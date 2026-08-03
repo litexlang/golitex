@@ -69,7 +69,7 @@ sketch:
         exist c N st {b = a * c}
 
     claim:
-        ? forall a, b N_pos:
+        ? forall a, b N+:
             $dvdN(a, b)
             =>:
                 a <= b
@@ -182,10 +182,13 @@ sketch:
             forall x R:
                 -1 <= -1 + (x - 1)^2 = x^2 - 2 * x
                 -1 <= x^2 - 2 * x
+            by def $lower_bound_for_parabola(-1)
 
-# Inside the `witness` block (witness block is used to prove an existence statement), the line `forall x R:` proves the universal part
-# of the proposition `$lower_bound_for_parabola(-1)`. The calculation rewrites
-# `x^2 - 2x` as `-1 + (x - 1)^2`, which is visibly at least `-1`.
+# Inside the `witness` block (witness block is used to prove an existence
+# statement), the line `forall x R:` proves the universal definition body. The
+# following `by def` explicitly introduces
+# `$lower_bound_for_parabola(-1)`. The calculation rewrites `x^2 - 2x` as
+# `-1 + (x - 1)^2`, which is visibly at least `-1`.
 
 # 4.1.6
 
@@ -216,6 +219,7 @@ sketch:
                 (x + y)^2 <= 3^2
                 abs(x + y) <= abs(3)
                 -3 <= x + y
+            by def $lower_bound_on_disk(-3)
 
 # The calculation shows `(x + y)^2 <= 3^2`. The known fact about squares then
 # turns that into `x + y >= -3`. This is a typical Litex pattern: write the
@@ -264,6 +268,7 @@ sketch:
                 n >= 5
                 =>:
                     n^3 >= 4 * n^2 + 7
+            by def $cubic_eventually_large(5)
 
 # The proof supplies `M = 5`. The `proof_debt` block records the estimate needed after
 # the threshold is chosen.
@@ -276,9 +281,9 @@ sketch:
 # from the general divisibility facts already established.
 
 sketch:
-    prop prime_by_trial_division(a N_pos):
+    prop prime_by_trial_division(a N+):
         2 <= a
-        forall b N_pos:
+        forall b N+:
             2 <= b < a
             =>:
                 a % b != 0
@@ -287,8 +292,8 @@ sketch:
         ? forall n range(2, 2):
             2 % n != 0
 
-    $prime_by_trial_division(2)
-    $prime(2)
+    by def $prime_by_trial_division(2)
+    by def $prime(2)
 
 # 4.2 “If and Only If”
 
@@ -356,6 +361,7 @@ sketch:
                 $dvdZ(8, n)
         witness exist c Z st {n = 8 * c} from -3 * a + 2 * n:
             n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
+        by def $dvdZ(8, n)
 
     claim:
         ? forall n, a Z:
@@ -364,6 +370,7 @@ sketch:
                 $dvdZ(8, 5 * n)
         witness exist c Z st {5 * n = 8 * c} from 5 * a:
             5 * n = 5 * (8 * a) = 8 * (5 * a)
+        by def $dvdZ(8, 5 * n)
 
 # 4.2.3 and 4.2.4
 
@@ -387,6 +394,7 @@ sketch:
         obtain k from exist k Z st {n = 2 * k + 1}
         witness exist c Z st {n - 1 = 2 * c} from k:
             n - 1 = 2 * k + 1 - 1 = 2 * k
+        by def $mod_eq(n, 1, 2)
 
     claim:
         ? forall n Z:
@@ -396,6 +404,7 @@ sketch:
         obtain k from exist k Z st {n - 1 = 2 * k}
         witness exist c Z st {n = 2 * c + 1} from k:
             n = n - 1 + 1 = 2 * k + 1
+        by def $odd(n)
 
     claim:
         ? forall n Z:
@@ -405,6 +414,7 @@ sketch:
         obtain k from exist k Z st {n = 2 * k}
         witness exist c Z st {n - 0 = 2 * c} from k:
             n - 0 = n = 2 * k
+        by def $mod_eq(n, 0, 2)
 
     claim:
         ? forall n Z:
@@ -414,6 +424,7 @@ sketch:
         obtain k from exist k Z st {n - 0 = 2 * k}
         witness exist c Z st {n = 2 * c} from k:
             n = n - 0 = 2 * k
+        by def $even(n)
 
 # 4.2.5 and 4.2.6
 
@@ -470,6 +481,7 @@ sketch:
         obtain k from exist k Z st {a = 2 * k + 1}
         witness exist t Z st {a - 1 = 2 * t} from k:
             a - 1 = (2 * k + 1) - 1 = 2 * k
+        by def $mod_eq(a, 1, 2)
 
     claim:
         ? forall a Z:
@@ -479,12 +491,14 @@ sketch:
         obtain k from exist k Z st {a - 1 = 2 * k}
         witness exist t Z st {a = 2 * t + 1} from k:
             a = (a - 1) + 1 = 2 * k + 1
+        by def $odd(a)
 
     claim:
         ? forall a, n Z:
             $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
+        by def $mod_eq(a, a, n)
 
     claim:
         ? forall a, b, c, n Z:
@@ -496,6 +510,8 @@ sketch:
         obtain y from exist y Z st {b - c = n * y}
         witness exist k Z st {a - c = n * k} from x + y:
             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
+        by def $mod_eq(a, c, n)
+        by def $mod_eq_trans(a, b, c, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -507,6 +523,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
+        by def $mod_eq(a + c, b + d, n)
 
     claim:
         ? forall x, y Z:
@@ -521,7 +538,7 @@ sketch:
         $mod_eq(x + y + 1, 1 + 1 + 1, 2)
         witness exist k Z st {1 + 1 + 1 - 1 = 2 * k} from 1:
             1 + 1 + 1 - 1 = 2 * 1
-        $mod_eq(1 + 1 + 1, 1, 2)
+        by def $mod_eq(1 + 1 + 1, 1, 2)
         $mod_eq_trans(x + y + 1, 1 + 1 + 1, 1, 2)
         $mod_eq(x + y + 1, 1, 2)
         $odd(x + y + 1)
@@ -574,6 +591,7 @@ sketch:
             0 <= 4
             4 < 5
             14 % 5 = 4
+            by def $remainder_property(4)
 
     claim:
         ? forall r Z:
@@ -582,9 +600,10 @@ sketch:
                 r = 4
         r = 14 % 5 = 4
 
-# The first claim proves existence by giving the witness `r = 4`. The final line
-# uses the builtin `%` calculation directly: Litex can compute `14 % 5 = 4`, so
-# the witness satisfies the remainder property.
+# The first claim proves existence by giving the witness `r = 4`. The three body
+# facts are checked directly, including the builtin calculation `14 % 5 = 4`;
+# `by def` then explicitly introduces the named remainder property for that
+# witness.
 
 # The second claim proves uniqueness. If an arbitrary integer `r` satisfies the
 # same property, then the definition gives `14 % 5 = r`. Since the builtin modulo
@@ -702,7 +721,7 @@ sketch:
 # builtin rule expects.
 
 claim:
-    ? forall a Z, m N_pos, k N:
+    ? forall a Z, m N+, k N:
         a % m = k
         =>:
             exist r Z st {a = m * r + k}
@@ -713,7 +732,7 @@ claim:
         a = m * r + a % m = m * r + k
 
 claim:
-    ? forall a Z, m N_pos, k N:
+    ? forall a Z, m N+, k N:
         k < m
         exist r Z st {a = m * r + k}
         =>:

@@ -35,16 +35,17 @@ prop is_self_adjoint_with_nonnegative_spectrum(s nonempty_set, VSet nonempty_set
         =>:
             $is_nonnegative_scalar(s, inner_space.scalar_geometry, lambda)
 
-prop has_only_nonnegative_entries(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N_pos, values &chap1a::FiniteList<s, n>):
-    forall k N_pos:
+prop has_only_nonnegative_entries(s nonempty_set, scalar_geometry &chap6a::InnerProductScalarGeometry<s>, n N+, values &chap1a::FiniteList<s, n>):
+    forall k N+:
         k <= n
         =>:
             $is_nonnegative_scalar(s, scalar_geometry, values.entries(k))
 
 prop has_nonzero_orthonormal_nonnegative_diagonalization(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap6b::is_orthonormal_basis(s, VSet, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, inner_space.scalar_geometry.scalars, n, \chap5c::matrix_of_operator<s, VSet, inner_space.vector_space, n>(basis, T)), $has_only_nonnegative_entries(s, inner_space.scalar_geometry, n, \chap5c::matrix_diagonal<s, n>(\chap5c::matrix_of_operator<s, VSet, inner_space.vector_space, n>(basis, T)))}
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap6b::is_orthonormal_basis(s, VSet, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, inner_space.scalar_geometry.scalars, n, \chap5c::matrix_of_operator<s, VSet, inner_space.vector_space, n>(basis, T)), $has_only_nonnegative_entries(s, inner_space.scalar_geometry, n, \chap5c::matrix_diagonal<s, n>(\chap5c::matrix_of_operator<s, VSet, inner_space.vector_space, n>(basis, T)))}
 
 prop has_orthonormal_nonnegative_diagonalization(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space>):
+    $chap2c::admits_basis_length(s, VSet, inner_space.vector_space)
     \chap2c::dimension<s, VSet, inner_space.vector_space> = 0 or $has_nonzero_orthonormal_nonnegative_diagonalization(s, VSet, inner_space, T)
 
 prop has_positive_square_root(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space>):
@@ -54,7 +55,8 @@ prop has_self_adjoint_square_root(s nonempty_set, VSet nonempty_set, inner_space
     exist S \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space> st {$chap7a::is_self_adjoint(s, VSet, inner_space, S), $is_square_root_of(s, VSet, inner_space.vector_space, T, S)}
 
 prop has_adjoint_square_factorization(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space>):
-    exist S \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space> st {T = fn(v VSet) VSet {\chap7a::adjoint<s, VSet, VSet, inner_space, inner_space>(S)(S(v))}}
+    $chap2a::is_finite_dimensional(s, VSet, inner_space.vector_space)
+    exist S, SAdj \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space> st {SAdj = \chap7a::adjoint<s, VSet, VSet, inner_space, inner_space>(S), T = fn(v VSet) VSet {SAdj(S(v))}}
 # Result 7.38. The proof follows the source cycle
 # (a)=>(b)=>(c)=>(d)=>(e)=>(f)=>(a), one mathematical move per edge.
 prop positive_operator_characterizations_statement(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, inner_space.vector_space, inner_space.vector_space>):

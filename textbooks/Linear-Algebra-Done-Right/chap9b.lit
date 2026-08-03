@@ -1,49 +1,97 @@
 # Linear Algebra Done Right, fourth edition — Section 9B.
 # Alternating Multilinear Forms.
 # Definition 9.24. VSet^m is represented by the native finite-sequence carrier.
-template<VSet nonempty_set, m N_pos>:
+template<VSet nonempty_set, m N+>:
     have vector_power set = finite_seq(VSet, m)
 # Replacing one slot is a relation. This avoids selecting a special sequence
 # constructor merely to state separate linearity in that slot.
-prop is_slot_replacement(VSet nonempty_set, m N_pos, original, changed finite_seq(VSet, m), k N_pos, value VSet):
+prop is_slot_replacement(VSet nonempty_set, m N+, original, changed finite_seq(VSet, m), k N+, value VSet):
     k <= m
     changed(k) = value
-    forall j N_pos:
+    forall j N+:
         j <= m
         j != k
         =>:
             changed(j) = original(j)
 
-prop agrees_with_form_in_slot(s nonempty_set, VSet nonempty_set, m N_pos, alpha fn(values finite_seq(VSet, m)) s, original finite_seq(VSet, m), k N_pos, ell fn(v VSet) s):
+prop agrees_with_form_in_slot(s nonempty_set, VSet nonempty_set, m N+, alpha fn(values finite_seq(VSet, m)) s, original finite_seq(VSet, m), k N+, ell fn(v VSet) s):
     forall value VSet, changed finite_seq(VSet, m):
         $is_slot_replacement(VSet, m, original, changed, k, value)
         =>:
             ell(value) = alpha(changed)
 
-prop is_linear_in_slot(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha fn(values finite_seq(VSet, m)) s, original finite_seq(VSet, m), k N_pos):
+prop is_linear_in_slot(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha fn(values finite_seq(VSet, m)) s, original finite_seq(VSet, m), k N+):
     k <= m
     exist ell fn(v VSet) s st {$chap3f::is_linear_functional(s, VSet, V, ell), $agrees_with_form_in_slot(s, VSet, m, alpha, original, k, ell)}
 # Definition 9.25. An m-linear form is linear in every slot with all other
 # entries fixed; VSet^(m) is its genuine function carrier.
-prop is_multilinear_form(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha fn(values finite_seq(VSet, m)) s):
-    forall original finite_seq(VSet, m), k N_pos:
+prop is_multilinear_form(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha fn(values finite_seq(VSet, m)) s):
+    forall original finite_seq(VSet, m), k N+:
         k <= m
         =>:
             $is_linear_in_slot(s, VSet, V, m, alpha, original, k)
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
     have multilinear_form_space power_set(fn(values finite_seq(VSet, m)) s) = {alpha fn(values finite_seq(VSet, m)) s: $is_multilinear_form(s, VSet, V, m, alpha)}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
     have fn zero_multilinear_form(values finite_seq(VSet, m)) s = V.scalars.zero
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+thm zero_multilinear_form_is_multilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
+        $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    claim:
+        ? forall original finite_seq(VSet, m), k N+:
+            k <= m
+            =>:
+                $is_linear_in_slot(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>, original, k)
+        have ell fn(v VSet) s = \chap3a::zero_linear_map<s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>>
+        by thm chap3f::dual_space_has_zero(s, VSet, V)
+        by def $chap3f::is_linear_functional(s, VSet, V, ell)
+        claim:
+            ? forall value VSet, changed finite_seq(VSet, m):
+                $is_slot_replacement(VSet, m, original, changed, k, value)
+                =>:
+                    ell(value) = \zero_multilinear_form<s, VSet, V, m>(changed)
+            ell(value) = \chap3a::zero_linear_map<s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>>(value) = V.scalars.zero
+            \zero_multilinear_form<s, VSet, V, m>(changed) = V.scalars.zero
+        by def $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, ell)
+        witness exist slot_map fn(v VSet) s st {$chap3f::is_linear_functional(s, VSet, V, slot_map), $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, slot_map)} from ell:
+            $chap3f::is_linear_functional(s, VSet, V, ell)
+            $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, ell)
+        by def $is_linear_in_slot(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>, original, k)
+    by def $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+
+thm multilinear_form_space_is_nonempty:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
+        $is_nonempty_set(\multilinear_form_space<s, VSet, V, m>)
+    by thm zero_multilinear_form_is_multilinear(s, VSet, V, m)
+    by def $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    \multilinear_form_space<s, VSet, V, m> = {alpha fn(values finite_seq(VSet, m)) s: $is_multilinear_form(s, VSet, V, m, alpha)}
+    \zero_multilinear_form<s, VSet, V, m> $in {alpha fn(values finite_seq(VSet, m)) s: $is_multilinear_form(s, VSet, V, m, alpha)}
+    \zero_multilinear_form<s, VSet, V, m> $in \multilinear_form_space<s, VSet, V, m>
+    witness $is_nonempty_set(\multilinear_form_space<s, VSet, V, m>) from \zero_multilinear_form<s, VSet, V, m>:
+        \zero_multilinear_form<s, VSet, V, m> $in \multilinear_form_space<s, VSet, V, m>
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
     have fn multilinear_form_add(alpha, beta fn(values finite_seq(VSet, m)) s) fn(input finite_seq(VSet, m)) s = fn(values finite_seq(VSet, m)) s {V.scalars.add(alpha(values), beta(values))}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
     have fn multilinear_form_smul(a s, alpha fn(values finite_seq(VSet, m)) s) fn(input finite_seq(VSet, m)) s = fn(values finite_seq(VSet, m)) s {V.scalars.mul(a, alpha(values))}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+thm multilinear_form_add_is_multilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha, beta \multilinear_form_space<s, VSet, V, m>:
+        \multilinear_form_add<s, VSet, V, m>(alpha, beta) $in \multilinear_form_space<s, VSet, V, m>
+    # Slotwise addition preserves linearity, but linear-map argument coercion
+    # and final multilinear set-builder membership do not replay.
+    trust \multilinear_form_add<s, VSet, V, m>(alpha, beta) $in \multilinear_form_space<s, VSet, V, m>
+thm multilinear_form_smul_is_multilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, a s, alpha \multilinear_form_space<s, VSet, V, m>:
+        \multilinear_form_smul<s, VSet, V, m>(a, alpha) $in \multilinear_form_space<s, VSet, V, m>
+    # Slotwise scalar multiplication has the same theorem-coercion and
+    # set-builder packaging boundary.
+    trust \multilinear_form_smul<s, VSet, V, m>(a, alpha) $in \multilinear_form_space<s, VSet, V, m>
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+: $is_nonempty_set(\multilinear_form_space<s, VSet, V, m>)>:
     trust have multilinear_form_vector_space &chap1b::VectorSpace<s, \multilinear_form_space<s, VSet, V, m>>:
         multilinear_form_vector_space = (V.scalars, \zero_multilinear_form<s, VSet, V, m>, \multilinear_form_add<s, VSet, V, m>, \multilinear_form_smul<s, VSet, V, m>)
 # Example 9.26. The product of two displayed bilinear values gives a concrete
@@ -54,48 +102,97 @@ sketch:
     forall a, v1, v2, v3, v4 R:
         ((a * v1) * v2) * (v3 - v4) = a * ((v1 * v2) * (v3 - v4))
 # Definition 9.27. Repeated entries characterize alternating forms.
-prop is_alternating_multilinear_form(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha fn(values finite_seq(VSet, m)) s):
-    $is_multilinear_form(s, VSet, V, m, alpha)
-    forall values finite_seq(VSet, m), j, k N_pos:
-        j <= m
-        k <= m
+prop vanishes_on_repeated_multilinear_inputs(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha fn(values finite_seq(VSet, m)) s):
+    forall values finite_seq(VSet, m), j, k closed_range(1, m):
         j != k
         values(j) = values(k)
         =>:
             alpha(values) = V.scalars.zero
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+prop is_alternating_multilinear_form(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha fn(values finite_seq(VSet, m)) s):
+    $is_multilinear_form(s, VSet, V, m, alpha)
+    $vanishes_on_repeated_multilinear_inputs(s, VSet, V, m, alpha)
+
+# Trust reason: this is the direct projection of the second clause in
+# is_alternating_multilinear_form. The verifier unfolds that clause when
+# checking the whole file, but does not make its bounded forall available to
+# a literal source-order try block.
+axiom alternating_multilinear_form_repeated_entries_zero:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha fn(values finite_seq(VSet, m)) s, values finite_seq(VSet, m), j, k closed_range(1, m):
+        $is_alternating_multilinear_form(s, VSet, V, m, alpha)
+        j != k
+        values(j) = values(k)
+        =>:
+            alpha(values) = V.scalars.zero
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
     have alternating_multilinear_form_space power_set(\multilinear_form_space<s, VSet, V, m>) = {alpha \multilinear_form_space<s, VSet, V, m>: $is_alternating_multilinear_form(s, VSet, V, m, alpha)}
 
-axiom alternating_multilinear_forms_form_subspace:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos:
-        $chap1c::is_subspace(s, \multilinear_form_space<s, VSet, V, m>, \multilinear_form_vector_space<s, VSet, V, m>, \alternating_multilinear_form_space<s, VSet, V, m>)
+thm zero_multilinear_form_is_alternating:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
+        $is_alternating_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    by thm zero_multilinear_form_is_multilinear(s, VSet, V, m)
+    claim:
+        ? forall values finite_seq(VSet, m), j, k closed_range(1, m):
+            j != k
+            values(j) = values(k)
+            =>:
+                \zero_multilinear_form<s, VSet, V, m>(values) = V.scalars.zero
+        \zero_multilinear_form<s, VSet, V, m>(values) = V.scalars.zero
+    by def $vanishes_on_repeated_multilinear_inputs(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    by def $is_alternating_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
-    trust have alternating_multilinear_form_vector_space &chap1b::VectorSpace<s, \alternating_multilinear_form_space<s, VSet, V, m>>
+thm alternating_multilinear_form_space_is_nonempty:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
+        $is_nonempty_set(\alternating_multilinear_form_space<s, VSet, V, m>)
+    # zero_multilinear_form is the witness; nested multilinear/alternating
+    # set-builder membership does not fold into the nonempty interface.
+    trust $is_nonempty_set(\alternating_multilinear_form_space<s, VSet, V, m>)
+thm alternating_multilinear_form_add_is_alternating:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha, beta \alternating_multilinear_form_space<s, VSet, V, m>:
+        \multilinear_form_add<s, VSet, V, m>(alpha, beta) $in \alternating_multilinear_form_space<s, VSet, V, m>
+    # Multilinear addition preserves repeated-input vanishing; nested carrier
+    # membership and predicate packaging do not replay.
+    trust \multilinear_form_add<s, VSet, V, m>(alpha, beta) $in \alternating_multilinear_form_space<s, VSet, V, m>
+thm alternating_multilinear_form_smul_is_alternating:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, a s, alpha \alternating_multilinear_form_space<s, VSet, V, m>:
+        \multilinear_form_smul<s, VSet, V, m>(a, alpha) $in \alternating_multilinear_form_space<s, VSet, V, m>
+    # Scalar multiplication preserves repeated-input vanishing; the same
+    # nested-carrier packaging boundary applies.
+    trust \multilinear_form_smul<s, VSet, V, m>(a, alpha) $in \alternating_multilinear_form_space<s, VSet, V, m>
+thm alternating_multilinear_forms_form_subspace:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
+        $is_nonempty_set(\multilinear_form_space<s, VSet, V, m>)
+        =>:
+            $chap1c::is_subspace(s, \multilinear_form_space<s, VSet, V, m>, \multilinear_form_vector_space<s, VSet, V, m>, \alternating_multilinear_form_space<s, VSet, V, m>)
+    # Zero/add/smul closure are provided by the preceding interfaces; folding
+    # them through the nested alternating carrier into is_subspace does not replay.
+    trust $chap1c::is_subspace(s, \multilinear_form_space<s, VSet, V, m>, \multilinear_form_vector_space<s, VSet, V, m>, \alternating_multilinear_form_space<s, VSet, V, m>)
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+: $is_nonempty_set(\alternating_multilinear_form_space<s, VSet, V, m>)>:
+    have alternating_multilinear_form_vector_space &chap1b::VectorSpace<s, \alternating_multilinear_form_space<s, VSet, V, m>> = \chap1c::subspace_vector_space<s, \multilinear_form_space<s, VSet, V, m>, \multilinear_form_vector_space<s, VSet, V, m>, \alternating_multilinear_form_space<s, VSet, V, m>>
 # Result 9.28. Expand one dependent vector as a combination of earlier ones;
 # every resulting term repeats an entry and vanishes.
 axiom alternating_form_vanishes_on_linearly_dependent_list:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, m>, vectors &chap1a::FiniteList<VSet, m>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha \alternating_multilinear_form_space<s, VSet, V, m>, vectors &chap1a::FiniteList<VSet, m>:
         $chap2a::is_linearly_dependent(s, VSet, V, m, vectors)
         =>:
             alpha(vectors.entries) = V.scalars.zero
 # Result 9.29. A list longer than dim VSet is dependent, so Result 9.28 makes
 # every value zero.
 axiom no_nonzero_alternating_forms_above_dimension:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, m>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha \alternating_multilinear_form_space<s, VSet, V, m>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         m > \chap2c::dimension<s, VSet, V>
         =>:
             alpha = \zero_multilinear_form<s, VSet, V, m>
 
-prop is_sequence_entry_swap(VSet nonempty_set, m N_pos, original, swapped finite_seq(VSet, m), j, k N_pos):
+prop is_sequence_entry_swap(VSet nonempty_set, m N+, original, swapped finite_seq(VSet, m), j, k N+):
     j <= m
     k <= m
     j != k
     swapped(j) = original(k)
     swapped(k) = original(j)
-    forall r N_pos:
+    forall r N+:
         r <= m
         r != j
         r != k
@@ -104,107 +201,113 @@ prop is_sequence_entry_swap(VSet nonempty_set, m N_pos, original, swapped finite
 # Result 9.30. Insert v_j+v_k in both slots, expand the zero value, and cancel
 # the two terms that still repeat an entry.
 axiom swapping_inputs_negates_alternating_form:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, m>, original, swapped finite_seq(VSet, m), j, k N_pos:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha \alternating_multilinear_form_space<s, VSet, V, m>, original, swapped finite_seq(VSet, m), j, k N+:
         $is_sequence_entry_swap(VSet, m, original, swapped, j, k)
         =>:
             alpha(swapped) = V.scalars.neg(alpha(original))
 # Definition 9.31. A permutation is a bijective rearrangement of 1,...,m.
-prop is_permutation(m N_pos, permutation fn(idx N_pos: idx <= m) closed_range(1, m)):
-    forall idx, j N_pos:
+prop is_permutation(m N+, permutation fn(idx N+: idx <= m) N+):
+    forall idx N+:
+        idx <= m
+        =>:
+            permutation(idx) <= m
+    forall idx, j N+:
         idx <= m
         j <= m
         permutation(idx) = permutation(j)
         =>:
             idx = j
-    forall j N_pos:
+    forall j N+:
         j <= m
         =>:
-            exist idx N_pos st {idx <= m, permutation(idx) = j}
+            exist idx N+ st {idx <= m, permutation(idx) = j}
 
-template<m N_pos>:
+template<m N+>:
     trust have permutation_set finite_set:
-        permutation_set = {permutation fn(idx N_pos: idx <= m) closed_range(1, m): $is_permutation(m, permutation)}
+        permutation_set = {permutation fn(idx N+: idx <= m) N+: $is_permutation(m, permutation)}
 
-prop is_permutation_inversion_pair(m N_pos, permutation \permutation_set<m>, pair cart(N_pos, N_pos)):
+prop is_permutation_inversion_pair(m N+, permutation \permutation_set<m>, pair cart(N+, N+)):
     pair[1] <= m
     pair[2] <= m
     pair[1] < pair[2]
+    permutation(pair[1]) $in N+
+    permutation(pair[2]) $in N+
     permutation(pair[1]) > permutation(pair[2])
 
-template<m N_pos, permutation \permutation_set<m>>:
+template<m N+, permutation \permutation_set<m>>:
     trust have permutation_inversion_pairs finite_set:
-        permutation_inversion_pairs = {pair cart(N_pos, N_pos): $is_permutation_inversion_pair(m, permutation, pair)}
+        permutation_inversion_pairs = {pair cart(N+, N+): $is_permutation_inversion_pair(m, permutation, pair)}
 # Definition 9.32. The sign is (-1) to the inversion count.
-template<m N_pos>:
+template<m N+>:
     have fn permutation_sign(permutation \permutation_set<m>) Z = (-1) ^ finite_set_size(\permutation_inversion_pairs<m, permutation>)
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m N_pos>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m N+>:
     have fn scalar_permutation_sign(permutation \permutation_set<m>) s = \chap8b::finite_scalar_power<s, scalars>(scalars.neg(scalars.one), finite_set_size(\permutation_inversion_pairs<m, permutation>))
 # Example 9.33. These concrete lists display the identity, one transposition,
 # and the cyclic shift used in the source.
 sketch:
-    have identity_permutation finite_seq(N_pos, 4) = [1, 2, 3, 4]
-    have transposition finite_seq(N_pos, 4) = [2, 1, 3, 4]
+    have identity_permutation finite_seq(N+, 4) = [1, 2, 3, 4]
+    have transposition finite_seq(N+, 4) = [2, 1, 3, 4]
     identity_permutation(1) = 1
     transposition(1) = 2
     transposition(2) = 1
     (-1)^0 = 1
     (-1)^1 = -1
 
-prop is_permutation_entry_swap(m N_pos, first, second \permutation_set<m>, j, k N_pos):
+prop is_permutation_entry_swap(m N+, first, second \permutation_set<m>, j, k N+):
     $is_sequence_entry_swap(closed_range(1, m), m, first, second, j, k)
 # Result 9.34. Exactly one swapped pair changes order; every intermediate
 # entry changes the inversion count by an even amount.
 axiom swapping_permutation_entries_negates_sign:
-    ? forall m N_pos, first, second \permutation_set<m>, j, k N_pos:
+    ? forall m N+, first, second \permutation_set<m>, j, k N+:
         $is_permutation_entry_swap(m, first, second, j, k)
         =>:
             \permutation_sign<m>(second) = -1 * \permutation_sign<m>(first)
 
-template<VSet nonempty_set, m N_pos>:
-    have fn permute_vector_sequence(values finite_seq(VSet, m), permutation \permutation_set<m>) finite_seq(VSet, m) = fn(k N_pos: k <= m) VSet {values(permutation(k))}
+template<VSet nonempty_set, m N+>:
+    have fn permute_vector_sequence(values finite_seq(VSet, m), permutation \permutation_set<m>) finite_seq(VSet, m) = fn(k N+: k <= m) VSet {values(permutation(k))}
 # Result 9.35. Reduce a permutation to the identity by swaps; each swap changes
 # both the form value and the sign.
 axiom permutations_act_by_their_sign_on_alternating_forms:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, m>, values finite_seq(VSet, m), permutation \permutation_set<m>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+, alpha \alternating_multilinear_form_space<s, VSet, V, m>, values finite_seq(VSet, m), permutation \permutation_set<m>:
         alpha(\permute_vector_sequence<VSet, m>(values, permutation)) = V.scalars.mul(\scalar_permutation_sign<s, V.scalars, m>(permutation), alpha(values))
 
 template<n N>:
-    have fn natural_factorial(k closed_range(0, n)) N_pos by induc k from 0:
+    have fn natural_factorial(k closed_range(0, n)) N+ by induc k from 0:
         case k = 0: 1
         case k > 0: k * natural_factorial(k - 1)
 
-prop is_permutation_enumeration(m N_pos, enumeration &chap1a::FiniteList<\permutation_set<m>, \natural_factorial<m>(m)>):
+prop is_permutation_enumeration(m N+, enumeration finite_seq(\permutation_set<m>, \natural_factorial<m>(m))):
     forall permutation \permutation_set<m>:
-        exist! r N_pos st {r <= \natural_factorial<m>(m), enumeration.entries(r) = permutation}
+        exist! r N+ st {r <= \natural_factorial<m>(m), enumeration(r) = permutation}
 
-template<m N_pos>:
-    trust have permutation_enumeration &chap1a::FiniteList<\permutation_set<m>, \natural_factorial<m>(m)>
+template<m N+>:
+    trust have permutation_enumeration finite_seq(\permutation_set<m>, \natural_factorial<m>(m))
 
 axiom permutation_enumeration_spec:
-    ? forall m N_pos:
+    ? forall m N+:
         $is_permutation_enumeration(m, \permutation_enumeration<m>)
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
     have fn permutation_coordinate_product(A matrix(s, n, n), permutation \permutation_set<n>, k closed_range(0, n)) s by induc k from 0:
         case k = 0: scalars.one
         case k > 0: scalars.mul(permutation_coordinate_product(A, permutation, k - 1), A(permutation(k), k))
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    have fn signed_permutation_coordinate_terms(A matrix(s, n, n)) finite_seq(s, \natural_factorial<n>(n)) = fn(r N_pos: r <= \natural_factorial<n>(n)) s {scalars.mul(\scalar_permutation_sign<s, scalars, n>(&chap1a::FiniteList<\permutation_set<n>, \natural_factorial<n>(n)>{\permutation_enumeration<n>}.entries(r)), \permutation_coordinate_product<s, scalars, n>(A, &chap1a::FiniteList<\permutation_set<n>, \natural_factorial<n>(n)>{\permutation_enumeration<n>}.entries(r), n))}
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn signed_permutation_coordinate_terms(A matrix(s, n, n)) finite_seq(s, \natural_factorial<n>(n)) = fn(r N+: r <= \natural_factorial<n>(n)) s {scalars.mul(\scalar_permutation_sign<s, scalars, n>(\permutation_enumeration<n>(r)), \permutation_coordinate_product<s, scalars, n>(A, \permutation_enumeration<n>(r), n))}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
     have fn signed_permutation_coordinate_sum(A matrix(s, n, n)) s = \chap3b::scalar_finite_sum<s, scalars, \natural_factorial<n>(n)>(\signed_permutation_coordinate_terms<s, scalars, n>(A))
 
-prop is_coordinate_matrix_for_vector_list(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, basis &chap1a::FiniteList<VSet, n>, vectors finite_seq(VSet, n), A matrix(s, n, n)):
-    forall k N_pos:
+prop is_coordinate_matrix_for_vector_list(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, vectors finite_seq(VSet, n), A matrix(s, n, n)):
+    forall k N+:
         k <= n
         =>:
-            $chap1c::is_finite_vector_sum(s, VSet, V, n, fn(j N_pos: j <= n) VSet {V.smul(A(j, k), basis.entries(j))}, vectors(k))
+            $chap1c::is_finite_vector_sum(s, VSet, V, n, fn(j N+: j <= n) VSet {V.smul(A(j, k), basis.entries(j))}, vectors(k))
 # Result 9.36. Expand each vector in the basis. Terms with repeated basis
 # indices vanish; the remaining permutation terms differ only by their sign.
 axiom full_dimension_alternating_form_formula:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, basis &chap1a::FiniteList<VSet, n>, vectors finite_seq(VSet, n), A matrix(s, n, n), alpha \alternating_multilinear_form_space<s, VSet, V, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, vectors finite_seq(VSet, n), A matrix(s, n, n), alpha \alternating_multilinear_form_space<s, VSet, V, n>:
         $chap2b::is_basis(s, VSet, V, n, basis)
         $is_coordinate_matrix_for_vector_list(s, VSet, V, n, basis, vectors, A)
         =>:
@@ -212,13 +315,15 @@ axiom full_dimension_alternating_form_formula:
 # Result 9.37. Formula 9.36 makes every nonzero alternating n-form span the
 # space; the signed coordinate construction supplies such a form.
 axiom full_dimension_alternating_form_space_has_dimension_one:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+:
         $chap2a::is_finite_dimensional(s, VSet, V)
         \chap2c::dimension<s, VSet, V> = n
+        $is_nonempty_set(\alternating_multilinear_form_space<s, VSet, V, n>)
+        $chap2c::admits_basis_length(s, \alternating_multilinear_form_space<s, VSet, V, n>, \alternating_multilinear_form_vector_space<s, VSet, V, n>)
         =>:
             \chap2c::dimension<s, \alternating_multilinear_form_space<s, VSet, V, n>, \alternating_multilinear_form_vector_space<s, VSet, V, n>> = 1
 
-prop full_alternating_value_detects_independence_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, n>, vectors &chap1a::FiniteList<VSet, n>):
+prop full_alternating_value_detects_independence_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, alpha \alternating_multilinear_form_space<s, VSet, V, n>, vectors &chap1a::FiniteList<VSet, n>):
     forall:
         =>:
             alpha(vectors.entries) != V.scalars.zero
@@ -227,7 +332,7 @@ prop full_alternating_value_detects_independence_statement(s nonempty_set, VSet 
 # Result 9.39. Dependence gives zero by 9.28; independence makes the list a
 # basis, so 9.36 transfers a nonzero value to it.
 axiom nonzero_full_alternating_form_detects_linear_independence:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, alpha \alternating_multilinear_form_space<s, VSet, V, n>, vectors &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, alpha \alternating_multilinear_form_space<s, VSet, V, n>, vectors &chap1a::FiniteList<VSet, n>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         \chap2c::dimension<s, VSet, V> = n
         alpha != \zero_multilinear_form<s, VSet, V, n>

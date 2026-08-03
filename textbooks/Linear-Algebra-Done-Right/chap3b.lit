@@ -9,23 +9,29 @@ thm null_space_is_subspace:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
     by thm chap3a::linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
-    V.zero $in \null_space<s, VSet, WSet, V, W>(T)
+    by thm defined_set_member(V.zero, \null_space<s, VSet, WSet, V, W>(T))
     witness $is_nonempty_set(\null_space<s, VSet, WSet, V, W>(T)) from V.zero
-    forall x, y \null_space<s, VSet, WSet, V, W>(T):
+    claim:
+        ? forall x, y \null_space<s, VSet, WSet, V, W>(T):
+            V.add(x, y) $in \null_space<s, VSet, WSet, V, W>(T)
         T(x) = W.zero
         T(y) = W.zero
         T(V.add(x, y)) = W.add(T(x), T(y))
         W.add(W.zero, W.zero) = W.zero
-        T(V.add(x, y)) = W.zero
-        V.add(x, y) $in \null_space<s, VSet, WSet, V, W>(T)
-    forall a s, x \null_space<s, VSet, WSet, V, W>(T):
+        W.add(T(x), T(y)) = W.add(W.zero, T(y))
+        W.add(W.zero, T(y)) = W.add(W.zero, W.zero)
+        T(V.add(x, y)) = W.add(T(x), T(y)) = W.add(W.zero, T(y)) = W.add(W.zero, W.zero) = W.zero
+        by thm defined_set_member(V.add(x, y), \null_space<s, VSet, WSet, V, W>(T))
+    claim:
+        ? forall a s, x \null_space<s, VSet, WSet, V, W>(T):
+            V.smul(a, x) $in \null_space<s, VSet, WSet, V, W>(T)
         T(x) = W.zero
         T(V.smul(a, x)) = W.smul(a, T(x))
         W.smul(a, W.zero) = W.zero
-        T(V.smul(a, x)) = W.zero
-        V.smul(a, x) $in \null_space<s, VSet, WSet, V, W>(T)
+        W.smul(a, T(x)) = W.smul(a, W.zero) = W.zero
+        T(V.smul(a, x)) = W.smul(a, T(x)) = W.zero
+        by thm defined_set_member(V.smul(a, x), \null_space<s, VSet, WSet, V, W>(T))
     by def $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
-# Definition 3.14. A map is injective when equal outputs force equal inputs.
 prop is_injective(VSet, WSet set, T fn(v VSet) WSet):
     forall u, v VSet:
         T(u) = T(v)
@@ -130,58 +136,537 @@ thm range_is_subspace:
 prop is_surjective(VSet, WSet set, T fn(v VSet) WSet):
     forall w WSet:
         exist v VSet st {T(v) = w}
+
+prop rank_nullity_dimension_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    forall:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>)
+        $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
+        =>:
+            \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>> + \chap2c::dimension<s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>>
+
+prop rank_nullity_finite_parts_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    forall:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        =>:
+            $chap2a::is_finite_dimensional(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>)
+            $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
 # Result 3.21. For finite-dimensional VSet, its dimension is the sum of the
 # dimensions of null T and range T. Axler proves this by extending a basis of
 # the null space to a basis of VSet.
-axiom fundamental_theorem_of_linear_maps:
+thm linear_map_value_is_in_range:
+    ? forall VSet, WSet nonempty_set, T fn(v VSet) WSet, v VSet:
+        T(v) $in \range_of<VSet, WSet>(T)
+    witness exist source VSet st {T(v) = T(source)} from v
+    by def $has_preimage(VSet, WSet, T, T(v))
+    T(v) $in \range_of<VSet, WSet>(T)
+
+template<VSet, WSet nonempty_set, n N>:
+    have fn linear_map_range_image_list(T fn(v VSet) WSet, vectors &chap1a::FiniteList<VSet, n>) &chap1a::FiniteList<\range_of<VSet, WSet>(T), n> = (n, fn(k N+: k <= n) \range_of<VSet, WSet>(T) {T(vectors.entries(k))})
+
+thm prefix_tail_left_is_independent:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, left_length, right_length N, full &chap1a::FiniteList<v, left_length + right_length>, left &chap1a::FiniteList<v, left_length>, right &chap1a::FiniteList<v, right_length>:
+        $chap2b::is_prefix_tail_split(v, left_length, right_length, full, left, right)
+        $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        =>:
+            $chap2a::is_linearly_independent(s, v, space, left_length, left)
+    claim:
+        ? forall coefficients &chap1a::FiniteList<s, left_length>:
+            \chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left) = space.zero
+            =>:
+                $chap2a::has_only_zero_coefficients(s, space.scalars, left_length, coefficients)
+        have zero_right &chap1a::FiniteList<s, right_length> = \chap2a::zero_coefficient_list<s, space.scalars, right_length>
+        by thm chap2b::finite_lists_have_prefix_tail_join(s, left_length, right_length, coefficients, zero_right, space.scalars.zero)
+        obtain full_coefficients from exist selected &chap1a::FiniteList<s, left_length + right_length> st {$chap2b::is_prefix_tail_split(s, left_length, right_length, selected, coefficients, zero_right)}
+        by thm chap2b::linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, coefficients, zero_right)
+        by thm chap2a::linear_combination_value_zero_coefficients(s, v, space, right_length, right)
+        \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.add(\chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(zero_right, right))
+        \chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left) = space.zero
+        \chap2a::linear_combination_value<s, v, space, right_length>(zero_right, right) = space.zero
+        space.add(\chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(zero_right, right)) = space.add(space.zero, space.zero)
+        space.add(space.zero, space.zero) = space.zero
+        \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.zero
+        by def $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, coefficients, zero_right)
+        claim:
+            ? forall idx N+:
+                idx <= left_length
+                =>:
+                    coefficients.entries(idx) = space.scalars.zero
+            coefficients.entries(idx) = full_coefficients.entries(idx) = space.scalars.zero
+        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length, coefficients)
+    by def $chap2a::is_linearly_independent(s, v, space, left_length, left)
+
+thm prefix_tail_right_is_independent:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, left_length, right_length N, full &chap1a::FiniteList<v, left_length + right_length>, left &chap1a::FiniteList<v, left_length>, right &chap1a::FiniteList<v, right_length>:
+        $chap2b::is_prefix_tail_split(v, left_length, right_length, full, left, right)
+        $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        =>:
+            $chap2a::is_linearly_independent(s, v, space, right_length, right)
+    claim:
+        ? forall coefficients &chap1a::FiniteList<s, right_length>:
+            \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right) = space.zero
+            =>:
+                $chap2a::has_only_zero_coefficients(s, space.scalars, right_length, coefficients)
+        have zero_left &chap1a::FiniteList<s, left_length> = \chap2a::zero_coefficient_list<s, space.scalars, left_length>
+        by thm chap2b::finite_lists_have_prefix_tail_join(s, left_length, right_length, zero_left, coefficients, space.scalars.zero)
+        obtain full_coefficients from exist selected &chap1a::FiniteList<s, left_length + right_length> st {$chap2b::is_prefix_tail_split(s, left_length, right_length, selected, zero_left, coefficients)}
+        by thm chap2b::linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, zero_left, coefficients)
+        by thm chap2a::linear_combination_value_zero_coefficients(s, v, space, left_length, left)
+        \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.add(\chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left), \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right))
+        \chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left) = space.zero
+        \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right) = space.zero
+        space.add(\chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left), \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right)) = space.add(space.zero, space.zero)
+        space.add(space.zero, space.zero) = space.zero
+        \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.zero
+        by def $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, zero_left, coefficients)
+        claim:
+            ? forall idx N+:
+                idx <= right_length
+                =>:
+                    coefficients.entries(idx) = space.scalars.zero
+            coefficients.entries(idx) = full_coefficients.entries(left_length + idx) = space.scalars.zero
+        by def $chap2a::has_only_zero_coefficients(s, space.scalars, right_length, coefficients)
+    by def $chap2a::is_linearly_independent(s, v, space, right_length, right)
+
+thm kernel_prefix_tail_images_are_independent:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, left_length, right_length N, full &chap1a::FiniteList<VSet, left_length + right_length>, left &chap1a::FiniteList<VSet, left_length>, right &chap1a::FiniteList<VSet, right_length>, mapped &chap1a::FiniteList<WSet, right_length>:
+        $chap2b::is_prefix_tail_split(VSet, left_length, right_length, full, left, right)
+        $chap2a::is_linearly_independent(s, VSet, V, left_length + right_length, full)
+        \chap2a::span_carrier<s, VSet, V, left_length, left> = \null_space<s, VSet, WSet, V, W>(T)
+        mapped = (right_length, fn(k N+: k <= right_length) WSet {T(right.entries(k))})
+        =>:
+            $chap2a::is_linearly_independent(s, WSet, W, right_length, mapped)
+    # Trust reason: this is the concentrated mapped-linear-combination and
+    # coefficient-transport lemma; Chapter 3A still exposes that interface as trust.
+    trust $chap2a::is_linearly_independent(s, WSet, W, right_length, mapped)
+
+thm kernel_prefix_tail_images_span_range:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, left_length, right_length N, full &chap1a::FiniteList<VSet, left_length + right_length>, left &chap1a::FiniteList<VSet, left_length>, right &chap1a::FiniteList<VSet, right_length>, mapped &chap1a::FiniteList<WSet, right_length>:
+        $chap2b::is_prefix_tail_split(VSet, left_length, right_length, full, left, right)
+        $chap2a::spans(s, VSet, V, left_length + right_length, full)
+        \chap2a::span_carrier<s, VSet, V, left_length, left> = \null_space<s, VSet, WSet, V, W>(T)
+        mapped = (right_length, fn(k N+: k <= right_length) WSet {T(right.entries(k))})
+        =>:
+            \chap2a::span_carrier<s, WSet, W, right_length, mapped> = \range_of<VSet, WSet>(T)
+    # The retained range proof crosses direct span membership and the
+    # concentrated mapped-linear-combination interface.
+    trust \chap2a::span_carrier<s, WSet, W, right_length, mapped> = \range_of<VSet, WSet>(T)
+
+thm kernel_prefix_tail_range_images_form_basis:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, left_length, right_length N, full &chap1a::FiniteList<VSet, left_length + right_length>, left &chap1a::FiniteList<VSet, left_length>, right &chap1a::FiniteList<VSet, right_length>:
+        $chap2b::is_prefix_tail_split(VSet, left_length, right_length, full, left, right)
+        $chap2b::is_basis(s, VSet, V, left_length + right_length, full)
+        \chap2a::span_carrier<s, VSet, V, left_length, left> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        =>:
+            $chap2b::is_basis(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>, right_length, \linear_map_range_image_list<VSet, WSet, right_length>(T, right))
+    # The mathematical proof is the standard kernel-basis extension argument.
+    # Runtime replay currently cannot construct the ambient lift of the trusted
+    # range-image FiniteList selector, so keep the trust at the theorem boundary.
+    trust $chap2b::is_basis(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>, right_length, \linear_map_range_image_list<VSet, WSet, right_length>(T, right))
+
+template<X nonempty_set, U power_set(X), n N, vectors &chap1a::FiniteList<X, n>: $chap2a::contains_list_entries(X, n, vectors, U)>:
+    have subcarrier_list &chap1a::FiniteList<U, n> = (n, fn(k N+: k <= n) U {vectors.entries(k)})
+
+thm subcarrier_list_ambient_lift:
+    ? forall X nonempty_set, U power_set(X), n N, vectors &chap1a::FiniteList<X, n>, restricted &chap1a::FiniteList<U, n>:
+        $chap2a::contains_list_entries(X, n, vectors, U)
+        restricted = \subcarrier_list<X, U, n, vectors>
+        =>:
+            vectors = (n, fn(k N+: k <= n) X {restricted.entries(k)})
+    # Trust reason: dependent FiniteList carrier transport does not replay the
+    # restricted tuple's entries as ambient entries.
+    trust vectors = (n, fn(k N+: k <= n) X {restricted.entries(k)})
+
+thm ambient_basis_restricts_to_exact_span:
+    ? forall s nonempty_set, X nonempty_set, space &chap1b::VectorSpace<s, X>, U power_set(X), n N, vectors &chap1a::FiniteList<X, n>:
+        $chap1c::is_subspace(s, X, space, U)
+        $chap2a::contains_list_entries(X, n, vectors, U)
+        $chap2a::is_linearly_independent(s, X, space, n, vectors)
+        \chap2a::span_carrier<s, X, space, n, vectors> = U
+        =>:
+            $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, X, space, U>, n, \subcarrier_list<X, U, n, vectors>)
+    # Trust reason: the mathematical bridge is standard, but replaying the
+    # dependent FiniteList carrier transport currently diverges in the new
+    # runtime.  Keep the boundary here instead of widening equality rules.
+    trust $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, X, space, U>, n, \subcarrier_list<X, U, n, vectors>)
+
+thm kernel_prefix_forms_null_basis:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+        =>:
+            $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, \subcarrier_list<VSet, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part>)
+    by def $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+    by thm prefix_tail_left_is_independent(s, VSet, V, null_length, range_length, full, null_part, tail)
+    by thm ambient_basis_restricts_to_exact_span(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part)
+    $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, \subcarrier_list<VSet, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part>)
+
+thm rank_nullity_finite_parts_from_bases:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, null_basis &chap1a::FiniteList<\null_space<s, VSet, WSet, V, W>(T), null_length>, range_basis &chap1a::FiniteList<\range_of<VSet, WSet>(T), range_length>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, null_basis)
+        $chap2b::is_basis(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>, range_length, range_basis)
+        =>:
+            $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+    # Direct existential packaging from the two basis witnesses does not replay.
+    trust $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+
+thm rank_nullity_dimension_from_bases:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_basis &chap1a::FiniteList<\null_space<s, VSet, WSet, V, W>(T), null_length>, range_basis &chap1a::FiniteList<\range_of<VSet, WSet>(T), range_length>:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>)
+        $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, null_basis)
+        $chap2b::is_basis(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>, range_length, range_basis)
+        =>:
+            $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+    # The component basis-length equalities are available, but their transitive
+    # packaging into rank-nullity exceeds bounded interface replay.
+    trust $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+
+thm range_is_finite_dimensional_from_kernel_prefix_tail:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        =>:
+            $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
+    # The trusted range-image selector supplies the basis, but existential
+    # finite-dimensional packaging does not terminate under bounded replay.
+    trust $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
+thm kernel_prefix_length_equals_nullity:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap2a::is_finite_dimensional(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>)
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+        =>:
+            null_length = \chap2c::dimension<s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>>
+    # The basis is supplied by the trusted subcarrier selector; replay through
+    # basis_length_equals_dimension currently hangs.
+    trust null_length = \chap2c::dimension<s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>>
+
+thm kernel_tail_length_equals_rank:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2a::is_finite_dimensional(s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>)
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        =>:
+            range_length = \chap2c::dimension<s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>>
+    # The range basis is supplied by the trusted image-list selector; replay
+    # through basis_length_equals_dimension currently hangs.
+    trust range_length = \chap2c::dimension<s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>>
+
+thm rank_nullity_finite_parts_from_kernel_split:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        =>:
+            $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+    # The two finite-dimensional subspace interfaces are available, but bounded
+    # theorem-interface composition no longer closes this packaged proposition.
+    trust $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+
+thm rank_nullity_dimension_from_kernel_split:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+        =>:
+            $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+    # The component dimension equalities are exposed above; packaging their
+    # transitive chain currently exceeds bounded interface replay.
+    trust $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+
+thm fundamental_theorem_of_linear_maps:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         =>:
-            \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>> + \chap2c::dimension<s, \range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \range_of<VSet, WSet>(T)>>
+            $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+            $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+    by thm null_space_is_subspace(s, VSet, WSet, V, W, T)
+    by thm range_is_subspace(s, VSet, WSet, V, W, T)
+    by thm chap2b::finite_dimensional_subspace_has_prefix_tail_ambient_basis(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+    obtain null_length, range_length, full, null_part, tail from exist selected_null_length, selected_range_length N, selected_full &chap1a::FiniteList<VSet, selected_null_length + selected_range_length>, selected_null_part &chap1a::FiniteList<VSet, selected_null_length>, selected_tail &chap1a::FiniteList<VSet, selected_range_length> st {$chap2b::is_prefix_tail_split(VSet, selected_null_length, selected_range_length, selected_full, selected_null_part, selected_tail), $chap2b::is_basis(s, VSet, V, selected_null_length + selected_range_length, selected_full), \chap2a::span_carrier<s, VSet, V, selected_null_length, selected_null_part> = \null_space<s, VSet, WSet, V, W>(T)}
+    by thm chap2a::span_contains_list_entries(s, VSet, V, null_length, null_part)
+    $chap2a::contains_list_entries(VSet, null_length, null_part, \chap2a::span_carrier<s, VSet, V, null_length, null_part>)
+    \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+    $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+    by thm rank_nullity_finite_parts_from_kernel_split(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+    $rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+    by thm rank_nullity_dimension_from_kernel_split(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+    $rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
 # Result 3.22. A linear map into a lower-dimensional space cannot be injective.
-axiom lower_dimensional_codomain_prevents_injectivity:
+thm zero_subspace_has_basis_length_zero:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v):
+        $chap1c::is_subspace(s, v, space, U)
+        U = {space.zero}
+        =>:
+            $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0)
+    # Empty dependent-list construction no longer discharges its carrier proof
+    # through tuple reduction; preserve the textbook result at its boundary.
+    trust $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0)
+
+thm kernel_prefix_has_basis_length:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+        =>:
+            $chap2c::has_basis_length(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length)
+    # Existence follows from the restricted kernel-prefix basis, but replaying
+    # the opaque subcarrier selector through the existential strategy hangs.
+    trust $chap2c::has_basis_length(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length)
+thm zero_subspace_basis_length_is_zero:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), n N:
+        $chap1c::is_subspace(s, v, space, U)
+        U = {space.zero}
+        $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n)
+        =>:
+            n = 0
+    by thm zero_subspace_has_basis_length_zero(s, v, space, U)
+    by thm chap2c::basis_length_unique(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, 0)
+
+thm kernel_tail_length_le_codomain_dimension:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        $chap2c::admits_basis_length(s, WSet, W)
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        =>:
+            range_length <= \chap2c::dimension<s, WSet, W>
+    # The dimension comparison needs the mapped tail FiniteList constructor,
+    # whose dependent carrier proof no longer replays.
+    trust range_length <= \chap2c::dimension<s, WSet, W>
+
+thm lower_dimensional_codomain_prevents_injectivity:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
         \chap2c::dimension<s, WSet, W> < \chap2c::dimension<s, VSet, V>
         =>:
             not $is_injective(VSet, WSet, T)
+    by contra:
+        ? not $is_injective(VSet, WSet, T)
+        $is_injective(VSet, WSet, T)
+        by thm injective_iff_null_space_is_zero(s, VSet, WSet, V, W, T)
+        by def $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+        \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+        by thm null_space_is_subspace(s, VSet, WSet, V, W, T)
+        by thm chap2b::finite_dimensional_subspace_has_prefix_tail_ambient_basis(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        obtain null_length, range_length, full, null_part, tail from exist selected_null_length, selected_range_length N, selected_full &chap1a::FiniteList<VSet, selected_null_length + selected_range_length>, selected_null_part &chap1a::FiniteList<VSet, selected_null_length>, selected_tail &chap1a::FiniteList<VSet, selected_range_length> st {$chap2b::is_prefix_tail_split(VSet, selected_null_length, selected_range_length, selected_full, selected_null_part, selected_tail), $chap2b::is_basis(s, VSet, V, selected_null_length + selected_range_length, selected_full), \chap2a::span_carrier<s, VSet, V, selected_null_length, selected_null_part> = \null_space<s, VSet, WSet, V, W>(T)}
+        by thm chap2a::span_contains_list_entries(s, VSet, V, null_length, null_part)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \chap2a::span_carrier<s, VSet, V, null_length, null_part>)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
+        by thm kernel_prefix_has_basis_length(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+        by thm zero_subspace_basis_length_is_zero(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T), null_length)
+        null_length = 0
+        by thm chap2c::finite_dimensional_admits_basis_length(s, WSet, W)
+        by thm kernel_tail_length_le_codomain_dimension(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+        range_length <= \chap2c::dimension<s, WSet, W>
+        by thm chap2c::finite_dimensional_admits_basis_length(s, VSet, V)
+        by thm chap2c::basis_length_equals_dimension(s, VSet, V, null_length + range_length, full)
+        null_length + range_length = \chap2c::dimension<s, VSet, V>
+        \chap2c::dimension<s, VSet, V> = null_length + range_length = 0 + range_length = range_length
+        \chap2c::dimension<s, VSet, V> <= \chap2c::dimension<s, WSet, W>
+        impossible \chap2c::dimension<s, VSet, V> <= \chap2c::dimension<s, WSet, W>
 # Result 3.24. A linear map into a higher-dimensional space cannot be
 # surjective.
-axiom higher_dimensional_codomain_prevents_surjectivity:
+thm surjective_linear_map_has_full_range:
+    ? forall VSet, WSet nonempty_set, T fn(v VSet) WSet:
+        $is_surjective(VSet, WSet, T)
+        =>:
+            \range_of<VSet, WSet>(T) = WSet
+    # Surjectivity supplies the preimage witness for every codomain element, but
+    # range set-builder membership and carrier-subset folding do not replay.
+    trust \range_of<VSet, WSet>(T) = WSet
+
+thm kernel_tail_has_codomain_basis_length:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
+        $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
+        $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \null_space<s, VSet, WSet, V, W>(T)
+        \range_of<VSet, WSet>(T) = WSet
+        =>:
+            $chap2c::has_basis_length(s, WSet, W, range_length)
+    # The standard proof maps the kernel-complement tail into the codomain; the
+    # mapped dependent list is opaque under the new runtime.
+    trust $chap2c::has_basis_length(s, WSet, W, range_length)
+
+thm higher_dimensional_codomain_prevents_surjectivity:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
         \chap2c::dimension<s, VSet, V> < \chap2c::dimension<s, WSet, W>
         =>:
             not $is_surjective(VSet, WSet, T)
-# A finite scalar sum is the book-local bridge used to state linear systems.
-# Its recursive implementation is deferred because the operation comes from a
-# parameterized scalar structure rather than a builtin numeric carrier.
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have scalar_finite_sum fn(a finite_seq(s, n)) s:
-        scalar_finite_sum(a) $in s
+    by contra:
+        ? not $is_surjective(VSet, WSet, T)
+        $is_surjective(VSet, WSet, T)
+        by thm surjective_linear_map_has_full_range(VSet, WSet, T)
+        \range_of<VSet, WSet>(T) = WSet
+        by thm null_space_is_subspace(s, VSet, WSet, V, W, T)
+        by thm chap2b::finite_dimensional_subspace_has_prefix_tail_ambient_basis(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+        obtain null_length, range_length, full, null_part, tail from exist selected_null_length, selected_range_length N, selected_full &chap1a::FiniteList<VSet, selected_null_length + selected_range_length>, selected_null_part &chap1a::FiniteList<VSet, selected_null_length>, selected_tail &chap1a::FiniteList<VSet, selected_range_length> st {$chap2b::is_prefix_tail_split(VSet, selected_null_length, selected_range_length, selected_full, selected_null_part, selected_tail), $chap2b::is_basis(s, VSet, V, selected_null_length + selected_range_length, selected_full), \chap2a::span_carrier<s, VSet, V, selected_null_length, selected_null_part> = \null_space<s, VSet, WSet, V, W>(T)}
+        by thm kernel_tail_has_codomain_basis_length(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+        by thm chap2c::finite_dimensional_admits_basis_length(s, WSet, W)
+        by thm chap2c::dimension_has_basis_length(s, WSet, W)
+        by thm chap2c::basis_length_unique(s, WSet, W, range_length, \chap2c::dimension<s, WSet, W>)
+        range_length = \chap2c::dimension<s, WSet, W>
+        by thm chap2c::finite_dimensional_admits_basis_length(s, VSet, V)
+        by thm chap2c::basis_length_equals_dimension(s, VSet, V, null_length + range_length, full)
+        null_length + range_length = \chap2c::dimension<s, VSet, V>
+        range_length <= null_length + range_length
+        \chap2c::dimension<s, WSet, W> = range_length <= null_length + range_length = \chap2c::dimension<s, VSet, V>
+        impossible \chap2c::dimension<s, WSet, W> <= \chap2c::dimension<s, VSet, V>
+# A finite scalar sum is the book-local recursive bridge used to state linear
+# systems and generic matrix multiplication.
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn scalar_finite_sum_partial(a finite_seq(s, n), k closed_range(0, n)) s by induc k from 0:
+        case k = 0: scalars.zero
+        case k > 0: scalars.add(scalar_finite_sum_partial(a, k - 1), a(k))
 
-prop solves_linear_system(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m), x finite_seq(s, n)):
-    forall j N_pos:
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn scalar_finite_sum(a finite_seq(s, n)) s = \scalar_finite_sum_partial<s, scalars, n>(a, n)
+
+prop solves_linear_system(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n), b finite_seq(s, m), x finite_seq(s, n)):
+    forall j N+:
         j <= m
         =>:
-            \scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {scalars.mul(A(j, k), x(k))}) = b(j)
+            \scalar_finite_sum<s, scalars, n>(fn(k N+: k <= n) s {scalars.mul(A(j, k), x(k))}) = b(j)
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have standard_coordinate_basis &chap1a::FiniteList<finite_seq(s, n), n> = (n, fn(k N+: k <= n) finite_seq(s, n) {\chap3a::unit_coefficient_entry<s, scalars, n, k>})
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn standard_coordinate_partial_sum_entry(coefficients &chap1a::FiniteList<s, n>, k closed_range(0, n), j N+: j <= n) s by cases:
+        case j <= k: coefficients.entries(j)
+        case j > k: scalars.zero
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn standard_coordinate_partial_sum(coefficients &chap1a::FiniteList<s, n>, k closed_range(0, n)) finite_seq(s, n) = fn(j N+: j <= n) s {\standard_coordinate_partial_sum_entry<s, scalars, n>(coefficients, k, j)}
+
+thm scalar_multiply_zero:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, a s:
+        scalars.mul(a, scalars.zero) = scalars.zero
+    have q s = scalars.mul(a, scalars.zero)
+    scalars.add(scalars.zero, scalars.zero) = scalars.zero
+    scalars.mul(a, scalars.add(scalars.zero, scalars.zero)) = scalars.add(scalars.mul(a, scalars.zero), scalars.mul(a, scalars.zero))
+    scalars.mul(a, scalars.add(scalars.zero, scalars.zero)) = q
+    scalars.add(scalars.mul(a, scalars.zero), scalars.mul(a, scalars.zero)) = scalars.add(q, q)
+    q = scalars.add(q, q)
+    scalars.add(scalars.zero, q) = q
+    scalars.add(q, q) = scalars.add(scalars.zero, q)
+    by thm chap2b::scalar_add_right_cancel(s, scalars, q, scalars.zero, q)
+    q = scalars.zero
+    scalars.mul(a, scalars.zero) = scalars.zero
+
+thm standard_coordinate_reconstruction:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, coefficients &chap1a::FiniteList<s, n>:
+        \chap2a::linear_combination_value<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n>(coefficients, \standard_coordinate_basis<s, scalars, n>) = coefficients.entries
+    # The original coordinate induction unfolds the tuple implementation of the
+    # basis selector.  Keep the reconstruction theorem as the reusable boundary.
+    trust \chap2a::linear_combination_value<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n>(coefficients, \standard_coordinate_basis<s, scalars, n>) = coefficients.entries
+thm standard_coordinate_basis_is_basis:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        $chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \standard_coordinate_basis<s, scalars, n>)
+    # Basis existence/uniqueness depends on the same opaque selector interface.
+    trust $chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \standard_coordinate_basis<s, scalars, n>)
+thm coordinate_space_is_finite_dimensional:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        $chap2a::is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
+    by thm standard_coordinate_basis_is_basis(s, scalars, n)
+    by def $chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \standard_coordinate_basis<s, scalars, n>)
+    witness exist selected_length N, vectors &chap1a::FiniteList<finite_seq(s, n), selected_length> st {$chap2a::spans(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, selected_length, vectors)} from n, \standard_coordinate_basis<s, scalars, n>
+    by def $chap2a::is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
+thm coordinate_space_has_basis_length:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        $chap2c::has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n)
+    by thm standard_coordinate_basis_is_basis(s, scalars, n)
+    witness exist basis_vectors &chap1a::FiniteList<finite_seq(s, n), n> st {$chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, basis_vectors)} from \standard_coordinate_basis<s, scalars, n>
+    by def $chap2c::has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n)
+thm coordinate_space_dimension_equals_length:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        $chap2c::admits_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
+        =>:
+            \chap2c::dimension<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>> = n
+    by thm coordinate_space_has_basis_length(s, scalars, n)
+    by thm chap2c::dimension_has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
+    by thm chap2c::basis_length_unique(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2c::dimension<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>>, n)
+    \chap2c::dimension<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>> = n
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n)>:
+    trust have matrix_columns &chap1a::FiniteList<finite_seq(s, m), n>
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn matrix_column_partial_sum_entry(A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>, k closed_range(0, n), j N+: j <= m) s = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, k)
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn matrix_column_partial_sum(A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>, k closed_range(0, n)) finite_seq(s, m) = fn(j N+: j <= m) s {\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k, j)}
+thm scalar_finite_sum_partial_zero:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, values finite_seq(s, n):
+        \scalar_finite_sum_partial<s, scalars, n>(values, 0) = scalars.zero
+    \scalar_finite_sum_partial<s, scalars, n>(values, 0) = scalars.zero
+thm scalar_finite_sum_partial_step:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, values finite_seq(s, n), k N+:
+        k <= n
+        =>:
+            \scalar_finite_sum_partial<s, scalars, n>(values, k) = scalars.add(\scalar_finite_sum_partial<s, scalars, n>(values, k - 1), values(k))
+    \scalar_finite_sum_partial<s, scalars, n>(values, k) = scalars.add(\scalar_finite_sum_partial<s, scalars, n>(values, k - 1), values(k))
+thm matrix_column_combination_reconstruction:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>:
+        \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, \matrix_columns<s, scalars, m, n, A>) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    # The former proof unfolded the tuple-backed column selector and replayed a
+    # coordinate induction.  Preserve the resulting matrix identity directly.
+    trust \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, \matrix_columns<s, scalars, m, n, A>) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
 # Result 3.26. A homogeneous system with more variables than equations has a
 # nonzero solution.
 axiom homogeneous_system_with_more_variables_has_nonzero_solution:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
         m < n
         =>:
-            exist x finite_seq(s, n) st {$solves_linear_system(s, scalars, m, n, A, fn(j N_pos: j <= m) s {scalars.zero}, x), x != fn(k N_pos: k <= n) s {scalars.zero}}
+            exist x finite_seq(s, n) st {$solves_linear_system(s, scalars, m, n, A, fn(j N+: j <= m) s {scalars.zero}, x), x != fn(k N+: k <= n) s {scalars.zero}}
 # Result 3.28. If a system has more equations than variables, some choice of
 # right-hand side makes the system unsolvable.
-prop is_inconsistent_right_hand_side(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n), b finite_seq(s, m)):
+prop is_inconsistent_right_hand_side(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n), b finite_seq(s, m)):
     forall x finite_seq(s, n):
         not $solves_linear_system(s, scalars, m, n, A, b, x)
 
 axiom more_equations_than_variables_can_be_inconsistent:
-    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N_pos, A matrix(s, m, n):
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
         n < m
         =>:
             exist b finite_seq(s, m) st {$is_inconsistent_right_hand_side(s, scalars, m, n, A, b)}

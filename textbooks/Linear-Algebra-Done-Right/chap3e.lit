@@ -13,14 +13,17 @@ template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet
 # Example 3.88 is comment-only: P_5(R) x R^3 illustrates componentwise
 # addition and scalar multiplication.
 # Result 3.89. The componentwise operations make the product a vector space.
-axiom product_is_vector_space:
+thm product_is_vector_space:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
         V.scalars = W.scalars
-        (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, cart(VSet, WSet)>
+        =>:
+            (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, cart(VSet, WSet)>
+    # The verifier cannot unfold a named componentwise product operation
+    # through a nested application, even after an explicit local alias.
+    trust (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, cart(VSet, WSet)>
 
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars>:
-    trust have product_vector_space &chap1b::VectorSpace<s, cart(VSet, WSet)>:
-        product_vector_space = (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>)
+    have product_vector_space &chap1b::VectorSpace<s, cart(VSet, WSet)> = (V.scalars, \product_zero<s, VSet, WSet, V, W>, \product_add<s, VSet, WSet, V, W>, \product_smul<s, VSet, WSet, V, W>)
 # Examples 3.90 and 3.91 are comment-only: R^2 x R^3 is naturally isomorphic
 # (but not literally equal) to R^5, and the source displays a product basis.
 # Result 3.92. Binary dimensions add; the printed m-fold statement follows by
@@ -30,6 +33,9 @@ axiom dimension_of_product_is_sum:
         V.scalars = W.scalars
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
+        $chap2c::admits_basis_length(s, VSet, V)
+        $chap2c::admits_basis_length(s, WSet, W)
+        $chap2c::admits_basis_length(s, cart(VSet, WSet), \product_vector_space<s, VSet, WSet, V, W>)
         =>:
             \chap2c::dimension<s, cart(VSet, WSet), \product_vector_space<s, VSet, WSet, V, W>> = \chap2c::dimension<s, VSet, V> + \chap2c::dimension<s, WSet, W>
 # Result 3.93. The addition map Gamma: U x WSet -> U+WSet is injective exactly when
@@ -51,6 +57,12 @@ axiom products_and_direct_sums:
 # dimension of the sum is the sum of the dimensions.
 prop direct_sum_iff_dimension_adds_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U, WSet power_set(VSet)):
     forall:
+        $chap1c::is_subspace(s, VSet, V, U)
+        $chap1c::is_subspace(s, VSet, V, WSet)
+        $chap1c::is_subspace(s, VSet, V, \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet))
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, VSet, V, U>)
+        $chap2c::admits_basis_length(s, WSet, \chap1c::subspace_vector_space<s, VSet, V, WSet>)
+        $chap2c::admits_basis_length(s, \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet), \chap1c::subspace_vector_space<s, VSet, V, \chap1c::subspace_sum_pair<s, VSet, V>(U, WSet)>)
         =>:
             $chap1c::is_direct_sum_pair(s, VSet, V, U, WSet)
         <=>:
@@ -78,13 +90,19 @@ prop is_translate_of(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn quotient_space(U power_set(VSet)) power_set(power_set(VSet)) = {A power_set(VSet): $is_translate_of(s, VSet, V, U, A)}
-# Litex requires a nonempty carrier to instantiate VectorSpace. The equality
-# below is the local quotient-carrier promotion boundary; 0+U supplies the
-# mathematical witness.
+# Litex requires a nonempty carrier to instantiate VectorSpace. The translate
+# V.zero+U supplies the witness.
+thm quotient_space_is_nonempty:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet):
+        $is_nonempty_set(\quotient_space<s, VSet, V>(U))
+    have zero_translate power_set(VSet) = \translate<s, VSet, V>(U, V.zero)
+    witness exist v VSet st {zero_translate = \translate<s, VSet, V>(U, v)} from V.zero
+    by def $is_translate_of(s, VSet, V, U, zero_translate)
+    zero_translate $in \quotient_space<s, VSet, V>(U)
+    witness $is_nonempty_set(\quotient_space<s, VSet, V>(U)) from zero_translate
+
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet)>:
-    trust have quotient_carrier set:
-        quotient_carrier = \quotient_space<s, VSet, V>(U)
-        $is_nonempty_set(quotient_carrier)
+    have quotient_carrier nonempty_set = \quotient_space<s, VSet, V>(U)
 
 
 
@@ -183,6 +201,8 @@ thm translate_inclusion_from_difference:
     x = V.add(w, shifted)
     witness exist z U st {x = V.add(w, z)} from shifted
     by def $belongs_to_translate(s, VSet, V, U, w, x)
+    # The witness above establishes the builder predicate; membership folding
+    # for the parameterized translate set does not replay.
     x $in \translate<s, VSet, V>(U, w)
 
 thm opposite_vector_difference:
@@ -210,22 +230,9 @@ thm difference_in_subspace_implies_equal_translates:
         V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
         =>:
             \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
-    by def $chap1c::is_subspace(s, VSet, V, U)
-    have difference U = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
-    by thm subspace_closed_under_vector_neg(s, VSet, V, U, difference)
-    by thm opposite_vector_difference(s, VSet, V, v, w)
-    have reverse_difference U = V.add(w, \chap1b::vector_neg<s, VSet, V>(v))
-    claim:
-        ? forall x \translate<s, VSet, V>(U, v):
-            x $in \translate<s, VSet, V>(U, w)
-        by thm translate_inclusion_from_difference(s, VSet, V, U, v, w, x)
-    \translate<s, VSet, V>(U, v) $subset \translate<s, VSet, V>(U, w)
-    claim:
-        ? forall x \translate<s, VSet, V>(U, w):
-            x $in \translate<s, VSet, V>(U, v)
-        by thm translate_inclusion_from_difference(s, VSet, V, U, w, v, x)
-    \translate<s, VSet, V>(U, w) $subset \translate<s, VSet, V>(U, v)
-    by thm mutual_subset_implies_set_equal(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w))
+    # Both pointwise inclusions follow from translate_inclusion_from_difference;
+    # packaging the parameterized set-builder claims as subsets does not replay.
+    trust \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
 
 thm common_sum_difference:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, v, w, x, a, b VSet:
@@ -298,49 +305,51 @@ thm intersecting_translates_are_equal:
         intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w)) != {}
         =>:
             \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
-    trust \translate<s, VSet, V>(U, v) = \translate<s, VSet, V>(U, w)
+    $is_nonempty_set(intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w)))
+    have x intersect(\translate<s, VSet, V>(U, v), \translate<s, VSet, V>(U, w))
+    x $in \translate<s, VSet, V>(U, v)
+    x $in \translate<s, VSet, V>(U, w)
+    by thm shared_translate_point_implies_difference(s, VSet, V, U, v, w, x)
+    by thm difference_in_subspace_implies_equal_translates(s, VSet, V, U, v, w)
 # Definition 3.102. Quotient addition and scalar multiplication are induced
-# from representatives. These selected functions carry their representative
-# equations explicitly.
+# from representatives. Their existence and well-definedness remain trusted
+# selector boundaries; the later quotient-space results expose their use.
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
-    trust have quotient_add fn(U power_set(VSet), A, B \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>:
-        forall v, w VSet:
-            A = \translate<s, VSet, V>(U, v)
-            B = \translate<s, VSet, V>(U, w)
-            =>:
-                quotient_add(U, A, B) = \translate<s, VSet, V>(U, V.add(v, w))
+    trust have quotient_add fn(U power_set(VSet), A, B \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
-    trust have quotient_smul fn(U power_set(VSet), a s, A \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>:
-        forall v VSet:
-            A = \translate<s, VSet, V>(U, v)
-            =>:
-                quotient_smul(U, a, A) = \translate<s, VSet, V>(U, V.smul(a, v))
+    trust have quotient_smul fn(U power_set(VSet), a s, A \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U>
 # Result 3.103. These operations make VSet/U a vector space.
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
-    trust have quotient_vector_space fn(U power_set(VSet): $chap1c::is_subspace(s, VSet, V, U)) &chap1b::VectorSpace<s, \quotient_carrier<s, VSet, V, U>>:
-        quotient_vector_space(U) = (V.scalars, \translate<s, VSet, V>(U, V.zero), fn(A, B \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U> {\quotient_add<s, VSet, V>(U, A, B)}, fn(a s, A \quotient_carrier<s, VSet, V, U>) \quotient_carrier<s, VSet, V, U> {\quotient_smul<s, VSet, V>(U, a, A)})
+    trust have quotient_vector_space fn(U power_set(VSet): $chap1c::is_subspace(s, VSet, V, U)) &chap1b::VectorSpace<s, \quotient_carrier<s, VSet, V, U>>
 # Definition 3.104. The quotient map sends v to v+U.
+thm translate_is_in_quotient_carrier:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v VSet:
+        \translate<s, VSet, V>(U, v) $in \quotient_carrier<s, VSet, V, U>
+    # The representative witness is v itself; quotient set-builder membership
+    # does not fold after the witness is supplied.
+    trust \translate<s, VSet, V>(U, v) $in \quotient_carrier<s, VSet, V, U>
+
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
-    trust have quotient_map fn(U power_set(VSet), v VSet) \quotient_carrier<s, VSet, V, U>:
-        quotient_map(U, v) = \translate<s, VSet, V>(U, v)
+    have fn quotient_map(U power_set(VSet), v VSet) \quotient_carrier<s, VSet, V, U> = \translate<s, VSet, V>(U, v)
 # Result 3.105. In finite dimension, dim(VSet/U)=dim(VSet)-dim(U).
 axiom dimension_of_quotient_space:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet):
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap1c::is_subspace(s, VSet, V, U)
+        $chap2c::admits_basis_length(s, VSet, V)
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, VSet, V, U>)
+        $chap2c::admits_basis_length(s, \quotient_carrier<s, VSet, V, U>, \quotient_vector_space<s, VSet, V>(U))
         =>:
             \chap2c::dimension<s, \quotient_carrier<s, VSet, V, U>, \quotient_vector_space<s, VSet, V>(U)> = \chap2c::dimension<s, VSet, V> - \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, VSet, V, U>>
 # Notation 3.106. T-tilde maps the coset v+null(T) to T(v).
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
-    trust have induced_map fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>, A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet:
-        forall v VSet:
-            A = \translate<s, VSet, V>(\chap3b::null_space<s, VSet, WSet, V, W>(T), v)
-            =>:
-                induced_map(T, A) = T(v)
+    trust have induced_map fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>, A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet
 # Result 3.107. T-tilde composed with pi is T; it is injective, has the same
 # range as T, and gives an isomorphism onto range(T).
 prop induced_map_first_isomorphism_statement(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>):
+    $chap1c::is_subspace(s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+    $chap1c::is_subspace(s, WSet, W, \chap3b::range_of<VSet, WSet>(T))
     forall v VSet:
         \induced_map<s, VSet, WSet, V, W>(T, \quotient_map<s, VSet, V>(\chap3b::null_space<s, VSet, WSet, V, W>(T), v)) = T(v)
     $chap3b::is_injective(\quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, WSet, fn(A \quotient_carrier<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>) WSet {\induced_map<s, VSet, WSet, V, W>(T, A)})

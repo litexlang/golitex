@@ -9,232 +9,210 @@
 # than the source's admitted illustration. This is a full number-theory
 # development, not an executable assumption.
 
-# Chapter 4 — Sets and Functions; source definition inverse and theorem
-# inverse_spec.
-# Missing mathematics: construct the source's total choice-with-default inverse
-# on arbitrary carriers and prove its positive-preimage specification. This is
-# genuine arbitrary choice, not the unique inverse available for an injective
-# function.
+# Chapter 5, Section 5.1 — Irrational roots and prime multiplicity.
+# The callable prime-factor exponent and all named source theorems are present.
+# The remaining mathematics is existence of the exponent function, its product
+# and power laws, and proofs of the coprime-square and exponent-divisibility
+# conclusions currently stated with trust.
 
-# Chapter 4 — Sets and Functions; source section Schroeder-Bernstein.
-# Missing mathematics: construct sbAux by recursive restricted images, define
-# sbSet and the piecewise sbFun using the inverse branch, prove the right-
-# inverse lemma and the injective and surjective branches, and assemble the
-# resulting bijection. A future implementation must preserve these callable
-# constructions rather than replacing them by proposition wrappers.
+# Chapter 5, Section 5.2 — MyNat.
+# The separate carrier, constructors, induction interface, recursive addition
+# and multiplication, computation equations, and eight named theorems are
+# present. Their genuine inductive construction and structural-induction
+# proofs remain to replace the localized trusts.
 
-# Chapter 5 — Elementary Number Theory; source section Irrational Roots.
-# Missing mathematics: prove the arbitrary-prime coprime-square obstruction;
-# construct the callable prime_factor_exponent; prove factorization_mul,
-# factorization_pow, prime_factorization_self, the parity obstruction, and
-# power_equation_exponent_divisible. This requires a decreasing-division
-# definition and its multiplicity laws.
+# Chapter 5, Section 5.3 — Primes congruent to 3 modulo 4.
+# Both source theorem statements are present. The strong-induction
+# factorization proof and the Euclid-style unboundedness proof remain.
 
-# Chapter 5 — Elementary Number Theory; source construction MyNat and the
-# theorems zero_add, succ_add, add_comm, add_assoc, mul_add, zero_mul,
-# succ_mul, and mul_comm.
-# Missing mathematics: construct the source's genuinely separate Peano carrier,
-# its zero and successor constructors, its induction principle, and recursive
-# addition and multiplication. Identifying MyNat with builtin N would erase
-# the mathematical construction and is therefore not an implementation.
+# Chapter 6, Section 6.1 — finite_product_ne_zero.
+# The exact theorem is present; its finite-set induction proof remains.
 
-# Chapter 5 — Elementary Number Theory; source theorems
-# exists_prime_factor_mod_4_eq_3 and primes_mod_4_eq_3_infinite.
-# Missing mathematics: carry out the strong-induction factorization preserving
-# residue 3 modulo 4, then use the source's Euclid-style number to prove these
-# primes are unbounded.
+# Chapter 6, Section 6.2 — triangle_card and double_counting.
+# The triangle carrier and both theorem statements are present. The finite
+# counting proofs, including the incidence-sum double count, remain.
 
-# Chapter 6 — Discrete Mathematics; source theorem finite_product_ne_zero.
-# Missing mathematics: prove by finite-set induction that a product of natural
-# numbers is nonzero when every factor is nonzero.
+# Chapter 6, Section 6.3 — lists, binary trees, and propositional formulas.
+# All source-facing carriers, constructors, recursive callables, equations, and
+# named theorems are present. Generic recursion/induction constructions and the
+# structural proofs currently represented by trust remain to be supplied.
 
-# Chapter 6 — Discrete Mathematics; source theorems triangle_card and
-# double_counting.
-# Missing mathematics: count the ordered pairs 0 <= idx < j <= n to obtain
-# n * (n + 1) / 2, and prove the double-counting inequality by summing the row
-# and column fiber cardinalities of a finite relation.
+# Chapter 7, Section 7.2 — permutation group.
+# The equivalence operations, nonempty carrier, and callable Group object are
+# present. The remaining proof is the exact Group record membership, especially
+# associativity as equality of composed function records.
 
-# Chapter 6 — Discrete Mathematics; source list definitions append and map.
-# Missing mathematics: select the recursive append and map functions from the
-# ListCore interfaces.
+# Chapter 7, Section 7.3 — Gaussian integers.
+# The callable commutative-ring and Euclidean-domain objects, centered integer
+# operations, Gaussian quotient/remainder/rank, and source-facing laws are
+# present. Coordinate ring laws, centered decomposition and bound, Gaussian
+# remainder estimate, and the final Euclidean-domain law proof remain.
 
-# Chapter 6 — Discrete Mathematics; source construction BinTree, recursive
-# functions size and depth, and theorem BinTree.size_le.
-# Missing mathematics: construct the inductive binary-tree carrier and its
-# recursion principle, define size and depth, and prove size <= 2^depth - 1 by
-# structural induction.
+# Chapter 8, Section 8.1 — hierarchy, scalar actions, and modules.
+# Ring addition commutativity is proved, and the self-module, natural/integer
+# scalar actions, integer module, and product additive monoid are callable.
+# Generic recursion, module membership, and componentwise product laws remain
+# to replace their localized trusts.
 
-# Chapter 6 — Discrete Mathematics; source construction PropForm, recursive
-# functions eval, vars, and subst, and theorems eval_eq_eval,
-# subst_eq_of_not_mem_vars, and subst_eval_eq.
-# Missing mathematics: construct propositional formulas with their induction
-# and recursion principles, define these three recursive functions, and prove
-# the agreement and substitution theorems.
-
-# Chapter 7 — Structures; source definition permGroup.
-# Missing mathematics: prove associativity, identity, and inverse laws for
-# reversed composition of self-equivalences, and assemble these operations into
-# the permutation-group object.
-
-# Chapter 7 — Structures; source Gaussian-integer commutative-ring instance.
-# Missing mathematics: prove the additive and multiplicative ring laws for the
-# coordinatewise Gaussian operations and assemble the commutative-ring object.
-
-# Chapter 7 — Structures; source centered integer remainder and Gaussian
-# Euclidean-domain construction.
-# Missing mathematics: prove the centered quotient-remainder identity and the
-# half-divisor bound, use those bounds to show that a nonzero Gaussian divisor
-# gives a strictly smaller remainder norm, and assemble the resulting quotient,
-# remainder, and rank into the Gaussian Euclidean-domain object.
-
-# Chapter 8 — Hierarchies; source Ring3 additive-commutativity theorem.
-# Missing mathematics: derive commutativity of addition from the source's ring
-# axioms.
-
-# Chapter 8 — Hierarchies; source selfModule, nsmul1, zsmul1, and abGrpModule.
-# Missing mathematics: construct generic natural and integer scalar
-# multiplication by recursion on the scalar, prove their defining and module
-# laws, and assemble the self-module and canonical integer-module objects.
-
-# Chapter 8 — Hierarchies; source product AddMonoid4 instance.
-# Missing mathematics: construct the componentwise natural-scalar action on a
-# product and verify the AdditiveMonoidWithNSmul laws.
-
-# Chapter 8 — Hierarchies; source quotient projection, quotient multiplication,
-# and quotient monoid.
-# Missing mathematics: prove that the class projection lands in the quotient,
-# that multiplication of representatives is independent of representatives,
-# and that the induced operation and identity form a monoid.
+# Chapter 8, Section 8.3 — quotient monoid.
+# The projection, nonempty quotient carrier, quotient multiplication and
+# representative equation, identity, and callable Monoid object are present.
+# Projection membership, representative independence, associativity, and
+# identity proofs remain.
 
 # Chapter 9 — Groups and Rings; source group normalization, homomorphism,
 # subgroup, finite-group, and conjugation results.
-# Missing mathematics: derive inverse uniqueness and the standard group
-# normalization laws; prove group homomorphisms preserve identity and inverse;
-# prove closure and membership results for subgroup map, comap, kernel, range,
-# closure, and join; and carry out the source Lagrange, Sylow, subgroup-
-# cardinality, coprime-intersection, and conjugation arguments. The carrier-
-# first group, homomorphism, subgroup, and conjugate-set interfaces are not a
-# substitute for these missing results.
+# The source-facing normalization, homomorphism, subgroup-closure, Lagrange,
+# Sylow, subgroup-cardinality, coprime-intersection, and conjugation statements
+# are present. Missing mathematics: replace their localized trusts with the
+# inverse-uniqueness, closure, counting, and finite-group proofs.
 
 # Chapter 9 — Groups and Rings; source permutation group, free group, and
 # presented-group constructions.
-# Missing mathematics: construct inverse permutations and prove the permutation
-# group laws; construct reduced words and the free-group universal lift; and
-# construct the quotient by relations used for the presented-group example.
+# Callable free-group and presented-group carriers, generators, and universal
+# lifts are present. Missing mathematics: construct reduced words, relation
+# quotients, inverse permutations, and prove their law and computation
+# packages instead of the localized trusts.
 
 # Chapter 9 — Groups and Rings; source actions, orbit-stabilizer, cosets, and
 # quotient-group theorems.
-# Missing mathematics: prove Cayley's map injective, the orbit-stabilizer and
-# quotient-times-subgroup equivalences, representative independence of quotient
-# multiplication and inverse, the quotient group laws and lift, and the group
-# first-isomorphism theorem.
+# Cayley injectivity, orbit-stabilizer, quotient-group carrier, projection,
+# operations, Group object, representative multiplication, and universal lift
+# are present. Missing mathematics: discharge the action/counting,
+# representative-independence, group-law, lift, and first-isomorphism trusts.
 
 # Chapter 9 — Groups and Rings; source generic ring identities, units, quotient
 # rings, ideal products, first isomorphism, and Chinese remainder theory.
-# Missing mathematics: construct unit inverse/group/map objects, prove quotient-
-# ring operation and lift well-definedness, ideal-product containments,
-# quotient-kernel equivalences, and the finite Chinese remainder induction and
-# isomorphism.
+# Unit multiplication, inverse selection, Group membership, and the restriction
+# of ring homomorphisms to units are checked. Quotient-ring operations and
+# CommutativeRing, ideal product, first-isomorphism map, and Chinese maps are
+# callable. Missing mathematics: prove the quotient well-definedness,
+# ideal-product, kernel/range, and finite CRT law packages.
 
 # Chapter 9 — Groups and Rings; source polynomial construction and results.
-# Missing mathematics: implement X, constants, polynomial addition and
-# multiplication by finite coefficient sums, composition, evaluation, natural
-# degree, roots, degree laws, and the bivariate circle example.
+# X, constants, addition, multiplication, powers, evaluation, degree, and roots
+# are callable. X, constants, and pointwise addition now have checked
+# finite-support constructions. Missing mathematics: implement convolution,
+# powers, finite evaluation, and degree selection and replace the degree/root
+# trusts; composition, natural degree refinements, and the bivariate circle
+# proof remain absent.
 
-# Chapter 10 — Linear Algebra; source dependent products and direct sums.
-# Missing mathematics: construct the dependent product and finite-support
-# direct-sum carriers, inclusions and projections, their universal maps, and the
-# finite-index equivalence.
+# Chapter 10 — Linear Algebra; remaining source vector-space constructions.
+# The linear-equivalence inverse and its two inverse equations are checked, as
+# is pointwise composition. Binary product structure, pairing/cpairing
+# linearity, and singleton-supported direct-sum inclusions are checked. Indexed
+# products, finite-support direct sums, and a universal lift are present.
+# Missing mathematics: implement the finite-sum universal lift, add the
+# structured scalar-to-endomorphism map, dependent heterogeneous carriers,
+# projections, parallel product map, and finite-index equivalence.
 
 # Chapter 10 — Linear Algebra; source kernel, range, quotient-space, and first-
 # isomorphism results.
-# Missing mathematics: prove the injective-kernel and surjective-range
-# equivalences; prove quotient projection typing and representative-independent
-# addition and scalar multiplication; construct compatible lifts; and prove the
-# quotient-by-kernel equivalence with the range.
+# The quotient carrier, its nonemptiness, the typed canonical projection, and
+# surjectivity of that projection are established. Missing mathematics:
+# selected inherited-subspace and quotient carriers, VectorSpace objects,
+# projections, compatible lift, first-isomorphism map, correspondence map, and
+# internal-direct-sum decomposition are present. Missing mathematics: connect
+# selected refined carriers definitionally to the displayed subspaces/cosets
+# and replace their operation, linearity, decomposition, equivalence, and
+# correspondence trusts.
 
 # Chapter 10 — Linear Algebra; source polynomial endomorphism theory.
-# Missing mathematics: implement finite polynomial evaluation on endomorphisms,
-# construct and characterize minimal and characteristic polynomials, connect
-# roots with eigenvalues, and prove Cayley-Hamilton.
+# Polynomial evaluation on endomorphisms, coprime-kernel intersection,
+# minimal/characteristic polynomial objects, and Cayley-Hamilton are present.
+# Missing mathematics: implement the finite evaluation and polynomial
+# selections, replace their theorem trusts, add kernel-join decomposition, and
+# prove the root/eigenvalue equivalences.
 
 # Chapter 10 — Linear Algebra; source matrix inverse and basis-coordinate
 # constructions.
-# Missing mathematics: select a two-sided matrix inverse from invertibility;
-# construct basis evaluation and coordinate representation, finite linear
-# combinations, Basis.mk and basis-constr, canonical function bases, toMatrix,
-# finite indexed matrix multiplication, and the change-of-basis formula.
+# General multiplication, determinant, inverse, coordinates, and change-of-
+# basis functions are callable. Missing mathematics: implement their finite
+# sums and selections, prove inverse/reconstruction/change-of-basis laws, and
+# add Basis.mk/constr, canonical bases, toMatrix, and determinant invariance.
 
 # Chapter 10 — Linear Algebra; source dimension results.
-# Missing mathematics: select ambient and subspace dimensions from finite
-# bases, prove positivity and finite-index equivalences, the sum/intersection
-# dimension formula and subspace bound, and equinumerosity of arbitrary basis
-# index sets.
+# A finite-dimensional space selects its dimension, index set, and basis.
+# Missing mathematics: replace these selection trusts and prove positivity,
+# finite-index equivalences, sum/intersection formulas, subspace bounds, and
+# equinumerosity of arbitrary basis index sets.
 
 # Chapter 11 — Topology; source filter laws and real-filter limits.
-# Missing mathematics: prove the principal/map/comap equivalences and map/comap
-# composition laws, identify the real at-point filter, and prove the remaining
-# limit-algebra theorems.
+# Principal, atTop(N), map, and comap filter-law promotions, both Tendsto
+# formulations, and real addition/scalar limit laws are checked. Missing
+# mathematics: prove map/comap composition and identify the real at-point
+# filter. Chapter 11 contains no executable trust or axiom declaration.
 
 # Chapter 11 — Topology; source metric-space analysis.
-# Missing mathematics: prove continuity of distance and quadratic examples,
-# closed-set and named closure characterizations, the neighborhood-basis theorems,
-# compact-interval and extreme-value results, compact sets closed,
-# Heine-Cantor, the reverse anchored-to-pairwise Cauchy characterization, the
-# geometric-step criterion, and the Baire theorem. Metric laws, balls,
-# convergence, compactness, Cauchy, completeness, and density interfaces do not
-# yet supply these results.
+# Continuous distance/quadratic composition, closed sequence limits and
+# closure, compact universe/closedness, reverse anchored Cauchy,
+# geometric-step convergence, uniform continuity on compact sets, Baire, and
+# its closed-cover/contains-a-ball consequence are checked. Missing
+# mathematics: prove `closed_unit_interval_metric_compactness_goal` from real
+# completeness or Bolzano–Weierstrass, then prove
+# `compact_metric_continuous_extrema_goal` from real order completeness. These
+# are non-executable goal propositions, not theorem facts.
 
 # Chapter 11 — Topology; source induced/coinduced, separation, extension, and
 # sequential compactness results.
-# Missing mathematics: prove the induced/coinduced comparison and the source
-# coinduced-topology composition iff relating continuity of g from the
-# coinduced topology along f to continuity of g composed with f; then prove
-# Hausdorff uniqueness, regular refinements, dense-set extension,
-# first-countable closure/sequence equivalence, convergent-subsequence result,
-# and finite-open-subcover theorem. The two directions relating pointwise
-# neighborhood continuity to the open-preimage criterion also still need their
-# topological proofs.
+# The induced/coinduced constructions and comparison, changed-topology
+# continuity iff, homogeneous Pi topology, Hausdorff uniqueness, regular/open
+# bases, first-countable closure/sequence equivalence,
+# cluster-point characterization, filter compactness, compact subsequences and
+# images, mapped cluster points, and finite indexed subcovers are checked.
+# Missing mathematics: prove `dense_subset_continuous_extension_goal` using a
+# checked global selection interface and Hausdorff uniqueness/continuity of
+# the selected limits, and support the fully dependent Pi carrier. The
+# dense-extension goal is not published as a theorem fact.
 
 # Chapter 12 — Differential Calculus; source selected derivative and elementary
 # derivative theorems.
-# Missing mathematics: prove uniqueness of an epsilon-defined derivative,
-# construct the total derivative with its differentiable and nondifferentiable
-# laws, supply real sine and pi from a real-analysis library, and prove the sine,
-# sum, fifth-power, and sine-at-pi derivative examples.
+# The total derivative interface, sine/pi background, sine, sum, fifth-power,
+# and sine-at-pi examples are present with localized trusts. Missing
+# mathematics: construct the background objects and replace their theorem
+# trusts.
 
 # Chapter 12 — Differential Calculus; source extrema, Rolle, and mean value
 # theorems.
-# Missing mathematics: derive zero derivative at a local minimum, then follow
-# the source auxiliary-function arguments for Rolle's theorem and the mean
-# value theorem.
+# Zero derivative at a local minimum, Rolle, and mean value are present with
+# localized trusts. Missing mathematics: carry out their one-sided,
+# extreme-value, and auxiliary-function proofs.
 
-# Chapter 12 — Differential Calculus; source norm continuity, finite-
-# dimensional completeness, and operator norm.
-# Missing mathematics: prove the reverse-triangle one-Lipschitz inequality,
-# transfer Cauchy convergence through a finite basis, and construct the operator
-# norm as a supremum with its two characteristic inequalities.
+# Chapter 12 — Differential Calculus; source norm and continuous-linear-map
+# examples, finite-dimensional completeness, operator norm, and uniform
+# boundedness.
+# Norm nonnegativity, the norm triangle inequality, and continuous-linear-map
+# add/smul projections are checked. The remaining named norm laws, induced
+# metric, norm continuity, continuous-linear-map continuity, callable operator
+# norm, its two characteristic
+# inequalities, pointwise/uniform family bounds, natural-number level sets,
+# the shell estimate, and the real-scalar Banach–Steinhaus theorem are present.
+# Missing mathematics: replace the localized continuity/supremum,
+# completeness-transport, closed-level-set, Archimedean-cover, recentering, and
+# shell-to-operator-norm trusts, and transfer completeness through a finite
+# basis.
 
 # Chapter 12 — Differential Calculus; source selected Frechet derivatives,
 # higher derivatives, and inverse function theorem.
-# Missing mathematics: prove derivative uniqueness before selecting fderiv,
+# A callable selected Fréchet derivative and its identification theorem are
+# present. Missing mathematics: prove derivative uniqueness and construction,
 # construct multilinear iterated derivatives and finite-order smoothness, and
 # carry out the quantitative local-inverse construction with its two inverse
 # laws and inverse derivative.
 
 # Chapter 13 — Integration and Measure Theory; source elementary integration.
-# Missing mathematics: construct oriented interval integrals, uniform Riemann
-# sums or an equivalent integrability foundation, logarithm and reciprocal
-# behavior, total real derivatives, and whole-line integrals; then prove the
-# identity and reciprocal formulas, both fundamental theorems of calculus, and
-# the real convolution formula.
+# Callable oriented and whole-line integrals, logarithm, reciprocal, real
+# convolution, the identity/reciprocal formulas, and both fundamental theorems
+# are present. Missing mathematics: construct the analysis-library objects and
+# replace the localized integral and FTC trusts.
 
 # Chapter 13 — Integration and Measure Theory; source extended nonnegative
 # reals and ENNReal-valued measure results.
-# Missing mathematics: construct ENNReal with zero, infinity, order, infinite
-# sums, infima, and conversion to real; specialize the generic countably-
-# additive measure interface; and prove measurable-superset infimum and
-# countable-subadditivity results.
+# The elementary measurable-space closures, generic countable additivity, AE
+# family, and AE/eventually equivalence are present. Missing mathematics:
+# construct ENNReal with zero, infinity, order, infinite sums, infima, and
+# conversion to real; specialize the generic measure interface; and prove
+# measurable-superset infimum and countable-subadditivity results.
 
 # Chapter 13 — Integration and Measure Theory; source Bochner integration and
 # major integration theorems.

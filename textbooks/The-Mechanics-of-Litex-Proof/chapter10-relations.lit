@@ -55,7 +55,7 @@ sketch:
         ? forall x set:
             $rel(x, x)
         x = x
-        $rel(x, x)
+        by def $rel(x, x)
 
     by symmetric_prop:
         ? forall x, y set:
@@ -64,7 +64,7 @@ sketch:
                 $rel(y, x)
         x = y
         y = x
-        $rel(y, x)
+        by def $rel(y, x)
 
     by transitive_prop:
         ? forall x, y, z set:
@@ -73,7 +73,7 @@ sketch:
             =>:
                 $rel(x, z)
         x = y = z
-        $rel(x, z)
+        by def $rel(x, z)
 
     by antisymmetric_prop:
         ? forall x, y set:
@@ -134,6 +134,7 @@ sketch:
             $divides(x, x)
         witness exist k N st {x = x * k} from 1:
             x = x * 1
+        by def $divides(x, x)
 
     # Transitive
     claim:
@@ -146,6 +147,7 @@ sketch:
         obtain k2 from exist k N st {c = b * k}
         witness exist k N st {c = a * k} from k1 * k2:
             c = b * k2 = (a * k1) * k2 = a * (k1 * k2)
+        by def $divides(a, c)
 
     # Antisymmetric
     claim:
@@ -180,7 +182,7 @@ sketch:
         witness exist k N st {2 = 1 * k} from 2:
             2 = 1 * 2
 
-        $divides(1, 2)
+        by def $divides(1, 2)
 
     claim:
         ? not $divides(2, 1)
@@ -249,26 +251,30 @@ sketch:
         (y - x)^2 < 1
 
     # Symmetric
-    forall x, y R:
-        $gap_square_less_than_one(x, y)
-        =>:
-            (x - y)^ 2 = (y - x)^2 < 1
-            $gap_square_less_than_one(y, x)
+    claim:
+        ? forall x, y R:
+            $gap_square_less_than_one(x, y)
+            =>:
+                $gap_square_less_than_one(y, x)
+        (x - y)^ 2 = (y - x)^2 < 1
+        by def $gap_square_less_than_one(y, x)
 
     # Reflexive
-    forall x R:
+    claim:
+        ? forall x R:
+            $gap_square_less_than_one(x, x)
         (x - x)^2 = 0 < 1
-        $gap_square_less_than_one(x, x)
+        by def $gap_square_less_than_one(x, x)
 
     # Not Antisymmetric
     (1.5 - 1)^2 = (1 - 1.5)^2 = 0.25 < 1
-    $gap_square_less_than_one(1, 1.5)
+    by def $gap_square_less_than_one(1, 1.5)
     $gap_square_less_than_one(1.5, 1)
     1.5 != 1
 
     # Not Transitive
     $gap_square_less_than_one(1, 1.5)
-    $gap_square_less_than_one(1.5, 2)
+    by def $gap_square_less_than_one(1.5, 2)
     not (2 - 1)^2 < 1
 
 # 10.1.4 Rock-paper-scissors
@@ -360,6 +366,7 @@ sketch:
         obtain k from exist k Z st {x - y = n * k}
         witness exist k2 Z st {y - x = n * k2} from -k:
             y - x = -(x - y) = -(n * k) = n * (-k)
+        by def $mod_eq(y, x, n)
 
     claim:
         ? forall x, y, z, n Z:
@@ -371,6 +378,7 @@ sketch:
         obtain k2 from exist k Z st {y - z = n * k}
         witness exist k Z st {x - z = n * k} from k1 + k2:
             x - z = (x - y) + (y - z) = n * k1 + n * k2 = n * (k1 + k2)
+        by def $mod_eq(x, z, n)
 
 # 10.2.2 Equality of squares
 
@@ -384,6 +392,7 @@ sketch:
         ? forall x Z:
             $square_eq(x, x)
         x^2 = x^2
+        by def $square_eq(x, x)
 
     claim:
         ? forall x, y Z:
@@ -392,6 +401,7 @@ sketch:
                 $square_eq(y, x)
         x^2 = y^2
         y^2 = x^2
+        by def $square_eq(y, x)
 
     claim:
         ? forall x, y, z Z:
@@ -402,6 +412,7 @@ sketch:
         x^2 = y^2
         y^2 = z^2
         x^2 = z^2
+        by def $square_eq(x, z)
 
 # 10.2.3 Equivalence classes
 
@@ -471,6 +482,7 @@ claim:
             x1 $in X
             $rel(a1, x1)
             $rel(a2, x1)
+            by thm set_builder_member(x1, {b X: $rel(a2, b)})
 
         claim:
             ? forall x1 {b X: $rel(a2, b)}:
@@ -478,6 +490,7 @@ claim:
             x1 $in X
             $rel(a2, x1)
             $rel(a1, x1)
+            by thm set_builder_member(x1, {b X: $rel(a1, b)})
 
 # 10.2.4 Example
 
@@ -495,6 +508,7 @@ sketch:
         ? forall p cart(Z, N):
             $rational_pair_eq(p, p)
         p[1] * (p[2] + 1) = p[1] * (p[2] + 1)
+        by def $rational_pair_eq(p, p)
 
     claim:
         ? forall p, q cart(Z, N):
@@ -503,6 +517,7 @@ sketch:
                 $rational_pair_eq(q, p)
         p[1] * (q[2] + 1) = q[1] * (p[2] + 1)
         q[1] * (p[2] + 1) = p[1] * (q[2] + 1)
+        by def $rational_pair_eq(q, p)
 
     claim:
         ? forall p, q, r cart(Z, N):
@@ -514,6 +529,7 @@ sketch:
         q[2] + 1 > 0
         q[2] + 1 != 0
         p[1] * (r[2] + 1) = ((q[2] + 1) * (p[1] * (r[2] + 1))) / (q[2] + 1) = ((q[2] + 1) * (r[1] * (p[2] + 1))) / (q[2] + 1) = r[1] * (p[2] + 1)
+        by def $rational_pair_eq(p, r)
 
 # 10.2.6 Bijection between sets
 
@@ -599,6 +615,7 @@ sketch:
             g(f(x)) = x
         forall y B:
             y = f(g(y))
+        by def $is_inverse_of_fn(A, B, f, g)
         witness exist g1 fn(x B) A st {$is_inverse_of_fn(A, B, f, g1)} from g
 
     # The relation "there exists a bijection between the two sets" is an
@@ -621,7 +638,11 @@ sketch:
             ? forall y S:
                 exist x S st {y = id(x)}
             witness exist x S st {y = id(x)} from y
+        by def $injective_fn(S, S, id)
+        by def $surjective_fn(S, S, id)
+        by def $bijective_fn(S, S, id)
         witness exist f fn(x S) S st {$bijective_fn(S, S, f)} from id
+        by def $exist_bijection(S, S)
 
     # Symmetric: if f is a bijection from S to T, then its inverse is a bijection
     # from T to S.
@@ -640,18 +661,18 @@ sketch:
                 =>:
                     y1 = y2
             y1 = f(g(y1)) = f(g(y2)) = y2
-        $injective_fn(T, S, g)
+        by def $injective_fn(T, S, g)
 
         claim:
             ? forall x S:
                 exist y T st {x = g(y)}
             witness exist y T st {x = g(y)} from f(x):
                 x = g(f(x))
-        $surjective_fn(T, S, g)
+        by def $surjective_fn(T, S, g)
 
-        $bijective_fn(T, S, g)
+        by def $bijective_fn(T, S, g)
         witness exist inverse_bijection fn(x T) S st {$bijective_fn(T, S, inverse_bijection)} from g
-        $exist_bijection(T, S)
+        by def $exist_bijection(T, S)
 
     # Transitive: compose two bijections.
     claim:
@@ -679,7 +700,7 @@ sketch:
             g(f(x1)) = h(x1) = h(x2) = g(f(x2))
             f(x1) = f(x2)
             x1 = x2
-        $injective_fn(S, U, h)
+        by def $injective_fn(S, U, h)
 
         claim:
             ? forall z U:
@@ -688,11 +709,11 @@ sketch:
             obtain x from exist x S st {y = f(x)}
             witness exist source_input S st {z = h(source_input)} from x:
                 z = g(y) = g(f(x)) = h(x)
-        $surjective_fn(S, U, h)
+        by def $surjective_fn(S, U, h)
 
-        $bijective_fn(S, U, h)
+        by def $bijective_fn(S, U, h)
         witness exist composed_bijection fn(x S) U st {$bijective_fn(S, U, composed_bijection)} from h
-        $exist_bijection(S, U)
+        by def $exist_bijection(S, U)
 
 # Summary
 
@@ -712,3 +733,12 @@ sketch:
 # and order-like relations are so convenient: once their basic properties are
 # registered, later proofs can focus on the mathematical idea rather than on
 # repeating routine relation steps.
+
+# Registration and definition introduction have distinct roles. To establish a
+# positive user-defined relation, first prove its mathematical body and then use
+# `by def`. A `by ..._prop` block registers a checked universal behavior for later
+# reuse; it does not silently unfold or fold the relation definition. When a
+# compound concept such as "there exists a bijection" is built from injectivity,
+# surjectivity, bijectivity, and an existential witness, introduce those named
+# layers in dependency order so that every downstream step consumes an already
+# visible fact.

@@ -1,7 +1,7 @@
 # Linear Algebra Done Right, fourth edition — Section 8B.
 # Generalized Eigenspace Decomposition.
 prop belongs_to_generalized_eigenspace(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, v VSet):
-    exist k N_pos st {\chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), k)(v) = V.zero}
+    exist k N+ st {\chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), k)(v) = V.zero}
 # Definition 8.19. The generalized eigenspace is a genuine set-valued
 # function; unlike generalized eigenvectors it also contains zero.
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
@@ -23,20 +23,20 @@ sketch:
     plane_1(3) = plane_2(3) = 0
     axis_3(1) = axis_3(2) = 0
     forall z1, z2, z3 R:
-        [z1, z2, z3] = [z1, z2, 0] + [0, 0, z3]
+        [z1, z2, z3] = [z1 + 0, z2 + 0, 0 + z3]
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
-    have fn generalized_eigenspace_family(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, eigenvalues &chap1a::FiniteList<s, m>) finite_seq(power_set(VSet), m) = fn(k N_pos: k <= m) power_set(VSet) {\generalized_eigenspace<s, VSet, V>(T, eigenvalues.entries(k))}
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+>:
+    have fn generalized_eigenspace_family(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, eigenvalues &chap1a::FiniteList<s, m>) finite_seq(power_set(VSet), m) = fn(k N+: k <= m) power_set(VSet) {\generalized_eigenspace<s, VSet, V>(T, eigenvalues.entries(k))}
 
-prop shifted_power_vanishes_on_generalized_eigenspace(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, r N_pos):
+prop shifted_power_vanishes_on_generalized_eigenspace(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, r N+):
     forall v \generalized_eigenspace<s, VSet, V>(T, lambda):
         \chap5a::operator_power<s, VSet, V>(\chap5a::operator_minus_scalar_identity<s, VSet, V>(T, lambda), r)(v) = V.zero
 
 prop shifted_operator_is_nilpotent_on_generalized_eigenspace(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s):
-    exist r N_pos st {$shifted_power_vanishes_on_generalized_eigenspace(s, VSet, V, T, lambda, r)}
+    exist r N+ st {$shifted_power_vanishes_on_generalized_eigenspace(s, VSet, V, T, lambda, r)}
 
-prop generalized_eigenspace_decomposition_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<s, m>):
-    forall k N_pos:
+prop generalized_eigenspace_decomposition_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, m N+, eigenvalues &chap1a::FiniteList<s, m>):
+    forall k N+:
         k <= m
         =>:
             $chap5a::is_invariant_subspace(s, VSet, V, T, \generalized_eigenspace<s, VSet, V>(T, eigenvalues.entries(k)))
@@ -46,7 +46,7 @@ prop generalized_eigenspace_decomposition_statement(s nonempty_set, VSet nonempt
 # Result 8.22. Description 8.20 gives invariance and nilpotence; Result 8.12
 # gives directness, and the generalized-eigenvector basis makes the sum all VSet.
 axiom generalized_eigenspace_decomposition:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<s, m>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, m N+, eigenvalues &chap1a::FiniteList<s, m>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap5d::lists_all_distinct_eigenvalues(s, VSet, V, T, m, eigenvalues)
         =>:
@@ -55,6 +55,7 @@ axiom generalized_eigenspace_decomposition:
 # eigenspace. Exact unique existence is recorded before the selected N-value.
 prop is_eigenvalue_multiplicity_value(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, d N):
     $chap1c::is_subspace(s, VSet, V, \generalized_eigenspace<s, VSet, V>(T, lambda))
+    $chap2c::admits_basis_length(s, \generalized_eigenspace<s, VSet, V>(T, lambda), \chap1c::subspace_vector_space<s, VSet, V, \generalized_eigenspace<s, VSet, V>(T, lambda)>)
     d = \chap2c::dimension<s, \generalized_eigenspace<s, VSet, V>(T, lambda), \chap1c::subspace_vector_space<s, VSet, V, \generalized_eigenspace<s, VSet, V>(T, lambda)>>
 
 axiom eigenvalue_multiplicity_exists_unique:
@@ -63,9 +64,11 @@ axiom eigenvalue_multiplicity_exists_unique:
         =>:
             exist! d N st {$is_eigenvalue_multiplicity_value(s, VSet, V, T, lambda, d)}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
-    # Selection from the exact dimension relation remains explicit proof debt.
-    trust have eigenvalue_multiplicity fn(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s) N
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>: $chap2a::is_finite_dimensional(s, VSet, V)>:
+    have fn eigenvalue_multiplicity by exist!:
+        ? forall T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s:
+            exist! d N st {$is_eigenvalue_multiplicity_value(s, VSet, V, T, lambda, d)}
+        by thm eigenvalue_multiplicity_exists_unique(s, VSet, V, T, lambda)
 
 axiom eigenvalue_multiplicity_spec:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s:
@@ -83,49 +86,53 @@ sketch:
     A(3, 3) = 7
     2 + 1 = 3
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
-    have fn eigenvalue_multiplicity_sum(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, eigenvalues &chap1a::FiniteList<s, m>) N = sum(1, m, fn(k N_pos: k <= m) N {\eigenvalue_multiplicity<s, VSet, V>(T, eigenvalues.entries(k))})
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+: $chap2a::is_finite_dimensional(s, VSet, V)>:
+    have fn eigenvalue_multiplicity_sum(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, eigenvalues &chap1a::FiniteList<s, m>) N = sum(1, m, fn(k N+: k <= m) N {\eigenvalue_multiplicity<s, VSet, V>(T, eigenvalues.entries(k))})
 # Result 8.25. Take dimensions in the generalized eigenspace direct sum.
 axiom sum_of_multiplicities_equals_dimension:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, VSet, V, T, m, eigenvalues)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, m N+, eigenvalues &chap1a::FiniteList<C, m>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $chap5d::lists_all_distinct_eigenvalues(C, VSet, V.general, T, m, eigenvalues)
         =>:
-            \eigenvalue_multiplicity_sum<&chap1a::Complex, VSet, V, m>(T, eigenvalues) = \chap2c::dimension<&chap1a::Complex, VSet, V>
+            \eigenvalue_multiplicity_sum<C, VSet, V.general, m>(T, eigenvalues) = \chap2c::dimension<C, VSet, V.general>
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>>:
     have fn finite_scalar_power(x s, k N) s by induc k from 0:
         case k = 0: scalars.one
         case k > 0: scalars.mul(finite_scalar_power(x, k - 1), x)
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N_pos>:
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+: $chap2a::is_finite_dimensional(s, VSet, V)>:
     have fn characteristic_factor_product(T \chap3a::linear_map_space<s, VSet, VSet, V, V>, eigenvalues &chap1a::FiniteList<s, m>, k closed_range(0, m), z s) s by induc k from 0:
         case k = 0: V.scalars.one
         case k > 0: V.scalars.mul(characteristic_factor_product(T, eigenvalues, k - 1, z), \finite_scalar_power<s, V.scalars>(V.scalars.add(z, V.scalars.neg(eigenvalues.entries(k))), \eigenvalue_multiplicity<s, VSet, V>(T, eigenvalues.entries(k))))
 
-prop has_characteristic_factor_values(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, q \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>):
-    forall z &chap1a::Complex:
-        q(z) = \characteristic_factor_product<&chap1a::Complex, VSet, V, m>(T, eigenvalues, m, z)
+prop has_characteristic_factor_values(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, m N+, eigenvalues &chap1a::FiniteList<C, m>, q \chap2a::polynomial_space<C, V.general.scalars>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    forall z C:
+        \chap4::polynomial_eval<C, V.general.scalars>(q, z) = \characteristic_factor_product<C, VSet, V.general, m>(T, eigenvalues, m, z)
 
-prop is_characteristic_polynomial_of(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, q \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>):
-    exist m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m> st {$chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, VSet, V, T, m, eigenvalues), $has_characteristic_factor_values(VSet, V, T, m, eigenvalues, q)}
+prop is_characteristic_polynomial_of(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, q \chap2a::polynomial_space<C, V.general.scalars>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    exist m N+, eigenvalues &chap1a::FiniteList<C, m> st {$chap5d::lists_all_distinct_eigenvalues(C, VSet, V.general, T, m, eigenvalues), $has_characteristic_factor_values(VSet, V, T, m, eigenvalues, q)}
 # Definition 8.26. The characteristic polynomial is selected only after the
 # multiplicity factorization relation has exact unique existence.
 axiom characteristic_polynomial_exists_unique:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
-            exist! q \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars> st {$is_characteristic_polynomial_of(VSet, V, T, q)}
+            exist! q \chap2a::polynomial_space<C, V.general.scalars> st {$is_characteristic_polynomial_of(VSet, V, T, q)}
 
-template<VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>>:
-    # The factorization is canonical, but its parameterized selection remains.
-    trust have characteristic_polynomial fn(T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>) \chap2a::polynomial_space<&chap1a::Complex, chap1a::complex_scalars>
+template<VSet nonempty_set, V &chap1b::CVectorSpace<VSet>: $chap2a::is_finite_dimensional(C, VSet, V.general), $chap2c::admits_basis_length(C, VSet, V.general), \chap2c::dimension<C, VSet, V.general> > 0>:
+    have fn characteristic_polynomial by exist!:
+        ? forall T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+            exist! q \chap2a::polynomial_space<C, V.general.scalars> st {$is_characteristic_polynomial_of(VSet, V, T, q)}
+        by thm characteristic_polynomial_exists_unique(VSet, V, T)
 
 axiom characteristic_polynomial_spec:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
             $is_characteristic_polynomial_of(VSet, V, T, \characteristic_polynomial<VSet, V>(T))
 # Example 8.27. Multiplicities 2 and 1 give (z-6)^2(z-7).
@@ -133,78 +140,84 @@ sketch:
     forall z R:
         (z - 6)^2 * (z - 7) = (z^2 - 12 * z + 36) * (z - 7)
 
-prop characteristic_polynomial_degree_and_zeros_statement(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    \chap2a::degree<&chap1a::Complex, chap1a::complex_scalars, \characteristic_polynomial<VSet, V>(T)> = chap2a::finite_polynomial_degree(\chap2c::dimension<&chap1a::Complex, VSet, V>)
-    forall lambda &chap1a::Complex:
+prop characteristic_polynomial_degree_and_zeros_statement(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    $chap2c::admits_basis_length(C, VSet, V.general)
+    \chap2c::dimension<C, VSet, V.general> > 0
+    \characteristic_polynomial<VSet, V>(T) $in \chap2a::polynomial_space<C, V.general.scalars>
+    $chap2a::is_polynomial(C, V.general.scalars, \characteristic_polynomial<VSet, V>(T))
+    $chap2a::admits_unique_polynomial_degree(C, V.general.scalars, \characteristic_polynomial<VSet, V>(T))
+    \chap2a::degree<C, V.general.scalars, \characteristic_polynomial<VSet, V>(T)> = chap2a::finite_polynomial_degree(\chap2c::dimension<C, VSet, V.general>)
+    forall lambda C:
         =>:
-            $chap4::is_zero_of_polynomial(&chap1a::Complex, chap1a::complex_scalars, \characteristic_polynomial<VSet, V>(T), lambda)
+            $chap4::is_zero_of_polynomial(C, V.general.scalars, \characteristic_polynomial<VSet, V>(T), lambda)
         <=>:
-            $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, T, lambda)
+            $chap5a::is_eigenvalue(C, VSet, V.general, T, lambda)
 # Result 8.28. Sum the multiplicities for the degree; the defining product
 # makes its zeros exactly the listed distinct eigenvalues.
 axiom degree_and_zeros_of_characteristic_polynomial:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
             $characteristic_polynomial_degree_and_zeros_statement(VSet, V, T)
 # Result 8.29. Each generalized eigenspace is killed by its corresponding
 # factor; commute that factor to the right and use the direct-sum decomposition.
 axiom cayley_hamilton_theorem:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
-            \chap5a::polynomial_at_operator<&chap1a::Complex, VSet, V>(\characteristic_polynomial<VSet, V>(T), T) = \chap3a::zero_linear_map<&chap1a::Complex, VSet, VSet, V, V>
+            \chap5a::polynomial_at_operator<C, VSet, V.general>(\characteristic_polynomial<VSet, V>(T), T) = \chap3a::zero_linear_map<C, VSet, VSet, V.general, V.general>
 # Result 8.30. Cayley-Hamilton plus Result 5.29 gives divisibility by the
 # minimal polynomial in one mathematical step.
 axiom characteristic_polynomial_is_multiple_of_minimal_polynomial:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        \chap2c::dimension<&chap1a::Complex, VSet, V> > 0
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        \chap2c::dimension<C, VSet, V.general> > 0
         =>:
-            $chap5b::is_polynomial_multiple(&chap1a::Complex, chap1a::complex_scalars, \characteristic_polynomial<VSet, V>(T), \chap5b::minimal_polynomial<&chap1a::Complex, VSet, V>(T))
+            $chap5b::is_polynomial_multiple(C, V.general.scalars, \characteristic_polynomial<VSet, V>(T), \chap5b::minimal_polynomial<C, VSet, V.general>(T))
 # Result 8.31. Apply rank-nullity to shifted powers to bound multiplicity by
 # diagonal occurrences; both totals are dim VSet, so every bound is equality.
 axiom multiplicity_equals_number_of_diagonal_occurrences:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>, lambda &chap1a::Complex:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        $chap2b::is_basis(&chap1a::Complex, VSet, V, n, basis)
-        $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T))
-        $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, T, lambda)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, n N+, basis &chap1a::FiniteList<VSet, n>, lambda C:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $chap2b::is_basis(C, VSet, V.general, n, basis)
+        $chap5c::is_upper_triangular_matrix(C, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T))
+        $chap5a::is_eigenvalue(C, VSet, V.general, T, lambda)
         =>:
-            $chap7e::finite_list_value_has_multiplicity(&chap1a::Complex, n, \chap5c::matrix_diagonal<&chap1a::Complex, n>(\chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T)), lambda, \eigenvalue_multiplicity<&chap1a::Complex, VSet, V>(T, lambda))
+            $chap7e::finite_list_value_has_multiplicity(C, n, \chap5c::matrix_diagonal<C, n>(\chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T)), lambda, \eigenvalue_multiplicity<C, VSet, V.general>(T, lambda))
 
-prop is_block_partition(n, m N_pos, block_of fn(idx N_pos: idx <= n) N_pos):
-    forall idx N_pos:
+prop is_block_partition(n, m N+, block_of fn(idx N+: idx <= n) N+):
+    forall idx N+:
         idx <= n
         =>:
             block_of(idx) <= m
-    forall idx, j N_pos:
+    forall idx, j N+:
         idx <= j
         j <= n
         =>:
             block_of(idx) <= block_of(j)
-    forall k N_pos:
+    forall k N+:
         k <= m
         =>:
-            exist idx N_pos st {idx <= n, block_of(idx) = k}
+            exist idx N+ st {idx <= n, block_of(idx) = k}
 
-prop has_zero_cross_block_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos):
-    forall row, column N_pos:
+prop has_zero_cross_block_entries(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n), block_of fn(idx N+: idx <= n) N+):
+    forall row, column N+:
         row <= n
         column <= n
         block_of(row) != block_of(column)
         =>:
             A(row, column) = scalars.zero
 
-prop is_block_diagonal_matrix_with_partition(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N_pos, A matrix(s, n, n), block_of fn(idx N_pos: idx <= n) N_pos):
+prop is_block_diagonal_matrix_with_partition(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N+, A matrix(s, n, n), block_of fn(idx N+: idx <= n) N+):
     $is_block_partition(n, m, block_of)
     $has_zero_cross_block_entries(s, scalars, n, A, block_of)
 # Definition 8.35. A matrix is block diagonal when a consecutive partition of
 # its indices makes every entry between different blocks zero.
-prop is_block_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N_pos, A matrix(s, n, n)):
-    exist block_of fn(idx N_pos: idx <= n) N_pos st {$is_block_diagonal_matrix_with_partition(s, scalars, n, m, A, block_of)}
+prop is_block_diagonal_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, m N+, A matrix(s, n, n)):
+    exist block_of fn(idx N+: idx <= n) N+ st {$is_block_diagonal_matrix_with_partition(s, scalars, n, m, A, block_of)}
 # Example 8.36. The displayed 5-by-5 example has consecutive block sizes
 # 1,2,2 and all cross-block entries zero.
 sketch:
@@ -213,33 +226,37 @@ sketch:
     A(3, 4) = A(4, 3) = 0
     A(5, 3) = 0
 
-prop block_diagonal_entries_are_eigenvalues(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, n, m N_pos, basis &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, block_of fn(idx N_pos: idx <= n) N_pos):
-    forall idx N_pos:
+prop block_diagonal_entries_are_eigenvalues(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, n, m N+, basis &chap1a::FiniteList<VSet, n>, eigenvalues &chap1a::FiniteList<C, m>, block_of fn(idx N+: idx <= n) N+):
+    $is_block_partition(n, m, block_of)
+    forall idx N+:
         idx <= n
         =>:
-            \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T)(idx, idx) = eigenvalues.entries(block_of(idx))
+            block_of(idx) <= m
+            \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T)(idx, idx) = eigenvalues.entries(block_of(idx))
 
-prop block_labels_match_partition(n N_pos, block_of fn(idx N_pos: idx <= n) N_pos, labels &chap1a::FiniteList<N_pos, n>):
-    forall idx N_pos:
+prop block_labels_match_partition(n N+, block_of fn(idx N+: idx <= n) N+, labels &chap1a::FiniteList<N+, n>):
+    forall idx N+:
         idx <= n
         =>:
             labels.entries(idx) = block_of(idx)
 
-prop block_sizes_match_eigenvalue_multiplicities(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, n, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>, labels &chap1a::FiniteList<N_pos, n>):
-    forall k N_pos:
+prop block_sizes_match_eigenvalue_multiplicities(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, n, m N+, eigenvalues &chap1a::FiniteList<C, m>, labels &chap1a::FiniteList<N+, n>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    forall k N+:
         k <= m
         =>:
-            $chap7e::finite_list_value_has_multiplicity(N_pos, n, labels, k, \eigenvalue_multiplicity<&chap1a::Complex, VSet, V>(T, eigenvalues.entries(k)))
+            $chap7e::finite_list_value_has_multiplicity(N+, n, labels, k, \eigenvalue_multiplicity<C, VSet, V.general>(T, eigenvalues.entries(k)))
 
-prop has_generalized_eigenvalue_block_form(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n>, block_of fn(idx N_pos: idx <= n) N_pos, labels &chap1a::FiniteList<N_pos, n> st {$chap2b::is_basis(&chap1a::Complex, VSet, V, n, basis), $is_block_diagonal_matrix_with_partition(&chap1a::Complex, chap1a::complex_scalars, n, m, \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T), block_of), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T)), $block_diagonal_entries_are_eigenvalues(VSet, V, T, n, m, basis, eigenvalues, block_of), $block_labels_match_partition(n, block_of, labels), $block_sizes_match_eigenvalue_multiplicities(VSet, V, T, n, m, eigenvalues, labels)}
+prop has_generalized_eigenvalue_block_form(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, m N+, eigenvalues &chap1a::FiniteList<C, m>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    exist n N+, basis &chap1a::FiniteList<VSet, n>, block_of fn(idx N+: idx <= n) N+, labels &chap1a::FiniteList<N+, n> st {$chap2b::is_basis(C, VSet, V.general, n, basis), $is_block_diagonal_matrix_with_partition(C, chap1a::complex_scalars, n, m, \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T), block_of), $chap5c::is_upper_triangular_matrix(C, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T)), $block_diagonal_entries_are_eigenvalues(VSet, V, T, n, m, basis, eigenvalues, block_of), $block_labels_match_partition(n, block_of, labels), $block_sizes_match_eigenvalue_multiplicities(VSet, V, T, n, m, eigenvalues, labels)}
 # Result 8.37. Choose a nilpotent upper-triangular basis in each generalized
 # eigenspace and concatenate them; adding lambda_k I makes each diagonal block
 # upper triangular with constant diagonal lambda_k.
 axiom block_diagonal_form_with_upper_triangular_blocks:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>, m N_pos, eigenvalues &chap1a::FiniteList<&chap1a::Complex, m>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        $chap5d::lists_all_distinct_eigenvalues(&chap1a::Complex, VSet, V, T, m, eigenvalues)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>, m N+, eigenvalues &chap1a::FiniteList<C, m>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $chap5d::lists_all_distinct_eigenvalues(C, VSet, V.general, T, m, eigenvalues)
         =>:
             $has_generalized_eigenvalue_block_form(VSet, V, T, m, eigenvalues)
 # Example 8.38. The generalized-eigenvector basis turns the source matrix into

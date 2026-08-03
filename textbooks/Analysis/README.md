@@ -91,7 +91,7 @@ that the constant rational approximation has limit `x^q`:
 
 ```litex
 by thm real_power_agrees_with_rational_power(x, q)
-$has_limit(rational_power_approx_seq(x, fn(n N_pos) R {q}), x^q)
+$has_limit(rational_power_approx_seq(x, fn(n N+) R {q}), x^q)
 ```
 
 The corresponding human design map is in `math_collections.md`; the runtime

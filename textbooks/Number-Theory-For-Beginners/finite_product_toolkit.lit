@@ -1,0 +1,311 @@
+# Reusable finite-set product tools used by the elementary number-theory
+# arguments from Section VIII onward.
+
+thm finite_insert_subset:
+    ? forall A finite_set, z A, S finite_set:
+        S $subset A
+        =>:
+            union({z}, S) $subset A
+    claim:
+        ? forall x union({z}, S):
+            x $in A
+        x $in {z} or x $in S
+        by cases:
+            ? x $in A
+            case x $in {z}:
+                x = z
+                x $in A
+            case x $in S:
+                x $in A
+    union({z}, S) $subset A
+
+prop finite_product_congruence_holds(m N+, A finite_set):
+    forall f, g fn(x A) Z:
+        forall x A:
+            $section5::congruent_mod(m, f(x), g(x))
+        =>:
+            $section5::congruent_mod(m, finite_set_product(A, f), finite_set_product(A, g))
+
+thm congruent_mod_transport_equalities:
+    ? forall m N+, x, y, x1, y1 Z:
+        x = x1
+        y = y1
+        $section5::congruent_mod(m, x1, y1)
+        =>:
+            $section5::congruent_mod(m, x, y)
+    x - y = x1 - y1
+    by def $section5::congruent_mod(m, x1, y1)
+    by def $section5::congruent_mod(m, x, y)
+
+thm finite_product_congruence_insert_step:
+    ? forall m N+, a set, S finite_set, f, g fn(x union({a}, S)) Z:
+        not a $in S
+        $finite_product_congruence_holds(m, S)
+        forall x union({a}, S):
+            $section5::congruent_mod(m, f(x), g(x))
+        =>:
+            $section5::congruent_mod(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g))
+    have fn fS(x S) Z = f(x)
+    have fn gS(x S) Z = g(x)
+    claim:
+        ? forall x S:
+            $section5::congruent_mod(m, fS(x), gS(x))
+        x $in union({a}, S)
+        fS(x) = f(x)
+        gS(x) = g(x)
+        $section5::congruent_mod(m, f(x), g(x))
+    by def $finite_product_congruence_holds(m, S)
+    $section5::congruent_mod(m, finite_set_product(S, fS), finite_set_product(S, gS))
+    $section5::congruent_mod(m, f(a), g(a))
+    by thm section5::congruent_mod_multiply(m, finite_set_product(S, fS), finite_set_product(S, gS), f(a), g(a))
+    have fn fR(x S) Z = f(x)
+    have fn gR(x S) Z = g(x)
+    fR = fn(x S) Z {f(x)}
+    gR = fn(x S) Z {g(x)}
+    by def $fn_eq_in(fS, fR, S)
+    by def $fn_eq_in(gS, gR, S)
+    finite_set_product(S, fR) = finite_set_product(S, fS)
+    finite_set_product(S, gR) = finite_set_product(S, gS)
+    by thm congruent_mod_transport_equalities(m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a))
+    finite_set_product(union({a}, S), f) = finite_set_product(S, fn(x S) Z {f(x)}) * f(a) = finite_set_product(S, fR) * f(a)
+    finite_set_product(union({a}, S), g) = finite_set_product(S, fn(x S) Z {g(x)}) * g(a) = finite_set_product(S, gR) * g(a)
+    by thm congruent_mod_transport_equalities(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g), finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a))
+
+thm finite_product_congruence:
+    ? forall m N+, A finite_set:
+        $finite_product_congruence_holds(m, A)
+    by induc P:
+        ? $finite_product_congruence_holds(m, P)
+        ? from P = {}:
+            claim:
+                ? forall f, g fn(x {}) Z:
+                    forall x {}:
+                        $section5::congruent_mod(m, f(x), g(x))
+                    =>:
+                        $section5::congruent_mod(m, finite_set_product({}, f), finite_set_product({}, g))
+                finite_set_product({}, f) = 1
+                finite_set_product({}, g) = 1
+                by thm section5::congruent_mod_reflexive(m, 1)
+                by thm congruent_mod_transport_equalities(m, finite_set_product({}, f), finite_set_product({}, g), 1, 1)
+            by def $finite_product_congruence_holds(m, {})
+        ? induc a, S:
+            $finite_product_congruence_holds(m, S)
+            claim:
+                ? forall f, g fn(x union({a}, S)) Z:
+                    forall x union({a}, S):
+                        $section5::congruent_mod(m, f(x), g(x))
+                    =>:
+                        $section5::congruent_mod(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g))
+                by thm finite_product_congruence_insert_step(m, a, S, f, g)
+            by def $finite_product_congruence_holds(m, union({a}, S))
+
+thm product_mul_algebra:
+    ? forall Pfg, Pf, Pg, fz, gz Z:
+        Pfg = Pf * Pg
+        =>:
+            Pfg * (fz * gz) = (Pf * fz) * (Pg * gz)
+    Pfg * (fz * gz) = (Pf * Pg) * (fz * gz) = (Pf * fz) * (Pg * gz)
+
+thm finite_product_mul_insert_step:
+    ? forall A finite_set, z A, S finite_set, f, g fn(x A) Z:
+        S $subset A
+        not z $in S
+        union({z}, S) $subset A
+        finite_set_product(S, fn(x S) Z {f(x) * g(x)}) = finite_set_product(S, fn(x S) Z {f(x)}) * finite_set_product(S, fn(x S) Z {g(x)})
+        =>:
+            finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x) * g(x)}) = finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x)}) * finite_set_product(union({z}, S), fn(x union({z}, S)) Z {g(x)})
+    finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x) * g(x)}) = finite_set_product(S, fn(x S) Z {f(x) * g(x)}) * (f(z) * g(z))
+    finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x)}) = finite_set_product(S, fn(x S) Z {f(x)}) * f(z)
+    finite_set_product(union({z}, S), fn(x union({z}, S)) Z {g(x)}) = finite_set_product(S, fn(x S) Z {g(x)}) * g(z)
+    by thm product_mul_algebra(finite_set_product(S, fn(x S) Z {f(x) * g(x)}), finite_set_product(S, fn(x S) Z {f(x)}), finite_set_product(S, fn(x S) Z {g(x)}), f(z), g(z))
+    finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x) * g(x)}) = finite_set_product(S, fn(x S) Z {f(x) * g(x)}) * (f(z) * g(z)) = (finite_set_product(S, fn(x S) Z {f(x)}) * f(z)) * (finite_set_product(S, fn(x S) Z {g(x)}) * g(z)) = finite_set_product(union({z}, S), fn(x union({z}, S)) Z {f(x)}) * finite_set_product(union({z}, S), fn(x union({z}, S)) Z {g(x)})
+
+thm finite_product_distributes_over_pointwise_product:
+    ? forall A finite_set, f, g fn(x A) Z:
+        finite_set_product(A, fn(x A) Z {f(x) * g(x)}) = finite_set_product(A, f) * finite_set_product(A, g)
+    by induc P in A:
+        ? finite_set_product(P, fn(x P) Z {f(x) * g(x)}) = finite_set_product(P, fn(x P) Z {f(x)}) * finite_set_product(P, fn(x P) Z {g(x)})
+        ? from P = {}:
+            {} $subset A
+            finite_set_product({}, fn(x {}) Z {f(x) * g(x)}) = 1 = 1 * 1 = finite_set_product({}, fn(x {}) Z {f(x)}) * finite_set_product({}, fn(x {}) Z {g(x)})
+        ? induc z, S:
+            by thm finite_insert_subset(A, z, S)
+            by thm finite_product_mul_insert_step(A, z, S, f, g)
+    finite_set_product(A, f) = finite_set_product(A, fn(x A) Z {f(x)})
+    finite_set_product(A, g) = finite_set_product(A, fn(x A) Z {g(x)})
+    finite_set_product(A, fn(x A) Z {f(x) * g(x)}) = finite_set_product(A, fn(x A) Z {f(x)}) * finite_set_product(A, fn(x A) Z {g(x)}) = finite_set_product(A, f) * finite_set_product(A, g)
+
+thm finite_set_product_bijective_reindex:
+    ? forall A, B finite_set, f fn(x A) B, g fn(y B) Z:
+        $bijective(A, B, f)
+        =>:
+            finite_set_product(A, fn(x A) Z {g(f(x))}) = finite_set_product(B, g)
+    prop reindex_holds(P finite_set):
+        forall carrier_C finite_set, h fn(x P) carrier_C, q fn(y carrier_C) Z:
+            $bijective(P, carrier_C, h)
+            =>:
+                finite_set_product(P, fn(x P) Z {q(h(x))}) = finite_set_product(carrier_C, q)
+    claim:
+        ? forall P finite_set:
+            $reindex_holds(P)
+        by induc P0:
+            ? $reindex_holds(P0)
+            ? from P0 = {}:
+                claim:
+                    ? forall carrier_C finite_set, h fn(x {}) carrier_C, q fn(y carrier_C) Z:
+                        $bijective({}, carrier_C, h)
+                        =>:
+                            finite_set_product({}, fn(x {}) Z {q(h(x))}) = finite_set_product(carrier_C, q)
+                    claim:
+                        ? carrier_C = {}
+                        by extension carrier_C = {}:
+                            claim:
+                                ? forall y carrier_C:
+                                    y $in {}
+                                by contra:
+                                    ? y $in {}
+                                    obtain x from exist x {} st {y = h(x)}
+                                    impossible x $in {}
+                            claim:
+                                ? forall y {}:
+                                    y $in carrier_C
+                                by contra:
+                                    ? y $in carrier_C
+                                    impossible y $in {}
+                    finite_set_product({}, fn(x {}) Z {q(h(x))}) = 1 = finite_set_product(carrier_C, q)
+                by def $reindex_holds({})
+            ? induc z, S:
+                claim:
+                    ? forall carrier_C finite_set, h fn(x union({z}, S)) carrier_C, q fn(y carrier_C) Z:
+                        $bijective(union({z}, S), carrier_C, h)
+                        =>:
+                            finite_set_product(union({z}, S), fn(x union({z}, S)) Z {q(h(x))}) = finite_set_product(carrier_C, q)
+                    claim:
+                        ? forall x S:
+                            h(x) $in set_minus(carrier_C, {h(z)})
+                        claim:
+                            ? not h(x) $in {h(z)}
+                            by contra:
+                                ? not h(x) $in {h(z)}
+                                h(x) $in {h(z)}
+                                h(x) = h(z)
+                                x = z
+                                z $in S
+                                impossible not z $in S
+                        h(x) $in set_minus(carrier_C, {h(z)})
+                    have fn h0(x S) set_minus(carrier_C, {h(z)}) = h(x)
+                    claim:
+                        ? forall y set_minus(carrier_C, {h(z)}):
+                            exist x S st {y = h0(x)}
+                        obtain x from exist x union({z}, S) st {y = h(x)}
+                        x $in {z} or x $in S
+                        by cases:
+                            ? exist x0 S st {y = h0(x0)}
+                            case x $in {z}:
+                                x = z
+                                y = h(x) = h(z)
+                                impossible not y $in {h(z)}
+                            case x $in S:
+                                witness exist x0 S st {y = h0(x0)} from x
+                    claim:
+                        ? forall x1, x2 S:
+                            h0(x1) = h0(x2)
+                            =>:
+                                x1 = x2
+                        h(x1) = h0(x1) = h0(x2) = h(x2)
+                        x1 = x2
+                    by def $injective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def $surjective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def $bijective(S, set_minus(carrier_C, {h(z)}), h0)
+                    have fn q0(y set_minus(carrier_C, {h(z)})) Z = q(y)
+                    q0 = fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}
+                    have fn qh(x S) Z = q(h(x))
+                    have fn q0h0(x S) Z = q0(h0(x))
+                    qh = fn(x S) Z {q(h(x))}
+                    q0h0 = fn(x S) Z {q0(h0(x))}
+                    claim:
+                        ? forall x S:
+                            qh(x) = q0h0(x)
+                        h0(x) $in set_minus(carrier_C, {h(z)})
+                        h0(x) $in carrier_C
+                        qh(x) = q(h(x)) = q(h0(x)) = q0(h0(x)) = q0h0(x)
+                    by def $fn_eq_in(qh, q0h0, S)
+                    finite_set_product(S, fn(x S) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q0(h0(x))})
+                    finite_set_product(S, fn(x S) Z {q0(h0(x))}) = finite_set_product(set_minus(carrier_C, {h(z)}), q0)
+                    finite_set_product(union({z}, S), fn(x union({z}, S)) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q(h(x))}) * q(h(z)) = finite_set_product(S, fn(x S) Z {q0(h0(x))}) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), q0) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}) * q(h(z)) = finite_set_product(carrier_C, q)
+                by def $reindex_holds(union({z}, S))
+    $reindex_holds(A)
+    finite_set_product(A, fn(x A) Z {g(f(x))}) = finite_set_product(B, g)
+
+thm finite_range_insert_size:
+    ? forall A finite_set, f fn(x A) A, y A:
+        $injective(A, A, f)
+        not y $in fn_range(f)
+        =>:
+            finite_set_size(union({y}, fn_range(f))) = finite_set_size(A) + 1
+    $is_finite_set(fn_range(f))
+    $is_finite_set({y})
+    finite_set_size(fn_range(f)) = finite_set_size(A)
+    intersect({y}, fn_range(f)) = {}
+    finite_set_size({y}) = 1
+    finite_set_size(intersect({y}, fn_range(f))) = finite_set_size({}) = 0
+    finite_set_size(union({y}, fn_range(f))) = finite_set_size({y}) + finite_set_size(fn_range(f)) - finite_set_size(intersect({y}, fn_range(f)))
+    finite_set_size(union({y}, fn_range(f))) = finite_set_size({y}) + finite_set_size(fn_range(f)) - finite_set_size(intersect({y}, fn_range(f))) = 1 + finite_set_size(A) - 0 = finite_set_size(A) + 1
+
+thm finite_self_range_contains_every_value:
+    ? forall A finite_set, f fn(x A) A, y A:
+        $injective(A, A, f)
+        =>:
+            y $in fn_range(f)
+    by contra:
+        ? y $in fn_range(f)
+        not y $in fn_range(f)
+        by thm finite_range_insert_size(A, f, y)
+        union({y}, fn_range(f)) $subset A
+        finite_set_size(union({y}, fn_range(f))) <= finite_set_size(A)
+        finite_set_size(A) + 1 <= finite_set_size(A)
+        impossible finite_set_size(A) + 1 <= finite_set_size(A)
+
+thm finite_self_injective_is_bijective:
+    ? forall A finite_set, f fn(x A) A:
+        $injective(A, A, f)
+        =>:
+            $bijective(A, A, f)
+    claim:
+        ? forall y A:
+            exist x A st {y = f(x)}
+        by thm finite_self_range_contains_every_value(A, f, y)
+        obtain x from exist x A st {y = f(x)}
+        witness exist z A st {y = f(z)} from x
+    by def $surjective(A, A, f)
+    by def $bijective(A, A, f)
+
+thm equal_remainders_after_multiplication_give_divisibility:
+    ? forall m N+, a, x, y Z:
+        (a * x) % m = (a * y) % m
+        =>:
+            $section1::divides_Z(m, a * (x - y))
+    by def $section5::same_remainder_mod(m, a * x, a * y)
+    a * x = m * section2::integer_quotient(a * x, m) + (a * x) % m
+    a * y = m * section2::integer_quotient(a * y, m) + (a * y) % m
+    a * x - a * y = (m * section2::integer_quotient(a * x, m) + (a * x) % m) - (m * section2::integer_quotient(a * y, m) + (a * y) % m) = (m * section2::integer_quotient(a * x, m) + (a * y) % m) - (m * section2::integer_quotient(a * y, m) + (a * y) % m) = m * section2::integer_quotient(a * x, m) - m * section2::integer_quotient(a * y, m) = m * (section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m))
+    a * (x - y) = a * x - a * y = m * (section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m))
+    witness exist t Z st {a * (x - y) = m * t} from section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m)
+    by def $section1::divides_Z(m, a * (x - y))
+
+thm congruent_mod_cancel_coprime_multiplier:
+    ? forall m N+, a, x, y Z:
+        $section3::relatively_prime_Z(a, m)
+        $section5::congruent_mod(m, a * x, a * y)
+        =>:
+            $section5::congruent_mod(m, x, y)
+    by thm section5::congruent_mod_has_same_remainder(m, a * x, a * y)
+    by thm equal_remainders_after_multiplication_give_divisibility(m, a, x, y)
+    by thm section6::relatively_prime_Z_symmetric(a, m)
+    by thm section3::theorem_III_2_euclid_lemma(m, a, x - y)
+    by def $section5::congruent_mod(m, x, y)
+
+thm finite_set_product_constant_formula:
+    ? forall A finite_set, a Z:
+        finite_set_product(A, fn(x A) Z {a}) = a ^ finite_set_size(A)
+    finite_set_product(A, fn(x A) Z {a}) = a ^ finite_set_size(A)

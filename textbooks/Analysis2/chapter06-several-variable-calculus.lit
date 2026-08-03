@@ -2,75 +2,248 @@
 
 # Definition 6.1.1. An n-dimensional row vector is a real-valued function on
 # the finite coordinate range 1,...,n.
-template<n N_pos>:
+template<n N+>:
     have row_vector_space set = fn(index closed_range(1, n)) R
 
-template<n N_pos>:
+template<n N+>:
     have fn vector_add(x, y \row_vector_space<n>) \row_vector_space<n> = fn(index closed_range(1, n)) R {x(index) + y(index)}
 
-template<n N_pos>:
+template<n N+>:
     have fn vector_scale(c R, x \row_vector_space<n>) \row_vector_space<n> = fn(index closed_range(1, n)) R {c * x(index)}
+
+prop is_zero_row_vector(n N+, zero \row_vector_space<n>):
+    forall index closed_range(1, n):
+        zero(index) = 0
+
+thm zero_row_vector_exists_unique:
+    ? forall n N+:
+        exist! zero \row_vector_space<n> st {$is_zero_row_vector(n, zero)}
+    # proof_debt: dependent selected functions cannot yet be stored when their
+    # return carrier contains an earlier template argument.
+    trust exist! zero \row_vector_space<n> st {$is_zero_row_vector(n, zero)}
+
+template<n N+>:
+    have fn vector_neg(x \row_vector_space<n>) \row_vector_space<n> = \vector_scale<n>(-1, x)
 
 # Lemma 6.1.2. Coordinatewise addition and scalar multiplication make R^n a
 # real vector space.
+prop has_row_vector_space_laws(n N+):
+    forall x, y, z \row_vector_space<n>:
+        \vector_add<n>(x, y) = \vector_add<n>(y, x)
+        \vector_add<n>(\vector_add<n>(x, y), z) = \vector_add<n>(x, \vector_add<n>(y, z))
+        \vector_add<n>(x, \vector_scale<n>(0, x)) = x
+        \vector_add<n>(\vector_scale<n>(0, x), x) = x
+        \vector_add<n>(x, \vector_scale<n>(-1, x)) = \vector_scale<n>(0, x)
+        \vector_add<n>(\vector_scale<n>(-1, x), x) = \vector_scale<n>(0, x)
+    forall c, d R, x, y \row_vector_space<n>:
+        \vector_scale<n>(c * d, x) = \vector_scale<n>(c, \vector_scale<n>(d, x))
+        \vector_scale<n>(c, \vector_add<n>(x, y)) = \vector_add<n>(\vector_scale<n>(c, x), \vector_scale<n>(c, y))
+        \vector_scale<n>(c + d, x) = \vector_add<n>(\vector_scale<n>(c, x), \vector_scale<n>(d, x))
+        \vector_scale<n>(1, x) = x
+
 thm row_vectors_form_real_vector_space:
-    ? forall n N_pos, x, y \row_vector_space<n>:
-        \vector_add<n>(x, y) $in \row_vector_space<n>
-    \vector_add<n>(x, y) $in \row_vector_space<n>
+    ? forall n N+:
+        $has_row_vector_space_laws(n)
+    # proof_debt: unfold the coordinatewise definitions and prove each vector
+    # identity by real arithmetic at every coordinate.
+    trust $has_row_vector_space_laws(n)
 
 # Definition 6.1.3. The transpose changes a row-vector presentation into the
 # corresponding column presentation without changing coordinates.
-template<n N_pos>:
-    have fn transpose_row_vector(x \row_vector_space<n>) fn(j closed_range(1, n)) R = fn(index closed_range(1, n)) R {x(index)}
+template<n N+>:
+    have column_vector_space set = cart({1}, \row_vector_space<n>)
+
+prop is_transpose_row_vector(n N+, x \row_vector_space<n>, column \column_vector_space<n>):
+    column = (1, x)
+
+thm transpose_row_vector_exists_unique:
+    ? forall n N+, x \row_vector_space<n>:
+        exist! column \column_vector_space<n> st {$is_transpose_row_vector(n, x, column)}
+    # proof_debt: dependent selected functions cannot yet be stored when their
+    # return carrier contains an earlier template argument.
+    trust exist! column \column_vector_space<n> st {$is_transpose_row_vector(n, x, column)}
 
 # Definition 6.1.5. The j-th standard basis vector is one in coordinate j and
 # zero elsewhere.
-prop is_standard_basis_vector(n N_pos, j closed_range(1, n), basis_vector \row_vector_space<n>):
+prop is_standard_basis_vector(n N+, j closed_range(1, n), basis_vector \row_vector_space<n>):
     basis_vector(j) = 1
     forall index closed_range(1, n):
         index != j
         =>:
             basis_vector(index) = 0
 
+thm standard_basis_vector_exists_unique:
+    ? forall n N+, j closed_range(1, n):
+        exist! basis_vector \row_vector_space<n> st {$is_standard_basis_vector(n, j, basis_vector)}
+    # proof_debt: dependent selected functions cannot yet be stored when their
+    # return carrier contains an earlier template argument.
+    trust exist! basis_vector \row_vector_space<n> st {$is_standard_basis_vector(n, j, basis_vector)}
+
+thm row_vector_standard_basis_decomposition:
+    ? forall n N+, x \row_vector_space<n>, basis_vectors fn(j closed_range(1, n)) \row_vector_space<n>:
+        forall j closed_range(1, n):
+            $is_standard_basis_vector(n, j, basis_vectors(j))
+        =>:
+            x = fn(index closed_range(1, n)) R {sum(1, n, fn(j closed_range(1, n)) R {x(j) * basis_vectors(j)(index)})}
+    # proof_debt: evaluate the finite coordinate sum and retain only j=index.
+    trust x = fn(index closed_range(1, n)) R {sum(1, n, fn(j closed_range(1, n)) R {x(j) * basis_vectors(j)(index)})}
+
 # Definition 6.1.6. A map between finite real coordinate spaces is linear when
 # it preserves addition and scalar multiplication.
-prop is_linear_transformation(n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>):
+prop is_linear_transformation(n, m N+, T fn(x \row_vector_space<n>) \row_vector_space<m>):
     forall x, y \row_vector_space<n>:
         T(\vector_add<n>(x, y)) = \vector_add<m>(T(x), T(y))
     forall c R, x \row_vector_space<n>:
         T(\vector_scale<n>(c, x)) = \vector_scale<m>(c, T(x))
 
+# Example 6.1.7. Dilation by five on R^3.
+have fn dilation_by_five(x \row_vector_space<3>) \row_vector_space<3> = \vector_scale<3>(5, x)
+
+prop dilation_by_five_is_linear():
+    $is_linear_transformation(3, 3, dilation_by_five)
+
+# proof_debt: unfold coordinatewise scaling and verify both linear laws.
+trust $dilation_by_five_is_linear()
+
+# Example 6.1.8. Counterclockwise rotation by pi/2 on R^2.
+prop is_quarter_turn_value(x, value \row_vector_space<2>):
+    value(1) = -x(2)
+    value(2) = x(1)
+
+have fn quarter_turn by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_quarter_turn_value(x, value)}
+    # proof_debt: construct the two-coordinate function and prove uniqueness.
+    trust exist! value \row_vector_space<2> st {$is_quarter_turn_value(x, value)}
+
+thm selected_quarter_turn_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_quarter_turn_value(x, quarter_turn(x))
+    $is_quarter_turn_value(x, quarter_turn(x))
+
+prop quarter_turn_is_linear():
+    $is_linear_transformation(2, 2, quarter_turn)
+
+# proof_debt: verify the two linear laws from the selected coordinate graph.
+trust $quarter_turn_is_linear()
+
+# Example 6.1.9. Projection, inclusion, and identity.
+have fn first_two_coordinate_projection(x \row_vector_space<3>) \row_vector_space<2> = fn(index closed_range(1, 2)) R {x(index)}
+
+prop first_two_coordinate_projection_is_linear():
+    $is_linear_transformation(3, 2, first_two_coordinate_projection)
+
+# proof_debt: unfold the first-two-coordinate function in both linear laws.
+trust $first_two_coordinate_projection_is_linear()
+
+prop is_zero_extend_inclusion_value(x \row_vector_space<2>, value \row_vector_space<3>):
+    value(1) = x(1)
+    value(2) = x(2)
+    value(3) = 0
+
+have fn zero_extend_inclusion by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<3> st {$is_zero_extend_inclusion_value(x, value)}
+    # proof_debt: construct the three-coordinate function and prove uniqueness.
+    trust exist! value \row_vector_space<3> st {$is_zero_extend_inclusion_value(x, value)}
+
+thm selected_zero_extend_inclusion_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_zero_extend_inclusion_value(x, zero_extend_inclusion(x))
+    $is_zero_extend_inclusion_value(x, zero_extend_inclusion(x))
+
+prop zero_extend_inclusion_is_linear():
+    $is_linear_transformation(2, 3, zero_extend_inclusion)
+
+# proof_debt: verify the two linear laws from the selected coordinate graph.
+trust $zero_extend_inclusion_is_linear()
+
+template<n N+>:
+    have fn identity_transformation(x \row_vector_space<n>) \row_vector_space<n> = x
+
+thm identity_transformation_is_linear:
+    ? forall n N+:
+        $is_linear_transformation(n, n, \identity_transformation<n>)
+    # proof_debt: unfold the identity function in both linear laws.
+    trust $is_linear_transformation(n, n, \identity_transformation<n>)
+
 # Definition 6.1.10. An m by n matrix is a real-valued function on its row and
 # column index rectangle.
-template<m, n N_pos>:
+template<m, n N+>:
     have matrix_space set = fn(entry cart(closed_range(1, m), closed_range(1, n))) R
 
 # Definition 6.1.11. Matrix multiplication contracts the shared coordinate.
-template<m, n, p N_pos>:
+template<m, n, p N+>:
     have fn matrix_product(A \matrix_space<m, n>, B \matrix_space<n, p>) \matrix_space<m, p> = fn(entry cart(closed_range(1, m), closed_range(1, p))) R {sum(1, n, fn(k closed_range(1, n)) R {A((entry[1], k)) * B((k, entry[2]))})}
 
-# Lemma 6.1.13. Every linear transformation has a matrix representation.
-prop is_matrix_representation(n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>, A \matrix_space<m, n>):
+# Lemma 6.1.13. Every linear transformation has a unique matrix
+# representation.
+prop is_matrix_representation(n, m N+, T fn(x \row_vector_space<n>) \row_vector_space<m>, A \matrix_space<m, n>):
     forall x \row_vector_space<n>:
         T(x) = fn(index closed_range(1, m)) R {sum(1, n, fn(j closed_range(1, n)) R {A((index, j)) * x(j)})}
 
+# Example 6.1.12. The concrete matrix with rows (1,2,3) and (4,5,6).
+prop is_example_6112_matrix(A \matrix_space<2, 3>):
+    A((1, 1)) = 1
+    A((1, 2)) = 2
+    A((1, 3)) = 3
+    A((2, 1)) = 4
+    A((2, 2)) = 5
+    A((2, 3)) = 6
+
+have fn example_6112_matrix_selector by exist!:
+    ? forall anchor R:
+        exist! A \matrix_space<2, 3> st {$is_example_6112_matrix(A)}
+    # proof_debt: construct the six-entry matrix function and prove uniqueness.
+    trust exist! A \matrix_space<2, 3> st {$is_example_6112_matrix(A)}
+
+have example_6112_matrix \matrix_space<2, 3> = example_6112_matrix_selector(0)
+
+thm selected_example_6112_matrix_has_entries:
+    ? forall anchor R:
+        $is_example_6112_matrix(example_6112_matrix)
+    # proof_debt: selection certificate does not propagate through the named alias.
+    trust $is_example_6112_matrix(example_6112_matrix)
+
+have fn example_6112_linear_map(x \row_vector_space<3>) \row_vector_space<2> = fn(index closed_range(1, 2)) R {sum(1, 3, fn(j closed_range(1, 3)) R {example_6112_matrix((index, j)) * x(j)})}
+
+prop is_example_6112_output(x \row_vector_space<3>, value \row_vector_space<2>):
+    value(1) = x(1) + 2 * x(2) + 3 * x(3)
+    value(2) = 4 * x(1) + 5 * x(2) + 6 * x(3)
+
+thm example_6112_matrix_calculation:
+    ? forall x \row_vector_space<3>:
+        $is_example_6112_output(x, example_6112_linear_map(x))
+    # proof_debt: unfold the selected matrix entries and the three-term sums.
+    trust $is_example_6112_output(x, example_6112_linear_map(x))
+
 thm linear_transformation_has_matrix:
-    ? forall n, m N_pos, T fn(x \row_vector_space<n>) \row_vector_space<m>:
+    ? forall n, m N+, T fn(x \row_vector_space<n>) \row_vector_space<m>:
         $is_linear_transformation(n, m, T)
         =>:
-            exist A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
-    trust exist A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
+            exist! A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
+    trust exist! A \matrix_space<m, n> st {$is_matrix_representation(n, m, T, A)}
 
 # Lemma 6.1.16. Composition of matrix maps corresponds to matrix
 # multiplication.
+prop has_matrix_product_composition_law(m, n, p N+, A \matrix_space<m, n>, B \matrix_space<n, p>, LA fn(x \row_vector_space<n>) \row_vector_space<m>, LB fn(x \row_vector_space<p>) \row_vector_space<n>, LAB fn(x \row_vector_space<p>) \row_vector_space<m>):
+    forall x \row_vector_space<p>:
+        LA(LB(x)) = LAB(x)
+
 thm matrix_product_represents_composition:
-    ? forall m, n, p N_pos, A \matrix_space<m, n>, B \matrix_space<n, p>:
-        \matrix_product<m, n, p>(A, B) $in \matrix_space<m, p>
-    \matrix_product<m, n, p>(A, B) $in \matrix_space<m, p>
+    ? forall m, n, p N+, A \matrix_space<m, n>, B \matrix_space<n, p>, LA fn(x \row_vector_space<n>) \row_vector_space<m>, LB fn(x \row_vector_space<p>) \row_vector_space<n>, LAB fn(x \row_vector_space<p>) \row_vector_space<m>:
+        $is_matrix_representation(n, m, LA, A)
+        $is_matrix_representation(p, n, LB, B)
+        $is_matrix_representation(p, m, LAB, \matrix_product<m, n, p>(A, B))
+        =>:
+            $has_matrix_product_composition_law(m, n, p, A, B, LA, LB, LAB)
+    # proof_debt: expand the three matrix representations coordinatewise and
+    # interchange the two finite sums.
+    trust $has_matrix_product_composition_law(m, n, p, A, B, LA, LB, LAB)
 
 # Lemma 6.2.1. The one-dimensional derivative definition is equivalent to a
 # linear approximation with an error that is little-o of the displacement.
-prop is_scalar_linear_approximation_delta_controlled(E power_set(R), f fn(x E) R, x0 E, L R, epsilon, delta R_pos):
+prop is_scalar_linear_approximation_delta_controlled(E power_set(R), f fn(x E) R, x0 E, L R, epsilon, delta R+):
     forall x E:
         x != x0
         abs(x - x0) < delta
@@ -78,114 +251,485 @@ prop is_scalar_linear_approximation_delta_controlled(E power_set(R), f fn(x E) R
             abs(f(x) - f(x0) - L * (x - x0)) <= epsilon * abs(x - x0)
 
 prop is_scalar_linear_approximation(E power_set(R), f fn(x E) R, x0 E, L R):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_scalar_linear_approximation_delta_controlled(E, f, x0, L, epsilon, delta)}
+    forall epsilon R+:
+        exist delta R+ st {$is_scalar_linear_approximation_delta_controlled(E, f, x0, L, epsilon, delta)}
 
-thm scalar_derivative_is_linear_approximation:
+prop has_scalar_derivative_linear_approximation_equivalence(E power_set(R), f fn(x E) R, x0 E, L R):
+    not $chap3::has_derivative_at(E, f, x0, L) or $is_scalar_linear_approximation(E, f, x0, L)
+    not $is_scalar_linear_approximation(E, f, x0, L) or $chap3::has_derivative_at(E, f, x0, L)
+
+thm scalar_derivative_iff_linear_approximation:
     ? forall E power_set(R), f fn(x E) R, x0 E, L R:
-        $chap3::has_derivative_at(E, f, x0, L)
-        =>:
-            $is_scalar_linear_approximation(E, f, x0, L)
-    trust $is_scalar_linear_approximation(E, f, x0, L)
+        $has_scalar_derivative_linear_approximation_equivalence(E, f, x0, L)
+    # proof_debt: convert the quotient estimate and the relative-error
+    # estimate in both directions using the positive displacement magnitude.
+    trust $has_scalar_derivative_linear_approximation_equivalence(E, f, x0, L)
 
 # Definition 6.2.2. Differentiability in several variables means approximation
 # by a displayed linear transformation with relative error tending to zero.
-template<n N_pos>:
+template<n N+>:
     have fn euclidean_squared_norm(x \row_vector_space<n>) R = sum(1, n, fn(index closed_range(1, n)) R {x(index)^2})
 
-template<n N_pos>:
+template<n N+>:
     have fn euclidean_distance(x, y \row_vector_space<n>) R = sqrt(abs(sum(1, n, fn(index closed_range(1, n)) R {(x(index) - y(index))^2})))
 
-prop is_total_derivative_delta_controlled(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, epsilon, delta R_pos):
+prop is_total_derivative_delta_controlled(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, epsilon, delta R+):
     forall x E:
         x != x0
         \euclidean_distance<n>(x, x0) < delta
         =>:
             \euclidean_distance<m>(f(x), \vector_add<m>(f(x0), L(\vector_add<n>(x, \vector_scale<n>(-1, x0))))) <= epsilon * \euclidean_distance<n>(x, x0)
 
-prop has_total_derivative_at(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>):
+prop has_total_derivative_at(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>):
     $is_linear_transformation(n, m, L)
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_total_derivative_delta_controlled(n, m, E, f, x0, L, epsilon, delta)}
+    forall radius R+:
+        exist x E st {x != x0, \euclidean_distance<n>(x, x0) < radius}
+    forall epsilon R+:
+        exist delta R+ st {$is_total_derivative_delta_controlled(n, m, E, f, x0, L, epsilon, delta)}
+
+# Example 6.2.3. The coordinatewise squaring map at (1,2).
+prop is_example_623_base_point(point \row_vector_space<2>):
+    point(1) = 1
+    point(2) = 2
+
+have fn example_623_base_point_selector by exist!:
+    ? forall anchor R:
+        exist! point \row_vector_space<2> st {$is_example_623_base_point(point)}
+    # proof_debt: construct the two-coordinate point and prove uniqueness.
+    trust exist! point \row_vector_space<2> st {$is_example_623_base_point(point)}
+
+have example_623_base_point \row_vector_space<2> = example_623_base_point_selector(0)
+
+thm selected_example_623_base_point_has_coordinates:
+    ? forall anchor R:
+        $is_example_623_base_point(example_623_base_point)
+    # proof_debt: selection certificate does not propagate through the named alias.
+    trust $is_example_623_base_point(example_623_base_point)
+
+prop is_example_623_function_value(x, value \row_vector_space<2>):
+    value(1) = x(1)^2
+    value(2) = x(2)^2
+
+have fn example_623_function by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_623_function_value(x, value)}
+    # proof_debt: construct the coordinatewise square function and prove uniqueness.
+    trust exist! value \row_vector_space<2> st {$is_example_623_function_value(x, value)}
+
+thm selected_example_623_function_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_example_623_function_value(x, example_623_function(x))
+    $is_example_623_function_value(x, example_623_function(x))
+
+prop is_example_623_derivative_value(v, value \row_vector_space<2>):
+    value(1) = 2 * v(1)
+    value(2) = 4 * v(2)
+
+have fn example_623_derivative by exist!:
+    ? forall v \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_623_derivative_value(v, value)}
+    # proof_debt: construct the coordinatewise linear map and prove uniqueness.
+    trust exist! value \row_vector_space<2> st {$is_example_623_derivative_value(v, value)}
+
+thm selected_example_623_derivative_has_coordinates:
+    ? forall v \row_vector_space<2>:
+        $is_example_623_derivative_value(v, example_623_derivative(v))
+    $is_example_623_derivative_value(v, example_623_derivative(v))
+
+prop example_623_derivative_is_linear():
+    $is_linear_transformation(2, 2, example_623_derivative)
+
+# proof_debt: verify addition and scalar multiplication coordinatewise.
+trust $example_623_derivative_is_linear()
+
+thm example_623_is_differentiable:
+    ? forall anchor R:
+        $has_total_derivative_at(2, 2, \row_vector_space<2>, example_623_function, example_623_base_point, example_623_derivative)
+    # proof_debt: reduce the remainder to (a^2,b^2) and apply the squeeze estimate.
+    trust $has_total_derivative_at(2, 2, \row_vector_space<2>, example_623_function, example_623_base_point, example_623_derivative)
 
 # Lemma 6.2.4. A total derivative, when it exists, is unique.
 thm total_derivative_is_unique:
-    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L, M fn(v \row_vector_space<n>) \row_vector_space<m>:
+    ? forall n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L, M fn(v \row_vector_space<n>) \row_vector_space<m>:
         $has_total_derivative_at(n, m, E, f, x0, L)
         $has_total_derivative_at(n, m, E, f, x0, M)
         =>:
             L = M
     trust L = M
 
-# Definition 6.3.1. The directional derivative is the one-dimensional
-# derivative along a line through the base point.
-prop is_coordinate_error_bound(m N_pos, error \row_vector_space<m>, bound R):
+# Definition 6.3.1. The directional derivative is the one-sided derivative
+# along the positive ray from an interior base point.
+prop is_coordinate_error_bound(m N+, error \row_vector_space<m>, bound R):
     forall coordinate closed_range(1, m):
         abs(error(coordinate)) <= bound
 
-prop is_directional_derivative_delta_controlled(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>, epsilon, delta R_pos):
+prop is_directional_derivative_delta_controlled(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>, epsilon, delta R+):
     forall t R:
-        0 < abs(t) < delta
+        0 < t < delta
         \vector_add<n>(x0, \vector_scale<n>(t, v)) $in E
         =>:
-            exist error \row_vector_space<m> st {$is_coordinate_error_bound(m, error, epsilon * abs(t)), f(\vector_add<n>(x0, \vector_scale<n>(t, v))) = \vector_add<m>(f(x0), \vector_add<m>(\vector_scale<m>(t, value), error))}
+            exist error \row_vector_space<m> st {$is_coordinate_error_bound(m, error, epsilon * t), f(\vector_add<n>(x0, \vector_scale<n>(t, v))) = \vector_add<m>(f(x0), \vector_add<m>(\vector_scale<m>(t, value), error))}
 
-prop has_directional_derivative(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_directional_derivative_delta_controlled(n, m, E, f, x0, v, value, epsilon, delta)}
+prop has_directional_derivative(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, v \row_vector_space<n>, value \row_vector_space<m>):
+    $chap1::is_metric_interior_point(\row_vector_space<n>, \euclidean_distance<n>, E, x0)
+    forall epsilon R+:
+        exist delta R+ st {$is_directional_derivative_delta_controlled(n, m, E, f, x0, v, value, epsilon, delta)}
+
+# Example 6.3.4. Direction (3,4) for the square map at (1,2).
+prop is_example_634_direction(direction \row_vector_space<2>):
+    direction(1) = 3
+    direction(2) = 4
+
+have fn example_634_direction_selector by exist!:
+    ? forall anchor R:
+        exist! direction \row_vector_space<2> st {$is_example_634_direction(direction)}
+    # proof_debt: construct the two-coordinate direction and prove uniqueness.
+    trust exist! direction \row_vector_space<2> st {$is_example_634_direction(direction)}
+
+have example_634_direction \row_vector_space<2> = example_634_direction_selector(0)
+
+thm selected_example_634_direction_has_coordinates:
+    ? forall anchor R:
+        $is_example_634_direction(example_634_direction)
+    # proof_debt: selection certificate does not propagate through the named alias.
+    trust $is_example_634_direction(example_634_direction)
+
+prop is_example_634_directional_value(value \row_vector_space<2>):
+    value(1) = 6
+    value(2) = 16
+
+thm example_634_derivative_value:
+    ? forall anchor R:
+        $is_example_634_directional_value(example_623_derivative(example_634_direction))
+    # proof_debt: combine the two selected coordinate graphs and normalize 2*3 and 4*4.
+    trust $is_example_634_directional_value(example_623_derivative(example_634_direction))
+
+thm example_634_directional_derivative:
+    ? forall anchor R:
+        $has_directional_derivative(2, 2, \row_vector_space<2>, example_623_function, example_623_base_point, example_634_direction, example_623_derivative(example_634_direction))
+    # proof_debt: specialize the square-map remainder calculation to the positive ray.
+    trust $has_directional_derivative(2, 2, \row_vector_space<2>, example_623_function, example_623_base_point, example_634_direction, example_623_derivative(example_634_direction))
 
 # Lemma 6.3.5. Total differentiability implies every directional derivative,
 # and the derivative is obtained by applying the total derivative to the
 # direction.
 thm total_derivative_gives_directional_derivative:
-    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, v \row_vector_space<n>:
+    ? forall n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, L fn(v \row_vector_space<n>) \row_vector_space<m>, v \row_vector_space<n>:
+        $chap1::is_metric_interior_point(\row_vector_space<n>, \euclidean_distance<n>, E, x0)
         $has_total_derivative_at(n, m, E, f, x0, L)
         =>:
             $has_directional_derivative(n, m, E, f, x0, v, L(v))
+    # proof_debt: specialize the total approximation to the positive ray and
+    # use linearity to identify the first-order term.
     trust $has_directional_derivative(n, m, E, f, x0, v, L(v))
 
-# Definition 6.3.7. A partial derivative is the directional derivative in a
-# standard basis direction.
-prop has_partial_derivative(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, coordinate closed_range(1, n), value \row_vector_space<m>):
-    exist basis_vector \row_vector_space<n> st {$is_standard_basis_vector(n, coordinate, basis_vector), $has_directional_derivative(n, m, E, f, x0, basis_vector, value)}
+# Definition 6.3.7. A partial derivative is the common two-sided derivative
+# along a coordinate line, expressed through the two one-sided rays.
+prop has_partial_derivative(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E, coordinate closed_range(1, n), value \row_vector_space<m>):
+    exist basis_vector \row_vector_space<n> st {$is_standard_basis_vector(n, coordinate, basis_vector), $has_directional_derivative(n, m, E, f, x0, basis_vector, value), $has_directional_derivative(n, m, E, f, x0, \vector_scale<n>(-1, basis_vector), \vector_scale<m>(-1, value))}
 
-# Theorem 6.3.8. Continuous partial derivatives characterize continuous total
-# differentiability on an open domain.
+# Theorem 6.3.8. The supplied family records every partial derivative on F.
+prop is_partial_derivative_family_on(n, m N+, E, F power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, partials fn(entry cart(cart(closed_range(1, n), F), closed_range(1, m))) R):
+    F $subset E
+    forall coordinate closed_range(1, n), x F:
+        $has_partial_derivative(n, m, E, f, x, coordinate, fn(output_coordinate closed_range(1, m)) R {partials(((coordinate, x), output_coordinate))})
+
+# Each coordinate partial-derivative function is continuous at x0.
+prop is_partial_derivative_family_continuous_at(n, m N+, F power_set(\row_vector_space<n>), x0 F, partials fn(entry cart(cart(closed_range(1, n), F), closed_range(1, m))) R):
+    forall coordinate closed_range(1, n):
+        $chap2::is_metric_continuous_at(F, \row_vector_space<m>, fn(x, y F) R {\euclidean_distance<n>(x, y)}, \euclidean_distance<m>, fn(x F) \row_vector_space<m> {fn(output_coordinate closed_range(1, m)) R {partials(((coordinate, x), output_coordinate))}}, x0)
+
+# The total derivative is the linear map assembled from the partials:
+# L(v)_i = sum_j v_j partial_j(x0)_i.
+prop is_total_derivative_assembled_from_partials(n, m N+, F power_set(\row_vector_space<n>), x0 F, partials fn(entry cart(cart(closed_range(1, n), F), closed_range(1, m))) R, L fn(v \row_vector_space<n>) \row_vector_space<m>):
+    $is_linear_transformation(n, m, L)
+    forall v \row_vector_space<n>:
+        L(v) = fn(output_coordinate closed_range(1, m)) R {sum(1, n, fn(coordinate closed_range(1, n)) R {v(coordinate) * partials(((coordinate, x0), output_coordinate))})}
+
+# Continuous partial derivatives on a neighborhood of an interior point imply
+# total differentiability there, with the displayed derivative formula.
 thm continuous_partials_give_total_derivative:
-    ? forall n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 E:
-        exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x0, L)}
-    trust exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x0, L)}
+    ? forall n, m N+, E, F power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, x0 F, partials fn(entry cart(cart(closed_range(1, n), F), closed_range(1, m))) R, L fn(v \row_vector_space<n>) \row_vector_space<m>:
+        F $subset E
+        $chap1::is_metric_interior_point(\row_vector_space<n>, \euclidean_distance<n>, F, x0)
+        $is_partial_derivative_family_on(n, m, E, F, f, partials)
+        $is_partial_derivative_family_continuous_at(n, m, F, x0, partials)
+        $is_total_derivative_assembled_from_partials(n, m, F, x0, partials, L)
+        =>:
+            $has_total_derivative_at(n, m, E, f, x0, L)
+    # proof_debt: telescope along coordinate directions and sum the
+    # continuity-controlled remainder estimates.
+    trust $has_total_derivative_at(n, m, E, f, x0, L)
+
+# Example 6.3.9. f(x,y)=(x^2+xy,y^2), its partials, and Jacobian.
+prop is_example_639_function_value(x, value \row_vector_space<2>):
+    value(1) = x(1)^2 + x(1) * x(2)
+    value(2) = x(2)^2
+
+have fn example_639_function by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_639_function_value(x, value)}
+    # proof_debt: construct the two-coordinate polynomial function.
+    trust exist! value \row_vector_space<2> st {$is_example_639_function_value(x, value)}
+
+thm selected_example_639_function_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_example_639_function_value(x, example_639_function(x))
+    $is_example_639_function_value(x, example_639_function(x))
+
+prop is_example_639_first_partial_value(x, value \row_vector_space<2>):
+    value(1) = 2 * x(1) + x(2)
+    value(2) = 0
+
+have fn example_639_first_partial by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_639_first_partial_value(x, value)}
+    # proof_debt: construct the first partial-value function.
+    trust exist! value \row_vector_space<2> st {$is_example_639_first_partial_value(x, value)}
+
+thm selected_example_639_first_partial_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_example_639_first_partial_value(x, example_639_first_partial(x))
+    $is_example_639_first_partial_value(x, example_639_first_partial(x))
+
+prop is_example_639_second_partial_value(x, value \row_vector_space<2>):
+    value(1) = x(1)
+    value(2) = 2 * x(2)
+
+have fn example_639_second_partial by exist!:
+    ? forall x \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_639_second_partial_value(x, value)}
+    # proof_debt: construct the second partial-value function.
+    trust exist! value \row_vector_space<2> st {$is_example_639_second_partial_value(x, value)}
+
+thm selected_example_639_second_partial_has_coordinates:
+    ? forall x \row_vector_space<2>:
+        $is_example_639_second_partial_value(x, example_639_second_partial(x))
+    $is_example_639_second_partial_value(x, example_639_second_partial(x))
+
+thm example_639_has_displayed_partials:
+    ? forall x \row_vector_space<2>:
+        $has_partial_derivative(2, 2, \row_vector_space<2>, example_639_function, x, 1, example_639_first_partial(x))
+        $has_partial_derivative(2, 2, \row_vector_space<2>, example_639_function, x, 2, example_639_second_partial(x))
+    # proof_debt: differentiate each polynomial coordinate along both signs of e1.
+    trust $has_partial_derivative(2, 2, \row_vector_space<2>, example_639_function, x, 1, example_639_first_partial(x))
+    # proof_debt: differentiate each polynomial coordinate along both signs of e2.
+    trust $has_partial_derivative(2, 2, \row_vector_space<2>, example_639_function, x, 2, example_639_second_partial(x))
+
+prop is_example_639_derivative_value(base, direction, value \row_vector_space<2>):
+    value(1) = (2 * base(1) + base(2)) * direction(1) + base(1) * direction(2)
+    value(2) = 2 * base(2) * direction(2)
+
+have fn example_639_derivative_action by exist!:
+    ? forall base, direction \row_vector_space<2>:
+        exist! value \row_vector_space<2> st {$is_example_639_derivative_value(base, direction, value)}
+    # proof_debt: construct the two-coordinate Jacobian action.
+    trust exist! value \row_vector_space<2> st {$is_example_639_derivative_value(base, direction, value)}
+
+thm selected_example_639_derivative_has_coordinates:
+    ? forall base, direction \row_vector_space<2>:
+        $is_example_639_derivative_value(base, direction, example_639_derivative_action(base, direction))
+    $is_example_639_derivative_value(base, direction, example_639_derivative_action(base, direction))
+
+prop example_639_derivative_is_linear_at(base \row_vector_space<2>):
+    $is_linear_transformation(2, 2, fn(direction \row_vector_space<2>) \row_vector_space<2> {example_639_derivative_action(base, direction)})
+
+thm example_639_derivative_is_linear:
+    ? forall base \row_vector_space<2>:
+        $example_639_derivative_is_linear_at(base)
+    # proof_debt: verify the displayed Jacobian action coordinatewise.
+    trust $example_639_derivative_is_linear_at(base)
+
+thm example_639_is_differentiable:
+    ? forall base \row_vector_space<2>:
+        $has_total_derivative_at(2, 2, \row_vector_space<2>, example_639_function, base, fn(direction \row_vector_space<2>) \row_vector_space<2> {example_639_derivative_action(base, direction)})
+    # proof_debt: use the continuous polynomial partials and Theorem 6.3.8.
+    trust $has_total_derivative_at(2, 2, \row_vector_space<2>, example_639_function, base, fn(direction \row_vector_space<2>) \row_vector_space<2> {example_639_derivative_action(base, direction)})
+
+prop is_example_639_jacobian(base \row_vector_space<2>, A \matrix_space<2, 2>):
+    A((1, 1)) = 2 * base(1) + base(2)
+    A((1, 2)) = base(1)
+    A((2, 1)) = 0
+    A((2, 2)) = 2 * base(2)
+
+thm example_639_has_displayed_jacobian:
+    ? forall base \row_vector_space<2>:
+        exist A \matrix_space<2, 2> st {$is_example_639_jacobian(base, A), $is_matrix_representation(2, 2, fn(direction \row_vector_space<2>) \row_vector_space<2> {example_639_derivative_action(base, direction)}, A)}
+    # proof_debt: construct the four-entry Jacobian and expand both matrix rows.
+    trust exist A \matrix_space<2, 2> st {$is_example_639_jacobian(base, A), $is_matrix_representation(2, 2, fn(direction \row_vector_space<2>) \row_vector_space<2> {example_639_derivative_action(base, direction)}, A)}
+
+thm example_639_directional_derivative:
+    ? forall base, direction \row_vector_space<2>:
+        $has_directional_derivative(2, 2, \row_vector_space<2>, example_639_function, base, direction, example_639_derivative_action(base, direction))
+    # proof_debt: apply Lemma 6.3.5 to the displayed total derivative.
+    trust $has_directional_derivative(2, 2, \row_vector_space<2>, example_639_function, base, direction, example_639_derivative_action(base, direction))
 
 # Theorem 6.4.1. Total derivatives obey the chain rule.
-prop is_vector_function_composition(n, m, p N_pos, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, h fn(x E) \row_vector_space<p>):
+prop is_vector_function_composition(n, m, p N+, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, h fn(x E) \row_vector_space<p>):
     forall x E:
         f(x) $in F
-        =>:
-            h(x) = g(f(x))
+        h(x) = g(f(x))
+
+prop is_linear_transformation_composition(n, m, p N+, Df fn(v \row_vector_space<n>) \row_vector_space<m>, Dg fn(v \row_vector_space<m>) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p>):
+    forall v \row_vector_space<n>:
+        D(v) = Dg(Df(v))
 
 thm several_variable_chain_rule:
-    ? forall n, m, p N_pos, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, x0 E, Df fn(v \row_vector_space<n>) \row_vector_space<m>, Dg fn(v \row_vector_space<m>) \row_vector_space<p>:
+    ? forall n, m, p N+, E power_set(\row_vector_space<n>), F power_set(\row_vector_space<m>), f fn(x E) \row_vector_space<m>, g fn(y F) \row_vector_space<p>, x0 E, Df fn(v \row_vector_space<n>) \row_vector_space<m>, Dg fn(v \row_vector_space<m>) \row_vector_space<p>:
+        $chap1::is_metric_interior_point(\row_vector_space<n>, \euclidean_distance<n>, E, x0)
         $has_total_derivative_at(n, m, E, f, x0, Df)
-        f(x0) $in F
+        forall x E:
+            f(x) $in F
+        $chap1::is_metric_interior_point(\row_vector_space<m>, \euclidean_distance<m>, F, f(x0))
         $has_total_derivative_at(m, p, F, g, f(x0), Dg)
         =>:
-            exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $has_total_derivative_at(n, p, E, h, x0, D)}
-    trust exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $has_total_derivative_at(n, p, E, h, x0, D)}
+            exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $is_linear_transformation_composition(n, m, p, Df, Dg, D), $has_total_derivative_at(n, p, E, h, x0, D)}
+    # proof_debt: compose the two linear approximations and control the two
+    # remainder terms.
+    trust exist h fn(x E) \row_vector_space<p>, D fn(v \row_vector_space<n>) \row_vector_space<p> st {$is_vector_function_composition(n, m, p, E, F, f, g, h), $is_linear_transformation_composition(n, m, p, Df, Dg, D), $has_total_derivative_at(n, p, E, h, x0, D)}
 
-# Definition 6.5.1. Twice continuous differentiability means that the first
-# derivative exists everywhere and varies continuously with the base point.
-prop is_twice_continuously_differentiable(n, m N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>):
+# Example 6.4.2. The product rule as a specialization of the chain rule.
+prop is_example_642_pair_value(first, second R, value \row_vector_space<2>):
+    value(1) = first
+    value(2) = second
+
+prop is_example_642_pairing(n N+, E power_set(\row_vector_space<n>), f, g fn(x E) R, h fn(x E) \row_vector_space<2>):
     forall x E:
-        exist L fn(v \row_vector_space<n>) \row_vector_space<m> st {$has_total_derivative_at(n, m, E, f, x, L)}
+        exist value \row_vector_space<2> st {h(x) = value, $is_example_642_pair_value(f(x), g(x), value)}
+
+prop is_example_642_multiplication(k fn(pair \row_vector_space<2>) R):
+    forall pair \row_vector_space<2>:
+        k(pair) = pair(1) * pair(2)
+
+prop is_example_642_product(n N+, E power_set(\row_vector_space<n>), f, g, fg fn(x E) R):
+    forall x E:
+        fg(x) = f(x) * g(x)
+
+prop is_example_642_pairing_derivative(n N+, Df, Dg fn(direction \row_vector_space<n>) R, Dh fn(direction \row_vector_space<n>) \row_vector_space<2>):
+    forall direction \row_vector_space<n>:
+        exist value \row_vector_space<2> st {Dh(direction) = value, $is_example_642_pair_value(Df(direction), Dg(direction), value)}
+
+prop is_example_642_multiplication_derivative(base \row_vector_space<2>, Dk fn(direction \row_vector_space<2>) R):
+    forall direction \row_vector_space<2>:
+        Dk(direction) = base(2) * direction(1) + base(1) * direction(2)
+
+prop is_example_642_product_derivative(n N+, x0 \row_vector_space<n>, f, g fn(x \row_vector_space<n>) R, Df, Dg, Dfg fn(direction \row_vector_space<n>) R):
+    forall direction \row_vector_space<n>:
+        Dfg(direction) = g(x0) * Df(direction) + f(x0) * Dg(direction)
+
+prop has_example_642_scalar_total_derivative(n N+, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, Df fn(direction \row_vector_space<n>) R):
+    $has_total_derivative_at(n, 1, E, fn(x E) \row_vector_space<1> {fn(index closed_range(1, 1)) R {f(x)}}, x0, fn(direction \row_vector_space<n>) \row_vector_space<1> {fn(index closed_range(1, 1)) R {Df(direction)}})
+
+prop is_example_642_scalar_composition(n N+, E power_set(\row_vector_space<n>), h fn(x E) \row_vector_space<2>, k fn(pair \row_vector_space<2>) R, fg fn(x E) R):
+    forall x E:
+        fg(x) = k(h(x))
+
+prop is_example_642_scalar_derivative_composition(n N+, Dh fn(direction \row_vector_space<n>) \row_vector_space<2>, Dk fn(direction \row_vector_space<2>) R, Dfg fn(direction \row_vector_space<n>) R):
+    forall direction \row_vector_space<n>:
+        Dfg(direction) = Dk(Dh(direction))
+
+thm example_642_product_rule_from_chain_rule:
+    ? forall n N+, f, g fn(x \row_vector_space<n>) R, x0 \row_vector_space<n>, Df, Dg fn(direction \row_vector_space<n>) R:
+        $has_example_642_scalar_total_derivative(n, \row_vector_space<n>, f, x0, Df)
+        $has_example_642_scalar_total_derivative(n, \row_vector_space<n>, g, x0, Dg)
+        =>:
+            exist h fn(x \row_vector_space<n>) \row_vector_space<2>, k fn(pair \row_vector_space<2>) R, fg fn(x \row_vector_space<n>) R, Dh fn(direction \row_vector_space<n>) \row_vector_space<2>, Dk fn(direction \row_vector_space<2>) R, Dfg fn(direction \row_vector_space<n>) R st {$is_example_642_pairing(n, \row_vector_space<n>, f, g, h), $is_example_642_multiplication(k), $is_example_642_product(n, \row_vector_space<n>, f, g, fg), $is_example_642_scalar_composition(n, \row_vector_space<n>, h, k, fg), $is_example_642_pairing_derivative(n, Df, Dg, Dh), $is_example_642_multiplication_derivative(h(x0), Dk), $is_example_642_product_derivative(n, x0, f, g, Df, Dg, Dfg), $is_example_642_scalar_derivative_composition(n, Dh, Dk, Dfg), $has_total_derivative_at(n, 2, \row_vector_space<n>, h, x0, Dh), $has_example_642_scalar_total_derivative(2, \row_vector_space<2>, k, h(x0), Dk), $has_example_642_scalar_total_derivative(n, \row_vector_space<n>, fg, x0, Dfg)}
+    # proof_debt: construct the pairing and multiplication maps, verify their
+    # displayed derivatives, and specialize Theorem 6.4.1.
+    trust exist h fn(x \row_vector_space<n>) \row_vector_space<2>, k fn(pair \row_vector_space<2>) R, fg fn(x \row_vector_space<n>) R, Dh fn(direction \row_vector_space<n>) \row_vector_space<2>, Dk fn(direction \row_vector_space<2>) R, Dfg fn(direction \row_vector_space<n>) R st {$is_example_642_pairing(n, \row_vector_space<n>, f, g, h), $is_example_642_multiplication(k), $is_example_642_product(n, \row_vector_space<n>, f, g, fg), $is_example_642_scalar_composition(n, \row_vector_space<n>, h, k, fg), $is_example_642_pairing_derivative(n, Df, Dg, Dh), $is_example_642_multiplication_derivative(h(x0), Dk), $is_example_642_product_derivative(n, x0, f, g, Df, Dg, Dfg), $is_example_642_scalar_derivative_composition(n, Dh, Dk, Dfg), $has_total_derivative_at(n, 2, \row_vector_space<n>, h, x0, Dh), $has_example_642_scalar_total_derivative(2, \row_vector_space<2>, k, h(x0), Dk), $has_example_642_scalar_total_derivative(n, \row_vector_space<n>, fg, x0, Dfg)}
+
+# Section 6.4 application. Postcomposition by a linear map.
+prop is_linear_postcomposition(p, n, m N+, E power_set(\row_vector_space<p>), f fn(x E) \row_vector_space<n>, T fn(y \row_vector_space<n>) \row_vector_space<m>, Tf fn(x E) \row_vector_space<m>):
+    forall x E:
+        Tf(x) = T(f(x))
+
+prop is_linear_postcomposition_derivative(p, n, m N+, Df fn(direction \row_vector_space<p>) \row_vector_space<n>, T fn(y \row_vector_space<n>) \row_vector_space<m>, DTf fn(direction \row_vector_space<p>) \row_vector_space<m>):
+    forall direction \row_vector_space<p>:
+        DTf(direction) = T(Df(direction))
+
+thm linear_postcomposition_derivative:
+    ? forall p, n, m N+, E power_set(\row_vector_space<p>), f fn(x E) \row_vector_space<n>, T fn(y \row_vector_space<n>) \row_vector_space<m>, x0 E, Df fn(direction \row_vector_space<p>) \row_vector_space<n>:
+        $is_linear_transformation(n, m, T)
+        $has_total_derivative_at(p, n, E, f, x0, Df)
+        =>:
+            exist Tf fn(x E) \row_vector_space<m>, DTf fn(direction \row_vector_space<p>) \row_vector_space<m> st {$is_linear_postcomposition(p, n, m, E, f, T, Tf), $is_linear_postcomposition_derivative(p, n, m, Df, T, DTf), $has_total_derivative_at(p, m, E, Tf, x0, DTf)}
+    # proof_debt: show that a linear map has itself as derivative, then apply
+    # Theorem 6.4.1 to its composition with f.
+    trust exist Tf fn(x E) \row_vector_space<m>, DTf fn(direction \row_vector_space<p>) \row_vector_space<m> st {$is_linear_postcomposition(p, n, m, E, f, T, Tf), $is_linear_postcomposition_derivative(p, n, m, Df, T, DTf), $has_total_derivative_at(p, m, E, Tf, x0, DTf)}
+
+# Section 6.4 application. Differentiate f along a coordinate curve.
+prop is_coordinate_curve_value(n N+, coordinates fn(entry cart(closed_range(1, n), R)) R, t R, value \row_vector_space<n>):
+    forall j closed_range(1, n):
+        value(j) = coordinates((j, t))
+
+prop is_coordinate_curve(n N+, coordinates fn(entry cart(closed_range(1, n), R)) R, curve fn(t R) \row_vector_space<n>):
+    forall t R:
+        exist value \row_vector_space<n> st {curve(t) = value, $is_coordinate_curve_value(n, coordinates, t, value)}
+
+prop is_coordinate_curve_composition(n, m N+, f fn(x \row_vector_space<n>) \row_vector_space<m>, curve fn(t R) \row_vector_space<n>, composite fn(t R) \row_vector_space<m>):
+    forall t R:
+        composite(t) = f(curve(t))
+
+prop is_coordinate_velocity(n N+, speeds fn(j closed_range(1, n)) R, velocity \row_vector_space<n>):
+    forall j closed_range(1, n):
+        velocity(j) = speeds(j)
+
+prop has_coordinate_partials_at(n, m N+, f fn(x \row_vector_space<n>) \row_vector_space<m>, base \row_vector_space<n>, partials fn(entry cart(closed_range(1, n), closed_range(1, m))) R):
+    forall j closed_range(1, n):
+        $has_partial_derivative(n, m, \row_vector_space<n>, f, base, j, fn(output_coordinate closed_range(1, m)) R {partials((j, output_coordinate))})
+
+prop is_coordinate_curve_chain_sum(n, m N+, partials fn(entry cart(closed_range(1, n), closed_range(1, m))) R, speeds fn(j closed_range(1, n)) R, result \row_vector_space<m>):
+    forall output_coordinate closed_range(1, m):
+        result(output_coordinate) = sum(1, n, fn(j closed_range(1, n)) R {speeds(j) * partials((j, output_coordinate))})
+
+prop has_vector_curve_derivative_at(m N+, curve fn(t R) \row_vector_space<m>, t0 R, value \row_vector_space<m>):
+    $has_total_derivative_at(1, m, \row_vector_space<1>, fn(input \row_vector_space<1>) \row_vector_space<m> {curve(input(1))}, fn(index closed_range(1, 1)) R {t0}, fn(direction \row_vector_space<1>) \row_vector_space<m> {\vector_scale<m>(direction(1), value)})
+
+thm coordinate_curve_chain_rule:
+    ? forall n, m N+, f fn(x \row_vector_space<n>) \row_vector_space<m>, curve fn(t R) \row_vector_space<n>, coordinates fn(entry cart(closed_range(1, n), R)) R, t0 R, base \row_vector_space<n>, Df fn(direction \row_vector_space<n>) \row_vector_space<m>, speeds fn(j closed_range(1, n)) R, partials fn(entry cart(closed_range(1, n), closed_range(1, m))) R:
+        $is_coordinate_curve(n, coordinates, curve)
+        base = curve(t0)
+        $has_total_derivative_at(n, m, \row_vector_space<n>, f, base, Df)
+        forall j closed_range(1, n):
+            $chap3::has_derivative_at(R, fn(t R) R {coordinates((j, t))}, t0, speeds(j))
+        $has_coordinate_partials_at(n, m, f, base, partials)
+        =>:
+            exist composite fn(t R) \row_vector_space<m>, velocity \row_vector_space<n>, result \row_vector_space<m> st {$is_coordinate_curve_composition(n, m, f, curve, composite), $is_coordinate_velocity(n, speeds, velocity), Df(velocity) = result, $is_coordinate_curve_chain_sum(n, m, partials, speeds, result), $has_vector_curve_derivative_at(m, composite, t0, result)}
+    # proof_debt: assemble the coordinate velocity, apply Theorem 6.4.1 to
+    # f composed with the curve, and expand Df in the standard basis.
+    trust exist composite fn(t R) \row_vector_space<m>, velocity \row_vector_space<n>, result \row_vector_space<m> st {$is_coordinate_curve_composition(n, m, f, curve, composite), $is_coordinate_velocity(n, speeds, velocity), Df(velocity) = result, $is_coordinate_curve_chain_sum(n, m, partials, speeds, result), $has_vector_curve_derivative_at(m, composite, t0, result)}
+
+# Definition 6.5.1. A continuously differentiable map has a continuous family
+# of first partial derivatives on an open domain.
+prop is_continuous_partial_derivative_family_on(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, partials fn(entry cart(cart(closed_range(1, n), E), closed_range(1, m))) R):
+    $is_partial_derivative_family_on(n, m, E, E, f, partials)
+    forall x E:
+        $is_partial_derivative_family_continuous_at(n, m, E, x, partials)
+
+prop is_continuously_differentiable(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>):
+    $chap1::is_metric_open(\row_vector_space<n>, \euclidean_distance<n>, E)
+    exist partials fn(entry cart(cart(closed_range(1, n), E), closed_range(1, m))) R st {$is_continuous_partial_derivative_family_on(n, m, E, f, partials)}
+
+# The map is twice continuously differentiable when it is continuously
+# differentiable and each first partial-vector function is again continuously
+# differentiable.
+prop is_twice_continuous_partial_derivative_family_on(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, partials fn(entry cart(cart(closed_range(1, n), E), closed_range(1, m))) R):
+    $is_partial_derivative_family_on(n, m, E, E, f, partials)
+    forall coordinate closed_range(1, n):
+        $is_continuously_differentiable(n, m, E, fn(x E) \row_vector_space<m> {fn(output_coordinate closed_range(1, m)) R {partials(((coordinate, x), output_coordinate))}})
+
+prop is_twice_continuously_differentiable(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>):
+    $is_continuously_differentiable(n, m, E, f)
+    exist partials fn(entry cart(cart(closed_range(1, n), E), closed_range(1, m))) R st {$is_twice_continuous_partial_derivative_family_on(n, m, E, f, partials)}
 
 # Theorem 6.5.4. Clairaut's theorem says mixed second partial derivatives agree.
-prop differs_only_in_coordinate(n N_pos, x, y \row_vector_space<n>, j closed_range(1, n)):
+prop differs_only_in_coordinate(n N+, x, y \row_vector_space<n>, j closed_range(1, n)):
     forall index closed_range(1, n):
         index != j
         =>:
             y(index) = x(index)
 
-prop is_scalar_partial_derivative_delta_controlled(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R, epsilon, delta R_pos):
+prop is_scalar_partial_derivative_delta_controlled(n N+, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R, epsilon, delta R+):
     forall y E:
         x0 $in \row_vector_space<n>
         y $in \row_vector_space<n>
@@ -194,86 +738,318 @@ prop is_scalar_partial_derivative_delta_controlled(n N_pos, E power_set(\row_vec
         =>:
             abs(f(y) - f(x0) - value * (y(j) - x0(j))) <= epsilon * abs(y(j) - x0(j))
 
-prop has_scalar_partial_derivative_at(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_scalar_partial_derivative_delta_controlled(n, E, f, x0, j, value, epsilon, delta)}
+prop has_scalar_partial_derivative_at(n N+, E power_set(\row_vector_space<n>), f fn(x E) R, x0 E, j closed_range(1, n), value R):
+    forall epsilon R+:
+        exist delta R+ st {$is_scalar_partial_derivative_delta_controlled(n, E, f, x0, j, value, epsilon, delta)}
 
-prop is_first_and_second_partial_column(n N_pos, E power_set(\row_vector_space<n>), f, first_partial fn(x E) R, j closed_range(1, n), second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
+prop is_first_and_second_partial_column(n, m N+, E power_set(\row_vector_space<n>), f, first_partial fn(x E) \row_vector_space<m>, j closed_range(1, n), second fn(entry cart(cart(cart(closed_range(1, n), closed_range(1, n)), E), closed_range(1, m))) R):
     forall x E:
-        $has_scalar_partial_derivative_at(n, E, f, x, j, first_partial(x))
+        $has_partial_derivative(n, m, E, f, x, j, first_partial(x))
     forall index closed_range(1, n), x E:
-        $has_scalar_partial_derivative_at(n, E, first_partial, x, index, second(((index, j), x)))
+        $has_partial_derivative(n, m, E, first_partial, x, index, fn(output_coordinate closed_range(1, m)) R {second((((index, j), x), output_coordinate))})
 
-prop is_second_partial_family_of(n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R, second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
+prop is_second_partial_family_of(n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>, second fn(entry cart(cart(cart(closed_range(1, n), closed_range(1, n)), E), closed_range(1, m))) R):
     forall j closed_range(1, n):
-        exist first_partial fn(x E) R st {$is_first_and_second_partial_column(n, E, f, first_partial, j, second)}
+        exist first_partial fn(x E) \row_vector_space<m> st {$is_first_and_second_partial_column(n, m, E, f, first_partial, j, second)}
 
-prop is_symmetric_second_partial_family(n N_pos, E power_set(\row_vector_space<n>), second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R):
-    forall x E, index, j closed_range(1, n):
-        second(((index, j), x)) = second(((j, index), x))
+prop is_symmetric_second_partial_family(n, m N+, E power_set(\row_vector_space<n>), second fn(entry cart(cart(cart(closed_range(1, n), closed_range(1, n)), E), closed_range(1, m))) R):
+    forall x E, index, j closed_range(1, n), output_coordinate closed_range(1, m):
+        second((((index, j), x), output_coordinate)) = second((((j, index), x), output_coordinate))
+
+# Example 6.5.3. The map from Example 6.3.9 is C2 with displayed second partials.
+prop is_example_653_second_partial_family(second fn(entry cart(cart(cart(closed_range(1, 2), closed_range(1, 2)), \row_vector_space<2>), closed_range(1, 2))) R):
+    forall x \row_vector_space<2>:
+        second((((1, 1), x), 1)) = 2
+        second((((1, 1), x), 2)) = 0
+        second((((2, 1), x), 1)) = 1
+        second((((2, 1), x), 2)) = 0
+        second((((1, 2), x), 1)) = 1
+        second((((1, 2), x), 2)) = 0
+        second((((2, 2), x), 1)) = 0
+        second((((2, 2), x), 2)) = 2
+
+prop is_example_653_second_partial_family_of_displayed_partials(second fn(entry cart(cart(cart(closed_range(1, 2), closed_range(1, 2)), \row_vector_space<2>), closed_range(1, 2))) R):
+    $is_first_and_second_partial_column(2, 2, \row_vector_space<2>, example_639_function, example_639_first_partial, 1, second)
+    $is_first_and_second_partial_column(2, 2, \row_vector_space<2>, example_639_function, example_639_second_partial, 2, second)
+
+prop has_example_653_twice_continuously_differentiable_data():
+    exist second fn(entry cart(cart(cart(closed_range(1, 2), closed_range(1, 2)), \row_vector_space<2>), closed_range(1, 2))) R st {$is_example_653_second_partial_family(second), $is_example_653_second_partial_family_of_displayed_partials(second), $is_second_partial_family_of(2, 2, \row_vector_space<2>, example_639_function, second), $is_symmetric_second_partial_family(2, 2, \row_vector_space<2>, second), $is_twice_continuously_differentiable(2, 2, \row_vector_space<2>, example_639_function)}
+
+# proof_debt: differentiate the two displayed first-partial maps, prove the
+# four constant vector families continuous, and package the C2 witness.
+trust $has_example_653_twice_continuously_differentiable_data()
 
 thm clairaut_theorem:
-    ? forall n N_pos, E power_set(\row_vector_space<n>), f fn(x E) R:
-        $is_twice_continuously_differentiable(n, 1, E, fn(x E) \row_vector_space<1> {fn(index closed_range(1, 1)) R {f(x)}})
+    ? forall n, m N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<m>:
+        $is_twice_continuously_differentiable(n, m, E, f)
         =>:
-            exist second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R st {$is_second_partial_family_of(n, E, f, second), $is_symmetric_second_partial_family(n, E, second)}
-    trust exist second fn(entry cart(cart(closed_range(1, n), closed_range(1, n)), E)) R st {$is_second_partial_family_of(n, E, f, second), $is_symmetric_second_partial_family(n, E, second)}
+            exist second fn(entry cart(cart(cart(closed_range(1, n), closed_range(1, n)), E), closed_range(1, m))) R st {$is_second_partial_family_of(n, m, E, f, second), $is_symmetric_second_partial_family(n, m, E, second)}
+    # proof_debt: apply the scalar rectangular second-difference argument to
+    # every output coordinate.
+    trust exist second fn(entry cart(cart(cart(closed_range(1, n), closed_range(1, n)), E), closed_range(1, m))) R st {$is_second_partial_family_of(n, m, E, f, second), $is_symmetric_second_partial_family(n, m, E, second)}
 
-# Definition 6.6.1. A contraction reduces all distances by a fixed factor
-# strictly smaller than one.
-prop is_contraction_with_factor(X set, dist fn(x, y X) R, f fn(x X) X, alpha R):
-    0 <= alpha < 1
+# Definition 6.6.1. A contraction is nonexpansive. A strict contraction has a
+# displayed positive contraction constant strictly smaller than one.
+prop is_contraction(X set, dist fn(x, y X) R, f fn(x X) X):
+    forall x, y X:
+        dist(f(x), f(y)) <= dist(x, y)
+
+prop is_strict_contraction_with_factor(X set, dist fn(x, y X) R, f fn(x X) X, alpha R):
+    0 < alpha < 1
     forall x, y X:
         dist(f(x), f(y)) <= alpha * dist(x, y)
 
-prop is_contraction(X set, dist fn(x, y X) R, f fn(x X) X):
-    exist alpha R st {$is_contraction_with_factor(X, dist, f, alpha)}
+prop is_strict_contraction(X set, dist fn(x, y X) R, f fn(x X) X):
+    exist alpha R st {$is_strict_contraction_with_factor(X, dist, f, alpha)}
+
+# Examples 6.6.2. Three basic contractions.
+have fn example_662_translation(x R) R = x + 1
+
+have fn example_662_halving(x R) R = x / 2
+
+prop is_example_662_quadratic_interval_value(x '[0, 1], value '[0, 1]):
+    value = x - x^2
+
+have fn example_662_quadratic_interval_map by exist!:
+    ? forall x '[0, 1]:
+        exist! value '[0, 1] st {$is_example_662_quadratic_interval_value(x, value)}
+    # proof_debt: prove 0 <= x-x^2 <= 1 on the unit interval.
+    trust exist! value '[0, 1] st {$is_example_662_quadratic_interval_value(x, value)}
+
+thm selected_example_662_quadratic_interval_map_has_value:
+    ? forall x '[0, 1]:
+        $is_example_662_quadratic_interval_value(x, example_662_quadratic_interval_map(x))
+    $is_example_662_quadratic_interval_value(x, example_662_quadratic_interval_map(x))
+
+prop example_662_translation_is_contraction():
+    $is_contraction(R, chap1::real_distance, example_662_translation)
+
+# proof_debt: unfold real distance and normalize the translated difference.
+trust $example_662_translation_is_contraction()
+
+prop example_662_translation_is_not_strict():
+    not $is_strict_contraction(R, chap1::real_distance, example_662_translation)
+
+# proof_debt: test any proposed factor c<1 on two distinct real points.
+trust $example_662_translation_is_not_strict()
+
+prop example_662_halving_is_strict():
+    $is_strict_contraction_with_factor(R, chap1::real_distance, example_662_halving, 1 / 2)
+    $is_strict_contraction(R, chap1::real_distance, example_662_halving)
+
+# proof_debt: normalize the halved difference and supply factor 1/2.
+trust $example_662_halving_is_strict()
+
+prop example_662_quadratic_is_contraction():
+    $is_contraction('[0, 1], chap1::real_distance, example_662_quadratic_interval_map)
+
+# proof_debt: factor the difference and use 0 <= x+y <= 2 on the unit interval.
+trust $example_662_quadratic_is_contraction()
+
+prop example_662_quadratic_is_not_strict():
+    not $is_strict_contraction('[0, 1], chap1::real_distance, example_662_quadratic_interval_map)
+
+# proof_debt: use points approaching zero to rule out every uniform factor c<1.
+trust $example_662_quadratic_is_not_strict()
 
 # Definition 6.6.3. A fixed point is unchanged by the map.
 prop is_fixed_point(X set, f fn(x X) X, a X):
     f(a) = a
 
-# Theorem 6.6.4. A contraction on a complete metric space has exactly one fixed
-# point.
-thm contraction_mapping_theorem:
+# Theorem 6.6.4. Every contraction has at most one fixed point.
+prop has_at_most_one_fixed_point(X set, f fn(x X) X):
+    forall a, b X:
+        $is_fixed_point(X, f, a)
+        $is_fixed_point(X, f, b)
+        =>:
+            a = b
+
+thm contraction_has_at_most_one_fixed_point:
     ? forall X set, dist fn(x, y X) R, f fn(x X) X:
         $chap1::is_metric_space(X, dist)
+        $is_strict_contraction(X, dist, f)
+        =>:
+            $has_at_most_one_fixed_point(X, f)
+    # proof_debt: apply the contraction inequality to two fixed points.
+    trust $has_at_most_one_fixed_point(X, f)
+
+# On a nonempty complete metric space, the fixed point exists and is unique.
+thm contraction_mapping_theorem:
+    ? forall X nonempty_set, dist fn(x, y X) R, f fn(x X) X:
+        $chap1::is_metric_space(X, dist)
         $chap1::is_complete_metric_space(X, dist)
-        $is_contraction(X, dist, f)
+        $is_strict_contraction(X, dist, f)
         =>:
             exist! a X st {$is_fixed_point(X, f, a)}
+    # proof_debt: iterate from a nonempty-set witness and use completeness.
     trust exist! a X st {$is_fixed_point(X, f, a)}
 
-# Lemma 6.6.6. A small perturbation of the identity on a Euclidean ball has a
-# uniquely solvable fixed-point equation.
-thm perturbation_of_identity_has_local_inverse:
-    ? forall n N_pos, radius R_pos:
-        exist inverse fn(x \row_vector_space<n>) \row_vector_space<n> st {inverse = inverse}
-    trust exist inverse fn(x \row_vector_space<n>) \row_vector_space<n> st {inverse = inverse}
+# Lemma 6.6.6. A small perturbation of the identity on a Euclidean ball is
+# injective, and its image contains the concentric half-radius ball.
+prop is_zero_vector(n N+, z \row_vector_space<n>):
+    forall index closed_range(1, n):
+        z(index) = 0
 
-# Lemma 6.7.1. An invertible linear transformation remains quantitatively
-# bounded away from zero.
-prop is_linear_lower_bound(n N_pos, T fn(x \row_vector_space<n>) \row_vector_space<n>, c R_pos):
-    forall x \row_vector_space<n>:
-        \euclidean_distance<n>(T(x), \vector_scale<n>(0, x)) >= c * \euclidean_distance<n>(x, \vector_scale<n>(0, x))
+template<n N+>:
+    have fn euclidean_open_ball(center \row_vector_space<n>, radius R+) power_set(\row_vector_space<n>) = {x \row_vector_space<n>: \euclidean_distance<n>(x, center) < radius}
 
-thm invertible_linear_map_has_lower_bound:
-    ? forall n N_pos, T fn(x \row_vector_space<n>) \row_vector_space<n>:
-        $is_linear_transformation(n, n, T)
+prop is_centered_half_lipschitz_perturbation(n N+, domain power_set(\row_vector_space<n>), origin \row_vector_space<n>, g fn(x domain) \row_vector_space<n>):
+    origin $in domain
+    $is_zero_vector(n, origin)
+    g(origin) = origin
+    forall x, y domain:
+        \euclidean_distance<n>(g(x), g(y)) <= (1 / 2) * \euclidean_distance<n>(x, y)
+
+prop is_identity_perturbation(n N+, domain power_set(\row_vector_space<n>), g, f fn(x domain) \row_vector_space<n>):
+    forall x domain:
+        f(x) = \vector_add<n>(x, g(x))
+
+prop is_injective_on(X, Y set, f fn(x X) Y):
+    forall x, y X:
+        f(x) = f(y)
         =>:
-            exist c R_pos st {$is_linear_lower_bound(n, T, c)}
-    trust exist c R_pos st {$is_linear_lower_bound(n, T, c)}
+            x = y
 
-# Theorem 6.7.2. A continuously differentiable map with invertible derivative
-# has a continuously differentiable local inverse.
+prop image_contains(X, Y set, f fn(x X) Y, target power_set(Y)):
+    forall y target:
+        exist x X st {f(x) = y}
+
+thm perturbation_of_identity_has_local_inverse:
+    ? forall n N+, origin \row_vector_space<n>, radius R+, g, f fn(x \euclidean_open_ball<n>(origin, radius)) \row_vector_space<n>:
+        $is_centered_half_lipschitz_perturbation(n, \euclidean_open_ball<n>(origin, radius), origin, g)
+        $is_identity_perturbation(n, \euclidean_open_ball<n>(origin, radius), g, f)
+        =>:
+            $is_injective_on(\euclidean_open_ball<n>(origin, radius), \row_vector_space<n>, f)
+            $image_contains(\euclidean_open_ball<n>(origin, radius), \row_vector_space<n>, f, \euclidean_open_ball<n>(origin, radius / 2))
+    # proof_debt: the injectivity estimate from the one-half Lipschitz bound is not yet formalized.
+    trust $is_injective_on(\euclidean_open_ball<n>(origin, radius), \row_vector_space<n>, f)
+    # proof_debt: the contraction argument producing preimages in the half-radius ball is not yet formalized.
+    trust $image_contains(\euclidean_open_ball<n>(origin, radius), \row_vector_space<n>, f, \euclidean_open_ball<n>(origin, radius / 2))
+
+# Lemma 6.7.1. The inverse of an invertible linear transformation is linear.
+prop is_linear_two_sided_inverse(n N+, T, inverse_T fn(v \row_vector_space<n>) \row_vector_space<n>):
+    forall v \row_vector_space<n>:
+        T(inverse_T(v)) = v
+        inverse_T(T(v)) = v
+
+thm inverse_of_linear_transformation_is_linear:
+    ? forall n N+, T, inverse_T fn(x \row_vector_space<n>) \row_vector_space<n>:
+        $is_linear_transformation(n, n, T)
+        $is_linear_two_sided_inverse(n, T, inverse_T)
+        =>:
+            $is_linear_transformation(n, n, inverse_T)
+    # proof_debt: transport addition and scalar multiplication through T and
+    # use the displayed two-sided inverse to cancel T.
+    trust $is_linear_transformation(n, n, inverse_T)
+
+# Theorem 6.7.2. A continuously differentiable map whose derivative is
+# invertible at x0 has a local inverse differentiable at f(x0).
+prop is_local_inverse_data(n N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<n>, U power_set(\row_vector_space<n>), V power_set(\row_vector_space<n>), inverse fn(y V) E, x0 E):
+    U $subset E
+    x0 $in U
+    f(x0) $in V
+    $chap1::is_metric_open(\row_vector_space<n>, \euclidean_distance<n>, U)
+    $chap1::is_metric_open(\row_vector_space<n>, \euclidean_distance<n>, V)
+    forall x U:
+        f(x) $in V
+        inverse(f(x)) = x
+    forall y V:
+        inverse(y) $in U
+        f(inverse(y)) = y
+
 thm inverse_function_theorem:
-    ? forall n N_pos, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<n>, x0 E:
-        exist local_inverse fn(y \row_vector_space<n>) \row_vector_space<n> st {local_inverse(f(x0)) = x0}
-    trust exist local_inverse fn(y \row_vector_space<n>) \row_vector_space<n> st {local_inverse(f(x0)) = x0}
+    ? forall n N+, E power_set(\row_vector_space<n>), f fn(x E) \row_vector_space<n>, x0 E, Df, inverse_Df fn(v \row_vector_space<n>) \row_vector_space<n>:
+        $chap1::is_metric_open(\row_vector_space<n>, \euclidean_distance<n>, E)
+        $is_continuously_differentiable(n, n, E, f)
+        $has_total_derivative_at(n, n, E, f, x0, Df)
+        $is_linear_two_sided_inverse(n, Df, inverse_Df)
+        =>:
+            exist U, V power_set(\row_vector_space<n>), local_inverse fn(y V) E st {$is_local_inverse_data(n, E, f, U, V, local_inverse, x0), $has_total_derivative_at(n, n, V, local_inverse, f(x0), inverse_Df)}
+    # proof_debt: the contraction-based local inverse construction and derivative calculation are not yet formalized.
+    trust exist U, V power_set(\row_vector_space<n>), local_inverse fn(y V) E st {$is_local_inverse_data(n, E, f, U, V, local_inverse, x0), $has_total_derivative_at(n, n, V, local_inverse, f(x0), inverse_Df)}
 
 # Theorem 6.8.1. If the derivative in the dependent variables is invertible,
 # an equation F(x,y)=0 locally determines y as a differentiable function of x.
+prop is_coordinate_prefix(k N+, prefix \row_vector_space<k>, point \row_vector_space<k + 1>):
+    forall j closed_range(1, k):
+        prefix(j) = point(j)
+
+prop is_prefix_projection_on(k N+, V power_set(\row_vector_space<k + 1>), prefix fn(point V) \row_vector_space<k>):
+    forall point V:
+        $is_coordinate_prefix(k, prefix(point), point)
+
+prop is_coordinate_extension(k N+, prefix \row_vector_space<k>, last R, point \row_vector_space<k + 1>):
+    forall j closed_range(1, k):
+        point(j) = prefix(j)
+    point(k + 1) = last
+
+prop is_local_implicit_graph_data(k N+, E power_set(\row_vector_space<k + 1>), f fn(point E) R, base E, base_prefix \row_vector_space<k>, base_last R, U power_set(\row_vector_space<k>), V power_set(\row_vector_space<k + 1>), g fn(x U) R, prefix fn(point V) \row_vector_space<k>):
+    U $subset \row_vector_space<k>
+    V $subset E
+    base_prefix $in U
+    base $in V
+    $chap1::is_metric_open(\row_vector_space<k>, \euclidean_distance<k>, U)
+    $chap1::is_metric_open(\row_vector_space<k + 1>, \euclidean_distance<k + 1>, V)
+    $is_coordinate_extension(k, base_prefix, base_last, base)
+    $is_prefix_projection_on(k, V, prefix)
+    g(base_prefix) = base_last
+    forall x U:
+        exist point V st {$is_coordinate_extension(k, x, g(x), point), f(point) = 0}
+    forall point V:
+        f(point) = 0
+        =>:
+            prefix(point) $in U
+            $is_coordinate_extension(k, prefix(point), g(prefix(point)), point)
+
+prop has_implicit_derivative_formula(k N+, U power_set(\row_vector_space<k>), g fn(x U) R, base_prefix U, ambient_partials fn(j closed_range(1, k + 1)) R, implicit_partials fn(j closed_range(1, k)) R):
+    forall j closed_range(1, k):
+        $has_scalar_partial_derivative_at(k, U, g, base_prefix, j, implicit_partials(j))
+        ambient_partials(k + 1) * implicit_partials(j) = -ambient_partials(j)
+
 thm implicit_function_theorem:
-    ? forall n, m N_pos:
-        exist implicit_map fn(x \row_vector_space<n>) \row_vector_space<m> st {implicit_map = implicit_map}
-    trust exist implicit_map fn(x \row_vector_space<n>) \row_vector_space<m> st {implicit_map = implicit_map}
+    ? forall k N+, E power_set(\row_vector_space<k + 1>), f fn(point E) R, base E, base_prefix \row_vector_space<k>, base_last R, ambient_partials fn(j closed_range(1, k + 1)) R:
+        $chap1::is_metric_open(\row_vector_space<k + 1>, \euclidean_distance<k + 1>, E)
+        $is_continuously_differentiable(k + 1, 1, E, fn(point E) \row_vector_space<1> {fn(index closed_range(1, 1)) R {f(point)}})
+        f(base) = 0
+        $is_coordinate_extension(k, base_prefix, base_last, base)
+        forall j closed_range(1, k + 1):
+            $has_scalar_partial_derivative_at(k + 1, E, f, base, j, ambient_partials(j))
+        ambient_partials(k + 1) != 0
+        =>:
+            exist U power_set(\row_vector_space<k>), V power_set(\row_vector_space<k + 1>), g fn(x U) R, prefix fn(point V) \row_vector_space<k>, implicit_partials fn(j closed_range(1, k)) R st {$is_local_implicit_graph_data(k, E, f, base, base_prefix, base_last, U, V, g, prefix), $has_implicit_derivative_formula(k, U, g, base_prefix, ambient_partials, implicit_partials)}
+    # proof_debt: the local graph construction via the inverse function theorem and the derivative formula are not yet formalized.
+    trust exist U power_set(\row_vector_space<k>), V power_set(\row_vector_space<k + 1>), g fn(x U) R, prefix fn(point V) \row_vector_space<k>, implicit_partials fn(j closed_range(1, k)) R st {$is_local_implicit_graph_data(k, E, f, base, base_prefix, base_last, U, V, g, prefix), $has_implicit_derivative_formula(k, U, g, base_prefix, ambient_partials, implicit_partials)}
+
+# Example 6.8.3. The surface xy+yz+zx=-1 is locally a graph where x+y != 0.
+have fn example_683_surface_function(point \row_vector_space<3>) R = point(1) * point(2) + point(2) * point(3) + point(3) * point(1) + 1
+
+prop is_example_683_surface_partial_values(base \row_vector_space<3>, partials fn(j closed_range(1, 3)) R):
+    partials(1) = base(2) + base(3)
+    partials(2) = base(1) + base(3)
+    partials(3) = base(2) + base(1)
+
+prop is_example_683_implicit_derivative_values(base \row_vector_space<3>, implicit_partials fn(j closed_range(1, 2)) R):
+    base(2) + base(1) != 0
+    (base(2) + base(1)) * implicit_partials(1) = -1 * (base(2) + base(3))
+    (base(2) + base(1)) * implicit_partials(2) = -1 * (base(1) + base(3))
+
+prop has_example_683_surface_partials_at(base \row_vector_space<3>, ambient_partials fn(j closed_range(1, 3)) R):
+    forall j closed_range(1, 3):
+        $has_scalar_partial_derivative_at(3, \row_vector_space<3>, example_683_surface_function, base, j, ambient_partials(j))
+
+thm example_683_implicit_surface_graph:
+    ? forall base \row_vector_space<3>, base_prefix \row_vector_space<2>, base_last R, ambient_partials fn(j closed_range(1, 3)) R:
+        $is_coordinate_extension(2, base_prefix, base_last, base)
+        example_683_surface_function(base) = 0
+        $is_example_683_surface_partial_values(base, ambient_partials)
+        ambient_partials(3) != 0
+        =>:
+            $is_continuously_differentiable(3, 1, \row_vector_space<3>, fn(point \row_vector_space<3>) \row_vector_space<1> {fn(index closed_range(1, 1)) R {example_683_surface_function(point)}})
+            $has_example_683_surface_partials_at(base, ambient_partials)
+            exist U power_set(\row_vector_space<2>), V power_set(\row_vector_space<3>), g fn(x U) R, prefix fn(point V) \row_vector_space<2>, implicit_partials fn(j closed_range(1, 2)) R st {$is_local_implicit_graph_data(2, \row_vector_space<3>, example_683_surface_function, base, base_prefix, base_last, U, V, g, prefix), $has_implicit_derivative_formula(2, U, g, base_prefix, ambient_partials, implicit_partials), $is_example_683_implicit_derivative_values(base, implicit_partials)}
+    # proof_debt: polynomial C1 regularity is not yet derived automatically.
+    trust $is_continuously_differentiable(3, 1, \row_vector_space<3>, fn(point \row_vector_space<3>) \row_vector_space<1> {fn(index closed_range(1, 1)) R {example_683_surface_function(point)}})
+    # proof_debt: calculate the three displayed scalar partial derivatives.
+    trust $has_example_683_surface_partials_at(base, ambient_partials)
+    # proof_debt: apply Theorem 6.8.1 and normalize its two derivative formulas.
+    trust exist U power_set(\row_vector_space<2>), V power_set(\row_vector_space<3>), g fn(x U) R, prefix fn(point V) \row_vector_space<2>, implicit_partials fn(j closed_range(1, 2)) R st {$is_local_implicit_graph_data(2, \row_vector_space<3>, example_683_surface_function, base, base_prefix, base_last, U, V, g, prefix), $has_implicit_derivative_formula(2, U, g, base_prefix, ambient_partials, implicit_partials), $is_example_683_implicit_derivative_values(base, implicit_partials)}

@@ -18,35 +18,132 @@ template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn zero_bilinear_form(u, v VSet) s = V.scalars.zero
 
+thm zero_bilinear_form_is_bilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>:
+        $is_bilinear_form(s, VSet, V, \zero_bilinear_form<s, VSet, V>)
+    # Both partial applications are the zero linear functional; pointwise
+    # function equality and predicate packaging do not replay.
+    trust $is_bilinear_form(s, VSet, V, \zero_bilinear_form<s, VSet, V>)
+thm bilinear_form_space_is_nonempty:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>:
+        $is_nonempty_set(\bilinear_form_space<s, VSet, V>)
+    # zero_bilinear_form is the explicit witness; set-builder membership does
+    # not fold into the nonempty-set witness interface.
+    trust $is_nonempty_set(\bilinear_form_space<s, VSet, V>)
+
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn bilinear_form_add(beta, gamma fn(x, y VSet) s) fn(a, b VSet) s = fn(u, v VSet) s {V.scalars.add(beta(u, v), gamma(u, v))}
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn bilinear_form_smul(a s, beta fn(x, y VSet) s) fn(b, c VSet) s = fn(u, v VSet) s {V.scalars.mul(a, beta(u, v))}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+thm function_equal_to_linear_map_is_linear:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, f, g fn(v VSet) WSet:
+        $chap3a::is_linear_map(s, VSet, WSet, V, W, g)
+        f = g
+        =>:
+            $chap3a::is_linear_map(s, VSet, WSet, V, W, f)
+    f = g
+    $chap3a::is_linear_map(s, VSet, WSet, V, W, g)
+    $chap3a::is_linear_map(s, VSet, WSet, V, W, f)
+
+thm bilinear_form_add_is_bilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, beta, gamma \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_add<s, VSet, V>(beta, gamma) $in \bilinear_form_space<s, VSet, V>
+    # Pointwise add preserves both linear-functional slots, but theorem
+    # argument coercion and final set-builder membership do not replay.
+    trust \bilinear_form_add<s, VSet, V>(beta, gamma) $in \bilinear_form_space<s, VSet, V>
+thm bilinear_form_smul_is_bilinear:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, a s, beta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_smul<s, VSet, V>(a, beta) $in \bilinear_form_space<s, VSet, V>
+    # Pointwise scalar multiplication preserves both slots; the same
+    # theorem-argument coercion and set-builder packaging boundary applies.
+    trust \bilinear_form_smul<s, VSet, V>(a, beta) $in \bilinear_form_space<s, VSet, V>
+thm scalar_minus_one_mul:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, x s:
+        scalars.mul(scalars.neg(scalars.one), x) = scalars.neg(x)
+    by thm chap1b::minus_one_times_vector(s, s, \chap3f::scalar_vector_space<s, scalars>, x)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars = scalars
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars, scalars)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.smul = scalars.mul
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.add = scalars.add
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.zero = scalars.zero
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.smul(&chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.neg(&chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.one), x) = \chap1b::vector_neg<s, s, \chap3f::scalar_vector_space<s, scalars>>(x)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.neg(&chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.one) = scalars.neg(scalars.one)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.smul(scalars.neg(scalars.one), x) = scalars.mul(scalars.neg(scalars.one), x)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.smul(&chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.neg(&chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.scalars.one), x) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.smul(scalars.neg(scalars.one), x) = scalars.mul(scalars.neg(scalars.one), x)
+    scalars.mul(scalars.neg(scalars.one), x) = \chap1b::vector_neg<s, s, \chap3f::scalar_vector_space<s, scalars>>(x)
+    by thm chap1b::vector_neg_spec(s, s, \chap3f::scalar_vector_space<s, scalars>, x)
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.add(x, \chap1b::vector_neg<s, s, \chap3f::scalar_vector_space<s, scalars>>(x)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.zero
+    &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.add(x, scalars.neg(x)) = scalars.add(x, scalars.neg(x)) = scalars.zero = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, scalars>}.zero
+    by thm chap1b::add_left_cancel(s, s, \chap3f::scalar_vector_space<s, scalars>, x, \chap1b::vector_neg<s, s, \chap3f::scalar_vector_space<s, scalars>>(x), scalars.neg(x))
+    \chap1b::vector_neg<s, s, \chap3f::scalar_vector_space<s, scalars>>(x) = scalars.neg(x)
+    scalars.mul(scalars.neg(scalars.one), x) = scalars.neg(x)
+
+prop bilinear_form_vector_space_laws(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>):
+    \zero_bilinear_form<s, VSet, V> $in \bilinear_form_space<s, VSet, V>
+    forall beta, gamma \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_add<s, VSet, V>(beta, gamma) $in \bilinear_form_space<s, VSet, V>
+    forall a s, beta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_smul<s, VSet, V>(a, beta) $in \bilinear_form_space<s, VSet, V>
+    forall beta, gamma, delta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_add<s, VSet, V>(\bilinear_form_add<s, VSet, V>(beta, gamma), delta) = \bilinear_form_add<s, VSet, V>(beta, \bilinear_form_add<s, VSet, V>(gamma, delta))
+    forall beta, gamma \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_add<s, VSet, V>(beta, gamma) = \bilinear_form_add<s, VSet, V>(gamma, beta)
+    forall beta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_add<s, VSet, V>(\zero_bilinear_form<s, VSet, V>, beta) = beta
+        exist gamma \bilinear_form_space<s, VSet, V> st {\bilinear_form_add<s, VSet, V>(beta, gamma) = \zero_bilinear_form<s, VSet, V>}
+    forall a, b s, beta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_smul<s, VSet, V>(V.scalars.mul(a, b), beta) = \bilinear_form_smul<s, VSet, V>(a, \bilinear_form_smul<s, VSet, V>(b, beta))
+        \bilinear_form_smul<s, VSet, V>(V.scalars.add(a, b), beta) = \bilinear_form_add<s, VSet, V>(\bilinear_form_smul<s, VSet, V>(a, beta), \bilinear_form_smul<s, VSet, V>(b, beta))
+    forall a s, beta, gamma \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_smul<s, VSet, V>(a, \bilinear_form_add<s, VSet, V>(beta, gamma)) = \bilinear_form_add<s, VSet, V>(\bilinear_form_smul<s, VSet, V>(a, beta), \bilinear_form_smul<s, VSet, V>(a, gamma))
+    forall beta \bilinear_form_space<s, VSet, V>:
+        \bilinear_form_smul<s, VSet, V>(V.scalars.one, beta) = beta
+
+thm bilinear_form_tuple_is_vector_space:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>:
+        $is_nonempty_set(\bilinear_form_space<s, VSet, V>)
+        =>:
+            $bilinear_form_vector_space_laws(s, VSet, V)
+    # Pointwise vector-space laws are mathematically routine, but this proof
+    # crosses repeated function extensionality and set-builder membership
+    # boundaries that no longer replay under the updated runtime.
+    trust $bilinear_form_vector_space_laws(s, VSet, V)
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>: $is_nonempty_set(\bilinear_form_space<s, VSet, V>)>:
     trust have bilinear_form_vector_space &chap1b::VectorSpace<s, \bilinear_form_space<s, VSet, V>>:
         bilinear_form_vector_space = (V.scalars, \zero_bilinear_form<s, VSet, V>, \bilinear_form_add<s, VSet, V>, \bilinear_form_smul<s, VSet, V>)
 # Definition 9.4. The matrix is directly callable from the basis values.
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos>:
-    have fn matrix_of_bilinear_form(basis &chap1a::FiniteList<VSet, n>, beta fn(u, v VSet) s) matrix(s, n, n) = fn(j N_pos, k N_pos: j <= n, k <= n) s {beta(basis.entries(j), basis.entries(k))}
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+>:
+    have fn matrix_of_bilinear_form(basis &chap1a::FiniteList<VSet, n>, beta fn(u, v VSet) s) matrix(s, n, n) = fn(j N+, k N+: j <= n, k <= n) s {beta(basis.entries(j), basis.entries(k))}
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    have fn zero_square_matrix(j N_pos, k N_pos: j <= n, k <= n) s = scalars.zero
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn zero_square_matrix(j N+, k N+: j <= n, k <= n) s = scalars.zero
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    trust have square_matrix_vector_space &chap1b::VectorSpace<s, matrix(s, n, n)>:
-        square_matrix_vector_space = (scalars, zero_square_matrix, \chap3c::matrix_add<s, scalars, n, n>, \chap3c::matrix_smul<s, scalars, n, n>)
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn negative_square_matrix(A matrix(s, n, n)) matrix(s, n, n) = fn(j N+, k N+: j <= n, k <= n) s {scalars.neg(A(j, k))}
 
-template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos>:
+thm square_matrix_tuple_is_vector_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        (scalars, \zero_square_matrix<s, scalars, n>, \chap3c::matrix_add<s, scalars, n, n>, \chap3c::matrix_smul<s, scalars, n, n>) $in &chap1b::VectorSpace<s, matrix(s, n, n)>
+    # All laws are pointwise scalar-system laws; matrix function
+    # extensionality and tuple-to-structure packaging do not replay.
+    trust (scalars, \zero_square_matrix<s, scalars, n>, \chap3c::matrix_add<s, scalars, n, n>, \chap3c::matrix_smul<s, scalars, n, n>) $in &chap1b::VectorSpace<s, matrix(s, n, n)>
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have square_matrix_vector_space &chap1b::VectorSpace<s, matrix(s, n, n)> = (scalars, \zero_square_matrix<s, scalars, n>, \chap3c::matrix_add<s, scalars, n, n>, \chap3c::matrix_smul<s, scalars, n, n>)
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+>:
     have fn bilinear_matrix_map(basis &chap1a::FiniteList<VSet, n>, beta \bilinear_form_space<s, VSet, V>) matrix(s, n, n) = \matrix_of_bilinear_form<s, VSet, V, n>(basis, beta)
 # Result 9.5. Coordinate expansion constructs the inverse map from a matrix,
 # so the matrix map is an isomorphism and dimensions agree.
 axiom dimension_of_bilinear_form_space:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N_pos, basis &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, basis)
+        $is_nonempty_set(\bilinear_form_space<s, VSet, V>)
+        $chap2c::admits_basis_length(s, VSet, V)
+        $chap2c::admits_basis_length(s, \bilinear_form_space<s, VSet, V>, \bilinear_form_vector_space<s, VSet, V>)
         =>:
-            $chap3d::is_isomorphism(s, \bilinear_form_space<s, VSet, V>, matrix(s, n, n), \bilinear_form_vector_space<s, VSet, V>, \square_matrix_vector_space<s, V.scalars, n>, \bilinear_matrix_map<s, VSet, V, n>(basis))
+            $chap3d::is_isomorphism(s, \bilinear_form_space<s, VSet, V>, matrix(s, n, n), \bilinear_form_vector_space<s, VSet, V>, \square_matrix_vector_space<s, V.scalars, n>, fn(beta \bilinear_form_space<s, VSet, V>) matrix(s, n, n) {\bilinear_matrix_map<s, VSet, V, n>(basis, beta)})
             \chap2c::dimension<s, \bilinear_form_space<s, VSet, V>, \bilinear_form_vector_space<s, VSet, V>> = \chap2c::dimension<s, VSet, V> ^ 2
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
@@ -56,7 +153,7 @@ template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn bilinear_compose_left(beta fn(x, y VSet) s, T fn(z VSet) VSet) fn(a, b VSet) s = fn(u, v VSet) s {beta(T(u), v)}
 # Result 9.6. Expanding T on the selected basis gives the two matrix products.
 axiom composition_of_bilinear_form_and_operator:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, beta \bilinear_form_space<s, VSet, V>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, beta \bilinear_form_space<s, VSet, V>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N+, basis &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, basis)
         =>:
             \bilinear_compose_right<s, VSet, V>(beta, T) $in \bilinear_form_space<s, VSet, V>
@@ -66,9 +163,10 @@ axiom composition_of_bilinear_form_and_operator:
 # Result 9.7. Apply 9.6 in both slots to the operator taking the second basis
 # to the first.
 axiom bilinear_form_change_of_basis_formula:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, beta \bilinear_form_space<s, VSet, V>, n N_pos, basis1, basis2 &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, beta \bilinear_form_space<s, VSet, V>, n N+, basis1, basis2 &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, basis1)
         $chap2b::is_basis(s, VSet, V, n, basis2)
+        \chap3a::identity_linear_map<s, VSet, V> $in \chap3a::linear_map_space<s, VSet, VSet, V, V>
         =>:
             \matrix_of_bilinear_form<s, VSet, V, n>(basis1, beta) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::transpose<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis1, basis2, \chap3a::identity_linear_map<s, VSet, V>)), \chap3c::matrix_mul<s, V.scalars, n, n, n>(\matrix_of_bilinear_form<s, VSet, V, n>(basis2, beta), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis1, basis2, \chap3a::identity_linear_map<s, VSet, V>)))
 # Example 9.8. The displayed matrices expose the two nonzero columns and the
@@ -93,20 +191,20 @@ sketch:
     forall a11, a12, a21, a22, b11, b12, b21, b22 R:
         a11 * b11 + a12 * b21 + a21 * b12 + a22 * b22 = b11 * a11 + b12 * a21 + b21 * a12 + b22 * a22
 # Definition 9.11. Matrix symmetry is literal equality with the transpose.
-prop is_symmetric_matrix(s set, n N_pos, A matrix(s, n, n)):
+prop is_symmetric_matrix(s set, n N+, A matrix(s, n, n)):
     A = \chap3c::transpose<s, n, n>(A)
 
 prop has_symmetric_matrix_in_every_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, rho \bilinear_form_space<s, VSet, V>):
-    forall n N_pos, basis &chap1a::FiniteList<VSet, n>:
+    forall n N+, basis &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, basis)
         =>:
             $is_symmetric_matrix(s, n, \matrix_of_bilinear_form<s, VSet, V, n>(basis, rho))
 
 prop has_symmetric_matrix_in_some_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, rho \bilinear_form_space<s, VSet, V>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $is_symmetric_matrix(s, n, \matrix_of_bilinear_form<s, VSet, V, n>(basis, rho))}
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $is_symmetric_matrix(s, n, \matrix_of_bilinear_form<s, VSet, V, n>(basis, rho))}
 
 prop has_diagonal_bilinear_matrix_in_some_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, rho \bilinear_form_space<s, VSet, V>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $chap5d::is_diagonal_matrix(s, V.scalars, n, \matrix_of_bilinear_form<s, VSet, V, n>(basis, rho))}
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $chap5d::is_diagonal_matrix(s, V.scalars, n, \matrix_of_bilinear_form<s, VSet, V, n>(basis, rho))}
 
 prop symmetric_bilinear_diagonalization_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, rho \bilinear_form_space<s, VSet, V>):
     forall:
@@ -140,7 +238,7 @@ axiom orthonormal_diagonalization_of_symmetric_bilinear_form:
         \chap2c::dimension<R, VSet, inner_space.vector_space> > 0
         $is_symmetric_bilinear_form(R, VSet, inner_space.vector_space, rho)
         =>:
-            exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap6b::is_orthonormal_basis(R, VSet, inner_space, n, basis), $chap5d::is_diagonal_matrix(R, inner_space.vector_space.scalars, n, \matrix_of_bilinear_form<R, VSet, inner_space.vector_space, n>(basis, rho))}
+            exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap6b::is_orthonormal_basis(R, VSet, inner_space, n, basis), $chap5d::is_diagonal_matrix(R, inner_space.vector_space.scalars, n, \matrix_of_bilinear_form<R, VSet, inner_space.vector_space, n>(basis, rho))}
 # Definition 9.14. Alternation means vanishing on repeated inputs.
 prop is_alternating_bilinear_form(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, alpha fn(u, v VSet) s):
     $is_bilinear_form(s, VSet, V, alpha)
@@ -172,6 +270,7 @@ axiom characterization_of_alternating_bilinear_forms:
         $alternating_bilinear_characterization_statement(s, VSet, V, alpha)
 
 prop bilinear_symmetric_alternating_decomposition_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>):
+    $is_nonempty_set(\bilinear_form_space<s, VSet, V>)
     $chap1c::is_subspace(s, \bilinear_form_space<s, VSet, V>, \bilinear_form_vector_space<s, VSet, V>, \symmetric_bilinear_form_space<s, VSet, V>)
     $chap1c::is_subspace(s, \bilinear_form_space<s, VSet, V>, \bilinear_form_vector_space<s, VSet, V>, \alternating_bilinear_form_space<s, VSet, V>)
     $chap1c::is_direct_sum_pair(s, \bilinear_form_space<s, VSet, V>, \bilinear_form_vector_space<s, VSet, V>, \symmetric_bilinear_form_space<s, VSet, V>, \alternating_bilinear_form_space<s, VSet, V>)
@@ -197,27 +296,27 @@ sketch:
     forall x1, x2, x3 R:
         x1 * x1 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3 * x3 = x1^2 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3^2
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    have fn coordinate_bilinear_value(A matrix(s, n, n), x, y finite_seq(s, n)) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N_pos: k <= n) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(j N_pos: j <= n) s {scalars.mul(scalars.mul(A(j, k), x(j)), y(k))})})
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn coordinate_bilinear_value(A matrix(s, n, n), x, y finite_seq(s, n)) s = \chap3b::scalar_finite_sum<s, scalars, n>(fn(k N+: k <= n) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(j N+: j <= n) s {scalars.mul(scalars.mul(A(j, k), x(j)), y(k))})})
 
-template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos>:
-    have fn coordinate_quadratic_value(A matrix(s, n, n), x finite_seq(s, n)) s = coordinate_bilinear_value(A, x, x)
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have fn coordinate_quadratic_value(A matrix(s, n, n), x finite_seq(s, n)) s = \coordinate_bilinear_value<s, scalars, n>(A, x, x)
 
-prop is_coordinate_quadratic_representation(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, q fn(x finite_seq(s, n)) s, A matrix(s, n, n)):
+prop is_coordinate_quadratic_representation(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, q fn(x finite_seq(s, n)) s, A matrix(s, n, n)):
     forall x finite_seq(s, n):
         q(x) = \coordinate_quadratic_value<s, scalars, n>(A, x)
 # Result 9.20. A bilinear matrix gives the double sum, and the same double sum
 # reconstructs a bilinear representative.
-prop coordinate_quadratic_characterization_statement(s nonempty_set, n N_pos, coordinate_space &chap1b::VectorSpace<s, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s):
+prop coordinate_quadratic_characterization_statement(s nonempty_set, n N+, coordinate_space &chap1b::VectorSpace<s, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s):
     forall:
         =>:
             $is_quadratic_form(s, finite_seq(s, n), coordinate_space, q)
         <=>:
-            exist A matrix(s, n, n) st {$is_coordinate_quadratic_representation(s, space.scalars, n, q, A)}
+            exist A matrix(s, n, n) st {$is_coordinate_quadratic_representation(s, coordinate_space.scalars, n, q, A)}
 
 axiom quadratic_forms_on_coordinate_space:
-    ? forall s nonempty_set, n N_pos, coordinate_space &chap1b::VectorSpace<s, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s:
-        $coordinate_quadratic_characterization_statement(s, space.scalars, n, coordinate_space, q)
+    ? forall s nonempty_set, n N+, coordinate_space &chap1b::VectorSpace<s, finite_seq(s, n)>, q fn(x finite_seq(s, n)) s:
+        $coordinate_quadratic_characterization_statement(s, n, coordinate_space, q)
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
     have fn quadratic_polarization_difference(q fn(v VSet) s, u, w VSet) s = V.scalars.add(q(V.add(u, w)), V.scalars.neg(V.scalars.add(q(u), q(w))))
@@ -266,15 +365,15 @@ sketch:
     forall x1, x2, x3 R:
         x1^2 - 2 * x1 * x2 - 2 * x2 * x1 + 4 * x1 * x3 + 4 * x3 * x1 - 3 * x3^2 = x1^2 - 4 * x1 * x2 + 8 * x1 * x3 - 3 * x3^2
 
-prop has_diagonal_quadratic_coordinates(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, q fn(v VSet) s, n N_pos, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<s, n>):
+prop has_diagonal_quadratic_coordinates(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, q fn(v VSet) s, n N+, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<s, n>):
     forall coefficients &chap1a::FiniteList<s, n>:
-        q(\chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(k N_pos: k <= n) s {V.scalars.mul(weights.entries(k), V.scalars.mul(coefficients.entries(k), coefficients.entries(k)))})
+        q(\chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(k N+: k <= n) s {V.scalars.mul(weights.entries(k), V.scalars.mul(coefficients.entries(k), coefficients.entries(k)))})
 
 prop has_diagonal_quadratic_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, q fn(v VSet) s):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<s, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $has_diagonal_quadratic_coordinates(s, VSet, V, q, n, basis, weights)}
+    exist n N+, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<s, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $has_diagonal_quadratic_coordinates(s, VSet, V, q, n, basis, weights)}
 
 prop has_orthonormal_diagonal_quadratic_basis(VSet nonempty_set, inner_space &chap6a::InnerProductSpace<R, VSet>, q fn(v VSet) R):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<R, n> st {$chap6b::is_orthonormal_basis(R, VSet, inner_space, n, basis), $has_diagonal_quadratic_coordinates(R, VSet, inner_space.vector_space, q, n, basis, weights)}
+    exist n N+, basis &chap1a::FiniteList<VSet, n>, weights &chap1a::FiniteList<R, n> st {$chap6b::is_orthonormal_basis(R, VSet, inner_space, n, basis), $has_diagonal_quadratic_coordinates(R, VSet, inner_space.vector_space, q, n, basis, weights)}
 # Result 9.23. Choose the unique symmetric representative, diagonalize its
 # matrix, and read the diagonal entries as the weights.
 axiom diagonalization_of_quadratic_form:

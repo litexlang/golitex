@@ -6,15 +6,15 @@
 
 # Definition 2.1.1 (Continuity). The residual predicate isolates one selected
 # epsilon--delta pair used by the quantified pointwise definition.
-prop is_metric_delta_controlled_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X, epsilon R_pos, delta R_pos):
+prop is_metric_delta_controlled_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X, epsilon R+, delta R+):
     forall x X:
         dist_X(x, a) < delta
         =>:
             dist_Y(f(x), f(a)) < epsilon
 
 prop is_metric_continuous_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+    forall epsilon R+:
+        exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
 
 prop is_metric_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
     forall a X:
@@ -33,10 +33,10 @@ thm metric_continuous_implies_continuous_at:
 # The two residual relations below expose statements (b) and (c) of Theorem
 # 2.1.4 without conflating either characterization with the definition.
 prop preserves_metric_limits_at(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X):
-    forall u fn(n N_pos) X:
+    forall u fn(n N+) X:
         $chap1::has_metric_limit(X, dist_X, u, a)
         =>:
-            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
 
 prop is_metric_open_neighborhood_witness_at(X, Y set, dist_X fn(x, y X) R, f fn(x X) Y, a X, V power_set(Y), U power_set(X)):
     $chap1::is_metric_open(X, dist_X, U)
@@ -62,36 +62,36 @@ thm metric_continuous_at_implies_preserves_limits:
         =>:
             $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
     claim:
-        ? forall u fn(n N_pos) X:
+        ? forall u fn(n N+) X:
             $chap1::has_metric_limit(X, dist_X, u, a)
             =>:
-                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
         claim:
-            ? forall epsilon R_pos:
-                $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon)
+            ? forall epsilon R+:
+                $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon)
             by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
-            obtain delta from exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
-            delta / 2 $in R_pos
+            obtain delta from exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+            delta / 2 $in R+
             by def $chap1::has_metric_limit(X, dist_X, u, a)
             $chap1::has_eventual_metric_closeness(X, dist_X, u, a, delta / 2)
-            obtain N0 from exist N0 N_pos st {$chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)}
+            obtain N0 from exist N0 N+ st {$chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)}
             claim:
-                ? exist M N_pos st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, M)}
-                witness exist M N_pos st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, M)} from N0:
+                ? exist M N+ st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon, M)}
+                witness exist M N+ st {$chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon, M)} from N0:
                     claim:
-                        ? forall n N_pos:
+                        ? forall n N+:
                             n >= N0
                             =>:
-                                dist_Y(fn(k N_pos) Y {f(u(k))}(n), f(a)) <= epsilon
+                                dist_Y(fn(k N+) Y {f(u(k))}(n), f(a)) <= epsilon
                         by def $chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)
                         dist_X(u(n), a) <= delta / 2 < delta
                         by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
                         dist_Y(f(u(n)), f(a)) < epsilon
-                        fn(k N_pos) Y {f(u(k))}(n) = f(u(n))
-                        dist_Y(fn(k N_pos) Y {f(u(k))}(n), f(a)) = dist_Y(f(u(n)), f(a)) < epsilon
-                    by def $chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon, N0)
-            by def $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a), epsilon)
-        by def $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                        fn(k N+) Y {f(u(k))}(n) = f(u(n))
+                        dist_Y(fn(k N+) Y {f(u(k))}(n), f(a)) = dist_Y(f(u(n)), f(a)) < epsilon
+                    by def $chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon, N0)
+            by def $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon)
+        by def $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
     by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
 
 thm preserves_limits_implies_metric_continuous_at:
@@ -129,10 +129,10 @@ template<X, Y set, f fn(x X) Y, E power_set(Y)>:
     have function_preimage power_set(X) = {x X: f(x) $in E}
 
 prop preserves_metric_limits(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
-    forall a X, u fn(n N_pos) X:
+    forall a X, u fn(n N+) X:
         $chap1::has_metric_limit(X, dist_X, u, a)
         =>:
-            $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+            $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
 
 prop pulls_back_metric_open_sets(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
     forall V power_set(Y):
@@ -155,14 +155,14 @@ thm metric_continuous_implies_preserves_all_limits:
         =>:
             $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
     claim:
-        ? forall a X, u fn(n N_pos) X:
+        ? forall a X, u fn(n N+) X:
             $chap1::has_metric_limit(X, dist_X, u, a)
             =>:
-                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
         by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
         by thm metric_continuous_at_implies_preserves_limits(X, Y, dist_X, dist_Y, f, a)
         by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
-        $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+        $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
     by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
 
 thm preserves_all_limits_implies_metric_continuous:
@@ -178,12 +178,12 @@ thm preserves_all_limits_implies_metric_continuous:
         claim:
             ? $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
             claim:
-                ? forall u fn(n N_pos) X:
+                ? forall u fn(n N+) X:
                     $chap1::has_metric_limit(X, dist_X, u, a)
                     =>:
-                        $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                        $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
                 by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
-                $chap1::has_metric_limit(Y, dist_Y, fn(n N_pos) Y {f(u(n))}, f(a))
+                $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
             by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
         by thm preserves_limits_implies_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
     by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
@@ -237,13 +237,13 @@ thm metric_continuous_at_composition:
         =>:
             $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
     claim:
-        ? forall epsilon R_pos:
-            exist delta R_pos st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)}
+        ? forall epsilon R+:
+            exist delta R+ st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)}
         by def $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
-        obtain eta from exist eta R_pos st {$is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)}
+        obtain eta from exist eta R+ st {$is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)}
         by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
-        obtain delta from exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)}
-        witness exist radius R_pos st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, radius)} from delta:
+        obtain delta from exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)}
+        witness exist radius R+ st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, radius)} from delta:
             claim:
                 ? forall x X:
                     dist_X(x, a) < delta
@@ -283,7 +283,7 @@ have fn real_pair_coordinate(a, b R, j closed_range(1, 2)) R by cases:
     case j != 1: b
 
 template<X set, f, g fn(x X) R>:
-    have fn real_function_pair(x X) \chap1::finite_real_vector<2> = fn(j N_pos: j <= 2) R {real_pair_coordinate(f(x), g(x), j)}
+    have fn real_function_pair(x X) \chap1::finite_real_vector<2> = fn(j N+: j <= 2) R {real_pair_coordinate(f(x), g(x), j)}
 
 thm real_function_pair_continuous_at_implies_components:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
@@ -314,10 +314,22 @@ thm real_function_pair_continuous_implies_components:
         =>:
             $is_metric_continuous(X, R, dist, chap1::real_distance, f)
             $is_metric_continuous(X, R, dist, chap1::real_distance, g)
-    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
-    trust:
-        $is_metric_continuous(X, R, dist, chap1::real_distance, f)
-        $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+    claim:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        claim:
+            ? forall a X:
+                $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
+            by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+            by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
+        by def $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+    claim:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        claim:
+            ? forall a X:
+                $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
+            by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+            by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
+        by def $is_metric_continuous(X, R, dist, chap1::real_distance, g)
 
 thm real_components_continuous_imply_pair:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -326,8 +338,13 @@ thm real_components_continuous_imply_pair:
         $is_metric_continuous(X, R, dist, chap1::real_distance, g)
         =>:
             $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
-    # trust: Tao assigns Lemma 2.2.1 to Exercise 2.2.1.
-    trust $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
+    claim:
+        ? forall a X:
+            $is_metric_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
+        by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
+        by thm real_components_continuous_at_imply_pair(X, dist, f, g, a)
+    by def $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
 
 # Lemma 2.2.2. These are the concrete arithmetic maps whose continuity the
 # source assigns to Exercise 2.2.2.
@@ -616,12 +633,12 @@ thm continuous_map_preserves_metric_compactness:
     trust $chap1::is_metric_compact(Y, dist_Y, \function_image<X, Y, f, K>)
 
 # Proposition 2.3.2 (Maximum principle).
-prop is_real_function_bound(X set, f fn(x X) R, M R_pos):
+prop is_real_function_bound(X set, f fn(x X) R, M R+):
     forall x X:
         abs(f(x)) <= M
 
 prop is_bounded_real_function(X set, f fn(x X) R):
-    exist M R_pos st {$is_real_function_bound(X, f, M)}
+    exist M R+ st {$is_real_function_bound(X, f, M)}
 
 prop attains_real_maximum_at(X set, f fn(x X) R, a X):
     forall x X:
@@ -656,15 +673,15 @@ thm compact_continuous_real_function_attains_extrema:
         exist xmin X st {$attains_real_minimum_at(X, f, xmin)}
 
 # Definition 2.3.4 (Uniform continuity).
-prop is_uniform_delta_controlled(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, epsilon R_pos, delta R_pos):
+prop is_uniform_delta_controlled(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, epsilon R+, delta R+):
     forall x, y X:
         dist_X(x, y) < delta
         =>:
             dist_Y(f(x), f(y)) < epsilon
 
 prop is_metric_uniformly_continuous(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y):
-    forall epsilon R_pos:
-        exist delta R_pos st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
+    forall epsilon R+:
+        exist delta R+ st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
 
 # Theorem 2.3.5. The uniform-to-pointwise direction is checked directly.
 thm metric_uniformly_continuous_implies_continuous:
@@ -676,11 +693,11 @@ thm metric_uniformly_continuous_implies_continuous:
         ? forall a X:
             $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
         claim:
-            ? forall epsilon R_pos:
-                exist delta R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
+            ? forall epsilon R+:
+                exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
             by def $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
-            obtain delta from exist delta R_pos st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
-            witness exist radius R_pos st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, radius)} from delta:
+            obtain delta from exist delta R+ st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
+            witness exist radius R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, radius)} from delta:
                 claim:
                     ? forall x X:
                         dist_X(x, a) < delta
@@ -719,6 +736,19 @@ prop is_metric_disconnected(X set, dist fn(x, y X) R):
 prop is_metric_connected(X set, dist fn(x, y X) R):
     $is_nonempty_set(X)
     not $is_metric_disconnected(X, dist)
+
+# Example 2.4.2. The union [1,2] union [3,4] is disconnected in the usual
+# real metric.
+have example_242_disconnected_set power_set(R) = {x R: 1 <= x <= 2 or 3 <= x <= 4}
+
+thm example_242_separated_intervals_are_disconnected:
+    ? forall X power_set(R):
+        X = example_242_disconnected_set
+        =>:
+            $is_metric_disconnected(X, fn(x, y X) R {chap1::real_distance(x, y)})
+    # proof_debt: show that the two closed intervals are relatively open in
+    # their union and form a nonempty disjoint cover.
+    trust $is_metric_disconnected(X, fn(x, y X) R {chap1::real_distance(x, y)})
 
 # Definition 2.4.3 (Connected subsets).
 prop is_metric_connected_subset(X set, dist fn(x, y X) R, E power_set(X)):
@@ -831,18 +861,41 @@ prop is_topological_neighborhood(X set, T power_set(power_set(X)), x X, V power_
     V $in T
     x $in V
 
+# Example 2.5.3. Every metric ball is a neighborhood of its center in the
+# topology induced by the metric.
+prop is_topology_induced_by_metric(X set, dist fn(x, y X) R, T power_set(power_set(X))):
+    forall V power_set(X):
+        =>:
+            V $in T
+        <=>:
+            $chap1::is_metric_open(X, dist, V)
+
+thm example_253_metric_ball_is_neighborhood:
+    ? forall X set, dist fn(x, y X) R, T power_set(power_set(X)), center X, radius R+:
+        $chap1::is_metric_space(X, dist)
+        $is_topology_on(X, T)
+        $is_topology_induced_by_metric(X, dist, T)
+        =>:
+            $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
+    by thm chap1::metric_open_and_closed_ball_properties(X, dist, center, radius)
+    $chap1::is_metric_open(X, dist, \chap1::metric_ball<X, dist>(center, radius))
+    by def $is_topology_induced_by_metric(X, dist, T)
+    \chap1::metric_ball<X, dist>(center, radius) $in T
+    center $in \chap1::metric_ball<X, dist>(center, radius)
+    by def $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
+
 # Definition 2.5.4 (Topological convergence).
-prop is_eventually_in_topological_neighborhood(X set, u fn(n N_pos) X, V power_set(X), N0 N_pos):
-    forall n N_pos:
+prop is_eventually_in_topological_neighborhood(X set, u fn(n N+) X, V power_set(X), N0 N+):
+    forall n N+:
         n >= N0
         =>:
             u(n) $in V
 
-prop has_topological_limit(X set, T power_set(power_set(X)), u fn(n N_pos) X, a X):
+prop has_topological_limit(X set, T power_set(power_set(X)), u fn(n N+) X, a X):
     forall V power_set(X):
         $is_topological_neighborhood(X, T, a, V)
         =>:
-            exist N0 N_pos st {$is_eventually_in_topological_neighborhood(X, u, V, N0)}
+            exist N0 N+ st {$is_eventually_in_topological_neighborhood(X, u, V, N0)}
 
 # Definition 2.5.5 (Interior, exterior, and boundary).
 prop is_topological_interior_point(X set, T power_set(power_set(X)), E power_set(X), x X):

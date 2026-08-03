@@ -66,9 +66,6 @@ thm vector_add_smul:
 thm vector_smul_comm:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, a, b K, v V:
         space.smul(a, space.smul(b, v)) = space.smul(b, space.smul(a, v))
-    $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
-    $is_field(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv)
-    $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
     space.scalar_mul(a, b) = space.scalar_mul(b, a)
     space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v)
     space.smul(a, space.smul(b, v)) = space.smul(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(b, a), v) = space.smul(b, space.smul(a, v))
@@ -102,6 +99,38 @@ thm linear_map_map_add:
             phi(source.add(u, v)) = target.add(phi(u), phi(v))
     phi(source.add(u, v)) = target.add(phi(u), phi(v))
 
+# A linear map sends the source zero to the target zero. Map the identity
+# zero + zero = zero, then cancel the common image of zero in the target group.
+thm linear_map_map_zero:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        =>:
+            phi(source.zero) = target.zero
+    source.add(source.zero, source.zero) = source.zero
+    phi(source.add(source.zero, source.zero)) = target.add(phi(source.zero), phi(source.zero))
+    by thm chap2::add_zero_from_laws(W, target.add, target.zero, target.neg, phi(source.zero))
+    target.add(phi(source.zero), phi(source.zero)) = phi(source.add(source.zero, source.zero)) = phi(source.zero) = target.add(phi(source.zero), target.zero)
+    by thm chap2::add_left_cancel(W, target.add, target.zero, target.neg, phi(source.zero), phi(source.zero), target.zero)
+
+# Linear maps preserve additive inverses. Map -v + v = 0 and use uniqueness of
+# the target additive inverse.
+thm linear_map_map_neg:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, v V:
+        $is_linear_map(K, V, W, source, target, phi)
+        =>:
+            phi(source.neg(v)) = target.neg(phi(v))
+    by thm linear_map_map_zero(K, V, W, source, target, phi)
+    thm function_substitution:
+        ? forall A, B set, f fn(x A) B, x, y A:
+            x = y
+            =>:
+                f(x) = f(y)
+        f(x) = f(y)
+    source.add(source.neg(v), v) = source.zero
+    by thm function_substitution(V, W, phi, source.add(source.neg(v), v), source.zero)
+    target.add(phi(v), phi(source.neg(v))) = target.add(phi(source.neg(v)), phi(v)) = phi(source.add(source.neg(v), v)) = phi(source.zero) = target.zero
+    by thm chap2::neg_eq_of_add_eq_zero(W, target.add, target.zero, target.neg, phi(v), phi(source.neg(v)))
+
 template<K, V, W nonempty_set, target &VectorSpace<K, W>>:
     have fn linear_map_add_raw(phi, psi fn(v V) W) fn(t V) W = fn(z V) W {target.add(phi(z), psi(z))}
 
@@ -114,12 +143,77 @@ template<K, U, V, W nonempty_set>:
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn scalar_endomorphism(a K) fn(t V) V = fn(v V) V {space.smul(a, v)}
 
+thm linear_map_add_closed:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi, psi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        $is_linear_map(K, V, W, source, target, psi)
+        =>:
+            $is_linear_map(K, V, W, source, target, \linear_map_add_raw<K, V, W, target>(phi, psi))
+    thm function_substitution:
+        ? forall A1, A2 set, f fn(x A1) A2, x1, x2 A1:
+            x1 = x2
+            =>:
+                f(x1) = f(x2)
+        f(x1) = f(x2)
+    claim:
+        ? forall u, v V:
+            \linear_map_add_raw<K, V, W, target>(phi, psi)(source.add(u, v)) = target.add(\linear_map_add_raw<K, V, W, target>(phi, psi)(u), \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
+        by thm function_substitution(W, W, fn(x W) W {target.add(x, psi(source.add(u, v)))}, phi(source.add(u, v)), target.add(phi(u), phi(v)))
+        by thm function_substitution(W, W, fn(y W) W {target.add(target.add(phi(u), phi(v)), y)}, psi(source.add(u, v)), target.add(psi(u), psi(v)))
+        by thm chap2::add_reorder_four(W, target.add, target.zero, target.neg, phi(u), phi(v), psi(u), psi(v))
+        \linear_map_add_raw<K, V, W, target>(phi, psi)(source.add(u, v)) = target.add(phi(source.add(u, v)), psi(source.add(u, v))) = target.add(target.add(phi(u), phi(v)), psi(source.add(u, v))) = target.add(target.add(phi(u), phi(v)), target.add(psi(u), psi(v))) = target.add(target.add(phi(u), psi(u)), target.add(phi(v), psi(v))) = target.add(\linear_map_add_raw<K, V, W, target>(phi, psi)(u), \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
+    claim:
+        ? forall a K, v V:
+            \linear_map_add_raw<K, V, W, target>(phi, psi)(source.smul(a, v)) = target.smul(a, \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
+        by thm function_substitution(W, W, fn(x W) W {target.add(x, psi(source.smul(a, v)))}, phi(source.smul(a, v)), target.smul(a, phi(v)))
+        by thm function_substitution(W, W, fn(y W) W {target.add(target.smul(a, phi(v)), y)}, psi(source.smul(a, v)), target.smul(a, psi(v)))
+        \linear_map_add_raw<K, V, W, target>(phi, psi)(source.smul(a, v)) = target.add(phi(source.smul(a, v)), psi(source.smul(a, v))) = target.add(target.smul(a, phi(v)), psi(source.smul(a, v))) = target.add(target.smul(a, phi(v)), target.smul(a, psi(v))) = target.smul(a, target.add(phi(v), psi(v))) = target.smul(a, \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
+    by def $is_linear_map(K, V, W, source, target, \linear_map_add_raw<K, V, W, target>(phi, psi))
+
+thm linear_map_smul_closed:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, a K, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        =>:
+            $is_linear_map(K, V, W, source, target, \linear_map_smul_raw<K, V, W, target>(a, phi))
+    thm function_substitution:
+        ? forall A1, A2 set, f fn(x A1) A2, x1, x2 A1:
+            x1 = x2
+            =>:
+                f(x1) = f(x2)
+        f(x1) = f(x2)
+    claim:
+        ? forall u, v V:
+            \linear_map_smul_raw<K, V, W, target>(a, phi)(source.add(u, v)) = target.add(\linear_map_smul_raw<K, V, W, target>(a, phi)(u), \linear_map_smul_raw<K, V, W, target>(a, phi)(v))
+        by thm function_substitution(W, W, fn(x W) W {target.smul(a, x)}, phi(source.add(u, v)), target.add(phi(u), phi(v)))
+        \linear_map_smul_raw<K, V, W, target>(a, phi)(source.add(u, v)) = target.smul(a, phi(source.add(u, v))) = target.smul(a, target.add(phi(u), phi(v))) = target.add(target.smul(a, phi(u)), target.smul(a, phi(v))) = target.add(\linear_map_smul_raw<K, V, W, target>(a, phi)(u), \linear_map_smul_raw<K, V, W, target>(a, phi)(v))
+    claim:
+        ? forall b K, v V:
+            \linear_map_smul_raw<K, V, W, target>(a, phi)(source.smul(b, v)) = target.smul(b, \linear_map_smul_raw<K, V, W, target>(a, phi)(v))
+        by thm function_substitution(W, W, fn(x W) W {target.smul(a, x)}, phi(source.smul(b, v)), target.smul(b, phi(v)))
+        by thm vector_smul_comm(K, W, target, a, b, phi(v))
+        \linear_map_smul_raw<K, V, W, target>(a, phi)(source.smul(b, v)) = target.smul(a, phi(source.smul(b, v))) = target.smul(a, target.smul(b, phi(v))) = target.smul(b, target.smul(a, phi(v))) = target.smul(b, \linear_map_smul_raw<K, V, W, target>(a, phi)(v))
+    by def $is_linear_map(K, V, W, source, target, \linear_map_smul_raw<K, V, W, target>(a, phi))
+
+thm scalar_endomorphism_is_linear:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
+        $is_linear_map(K, V, V, space, space, \scalar_endomorphism<K, V, space>(a))
+    claim:
+        ? forall u, v V:
+            \scalar_endomorphism<K, V, space>(a)(space.add(u, v)) = space.add(\scalar_endomorphism<K, V, space>(a)(u), \scalar_endomorphism<K, V, space>(a)(v))
+        \scalar_endomorphism<K, V, space>(a)(space.add(u, v)) = space.smul(a, space.add(u, v)) = space.add(space.smul(a, u), space.smul(a, v)) = space.add(\scalar_endomorphism<K, V, space>(a)(u), \scalar_endomorphism<K, V, space>(a)(v))
+    claim:
+        ? forall b K, v V:
+            \scalar_endomorphism<K, V, space>(a)(space.smul(b, v)) = space.smul(b, \scalar_endomorphism<K, V, space>(a)(v))
+        by thm vector_smul_comm(K, V, space, a, b, v)
+        \scalar_endomorphism<K, V, space>(a)(space.smul(b, v)) = space.smul(a, space.smul(b, v)) = space.smul(b, space.smul(a, v)) = space.smul(b, \scalar_endomorphism<K, V, space>(a)(v))
+    by def $is_linear_map(K, V, V, space, space, \scalar_endomorphism<K, V, space>(a))
+
 thm linear_map_composition_closed:
     ? forall K, U, V, W nonempty_set, source &VectorSpace<K, U>, middle &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, psi fn(u U) V:
         $is_linear_map(K, V, W, middle, target, phi)
         $is_linear_map(K, U, V, source, middle, psi)
         =>:
-            $is_linear_map(K, U, W, source, target, fn(x U) W {phi(psi(x))})
+            $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
     source.scalar_add = middle.scalar_add = target.scalar_add
     source.scalar_zero = middle.scalar_zero = target.scalar_zero
     source.scalar_neg = middle.scalar_neg = target.scalar_neg
@@ -134,15 +228,16 @@ thm linear_map_composition_closed:
         f(x) = f(y)
     claim:
         ? forall x, y U:
-            (fn(q U) W {phi(psi(q))})(source.add(x, y)) = target.add((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+            \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.add(x, y)) = target.add(\linear_map_compose_raw<K, U, V, W>(phi, psi)(x), \linear_map_compose_raw<K, U, V, W>(phi, psi)(y))
         by thm function_substitution(V, W, phi, psi(source.add(x, y)), middle.add(psi(x), psi(y)))
-        (fn(q U) W {phi(psi(q))})(source.add(x, y)) = phi(psi(source.add(x, y))) = phi(middle.add(psi(x), psi(y))) = target.add(phi(psi(x)), phi(psi(y))) = target.add((fn(q U) W {phi(psi(q))})(x), (fn(q U) W {phi(psi(q))})(y))
+        \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.add(x, y)) = phi(psi(source.add(x, y))) = phi(middle.add(psi(x), psi(y))) = target.add(phi(psi(x)), phi(psi(y))) = target.add(\linear_map_compose_raw<K, U, V, W>(phi, psi)(x), \linear_map_compose_raw<K, U, V, W>(phi, psi)(y))
     claim:
         ? forall a K, x U:
-            (fn(q U) W {phi(psi(q))})(source.smul(a, x)) = target.smul(a, (fn(q U) W {phi(psi(q))})(x))
+            \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.smul(a, x)) = target.smul(a, \linear_map_compose_raw<K, U, V, W>(phi, psi)(x))
         by thm function_substitution(V, W, phi, psi(source.smul(a, x)), middle.smul(a, psi(x)))
-        (fn(q U) W {phi(psi(q))})(source.smul(a, x)) = phi(psi(source.smul(a, x))) = phi(middle.smul(a, psi(x))) = target.smul(a, phi(psi(x))) = target.smul(a, (fn(q U) W {phi(psi(q))})(x))
-    $is_linear_map(K, U, W, source, target, fn(x U) W {phi(psi(x))})
+        \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.smul(a, x)) = phi(psi(source.smul(a, x))) = phi(middle.smul(a, psi(x))) = target.smul(a, phi(psi(x))) = target.smul(a, \linear_map_compose_raw<K, U, V, W>(phi, psi)(x))
+    by def $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
+    $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
 
 prop is_bijective_linear_map(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
     $is_linear_map(K, V, W, source, target, phi)
@@ -154,7 +249,40 @@ thm bijective_linear_map_is_equivalence:
         $chap4::bijective_fn(V, W, phi)
         =>:
             $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def $is_bijective_linear_map(K, V, W, source, target, phi)
     $is_bijective_linear_map(K, V, W, source, target, phi)
+
+# A linear equivalence exposes the total inverse selected in Chapter 4.
+template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W: $is_bijective_linear_map(K, V, W, source, target, phi)>:
+    have fn linear_equiv_inverse(w W) V = \chap4::inverse<V, W, source.zero, phi>(w)
+
+claim forall! K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, v V: $is_bijective_linear_map(K, V, W, source, target, phi) => {\linear_equiv_inverse<K, V, W, source, target, phi>(phi(v)) = v}:
+    by def $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def $chap4::bijective_fn(V, W, phi)
+    claim:
+        ? $chap4::has_preimage(V, W, phi, phi(v))
+        witness exist x V st {phi(x) = phi(v)} from v
+        by def $chap4::has_preimage(V, W, phi, phi(v))
+    by thm chap4::inverse_spec(V, W, source.zero, phi, phi(v))
+    \linear_equiv_inverse<K, V, W, source, target, phi>(phi(v)) = \chap4::inverse<V, W, source.zero, phi>(phi(v))
+    phi(\linear_equiv_inverse<K, V, W, source, target, phi>(phi(v))) = phi(\chap4::inverse<V, W, source.zero, phi>(phi(v))) = phi(v)
+    by def $chap4::injective_fn(V, W, phi)
+
+claim forall! K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, w W: $is_bijective_linear_map(K, V, W, source, target, phi) => {phi(\linear_equiv_inverse<K, V, W, source, target, phi>(w)) = w}:
+    by def $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def $chap4::bijective_fn(V, W, phi)
+    by def $chap4::surjective_fn(V, W, phi)
+    obtain v from exist x V st {w = phi(x)}
+    claim:
+        ? $chap4::has_preimage(V, W, phi, w)
+        witness exist x V st {phi(x) = w} from v
+        by def $chap4::has_preimage(V, W, phi, w)
+    by thm chap4::inverse_spec(V, W, source.zero, phi, w)
+    \linear_equiv_inverse<K, V, W, source, target, phi>(w) = \chap4::inverse<V, W, source.zero, phi>(w)
+    phi(\linear_equiv_inverse<K, V, W, source, target, phi>(w)) = phi(\chap4::inverse<V, W, source.zero, phi>(w)) = w
+
+template<K, U, V, W nonempty_set, source &VectorSpace<K, U>, middle &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, psi fn(u U) V: $is_bijective_linear_map(K, V, W, middle, target, phi), $is_bijective_linear_map(K, U, V, source, middle, psi)>:
+    have fn linear_equiv_compose(x U) W = phi(psi(x))
 
 # ---------------------------------------------------------------------------
 # 10.1.3 Binary products and coproducts
@@ -198,6 +326,419 @@ thm linear_coproduct_formula:
         (fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))})((v, w)) = addU(phi(v), psi(w))
     (fn(p cart(V, W)) U {addU(phi(p[1]), psi(p[2]))})((v, w)) = addU(phi(v), psi(w))
 
+# Binary products and coproducts carry the pointwise vector-space structure.
+# The flat VectorSpace representation requires the two factors to expose the
+# same scalar-field operations on K.
+template<K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>>:
+    have fn product_vector_add(x, y cart(V, W)) cart(V, W) = (left.add(x[1], y[1]), right.add(x[2], y[2]))
+
+template<K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>>:
+    have product_vector_zero cart(V, W) = (left.zero, right.zero)
+
+template<K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>>:
+    have fn product_vector_neg(x cart(V, W)) cart(V, W) = (left.neg(x[1]), right.neg(x[2]))
+
+template<K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>>:
+    have fn product_vector_smul(a K, x cart(V, W)) cart(V, W) = (left.smul(a, x[1]), right.smul(a, x[2]))
+
+thm product_vector_add_assoc:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x, y, z cart(V, W):
+        \product_vector_add<K, V, W, left, right>(\product_vector_add<K, V, W, left, right>(x, y), z) = \product_vector_add<K, V, W, left, right>(x, \product_vector_add<K, V, W, left, right>(y, z))
+    have xy cart(V, W) = (left.add(x[1], y[1]), right.add(x[2], y[2]))
+    have yz cart(V, W) = (left.add(y[1], z[1]), right.add(y[2], z[2]))
+    \product_vector_add<K, V, W, left, right>(x, y) = xy
+    \product_vector_add<K, V, W, left, right>(y, z) = yz
+    xy[1] = left.add(x[1], y[1])
+    xy[2] = right.add(x[2], y[2])
+    yz[1] = left.add(y[1], z[1])
+    yz[2] = right.add(y[2], z[2])
+    \product_vector_add<K, V, W, left, right>(xy, z) = (left.add(xy[1], z[1]), right.add(xy[2], z[2])) = (left.add(left.add(x[1], y[1]), z[1]), right.add(right.add(x[2], y[2]), z[2]))
+    \product_vector_add<K, V, W, left, right>(x, yz) = (left.add(x[1], yz[1]), right.add(x[2], yz[2])) = (left.add(x[1], left.add(y[1], z[1])), right.add(x[2], right.add(y[2], z[2])))
+    left.add(left.add(x[1], y[1]), z[1]) = left.add(x[1], left.add(y[1], z[1]))
+    right.add(right.add(x[2], y[2]), z[2]) = right.add(x[2], right.add(y[2], z[2]))
+    \product_vector_add<K, V, W, left, right>(\product_vector_add<K, V, W, left, right>(x, y), z) = \product_vector_add<K, V, W, left, right>(xy, z) = (left.add(left.add(x[1], y[1]), z[1]), right.add(right.add(x[2], y[2]), z[2])) = (left.add(x[1], left.add(y[1], z[1])), right.add(x[2], right.add(y[2], z[2]))) = \product_vector_add<K, V, W, left, right>(x, yz) = \product_vector_add<K, V, W, left, right>(x, \product_vector_add<K, V, W, left, right>(y, z))
+
+thm product_vector_add_zero:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x cart(V, W):
+        \product_vector_add<K, V, W, left, right>(\product_vector_zero<K, V, W, left, right>, x) = x
+        \product_vector_add<K, V, W, left, right>(x, \product_vector_zero<K, V, W, left, right>) = x
+    have z0 cart(V, W) = (left.zero, right.zero)
+    \product_vector_zero<K, V, W, left, right> = z0
+    z0[1] = left.zero
+    z0[2] = right.zero
+    left.add(left.zero, x[1]) = x[1]
+    right.add(right.zero, x[2]) = x[2]
+    left.add(x[1], left.zero) = left.add(left.zero, x[1]) = x[1]
+    right.add(x[2], right.zero) = right.add(right.zero, x[2]) = x[2]
+    \product_vector_add<K, V, W, left, right>(z0, x) = (left.add(z0[1], x[1]), right.add(z0[2], x[2])) = (left.add(left.zero, x[1]), right.add(right.zero, x[2]))
+    \product_vector_add<K, V, W, left, right>(x, z0) = (left.add(x[1], z0[1]), right.add(x[2], z0[2])) = (left.add(x[1], left.zero), right.add(x[2], right.zero))
+    by thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    x = (x[1], x[2])
+    (x[1], x[2]) = x
+    \product_vector_add<K, V, W, left, right>(\product_vector_zero<K, V, W, left, right>, x) = \product_vector_add<K, V, W, left, right>(z0, x) = (left.add(left.zero, x[1]), right.add(right.zero, x[2])) = (x[1], x[2]) = x
+    \product_vector_add<K, V, W, left, right>(x, \product_vector_zero<K, V, W, left, right>) = \product_vector_add<K, V, W, left, right>(x, z0) = (left.add(x[1], left.zero), right.add(x[2], right.zero)) = (x[1], x[2]) = x
+
+thm product_vector_add_neg:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x cart(V, W):
+        \product_vector_add<K, V, W, left, right>(\product_vector_neg<K, V, W, left, right>(x), x) = \product_vector_zero<K, V, W, left, right>
+        \product_vector_add<K, V, W, left, right>(x, \product_vector_neg<K, V, W, left, right>(x)) = \product_vector_zero<K, V, W, left, right>
+    have nx cart(V, W) = (left.neg(x[1]), right.neg(x[2]))
+    have z0 cart(V, W) = (left.zero, right.zero)
+    \product_vector_neg<K, V, W, left, right>(x) = nx
+    \product_vector_zero<K, V, W, left, right> = z0
+    nx[1] = left.neg(x[1])
+    nx[2] = right.neg(x[2])
+    z0[1] = left.zero
+    z0[2] = right.zero
+    \product_vector_add<K, V, W, left, right>(nx, x) = (left.add(nx[1], x[1]), right.add(nx[2], x[2])) = (left.add(left.neg(x[1]), x[1]), right.add(right.neg(x[2]), x[2]))
+    \product_vector_add<K, V, W, left, right>(x, nx) = (left.add(x[1], nx[1]), right.add(x[2], nx[2])) = (left.add(x[1], left.neg(x[1])), right.add(x[2], right.neg(x[2])))
+    left.add(left.neg(x[1]), x[1]) = left.zero
+    right.add(right.neg(x[2]), x[2]) = right.zero
+    left.add(x[1], left.neg(x[1])) = left.add(left.neg(x[1]), x[1]) = left.zero
+    right.add(x[2], right.neg(x[2])) = right.add(right.neg(x[2]), x[2]) = right.zero
+    by thm tuple_equal_from_coordinates((left.add(left.neg(x[1]), x[1]), right.add(right.neg(x[2]), x[2])), z0)
+    by thm tuple_equal_from_coordinates((left.add(x[1], left.neg(x[1])), right.add(x[2], right.neg(x[2]))), z0)
+    \product_vector_add<K, V, W, left, right>(\product_vector_neg<K, V, W, left, right>(x), x) = \product_vector_add<K, V, W, left, right>(nx, x) = (left.add(left.neg(x[1]), x[1]), right.add(right.neg(x[2]), x[2])) = z0 = \product_vector_zero<K, V, W, left, right>
+    \product_vector_add<K, V, W, left, right>(x, \product_vector_neg<K, V, W, left, right>(x)) = \product_vector_add<K, V, W, left, right>(x, nx) = (left.add(x[1], left.neg(x[1])), right.add(x[2], right.neg(x[2]))) = z0 = \product_vector_zero<K, V, W, left, right>
+
+thm product_vector_add_comm:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x, y cart(V, W):
+        \product_vector_add<K, V, W, left, right>(x, y) = \product_vector_add<K, V, W, left, right>(y, x)
+    left.add(x[1], y[1]) = left.add(y[1], x[1])
+    right.add(x[2], y[2]) = right.add(y[2], x[2])
+    \product_vector_add<K, V, W, left, right>(x, y) = (left.add(x[1], y[1]), right.add(x[2], y[2])) = (left.add(y[1], x[1]), right.add(y[2], x[2])) = \product_vector_add<K, V, W, left, right>(y, x)
+
+thm product_vector_smul_add:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, a K, x, y cart(V, W):
+        \product_vector_smul<K, V, W, left, right>(a, \product_vector_add<K, V, W, left, right>(x, y)) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(a, y))
+    have xy cart(V, W) = (left.add(x[1], y[1]), right.add(x[2], y[2]))
+    have ax cart(V, W) = (left.smul(a, x[1]), right.smul(a, x[2]))
+    have ay cart(V, W) = (left.smul(a, y[1]), right.smul(a, y[2]))
+    \product_vector_add<K, V, W, left, right>(x, y) = xy
+    \product_vector_smul<K, V, W, left, right>(a, x) = ax
+    \product_vector_smul<K, V, W, left, right>(a, y) = ay
+    xy[1] = left.add(x[1], y[1])
+    xy[2] = right.add(x[2], y[2])
+    ax[1] = left.smul(a, x[1])
+    ax[2] = right.smul(a, x[2])
+    ay[1] = left.smul(a, y[1])
+    ay[2] = right.smul(a, y[2])
+    \product_vector_smul<K, V, W, left, right>(a, xy) = (left.smul(a, xy[1]), right.smul(a, xy[2])) = (left.smul(a, left.add(x[1], y[1])), right.smul(a, right.add(x[2], y[2])))
+    \product_vector_add<K, V, W, left, right>(ax, ay) = (left.add(ax[1], ay[1]), right.add(ax[2], ay[2])) = (left.add(left.smul(a, x[1]), left.smul(a, y[1])), right.add(right.smul(a, x[2]), right.smul(a, y[2])))
+    left.smul(a, left.add(x[1], y[1])) = left.add(left.smul(a, x[1]), left.smul(a, y[1]))
+    right.smul(a, right.add(x[2], y[2])) = right.add(right.smul(a, x[2]), right.smul(a, y[2]))
+    \product_vector_smul<K, V, W, left, right>(a, \product_vector_add<K, V, W, left, right>(x, y)) = \product_vector_smul<K, V, W, left, right>(a, xy) = (left.smul(a, left.add(x[1], y[1])), right.smul(a, right.add(x[2], y[2]))) = (left.add(left.smul(a, x[1]), left.smul(a, y[1])), right.add(right.smul(a, x[2]), right.smul(a, y[2]))) = \product_vector_add<K, V, W, left, right>(ax, ay) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(a, y))
+
+thm product_vector_scalar_laws:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, a, b K, x cart(V, W):
+        left.scalar_add = right.scalar_add
+        left.scalar_mul = right.scalar_mul
+        =>:
+            \product_vector_smul<K, V, W, left, right>(left.scalar_add(a, b), x) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(b, x))
+            \product_vector_smul<K, V, W, left, right>(left.scalar_mul(a, b), x) = \product_vector_smul<K, V, W, left, right>(a, \product_vector_smul<K, V, W, left, right>(b, x))
+    right.scalar_add(a, b) = left.scalar_add(a, b)
+    right.scalar_mul(a, b) = left.scalar_mul(a, b)
+    have ax cart(V, W) = (left.smul(a, x[1]), right.smul(a, x[2]))
+    have bx cart(V, W) = (left.smul(b, x[1]), right.smul(b, x[2]))
+    \product_vector_smul<K, V, W, left, right>(a, x) = ax
+    \product_vector_smul<K, V, W, left, right>(b, x) = bx
+    ax[1] = left.smul(a, x[1])
+    ax[2] = right.smul(a, x[2])
+    bx[1] = left.smul(b, x[1])
+    bx[2] = right.smul(b, x[2])
+    \product_vector_add<K, V, W, left, right>(ax, bx) = (left.add(ax[1], bx[1]), right.add(ax[2], bx[2])) = (left.add(left.smul(a, x[1]), left.smul(b, x[1])), right.add(right.smul(a, x[2]), right.smul(b, x[2])))
+    \product_vector_smul<K, V, W, left, right>(a, bx) = (left.smul(a, bx[1]), right.smul(a, bx[2])) = (left.smul(a, left.smul(b, x[1])), right.smul(a, right.smul(b, x[2])))
+    left.smul(left.scalar_add(a, b), x[1]) = left.add(left.smul(a, x[1]), left.smul(b, x[1]))
+    right.smul(left.scalar_add(a, b), x[2]) = right.smul(right.scalar_add(a, b), x[2]) = right.add(right.smul(a, x[2]), right.smul(b, x[2]))
+    left.smul(left.scalar_mul(a, b), x[1]) = left.smul(a, left.smul(b, x[1]))
+    right.smul(left.scalar_mul(a, b), x[2]) = right.smul(right.scalar_mul(a, b), x[2]) = right.smul(a, right.smul(b, x[2]))
+    \product_vector_smul<K, V, W, left, right>(left.scalar_add(a, b), x) = (left.smul(left.scalar_add(a, b), x[1]), right.smul(left.scalar_add(a, b), x[2])) = (left.add(left.smul(a, x[1]), left.smul(b, x[1])), right.add(right.smul(a, x[2]), right.smul(b, x[2]))) = \product_vector_add<K, V, W, left, right>(ax, bx) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(b, x))
+    \product_vector_smul<K, V, W, left, right>(left.scalar_mul(a, b), x) = (left.smul(left.scalar_mul(a, b), x[1]), right.smul(left.scalar_mul(a, b), x[2])) = (left.smul(a, left.smul(b, x[1])), right.smul(a, right.smul(b, x[2]))) = \product_vector_smul<K, V, W, left, right>(a, bx) = \product_vector_smul<K, V, W, left, right>(a, \product_vector_smul<K, V, W, left, right>(b, x))
+
+thm product_vector_one_smul:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x cart(V, W):
+        left.scalar_one = right.scalar_one
+        =>:
+            \product_vector_smul<K, V, W, left, right>(left.scalar_one, x) = x
+    right.scalar_one = left.scalar_one
+    left.smul(left.scalar_one, x[1]) = x[1]
+    right.smul(left.scalar_one, x[2]) = right.smul(right.scalar_one, x[2]) = x[2]
+    by thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    x = (x[1], x[2])
+    (x[1], x[2]) = x
+    \product_vector_smul<K, V, W, left, right>(left.scalar_one, x) = (left.smul(left.scalar_one, x[1]), right.smul(left.scalar_one, x[2])) = (x[1], x[2]) = x
+
+thm product_vector_zero_smul:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>, x cart(V, W):
+        left.scalar_zero = right.scalar_zero
+        =>:
+            \product_vector_smul<K, V, W, left, right>(left.scalar_zero, x) = \product_vector_zero<K, V, W, left, right>
+    have z0 cart(V, W) = (left.zero, right.zero)
+    \product_vector_zero<K, V, W, left, right> = z0
+    right.scalar_zero = left.scalar_zero
+    left.smul(left.scalar_zero, x[1]) = left.zero
+    right.smul(left.scalar_zero, x[2]) = right.smul(right.scalar_zero, x[2]) = right.zero
+    by thm tuple_equal_from_coordinates((left.smul(left.scalar_zero, x[1]), right.smul(left.scalar_zero, x[2])), z0)
+    \product_vector_smul<K, V, W, left, right>(left.scalar_zero, x) = (left.smul(left.scalar_zero, x[1]), right.smul(left.scalar_zero, x[2])) = z0 = \product_vector_zero<K, V, W, left, right>
+
+thm product_vector_space_tuple_is_vector_space:
+    ? forall K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>:
+        left.scalar_add = right.scalar_add
+        left.scalar_zero = right.scalar_zero
+        left.scalar_neg = right.scalar_neg
+        left.scalar_mul = right.scalar_mul
+        left.scalar_one = right.scalar_one
+        left.scalar_inv = right.scalar_inv
+        =>:
+            (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>) $in &VectorSpace<K, cart(V, W)>
+    claim:
+        ? forall x, y, z cart(V, W):
+            \product_vector_add<K, V, W, left, right>(\product_vector_add<K, V, W, left, right>(x, y), z) = \product_vector_add<K, V, W, left, right>(x, \product_vector_add<K, V, W, left, right>(y, z))
+        by thm product_vector_add_assoc(K, V, W, left, right, x, y, z)
+    claim:
+        ? forall x cart(V, W):
+            \product_vector_add<K, V, W, left, right>(\product_vector_zero<K, V, W, left, right>, x) = x
+            \product_vector_add<K, V, W, left, right>(x, \product_vector_zero<K, V, W, left, right>) = x
+        by thm product_vector_add_zero(K, V, W, left, right, x)
+    claim:
+        ? forall x cart(V, W):
+            \product_vector_add<K, V, W, left, right>(\product_vector_neg<K, V, W, left, right>(x), x) = \product_vector_zero<K, V, W, left, right>
+            \product_vector_add<K, V, W, left, right>(x, \product_vector_neg<K, V, W, left, right>(x)) = \product_vector_zero<K, V, W, left, right>
+        by thm product_vector_add_neg(K, V, W, left, right, x)
+    claim:
+        ? forall x, y cart(V, W):
+            \product_vector_add<K, V, W, left, right>(x, y) = \product_vector_add<K, V, W, left, right>(y, x)
+        by thm product_vector_add_comm(K, V, W, left, right, x, y)
+    by def $chap2::is_additive_commutative_group(cart(V, W), \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>)
+    claim:
+        ? forall a K, x, y cart(V, W):
+            \product_vector_smul<K, V, W, left, right>(a, \product_vector_add<K, V, W, left, right>(x, y)) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(a, y))
+        by thm product_vector_smul_add(K, V, W, left, right, a, x, y)
+    claim:
+        ? forall a, b K, x cart(V, W):
+            \product_vector_smul<K, V, W, left, right>(left.scalar_add(a, b), x) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(b, x))
+            \product_vector_smul<K, V, W, left, right>(left.scalar_mul(a, b), x) = \product_vector_smul<K, V, W, left, right>(a, \product_vector_smul<K, V, W, left, right>(b, x))
+        by thm product_vector_scalar_laws(K, V, W, left, right, a, b, x)
+    claim:
+        ? forall x cart(V, W):
+            \product_vector_smul<K, V, W, left, right>(left.scalar_one, x) = x
+        by thm product_vector_one_smul(K, V, W, left, right, x)
+    claim:
+        ? forall x cart(V, W):
+            \product_vector_smul<K, V, W, left, right>(left.scalar_zero, x) = \product_vector_zero<K, V, W, left, right>
+        by thm product_vector_zero_smul(K, V, W, left, right, x)
+    by def $is_vector_space(K, cart(V, W), left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    left.scalar_add $in fn(x, y K) K
+    left.scalar_zero $in K
+    left.scalar_neg $in fn(x K) K
+    left.scalar_mul $in fn(x, y K) K
+    left.scalar_one $in K
+    left.scalar_inv $in fn(x K) K
+    \product_vector_add<K, V, W, left, right> $in fn(x, y cart(V, W)) cart(V, W)
+    \product_vector_zero<K, V, W, left, right> $in cart(V, W)
+    \product_vector_neg<K, V, W, left, right> $in fn(x cart(V, W)) cart(V, W)
+    \product_vector_smul<K, V, W, left, right> $in fn(a K, x cart(V, W)) cart(V, W)
+    by thm cart_member_from_coordinates((left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>), cart(fn(x, y K) K, K, fn(x K) K, fn(x, y K) K, K, fn(x K) K, fn(x, y cart(V, W)) cart(V, W), cart(V, W), fn(x cart(V, W)) cart(V, W), fn(a K, x cart(V, W)) cart(V, W)))
+    (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>) $in cart(fn(x, y K) K, K, fn(x K) K, fn(x, y K) K, K, fn(x K) K, fn(x, y cart(V, W)) cart(V, W), cart(V, W), fn(x cart(V, W)) cart(V, W), fn(a K, x cart(V, W)) cart(V, W))
+    by thm struct_member((left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>), &VectorSpace<K, cart(V, W)>)
+
+template<K, V, W nonempty_set, left &VectorSpace<K, V>, right &VectorSpace<K, W>: left.scalar_add = right.scalar_add, left.scalar_zero = right.scalar_zero, left.scalar_neg = right.scalar_neg, left.scalar_mul = right.scalar_mul, left.scalar_one = right.scalar_one, left.scalar_inv = right.scalar_inv>:
+    have product_vector_space &VectorSpace<K, cart(V, W)> = (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+
+thm linear_product_is_linear:
+    ? forall K, U, V, W nonempty_set, source &VectorSpace<K, U>, left &VectorSpace<K, V>, right &VectorSpace<K, W>, phi fn(u U) V, psi fn(u U) W:
+        left.scalar_add = right.scalar_add
+        left.scalar_zero = right.scalar_zero
+        left.scalar_neg = right.scalar_neg
+        left.scalar_mul = right.scalar_mul
+        left.scalar_one = right.scalar_one
+        left.scalar_inv = right.scalar_inv
+        $is_linear_map(K, U, V, source, left, phi)
+        $is_linear_map(K, U, W, source, right, psi)
+        =>:
+            $is_linear_map(K, U, cart(V, W), source, \product_vector_space<K, V, W, left, right>, \linear_product<U, V, W>(phi, psi))
+    claim:
+        ? forall u, v U:
+            \linear_product<U, V, W>(phi, psi)(source.add(u, v)) = \product_vector_add<K, V, W, left, right>(\linear_product<U, V, W>(phi, psi)(u), \linear_product<U, V, W>(phi, psi)(v))
+        have pu cart(V, W) = (phi(u), psi(u))
+        have pv cart(V, W) = (phi(v), psi(v))
+        pu[1] = phi(u)
+        pu[2] = psi(u)
+        pv[1] = phi(v)
+        pv[2] = psi(v)
+        \linear_product<U, V, W>(phi, psi)(u) = pu
+        \linear_product<U, V, W>(phi, psi)(v) = pv
+        \linear_product<U, V, W>(phi, psi)(source.add(u, v)) = (phi(source.add(u, v)), psi(source.add(u, v)))
+        \product_vector_add<K, V, W, left, right>(pu, pv) = (left.add(pu[1], pv[1]), right.add(pu[2], pv[2])) = (left.add(phi(u), phi(v)), right.add(psi(u), psi(v)))
+        phi(source.add(u, v)) = left.add(phi(u), phi(v))
+        psi(source.add(u, v)) = right.add(psi(u), psi(v))
+        \linear_product<U, V, W>(phi, psi)(source.add(u, v)) = (phi(source.add(u, v)), psi(source.add(u, v))) = (left.add(phi(u), phi(v)), right.add(psi(u), psi(v))) = \product_vector_add<K, V, W, left, right>(pu, pv) = \product_vector_add<K, V, W, left, right>(\linear_product<U, V, W>(phi, psi)(u), \linear_product<U, V, W>(phi, psi)(v))
+    claim:
+        ? forall a K, u U:
+            \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = \product_vector_smul<K, V, W, left, right>(a, \linear_product<U, V, W>(phi, psi)(u))
+        have pu cart(V, W) = (phi(u), psi(u))
+        pu[1] = phi(u)
+        pu[2] = psi(u)
+        \linear_product<U, V, W>(phi, psi)(u) = pu
+        \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = (phi(source.smul(a, u)), psi(source.smul(a, u)))
+        \product_vector_smul<K, V, W, left, right>(a, pu) = (left.smul(a, pu[1]), right.smul(a, pu[2])) = (left.smul(a, phi(u)), right.smul(a, psi(u)))
+        phi(source.smul(a, u)) = left.smul(a, phi(u))
+        psi(source.smul(a, u)) = right.smul(a, psi(u))
+        \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = (phi(source.smul(a, u)), psi(source.smul(a, u))) = (left.smul(a, phi(u)), right.smul(a, psi(u))) = \product_vector_smul<K, V, W, left, right>(a, pu) = \product_vector_smul<K, V, W, left, right>(a, \linear_product<U, V, W>(phi, psi)(u))
+    have product_space_value &VectorSpace<K, cart(V, W)> = \product_vector_space<K, V, W, left, right>
+    \product_vector_space<K, V, W, left, right> = (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    product_space_value = (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    product_space_value.add = \product_vector_add<K, V, W, left, right>
+    product_space_value.smul = \product_vector_smul<K, V, W, left, right>
+    claim:
+        ? forall u, v U:
+            \linear_product<U, V, W>(phi, psi)(source.add(u, v)) = product_space_value.add(\linear_product<U, V, W>(phi, psi)(u), \linear_product<U, V, W>(phi, psi)(v))
+        \linear_product<U, V, W>(phi, psi)(source.add(u, v)) = \product_vector_add<K, V, W, left, right>(\linear_product<U, V, W>(phi, psi)(u), \linear_product<U, V, W>(phi, psi)(v)) = product_space_value.add(\linear_product<U, V, W>(phi, psi)(u), \linear_product<U, V, W>(phi, psi)(v))
+    claim:
+        ? forall a K, u U:
+            \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = product_space_value.smul(a, \linear_product<U, V, W>(phi, psi)(u))
+        \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = \product_vector_smul<K, V, W, left, right>(a, \linear_product<U, V, W>(phi, psi)(u)) = product_space_value.smul(a, \linear_product<U, V, W>(phi, psi)(u))
+    by def $is_linear_map(K, U, cart(V, W), source, product_space_value, \linear_product<U, V, W>(phi, psi))
+    $is_linear_map(K, U, cart(V, W), source, \product_vector_space<K, V, W, left, right>, \linear_product<U, V, W>(phi, psi))
+
+thm linear_coproduct_is_linear:
+    ? forall K, U, V, W nonempty_set, target &VectorSpace<K, U>, left &VectorSpace<K, V>, right &VectorSpace<K, W>, phi fn(v V) U, psi fn(w W) U:
+        left.scalar_add = right.scalar_add
+        left.scalar_zero = right.scalar_zero
+        left.scalar_neg = right.scalar_neg
+        left.scalar_mul = right.scalar_mul
+        left.scalar_one = right.scalar_one
+        left.scalar_inv = right.scalar_inv
+        $is_linear_map(K, V, U, left, target, phi)
+        $is_linear_map(K, W, U, right, target, psi)
+        =>:
+            $is_linear_map(K, cart(V, W), U, \product_vector_space<K, V, W, left, right>, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
+    claim:
+        ? forall p, q cart(V, W):
+            \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_add<K, V, W, left, right>(p, q)) = target.add(\linear_coproduct<U, V, W, target.add>(phi, psi)(p), \linear_coproduct<U, V, W, target.add>(phi, psi)(q))
+        have pq cart(V, W) = (left.add(p[1], q[1]), right.add(p[2], q[2]))
+        pq[1] = left.add(p[1], q[1])
+        pq[2] = right.add(p[2], q[2])
+        \product_vector_add<K, V, W, left, right>(p, q) = pq
+        phi(left.add(p[1], q[1])) = target.add(phi(p[1]), phi(q[1]))
+        psi(right.add(p[2], q[2])) = target.add(psi(p[2]), psi(q[2]))
+        by thm chap2::add_reorder_four(U, target.add, target.zero, target.neg, phi(p[1]), phi(q[1]), psi(p[2]), psi(q[2]))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(pq) = target.add(phi(pq[1]), psi(pq[2])) = target.add(phi(left.add(p[1], q[1])), psi(right.add(p[2], q[2])))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_add<K, V, W, left, right>(p, q)) = \linear_coproduct<U, V, W, target.add>(phi, psi)(pq) = target.add(phi(left.add(p[1], q[1])), psi(right.add(p[2], q[2]))) = target.add(target.add(phi(p[1]), phi(q[1])), target.add(psi(p[2]), psi(q[2]))) = target.add(target.add(phi(p[1]), psi(p[2])), target.add(phi(q[1]), psi(q[2]))) = target.add(\linear_coproduct<U, V, W, target.add>(phi, psi)(p), \linear_coproduct<U, V, W, target.add>(phi, psi)(q))
+    claim:
+        ? forall a K, p cart(V, W):
+            \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_smul<K, V, W, left, right>(a, p)) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
+        have ap cart(V, W) = (left.smul(a, p[1]), right.smul(a, p[2]))
+        ap[1] = left.smul(a, p[1])
+        ap[2] = right.smul(a, p[2])
+        \product_vector_smul<K, V, W, left, right>(a, p) = ap
+        phi(left.smul(a, p[1])) = target.smul(a, phi(p[1]))
+        psi(right.smul(a, p[2])) = target.smul(a, psi(p[2]))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(ap) = target.add(phi(ap[1]), psi(ap[2])) = target.add(phi(left.smul(a, p[1])), psi(right.smul(a, p[2])))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_smul<K, V, W, left, right>(a, p)) = \linear_coproduct<U, V, W, target.add>(phi, psi)(ap) = target.add(phi(left.smul(a, p[1])), psi(right.smul(a, p[2]))) = target.add(target.smul(a, phi(p[1])), target.smul(a, psi(p[2]))) = target.smul(a, target.add(phi(p[1]), psi(p[2]))) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
+    have product_space_value &VectorSpace<K, cart(V, W)> = \product_vector_space<K, V, W, left, right>
+    \product_vector_space<K, V, W, left, right> = (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    product_space_value = (left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    product_space_value.add = \product_vector_add<K, V, W, left, right>
+    product_space_value.smul = \product_vector_smul<K, V, W, left, right>
+    claim:
+        ? forall p, q cart(V, W):
+            \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.add(p, q)) = target.add(\linear_coproduct<U, V, W, target.add>(phi, psi)(p), \linear_coproduct<U, V, W, target.add>(phi, psi)(q))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.add(p, q)) = \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_add<K, V, W, left, right>(p, q)) = target.add(\linear_coproduct<U, V, W, target.add>(phi, psi)(p), \linear_coproduct<U, V, W, target.add>(phi, psi)(q))
+    claim:
+        ? forall a K, p cart(V, W):
+            \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.smul(a, p)) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
+        \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.smul(a, p)) = \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_smul<K, V, W, left, right>(a, p)) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
+    by def $is_linear_map(K, cart(V, W), U, product_space_value, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
+    $is_linear_map(K, cart(V, W), U, \product_vector_space<K, V, W, left, right>, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
+
+# Homogeneous indexed products and their finite-support subcarrier model the
+# dependent-product/direct-sum source family while keeping support explicit.
+template<I set, V nonempty_set>:
+    have indexed_product set = fn(idx I) V
+
+prop vector_support_contains_nonzero(I set, V nonempty_set, zero V, value fn(idx I) V, support finite_set):
+    forall idx I:
+        value(idx) != zero
+        =>:
+            idx $in support
+
+prop has_finite_vector_support(I set, V nonempty_set, zero V, value fn(idx I) V):
+    exist support finite_set st {$vector_support_contains_nonzero(I, V, zero, value, support)}
+
+prop is_direct_sum_single(I set, V nonempty_set, zero V, selected I, v V, value fn(idx I) V):
+    forall idx I:
+        idx = selected
+        =>:
+            value(idx) = v
+    forall idx I:
+        idx != selected
+        =>:
+            value(idx) = zero
+
+template<I set, V nonempty_set, zero V>:
+    have indexed_direct_sum power_set(fn(idx I) V) = {value fn(idx I) V: $has_finite_vector_support(I, V, zero, value)}
+
+template<I set, V nonempty_set, zero V>:
+    have fn direct_sum_single by exist!:
+        ? forall selected I, v V:
+            exist! value \indexed_direct_sum<I, V, zero> st {$is_direct_sum_single(I, V, zero, selected, v, value)}
+        have fn candidate(idx I) V by cases:
+            case idx = selected: v
+            case idx != selected: zero
+        claim:
+            ? $has_finite_vector_support(I, V, zero, candidate)
+            claim:
+                ? $vector_support_contains_nonzero(I, V, zero, candidate, {selected})
+                claim:
+                    ? forall idx I:
+                        candidate(idx) != zero
+                        =>:
+                            idx $in {selected}
+                    by cases:
+                        ? idx $in {selected}
+                        case idx = selected:
+                            idx $in {selected}
+                        case idx != selected:
+                            candidate(idx) = zero
+                            impossible candidate(idx) = zero
+                by def $vector_support_contains_nonzero(I, V, zero, candidate, {selected})
+            witness exist support finite_set st {$vector_support_contains_nonzero(I, V, zero, candidate, support)} from {selected}
+            by def $has_finite_vector_support(I, V, zero, candidate)
+        by thm set_builder_member(candidate, {value fn(idx I) V: $has_finite_vector_support(I, V, zero, value)})
+        \indexed_direct_sum<I, V, zero> = {value fn(idx I) V: $has_finite_vector_support(I, V, zero, value)}
+        candidate $in \indexed_direct_sum<I, V, zero>
+        witness exist value \indexed_direct_sum<I, V, zero> st {$is_direct_sum_single(I, V, zero, selected, v, value)} from candidate:
+            forall idx I:
+                idx = selected
+                =>:
+                    candidate(idx) = v
+            forall idx I:
+                idx != selected
+                =>:
+                    candidate(idx) = zero
+            by def $is_direct_sum_single(I, V, zero, selected, v, candidate)
+        claim:
+            ? forall value1, value2 \indexed_direct_sum<I, V, zero>:
+                $is_direct_sum_single(I, V, zero, selected, v, value1)
+                $is_direct_sum_single(I, V, zero, selected, v, value2)
+                =>:
+                    value1 = value2
+            claim:
+                ? forall idx I:
+                    value1(idx) = value2(idx)
+                by cases:
+                    ? value1(idx) = value2(idx)
+                    case idx = selected:
+                        value1(idx) = v = value2(idx)
+                    case idx != selected:
+                        value1(idx) = zero = value2(idx)
+            by def $fn_eq(value1, value2)
+            value1 = value2
+
+template<I set, V, W nonempty_set, zero V, addW fn(x, y W) W>:
+    trust have direct_sum_lift fn(phi fn(idx I) fn(v V) W, value \indexed_direct_sum<I, V, zero>) W
+
 # ---------------------------------------------------------------------------
 # 10.2 Subspaces
 # ---------------------------------------------------------------------------
@@ -234,6 +775,43 @@ thm subspace_smul_mem:
 template<V set>:
     have fn subspace_intersection(U, W power_set(V)) power_set(V) = {x V: x $in U and x $in W}
 
+# Intersecting two subspaces preserves every closure law componentwise.
+thm subspace_intersection_is_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
+        $is_subspace(K, V, space, U)
+        $is_subspace(K, V, space, W)
+        =>:
+            $is_subspace(K, V, space, \subspace_intersection<V>(U, W))
+    \subspace_intersection<V>(U, W) = {x V: x $in U and x $in W}
+    space.zero $in U
+    space.zero $in W
+    by thm set_builder_member(space.zero, {x V: x $in U and x $in W})
+    space.zero $in \subspace_intersection<V>(U, W)
+    claim:
+        ? forall x, y \subspace_intersection<V>(U, W):
+            space.add(x, y) $in \subspace_intersection<V>(U, W)
+        x $in {q V: q $in U and q $in W}
+        x $in U
+        x $in W
+        y $in {q V: q $in U and q $in W}
+        y $in U
+        y $in W
+        space.add(x, y) $in U
+        space.add(x, y) $in W
+        by thm set_builder_member(space.add(x, y), {q V: q $in U and q $in W})
+        space.add(x, y) $in \subspace_intersection<V>(U, W)
+    claim:
+        ? forall a K, x \subspace_intersection<V>(U, W):
+            space.smul(a, x) $in \subspace_intersection<V>(U, W)
+        x $in {q V: q $in U and q $in W}
+        x $in U
+        x $in W
+        space.smul(a, x) $in U
+        space.smul(a, x) $in W
+        by thm set_builder_member(space.smul(a, x), {q V: q $in U and q $in W})
+        space.smul(a, x) $in \subspace_intersection<V>(U, W)
+    by def $is_subspace(K, V, space, \subspace_intersection<V>(U, W))
+
 template<V set>:
     have subspace_top power_set(V) = V
 
@@ -250,12 +828,85 @@ prop span_member(K, V nonempty_set, space &VectorSpace<K, V>, S power_set(V), x 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn span(S power_set(V)) power_set(V) = {x V: $span_member(K, V, space, S, x)}
 
+# Every generator belongs to every subspace containing the generating set.
+thm span_contains:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, S power_set(V):
+        S $subset \span<K, V, space>(S)
+    \span<K, V, space>(S) = {x V: $span_member(K, V, space, S, x)}
+    claim:
+        ? forall x V:
+            x $in S
+            =>:
+                x $in \span<K, V, space>(S)
+        by def $span_member(K, V, space, S, x)
+        by thm set_builder_member(x, {q V: $span_member(K, V, space, S, q)})
+        x $in \span<K, V, space>(S)
+    by def S $subset \span<K, V, space>(S)
+    S $subset \span<K, V, space>(S)
+
+# The intersection-style definition of span inherits zero, addition, and
+# scalar closure from every subspace that contains the generating set.
+thm span_is_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, S power_set(V):
+        $is_subspace(K, V, space, \span<K, V, space>(S))
+    \span<K, V, space>(S) = {x V: $span_member(K, V, space, S, x)}
+    claim:
+        ? $span_member(K, V, space, S, space.zero)
+        by def $span_member(K, V, space, S, space.zero)
+    by thm set_builder_member(space.zero, {q V: $span_member(K, V, space, S, q)})
+    space.zero $in \span<K, V, space>(S)
+    claim:
+        ? forall x, y V:
+            x $in \span<K, V, space>(S)
+            y $in \span<K, V, space>(S)
+            =>:
+                space.add(x, y) $in \span<K, V, space>(S)
+        claim:
+            ? forall U power_set(V):
+                $is_subspace(K, V, space, U)
+                S $subset U
+                =>:
+                    space.add(x, y) $in U
+            x $in {q V: $span_member(K, V, space, S, q)}
+            y $in {q V: $span_member(K, V, space, S, q)}
+            by def $span_member(K, V, space, S, x)
+            by def $span_member(K, V, space, S, y)
+            x $in U
+            y $in U
+            by thm subspace_add_mem(K, V, space, U, x, y)
+        by def $span_member(K, V, space, S, space.add(x, y))
+        by thm set_builder_member(space.add(x, y), {q V: $span_member(K, V, space, S, q)})
+        space.add(x, y) $in \span<K, V, space>(S)
+    claim:
+        ? forall a K, x V:
+            x $in \span<K, V, space>(S)
+            =>:
+                space.smul(a, x) $in \span<K, V, space>(S)
+        claim:
+            ? forall U power_set(V):
+                $is_subspace(K, V, space, U)
+                S $subset U
+                =>:
+                    space.smul(a, x) $in U
+            x $in {q V: $span_member(K, V, space, S, q)}
+            by def $span_member(K, V, space, S, x)
+            x $in U
+            by thm subspace_smul_mem(K, V, space, U, a, x)
+        by def $span_member(K, V, space, S, space.smul(a, x))
+        by thm set_builder_member(space.smul(a, x), {q V: $span_member(K, V, space, S, q)})
+        space.smul(a, x) $in \span<K, V, space>(S)
+    by def $is_subspace(K, V, space, \span<K, V, space>(S))
+
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, space>({x V: x $in U or x $in W})
 
 prop is_complementary_subspaces(K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V)):
+    $is_subspace(K, V, space, U)
+    $is_subspace(K, V, space, W)
     \subspace_join<K, V, space>(U, W) = V
     intersect(U, W) = {space.zero}
+    forall v V:
+        exist pair cart(U, W) st {space.add(pair[1], pair[2]) = v}
 
 thm complementary_subspaces_span_top:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
@@ -279,7 +930,41 @@ thm span_universal_property:
             {x V: $span_member(K, V, space, S, x)} $subset U
     forall x {q V: $span_member(K, V, space, S, q)}:
         x $in U
+    by def {x V: $span_member(K, V, space, S, x)} $subset U
     {x V: $span_member(K, V, space, S, x)} $subset U
+
+thm span_subset_of_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, S, U power_set(V):
+        $is_subspace(K, V, space, U)
+        S $subset U
+        =>:
+            \span<K, V, space>(S) $subset U
+    by thm span_universal_property(K, V, space, S, U)
+    \span<K, V, space>(S) = {x V: $span_member(K, V, space, S, x)}
+    \span<K, V, space>(S) $subset U
+
+thm subset_of_span_subset:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, S, U power_set(V):
+        \span<K, V, space>(S) $subset U
+        =>:
+            S $subset U
+    claim:
+        ? forall x V:
+            x $in S
+            =>:
+                x $in U
+        by thm span_contains(K, V, space, S)
+        x $in \span<K, V, space>(S)
+        x $in U
+    by def S $subset U
+    S $subset U
+
+forall K, V nonempty_set, space &VectorSpace<K, V>, S, U power_set(V):
+    $is_subspace(K, V, space, U)
+    =>:
+        \span<K, V, space>(S) $subset U
+    <=>:
+        S $subset U
 
 prop has_linear_map_preimage(V, W set, phi fn(v V) W, U power_set(V), y W):
     exist x V st {x $in U, phi(x) = y}
@@ -290,11 +975,656 @@ template<V, W set, phi fn(v V) W>:
 template<V, W set, phi fn(v V) W>:
     have fn subspace_comap(F power_set(W)) power_set(V) = {x V: phi(x) $in F}
 
+# Map and comap form the set-level adjunction used by the source. The current
+# theorem syntax names the two directions separately; their final iff is the
+# ordinary reusable universal fact below.
+thm subspace_map_subset_of_subset_comap:
+    ? forall V, W set, phi fn(v V) W, U power_set(V), F power_set(W):
+        U $subset \subspace_comap<V, W, phi>(F)
+        =>:
+            \subspace_map<V, W, phi>(U) $subset F
+    claim:
+        ? forall y W:
+            y $in \subspace_map<V, W, phi>(U)
+            =>:
+                y $in F
+        obtain x from exist z V st {z $in U, phi(z) = y}
+        x $in \subspace_comap<V, W, phi>(F)
+        y $in F
+    by def \subspace_map<V, W, phi>(U) $subset F
+    \subspace_map<V, W, phi>(U) $subset F
+
+thm subspace_subset_comap_of_map_subset:
+    ? forall V, W set, phi fn(v V) W, U power_set(V), F power_set(W):
+        \subspace_map<V, W, phi>(U) $subset F
+        =>:
+            U $subset \subspace_comap<V, W, phi>(F)
+    claim:
+        ? forall x V:
+            x $in U
+            =>:
+                x $in \subspace_comap<V, W, phi>(F)
+        witness exist z V st {z $in U, phi(z) = phi(x)} from x
+        by def $has_linear_map_preimage(V, W, phi, U, phi(x))
+        by thm set_builder_member(phi(x), {y W: $has_linear_map_preimage(V, W, phi, U, y)})
+        \subspace_map<V, W, phi>(U) = {y W: $has_linear_map_preimage(V, W, phi, U, y)}
+        phi(x) $in \subspace_map<V, W, phi>(U)
+        phi(x) $in F
+        by thm set_builder_member(x, {z V: phi(z) $in F})
+        \subspace_comap<V, W, phi>(F) = {z V: phi(z) $in F}
+        x $in \subspace_comap<V, W, phi>(F)
+    by def U $subset \subspace_comap<V, W, phi>(F)
+    U $subset \subspace_comap<V, W, phi>(F)
+
+forall V, W set, phi fn(v V) W, U power_set(V), F power_set(W):
+    =>:
+        \subspace_map<V, W, phi>(U) $subset F
+    <=>:
+        U $subset \subspace_comap<V, W, phi>(F)
+
+# The source definition of a linear-map image is closed under zero, addition,
+# and scalar multiplication. Choose preimages and apply the source subspace
+# closure laws; linearity sends the chosen operations to the target ones.
+thm linear_map_map_is_subspace:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, U power_set(V):
+        $is_linear_map(K, V, W, source, target, phi)
+        $is_subspace(K, V, source, U)
+        =>:
+            $is_subspace(K, W, target, \subspace_map<V, W, phi>(U))
+    \subspace_map<V, W, phi>(U) = {y W: $has_linear_map_preimage(V, W, phi, U, y)}
+    by thm linear_map_map_zero(K, V, W, source, target, phi)
+    claim:
+        ? $has_linear_map_preimage(V, W, phi, U, target.zero)
+        witness exist x V st {x $in U, phi(x) = target.zero} from source.zero
+        by def $has_linear_map_preimage(V, W, phi, U, target.zero)
+    by thm set_builder_member(target.zero, {y W: $has_linear_map_preimage(V, W, phi, U, y)})
+    target.zero $in \subspace_map<V, W, phi>(U)
+    claim:
+        ? forall y1, y2 W:
+            y1 $in \subspace_map<V, W, phi>(U)
+            y2 $in \subspace_map<V, W, phi>(U)
+            =>:
+                target.add(y1, y2) $in \subspace_map<V, W, phi>(U)
+        y1 $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
+        by def $has_linear_map_preimage(V, W, phi, U, y1)
+        obtain x1 from exist x V st {x $in U, phi(x) = y1}
+        y2 $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
+        by def $has_linear_map_preimage(V, W, phi, U, y2)
+        obtain x2 from exist x V st {x $in U, phi(x) = y2}
+        witness exist x V st {x $in U, phi(x) = target.add(y1, y2)} from source.add(x1, x2):
+            phi(source.add(x1, x2)) = target.add(phi(x1), phi(x2)) = target.add(y1, y2)
+        by def $has_linear_map_preimage(V, W, phi, U, target.add(y1, y2))
+        by thm set_builder_member(target.add(y1, y2), {q W: $has_linear_map_preimage(V, W, phi, U, q)})
+        target.add(y1, y2) $in \subspace_map<V, W, phi>(U)
+    claim:
+        ? forall a K, y W:
+            y $in \subspace_map<V, W, phi>(U)
+            =>:
+                target.smul(a, y) $in \subspace_map<V, W, phi>(U)
+        y $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
+        by def $has_linear_map_preimage(V, W, phi, U, y)
+        obtain x from exist v V st {v $in U, phi(v) = y}
+        witness exist v V st {v $in U, phi(v) = target.smul(a, y)} from source.smul(a, x):
+            phi(source.smul(a, x)) = target.smul(a, phi(x)) = target.smul(a, y)
+        by def $has_linear_map_preimage(V, W, phi, U, target.smul(a, y))
+        by thm set_builder_member(target.smul(a, y), {q W: $has_linear_map_preimage(V, W, phi, U, q)})
+        target.smul(a, y) $in \subspace_map<V, W, phi>(U)
+    by def $is_subspace(K, W, target, \subspace_map<V, W, phi>(U))
+
+# The source `preimage` construction is exactly `subspace_comap`. Zero maps to
+# zero, while additivity and homogeneity transport the target closure laws back
+# to the source carrier.
+thm linear_map_comap_is_subspace:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, F power_set(W):
+        $is_linear_map(K, V, W, source, target, phi)
+        $is_subspace(K, W, target, F)
+        =>:
+            $is_subspace(K, V, source, \subspace_comap<V, W, phi>(F))
+    \subspace_comap<V, W, phi>(F) = {x V: phi(x) $in F}
+    by thm linear_map_map_zero(K, V, W, source, target, phi)
+    target.zero $in F
+    phi(source.zero) $in F
+    by thm set_builder_member(source.zero, {q V: phi(q) $in F})
+    source.zero $in \subspace_comap<V, W, phi>(F)
+    claim:
+        ? forall x, y V:
+            x $in \subspace_comap<V, W, phi>(F)
+            y $in \subspace_comap<V, W, phi>(F)
+            =>:
+                source.add(x, y) $in \subspace_comap<V, W, phi>(F)
+        x $in {q V: phi(q) $in F}
+        phi(x) $in F
+        y $in {q V: phi(q) $in F}
+        phi(y) $in F
+        by thm subspace_add_mem(K, W, target, F, phi(x), phi(y))
+        phi(source.add(x, y)) = target.add(phi(x), phi(y))
+        phi(source.add(x, y)) $in F
+        by thm set_builder_member(source.add(x, y), {q V: phi(q) $in F})
+        source.add(x, y) $in \subspace_comap<V, W, phi>(F)
+    claim:
+        ? forall a K, x V:
+            x $in \subspace_comap<V, W, phi>(F)
+            =>:
+                source.smul(a, x) $in \subspace_comap<V, W, phi>(F)
+        x $in {q V: phi(q) $in F}
+        phi(x) $in F
+        by thm subspace_smul_mem(K, W, target, F, a, phi(x))
+        phi(source.smul(a, x)) = target.smul(a, phi(x))
+        phi(source.smul(a, x)) $in F
+        by thm set_builder_member(source.smul(a, x), {q V: phi(q) $in F})
+        source.smul(a, x) $in \subspace_comap<V, W, phi>(F)
+    by def $is_subspace(K, V, source, \subspace_comap<V, W, phi>(F))
+
+# Every scalar fixes the vector-space zero. Distribute over zero + zero and
+# cancel the duplicated scalar multiple in the additive group.
+thm vector_smul_zero:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
+        space.smul(a, space.zero) = space.zero
+    $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
+    $chap2::is_additive_commutative_group(V, space.add, space.zero, space.neg)
+    space.add(space.zero, space.zero) = space.zero
+    space.smul(a, space.add(space.zero, space.zero)) = space.add(space.smul(a, space.zero), space.smul(a, space.zero))
+    by thm chap2::add_zero_from_laws(V, space.add, space.zero, space.neg, space.smul(a, space.zero))
+    space.add(space.smul(a, space.zero), space.smul(a, space.zero)) = space.smul(a, space.add(space.zero, space.zero)) = space.smul(a, space.zero) = space.add(space.smul(a, space.zero), space.zero)
+    by thm chap2::add_left_cancel(V, space.add, space.zero, space.neg, space.smul(a, space.zero), space.smul(a, space.zero), space.zero)
+
+# Scalar multiplication by -1 is the additive inverse. The proof identifies
+# (-1) • v as the unique vector whose sum with v is zero.
+thm vector_smul_neg_one:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, v V:
+        space.smul(space.scalar_neg(space.scalar_one), v) = space.neg(v)
+    $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
+    $chap2::is_additive_commutative_group(V, space.add, space.zero, space.neg)
+    $is_field(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv)
+    $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+    $chap2::is_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+    $chap2::is_additive_commutative_group(K, space.scalar_add, space.scalar_zero, space.scalar_neg)
+    space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one) = space.scalar_zero
+    space.smul(space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one), v) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), space.smul(space.scalar_one, v))
+    space.smul(space.scalar_add(space.scalar_neg(space.scalar_one), space.scalar_one), v) = space.smul(space.scalar_zero, v) = space.zero
+    space.smul(space.scalar_one, v) = v
+    space.add(space.smul(space.scalar_neg(space.scalar_one), v), v) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), space.smul(space.scalar_one, v)) = space.zero
+    space.add(v, space.smul(space.scalar_neg(space.scalar_one), v)) = space.add(space.smul(space.scalar_neg(space.scalar_one), v), v) = space.zero
+    by thm chap2::eq_neg_of_add_eq_zero(V, space.add, space.zero, space.neg, v, space.smul(space.scalar_neg(space.scalar_one), v))
+
+# The bottom subspace contains only zero. Its closure under addition follows
+# from the additive identity, and scalar closure follows from `vector_smul_zero`.
+thm subspace_bottom_is_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        $is_subspace(K, V, space, \subspace_bottom<V, space.zero>)
+    $is_vector_space(K, V, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, space.add, space.zero, space.neg, space.smul)
+    $chap2::is_additive_commutative_group(V, space.add, space.zero, space.neg)
+    \subspace_bottom<V, space.zero> = {space.zero}
+    space.zero $in {space.zero}
+    space.zero $in \subspace_bottom<V, space.zero>
+    claim:
+        ? forall x, y V:
+            x $in \subspace_bottom<V, space.zero>
+            y $in \subspace_bottom<V, space.zero>
+            =>:
+                space.add(x, y) $in \subspace_bottom<V, space.zero>
+        space.add(x, y) = space.add(space.zero, space.zero) = space.zero
+    claim:
+        ? forall a K, x V:
+            x $in \subspace_bottom<V, space.zero>
+            =>:
+                space.smul(a, x) $in \subspace_bottom<V, space.zero>
+        by thm vector_smul_zero(K, V, space, a)
+        space.smul(a, x) = space.smul(a, space.zero) = space.zero
+    by def $is_subspace(K, V, space, \subspace_bottom<V, space.zero>)
+
 template<V, W set, zeroW W, phi fn(v V) W>:
     have linear_kernel power_set(V) = {x V: phi(x) = zeroW}
 
+# A linear-map kernel is closed because its members map to target zero.
+# Additivity handles sums and `vector_smul_zero` handles scalar multiples.
+thm linear_map_kernel_is_subspace:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        =>:
+            $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, phi>)
+    by thm linear_map_map_zero(K, V, W, source, target, phi)
+    $is_vector_space(K, W, target.scalar_add, target.scalar_zero, target.scalar_neg, target.scalar_mul, target.scalar_one, target.scalar_inv, target.add, target.zero, target.neg, target.smul)
+    $chap2::is_additive_commutative_group(W, target.add, target.zero, target.neg)
+    \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
+    by thm set_builder_member(source.zero, {x V: phi(x) = target.zero})
+    source.zero $in \linear_kernel<V, W, target.zero, phi>
+    claim:
+        ? forall x, y V:
+            x $in \linear_kernel<V, W, target.zero, phi>
+            y $in \linear_kernel<V, W, target.zero, phi>
+            =>:
+                source.add(x, y) $in \linear_kernel<V, W, target.zero, phi>
+        x $in {z V: phi(z) = target.zero}
+        phi(x) = target.zero
+        y $in {z V: phi(z) = target.zero}
+        phi(y) = target.zero
+        phi(source.add(x, y)) = target.add(phi(x), phi(y)) = target.add(target.zero, target.zero) = target.zero
+        by thm set_builder_member(source.add(x, y), {z V: phi(z) = target.zero})
+        source.add(x, y) $in \linear_kernel<V, W, target.zero, phi>
+    claim:
+        ? forall a K, x V:
+            x $in \linear_kernel<V, W, target.zero, phi>
+            =>:
+                source.smul(a, x) $in \linear_kernel<V, W, target.zero, phi>
+        x $in {z V: phi(z) = target.zero}
+        phi(x) = target.zero
+        by thm vector_smul_zero(K, W, target, a)
+        phi(source.smul(a, x)) = target.smul(a, phi(x)) = target.smul(a, target.zero) = target.zero
+        by thm set_builder_member(source.smul(a, x), {z V: phi(z) = target.zero})
+        source.smul(a, x) $in \linear_kernel<V, W, target.zero, phi>
+    by def $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, phi>)
+
+# A linear map is injective exactly when its kernel contains only zero.
+thm linear_map_kernel_eq_bottom_of_injective:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        $chap4::injective_fn(V, W, phi)
+        =>:
+            \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+    by thm linear_map_map_zero(K, V, W, source, target, phi)
+    \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
+    \subspace_bottom<V, source.zero> = {source.zero}
+    claim:
+        ? forall x V:
+            x $in \linear_kernel<V, W, target.zero, phi>
+            =>:
+                x $in \subspace_bottom<V, source.zero>
+        phi(x) = target.zero = phi(source.zero)
+        by def $chap4::injective_fn(V, W, phi)
+        x = source.zero
+        x $in {source.zero}
+        x $in \subspace_bottom<V, source.zero>
+    by def \linear_kernel<V, W, target.zero, phi> $subset \subspace_bottom<V, source.zero>
+    \linear_kernel<V, W, target.zero, phi> $subset \subspace_bottom<V, source.zero>
+    claim:
+        ? forall x V:
+            x $in \subspace_bottom<V, source.zero>
+            =>:
+                x $in \linear_kernel<V, W, target.zero, phi>
+        x $in {source.zero}
+        x = source.zero
+        phi(x) = phi(source.zero) = target.zero
+        by thm set_builder_member(x, {z V: phi(z) = target.zero})
+        x $in \linear_kernel<V, W, target.zero, phi>
+    by def \subspace_bottom<V, source.zero> $subset \linear_kernel<V, W, target.zero, phi>
+    \subspace_bottom<V, source.zero> $subset \linear_kernel<V, W, target.zero, phi>
+    by extension \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+
+thm linear_map_injective_of_kernel_eq_bottom:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+        =>:
+            $chap4::injective_fn(V, W, phi)
+    $chap2::is_additive_commutative_group(V, source.add, source.zero, source.neg)
+    $chap2::is_additive_commutative_group(W, target.add, target.zero, target.neg)
+    \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
+    \subspace_bottom<V, source.zero> = {source.zero}
+    claim:
+        ? forall x1, x2 V:
+            phi(x1) = phi(x2)
+            =>:
+                x1 = x2
+        by thm linear_map_map_neg(K, V, W, source, target, phi, x1)
+        phi(source.add(source.neg(x1), x2)) = target.add(phi(source.neg(x1)), phi(x2)) = target.add(target.neg(phi(x1)), phi(x2)) = target.add(target.neg(phi(x1)), phi(x1)) = target.zero
+        by thm set_builder_member(source.add(source.neg(x1), x2), {x V: phi(x) = target.zero})
+        source.add(source.neg(x1), x2) $in \linear_kernel<V, W, target.zero, phi>
+        source.add(source.neg(x1), x2) $in \subspace_bottom<V, source.zero>
+        source.add(source.neg(x1), x2) $in {source.zero}
+        source.add(source.neg(x1), x2) = source.zero
+        by thm chap2::eq_neg_of_add_eq_zero(V, source.add, source.zero, source.neg, source.neg(x1), x2)
+        by thm chap2::neg_neg(V, source.add, source.zero, source.neg, x1)
+        x2 = source.neg(source.neg(x1)) = x1
+        x1 = x2
+    by def $chap4::injective_fn(V, W, phi)
+
+prop linear_map_injective_iff_kernel_eq_bottom(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
+    forall:
+        $chap4::injective_fn(V, W, phi)
+        =>:
+            \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+    forall:
+        \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+        =>:
+            $chap4::injective_fn(V, W, phi)
+
+# The two preceding checked theorems establish the two directions exposed by
+# this source-facing equivalence package.
+
+# The top carrier is the whole vector carrier, so all three subspace closure
+# clauses follow directly from the operation result types.
+thm subspace_top_is_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        $is_subspace(K, V, space, \subspace_top<V>)
+    \subspace_top<V> = V
+    by def $is_subspace(K, V, space, \subspace_top<V>)
+
 template<V, W set, phi fn(v V) W>:
     have linear_range power_set(W) = \subspace_map<V, W, phi>(V)
+
+# The range is the image of the whole source space. The top-space theorem and
+# image closure therefore give its subspace laws without another element proof.
+thm linear_map_range_is_subspace:
+    ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
+        $is_linear_map(K, V, W, source, target, phi)
+        =>:
+            $is_subspace(K, W, target, \linear_range<V, W, phi>)
+    by thm subspace_top_is_subspace(K, V, source)
+    \subspace_top<V> = V
+    by thm linear_map_map_is_subspace(K, V, W, source, target, phi, V)
+    \linear_range<V, W, phi> = \subspace_map<V, W, phi>(V)
+
+# Surjectivity is exactly the statement that the range is the top carrier.
+thm linear_map_range_eq_top_of_surjective:
+    ? forall V, W nonempty_set, phi fn(v V) W:
+        $chap4::surjective_fn(V, W, phi)
+        =>:
+            \linear_range<V, W, phi> = \subspace_top<W>
+    \linear_range<V, W, phi> = \subspace_map<V, W, phi>(V)
+    \subspace_top<W> = W
+    claim:
+        ? forall y W:
+            y $in \linear_range<V, W, phi>
+        by def $chap4::surjective_fn(V, W, phi)
+        obtain x from exist z V st {y = phi(z)}
+        witness exist z V st {z $in V, phi(z) = y} from x
+        by def $has_linear_map_preimage(V, W, phi, V, y)
+        by thm set_builder_member(y, {q W: $has_linear_map_preimage(V, W, phi, V, q)})
+        \subspace_map<V, W, phi>(V) = {q W: $has_linear_map_preimage(V, W, phi, V, q)}
+        y $in \subspace_map<V, W, phi>(V)
+        y $in \linear_range<V, W, phi>
+    by def \subspace_top<W> $subset \linear_range<V, W, phi>
+    \subspace_top<W> $subset \linear_range<V, W, phi>
+    \linear_range<V, W, phi> $subset \subspace_top<W>
+    by extension \linear_range<V, W, phi> = \subspace_top<W>
+
+thm linear_map_surjective_of_range_eq_top:
+    ? forall V, W nonempty_set, phi fn(v V) W:
+        \linear_range<V, W, phi> = \subspace_top<W>
+        =>:
+            $chap4::surjective_fn(V, W, phi)
+    \linear_range<V, W, phi> = \subspace_map<V, W, phi>(V)
+    \subspace_top<W> = W
+    claim:
+        ? forall y W:
+            exist x V st {y = phi(x)}
+        y $in \subspace_top<W>
+        y $in \linear_range<V, W, phi>
+        y $in \subspace_map<V, W, phi>(V)
+        \subspace_map<V, W, phi>(V) = {q W: $has_linear_map_preimage(V, W, phi, V, q)}
+        y $in {q W: $has_linear_map_preimage(V, W, phi, V, q)}
+        by def $has_linear_map_preimage(V, W, phi, V, y)
+        obtain x from exist z V st {z $in V, phi(z) = y}
+        witness exist z V st {y = phi(z)} from x
+    by def $chap4::surjective_fn(V, W, phi)
+
+prop linear_map_surjective_iff_range_eq_top(V, W nonempty_set, phi fn(v V) W):
+    forall:
+        $chap4::surjective_fn(V, W, phi)
+        =>:
+            \linear_range<V, W, phi> = \subspace_top<W>
+    forall:
+        \linear_range<V, W, phi> = \subspace_top<W>
+        =>:
+            $chap4::surjective_fn(V, W, phi)
+
+# The two preceding checked theorems establish the two directions exposed by
+# this source-facing equivalence package.
+
+# The real axis is the concrete first-coordinate subspace of R x R.
+prop is_on_real_axis(p cart(R, R)):
+    p[2] = 0
+
+have real_axis power_set(cart(R, R)) = {p cart(R, R): $is_on_real_axis(p)}
+
+# A subspace contains the ambient zero, so its carrier is nonempty. The
+# inherited carrier is the subspace itself, and its inclusion is the identity
+# viewed at the ambient codomain.
+thm subspace_carrier_nonempty:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $is_subspace(K, V, space, U)
+        =>:
+            $is_nonempty_set(U)
+    space.zero $in U
+    witness $is_nonempty_set(U) from space.zero
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have inherited_subspace_carrier nonempty_set = U
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn inherited_subspace_inclusion(x \inherited_subspace_carrier<K, V, space, U>) V = x
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn inherited_subspace_add(x, y \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U> = space.add(x, y)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn inherited_subspace_neg(x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U> = space.smul(space.scalar_neg(space.scalar_one), x)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn inherited_subspace_smul(a K, x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U> = space.smul(a, x)
+
+thm inherited_subspace_tuple_is_vector_space:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $is_subspace(K, V, space, U)
+        =>:
+            (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>) $in &VectorSpace<K, \inherited_subspace_carrier<K, V, space, U>>
+    claim:
+        ? forall x, y, z \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_add<K, V, space, U>(\inherited_subspace_add<K, V, space, U>(x, y), z) = \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_add<K, V, space, U>(y, z))
+        \inherited_subspace_add<K, V, space, U>(x, y) = space.add(x, y)
+        \inherited_subspace_add<K, V, space, U>(y, z) = space.add(y, z)
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_add<K, V, space, U>(x, y), z) = space.add(\inherited_subspace_add<K, V, space, U>(x, y), z) = space.add(space.add(x, y), z)
+        \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_add<K, V, space, U>(y, z)) = space.add(x, \inherited_subspace_add<K, V, space, U>(y, z)) = space.add(x, space.add(y, z))
+        space.add(space.add(x, y), z) = space.add(x, space.add(y, z))
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_add<K, V, space, U>(x, y), z) = space.add(space.add(x, y), z) = space.add(x, space.add(y, z)) = \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_add<K, V, space, U>(y, z))
+    claim:
+        ? forall x \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_add<K, V, space, U>(space.zero, x) = x
+            \inherited_subspace_add<K, V, space, U>(x, space.zero) = x
+        space.add(space.zero, x) = x
+        space.add(x, space.zero) = space.add(space.zero, x) = x
+        \inherited_subspace_add<K, V, space, U>(space.zero, x) = space.add(space.zero, x) = x
+        \inherited_subspace_add<K, V, space, U>(x, space.zero) = space.add(x, space.zero) = x
+    claim:
+        ? forall x \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_add<K, V, space, U>(\inherited_subspace_neg<K, V, space, U>(x), x) = space.zero
+            \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_neg<K, V, space, U>(x)) = space.zero
+        by thm vector_smul_neg_one(K, V, space, x)
+        \inherited_subspace_neg<K, V, space, U>(x) = space.smul(space.scalar_neg(space.scalar_one), x) = space.neg(x)
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_neg<K, V, space, U>(x), x) = space.add(\inherited_subspace_neg<K, V, space, U>(x), x) = space.add(space.neg(x), x)
+        \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_neg<K, V, space, U>(x)) = space.add(x, \inherited_subspace_neg<K, V, space, U>(x)) = space.add(x, space.neg(x))
+        space.add(space.neg(x), x) = space.zero
+        space.add(x, space.neg(x)) = space.add(space.neg(x), x) = space.zero
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_neg<K, V, space, U>(x), x) = space.add(space.neg(x), x) = space.zero
+        \inherited_subspace_add<K, V, space, U>(x, \inherited_subspace_neg<K, V, space, U>(x)) = space.add(x, space.neg(x)) = space.zero
+    claim:
+        ? forall x, y \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_add<K, V, space, U>(x, y) = \inherited_subspace_add<K, V, space, U>(y, x)
+        space.add(x, y) = space.add(y, x)
+        \inherited_subspace_add<K, V, space, U>(x, y) = space.add(x, y) = space.add(y, x) = \inherited_subspace_add<K, V, space, U>(y, x)
+    claim:
+        ? forall a K, u, v \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_add<K, V, space, U>(u, v)) = \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, u), \inherited_subspace_smul<K, V, space, U>(a, v))
+        \inherited_subspace_add<K, V, space, U>(u, v) = space.add(u, v)
+        \inherited_subspace_smul<K, V, space, U>(a, u) = space.smul(a, u)
+        \inherited_subspace_smul<K, V, space, U>(a, v) = space.smul(a, v)
+        \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_add<K, V, space, U>(u, v)) = space.smul(a, \inherited_subspace_add<K, V, space, U>(u, v)) = space.smul(a, space.add(u, v))
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, u), \inherited_subspace_smul<K, V, space, U>(a, v)) = space.add(\inherited_subspace_smul<K, V, space, U>(a, u), \inherited_subspace_smul<K, V, space, U>(a, v)) = space.add(space.smul(a, u), space.smul(a, v))
+        space.smul(a, space.add(u, v)) = space.add(space.smul(a, u), space.smul(a, v))
+        \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_add<K, V, space, U>(u, v)) = space.smul(a, space.add(u, v)) = space.add(space.smul(a, u), space.smul(a, v)) = \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, u), \inherited_subspace_smul<K, V, space, U>(a, v))
+    claim:
+        ? forall a, b K, v \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_smul<K, V, space, U>(space.scalar_add(a, b), v) = \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, v), \inherited_subspace_smul<K, V, space, U>(b, v))
+            \inherited_subspace_smul<K, V, space, U>(space.scalar_mul(a, b), v) = \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_smul<K, V, space, U>(b, v))
+        \inherited_subspace_smul<K, V, space, U>(a, v) = space.smul(a, v)
+        \inherited_subspace_smul<K, V, space, U>(b, v) = space.smul(b, v)
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_add(a, b), v) = space.smul(space.scalar_add(a, b), v)
+        \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, v), \inherited_subspace_smul<K, V, space, U>(b, v)) = space.add(\inherited_subspace_smul<K, V, space, U>(a, v), \inherited_subspace_smul<K, V, space, U>(b, v)) = space.add(space.smul(a, v), space.smul(b, v))
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(a, b), v)
+        \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_smul<K, V, space, U>(b, v)) = space.smul(a, \inherited_subspace_smul<K, V, space, U>(b, v)) = space.smul(a, space.smul(b, v))
+        space.smul(space.scalar_add(a, b), v) = space.add(space.smul(a, v), space.smul(b, v))
+        space.smul(space.scalar_mul(a, b), v) = space.smul(a, space.smul(b, v))
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_add(a, b), v) = space.smul(space.scalar_add(a, b), v) = space.add(space.smul(a, v), space.smul(b, v)) = \inherited_subspace_add<K, V, space, U>(\inherited_subspace_smul<K, V, space, U>(a, v), \inherited_subspace_smul<K, V, space, U>(b, v))
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_mul(a, b), v) = space.smul(space.scalar_mul(a, b), v) = space.smul(a, space.smul(b, v)) = \inherited_subspace_smul<K, V, space, U>(a, \inherited_subspace_smul<K, V, space, U>(b, v))
+    claim:
+        ? forall v \inherited_subspace_carrier<K, V, space, U>:
+            \inherited_subspace_smul<K, V, space, U>(space.scalar_one, v) = v
+            \inherited_subspace_smul<K, V, space, U>(space.scalar_zero, v) = space.zero
+        space.smul(space.scalar_one, v) = v
+        space.smul(space.scalar_zero, v) = space.zero
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_one, v) = space.smul(space.scalar_one, v) = v
+        \inherited_subspace_smul<K, V, space, U>(space.scalar_zero, v) = space.smul(space.scalar_zero, v) = space.zero
+    by def $chap2::is_additive_commutative_group(\inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>)
+    by def $is_vector_space(K, \inherited_subspace_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>)
+    space.scalar_add $in fn(x, y K) K
+    space.scalar_zero $in K
+    space.scalar_neg $in fn(x K) K
+    space.scalar_mul $in fn(x, y K) K
+    space.scalar_one $in K
+    space.scalar_inv $in fn(x K) K
+    \inherited_subspace_add<K, V, space, U> $in fn(x, y \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>
+    \inherited_subspace_carrier<K, V, space, U> = U
+    space.zero $in U
+    space.zero $in \inherited_subspace_carrier<K, V, space, U>
+    \inherited_subspace_neg<K, V, space, U> $in fn(x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>
+    \inherited_subspace_smul<K, V, space, U> $in fn(a K, x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>
+    by thm cart_member_from_coordinates((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>), cart(fn(x, y K) K, K, fn(x K) K, fn(x, y K) K, K, fn(x K) K, fn(x, y \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_carrier<K, V, space, U>, fn(x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>, fn(a K, x \inherited_subspace_carrier<K, V, space, U>) \inherited_subspace_carrier<K, V, space, U>))
+    by thm struct_member((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>), &VectorSpace<K, \inherited_subspace_carrier<K, V, space, U>>)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have inherited_subspace_vector_space &VectorSpace<K, \inherited_subspace_carrier<K, V, space, U>> = (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>)
+
+# Complementary subspaces admit a unique callable decomposition.
+thm complementary_decomposition_exists:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V), v V:
+        $is_complementary_subspaces(K, V, space, U, W)
+        =>:
+            exist pair cart(U, W) st {space.add(pair[1], pair[2]) = v}
+    exist pair cart(U, W) st {space.add(pair[1], pair[2]) = v}
+
+thm complementary_decomposition_unique:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V), v V, pair1, pair2 cart(U, W):
+        $is_complementary_subspaces(K, V, space, U, W)
+        space.add(pair1[1], pair1[2]) = v
+        space.add(pair2[1], pair2[2]) = v
+        =>:
+            pair1 = pair2
+    have u1 U = pair1[1]
+    have w1 W = pair1[2]
+    have u2 U = pair2[1]
+    have w2 W = pair2[2]
+    $is_subspace(K, V, space, U)
+    $is_subspace(K, V, space, W)
+    space.smul(space.scalar_neg(space.scalar_one), u2) $in U
+    space.smul(space.scalar_neg(space.scalar_one), w1) $in W
+    by thm vector_smul_neg_one(K, V, space, u2)
+    by thm vector_smul_neg_one(K, V, space, w1)
+    space.neg(u2) $in U
+    space.neg(w1) $in W
+    space.add(u1, space.neg(u2)) $in U
+    space.add(w2, space.neg(w1)) $in W
+    have du V = space.add(u1, space.neg(u2))
+    have dw V = space.add(w2, space.neg(w1))
+    du = space.add(u1, space.neg(u2))
+    dw = space.add(w2, space.neg(w1))
+    du $in U
+    dw $in W
+    space.add(u1, w1) = space.add(pair1[1], pair1[2]) = v
+    space.add(u2, w2) = space.add(pair2[1], pair2[2]) = v
+    space.add(u1, w1) = v = space.add(u2, w2)
+    space.add(space.add(u1, w1), space.add(space.neg(u2), space.neg(w1))) = space.add(space.add(u2, w2), space.add(space.neg(u2), space.neg(w1)))
+    by thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, u1, w1, space.neg(u2), space.neg(w1))
+    space.add(w1, space.neg(w1)) = space.add(space.neg(w1), w1) = space.zero
+    space.add(u1, space.neg(u2)) = du
+    space.add(du, space.zero) = space.add(space.zero, du) = du
+    space.add(space.add(u1, w1), space.add(space.neg(u2), space.neg(w1))) = space.add(space.add(u1, space.neg(u2)), space.add(w1, space.neg(w1))) = space.add(space.add(u1, space.neg(u2)), space.zero) = space.add(du, space.zero) = du
+    by thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, u2, w2, space.neg(u2), space.neg(w1))
+    space.add(u2, space.neg(u2)) = space.add(space.neg(u2), u2) = space.zero
+    space.add(w2, space.neg(w1)) = dw
+    space.add(space.zero, dw) = dw
+    space.add(space.add(u2, w2), space.add(space.neg(u2), space.neg(w1))) = space.add(space.add(u2, space.neg(u2)), space.add(w2, space.neg(w1))) = space.add(space.zero, space.add(w2, space.neg(w1))) = space.add(space.zero, dw) = dw
+    du = dw
+    du $in W
+    du $in intersect(U, W)
+    intersect(U, W) = {space.zero}
+    du $in {space.zero}
+    du = space.zero
+    space.add(u1, space.neg(u2)) = du = space.zero = space.add(u2, space.neg(u2))
+    by thm chap2::add_right_cancel(V, space.add, space.zero, space.neg, u1, space.neg(u2), u2)
+    u1 = u2
+    space.add(u1, w1) = space.add(u2, w2) = space.add(u1, w2)
+    by thm chap2::add_left_cancel(V, space.add, space.zero, space.neg, u1, w1, w2)
+    w1 = w2
+    pair1[1] = u1
+    pair1[2] = w1
+    pair2[1] = u2
+    pair2[2] = w2
+    by thm tuple_equal_from_coordinates(pair1, (u1, w1))
+    by thm tuple_equal_from_coordinates(pair2, (u2, w2))
+    pair1 = (u1, w1)
+    pair2 = (u2, w2)
+    pair1 = (u1, w1) = (u2, w2) = pair2
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V): $is_complementary_subspaces(K, V, space, U, W)>:
+    have fn internal_direct_sum_decompose by exist!:
+        ? forall v V:
+            exist! pair cart(U, W) st {space.add(pair[1], pair[2]) = v}
+        by thm complementary_decomposition_exists(K, V, space, U, W, v)
+        claim:
+            ? forall pair1, pair2 cart(U, W):
+                space.add(pair1[1], pair1[2]) = v
+                space.add(pair2[1], pair2[2]) = v
+                =>:
+                    pair1 = pair2
+            by thm complementary_decomposition_unique(K, V, space, U, W, v, pair1, pair2)
+
+thm internal_direct_sum_decompose_add:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V), v V:
+        $is_complementary_subspaces(K, V, space, U, W)
+        =>:
+            space.add(\internal_direct_sum_decompose<K, V, space, U, W>(v)[1], \internal_direct_sum_decompose<K, V, space, U, W>(v)[2]) = v
+    space.add(\internal_direct_sum_decompose<K, V, space, U, W>(v)[1], \internal_direct_sum_decompose<K, V, space, U, W>(v)[2]) = v
+
+thm is_subspace_of_eq:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, A, B power_set(V):
+        A = B
+        $is_subspace(K, V, space, A)
+        =>:
+            $is_subspace(K, V, space, B)
+    claim:
+        ? space.zero $in B
+        space.zero $in A
+        A = B
+    claim:
+        ? forall x, y V:
+            x $in B
+            y $in B
+            =>:
+                space.add(x, y) $in B
+        x $in A
+        y $in A
+        space.add(x, y) $in A
+        A = B
+    claim:
+        ? forall a K, x V:
+            x $in B
+            =>:
+                space.smul(a, x) $in B
+        x $in A
+        space.smul(a, x) $in A
+        A = B
+    by def $is_subspace(K, V, space, B)
+
+thm subspace_join_is_subspace:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
+        $is_subspace(K, V, space, U)
+        $is_subspace(K, V, space, W)
+        =>:
+            $is_subspace(K, V, space, \subspace_join<K, V, space>(U, W))
+    by thm span_is_subspace(K, V, space, {x V: x $in U or x $in W})
+    \subspace_join<K, V, space>(U, W) = \span<K, V, space>({x V: x $in U or x $in W})
+    by thm is_subspace_of_eq(K, V, space, \span<K, V, space>({x V: x $in U or x $in W}), \subspace_join<K, V, space>(U, W))
 
 # ---------------------------------------------------------------------------
 # 10.2.5 Quotient spaces
@@ -306,16 +1636,577 @@ prop subspace_translate_member(K, V nonempty_set, space &VectorSpace<K, V>, U po
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn subspace_translate(U power_set(V), v V) power_set(V) = {x V: $subspace_translate_member(K, V, space, U, v, x)}
 
+thm subspace_translate_mem_of_witness:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, x, u V:
+        u $in U
+        x = space.add(v, u)
+        =>:
+            x $in \subspace_translate<K, V, space>(U, v)
+    witness exist t V st {t $in U, x = space.add(v, t)} from u
+    by def $subspace_translate_member(K, V, space, U, v, x)
+    by thm set_builder_member(x, {q V: $subspace_translate_member(K, V, space, U, v, q)})
+    \subspace_translate<K, V, space>(U, v) = {q V: $subspace_translate_member(K, V, space, U, v, q)}
+    x $in \subspace_translate<K, V, space>(U, v)
+
+thm subspace_translate_witness_of_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, x V:
+        x $in \subspace_translate<K, V, space>(U, v)
+        =>:
+            exist u V st {u $in U, x = space.add(v, u)}
+    \subspace_translate<K, V, space>(U, v) = {q V: $subspace_translate_member(K, V, space, U, v, q)}
+    x $in {q V: $subspace_translate_member(K, V, space, U, v, q)}
+    by def $subspace_translate_member(K, V, space, U, v, x)
+    exist u V st {u $in U, x = space.add(v, u)}
+
 prop is_subspace_translate(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), CarrierC power_set(V)):
     exist v V st {CarrierC = \subspace_translate<K, V, space>(U, v)}
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn quotient_space(U power_set(V)) power_set(power_set(V)) = {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)}
 
+# Every translate v + U belongs to the quotient carrier: its representative
+# is v itself.
+thm quotient_projection_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v V:
+        \subspace_translate<K, V, space>(U, v) $in \quotient_space<K, V, space>(U)
+    witness exist x V st {\subspace_translate<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, x)} from v
+    by def $is_subspace_translate(K, V, space, U, \subspace_translate<K, V, space>(U, v))
+    by thm set_builder_member(\subspace_translate<K, V, space>(U, v), {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)})
+    \quotient_space<K, V, space>(U) = {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)}
+    \subspace_translate<K, V, space>(U, v) $in \quotient_space<K, V, space>(U)
+
+# The quotient carrier is nonempty because it contains the translate of the
+# source zero vector.
+thm quotient_space_nonempty:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $is_nonempty_set(\quotient_space<K, V, space>(U))
+    witness $is_nonempty_set(\quotient_space<K, V, space>(U)) from \subspace_translate<K, V, space>(U, space.zero):
+        by thm quotient_projection_mem(K, V, space, U, space.zero)
+
+# The canonical quotient projection sends a vector to its translate by U.
+# This is callable data with the quotient carrier as its codomain.
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn quotient_projection(U power_set(V), v V) \quotient_space<K, V, space>(U) = \subspace_translate<K, V, space>(U, v)
+
+# Every quotient element has a representative, so the canonical projection is
+# surjective.
+thm quotient_projection_surjective:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $chap4::surjective_fn(V, \quotient_space<K, V, space>(U), fn(v V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, v)})
+    claim:
+        ? forall CarrierC \quotient_space<K, V, space>(U):
+            exist v V st {CarrierC = fn(x V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, x)}(v)}
+        \quotient_space<K, V, space>(U) = {D power_set(V): $is_subspace_translate(K, V, space, U, D)}
+        CarrierC $in {D power_set(V): $is_subspace_translate(K, V, space, U, D)}
+        by def $is_subspace_translate(K, V, space, U, CarrierC)
+        obtain v from exist x V st {CarrierC = \subspace_translate<K, V, space>(U, x)}
+        fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(v) = \quotient_projection<K, V, space>(U, v)
+        \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+        CarrierC = \subspace_translate<K, V, space>(U, v) = \quotient_projection<K, V, space>(U, v) = fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(v)
+        witness exist x V st {CarrierC = fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(x)} from v
+    by def $chap4::surjective_fn(V, \quotient_space<K, V, space>(U), fn(v V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, v)})
+
+# A subspace translate contains its center. More generally, every member of a
+# translate is another representative of exactly the same quotient element.
+thm subspace_translate_center_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v V:
+        $is_subspace(K, V, space, U)
+        =>:
+            v $in \subspace_translate<K, V, space>(U, v)
+    space.zero $in U
+    space.add(v, space.zero) = space.add(space.zero, v) = v
+    v = space.add(v, space.zero)
+    by thm subspace_translate_mem_of_witness(K, V, space, U, v, v, space.zero)
+
+thm subspace_translate_eq_of_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, x V:
+        $is_subspace(K, V, space, U)
+        x $in \subspace_translate<K, V, space>(U, v)
+        =>:
+            \subspace_translate<K, V, space>(U, x) = \subspace_translate<K, V, space>(U, v)
+    by thm subspace_translate_witness_of_mem(K, V, space, U, v, x)
+    obtain u from exist u0 V st {u0 $in U, x = space.add(v, u0)}
+    claim:
+        ? forall z \subspace_translate<K, V, space>(U, x):
+            z $in \subspace_translate<K, V, space>(U, v)
+        by thm subspace_translate_witness_of_mem(K, V, space, U, x, z)
+        obtain w from exist w0 V st {w0 $in U, z = space.add(x, w0)}
+        space.add(u, w) $in U
+        z = space.add(x, w) = space.add(space.add(v, u), w) = space.add(v, space.add(u, w))
+        by thm subspace_translate_mem_of_witness(K, V, space, U, v, z, space.add(u, w))
+    by def \subspace_translate<K, V, space>(U, x) $subset \subspace_translate<K, V, space>(U, v)
+    \subspace_translate<K, V, space>(U, x) $subset \subspace_translate<K, V, space>(U, v)
+    claim:
+        ? forall z \subspace_translate<K, V, space>(U, v):
+            z $in \subspace_translate<K, V, space>(U, x)
+        by thm subspace_translate_witness_of_mem(K, V, space, U, v, z)
+        obtain w from exist w0 V st {w0 $in U, z = space.add(v, w0)}
+        space.smul(space.scalar_neg(space.scalar_one), u) $in U
+        by thm vector_smul_neg_one(K, V, space, u)
+        space.neg(u) $in U
+        space.add(space.neg(u), w) $in U
+        space.add(u, space.add(space.neg(u), w)) = space.add(space.add(u, space.neg(u)), w)
+        space.add(v, space.add(u, space.add(space.neg(u), w))) = space.add(v, space.add(space.add(u, space.neg(u)), w))
+        by thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, u)
+        space.add(u, space.neg(u)) = space.zero
+        space.add(space.add(u, space.neg(u)), w) = space.add(space.zero, w)
+        space.add(v, space.add(space.add(u, space.neg(u)), w)) = space.add(v, space.add(space.zero, w))
+        space.add(space.zero, w) = w
+        space.add(v, space.add(space.zero, w)) = space.add(v, w)
+        space.add(x, space.add(space.neg(u), w)) = space.add(space.add(v, u), space.add(space.neg(u), w)) = space.add(v, space.add(u, space.add(space.neg(u), w))) = space.add(v, space.add(space.add(u, space.neg(u)), w)) = space.add(v, space.add(space.zero, w)) = space.add(v, w) = z
+        z = space.add(x, space.add(space.neg(u), w))
+        by thm subspace_translate_mem_of_witness(K, V, space, U, x, z, space.add(space.neg(u), w))
+    by def \subspace_translate<K, V, space>(U, v) $subset \subspace_translate<K, V, space>(U, x)
+    \subspace_translate<K, V, space>(U, v) $subset \subspace_translate<K, V, space>(U, x)
+    by extension \subspace_translate<K, V, space>(U, x) = \subspace_translate<K, V, space>(U, v)
+
 prop is_quotient_space_lift_compatible(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, U power_set(V), phi fn(v V) W):
     $is_linear_map(K, V, W, source, target, phi)
     $is_subspace(K, V, source, U)
     U $subset \linear_kernel<V, W, target.zero, phi>
+
+# Quotient addition, inverse, scalar multiplication, and zero are exposed by a
+# selected vector-space structure on the actual coset carrier.
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have quotient_vector_carrier nonempty_set = \quotient_space<K, V, space>(U)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn quotient_vector_projection(v V) \quotient_vector_carrier<K, V, space, U> = \quotient_projection<K, V, space>(U, v)
+
+thm subspace_translate_add_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, w, x, y V:
+        $is_subspace(K, V, space, U)
+        x $in \subspace_translate<K, V, space>(U, v)
+        y $in \subspace_translate<K, V, space>(U, w)
+        =>:
+            space.add(x, y) $in \subspace_translate<K, V, space>(U, space.add(v, w))
+    by thm subspace_translate_witness_of_mem(K, V, space, U, v, x)
+    obtain u from exist u0 V st {u0 $in U, x = space.add(v, u0)}
+    by thm subspace_translate_witness_of_mem(K, V, space, U, w, y)
+    obtain t from exist t0 V st {t0 $in U, y = space.add(w, t0)}
+    space.add(u, t) $in U
+    by thm chap2::add_reorder_four(V, space.add, space.zero, space.neg, v, u, w, t)
+    space.add(x, y) = space.add(space.add(v, u), space.add(w, t)) = space.add(space.add(v, w), space.add(u, t))
+    by thm subspace_translate_mem_of_witness(K, V, space, U, space.add(v, w), space.add(x, y), space.add(u, t))
+
+thm subspace_translate_smul_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), a K, v, x V:
+        $is_subspace(K, V, space, U)
+        x $in \subspace_translate<K, V, space>(U, v)
+        =>:
+            space.smul(a, x) $in \subspace_translate<K, V, space>(U, space.smul(a, v))
+    by thm subspace_translate_witness_of_mem(K, V, space, U, v, x)
+    obtain u from exist u0 V st {u0 $in U, x = space.add(v, u0)}
+    space.smul(a, u) $in U
+    space.smul(a, x) = space.smul(a, space.add(v, u)) = space.add(space.smul(a, v), space.smul(a, u))
+    by thm subspace_translate_mem_of_witness(K, V, space, U, space.smul(a, v), space.smul(a, x), space.smul(a, u))
+
+prop is_quotient_vector_add_value(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), q, r, s power_set(V)):
+    exist v, w V st {q = \subspace_translate<K, V, space>(U, v), r = \subspace_translate<K, V, space>(U, w), s = \subspace_translate<K, V, space>(U, space.add(v, w))}
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn quotient_vector_add by exist!:
+        ? forall q, r \quotient_vector_carrier<K, V, space, U>:
+            exist! s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_add_value(K, V, space, U, q, r, s)}
+        obtain v from exist v0 V st {q = \subspace_translate<K, V, space>(U, v0)}
+        obtain w from exist w0 V st {r = \subspace_translate<K, V, space>(U, w0)}
+        by thm quotient_projection_mem(K, V, space, U, space.add(v, w))
+        \subspace_translate<K, V, space>(U, space.add(v, w)) $in \quotient_space<K, V, space>(U)
+        \quotient_vector_carrier<K, V, space, U> = \quotient_space<K, V, space>(U)
+        \subspace_translate<K, V, space>(U, space.add(v, w)) $in \quotient_vector_carrier<K, V, space, U>
+        have candidate \quotient_vector_carrier<K, V, space, U> = \subspace_translate<K, V, space>(U, space.add(v, w))
+        witness exist s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_add_value(K, V, space, U, q, r, s)} from candidate:
+            witness exist v0, w0 V st {q = \subspace_translate<K, V, space>(U, v0), r = \subspace_translate<K, V, space>(U, w0), candidate = \subspace_translate<K, V, space>(U, space.add(v0, w0))} from v, w
+            by def $is_quotient_vector_add_value(K, V, space, U, q, r, candidate)
+        claim:
+            ? forall s1, s2 \quotient_vector_carrier<K, V, space, U>:
+                $is_quotient_vector_add_value(K, V, space, U, q, r, s1)
+                $is_quotient_vector_add_value(K, V, space, U, q, r, s2)
+                =>:
+                    s1 = s2
+            by def $is_quotient_vector_add_value(K, V, space, U, q, r, s1)
+            by def $is_quotient_vector_add_value(K, V, space, U, q, r, s2)
+            obtain v1, w1 from exist a, b V st {q = \subspace_translate<K, V, space>(U, a), r = \subspace_translate<K, V, space>(U, b), s1 = \subspace_translate<K, V, space>(U, space.add(a, b))}
+            obtain v2, w2 from exist a, b V st {q = \subspace_translate<K, V, space>(U, a), r = \subspace_translate<K, V, space>(U, b), s2 = \subspace_translate<K, V, space>(U, space.add(a, b))}
+            by thm subspace_translate_center_mem(K, V, space, U, v2)
+            v2 $in \subspace_translate<K, V, space>(U, v2)
+            \subspace_translate<K, V, space>(U, v2) = q = \subspace_translate<K, V, space>(U, v1)
+            v2 $in \subspace_translate<K, V, space>(U, v1)
+            by thm subspace_translate_center_mem(K, V, space, U, w2)
+            w2 $in \subspace_translate<K, V, space>(U, w2)
+            \subspace_translate<K, V, space>(U, w2) = r = \subspace_translate<K, V, space>(U, w1)
+            w2 $in \subspace_translate<K, V, space>(U, w1)
+            by thm subspace_translate_add_mem(K, V, space, U, v1, w1, v2, w2)
+            space.add(v2, w2) $in \subspace_translate<K, V, space>(U, space.add(v1, w1))
+            by thm subspace_translate_eq_of_mem(K, V, space, U, space.add(v1, w1), space.add(v2, w2))
+            \subspace_translate<K, V, space>(U, space.add(v2, w2)) = \subspace_translate<K, V, space>(U, space.add(v1, w1))
+            s2 = \subspace_translate<K, V, space>(U, space.add(v2, w2)) = \subspace_translate<K, V, space>(U, space.add(v1, w1)) = s1
+            s1 = s2
+
+prop is_quotient_vector_smul_value(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), a K, q, s power_set(V)):
+    exist v V st {q = \subspace_translate<K, V, space>(U, v), s = \subspace_translate<K, V, space>(U, space.smul(a, v))}
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn quotient_vector_smul by exist!:
+        ? forall a K, q \quotient_vector_carrier<K, V, space, U>:
+            exist! s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_smul_value(K, V, space, U, a, q, s)}
+        obtain v from exist v0 V st {q = \subspace_translate<K, V, space>(U, v0)}
+        by thm quotient_projection_mem(K, V, space, U, space.smul(a, v))
+        \subspace_translate<K, V, space>(U, space.smul(a, v)) $in \quotient_space<K, V, space>(U)
+        \quotient_vector_carrier<K, V, space, U> = \quotient_space<K, V, space>(U)
+        \subspace_translate<K, V, space>(U, space.smul(a, v)) $in \quotient_vector_carrier<K, V, space, U>
+        have candidate \quotient_vector_carrier<K, V, space, U> = \subspace_translate<K, V, space>(U, space.smul(a, v))
+        witness exist s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_smul_value(K, V, space, U, a, q, s)} from candidate:
+            witness exist v0 V st {q = \subspace_translate<K, V, space>(U, v0), candidate = \subspace_translate<K, V, space>(U, space.smul(a, v0))} from v
+            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, candidate)
+        claim:
+            ? forall s1, s2 \quotient_vector_carrier<K, V, space, U>:
+                $is_quotient_vector_smul_value(K, V, space, U, a, q, s1)
+                $is_quotient_vector_smul_value(K, V, space, U, a, q, s2)
+                =>:
+                    s1 = s2
+            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, s1)
+            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, s2)
+            obtain v1 from exist x V st {q = \subspace_translate<K, V, space>(U, x), s1 = \subspace_translate<K, V, space>(U, space.smul(a, x))}
+            obtain v2 from exist x V st {q = \subspace_translate<K, V, space>(U, x), s2 = \subspace_translate<K, V, space>(U, space.smul(a, x))}
+            by thm subspace_translate_center_mem(K, V, space, U, v2)
+            v2 $in \subspace_translate<K, V, space>(U, v2)
+            \subspace_translate<K, V, space>(U, v2) = q = \subspace_translate<K, V, space>(U, v1)
+            v2 $in \subspace_translate<K, V, space>(U, v1)
+            by thm subspace_translate_smul_mem(K, V, space, U, a, v1, v2)
+            space.smul(a, v2) $in \subspace_translate<K, V, space>(U, space.smul(a, v1))
+            by thm subspace_translate_eq_of_mem(K, V, space, U, space.smul(a, v1), space.smul(a, v2))
+            \subspace_translate<K, V, space>(U, space.smul(a, v2)) = \subspace_translate<K, V, space>(U, space.smul(a, v1))
+            s2 = \subspace_translate<K, V, space>(U, space.smul(a, v2)) = \subspace_translate<K, V, space>(U, space.smul(a, v1)) = s1
+            s1 = s2
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn quotient_vector_neg(q \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U> = \quotient_vector_smul<K, V, space, U>(space.scalar_neg(space.scalar_one), q)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have quotient_vector_zero \quotient_vector_carrier<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
+
+thm quotient_vector_has_projection_preimage:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), q power_set(V):
+        $is_subspace(K, V, space, U)
+        q $in \quotient_vector_carrier<K, V, space, U>
+        =>:
+            exist v V st {q = \quotient_vector_projection<K, V, space, U>(v)}
+    obtain v from exist v0 V st {q = \subspace_translate<K, V, space>(U, v0)}
+    \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+    witness exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)} from v
+
+thm quotient_vector_add_projection:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v, w V:
+        $is_subspace(K, V, space, U)
+        =>:
+            \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \quotient_vector_projection<K, V, space, U>(space.add(v, w))
+    claim:
+        ? $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(space.add(v, w)))
+        \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+        \quotient_vector_projection<K, V, space, U>(w) = \quotient_projection<K, V, space>(U, w) = \subspace_translate<K, V, space>(U, w)
+        \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \quotient_projection<K, V, space>(U, space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v, w))
+        witness exist v0, w0 V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v0), \quotient_vector_projection<K, V, space, U>(w) = \subspace_translate<K, V, space>(U, w0), \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v0, w0))} from v, w
+        by def $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(space.add(v, w)))
+    $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)))
+    by def $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)))
+    obtain v1, w1 from exist a, b V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, a), \quotient_vector_projection<K, V, space, U>(w) = \subspace_translate<K, V, space>(U, b), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \subspace_translate<K, V, space>(U, space.add(a, b))}
+    \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+    \quotient_vector_projection<K, V, space, U>(w) = \quotient_projection<K, V, space>(U, w) = \subspace_translate<K, V, space>(U, w)
+    \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \quotient_projection<K, V, space>(U, space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v, w))
+    by thm subspace_translate_center_mem(K, V, space, U, v)
+    v $in \subspace_translate<K, V, space>(U, v)
+    \subspace_translate<K, V, space>(U, v) = \quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v1)
+    v $in \subspace_translate<K, V, space>(U, v1)
+    by thm subspace_translate_center_mem(K, V, space, U, w)
+    w $in \subspace_translate<K, V, space>(U, w)
+    \subspace_translate<K, V, space>(U, w) = \quotient_vector_projection<K, V, space, U>(w) = \subspace_translate<K, V, space>(U, w1)
+    w $in \subspace_translate<K, V, space>(U, w1)
+    by thm subspace_translate_add_mem(K, V, space, U, v1, w1, v, w)
+    space.add(v, w) $in \subspace_translate<K, V, space>(U, space.add(v1, w1))
+    by thm subspace_translate_eq_of_mem(K, V, space, U, space.add(v1, w1), space.add(v, w))
+    \subspace_translate<K, V, space>(U, space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v1, w1))
+    \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \subspace_translate<K, V, space>(U, space.add(v1, w1)) = \subspace_translate<K, V, space>(U, space.add(v, w)) = \quotient_vector_projection<K, V, space, U>(space.add(v, w))
+
+thm quotient_vector_smul_projection:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), a K, v V:
+        $is_subspace(K, V, space, U)
+        =>:
+            \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
+    claim:
+        ? $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)))
+        \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+        \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_projection<K, V, space>(U, space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v))
+        witness exist v0 V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v0), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v0))} from v
+        by def $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)))
+    $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)))
+    by def $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)))
+    obtain v1 from exist x V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, x), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \subspace_translate<K, V, space>(U, space.smul(a, x))}
+    \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
+    \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_projection<K, V, space>(U, space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v))
+    by thm subspace_translate_center_mem(K, V, space, U, v)
+    v $in \subspace_translate<K, V, space>(U, v)
+    \subspace_translate<K, V, space>(U, v) = \quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v1)
+    v $in \subspace_translate<K, V, space>(U, v1)
+    by thm subspace_translate_smul_mem(K, V, space, U, a, v1, v)
+    space.smul(a, v) $in \subspace_translate<K, V, space>(U, space.smul(a, v1))
+    by thm subspace_translate_eq_of_mem(K, V, space, U, space.smul(a, v1), space.smul(a, v))
+    \subspace_translate<K, V, space>(U, space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v1))
+    \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \subspace_translate<K, V, space>(U, space.smul(a, v1)) = \subspace_translate<K, V, space>(U, space.smul(a, v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
+
+thm quotient_vector_tuple_is_vector_space:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $is_subspace(K, V, space, U)
+        =>:
+            (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>) $in &VectorSpace<K, \quotient_vector_carrier<K, V, space, U>>
+    claim:
+        ? forall q, r, s \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_add<K, V, space, U>(\quotient_vector_add<K, V, space, U>(q, r), s) = \quotient_vector_add<K, V, space, U>(q, \quotient_vector_add<K, V, space, U>(r, s))
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        obtain w from exist w0 V st {r = \quotient_vector_projection<K, V, space, U>(w0)}
+        obtain t from exist t0 V st {s = \quotient_vector_projection<K, V, space, U>(t0)}
+        by thm quotient_vector_add_projection(K, V, space, U, v, w)
+        by thm quotient_vector_add_projection(K, V, space, U, space.add(v, w), t)
+        by thm quotient_vector_add_projection(K, V, space, U, w, t)
+        by thm quotient_vector_add_projection(K, V, space, U, v, space.add(w, t))
+        \quotient_vector_add<K, V, space, U>(q, r) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \quotient_vector_projection<K, V, space, U>(space.add(v, w))
+        \quotient_vector_add<K, V, space, U>(r, s) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(t)) = \quotient_vector_projection<K, V, space, U>(space.add(w, t))
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_add<K, V, space, U>(q, r), s) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.add(v, w)), \quotient_vector_projection<K, V, space, U>(t)) = \quotient_vector_projection<K, V, space, U>(space.add(space.add(v, w), t))
+        \quotient_vector_add<K, V, space, U>(q, \quotient_vector_add<K, V, space, U>(r, s)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.add(w, t))) = \quotient_vector_projection<K, V, space, U>(space.add(v, space.add(w, t)))
+        space.add(space.add(v, w), t) = space.add(v, space.add(w, t))
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_add<K, V, space, U>(q, r), s) = \quotient_vector_projection<K, V, space, U>(space.add(space.add(v, w), t)) = \quotient_vector_projection<K, V, space, U>(space.add(v, space.add(w, t))) = \quotient_vector_add<K, V, space, U>(q, \quotient_vector_add<K, V, space, U>(r, s))
+    claim:
+        ? forall q \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_add<K, V, space, U>(\quotient_vector_zero<K, V, space, U>, q) = q
+            \quotient_vector_add<K, V, space, U>(q, \quotient_vector_zero<K, V, space, U>) = q
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        \quotient_vector_zero<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
+        by thm quotient_vector_add_projection(K, V, space, U, space.zero, v)
+        by thm quotient_vector_add_projection(K, V, space, U, v, space.zero)
+        space.add(space.zero, v) = v
+        space.add(v, space.zero) = space.add(space.zero, v) = v
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_zero<K, V, space, U>, q) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.zero), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.add(space.zero, v)) = \quotient_vector_projection<K, V, space, U>(v) = q
+        \quotient_vector_add<K, V, space, U>(q, \quotient_vector_zero<K, V, space, U>) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.zero)) = \quotient_vector_projection<K, V, space, U>(space.add(v, space.zero)) = \quotient_vector_projection<K, V, space, U>(v) = q
+    claim:
+        ? forall q \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_add<K, V, space, U>(\quotient_vector_neg<K, V, space, U>(q), q) = \quotient_vector_zero<K, V, space, U>
+            \quotient_vector_add<K, V, space, U>(q, \quotient_vector_neg<K, V, space, U>(q)) = \quotient_vector_zero<K, V, space, U>
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        \quotient_vector_neg<K, V, space, U>(q) = \quotient_vector_smul<K, V, space, U>(space.scalar_neg(space.scalar_one), q)
+        by thm quotient_vector_smul_projection(K, V, space, U, space.scalar_neg(space.scalar_one), v)
+        by thm vector_smul_neg_one(K, V, space, v)
+        \quotient_vector_neg<K, V, space, U>(q) = \quotient_vector_smul<K, V, space, U>(space.scalar_neg(space.scalar_one), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_neg(space.scalar_one), v)) = \quotient_vector_projection<K, V, space, U>(space.neg(v))
+        by thm quotient_vector_add_projection(K, V, space, U, space.neg(v), v)
+        by thm quotient_vector_add_projection(K, V, space, U, v, space.neg(v))
+        \quotient_vector_zero<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
+        space.add(space.neg(v), v) = space.zero
+        by thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, v)
+        space.add(v, space.neg(v)) = space.zero
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_neg<K, V, space, U>(q), q) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.neg(v)), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.add(space.neg(v), v)) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
+        \quotient_vector_add<K, V, space, U>(q, \quotient_vector_neg<K, V, space, U>(q)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.neg(v))) = \quotient_vector_projection<K, V, space, U>(space.add(v, space.neg(v))) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
+    claim:
+        ? forall q, r \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_add<K, V, space, U>(q, r) = \quotient_vector_add<K, V, space, U>(r, q)
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        obtain w from exist w0 V st {r = \quotient_vector_projection<K, V, space, U>(w0)}
+        by thm quotient_vector_add_projection(K, V, space, U, v, w)
+        by thm quotient_vector_add_projection(K, V, space, U, w, v)
+        space.add(v, w) = space.add(w, v)
+        \quotient_vector_add<K, V, space, U>(q, r) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \quotient_vector_projection<K, V, space, U>(space.add(w, v)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_add<K, V, space, U>(r, q)
+    claim:
+        ? forall a K, q, r \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_add<K, V, space, U>(q, r)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(a, r))
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        obtain w from exist w0 V st {r = \quotient_vector_projection<K, V, space, U>(w0)}
+        by thm quotient_vector_add_projection(K, V, space, U, v, w)
+        by thm quotient_vector_smul_projection(K, V, space, U, a, space.add(v, w))
+        by thm quotient_vector_smul_projection(K, V, space, U, a, v)
+        by thm quotient_vector_smul_projection(K, V, space, U, a, w)
+        by thm quotient_vector_add_projection(K, V, space, U, space.smul(a, v), space.smul(a, w))
+        \quotient_vector_add<K, V, space, U>(q, r) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \quotient_vector_projection<K, V, space, U>(space.add(v, w))
+        \quotient_vector_smul<K, V, space, U>(a, q) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
+        \quotient_vector_smul<K, V, space, U>(a, r) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(w)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, w))
+        space.smul(a, space.add(v, w)) = space.add(space.smul(a, v), space.smul(a, w))
+        \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_add<K, V, space, U>(q, r)) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(space.add(v, w))) = \quotient_vector_projection<K, V, space, U>(space.smul(a, space.add(v, w))) = \quotient_vector_projection<K, V, space, U>(space.add(space.smul(a, v), space.smul(a, w)))
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(a, r)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.smul(a, v)), \quotient_vector_projection<K, V, space, U>(space.smul(a, w))) = \quotient_vector_projection<K, V, space, U>(space.add(space.smul(a, v), space.smul(a, w)))
+        \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_add<K, V, space, U>(q, r)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(a, r))
+    claim:
+        ? forall a, b K, q \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_smul<K, V, space, U>(space.scalar_add(a, b), q) = \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(b, q))
+            \quotient_vector_smul<K, V, space, U>(space.scalar_mul(a, b), q) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_smul<K, V, space, U>(b, q))
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        by thm quotient_vector_smul_projection(K, V, space, U, space.scalar_add(a, b), v)
+        by thm quotient_vector_smul_projection(K, V, space, U, a, v)
+        by thm quotient_vector_smul_projection(K, V, space, U, b, v)
+        by thm quotient_vector_add_projection(K, V, space, U, space.smul(a, v), space.smul(b, v))
+        space.smul(space.scalar_add(a, b), v) = space.add(space.smul(a, v), space.smul(b, v))
+        \quotient_vector_smul<K, V, space, U>(space.scalar_add(a, b), q) = \quotient_vector_smul<K, V, space, U>(space.scalar_add(a, b), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_add(a, b), v)) = \quotient_vector_projection<K, V, space, U>(space.add(space.smul(a, v), space.smul(b, v)))
+        \quotient_vector_smul<K, V, space, U>(a, q) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
+        \quotient_vector_smul<K, V, space, U>(b, q) = \quotient_vector_smul<K, V, space, U>(b, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(b, v))
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(b, q)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(space.smul(a, v)), \quotient_vector_projection<K, V, space, U>(space.smul(b, v))) = \quotient_vector_projection<K, V, space, U>(space.add(space.smul(a, v), space.smul(b, v)))
+        \quotient_vector_smul<K, V, space, U>(space.scalar_add(a, b), q) = \quotient_vector_add<K, V, space, U>(\quotient_vector_smul<K, V, space, U>(a, q), \quotient_vector_smul<K, V, space, U>(b, q))
+        by thm quotient_vector_smul_projection(K, V, space, U, space.scalar_mul(a, b), v)
+        by thm quotient_vector_smul_projection(K, V, space, U, b, v)
+        by thm quotient_vector_smul_projection(K, V, space, U, a, space.smul(b, v))
+        space.smul(space.scalar_mul(a, b), v) = space.smul(a, space.smul(b, v))
+        \quotient_vector_smul<K, V, space, U>(space.scalar_mul(a, b), q) = \quotient_vector_smul<K, V, space, U>(space.scalar_mul(a, b), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_mul(a, b), v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, space.smul(b, v)))
+        \quotient_vector_smul<K, V, space, U>(b, q) = \quotient_vector_projection<K, V, space, U>(space.smul(b, v))
+        \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_smul<K, V, space, U>(b, q)) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(space.smul(b, v))) = \quotient_vector_projection<K, V, space, U>(space.smul(a, space.smul(b, v)))
+        \quotient_vector_smul<K, V, space, U>(space.scalar_mul(a, b), q) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_smul<K, V, space, U>(b, q))
+    claim:
+        ? forall q \quotient_vector_carrier<K, V, space, U>:
+            \quotient_vector_smul<K, V, space, U>(space.scalar_one, q) = q
+            \quotient_vector_smul<K, V, space, U>(space.scalar_zero, q) = \quotient_vector_zero<K, V, space, U>
+        obtain v from exist v0 V st {q = \quotient_vector_projection<K, V, space, U>(v0)}
+        by thm quotient_vector_smul_projection(K, V, space, U, space.scalar_one, v)
+        by thm quotient_vector_smul_projection(K, V, space, U, space.scalar_zero, v)
+        space.smul(space.scalar_one, v) = v
+        space.smul(space.scalar_zero, v) = space.zero
+        \quotient_vector_zero<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
+        \quotient_vector_smul<K, V, space, U>(space.scalar_one, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_one, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_one, v)) = \quotient_vector_projection<K, V, space, U>(v) = q
+        \quotient_vector_smul<K, V, space, U>(space.scalar_zero, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_zero, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_zero, v)) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
+    by def $chap2::is_additive_commutative_group(\quotient_vector_carrier<K, V, space, U>, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>)
+    by def $is_vector_space(K, \quotient_vector_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
+    space.scalar_add $in fn(x, y K) K
+    space.scalar_zero $in K
+    space.scalar_neg $in fn(x K) K
+    space.scalar_mul $in fn(x, y K) K
+    space.scalar_one $in K
+    space.scalar_inv $in fn(x K) K
+    \quotient_vector_add<K, V, space, U> $in fn(x, y \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>
+    \quotient_vector_zero<K, V, space, U> $in \quotient_vector_carrier<K, V, space, U>
+    \quotient_vector_neg<K, V, space, U> $in fn(x \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>
+    \quotient_vector_smul<K, V, space, U> $in fn(a K, x \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>
+    by thm cart_member_from_coordinates((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>), cart(fn(x, y K) K, K, fn(x K) K, fn(x, y K) K, K, fn(x K) K, fn(x, y \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>, \quotient_vector_carrier<K, V, space, U>, fn(x \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>, fn(a K, x \quotient_vector_carrier<K, V, space, U>) \quotient_vector_carrier<K, V, space, U>))
+    by thm struct_member((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>), &VectorSpace<K, \quotient_vector_carrier<K, V, space, U>>)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have quotient_vector_space &VectorSpace<K, \quotient_vector_carrier<K, V, space, U>> = (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
+
+thm quotient_vector_projection_is_linear:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V):
+        $is_subspace(K, V, space, U)
+        =>:
+            $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, \quotient_vector_space<K, V, space, U>, \quotient_vector_projection<K, V, space, U>)
+    have target &VectorSpace<K, \quotient_vector_carrier<K, V, space, U>> = \quotient_vector_space<K, V, space, U>
+    \quotient_vector_space<K, V, space, U> = (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
+    target = (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
+    target.add = \quotient_vector_add<K, V, space, U>
+    target.smul = \quotient_vector_smul<K, V, space, U>
+    claim:
+        ? forall u, v V:
+            \quotient_vector_projection<K, V, space, U>(space.add(u, v)) = target.add(\quotient_vector_projection<K, V, space, U>(u), \quotient_vector_projection<K, V, space, U>(v))
+        target.add = \quotient_vector_add<K, V, space, U>
+        by thm quotient_vector_add_projection(K, V, space, U, u, v)
+        \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(u), \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.add(u, v))
+        \quotient_vector_projection<K, V, space, U>(space.add(u, v)) = \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(u), \quotient_vector_projection<K, V, space, U>(v)) = target.add(\quotient_vector_projection<K, V, space, U>(u), \quotient_vector_projection<K, V, space, U>(v))
+    claim:
+        ? forall a K, v V:
+            \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = target.smul(a, \quotient_vector_projection<K, V, space, U>(v))
+        target.smul = \quotient_vector_smul<K, V, space, U>
+        by thm quotient_vector_smul_projection(K, V, space, U, a, v)
+        \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
+        \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = target.smul(a, \quotient_vector_projection<K, V, space, U>(v))
+    by def $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, target, \quotient_vector_projection<K, V, space, U>)
+    $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, target, \quotient_vector_projection<K, V, space, U>)
+    $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, \quotient_vector_space<K, V, space, U>, \quotient_vector_projection<K, V, space, U>)
+
+prop is_quotient_space_lift_value(K, V, W nonempty_set, source &VectorSpace<K, V>, U power_set(V), phi fn(v V) W, q power_set(V), y W):
+    exist v V st {q = \subspace_translate<K, V, source>(U, v), y = phi(v)}
+
+template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, U power_set(V), phi fn(v V) W: $is_quotient_space_lift_compatible(K, V, W, source, target, U, phi)>:
+    have fn quotient_space_lift by exist!:
+        ? forall q \quotient_vector_carrier<K, V, source, U>:
+            exist! y W st {$is_quotient_space_lift_value(K, V, W, source, U, phi, q, y)}
+        $is_linear_map(K, V, W, source, target, phi)
+        $is_subspace(K, V, source, U)
+        U $subset \linear_kernel<V, W, target.zero, phi>
+        obtain v from exist v0 V st {q = \subspace_translate<K, V, source>(U, v0)}
+        have candidate W = phi(v)
+        claim:
+            ? exist v0 V st {q = \subspace_translate<K, V, source>(U, v0), candidate = phi(v0)}
+            witness exist v0 V st {q = \subspace_translate<K, V, source>(U, v0), candidate = phi(v0)} from v
+        by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, candidate)
+        witness exist y W st {$is_quotient_space_lift_value(K, V, W, source, U, phi, q, y)} from candidate
+        claim:
+            ? forall y1, y2 W:
+                $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y1)
+                $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y2)
+                =>:
+                    y1 = y2
+            by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y1)
+            by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y2)
+            obtain v1 from exist x V st {q = \subspace_translate<K, V, source>(U, x), y1 = phi(x)}
+            obtain v2 from exist x V st {q = \subspace_translate<K, V, source>(U, x), y2 = phi(x)}
+            by thm subspace_translate_center_mem(K, V, source, U, v2)
+            v2 $in \subspace_translate<K, V, source>(U, v2)
+            \subspace_translate<K, V, source>(U, v2) = q = \subspace_translate<K, V, source>(U, v1)
+            v2 $in \subspace_translate<K, V, source>(U, v1)
+            obtain u from exist u0 V st {u0 $in U, v2 = source.add(v1, u0)}
+            u $in \linear_kernel<V, W, target.zero, phi>
+            \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
+            phi(u) = target.zero
+            phi(source.add(v1, u)) = target.add(phi(v1), phi(u)) = target.add(phi(v1), target.zero)
+            target.add(phi(v1), target.zero) = target.add(target.zero, phi(v1)) = phi(v1)
+            y2 = phi(v2) = phi(source.add(v1, u)) = target.add(phi(v1), phi(u)) = target.add(phi(v1), target.zero) = phi(v1) = y1
+            y1 = y2
+
+# First isomorphism and correspondence are callable maps between the displayed
+# quotient/range and subspace carriers; bijectivity and order preservation are
+# retained as narrow theorem debt.
+prop is_linear_first_isomorphism_value(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, q power_set(V), y W):
+    exist v V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v), y = phi(v)}
+
+template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W: $is_linear_map(K, V, W, source, target, phi)>:
+    have fn linear_first_isomorphism by exist!:
+        ? forall q \quotient_space<K, V, source>(\linear_kernel<V, W, target.zero, phi>):
+            exist! y \linear_range<V, W, phi> st {$is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y)}
+        by thm linear_map_kernel_is_subspace(K, V, W, source, target, phi)
+        obtain v from exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0)}
+        \linear_range<V, W, phi> = \subspace_map<V, W, phi>(V)
+        witness exist z V st {z $in V, phi(z) = phi(v)} from v
+        by def $has_linear_map_preimage(V, W, phi, V, phi(v))
+        by thm set_builder_member(phi(v), {y W: $has_linear_map_preimage(V, W, phi, V, y)})
+        \subspace_map<V, W, phi>(V) = {y W: $has_linear_map_preimage(V, W, phi, V, y)}
+        phi(v) $in \subspace_map<V, W, phi>(V)
+        phi(v) $in \linear_range<V, W, phi>
+        have candidate \linear_range<V, W, phi> = phi(v)
+        claim:
+            ? exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0), candidate = phi(v0)}
+            witness exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0), candidate = phi(v0)} from v
+        by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, candidate)
+        witness exist y \linear_range<V, W, phi> st {$is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y)} from candidate
+        claim:
+            ? forall y1, y2 \linear_range<V, W, phi>:
+                $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y1)
+                $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y2)
+                =>:
+                    y1 = y2
+            by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y1)
+            by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y2)
+            obtain v1 from exist x V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, x), y1 = phi(x)}
+            obtain v2 from exist x V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, x), y2 = phi(x)}
+            by thm subspace_translate_center_mem(K, V, source, \linear_kernel<V, W, target.zero, phi>, v2)
+            v2 $in \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v2)
+            \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v2) = q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v1)
+            v2 $in \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v1)
+            obtain u from exist u0 V st {u0 $in \linear_kernel<V, W, target.zero, phi>, v2 = source.add(v1, u0)}
+            \linear_kernel<V, W, target.zero, phi> = {x V: phi(x) = target.zero}
+            phi(u) = target.zero
+            phi(source.add(v1, u)) = target.add(phi(v1), phi(u)) = target.add(phi(v1), target.zero)
+            target.add(phi(v1), target.zero) = target.add(target.zero, phi(v1)) = phi(v1)
+            y2 = phi(v2) = phi(source.add(v1, u)) = target.add(phi(v1), phi(u)) = target.add(phi(v1), target.zero) = phi(v1) = y1
+            y1 = y2
+
+prop is_subspace_containing(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), S power_set(V)):
+    $is_subspace(K, V, space, S)
+    U $subset S
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn subspaces_containing(U power_set(V)) power_set(power_set(V)) = {S power_set(V): $is_subspace_containing(K, V, space, U, S)}
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspace(K, V, space, U)>:
+    have fn quotient_subspace_correspondence(S \subspaces_containing<K, V, space>(U)) power_set(\quotient_space<K, V, space>(U)) = \subspace_map<V, \quotient_space<K, V, space>(U), fn(v V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, v)}>(S)
 
 # ---------------------------------------------------------------------------
 # 10.3 Endomorphisms and eigenvalues
@@ -324,8 +2215,30 @@ prop is_quotient_space_lift_compatible(K, V, W nonempty_set, source &VectorSpace
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have endomorphism_space power_set(fn(v V) V) = \linear_map_space<K, V, V, space, space>
 
-template<K, V set>:
-    have fn endomorphism_comp(phi, psi fn(v V) V) fn(t V) V = fn(x V) V {phi(psi(x))}
+template<K, V nonempty_set>:
+    have fn endomorphism_comp_raw(phi, psi fn(v V) V) fn(t V) V = \linear_map_compose_raw<K, V, V, V>(phi, psi)
+
+# Composition of two endomorphisms is again an endomorphism.
+thm endomorphism_comp_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi, psi \endomorphism_space<K, V, space>:
+        \endomorphism_comp_raw<K, V>(phi, psi) $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    phi $in \linear_map_space<K, V, V, space, space>
+    psi $in \linear_map_space<K, V, V, space, space>
+    phi $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    psi $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    $is_linear_map(K, V, V, space, space, phi)
+    $is_linear_map(K, V, V, space, space, psi)
+    by thm linear_map_composition_closed(K, V, V, V, space, space, space, phi, psi)
+    by thm set_builder_member(\linear_map_compose_raw<K, V, V, V>(phi, psi), {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)})
+    \endomorphism_comp_raw<K, V>(phi, psi) = \linear_map_compose_raw<K, V, V, V>(phi, psi)
+    \endomorphism_comp_raw<K, V>(phi, psi) $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    \endomorphism_comp_raw<K, V>(phi, psi) $in \linear_map_space<K, V, V, space, space>
+    \endomorphism_comp_raw<K, V>(phi, psi) $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_comp(phi, psi \endomorphism_space<K, V, space>) \endomorphism_space<K, V, space> = \endomorphism_comp_raw<K, V>(phi, psi)
 
 prop has_eigenvector(K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K, v V):
     v != space.zero
@@ -336,6 +2249,104 @@ prop has_eigenvalue(K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, 
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn eigenspace(phi fn(v V) V, a K) power_set(V) = {v V: phi(v) = space.smul(a, v)}
+
+# Subtracting the scalar endomorphism a * id from phi is the pointwise map
+# v |-> phi(v) - a v.
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_sub_scalar_raw(phi fn(v V) V, a K) fn(x V) V = fn(v V) V {space.add(phi(v), space.neg(space.smul(a, v)))}
+
+# The pointwise formula is the sum of phi and -1 times the scalar
+# endomorphism. This exposes its linearity through the checked closure laws.
+thm endomorphism_sub_scalar_raw_eq_linear_combination:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))
+    claim:
+        ? forall v V:
+            \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))(v)
+        by thm vector_smul_neg_one(K, V, space, space.smul(a, v))
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.add(phi(v), space.neg(space.smul(a, v)))
+        \scalar_endomorphism<K, V, space>(a)(v) = space.smul(a, v)
+        \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))(v) = space.smul(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)(v)) = space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v))
+        \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))(v) = space.add(phi(v), \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))(v)) = space.add(phi(v), space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v)))
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.add(phi(v), space.neg(space.smul(a, v))) = space.add(phi(v), space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v))) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))(v)
+    by def $fn_eq(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))))
+    $fn_eq(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))))
+    \endomorphism_sub_scalar_raw<K, V, space>(phi, a) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))
+
+thm endomorphism_sub_scalar_is_linear:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
+        $is_linear_map(K, V, V, space, space, phi)
+        =>:
+            $is_linear_map(K, V, V, space, space, \endomorphism_sub_scalar_raw<K, V, space>(phi, a))
+    by thm scalar_endomorphism_is_linear(K, V, space, a)
+    by thm linear_map_smul_closed(K, V, V, space, space, space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))
+    by thm linear_map_add_closed(K, V, V, space, space, phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))
+    by thm endomorphism_sub_scalar_raw_eq_linear_combination(K, V, space, phi, a)
+
+thm endomorphism_sub_scalar_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>, a K:
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a) $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {psi fn(v V) V: $is_linear_map(K, V, V, space, space, psi)}
+    phi $in \linear_map_space<K, V, V, space, space>
+    phi $in {psi fn(v V) V: $is_linear_map(K, V, V, space, space, psi)}
+    $is_linear_map(K, V, V, space, space, phi)
+    by thm endomorphism_sub_scalar_is_linear(K, V, space, phi, a)
+    by thm set_builder_member(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), {psi fn(v V) V: $is_linear_map(K, V, V, space, space, psi)})
+    \endomorphism_sub_scalar_raw<K, V, space>(phi, a) $in {psi fn(v V) V: $is_linear_map(K, V, V, space, space, psi)}
+    \endomorphism_sub_scalar_raw<K, V, space>(phi, a) $in \linear_map_space<K, V, V, space, space>
+    \endomorphism_sub_scalar_raw<K, V, space>(phi, a) $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_sub_scalar(phi \endomorphism_space<K, V, space>, a K) \endomorphism_space<K, V, space> = \endomorphism_sub_scalar_raw<K, V, space>(phi, a)
+
+# A vector lies in the a-eigenspace exactly when (phi - a * id) sends it to
+# zero. The two directions are the additive-group equivalence x - y = 0 iff
+# x = y.
+thm eigenspace_eq_kernel_sub_scalar_raw:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
+        \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    \eigenspace<K, V, space>(phi, a) = {v V: phi(v) = space.smul(a, v)}
+    \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> = {v V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.zero}
+    claim:
+        ? forall v \eigenspace<K, V, space>(phi, a):
+            v $in \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+        by thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.add(phi(v), space.neg(space.smul(a, v))) = space.add(space.smul(a, v), space.neg(space.smul(a, v))) = space.zero
+        by thm set_builder_member(v, {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero})
+        v $in {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero}
+        v $in \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    claim:
+        ? forall v \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>:
+            v $in \eigenspace<K, V, space>(phi, a)
+        v $in {x V: \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(x) = space.zero}
+        \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.zero
+        by thm chap2::add_neg_cancel_from_laws(V, space.add, space.zero, space.neg, space.smul(a, v))
+        space.add(phi(v), space.neg(space.smul(a, v))) = \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.zero = space.add(space.smul(a, v), space.neg(space.smul(a, v)))
+        by thm chap2::add_right_cancel(V, space.add, space.zero, space.neg, phi(v), space.neg(space.smul(a, v)), space.smul(a, v))
+        by thm set_builder_member(v, {x V: phi(x) = space.smul(a, x)})
+        v $in \eigenspace<K, V, space>(phi, a)
+    by def \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    by def \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> $subset \eigenspace<K, V, space>(phi, a)
+    \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> $subset \eigenspace<K, V, space>(phi, a)
+    by extension \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+
+# For a genuine endomorphism, the source eigenspace is the kernel of the typed
+# endomorphism phi - a • id.
+thm eigenspace_eq_kernel_sub_scalar:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>, a K:
+        \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar<K, V, space>(phi, a)>
+    thm function_substitution:
+        ? forall A, B set, f fn(x A) B, x, y A:
+            x = y
+            =>:
+                f(x) = f(y)
+        f(x) = f(y)
+    by thm eigenspace_eq_kernel_sub_scalar_raw(K, V, space, phi, a)
+    \endomorphism_sub_scalar<K, V, space>(phi, a) = \endomorphism_sub_scalar_raw<K, V, space>(phi, a)
+    by thm function_substitution(fn(v V) V, power_set(V), fn(q fn(v V) V) power_set(V) {\linear_kernel<V, V, space.zero, q>}, \endomorphism_sub_scalar<K, V, space>(phi, a), \endomorphism_sub_scalar_raw<K, V, space>(phi, a))
+    \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar<K, V, space>(phi, a)>
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn eigenvalues(phi fn(v V) V) power_set(K) = {a K: $has_eigenvalue(K, V, space, phi, a)}
@@ -348,8 +2359,13 @@ thm eigenvalue_implies_eigenspace_nontrivial:
         $has_eigenvalue(K, V, space, phi, a)
         =>:
             $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
+    by def $has_eigenvalue(K, V, space, phi, a)
     obtain v from exist v V st {$has_eigenvector(K, V, space, phi, a, v)}
-    witness exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero} from v
+    by def $has_eigenvector(K, V, space, phi, a, v)
+    by thm set_builder_member(v, {candidate V: phi(candidate) = space.smul(a, candidate)})
+    claim:
+        ? exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero}
+        witness exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero} from v
     by def $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
 
 thm eigenspace_nontrivial_implies_eigenvalue:
@@ -357,12 +2373,155 @@ thm eigenspace_nontrivial_implies_eigenvalue:
         $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
         =>:
             $has_eigenvalue(K, V, space, phi, a)
+    by def $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
     obtain v from exist v V st {v $in {candidate V: phi(candidate) = space.smul(a, candidate)}, v != space.zero}
-    witness exist w V st {$has_eigenvector(K, V, space, phi, a, w)} from v
+    phi(v) = space.smul(a, v)
+    by def $has_eigenvector(K, V, space, phi, a, v)
+    claim:
+        ? exist w V st {$has_eigenvector(K, V, space, phi, a, w)}
+        witness exist w V st {$has_eigenvector(K, V, space, phi, a, w)} from v
     by def $has_eigenvalue(K, V, space, phi, a)
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
-    have zero_endomorphism fn(v V) V = fn(v V) V {space.zero}
+    have fn zero_endomorphism_raw(v V) V = space.zero
+
+thm zero_endomorphism_raw_is_linear:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        $is_linear_map(K, V, V, space, space, fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)})
+    claim:
+        ? forall u, v V:
+            \zero_endomorphism_raw<K, V, space>(space.add(u, v)) = space.add(\zero_endomorphism_raw<K, V, space>(u), \zero_endomorphism_raw<K, V, space>(v))
+        \zero_endomorphism_raw<K, V, space>(space.add(u, v)) = space.zero = space.add(space.zero, space.zero) = space.add(\zero_endomorphism_raw<K, V, space>(u), \zero_endomorphism_raw<K, V, space>(v))
+    claim:
+        ? forall a K, v V:
+            \zero_endomorphism_raw<K, V, space>(space.smul(a, v)) = space.smul(a, \zero_endomorphism_raw<K, V, space>(v))
+        by thm vector_smul_zero(K, V, space, a)
+        \zero_endomorphism_raw<K, V, space>(space.smul(a, v)) = space.zero = space.smul(a, space.zero) = space.smul(a, \zero_endomorphism_raw<K, V, space>(v))
+    by def $is_linear_map(K, V, V, space, space, fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)})
+
+thm zero_endomorphism_raw_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)} $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    by thm zero_endomorphism_raw_is_linear(K, V, space)
+    by thm set_builder_member(fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)}, {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)})
+    fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)} $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)} $in \linear_map_space<K, V, V, space, space>
+    fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)} $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have zero_endomorphism \endomorphism_space<K, V, space> = fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)}
+
+thm endomorphism_add_raw_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi, psi \endomorphism_space<K, V, space>:
+        \linear_map_add_raw<K, V, V, space>(phi, psi) $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    phi $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    psi $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    by thm linear_map_add_closed(K, V, V, space, space, phi, psi)
+    by thm set_builder_member(\linear_map_add_raw<K, V, V, space>(phi, psi), {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)})
+    \linear_map_add_raw<K, V, V, space>(phi, psi) $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    \linear_map_add_raw<K, V, V, space>(phi, psi) $in \linear_map_space<K, V, V, space, space>
+    \linear_map_add_raw<K, V, V, space>(phi, psi) $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_add(phi, psi \endomorphism_space<K, V, space>) \endomorphism_space<K, V, space> = \linear_map_add_raw<K, V, V, space>(phi, psi)
+
+thm endomorphism_smul_raw_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K, phi \endomorphism_space<K, V, space>:
+        \linear_map_smul_raw<K, V, V, space>(a, phi) $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    phi $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    by thm linear_map_smul_closed(K, V, V, space, space, a, phi)
+    by thm set_builder_member(\linear_map_smul_raw<K, V, V, space>(a, phi), {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)})
+    \linear_map_smul_raw<K, V, V, space>(a, phi) $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    \linear_map_smul_raw<K, V, V, space>(a, phi) $in \linear_map_space<K, V, V, space, space>
+    \linear_map_smul_raw<K, V, V, space>(a, phi) $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_smul(a K, phi \endomorphism_space<K, V, space>) \endomorphism_space<K, V, space> = \linear_map_smul_raw<K, V, V, space>(a, phi)
+
+thm scalar_endomorphism_mem:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
+        \scalar_endomorphism<K, V, space>(a) $in \endomorphism_space<K, V, space>
+    \endomorphism_space<K, V, space> = \linear_map_space<K, V, V, space, space>
+    \linear_map_space<K, V, V, space, space> = {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    by thm scalar_endomorphism_is_linear(K, V, space, a)
+    by thm set_builder_member(\scalar_endomorphism<K, V, space>(a), {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)})
+    \scalar_endomorphism<K, V, space>(a) $in {q fn(v V) V: $is_linear_map(K, V, V, space, space, q)}
+    \scalar_endomorphism<K, V, space>(a) $in \linear_map_space<K, V, V, space, space>
+    \scalar_endomorphism<K, V, space>(a) $in \endomorphism_space<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_scalar(a K) \endomorphism_space<K, V, space> = \scalar_endomorphism<K, V, space>(a)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_pow(phi \endomorphism_space<K, V, space>, n N) \endomorphism_space<K, V, space> by induc n from 0:
+        case n = 0: \endomorphism_scalar<K, V, space>(space.scalar_one)
+        case n > 0: \endomorphism_comp<K, V, space>(endomorphism_pow(phi, n - 1), phi)
+
+thm endomorphism_pow_zero:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>:
+        \endomorphism_pow<K, V, space>(phi, 0) = \endomorphism_scalar<K, V, space>(space.scalar_one)
+    \endomorphism_pow<K, V, space>(phi, 0) = \endomorphism_scalar<K, V, space>(space.scalar_one)
+
+thm endomorphism_pow_succ:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>, n N:
+        \endomorphism_pow<K, V, space>(phi, n + 1) = \endomorphism_comp<K, V, space>(\endomorphism_pow<K, V, space>(phi, n), phi)
+    n + 1 > 0
+    n + 1 - 1 = n
+    \endomorphism_pow<K, V, space>(phi, n + 1) = \endomorphism_comp<K, V, space>(\endomorphism_pow<K, V, space>(phi, n + 1 - 1), phi) = \endomorphism_comp<K, V, space>(\endomorphism_pow<K, V, space>(phi, n), phi)
+
+thm vector_space_scalar_commutative_ring:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>:
+        (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one) $in &chap7::CommutativeRing<K>
+    by def $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+    space.scalar_add $in fn(x, y K) K
+    space.scalar_zero $in K
+    space.scalar_neg $in fn(x K) K
+    space.scalar_mul $in fn(x, y K) K
+    space.scalar_one $in K
+    by thm cart_member_from_coordinates((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one), cart(fn(x, y K) K, K, fn(x K) K, fn(x, y K) K, K))
+    by thm struct_member((space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one), &chap7::CommutativeRing<K>)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have scalar_commutative_ring &chap7::CommutativeRing<K> = (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn endomorphism_finite_sum(term fn(n N) \endomorphism_space<K, V, space>, count N) \endomorphism_space<K, V, space> by induc count from 0:
+        case count = 0: \zero_endomorphism<K, V, space>
+        case count > 0: \endomorphism_add<K, V, space>(endomorphism_finite_sum(term, count - 1), term(count - 1))
+
+thm endomorphism_finite_sum_zero:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, term fn(n N) \endomorphism_space<K, V, space>:
+        \endomorphism_finite_sum<K, V, space>(term, 0) = \zero_endomorphism<K, V, space>
+    \endomorphism_finite_sum<K, V, space>(term, 0) = \zero_endomorphism<K, V, space>
+
+thm endomorphism_finite_sum_succ:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, term fn(n N) \endomorphism_space<K, V, space>, count N:
+        \endomorphism_finite_sum<K, V, space>(term, count + 1) = \endomorphism_add<K, V, space>(\endomorphism_finite_sum<K, V, space>(term, count), term(count))
+    count + 1 > 0
+    count + 1 - 1 = count
+    \endomorphism_finite_sum<K, V, space>(term, count + 1) = \endomorphism_add<K, V, space>(\endomorphism_finite_sum<K, V, space>(term, count + 1 - 1), term(count + 1 - 1)) = \endomorphism_add<K, V, space>(\endomorphism_finite_sum<K, V, space>(term, count), term(count))
+
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn polynomial_endomorphism_term(p \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>, phi \endomorphism_space<K, V, space>, n N) \endomorphism_space<K, V, space> = \endomorphism_smul<K, V, space>(p(n), \endomorphism_pow<K, V, space>(phi, n))
+
+# A finite-support scalar polynomial evaluates to the checked finite sum of
+# coefficient-scaled powers of the supplied endomorphism.
+template<K, V nonempty_set, space &VectorSpace<K, V>>:
+    have fn polynomial_endomorphism_eval(p \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>, phi \endomorphism_space<K, V, space>) \endomorphism_space<K, V, space> = \endomorphism_finite_sum<K, V, space>(fn(n N) \endomorphism_space<K, V, space> {\polynomial_endomorphism_term<K, V, space>(p, phi, n)}, \chap9::polynomial_eval_bound<K, \scalar_commutative_ring<K, V, space>>(p) + 1)
+
+prop endomorphism_polynomials_coprime(K, V nonempty_set, space &VectorSpace<K, V>, p, q \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>):
+    exist a, b \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero> st {\chap9::polynomial_add<K, \scalar_commutative_ring<K, V, space>>(\chap9::polynomial_mul<K, \scalar_commutative_ring<K, V, space>>(a, p), \chap9::polynomial_mul<K, \scalar_commutative_ring<K, V, space>>(b, q)) = \chap9::polynomial_C<K, \scalar_commutative_ring<K, V, space>>(&chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.one)}
+
+trust forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>, p, q \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>:
+    $endomorphism_polynomials_coprime(K, V, space, p, q)
+    =>:
+        \subspace_intersection<V>(\linear_kernel<V, V, space.zero, \polynomial_endomorphism_eval<K, V, space>(p, phi)>, \linear_kernel<V, V, space.zero, \polynomial_endomorphism_eval<K, V, space>(q, phi)>) = \subspace_bottom<V, space.zero>
 
 # ---------------------------------------------------------------------------
 # 10.4.1 Matrices
@@ -381,19 +2540,41 @@ thm concrete_trace2:
         trace2(1, 4) = 5
     trace2(1, 4) = 1 + 4 = 5
 
-template<A set, add fn(x, y A) A, n N_pos>:
-    have fn matrix_add(P, M matrix(A, n, n)) matrix(A, n, n) = fn(idx N_pos, j N_pos: idx <= n, j <= n) A {add(P(idx, j), M(idx, j))}
+template<A set, add fn(x, y A) A, n N+>:
+    have fn matrix_add(P, M matrix(A, n, n)) matrix(A, n, n) = fn(idx N+, j N+: idx <= n, j <= n) A {add(P(idx, j), M(idx, j))}
 
 template<A set, add fn(x, y A) A, mul fn(x, y A) A>:
-    have fn matrix2_mul(P, M matrix(A, 2, 2)) matrix(A, 2, 2) = fn(idx N_pos, j N_pos: idx <= 2, j <= 2) A {add(mul(P(idx, 1), M(1, j)), mul(P(idx, 2), M(2, j)))}
+    have fn matrix2_mul(P, M matrix(A, 2, 2)) matrix(A, 2, 2) = fn(idx N+, j N+: idx <= 2, j <= 2) A {add(mul(P(idx, 1), M(1, j)), mul(P(idx, 2), M(2, j)))}
 
-template<A set, m, n N_pos>:
-    have fn matrix_transpose(P matrix(A, m, n)) matrix(A, n, m) = fn(idx N_pos, j N_pos: idx <= n, j <= m) A {P(j, idx)}
+template<A nonempty_set, add fn(x, y A) A, zero A, mul fn(x, y A) A, m, n, p N+: $chap9::is_additive_commutative_monoid(A, add, zero)>:
+    have fn matrix_mul_term(P matrix(A, m, n), M matrix(A, n, p), row, column N+, index N: row <= m, column <= p) A by cases:
+        case index < n: mul(P(row, index + 1), M(index + 1, column))
+        case index >= n: zero
+
+template<A nonempty_set, add fn(x, y A) A, zero A, mul fn(x, y A) A, m, n, p N+: $chap9::is_additive_commutative_monoid(A, add, zero)>:
+    have fn matrix_mul(P matrix(A, m, n), M matrix(A, n, p)) matrix(A, m, p) = fn(row N+, column N+: row <= m, column <= p) A {\chap9::finite_range_sum<A, add, zero>(fn(index N) A {\matrix_mul_term<A, add, zero, mul, m, n, p>(P, M, row, column, index)}, n)}
+
+template<K nonempty_set, field &Field<K>, n N+>:
+    have fn identity_matrix_entry(row, column N+: row <= n, column <= n) K by cases:
+        case row = column: field.one
+        case row != column: field.zero
+
+template<K nonempty_set, field &Field<K>, n N+>:
+    have fn identity_matrix(row, column N+: row <= n, column <= n) K = \identity_matrix_entry<K, field, n>(row, column)
+
+template<K nonempty_set, field &Field<K>, n N+>:
+    trust have matrix_determinant fn(M matrix(K, n, n)) K
+
+template<K nonempty_set, field &Field<K>, n N+, M matrix(K, n, n): \matrix_determinant<K, field, n>(M) != field.zero>:
+    trust have matrix_inverse matrix(K, n, n)
+
+template<A set, m, n N+>:
+    have fn matrix_transpose(P matrix(A, m, n)) matrix(A, n, m) = fn(idx N+, j N+: idx <= n, j <= m) A {P(j, idx)}
 
 # The retained source construction is real-valued; keeping that carrier visible
 # gives the entries their intended numeric power operation.
-template<n N_pos>:
-    have fn vandermonde(v fn(idx N_pos: idx <= n) R) matrix(R, n, n) = fn(idx N_pos, j N_pos: idx <= n, j <= n) R {v(idx)^(j - 1)}
+template<n N+>:
+    have fn vandermonde(v fn(idx N+: idx <= n) R) matrix(R, n, n) = fn(idx N+, j N+: idx <= n, j <= n) R {v(idx)^(j - 1)}
 
 # ---------------------------------------------------------------------------
 # 10.4.2 Bases and coordinates
@@ -437,6 +2618,20 @@ prop has_finite_coefficient_support(K, I set, zeroK K, coefficients fn(idx I) K)
 template<K, I set, zeroK K>:
     have finitely_supported_coefficients power_set(fn(idx I) K) = {coefficients fn(idx I) K: $has_finite_coefficient_support(K, I, zeroK, coefficients)}
 
+template<K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(idx I) V: $is_basis(K, V, space, I, b)>:
+    trust have basis_coordinates fn(v V) \finitely_supported_coefficients<K, I, space.scalar_zero>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, I set, b, c fn(idx I) V: $is_basis(K, V, space, I, b), $is_basis(K, V, space, I, c)>:
+    trust have change_of_basis_matrix fn(row, column I) K
+
+thm basis_coordinates_have_finite_support:
+    ? forall K, V nonempty_set, space &VectorSpace<K, V>, I set, b fn(idx I) V, v V:
+        $is_basis(K, V, space, I, b)
+        =>:
+            $has_finite_coefficient_support(K, I, space.scalar_zero, \basis_coordinates<K, V, space, I, b>(v))
+    \basis_coordinates<K, V, space, I, b>(v) $in \finitely_supported_coefficients<K, I, space.scalar_zero>
+    $has_finite_coefficient_support(K, I, space.scalar_zero, \basis_coordinates<K, V, space, I, b>(v))
+
 # ---------------------------------------------------------------------------
 # 10.4.3 Dimension
 # ---------------------------------------------------------------------------
@@ -456,3 +2651,32 @@ prop has_subspace_dimension(K, V nonempty_set, space &VectorSpace<K, V>, U power
 
 prop is_nontrivial_space(V set):
     exist u, v V st {u != v}
+
+# Finite-dimensional spaces select a dimension and basis; minimal and
+# characteristic polynomials are selected source-facing objects. Existence,
+# uniqueness, determinant construction, and Cayley-Hamilton remain proof debt.
+template<K, V nonempty_set, space &VectorSpace<K, V>: $is_finite_dimensional(K, V, space)>:
+    trust have vector_space_dimension N
+
+template<K, V nonempty_set, space &VectorSpace<K, V>: $is_finite_dimensional(K, V, space)>:
+    trust have finite_basis_index finite_set
+
+template<K, V nonempty_set, space &VectorSpace<K, V>: $is_finite_dimensional(K, V, space)>:
+    trust have finite_basis fn(idx \finite_basis_index<K, V, space>) V
+
+trust forall K, V nonempty_set, space &VectorSpace<K, V>:
+    $is_finite_dimensional(K, V, space)
+    =>:
+        $is_basis(K, V, space, \finite_basis_index<K, V, space>, \finite_basis<K, V, space>)
+        finite_set_size(\finite_basis_index<K, V, space>) = \vector_space_dimension<K, V, space>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>: $is_finite_dimensional(K, V, space)>:
+    trust have minimal_polynomial \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>
+
+template<K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>: $is_finite_dimensional(K, V, space)>:
+    trust have characteristic_polynomial \chap9::polynomial_carrier<K, &chap7::CommutativeRing<K>{\scalar_commutative_ring<K, V, space>}.zero>
+
+trust forall K, V nonempty_set, space &VectorSpace<K, V>, phi \endomorphism_space<K, V, space>:
+    $is_finite_dimensional(K, V, space)
+    =>:
+        \polynomial_endomorphism_eval<K, V, space>(\characteristic_polynomial<K, V, space, phi>, phi) = \zero_endomorphism<K, V, space>

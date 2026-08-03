@@ -599,7 +599,7 @@ prop divides(a Z, b Z):
 
 # A positive divisor of a nonzero integer is at most its absolute value.
 thm _positive_divisor_le_abs:
-    ? forall d N_pos, a Z:
+    ? forall d N+, a Z:
         $divides(d, a)
         a != 0
         =>:
@@ -611,7 +611,7 @@ thm _positive_divisor_le_abs:
         a = d * k = d * 0 = 0
         impossible a != 0
     abs(k) > 0
-    abs(k) $in N_pos
+    abs(k) $in N+
     d * 1 <= d * abs(k)
     abs(d) = d
     abs(a) = abs(d * k) = abs(d) * abs(k) = d * abs(k)
@@ -623,9 +623,9 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
-            $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
-    have CarrierC power_set(N) = {d N_pos: $divides(d, a), $divides(d, b)}
+            $is_finite_set({d N+: $divides(d, a), $divides(d, b)})
+            $is_nonempty_set({d N+: $divides(d, a), $divides(d, b)})
+    have CarrierC power_set(N) = {d N+: $divides(d, a), $divides(d, b)}
     claim:
         ? $is_finite_set(CarrierC)
         by cases:
@@ -635,12 +635,13 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     ? forall d CarrierC:
                         d $in closed_range(1, abs(a))
                     d $in CarrierC
-                    d $in N_pos
+                    d $in N+
                     d >= 1
                     $divides(d, a)
                     by thm _positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
+                by def CarrierC $subset closed_range(1, abs(a))
                 CarrierC $subset closed_range(1, abs(a))
                 CarrierC = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC))
                 $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC)))
@@ -650,28 +651,32 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     ? forall d CarrierC:
                         d $in closed_range(1, abs(b))
                     d $in CarrierC
-                    d $in N_pos
+                    d $in N+
                     d >= 1
                     $divides(d, b)
                     by thm _positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
+                by def CarrierC $subset closed_range(1, abs(b))
                 CarrierC $subset closed_range(1, abs(b))
                 CarrierC = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC))
                 $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC)))
                 $is_finite_set(CarrierC)
     witness $is_nonempty_set(CarrierC) from 1:
-        1 $in N_pos
+        1 $in N+
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
+        by def $divides(1, a)
         $divides(1, a)
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
+        by def $divides(1, b)
         $divides(1, b)
-        1 $in {d N_pos: $divides(d, a), $divides(d, b)}
+        by thm set_builder_member(1, {d N+: $divides(d, a), $divides(d, b)})
+        1 $in {d N+: $divides(d, a), $divides(d, b)}
         1 $in CarrierC
-    $is_finite_set({d N_pos: $divides(d, a), $divides(d, b)})
-    $is_nonempty_set({d N_pos: $divides(d, a), $divides(d, b)})
+    $is_finite_set({d N+: $divides(d, a), $divides(d, b)})
+    $is_nonempty_set({d N+: $divides(d, a), $divides(d, b)})
 
 # The native gcd object is the greatest positive common divisor and is
 # well-defined when the input pair is not all zero.
@@ -680,8 +685,8 @@ thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
-            gcd(a, b) $in N_pos
-    gcd(a, b) $in N_pos
+            gcd(a, b) $in N+
+    gcd(a, b) $in N+
 
 thm gcd_divides_left:
     ? forall a, b Z:
@@ -691,6 +696,7 @@ thm gcd_divides_left:
     by thm gcd_positive(a, b)
     a % gcd(a, b) = 0
     exist k Z st {a = gcd(a, b) * k}
+    by def $divides(gcd(a, b), a)
     $divides(gcd(a, b), a)
 
 thm gcd_divides_right:
@@ -701,10 +707,11 @@ thm gcd_divides_right:
     by thm gcd_positive(a, b)
     b % gcd(a, b) = 0
     exist k Z st {b = gcd(a, b) * k}
+    by def $divides(gcd(a, b), b)
     $divides(gcd(a, b), b)
 
 thm common_divisor_le_gcd:
-    ? forall a, b Z, d N_pos:
+    ? forall a, b Z, d N+:
         a != 0 or b != 0
         $divides(d, a)
         $divides(d, b)
@@ -730,7 +737,7 @@ thm gcd_euclidean_base:
     by thm _positive_divisor_le_abs(gcd(a, 0), a)
     gcd(a, 0) <= abs(a)
     abs(a) > 0
-    abs(a) $in N_pos
+    abs(a) $in N+
     by cases:
         ? $divides(abs(a), a)
         case a >= 0:
@@ -739,12 +746,15 @@ thm gcd_euclidean_base:
             abs(a) * 1 = a * 1
             a = abs(a) * 1
             witness exist k Z st {a = abs(a) * k} from 1
+            by def $divides(abs(a), a)
         case a < 0:
             abs(a) = -a
             a = abs(a) * (-1)
             witness exist k Z st {a = abs(a) * k} from -1
+            by def $divides(abs(a), a)
     witness exist k Z st {0 = abs(a) * k} from 0:
         0 = abs(a) * 0
+    by def $divides(abs(a), 0)
     $divides(abs(a), 0)
     by thm common_divisor_le_gcd(a, 0, abs(a))
     abs(a) <= gcd(a, 0)
@@ -761,6 +771,7 @@ claim:
     obtain l from exist l Z st {z = y * l}
     witness exist m Z st {z = x * m} from k * l:
         z = y * l = (x * k) * l = x * (k * l)
+    by def $divides(x, z)
 
 # A factor divides any product containing it. Commutativity places x first and
 # exposes y*z as the witness.
@@ -769,6 +780,7 @@ claim:
         $divides(x, y * x * z)
     witness exist k Z st {y * x * z = x * k} from y * z:
         y * x * z = x * (y * z)
+    by def $divides(x, y * x * z)
 
 # Every natural number divides its square, witnessed by the number itself in Z.
 claim:
@@ -776,6 +788,7 @@ claim:
         $divides(x, x^2)
     witness exist k Z st {x^2 = x * k} from x:
         x^2 = x * x
+    by def $divides(x, x^2)
 
 # Gcd symmetry on the nonzero natural pairs supported by the local construction.
 # Unlike the source's total Nat.gcd, this gcd is undefined
@@ -801,6 +814,22 @@ thm gcd_comm:
     gcd(a, b) = gcd(b, a)
 
 # 2.5 Proving Facts about Algebraic Structures
+
+# In a generic order represented by a relation, strict comparison means
+# non-strict comparison together with inequality. This is the source's
+# carrier-independent counterpart of x < y.
+prop is_less_than_in_order(A set, le_rel power_set(cart(A, A)), x, y A):
+    (x, y) $in le_rel
+    x != y
+
+# The source example `x < y ↔ x ≤ y ∧ x ≠ y` is now definitional: unfolding
+# the strict relation gives exactly the two displayed conditions.
+trust forall A set, le_rel power_set(cart(A, A)), x, y A:
+    =>:
+        $is_less_than_in_order(A, le_rel, x, y)
+    <=>:
+        (x, y) $in le_rel
+        x != y
 
 # A lattice packages a partial order with callable meet and join operations.
 # The final two law families are the universal properties: meet is the
@@ -838,6 +867,16 @@ struct Lattice<s nonempty_set>:
             =>:
                 (join(x, y), z) $in le_rel
 
+# The stored order relation is transitive. Naming this standard projection lets
+# later lattice proofs compose inequalities without reopening the struct laws.
+thm lattice_le_trans:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        (x, y) $in lattice.le_rel
+        (y, z) $in lattice.le_rel
+        =>:
+            (x, z) $in lattice.le_rel
+    (x, z) $in lattice.le_rel
+
 # The source's meet-commutativity example follows because each meet is a lower
 # bound for the arguments of the other meet; antisymmetry then identifies them.
 thm lattice_meet_comm:
@@ -851,6 +890,30 @@ thm lattice_meet_comm:
     (lattice.meet(y, x), lattice.meet(x, y)) $in lattice.le_rel
     lattice.meet(x, y) = lattice.meet(y, x)
 
+# The source's meet-associativity example compares the two nested meets as
+# greatest lower bounds of x, y, and z. Transitivity supplies the four
+# component bounds; the meet universal property and antisymmetry finish.
+thm lattice_meet_assoc:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        lattice.meet(lattice.meet(x, y), z) = lattice.meet(x, lattice.meet(y, z))
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y)) $in lattice.le_rel
+    (lattice.meet(x, y), x) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y), x)
+    (lattice.meet(x, y), y) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, lattice.meet(lattice.meet(x, y), z), lattice.meet(x, y), y)
+    (lattice.meet(lattice.meet(x, y), z), z) $in lattice.le_rel
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(y, z)) $in lattice.le_rel
+    (lattice.meet(lattice.meet(x, y), z), lattice.meet(x, lattice.meet(y, z))) $in lattice.le_rel
+    (lattice.meet(x, lattice.meet(y, z)), x) $in lattice.le_rel
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z)) $in lattice.le_rel
+    (lattice.meet(y, z), y) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z), y)
+    (lattice.meet(y, z), z) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, lattice.meet(x, lattice.meet(y, z)), lattice.meet(y, z), z)
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(x, y)) $in lattice.le_rel
+    (lattice.meet(x, lattice.meet(y, z)), lattice.meet(lattice.meet(x, y), z)) $in lattice.le_rel
+    lattice.meet(lattice.meet(x, y), z) = lattice.meet(x, lattice.meet(y, z))
+
 # The join-commutativity example is dual: each join is an upper bound for the
 # arguments of the other join, and antisymmetry closes the equality.
 thm lattice_join_comm:
@@ -863,6 +926,30 @@ thm lattice_join_comm:
     (y, lattice.join(y, x)) $in lattice.le_rel
     (lattice.join(x, y), lattice.join(y, x)) $in lattice.le_rel
     lattice.join(x, y) = lattice.join(y, x)
+
+# The source's join-associativity example is the order-dual argument. Each
+# nested join is an upper bound for x, y, and z, so the least-upper-bound law
+# gives both comparisons and antisymmetry identifies the joins.
+thm lattice_join_assoc:
+    ? forall s nonempty_set, lattice &Lattice<s>, x, y, z s:
+        lattice.join(lattice.join(x, y), z) = lattice.join(x, lattice.join(y, z))
+    (x, lattice.join(x, y)) $in lattice.le_rel
+    (lattice.join(x, y), lattice.join(lattice.join(x, y), z)) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, x, lattice.join(x, y), lattice.join(lattice.join(x, y), z))
+    (y, lattice.join(x, y)) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, y, lattice.join(x, y), lattice.join(lattice.join(x, y), z))
+    (z, lattice.join(lattice.join(x, y), z)) $in lattice.le_rel
+    (lattice.join(y, z), lattice.join(lattice.join(x, y), z)) $in lattice.le_rel
+    (lattice.join(x, lattice.join(y, z)), lattice.join(lattice.join(x, y), z)) $in lattice.le_rel
+    (x, lattice.join(x, lattice.join(y, z))) $in lattice.le_rel
+    (y, lattice.join(y, z)) $in lattice.le_rel
+    (lattice.join(y, z), lattice.join(x, lattice.join(y, z))) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, y, lattice.join(y, z), lattice.join(x, lattice.join(y, z)))
+    (z, lattice.join(y, z)) $in lattice.le_rel
+    by thm lattice_le_trans(s, lattice, z, lattice.join(y, z), lattice.join(x, lattice.join(y, z)))
+    (lattice.join(x, y), lattice.join(x, lattice.join(y, z))) $in lattice.le_rel
+    (lattice.join(lattice.join(x, y), z), lattice.join(x, lattice.join(y, z))) $in lattice.le_rel
+    lattice.join(lattice.join(x, y), z) = lattice.join(x, lattice.join(y, z))
 
 # Result (source label: absorb1). The meet is below x. Conversely, x is below
 # both x and x join y, so it is below their meet; antisymmetry gives equality.
@@ -885,3 +972,161 @@ thm lattice_join_meet_absorb:
     (lattice.meet(x, y), x) $in lattice.le_rel
     (lattice.join(x, lattice.meet(x, y)), x) $in lattice.le_rel
     lattice.join(x, lattice.meet(x, y)) = x
+
+# A distributive lattice adds no new operations to a lattice. This residual
+# property records the source's four standard left and right distribution
+# laws while retaining the same callable meet and join.
+prop is_distributive_lattice(s nonempty_set, lattice &Lattice<s>):
+    forall x, y, z s:
+        lattice.meet(x, lattice.join(y, z)) = lattice.join(lattice.meet(x, y), lattice.meet(x, z))
+        lattice.meet(lattice.join(x, y), z) = lattice.join(lattice.meet(x, z), lattice.meet(y, z))
+        lattice.join(x, lattice.meet(y, z)) = lattice.meet(lattice.join(x, y), lattice.join(x, z))
+        lattice.join(lattice.meet(x, y), z) = lattice.meet(lattice.join(x, z), lattice.join(y, z))
+
+# The source next assumes only meet-over-join distributivity and derives the
+# dual join-over-meet law. Expand the right side once, commute the inner meets,
+# distribute again, reassociate, and absorb the repeated a term.
+thm lattice_join_meet_distributive_of_meet_join_distributive:
+    ? forall s nonempty_set, lattice &Lattice<s>, a, b, c s:
+        forall x, y, z s:
+            lattice.meet(x, lattice.join(y, z)) = lattice.join(lattice.meet(x, y), lattice.meet(x, z))
+        =>:
+            lattice.join(a, lattice.meet(b, c)) = lattice.meet(lattice.join(a, b), lattice.join(a, c))
+    lattice.meet(lattice.join(a, b), lattice.join(a, c)) = lattice.join(lattice.meet(lattice.join(a, b), a), lattice.meet(lattice.join(a, b), c))
+    by thm lattice_meet_comm(s, lattice, lattice.join(a, b), a)
+    by thm lattice_meet_join_absorb(s, lattice, a, b)
+    by thm lattice_meet_comm(s, lattice, lattice.join(a, b), c)
+    lattice.meet(c, lattice.join(a, b)) = lattice.join(lattice.meet(c, a), lattice.meet(c, b))
+    by thm lattice_meet_comm(s, lattice, c, a)
+    by thm lattice_meet_comm(s, lattice, c, b)
+    lattice.meet(lattice.join(a, b), c) = lattice.meet(c, lattice.join(a, b)) = lattice.join(lattice.meet(c, a), lattice.meet(c, b)) = lattice.join(lattice.meet(a, c), lattice.meet(c, b)) = lattice.join(lattice.meet(a, c), lattice.meet(b, c))
+    by thm lattice_join_assoc(s, lattice, a, lattice.meet(a, c), lattice.meet(b, c))
+    by thm lattice_join_meet_absorb(s, lattice, a, c)
+    lattice.meet(lattice.join(a, b), lattice.join(a, c)) = lattice.join(lattice.meet(lattice.join(a, b), a), lattice.meet(lattice.join(a, b), c)) = lattice.join(a, lattice.meet(lattice.join(a, b), c)) = lattice.join(a, lattice.join(lattice.meet(a, c), lattice.meet(b, c))) = lattice.join(lattice.join(a, lattice.meet(a, c)), lattice.meet(b, c)) = lattice.join(a, lattice.meet(b, c))
+    lattice.join(a, lattice.meet(b, c)) = lattice.meet(lattice.join(a, b), lattice.join(a, c))
+
+# Conversely, join-over-meet distributivity implies meet-over-join
+# distributivity by the order-dual calculation with join and meet exchanged.
+thm lattice_meet_join_distributive_of_join_meet_distributive:
+    ? forall s nonempty_set, lattice &Lattice<s>, a, b, c s:
+        forall x, y, z s:
+            lattice.join(x, lattice.meet(y, z)) = lattice.meet(lattice.join(x, y), lattice.join(x, z))
+        =>:
+            lattice.meet(a, lattice.join(b, c)) = lattice.join(lattice.meet(a, b), lattice.meet(a, c))
+    lattice.join(lattice.meet(a, b), lattice.meet(a, c)) = lattice.meet(lattice.join(lattice.meet(a, b), a), lattice.join(lattice.meet(a, b), c))
+    by thm lattice_join_comm(s, lattice, lattice.meet(a, b), a)
+    by thm lattice_join_meet_absorb(s, lattice, a, b)
+    by thm lattice_join_comm(s, lattice, lattice.meet(a, b), c)
+    lattice.join(c, lattice.meet(a, b)) = lattice.meet(lattice.join(c, a), lattice.join(c, b))
+    by thm lattice_join_comm(s, lattice, c, a)
+    by thm lattice_join_comm(s, lattice, c, b)
+    lattice.join(lattice.meet(a, b), c) = lattice.join(c, lattice.meet(a, b)) = lattice.meet(lattice.join(c, a), lattice.join(c, b)) = lattice.meet(lattice.join(a, c), lattice.join(c, b)) = lattice.meet(lattice.join(a, c), lattice.join(b, c))
+    by thm lattice_meet_assoc(s, lattice, a, lattice.join(a, c), lattice.join(b, c))
+    by thm lattice_meet_join_absorb(s, lattice, a, c)
+    lattice.join(lattice.meet(a, b), lattice.meet(a, c)) = lattice.meet(lattice.join(lattice.meet(a, b), a), lattice.join(lattice.meet(a, b), c)) = lattice.meet(a, lattice.join(lattice.meet(a, b), c)) = lattice.meet(a, lattice.meet(lattice.join(a, c), lattice.join(b, c))) = lattice.meet(lattice.meet(a, lattice.join(a, c)), lattice.join(b, c)) = lattice.meet(a, lattice.join(b, c))
+    lattice.meet(a, lattice.join(b, c)) = lattice.join(lattice.meet(a, b), lattice.meet(a, c))
+
+# The source's strict ordered ring supplies an ordinary partial order,
+# translation invariance, and nonnegative multiplication. These are residual
+# laws on an existing Ring rather than a duplicate package of its operations.
+prop is_ordered_ring(s nonempty_set, ring &Ring<s>, le_rel power_set(cart(s, s))):
+    forall x s:
+        (x, x) $in le_rel
+    forall x, y, z s:
+        (x, y) $in le_rel
+        (y, z) $in le_rel
+        =>:
+            (x, z) $in le_rel
+    forall x, y s:
+        (x, y) $in le_rel
+        (y, x) $in le_rel
+        =>:
+            x = y
+    forall a, b, c s:
+        (a, b) $in le_rel
+        =>:
+            (ring.add(c, a), ring.add(c, b)) $in le_rel
+    forall a, b s:
+        (ring.zero, a) $in le_rel
+        (ring.zero, b) $in le_rel
+        =>:
+            (ring.zero, ring.mul(a, b)) $in le_rel
+
+# Adding -a to a <= b gives 0 <= b-a.
+thm ring_sub_nonnegative_of_le:
+    ? forall s nonempty_set, ring &Ring<s>, le_rel power_set(cart(s, s)), a, b s:
+        $is_ordered_ring(s, ring, le_rel)
+        (a, b) $in le_rel
+        =>:
+            (ring.zero, ring.add(b, ring.neg(a))) $in le_rel
+    (ring.add(ring.neg(a), a), ring.add(ring.neg(a), b)) $in le_rel
+    ring.add(ring.neg(a), a) = ring.zero
+    ring.add(ring.neg(a), b) = ring.add(b, ring.neg(a))
+    (ring.zero, ring.add(b, ring.neg(a))) $in le_rel
+
+# Conversely, adding a to 0 <= b-a and cancelling a with -a recovers a <= b.
+thm ring_le_of_sub_nonnegative:
+    ? forall s nonempty_set, ring &Ring<s>, le_rel power_set(cart(s, s)), a, b s:
+        $is_ordered_ring(s, ring, le_rel)
+        (ring.zero, ring.add(b, ring.neg(a))) $in le_rel
+        =>:
+            (a, b) $in le_rel
+    (ring.add(a, ring.zero), ring.add(a, ring.add(b, ring.neg(a)))) $in le_rel
+    by thm add_zero_from_laws(s, ring.add, ring.zero, ring.neg, a)
+    by thm add_neg_cancel_from_laws(s, ring.add, ring.zero, ring.neg, a)
+    by thm add_zero_from_laws(s, ring.add, ring.zero, ring.neg, b)
+    ring.add(a, b) = ring.add(b, a)
+    ring.add(ring.add(a, b), ring.neg(a)) = ring.add(ring.add(b, a), ring.neg(a))
+    ring.add(a, ring.add(b, ring.neg(a))) = ring.add(ring.add(a, b), ring.neg(a)) = ring.add(ring.add(b, a), ring.neg(a)) = ring.add(b, ring.add(a, ring.neg(a))) = ring.add(b, ring.zero) = b
+    (a, b) $in le_rel
+
+# If a <= b and c is nonnegative, then b-a and c have a nonnegative product.
+# Right distributivity rewrites that product as bc-ac, and the preceding
+# equivalence gives ac <= bc.
+thm ring_mul_le_mul_right_of_nonnegative:
+    ? forall s nonempty_set, ring &Ring<s>, le_rel power_set(cart(s, s)), a, b, c s:
+        $is_ordered_ring(s, ring, le_rel)
+        (a, b) $in le_rel
+        (ring.zero, c) $in le_rel
+        =>:
+            (ring.mul(a, c), ring.mul(b, c)) $in le_rel
+    by thm ring_sub_nonnegative_of_le(s, ring, le_rel, a, b)
+    (ring.zero, ring.mul(ring.add(b, ring.neg(a)), c)) $in le_rel
+    by def $is_ring(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    by thm neg_mul_left(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, a, c)
+    ring.mul(ring.add(b, ring.neg(a)), c) = ring.add(ring.mul(b, c), ring.mul(ring.neg(a), c)) = ring.add(ring.mul(b, c), ring.neg(ring.mul(a, c)))
+    (ring.zero, ring.add(ring.mul(b, c), ring.neg(ring.mul(a, c)))) $in le_rel
+    by thm ring_le_of_sub_nonnegative(s, ring, le_rel, ring.mul(a, c), ring.mul(b, c))
+
+# A candidate real-valued distance separates points when distance zero is
+# equivalent to equality. Both directions are kept because later ball proofs
+# use the reflexive direction directly.
+prop metric_separates_points(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) = 0
+        =>:
+            x = y
+    forall x, y X:
+        x = y
+        =>:
+            dist(x, y) = 0
+
+# The source's metric-space laws require nonnegative and symmetric distances,
+# point separation, and the triangle inequality.
+prop is_metric_space(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+    $metric_separates_points(X, dist)
+    forall x, y X:
+        dist(x, y) = dist(y, x)
+    forall x, y, z X:
+        dist(x, z) <= dist(x, y) + dist(y, z)
+
+# The final source example in this section is the nonnegativity projection from
+# the metric laws.
+thm metric_distance_nonnegative:
+    ? forall X set, dist fn(x, y X) R, x, y X:
+        $is_metric_space(X, dist)
+        =>:
+            dist(x, y) >= 0
+    dist(x, y) >= 0

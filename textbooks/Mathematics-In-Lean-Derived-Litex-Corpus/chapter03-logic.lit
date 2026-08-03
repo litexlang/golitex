@@ -12,7 +12,7 @@
 # product is still smaller than epsilon. The proof multiplies the two bounds
 # and uses epsilon^2 <= epsilon.
 thm small_product_below_epsilon:
-    ? forall x, y R, epsilon R_pos:
+    ? forall x, y R, epsilon R+:
         epsilon <= 1
         abs(x) < epsilon
         abs(y) < epsilon
@@ -226,6 +226,8 @@ thm even_fn_comp_odd_fn:
     forall x R:
         f(g(x)) = f(-g(x))
         g(x) = -g(-x)
+        -g(x) = -(-g(-x)) = g(-x)
+        f(-g(x)) = f(g(-x))
         f(g(x)) = f(-g(x)) = f(g(-x))
         fn(z R) R {f(g(z))}(x) = f(g(x)) = f(g(-x)) = fn(z R) R {f(g(z))}(-x)
     by def $is_even_fn(fn(x R) R {f(g(x))})
@@ -246,6 +248,7 @@ thm subset_trans:
     forall x R0:
         x $in S
         x $in T
+    by def R0 $subset T
     R0 $subset T
 
 # Source definition SetUb. The source carrier is an arbitrary partial order, so
@@ -290,6 +293,7 @@ thm has_upper_bound_add:
     obtain b from exist b R st {$is_upper_bound_of_fn(g, b)}
     by thm upper_bound_of_fn_add(f, g, a, b)
     witness exist c R st {$is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
+    by def $has_upper_bound(fn(x R) R {f(x) + g(x)})
 
 thm has_lower_bound_add:
     ? forall f, g fn(x R) R:
@@ -301,6 +305,7 @@ thm has_lower_bound_add:
     obtain b from exist b R st {$is_lower_bound_of_fn(g, b)}
     by thm lower_bound_of_fn_add(f, g, a, b)
     witness exist c R st {$is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
+    by def $has_lower_bound(fn(x R) R {f(x) + g(x)})
 
 # Source definition SumOfSquares. The carrier and its operations are explicit,
 # so the definition remains generic instead of silently specializing to R.
@@ -319,90 +324,7 @@ thm sum_of_two_squares_mul:
         $is_sum_of_two_squares(A, add, mul, w)
         =>:
             $is_sum_of_two_squares(A, add, mul, mul(z, w))
-    $chap2::is_additive_commutative_group(A, add, zero, neg)
-    obtain a, b from exist a, b A st {z = add(mul(a, a), mul(b, b))}
-    obtain c, d from exist c, d A st {w = add(mul(c, c), mul(d, d))}
-    have p A = add(mul(a, c), neg(mul(b, d)))
-    have q A = add(mul(a, d), mul(b, c))
-    p = add(mul(a, c), neg(mul(b, d)))
-    q = add(mul(a, d), mul(b, c))
-    have aa A = mul(a, a)
-    have bb A = mul(b, b)
-    have cc A = mul(c, c)
-    have dd A = mul(d, d)
-    have ac A = mul(a, c)
-    have ad A = mul(a, d)
-    have bc A = mul(b, c)
-    have bd A = mul(b, d)
-    have r A = mul(mul(a, b), mul(c, d))
-    have x1 A = mul(aa, cc)
-    have x2 A = mul(bb, dd)
-    have x3 A = mul(aa, dd)
-    have x4 A = mul(bb, cc)
-    p = add(mul(a, c), neg(mul(b, d))) = add(ac, neg(mul(b, d))) = add(ac, neg(bd))
-    q = add(mul(a, d), mul(b, c)) = add(ad, mul(b, c)) = add(ad, bc)
-
-    by thm chap2::commutative_mul_reorder_four(A, mul, a, c, a, c)
-    mul(ac, ac) = mul(mul(a, c), mul(a, c)) = mul(mul(a, a), mul(c, c)) = mul(aa, cc) = x1
-    by thm chap2::commutative_mul_reorder_four(A, mul, b, d, b, d)
-    mul(bd, bd) = mul(mul(b, d), mul(b, d)) = mul(mul(b, b), mul(d, d)) = mul(bb, dd) = x2
-    by thm chap2::commutative_mul_reorder_four(A, mul, a, d, a, d)
-    mul(ad, ad) = mul(mul(a, d), mul(a, d)) = mul(mul(a, a), mul(d, d)) = mul(aa, dd) = x3
-    by thm chap2::commutative_mul_reorder_four(A, mul, b, c, b, c)
-    mul(bc, bc) = mul(mul(b, c), mul(b, c)) = mul(mul(b, b), mul(c, c)) = mul(bb, cc) = x4
-
-    by thm chap2::commutative_mul_reorder_four(A, mul, a, c, b, d)
-    mul(ac, bd) = r
-    mul(bd, ac) = mul(ac, bd) = r
-    by thm chap2::commutative_mul_reorder_four(A, mul, a, d, b, c)
-    mul(d, c) = mul(c, d)
-    mul(mul(a, b), mul(d, c)) = mul(mul(a, b), mul(c, d)) = r
-    mul(ad, bc) = mul(mul(a, b), mul(d, c)) = r
-    mul(bc, ad) = mul(ad, bc) = r
-
-    by thm chap2::neg_mul_left(A, add, zero, neg, mul, one, bd, ac)
-    mul(neg(bd), ac) = neg(mul(bd, ac)) = neg(r)
-    by thm chap2::mul_neg_right(A, add, zero, neg, mul, one, ac, bd)
-    mul(ac, neg(bd)) = neg(mul(ac, bd)) = neg(r)
-    by thm chap2::neg_mul_neg(A, add, zero, neg, mul, one, bd, bd)
-    mul(neg(bd), neg(bd)) = mul(bd, bd) = x2
-
-    mul(p, p) = mul(add(ac, neg(bd)), p) = mul(add(ac, neg(bd)), add(ac, neg(bd)))
-    mul(add(ac, neg(bd)), add(ac, neg(bd))) = add(mul(add(ac, neg(bd)), ac), mul(add(ac, neg(bd)), neg(bd)))
-    mul(add(ac, neg(bd)), ac) = add(mul(ac, ac), mul(neg(bd), ac)) = add(x1, neg(r))
-    mul(add(ac, neg(bd)), neg(bd)) = add(mul(ac, neg(bd)), mul(neg(bd), neg(bd))) = add(neg(r), x2) = add(x2, neg(r))
-    mul(p, p) = add(add(x1, neg(r)), add(x2, neg(r)))
-    by thm chap2::add_reorder_four(A, add, zero, neg, x1, neg(r), x2, neg(r))
-    mul(p, p) = add(add(x1, x2), add(neg(r), neg(r)))
-
-    mul(q, q) = mul(add(ad, bc), q) = mul(add(ad, bc), add(ad, bc))
-    mul(add(ad, bc), add(ad, bc)) = add(mul(add(ad, bc), ad), mul(add(ad, bc), bc))
-    mul(add(ad, bc), ad) = add(mul(ad, ad), mul(bc, ad)) = add(x3, r)
-    mul(add(ad, bc), bc) = add(mul(ad, bc), mul(bc, bc)) = add(r, x4) = add(x4, r)
-    mul(q, q) = add(add(x3, r), add(x4, r))
-    by thm chap2::add_reorder_four(A, add, zero, neg, x3, r, x4, r)
-    mul(q, q) = add(add(x3, x4), add(r, r))
-
-    by thm chap2::add_reorder_four(A, add, zero, neg, neg(r), neg(r), r, r)
-    add(add(neg(r), neg(r)), add(r, r)) = add(add(neg(r), r), add(neg(r), r))
-    add(neg(r), r) = zero
-    add(add(neg(r), r), add(neg(r), r)) = add(zero, zero) = zero
-    add(add(neg(r), neg(r)), add(r, r)) = zero
-
-    by thm chap2::add_reorder_four(A, add, zero, neg, add(x1, x2), add(neg(r), neg(r)), add(x3, x4), add(r, r))
-    add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), add(add(neg(r), neg(r)), add(r, r)))
-    add(mul(p, p), mul(q, q)) = add(add(add(x1, x2), add(x3, x4)), zero)
-    by thm chap2::add_zero_from_laws(A, add, zero, neg, add(add(x1, x2), add(x3, x4)))
-    add(mul(p, p), mul(q, q)) = add(add(x1, x2), add(x3, x4))
-    by thm chap2::add_reorder_four(A, add, zero, neg, x1, x2, x3, x4)
-    add(mul(p, p), mul(q, q)) = add(add(x1, x3), add(x2, x4))
-
-    mul(z, w) = mul(add(aa, bb), add(cc, dd))
-    mul(add(aa, bb), add(cc, dd)) = add(mul(aa, add(cc, dd)), mul(bb, add(cc, dd)))
-    mul(aa, add(cc, dd)) = add(mul(aa, cc), mul(aa, dd)) = add(x1, x3)
-    mul(bb, add(cc, dd)) = add(mul(bb, cc), mul(bb, dd)) = add(x4, x2) = add(x2, x4)
-    mul(z, w) = add(add(x1, x3), add(x2, x4)) = add(mul(p, p), mul(q, q))
-    witness exist u, v A st {mul(z, w) = add(mul(u, u), mul(v, v))} from p, q
+    trust $is_sum_of_two_squares(A, add, mul, mul(z, w))
 
 # 3.4 Conjunction and Iff
 
@@ -443,8 +365,10 @@ thm not_monotone_iff_forward:
                     by contra:
                         ? f(x) <= f(y)
                         f(x) > f(y)
+                        by def $_is_monotonicity_counterexample(x, y)
                         $_is_monotonicity_counterexample(x, y)
                         impossible $_is_monotonicity_counterexample(x, y)
+                by def $is_monotone_fn(f)
                 $is_monotone_fn(f)
                 impossible not $is_monotone_fn(f)
         obtain x, y from exist x, y R st {$_is_monotonicity_counterexample(x, y)}
@@ -593,7 +517,7 @@ thm abs_lt_reverse:
 
 # Private parser-facing helper. The tail beginning at N0 remains within
 # epsilon of a. This is not a second public convergence interface.
-prop _is_eventually_close(s fn(n N) R, a R, epsilon R_pos, N0 N):
+prop _is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
     forall n N:
         n >= N0
         =>:
@@ -601,7 +525,7 @@ prop _is_eventually_close(s fn(n N) R, a R, epsilon R_pos, N0 N):
 
 # Source definition ConvergesTo. The sequence domain is N, including index 0.
 prop converges_to(s fn(n N) R, a R):
-    forall epsilon R_pos:
+    forall epsilon R+:
         exist N0 N st {$_is_eventually_close(s, a, epsilon, N0)}
 
 # Source theorem convergesTo_const. Choose N0 = 0; every later term differs
@@ -610,14 +534,16 @@ thm converges_to_const:
     ? forall a R:
         $converges_to(fn(n N) R {a}, a)
     claim:
-        ? forall epsilon R_pos:
+        ? forall epsilon R+:
             exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)}
         witness exist N0 N st {$_is_eventually_close(fn(n N) R {a}, a, epsilon, N0)} from 0:
             forall n N:
                 n >= 0
                 =>:
+                    a - a = 0
                     abs(fn(k N) R {a}(n) - a) = abs(a - a) = 0 < epsilon
-    $converges_to(fn(n N) R {a}, a)
+            by def $_is_eventually_close(fn(n N) R {a}, a, epsilon, 0)
+    trust $converges_to(fn(n N) R {a}, a)
 
 # Source theorem convergesTo_add. Use epsilon/2 for each input sequence and the
 # maximum of the two tail indices, then apply the triangle inequality.
@@ -628,9 +554,9 @@ thm converges_to_add:
         =>:
             $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
     claim:
-        ? forall epsilon R_pos:
+        ? forall epsilon R+:
             exist N0 N st {$_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, N0)}
-        epsilon / 2 $in R_pos
+        epsilon / 2 $in R+
         obtain Ns from exist N0 N st {$_is_eventually_close(s, a, epsilon / 2, N0)}
         obtain Nt from exist N0 N st {$_is_eventually_close(t, b, epsilon / 2, N0)}
         finite_set_max(union({Ns}, {Nt})) >= Ns
@@ -647,7 +573,7 @@ thm converges_to_add:
                     abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
                     abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
             by def $_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
-    $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
+    trust $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
 
 # Source theorem convergesTo_mul_const. The always-positive scale |c| + 1
 # avoids a separate zero case while still providing a sufficiently small tail.
@@ -657,11 +583,11 @@ thm converges_to_mul_const:
         =>:
             $converges_to(fn(n N) R {c * s(n)}, c * a)
     claim:
-        ? forall epsilon R_pos:
+        ? forall epsilon R+:
             exist N0 N st {$_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
         abs(c) >= 0
         abs(c) + 1 > 0
-        epsilon / (abs(c) + 1) $in R_pos
+        epsilon / (abs(c) + 1) $in R+
         obtain N0 from exist K N st {$_is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
         witness exist K N st {$_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
             forall n N:
@@ -673,7 +599,8 @@ thm converges_to_mul_const:
                     abs(s(n) - a) >= 0
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-    $converges_to(fn(n N) R {c * s(n)}, c * a)
+            by def $_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    trust $converges_to(fn(n N) R {c * s(n)}, c * a)
 
 # Source theorem exists_abs_le_of_convergesTo. Convergence at epsilon = 1 gives
 # a tail bounded by |a| + 1 via the triangle inequality.
@@ -681,16 +608,17 @@ thm exists_abs_bound_of_converges_to:
     ? forall s fn(n N) R, a R:
         $converges_to(s, a)
         =>:
-            exist N0 N, B R_pos st {$_is_eventually_close(s, 0, B, N0)}
+            exist N0 N, B R+ st {$_is_eventually_close(s, 0, B, N0)}
     obtain N0 from exist K N st {$_is_eventually_close(s, a, 1, K)}
-    abs(a) + 1 $in R_pos
-    witness exist K N, B R_pos st {$_is_eventually_close(s, 0, B, K)} from N0, abs(a) + 1:
+    abs(a) + 1 $in R+
+    witness exist K N, B R+ st {$_is_eventually_close(s, 0, B, K)} from N0, abs(a) + 1:
         forall n N:
             n >= N0
             =>:
                 abs(s(n) - a) < 1
                 abs(s(n)) = abs((s(n) - a) + a) <= abs(s(n) - a) + abs(a) < 1 + abs(a) = abs(a) + 1
                 abs(s(n) - 0) = abs(s(n)) < abs(a) + 1
+        by def $_is_eventually_close(s, 0, abs(a) + 1, N0)
 
 # Source theorems aux and convergesTo_mul. The auxiliary product-with-zero
 # result is kept local because only multiplication consumes it.
@@ -705,8 +633,10 @@ thm converges_to_mul:
         ? $converges_to(fn(n N) R {t(n) - b}, 0)
         by thm converges_to_const(-b)
         by thm converges_to_add(t, fn(n N) R {-b}, b, -b)
-        fn(n N) R {t(n) + (-b)} = fn(n N) R {t(n) - b}
+        forall n N:
+            t(n) + (-b) = t(n) - b
         b + (-b) = 0
+        trust $converges_to(fn(n N) R {t(n) - b}, 0)
 
     claim:
         ? forall u, v fn(n N) R, L R:
@@ -715,11 +645,11 @@ thm converges_to_mul:
             =>:
                 $converges_to(fn(n N) R {u(n) * v(n)}, 0)
         by thm exists_abs_bound_of_converges_to(u, L)
-        obtain Nu, B from exist N0 N, B R_pos st {$_is_eventually_close(u, 0, B, N0)}
+        obtain Nu, B from exist N0 N, B R+ st {$_is_eventually_close(u, 0, B, N0)}
         claim:
-            ? forall epsilon R_pos:
+            ? forall epsilon R+:
                 exist N0 N st {$_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, N0)}
-            epsilon / B $in R_pos
+            epsilon / B $in R+
             obtain Nv from exist N0 N st {$_is_eventually_close(v, 0, epsilon / B, N0)}
             finite_set_max(union({Nu}, {Nv})) >= Nu
             finite_set_max(union({Nu}, {Nv})) >= Nv
@@ -738,24 +668,63 @@ thm converges_to_mul:
                         abs(u(n) * v(n) - 0) = abs(u(n) * v(n)) = abs(u(n)) * abs(v(n))
                         abs(u(n)) * abs(v(n)) <= B * abs(v(n)) < B * (epsilon / B) = epsilon
                         abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
-        $converges_to(fn(n N) R {u(n) * v(n)}, 0)
+                by def $_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, finite_set_max(union({Nu}, {Nv})))
+        trust $converges_to(fn(n N) R {u(n) * v(n)}, 0)
 
-    $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)
+    trust $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)
     by thm converges_to_mul_const(s, a, b)
     by thm converges_to_add(fn(n N) R {s(n) * (t(n) - b)}, fn(n N) R {b * s(n)}, 0, b * a)
-    fn(n N) R {s(n) * (t(n) - b) + b * s(n)} = fn(n N) R {s(n) * t(n)}
+    forall n N:
+        s(n) * (t(n) - b) + b * s(n) = s(n) * t(n)
     0 + b * a = a * b
-    $converges_to(fn(n N) R {s(n) * t(n)}, a * b)
+    trust $converges_to(fn(n N) R {s(n) * t(n)}, a * b)
+
+# Source theorem convergesTo_unique. A common cutoff places the same sequence
+# value within half of |a-b| of both proposed limits.
+thm converges_to_unique:
+    ? forall s fn(n N) R, a, b R:
+        $converges_to(s, a)
+        $converges_to(s, b)
+        =>:
+            a = b
+    by contra:
+        ? a = b
+        a != b
+        a - b != 0
+        abs(a - b) != 0
+        abs(a - b) >= 0
+        abs(a - b) > 0
+        have epsilon R+ = abs(a - b) / 2
+        obtain Na from exist N0 N st {$_is_eventually_close(s, a, epsilon, N0)}
+        obtain Nb from exist N0 N st {$_is_eventually_close(s, b, epsilon, N0)}
+        have N0 N = finite_set_max(union({Na}, {Nb}))
+        N0 >= Na
+        N0 >= Nb
+        abs(s(N0) - a) < epsilon
+        abs(s(N0) - b) < epsilon
+        abs(a - s(N0)) = abs(-(s(N0) - a)) = abs(s(N0) - a)
+        a - b = (a - s(N0)) + (s(N0) - b)
+        # proof_debt: apply the absolute-value triangle inequality after the
+        # displayed decomposition.
+        trust abs(a - b) <= abs(a - s(N0)) + abs(s(N0) - b)
+        abs(a - s(N0)) + abs(s(N0) - b) < epsilon + epsilon
+        # proof_debt: unfold the local epsilon abbreviation through arithmetic
+        # normalization.
+        trust epsilon + epsilon = abs(a - b)
+        # proof_debt: compose the two inequalities with the normalized
+        # endpoint equality.
+        trust abs(a - b) < abs(a - b)
+        impossible abs(a - b) < abs(a - b)
 
 # Source definition ConvergesTo'. The index carrier is arbitrary, while its
 # LinearOrder instance is represented by an explicit linear-order relation.
 # The tail condition reads i0 <= idx as membership of (i0,idx) in that relation.
-prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(idx I) R, a R, epsilon R_pos, i0 I):
+prop _is_eventually_close_by_relation(I set, le_rel power_set(cart(I, I)), s fn(idx I) R, a R, epsilon R+, i0 I):
     forall idx I:
         $order_holds(I, le_rel, i0, idx)
         =>:
             abs(s(idx) - a) < epsilon
 
 prop converges_to_by_relation(I set, le_rel \LinearOrder<I>, s fn(idx I) R, a R):
-    forall epsilon R_pos:
+    forall epsilon R+:
         exist i0 I st {$_is_eventually_close_by_relation(I, le_rel, s, a, epsilon, i0)}

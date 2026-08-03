@@ -4,9 +4,10 @@
 # zero-dimensional branch is explicit because Litex matrices have positive
 # dimensions, whereas the empty list is still an orthonormal basis of {0}.
 prop has_nonzero_orthonormal_diagonalizing_basis(s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>):
-    exist n N_pos, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(s, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, inner_space.scalar_geometry.scalars, n, \chap5c::matrix_of_operator<s, V, inner_space.vector_space, n>(basis, T))}
+    exist n N+, basis &chap1a::FiniteList<V, n> st {$chap6b::is_orthonormal_basis(s, V, inner_space, n, basis), $chap5d::is_diagonal_matrix(s, inner_space.scalar_geometry.scalars, n, \chap5c::matrix_of_operator<s, V, inner_space.vector_space, n>(basis, T))}
 
 prop has_orthonormal_diagonalizing_basis(s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>):
+    $chap2c::admits_basis_length(s, V, inner_space.vector_space)
     \chap2c::dimension<s, V, inner_space.vector_space> = 0 or $has_nonzero_orthonormal_diagonalizing_basis(s, V, inner_space, T)
 # The equivalent eigenvector formulation keeps the basis and its eigenvalues
 # as existential data; the spectral theorem does not choose either canonically.
@@ -26,10 +27,13 @@ axiom invertible_quadratic_expression_of_self_adjoint_operator:
 # factors with real roots remain; the zero-dimensional case is the empty
 # product.
 prop has_real_linear_factorization_of_minimal_polynomial(s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>):
-    exist m N_pos, roots &chap1a::FiniteList<R, m>, stages fn(k N_pos: k <= m + 1) \chap2a::polynomial_space<s, inner_space.scalar_geometry.scalars> st {$chap5c::is_monic_linear_factorization(s, inner_space.scalar_geometry.scalars, \chap5b::minimal_polynomial<s, V, inner_space.vector_space>(T), m, (m, fn(j N_pos: j <= m) s {inner_space.scalar_geometry.real_embed(roots.entries(j))}), stages)}
+    $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+    exist m N+, roots &chap1a::FiniteList<R, m>, stages fn(k N+: k <= m + 1) \chap2a::polynomial_space<s, inner_space.scalar_geometry.scalars> st {$chap5c::is_monic_linear_factorization(s, inner_space.scalar_geometry.scalars, \chap5b::minimal_polynomial<s, V, inner_space.vector_space>(T), m, (m, fn(j N+: j <= m) s {inner_space.scalar_geometry.real_embed(roots.entries(j))}), stages)}
 
 axiom minimal_polynomial_of_self_adjoint_operator_splits_over_reals:
     ? forall s nonempty_set, V nonempty_set, inner_space &chap6a::InnerProductSpace<s, V>, T \chap3a::linear_map_space<s, V, V, inner_space.vector_space, inner_space.vector_space>:
+        $chap2a::is_finite_dimensional(s, V, inner_space.vector_space)
+        $chap2c::admits_basis_length(s, V, inner_space.vector_space)
         $chap7a::is_self_adjoint(s, V, inner_space, T)
         =>:
             \chap2c::dimension<s, V, inner_space.vector_space> = 0 or $has_real_linear_factorization_of_minimal_polynomial(s, V, inner_space, T)
@@ -75,21 +79,21 @@ sketch:
 # upper-triangular basis; 7.20 eliminates each off-diagonal row from the norm
 # equality ||Te_k||=||T*e_k||. Conversely diagonal matrices commute with their
 # conjugate transposes. Diagonal and eigenvector formulations are equivalent.
-prop complex_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, V>, T \chap3a::linear_map_space<&chap1a::Complex, V, V, inner_space.vector_space, inner_space.vector_space>):
+prop complex_spectral_theorem_statement(V nonempty_set, inner_space &chap6a::CInnerProductSpace<V>, T \chap3a::linear_map_space<C, V, V, inner_space.vector_space.general, inner_space.vector_space.general>):
     forall:
         =>:
-            $chap7a::is_normal(&chap1a::Complex, V, inner_space, T)
+            $chap7a::is_normal(C, V, inner_space.general, T)
         <=>:
-            $has_orthonormal_diagonalizing_basis(&chap1a::Complex, V, inner_space, T)
+            $has_orthonormal_diagonalizing_basis(C, V, inner_space.general, T)
     forall:
         =>:
-            $has_orthonormal_diagonalizing_basis(&chap1a::Complex, V, inner_space, T)
+            $has_orthonormal_diagonalizing_basis(C, V, inner_space.general, T)
         <=>:
-            $has_orthonormal_eigenvector_basis(&chap1a::Complex, V, inner_space, T)
+            $has_orthonormal_eigenvector_basis(C, V, inner_space.general, T)
 
 axiom complex_spectral_theorem:
-    ? forall V nonempty_set, inner_space &chap6a::InnerProductSpace<&chap1a::Complex, V>, T \chap3a::linear_map_space<&chap1a::Complex, V, V, inner_space.vector_space, inner_space.vector_space>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, V, inner_space.vector_space)
+    ? forall V nonempty_set, inner_space &chap6a::CInnerProductSpace<V>, T \chap3a::linear_map_space<C, V, V, inner_space.vector_space.general, inner_space.vector_space.general>:
+        $chap2a::is_finite_dimensional(C, V, inner_space.vector_space.general)
         =>:
             $complex_spectral_theorem_statement(V, inner_space, T)
 # Example 7.33. For T(w,z)=(2w-3z,3w+2z), the first two lines compare the

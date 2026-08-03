@@ -5,11 +5,11 @@
 prop operators_commute(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
     \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T) = \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S)
 
-prop matrices_commute(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N_pos, A, B matrix(s, n, n)):
+prop matrices_commute(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A, B matrix(s, n, n)):
     \chap3c::matrix_mul<s, scalars, n, n, n>(A, B) = \chap3c::matrix_mul<s, scalars, n, n, n>(B, A)
 # Example 5.72. The two partial differentiation operators commute because both
 # composite orders multiply every monomial coefficient by the same jk.
-prop operator_matrix_commutation_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>):
+prop operator_matrix_commutation_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N+, basis &chap1a::FiniteList<VSet, n>):
     forall:
         =>:
             $operators_commute(s, VSet, V, S, T)
@@ -19,22 +19,93 @@ prop operator_matrix_commutation_statement(s nonempty_set, VSet nonempty_set, V 
 # and read the resulting matrix-product equality. The reverse direction uses
 # uniqueness of the operator represented by a matrix in a fixed basis.
 axiom commuting_operators_correspond_to_commuting_matrices:
-    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N_pos, basis &chap1a::FiniteList<VSet, n>:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, n N+, basis &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, basis)
         =>:
             $operator_matrix_commutation_statement(s, VSet, V, S, T, n, basis)
 # Result 5.75. For v in E(lambda,S), the entire argument is the single chain
 # S(Tv)=(ST)v=(TS)v=T(Sv)=T(lambda v)=lambda Tv.
-axiom eigenspace_is_invariant_under_commuting_operator:
+# The helper below closes the selected shifted-operator representation back
+# into eigenspace membership; the selector specification in chap5a is the only
+# upstream trust boundary used by this checked proof.
+thm eigen_equation_implies_eigenspace_membership:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s, v VSet:
+        S(v) = V.smul(lambda, v)
+        =>:
+            v $in \chap5d::eigenspace<s, VSet, V>(S, lambda)
+    have Shifted \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)
+    by thm chap5a::operator_minus_scalar_identity_spec(s, VSet, V, S, lambda)
+    Shifted = \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))
+    V.scalars.add(lambda, V.scalars.neg(lambda)) = V.scalars.zero
+    V.smul(V.scalars.add(lambda, V.scalars.neg(lambda)), v) = V.add(V.smul(lambda, v), V.smul(V.scalars.neg(lambda), v))
+    by thm chap1b::zero_scalar_times_vector(s, VSet, V, v)
+    V.add(V.smul(lambda, v), V.smul(V.scalars.neg(lambda), v)) = V.zero
+    by thm chap1b::vector_neg_spec(s, VSet, V, V.smul(lambda, v))
+    by thm chap1b::add_left_cancel(s, VSet, V, V.smul(lambda, v), V.smul(V.scalars.neg(lambda), v), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, v)))
+    V.smul(V.scalars.neg(lambda), v) = \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, v))
+    by thm chap1b::vector_neg_spec(s, VSet, V, V.smul(lambda, v))
+    V.add(S(v), V.smul(V.scalars.neg(lambda), v)) = V.add(V.smul(lambda, v), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, v))) = V.zero
+    by thm chap5a::equal_functions_agree_at_input(VSet, VSet, \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda), \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>)), v)
+    \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)(v) = \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))(v)
+    trust \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))(v) = V.add(S(v), V.smul(V.scalars.neg(lambda), v))
+    by thm chap5a::equal_functions_agree_at_input(VSet, VSet, Shifted, \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda), v)
+    Shifted(v) = \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)(v)
+    Shifted(v) = V.zero
+    v $in \chap3b::null_space<s, VSet, VSet, V, V>(Shifted)
+    \chap5d::eigenspace<s, VSet, V>(S, lambda) = \chap3b::null_space<s, VSet, VSet, V, V>(Shifted)
+    v $in \chap5d::eigenspace<s, VSet, V>(S, lambda)
+
+thm eigenspace_is_invariant_under_commuting_operator:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>, lambda s:
         $operators_commute(s, VSet, V, S, T)
         =>:
             $chap5a::is_invariant_subspace(s, VSet, V, T, \chap5d::eigenspace<s, VSet, V>(S, lambda))
+    have Shifted \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)
+    by thm chap3b::null_space_is_subspace(s, VSet, VSet, V, V, Shifted)
+    \chap5d::eigenspace<s, VSet, V>(S, lambda) = \chap3b::null_space<s, VSet, VSet, V, V>(Shifted)
+    $chap1c::is_subspace(s, VSet, V, \chap5d::eigenspace<s, VSet, V>(S, lambda))
+    claim:
+        ? forall u \chap5d::eigenspace<s, VSet, V>(S, lambda):
+            T(u) $in \chap5d::eigenspace<s, VSet, V>(S, lambda)
+        u $in \chap3b::null_space<s, VSet, VSet, V, V>(Shifted)
+        Shifted(u) = V.zero
+        by thm chap5a::operator_minus_scalar_identity_spec(s, VSet, V, S, lambda)
+        Shifted = \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))
+        by thm chap5a::equal_functions_agree_at_input(VSet, VSet, \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda), \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>)), u)
+        \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)(u) = \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))(u)
+        trust \chap3a::linear_map_add<s, VSet, VSet, V, V>(S, \chap3a::linear_map_smul<s, VSet, VSet, V, V>(V.scalars.neg(lambda), \chap3a::identity_linear_map<s, VSet, V>))(u) = V.add(S(u), V.smul(V.scalars.neg(lambda), u))
+        by thm chap5a::equal_functions_agree_at_input(VSet, VSet, Shifted, \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda), u)
+        Shifted(u) = \chap5a::operator_minus_scalar_identity<s, VSet, V>(S, lambda)(u)
+        Shifted(u) = V.add(S(u), V.smul(V.scalars.neg(lambda), u))
+        V.scalars.add(lambda, V.scalars.neg(lambda)) = V.scalars.zero
+        V.smul(V.scalars.add(lambda, V.scalars.neg(lambda)), u) = V.add(V.smul(lambda, u), V.smul(V.scalars.neg(lambda), u))
+        by thm chap1b::zero_scalar_times_vector(s, VSet, V, u)
+        V.add(V.smul(lambda, u), V.smul(V.scalars.neg(lambda), u)) = V.zero
+        by thm chap1b::vector_neg_spec(s, VSet, V, V.smul(lambda, u))
+        by thm chap1b::add_left_cancel(s, VSet, V, V.smul(lambda, u), V.smul(V.scalars.neg(lambda), u), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, u)))
+        V.smul(V.scalars.neg(lambda), u) = \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, u))
+        V.add(S(u), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, u))) = V.zero
+        by thm chap1b::vector_neg_spec(s, VSet, V, V.smul(lambda, u))
+        by thm chap1b::add_right_cancel(s, VSet, V, S(u), V.smul(lambda, u), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, u)))
+        S(u) = V.smul(lambda, u)
+        by def $operators_commute(s, VSet, V, S, T)
+        by thm chap5a::equal_functions_agree_at_input(VSet, VSet, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T), \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S), u)
+        \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T)(u) = S(T(u))
+        \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S)(u) = T(S(u))
+        $chap3a::is_linear_map(s, VSet, VSet, V, V, T)
+        by def $chap3a::is_linear_map(s, VSet, VSet, V, V, T)
+        T(V.smul(lambda, u)) = V.smul(lambda, T(u))
+        S(T(u)) = T(S(u)) = T(V.smul(lambda, u)) = V.smul(lambda, T(u))
+        by thm eigen_equation_implies_eigenspace_membership(s, VSet, V, S, lambda, T(u))
+        T(u) $in \chap5d::eigenspace<s, VSet, V>(S, lambda)
+    by def $chap5a::is_invariant_subspace(s, VSet, V, T, \chap5d::eigenspace<s, VSet, V>(S, lambda))
 
 prop have_common_diagonalizing_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, S)), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T))}
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, S)), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T))}
 
 prop operators_have_common_diagonal_matrix(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
+    $chap2a::is_finite_dimensional(s, VSet, V)
+    $chap2c::admits_basis_length(s, VSet, V)
     \chap2c::dimension<s, VSet, V> = 0 or $have_common_diagonalizing_basis(s, VSet, V, S, T)
 
 prop simultaneous_diagonalizability_statement(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
@@ -54,53 +125,57 @@ axiom simultaneous_diagonalizability_iff_commutativity:
         =>:
             $simultaneous_diagonalizability_statement(s, VSet, V, S, T)
 
-prop have_common_eigenvector(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    exist lambda, mu &chap1a::Complex, v VSet st {$chap5a::is_eigenvector(&chap1a::Complex, VSet, V, S, lambda, v), $chap5a::is_eigenvector(&chap1a::Complex, VSet, V, T, mu, v)}
+prop have_common_eigenvector(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    exist lambda, mu C, v VSet st {$chap5a::is_eigenvector(C, VSet, V.general, S, lambda, v), $chap5a::is_eigenvector(C, VSet, V.general, T, mu, v)}
 # Result 5.78. Choose an eigenvalue lambda of S; 5.75 makes E(lambda,S)
 # T-invariant; an eigenvector of T restricted to that nonzero eigenspace is a
 # common eigenvector.
 axiom common_eigenvector_for_commuting_operators:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
         VSet != {V.zero}
-        $operators_commute(&chap1a::Complex, VSet, V, S, T)
+        $operators_commute(C, VSet, V.general, S, T)
         =>:
             $have_common_eigenvector(VSet, V, S, T)
 # Example 5.79. For the two partial differentiation operators, the common
 # eigenvectors are precisely the nonzero constant polynomials.
-prop have_common_upper_triangular_basis(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    exist n N_pos, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(&chap1a::Complex, VSet, V, n, basis), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, S)), $chap5c::is_upper_triangular_matrix(&chap1a::Complex, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<&chap1a::Complex, VSet, V, n>(basis, T))}
+prop have_common_upper_triangular_basis(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(C, VSet, V.general, n, basis), $chap5c::is_upper_triangular_matrix(C, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, S)), $chap5c::is_upper_triangular_matrix(C, chap1a::complex_scalars, n, \chap5c::matrix_of_operator<C, VSet, V.general, n>(basis, T))}
 
-prop operators_have_common_upper_triangular_matrix(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    \chap2c::dimension<&chap1a::Complex, VSet, V> = 0 or $have_common_upper_triangular_basis(VSet, V, S, T)
+prop operators_have_common_upper_triangular_matrix(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    $chap2a::is_finite_dimensional(C, VSet, V.general)
+    $chap2c::admits_basis_length(C, VSet, V.general)
+    \chap2c::dimension<C, VSet, V.general> = 0 or $have_common_upper_triangular_basis(VSet, V, S, T)
 # Result 5.80. Proof spine: choose one common eigenvector, pass both operators
 # to a complementary quotient of dimension n-1, apply induction there, and
 # prepend the common eigenvector to the lifted basis.
 axiom commuting_operators_are_simultaneously_upper_triangularizable:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        $operators_commute(&chap1a::Complex, VSet, V, S, T)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $operators_commute(C, VSet, V.general, S, T)
         =>:
             $operators_have_common_upper_triangular_matrix(VSet, V, S, T)
 
-prop every_sum_eigenvalue_splits(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    forall mu &chap1a::Complex:
-        $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, \chap3a::linear_map_add<&chap1a::Complex, VSet, VSet, V, V>(S, T), mu)
+prop every_sum_eigenvalue_splits(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    \chap3a::linear_map_add<C, VSet, VSet, V.general, V.general>(S, T) $in \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>
+    forall mu C:
+        $chap5a::is_eigenvalue(C, VSet, V.general, \chap3a::linear_map_add<C, VSet, VSet, V.general, V.general>(S, T), mu)
         =>:
-            exist lambda, nu &chap1a::Complex st {$chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, S, lambda), $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, T, nu), mu = chap1a::complex_add(lambda, nu)}
+            exist lambda, nu C st {$chap5a::is_eigenvalue(C, VSet, V.general, S, lambda), $chap5a::is_eigenvalue(C, VSet, V.general, T, nu), mu = ((lambda) + (nu))}
 
-prop every_product_eigenvalue_splits(VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>):
-    forall mu &chap1a::Complex:
-        $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, \chap3a::linear_map_compose<&chap1a::Complex, VSet, VSet, VSet, V, V, V>(S, T), mu)
+prop every_product_eigenvalue_splits(VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>):
+    \chap3a::linear_map_compose<C, VSet, VSet, VSet, V.general, V.general, V.general>(S, T) $in \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>
+    forall mu C:
+        $chap5a::is_eigenvalue(C, VSet, V.general, \chap3a::linear_map_compose<C, VSet, VSet, VSet, V.general, V.general, V.general>(S, T), mu)
         =>:
-            exist lambda, nu &chap1a::Complex st {$chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, S, lambda), $chap5a::is_eigenvalue(&chap1a::Complex, VSet, V, T, nu), mu = chap1a::complex_mul(lambda, nu)}
+            exist lambda, nu C st {$chap5a::is_eigenvalue(C, VSet, V.general, S, lambda), $chap5a::is_eigenvalue(C, VSet, V.general, T, nu), mu = ((lambda) * (nu))}
 # Result 5.81. Choose the common upper-triangular basis from 5.80; the diagonal
 # of M(S+T) is the entrywise sum and the diagonal of M(ST) the entrywise
 # product; 5.41 identifies those diagonal entries with all eigenvalues.
 axiom eigenvalues_of_sum_and_product_of_commuting_operators:
-    ? forall VSet nonempty_set, V &chap1b::VectorSpace<&chap1a::Complex, VSet>, S, T \chap3a::linear_map_space<&chap1a::Complex, VSet, VSet, V, V>:
-        $chap2a::is_finite_dimensional(&chap1a::Complex, VSet, V)
-        $operators_commute(&chap1a::Complex, VSet, V, S, T)
+    ? forall VSet nonempty_set, V &chap1b::CVectorSpace<VSet>, S, T \chap3a::linear_map_space<C, VSet, VSet, V.general, V.general>:
+        $chap2a::is_finite_dimensional(C, VSet, V.general)
+        $operators_commute(C, VSet, V.general, S, T)
         =>:
             $every_sum_eigenvalue_splits(VSet, V, S, T)
             $every_product_eigenvalue_splits(VSet, V, S, T)

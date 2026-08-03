@@ -1,28 +1,22 @@
 # Linear Algebra Done Right, fourth edition, Section 1A: R^n and C^n.
-# Definition 1.1. A complex number is an ordered pair of real numbers.
-# The fields real_coord and im expose the two coordinates, while complex_add and
-# complex_mul implement the source's coordinate formulas as callable maps.
-struct Complex:
-    real_coord R
-    im R
-
-have complex_zero &Complex = (0, 0)
-have complex_one &Complex = (1, 0)
-have fn complex_add(a, b &Complex) &Complex = (a.real_coord + b.real_coord, a.im + b.im)
-have fn complex_mul(a, b &Complex) &Complex = (a.real_coord * b.real_coord - a.im * b.im, a.real_coord * b.im + a.im * b.real_coord)
-# Example 1.2. Expanding the coordinate formula gives
+# Definition 1.1. Litex uses its builtin complex carrier C. The source pair
+# presentation is expressed through re, img, and z = re(z) + img(z) * i rather
+# than introducing a second complex-number type.
+# This checked source-facing statement records the coordinate presentation.
+thm complex_coordinate_representation:
+    ? forall z C:
+        z = re(z) + img(z) * i
+    z = re(z) + img(z) * i
+# Example 1.2. Expanding the builtin product gives
 # (2 + 3i)(4 + 5i) = -7 + 22i.
 sketch:
     2 * 4 - 3 * 5 = -7
     2 * 5 + 3 * 4 = 22
-# Result 1.3. Complex arithmetic obeys commutativity, associativity,
-# identities, unique additive and nonzero multiplicative inverses, and
-# distributivity. ScalarSystem packages this same reusable operation surface;
-# its operation fields remain callable in every later chapter.
-# Source handling: the book proves commutativity of multiplication immediately
-# after this result, but leaves several other listed laws as exercises. The two
-# named boundaries below therefore mix source-proved coordinate algebra with
-# source-deferred clauses; Wave 1 must split them before reducing either debt.
+# Result 1.3. Complex arithmetic obeys the field laws. The source leaves
+# several coordinate verifications to exercises; Litex checks the displayed
+# laws directly from builtin complex arithmetic instead of retaining those
+# omitted proofs as trust. ScalarSystem packages the same operation surface
+# for generic algebraic backends.
 struct ScalarSystem<s nonempty_set>:
     zero s
     one s
@@ -51,223 +45,50 @@ struct ScalarSystem<s nonempty_set>:
 prop is_scalar_system(s nonempty_set, scalar_zero, scalar_one s, scalar_add fn(x, y s) s, scalar_neg fn(x s) s, scalar_mul fn(x, y s) s, scalar_inv fn(x s) s):
     (scalar_zero, scalar_one, scalar_add, scalar_neg, scalar_mul, scalar_inv) $in &ScalarSystem<s>
 
-thm complex_mul_comm:
-    ? forall x, y &Complex:
-        complex_mul(x, y) = complex_mul(y, x)
-    complex_mul(x, y) = (x.real_coord * y.real_coord - x.im * y.im, x.real_coord * y.im + x.im * y.real_coord)
-    complex_mul(y, x) = (y.real_coord * x.real_coord - y.im * x.im, y.real_coord * x.im + y.im * x.real_coord)
-    &Complex{complex_mul(x, y)}.real_coord = x.real_coord * y.real_coord - x.im * y.im = y.real_coord * x.real_coord - y.im * x.im = &Complex{complex_mul(y, x)}.real_coord
-    &Complex{complex_mul(x, y)}.im = x.real_coord * y.im + x.im * y.real_coord = y.real_coord * x.im + y.im * x.real_coord = &Complex{complex_mul(y, x)}.im
-    complex_mul(x, y) = complex_mul(y, x)
-
-thm complex_add_laws:
-    ? forall x, y, z &Complex:
-        complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
-        complex_add(x, y) = complex_add(y, x)
-        complex_add(complex_zero, x) = x
-    complex_add(x, y) = (x.real_coord + y.real_coord, x.im + y.im)
-    complex_add(y, z) = (y.real_coord + z.real_coord, y.im + z.im)
-    complex_add(complex_add(x, y), z) = (x.real_coord + y.real_coord + z.real_coord, x.im + y.im + z.im)
-    complex_add(x, complex_add(y, z)) = (x.real_coord + (y.real_coord + z.real_coord), x.im + (y.im + z.im))
-    &Complex{complex_add(complex_add(x, y), z)}.real_coord = x.real_coord + y.real_coord + z.real_coord = x.real_coord + (y.real_coord + z.real_coord) = &Complex{complex_add(x, complex_add(y, z))}.real_coord
-    &Complex{complex_add(complex_add(x, y), z)}.im = x.im + y.im + z.im = x.im + (y.im + z.im) = &Complex{complex_add(x, complex_add(y, z))}.im
-    complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
-    complex_add(y, x) = (y.real_coord + x.real_coord, y.im + x.im)
-    &Complex{complex_add(x, y)}.real_coord = x.real_coord + y.real_coord = y.real_coord + x.real_coord = &Complex{complex_add(y, x)}.real_coord
-    &Complex{complex_add(x, y)}.im = x.im + y.im = y.im + x.im = &Complex{complex_add(y, x)}.im
-    complex_add(x, y) = complex_add(y, x)
-    complex_add(complex_zero, x) = (0 + x.real_coord, 0 + x.im) = (x.real_coord, x.im) = x
-
-thm complex_mul_laws:
-    ? forall x, y, z &Complex:
-        complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
-        complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
-        complex_mul(complex_one, x) = x
-    complex_mul(x, y) = (x.real_coord * y.real_coord - x.im * y.im, x.real_coord * y.im + x.im * y.real_coord)
-    complex_mul(y, z) = (y.real_coord * z.real_coord - y.im * z.im, y.real_coord * z.im + y.im * z.real_coord)
-    complex_mul(complex_mul(x, y), z) = ((x.real_coord * y.real_coord - x.im * y.im) * z.real_coord - (x.real_coord * y.im + x.im * y.real_coord) * z.im, (x.real_coord * y.real_coord - x.im * y.im) * z.im + (x.real_coord * y.im + x.im * y.real_coord) * z.real_coord)
-    complex_mul(x, complex_mul(y, z)) = (x.real_coord * (y.real_coord * z.real_coord - y.im * z.im) - x.im * (y.real_coord * z.im + y.im * z.real_coord), x.real_coord * (y.real_coord * z.im + y.im * z.real_coord) + x.im * (y.real_coord * z.real_coord - y.im * z.im))
-    &Complex{complex_mul(complex_mul(x, y), z)}.real_coord = (x.real_coord * y.real_coord - x.im * y.im) * z.real_coord - (x.real_coord * y.im + x.im * y.real_coord) * z.im = x.real_coord * (y.real_coord * z.real_coord - y.im * z.im) - x.im * (y.real_coord * z.im + y.im * z.real_coord) = &Complex{complex_mul(x, complex_mul(y, z))}.real_coord
-    &Complex{complex_mul(complex_mul(x, y), z)}.im = (x.real_coord * y.real_coord - x.im * y.im) * z.im + (x.real_coord * y.im + x.im * y.real_coord) * z.real_coord = x.real_coord * (y.real_coord * z.im + y.im * z.real_coord) + x.im * (y.real_coord * z.real_coord - y.im * z.im) = &Complex{complex_mul(x, complex_mul(y, z))}.im
-    complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
-    complex_add(y, z) = (y.real_coord + z.real_coord, y.im + z.im)
-    complex_mul(x, complex_add(y, z)) = (x.real_coord * (y.real_coord + z.real_coord) - x.im * (y.im + z.im), x.real_coord * (y.im + z.im) + x.im * (y.real_coord + z.real_coord))
-    complex_mul(x, z) = (x.real_coord * z.real_coord - x.im * z.im, x.real_coord * z.im + x.im * z.real_coord)
-    complex_add(complex_mul(x, y), complex_mul(x, z)) = (x.real_coord * y.real_coord - x.im * y.im + (x.real_coord * z.real_coord - x.im * z.im), x.real_coord * y.im + x.im * y.real_coord + (x.real_coord * z.im + x.im * z.real_coord))
-    &Complex{complex_mul(x, complex_add(y, z))}.real_coord = x.real_coord * (y.real_coord + z.real_coord) - x.im * (y.im + z.im) = x.real_coord * y.real_coord - x.im * y.im + (x.real_coord * z.real_coord - x.im * z.im) = &Complex{complex_add(complex_mul(x, y), complex_mul(x, z))}.real_coord
-    &Complex{complex_mul(x, complex_add(y, z))}.im = x.real_coord * (y.im + z.im) + x.im * (y.real_coord + z.real_coord) = x.real_coord * y.im + x.im * y.real_coord + (x.real_coord * z.im + x.im * z.real_coord) = &Complex{complex_add(complex_mul(x, y), complex_mul(x, z))}.im
-    complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
-    complex_mul(complex_one, x) = (1 * x.real_coord - 0 * x.im, 1 * x.im + 0 * x.real_coord) = (x.real_coord, x.im) = x
-
-thm complex_additive_inverse_exists:
-    ? forall x &Complex:
-        exist y &Complex st {complex_add(x, y) = complex_zero}
-    have inverse &Complex = (-x.real_coord, -x.im)
-    complex_add(x, inverse) = (x.real_coord + (-x.real_coord), x.im + (-x.im)) = (0, 0) = complex_zero
-    witness exist y &Complex st {complex_add(x, y) = complex_zero} from inverse
-
-thm complex_additive_inverse_unique:
-    ? forall x, inverse, y1, y2 &Complex:
-        complex_add(x, inverse) = complex_zero
-        complex_add(x, y1) = complex_zero
-        complex_add(x, y2) = complex_zero
-        =>:
-            y1 = y2
-    by thm complex_add_laws(inverse, x, y1)
-    by thm complex_add_laws(y1, inverse, x)
-    complex_add(inverse, x) = complex_add(x, inverse) = complex_zero
-    y1 = complex_add(complex_zero, y1)
-    complex_add(complex_zero, y1) = complex_add(complex_add(inverse, x), y1)
-    complex_add(complex_add(inverse, x), y1) = complex_add(inverse, complex_add(x, y1))
-    complex_add(inverse, complex_add(x, y1)) = complex_add(inverse, complex_zero)
-    complex_add(inverse, complex_zero) = complex_add(complex_zero, inverse) = inverse
-    by thm complex_add_laws(inverse, x, y2)
-    by thm complex_add_laws(y2, inverse, x)
-    y2 = complex_add(complex_zero, y2)
-    complex_add(complex_zero, y2) = complex_add(complex_add(inverse, x), y2)
-    complex_add(complex_add(inverse, x), y2) = complex_add(inverse, complex_add(x, y2))
-    complex_add(inverse, complex_add(x, y2)) = complex_add(inverse, complex_zero) = inverse
-    y1 = y2
-
-thm complex_additive_inverse_exists_unique:
-    ? forall x &Complex:
-        exist! y &Complex st {complex_add(x, y) = complex_zero}
-    by thm complex_additive_inverse_exists(x)
-    obtain inverse from exist y &Complex st {complex_add(x, y) = complex_zero}
-    claim:
-        ? forall y1, y2 &Complex:
-            complex_add(x, y1) = complex_zero
-            complex_add(x, y2) = complex_zero
-            =>:
-                y1 = y2
-        by thm complex_additive_inverse_unique(x, inverse, y1, y2)
-        y1 = y2
-    witness exist! y &Complex st {complex_add(x, y) = complex_zero} from inverse
-
 thm complex_arithmetic_laws:
-    ? forall x, y, z &Complex:
-        complex_zero != complex_one
-        complex_add(complex_add(x, y), z) = complex_add(x, complex_add(y, z))
-        complex_add(x, y) = complex_add(y, x)
-        complex_mul(complex_mul(x, y), z) = complex_mul(x, complex_mul(y, z))
-        complex_mul(x, y) = complex_mul(y, x)
-        complex_mul(x, complex_add(y, z)) = complex_add(complex_mul(x, y), complex_mul(x, z))
-        complex_add(complex_zero, x) = x
-        complex_mul(complex_one, x) = x
-        exist! w &Complex st {complex_add(x, w) = complex_zero}
-    complex_zero = (0, 0)
-    complex_one = (1, 0)
-    complex_zero != complex_one
-    by thm complex_add_laws(x, y, z)
-    by thm complex_mul_comm(x, y)
-    by thm complex_mul_laws(x, y, z)
-    by thm complex_additive_inverse_exists_unique(x)
-
-thm complex_nonzero_inverse_exists:
-    ? forall x &Complex:
-        x != complex_zero
-        =>:
-            exist y &Complex st {complex_mul(x, y) = complex_one}
-    have d R = x.real_coord^2 + x.im^2
-    # Proof debt: the verifier does not close the sum-of-squares contradiction.
-    trust d != 0
-    have inverse &Complex = (x.real_coord / d, -x.im / d)
-    complex_mul(x, inverse) = (x.real_coord * (x.real_coord / d) - x.im * (-x.im / d), x.real_coord * (-x.im / d) + x.im * (x.real_coord / d))
-    &Complex{complex_mul(x, inverse)}.real_coord = x.real_coord * (x.real_coord / d) - x.im * (-x.im / d) = (x.real_coord^2 + x.im^2) / d = d / d = 1 = complex_one.real_coord
-    &Complex{complex_mul(x, inverse)}.im = x.real_coord * (-x.im / d) + x.im * (x.real_coord / d) = 0 = complex_one.im
-    complex_mul(x, inverse) = complex_one
-    witness exist y &Complex st {complex_mul(x, y) = complex_one} from inverse
-
-thm complex_inverse_unique:
-    ? forall x, inverse, y1, y2 &Complex:
-        complex_mul(x, inverse) = complex_one
-        complex_mul(x, y1) = complex_one
-        complex_mul(x, y2) = complex_one
-        =>:
-            y1 = y2
-    by thm complex_mul_comm(inverse, x)
-    by thm complex_mul_laws(y1, inverse, x)
-    by thm complex_mul_laws(inverse, x, y1)
-    by thm complex_mul_laws(inverse, complex_one, x)
-    y1 = complex_mul(complex_one, y1)
-    complex_mul(complex_one, y1) = complex_mul(complex_mul(inverse, x), y1)
-    complex_mul(complex_mul(inverse, x), y1) = complex_mul(inverse, complex_mul(x, y1))
-    complex_mul(inverse, complex_mul(x, y1)) = complex_mul(inverse, complex_one)
-    by thm complex_mul_comm(inverse, complex_one)
-    complex_mul(inverse, complex_one) = complex_mul(complex_one, inverse) = inverse
-    by thm complex_mul_laws(y2, inverse, x)
-    by thm complex_mul_laws(inverse, x, y2)
-    y2 = complex_mul(complex_one, y2)
-    complex_mul(complex_one, y2) = complex_mul(complex_mul(inverse, x), y2)
-    complex_mul(complex_mul(inverse, x), y2) = complex_mul(inverse, complex_mul(x, y2))
-    complex_mul(inverse, complex_mul(x, y2)) = complex_mul(inverse, complex_one) = inverse
-    y1 = y2
-
-thm complex_nonzero_inverse_exists_unique:
-    ? forall x &Complex:
-        x != complex_zero
-        =>:
-            exist! y &Complex st {complex_mul(x, y) = complex_one}
-    by thm complex_nonzero_inverse_exists(x)
-    obtain inverse from exist y &Complex st {complex_mul(x, y) = complex_one}
+    ? forall x, y, z C:
+        0 != 1
+        (x + y) + z = x + (y + z)
+        x + y = y + x
+        (x * y) * z = x * (y * z)
+        x * y = y * x
+        x * (y + z) = x * y + x * z
+        0 + x = x
+        1 * x = x
+        exist! w C st {x + w = 0}
+    0 != 1
+    (x + y) + z = x + (y + z)
+    x + y = y + x
+    (x * y) * z = x * (y * z)
+    x * y = y * x
+    x * (y + z) = x * y + x * z
+    0 + x = x
+    1 * x = x
+    have inverse C = -x
+    x + inverse = x + (-x) = 0
     claim:
-        ? forall y1, y2 &Complex:
-            complex_mul(x, y1) = complex_one
-            complex_mul(x, y2) = complex_one
+        ? forall w1, w2 C:
+            x + w1 = 0
+            x + w2 = 0
             =>:
-                y1 = y2
-        by thm complex_inverse_unique(x, inverse, y1, y2)
-        y1 = y2
-    witness exist! y &Complex st {complex_mul(x, y) = complex_one} from inverse
-# Example 1.4. The source verifies multiplication commutativity by comparing
-# the real and imaginary coordinates of alpha beta and beta alpha.
+                w1 = w2
+        w1 = w1 + 0 = w1 + (x + w2) = (w1 + x) + w2 = (x + w1) + w2 = 0 + w2 = w2
+    witness exist! w C st {x + w = 0} from inverse
+# Example 1.4. Multiplication commutativity is builtin complex arithmetic.
 sketch:
-    forall alpha, beta &Complex:
-        complex_mul(alpha, beta) = complex_mul(beta, alpha)
-# Definition 1.5. Negation and subtraction are coordinatewise. The inverse of
-# a nonzero complex number divides its conjugate by a^2+b^2, and division is
-# multiplication by that inverse. complex_inv is total only so it can be a
-# ScalarSystem field; its law is required solely away from complex_zero.
-have fn complex_neg(z &Complex) &Complex = (-z.real_coord, -z.im)
-have fn complex_sub(z, w &Complex) &Complex = complex_add(z, complex_neg(w))
-have fn complex_norm_sq(z &Complex) R = z.real_coord^2 + z.im^2
-# A sum of two real squares vanishes only when both coordinates vanish.
-thm nonzero_complex_has_nonzero_norm_sq:
-    ? forall z &Complex:
-        z != complex_zero
-        =>:
-            complex_norm_sq(z) != 0
-    claim:
-        ? forall:
-            complex_norm_sq(z) = 0
-            =>:
-                z = complex_zero
-        complex_norm_sq(z) = z.real_coord^2 + z.im^2
-        z.real_coord^2 >= 0
-        z.im^2 >= 0
-        z.real_coord^2 + z.im^2 = 0
-        z.real_coord^2 = 0
-        z.im^2 = 0
-        z.real_coord = 0
-        z.im = 0
-        complex_zero = (0, 0)
-        z.real_coord = complex_zero.real_coord
-        z.im = complex_zero.im
-        # Proof debt: coordinate equality does not close structure equality here.
-        trust z = complex_zero
-    by contra complex_norm_sq(z) != 0:
-        complex_norm_sq(z) = 0
-        z = complex_zero
-        impossible z != complex_zero
-
-have fn complex_inv(z &Complex) &Complex by cases:
-    case z = complex_zero: complex_zero
-    case z != complex_zero: (z.real_coord / complex_norm_sq(z), -z.im / complex_norm_sq(z))
-
-have fn complex_div(z &Complex, w &Complex: w != complex_zero) &Complex = complex_mul(z, complex_inv(w))
+    forall alpha, beta C:
+        alpha * beta = beta * alpha
+# Definition 1.5. Negation, subtraction, inverse, and division use the builtin
+# operators on C. These named adapters provide callable ScalarSystem fields.
+have fn complex_scalar_add(x, y C) C = x + y
+have fn complex_scalar_neg(x C) C = -x
+have fn complex_scalar_mul(x, y C) C = x * y
+have fn complex_scalar_inv(x C) C by cases:
+    case x = 0: 0
+    case x != 0: 1 / x
 # Notation 1.6. The book writes F for either R or C and calls its elements
 # scalars. Litex makes that standing choice explicit as
-# `s nonempty_set, scalars &ScalarSystem<s>`; these are the two source cases.
+# `s nonempty_set, scalars &ScalarSystem<s>`.
 have fn real_inv(x R) R by cases:
     case x = 0: 0
     case x != 0: 1 / x
@@ -290,9 +111,16 @@ claim:
         real_add(real_add(x, y), z) = real_add(x, real_add(y, z))
         real_mul(real_mul(x, y), z) = real_mul(x, real_mul(y, z))
         real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
-    real_add(real_add(x, y), z) = (x + y) + z = x + (y + z) = real_add(x, real_add(y, z))
-    real_mul(real_mul(x, y), z) = (x * y) * z = x * (y * z) = real_mul(x, real_mul(y, z))
-    real_mul(x, real_add(y, z)) = x * (y + z) = x * y + x * z = real_add(real_mul(x, y), real_mul(x, z))
+    real_add(x, y) = x + y
+    real_add(y, z) = y + z
+    real_add(real_add(x, y), z) = real_add(x, y) + z = (x + y) + z = x + (y + z) = x + real_add(y, z) = real_add(x, real_add(y, z))
+    real_mul(x, y) = x * y
+    real_mul(x, z) = x * z
+    real_mul(y, z) = y * z
+    real_mul(real_mul(x, y), z) = real_mul(x, y) * z = (x * y) * z = x * (y * z) = x * real_mul(y, z) = real_mul(x, real_mul(y, z))
+    real_mul(x, real_add(y, z)) = x * real_add(y, z) = x * (y + z) = x * y + x * z
+    real_add(real_mul(x, y), real_mul(x, z)) = real_mul(x, y) + real_mul(x, z) = x * y + x * z
+    real_mul(x, real_add(y, z)) = real_add(real_mul(x, y), real_mul(x, z))
 
 claim:
     ? forall x, y R:
@@ -307,14 +135,105 @@ claim:
         real_add(x, real_neg(x)) = 0
         real_mul(1, x) = x
     real_add(0, x) = 0 + x = x
-    real_add(x, real_neg(x)) = x + (-x) = 0
+    real_neg(x) = -x
+    real_add(x, real_neg(x)) = x + real_neg(x) = x + (-x) = 0
     real_mul(1, x) = 1 * x = x
 
+by thm struct_member((0, 1, real_add, real_neg, real_mul, real_inv), &ScalarSystem<R>)
 have real_scalars &ScalarSystem<R> = (0, 1, real_add, real_neg, real_mul, real_inv)
-# The complex tuple is explicit, but its projection-heavy structure-membership
-# proof remains a selected-structure boundary.
-trust have complex_scalars &ScalarSystem<&Complex>:
-    complex_scalars = (complex_zero, complex_one, complex_add, complex_neg, complex_mul, complex_inv)
+
+claim:
+    ? forall x C:
+        x != 0
+        =>:
+            complex_scalar_mul(x, complex_scalar_inv(x)) = 1
+    complex_scalar_inv(x) = 1 / x
+    complex_scalar_mul(x, complex_scalar_inv(x)) = x * complex_scalar_inv(x) = x * (1 / x) = 1
+
+claim:
+    ? forall x, y, z C:
+        complex_scalar_add(complex_scalar_add(x, y), z) = complex_scalar_add(x, complex_scalar_add(y, z))
+        complex_scalar_mul(complex_scalar_mul(x, y), z) = complex_scalar_mul(x, complex_scalar_mul(y, z))
+        complex_scalar_mul(x, complex_scalar_add(y, z)) = complex_scalar_add(complex_scalar_mul(x, y), complex_scalar_mul(x, z))
+    complex_scalar_add(x, y) = x + y
+    complex_scalar_add(y, z) = y + z
+    complex_scalar_add(complex_scalar_add(x, y), z) = complex_scalar_add(x, y) + z = (x + y) + z = x + (y + z) = x + complex_scalar_add(y, z) = complex_scalar_add(x, complex_scalar_add(y, z))
+    complex_scalar_mul(x, y) = x * y
+    complex_scalar_mul(x, z) = x * z
+    complex_scalar_mul(y, z) = y * z
+    complex_scalar_mul(complex_scalar_mul(x, y), z) = complex_scalar_mul(x, y) * z = (x * y) * z = x * (y * z) = x * complex_scalar_mul(y, z) = complex_scalar_mul(x, complex_scalar_mul(y, z))
+    complex_scalar_mul(x, complex_scalar_add(y, z)) = x * complex_scalar_add(y, z) = x * (y + z) = x * y + x * z
+    complex_scalar_add(complex_scalar_mul(x, y), complex_scalar_mul(x, z)) = complex_scalar_mul(x, y) + complex_scalar_mul(x, z) = x * y + x * z
+    complex_scalar_mul(x, complex_scalar_add(y, z)) = complex_scalar_add(complex_scalar_mul(x, y), complex_scalar_mul(x, z))
+
+claim:
+    ? forall x, y C:
+        complex_scalar_add(x, y) = complex_scalar_add(y, x)
+        complex_scalar_mul(x, y) = complex_scalar_mul(y, x)
+    complex_scalar_add(x, y) = x + y = y + x = complex_scalar_add(y, x)
+    complex_scalar_mul(x, y) = x * y = y * x = complex_scalar_mul(y, x)
+
+claim:
+    ? forall x C:
+        complex_scalar_add(0, x) = x
+        complex_scalar_add(x, complex_scalar_neg(x)) = 0
+        complex_scalar_mul(1, x) = x
+    complex_scalar_add(0, x) = 0 + x = x
+    complex_scalar_neg(x) = -x
+    complex_scalar_add(x, complex_scalar_neg(x)) = x + complex_scalar_neg(x) = x + (-x) = 0
+    complex_scalar_mul(1, x) = 1 * x = x
+
+# The generic complex adapter structure is checked from builtin field laws.
+# Two later-use operation-value bridges below remain localized proof debt.
+by thm struct_member((0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv), &ScalarSystem<C>)
+have complex_scalars &ScalarSystem<C> = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
+
+# The adapter fields compute exactly as builtin complex arithmetic. This named
+# bridge prevents later generic structures from reopening the adapter body.
+thm complex_scalar_adapter_values:
+    ? forall x, y C:
+        &ScalarSystem<C>{complex_scalars}.one = 1
+        &ScalarSystem<C>{complex_scalars}.add(x, y) = x + y
+        &ScalarSystem<C>{complex_scalars}.mul(x, y) = x * y
+    complex_scalars = (0, 1, complex_scalar_add, complex_scalar_neg, complex_scalar_mul, complex_scalar_inv)
+    &ScalarSystem<C>{complex_scalars}.one = 1
+    &ScalarSystem<C>{complex_scalars}.add = complex_scalar_add
+    &ScalarSystem<C>{complex_scalars}.mul = complex_scalar_mul
+    &ScalarSystem<C>{complex_scalars}.add(x, y) = complex_scalar_add(x, y) = x + y
+    &ScalarSystem<C>{complex_scalars}.mul(x, y) = complex_scalar_mul(x, y) = x * y
+
+# Equal scalar-system records have equal callable operation fields. Explicit
+# tuple projections expose the congruence once, so callers can reuse it without
+# asking field access to rediscover structural equality.
+thm equal_scalar_systems_have_equal_operation_fields:
+    ? forall s nonempty_set, A, B &ScalarSystem<s>:
+        A = B
+        =>:
+            A.zero = B.zero
+            A.one = B.one
+            A.add = B.add
+            A.neg = B.neg
+            A.mul = B.mul
+    A[1] = B[1]
+    A.zero = A[1]
+    B.zero = B[1]
+    A.zero = B.zero
+    A[2] = B[2]
+    A.one = A[2]
+    B.one = B[2]
+    A.one = B.one
+    A[3] = B[3]
+    A.add = A[3]
+    B.add = B[3]
+    A.add = B.add
+    A[4] = B[4]
+    A.neg = A[4]
+    B.neg = B[4]
+    A.neg = B.neg
+    A[5] = B[5]
+    A.mul = A[5]
+    B.mul = B[5]
+    A.mul = B.mul
 # Example 1.7. R^2 and R^3 are ordered real coordinate lists. finite_seq is
 # the native homogeneous positive-length list carrier used below.
 sketch:
@@ -324,11 +243,11 @@ sketch:
     real_triple(3) = 3
 # Definition 1.8. A finite list has a length and an ordered coordinate map.
 # The family FiniteList<s,n> also admits n=0, unlike native finite_seq, whose
-# length parameter is N_pos. For n>0 the coordinate development below uses
+# length parameter is N+. For n>0 the coordinate development below uses
 # finite_seq because it already provides application and list literals.
 struct FiniteList<s set, n N>:
     length N
-    entries fn(idx N_pos: idx <= n) s
+    entries fn(idx N+: idx <= n) s
     <=>:
         length = n
 # Trust reason: Litex can type the empty-domain function space at n=0, but its
@@ -338,9 +257,9 @@ template<s set>:
     trust have empty_list &FiniteList<s, 0>
 # Equality of these dependent list records is extensional in the coordinate
 # function. Equality implies entrywise equality is checked below; the converse
-# remains the explicit finite-list extensionality axiom.
+# remains the explicit finite-list extensionality proof boundary.
 prop have_same_finite_list_entries(s set, n N, x, y &FiniteList<s, n>):
-    forall idx N_pos:
+    forall idx N+:
         idx <= n
         =>:
             x.entries(idx) = y.entries(idx)
@@ -351,7 +270,7 @@ thm finite_list_equal_implies_same_entries:
         =>:
             $have_same_finite_list_entries(s, n, x, y)
     claim:
-        ? forall idx N_pos:
+        ? forall idx N+:
             idx <= n
             =>:
                 x.entries(idx) = y.entries(idx)
@@ -360,13 +279,31 @@ thm finite_list_equal_implies_same_entries:
         x.entries = x[2]
         y.entries = y[2]
         x.entries = y.entries
-    $have_same_finite_list_entries(s, n, x, y)
+    by def $have_same_finite_list_entries(s, n, x, y)
 
-axiom finite_list_extensionality:
+thm finite_list_extensionality:
     ? forall s set, n N, x, y &FiniteList<s, n>:
         $have_same_finite_list_entries(s, n, x, y)
         =>:
             x = y
+    have left_entries fn(idx N+: idx <= n) s = x.entries
+    have right_entries fn(idx N+: idx <= n) s = y.entries
+    claim:
+        ? forall idx N+:
+            idx <= n
+            =>:
+                left_entries(idx) = right_entries(idx)
+        by def $have_same_finite_list_entries(s, n, x, y)
+        left_entries(idx) = x.entries(idx) = y.entries(idx) = right_entries(idx)
+    by def $fn_eq(left_entries, right_entries)
+    left_entries = right_entries
+    x.entries = left_entries = right_entries = y.entries
+    x[1] = x.length = n = y.length = y[1]
+    x[2] = x.entries = y.entries = y[2]
+    by thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    by thm tuple_equal_from_coordinates(y, (y[1], y[2]))
+    (x[1], x[2]) = (y[1], y[2])
+    x = (x[1], x[2]) = (y[1], y[2]) = y
 # Example 1.9. Order and repetition are observable in lists through coordinate
 # application, whereas finite-set literals are extensional.
 sketch:
@@ -375,27 +312,31 @@ sketch:
     list_35(1) = 3
     list_53(1) = 5
 # Notation 1.10. The chapter's fixed length is always represented by a
-# parameter `n N_pos`; the following templates keep that hypothesis visible.
+# parameter `n N+`; the following templates keep that hypothesis visible.
 # Definition 1.11. F^n is the carrier finite_seq(s,n), and coordinate(x,k)
 # is the kth entry. This is a declaration family and an applicable map, not a
 # predicate describing a proposed coordinate list.
-template<s nonempty_set, n N_pos>:
+template<s nonempty_set, n N+>:
     have coordinate_carrier set = finite_seq(s, n)
 
-template<s nonempty_set, n N_pos>:
-    have fn coordinate(x finite_seq(s, n), k N_pos: k <= n) s = x(k)
-# Example 1.12. C^4 consists of lists of four Complex records.
+template<s nonempty_set, n N+>:
+    have fn coordinate(x finite_seq(s, n), k N+: k <= n) s = x(k)
+# Example 1.12. C^4 consists of lists of four builtin complex numbers.
 sketch:
-    have complex_four finite_seq(&Complex, 4) = [(1, 0), (0, 1), (2, 3), (4, 5)]
-    \coordinate<&Complex, 4>(complex_four, 3) $in &Complex
-    complex_four(3) = (2, 3)
+    1 $in C
+    i $in C
+    2 + 3 * i $in C
+    4 + 5 * i $in C
+    have complex_four finite_seq(C, 4) = [1, i, 2 + 3 * i, 4 + 5 * i]
+    \coordinate<C, 4>(complex_four, 3) $in C
+    complex_four(3) = 2 + 3 * i
 # Definition 1.13. Addition in F^n is the callable map obtained by adding
 # corresponding coordinates with the selected ScalarSystem operation.
-template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
-    have fn coordinate_add(x, y finite_seq(s, n)) finite_seq(s, n) = fn(idx N_pos: idx <= n) s {scalars.add(x(idx), y(idx))}
+template<s nonempty_set, scalars &ScalarSystem<s>, n N+>:
+    have fn coordinate_add(x, y finite_seq(s, n)) finite_seq(s, n) = fn(idx N+: idx <= n) s {scalars.add(x(idx), y(idx))}
 # Applying the returned finite sequence exposes the pointwise template body.
 thm coordinate_add_entry:
-    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N_pos, x, y, result finite_seq(s, n), idx N_pos:
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N+, x, y, result finite_seq(s, n), idx N+:
         result = \coordinate_add<s, scalars, n>(x, y)
         idx <= n
         =>:
@@ -409,10 +350,10 @@ thm coordinate_add_entry:
 # The pointwise scalar equalities are available from ScalarSystem; Litex's
 # function extensionality closes the finite-sequence equality.
 thm coordinate_add_commutative:
-    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N_pos, x, y finite_seq(s, n):
+    ? forall s nonempty_set, scalars &ScalarSystem<s>, n N+, x, y finite_seq(s, n):
         \coordinate_add<s, scalars, n>(x, y) = \coordinate_add<s, scalars, n>(y, x)
     claim:
-        ? forall idx N_pos:
+        ? forall idx N+:
             idx <= n
             =>:
                 scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
@@ -420,7 +361,7 @@ thm coordinate_add_commutative:
     have left finite_seq(s, n) = \coordinate_add<s, scalars, n>(x, y)
     have right finite_seq(s, n) = \coordinate_add<s, scalars, n>(y, x)
     claim:
-        ? forall idx N_pos:
+        ? forall idx N+:
             idx <= n
             =>:
                 left(idx) = right(idx)
@@ -429,13 +370,13 @@ thm coordinate_add_commutative:
         left(idx) = scalars.add(x(idx), y(idx))
         scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
         scalars.add(y(idx), x(idx)) = right(idx)
-    $fn_eq(left, right)
+    by def $fn_eq(left, right)
     left = right
     \coordinate_add<s, scalars, n>(x, y) = \coordinate_add<s, scalars, n>(y, x)
 # Notation 1.15. The zero vector is the constant coordinate list whose value
 # is the scalar zero selected by the ScalarSystem instance.
-template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
-    have coordinate_zero finite_seq(s, n) = fn(idx N_pos: idx <= n) s {scalars.zero}
+template<s nonempty_set, scalars &ScalarSystem<s>, n N+>:
+    have coordinate_zero finite_seq(s, n) = fn(idx N+: idx <= n) s {scalars.zero}
 # Example 1.16. In x+0=x the second argument below is visibly a vector-valued
 # zero, not the scalar zero field of ScalarSystem. The full identity law is
 # packaged by coordinate_space after VectorSpace is introduced in Section 1B.
@@ -444,10 +385,9 @@ sketch:
     \coordinate_add<R, real_scalars, 2>(x2, \coordinate_zero<R, real_scalars, 2>) $in finite_seq(R, 2)
 # Definition 1.17. Vector negation is the callable coordinatewise application
 # of the scalar negation field.
-template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
-    have fn coordinate_neg(x finite_seq(s, n)) finite_seq(s, n) = fn(idx N_pos: idx <= n) s {scalars.neg(x(idx))}
+template<s nonempty_set, scalars &ScalarSystem<s>, n N+>:
+    have fn coordinate_neg(x finite_seq(s, n)) finite_seq(s, n) = fn(idx N+: idx <= n) s {scalars.neg(x(idx))}
 # Definition 1.18. Scalar multiplication is the callable map that multiplies
 # each coordinate by the selected scalar.
-template<s nonempty_set, scalars &ScalarSystem<s>, n N_pos>:
-    have fn coordinate_smul(a s, x finite_seq(s, n)) finite_seq(s, n) = fn(idx N_pos: idx <= n) s {scalars.mul(a, x(idx))}
-
+template<s nonempty_set, scalars &ScalarSystem<s>, n N+>:
+    have fn coordinate_smul(a s, x finite_seq(s, n)) finite_seq(s, n) = fn(idx N+: idx <= n) s {scalars.mul(a, x(idx))}

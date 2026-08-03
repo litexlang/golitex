@@ -10,56 +10,80 @@ have fn power_series_term(coefficients fn(m N) R, center R, n N, x R) R = coeffi
 have fn power_series_partial_sum(coefficients fn(m N) R, center R, k N, x R) R = sum(0, k, fn(j closed_range(0, k)) R {coefficients(j) * (x - center)^j})
 
 # Definition 4.1.3 (Radius of convergence). A tagged pair `(0,r)` denotes a
-# finite nonnegative radius and `(1,0)` denotes positive infinity. The
-# The definition below characterizes the radius by absolute convergence
-# strictly inside it and divergence strictly outside it.
+# finite nonnegative value and `(1,0)` denotes positive infinity.
 have nonnegative_reals set = {r R: r >= 0}
 have power_series_radius set = union(cart({0}, nonnegative_reals), {(1, 0)})
 
-prop is_finite_radius_behavior(coefficients fn(n N) R, r nonnegative_reals):
-    forall x R:
-        abs(x) < r
-        =>:
-            exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * x^j)})}, L)}
-    forall x R:
-        abs(x) > r
-        =>:
-            not exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {coefficients(j) * x^j})}, L)}
+prop is_power_series_coefficient_root_sequence(coefficients fn(n N) R, roots fn(n N+) R):
+    forall n N+:
+        roots(n) >= 0
+        roots(n)^n = abs(coefficients(n))
 
-prop is_infinite_radius_behavior(coefficients fn(n N) R):
-    forall x R:
-        exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * x^j)})}, L)}
+prop is_eventual_nonnegative_sequence_upper_bound(sequence fn(n N+) R, value R, epsilon R+, N0 N+):
+    forall n N+:
+        n >= N0
+        =>:
+            sequence(n) <= value + epsilon
+
+prop is_finite_nonnegative_sequence_limsup(sequence fn(n N+) R, value nonnegative_reals):
+    forall epsilon R+:
+        exist N0 N+ st {$is_eventual_nonnegative_sequence_upper_bound(sequence, value, epsilon, N0)}
+    forall epsilon R+, N0 N+:
+        exist n N+ st {n >= N0, sequence(n) >= value - epsilon}
+
+prop is_positive_infinite_nonnegative_sequence_limsup(sequence fn(n N+) R):
+    forall bound R, N0 N+:
+        exist n N+ st {n >= N0, sequence(n) > bound}
+
+prop is_tagged_nonnegative_sequence_limsup(sequence fn(n N+) R, value power_series_radius):
+    forall finite_value nonnegative_reals:
+        value = (0, finite_value)
+        =>:
+            $is_finite_nonnegative_sequence_limsup(sequence, finite_value)
+    forall infinite_tag {(1, 0)}:
+        value = infinite_tag
+        =>:
+            $is_positive_infinite_nonnegative_sequence_limsup(sequence)
+
+prop is_reciprocal_extended_nonnegative(limsup_value, radius power_series_radius):
+    forall finite_value nonnegative_reals:
+        limsup_value = (0, finite_value)
+        finite_value = 0
+        =>:
+            radius = (1, 0)
+    forall finite_value nonnegative_reals:
+        limsup_value = (0, finite_value)
+        finite_value > 0
+        =>:
+            exist reciprocal nonnegative_reals st {radius = (0, reciprocal), finite_value * reciprocal = 1}
+    forall infinite_tag {(1, 0)}:
+        limsup_value = infinite_tag
+        =>:
+            radius = (0, 0)
 
 prop is_radius_of_convergence(coefficients fn(n N) R, radius power_series_radius):
-    forall r nonnegative_reals:
-        radius = (0, r)
-        =>:
-            $is_finite_radius_behavior(coefficients, r)
-    forall infinite_tag {(1, 0)}:
-        radius = infinite_tag
-        =>:
-            $is_infinite_radius_behavior(coefficients)
+    exist roots fn(n N+) R, limsup_value power_series_radius st {$is_power_series_coefficient_root_sequence(coefficients, roots), $is_tagged_nonnegative_sequence_limsup(roots, limsup_value), $is_reciprocal_extended_nonnegative(limsup_value, radius)}
 
 # Theorem 4.1.6 (convergence, uniform convergence, differentiation, and
 # integration within the radius).
 prop has_power_series_sum(coefficients fn(m N) R, center, x, L R):
-    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {power_series_partial_sum(coefficients, center, k, x)}, L)
+    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N+) R {power_series_partial_sum(coefficients, center, k, x)}, L)
 
 prop is_power_series_absolutely_convergent_at(coefficients fn(m N) R, center, x R):
-    exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * (x - center)^j)})}, L)}
+    exist L R st {$chap1::has_metric_limit(R, chap1::real_distance, fn(k N+) R {sum(0, k, fn(j closed_range(0, k)) R {abs(coefficients(j) * (x - center)^j)})}, L)}
 
 prop is_power_series_divergent_at(coefficients fn(m N) R, center, x R):
     not exist L R st {$has_power_series_sum(coefficients, center, x, L)}
 
-prop is_power_series_uniform_tail(coefficients fn(m N) R, center R, I power_set(R), f fn(x I) R, epsilon R_pos, N0 N_pos):
-    forall k N_pos, x I:
+prop is_power_series_uniform_tail(coefficients fn(m N) R, center R, I power_set(R), f fn(x I) R, epsilon R+, N0 N+):
+    forall k N+, x I:
         k >= N0
         =>:
             abs(power_series_partial_sum(coefficients, center, k, x) - f(x)) < epsilon
 
 prop is_power_series_uniformly_convergent_on(coefficients fn(m N) R, center R, I power_set(R), f fn(x I) R):
-    forall epsilon R_pos:
-        exist N0 N_pos st {$is_power_series_uniform_tail(coefficients, center, I, f, epsilon, N0)}
+    forall epsilon R+:
+        exist N0 N+ st {$is_power_series_uniform_tail(coefficients, center, I, f, epsilon, N0)}
 
 thm power_series_diverges_outside_finite_radius:
     ? forall coefficients fn(m N) R, center, radius, x R:
@@ -82,7 +106,7 @@ thm power_series_converges_absolutely_inside_finite_radius:
     trust $is_power_series_absolutely_convergent_at(coefficients, center, x)
 
 thm power_series_uniformly_converges_on_compact_subinterval:
-    ? forall coefficients fn(m N) R, center, radius, r R_pos, f fn(x '[center - r, center + r]) R:
+    ? forall coefficients fn(m N) R, center, radius, r R+, f fn(x '[center - r, center + r]) R:
         radius > r
         $is_radius_of_convergence(coefficients, (0, radius))
         forall x '[center - r, center + r]:
@@ -92,41 +116,75 @@ thm power_series_uniformly_converges_on_compact_subinterval:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $is_power_series_uniformly_convergent_on(coefficients, center, '[center - r, center + r], f)
 
-prop has_termwise_derivative_power_series(coefficients fn(m N) R, center, radius R_pos, derivative fn(x '(center - radius, center + radius)) R):
+prop has_termwise_derivative_power_series(coefficients fn(m N) R, center, radius R+, derivative fn(x '(center - radius, center + radius)) R):
     forall x '(center - radius, center + radius):
         $has_power_series_sum(fn(n N) R {(n + 1) * coefficients(n + 1)}, center, x, derivative(x))
 
+prop is_power_series_derivative_restriction(center R, r, radius R+, derivative fn(x '(center - radius, center + radius)) R, restricted_derivative fn(x '[center - r, center + r]) R):
+    r < radius
+    '[center - r, center + r] $subset '(center - radius, center + radius)
+    forall x '[center - r, center + r]:
+        x $in '(center - radius, center + radius)
+        restricted_derivative(x) = derivative(x)
+
+prop has_power_series_derivative_conclusions(coefficients fn(m N) R, center, radius R+, f, derivative fn(x '(center - radius, center + radius)) R):
+    $chap3::has_continuous_derivative_on('(center - radius, center + radius), f, derivative)
+    $has_termwise_derivative_power_series(coefficients, center, radius, derivative)
+    forall r R+:
+        r < radius
+        =>:
+            exist restricted_derivative fn(x '[center - r, center + r]) R st {$is_power_series_derivative_restriction(center, r, radius, derivative, restricted_derivative), $is_power_series_uniformly_convergent_on(fn(n N) R {(n + 1) * coefficients(n + 1)}, center, '[center - r, center + r], restricted_derivative)}
+
 thm power_series_may_be_differentiated_termwise:
-    ? forall coefficients fn(m N) R, center, radius R_pos, f, derivative fn(x '(center - radius, center + radius)) R:
+    ? forall coefficients fn(m N) R, center, radius R+, f fn(x '(center - radius, center + radius)) R:
+        $is_radius_of_convergence(coefficients, (0, radius))
         forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
-        $chap3::has_continuous_derivative_on('(center - radius, center + radius), f, derivative)
         =>:
-            $has_termwise_derivative_power_series(coefficients, center, radius, derivative)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_termwise_derivative_power_series(coefficients, center, radius, derivative)
+            exist derivative fn(x '(center - radius, center + radius)) R st {$has_power_series_derivative_conclusions(coefficients, center, radius, f, derivative)}
+    # proof_debt: apply the uniform derivative limit theorem to the partial
+    # sums and control the derived series on every smaller closed interval.
+    trust exist derivative fn(x '(center - radius, center + radius)) R st {$has_power_series_derivative_conclusions(coefficients, center, radius, f, derivative)}
+
+prop is_power_series_function_restriction(center R, radius R+, y, z R, f fn(x '(center - radius, center + radius)) R, restricted_f fn(x '[y, z]) R):
+    y <= z
+    '[y, z] $subset '(center - radius, center + radius)
+    forall x '[y, z]:
+        x $in '(center - radius, center + radius)
+        restricted_f(x) = f(x)
+
+prop is_integrated_power_series_coefficient_family(coefficients, integrated_coefficients fn(m N) R, center, y, z R):
+    forall n N:
+        (n + 1) * integrated_coefficients(n) = coefficients(n) * ((z - center)^(n + 1) - (y - center)^(n + 1))
+
+prop has_power_series_integral_conclusions(coefficients fn(m N) R, center R, radius R+, y, z R, f fn(x '(center - radius, center + radius)) R, restricted_f fn(x '[y, z]) R, integrated_coefficients fn(m N) R, A R):
+    $is_power_series_function_restriction(center, radius, y, z, f, restricted_f)
+    $chap3::has_riemann_integral_value('[y, z], restricted_f, A)
+    $is_integrated_power_series_coefficient_family(coefficients, integrated_coefficients, center, y, z)
+    $has_power_series_sum(integrated_coefficients, 0, 1, A)
 
 thm power_series_may_be_integrated_termwise:
-    ? forall coefficients, integrated_coefficients fn(m N) R, center R, y, z R, f fn(x '[y, z]) R, A R:
-        forall x '[y, z]:
+    ? forall coefficients fn(m N) R, center R, radius R+, y, z R, f fn(x '(center - radius, center + radius)) R:
+        $is_radius_of_convergence(coefficients, (0, radius))
+        y <= z
+        '[y, z] $subset '(center - radius, center + radius)
+        forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
-        $chap3::has_riemann_integral_value('[y, z], f, A)
-        forall n N:
-            (n + 1) * integrated_coefficients(n) = coefficients(n) * ((z - center)^(n + 1) - (y - center)^(n + 1))
         =>:
-            $has_power_series_sum(integrated_coefficients, 0, 1, A)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_power_series_sum(integrated_coefficients, 0, 1, A)
+            exist restricted_f fn(x '[y, z]) R, integrated_coefficients fn(m N) R, A R st {$has_power_series_integral_conclusions(coefficients, center, radius, y, z, f, restricted_f, integrated_coefficients, A)}
+    # proof_debt: integrate the uniformly convergent power-series partial sums
+    # on the closed interval and pass the finite integral formula to the limit.
+    trust exist restricted_f fn(x '[y, z]) R, integrated_coefficients fn(m N) R, A R st {$has_power_series_integral_conclusions(coefficients, center, radius, y, z, f, restricted_f, integrated_coefficients, A)}
 
 # Definition 4.2.1 (Real analytic functions).
-prop is_power_series_expansion_on(E power_set(R), f fn(x E) R, center R, r R_pos, coefficients fn(n N) R):
+prop is_power_series_expansion_on(E power_set(R), f fn(x E) R, center R, r R+, coefficients fn(n N) R):
     '(center - r, center + r) $subset E
     forall x '(center - r, center + r):
         $has_power_series_sum(coefficients, center, x, f(x))
 
 prop is_real_analytic_at(E power_set(R), f fn(x E) R, center E):
     $chap1::is_metric_interior_point(R, chap1::real_distance, E, center)
-    exist r R_pos, coefficients fn(n N) R st {$is_power_series_expansion_on(E, f, center, r, coefficients)}
+    exist r R+, coefficients fn(n N) R st {$is_power_series_expansion_on(E, f, center, r, coefficients)}
 
 prop is_real_analytic_on(E power_set(R), f fn(x E) R):
     $chap1::is_metric_open(R, chap1::real_distance, E)
@@ -163,58 +221,73 @@ prop has_analytic_derivative_coefficients(coefficients fn(m N) R, derivative_coe
     forall order, n N:
         factorial_real(n) * derivative_coefficients((order, n)) = coefficients(n + order) * factorial_real(n + order)
 
-prop has_analytic_derivative_expansions(center R, radius R_pos, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R):
+prop has_analytic_derivative_expansions(center R, radius R+, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R):
     forall order N, x '(center - radius, center + radius):
         $has_power_series_sum(fn(n N) R {derivative_coefficients((order, n))}, center, x, derivatives(order)(x))
 
+prop has_full_analytic_derivative_data(center R, radius R+, f fn(x '(center - radius, center + radius)) R, coefficients fn(n N) R, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R):
+    forall order N:
+        $is_derivative_tower('(center - radius, center + radius), f, derivatives, order)
+    $has_analytic_derivative_coefficients(coefficients, derivative_coefficients)
+    $has_analytic_derivative_expansions(center, radius, derivatives, derivative_coefficients)
+
 thm real_analytic_functions_are_k_times_differentiable:
-    ? forall center R, radius R_pos, order N, f fn(x '(center - radius, center + radius)) R, coefficients fn(n N) R, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R:
+    ? forall center R, radius R+, f fn(x '(center - radius, center + radius)) R, coefficients fn(n N) R:
         forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
-        $has_analytic_derivative_coefficients(coefficients, derivative_coefficients)
         =>:
-            $is_derivative_tower('(center - radius, center + radius), f, derivatives, order)
-            $has_analytic_derivative_expansions(center, radius, derivatives, derivative_coefficients)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $is_derivative_tower('(center - radius, center + radius), f, derivatives, order)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_analytic_derivative_expansions(center, radius, derivatives, derivative_coefficients)
+            exist derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R st {$has_full_analytic_derivative_data(center, radius, f, coefficients, derivatives, derivative_coefficients)}
+    # proof_debt: construct the derivative family by repeated termwise
+    # differentiation and prove the factorial coefficient formula.
+    trust exist derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R st {$has_full_analytic_derivative_data(center, radius, f, coefficients, derivatives, derivative_coefficients)}
 
 # Corollary 4.2.7 (Real analytic functions are infinitely differentiable).
 prop has_analytic_derivative_family(E power_set(R), derivatives fn(k N) fn(x E) R):
     forall order N:
         $is_real_analytic_on(E, derivatives(order))
 
+prop has_full_global_analytic_derivative_data(E power_set(R), f fn(x E) R, derivatives fn(k N) fn(x E) R):
+    forall x E:
+        derivatives(0)(x) = f(x)
+    forall order N:
+        $is_derivative_tower(E, f, derivatives, order)
+    $is_infinitely_differentiable(E, f)
+    $has_analytic_derivative_family(E, derivatives)
+
 thm real_analytic_functions_are_infinitely_differentiable:
-    ? forall E power_set(R), f fn(x E) R, derivatives fn(k N) fn(x E) R:
+    ? forall E power_set(R), f fn(x E) R:
         $is_real_analytic_on(E, f)
-        forall x E:
-            derivatives(0)(x) = f(x)
         =>:
-            $is_infinitely_differentiable(E, f)
-            $has_analytic_derivative_family(E, derivatives)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $is_infinitely_differentiable(E, f)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_analytic_derivative_family(E, derivatives)
+            exist derivatives fn(k N) fn(x E) R st {$has_full_global_analytic_derivative_data(E, f, derivatives)}
+    # proof_debt: patch the local derivative families from Proposition 4.2.6
+    # over the open domain and prove that every resulting derivative is analytic.
+    trust exist derivatives fn(k N) fn(x E) R st {$has_full_global_analytic_derivative_data(E, f, derivatives)}
 
 # Corollary 4.2.10 (Taylor's formula).
-prop has_taylor_coefficients(coefficients fn(n N) R, center R, derivatives fn(k N) fn(x R) R):
+prop has_taylor_coefficients(center R, radius R+, coefficients fn(n N) R, derivatives fn(k N) fn(x '(center - radius, center + radius)) R):
     forall k N:
         derivatives(k)(center) = factorial_real(k) * coefficients(k)
 
+prop has_taylor_formula_data(center R, radius R+, f fn(x '(center - radius, center + radius)) R, coefficients fn(n N) R, derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R):
+    $has_full_analytic_derivative_data(center, radius, f, coefficients, derivatives, derivative_coefficients)
+    $has_taylor_coefficients(center, radius, coefficients, derivatives)
+
 thm analytic_power_series_has_taylor_coefficients:
-    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x R) R, derivatives fn(k N) fn(x R) R:
+    ? forall coefficients fn(n N) R, center R, radius R+, f fn(x '(center - radius, center + radius)) R:
         forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
         =>:
-            $has_taylor_coefficients(coefficients, center, derivatives)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_taylor_coefficients(coefficients, center, derivatives)
+            exist derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R st {$has_taylor_formula_data(center, radius, f, coefficients, derivatives, derivative_coefficients)}
+    # proof_debt: construct the derivative data from Proposition 4.2.6 and
+    # evaluate each derivative power series at the center.
+    trust exist derivatives fn(k N) fn(x '(center - radius, center + radius)) R, derivative_coefficients fn(p cart(N, N)) R st {$has_taylor_formula_data(center, radius, f, coefficients, derivatives, derivative_coefficients)}
 
 # Corollary 4.2.12 (Uniqueness of power series).
 thm analytic_power_series_coefficients_are_unique:
-    ? forall coefficients1, coefficients2 fn(k N) R, center R, radius1, radius2 R_pos, f fn(x R) R, n N:
+    ? forall E power_set(R), center E, f fn(x E) R, coefficients1, coefficients2 fn(k N) R, radius1, radius2 R+, n N:
+        $chap1::is_metric_interior_point(R, chap1::real_distance, E, center)
+        '(center - radius1, center + radius1) $subset E
+        '(center - radius2, center + radius2) $subset E
         forall x '(center - radius1, center + radius1):
             $has_power_series_sum(coefficients1, center, x, f(x))
         forall x '(center - radius2, center + radius2):
@@ -234,7 +307,8 @@ prop has_right_limit_at(E power_set(R), f fn(x E) R, endpoint, L R):
     $chap3::has_function_limit(R, R, chap1::real_distance, chap1::real_distance, E, f, endpoint, L)
 
 thm abel_theorem_at_right_endpoint:
-    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+    ? forall coefficients fn(n N) R, center R, radius R+, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+        $is_radius_of_convergence(coefficients, (0, radius))
         forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
         $has_power_series_sum(coefficients, center, center + radius, endpoint_sum)
@@ -244,7 +318,8 @@ thm abel_theorem_at_right_endpoint:
     trust $has_left_limit_at('(center - radius, center + radius), f, center + radius, endpoint_sum)
 
 thm abel_theorem_at_left_endpoint:
-    ? forall coefficients fn(n N) R, center R, radius R_pos, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+    ? forall coefficients fn(n N) R, center R, radius R+, f fn(x '(center - radius, center + radius)) R, endpoint_sum R:
+        $is_radius_of_convergence(coefficients, (0, radius))
         forall x '(center - radius, center + radius):
             $has_power_series_sum(coefficients, center, x, f(x))
         $has_power_series_sum(coefficients, center, center - radius, endpoint_sum)
@@ -254,30 +329,39 @@ thm abel_theorem_at_left_endpoint:
     trust $has_right_limit_at('(center - radius, center + radius), f, center - radius, endpoint_sum)
 
 # Lemma 4.3.2 (Summation by parts).
-prop has_nonnegative_series_sum(sequence fn(n N) R, L R):
-    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N_pos) R {sum(0, k, fn(j closed_range(0, k)) R {sequence(j)})}, L)
+prop has_zero_indexed_series_sum(sequence fn(n N) R, L R):
+    $chap1::has_metric_limit(R, chap1::real_distance, fn(k N+) R {sum(0, k, fn(j closed_range(0, k)) R {sequence(j)})}, L)
 
 thm summation_by_parts:
     ? forall a, b fn(n N) R, A, B, left_sum R:
-        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {a(n)}, A)
-        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {b(n)}, B)
-        $has_nonnegative_series_sum(fn(n N) R {(a(n + 1) - a(n)) * b(n)}, left_sum)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {a(n)}, A)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {b(n)}, B)
+        $has_zero_indexed_series_sum(fn(n N) R {(a(n + 1) - a(n)) * b(n)}, left_sum)
         =>:
-            $has_nonnegative_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
+            $has_zero_indexed_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_nonnegative_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
+    trust $has_zero_indexed_series_sum(fn(n N) R {a(n + 1) * (b(n + 1) - b(n))}, A * B - a(0) * b(0) - left_sum)
 
 # Theorem 4.4.1 (Products of analytic power series).
 have fn power_series_convolution(c, d fn(k N) R, n N) R = sum(0, n, fn(m closed_range(0, n)) R {c(m) * d(n - m)})
 
+prop has_analytic_power_series_product_conclusions(center R, radius R+, c, d fn(n N) R, f, g fn(x '(center - radius, center + radius)) R):
+    $is_real_analytic_on('(center - radius, center + radius), fn(x '(center - radius, center + radius)) R {f(x) * g(x)})
+    forall x '(center - radius, center + radius):
+        $has_power_series_sum(fn(n N) R {power_series_convolution(c, d, n)}, center, x, f(x) * g(x))
+
 thm product_of_analytic_power_series:
-    ? forall center R, radius R_pos, c, d fn(n N) R, f, g fn(x '(center - radius, center + radius)) R, x '(center - radius, center + radius):
-        $has_power_series_sum(c, center, x, f(x))
-        $has_power_series_sum(d, center, x, g(x))
+    ? forall center R, radius R+, c, d fn(n N) R, f, g fn(x '(center - radius, center + radius)) R:
+        $is_real_analytic_on('(center - radius, center + radius), f)
+        $is_real_analytic_on('(center - radius, center + radius), g)
+        forall x '(center - radius, center + radius):
+            $has_power_series_sum(c, center, x, f(x))
+            $has_power_series_sum(d, center, x, g(x))
         =>:
-            $has_power_series_sum(fn(n N) R {power_series_convolution(c, d, n)}, center, x, f(x) * g(x))
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_power_series_sum(fn(n N) R {power_series_convolution(c, d, n)}, center, x, f(x) * g(x))
+            $has_analytic_power_series_product_conclusions(center, radius, c, d, f, g)
+    # proof_debt: use absolute convergence to justify the Cauchy product and
+    # prove analyticity of the resulting product function on the interval.
+    trust $has_analytic_power_series_product_conclusions(center, radius, c, d, f, g)
 
 # Definition 4.5.1 (Exponential function).
 prop is_exponential_coefficient(n N, c R):
@@ -298,16 +382,28 @@ have fn exp_real by exist!:
 # Theorem 4.5.2 (Basic properties of exponential).
 thm exponential_basic_properties:
     ? forall x, y R:
+        $is_radius_of_convergence(fn(n N) R {exponential_coefficient(n)}, (1, 0))
+        $is_power_series_absolutely_convergent_at(fn(n N) R {exponential_coefficient(n)}, 0, x)
+        $has_power_series_sum(fn(n N) R {exponential_coefficient(n)}, 0, x, exp_real(x))
         $is_real_analytic_on(R, fn(t R) R {exp_real(t)})
         $has_derivative_on(R, fn(t R) R {exp_real(t)}, fn(t R) R {exp_real(t)})
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {exp_real(t)})
         exp_real(x + y) = exp_real(x) * exp_real(y)
         exp_real(0) = 1
         exp_real(x) > 0
-        exp_real(-x) * exp_real(x) = 1
+        exp_real(-x) = 1 / exp_real(x)
+    # proof_debt: show the reciprocal-factorial coefficients have infinite radius.
+    trust $is_radius_of_convergence(fn(n N) R {exponential_coefficient(n)}, (1, 0))
+    # proof_debt: prove absolute convergence of the exponential series at x.
+    trust $is_power_series_absolutely_convergent_at(fn(n N) R {exponential_coefficient(n)}, 0, x)
+    # proof_debt: connect the selected exponential value to its series sum.
+    trust $has_power_series_sum(fn(n N) R {exponential_coefficient(n)}, 0, x, exp_real(x))
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $is_real_analytic_on(R, fn(t R) R {exp_real(t)})
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $has_derivative_on(R, fn(t R) R {exp_real(t)}, fn(t R) R {exp_real(t)})
+    # proof_debt: derive continuity from differentiability.
+    trust $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {exp_real(t)})
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust exp_real(x + y) = exp_real(x) * exp_real(y)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
@@ -315,7 +411,7 @@ thm exponential_basic_properties:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust exp_real(x) > 0
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust exp_real(-x) * exp_real(x) = 1
+    trust exp_real(-x) = 1 / exp_real(x)
 
 thm exponential_order_forward:
     ? forall x, y R:
@@ -359,17 +455,17 @@ thm exponential_as_euler_power:
     trust exp_real(x) = value
 
 # Definition 4.5.5 (Natural logarithm).
-prop is_logarithm_value(x R_pos, y R):
+prop is_logarithm_value(x R+, y R):
     exp_real(y) = x
 
 have fn log_real by exist!:
-    ? forall x R_pos:
+    ? forall x R+:
         exist! y R st {$is_logarithm_value(x, y)}
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust exist! y R st {$is_logarithm_value(x, y)}
 
 thm exponential_of_logarithm:
-    ? forall x R_pos:
+    ? forall x R+:
         exp_real(log_real(x)) = x
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust exp_real(log_real(x)) = x
@@ -384,18 +480,18 @@ thm logarithm_of_exponential:
 
 # Theorem 4.5.6 (Logarithm properties).
 thm logarithm_derivative_and_integral:
-    ? forall a, b R_pos:
+    ? forall a, b R+:
         a <= b
         =>:
-            $has_derivative_on(R_pos, fn(x R_pos) R {log_real(x)}, fn(x R_pos) R {1 / x})
+            $has_derivative_on(R+, fn(x R+) R {log_real(x)}, fn(x R+) R {1 / x})
             $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {1 / x}, log_real(b) - log_real(a))
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $has_derivative_on(R_pos, fn(x R_pos) R {log_real(x)}, fn(x R_pos) R {1 / x})
+    trust $has_derivative_on(R+, fn(x R+) R {log_real(x)}, fn(x R+) R {1 / x})
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust $chap3::has_riemann_integral_value('[a, b], fn(x '[a, b]) R {1 / x}, log_real(b) - log_real(a))
 
 thm logarithm_product_and_reciprocal_laws:
-    ? forall x, y R_pos:
+    ? forall x, y R+:
         log_real(x * y) = log_real(x) + log_real(y)
         log_real(1) = 0
         log_real(1 / x) = -log_real(x)
@@ -407,7 +503,7 @@ thm logarithm_product_and_reciprocal_laws:
     trust log_real(1 / x) = -log_real(x)
 
 thm logarithm_real_power_law:
-    ? forall x R_pos, y, value R:
+    ? forall x R+, y, value R:
         $has_real_power_value(x, y, value)
         value > 0
         =>:
@@ -417,9 +513,25 @@ thm logarithm_real_power_law:
 
 thm logarithm_power_series:
     ? forall x '(-1, 1):
-        $chap3::has_real_series_sum(fn(n N_pos) R {-x^n / n}, log_real(1 - x))
+        $chap3::has_real_series_sum(fn(n N+) R {-x^n / n}, log_real(1 - x))
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $chap3::has_real_series_sum(fn(n N_pos) R {-x^n / n}, log_real(1 - x))
+    trust $chap3::has_real_series_sum(fn(n N+) R {-x^n / n}, log_real(1 - x))
+
+have fn logarithm_taylor_coefficient(n N) R by induc n from 0:
+    case n = 0: 0
+    case n > 0: (-1)^(n + 1) / n
+
+thm logarithm_taylor_series_at_one:
+    ? forall x '(0, 2):
+        $is_radius_of_convergence(fn(n N) R {logarithm_taylor_coefficient(n)}, (0, 1))
+        $is_real_analytic_at(R+, fn(t R+) R {log_real(t)}, 1)
+        $has_power_series_sum(fn(n N) R {logarithm_taylor_coefficient(n)}, 1, x, log_real(x))
+    # proof_debt: prove the alternating reciprocal coefficient family has radius one.
+    trust $is_radius_of_convergence(fn(n N) R {logarithm_taylor_coefficient(n)}, (0, 1))
+    # proof_debt: derive analyticity of logarithm at one from the displayed series.
+    trust $is_real_analytic_at(R+, fn(t R+) R {log_real(t)}, 1)
+    # proof_debt: reindex the ln(1-x) expansion around one.
+    trust $has_power_series_sum(fn(n N) R {logarithm_taylor_coefficient(n)}, 1, x, log_real(x))
 
 # Definition 4.6.1 (Informal complex-number carrier).
 have informal_complex_coordinates set = cart(R, R)
@@ -443,7 +555,7 @@ thm complex_additive_group_laws:
         complex_add(complex_zero, z1) = z1
         complex_add(z1, complex_neg(z1)) = complex_zero
         complex_add(complex_neg(z1), z1) = complex_zero
-    complex_add(z1, z2) = complex_add(z2, z1)
+    complex_add(z1, z2) = (z1.real_part + z2.real_part, z1.im + z2.im) = (z2.real_part + z1.real_part, z2.im + z1.im) = complex_add(z2, z1)
     # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate associativity calculation.
     trust complex_add(complex_add(z1, z2), z3) = complex_add(z1, complex_add(z2, z3))
     # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
@@ -467,7 +579,8 @@ thm complex_multiplication_laws:
         complex_mul(z1, complex_one) = z1
         complex_mul(complex_one, z1) = z1
         complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
-    complex_mul(z1, z2) = complex_mul(z2, z1)
+        complex_mul(complex_add(z2, z3), z1) = complex_add(complex_mul(z2, z1), complex_mul(z3, z1))
+    complex_mul(z1, z2) = (z1.real_part * z2.real_part - z1.im * z2.im, z1.real_part * z2.im + z1.im * z2.real_part) = (z2.real_part * z1.real_part - z2.im * z1.im, z2.real_part * z1.im + z2.im * z1.real_part) = complex_mul(z2, z1)
     # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate associativity calculation.
     trust complex_mul(complex_mul(z1, z2), z3) = complex_mul(z1, complex_mul(z2, z3))
     # proof_debt: struct-valued function unfolding does not yet bridge the computed tuple to the named operand.
@@ -476,6 +589,9 @@ thm complex_multiplication_laws:
     trust complex_mul(complex_one, z1) = z1
     # proof_debt: nested struct-valued function unfolding does not yet expose the coordinate distributivity calculation.
     trust complex_mul(z1, complex_add(z2, z3)) = complex_add(complex_mul(z1, z2), complex_mul(z1, z3))
+    # migration_forced_trust: shallow replay cannot yet combine struct-valued
+    # function congruence with the two coordinate commutativity substitutions.
+    trust complex_mul(complex_add(z2, z3), z1) = complex_add(complex_mul(z2, z1), complex_mul(z3, z1))
 
 # Lemma 4.6.7 (Real-imaginary representation).
 have imaginary_unit &ComplexNumber = (0, 1)
@@ -519,6 +635,38 @@ thm complex_conjugation_laws:
     trust complex_conjugate(complex_mul(z, w)) = complex_mul(complex_conjugate(z), complex_conjugate(w))
     # proof_debt: nested struct-valued function unfolding does not yet bridge the computed tuple to z.
     trust complex_conjugate(complex_conjugate(z)) = z
+
+thm equal_conjugates_imply_equal_originals:
+    ? forall z, w &ComplexNumber:
+        complex_conjugate(z) = complex_conjugate(w)
+        =>:
+            z = w
+    # proof_debt: apply conjugation again and use involution.
+    trust z = w
+
+thm equal_originals_imply_equal_conjugates:
+    ? forall z, w &ComplexNumber:
+        z = w
+        =>:
+            complex_conjugate(z) = complex_conjugate(w)
+    complex_conjugate(z) = complex_conjugate(w)
+
+thm conjugation_fixed_implies_real:
+    ? forall z &ComplexNumber:
+        complex_conjugate(z) = z
+        =>:
+            $is_real_complex(z)
+    # proof_debt: unfold the conjugate coordinate equality.
+    trust $is_real_complex(z)
+
+thm real_implies_conjugation_fixed:
+    ? forall z &ComplexNumber:
+        $is_real_complex(z)
+        =>:
+            complex_conjugate(z) = z
+    # proof_debt: struct-valued function unfolding does not bridge the
+    # zero-imaginary coordinate computation back to z.
+    trust complex_conjugate(z) = z
 
 # Definition 4.6.10 (Complex absolute value).
 have fn complex_abs(z &ComplexNumber) R = sqrt(z.real_part^2 + z.im^2)
@@ -565,6 +713,15 @@ thm complex_absolute_value_zero:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust z = complex_zero
 
+thm complex_zero_has_absolute_value_zero:
+    ? forall z &ComplexNumber:
+        z = complex_zero
+        =>:
+            complex_abs(z) = 0
+    # proof_debt: struct equality does not yet expose both zero coordinates
+    # through sqrt normalization in this source context.
+    trust complex_abs(z) = 0
+
 # Definition 4.6.12 (Complex reciprocal and quotient).
 prop is_complex_reciprocal(z, w &ComplexNumber):
     complex_mul(z, w) = complex_one
@@ -589,20 +746,20 @@ thm complex_distance_is_metric:
     trust $chap1::is_metric_space(&ComplexNumber, complex_distance)
 
 thm complex_convergence_implies_coordinatewise:
-    ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
+    ? forall sequence fn(n N+) &ComplexNumber, z &ComplexNumber:
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
         =>:
-            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
-            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
+            $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.im}, z.im)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
+    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+    trust $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.im}, z.im)
 
 thm coordinatewise_convergence_implies_complex:
-    ? forall sequence fn(n N_pos) &ComplexNumber, z &ComplexNumber:
-        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
-        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N_pos) R {&ComplexNumber{sequence(n)}.im}, z.im)
+    ? forall sequence fn(n N+) &ComplexNumber, z &ComplexNumber:
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.real_part}, z.real_part)
+        $chap1::has_metric_limit(R, chap1::real_distance, fn(n N+) R {&ComplexNumber{sequence(n)}.im}, z.im)
         =>:
             $chap1::has_metric_limit(&ComplexNumber, complex_distance, sequence, z)
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
@@ -610,35 +767,43 @@ thm coordinatewise_convergence_implies_complex:
 
 # Lemma 4.6.14 (Complex limit laws). These are concrete convergence
 # conclusions over the Chapter 1 metric-limit relation, not opaque flags.
-template<z, w fn(n N_pos) &ComplexNumber>:
-    have fn complex_sum_sequence(n N_pos) &ComplexNumber = complex_add(z(n), w(n))
+template<z, w fn(n N+) &ComplexNumber>:
+    have fn complex_sum_sequence(n N+) &ComplexNumber = complex_add(z(n), w(n))
 
-template<z, w fn(n N_pos) &ComplexNumber>:
-    have fn complex_product_sequence(n N_pos) &ComplexNumber = complex_mul(z(n), w(n))
+template<z, w fn(n N+) &ComplexNumber>:
+    have fn complex_product_sequence(n N+) &ComplexNumber = complex_mul(z(n), w(n))
 
-template<z fn(n N_pos) &ComplexNumber, c &ComplexNumber>:
-    have fn complex_constant_product_sequence(n N_pos) &ComplexNumber = complex_mul(c, z(n))
+template<z, w fn(n N+) &ComplexNumber>:
+    have fn complex_difference_sequence(n N+) &ComplexNumber = complex_add(z(n), complex_neg(w(n)))
 
-prop has_basic_complex_limit_laws(z, w fn(n N_pos) &ComplexNumber, c, limit_z, limit_w &ComplexNumber):
+template<z fn(n N+) &ComplexNumber, c &ComplexNumber>:
+    have fn complex_constant_product_sequence(n N+) &ComplexNumber = complex_mul(c, z(n))
+
+template<z fn(n N+) &ComplexNumber>:
+    have fn complex_conjugate_sequence(n N+) &ComplexNumber = complex_conjugate(z(n))
+
+prop has_basic_complex_limit_laws(z, w fn(n N+) &ComplexNumber, c, limit_z, limit_w &ComplexNumber):
     $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_sum_sequence<z, w>, complex_add(limit_z, limit_w))
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_difference_sequence<z, w>, complex_add(limit_z, complex_neg(limit_w)))
     $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_product_sequence<z, w>, complex_mul(limit_z, limit_w))
     $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_constant_product_sequence<z, c>, complex_mul(c, limit_z))
+    $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_conjugate_sequence<z>, complex_conjugate(limit_z))
 
 have fn complex_safe_divide(z, w &ComplexNumber) &ComplexNumber by cases:
     case w != complex_zero: complex_divide(z, w)
     case w = complex_zero: complex_zero
 
-template<z, w fn(n N_pos) &ComplexNumber>:
-    have fn complex_quotient_sequence(n N_pos) &ComplexNumber = complex_safe_divide(z(n), w(n))
+template<z, w fn(n N+) &ComplexNumber>:
+    have fn complex_quotient_sequence(n N+) &ComplexNumber = complex_safe_divide(z(n), w(n))
 
-prop has_complex_quotient_limit(z, w fn(n N_pos) &ComplexNumber, limit_z, limit_w &ComplexNumber):
-    forall n N_pos:
+prop has_complex_quotient_limit(z, w fn(n N+) &ComplexNumber, limit_z, limit_w &ComplexNumber):
+    forall n N+:
         w(n) != complex_zero
     limit_w != complex_zero
     $chap1::has_metric_limit(&ComplexNumber, complex_distance, \complex_quotient_sequence<z, w>, complex_divide(limit_z, limit_w))
 
 thm complex_limit_laws:
-    ? forall z, w fn(n N_pos) &ComplexNumber, c, limit_z, limit_w &ComplexNumber:
+    ? forall z, w fn(n N+) &ComplexNumber, c, limit_z, limit_w &ComplexNumber:
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, z, limit_z)
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, w, limit_w)
         =>:
@@ -647,10 +812,10 @@ thm complex_limit_laws:
     trust $has_basic_complex_limit_laws(z, w, c, limit_z, limit_w)
 
 thm complex_quotient_limit_law:
-    ? forall z, w fn(n N_pos) &ComplexNumber, limit_z, limit_w &ComplexNumber:
+    ? forall z, w fn(n N+) &ComplexNumber, limit_z, limit_w &ComplexNumber:
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, z, limit_z)
         $chap1::has_metric_limit(&ComplexNumber, complex_distance, w, limit_w)
-        forall n N_pos:
+        forall n N+:
             w(n) != complex_zero
         limit_w != complex_zero
         =>:
@@ -668,18 +833,18 @@ prop is_complex_exponential_coordinate_data(z &ComplexNumber, data fn(entry cart
     data((0, 1)) = 0
     data((0, 2)) = 1
     data((0, 3)) = 0
-    forall n N_pos:
+    forall n N+:
         data((n, 0)) = z.real_part * data((n - 1, 0)) - z.im * data((n - 1, 1))
         data((n, 1)) = z.real_part * data((n - 1, 1)) + z.im * data((n - 1, 0))
         factorial_real(n) * (data((n, 2)) - data((n - 1, 2))) = data((n, 0))
         factorial_real(n) * (data((n, 3)) - data((n - 1, 3))) = data((n, 1))
 
-prop is_complex_exponential_partial_sum_view(data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N_pos) &ComplexNumber):
-    forall n N_pos:
+prop is_complex_exponential_partial_sum_view(data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N+) &ComplexNumber):
+    forall n N+:
         partial_sums(n) = (data((n, 2)), data((n, 3)))
 
 prop has_complex_exponential_series_sum(z, L &ComplexNumber):
-    exist data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N_pos) &ComplexNumber st {$is_complex_exponential_coordinate_data(z, data), $is_complex_exponential_partial_sum_view(data, partial_sums), $chap1::has_metric_limit(&ComplexNumber, complex_distance, partial_sums, L)}
+    exist data fn(entry cart(N, closed_range(0, 3))) R, partial_sums fn(n N+) &ComplexNumber st {$is_complex_exponential_coordinate_data(z, data), $is_complex_exponential_partial_sum_view(data, partial_sums), $chap1::has_metric_limit(&ComplexNumber, complex_distance, partial_sums, L)}
 
 have fn exp_complex by exist!:
     ? forall z &ComplexNumber:
@@ -711,6 +876,59 @@ have fn real_sin by exist!:
     # proof_debt: the concrete coordinate graph is defined, but the verifier
     # does not propagate the R-valued field type through exp_complex.
     trust exist! y R st {$is_real_sine_value(x, y)}
+
+prop is_cosine_taylor_coefficient(n N, c R):
+    exist k N st {n = 2 * k, factorial_real(n) * c = (-1)^k} or not exist k N st {n = 2 * k} and c = 0
+
+have fn cosine_taylor_coefficient by exist!:
+    ? forall n N:
+        exist! c R st {$is_cosine_taylor_coefficient(n, c)}
+    # proof_debt: parity decomposition and reciprocal-factorial uniqueness are
+    # not yet available as a reusable checked interface.
+    trust exist! c R st {$is_cosine_taylor_coefficient(n, c)}
+
+prop is_sine_taylor_coefficient(n N, c R):
+    exist k N st {n = 2 * k + 1, factorial_real(n) * c = (-1)^k} or not exist k N st {n = 2 * k + 1} and c = 0
+
+have fn sine_taylor_coefficient by exist!:
+    ? forall n N:
+        exist! c R st {$is_sine_taylor_coefficient(n, c)}
+    # proof_debt: parity decomposition and reciprocal-factorial uniqueness are
+    # not yet available as a reusable checked interface.
+    trust exist! c R st {$is_sine_taylor_coefficient(n, c)}
+
+thm trigonometric_power_series_are_entire:
+    ? forall x R:
+        $is_radius_of_convergence(fn(n N) R {cosine_taylor_coefficient(n)}, (1, 0))
+        $is_radius_of_convergence(fn(n N) R {sine_taylor_coefficient(n)}, (1, 0))
+        $is_power_series_absolutely_convergent_at(fn(n N) R {cosine_taylor_coefficient(n)}, 0, x)
+        $is_power_series_absolutely_convergent_at(fn(n N) R {sine_taylor_coefficient(n)}, 0, x)
+        $has_power_series_sum(fn(n N) R {cosine_taylor_coefficient(n)}, 0, x, real_cos(x))
+        $has_power_series_sum(fn(n N) R {sine_taylor_coefficient(n)}, 0, x, real_sin(x))
+        $is_real_analytic_on(R, fn(t R) R {real_cos(t)})
+        $is_real_analytic_on(R, fn(t R) R {real_sin(t)})
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {real_cos(t)})
+        $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {real_sin(t)})
+    # proof_debt: the ratio-test argument for the cosine coefficients is not yet formalized.
+    trust $is_radius_of_convergence(fn(n N) R {cosine_taylor_coefficient(n)}, (1, 0))
+    # proof_debt: the ratio-test argument for the sine coefficients is not yet formalized.
+    trust $is_radius_of_convergence(fn(n N) R {sine_taylor_coefficient(n)}, (1, 0))
+    # proof_debt: absolute convergence of the cosine series at x is not yet formalized.
+    trust $is_power_series_absolutely_convergent_at(fn(n N) R {cosine_taylor_coefficient(n)}, 0, x)
+    # proof_debt: absolute convergence of the sine series at x is not yet formalized.
+    trust $is_power_series_absolutely_convergent_at(fn(n N) R {sine_taylor_coefficient(n)}, 0, x)
+    # proof_debt: identify the selected real cosine value with its factorial series.
+    trust $has_power_series_sum(fn(n N) R {cosine_taylor_coefficient(n)}, 0, x, real_cos(x))
+    # proof_debt: identify the selected real sine value with its factorial series.
+    trust $has_power_series_sum(fn(n N) R {sine_taylor_coefficient(n)}, 0, x, real_sin(x))
+    # proof_debt: transport the local power-series expansions to every real center.
+    trust $is_real_analytic_on(R, fn(t R) R {real_cos(t)})
+    # proof_debt: transport the local power-series expansions to every real center.
+    trust $is_real_analytic_on(R, fn(t R) R {real_sin(t)})
+    # proof_debt: derive continuity from global analyticity.
+    trust $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {real_cos(t)})
+    # proof_debt: derive continuity from global analyticity.
+    trust $chap2::is_metric_continuous(R, R, chap1::real_distance, chap1::real_distance, fn(t R) R {real_sin(t)})
 
 # Theorem 4.7.2 (Trigonometric identities).
 thm trigonometric_identities:
@@ -764,18 +982,25 @@ thm euler_formula:
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
     trust exp_complex(complex_mul(imaginary_unit, complex_of_real(x))) = (real_cos(x), real_sin(x))
 
+thm negative_euler_formula:
+    ? forall x R:
+        exp_complex(complex_neg(complex_mul(imaginary_unit, complex_of_real(x)))) = (real_cos(x), -real_sin(x))
+    # proof_debt: combine the exponential inverse law with the trigonometric
+    # parity identities in the complex carrier.
+    trust exp_complex(complex_neg(complex_mul(imaginary_unit, complex_of_real(x)))) = (real_cos(x), -real_sin(x))
+
 # Lemma 4.7.3 (A positive zero of sine exists).
 thm positive_sine_zero_exists:
     ? forall anchor R:
-        exist x R_pos st {real_sin(x) = 0}
+        exist x R+ st {real_sin(x) = 0}
     # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust exist x R_pos st {real_sin(x) = 0}
+    trust exist x R+ st {real_sin(x) = 0}
 
 # Definition 4.7.4 (Pi).
 prop is_least_positive_sine_zero(p R):
     p > 0
     real_sin(p) = 0
-    forall x R_pos:
+    forall x R+:
         real_sin(x) = 0
         =>:
             p <= x
@@ -788,6 +1013,25 @@ have fn pi_selector by exist!:
 
 have pi_real R = pi_selector(0)
 
+thm pi_trigonometric_values:
+    ? forall anchor R:
+        pi_real > 0
+        real_sin(pi_real) = 0
+        real_cos(pi_real) = -1
+        exp_complex(complex_mul(imaginary_unit, complex_of_real(pi_real))) = complex_neg(complex_one)
+    # proof_debt: the selected least-positive-zero facts do not propagate
+    # through the named alias pi_real.
+    trust pi_real > 0
+    # proof_debt: the selected least-positive-zero facts do not propagate
+    # through the named alias pi_real.
+    trust real_sin(pi_real) = 0
+    # proof_debt: use monotonicity on the first positive-zero interval and
+    # sin^2 + cos^2 = 1 to select the negative cosine value.
+    trust real_cos(pi_real) = -1
+    # proof_debt: combine Euler's formula with the displayed sine/cosine values
+    # through the concrete complex coordinates.
+    trust exp_complex(complex_mul(imaginary_unit, complex_of_real(pi_real))) = complex_neg(complex_one)
+
 # Theorem 4.7.5 (Periodicity and zero sets).
 prop is_integer_multiple_of_pi(x R):
     exist k Z st {x = k * pi_real}
@@ -795,20 +1039,25 @@ prop is_integer_multiple_of_pi(x R):
 prop is_half_integer_multiple_of_pi(x R):
     exist k Z st {2 * x = (2 * k + 1) * pi_real}
 
+thm trigonometric_half_periodicity:
+    ? forall x R:
+        real_cos(x + pi_real) = -real_cos(x)
+        real_sin(x + pi_real) = -real_sin(x)
+    # proof_debt: the half-period identities still need the source analytic proof.
+    trust real_cos(x + pi_real) = -real_cos(x)
+    # proof_debt: the half-period identities still need the source analytic proof.
+    trust real_sin(x + pi_real) = -real_sin(x)
+
 thm trigonometric_periodicity:
     ? forall x R:
         real_cos(x + pi_real) = -real_cos(x)
         real_sin(x + pi_real) = -real_sin(x)
         real_cos(x + 2 * pi_real) = real_cos(x)
         real_sin(x + 2 * pi_real) = real_sin(x)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust real_cos(x + pi_real) = -real_cos(x)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust real_sin(x + pi_real) = -real_sin(x)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust real_cos(x + 2 * pi_real) = real_cos(x)
-    # proof_debt: source proof or supporting analysis interface is not yet formalized.
-    trust real_sin(x + 2 * pi_real) = real_sin(x)
+    by thm trigonometric_half_periodicity(x)
+    by thm trigonometric_half_periodicity(x + pi_real)
+    real_cos(x + 2 * pi_real) = real_cos((x + pi_real) + pi_real) = -real_cos(x + pi_real) = -(-real_cos(x)) = real_cos(x)
+    real_sin(x + 2 * pi_real) = real_sin((x + pi_real) + pi_real) = -real_sin(x + pi_real) = -(-real_sin(x)) = real_sin(x)
 
 thm sine_zero_characterization_forward:
     ? forall x R:

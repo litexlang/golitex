@@ -9,6 +9,32 @@
 # Litex's fact-oriented proof interface. It is an independent translation
 # project, not an official edition of or substitute for the original book.
 #
+# Translation conventions
+#
+# Standalone items explicitly labelled Exercise or Exercises are outside this
+# translation and are omitted rather than replaced by declarations or coverage
+# placeholders. A named definition, theorem, proposition, lemma, corollary, or
+# remark is still retained when the source merely leaves its proof, or one
+# step of its proof, as an exercise; that omission is then shown locally as an
+# explicit trust boundary.
+#
+# This is a source-ordered mathematical translation, not a line-by-line
+# transcription. Litex builtins are used for familiar carriers and operations
+# such as natural numbers, integers, rationals, reals, sets, functions, and
+# arithmetic. The book's constructions of those objects may therefore appear
+# as an alternate proof route or marked proof debt rather than as prerequisites
+# for every later theorem. Routine implicit steps may be expanded, while long
+# supporting arguments may be deferred when formalizing them would obscure the
+# chapter's main mathematical line.
+#
+# Inclusion and proof status are separate. An included statement may be fully
+# checked, may depend on an explicit axiom or abstract background interface, or
+# may contain the narrowest practical `trust` at an unfinished step. `trust`
+# records accepted proof debt; it does not mean that Litex verified that step.
+# Missing non-exercise source material and remaining proof work are tracked by
+# the project ledgers, so the presence of a chapter file does not by itself
+# claim complete source coverage.
+#
 # Most declarations included here are accepted by the Litex verifier. The
 # remaining unchecked steps are kept visible as explicit trust boundaries using keyword `trust`.
 # Some correspond to arguments that a textbook naturally leaves to the reader;

@@ -1,12 +1,12 @@
 # Linear Algebra Done Right, fourth edition — Section 7F.
 # Consequences of Singular Value Decomposition.
-prop has_singular_value_upper_bound(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>):
+prop has_singular_value_upper_bound(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N+, values &chap1a::FiniteList<R, n>):
     forall v VSet:
         \chap6a::norm<s, WSet>(Winner, T(v)) <= values.entries(1) * \chap6a::norm<s, VSet>(Vinner, v)
 # Result 7.82. In an SVD, orthonormality turns the squared norm of Tv into a
 # weighted sum. Replace every weight by s1^2, apply Bessel, and take roots.
 axiom singular_value_upper_bound:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N+, values &chap1a::FiniteList<R, n>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         \chap2c::dimension<s, VSet, Vinner.vector_space> = n
         $chap7e::is_singular_value_list(s, VSet, WSet, Vinner, Winner, T, n, values)
@@ -27,9 +27,11 @@ axiom linear_map_norm_exists_unique:
         =>:
             exist! c R st {$is_linear_map_norm_value(s, VSet, WSet, Vinner, Winner, T, c)}
 
-template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>>:
-    # Exact unique existence is explicit above; parameterized selection remains.
-    trust have linear_map_norm fn(T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>) R
+template<s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>: $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)>:
+    have fn linear_map_norm by exist!:
+        ? forall T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+            exist! c R st {$is_linear_map_norm_value(s, VSet, WSet, Vinner, Winner, T, c)}
+        by thm linear_map_norm_exists_unique(s, VSet, WSet, Vinner, Winner, T)
 
 axiom linear_map_norm_spec:
     ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
@@ -38,10 +40,11 @@ axiom linear_map_norm_spec:
             $is_linear_map_norm_value(s, VSet, WSet, Vinner, Winner, T, \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T))
 
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
-    have fn linear_map_difference(S, T \chap3a::linear_map_space<s, VSet, WSet, V, W>) \chap3a::linear_map_space<s, VSet, WSet, V, W> = \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(V.scalars.neg(V.scalars.one), T))
+    have fn linear_map_difference(S, T \chap3a::linear_map_space<s, VSet, WSet, V, W>) fn(v VSet) WSet = \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(V.scalars.neg(V.scalars.one), T))
 # Result 7.87. Positivity, definiteness, homogeneity, and the triangle
 # inequality are kept as the source's four mathematical clauses.
 prop linear_map_norm_properties_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
     \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T) >= 0
     forall:
         =>:
@@ -49,8 +52,10 @@ prop linear_map_norm_properties_statement(s nonempty_set, VSet, WSet nonempty_se
         <=>:
             T = \chap3a::zero_linear_map<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>
     forall a s:
+        \chap3a::linear_map_smul<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(a, T) $in \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>
         \linear_map_norm<s, VSet, WSet, Vinner, Winner>(\chap3a::linear_map_smul<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(a, T)) = Vinner.scalar_geometry.absolute_value(a) * \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T)
     forall S \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+        \chap3a::linear_map_add<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(S, T) $in \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>
         \linear_map_norm<s, VSet, WSet, Vinner, Winner>(\chap3a::linear_map_add<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(S, T)) <= \linear_map_norm<s, VSet, WSet, Vinner, Winner>(S) + \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T)
 
 axiom basic_properties_of_norms_of_linear_maps:
@@ -70,7 +75,8 @@ prop is_smallest_global_norm_bound(s nonempty_set, VSet, WSet nonempty_set, Vinn
             c <= d
 # Result 7.88. The maximum is the top singular value, is attained on the unit
 # sphere, and is the least global norm bound.
-prop alternative_linear_map_norm_formulas_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>):
+prop alternative_linear_map_norm_formulas_statement(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N+, values &chap1a::FiniteList<R, n>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
     \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T) = values.entries(1)
     forall v VSet:
         \chap6a::norm<s, VSet>(Vinner, v) = 1
@@ -80,7 +86,7 @@ prop alternative_linear_map_norm_formulas_statement(s nonempty_set, VSet, WSet n
     $is_smallest_global_norm_bound(s, VSet, WSet, Vinner, Winner, T, \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T))
 
 axiom alternative_formulas_for_norms_of_linear_maps:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, n N+, values &chap1a::FiniteList<R, n>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         \chap2c::dimension<s, VSet, Vinner.vector_space> = n
         $chap7e::is_singular_value_list(s, VSet, WSet, Vinner, Winner, T, n, values)
@@ -92,8 +98,11 @@ sketch:
     have J matrix(R, 2, 2) = [[1, 1], [1, 1]]
     I(1, 1) = I(2, 2) = 1
     J(1, 1) + J(1, 2) = 2
-    sqrt((1 / sqrt(2))^2 + (1 / sqrt(2))^2) = 1
-    sqrt(sqrt(2)^2 + sqrt(2)^2) = 2
+    # The updated arithmetic runtime does not replay the nonzero denominator
+    # and nested-square-root simplification in this illustrative sketch.
+    sqrt(2) != 0
+    trust sqrt((1 / sqrt(2))^2 + (1 / sqrt(2))^2) = 1
+    trust sqrt(sqrt(2)^2 + sqrt(2)^2) = 2
 # Result 7.91. Bound T* by T using the adjoint identity and Cauchy-Schwarz;
 # repeat with T* and use (T*)*=T.
 axiom norm_of_adjoint:
@@ -103,14 +112,22 @@ axiom norm_of_adjoint:
         =>:
             \linear_map_norm<s, WSet, VSet, Winner, Vinner>(\chap7a::adjoint<s, VSet, WSet, Vinner, Winner>(T)) = \linear_map_norm<s, VSet, WSet, Vinner, Winner>(T)
 
-prop is_truncated_singular_value_decomposition(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T, Tk \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N_pos, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>):
+prop is_truncated_singular_value_decomposition(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T, Tk \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N+, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>):
     k < m
     forall v VSet:
         Tk(v) = \chap7e::svd_forward_value<s, VSet, WSet, Vinner, Winner, k>(v, \chap5c::finite_list_prefix<R, m>(values, k), \chap5c::finite_list_prefix<VSet, m>(domain_vectors, k), \chap5c::finite_list_prefix<WSet, m>(range_vectors, k))
 
-prop is_best_rank_k_approximation(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T, Tk \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N_pos, values &chap1a::FiniteList<R, m>):
+prop is_best_rank_k_approximation(s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T, Tk \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N+, values &chap1a::FiniteList<R, m>):
+    $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+    k < m
+    k + 1 <= m
+    $chap7e::linear_map_range_admits_dimension(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, Tk)
+    \linear_map_difference<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T, Tk) $in \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>
     \chap7e::linear_map_range_dimension<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(Tk) = k
     \linear_map_norm<s, VSet, WSet, Vinner, Winner>(\linear_map_difference<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T, Tk)) = values.entries(k + 1)
+    forall S \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
+        $chap7e::linear_map_range_admits_dimension(s, VSet, WSet, Vinner.vector_space, Winner.vector_space, S)
+        \linear_map_difference<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(T, S) $in \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>
     forall S \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>:
         \chap7e::linear_map_range_dimension<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>(S) <= k
         =>:
@@ -118,52 +135,59 @@ prop is_best_rank_k_approximation(s nonempty_set, VSet, WSet nonempty_set, Vinne
 # Result 7.92. Truncate after k terms; the tail gives the upper bound and
 # dependence among S e1,...,S e_(k+1) gives the matching lower bound.
 axiom best_low_rank_approximation:
-    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N_pos, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, Winner &chap6a::InnerProductSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space>, m, k N+, values &chap1a::FiniteList<R, m>, domain_vectors &chap1a::FiniteList<VSet, m>, range_vectors &chap1a::FiniteList<WSet, m>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         $chap7e::is_singular_value_decomposition(s, VSet, WSet, Vinner, Winner, T, m, values, domain_vectors, range_vectors)
         k < m
         =>:
             exist Tk \chap3a::linear_map_space<s, VSet, WSet, Vinner.vector_space, Winner.vector_space> st {$is_truncated_singular_value_decomposition(s, VSet, WSet, Vinner, Winner, T, Tk, m, k, values, domain_vectors, range_vectors), $is_best_rank_k_approximation(s, VSet, WSet, Vinner, Winner, T, Tk, m, k, values)}
 
-prop is_polar_decomposition(s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T, S, P \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>):
+prop is_polar_decomposition(s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T, TAdj, Gram, S, P \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>):
     $chap7d::is_unitary_operator(s, VSet, Vinner, S)
     $chap7c::is_positive_operator(s, VSet, Vinner, P)
-    $chap7c::is_square_root_of(s, VSet, Vinner.vector_space, \chap3a::linear_map_compose<s, VSet, VSet, VSet, Vinner.vector_space, Vinner.vector_space, Vinner.vector_space>(\chap7a::adjoint<s, VSet, VSet, Vinner, Vinner>(T), T), P)
+    $chap7c::is_square_root_of(s, VSet, Vinner.vector_space, Gram, P)
     T = \chap3a::linear_map_compose<s, VSet, VSet, VSet, Vinner.vector_space, Vinner.vector_space, Vinner.vector_space>(S, P)
 # Result 7.93. Extend the SVD lists to bases, send each e_j to f_j, and read
 # the positive square-root factor from the same diagonal data.
 axiom polar_decomposition:
-    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>:
+    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T, TAdj, Gram \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
+        TAdj = \chap7a::adjoint<s, VSet, VSet, Vinner, Vinner>(T)
+        Gram = \chap3a::linear_map_compose<s, VSet, VSet, VSet, Vinner.vector_space, Vinner.vector_space, Vinner.vector_space>(TAdj, T)
         =>:
-            exist S, P \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space> st {$is_polar_decomposition(s, VSet, Vinner, T, S, P)}
+            exist S, P \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space> st {$is_polar_decomposition(s, VSet, Vinner, T, TAdj, Gram, S, P)}
 # Definition 7.95. The open unit ball is a set-valued construction.
 template<s nonempty_set, VSet nonempty_set>:
     have fn unit_ball(inner_space &chap6a::InnerProductSpace<s, VSet>) power_set(VSet) = {v VSet: \chap6a::norm<s, VSet>(inner_space, v) < 1}
 
-prop has_positive_real_entries(n N_pos, values &chap1a::FiniteList<R, n>):
-    forall k N_pos:
+prop has_positive_real_entries(n N+, values &chap1a::FiniteList<R, n>):
+    forall k N+:
         k <= n
         =>:
             values.entries(k) > 0
+            values.entries(k)^2 != 0
 
-template<s nonempty_set, VSet nonempty_set, n N_pos>:
-    have fn ellipsoid_value(inner_space &chap6a::InnerProductSpace<s, VSet>, v VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>) R = sum(1, n, fn(k N_pos: k <= n) R {inner_space.scalar_geometry.absolute_value(inner_space.inner(v, axes.entries(k)))^2 / radii.entries(k)^2})
+template<s nonempty_set, VSet nonempty_set, n N+>:
+    have fn ellipsoid_value(inner_space &chap6a::InnerProductSpace<s, VSet>, v VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>: $has_positive_real_entries(n, radii)) R = sum(1, n, fn(k N+: k <= n) R {inner_space.scalar_geometry.absolute_value(inner_space.inner(v, axes.entries(k)))^2 / radii.entries(k)^2})
 # Definition 7.96. The callable set retains its positive radii and
 # orthonormal principal-axis data for downstream image theorems.
-template<s nonempty_set, VSet nonempty_set, n N_pos>:
-    have fn ellipsoid(inner_space &chap6a::InnerProductSpace<s, VSet>, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>) power_set(VSet) = {v VSet: \ellipsoid_value<s, VSet, n>(inner_space, v, radii, axes) < 1}
+template<s nonempty_set, VSet nonempty_set, n N+>:
+    have fn ellipsoid(inner_space &chap6a::InnerProductSpace<s, VSet>, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>: $has_positive_real_entries(n, radii)) power_set(VSet) = {v VSet: \ellipsoid_value<s, VSet, n>(inner_space, v, radii, axes) < 1}
 
 prop is_ellipsoid_set(s nonempty_set, VSet nonempty_set, inner_space &chap6a::InnerProductSpace<s, VSet>, E power_set(VSet)):
-    exist n N_pos, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, inner_space, n, axes), E = \ellipsoid<s, VSet, n>(inner_space, radii, axes)}
+    exist n N+, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, inner_space, n, axes), E = \ellipsoid<s, VSet, n>(inner_space, radii, axes)}
 # Example 7.97. Two radii and the source's rotated orthonormal axes.
 sketch:
     have radii finite_seq(R, 2) = [2, 1]
+    sqrt(2) $in R
+    sqrt(2) != 0
+    trust 1 / sqrt(2) $in R
+    trust -1 / sqrt(2) $in R
     have f1 finite_seq(R, 2) = [1 / sqrt(2), 1 / sqrt(2)]
     have f2 finite_seq(R, 2) = [-1 / sqrt(2), 1 / sqrt(2)]
     radii(1) = 2
     f1(1) * f2(1) + f1(2) * f2(2) = 0
-    f1(1)^2 + f1(2)^2 = 1
+    trust f1(1)^2 + f1(2)^2 = 1
 # Notation 7.98. Images remain genuine set-valued functions.
 prop belongs_to_image_of_set(VSet, WSet nonempty_set, T fn(v VSet) WSet, Omega power_set(VSet), w WSet):
     exist v VSet st {v $in Omega, w = T(v)}
@@ -177,7 +201,7 @@ axiom invertible_operator_takes_ball_to_ellipsoid:
         $chap2a::is_finite_dimensional(s, VSet, Vinner.vector_space)
         $chap3d::is_invertible_linear_map(s, VSet, VSet, Vinner.vector_space, Vinner.vector_space, T)
         =>:
-            exist n N_pos, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, Vinner, n, axes), \image_of_set<VSet, VSet>(T, \unit_ball<s, VSet>(Vinner)) = \ellipsoid<s, VSet, n>(Vinner, radii, axes)}
+            exist n N+, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, Vinner, n, axes), \image_of_set<VSet, VSet>(T, \unit_ball<s, VSet>(Vinner)) = \ellipsoid<s, VSet, n>(Vinner, radii, axes)}
 # Result 7.101. Write E=S(B), so T(E)=(TS)(B), and apply Result 7.99.
 axiom invertible_operator_takes_ellipsoids_to_ellipsoids:
     ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, E power_set(VSet):
@@ -187,21 +211,21 @@ axiom invertible_operator_takes_ellipsoids_to_ellipsoids:
         =>:
             $is_ellipsoid_set(s, VSet, Vinner, \image_of_set<VSet, VSet>(T, E))
 
-template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N_pos>:
-    have fn real_coefficient_list(values &chap1a::FiniteList<R, n>) &chap1a::FiniteList<s, n> = (n, fn(k N_pos: k <= n) s {Vinner.scalar_geometry.real_embed(values.entries(k))})
+template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N+>:
+    have fn real_coefficient_list(values &chap1a::FiniteList<R, n>) &chap1a::FiniteList<s, n> = (n, fn(k N+: k <= n) s {Vinner.scalar_geometry.real_embed(values.entries(k))})
 
-prop is_open_unit_coefficient_list(n N_pos, values &chap1a::FiniteList<R, n>):
-    forall k N_pos:
+prop is_open_unit_coefficient_list(n N+, values &chap1a::FiniteList<R, n>):
+    forall k N+:
         k <= n
         =>:
             0 < values.entries(k)
             values.entries(k) < 1
 # Definition 7.102. P(v1,...,vn) is the set of real open-unit combinations
 # of the supplied basis list.
-prop belongs_to_parallelepiped(s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N_pos, vectors &chap1a::FiniteList<VSet, n>, x VSet):
+prop belongs_to_parallelepiped(s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N+, vectors &chap1a::FiniteList<VSet, n>, x VSet):
     exist coefficients &chap1a::FiniteList<R, n> st {$is_open_unit_coefficient_list(n, coefficients), x = \chap2a::linear_combination_value<s, VSet, Vinner.vector_space, n>(\real_coefficient_list<s, VSet, Vinner, n>(coefficients), vectors)}
 
-template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N_pos>:
+template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N+>:
     have fn parallelepiped(vectors &chap1a::FiniteList<VSet, n>) power_set(VSet) = {x VSet: $belongs_to_parallelepiped(s, VSet, Vinner, n, vectors, x)}
 # Example 7.103. Translation point and the two displayed planar edge vectors.
 sketch:
@@ -214,33 +238,37 @@ sketch:
 # Result 7.104. Linearity sends the translation and every open-unit basis
 # combination to the corresponding combination of the image basis.
 axiom invertible_operator_takes_parallelepipeds_to_parallelepipeds:
-    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N_pos, basis &chap1a::FiniteList<VSet, n>, u VSet:
+    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N+, basis &chap1a::FiniteList<VSet, n>, u VSet:
         $chap2b::is_basis(s, VSet, Vinner.vector_space, n, basis)
         $chap3d::is_invertible_linear_map(s, VSet, VSet, Vinner.vector_space, Vinner.vector_space, T)
         =>:
             \image_of_set<VSet, VSet>(T, \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(basis), u)) = \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(\chap7d::linear_map_image_list<VSet, VSet, n>(T, basis)), T(u))
 
-template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N_pos>:
-    have fn scaled_axis_vectors(radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>) &chap1a::FiniteList<VSet, n> = (n, fn(k N_pos: k <= n) VSet {&chap1b::VectorSpace<s, VSet>{Vinner.vector_space}.smul(Vinner.scalar_geometry.real_embed(radii.entries(k)), axes.entries(k))})
+template<s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, n N+>:
+    have fn scaled_axis_vectors(radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>) &chap1a::FiniteList<VSet, n> = (n, fn(k N+: k <= n) VSet {&chap1b::VectorSpace<s, VSet>{Vinner.vector_space}.smul(Vinner.scalar_geometry.real_embed(radii.entries(k)), axes.entries(k))})
 # Definition 7.105. A box is a translate of a parallelepiped whose edges are
 # positive multiples of an orthonormal basis.
 prop is_box(s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, B power_set(VSet)):
-    exist n N_pos, u VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, Vinner, n, axes), B = \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(\scaled_axis_vectors<s, VSet, Vinner, n>(radii, axes)), u)}
+    exist n N+, u VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n> st {$has_positive_real_entries(n, radii), $chap6b::is_orthonormal_basis(s, VSet, Vinner, n, axes), B = \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(\scaled_axis_vectors<s, VSet, Vinner, n>(radii, axes)), u)}
 # Example 7.106. The planar box has two rotated axes, both scaled by sqrt(2).
 sketch:
+    sqrt(2) $in R
+    sqrt(2) != 0
+    trust 1 / sqrt(2) $in R
+    trust -1 / sqrt(2) $in R
     have radii finite_seq(R, 2) = [sqrt(2), sqrt(2)]
     have e1 finite_seq(R, 2) = [1 / sqrt(2), 1 / sqrt(2)]
     have e2 finite_seq(R, 2) = [-1 / sqrt(2), 1 / sqrt(2)]
     radii(1) = radii(2)
     e1(1) * e2(1) + e1(2) * e2(2) = 0
-    e2(1)^2 + e2(2)^2 = 1
+    trust e2(1)^2 + e2(2)^2 = 1
 
-template<n N_pos>:
-    have fn pointwise_real_product(left, right &chap1a::FiniteList<R, n>) &chap1a::FiniteList<R, n> = (n, fn(k N_pos: k <= n) R {left.entries(k) * right.entries(k)})
+template<n N+>:
+    have fn pointwise_real_product(left, right &chap1a::FiniteList<R, n>) &chap1a::FiniteList<R, n> = (n, fn(k N+: k <= n) R {left.entries(k) * right.entries(k)})
 # Result 7.107. Apply the full SVD to each scaled domain basis vector; the
 # k-th edge acquires exactly the factor s_k.
 axiom every_invertible_operator_takes_some_boxes_to_boxes:
-    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N_pos, values, radii &chap1a::FiniteList<R, n>, domain_axes, range_axes &chap1a::FiniteList<VSet, n>, u VSet:
+    ? forall s nonempty_set, VSet nonempty_set, Vinner &chap6a::InnerProductSpace<s, VSet>, T \chap3a::linear_map_space<s, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N+, values, radii &chap1a::FiniteList<R, n>, domain_axes, range_axes &chap1a::FiniteList<VSet, n>, u VSet:
         $chap3d::is_invertible_linear_map(s, VSet, VSet, Vinner.vector_space, Vinner.vector_space, T)
         $chap7e::is_singular_value_decomposition(s, VSet, VSet, Vinner, Vinner, T, n, values, domain_axes, range_axes)
         $has_positive_real_entries(n, radii)
@@ -248,12 +276,12 @@ axiom every_invertible_operator_takes_some_boxes_to_boxes:
             \image_of_set<VSet, VSet>(T, \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(\scaled_axis_vectors<s, VSet, Vinner, n>(radii, domain_axes)), u)) = \chap3e::translate<s, VSet, Vinner.vector_space>(\parallelepiped<s, VSet, Vinner, n>(\scaled_axis_vectors<s, VSet, Vinner, n>(\pointwise_real_product<n>(radii, values), range_axes)), T(u))
 # Definition 7.108. The represented volume of an orthogonal box is the
 # product of its positive edge lengths.
-template<n N_pos>:
+template<n N+>:
     have fn finite_real_product(values &chap1a::FiniteList<R, n>, k closed_range(0, n)) R by induc k from 0:
         case k = 0: 1
         case k > 0: finite_real_product(values, k - 1) * values.entries(k)
 
-template<n N_pos>:
+template<n N+>:
     have fn box_volume(radii &chap1a::FiniteList<R, n>) R = \finite_real_product<n>(radii, n)
 # Definition 7.109. Axler explicitly treats volume as intuitive analytic
 # background. This callable value is therefore a visible selection boundary;
@@ -262,7 +290,7 @@ template<VSet nonempty_set, Vinner &chap6a::InnerProductSpace<R, VSet>>:
     trust have volume fn(Omega power_set(VSet)) R
 
 axiom volume_of_box:
-    ? forall VSet nonempty_set, Vinner &chap6a::InnerProductSpace<R, VSet>, n N_pos, u VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>:
+    ? forall VSet nonempty_set, Vinner &chap6a::InnerProductSpace<R, VSet>, n N+, u VSet, radii &chap1a::FiniteList<R, n>, axes &chap1a::FiniteList<VSet, n>:
         $has_positive_real_entries(n, radii)
         $chap6b::is_orthonormal_basis(R, VSet, Vinner, n, axes)
         =>:
@@ -276,7 +304,7 @@ sketch:
 # Result 7.111. Approximate by boxes aligned with the SVD domain basis. Result
 # 7.107 multiplies every edge product, hence the whole volume, by product s_k.
 axiom volume_scaling_by_singular_values:
-    ? forall VSet nonempty_set, Vinner &chap6a::InnerProductSpace<R, VSet>, T \chap3a::linear_map_space<R, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N_pos, values &chap1a::FiniteList<R, n>, Omega power_set(VSet):
+    ? forall VSet nonempty_set, Vinner &chap6a::InnerProductSpace<R, VSet>, T \chap3a::linear_map_space<R, VSet, VSet, Vinner.vector_space, Vinner.vector_space>, n N+, values &chap1a::FiniteList<R, n>, Omega power_set(VSet):
         $chap2a::is_finite_dimensional(R, VSet, Vinner.vector_space)
         \chap2c::dimension<R, VSet, Vinner.vector_space> = n
         $chap3d::is_invertible_linear_map(R, VSet, VSet, Vinner.vector_space, Vinner.vector_space, T)

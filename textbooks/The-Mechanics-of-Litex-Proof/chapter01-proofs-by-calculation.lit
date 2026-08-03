@@ -120,7 +120,7 @@ sketch:
     prop between(a, b, c R):
         a <= b <= c
 
-    $between(1, 2, 3)
+    by def $between(1, 2, 3)
 
 # The definition says what it means for `b` to be between `a` and `c`. The final
 # line asks Litex to check that `2` is between `1` and `3`.
@@ -153,7 +153,7 @@ forall a, b Q:
 # separate algebraic simplification, substitution from known equalities, and
 # numeric calculation.
 
-# `N` is the set of natural numbers, `N_pos` is the set of positive natural
+# `N` is the set of natural numbers, `N+` is the set of positive natural
 # numbers, `Z` is the set of integers, `Q` is the set of rational numbers, and
 # `R` is the set of real numbers. They are all built-in sets.
 
@@ -688,7 +688,8 @@ forall a, b, c R:
 # objects from your fact into the pattern, and then checks that the required
 # supporting facts are already known.
 
-# This is the common idea behind both known `forall` facts and builtin rules.
+# Known `forall` matching and builtin verification both inspect mathematical
+# shape, but they are separate stages with different recursion boundaries.
 
 # Matching a known `forall`
 
@@ -722,13 +723,12 @@ sketch:
 
 # This restriction is intentional. If every `forall` match could freely start more
 # `forall` matches while checking its assumptions, the search space would grow very
-# quickly. Litex keeps `forall` matching local and predictable, and leaves broader
-# proof-search behavior to more explicit mechanisms.
+# quickly. Litex keeps each known-`forall` application bounded. The candidates
+# visible to that stage can come from the current scope, earlier exports, or a
+# referenced imported module; a qualified `by thm` makes a particular dependency
+# explicit when that is clearer.
 
-# > In later versions, Litex will introduce
-# > the `strategy` keyword so users can define rule-like proof behavior closer to builtin rules.
-
-# Matching a builtin rule
+# Matching a builtin rule and a builtin strategy
 
 # Builtin rules are used in the same spirit, but the rule is supplied by Litex
 # instead of being written as a `forall` in the proof.
@@ -747,7 +747,8 @@ sketch:
 # 0 < obj
 # ```
 
-# One matching rule says, informally:
+# The product shape is handled by a structural builtin strategy. Informally, its
+# current step says:
 
 # ```text
 # 0 < obj
@@ -765,30 +766,49 @@ sketch:
 # obj -> a * b
 # ```
 
-# After substitution, the builtin rule asks Litex to check two smaller facts:
+# After substitution, the strategy asks Litex to check two smaller facts:
 
 # ```text
 # 0 < a
 # 0 < b
 # ```
 
-# If those facts are already in the context, or can themselves be verified by
-# other known facts and builtin rules, then the original goal `0 < a * b` is
-# verified.
+# Each immediate child first tries an already-known non-`forall` fact or
+# deterministic computation, then one fresh direct builtin rule. If the child
+# still has the same supported constructor shape, the strategy may descend
+# again. This makes a nested product such as `(a * b) * c` routine while every
+# recursive step removes one multiplication constructor.
+
+# A direct builtin rule has a different boundary: it may consume known atomic
+# premises or computation, but it cannot invoke a second direct builtin rule.
+# Thus a semantic chain such as `sqrt(t) != 0` from `sqrt(t) > 0` from `t > 0`
+# is not silently traversed. The intermediate mathematical fact must already be
+# known or be proved explicitly.
+
+sketch:
+    forall a, b, c R:
+        a > 0
+        b > 0
+        c > 0
+        =>:
+            0 < (a * b) * c
 
 # Builtin proof search follows the same pattern-matching idea. Litex does not
 # start by asking you for a tactic name. It starts from the mathematical shape of
 # the fact:
 
-# 1. What is the main relation or proposition being proved?
-# 2. Which known `forall` facts or builtin rules have conclusions with that shape?
-# 3. Can the objects in the goal be matched with the objects in the rule?
-# 4. After substitution, are the rule's required assumptions already known?
+# 1. Is the atomic fact already known, or is it deterministic computation?
+# 2. Does one direct builtin rule match, with all its premises already known or
+#    computable?
+# 3. Does a supported builtin strategy remove one outer constructor and reduce
+#    the goal to smaller children?
+# 4. If those routes fail, does a visible known `forall` or user-defined strategy
+#    match the goal?
 
 # This is why the proof language can stay close to ordinary mathematics. When you
-# write a line such as `0 < a * b`, Litex reads its pattern, looks for matching
-# mathematical rules, substitutes the concrete terms, and checks the resulting
-# smaller obligations from the current context.
+# write a line such as `0 < a * b`, Litex reads its pattern and follows this
+# fixed order. Direct rules remain one layer deep; only a dedicated structural
+# strategy repeats through strictly smaller constructor shapes.
 
 # 1.6 Chapter summary: common shortcuts and built-in rules
 

@@ -9,14 +9,34 @@
 # official adaptation, a replacement for the original book, or a claim that
 # Litex reproduces Lean and Mathlib.
 #
-# Most declarations included in this project are accepted by the Litex
-# verifier. Any remaining unchecked step is kept visible as an explicit trust
-# or citation boundary. We often spell out reasoning that ordinary mathematical
-# prose or the motivating source can leave implicit, because those intermediate
-# facts help beginners see how a checked argument grows. A small number of
-# supporting steps remain deliberately marked rather than expanded when their
-# full proofs would distract from the lesson or require infrastructure beyond
-# the chapter's scope.
+# Book conventions
+#
+# This is a Litex-first teaching book rather than a line-by-line translation of
+# its motivating source. Examples and topics are selected and reorganized to
+# teach Litex's fact-oriented proof style, and custom predicates sometimes
+# restate familiar mathematics deliberately so readers can practise defining
+# and reusing an interface. Builtin facts and the small imported standard
+# library remain part of the checking environment; a successful example is
+# therefore not a claim that every mathematical foundation was reconstructed
+# inside its chapter.
+#
+# Pedagogical prose may suggest follow-up exercises without treating them as
+# source-coverage obligations. Executable lessons themselves are expected to
+# remain checked. If a future lesson requires an unfinished supporting result,
+# it must expose that result as an explicit trust, axiom, abstract-proposition,
+# or citation boundary rather than presenting it as verified. At present the
+# book contains no executable trust, axiom, or abstract-proposition boundary.
+#
+# Coverage and verification should not be confused: the chosen lessons are a
+# curriculum, not a claim to reproduce every topic or example in the motivating
+# book or in Mathlib.
+#
+# The declarations currently included in this project are accepted by the
+# Litex verifier. We often spell out reasoning that ordinary mathematical prose
+# or the motivating source can leave implicit, because those intermediate facts
+# help beginners see how a checked argument grows. If a supporting proof later
+# proves too distracting or requires infrastructure beyond a chapter's scope,
+# its boundary will remain deliberately visible under the convention above.
 #
 # The book progresses from calculation chains to reusable predicates, logical
 # structure, induction, number theory, functions, sets, and relations. These

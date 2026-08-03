@@ -1,13 +1,9 @@
 # Mathematics still to be completed
 #
-# Chapter 1A, Result 1.8 — nonzero complex inverse
-# The coordinate inverse formula is explicit. The remaining gap is the
-# sum-of-squares argument proving its denominator is nonzero.
-#
-# Chapter 1A, Definitions 1.3, 1.6, and 1.8 — scalar and finite-list objects
-# The real scalar system is checked. The remaining constructions are the
-# Complex scalar system from coordinate arithmetic and the length-zero finite
-# list, including the required inverse and empty-coordinate-map facts.
+# Chapter 1A, Definition 1.8 — length-zero finite-list object
+# Builtin C and the canonical real and complex ScalarSystem adapters are
+# checked. The remaining construction is the unique empty coordinate map
+# needed by FiniteList<s,0>.
 #
 # Chapter 1B, Definition 1.20 — coordinate vector-space structure
 # Pointwise coordinate operations are callable. The proof that they satisfy
@@ -30,6 +26,9 @@
 # for basis extraction and extension remain to be proved. The source proof that
 # two bases have the same length applies the two resulting length inequalities
 # in opposite directions; its full release replay remains a named boundary.
+# In Result 2.19, the positive-length conclusion is now proved by eliminating
+# the n=0 branch; only the largest-index/deletion/span-preservation existential
+# remains trusted.
 # Results 2.38 and 2.42 follow the source
 # routes, but each retains one trusted equality because equal natural indices do
 # not yet transport a FiniteList value between its dependent length types.
@@ -67,9 +66,11 @@
 # selected objects with unfinished construction or uniqueness bridges.
 #
 # Chapter 3E, Definitions 3.91-3.104 — products and quotients
-# Product-space and quotient-space operations are callable. Their inherited
-# VectorSpace structures, representative independence, quotient map, and
-# induced map still need well-definedness and linearity proofs.
+# Product-space and quotient-space operations are callable. The common-scalar
+# premise is explicit, quotient_carrier is checked nonempty via zero+U, and
+# quotient_map is the checked translate function. Folding the product laws into
+# VectorSpace, representative independence, the quotient VectorSpace, and the
+# induced map still need proofs.
 #
 # Chapter 3F, Definitions 3.108-3.124 — dual spaces
 # Scalar, dual, dual-basis, and dual-map interfaces are present. The vector
@@ -87,13 +88,19 @@
 # existence and consequences, invariant restrictions, triangularization,
 # diagonalization, eigenspace dimension arguments, Gershgorin's theorem, and
 # simultaneous-basis results still contain unproved mathematical steps.
-# Matrix commutativity and invariance of an eigenspace under a commuting
-# operator remain assumed relations rather than derived results.
+# The typed T-lambda I constructor also retains one localized trust because
+# registered-prefix use does not combine the checked identity, scalar-multiple,
+# and addition closure theorems into its linear-map return membership.
+# Its selected value is exposed by one named specification axiom. Matrix
+# commutativity is concrete, and invariance of an eigenspace under a commuting
+# operator is now a checked theorem built on that specification boundary.
 #
 # Chapter 6, Sections 6A-6C — inner-product spaces
-# The scalar-geometry instances, norm inequalities, Gram-Schmidt and Riesz
-# constructions, orthogonal decompositions and projections, and pseudoinverse
-# results retain incomplete existence or proof steps.
+# Result 6.11 is checked from Result 6.6 and definiteness. Result 6.6 now has a
+# checked second-slot-zero derivation, but four localized scalar-field
+# projection transports remain trusted. Norm inequalities, Gram-Schmidt and
+# Riesz constructions, orthogonal decompositions and projections, and
+# pseudoinverse results retain incomplete existence or proof steps.
 #
 # Chapter 7, Section 7A — Results 7.5-7.23
 # The adjoint construction is uniquely characterized, and Result 7.4 is
@@ -169,8 +176,10 @@
 # Chapter 9, Section 9D — tensor products
 # Two-space and finite-family tensor products follow the source's
 # multilinear-functional-on-duals construction. Pure tensors, dimensions,
-# bases, inner products, and both universal-map directions are callable. The
-# dependent component/dual structures, tensor-basis arguments, and universal
-# extension proofs remain explicit trust boundaries.
+# bases, inner products, and both universal-map directions are callable.
+# Bilinear-functional zero/addition/scalar closure, dual evaluation over the
+# original scalar space, and all four tensor-bilinearity identities are
+# checked. Dependent component/dual structures, tensor-basis arguments, and
+# universal extension proofs remain explicit trust boundaries.
 # Result 3.118: dual_map is selected with trust. Its pointwise equation is
 # represented by dual_map_spec because a nested template body loses T.

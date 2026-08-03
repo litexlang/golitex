@@ -19,7 +19,7 @@ this is a notational convention.  In this text {1,2,3,...} is called the
 positive integers rather than the natural numbers.
 """
 
-# This is a comment-only convention.  The later type `N_pos` denotes precisely
+# This is a comment-only convention.  The later type `N+` denotes precisely
 # the nonzero natural numbers, while `N` includes `0`.
 
 """
@@ -73,7 +73,7 @@ Axiom 2.3. 0 is not the successor of any natural number; i.e., we have n++ ̸= 0
 # checked arithmetic fact, and the positive type records the same conclusion.
 
 forall n N:
-    n + 1 $in N_pos
+    n + 1 $in N+
     n + 1 != 0
 
 """
@@ -187,11 +187,17 @@ Remark 2.1.13. (Informal) One interesting feature about the natural numbers is t
 # arithmetic.
 
 # The finite-set counting facts used below are builtin rules; their induction
-# proofs are not part of this introductory natural-number discussion.
+# proofs are not part of this introductory natural-number discussion.  Each
+# rule is applied after its endpoint, finiteness, and subset premises have been
+# made explicit, matching the verifier's one-layer builtin-rule boundary.
 
 by contra:
     ? not $is_finite_set(N)
-    0...finite_set_size(N) $subset N
+    finite_set_size(N) $in N
+    $is_finite_set(0...finite_set_size(N))
+    by def 0...finite_set_size(N) $subset N
+    finite_set_size(0...finite_set_size(N)) = finite_set_size(N) - 0 + 1
+    finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
     finite_set_size(N) + 1 = finite_set_size(N) - 0 + 1 = finite_set_size(0...finite_set_size(N)) <= finite_set_size(N)
     impossible finite_set_size(N) + 1 <= finite_set_size(N)
 
@@ -279,16 +285,16 @@ forall a, b, c N:
 Definition 2.2.7 (Positive natural numbers). A natural number n is said to be positive iff it is not equal to 0. (“iff” is shorthand for “if and only if” - see Section A.1).
 """
 
-# `N_pos` is the type used here for positive natural numbers, i.e. natural
+# `N+` is the type used here for positive natural numbers, i.e. natural
 # numbers different from zero.
 
 forall n N:
     n != 0
     =>:
-        n $in N_pos
+        n $in N+
 
 forall n N:
-    n $in N_pos
+    n $in N+
     =>:
         n != 0
 
@@ -296,9 +302,9 @@ forall n N:
 Proposition 2.2.8. If a is positive and b is a natural number, then a+b is positive (and hence b + a is also, by Proposition 2.2.4).
 """
 
-forall a N_pos, b N:
-    a + b $in N_pos
-    b + a $in N_pos
+forall a N+, b N:
+    a + b $in N+
+    b + a $in N+
 
 """
 Corollary 2.2.9. If a and b are natural numbers such that a+b=0, then a=0 and b=0.
@@ -325,7 +331,7 @@ Lemma 2.2.10. Let a be a positive number. Then there exists exactly one natural 
 # number `b` such that ...”; `st` is the literal “such that.”
 
 claim:
-    ? forall a N_pos:
+    ? forall a N+:
         exist! b N st {b + 1 = a}
     witness exist b N st {b + 1 = a} from a - 1
     forall b1, b2 N:
@@ -354,15 +360,17 @@ sketch:
         ? forall n, m N:
             n > m
             =>:
-                exist a N_pos st {n = m + a}
-        witness exist a N_pos st {n = m + a} from n - m
+                exist a N+ st {n = m + a}
+        n - m > 0
+        n - m $in N+
+        witness exist a N+ st {n = m + a} from n - m
 
     forall n, m, a N:
         n = m + a
         =>:
             n = m + a >= m
 
-    forall n, m N, a N_pos:
+    forall n, m N, a N+:
         n = m + a
         =>:
             n = m + a > m
@@ -541,8 +549,8 @@ forall n, m N:
     =>:
         n * m = 0
 
-forall n, m N_pos:
-    n * m $in N_pos
+forall n, m N+:
+    n * m $in N+
 
 """
 Proposition 2.3.4 (Distributive law). For any natural numbers a,b,c, we have a(b+c)=ab+ac and (b+c)a=ba+ca.
@@ -567,7 +575,7 @@ with a<b, and c is positive, then ac<bc.
 # Writing `b = a + d` with `d` positive makes the proof immediate: distribute
 # the product, then observe that the added term `d*c` is positive.
 
-forall a, b N, c N_pos:
+forall a, b N, c N+:
     a < b
     =>:
         a * c < b * c
@@ -576,7 +584,7 @@ forall a, b N, c N_pos:
 Corollary 2.3.7 (Cancellation law). Let a,b,c be natural numbers such that ac=bc and c is non-zero. Then a=b.
 """
 
-forall a, b N, c N_pos:
+forall a, b N, c N+:
     a * c = b * c
     =>:
         a = (a * c) / c = (b * c) / c = b
@@ -598,7 +606,7 @@ Proposition 2.3.9 (Euclidean algorithm). Let n be a natural number, and let q be
 # the source condition `0 <= r`, while the body records `r < q` and
 # `n = m*q + r`.
 
-prop is_euclidean_division(n N, q N_pos, m N, r N):
+prop is_euclidean_division(n N, q N+, m N, r N):
     r < q
     n = m * q + r
 
@@ -610,7 +618,7 @@ prop is_euclidean_division(n N, q N_pos, m N, r N):
 # remainder supplied by the induction hypothesis.
 
 claim:
-    ? forall q N_pos, n N:
+    ? forall q N+, n N:
         exist m, r N st {$is_euclidean_division(n, q, m, r)}
     by induc n from 0:
         ? exist m, r N st {$is_euclidean_division(n, q, m, r)}
@@ -618,22 +626,23 @@ claim:
         ? from n = 0:
             witness exist m, r N st {$is_euclidean_division(0, q, m, r)} from 0, 0:
                 0 = 0 * q + 0
+                by def $is_euclidean_division(0, q, 0, 0)
 
         ? induc:
             obtain m, r from exist m, r N st {$is_euclidean_division(n, q, m, r)}
-            r < q
-            n = m * q + r
             by cases:
                 ? exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)}
                 case r + 1 < q:
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m, r + 1:
                         n + 1 = (m * q + r) + 1 = m * q + (r + 1)
+                        by def $is_euclidean_division(n + 1, q, m, r + 1)
                 case r + 1 >= q:
                     r + 1 <= q
                     q <= r + 1
                     r + 1 = q
                     witness exist m1, r1 N st {$is_euclidean_division(n + 1, q, m1, r1)} from m + 1, 0:
                         n + 1 = (m * q + r) + 1 = m * q + (r + 1) = m * q + q = (m + 1) * q + 0
+                        by def $is_euclidean_division(n + 1, q, m + 1, 0)
 
 """
 Remark 2.3.10. Dividing a natural number by a positive natural number produces
@@ -646,7 +655,11 @@ point to elementary number theory.
 
 # The remainder operation `%` captures the same quotient-remainder idea.
 
-forall a N, b N_pos:
+claim:
+    ? forall a N, b N+:
+        a % b < b
+        (a - a % b) % b = 0
+    a $in Z
     a % b < b
     (a - a % b) % b = 0
 

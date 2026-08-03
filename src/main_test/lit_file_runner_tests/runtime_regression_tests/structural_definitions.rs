@@ -2937,3 +2937,61 @@ thm equal_index_transport:
         run_output
     );
 }
+
+#[test]
+fn stale_local_template_equality_candidate_does_not_abort_later_application() {
+    let source_code = r#"
+template<X set, dist fn(x, y X) R>:
+    have fn metric_ball(center X, radius R+) power_set(X) = {x X: dist(x, center) < radius}
+
+thm metric_ball_member_implies_distance_lt:
+    ? forall X set, dist fn(x, y X) R, center X, radius R+, point X:
+        point $in \metric_ball<X, dist>(center, radius)
+        =>:
+            dist(point, center) < radius
+    trust dist(point, center) < radius
+
+thm metric_distance_lt_implies_ball_member:
+    ? forall X set, dist fn(x, y X) R, center, point X, radius R+:
+        dist(point, center) < radius
+        =>:
+            point $in \metric_ball<X, dist>(center, radius)
+    trust point $in \metric_ball<X, dist>(center, radius)
+
+thm symbolic_template_as_dependent_claim_type:
+    ? forall X set, dist fn(x, y X) R, center X, small, large R+:
+        small <= large
+        =>:
+            \metric_ball<X, dist>(center, small) $subset \metric_ball<X, dist>(center, large)
+    claim:
+        ? forall point \metric_ball<X, dist>(center, small):
+            point $in \metric_ball<X, dist>(center, large)
+        by thm metric_ball_member_implies_distance_lt(X, dist, center, small, point)
+        dist(point, center) < small <= large
+        by thm metric_distance_lt_implies_ball_member(X, dist, center, point, large)
+    trust \metric_ball<X, dist>(center, small) $subset \metric_ball<X, dist>(center, large)
+
+have fn real_distance(x, y R) R = abs(x - y)
+
+thm concrete_template_after_symbolic_template:
+    ? forall I power_set(R):
+        I = '(3, 7)
+        =>:
+            \metric_ball<R, real_distance>(5, 2) = I
+    trust \metric_ball<R, real_distance>(5, 2) = I
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "stale_local_template_equality_candidate_does_not_abort_later_application",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "an unusable equality candidate from a closed binder scope must be skipped:\n{}",
+        run_output
+    );
+}

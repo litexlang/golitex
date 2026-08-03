@@ -133,7 +133,12 @@ impl Runtime {
         };
         if let Some((struct_value_obj, index)) = callable_projection {
             if let Obj::InstantiatedTemplateObj(template_obj) = &struct_value_obj {
-                self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+                if self
+                    .materialize_instantiated_template_obj(template_obj, verify_state)
+                    .is_err()
+                {
+                    return Ok(None);
+                }
             }
             let mut struct_values = vec![struct_value_obj.clone()];
             if let Some(unfolded_struct_value) =
@@ -174,7 +179,18 @@ impl Runtime {
             return Ok(None);
         }
         if let FnObjHead::InstantiatedTemplateObj(template_obj) = fn_obj.head.as_ref() {
-            self.materialize_instantiated_template_obj(template_obj, verify_state)?;
+            // One-step unfolding is a best-effort search operation. Equality
+            // classes and owner indexes can retain a function application
+            // whose template arguments belonged to a closed local binder
+            // scope. That candidate cannot be unfolded now, but it must not
+            // abort unrelated verification. Direct uses of an ill-defined
+            // template are still rejected by the caller's ordinary WD check.
+            if self
+                .materialize_instantiated_template_obj(template_obj, verify_state)
+                .is_err()
+            {
+                return Ok(None);
+            }
         }
         let keys = match fn_obj.head.as_ref() {
             FnObjHead::Identifier(i) => vec![i.to_string(), i.name.clone()],
