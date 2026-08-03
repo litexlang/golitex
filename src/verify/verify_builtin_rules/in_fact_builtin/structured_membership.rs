@@ -430,7 +430,7 @@ impl Runtime {
     }
 
     // If every entry of `[a, b, ...]` is in `S`, then applying it at a valid index gives an element of `S`.
-    // Example: `[1, 2, 3](i) $in R` follows from `i $in N_pos`, `i <= 3`, and each entry in `R`.
+    // Example: `[1, 2, 3](i) $in R` follows from `i $in N+`, `i <= 3`, and each entry in `R`.
     pub(super) fn verify_in_fact_finite_seq_literal_application_in_set(
         &mut self,
         in_fact: &InFact,

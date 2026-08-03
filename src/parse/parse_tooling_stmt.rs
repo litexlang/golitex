@@ -3,18 +3,6 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_trust_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(TRUST)?;
-        if tb.current_token_is_equal_to(IMPORT) {
-            return Err(removed_source_import_error(tb));
-        }
-        if tb.current_token_is_equal_to(LOCAL) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "trust local import has been removed; use `trust Name = \"path\"` in litex.config [import] for a package"
-                        .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         if tb.current_token_is_equal_to(HAVE) {
             return self.parse_trust_have_stmt(tb);
         }
@@ -92,15 +80,6 @@ impl Runtime {
         tb.skip_token(CLEAR)?;
         Ok(ClearStmt::new(tb.line_file.clone()).into())
     }
-}
-
-fn removed_source_import_error(tb: &TokenBlock) -> RuntimeError {
-    ParseRuntimeError(RuntimeErrorStruct::new_with_msg_and_line_file(
-        "trust import is invalid: import is trusted by default. Use terminal `import` in an isolated REPL, or declare a module dependency in litex.config [import] or [import std]; use `litex -strict` to verify loaded code"
-            .to_string(),
-        tb.line_file.clone(),
-    ))
-    .into()
 }
 
 fn import_parse_error(tb: &TokenBlock, message: &str) -> RuntimeError {

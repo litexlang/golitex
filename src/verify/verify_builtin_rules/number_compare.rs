@@ -43,7 +43,7 @@ impl Runtime {
             _ => return Ok(StmtUnknown::new().into()),
         };
         // Every positive common divisor is bounded by the gcd.
-        // Example: `d in N_pos`, `a % d = 0`, `b % d = 0` imply `d <= gcd(a, b)`.
+        // Example: `d in N+`, `a % d = 0`, `b % d = 0` imply `d <= gcd(a, b)`.
         if let (AtomicFact::LessEqualFact(_), Obj::Gcd(gcd)) = (atomic_fact, &right) {
             let d_in_n_pos: AtomicFact =
                 InFact::new(left.clone(), StandardSet::NPos.into(), line_file.clone()).into();
@@ -737,7 +737,7 @@ impl Runtime {
         Ok(None)
     }
 
-    /// `n >= 1` / `1 <= n` from known `n $in N_pos`.
+    /// `n >= 1` / `1 <= n` from known `n $in N+`.
     fn try_verify_order_one_le_from_membership_in_n_pos(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -777,7 +777,7 @@ impl Runtime {
             return Ok(Some(StmtResult::from(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     atomic_fact.clone().into(),
-                    "n >= 1 from n $in N_pos".to_string(),
+                    "n >= 1 from n $in N+".to_string(),
                     vec![in_n_pos_result],
                 ),
             )));
@@ -1078,7 +1078,7 @@ impl Runtime {
     }
 
     /// Euclidean remainders modulo a positive integer lie in the standard interval.
-    /// Example: from `a $in Z` and `b $in N_pos`, prove `0 <= a % b < b`.
+    /// Example: from `a $in Z` and `b $in N+`, prove `0 <= a % b < b`.
     fn try_verify_mod_remainder_bounds(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -1138,9 +1138,9 @@ impl Runtime {
         }
 
         let reason = if strict_upper_bound {
-            "mod remainder upper bound: a % b < b for a in Z and b in N_pos"
+            "mod remainder upper bound: a % b < b for a in Z and b in N+"
         } else {
-            "mod remainder nonnegative: 0 <= a % b for a in Z and b in N_pos"
+            "mod remainder nonnegative: 0 <= a % b for a in Z and b in N+"
         };
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1891,8 +1891,8 @@ impl Runtime {
     // - 0 < base < 1 reverses order on positive arguments
     // - with base > 1, log_a(x) is positive for x > 1 and negative for 0 < x < 1
     // Examples:
-    // `forall a, x, y R_pos: a > 1, x < y =>: log(a, x) < log(a, y)`
-    // `forall a, x R_pos: a > 1, x < 1 =>: log(a, x) < 0`
+    // `forall a, x, y R+: a > 1, x < y =>: log(a, x) < log(a, y)`
+    // `forall a, x R+: a > 1, x < 1 =>: log(a, x) < 0`
     fn verify_log_order_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -2622,9 +2622,9 @@ impl Runtime {
         )))
     }
 
-    // `0 <= a^n` / `a^n >= 0` when `0 <= a` and `n in N_pos`.
+    // `0 <= a^n` / `a^n >= 0` when `0 <= a` and `n in N+`.
     // This covers symbolic positive integer exponents without needing `a > 0`.
-    // Example: `forall a R, n N_pos: a >= 0 =>: a^n >= 0`.
+    // Example: `forall a R, n N+: a >= 0 =>: a^n >= 0`.
     fn verify_zero_le_pow_from_nonnegative_base_positive_integer_exp_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -2663,7 +2663,7 @@ impl Runtime {
         Ok(Some(StmtResult::from(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
-                "0 <= a^n from 0 <= a and n in N_pos".to_string(),
+                "0 <= a^n from 0 <= a and n in N+".to_string(),
                 vec![base_result, in_n_pos_result],
             ),
         )))

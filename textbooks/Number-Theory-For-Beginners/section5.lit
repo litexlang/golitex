@@ -65,12 +65,12 @@ sketch:
         x + z2 = y
         =>:
             z1 = (x + z1) - x = (x + z2) - x = z2
-    forall x, y, z Q_nz:
+    forall x, y, z Q*:
         (x * y) * z = x * (y * z)
         x * y = y * x
         1 * x = x
         x * (y / x) = y
-    forall x, y, z1, z2 Q_nz:
+    forall x, y, z1, z2 Q*:
         x * z1 = y
         x * z2 = y
         =>:

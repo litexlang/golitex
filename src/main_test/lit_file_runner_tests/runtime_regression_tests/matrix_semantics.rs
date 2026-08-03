@@ -44,7 +44,7 @@ forall S set, a, b S:
 fn real_matrix_operators_have_symbolic_types_and_entry_formulas() {
     run_with_large_stack("real_matrix_operators_have_symbolic_semantics", || {
         let source_code = r#"
-forall m, n, p N_pos, A, B matrix(R, m, n), c_matrix matrix(R, n, p), c R, i1, j N_pos:
+forall m, n, p N+, A, B matrix(R, m, n), c_matrix matrix(R, n, p), c R, i1, j N+:
     i1 <= m
     j <= n
     =>:
@@ -55,14 +55,14 @@ forall m, n, p N_pos, A, B matrix(R, m, n), c_matrix matrix(R, n, p), c R, i1, j
         (A '- B)(i1, j) = A(i1, j) - B(i1, j)
         (c *' A)(i1, j) = c * A(i1, j)
 
-forall m, n, p N_pos, A matrix(R, m, n), B matrix(R, n, p), i1, j N_pos:
+forall m, n, p N+, A matrix(R, m, n), B matrix(R, n, p), i1, j N+:
     i1 <= m
     j <= p
     =>:
         A '* B $in matrix(R, m, p)
-        (A '* B)(i1, j) = sum(1, n, fn(k N_pos: k <= n) R {A(i1, k) * B(k, j)})
+        (A '* B)(i1, j) = sum(1, n, fn(k N+: k <= n) R {A(i1, k) * B(k, j)})
 
-forall n, k N_pos, A matrix(R, n, n), i1, j N_pos:
+forall n, k N+, A matrix(R, n, n), i1, j N+:
     i1 <= n
     j <= n
     =>:

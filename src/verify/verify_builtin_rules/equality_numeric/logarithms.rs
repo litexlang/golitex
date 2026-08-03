@@ -242,7 +242,7 @@ impl Runtime {
     }
 
     // Reciprocal rule: log_a(1 / x) = -log_a(x).
-    // Example: `forall a, x R_pos: a != 1 =>: log(a, 1 / x) = -log(a, x)`.
+    // Example: `forall a, x R+: a != 1 =>: log(a, 1 / x) = -log(a, x)`.
     pub(crate) fn try_verify_log_reciprocal_rule(
         &mut self,
         left: &Obj,
@@ -306,7 +306,7 @@ impl Runtime {
     }
 
     // Change of base: log_a(b) = log_c(b) / log_c(a).
-    // Example: `forall a, b, c R_pos: a != 1, c != 1 =>: log(a, b) = log(c, b) / log(c, a)`.
+    // Example: `forall a, b, c R+: a != 1, c != 1 =>: log(a, b) = log(c, b) / log(c, a)`.
     pub(crate) fn try_verify_log_change_of_base_rule(
         &mut self,
         left: &Obj,
@@ -446,7 +446,7 @@ impl Runtime {
     }
 
     // Exponential inverse in the other direction: a^c = b from known c = log_a(b).
-    // Example: `forall a, b R_pos, c R: log(a, b) = c =>: a^c = b`.
+    // Example: `forall a, b R+, c R: log(a, b) = c =>: a^c = b`.
     pub(crate) fn try_verify_pow_equals_by_known_log_inverse(
         &mut self,
         left: &Obj,

@@ -57,24 +57,12 @@ impl Runtime {
             ))),
             TRUST => self.parse_trust_stmt(tb),
             IMPORT => self.parse_import_stmt(tb),
-            LOCAL => Err(parse_stmt_error(
-                tb,
-                "local import has been removed; place the referenced source earlier in litex.config [export] and use its canonical name",
-            )),
             DO_NOTHING => self.parse_do_nothing_stmt(tb),
             EVAL => self.parse_eval_stmt(tb),
-            "macro" if tb.token_at_add_index(2) == "\"" => Err(parse_stmt_error(
-                tb,
-                "macro has been removed; write the full Litex expression directly",
-            )),
             WITNESS => self.parse_witness_stmt(tb),
             STRUCT => self.parse_def_struct_stmt(tb),
             TEMPLATE => self.parse_def_template_stmt(tb),
             SETTING => self.parse_def_setting_stmt(tb),
-            ALGO => Err(parse_stmt_error(
-                tb,
-                "algorithm implementations must use `have algo for f(...)`",
-            )),
             STRONG_INDUC => Err(parse_stmt_error(
                 tb,
                 "strong_induc is only valid after `by`",
@@ -154,10 +142,6 @@ mod parse_stmt_diagnostic_tests {
         ] {
             assert!(parse_one_stmt(source_code).is_ok(), "{source_code:?}");
         }
-        for source_code in ["local import chapter", "trust local import chapter"] {
-            let message = parse_one_stmt_error_message(source_code);
-            assert!(message.contains("has been removed"), "{message}");
-        }
         let message = parse_one_stmt_error_message("import std basics");
         assert!(
             message.contains("only available in an isolated REPL"),
@@ -204,27 +188,10 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
-    fn function_implementation_syntax_has_targeted_migrations() {
-        assert_eq!(
-            parse_one_stmt_error_message("algo f(x):\n    x"),
-            "algorithm implementations must use `have algo for f(...)`"
-        );
+    fn function_implementation_syntax_requires_for_after_have_algo() {
         assert_eq!(
             parse_one_stmt_error_message("have algo f(x):\n    x"),
             "have algo: expected `for f(...)`"
-        );
-        assert_eq!(
-            parse_one_stmt_error_message("have fn as algo f(x R) R = x"),
-            "`have fn as algo` has been replaced by `have fn ...` followed by `have algo for f(...)`"
-        );
-    }
-
-    #[test]
-    fn removed_macro_definition_reports_migration_error() {
-        let message = parse_one_stmt_error_message("macro eq \"a = b\"");
-        assert_eq!(
-            message,
-            "macro has been removed; write the full Litex expression directly"
         );
     }
 }

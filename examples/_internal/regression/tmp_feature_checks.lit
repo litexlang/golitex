@@ -20,15 +20,15 @@ forall x, y Q, n N+:
     =>:
         x^n > y^n
 
-forall x Q_nz, n Z:
+forall x Q*, n Z:
     x^n != 0
 
-forall x Q_nz, n N+:
+forall x Q*, n N+:
     x^n != 0
     =>:
         x^(-n) = 1 / x^n
 
-forall x, y Q_nz, n Z:
+forall x, y Q*, n Z:
     (x * y)^n = x^n * y^n
 
 forall x, y Q+, n Z:
@@ -43,7 +43,7 @@ forall x, y Q+, n Z:
     =>:
         x = y
 
-forall x Q_nz, n Z:
+forall x Q*, n Z:
     x $in R
     abs(x^n) = abs(x)^n
 
@@ -53,7 +53,7 @@ forall a, b R:
     =>:
         b = 0
 
-forall a, b, c R_nz:
+forall a, b, c R*:
     a / (b / c) = a * c / b
     (a / b) / c = a / (b * c)
 

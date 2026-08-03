@@ -17,20 +17,20 @@ forall a, b R:
     =>:
         a != 0 and b != 0
 
-forall a R_pos, b R_nz:
+forall a R+, b R*:
     a = (a ^ b) ^ (1 / b)
     a = (a ^ (1 / b)) ^ b
 
-forall n Z, k N_pos:
+forall n Z, k N+:
     (-n) % k = (k - (n % k)) % k
 
 forall n Z, m Z:
     n >= m or n <= m - 1
 
-forall n Z, m N_pos, k N_pos:
+forall n Z, m N+, k N+:
     n ^ m % k = ((n % k) ^ m) % k
 
-forall n N_pos:
+forall n N+:
     2 ^ (n - 1) != 0
     2 ^ (n - 1 + 1) = 2 ^ (n - 1) * 2 ^ 1
     0 ^ (1 / n) = 0
@@ -96,9 +96,9 @@ sum(1, finite_set_size(X), fn(left_index closed_range(1, finite_set_size(X))) R 
                 "equality: a = 0 from a^2 + b^2 = 0 over R",
                 "product_nonzero_component: a * b != 0 gives a != 0 and b != 0",
                 "equality: (a^m)^n = a^(m*n) for real exponents over positive real bases",
-                "equality: (-n) % k = (k - n % k) % k for n in Z and k in N_pos",
+                "equality: (-n) % k = (k - n % k) % k for n in Z and k in N+",
                 "or: integer discrete split x >= n or x <= n - 1",
-                "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N_pos",
+                "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N+",
                 "abs: -abs(x) <= x",
             ] {
                 assert!(
@@ -163,14 +163,14 @@ forall a, b R:
                 (
                     "integer_mod_power_does_not_accept_an_extra_residue",
                     r#"
-forall n Z, m N_pos, k N_pos:
+forall n Z, m N+, k N+:
     n ^ m % k = ((n % k) ^ m + 1) % k
 "#,
                 ),
                 (
                     "integer_expression_exponent_does_not_make_zero_base_nonzero",
                     r#"
-forall n N_pos:
+forall n N+:
     0 ^ (n - 1) != 0
 "#,
                 ),

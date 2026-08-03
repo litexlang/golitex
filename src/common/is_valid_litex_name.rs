@@ -65,15 +65,6 @@ mod tests {
     }
 
     #[test]
-    fn former_compatibility_words_are_not_reserved() {
-        for name in [
-            "let", "scratch", "export", "oo", "oc", "co", "cc", "oinf", "cinf", "info", "infc",
-        ] {
-            assert!(is_valid_litex_name(name).is_ok(), "{name}");
-        }
-    }
-
-    #[test]
     fn exist_unique_is_not_reserved_keyword() {
         assert!(is_valid_litex_name("exist_unique").is_ok());
     }

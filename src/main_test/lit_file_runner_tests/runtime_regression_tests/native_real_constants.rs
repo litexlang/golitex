@@ -19,8 +19,8 @@ fn native_real_constants_do_not_use_builtin_symbol_ids() {
 #[test]
 fn native_real_constant_contract_is_checkable() {
     let source_code = r#"
-e $in R_pos
-pi $in R_pos
+e $in R+
+pi $in R+
 e $in R
 pi $in R
 e $in C

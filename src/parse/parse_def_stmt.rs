@@ -939,134 +939,107 @@ impl Runtime {
     pub fn parse_have_fn_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;
         tb.skip_token(FN_LOWER_CASE)?;
-        if tb.current_token_is_equal_to(AS) && tb.token_at_add_index(1) == ALGO {
+        let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        if tb.current_token_is_equal_to(BY) {
+            tb.skip_token(BY)?;
+            if tb.current_token_is_equal_to(EXIST) && tb.token_at_add_index(1) == "!" {
+                tb.skip_token(EXIST)?;
+                tb.skip_token("!")?;
+                tb.skip_token(COLON)?;
+                if !tb.exceed_end_of_head() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "unexpected token after `have fn <name> by exist!:`".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                return self.parse_have_fn_by_exist_unique_body(tb, name, symbol_binding);
+            }
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`have fn as algo` has been replaced by `have fn ...` followed by `have algo for f(...)`"
+                    "expected `by exist!:` after `have fn <name>` for unique-existence function definitions"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        if tb.current_token_is_equal_to(BY) {
-            Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`have fn by induc from ...` has been replaced by `have fn f(...) R by induc ... from ...:`"
-                        .to_string(),
-                    tb.line_file.clone(),
-                ),
-            )))
-        } else {
-            let name = self.parse_name_and_insert_into_top_parsing_time_name_scope(tb)?;
-            let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
-            if tb.current_token_is_equal_to(BY) {
-                tb.skip_token(BY)?;
-                if tb.current_token_is_equal_to(EXIST) && tb.token_at_add_index(1) == "!" {
-                    tb.skip_token(EXIST)?;
-                    tb.skip_token("!")?;
-                    tb.skip_token(COLON)?;
-                    if !tb.exceed_end_of_head() {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "unexpected token after `have fn <name> by exist!:`".to_string(),
-                                tb.line_file.clone(),
-                            ),
-                        )));
-                    }
-                    return self.parse_have_fn_by_exist_unique_body(tb, name, symbol_binding);
-                }
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "expected `by exist!:` after `have fn <name>` for unique-existence function definitions"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
 
-            let fs = self.parse_fn_set_clause(tb)?;
-            let fn_param_bindings = fs.collect_all_param_bindings_including_nested_ret_fn_sets();
-            let top_level_fn_param_bindings = fs.params_def_with_set.collect_param_bindings();
+        let fs = self.parse_fn_set_clause(tb)?;
+        let fn_param_bindings = fs.collect_all_param_bindings_including_nested_ret_fn_sets();
+        let top_level_fn_param_bindings = fs.params_def_with_set.collect_param_bindings();
 
-            if tb.current_token_is_equal_to(EQUAL) {
-                tb.skip_token(EQUAL)?;
+        if tb.current_token_is_equal_to(EQUAL) {
+            tb.skip_token(EQUAL)?;
 
-                let lf = tb.line_file.clone();
-                let equal_to = self.parse_in_existing_free_param_scope(
-                    ParamObjType::FnSet,
-                    &fn_param_bindings,
-                    lf,
-                    |this| this.parse_obj(tb),
-                )?;
-                let equal_to_anonymous_fn = AnonymousFn::new(
-                    fs.params_def_with_set.clone(),
-                    fs.dom_facts.clone(),
-                    fs.ret_set.clone(),
-                    equal_to,
-                )?;
-                let stmt = HaveFnEqualStmt::new(
-                    name,
-                    symbol_binding.clone(),
-                    equal_to_anonymous_fn,
-                    tb.line_file.clone(),
-                );
-                self.register_local_existing_identifier_bindings_for_parse(
-                    std::slice::from_ref(&symbol_binding),
-                    tb.line_file.clone(),
-                )?;
-                Ok(stmt.into())
-            } else if tb.current_token_is_equal_to(COLON) {
-                tb.skip_token(COLON)?;
-                self.parse_have_fn_case_by_case_stmt_after_colon(
+            let lf = tb.line_file.clone();
+            let equal_to = self.parse_in_existing_free_param_scope(
+                ParamObjType::FnSet,
+                &fn_param_bindings,
+                lf,
+                |this| this.parse_obj(tb),
+            )?;
+            let equal_to_anonymous_fn = AnonymousFn::new(
+                fs.params_def_with_set.clone(),
+                fs.dom_facts.clone(),
+                fs.ret_set.clone(),
+                equal_to,
+            )?;
+            let stmt = HaveFnEqualStmt::new(
+                name,
+                symbol_binding.clone(),
+                equal_to_anonymous_fn,
+                tb.line_file.clone(),
+            );
+            self.register_local_existing_identifier_bindings_for_parse(
+                std::slice::from_ref(&symbol_binding),
+                tb.line_file.clone(),
+            )?;
+            Ok(stmt.into())
+        } else if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            self.parse_have_fn_case_by_case_stmt_after_colon(
+                tb,
+                name,
+                symbol_binding,
+                fs,
+                &fn_param_bindings,
+            )
+        } else if tb.current_token_is_equal_to(BY) {
+            if tb.token_at_add_index(1) == CASES {
+                self.parse_have_fn_by_cases_stmt_after_signature(
                     tb,
                     name,
                     symbol_binding,
                     fs,
                     &fn_param_bindings,
                 )
-            } else if tb.current_token_is_equal_to(BY) {
-                if tb.token_at_add_index(1) == CASES {
-                    self.parse_have_fn_by_cases_stmt_after_signature(
-                        tb,
-                        name,
-                        symbol_binding,
-                        fs,
-                        &fn_param_bindings,
-                    )
-                } else if tb.token_at_add_index(1) == INDUC {
-                    self.parse_have_fn_by_induc_stmt_after_signature(
-                        tb,
-                        name,
-                        symbol_binding,
-                        fs,
-                        top_level_fn_param_bindings,
-                    )
-                } else if tb.token_at_add_index(1) == "decreasing" {
-                    Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "`by decreasing <measure> from <lower>` has been replaced by `by induc <measure> from <lower>`"
-                                .to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )))
-                } else {
-                    Err(RuntimeError::from(ParseRuntimeError(
+            } else if tb.token_at_add_index(1) == INDUC {
+                self.parse_have_fn_by_induc_stmt_after_signature(
+                    tb,
+                    name,
+                    symbol_binding,
+                    fs,
+                    top_level_fn_param_bindings,
+                )
+            } else {
+                Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "expected `by cases` or `by induc <measure> from <lower>` after `have fn` signature"
                                 .to_string(),
                             tb.line_file.clone(),
                         ),
                     )))
-                }
-            } else {
-                Err(RuntimeError::from(ParseRuntimeError(
+            }
+        } else {
+            Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         "expected `=`, `:`, `by cases`, or `by induc <measure> from <lower>` after `have fn` signature"
                             .to_string(),
                         tb.line_file.clone(),
                     ),
                 )))
-            }
         }
     }
 

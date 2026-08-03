@@ -340,7 +340,7 @@ impl Runtime {
     // A weak lower bound that is itself in a positive numeric carrier keeps
     // the bounded value away from zero. This stays leaf-only so it remains
     // available during anonymous-function well-definedness checks.
-    // Example: `a R_pos`, `a <= x` implies `x != 0` (in particular for
+    // Example: `a R+`, `a <= x` implies `x != 0` (in particular for
     // `x` bound by a closed interval `[a, b]`).
     fn try_verify_not_equal_from_known_positive_lower_bound(
         &mut self,
@@ -841,7 +841,7 @@ impl Runtime {
     }
 
     // a^n != 0 with integer exponent n, from a != 0.
-    // Example: from `x R_nz` and `n Z`, prove `x^n != 0`.
+    // Example: from `x R*` and `n Z`, prove `x^n != 0`.
     fn try_verify_not_equal_pow_from_base_nonzero(
         &mut self,
         not_equal_fact: &NotEqualFact,
@@ -881,7 +881,7 @@ impl Runtime {
         // A known positive numeric carrier makes the power base nonzero in
         // this same rule.  Do not spend another builtin layer converting the
         // carrier to `base != 0` while checking a division's well-definedness.
-        // Example: `n N_pos` implies `n^2 != 0`.
+        // Example: `n N+` implies `n^2 != 0`.
         for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let positive_membership: AtomicFact =
                 InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();

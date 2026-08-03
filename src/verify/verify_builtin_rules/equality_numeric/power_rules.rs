@@ -233,7 +233,7 @@ impl Runtime {
         };
 
         // Power law for positive integer exponents:
-        // `a^(m+n) = a^m * a^n`. Example: `forall a R, m, n N_pos: a^(m+n) = a^m * a^n`.
+        // `a^(m+n) = a^m * a^n`. Example: `forall a R, m, n N+: a^(m+n) = a^m * a^n`.
         let candidates = [
             (
                 product.left.as_ref(),
@@ -307,7 +307,7 @@ impl Runtime {
             }
 
             // Real-exponent addition law requires a positive real base.
-            // Example: `forall a R_pos, m, n R: a^(m+n) = a^m * a^n`.
+            // Example: `forall a R+, m, n R: a^(m+n) = a^m * a^n`.
             let exponents_are_real = self.obj_is_verified_in_standard_set_for_power_builtin(
                 left_exp,
                 StandardSet::R,
@@ -332,7 +332,7 @@ impl Runtime {
 
             // The remaining integer-exponent branch needs a nonzero base so negative
             // exponents do not accidentally justify undefined `0^(-n)`.
-            // Example: `forall a R_nz, m, n Z: a^m * a^n = a^(m+n)`.
+            // Example: `forall a R*, m, n Z: a^m * a^n = a^(m+n)`.
             let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
                 left_exp,
                 line_file.clone(),
@@ -433,7 +433,7 @@ impl Runtime {
         }
 
         // Real-exponent power-of-power law requires a positive real base.
-        // Example: `forall a R_pos, m, n R: (a^m)^n = a^(m*n)`.
+        // Example: `forall a R+, m, n R: (a^m)^n = a^(m*n)`.
         let base_is_positive_real = self.obj_is_verified_positive_real_base_for_power_of_power(
             combined_power.base.as_ref(),
             line_file.clone(),
@@ -453,7 +453,7 @@ impl Runtime {
         }
 
         // Power-of-power law for positive integer exponents:
-        // `(a^m)^n = a^(m*n)`. Example: `forall a R, m, n N_pos: (a^m)^n = a^(m*n)`.
+        // `(a^m)^n = a^(m*n)`. Example: `forall a R, m, n N+: (a^m)^n = a^(m*n)`.
         let exponents_are_positive = self.obj_is_verified_in_n_pos(
             inner_power.exponent.as_ref(),
             line_file.clone(),
@@ -493,7 +493,7 @@ impl Runtime {
 
         // Integer-exponent power-of-power law needs a nonzero base so negative
         // exponents do not justify undefined powers of zero.
-        // Example: `forall a R_nz, m, n Z: (a^m)^n = a^(m*n)`.
+        // Example: `forall a R*, m, n Z: (a^m)^n = a^(m*n)`.
         let exponents_are_integer = self.obj_is_verified_integer_exponent_for_power_builtin(
             inner_power.exponent.as_ref(),
             line_file.clone(),
@@ -556,7 +556,7 @@ impl Runtime {
     }
 
     // A power of a power can equal the bare base when the exponents multiply to one.
-    // Example: for `a R_pos` and `b R_nz`, `(a^b)^(1 / b) = a`.
+    // Example: for `a R+` and `b R*`, `(a^b)^(1 / b) = a`.
     fn power_of_power_equals_base_holds(
         &mut self,
         nested_power: &Pow,
@@ -695,7 +695,7 @@ impl Runtime {
         // Product power law for natural integer exponents over complex bases, and the
         // existing positive-integer exponent shape; integer exponents need nonzero
         // factors so negative powers are defined.
-        // Example: `forall a,b R_nz, n Z: (a*b)^n = a^n*b^n`.
+        // Example: `forall a,b R*, n Z: (a*b)^n = a^n*b^n`.
         let candidates = [
             (
                 product.left.as_ref(),
@@ -763,7 +763,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a*b)^n = a^n * b^n for n in N over complex bases, n in N_pos, or n in Z with nonzero bases",
+                "equality: (a*b)^n = a^n * b^n for n in N over complex bases, n in N+, or n in Z with nonzero bases",
             )));
         }
         Ok(None)

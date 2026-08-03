@@ -77,16 +77,6 @@ pub fn parse_project_config(
                 "[import]" => Some(ConfigTable::Import),
                 "[import std]" => Some(ConfigTable::ImportStd),
                 "[export]" => Some(ConfigTable::Export),
-                "[requires]" => return Err(config_error(
-                    config_path,
-                    line,
-                    "[requires] has been removed; dependency order is the recursive [export] order",
-                )),
-                "[run]" => return Err(config_error(
-                    config_path,
-                    line,
-                    "[run] has been removed; list ordered `name = \"path\"` entries in [export]",
-                )),
                 _ => {
                     return Err(config_error(
                         config_path,
@@ -160,9 +150,6 @@ pub fn parse_project_config(
                     ));
                 };
                 let raw_key = raw_key.trim();
-                if raw_key.starts_with("trust ") {
-                    return Err(config_trust_removed_error(config_path, line));
-                }
                 let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
                 is_valid_litex_name(raw_key)
                     .map_err(|message| config_error(config_path, line, message.as_str()))?;
@@ -180,9 +167,6 @@ pub fn parse_project_config(
                 });
             }
             Some(ConfigTable::ImportStd) => {
-                if text.starts_with("trust ") {
-                    return Err(config_trust_removed_error(config_path, line));
-                }
                 if text.contains('=') || text.split_whitespace().count() != 1 {
                     return Err(config_error(
                         config_path,
@@ -213,9 +197,6 @@ pub fn parse_project_config(
                     ));
                 };
                 let raw_key = raw_key.trim();
-                if raw_key.starts_with("trust ") {
-                    return Err(config_trust_removed_error(config_path, line));
-                }
                 let value = parse_quoted_path(raw_value.trim(), config_path, line)?;
                 is_valid_litex_name(raw_key)
                     .map_err(|message| config_error(config_path, line, message.as_str()))?;
@@ -353,14 +334,6 @@ fn config_error(config_path: &str, line: usize, message: &str) -> RuntimeError {
     .into()
 }
 
-fn config_trust_removed_error(config_path: &str, line: usize) -> RuntimeError {
-    config_error(
-        config_path,
-        line,
-        "`trust` has been removed from litex.config: imports are trusted by default, while project exports run normally. Remove `trust`; use `litex -strict` to verify loaded dependencies",
-    )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -411,10 +384,6 @@ mod tests {
             (
                 "[hierarchy]\nmodule\n\n[import std]\nbasics = \"./basics\"\n\n[export]\nmain = \"./main.lit\"\n",
                 "expects exactly one standard package name",
-            ),
-            (
-                "[hierarchy]\nmodule\n\n[import std]\ntrust basics\n\n[export]\nmain = \"./main.lit\"\n",
-                "`trust` has been removed from litex.config",
             ),
             (
                 "[hierarchy]\nmodule\n\n[import std]\nbasics number_theory\n\n[export]\nmain = \"./main.lit\"\n",
@@ -481,30 +450,6 @@ mod tests {
         ] {
             let Err(error) = parse_project_config(source, "litex.config") else {
                 panic!("invalid hierarchy configuration must be rejected");
-            };
-            assert!(format!("{error:?}").contains(expected), "{error:?}");
-        }
-    }
-
-    #[test]
-    fn removed_config_tables_have_migration_messages() {
-        for (source, expected) in [
-            (
-                "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n\n[requires]\nmain = []\n",
-                "[requires] has been removed",
-            ),
-            ("[run]\n./main.lit\n", "[run] has been removed"),
-            (
-                "[hierarchy]\nmodule\n\n[import]\ntrust Algebra = \"../algebra\"\n\n[export]\nmain = \"./main.lit\"\n",
-                "`trust` has been removed from litex.config",
-            ),
-            (
-                "[hierarchy]\nmodule\n\n[export]\ntrust main = \"./main.lit\"\n",
-                "`trust` has been removed from litex.config",
-            ),
-        ] {
-            let Err(error) = parse_project_config(source, "litex.config") else {
-                panic!("removed configuration syntax must be rejected");
             };
             assert!(format!("{error:?}").contains(expected), "{error:?}");
         }

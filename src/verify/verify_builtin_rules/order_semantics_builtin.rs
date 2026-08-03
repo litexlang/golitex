@@ -128,7 +128,7 @@ impl Runtime {
     }
 
     // A positive even integer is at least two and therefore greater than one.
-    // Example: `i $in N_pos`, `i % 2 = 0` => `i > 1`, so `i - 1 $in N_pos`.
+    // Example: `i $in N+`, `i % 2 = 0` => `i > 1`, so `i - 1 $in N+`.
     fn try_verify_positive_even_integer_greater_than_one(
         &mut self,
         atomic_fact: &AtomicFact,

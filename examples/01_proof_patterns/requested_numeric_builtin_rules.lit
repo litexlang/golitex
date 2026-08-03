@@ -11,7 +11,7 @@ forall a, b R:
     =>:
         a != 0 and b != 0
 
-forall a R+, b R_nz:
+forall a R+, b R*:
     b $in R
     1 / b $in R
     a = (a ^ b) ^ (1 / b)

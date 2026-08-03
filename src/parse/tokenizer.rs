@@ -38,10 +38,9 @@ impl Tokenizer {
     pub fn tokenize_line(
         &self,
         line: &str,
-        line_file: LineFile,
+        _line_file: LineFile,
     ) -> Result<Vec<String>, RuntimeError> {
-        let raw_tokens = self.raw_tokenize_line(line);
-        self.reject_removed_macro_use(raw_tokens, line_file)
+        Ok(self.raw_tokenize_line(line))
     }
 
     fn raw_tokenize_line(&self, line: &str) -> Vec<String> {
@@ -105,20 +104,6 @@ impl Tokenizer {
                 continue;
             }
 
-            if bytes[i] == b'@' {
-                let start = i;
-                i += 1;
-                while i < line.len() {
-                    let next_ch = line[i..].chars().next().unwrap_or('\0');
-                    if !Self::is_identifier_continue_char(next_ch) {
-                        break;
-                    }
-                    i += next_ch.len_utf8();
-                }
-                tokens.push(line[start..i].to_string());
-                continue;
-            }
-
             if bytes[i].is_ascii_digit() {
                 let start = i;
                 i += 1;
@@ -140,28 +125,6 @@ impl Tokenizer {
             i += ch.len_utf8();
         }
         tokens
-    }
-
-    fn reject_removed_macro_use(
-        &self,
-        raw_tokens: Vec<String>,
-        line_file: LineFile,
-    ) -> Result<Vec<String>, RuntimeError> {
-        let mut tokens = Vec::with_capacity(raw_tokens.len());
-        for token in raw_tokens {
-            if Self::is_macro_use_token(&token) {
-                return Err(Self::parse_error(
-                    format!(
-                        "{} macro abbreviation has been removed; write the full Litex expression directly",
-                        token
-                    ),
-                    line_file,
-                ));
-            } else {
-                tokens.push(token);
-            }
-        }
-        Ok(tokens)
     }
 
     pub(crate) fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
@@ -243,9 +206,7 @@ impl Tokenizer {
 
             // Tokenize header; if it's empty (e.g. whole line comment),
             // treat it like a blank line for block parsing.
-            let raw_header_tokens = self.raw_tokenize_line(content);
-            let header_tokens =
-                self.reject_removed_macro_use(raw_header_tokens, line_file.clone())?;
+            let header_tokens = self.raw_tokenize_line(content);
             if header_tokens.is_empty() {
                 continue;
             }
@@ -334,22 +295,6 @@ impl Tokenizer {
         trimmed.ends_with(COLON)
     }
 
-    fn is_macro_use_token(token: &str) -> bool {
-        let Some(name) = token.strip_prefix('@') else {
-            return false;
-        };
-        Self::is_macro_name(name)
-    }
-
-    fn is_macro_name(name: &str) -> bool {
-        let mut chars = name.chars();
-        match chars.next() {
-            Some(ch) if Self::is_identifier_start_char(ch) => {}
-            _ => return false,
-        }
-        chars.all(Self::is_identifier_continue_char)
-    }
-
     fn is_identifier_start_char(ch: char) -> bool {
         ch == '_' || ch.is_alphabetic()
     }
@@ -370,6 +315,9 @@ impl Tokenizer {
                 | COMPACT_Z_NEG
                 | COMPACT_Q_NEG
                 | COMPACT_R_NEG
+                | COMPACT_Z_NZ
+                | COMPACT_Q_NZ
+                | COMPACT_R_NZ
         ) {
             return true;
         }
@@ -383,12 +331,6 @@ impl Tokenizer {
                 next,
                 ',' | ':' | ')' | ']' | '}' | '>' | '=' | '!' | '<' | '$' | '{' | '#'
             )
-    }
-
-    fn parse_error(message: String, line_file: LineFile) -> RuntimeError {
-        RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(message, line_file),
-        ))
     }
 }
 
@@ -447,20 +389,6 @@ mod tests {
     }
 
     #[test]
-    fn removed_default_struct_view_prefix_is_two_ampersands() {
-        let tokenizer = Tokenizer::new();
-        assert_eq!(
-            tokenizer
-                .tokenize_line("forall p &&Point: p.x = &Point{p}.x", test_line_file())
-                .unwrap(),
-            vec![
-                "forall", "p", "&", "&", "Point", ":", "p", ".", "x", "=", "&", "Point", "{", "p",
-                "}", ".", "x"
-            ]
-        );
-    }
-
-    #[test]
     fn matrix_operator_tokens_preserve_apostrophe_and_interval_prefix() {
         let tokenizer = Tokenizer::new();
         assert_eq!(
@@ -479,12 +407,6 @@ mod tests {
                 .unwrap(),
             vec!["'", "(", "0", ",", "1", ")"]
         );
-        assert_eq!(
-            tokenizer
-                .tokenize_line("A ++ B -- C ** D *. E ^^ 2", test_line_file())
-                .unwrap(),
-            vec!["A", "++", "B", "--", "C", "**", "D", "*.", "E", "^^", "2"]
-        );
     }
 
     #[test]
@@ -492,30 +414,21 @@ mod tests {
         let tokenizer = Tokenizer::new();
         assert_eq!(
             tokenizer
-                .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R-", test_line_file())
+                .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R- Z* Q* R*", test_line_file())
                 .unwrap(),
-            vec!["set", "+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-"]
+            vec!["set", "+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-", "Z*", "Q*", "R*"]
         );
         assert_eq!(
             tokenizer
-                .tokenize_line("set + N + Z -", test_line_file())
+                .tokenize_line("set + N + Z - R *", test_line_file())
                 .unwrap(),
-            vec!["set", "+", "N", "+", "Z", "-"]
+            vec!["set", "+", "N", "+", "Z", "-", "R", "*"]
         );
         assert_eq!(
             tokenizer
-                .tokenize_line("N+1 R-x Q-(a)", test_line_file())
+                .tokenize_line("N+1 R-x Q-(a) R*x", test_line_file())
                 .unwrap(),
-            vec!["N", "+", "1", "R", "-", "x", "Q", "-", "(", "a", ")"]
+            vec!["N", "+", "1", "R", "-", "x", "Q", "-", "(", "a", ")", "R", "*", "x"]
         );
-    }
-
-    #[test]
-    fn removed_macro_use_reports_migration_error() {
-        let tokenizer = Tokenizer::new();
-        let error = tokenizer
-            .tokenize_line("have @eq", test_line_file())
-            .unwrap_err();
-        assert!(format!("{:?}", error).contains("macro abbreviation has been removed"));
     }
 }

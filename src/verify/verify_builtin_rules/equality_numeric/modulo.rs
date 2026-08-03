@@ -256,7 +256,7 @@ impl Runtime {
     }
 
     // Negating an integer replaces its Euclidean residue by the complementary residue.
-    // Example: for `n Z` and `k N_pos`, `(-n) % k = (k - n % k) % k`.
+    // Example: for `n Z` and `k N+`, `(-n) % k = (k - n % k) % k`.
     pub(crate) fn try_verify_integer_mod_negation_rule(
         &mut self,
         left: &Obj,
@@ -338,7 +338,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (-n) % k = (k - n % k) % k for n in Z and k in N_pos",
+                "equality: (-n) % k = (k - n % k) % k for n in Z and k in N+",
                 vec![
                     modulus_matches,
                     complement_starts_at_modulus,
@@ -354,7 +354,7 @@ impl Runtime {
     }
 
     // Reducing an integer before a natural power preserves its Euclidean residue.
-    // Example: for `n Z`, `m N`, and `k N_pos`, `n^m % k = ((n % k)^m) % k`.
+    // Example: for `n Z`, `m N`, and `k N+`, `n^m % k = ((n % k)^m) % k`.
     pub(crate) fn try_verify_integer_mod_natural_power_rule(
         &mut self,
         left: &Obj,
@@ -456,7 +456,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N_pos",
+                "equality: n^m % k = ((n % k)^m) % k for n in Z, m in N, and k in N+",
                 vec![
                     outer_modulus_matches,
                     inner_modulus_matches,

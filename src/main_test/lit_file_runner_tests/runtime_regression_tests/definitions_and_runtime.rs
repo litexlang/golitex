@@ -366,15 +366,15 @@ a = c
 #[test]
 fn positive_real_power_closure_enables_log_inverse() {
     let source_code = r#"
-forall a R_pos, x R:
-    a^x $in R_pos
+forall a R+, x R:
+    a^x $in R+
 
-forall a R_pos, x, y R:
+forall a R+, x, y R:
     a^x = y
     =>:
-        y $in R_pos
+        y $in R+
 
-forall a R_pos, x, y R:
+forall a R+, x, y R:
     a != 1
     a^x = y
     =>:
@@ -392,14 +392,14 @@ forall a R_pos, x, y R:
         "positive_real_power_closure_enables_log_inverse failed:\n{}",
         run_output
     );
-    assert!(run_output.contains("R_pos: a^x from 0 < a and x in R"));
+    assert!(run_output.contains("R+: a^x from 0 < a and x in R"));
     assert!(run_output.contains("equality: log(a, b) = c from a^c = b"));
 }
 
 #[test]
 fn forall_iff_output_reports_direction_checks() {
     let source_code = r#"
-forall a, b R_pos, c R:
+forall a, b R+, c R:
     a != 1
     =>:
         log(a, b) = c
@@ -607,47 +607,6 @@ fn duplicate_definition_names_fail_in_their_namespace_impl() {
             run_output
         );
     }
-}
-
-#[test]
-fn alias_is_available_as_an_identifier_name() {
-    let source_code = r#"
-have alias R = 1
-alias = 1
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("alias_is_available_as_an_identifier_name");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "`alias` should be available as an identifier name:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn removed_alias_statement_is_rejected() {
-    let source_code = r#"
-prop is_one(x R):
-    x = 1
-alias prop one_prop <=> is_one
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("removed_alias_statement_is_rejected");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        !run_succeeded,
-        "removed alias syntax should fail:\n{}",
-        run_output
-    );
 }
 
 #[test]
@@ -971,41 +930,6 @@ stop strategy use_target_strategy
         env.stopped_strategy_stmts
             .get(&("target_strategy_prop".to_string(), true)),
         Some(&"use_target_strategy".to_string())
-    );
-}
-
-#[test]
-fn by_strategy_is_not_a_valid_by_subkeyword() {
-    let source_code = r#"
-prop target_strategy_prop(x R):
-    x = 1
-
-strategy use_target_strategy:
-    ? forall x R:
-        x = 1
-        =>:
-            $target_strategy_prop(x)
-
-    by def $target_strategy_prop(x)
-
-by strategy use_target_strategy
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("by_strategy_is_not_a_valid_by_subkeyword");
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        !run_succeeded,
-        "`by strategy` should not parse as strategy activation:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("got `strategy`"),
-        "the parser should report that strategy is not a valid `by` subkeyword:\n{}",
-        run_output
     );
 }
 
@@ -1337,29 +1261,6 @@ strategy bad_strategy:
         "strategy equality then fact should report equality restriction:\n{}",
         run_output
     );
-}
-
-#[test]
-fn legacy_have_fn_as_algo_reports_migration() {
-    run_with_large_stack("legacy_have_fn_as_algo_reports_migration", || {
-        let source_code = "have fn as algo bad_algo_case(x, y R) R = 0";
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("legacy_have_fn_as_algo_reports_migration");
-        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-        let (run_succeeded, run_output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-        assert!(
-            !run_succeeded,
-            "legacy have fn as algo should fail, but succeeded:\n{}",
-            run_output
-        );
-        assert!(
-            run_output.contains("has been replaced") && run_output.contains("have algo for f(...)"),
-            "legacy have fn as algo should report its migration:\n{}",
-            run_output
-        );
-    });
 }
 
 #[test]

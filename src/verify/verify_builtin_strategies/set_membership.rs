@@ -96,7 +96,7 @@ impl Runtime {
             // Real interval membership structurally decomposes into the real
             // carrier and its two endpoint bounds. Each smaller child may use
             // one direct rule or another constructor-decreasing strategy.
-            // Example: `r R_pos` implies `c in (c-r, c+r)`.
+            // Example: `r R+` implies `c in (c-r, c+r)`.
             Obj::IntervalObj(interval) => vec![vec![
                 InFact::new(fact.element.clone(), StandardSet::R.into(), lf.clone()).into(),
                 if interval.left_closed() {
@@ -166,7 +166,7 @@ impl Runtime {
         &mut self,
         fact: &InFact,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) = self.try_verify_set_builder_membership_alias_transport(fact)? {
+        if let Some(result) = self.try_verify_set_builder_membership_definition_transport(fact)? {
             return Ok(result);
         }
         // Most membership goals target a carrier parameter or a native set

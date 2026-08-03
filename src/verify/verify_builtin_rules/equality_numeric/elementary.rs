@@ -356,7 +356,7 @@ impl Runtime {
     }
 
     // Subtracting the Euclidean remainder leaves a multiple of the positive modulus.
-    // Example: `forall a Z, b N_pos: (a - a % b) % b = 0`.
+    // Example: `forall a Z, b N+: (a - a % b) % b = 0`.
     pub(crate) fn try_verify_mod_dividend_minus_remainder_equals_zero(
         &mut self,
         left: &Obj,
@@ -412,7 +412,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "equality: (a - a % b) % b = 0 for a in Z and b in N_pos".to_string(),
+                "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
                 vec![dividend_result, modulus_result],
             )
             .into(),

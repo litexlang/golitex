@@ -2,7 +2,7 @@
 + $in fn(a, b R) R
 / $in fn(a R, b R: b != 0) R
 % $in fn(a Z, b Z: b != 0) Z
-^ $in fn(a, b R: a $in R+ or a = 0 and b $in R+ or a $in R_nz and b $in Z or b $in N) R
+^ $in fn(a, b R: a $in R+ or a = 0 and b $in R+ or a $in R* and b $in Z or b $in N) R
 
 # The Archimedean property supplies a reciprocal natural bound for every positive real.
 forall epsilon R+:

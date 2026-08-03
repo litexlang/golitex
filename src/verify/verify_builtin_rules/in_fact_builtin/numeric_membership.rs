@@ -97,7 +97,7 @@ impl Runtime {
     }
 
     // Finite-set sum: the return set of the summand controls the numeric set of the sum.
-    // Example: `finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the domain must be nonempty.
+    // Example: `finite_set_sum({1, 2}, fn(x Z) Z {x}) $in Z`; for `N+`, the domain must be nonempty.
     pub(super) fn verify_in_fact_finite_set_sum_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -146,7 +146,7 @@ impl Runtime {
     }
 
     // Finite-set product: the return set of the factor controls the numeric set of the product.
-    // Example: `finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z`; for `N_pos`, the empty product is `1`.
+    // Example: `finite_set_product({1, 2}, fn(x Z) Z {x}) $in Z`; for `N+`, the empty product is `1`.
     pub(super) fn verify_in_fact_finite_set_product_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -182,9 +182,9 @@ impl Runtime {
         ))
     }
 
-    // `sum(start, end, f)` / `product(start, end, f)` in `N_pos` when the iterand's declared
-    // return set is `N_pos` and the whole iterated object is well-defined on the integer interval.
-    // Example: `product(1, a, fn(x N_pos) N_pos {x}) $in N_pos`.
+    // `sum(start, end, f)` / `product(start, end, f)` in `N+` when the iterand's declared
+    // return set is `N+` and the whole iterated object is well-defined on the integer interval.
+    // Example: `product(1, a, fn(x N+) N+ {x}) $in N+`.
     pub(super) fn verify_in_fact_sum_or_product_in_n_pos_by_iterand_ret_set(
         &mut self,
         in_fact: &InFact,
@@ -199,7 +199,7 @@ impl Runtime {
         if !verify_equality_by_they_are_the_same(&ret_set, &n_pos_obj) {
             return Ok((StmtUnknown::new()).into());
         }
-        let reason = format!("{op}: iterand return set is N_pos");
+        let reason = format!("{op}: iterand return set is N+");
         Ok(number_in_set_verified_by_builtin_rules_result(
             in_fact,
             reason.as_str(),
@@ -208,7 +208,7 @@ impl Runtime {
 
     /// `f(args) $in S` when the head's declared return set is `S`, or a standard numeric
     /// subset of `S`, and the application is well-defined in the current environment.
-    /// This also covers function-valued returns, e.g. `seq_add_R(a, b) $in fn(k N_pos) R`.
+    /// This also covers function-valued returns, e.g. `seq_add_R(a, b) $in fn(k N+) R`.
     /// Example: if `floor fn(x R) Z`, then `floor(x) $in R` because `Z subset R`.
     pub(super) fn verify_in_fact_fn_application_in_typed_return_set(
         &mut self,
@@ -311,7 +311,7 @@ impl Runtime {
     }
 
     // Integer subtraction stays in `N` when the result is nonnegative.
-    // Example: `forall n N_pos: n - 1 $in N`, since `n, 1 $in Z` and `1 <= n`.
+    // Example: `forall n N+: n - 1 $in N`, since `n, 1 $in Z` and `1 <= n`.
     pub(super) fn verify_in_fact_sub_in_n_from_integer_terms_and_bound(
         &mut self,
         in_fact: &InFact,
@@ -327,7 +327,7 @@ impl Runtime {
         }
 
         // A positive natural has a natural predecessor.
-        // Examples: `n $in N_pos` => `n - 1 $in N`, or
+        // Examples: `n $in N+` => `n - 1 $in N`, or
         // `n $in N`, `n > 0` => `n - 1 $in N`.
         if matches!(sub.right.as_ref(), Obj::Number(number) if number.normalized_value == "1") {
             let lf = in_fact.line_file.clone();
@@ -340,7 +340,7 @@ impl Runtime {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
-                        "N: n - 1 from n in N_pos".to_string(),
+                        "N: n - 1 from n in N+".to_string(),
                         vec![positive_natural_result],
                     )
                     .into(),
@@ -508,7 +508,7 @@ impl Runtime {
     }
 
     // Positive real bases raised to real exponents are positive reals.
-    // Example: `forall a R_pos, x R: a^x $in R_pos`.
+    // Example: `forall a R+, x R: a^x $in R+`.
     pub(super) fn verify_in_fact_pow_in_r_pos_from_positive_base_real_exponent(
         &mut self,
         in_fact: &InFact,
@@ -534,7 +534,7 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "R_pos: a^x from 0 < a and x in R".to_string(),
+                "R+: a^x from 0 < a and x in R".to_string(),
                 vec![base_result, exponent_result],
             )
             .into(),
@@ -542,7 +542,7 @@ impl Runtime {
     }
 
     // A positive natural greater than one has a positive natural predecessor.
-    // Example: `n $in N_pos`, `n > 1` => `n - 1 $in N_pos`.
+    // Example: `n $in N+`, `n > 1` => `n - 1 $in N+`.
     pub(super) fn verify_in_fact_sub_in_n_pos_from_n_pos_and_greater_than_one(
         &mut self,
         in_fact: &InFact,
@@ -581,16 +581,16 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "N_pos: n - 1 from n in N_pos and n > 1".to_string(),
+                "N+: n - 1 from n in N+ and n > 1".to_string(),
                 vec![membership_result, bound_result],
             )
             .into(),
         )
     }
 
-    // `a + b $in N_pos` when both summands are in `N_pos`, or one summand is in
-    // `N_pos` and the other is in `N`.
-    // Example: `forall a, b N_pos: a + b $in N_pos`.
+    // `a + b $in N+` when both summands are in `N+`, or one summand is in
+    // `N+` and the other is in `N`.
+    // Example: `forall a, b N+: a + b $in N+`.
     pub(super) fn verify_in_fact_add_in_n_pos_from_n_pos_and_n(
         &mut self,
         in_fact: &InFact,
@@ -620,7 +620,7 @@ impl Runtime {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
-                        "N_pos: a + b from a in N_pos and b in N_pos".to_string(),
+                        "N+: a + b from a in N+ and b in N+".to_string(),
                         vec![r_left_n_pos_for_pair, r_right_n_pos_for_pair],
                     )
                     .into(),
@@ -637,7 +637,7 @@ impl Runtime {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
-                        "N_pos: a + b from a in N_pos and b in N".to_string(),
+                        "N+: a + b from a in N+ and b in N".to_string(),
                         vec![r_left_n_pos, r_right_n],
                     )
                     .into(),
@@ -660,15 +660,15 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "N_pos: a + b from a in N and b in N_pos".to_string(),
+                "N+: a + b from a in N and b in N+".to_string(),
                 vec![r_left_n, r_right_n_pos],
             )
             .into(),
         )
     }
 
-    // `a * b $in N_pos` when `a $in N_pos` and `b $in N_pos` (positive naturals are closed under multiplication).
-    // Example: `forall a, b N_pos: a * b $in N_pos`.
+    // `a * b $in N+` when `a $in N+` and `b $in N+` (positive naturals are closed under multiplication).
+    // Example: `forall a, b N+: a * b $in N+`.
     pub(super) fn verify_in_fact_mul_in_n_pos_from_factors_in_n_pos(
         &mut self,
         in_fact: &InFact,
@@ -698,16 +698,16 @@ impl Runtime {
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "N_pos: a * b from a in N_pos and b in N_pos".to_string(),
+                "N+: a * b from a in N+ and b in N+".to_string(),
                 vec![r_left, r_right],
             )
             .into(),
         )
     }
 
-    // `N_pos` = positive integers: from `0 < x` and (`x $in Z` or `x $in N`).
+    // `N+` = positive integers: from `0 < x` and (`x $in Z` or `x $in N`).
     // Also proves a nonzero natural is positive.
-    // Example: `forall n N: n != 0 =>: n $in N_pos`.
+    // Example: `forall n N: n != 0 =>: n $in N+`.
     pub(super) fn verify_in_fact_n_pos_by_zero_less_and_in_z_or_n(
         &mut self,
         in_fact: &InFact,
@@ -725,7 +725,7 @@ impl Runtime {
                 return Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
                         in_fact,
-                        "N_pos: x in N and x != 0",
+                        "N+: x in N and x != 0",
                         vec![in_n_result, nonzero_result],
                     ),
                 );
@@ -745,7 +745,7 @@ impl Runtime {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
                     in_fact,
-                    "N_pos: 0 < x and x in Z",
+                    "N+: 0 < x and x in Z",
                     vec![zero_lt_result, in_z_result],
                 ),
             );
@@ -756,7 +756,7 @@ impl Runtime {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
                     in_fact,
-                    "N_pos: 0 < x and x in N",
+                    "N+: 0 < x and x in N",
                     vec![zero_lt_result, in_n_result],
                 ),
             );
@@ -765,8 +765,8 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    // `Q_pos` and `R_pos` are the positive elements of their base sets.
-    // Example: from `a $in Q` and `0 < a`, prove `a $in Q_pos`.
+    // `Q+` and `R+` are the positive elements of their base sets.
+    // Example: from `a $in Q` and `0 < a`, prove `a $in Q+`.
     pub(super) fn verify_in_fact_standard_positive_by_zero_less_and_base_set(
         &mut self,
         in_fact: &InFact,
@@ -800,7 +800,7 @@ impl Runtime {
 
     // `N` = nonnegative integers: from `x $in Z` and `x >= 0`; strict `x > 0` also suffices.
     // Example: after `a, b $in Z` and `b - a >= 0`, Litex verifies `b - a $in N`.
-    // Also covers predecessors of positive naturals: `forall n N_pos: n - 1 $in N`.
+    // Also covers predecessors of positive naturals: `forall n N+: n - 1 $in N`.
     pub(super) fn verify_in_fact_n_by_nonnegative_integer(
         &mut self,
         in_fact: &InFact,
@@ -816,7 +816,7 @@ impl Runtime {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
                     in_fact,
-                    "N: x in N_pos",
+                    "N: x in N+",
                     vec![in_n_pos_result],
                 ),
             );
@@ -1585,7 +1585,7 @@ impl Runtime {
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N_pos and exponent in N"
+                "Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N+ and exponent in N"
                     .to_string(),
                 subgoals,
             ))
@@ -1730,7 +1730,7 @@ impl Runtime {
             StandardSet::RNeg => Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     in_fact.clone().into(),
-                    "mul_opposite_signs_product_in_R_neg".to_string(),
+                    "mul_opposite_signs_product_in_negative_reals".to_string(),
                     base_subgoals,
                 ))
                 .into(),
@@ -1749,7 +1749,7 @@ impl Runtime {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
-                            "mul_opposite_signs_product_in_Q_neg".to_string(),
+                            "mul_opposite_signs_product_in_negative_rationals".to_string(),
                             base_subgoals,
                         ))
                         .into(),
@@ -1772,7 +1772,7 @@ impl Runtime {
                     Ok(
                         (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                             in_fact.clone().into(),
-                            "mul_opposite_signs_product_in_Z_neg".to_string(),
+                            "mul_opposite_signs_product_in_negative_integers".to_string(),
                             base_subgoals,
                         ))
                         .into(),

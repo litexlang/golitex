@@ -73,7 +73,7 @@ impl Runtime {
         }
     }
 
-    /// Record `element` as having function signature `body` (same keys/aliases as `element $in fn ...` infer).
+    /// Record `element` as having function signature `body` (same lookup keys as `element $in fn ...` infer).
     /// When `equal_to` is `Some`, stores the defining expression (e.g. from `a = '…{…}` or `have fn`).
     pub(crate) fn register_known_objs_in_fn_sets_for_element_body(
         &mut self,
@@ -98,11 +98,11 @@ impl Runtime {
             body_opt,
             equal_opt.clone(),
         );
-        for alias in extra_known_fn_set_keys_for_bare_name_lookup(element) {
-            if alias != key {
+        for alternate_key in extra_known_fn_set_keys_for_bare_name_lookup(element) {
+            if alternate_key != key {
                 Self::upsert_known_fn_info_for_key(
                     &mut env.known_objs_in_fn_sets,
-                    alias,
+                    alternate_key,
                     Some((body.clone(), fn_signature_line_file.clone())),
                     equal_opt.clone(),
                 );
@@ -134,7 +134,7 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    // Alias-to-function-space inference: if `S = fn(...) T`, then `x $in S` also gives
+    // Equal-function-space inference: if `S = fn(...) T`, then `x $in S` also gives
     // `x $in fn(...) T`, which registers `x` as callable with that function signature.
     // Example: `A $in \tensor3<R, 3>` and `\tensor3<R, 3> = fn(i, j, k closed_range(1, 3)) R`.
     fn infer_membership_in_equal_fn_set_from_in_fact(
@@ -545,7 +545,7 @@ impl Runtime {
             Obj::OneSideInfinityIntervalObj(interval) => {
                 self.infer_in_fact_element_in_one_side_infinity_interval(in_fact, interval)
             }
-            // Strictly positive number sets: `x $in R_pos` (etc.) => `0 < x`.
+            // Strictly positive number sets: `x $in R+` (etc.) => `0 < x`.
             Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::NPos) => {
@@ -560,7 +560,7 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
-            // Strictly negative rays: `x $in R_neg` (etc.) => `x < 0`.
+            // Strictly negative rays: `x $in R-` (etc.) => `x < 0`.
             Obj::StandardSet(StandardSet::QNeg)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::RNeg) => {
@@ -575,7 +575,7 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
-            // Nonzero: `x $in R_nz` (etc.) => `x != 0`.
+            // Nonzero: `x $in R*` (etc.) => `x != 0`.
             Obj::StandardSet(StandardSet::QNz)
             | Obj::StandardSet(StandardSet::ZNz)
             | Obj::StandardSet(StandardSet::RNz) => {
@@ -944,9 +944,10 @@ impl Runtime {
                 if !equal_set_infer.is_empty() {
                     return Ok(equal_set_infer);
                 }
-                let alias_infer = self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
-                if !alias_infer.is_empty() {
-                    return Ok(alias_infer);
+                let equal_fn_set_infer =
+                    self.infer_membership_in_equal_fn_set_from_in_fact(in_fact)?;
+                if !equal_fn_set_infer.is_empty() {
+                    return Ok(equal_fn_set_infer);
                 }
                 // If the set side is a one-layer user-defined set builder, unfold it
                 // for inference too. Example: `(3,4) $in circle(5)` infers

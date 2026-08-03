@@ -76,7 +76,7 @@ fn eval_output_reports_final_stored_equality() {
         let source_code = r#"
 eval 1 + 2
 
-have a R = sum(1, 2, fn(z N_pos: z <= 2) R {z})
+have a R = sum(1, 2, fn(z N+: z <= 2) R {z})
 eval a
 "#;
 
@@ -1457,7 +1457,7 @@ $sym_p(B, A)
 #[test]
 fn builtin_rule_chain_normal_output_keeps_public_conclusions() {
     let source_code = r#"
-forall x R_pos:
+forall x R+:
     x^3 = 8
     =>:
         3 = log(2, 8) = log(2, x^3) = 3 * log(2, x)
@@ -1506,7 +1506,7 @@ forall x R_pos:
 #[test]
 fn builtin_strategy_results_are_nested_back_to_the_root() {
     let source_code = r#"
-have a, b, c, d R_pos
+have a, b, c, d R+
 (a + b) + (c + d) > 0
 "#;
 

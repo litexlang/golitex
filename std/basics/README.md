@@ -27,7 +27,7 @@ Names beginning with `_` are implementation details, not client API.
 | --- | --- | --- |
 | `e` | Euler's positive real constant | Native |
 | `pi` | the positive circle constant | Native |
-| `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N_pos` | Checked |
+| `integer_quotient(a, d)` | the integer `q` selected by `a = d * q + a % d`, for `d : N+` | Checked |
 
 `integer_quotient` is an ordinary source-level function selected from the
 kernel's narrow Euclidean unique-existence fact. Native `gcd(a, b)` is the
@@ -37,7 +37,7 @@ user-facing gcd object and requires the side condition `a != 0 or b != 0`.
 
 | Name | Meaning |
 | --- | --- |
-| `is_reduced_fraction(a, b)` | `a : Z`, `b : N_pos`, and their only positive common divisor is `1` |
+| `is_reduced_fraction(a, b)` | `a : Z`, `b : N+`, and their only positive common divisor is `1` |
 | `prime_by_trial_division(p)` | source definition: `p >= 2`, with no divisor in `range(2, p)` |
 | `divides(a, b)` | there is `k : Z` with `b = a * k` |
 
@@ -47,8 +47,8 @@ user-facing gcd object and requires the side condition `a != 0 or b != 0`.
 
 | Theorem | Conclusion | Status |
 | --- | --- | --- |
-| `rational_has_unique_reduced_fraction(q)` | one `a : Z`, `b : N_pos` with `q = a / b` and `is_reduced_fraction(a, b)` | Trusted |
-| `rational_has_reduced_fraction(q)` | some `p : Z`, `d : N_pos` with `q = p / d` and `gcd(p, d) = 1` | Checked |
+| `rational_has_unique_reduced_fraction(q)` | one `a : Z`, `b : N+` with `q = a / b` and `is_reduced_fraction(a, b)` | Trusted |
+| `rational_has_reduced_fraction(q)` | some `p : Z`, `d : N+` with `q = p / d` and `gcd(p, d) = 1` | Checked |
 
 The second theorem is the checked reduced-fraction existence theorem. The first
 is a separate, currently trusted unique-normal-form interface.
@@ -76,7 +76,7 @@ they belong to the set and bound every member. Literal calls such as
 | Theorem | Conclusion |
 | --- | --- |
 | `gcd_comm(a, b)` | `gcd(a, b) = gcd(b, a)` |
-| `gcd_positive(a, b)` | `gcd(a, b) $in N_pos` |
+| `gcd_positive(a, b)` | `gcd(a, b) $in N+` |
 | `gcd_divides_left(a, b)` | `gcd(a, b)` divides `a` |
 | `gcd_divides_right(a, b)` | `gcd(a, b)` divides `b` |
 | `common_divisor_le_gcd(a, b, d)` | a positive common divisor `d` is at most `gcd(a, b)` |
@@ -104,7 +104,7 @@ import std basics
 
 thm every_rational_has_coprime_integer_fraction:
     ? forall q Q:
-        exist p Z, d N_pos st {q = p / d, gcd(p, d) = 1}
+        exist p Z, d N+ st {q = p / d, gcd(p, d) = 1}
     by thm basics::rational_has_reduced_fraction(q)
 ```
 

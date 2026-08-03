@@ -258,7 +258,7 @@ equivalence `a <= b <=> a < b + 1`.
 Constructor and definition strategies remain local. They can check a dependent
 tuple as a struct, project a callable field through one checked constructor,
 or unfold one literal/checked/template set builder or one exact indexed named
-builder for membership. They do not scan all local aliases. Equality replay can
+builder for membership. They do not scan all local named definitions. Equality replay can
 unfold one checked body against simple arithmetic. Known-only equality first
 checks identity, direct lookup/calculation, or an already stored equality
 class, then applies structural congruence using only those same known-equality
@@ -627,7 +627,7 @@ The same declaration-driven rule supports consecutive field chains. If
 `outer &Outer` and `Outer.inner` is declared directly as `&Inner`, then
 `outer.inner.value` lowers to
 `&Inner{&Outer{outer}.inner}.value`. The intermediate view comes from the
-field declaration, not from proof search. A set alias or a later fact saying
+field declaration, not from proof search. A named set definition or a later fact saying
 that `outer.inner` belongs to `&Inner` does not enable the shorthand.
 
 This is a field-chain feature rather than general postfix type inference. A

@@ -200,7 +200,7 @@ impl Runtime {
 
     // Zero as a base stays zero for positive exponents: `0^x = 0` when `x > 0`.
     // This intentionally does not cover the zeroth power convention `0^0 = 1`.
-    // Example: `forall x R_pos: 0^x = 0`.
+    // Example: `forall x R+: 0^x = 0`.
     pub(crate) fn try_verify_zero_pow_positive_exponent_identity(
         &mut self,
         left: &Obj,
@@ -240,7 +240,7 @@ impl Runtime {
             // Keep reciprocal positivity inside this one power identity rule:
             // direct positivity (or a direct positive carrier) of numerator
             // and denominator entails positivity of their quotient. This lets
-            // `n $in N_pos` justify `0^(1/n) = 0` without a second builtin hop.
+            // `n $in N+` justify `0^(1/n) = 0` without a second builtin hop.
             let Obj::Div(div) = pow.exponent.as_ref() else {
                 return Ok(None);
             };

@@ -360,9 +360,7 @@ impl Runtime {
                 )?
             };
 
-            let setting_bindings = setting_prefix
-                .params_def_with_type
-                .collect_param_bindings();
+            let setting_bindings = setting_prefix.params_def_with_type.collect_param_bindings();
             this.parse_in_existing_free_param_scope(
                 ParamObjType::Forall,
                 &setting_bindings,

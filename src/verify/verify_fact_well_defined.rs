@@ -136,7 +136,7 @@ impl Runtime {
             {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} requires its argument to belong to N_pos", atomic_fact),
+                        format!("{} requires its argument to belong to N+", atomic_fact),
                         atomic_fact.line_file(),
                     ),
                 )

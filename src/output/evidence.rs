@@ -787,9 +787,15 @@ fn builtin_rule_output_text(rule: &str) -> BuiltinRuleOutputText {
         "calculation and rational expression simplification" => {
             BuiltinRuleOutputText::ExactCalculationAndRationalExpressionSimplification
         }
-        "mul_opposite_signs_product_in_R_neg" => BuiltinRuleOutputText::OppositeSignProductInRNeg,
-        "mul_opposite_signs_product_in_Q_neg" => BuiltinRuleOutputText::OppositeSignProductInQNeg,
-        "mul_opposite_signs_product_in_Z_neg" => BuiltinRuleOutputText::OppositeSignProductInZNeg,
+        "mul_opposite_signs_product_in_negative_reals" => {
+            BuiltinRuleOutputText::OppositeSignProductInRNeg
+        }
+        "mul_opposite_signs_product_in_negative_rationals" => {
+            BuiltinRuleOutputText::OppositeSignProductInQNeg
+        }
+        "mul_opposite_signs_product_in_negative_integers" => {
+            BuiltinRuleOutputText::OppositeSignProductInZNeg
+        }
         _ => BuiltinRuleOutputText::Fallback(humanize_builtin_rule_label(rule)),
     }
 }
@@ -951,54 +957,54 @@ fn render_builtin_rule_output_text(
         }
         .to_string(),
         BuiltinRuleOutputText::OppositeSignProductInRNeg => match output_language {
-            OutputLanguage::English => "product of opposite-sign factors is in R_neg",
-            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 R_neg",
-            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 R_neg",
-            OutputLanguage::Japanese => "異符号の因子の積は R_neg に属する",
-            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 R_neg에 속함",
-            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en R_neg",
-            OutputLanguage::French => "le produit de facteurs de signes opposés est dans R_neg",
-            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in R_neg",
-            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em R_neg",
-            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в R_neg",
-            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى R_neg",
-            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल R_neg में है",
-            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc R_neg",
-            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di R_neg",
+            OutputLanguage::English => "product of opposite-sign factors is in R-",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 R-",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 R-",
+            OutputLanguage::Japanese => "異符号の因子の積は R- に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 R-에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en R-",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans R-",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in R-",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em R-",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в R-",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى R-",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल R- में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc R-",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di R-",
         }
         .to_string(),
         BuiltinRuleOutputText::OppositeSignProductInQNeg => match output_language {
-            OutputLanguage::English => "product of opposite-sign factors is in Q_neg",
-            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Q_neg",
-            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Q_neg",
-            OutputLanguage::Japanese => "異符号の因子の積は Q_neg に属する",
-            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Q_neg에 속함",
-            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Q_neg",
-            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Q_neg",
-            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Q_neg",
-            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Q_neg",
-            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Q_neg",
-            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Q_neg",
-            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Q_neg में है",
-            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Q_neg",
-            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Q_neg",
+            OutputLanguage::English => "product of opposite-sign factors is in Q-",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Q-",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Q-",
+            OutputLanguage::Japanese => "異符号の因子の積は Q- に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Q-에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Q-",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Q-",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Q-",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Q-",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Q-",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Q-",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Q- में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Q-",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Q-",
         }
         .to_string(),
         BuiltinRuleOutputText::OppositeSignProductInZNeg => match output_language {
-            OutputLanguage::English => "product of opposite-sign factors is in Z_neg",
-            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Z_neg",
-            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Z_neg",
-            OutputLanguage::Japanese => "異符号の因子の積は Z_neg に属する",
-            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Z_neg에 속함",
-            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Z_neg",
-            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Z_neg",
-            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Z_neg",
-            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Z_neg",
-            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Z_neg",
-            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Z_neg",
-            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Z_neg में है",
-            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Z_neg",
-            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Z_neg",
+            OutputLanguage::English => "product of opposite-sign factors is in Z-",
+            OutputLanguage::SimplifiedChinese => "异号因子的乘积属于 Z-",
+            OutputLanguage::TraditionalChinese => "異號因子的乘積屬於 Z-",
+            OutputLanguage::Japanese => "異符号の因子の積は Z- に属する",
+            OutputLanguage::Korean => "부호가 반대인 인수들의 곱은 Z-에 속함",
+            OutputLanguage::Spanish => "el producto de factores de signo opuesto está en Z-",
+            OutputLanguage::French => "le produit de facteurs de signes opposés est dans Z-",
+            OutputLanguage::German => "Produkt von Faktoren mit entgegengesetztem Vorzeichen liegt in Z-",
+            OutputLanguage::Portuguese => "o produto de fatores com sinais opostos está em Z-",
+            OutputLanguage::Russian => "произведение множителей с противоположными знаками находится в Z-",
+            OutputLanguage::Arabic => "حاصل ضرب عوامل بإشارات متعاكسة ينتمي إلى Z-",
+            OutputLanguage::Hindi => "विपरीत चिह्न वाले गुणकों का गुणनफल Z- में है",
+            OutputLanguage::Vietnamese => "tích của các thừa số trái dấu thuộc Z-",
+            OutputLanguage::Indonesian => "hasil kali faktor bertanda berlawanan berada di Z-",
         }
         .to_string(),
         BuiltinRuleOutputText::Fallback(text) => text.clone(),
@@ -1012,15 +1018,15 @@ fn humanize_builtin_rule_label(rule: &str) -> String {
 
     let mut text = rule.replace('_', " ");
     for (plain, original) in [
-        ("N pos", "N_pos"),
-        ("Q pos", "Q_pos"),
-        ("R pos", "R_pos"),
-        ("Z neg", "Z_neg"),
-        ("Q neg", "Q_neg"),
-        ("R neg", "R_neg"),
-        ("Z nz", "Z_nz"),
-        ("Q nz", "Q_nz"),
-        ("R nz", "R_nz"),
+        ("N pos", "N+"),
+        ("Q pos", "Q+"),
+        ("R pos", "R+"),
+        ("Z neg", "Z-"),
+        ("Q neg", "Q-"),
+        ("R neg", "R-"),
+        ("Z nz", "Z*"),
+        ("Q nz", "Q*"),
+        ("R nz", "R*"),
     ] {
         text = text.replace(plain, original);
     }

@@ -216,7 +216,7 @@ constructors are checked field by field; callable struct fields project through
 one checked constructor; and set-builder membership unfolds one literal, one
 checked function/template definition, or one exact indexed named-builder
 equality. The indexed route does not scan the environment for approximate
-aliases.
+named definitions.
 
 For known integers, the two singleton-interval rules retain both explicit
 bounds: `n <= x < n + 1` gives `x = n`, and `n < x <= n + 1` gives

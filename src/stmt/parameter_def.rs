@@ -182,7 +182,7 @@ pub struct ParamDefWithSet {
     /// For each parameter group, the flat indices of earlier parameters cited by that group's set.
     ///
     /// Later parameter sets may depend on earlier arguments, e.g.
-    /// `fn(n N_pos, x closed_range(1, n)) R`; function return sets are intentionally outside this
+    /// `fn(n N+, x closed_range(1, n)) R`; function return sets are intentionally outside this
     /// dependent parameter list and must not cite these parameters.
     pub param_set_cited_param_indices: Vec<Vec<usize>>,
 }

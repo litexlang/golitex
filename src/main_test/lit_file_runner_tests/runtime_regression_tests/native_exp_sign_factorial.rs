@@ -55,7 +55,7 @@ fn native_exp_sign_factorial_symbolic_contracts_are_available() {
     assert_source_succeeds(
         r#"
 forall x R:
-    exp(x) $in R_pos
+    exp(x) $in R+
     exp(x) > 0
     exp(x) = e^x
     ln(exp(x)) = x
@@ -93,7 +93,7 @@ forall x R:
         ln(x) < 0
 
 forall n N:
-    factorial(n) $in N_pos
+    factorial(n) $in N+
     factorial(n) >= 1
     factorial(n + 1) = (n + 1) * factorial(n)
 

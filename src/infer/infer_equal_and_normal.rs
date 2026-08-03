@@ -349,7 +349,7 @@ impl Runtime {
             _ => self.get_obj_equal_to_set_builder(&equal_fact.right.to_string()),
         };
 
-        // Equality propagates a known set-builder representative across aliases.
+        // Equality propagates a known set-builder representative across equal named sets.
         // This is used when a template instance first equals its materialized
         // identifier and that identifier equals `{x T: P(x)}`.
         // Example: `\selected<T> = selected<T> = {x T: P(x)}` lets membership
@@ -427,9 +427,9 @@ impl Runtime {
             .insert(target.to_string(), value);
     }
 
-    // From `a^x = y`, infer `y $in R_pos` when `0 < a` and `x $in R`.
+    // From `a^x = y`, infer `y $in R+` when `0 < a` and `x $in R`.
     // This is safe because a positive real base raised to a real exponent is positive.
-    // Example: `a R_pos`, `x R`, `a^x = y` infers `y $in R_pos`.
+    // Example: `a R+`, `x R`, `a^x = y` infers `y $in R+`.
     fn infer_equal_fact_by_positive_real_power(
         &mut self,
         equal_fact: &EqualFact,

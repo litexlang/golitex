@@ -420,7 +420,7 @@ impl Runtime {
     }
 
     // A finite sum over one index is the summand at that index.
-    // Example: `sum(1, 1, fn(x N_pos) N_pos {x}) = 1`.
+    // Example: `sum(1, 1, fn(x N+) N+ {x}) = 1`.
     pub(crate) fn try_verify_sum_single_term(
         &mut self,
         left: &Obj,
@@ -469,7 +469,7 @@ impl Runtime {
     }
 
     // A finite product over one index is the factor at that index.
-    // Example: `product(1, 1, fn(x N_pos) N_pos {x}) = 1`.
+    // Example: `product(1, 1, fn(x N+) N+ {x}) = 1`.
     pub(crate) fn try_verify_product_single_term(
         &mut self,
         left: &Obj,

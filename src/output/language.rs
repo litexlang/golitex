@@ -1381,16 +1381,16 @@ const ZH_TEXTS: &[(&str, &str)] = &[
         "精确计算和有理表达式化简",
     ),
     (
-        "product of opposite-sign factors is in R_neg",
-        "异号因子的乘积属于 R_neg",
+        "product of opposite-sign factors is in R-",
+        "异号因子的乘积属于 R-",
     ),
     (
-        "product of opposite-sign factors is in Q_neg",
-        "异号因子的乘积属于 Q_neg",
+        "product of opposite-sign factors is in Q-",
+        "异号因子的乘积属于 Q-",
     ),
     (
-        "product of opposite-sign factors is in Z_neg",
-        "异号因子的乘积属于 Z_neg",
+        "product of opposite-sign factors is in Z-",
+        "异号因子的乘积属于 Z-",
     ),
 ];
 

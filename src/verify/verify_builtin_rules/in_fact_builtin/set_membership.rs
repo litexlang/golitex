@@ -2,7 +2,7 @@ use super::*;
 use std::rc::Rc;
 
 impl Runtime {
-    fn unfold_set_builder_alias_without_transport_reentry(
+    fn unfold_set_builder_definition_without_transport_reentry(
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,
@@ -16,7 +16,7 @@ impl Runtime {
         result
     }
 
-    pub(crate) fn try_verify_set_builder_membership_alias_transport(
+    pub(crate) fn try_verify_set_builder_membership_definition_transport(
         &mut self,
         goal: &InFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
@@ -37,7 +37,7 @@ impl Runtime {
         for membership in memberships {
             let unfolded = match &membership.set {
                 Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-                _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                _ => match self.unfold_set_builder_definition_without_transport_reentry(
                     &membership.set,
                     &final_state,
                 )? {
@@ -56,12 +56,12 @@ impl Runtime {
 
             let membership_result = Self::stmt_result_for_indexed_fact(
                 membership.clone().into(),
-                "known membership in an equal one-layer set-builder alias",
+                "known membership in an equal one-layer set-builder definition",
             );
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     goal.clone().into(),
-                    "set-builder membership transport through one unfolded alias".to_string(),
+                    "set-builder membership transport through one unfolded definition".to_string(),
                     vec![membership_result],
                 )
                 .into(),
@@ -119,7 +119,7 @@ impl Runtime {
             let AtomicFact::InFact(instantiated_membership) = &instantiated else {
                 unreachable!()
             };
-            let unfolded = self.unfold_set_builder_alias_without_transport_reentry(
+            let unfolded = self.unfold_set_builder_definition_without_transport_reentry(
                 &instantiated_membership.set,
                 &final_state,
             )?;
@@ -156,7 +156,7 @@ impl Runtime {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     goal.clone().into(),
-                    "set-builder membership transport from a known universal alias membership"
+                    "set-builder membership transport from a known universal named-set membership"
                         .to_string(),
                     vec![membership_result],
                 )
@@ -194,7 +194,7 @@ impl Runtime {
             for (membership_pattern, forall_context) in forall_memberships {
                 let set_builder = match &membership_pattern.set {
                     Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-                    _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                    _ => match self.unfold_set_builder_definition_without_transport_reentry(
                         &membership_pattern.set,
                         &UseContextVerifyState::new_with_final_round(true),
                     )? {
@@ -294,7 +294,7 @@ impl Runtime {
         for membership in memberships {
             let set_builder = match &membership.set {
                 Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-                _ => match self.unfold_set_builder_alias_without_transport_reentry(
+                _ => match self.unfold_set_builder_definition_without_transport_reentry(
                     &membership.set,
                     &final_state,
                 )? {
@@ -329,7 +329,7 @@ impl Runtime {
                 let membership_atomic: AtomicFact = membership.clone().into();
                 let membership_result = Self::stmt_result_for_indexed_fact(
                     membership_atomic,
-                    "known membership in a set-builder or its one-layer alias",
+                    "known membership in a set-builder or its one-layer named definition",
                 );
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1042,7 +1042,7 @@ impl Runtime {
 
     // Membership through a set-valued definition: if `S(a) = {x T: P(x)}`,
     // then `y $in S(a)` is checked by unfolding one layer and proving
-    // `y $in T` plus `P(y)`. This includes instantiated template aliases.
+    // `y $in T` plus `P(y)`. This includes instantiated template definitions.
     // Examples: `(3, 4) $in circle(5)` and `y $in \selected<T>`.
     pub(crate) fn maybe_verify_in_fact_in_unfolded_user_defined_set(
         &mut self,
@@ -1095,7 +1095,7 @@ impl Runtime {
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "membership in a set-valued definition: unfold one function or template alias to a set builder".to_string(),
+                "membership in a set-valued definition: unfold one function or template definition to a set builder".to_string(),
                 vec![unfolded_result],
             )
             .into(),

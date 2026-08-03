@@ -1,4 +1,4 @@
-//! Decides whether a decimal Number belongs to a standard number set (N, N_pos, Z, Z_neg, Z_nz, Q, R, etc.).
+//! Decides whether a decimal Number belongs to a standard number set (N, N+, Z, Z-, Z*, Q, R, etc.).
 
 use crate::prelude::*;
 
@@ -85,22 +85,22 @@ pub fn number_is_in_n(number: &Number) -> bool {
     number_is_in_z(number) && !number_is_negative(number)
 }
 
-// --- N_pos (positive naturals: 1, 2, 3, ...) ---
+// --- N+ (positive naturals: 1, 2, 3, ...) ---
 pub fn number_is_in_n_pos(number: &Number) -> bool {
     number_is_in_z(number) && number_is_positive(number)
 }
 
-// --- Z_neg (negative integers) ---
+// --- Z- (negative integers) ---
 pub fn number_is_in_z_neg(number: &Number) -> bool {
     number_is_in_z(number) && number_is_negative(number)
 }
 
-// --- Z_nz (non-zero integers) ---
+// --- Z* (non-zero integers) ---
 pub fn number_is_in_z_nz(number: &Number) -> bool {
     number_is_in_z(number) && number_is_nonzero(number)
 }
 
-// --- Q_pos, R_pos (positive rationals/reals) ---
+// --- Q+, R+ (positive rationals/reals) ---
 pub fn number_is_in_q_pos(number: &Number) -> bool {
     number_is_positive(number)
 }
@@ -109,7 +109,7 @@ pub fn number_is_in_r_pos(number: &Number) -> bool {
     number_is_positive(number)
 }
 
-// --- Q_neg, R_neg ---
+// --- Q-, R- ---
 pub fn number_is_in_q_neg(number: &Number) -> bool {
     number_is_negative(number)
 }
@@ -118,7 +118,7 @@ pub fn number_is_in_r_neg(number: &Number) -> bool {
     number_is_negative(number)
 }
 
-// --- Q_nz, R_nz (non-zero) ---
+// --- Q*, R* (non-zero) ---
 pub fn number_is_in_q_nz(number: &Number) -> bool {
     number_is_nonzero(number)
 }

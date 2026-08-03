@@ -122,7 +122,7 @@ impl Runtime {
             &def.line_file,
         )?;
         let instance_identifier = self.declared_identifier_obj(&instance_name);
-        // Register the public template application as an alias before the
+        // Register the public template application as a named definition before the
         // instantiated body stores derived facts. For a selected function,
         // this lets its unique-existence property normalize directly to calls
         // such as `\selected<T>(x)` instead of remaining attached only to the

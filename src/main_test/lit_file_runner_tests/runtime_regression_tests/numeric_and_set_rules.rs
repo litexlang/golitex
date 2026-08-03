@@ -247,7 +247,7 @@ forall a, b Z:
     =>:
         exist k Z st {a = k * b}
 
-forall k N_pos:
+forall k N+:
     k >= 2
     =>:
         1 % k = 1
@@ -516,20 +516,20 @@ have fn predecessor_count(n N) N by induc n from 0:
 predecessor_count(0) = 0
 predecessor_count(1) = predecessor_count(0) = 0
 
-forall n N_pos:
+forall n N+:
     n - 1 $in N
 
-forall n N_pos:
+forall n N+:
     n > 1
     =>:
-        n - 1 $in N_pos
+        n - 1 $in N+
 
-forall n N_pos:
+forall n N+:
     2 <= n
     =>:
-        n - 1 $in N_pos
+        n - 1 $in N+
 
-have fn positive_predecessor_count(n N_pos) N_pos by induc n from 1:
+have fn positive_predecessor_count(n N+) N+ by induc n from 1:
     case n = 1: 1
     case n > 1: positive_predecessor_count(n - 1)
 
@@ -543,7 +543,7 @@ have fn hanoi_moves_predecessor_probe(n N) N by induc n from 0:
 have fn shifted_hanoi_moves_predecessor_probe(n N) N = hanoi_moves_predecessor_probe(n) + 1
 
 thm shifted_hanoi_recurrence_predecessor_probe:
-    ? forall n N_pos:
+    ? forall n N+:
         shifted_hanoi_moves_predecessor_probe(n) = 2 * shifted_hanoi_moves_predecessor_probe(n - 1)
     hanoi_moves_predecessor_probe(n) = 2 * hanoi_moves_predecessor_probe(n - 1) + 1
     shifted_hanoi_moves_predecessor_probe(n - 1) = hanoi_moves_predecessor_probe(n - 1) + 1
@@ -566,11 +566,11 @@ thm shifted_hanoi_recurrence_predecessor_probe:
                 "missing positive natural predecessor provenance:\n{run_output}"
             );
             assert!(
-                run_output.contains("N: n - 1 from n in N_pos"),
+                run_output.contains("N: n - 1 from n in N+"),
                 "missing positive-natural-to-natural predecessor provenance:\n{run_output}"
             );
             assert!(
-                run_output.contains("N_pos: n - 1 from n in N_pos and n > 1"),
+                run_output.contains("N+: n - 1 from n in N+ and n > 1"),
                 "missing strictly positive predecessor provenance:\n{run_output}"
             );
 
@@ -581,11 +581,11 @@ thm shifted_hanoi_recurrence_predecessor_probe:
                 ),
                 (
                     "positive_natural_predecessor_need_not_be_positive",
-                    "forall n N:\n    n > 0\n    =>:\n        n - 1 $in N_pos",
+                    "forall n N:\n    n > 0\n    =>:\n        n - 1 $in N+",
                 ),
                 (
                     "positive_natural_predecessor_requires_greater_than_one_to_stay_positive",
-                    "forall n N_pos:\n    n - 1 $in N_pos",
+                    "forall n N+:\n    n - 1 $in N+",
                 ),
             ] {
                 let mut boundary_runtime = Runtime::new();
@@ -619,7 +619,7 @@ forall z, q Z:
 forall gap Z:
     gap > 0
     =>:
-        gap $in N_pos
+        gap $in N+
 
 forall G set, L fn(x G) power_set(G):
     fn_range(L) $subset power_set(G)
@@ -654,7 +654,7 @@ img(1 + i) = 1
                 "Number Theory for Beginners migration patterns should verify:\n{run_output}"
             );
             for rule in [
-                "N_pos: 0 < x and x in Z",
+                "N+: 0 < x and x in Z",
                 "function range subset codomain",
                 "equality: (-1)^(2*m+1) = -1 for m in N",
                 "integer adjacency: a < b + 1 gives a <= b",
@@ -714,7 +714,7 @@ finite_set_max(union({-u}, {-v})) <= -u
 finite_set_max(union({-u}, {-v})) = -u
 -finite_set_max(union({-u}, {-v})) = -(-u)
 
-have epsilon R_pos
+have epsilon R+
 have a, b, A, B R
 trust abs(a - A) < epsilon
 trust abs(b - B) < epsilon
@@ -807,10 +807,10 @@ forall a Z, n N:
 forall a N, n N:
     a^n $in N
 
-forall a N_pos, n N:
-    a^n $in N_pos
+forall a N+, n N:
+    a^n $in N+
 
-forall n N_pos:
+forall n N+:
     0^(1/n) = 0
 "#;
 
@@ -1347,7 +1347,7 @@ phi(a) $in R
 #[test]
 fn symmetric_interval_center_membership_uses_positive_radius() {
     let positive_source = r#"
-forall center R, radius R_pos:
+forall center R, radius R+:
     center $in '(center - radius, center + radius)
 "#;
     let mut positive_runtime = Runtime::new();
@@ -1516,7 +1516,7 @@ forall x, y R:
 fn absolute_value_upper_bound_accepts_direct_two_sided_sandwich_only() {
     let positive_source = r#"
 have x R
-have epsilon R_pos
+have epsilon R+
 trust -epsilon < x
 trust x < epsilon
 abs(x) < epsilon
@@ -1536,7 +1536,7 @@ abs(x) < epsilon
 
     let negative_source = r#"
 have x R
-have epsilon R_pos
+have epsilon R+
 trust x < epsilon
 abs(x) < epsilon
 "#;
@@ -1561,7 +1561,7 @@ fn real_power_and_order_builtins_require_real_operands() {
         || {
             let positive_source = r#"
 have a, b, c, d, e1, f, x R
-have n N_pos
+have n N+
 trust:
     0 < a
     0 <= a
@@ -1614,7 +1614,7 @@ e1 < 4
                 ),
                 (
                     "positive_integer_exponent",
-                    "have S set\nhave n N_pos\ntrust 0 <= S\n0 <= S^n",
+                    "have S set\nhave n N+\ntrust 0 <= S\n0 <= S^n",
                 ),
                 (
                     "literal_integer_exponent",
@@ -1809,12 +1809,12 @@ forall x R, n, m N:
 forall x, y Q, n N:
     (x * y)^n = x^n * y^n
 
-forall x Q, n N_pos:
+forall x Q, n N+:
     x^n = 0
     =>:
         x = 0
 
-forall x, y Q, n N_pos:
+forall x, y Q, n N+:
     x >= y
     y >= 0
     =>:
@@ -1824,10 +1824,10 @@ forall x, y Q, n N_pos:
 forall x R, n N:
     abs(x^n) = abs(x)^n
 
-forall x Q_nz, n, m Z:
+forall x Q*, n, m Z:
     x^n * x^m = x^(n + m)
 
-forall x Q_nz, n, m Z:
+forall x Q*, n, m Z:
     x^n != 0
     =>:
         (x^n)^m = x^(n * m)
@@ -1853,7 +1853,7 @@ forall m Z:
             "common_power_equalities_and_order_are_builtin failed:\n{}",
             run_output
         );
-        assert!(run_output.contains("equality: x^(1/n) = z from x = z^n, n in N_pos, and z >= 0"));
+        assert!(run_output.contains("equality: x^(1/n) = z from x = z^n, n in N+, and z >= 0"));
     });
 }
 
@@ -1864,21 +1864,21 @@ fn positive_real_power_addition_is_builtin() {
             (
                 "positive_real_power_addition_forward",
                 r#"
-forall a R_pos, b, c R:
+forall a R+, b, c R:
     a^(b + c) = a^b * a^c
 "#,
             ),
             (
                 "positive_real_power_addition_reverse",
                 r#"
-forall a R_pos, b, c R:
+forall a R+, b, c R:
     a^b * a^c = a^(b + c)
 "#,
             ),
             (
                 "positive_real_power_addition_rational_exponents",
                 r#"
-forall x R_pos, q, r Q:
+forall x R+, q, r Q:
     x^(q + r) = x^q * x^r
 "#,
             ),
@@ -1911,7 +1911,7 @@ fn real_exponent_power_addition_requires_positive_base() {
         "real_exponent_power_addition_requires_positive_base",
         || {
             let source_code = r#"
-forall a R_nz, b, c R:
+forall a R*, b, c R:
     a^(b + c) = a^b * a^c
 "#;
 
@@ -1944,21 +1944,21 @@ fn positive_real_power_of_power_is_builtin() {
             (
                 "positive_real_power_of_power_forward",
                 r#"
-forall a R_pos, b, c R:
+forall a R+, b, c R:
     (a^b)^c = a^(b * c)
 "#,
             ),
             (
                 "positive_real_power_of_power_reverse",
                 r#"
-forall a R_pos, b, c R:
+forall a R+, b, c R:
     a^(b * c) = (a^b)^c
 "#,
             ),
             (
                 "positive_real_power_of_power_nth_root",
                 r#"
-forall x R, n N_pos:
+forall x R, n N+:
     x > 0
     =>:
         (x^(1 / n))^n = x^((1 / n) * n)
@@ -2576,7 +2576,7 @@ fn one_sided_interval_literal_rejects_invalid_delimiters() {
 fn euclidean_quotient_unique_existence_is_builtin() {
     run_with_large_stack("euclidean_quotient_unique_existence_is_builtin", || {
         let source_code = r#"
-forall a Z, d N_pos:
+forall a Z, d N+:
     exist! q Z st {a = d * q + a % d}
 "#;
 
@@ -2608,10 +2608,10 @@ fn source_defined_integer_quotient_uses_unique_existence_builtin() {
         || {
             let source_code = r#"
 have fn integer_quotient by exist!:
-    ? forall a Z, d N_pos:
+    ? forall a Z, d N+:
         exist! q Z st {a = d * q + a % d}
 
-forall a Z, d N_pos:
+forall a Z, d N+:
     integer_quotient(a, d) $in Z
     a = d * integer_quotient(a, d) + a % d
 "#;
@@ -2915,8 +2915,8 @@ thm finite_set_extrema_have_defining_properties:
 #[test]
 fn finite_set_extrema_inherit_positive_natural_carriers_in_one_rule() {
     let positive_source = r#"
-forall n1, n2 N_pos:
-    finite_set_max(union({n1}, {n2})) $in N_pos
+forall n1, n2 N+:
+    finite_set_max(union({n1}, {n2})) $in N+
 "#;
     let mut positive_runtime = Runtime::new();
     positive_runtime.isolated = true;
@@ -2929,7 +2929,7 @@ forall n1, n2 N_pos:
         render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
     assert!(
         positive_succeeded,
-        "a maximum of positive naturals should inherit N_pos directly:\n{positive_output}"
+        "a maximum of positive naturals should inherit N+ directly:\n{positive_output}"
     );
     assert!(
         positive_output.contains("finite-set extremum: member of a standard numeric superset"),
@@ -2938,7 +2938,7 @@ forall n1, n2 N_pos:
 
     let nonpositive_boundary = r#"
 forall n N:
-    finite_set_max({n}) $in N_pos
+    finite_set_max({n}) $in N+
 "#;
     let mut boundary_runtime = Runtime::new();
     boundary_runtime.isolated = true;
@@ -2951,7 +2951,7 @@ forall n N:
         render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
     assert!(
         !boundary_succeeded,
-        "a merely natural singleton maximum must not be promoted to N_pos:\n{boundary_output}"
+        "a merely natural singleton maximum must not be promoted to N+:\n{boundary_output}"
     );
 }
 
@@ -2961,7 +2961,7 @@ fn positive_quotient_strategy_descends_through_a_positive_difference() {
 forall a, b R:
     a > b
     =>:
-        (a - b) / 2 $in R_pos
+        (a - b) / 2 $in R+
 "#;
     let mut positive_runtime = Runtime::new();
     positive_runtime.isolated = true;
@@ -2981,7 +2981,7 @@ forall a, b R:
 forall a, b R:
     a > b
     =>:
-        (a - b) / (-2) $in R_pos
+        (a - b) / (-2) $in R+
 "#;
     let mut boundary_runtime = Runtime::new();
     boundary_runtime.isolated = true;
@@ -3001,8 +3001,8 @@ forall a, b R:
 #[test]
 fn positive_base_power_is_nonzero_during_definition_well_definedness() {
     let positive_source = r#"
-prop has_positive_index_reciprocal_square(u fn(n N_pos) R):
-    forall n N_pos:
+prop has_positive_index_reciprocal_square(u fn(n N+) R):
+    forall n N+:
         u(n) = 1 / n^2
 "#;
     let mut positive_runtime = Runtime::new();
@@ -3108,7 +3108,7 @@ fn gcd_accepts_known_non_all_zero_disjunction() {
 forall a, b Z:
     a != 0 or b != 0
     =>:
-        gcd(a, b) $in N_pos
+        gcd(a, b) $in N+
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("gcd_accepts_known_non_all_zero_disjunction");
@@ -3303,7 +3303,7 @@ forall n N:
 #[test]
 fn absolute_value_of_a_known_nonzero_integer_is_positive_natural() {
     let source_code = r#"
-forall z Z_nz:
+forall z Z*:
     abs(z) $in N+
 
 forall z Z-:
@@ -3348,12 +3348,12 @@ forall n N:
 #[test]
 fn strict_sign_refines_known_integer_carriers() {
     let source_code = r#"
-forall z Z_nz:
+forall z Z*:
     z > 0
     =>:
         z $in N+
 
-forall z Z_nz:
+forall z Z*:
     z < 0
     =>:
         z $in Z-

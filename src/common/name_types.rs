@@ -1,4 +1,4 @@
-//! String aliases used as map keys / logical names (environment, facts, etc.).
+//! String newtypes used as map keys / logical names (environment, facts, etc.).
 
 pub type ObjString = String;
 pub type FactString = String;
