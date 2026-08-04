@@ -1,0 +1,29 @@
+# Tracer: beta-reduced anonymous applications use structural equality replay.
+#
+# Before (did not work):
+# forall f, g fn(x R) R, a R:
+#     forall x R:
+#         f(x) = f(-x)
+#         g(x) = g(-x)
+#     =>:
+#         f(a) = f(-a)
+#         g(a) = g(-a)
+#         fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
+# Former behavior: the last equality was unknown unless the beta-reduced
+# product equality was written out as an intermediate conclusion.
+#
+# Now (verified):
+forall f, g fn(x R) R, a R:
+    forall x R:
+        f(x) = f(-x)
+        g(x) = g(-x)
+    =>:
+        f(a) = f(-a)
+        g(a) = g(-a)
+        fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
+# Current behavior: both complete anonymous applications beta-reduce, then
+# multiplication congruence closes its two leaves from the stored equalities.
+# Boundary: beta reduction does not instantiate the known forall or invent a
+# missing factor equality; the executable Rust regression omits g(a) = g(b).
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/anonymous_function_beta_structural_equality.lit
+# Implementation: src/runtime/runtime_known_object_properties.rs and src/verify/verify_builtin_rules/equality_structural.rs

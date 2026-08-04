@@ -467,7 +467,7 @@ impl Runtime {
     }
 
     fn fresh_setting_forall_prefix(
-        &self,
+        &mut self,
         setting: &DefSettingStmt,
         use_line_file: LineFile,
     ) -> Result<ForallFact, RuntimeError> {
@@ -488,6 +488,11 @@ impl Runtime {
             );
         }
         let mut fresh = self.alpha_rename_forall_fact(&skeleton, &rename_map)?;
+        for group in &fresh.params_def_with_type.groups {
+            if let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type {
+                self.register_default_struct_view(&group.params, struct_obj);
+            }
+        }
         fresh.line_file = use_line_file;
         Ok(fresh)
     }

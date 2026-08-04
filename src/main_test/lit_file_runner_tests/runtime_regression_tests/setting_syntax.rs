@@ -106,6 +106,53 @@ forall [OneElement]:
 }
 
 #[test]
+fn setting_expansion_replays_parameterized_default_struct_views() {
+    let source = r#"
+struct Box<s set>:
+    value s
+    tag N
+
+setting BoxSetting:
+    s nonempty_set
+    box &Box<s>
+
+forall [BoxSetting]:
+    box.value = &Box<s>{box}.value
+
+forall [BoxSetting]:
+    box.value = &Box<s>{box}.value
+"#;
+    let (succeeded, output) = run_setting_source(source, "setting_default_struct_view");
+    assert!(
+        succeeded,
+        "setting expansion should replay each fresh binder's instantiated default struct view:\n{}",
+        output
+    );
+}
+
+#[test]
+fn setting_expansion_does_not_invent_default_struct_views() {
+    let source = r#"
+struct Point:
+    x R
+    y R
+
+setting UntypedPoint:
+    point set
+
+forall [UntypedPoint]:
+    point.x = point.x
+"#;
+    let (succeeded, output) = run_setting_source(source, "setting_without_default_struct_view");
+    assert!(
+        !succeeded,
+        "an untyped setting parameter must not acquire a default struct view:\n{}",
+        output
+    );
+    assert!(output.contains("default struct view"));
+}
+
+#[test]
 fn setting_reports_unknown_collision_order_and_duplicate_errors() {
     let cases = [
         ("forall [Missing]:\n    1 = 1", "unknown setting `Missing`"),

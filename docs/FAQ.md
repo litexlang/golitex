@@ -265,12 +265,18 @@ stored equality representatives. For each pair it may unfold one checked outer
 definition on one side. If that exposes the same supported constructor, the
 central matcher descends componentwise. A comparison node first tries identity,
 an already stored non-forall equality class, pure numeric computation, bounded
-obligation-free rational-expression normalization, and structural descent. It
-does not launch the ordinary builtin dispatcher. Equality replay also blocks
-known `forall` instantiation, comparison of two freshly unfolded sides, and
-recursive child definition unfolding. Thus `k = a * t` can bridge
-`k = a * t + 0`, while a semantic builtin theorem or second named function
-definition is not silently used.
+obligation-free rational-expression normalization, capture-avoiding beta
+reduction of one complete anonymous-function application layer, and structural
+descent. It does not launch the ordinary builtin dispatcher. Thus two terms
+such as `fn(x R) R {f(x) * g(x)}(a)` and
+`fn(x R) R {f(x) * g(x)}(b)` are compared as `f(a) * g(a)` and
+`f(b) * g(b)`; multiplication descent still needs both corresponding leaf
+equalities to be stored. The reduced product equality is only a transient
+comparison target. Equality replay also blocks known `forall` instantiation,
+comparison of two freshly unfolded named-definition sides, and recursive child
+definition unfolding. Thus `k = a * t` can bridge `k = a * t + 0`, while a
+semantic builtin theorem or second named function definition is not silently
+used.
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality

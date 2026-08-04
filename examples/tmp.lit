@@ -1,0 +1,8 @@
+forall f, g fn(x R) R, a R:
+    forall x R:
+        f(x) = f(-x)
+        g(x) = g(-x)
+    =>:
+        f(a) = f(-a)
+        g(a) = g(-a)
+        fn(x R) R {f(x) * g(x)} (a) = fn(x R) R {f(x) * g(x)} (-a)

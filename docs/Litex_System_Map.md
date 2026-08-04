@@ -232,17 +232,21 @@ stored equality representatives. Per representative pair, it may unfold one
 checked outer definition on one side and feed equal top-level constructors to
 the central structural matcher. Every comparison node first tries identity, a
 stored non-forall equality class, pure numeric computation, bounded
-obligation-free rational-expression normalization, and constructor descent.
-It never opens the ordinary builtin dispatcher. The replay guard blocks known
-`forall`, comparison of two freshly unfolded sides, and recursive
-checked-definition replay. Function applications align trailing argument
-groups and then compare their remaining function prefixes, so the two sides
-need not have the same number of curried application groups. Other atomic-fact
-lookup may use known-only congruence for transport, but does not start the
-fuller child-proof route. One-step function unfolding is best-effort: a
-template candidate captured under an already closed local binder scope is
-skipped when it can no longer be materialized, while a direct ill-defined
-template use is still rejected by the ordinary well-definedness check.
+obligation-free rational-expression normalization, capture-avoiding beta
+reduction of one complete anonymous-function application layer, and
+constructor descent. Remaining curried application layers are reapplied when
+the substituted result is callable. It never opens the ordinary builtin
+dispatcher, and beta-reduced comparison targets are not stored as facts. The
+replay guard blocks known `forall`, comparison of two freshly unfolded named
+definitions, and recursive checked-definition replay. Function applications
+align trailing argument groups and then compare their remaining function
+prefixes, so the two sides need not have the same number of curried application
+groups. Other atomic-fact lookup may use known-only congruence for transport,
+but does not start the fuller child-proof route. One-step function unfolding is
+best-effort: a template candidate captured under an already closed local binder
+scope is skipped when it can no longer be materialized, while a direct
+ill-defined template use is still rejected by the ordinary well-definedness
+check.
 The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid
 weakening from `x >= 0`.
 
