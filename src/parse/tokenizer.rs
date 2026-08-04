@@ -356,17 +356,6 @@ mod tests {
     }
 
     #[test]
-    fn forall_bang_splits_like_exist_bang() {
-        let tokenizer = Tokenizer::new();
-        assert_eq!(
-            tokenizer
-                .tokenize_line("forall! x R: x > 0", test_line_file())
-                .unwrap(),
-            vec!["forall", "!", "x", "R", ":", "x", ">", "0"]
-        );
-    }
-
-    #[test]
     fn unicode_identifier_is_one_token() {
         let tokenizer = Tokenizer::new();
         assert_eq!(

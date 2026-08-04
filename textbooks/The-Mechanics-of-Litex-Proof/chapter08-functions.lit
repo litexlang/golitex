@@ -195,7 +195,8 @@ sketch:
             x2 + 1 = q_shift(x2) = q_shift(x1) = x1 + 1
             x1 = x1 + 1 - 1 = x2 + 1 - 1 = x2
 
-    by def $injective_fn(R, R, q_shift)
+    by def:
+        ? $injective_fn(R, R, q_shift)
 
 # Equivalently, you can use `forall` to prove this statement without defining the specific function.
 
@@ -211,7 +212,8 @@ claim:
             f(x1) = x1 + 1
             f(x2) = x2 + 1
             x1 = x1 + 1 - 1 = f(x1) - 1 = f(x2) - 1 = x2 + 1 - 1 = x2
-    by def $injective_fn(R, R, f)
+    by def:
+        ? $injective_fn(R, R, f)
 
 # Equivalently, you can use anonymous function to define the function.
 
@@ -220,14 +222,16 @@ forall x1, x2 R:
     =>:
         x1 = (x1 + 1) - 1 = fn(x R) R {x + 1}(x1) - 1 = fn(x R) R {x + 1}(x2) - 1 = (x2 + 1) - 1 = x2
 
-by def $injective_fn(R, R, fn(x R) R {x + 1})
+by def:
+    ? $injective_fn(R, R, fn(x R) R {x + 1})
 
 # 8.1.4 Example: `x |-> x^2` On `R` Is Not Injective
 
 # To disprove injectivity, find two different inputs with the same output.
 # For the square function on real numbers, the witnesses are `-1` and `1`:
 
-by contra not $injective_fn(R, R, fn(x R) R {x^2}):
+by contra:
+    ? not $injective_fn(R, R, fn(x R) R {x^2})
     fn(x R) R {x^2}(1) = 1 = fn(x R) R {x^2}(-1)
     impossible 1 = -1
 
@@ -276,7 +280,8 @@ sketch:
         witness exist x Q st {y = s(x)} from a:
             y = 3 * ((y - 2) / 3) + 2 = 3 * a + 2 = s(a)
 
-    by def $surjective_fn(Q, Q, s)
+    by def:
+        ? $surjective_fn(Q, Q, s)
 
 # 8.1.7 Example: `x |-> x^2` On `R` Is Not Surjective
 
@@ -297,7 +302,8 @@ sketch:
     forall x R:
         square(x) = x^2
 
-    by contra not $surjective_fn(R, R, square):
+    by contra:
+        ? not $surjective_fn(R, R, square)
         obtain x from exist x R st {-1 = square(x)}
         0 <= x^2
         -1 = square(x) = x^2
@@ -339,7 +345,8 @@ sketch:
     forall x {1, 2, 3}:
         f_const_not_inj(x) = 3
 
-    by contra not $injective_fn({1, 2, 3}, {1, 2, 3}, f_const_not_inj):
+    by contra:
+        ? not $injective_fn({1, 2, 3}, {1, 2, 3}, f_const_not_inj)
         f_const_not_inj(1) = 3 = f_const_not_inj(2)
         impossible 1 = 2
 
@@ -363,7 +370,8 @@ sketch:
         ? forall x {1, 2, 3}:
             f_const_not_surj(x) = 3
 
-    by contra not $surjective_fn({1, 2, 3}, {1, 2, 3}, f_const_not_surj):
+    by contra:
+        ? not $surjective_fn({1, 2, 3}, {1, 2, 3}, f_const_not_surj)
         obtain x from exist x {1, 2, 3} st {2 = f_const_not_surj(x)}
         f_const_not_surj(x) = 3
         2 = f_const_not_surj(x) = 3
@@ -439,7 +447,8 @@ sketch:
                     case x2 = 3:
                         x1 = 3 = x2
 
-    by def $injective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_inj)
+    by def:
+        ? $injective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_inj)
 
 # 8.1.11 Example: The Same Finite Function Is Surjective
 
@@ -475,7 +484,8 @@ sketch:
                 witness exist x {1, 2, 3} st {y = g_cycle_surj(x)} from 2:
                     y = 3 = g_cycle_surj(2)
 
-    by def $surjective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_surj)
+    by def:
+        ? $surjective_fn({1, 2, 3}, {1, 2, 3}, g_cycle_surj)
 
 # 8.1.12 Example: `x |-> x^3` On `R` Is Injective
 
@@ -503,7 +513,8 @@ sketch:
             case x1 - x2 = 0:
                 x1 = x2
             case x1^2 + x1*x2 + x2^2 = 0:
-                by cases x1 = x2:
+                by cases:
+                    ? x1 = x2
                     case x1 != 0:
                         0 < x1^2
                         0 < x1^2 +((x1+x2)^2+x2^2) = 2 * (x1^2 + x1 * x2 + x2^2) = 2 * 0 = 0
@@ -511,7 +522,8 @@ sketch:
                     case x1 = 0:
                         0 = 0 - x2^3
                         x2^3 = 0
-                        by contra x2 = 0:
+                        by contra:
+                            ? x2 = 0
                             impossible x2^3 != 0
 
 # 8.2 Bijectivity
@@ -566,7 +578,8 @@ sketch:
                 x1 = x2
 
         x1 = ((2 * x1 - 5) + 5) / 2 = (p_affine(x1) + 5) / 2 = (p_affine(x2) + 5) / 2 = ((2 * x2 - 5) + 5) / 2 = x2
-    by def $injective_fn(R, R, p_affine)
+    by def:
+        ? $injective_fn(R, R, p_affine)
 
     claim:
         ? forall y R:
@@ -579,8 +592,10 @@ sketch:
             p_affine((y + 5) / 2) = 2 * ((y + 5) / 2) - 5
             y = p_affine((y + 5) / 2)
 
-    by def $surjective_fn(R, R, p_affine)
-    by def $bijective_fn(R, R, p_affine)
+    by def:
+        ? $surjective_fn(R, R, p_affine)
+    by def:
+        ? $bijective_fn(R, R, p_affine)
 
 # 8.2.3 Example: `a(t) = t^3 - t` Is Not Bijective
 
@@ -599,11 +614,13 @@ sketch:
     forall t R:
         a(t) = t^3 - t
 
-    by contra not $injective_fn(R, R, a):
+    by contra:
+        ? not $injective_fn(R, R, a)
         a(0) = 0^3 - 0 = 0 = 1^3 - 1 = a(1)
         impossible 0 = 1
 
-    by contra not $bijective_fn(R, R, a):
+    by contra:
+        ? not $bijective_fn(R, R, a)
         $injective_fn(R, R, a)
         impossible $injective_fn(R, R, a)
 
@@ -639,13 +656,15 @@ sketch:
         ? forall x {1, 2}:
             f_two_to_three(x) = 1
 
-    by contra not $surjective_fn({1, 2}, {1, 2, 3}, f_two_to_three):
+    by contra:
+        ? not $surjective_fn({1, 2}, {1, 2, 3}, f_two_to_three)
         obtain x from exist x {1, 2} st {2 = f_two_to_three(x)}
         f_two_to_three(x) = 1
         2 = f_two_to_three(x) = 1
         impossible 2 = 1
 
-    by contra not $bijective_fn({1, 2}, {1, 2, 3}, f_two_to_three):
+    by contra:
+        ? not $bijective_fn({1, 2}, {1, 2, 3}, f_two_to_three)
         $surjective_fn({1, 2}, {1, 2, 3}, f_two_to_three)
         impossible $surjective_fn({1, 2}, {1, 2, 3}, f_two_to_three)
 
@@ -701,7 +720,8 @@ claim:
 
         exist! unique_input S st {y = f(unique_input)}
 
-    by def $exist_unique_preimage(S, T, f)
+    by def:
+        ? $exist_unique_preimage(S, T, f)
 
 claim:
     ? forall S, T set, f fn(x S) T:
@@ -716,7 +736,8 @@ claim:
         exist! x S st {y = f(x)}
         exist x S st {y = f(x)}
 
-    by def $surjective_fn(S, T, f)
+    by def:
+        ? $surjective_fn(S, T, f)
 
     claim:
         ? forall x1, x2 S:
@@ -736,8 +757,10 @@ claim:
         f(x1) = f(x2)
         x1 = x2
 
-    by def $injective_fn(S, T, f)
-    by def $bijective_fn(S, T, f)
+    by def:
+        ? $injective_fn(S, T, f)
+    by def:
+        ? $bijective_fn(S, T, f)
 
 # 8.3 Composition And Inverses
 
@@ -989,7 +1012,8 @@ sketch:
 
         g $in fn(y T) S
 
-        by def $is_inverse(S, T, f, g)
+        by def:
+            ? $is_inverse(S, T, f, g)
         witness exist h fn(y T) S st {$is_inverse(S, T, f, h)} from g
 
     claim:
@@ -1006,7 +1030,8 @@ sketch:
 
             x1 = g(f(x1)) = g(f(x2)) = x2
 
-        by def $injective_fn(S, T, f)
+        by def:
+            ? $injective_fn(S, T, f)
 
         claim:
             ? forall y T:
@@ -1014,8 +1039,10 @@ sketch:
 
             witness exist x S st {y = f(x)} from g(y)
 
-        by def $surjective_fn(S, T, f)
-        by def $bijective_fn(S, T, f)
+        by def:
+            ? $surjective_fn(S, T, f)
+        by def:
+            ? $bijective_fn(S, T, f)
 
     claim:
         ? forall S, T set, f fn(x S) T:
@@ -1034,7 +1061,8 @@ sketch:
 
             x1 = g(f(x1)) = g(f(x2)) = x2
 
-        by def $injective_fn(S, T, f)
+        by def:
+            ? $injective_fn(S, T, f)
 
         claim:
             ? forall y T:
@@ -1042,8 +1070,10 @@ sketch:
 
             witness exist x S st {y = f(x)} from g(y)
 
-        by def $surjective_fn(S, T, f)
-        by def $bijective_fn(S, T, f)
+        by def:
+            ? $surjective_fn(S, T, f)
+        by def:
+            ? $bijective_fn(S, T, f)
 
     claim:
         ? forall S, T set, f fn(x S) T:
@@ -1052,7 +1082,8 @@ sketch:
                 $has_inverse(S, T, f)
 
         exist h fn(y T) S st {$is_inverse(S, T, f, h)}
-        by def $has_inverse(S, T, f)
+        by def:
+            ? $has_inverse(S, T, f)
 
     forall S, T set, f fn(x S) T:
         =>:
@@ -1129,7 +1160,8 @@ sketch:
             m1 + 1 = q_Z_pair(m1)[1] = q_Z_pair(m2)[1] = m2 + 1
             m1 = (m1 + 1) - 1 = (m2 + 1) - 1 = m2
 
-        by def $injective_fn(Z, cart(Z, Z), q_Z_pair)
+        by def:
+            ? $injective_fn(Z, cart(Z, Z), q_Z_pair)
 
     claim:
         ? not $surjective_fn(Z, cart(Z, Z), q_Z_pair)
@@ -1221,7 +1253,8 @@ sketch:
                 =>:
                     u = v
             u = Finv_Z2(F_Z2(u)) = Finv_Z2(F_Z2(v)) = v
-        by def $injective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+        by def:
+            ? $injective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
     claim:
         ? $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
@@ -1230,9 +1263,11 @@ sketch:
                 exist x cart(Z, Z) st {y = F_Z2(x)}
             witness exist x cart(Z, Z) st {y = F_Z2(x)} from Finv_Z2(y):
                 y = F_Z2(Finv_Z2(y))
-        by def $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+        by def:
+            ? $surjective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
-    by def $bijective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
+    by def:
+        ? $bijective_fn(cart(Z, Z), cart(Z, Z), F_Z2)
 
 # 8.4.3 Example: Same Formula Over `R^2` And `Z^2`
 
@@ -1286,7 +1321,8 @@ sketch:
                 =>:
                     u = v
             u = Finv_R2(F_R2(u)) = Finv_R2(F_R2(v)) = v
-        by def $injective_fn(cart(R, R), cart(R, R), F_R2)
+        by def:
+            ? $injective_fn(cart(R, R), cart(R, R), F_R2)
 
     claim:
         ? $surjective_fn(cart(R, R), cart(R, R), F_R2)
@@ -1295,9 +1331,11 @@ sketch:
                 exist x cart(R, R) st {y = F_R2(x)}
             witness exist x cart(R, R) st {y = F_R2(x)} from Finv_R2(y):
                 y = F_R2(Finv_R2(y))
-        by def $surjective_fn(cart(R, R), cart(R, R), F_R2)
+        by def:
+            ? $surjective_fn(cart(R, R), cart(R, R), F_R2)
 
-    by def $bijective_fn(cart(R, R), cart(R, R), F_R2)
+    by def:
+        ? $bijective_fn(cart(R, R), cart(R, R), F_R2)
 
 # Over `Z^2`, however, the same formula is not always integer-valued. In fact the
 # map from `Z^2` to `Z^2` is not surjective. The pair `(0, 1)` is not hit. If
@@ -1360,7 +1398,8 @@ sketch:
             (u[1], u[2]) = (v[1], v[2])
             by thm tuple_equal_from_coordinates(v, (v[1], v[2]))
             u = v
-        by def $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
+        by def:
+            ? $injective_fn(cart(R, R), cart(R, R, R), rho_R3)
 
 # 8.4.5 Example: Addition From `R^2` To `R`
 
@@ -1418,7 +1457,8 @@ sketch:
                 exist p cart(R, R) st {a = add_R2(p)}
             witness exist p cart(R, R) st {a = add_R2(p)} from (a, 0):
                 a = a + 0 = add_R2((a, 0))
-        by def $surjective_fn(cart(R, R), R, add_R2)
+        by def:
+            ? $surjective_fn(cart(R, R), R, add_R2)
 
 # 8.4.6 Example: `5m + 8n` From `Z^2` To `Z`
 
@@ -1473,7 +1513,8 @@ sketch:
                 exist u cart(Z, Z) st {a = Z_lin58(u)}
             witness exist u cart(Z, Z) st {a = Z_lin58(u)} from (-3 * a, 2 * a):
                 a = 5 * (-3 * a) + 8 * (2 * a) = Z_lin58((-3 * a, 2 * a))
-        by def $surjective_fn(cart(Z, Z), Z, Z_lin58)
+        by def:
+            ? $surjective_fn(cart(Z, Z), Z, Z_lin58)
 
 # 8.4.7 Example: `5m + 10n` From `Z^2` To `Z`
 
@@ -1770,7 +1811,8 @@ sketch:
             tri(0 + 1) = tri(0) + 0 + 1 = 1
             0 < 1 = tri(0 + 1)
             witness exist s N st {$triangular_interval(0, s)} from 0:
-                by def $triangular_interval(0, 0)
+                by def:
+                    ? $triangular_interval(0, 0)
 
         ? induc:
             obtain s from exist s N st {$triangular_interval(n, s)}
@@ -1779,12 +1821,14 @@ sketch:
                 case n + 1 < tri(s + 1):
                     tri(s) <= n <= n + 1
                     witness exist t N st {$triangular_interval(n + 1, t)} from s:
-                        by def $triangular_interval(n + 1, s)
+                        by def:
+                            ? $triangular_interval(n + 1, s)
                 case n + 1 >= tri(s + 1):
                     tri((s + 1) + 1) = tri(s + 1) + (s + 1) + 1 = tri(s + 1) + s + 2
                     n + 1 < n + 2 <= tri(s + 1) + s + 2 = tri((s + 1) + 1)
                     witness exist t N st {$triangular_interval(n + 1, t)} from s + 1:
-                        by def $triangular_interval(n + 1, s + 1)
+                        by def:
+                            ? $triangular_interval(n + 1, s + 1)
 
     claim:
         ? forall n N:
@@ -1799,14 +1843,18 @@ sketch:
         witness exist t cart(N, N) st {n = cauchy_pair(t)} from p:
             n = cauchy_pair(p)
 
-    by def $injective_fn(cart(N, N), N, cauchy_pair)
-    by def $surjective_fn(cart(N, N), N, cauchy_pair)
-    by def $bijective_fn(cart(N, N), N, cauchy_pair)
+    by def:
+        ? $injective_fn(cart(N, N), N, cauchy_pair)
+    by def:
+        ? $surjective_fn(cart(N, N), N, cauchy_pair)
+    by def:
+        ? $bijective_fn(cart(N, N), N, cauchy_pair)
 
     claim:
         ? $exist_bijection(cart(N, N), N)
         witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cauchy_pair
-        by def $exist_bijection(cart(N, N), N)
+        by def:
+            ? $exist_bijection(cart(N, N), N)
 
 # Summary
 

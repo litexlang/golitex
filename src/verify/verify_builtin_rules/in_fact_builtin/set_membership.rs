@@ -932,7 +932,7 @@ impl Runtime {
     // General Cartesian product membership: a member is a function on `I` into `big_union(s)`
     // whose value at every index lies in the indexed factor.
     // Example: `f $in general_cart(I, s, g)` follows from
-    // `f $in fn(t I)big_union(s)` and `forall! t I => {f(t) $in g(t)}`.
+    // `f $in fn(t I)big_union(s)` and `forall t I => {f(t) $in g(t)}`.
     pub(crate) fn verify_in_fact_in_general_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,

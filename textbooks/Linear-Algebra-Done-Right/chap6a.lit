@@ -191,7 +191,8 @@ prop has_basic_inner_product_properties(s nonempty_set, VSet nonempty_set, inner
 thm basic_properties_of_an_inner_product:
     ? forall s nonempty_set, VSet nonempty_set, inner_space &InnerProductSpace<s, VSet>:
         $has_basic_inner_product_properties(s, VSet, inner_space)
-    by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+    by def:
+        ? $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
     claim:
         ? forall v VSet:
             $chap3f::is_linear_functional(s, VSet, inner_space.vector_space, fn(u VSet) s {inner_space.inner(u, v)})
@@ -219,7 +220,8 @@ thm basic_properties_of_an_inner_product:
         ? forall lambda s, u, v VSet:
             inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.smul(lambda, v)) = inner_space.scalar_geometry.scalars.mul(inner_space.scalar_geometry.conjugate(lambda), inner_space.inner(u, v))
         trust inner_space.inner(u, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.smul(lambda, v)) = inner_space.scalar_geometry.scalars.mul(inner_space.scalar_geometry.conjugate(lambda), inner_space.inner(u, v))
-    by def $has_basic_inner_product_properties(s, VSet, inner_space)
+    by def:
+        ? $has_basic_inner_product_properties(s, VSet, inner_space)
 # Definition 6.7. The inner-product axioms make the real part nonnegative, so
 # the induced norm is a direct callable value rather than a candidate relation.
 template<s nonempty_set, VSet nonempty_set>:
@@ -261,15 +263,19 @@ thm orthogonality_and_zero:
     ? forall s nonempty_set, VSet nonempty_set, inner_space &InnerProductSpace<s, VSet>, v VSet:
         $orthogonality_and_zero_statement(s, VSet, inner_space, v)
     by thm basic_properties_of_an_inner_product(s, VSet, inner_space)
-    by def $has_basic_inner_product_properties(s, VSet, inner_space)
-    by def $are_orthogonal(s, VSet, inner_space, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v)
+    by def:
+        ? $has_basic_inner_product_properties(s, VSet, inner_space)
+    by def:
+        ? $are_orthogonal(s, VSet, inner_space, &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero, v)
     claim:
         ? forall:
             $are_orthogonal(s, VSet, inner_space, v, v)
             =>:
                 v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
-        by def $are_orthogonal(s, VSet, inner_space, v, v)
-        by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+        by def:
+            ? $are_orthogonal(s, VSet, inner_space, v, v)
+        by def:
+            ? $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
         inner_space.scalar_geometry.scalars = inner_space.vector_space.scalars
         inner_space.scalar_geometry.scalars.zero = inner_space.vector_space.scalars.zero
         inner_space.inner(v, v) = inner_space.scalar_geometry.scalars.zero = inner_space.vector_space.scalars.zero
@@ -279,13 +285,16 @@ thm orthogonality_and_zero:
             v = &chap1b::VectorSpace<s, VSet>{inner_space.vector_space}.zero
             =>:
                 $are_orthogonal(s, VSet, inner_space, v, v)
-        by def $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
+        by def:
+            ? $is_inner_product(s, inner_space.scalar_geometry, VSet, inner_space.vector_space, inner_space.inner)
         inner_space.scalar_geometry.scalars = inner_space.vector_space.scalars
         inner_space.vector_space.scalars.zero = inner_space.scalar_geometry.scalars.zero
         inner_space.inner(v, v) = inner_space.vector_space.scalars.zero = inner_space.scalar_geometry.scalars.zero
-        by def $are_orthogonal(s, VSet, inner_space, v, v)
+        by def:
+            ? $are_orthogonal(s, VSet, inner_space, v, v)
         $are_orthogonal(s, VSet, inner_space, v, v)
-    by def $orthogonality_and_zero_statement(s, VSet, inner_space, v)
+    by def:
+        ? $orthogonality_and_zero_statement(s, VSet, inner_space, v)
 # Result 6.12. Expand <u+v,u+v>; the two cross terms vanish by orthogonality;
 # the remaining diagonal terms are the two squared norms.
 axiom pythagorean_theorem:

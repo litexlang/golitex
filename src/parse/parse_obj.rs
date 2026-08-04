@@ -1780,7 +1780,7 @@ impl Runtime {
 
                     let mut facts_inst = Vec::new();
                     loop {
-                        let f = this.parse_exist_body_fact(tb)?;
+                        let f = this.parse_inline_exist_body_fact(tb)?;
                         facts_inst.push(this.inst_exist_body_fact(
                             &f,
                             &empty,
@@ -2489,7 +2489,7 @@ mod module_qualification_parse_tests {
         };
         assert_with_mod(&thm_stmt.name, "Nat", "T");
 
-        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $P(a)");
+        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def:\n    ? $P(a)");
         let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
             panic!("expected by def stmt");
         };
@@ -2534,7 +2534,7 @@ mod module_qualification_parse_tests {
         };
         assert_with_mod(&thm_stmt.name, "Other", "T");
 
-        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def $Other::P(a)");
+        let def_stmt = parse_one_stmt_line_with_runtime(&mut rt, "by def:\n    ? $Other::P(a)");
         let Stmt::By(ByStmt::ByDefStmt(def_stmt)) = def_stmt else {
             panic!("expected by def stmt");
         };

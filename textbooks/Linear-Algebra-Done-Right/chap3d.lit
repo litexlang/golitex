@@ -20,8 +20,10 @@ thm inverse_linear_map_is_unique:
         $is_inverse_linear_map(s, VSet, WSet, V, W, T, S2)
         =>:
             S1 = S2
-    by def $is_inverse_linear_map(s, VSet, WSet, V, W, T, S1)
-    by def $is_inverse_linear_map(s, VSet, WSet, V, W, T, S2)
+    by def:
+        ? $is_inverse_linear_map(s, VSet, WSet, V, W, T, S1)
+    by def:
+        ? $is_inverse_linear_map(s, VSet, WSet, V, W, T, S2)
     claim:
         ? forall w WSet:
             S1(w) = S2(w)
@@ -37,7 +39,8 @@ template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet
             $is_invertible_linear_map(s, VSet, WSet, V, W, T)
             =>:
                 exist! S fn(w WSet) VSet st {$is_inverse_linear_map(s, VSet, WSet, V, W, T, S)}
-        by def $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        by def:
+            ? $is_invertible_linear_map(s, VSet, WSet, V, W, T)
         obtain S from exist S fn(w WSet) VSet st {$is_inverse_linear_map(s, VSet, WSet, V, W, T, S)}
         claim:
             ? forall S1, S2 fn(w WSet) VSet:
@@ -55,9 +58,11 @@ thm invertible_implies_injective_and_surjective:
         =>:
             $chap3b::is_injective(VSet, WSet, T)
             $chap3b::is_surjective(VSet, WSet, T)
-    by def $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_invertible_linear_map(s, VSet, WSet, V, W, T)
     obtain S from exist S fn(w WSet) VSet st {$is_inverse_linear_map(s, VSet, WSet, V, W, T, S)}
-    by def $is_inverse_linear_map(s, VSet, WSet, V, W, T, S)
+    by def:
+        ? $is_inverse_linear_map(s, VSet, WSet, V, W, T, S)
     claim:
         ? forall u, v VSet:
             T(u) = T(v)
@@ -65,12 +70,14 @@ thm invertible_implies_injective_and_surjective:
                 u = v
         S(T(u)) = S(T(v))
         u = S(T(u)) = S(T(v)) = v
-    by def $chap3b::is_injective(VSet, WSet, T)
+    by def:
+        ? $chap3b::is_injective(VSet, WSet, T)
     claim:
         ? forall w WSet:
             exist v VSet st {T(v) = w}
         witness exist v VSet st {T(v) = w} from S(w)
-    by def $chap3b::is_surjective(VSet, WSet, T)
+    by def:
+        ? $chap3b::is_surjective(VSet, WSet, T)
 # Example 3.62 is retained as prose in the source: a quarter-turn/stretch map
 # on R^3 has the evident clockwise-turn/quarter-stretch inverse.
 # Result 3.63. Invertibility is equivalent to injectivity plus surjectivity.

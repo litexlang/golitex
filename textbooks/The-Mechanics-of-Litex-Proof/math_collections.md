@@ -52,7 +52,8 @@ claim:
     obtain k from exist a Z st {x = 8 * a}
     witness exist c Z st {5 * x = 8 * c} from 5 * k:
         5 * x = 5 * (8 * k) = 8 * (5 * k)
-    by def $multiple8(5 * x)
+    by def:
+        ? $multiple8(5 * x)
 ```
 
 This is a `prop` boundary, not a theorem call and not an automatic direct rule.
@@ -129,7 +130,7 @@ then transports that membership to another builder, eliminate the transported
 fact rather than calling the theorem again.
 
 Subset is a positive builtin definition. Prove the universal membership body,
-then write `by def A $subset B`. Extensional equality remains `by extension`
+then write `by def:` with `? A $subset B`. Extensional equality remains `by extension:`
 with both membership directions visible.
 
 ## Relations

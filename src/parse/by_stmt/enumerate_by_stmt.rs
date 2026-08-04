@@ -6,64 +6,13 @@ impl Runtime {
         if tb.current_token_is_equal_to(FINITE_SET) {
             tb.skip_token(FINITE_SET)?;
             if tb.current()? != COLON {
-                let (fact, has_proof_body) = self.parse_header_fact_with_optional_trailing_colon(
-                    tb,
-                    "by enumerate finite_set",
-                    "by enumerate finite_set => <forall fact>:",
-                    "by enumerate finite_set <forall fact>:",
-                )?;
-                let forall_fact = match fact {
-                    Fact::ForallFact(ff) => ff,
-                    Fact::ForallFactWithIff(_) => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by enumerate finite_set: forall with `<=>` is not allowed here"
-                                    .to_string(),
-                                tb.line_file.clone(),
-                            ),
-                        )));
-                    }
-                    _ => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file("by enumerate finite_set: header shorthand must be a single `forall` fact"
-                                    .to_string(), tb.line_file.clone()),
-                        )));
-                    }
-                };
-
-                for g in forall_fact.params_def_with_type.groups.iter() {
-                    if !matches!(&g.param_type, ParamType::Obj(_)) {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named finite-set definition"
-                                    .to_string(),
-                                forall_fact.line_file.clone(),
-                            ),
-                        )));
-                    }
-                }
-
-                let bindings = forall_fact.params_def_with_type.collect_param_bindings();
-                let lf = tb.line_file.clone();
-                let proof: Vec<Stmt> = if has_proof_body {
-                    self.parse_stmts_with_existing_free_param_bindings(
-                        ParamObjType::Forall,
-                        &bindings,
-                        lf,
-                        |this| {
-                            tb.body
-                                .iter_mut()
-                                .map(|b| this.parse_stmt(b))
-                                .collect::<Result<_, _>>()
-                        },
-                    )?
-                } else {
-                    vec![]
-                };
-
-                return Ok(
-                    ByEnumerateFiniteSetStmt::new(forall_fact, proof, tb.line_file.clone()).into(),
-                );
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by enumerate finite_set no longer accepts a goal on the header; use `by enumerate finite_set:` followed by `? forall ...`"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             tb.skip_token(COLON)?;
             return self.parse_by_enumerate_finite_set_stmt_forall_in_question_goal(tb);

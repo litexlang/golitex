@@ -139,19 +139,24 @@ thm function_limit_at_domain_point_equals_value:
                 case dist_Y(f(x0), L) > 0:
                     dist_Y(f(x0), L) > 0
                 case dist_Y(f(x0), L) = 0:
-                    by def $chap1::is_metric_space(Y, dist_Y)
+                    by def:
+                        ? $chap1::is_metric_space(Y, dist_Y)
                     f(x0) = L
                     impossible f(x0) != L
                 case dist_Y(f(x0), L) < 0:
-                    by def $chap1::is_metric_space(Y, dist_Y)
+                    by def:
+                        ? $chap1::is_metric_space(Y, dist_Y)
                     dist_Y(f(x0), L) >= 0
                     impossible dist_Y(f(x0), L) < 0
         dist_Y(f(x0), L) / 2 $in R+
-        by def $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
+        by def:
+            ? $has_function_limit(X, Y, dist_X, dist_Y, E, f, x0, L)
         obtain delta from exist delta R+ st {$is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, dist_Y(f(x0), L) / 2, delta)}
-        by def $chap1::is_metric_space(X, dist_X)
+        by def:
+            ? $chap1::is_metric_space(X, dist_X)
         dist_X(x0, x0) = 0 < delta
-        by def $is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, dist_Y(f(x0), L) / 2, delta)
+        by def:
+            ? $is_function_limit_delta_controlled(X, Y, dist_X, dist_Y, E, f, x0, L, dist_Y(f(x0), L) / 2, delta)
         dist_Y(f(x0), L) < dist_Y(f(x0), L) / 2 < dist_Y(f(x0), L)
         impossible dist_Y(f(x0), L) = dist_Y(f(x0), L)
 
@@ -205,7 +210,8 @@ thm uniform_limit_preserves_continuity:
                 $chap2::is_metric_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
             by thm chap2::metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, family(n), x0)
         by thm uniform_limit_preserves_continuity_at(X, Y, dist_X, dist_Y, family, f, x0)
-    by def $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    by def:
+        ? $chap2::is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 # Proposition 3.3.3 (Interchange of limits and uniform limits). The individual
 # limiting values form a convergent sequence in the complete codomain, and its

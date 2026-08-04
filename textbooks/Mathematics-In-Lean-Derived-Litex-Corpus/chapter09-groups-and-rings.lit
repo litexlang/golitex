@@ -81,7 +81,8 @@ thm finite_range_sum_all_zero:
                             \finite_range_sum<M, add, zero>(f, count) = add(zero, token)
                     by thm finite_range_sum_zero(M, add, zero, f)
                     \finite_range_sum<M, add, zero>(f, count) = zero = add(zero, zero) = add(zero, token)
-                by def $_finite_range_sum_all_zero_at(count)
+                by def:
+                    ? $_finite_range_sum_all_zero_at(count)
             ? induc:
                 $_finite_range_sum_all_zero_at(count)
                 claim:
@@ -101,7 +102,8 @@ thm finite_range_sum_all_zero:
                     f(count) = zero
                     by thm finite_range_sum_succ(M, add, zero, f, count)
                     \finite_range_sum<M, add, zero>(f, count + 1) = add(\finite_range_sum<M, add, zero>(f, count), f(count)) = add(zero, zero) = zero = add(zero, token)
-                by def $_finite_range_sum_all_zero_at(count + 1)
+                by def:
+                    ? $_finite_range_sum_all_zero_at(count + 1)
     $_finite_range_sum_all_zero_at(n)
     zero = zero
     \finite_range_sum<M, add, zero>(f, n) = add(zero, zero) = zero
@@ -167,7 +169,8 @@ thm additive_hom_comp:
             h(u) = h(v)
         by thm function_substitution(B, CarrierC, g, f(addA(x, y)), addB(f(x), f(y)))
         (fn(q A) CarrierC {g(f(q))})(addA(x, y)) = g(f(addA(x, y))) = g(addB(f(x), f(y))) = addC(g(f(x)), g(f(y))) = addC((fn(q A) CarrierC {g(f(q))})(x), (fn(q A) CarrierC {g(f(q))})(y))
-    by def $is_additive_monoid_hom(A, CarrierC, addA, zeroA, addC, zeroC, fn(x A) CarrierC {g(f(x))})
+    by def:
+        ? $is_additive_monoid_hom(A, CarrierC, addA, zeroA, addC, zeroC, fn(x A) CarrierC {g(f(x))})
 
 # A group homomorphism is a property of a candidate function between two
 # operation-bearing Chapter 2 group values.
@@ -183,7 +186,8 @@ prop is_bijective_group_hom(G, H nonempty_set, source &chap2::Group<G>, target &
 thm group_mul_inv_cancel:
     ? forall G nonempty_set, group &chap2::Group<G>, x G:
         group.mul(x, group.inv(x)) = group.one
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     by thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, x)
     group.mul(x, group.inv(x)) = group.one
 
@@ -199,7 +203,8 @@ thm group_hom_map_mul:
 thm group_normalization_identity:
     ? forall G nonempty_set, group &chap2::Group<G>, x, y, z G:
         group.mul(group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))), group.inv(group.mul(group.mul(x, y), group.inv(x)))) = group.one
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     by thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, x, z)
     group.inv(group.mul(x, z)) = group.mul(group.inv(z), group.inv(x))
     group.mul(group.mul(x, group.mul(y, z)), group.inv(group.mul(x, z))) = group.mul(group.mul(x, group.mul(y, z)), group.mul(group.inv(z), group.inv(x)))
@@ -221,7 +226,8 @@ thm group_hom_map_inv:
         $is_group_hom(G, H, source, target, f)
         =>:
             f(source.inv(x)) = target.inv(f(x))
-    by def $chap2::is_group(H, target.mul, target.one, target.inv)
+    by def:
+        ? $chap2::is_group(H, target.mul, target.one, target.inv)
     f(source.mul(source.inv(x), x)) = target.mul(f(source.inv(x)), f(x))
     source.mul(source.inv(x), x) = source.one
     f(source.one) = target.one
@@ -241,7 +247,8 @@ thm bijective_group_hom_is_equivalence:
         $chap4::bijective_fn(G, H, f)
         =>:
             $is_bijective_group_hom(G, H, source, target, f)
-    by def $is_bijective_group_hom(G, H, source, target, f)
+    by def:
+        ? $is_bijective_group_hom(G, H, source, target, f)
 
 # ---------------------------------------------------------------------------
 # 9.1.3 Subgroups
@@ -315,7 +322,8 @@ thm subgroup_intersection_closed:
         group.inv(x) $in K
         by thm set_builder_member(group.inv(x), {q G: q $in H and q $in K})
         group.inv(x) $in {q G: q $in H and q $in K}
-    by def $is_subgroup(G, group, {x G: x $in H and x $in K})
+    by def:
+        ? $is_subgroup(G, group, {x G: x $in H and x $in K})
 
 prop has_subgroup_map_preimage(G, H set, f fn(x G) H, S power_set(G), y H):
     exist x G st {x $in S, f(x) = y}
@@ -342,7 +350,8 @@ thm subgroup_map_closed:
             $is_subgroup(H, target, \subgroup_map<G, H, f>(S))
     \subgroup_map<G, H, f>(S) = {y H: $has_subgroup_map_preimage(G, H, f, S, y)}
     witness exist x G st {x $in S, f(x) = target.one} from source.one
-    by def $has_subgroup_map_preimage(G, H, f, S, target.one)
+    by def:
+        ? $has_subgroup_map_preimage(G, H, f, S, target.one)
     by thm set_builder_member(target.one, {y H: $has_subgroup_map_preimage(G, H, f, S, y)})
     target.one $in {y H: $has_subgroup_map_preimage(G, H, f, S, y)}
     target.one $in \subgroup_map<G, H, f>(S)
@@ -352,13 +361,16 @@ thm subgroup_map_closed:
             b $in \subgroup_map<G, H, f>(S)
             =>:
                 target.mul(a, b) $in \subgroup_map<G, H, f>(S)
-        by def $has_subgroup_map_preimage(G, H, f, S, a)
+        by def:
+            ? $has_subgroup_map_preimage(G, H, f, S, a)
         obtain x from exist x G st {x $in S, f(x) = a}
-        by def $has_subgroup_map_preimage(G, H, f, S, b)
+        by def:
+            ? $has_subgroup_map_preimage(G, H, f, S, b)
         obtain y from exist y G st {y $in S, f(y) = b}
         witness exist z G st {z $in S, f(z) = target.mul(a, b)} from source.mul(x, y):
             f(source.mul(x, y)) = target.mul(f(x), f(y)) = target.mul(a, b)
-        by def $has_subgroup_map_preimage(G, H, f, S, target.mul(a, b))
+        by def:
+            ? $has_subgroup_map_preimage(G, H, f, S, target.mul(a, b))
         by thm set_builder_member(target.mul(a, b), {q H: $has_subgroup_map_preimage(G, H, f, S, q)})
         target.mul(a, b) $in {q H: $has_subgroup_map_preimage(G, H, f, S, q)}
         target.mul(a, b) $in \subgroup_map<G, H, f>(S)
@@ -367,16 +379,19 @@ thm subgroup_map_closed:
             a $in \subgroup_map<G, H, f>(S)
             =>:
                 target.inv(a) $in \subgroup_map<G, H, f>(S)
-        by def $has_subgroup_map_preimage(G, H, f, S, a)
+        by def:
+            ? $has_subgroup_map_preimage(G, H, f, S, a)
         obtain x from exist x G st {x $in S, f(x) = a}
         by thm group_hom_map_inv(G, H, source, target, f, x)
         witness exist z G st {z $in S, f(z) = target.inv(a)} from source.inv(x):
             f(source.inv(x)) = target.inv(f(x)) = target.inv(a)
-        by def $has_subgroup_map_preimage(G, H, f, S, target.inv(a))
+        by def:
+            ? $has_subgroup_map_preimage(G, H, f, S, target.inv(a))
         by thm set_builder_member(target.inv(a), {q H: $has_subgroup_map_preimage(G, H, f, S, q)})
         target.inv(a) $in {q H: $has_subgroup_map_preimage(G, H, f, S, q)}
         target.inv(a) $in \subgroup_map<G, H, f>(S)
-    by def $is_subgroup(H, target, \subgroup_map<G, H, f>(S))
+    by def:
+        ? $is_subgroup(H, target, \subgroup_map<G, H, f>(S))
 
 thm subgroup_comap_closed:
     ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H, T power_set(H):
@@ -418,14 +433,16 @@ thm subgroup_comap_closed:
         by thm set_builder_member(source.inv(x), {q G: f(q) $in T})
         source.inv(x) $in {q G: f(q) $in T}
         source.inv(x) $in \subgroup_comap<G, H, f>(T)
-    by def $is_subgroup(G, source, \subgroup_comap<G, H, f>(T))
+    by def:
+        ? $is_subgroup(G, source, \subgroup_comap<G, H, f>(T))
 
 thm group_kernel_closed:
     ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
         $is_group_hom(G, H, source, target, f)
         =>:
             $is_subgroup(G, source, \group_kernel<G, H, target.one, f>)
-    by def $chap2::is_group(H, target.mul, target.one, target.inv)
+    by def:
+        ? $chap2::is_group(H, target.mul, target.one, target.inv)
     \group_kernel<G, H, target.one, f> = {q G: f(q) = target.one}
     f(source.one) = target.one
     by thm set_builder_member(source.one, {q G: f(q) = target.one})
@@ -456,14 +473,16 @@ thm group_kernel_closed:
         by thm set_builder_member(source.inv(x), {q G: f(q) = target.one})
         source.inv(x) $in {q G: f(q) = target.one}
         source.inv(x) $in \group_kernel<G, H, target.one, f>
-    by def $is_subgroup(G, source, \group_kernel<G, H, target.one, f>)
+    by def:
+        ? $is_subgroup(G, source, \group_kernel<G, H, target.one, f>)
 
 thm group_range_closed:
     ? forall G, H nonempty_set, source &chap2::Group<G>, target &chap2::Group<H>, f fn(x G) H:
         $is_group_hom(G, H, source, target, f)
         =>:
             $is_subgroup(H, target, \group_range<G, H, f>)
-    by def $is_subgroup(G, source, G)
+    by def:
+        ? $is_subgroup(G, source, G)
     by thm subgroup_map_closed(G, H, source, target, f, G)
     \group_range<G, H, f> = \subgroup_map<G, H, f>(G)
     $is_subgroup(H, target, \group_range<G, H, f>)
@@ -525,7 +544,8 @@ thm subgroup_eq_bottom_iff_order_one_forward:
                 trust finite_set_size({group.one, x}) <= finite_set_size(H)
                 2 <= 1
                 impossible 2 <= 1
-    by extension H = {group.one}:
+    by extension:
+        ? H = {group.one}
         forall x H:
             x = group.one
             x $in {group.one}
@@ -658,7 +678,8 @@ thm group_action_gives_permutation:
         $is_group_action(G, X, group, act)
         =>:
             $is_permutation(X, \toPermHom<G, X, act>(g))
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \toPermHom<G, X, act>(g) = fn(y X) X {act(g, y)}
     have inverse_action fn(y X) X = fn(y X) X {act(group.inv(g), y)}
     claim:
@@ -678,7 +699,8 @@ thm group_action_gives_permutation:
             group.mul(group.inv(g), g) = group.one
             by thm function_substitution(G, X, fn(a G) X {act(a, x)}, group.mul(group.inv(g), g), group.one)
             inverse_action(\toPermHom<G, X, act>(g)(x)) = act(group.inv(g), act(g, x)) = act(group.mul(group.inv(g), g), x) = act(group.one, x) = x
-        by def $chap4::is_left_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
+        by def:
+            ? $chap4::is_left_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
     by thm chap4::injective_of_left_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
     claim:
         ? $chap4::is_right_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
@@ -698,15 +720,19 @@ thm group_action_gives_permutation:
             by thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, g)
             by thm function_substitution(G, X, fn(a G) X {act(a, y)}, group.mul(g, group.inv(g)), group.one)
             \toPermHom<G, X, act>(g)(inverse_action(y)) = act(g, act(group.inv(g), y)) = act(group.mul(g, group.inv(g)), y) = act(group.one, y) = y
-        by def $chap4::is_right_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
+        by def:
+            ? $chap4::is_right_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
     by thm chap4::surjective_of_right_inverse(X, X, \toPermHom<G, X, act>(g), inverse_action)
-    by def $chap4::bijective_fn(X, X, \toPermHom<G, X, act>(g))
-    by def $is_permutation(X, \toPermHom<G, X, act>(g))
+    by def:
+        ? $chap4::bijective_fn(X, X, \toPermHom<G, X, act>(g))
+    by def:
+        ? $is_permutation(X, \toPermHom<G, X, act>(g))
 
 thm cayley_map_injective:
     ? forall G nonempty_set, group &chap2::Group<G>:
         $chap4::injective_fn(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     claim:
         ? forall a, b G:
             \CayleyIsoMorphism<G, group>(a) = \CayleyIsoMorphism<G, group>(b)
@@ -730,7 +756,8 @@ thm cayley_map_injective:
         by thm chap2::mul_one(G, group.mul, group.one, group.inv, a)
         by thm chap2::mul_one(G, group.mul, group.one, group.inv, b)
         a = group.mul(a, group.one) = group.mul(b, group.one) = b
-    by def $chap4::injective_fn(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
+    by def:
+        ? $chap4::injective_fn(G, fn(y G) G, \CayleyIsoMorphism<G, group>)
 
 thm orbit_stabilizer_equinumerous:
     ? forall G nonempty_set, X set, group &chap2::Group<G>, act fn(g G, x X) X, x X:
@@ -744,7 +771,8 @@ thm conjugate_subgroup_by_one:
         $is_subgroup(G, group, H)
         =>:
             \conjugate_subgroup<G, group>(group.one, H) = H
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \conjugate_subgroup<G, group>(group.one, H) = {q G: $conjugate_subgroup_member(G, group, H, group.one, q)}
     group.mul(group.inv(group.one), group.one) = group.one
     by thm chap2::mul_one(G, group.mul, group.one, group.inv, group.inv(group.one))
@@ -755,7 +783,8 @@ thm conjugate_subgroup_by_one:
             x $in \conjugate_subgroup<G, group>(group.one, H)
             =>:
                 x $in H
-        by def $conjugate_subgroup_member(G, group, H, group.one, x)
+        by def:
+            ? $conjugate_subgroup_member(G, group, H, group.one, x)
         obtain h from exist h G st {h $in H, x = group.mul(group.mul(group.one, h), group.inv(group.one))}
         group.mul(group.one, h) = h
         group.mul(group.mul(group.one, h), group.inv(group.one)) = group.mul(h, group.one)
@@ -763,7 +792,8 @@ thm conjugate_subgroup_by_one:
         group.mul(h, group.one) = h
         x = h
         x $in H
-    by def \conjugate_subgroup<G, group>(group.one, H) $subset H
+    by def:
+        ? \conjugate_subgroup<G, group>(group.one, H) $subset H
     \conjugate_subgroup<G, group>(group.one, H) $subset H
     claim:
         ? forall h G:
@@ -776,13 +806,16 @@ thm conjugate_subgroup_by_one:
             by thm chap2::mul_one(G, group.mul, group.one, group.inv, h)
             group.mul(h, group.one) = h
             h = group.mul(group.mul(group.one, h), group.inv(group.one))
-        by def $conjugate_subgroup_member(G, group, H, group.one, h)
+        by def:
+            ? $conjugate_subgroup_member(G, group, H, group.one, h)
         by thm set_builder_member(h, {q G: $conjugate_subgroup_member(G, group, H, group.one, q)})
         h $in {q G: $conjugate_subgroup_member(G, group, H, group.one, q)}
         h $in \conjugate_subgroup<G, group>(group.one, H)
-    by def H $subset \conjugate_subgroup<G, group>(group.one, H)
+    by def:
+        ? H $subset \conjugate_subgroup<G, group>(group.one, H)
     H $subset \conjugate_subgroup<G, group>(group.one, H)
-    by extension \conjugate_subgroup<G, group>(group.one, H) = H
+    by extension:
+        ? \conjugate_subgroup<G, group>(group.one, H) = H
 
 # ---------------------------------------------------------------------------
 # 9.1.6 Quotient groups
@@ -816,19 +849,20 @@ thm left_coset_in_quotient_group_carrier:
             \left_coset<G, group>(H, g) $in \quotient_group_carrier<G, group>(H)
     \quotient_group_carrier<G, group>(H) = {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)}
     witness exist representative G st {\left_coset<G, group>(H, g) = \left_coset<G, group>(H, representative)} from g
-    by def $is_left_coset_of(G, group, H, \left_coset<G, group>(H, g))
+    by def:
+        ? $is_left_coset_of(G, group, H, \left_coset<G, group>(H, g))
     by thm set_builder_member(\left_coset<G, group>(H, g), {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)})
     \left_coset<G, group>(H, g) $in {CarrierC power_set(G): $is_left_coset_of(G, group, H, CarrierC)}
     \left_coset<G, group>(H, g) $in \quotient_group_carrier<G, group>(H)
 
-claim forall! G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H) => {$is_nonempty_set(\quotient_group_carrier<G, group>(H))}:
+claim forall G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H) => {$is_nonempty_set(\quotient_group_carrier<G, group>(H))}:
     by thm left_coset_in_quotient_group_carrier(G, group, H, group.one)
     witness $is_nonempty_set(\quotient_group_carrier<G, group>(H)) from \left_coset<G, group>(H, group.one)
 
 template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subgroup(G, group, H)>:
     have quotient_group_nonempty nonempty_set = \quotient_group_carrier<G, group>(H)
 
-claim forall! G nonempty_set, group &chap2::Group<G>, H power_set(G), g G: $is_normal_subgroup(G, group, H) => {\left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>}:
+claim forall G nonempty_set, group &chap2::Group<G>, H power_set(G), g G: $is_normal_subgroup(G, group, H) => {\left_coset<G, group>(H, g) $in \quotient_group_nonempty<G, group, H>}:
     by thm left_coset_in_quotient_group_carrier(G, group, H, g)
     \left_coset<G, group>(H, g) $in \quotient_group_carrier<G, group>(H)
     \quotient_group_nonempty<G, group, H> = \quotient_group_carrier<G, group>(H)
@@ -847,7 +881,8 @@ thm object_substitution:
 thm group_inv_inv:
     ? forall G nonempty_set, group &chap2::Group<G>, x G:
         group.inv(group.inv(x)) = x
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     by thm chap2::mul_inv_cancel(G, group.mul, group.one, group.inv, group.inv(x))
     group.mul(group.inv(x), group.inv(group.inv(x))) = group.one
     group.mul(group.inv(x), x) = group.one
@@ -859,12 +894,14 @@ thm left_coset_center_mem:
         $is_subgroup(G, group, H)
         =>:
             g $in \left_coset<G, group>(H, g)
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, g) = {x G: $left_coset_member(G, group, H, g, x)}
     group.one $in H
     by thm chap2::mul_one(G, group.mul, group.one, group.inv, g)
     witness exist h G st {h $in H, g = group.mul(g, h)} from group.one
-    by def $left_coset_member(G, group, H, g, g)
+    by def:
+        ? $left_coset_member(G, group, H, g, g)
     by thm set_builder_member(g, {x G: $left_coset_member(G, group, H, g, x)})
     g $in {x G: $left_coset_member(G, group, H, g, x)}
     g $in \left_coset<G, group>(H, g)
@@ -875,7 +912,8 @@ thm left_coset_eq_of_mem:
         x $in \left_coset<G, group>(H, g)
         =>:
             \left_coset<G, group>(H, x) = \left_coset<G, group>(H, g)
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, g) = {q G: $left_coset_member(G, group, H, g, q)}
     \left_coset<G, group>(H, x) = {q G: $left_coset_member(G, group, H, x, q)}
     obtain u from exist h G st {h $in H, x = group.mul(g, h)}
@@ -886,11 +924,13 @@ thm left_coset_eq_of_mem:
         group.mul(u, w) $in H
         z = group.mul(x, w) = group.mul(group.mul(g, u), w) = group.mul(g, group.mul(u, w))
         witness exist h G st {h $in H, z = group.mul(g, h)} from group.mul(u, w)
-        by def $left_coset_member(G, group, H, g, z)
+        by def:
+            ? $left_coset_member(G, group, H, g, z)
         by thm set_builder_member(z, {q G: $left_coset_member(G, group, H, g, q)})
         z $in {q G: $left_coset_member(G, group, H, g, q)}
         z $in \left_coset<G, group>(H, g)
-    by def \left_coset<G, group>(H, x) $subset \left_coset<G, group>(H, g)
+    by def:
+        ? \left_coset<G, group>(H, x) $subset \left_coset<G, group>(H, g)
     \left_coset<G, group>(H, x) $subset \left_coset<G, group>(H, g)
     claim:
         ? forall z \left_coset<G, group>(H, g):
@@ -913,13 +953,16 @@ thm left_coset_eq_of_mem:
         group.mul(x, group.mul(group.inv(u), w)) = group.mul(group.mul(g, u), group.mul(group.inv(u), w)) = group.mul(g, group.mul(u, group.mul(group.inv(u), w))) = group.mul(g, group.mul(group.mul(u, group.inv(u)), w)) = group.mul(g, group.mul(group.one, w)) = group.mul(g, w) = z
         witness exist h G st {h $in H, z = group.mul(x, h)} from group.mul(group.inv(u), w):
             z = group.mul(x, group.mul(group.inv(u), w))
-        by def $left_coset_member(G, group, H, x, z)
+        by def:
+            ? $left_coset_member(G, group, H, x, z)
         by thm set_builder_member(z, {q G: $left_coset_member(G, group, H, x, q)})
         z $in {q G: $left_coset_member(G, group, H, x, q)}
         z $in \left_coset<G, group>(H, x)
-    by def \left_coset<G, group>(H, g) $subset \left_coset<G, group>(H, x)
+    by def:
+        ? \left_coset<G, group>(H, g) $subset \left_coset<G, group>(H, x)
     \left_coset<G, group>(H, g) $subset \left_coset<G, group>(H, x)
-    by extension \left_coset<G, group>(H, x) = \left_coset<G, group>(H, g)
+    by extension:
+        ? \left_coset<G, group>(H, x) = \left_coset<G, group>(H, g)
 
 thm left_coset_mul_mem:
     ? forall G nonempty_set, group &chap2::Group<G>, H power_set(G), a, b, x, y G:
@@ -928,7 +971,8 @@ thm left_coset_mul_mem:
         y $in \left_coset<G, group>(H, b)
         =>:
             group.mul(x, y) $in \left_coset<G, group>(H, group.mul(a, b))
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, group.mul(a, b)) = {q G: $left_coset_member(G, group, H, group.mul(a, b), q)}
     obtain u from exist h G st {h $in H, x = group.mul(a, h)}
     obtain v from exist h G st {h $in H, y = group.mul(b, h)}
@@ -959,7 +1003,8 @@ thm left_coset_mul_mem:
     group.mul(a, group.mul(u, group.mul(b, v))) = group.mul(a, group.mul(b, group.mul(moved, v)))
     group.mul(x, y) = group.mul(group.mul(a, u), group.mul(b, v)) = group.mul(a, group.mul(u, group.mul(b, v))) = group.mul(a, group.mul(b, group.mul(moved, v))) = group.mul(group.mul(a, b), group.mul(moved, v))
     witness exist h G st {h $in H, group.mul(x, y) = group.mul(group.mul(a, b), h)} from group.mul(moved, v)
-    by def $left_coset_member(G, group, H, group.mul(a, b), group.mul(x, y))
+    by def:
+        ? $left_coset_member(G, group, H, group.mul(a, b), group.mul(x, y))
     by thm set_builder_member(group.mul(x, y), {q G: $left_coset_member(G, group, H, group.mul(a, b), q)})
     group.mul(x, y) $in {q G: $left_coset_member(G, group, H, group.mul(a, b), q)}
     group.mul(x, y) $in \left_coset<G, group>(H, group.mul(a, b))
@@ -980,7 +1025,8 @@ template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subg
         have candidate \quotient_group_nonempty<G, group, H> = \left_coset<G, group>(H, group.mul(a, b))
         witness exist s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_mul_value(G, group, H, q, r, s)} from candidate:
             witness exist a0, b0 G st {q = \left_coset<G, group>(H, a0), r = \left_coset<G, group>(H, b0), candidate = \left_coset<G, group>(H, group.mul(a0, b0))} from a, b
-            by def $is_quotient_group_mul_value(G, group, H, q, r, candidate)
+            by def:
+                ? $is_quotient_group_mul_value(G, group, H, q, r, candidate)
         claim:
             ? forall s1, s2 \quotient_group_nonempty<G, group, H>:
                 $is_quotient_group_mul_value(G, group, H, q, r, s1)
@@ -1010,7 +1056,8 @@ thm left_coset_inv_mem:
         x $in \left_coset<G, group>(H, a)
         =>:
             group.inv(x) $in \left_coset<G, group>(H, group.inv(a))
-    by def $chap2::is_group(G, group.mul, group.one, group.inv)
+    by def:
+        ? $chap2::is_group(G, group.mul, group.one, group.inv)
     \left_coset<G, group>(H, group.inv(a)) = {q G: $left_coset_member(G, group, H, group.inv(a), q)}
     obtain u from exist h G st {h $in H, x = group.mul(a, h)}
     group.inv(u) $in H
@@ -1031,7 +1078,8 @@ thm left_coset_inv_mem:
     by thm chap2::mul_inv_rev(G, group.mul, group.one, group.inv, a, u)
     group.inv(x) = group.inv(group.mul(a, u)) = group.mul(group.inv(u), group.inv(a)) = group.mul(group.inv(a), moved)
     witness exist h G st {h $in H, group.inv(x) = group.mul(group.inv(a), h)} from moved
-    by def $left_coset_member(G, group, H, group.inv(a), group.inv(x))
+    by def:
+        ? $left_coset_member(G, group, H, group.inv(a), group.inv(x))
     by thm set_builder_member(group.inv(x), {q G: $left_coset_member(G, group, H, group.inv(a), q)})
     group.inv(x) $in {q G: $left_coset_member(G, group, H, group.inv(a), q)}
     group.inv(x) $in \left_coset<G, group>(H, group.inv(a))
@@ -1051,7 +1099,8 @@ template<G nonempty_set, group &chap2::Group<G>, H power_set(G): $is_normal_subg
         have candidate \quotient_group_nonempty<G, group, H> = \left_coset<G, group>(H, group.inv(a))
         witness exist s \quotient_group_nonempty<G, group, H> st {$is_quotient_group_inv_value(G, group, H, q, s)} from candidate:
             witness exist a0 G st {q = \left_coset<G, group>(H, a0), candidate = \left_coset<G, group>(H, group.inv(a0))} from a
-            by def $is_quotient_group_inv_value(G, group, H, q, candidate)
+            by def:
+                ? $is_quotient_group_inv_value(G, group, H, q, candidate)
         claim:
             ? forall s1, s2 \quotient_group_nonempty<G, group, H>:
                 $is_quotient_group_inv_value(G, group, H, q, s1)
@@ -1190,7 +1239,8 @@ thm quotient_group_tuple_is_group:
         group.mul(group.inv(x), x) = group.one
         \quotient_group_one<G, group, H> = \quotient_group_mk<G, group, H>(group.one)
         \quotient_group_mul<G, group, H>(\quotient_group_inv<G, group, H>(q), q) = \quotient_group_mul<G, group, H>(iq, q) = \quotient_group_mk<G, group, H>(group.mul(group.inv(x), x)) = \quotient_group_mk<G, group, H>(group.one) = \quotient_group_one<G, group, H>
-    by def $chap2::is_group(\quotient_group_nonempty<G, group, H>, \quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
+    by def:
+        ? $chap2::is_group(\quotient_group_nonempty<G, group, H>, \quotient_group_mul<G, group, H>, \quotient_group_one<G, group, H>, \quotient_group_inv<G, group, H>)
     \quotient_group_mul<G, group, H> $in fn(q, r \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
     \quotient_group_one<G, group, H> $in \quotient_group_nonempty<G, group, H>
     \quotient_group_inv<G, group, H> $in fn(q \quotient_group_nonempty<G, group, H>) \quotient_group_nonempty<G, group, H>
@@ -1211,13 +1261,16 @@ template<G, Target nonempty_set, source &chap2::Group<G>, target &chap2::Group<T
     have fn quotient_group_lift by exist!:
         ? forall q \quotient_group_nonempty<G, source, H>:
             exist! y Target st {$is_quotient_group_lift_value(G, Target, source, H, f, q, y)}
-        by def $chap2::is_group(G, source.mul, source.one, source.inv)
-        by def $chap2::is_group(Target, target.mul, target.one, target.inv)
+        by def:
+            ? $chap2::is_group(G, source.mul, source.one, source.inv)
+        by def:
+            ? $chap2::is_group(Target, target.mul, target.one, target.inv)
         obtain g from exist representative G st {q = \left_coset<G, source>(H, representative)}
         have candidate Target = f(g)
         witness exist y Target st {$is_quotient_group_lift_value(G, Target, source, H, f, q, y)} from candidate:
             witness exist representative G st {q = \left_coset<G, source>(H, representative), candidate = f(representative)} from g
-            by def $is_quotient_group_lift_value(G, Target, source, H, f, q, candidate)
+            by def:
+                ? $is_quotient_group_lift_value(G, Target, source, H, f, q, candidate)
         claim:
             ? forall y1, y2 Target:
                 $is_quotient_group_lift_value(G, Target, source, H, f, q, y1)
@@ -1290,10 +1343,11 @@ template<A set, mul fn(x, y A) A, one A>:
 
 # Units form a genuine group carrier. Multiplication and inverse are selected
 # on the refined unit carrier so later maps can use them directly.
-claim forall! A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {$is_nonempty_set(\units<A, mul, one>)}:
+claim forall A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {$is_nonempty_set(\units<A, mul, one>)}:
     \units<A, mul, one> = {x A: $is_unit(A, mul, one, x)}
     witness exist y A st {mul(one, y) = one, mul(y, one) = one} from one
-    by def $is_unit(A, mul, one, one)
+    by def:
+        ? $is_unit(A, mul, one, one)
     by thm set_builder_member(one, {x A: $is_unit(A, mul, one, x)})
     one $in {x A: $is_unit(A, mul, one, x)}
     one $in \units<A, mul, one>
@@ -1302,16 +1356,18 @@ claim forall! A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) =
 template<A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one)>:
     have units_carrier nonempty_set = \units<A, mul, one>
 
-claim forall! A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {\units_carrier<A, mul, one> $subset A}:
+claim forall A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {\units_carrier<A, mul, one> $subset A}:
     \units_carrier<A, mul, one> = \units<A, mul, one>
     \units<A, mul, one> $subset A
     \units_carrier<A, mul, one> $subset A
 
-claim forall! A nonempty_set, mul fn(x, y A) A, one A, x, y \units<A, mul, one>: $is_monoid(A, mul, one) => {mul(x, y) $in \units_carrier<A, mul, one>}:
+claim forall A nonempty_set, mul fn(x, y A) A, one A, x, y \units<A, mul, one>: $is_monoid(A, mul, one) => {mul(x, y) $in \units_carrier<A, mul, one>}:
     \units<A, mul, one> = {z A: $is_unit(A, mul, one, z)}
-    by def $is_unit(A, mul, one, x)
+    by def:
+        ? $is_unit(A, mul, one, x)
     obtain x_inv from exist candidate A st {mul(x, candidate) = one, mul(candidate, x) = one}
-    by def $is_unit(A, mul, one, y)
+    by def:
+        ? $is_unit(A, mul, one, y)
     obtain y_inv from exist candidate A st {mul(y, candidate) = one, mul(candidate, y) = one}
     witness exist candidate A st {mul(mul(x, y), candidate) = one, mul(candidate, mul(x, y)) = one} from mul(y_inv, x_inv):
         mul(mul(x, y), mul(y_inv, x_inv)) = mul(x, mul(y, mul(y_inv, x_inv)))
@@ -1320,7 +1376,8 @@ claim forall! A nonempty_set, mul fn(x, y A) A, one A, x, y \units<A, mul, one>:
         mul(mul(y_inv, x_inv), mul(x, y)) = mul(y_inv, mul(x_inv, mul(x, y)))
         mul(x_inv, mul(x, y)) = mul(mul(x_inv, x), y) = mul(one, y) = y
         mul(mul(y_inv, x_inv), mul(x, y)) = mul(y_inv, y) = one
-    by def $is_unit(A, mul, one, mul(x, y))
+    by def:
+        ? $is_unit(A, mul, one, mul(x, y))
     by thm set_builder_member(mul(x, y), {z A: $is_unit(A, mul, one, z)})
     mul(x, y) $in {z A: $is_unit(A, mul, one, z)}
     mul(x, y) $in \units<A, mul, one>
@@ -1336,12 +1393,14 @@ thm unit_inverse_exists_unique:
         =>:
             exist! y \units<A, mul, one> st {mul(x, y) = one, mul(y, x) = one}
     \units<A, mul, one> = {z A: $is_unit(A, mul, one, z)}
-    by def $is_unit(A, mul, one, x)
+    by def:
+        ? $is_unit(A, mul, one, x)
     obtain y from exist candidate A st {mul(x, candidate) = one, mul(candidate, x) = one}
     claim:
         ? y $in \units<A, mul, one>
         witness exist candidate A st {mul(y, candidate) = one, mul(candidate, y) = one} from x
-        by def $is_unit(A, mul, one, y)
+        by def:
+            ? $is_unit(A, mul, one, y)
         by thm set_builder_member(y, {z A: $is_unit(A, mul, one, z)})
         y $in {z A: $is_unit(A, mul, one, z)}
         y $in \units<A, mul, one>
@@ -1361,12 +1420,14 @@ template<A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one), \unit
         ? forall x \units_carrier<A, mul, one>:
             exist! y \units_carrier<A, mul, one> st {mul(x, y) = one, mul(y, x) = one}
         \units<A, mul, one> = {z A: $is_unit(A, mul, one, z)}
-        by def $is_unit(A, mul, one, x)
+        by def:
+            ? $is_unit(A, mul, one, x)
         obtain y from exist candidate A st {mul(x, candidate) = one, mul(candidate, x) = one}
         claim:
             ? y $in \units_carrier<A, mul, one>
             witness exist candidate A st {mul(y, candidate) = one, mul(candidate, y) = one} from x
-            by def $is_unit(A, mul, one, y)
+            by def:
+                ? $is_unit(A, mul, one, y)
             by thm set_builder_member(y, {z A: $is_unit(A, mul, one, z)})
             y $in {z A: $is_unit(A, mul, one, z)}
             y $in \units<A, mul, one>
@@ -1382,10 +1443,11 @@ template<A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one), \unit
                 mul(y1, one) = mul(y1, mul(x, y2)) = mul(mul(y1, x), y2) = mul(one, y2) = y2
                 y1 = y2
 
-claim forall! A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {one $in \units_carrier<A, mul, one>}:
+claim forall A nonempty_set, mul fn(x, y A) A, one A: $is_monoid(A, mul, one) => {one $in \units_carrier<A, mul, one>}:
     \units<A, mul, one> = {z A: $is_unit(A, mul, one, z)}
     witness exist y A st {mul(one, y) = one, mul(y, one) = one} from one
-    by def $is_unit(A, mul, one, one)
+    by def:
+        ? $is_unit(A, mul, one, one)
     by thm set_builder_member(one, {z A: $is_unit(A, mul, one, z)})
     one $in {z A: $is_unit(A, mul, one, z)}
     one $in \units<A, mul, one>
@@ -1419,7 +1481,8 @@ claim:
             \unit_mul<A, mul, one>(\unit_inv<A, mul, one>(x), x) = \unit_one<A, mul, one>
         \unit_mul<A, mul, one>(\unit_one<A, mul, one>, x) = mul(one, x) = x
         \unit_mul<A, mul, one>(\unit_inv<A, mul, one>(x), x) = mul(\unit_inv<A, mul, one>(x), x) = one = \unit_one<A, mul, one>
-    by def $chap2::is_group(\units_carrier<A, mul, one>, \unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
+    by def:
+        ? $chap2::is_group(\units_carrier<A, mul, one>, \unit_mul<A, mul, one>, \unit_one<A, mul, one>, \unit_inv<A, mul, one>)
     \unit_mul<A, mul, one> $in fn(x, y \units_carrier<A, mul, one>) \units_carrier<A, mul, one>
     \unit_one<A, mul, one> $in \units_carrier<A, mul, one>
     \unit_inv<A, mul, one> $in fn(x \units_carrier<A, mul, one>) \units_carrier<A, mul, one>
@@ -1496,10 +1559,12 @@ thm integer_units_reverse:
         ? $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
         case x = 1:
             witness exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1} from 1
-            by def $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
+            by def:
+                ? $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
         case x = -1:
             witness exist y Z st {fn(a, b Z) Z {a * b}(x, y) = 1, fn(a, b Z) Z {a * b}(y, x) = 1} from -1
-            by def $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
+            by def:
+                ? $is_unit(Z, fn(a, b Z) Z {a * b}, 1, x)
 
 prop is_ring_hom(A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S):
     f(source.zero) = target.zero
@@ -1508,9 +1573,10 @@ prop is_ring_hom(A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<
         f(source.add(x, y)) = target.add(f(x), f(y))
         f(source.mul(x, y)) = target.mul(f(x), f(y))
 
-claim forall! A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x \units<A, source.mul, source.one>: $is_ring_hom(A, S, source, target, f) => {f(x) $in \units<S, target.mul, target.one>}:
+claim forall A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>, f fn(x A) S, x \units<A, source.mul, source.one>: $is_ring_hom(A, S, source, target, f) => {f(x) $in \units<S, target.mul, target.one>}:
     \units<S, target.mul, target.one> = {z S: $is_unit(S, target.mul, target.one, z)}
-    by def $is_unit(A, source.mul, source.one, x)
+    by def:
+        ? $is_unit(A, source.mul, source.one, x)
     obtain y from exist y A st {source.mul(x, y) = source.one, source.mul(y, x) = source.one}
     witness exist z S st {target.mul(f(x), z) = target.one, target.mul(z, f(x)) = target.one} from f(y):
         f(source.mul(x, y)) = target.mul(f(x), f(y))
@@ -1519,7 +1585,8 @@ claim forall! A, S nonempty_set, source &chap2::Ring<A>, target &chap2::Ring<S>,
         f(source.mul(y, x)) = target.mul(f(y), f(x))
         f(source.mul(y, x)) = f(source.one) = target.one
         target.mul(f(y), f(x)) = target.one
-    by def $is_unit(S, target.mul, target.one, f(x))
+    by def:
+        ? $is_unit(S, target.mul, target.one, f(x))
     by thm set_builder_member(f(x), {z S: $is_unit(S, target.mul, target.one, z)})
     f(x) $in {z S: $is_unit(S, target.mul, target.one, z)}
     f(x) $in \units<S, target.mul, target.one>
@@ -1642,19 +1709,20 @@ thm ideal_coset_in_quotient_ring_carrier:
             \ideal_coset<A, ring>(I, x) $in \quotient_ring_carrier<A, ring>(I)
     \quotient_ring_carrier<A, ring>(I) = {CarrierC power_set(A): $is_ideal_coset(A, ring, I, CarrierC)}
     witness exist representative A st {\ideal_coset<A, ring>(I, x) = \ideal_coset<A, ring>(I, representative)} from x
-    by def $is_ideal_coset(A, ring, I, \ideal_coset<A, ring>(I, x))
+    by def:
+        ? $is_ideal_coset(A, ring, I, \ideal_coset<A, ring>(I, x))
     by thm set_builder_member(\ideal_coset<A, ring>(I, x), {CarrierC power_set(A): $is_ideal_coset(A, ring, I, CarrierC)})
     \ideal_coset<A, ring>(I, x) $in {CarrierC power_set(A): $is_ideal_coset(A, ring, I, CarrierC)}
     \ideal_coset<A, ring>(I, x) $in \quotient_ring_carrier<A, ring>(I)
 
-claim forall! A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_ideal(A, ring, I) => {$is_nonempty_set(\quotient_ring_carrier<A, ring>(I))}:
+claim forall A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_ideal(A, ring, I) => {$is_nonempty_set(\quotient_ring_carrier<A, ring>(I))}:
     by thm ideal_coset_in_quotient_ring_carrier(A, ring, I, ring.zero)
     witness $is_nonempty_set(\quotient_ring_carrier<A, ring>(I)) from \ideal_coset<A, ring>(I, ring.zero)
 
 template<A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_ideal(A, ring, I)>:
     have quotient_ring_nonempty nonempty_set = \quotient_ring_carrier<A, ring>(I)
 
-claim forall! A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), x A: $is_ideal(A, ring, I) => {\ideal_coset<A, ring>(I, x) $in \quotient_ring_nonempty<A, ring, I>}:
+claim forall A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), x A: $is_ideal(A, ring, I) => {\ideal_coset<A, ring>(I, x) $in \quotient_ring_nonempty<A, ring, I>}:
     by thm ideal_coset_in_quotient_ring_carrier(A, ring, I, x)
     \ideal_coset<A, ring>(I, x) $in \quotient_ring_carrier<A, ring>(I)
     \quotient_ring_nonempty<A, ring, I> = \quotient_ring_carrier<A, ring>(I)
@@ -1675,7 +1743,8 @@ thm ideal_coset_center_mem:
     ring.zero $in I
     by thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, r)
     witness exist idx A st {idx $in I, r = ring.add(r, idx)} from ring.zero
-    by def $ideal_coset_member(A, ring, I, r, r)
+    by def:
+        ? $ideal_coset_member(A, ring, I, r, r)
     by thm set_builder_member(r, {x A: $ideal_coset_member(A, ring, I, r, x)})
     r $in {x A: $ideal_coset_member(A, ring, I, r, x)}
     r $in \ideal_coset<A, ring>(I, r)
@@ -1699,11 +1768,13 @@ thm ideal_coset_eq_of_mem:
         ring.add(u, w) $in I
         z = ring.add(x, w) = ring.add(ring.add(r, u), w) = ring.add(r, ring.add(u, w))
         witness exist idx A st {idx $in I, z = ring.add(r, idx)} from ring.add(u, w)
-        by def $ideal_coset_member(A, ring, I, r, z)
+        by def:
+            ? $ideal_coset_member(A, ring, I, r, z)
         by thm set_builder_member(z, {q A: $ideal_coset_member(A, ring, I, r, q)})
         z $in {q A: $ideal_coset_member(A, ring, I, r, q)}
         z $in \ideal_coset<A, ring>(I, r)
-    by def \ideal_coset<A, ring>(I, x) $subset \ideal_coset<A, ring>(I, r)
+    by def:
+        ? \ideal_coset<A, ring>(I, x) $subset \ideal_coset<A, ring>(I, r)
     \ideal_coset<A, ring>(I, x) $subset \ideal_coset<A, ring>(I, r)
     claim:
         ? forall z \ideal_coset<A, ring>(I, r):
@@ -1722,13 +1793,16 @@ thm ideal_coset_eq_of_mem:
         ring.add(x, ring.add(ring.neg(u), w)) = ring.add(ring.add(r, u), ring.add(ring.neg(u), w)) = ring.add(r, ring.add(u, ring.add(ring.neg(u), w))) = ring.add(r, ring.add(ring.add(u, ring.neg(u)), w)) = ring.add(r, ring.add(ring.zero, w)) = ring.add(r, w) = z
         witness exist idx A st {idx $in I, z = ring.add(x, idx)} from ring.add(ring.neg(u), w):
             z = ring.add(x, ring.add(ring.neg(u), w))
-        by def $ideal_coset_member(A, ring, I, x, z)
+        by def:
+            ? $ideal_coset_member(A, ring, I, x, z)
         by thm set_builder_member(z, {q A: $ideal_coset_member(A, ring, I, x, q)})
         z $in {q A: $ideal_coset_member(A, ring, I, x, q)}
         z $in \ideal_coset<A, ring>(I, x)
-    by def \ideal_coset<A, ring>(I, r) $subset \ideal_coset<A, ring>(I, x)
+    by def:
+        ? \ideal_coset<A, ring>(I, r) $subset \ideal_coset<A, ring>(I, x)
     \ideal_coset<A, ring>(I, r) $subset \ideal_coset<A, ring>(I, x)
-    by extension \ideal_coset<A, ring>(I, x) = \ideal_coset<A, ring>(I, r)
+    by extension:
+        ? \ideal_coset<A, ring>(I, x) = \ideal_coset<A, ring>(I, r)
 
 thm ideal_coset_add_mem:
     ? forall A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A), a, b, x, y A:
@@ -1747,7 +1821,8 @@ thm ideal_coset_add_mem:
     by thm chap2::add_reorder_four(A, ring.add, ring.zero, ring.neg, a, u, b, v)
     ring.add(x, y) = ring.add(ring.add(a, u), ring.add(b, v)) = ring.add(ring.add(a, b), ring.add(u, v))
     witness exist idx A st {idx $in I, ring.add(x, y) = ring.add(ring.add(a, b), idx)} from ring.add(u, v)
-    by def $ideal_coset_member(A, ring, I, ring.add(a, b), ring.add(x, y))
+    by def:
+        ? $ideal_coset_member(A, ring, I, ring.add(a, b), ring.add(x, y))
     by thm set_builder_member(ring.add(x, y), {q A: $ideal_coset_member(A, ring, I, ring.add(a, b), q)})
     ring.add(x, y) $in {q A: $ideal_coset_member(A, ring, I, ring.add(a, b), q)}
     ring.add(x, y) $in \ideal_coset<A, ring>(I, ring.add(a, b))
@@ -1772,7 +1847,8 @@ thm ideal_coset_neg_mem:
     ring.add(ring.neg(a), ring.neg(u)) = ring.neg(ring.add(a, u))
     ring.neg(x) = ring.neg(ring.add(a, u)) = ring.add(ring.neg(a), ring.neg(u))
     witness exist idx A st {idx $in I, ring.neg(x) = ring.add(ring.neg(a), idx)} from ring.neg(u)
-    by def $ideal_coset_member(A, ring, I, ring.neg(a), ring.neg(x))
+    by def:
+        ? $ideal_coset_member(A, ring, I, ring.neg(a), ring.neg(x))
     by thm set_builder_member(ring.neg(x), {q A: $ideal_coset_member(A, ring, I, ring.neg(a), q)})
     ring.neg(x) $in {q A: $ideal_coset_member(A, ring, I, ring.neg(a), q)}
     ring.neg(x) $in \ideal_coset<A, ring>(I, ring.neg(a))
@@ -1807,7 +1883,8 @@ thm ideal_coset_mul_mem:
     ring.add(ring.add(ring.mul(a, b), ring.mul(a, v)), ring.mul(u, ring.add(b, v))) = ring.add(ring.add(ring.mul(a, b), ring.mul(a, v)), ring.add(ring.mul(u, b), ring.mul(u, v)))
     ring.mul(x, y) = ring.mul(ring.add(a, u), ring.add(b, v)) = ring.add(ring.mul(a, ring.add(b, v)), ring.mul(u, ring.add(b, v))) = ring.add(ring.add(ring.mul(a, b), ring.mul(a, v)), ring.mul(u, ring.add(b, v))) = ring.add(ring.add(ring.mul(a, b), ring.mul(a, v)), ring.add(ring.mul(u, b), ring.mul(u, v))) = ring.add(ring.mul(a, b), ring.add(ring.mul(a, v), ring.add(ring.mul(u, b), ring.mul(u, v)))) = ring.add(ring.mul(a, b), offset)
     witness exist idx A st {idx $in I, ring.mul(x, y) = ring.add(ring.mul(a, b), idx)} from offset
-    by def $ideal_coset_member(A, ring, I, ring.mul(a, b), ring.mul(x, y))
+    by def:
+        ? $ideal_coset_member(A, ring, I, ring.mul(a, b), ring.mul(x, y))
     by thm set_builder_member(ring.mul(x, y), {q A: $ideal_coset_member(A, ring, I, ring.mul(a, b), q)})
     ring.mul(x, y) $in {q A: $ideal_coset_member(A, ring, I, ring.mul(a, b), q)}
     ring.mul(x, y) $in \ideal_coset<A, ring>(I, ring.mul(a, b))
@@ -1828,7 +1905,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_id
         have candidate \quotient_ring_nonempty<A, ring, I> = \ideal_coset<A, ring>(I, ring.add(a, b))
         witness exist s \quotient_ring_nonempty<A, ring, I> st {$is_quotient_ring_add_value(A, ring, I, q, r, s)} from candidate:
             witness exist a0, b0 A st {q = \ideal_coset<A, ring>(I, a0), r = \ideal_coset<A, ring>(I, b0), candidate = \ideal_coset<A, ring>(I, ring.add(a0, b0))} from a, b
-            by def $is_quotient_ring_add_value(A, ring, I, q, r, candidate)
+            by def:
+                ? $is_quotient_ring_add_value(A, ring, I, q, r, candidate)
         claim:
             ? forall s1, s2 \quotient_ring_nonempty<A, ring, I>:
                 $is_quotient_ring_add_value(A, ring, I, q, r, s1)
@@ -1867,7 +1945,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_id
         have candidate \quotient_ring_nonempty<A, ring, I> = \ideal_coset<A, ring>(I, ring.neg(a))
         witness exist s \quotient_ring_nonempty<A, ring, I> st {$is_quotient_ring_neg_value(A, ring, I, q, s)} from candidate:
             witness exist a0 A st {q = \ideal_coset<A, ring>(I, a0), candidate = \ideal_coset<A, ring>(I, ring.neg(a0))} from a
-            by def $is_quotient_ring_neg_value(A, ring, I, q, candidate)
+            by def:
+                ? $is_quotient_ring_neg_value(A, ring, I, q, candidate)
         claim:
             ? forall s1, s2 \quotient_ring_nonempty<A, ring, I>:
                 $is_quotient_ring_neg_value(A, ring, I, q, s1)
@@ -1903,7 +1982,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>, I power_set(A): $is_id
         have candidate \quotient_ring_nonempty<A, ring, I> = \ideal_coset<A, ring>(I, ring.mul(a, b))
         witness exist s \quotient_ring_nonempty<A, ring, I> st {$is_quotient_ring_mul_value(A, ring, I, q, r, s)} from candidate:
             witness exist a0, b0 A st {q = \ideal_coset<A, ring>(I, a0), r = \ideal_coset<A, ring>(I, b0), candidate = \ideal_coset<A, ring>(I, ring.mul(a0, b0))} from a, b
-            by def $is_quotient_ring_mul_value(A, ring, I, q, r, candidate)
+            by def:
+                ? $is_quotient_ring_mul_value(A, ring, I, q, r, candidate)
         claim:
             ? forall s1, s2 \quotient_ring_nonempty<A, ring, I>:
                 $is_quotient_ring_mul_value(A, ring, I, q, r, s1)
@@ -2152,9 +2232,12 @@ thm quotient_ring_tuple_is_commutative_ring:
         by thm quotient_ring_mul_of_representatives(A, ring, I, r, q, y, x)
         ring.mul(x, y) = ring.mul(y, x)
         \quotient_ring_mul<A, ring, I>(q, r) = \quotient_ring_mk<A, ring, I>(ring.mul(x, y)) = \quotient_ring_mk<A, ring, I>(ring.mul(y, x)) = \quotient_ring_mul<A, ring, I>(r, q)
-    by def $chap2::is_additive_commutative_group(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>)
-    by def $chap2::is_ring(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
-    by def $chap7::is_commutative_ring(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
+    by def:
+        ? $chap2::is_additive_commutative_group(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>)
+    by def:
+        ? $chap2::is_ring(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
+    by def:
+        ? $chap7::is_commutative_ring(\quotient_ring_nonempty<A, ring, I>, \quotient_ring_add<A, ring, I>, \quotient_ring_zero<A, ring, I>, \quotient_ring_neg<A, ring, I>, \quotient_ring_mul<A, ring, I>, \quotient_ring_one<A, ring, I>)
     \quotient_ring_add<A, ring, I> $in fn(q, r \quotient_ring_nonempty<A, ring, I>) \quotient_ring_nonempty<A, ring, I>
     \quotient_ring_zero<A, ring, I> $in \quotient_ring_nonempty<A, ring, I>
     \quotient_ring_neg<A, ring, I> $in fn(q \quotient_ring_nonempty<A, ring, I>) \quotient_ring_nonempty<A, ring, I>
@@ -2186,7 +2269,8 @@ thm ideal_contains_finite_range_sum:
         ? forall x A:
             ring.add(x, ring.zero) = x
         by thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
-    by def $is_additive_commutative_monoid(A, ring.add, ring.zero)
+    by def:
+        ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     prop _ideal_contains_finite_range_sum_at(count N):
         forall target power_set(A):
             target = I
@@ -2212,7 +2296,8 @@ thm ideal_contains_finite_range_sum:
                     ring.zero $in target
                     \finite_range_sum<A, ring.add, ring.zero>(f, count) = ring.zero
                     \finite_range_sum<A, ring.add, ring.zero>(f, count) $in target
-                by def $_ideal_contains_finite_range_sum_at(count)
+                by def:
+                    ? $_ideal_contains_finite_range_sum_at(count)
                 $_ideal_contains_finite_range_sum_at(count)
             ? induc:
                 $_ideal_contains_finite_range_sum_at(count)
@@ -2240,7 +2325,8 @@ thm ideal_contains_finite_range_sum:
                     \finite_range_sum<A, ring.add, ring.zero>(f, count + 1) = ring.add(\finite_range_sum<A, ring.add, ring.zero>(f, count), f(count))
                     \finite_range_sum<A, ring.add, ring.zero>(f, count + 1) $in I
                     \finite_range_sum<A, ring.add, ring.zero>(f, count + 1) $in target
-                by def $_ideal_contains_finite_range_sum_at(count + 1)
+                by def:
+                    ? $_ideal_contains_finite_range_sum_at(count + 1)
                 $_ideal_contains_finite_range_sum_at(count + 1)
     $_ideal_contains_finite_range_sum_at(n)
     I = I
@@ -2268,7 +2354,8 @@ thm ideal_product_subset_factors:
     claim:
         ? forall x \ideal_product<A, ring>(I, J):
             x $in I
-        by def $ideal_product_member(A, ring, I, J, x)
+        by def:
+            ? $ideal_product_member(A, ring, I, J, x)
         obtain n, left, right from exist n N, left, right fn(index N) A st {$ideal_product_factors(A, I, J, n, left, right), x = \finite_range_sum<A, ring.add, ring.zero>(fn(index N) A {ring.mul(left(index), right(index))}, n)}
         claim:
             ? forall index range(0, n):
@@ -2281,12 +2368,14 @@ thm ideal_product_subset_factors:
         by thm ideal_contains_finite_range_sum(A, ring, I, fn(index N) A {ring.mul(left(index), right(index))}, n)
         x = \finite_range_sum<A, ring.add, ring.zero>(fn(index N) A {ring.mul(left(index), right(index))}, n)
         x $in I
-    by def \ideal_product<A, ring>(I, J) $subset I
+    by def:
+        ? \ideal_product<A, ring>(I, J) $subset I
     \ideal_product<A, ring>(I, J) $subset I
     claim:
         ? forall x \ideal_product<A, ring>(I, J):
             x $in J
-        by def $ideal_product_member(A, ring, I, J, x)
+        by def:
+            ? $ideal_product_member(A, ring, I, J, x)
         obtain n, left, right from exist n N, left, right fn(index N) A st {$ideal_product_factors(A, I, J, n, left, right), x = \finite_range_sum<A, ring.add, ring.zero>(fn(index N) A {ring.mul(left(index), right(index))}, n)}
         claim:
             ? forall index range(0, n):
@@ -2297,7 +2386,8 @@ thm ideal_product_subset_factors:
         by thm ideal_contains_finite_range_sum(A, ring, J, fn(index N) A {ring.mul(left(index), right(index))}, n)
         x = \finite_range_sum<A, ring.add, ring.zero>(fn(index N) A {ring.mul(left(index), right(index))}, n)
         x $in J
-    by def \ideal_product<A, ring>(I, J) $subset J
+    by def:
+        ? \ideal_product<A, ring>(I, J) $subset J
     \ideal_product<A, ring>(I, J) $subset J
 
 template<A set>:
@@ -2379,7 +2469,8 @@ thm ring_kernel_is_ideal:
         by thm set_builder_member(source.mul(r, x), {z A: f(z) = target.zero})
         source.mul(r, x) $in {z A: f(z) = target.zero}
         source.mul(r, x) $in \ring_kernel<A, S, target.zero, f>
-    by def $is_ideal(A, source, \ring_kernel<A, S, target.zero, f>)
+    by def:
+        ? $is_ideal(A, source, \ring_kernel<A, S, target.zero, f>)
 
 thm ring_range_is_nonempty:
     ? forall A, S nonempty_set, source &chap7::CommutativeRing<A>, target &chap7::CommutativeRing<S>, f fn(x A) S:
@@ -2388,7 +2479,8 @@ thm ring_range_is_nonempty:
             $is_nonempty_set(\ring_range<A, S, f>)
     \ideal_map<A, S, f>(A) = {y S: $has_ideal_map_preimage(A, S, f, A, y)}
     witness exist x A st {x $in A, f(x) = f(source.zero)} from source.zero
-    by def $has_ideal_map_preimage(A, S, f, A, f(source.zero))
+    by def:
+        ? $has_ideal_map_preimage(A, S, f, A, f(source.zero))
     by thm set_builder_member(f(source.zero), {y S: $has_ideal_map_preimage(A, S, f, A, y)})
     f(source.zero) $in {y S: $has_ideal_map_preimage(A, S, f, A, y)}
     f(source.zero) $in \ideal_map<A, S, f>(A)
@@ -2409,7 +2501,8 @@ template<A, S nonempty_set, source &chap7::CommutativeRing<A>, target &chap7::Co
         \ideal_map<A, S, f>(A) = {y S: $has_ideal_map_preimage(A, S, f, A, y)}
         obtain a from exist representative A st {q = \ideal_coset<A, source>(\ring_kernel<A, S, target.zero, f>, representative)}
         witness exist x A st {x $in A, f(x) = f(a)} from a
-        by def $has_ideal_map_preimage(A, S, f, A, f(a))
+        by def:
+            ? $has_ideal_map_preimage(A, S, f, A, f(a))
         by thm set_builder_member(f(a), {y S: $has_ideal_map_preimage(A, S, f, A, y)})
         f(a) $in {y S: $has_ideal_map_preimage(A, S, f, A, y)}
         f(a) $in \ideal_map<A, S, f>(A)
@@ -2420,7 +2513,8 @@ template<A, S nonempty_set, source &chap7::CommutativeRing<A>, target &chap7::Co
         have candidate \ring_range_nonempty<A, S, source, target, f> = f(a)
         witness exist y \ring_range_nonempty<A, S, source, target, f> st {$is_quotient_ring_first_isomorphism_value(A, S, source, target, f, q, y)} from candidate:
             witness exist x A st {q = \ideal_coset<A, source>(\ring_kernel<A, S, target.zero, f>, x), candidate = f(x)} from a
-            by def $is_quotient_ring_first_isomorphism_value(A, S, source, target, f, q, candidate)
+            by def:
+                ? $is_quotient_ring_first_isomorphism_value(A, S, source, target, f, q, candidate)
         claim:
             ? forall y1, y2 \ring_range_nonempty<A, S, source, target, f>:
                 $is_quotient_ring_first_isomorphism_value(A, S, source, target, f, q, y1)
@@ -2552,9 +2646,11 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                         case n != 1:
                             candidate(n) = ring.zero
                             impossible candidate(n) = ring.zero
-                by def $supports_polynomial(A, ring.zero, candidate, {1})
+                by def:
+                    ? $supports_polynomial(A, ring.zero, candidate, {1})
             witness exist support finite_set st {$supports_polynomial(A, ring.zero, candidate, support)} from {1}
-            by def $polynomial_has_finite_support(A, ring.zero, candidate)
+            by def:
+                ? $polynomial_has_finite_support(A, ring.zero, candidate)
         by thm set_builder_member(candidate, {candidate_polynomial fn(n N) A: $polynomial_has_finite_support(A, ring.zero, candidate_polynomial)})
         candidate $in {candidate_polynomial fn(n N) A: $polynomial_has_finite_support(A, ring.zero, candidate_polynomial)}
         candidate $in \polynomial_carrier<A, ring.zero>
@@ -2564,7 +2660,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                 n != 1
                 =>:
                     candidate(n) = ring.zero
-            by def $is_polynomial_X(A, ring.zero, ring.one, candidate)
+            by def:
+                ? $is_polynomial_X(A, ring.zero, ring.one, candidate)
         claim:
             ? forall p, q \polynomial_carrier<A, ring.zero>:
                 $is_polynomial_X(A, ring.zero, ring.one, p)
@@ -2580,7 +2677,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                         p(n) = ring.one = q(n)
                     case n != 1:
                         p(n) = ring.zero = q(n)
-            by def $fn_eq(p, q)
+            by def:
+                ? $fn_eq(p, q)
             $fn_eq(p, q)
             p = q
 
@@ -2619,9 +2717,11 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                         case n != 0:
                             candidate(n) = ring.zero
                             impossible candidate(n) = ring.zero
-                by def $supports_polynomial(A, ring.zero, candidate, {0})
+                by def:
+                    ? $supports_polynomial(A, ring.zero, candidate, {0})
             witness exist support finite_set st {$supports_polynomial(A, ring.zero, candidate, support)} from {0}
-            by def $polynomial_has_finite_support(A, ring.zero, candidate)
+            by def:
+                ? $polynomial_has_finite_support(A, ring.zero, candidate)
         by thm set_builder_member(candidate, {candidate_polynomial fn(n N) A: $polynomial_has_finite_support(A, ring.zero, candidate_polynomial)})
         candidate $in {candidate_polynomial fn(n N) A: $polynomial_has_finite_support(A, ring.zero, candidate_polynomial)}
         candidate $in \polynomial_carrier<A, ring.zero>
@@ -2631,7 +2731,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                 n != 0
                 =>:
                     candidate(n) = ring.zero
-            by def $is_polynomial_C(A, ring.zero, a, candidate)
+            by def:
+                ? $is_polynomial_C(A, ring.zero, a, candidate)
         claim:
             ? forall p, q \polynomial_carrier<A, ring.zero>:
                 $is_polynomial_C(A, ring.zero, a, p)
@@ -2647,7 +2748,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                         p(n) = a = q(n)
                     case n != 0:
                         p(n) = ring.zero = q(n)
-            by def $fn_eq(p, q)
+            by def:
+                ? $fn_eq(p, q)
             $fn_eq(p, q)
             p = q
 
@@ -2697,9 +2799,11 @@ thm polynomial_add_coeff_has_finite_support:
                         impossible n $in union(support_p, support_q)
                 \polynomial_add_coeff<A, ring>(p, q, n) = ring.add(p(n), q(n)) = ring.add(ring.zero, ring.zero) = ring.zero
                 impossible \polynomial_add_coeff<A, ring>(p, q, n) != ring.zero
-        by def $supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_add_coeff<A, ring>(p, q, n)}, union(support_p, support_q))
+        by def:
+            ? $supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_add_coeff<A, ring>(p, q, n)}, union(support_p, support_q))
     witness exist support finite_set st {$supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_add_coeff<A, ring>(p, q, n)}, support)} from union(support_p, support_q)
-    by def $polynomial_has_finite_support(A, ring.zero, fn(n N) A {\polynomial_add_coeff<A, ring>(p, q, n)})
+    by def:
+        ? $polynomial_has_finite_support(A, ring.zero, fn(n N) A {\polynomial_add_coeff<A, ring>(p, q, n)})
 
 template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
     have fn polynomial_add by exist!:
@@ -2747,7 +2851,8 @@ thm polynomial_mul_coeff_has_finite_support:
             ? forall x A:
                 ring.add(x, ring.zero) = x
             by thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
-        by def $is_additive_commutative_monoid(A, ring.add, ring.zero)
+        by def:
+            ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     have fn support_index_sum(pair cart(support_p, support_q)) N = pair[1] + pair[2]
     have product_support finite_set = fn_range(support_index_sum)
     claim:
@@ -2762,7 +2867,8 @@ thm polynomial_mul_coeff_has_finite_support:
                 obtain pair from exist input cart(support_p, support_q) st {n = support_index_sum(input)}
                 support_index_sum(pair) $in N
                 n $in N
-            by def product_support $subset N
+            by def:
+                ? product_support $subset N
         claim:
             ? forall n N:
                 \polynomial_mul_coeff<A, ring>(p, q, n) != ring.zero
@@ -2804,9 +2910,11 @@ thm polynomial_mul_coeff_has_finite_support:
                 by thm finite_range_sum_all_zero(A, ring.add, ring.zero, fn(index N) A {\polynomial_mul_term<A, ring>(p, q, n, index)}, n + 1)
                 \polynomial_mul_coeff<A, ring>(p, q, n) = ring.zero
                 impossible \polynomial_mul_coeff<A, ring>(p, q, n) != ring.zero
-        by def $supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_mul_coeff<A, ring>(p, q, n)}, product_support)
+        by def:
+            ? $supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_mul_coeff<A, ring>(p, q, n)}, product_support)
     witness exist support finite_set st {$supports_polynomial(A, ring.zero, fn(n N) A {\polynomial_mul_coeff<A, ring>(p, q, n)}, support)} from product_support
-    by def $polynomial_has_finite_support(A, ring.zero, fn(n N) A {\polynomial_mul_coeff<A, ring>(p, q, n)})
+    by def:
+        ? $polynomial_has_finite_support(A, ring.zero, fn(n N) A {\polynomial_mul_coeff<A, ring>(p, q, n)})
 
 template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
     have fn polynomial_mul by exist!:
@@ -2844,7 +2952,8 @@ thm polynomial_nonzero_support_is_finite:
                 n $in support
             p(n) != ring.zero
             n $in support
-        by def \polynomial_nonzero_support<A, ring>(p) $subset support
+        by def:
+            ? \polynomial_nonzero_support<A, ring>(p) $subset support
     \polynomial_nonzero_support<A, ring>(p) = set_minus(support, set_minus(support, \polynomial_nonzero_support<A, ring>(p)))
     $is_finite_set(set_minus(support, set_minus(support, \polynomial_nonzero_support<A, ring>(p))))
     $is_finite_set(\polynomial_nonzero_support<A, ring>(p))
@@ -2870,7 +2979,8 @@ template<A nonempty_set, ring &chap7::CommutativeRing<A>>:
                 ? forall n \polynomial_nonzero_support<A, ring>(p):
                     n $in N
                 n $in N
-            by def \polynomial_nonzero_support<A, ring>(p) $subset N
+            by def:
+                ? \polynomial_nonzero_support<A, ring>(p) $subset N
         $is_finite_set(union({0}, \polynomial_nonzero_support_finite<A, ring, p>))
         witness $is_nonempty_set(union({0}, \polynomial_nonzero_support_finite<A, ring, p>)) from 0:
             0 $in {0}
@@ -2959,7 +3069,8 @@ thm polynomial_X_sub_C_eval:
             ? forall x A:
                 ring.add(x, ring.zero) = x
             by thm chap2::add_zero_from_laws(A, ring.add, ring.zero, ring.neg, x)
-        by def $is_additive_commutative_monoid(A, ring.add, ring.zero)
+        by def:
+            ? $is_additive_commutative_monoid(A, ring.add, ring.zero)
     by cases:
         ? \polynomial_eval<A, ring>(p, r) = ring.zero
         case ring.one = ring.zero:
@@ -3004,7 +3115,8 @@ thm polynomial_X_sub_C_eval:
                                     pc(n) = ring.zero
                                     p(n) = ring.add(px(n), pc(n)) = ring.add(ring.zero, ring.zero) = ring.zero
                                     impossible p(n) = ring.zero
-                by def \polynomial_nonzero_support<A, ring>(p) $subset {0, 1}
+                by def:
+                    ? \polynomial_nonzero_support<A, ring>(p) $subset {0, 1}
             claim:
                 ? union({0}, \polynomial_nonzero_support_finite<A, ring, p>) $subset {0, 1}
                 claim:
@@ -3018,7 +3130,8 @@ thm polynomial_X_sub_C_eval:
                         case n $in \polynomial_nonzero_support_finite<A, ring, p>:
                             n $in \polynomial_nonzero_support<A, ring>(p)
                             n $in {0, 1}
-                by def union({0}, \polynomial_nonzero_support_finite<A, ring, p>) $subset {0, 1}
+                by def:
+                    ? union({0}, \polynomial_nonzero_support_finite<A, ring, p>) $subset {0, 1}
             1 $in union({0}, \polynomial_nonzero_support_finite<A, ring, p>)
             have bound N = \polynomial_eval_bound<A, ring>(p)
             by thm polynomial_eval_bound_member(A, ring, p)

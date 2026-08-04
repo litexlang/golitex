@@ -88,17 +88,20 @@ thm eigenspace_is_invariant_under_commuting_operator:
         by thm chap1b::vector_neg_spec(s, VSet, V, V.smul(lambda, u))
         by thm chap1b::add_right_cancel(s, VSet, V, S(u), V.smul(lambda, u), \chap1b::vector_neg<s, VSet, V>(V.smul(lambda, u)))
         S(u) = V.smul(lambda, u)
-        by def $operators_commute(s, VSet, V, S, T)
+        by def:
+            ? $operators_commute(s, VSet, V, S, T)
         by thm chap5a::equal_functions_agree_at_input(VSet, VSet, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T), \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S), u)
         \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T)(u) = S(T(u))
         \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S)(u) = T(S(u))
         $chap3a::is_linear_map(s, VSet, VSet, V, V, T)
-        by def $chap3a::is_linear_map(s, VSet, VSet, V, V, T)
+        by def:
+            ? $chap3a::is_linear_map(s, VSet, VSet, V, V, T)
         T(V.smul(lambda, u)) = V.smul(lambda, T(u))
         S(T(u)) = T(S(u)) = T(V.smul(lambda, u)) = V.smul(lambda, T(u))
         by thm eigen_equation_implies_eigenspace_membership(s, VSet, V, S, lambda, T(u))
         T(u) $in \chap5d::eigenspace<s, VSet, V>(S, lambda)
-    by def $chap5a::is_invariant_subspace(s, VSet, V, T, \chap5d::eigenspace<s, VSet, V>(S, lambda))
+    by def:
+        ? $chap5a::is_invariant_subspace(s, VSet, V, T, \chap5d::eigenspace<s, VSet, V>(S, lambda))
 
 prop have_common_diagonalizing_basis(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, S, T \chap3a::linear_map_space<s, VSet, VSet, V, V>):
     exist n N+, basis &chap1a::FiniteList<VSet, n> st {$chap2b::is_basis(s, VSet, V, n, basis), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, S)), $chap5d::is_diagonal_matrix(s, V.scalars, n, \chap5c::matrix_of_operator<s, VSet, V, n>(basis, T))}

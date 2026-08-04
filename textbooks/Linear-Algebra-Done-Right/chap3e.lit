@@ -97,7 +97,8 @@ thm quotient_space_is_nonempty:
         $is_nonempty_set(\quotient_space<s, VSet, V>(U))
     have zero_translate power_set(VSet) = \translate<s, VSet, V>(U, V.zero)
     witness exist v VSet st {zero_translate = \translate<s, VSet, V>(U, v)} from V.zero
-    by def $is_translate_of(s, VSet, V, U, zero_translate)
+    by def:
+        ? $is_translate_of(s, VSet, V, U, zero_translate)
     zero_translate $in \quotient_space<s, VSet, V>(U)
     witness $is_nonempty_set(\quotient_space<s, VSet, V>(U)) from zero_translate
 
@@ -112,14 +113,16 @@ thm mutual_subset_implies_set_equal:
         B $subset A
         =>:
             A = B
-    by extension A = B
+    by extension:
+        ? A = B
 
 thm translate_member_witness:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, x VSet:
         $belongs_to_translate(s, VSet, V, U, v, x)
         =>:
             exist u U st {x = V.add(v, u)}
-    by def $belongs_to_translate(s, VSet, V, U, v, x)
+    by def:
+        ? $belongs_to_translate(s, VSet, V, U, v, x)
 
 thm translate_set_member_witness:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, U power_set(VSet), v, x VSet:
@@ -134,10 +137,12 @@ thm translate_contains_base:
         $chap1c::is_subspace(s, VSet, V, U)
         =>:
             v $in \translate<s, VSet, V>(U, v)
-    by def $chap1c::is_subspace(s, VSet, V, U)
+    by def:
+        ? $chap1c::is_subspace(s, VSet, V, U)
     V.add(v, V.zero) = V.add(V.zero, v) = v
     witness exist u U st {v = V.add(v, u)} from V.zero
-    by def $belongs_to_translate(s, VSet, V, U, v, v)
+    by def:
+        ? $belongs_to_translate(s, VSet, V, U, v, v)
     v $in \translate<s, VSet, V>(U, v)
 
 thm subspace_closed_under_vector_neg:
@@ -145,7 +150,8 @@ thm subspace_closed_under_vector_neg:
         $chap1c::is_subspace(s, VSet, V, U)
         =>:
             \chap1b::vector_neg<s, VSet, V>(x) $in U
-    by def $chap1c::is_subspace(s, VSet, V, U)
+    by def:
+        ? $chap1c::is_subspace(s, VSet, V, U)
     V.smul(V.scalars.neg(V.scalars.one), x) $in U
     by thm chap1b::minus_one_times_vector(s, VSet, V, x)
     \chap1b::vector_neg<s, VSet, V>(x) $in U
@@ -189,7 +195,8 @@ thm translate_inclusion_from_difference:
         x $in \translate<s, VSet, V>(U, v)
         =>:
             x $in \translate<s, VSet, V>(U, w)
-    by def $chap1c::is_subspace(s, VSet, V, U)
+    by def:
+        ? $chap1c::is_subspace(s, VSet, V, U)
     have difference U = V.add(v, \chap1b::vector_neg<s, VSet, V>(w))
     by thm translate_set_member_witness(s, VSet, V, U, v, x)
     obtain u from exist u U st {x = V.add(v, u)}
@@ -200,7 +207,8 @@ thm translate_inclusion_from_difference:
     V.add(w, V.add(V.add(v, \chap1b::vector_neg<s, VSet, V>(w)), u)) = V.add(w, shifted)
     x = V.add(w, shifted)
     witness exist z U st {x = V.add(w, z)} from shifted
-    by def $belongs_to_translate(s, VSet, V, U, w, x)
+    by def:
+        ? $belongs_to_translate(s, VSet, V, U, w, x)
     # The witness above establishes the builder predicate; membership folding
     # for the parameterized translate set does not replay.
     x $in \translate<s, VSet, V>(U, w)
@@ -257,7 +265,8 @@ thm common_sum_difference_is_subspace_member:
         x = V.add(w, b)
         =>:
             V.add(v, \chap1b::vector_neg<s, VSet, V>(w)) $in U
-    by def $chap1c::is_subspace(s, VSet, V, U)
+    by def:
+        ? $chap1c::is_subspace(s, VSet, V, U)
     by thm subspace_closed_under_vector_neg(s, VSet, V, U, a)
     have candidate U = V.add(b, \chap1b::vector_neg<s, VSet, V>(a))
     by thm common_sum_difference(s, VSet, V, v, w, x, a, b)

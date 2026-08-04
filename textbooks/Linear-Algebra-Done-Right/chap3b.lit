@@ -31,7 +31,8 @@ thm null_space_is_subspace:
         W.smul(a, T(x)) = W.smul(a, W.zero) = W.zero
         T(V.smul(a, x)) = W.smul(a, T(x)) = W.zero
         by thm defined_set_member(V.smul(a, x), \null_space<s, VSet, WSet, V, W>(T))
-    by def $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
+    by def:
+        ? $chap1c::is_subspace(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
 prop is_injective(VSet, WSet set, T fn(v VSet) WSet):
     forall u, v VSet:
         T(u) = T(v)
@@ -56,7 +57,8 @@ thm injective_iff_null_space_is_zero:
             $is_injective(VSet, WSet, T)
             =>:
                 \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
-        by extension \null_space<s, VSet, WSet, V, W>(T) = {V.zero}:
+        by extension:
+            ? \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
             forall x \null_space<s, VSet, WSet, V, W>(T):
                 T(x) = W.zero = T(V.zero)
                 x = V.zero
@@ -85,13 +87,15 @@ thm injective_iff_null_space_is_zero:
             by thm chap1b::vector_neg_spec(s, VSet, V, v)
             V.add(u, \chap1b::vector_neg<s, VSet, V>(v)) = V.add(v, \chap1b::vector_neg<s, VSet, V>(v))
             by thm chap1b::add_right_cancel(s, VSet, V, u, v, \chap1b::vector_neg<s, VSet, V>(v))
-        by def $is_injective(VSet, WSet, T)
+        by def:
+            ? $is_injective(VSet, WSet, T)
     forall:
         =>:
             $is_injective(VSet, WSet, T)
         <=>:
             \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
-    by def $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+    by def:
+        ? $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
 # Definition 3.16. The range of T is the set of all values T(v). The helper
 # relation keeps the existential out of the set-builder parser while the
 # source-facing range remains a callable set-valued construction.
@@ -106,7 +110,8 @@ thm range_is_subspace:
         $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
     by thm chap3a::linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
     witness exist v VSet st {W.zero = T(v)} from V.zero
-    by def $has_preimage(VSet, WSet, T, W.zero)
+    by def:
+        ? $has_preimage(VSet, WSet, T, W.zero)
     W.zero $in \range_of<VSet, WSet>(T)
     witness $is_nonempty_set(\range_of<VSet, WSet>(T)) from W.zero
     claim:
@@ -119,7 +124,8 @@ thm range_is_subspace:
         obtain v from exist z VSet st {y = T(z)}
         W.add(x, y) = W.add(T(u), T(v)) = T(V.add(u, v))
         witness exist z VSet st {W.add(x, y) = T(z)} from V.add(u, v)
-        by def $has_preimage(VSet, WSet, T, W.add(x, y))
+        by def:
+            ? $has_preimage(VSet, WSet, T, W.add(x, y))
         W.add(x, y) $in \range_of<VSet, WSet>(T)
     claim:
         ? forall a s, x WSet:
@@ -129,9 +135,11 @@ thm range_is_subspace:
         obtain u from exist v VSet st {x = T(v)}
         W.smul(a, x) = W.smul(a, T(u)) = T(V.smul(a, u))
         witness exist z VSet st {W.smul(a, x) = T(z)} from V.smul(a, u)
-        by def $has_preimage(VSet, WSet, T, W.smul(a, x))
+        by def:
+            ? $has_preimage(VSet, WSet, T, W.smul(a, x))
         W.smul(a, x) $in \range_of<VSet, WSet>(T)
-    by def $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
+    by def:
+        ? $chap1c::is_subspace(s, WSet, W, \range_of<VSet, WSet>(T))
 # Definition 3.19. A map is surjective when every codomain vector is attained.
 prop is_surjective(VSet, WSet set, T fn(v VSet) WSet):
     forall w WSet:
@@ -162,7 +170,8 @@ thm linear_map_value_is_in_range:
     ? forall VSet, WSet nonempty_set, T fn(v VSet) WSet, v VSet:
         T(v) $in \range_of<VSet, WSet>(T)
     witness exist source VSet st {T(v) = T(source)} from v
-    by def $has_preimage(VSet, WSet, T, T(v))
+    by def:
+        ? $has_preimage(VSet, WSet, T, T(v))
     T(v) $in \range_of<VSet, WSet>(T)
 
 template<VSet, WSet nonempty_set, n N>:
@@ -190,18 +199,23 @@ thm prefix_tail_left_is_independent:
         space.add(\chap2a::linear_combination_value<s, v, space, left_length>(coefficients, left), \chap2a::linear_combination_value<s, v, space, right_length>(zero_right, right)) = space.add(space.zero, space.zero)
         space.add(space.zero, space.zero) = space.zero
         \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.zero
-        by def $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        by def:
+            ? $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
         $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
-        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
-        by def $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, coefficients, zero_right)
+        by def:
+            ? $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def:
+            ? $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, coefficients, zero_right)
         claim:
             ? forall idx N+:
                 idx <= left_length
                 =>:
                     coefficients.entries(idx) = space.scalars.zero
             coefficients.entries(idx) = full_coefficients.entries(idx) = space.scalars.zero
-        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length, coefficients)
-    by def $chap2a::is_linearly_independent(s, v, space, left_length, left)
+        by def:
+            ? $chap2a::has_only_zero_coefficients(s, space.scalars, left_length, coefficients)
+    by def:
+        ? $chap2a::is_linearly_independent(s, v, space, left_length, left)
 
 thm prefix_tail_right_is_independent:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, left_length, right_length N, full &chap1a::FiniteList<v, left_length + right_length>, left &chap1a::FiniteList<v, left_length>, right &chap1a::FiniteList<v, right_length>:
@@ -225,18 +239,23 @@ thm prefix_tail_right_is_independent:
         space.add(\chap2a::linear_combination_value<s, v, space, left_length>(zero_left, left), \chap2a::linear_combination_value<s, v, space, right_length>(coefficients, right)) = space.add(space.zero, space.zero)
         space.add(space.zero, space.zero) = space.zero
         \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full) = space.zero
-        by def $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+        by def:
+            ? $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
         $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
-        by def $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
-        by def $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, zero_left, coefficients)
+        by def:
+            ? $chap2a::has_only_zero_coefficients(s, space.scalars, left_length + right_length, full_coefficients)
+        by def:
+            ? $chap2b::is_prefix_tail_split(s, left_length, right_length, full_coefficients, zero_left, coefficients)
         claim:
             ? forall idx N+:
                 idx <= right_length
                 =>:
                     coefficients.entries(idx) = space.scalars.zero
             coefficients.entries(idx) = full_coefficients.entries(left_length + idx) = space.scalars.zero
-        by def $chap2a::has_only_zero_coefficients(s, space.scalars, right_length, coefficients)
-    by def $chap2a::is_linearly_independent(s, v, space, right_length, right)
+        by def:
+            ? $chap2a::has_only_zero_coefficients(s, space.scalars, right_length, coefficients)
+    by def:
+        ? $chap2a::is_linearly_independent(s, v, space, right_length, right)
 
 thm kernel_prefix_tail_images_are_independent:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, left_length, right_length N, full &chap1a::FiniteList<VSet, left_length + right_length>, left &chap1a::FiniteList<VSet, left_length>, right &chap1a::FiniteList<VSet, right_length>, mapped &chap1a::FiniteList<WSet, right_length>:
@@ -310,7 +329,8 @@ thm kernel_prefix_forms_null_basis:
         $chap2a::contains_list_entries(VSet, null_length, null_part, \null_space<s, VSet, WSet, V, W>(T))
         =>:
             $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, \subcarrier_list<VSet, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part>)
-    by def $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
+    by def:
+        ? $chap2b::is_basis(s, VSet, V, null_length + range_length, full)
     by thm prefix_tail_left_is_independent(s, VSet, V, null_length, range_length, full, null_part, tail)
     by thm ambient_basis_restricts_to_exact_span(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part)
     $chap2b::is_basis(s, \null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \null_space<s, VSet, WSet, V, W>(T)>, null_length, \subcarrier_list<VSet, \null_space<s, VSet, WSet, V, W>(T), null_length, null_part>)
@@ -485,7 +505,8 @@ thm lower_dimensional_codomain_prevents_injectivity:
         ? not $is_injective(VSet, WSet, T)
         $is_injective(VSet, WSet, T)
         by thm injective_iff_null_space_is_zero(s, VSet, WSet, V, W, T)
-        by def $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+        by def:
+            ? $injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
         \null_space<s, VSet, WSet, V, W>(T) = {V.zero}
         by thm null_space_is_subspace(s, VSet, WSet, V, W, T)
         by thm chap2b::finite_dimensional_subspace_has_prefix_tail_ambient_basis(s, VSet, V, \null_space<s, VSet, WSet, V, W>(T))
@@ -612,15 +633,18 @@ thm coordinate_space_is_finite_dimensional:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
         $chap2a::is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
     by thm standard_coordinate_basis_is_basis(s, scalars, n)
-    by def $chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \standard_coordinate_basis<s, scalars, n>)
+    by def:
+        ? $chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, \standard_coordinate_basis<s, scalars, n>)
     witness exist selected_length N, vectors &chap1a::FiniteList<finite_seq(s, n), selected_length> st {$chap2a::spans(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, selected_length, vectors)} from n, \standard_coordinate_basis<s, scalars, n>
-    by def $chap2a::is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
+    by def:
+        ? $chap2a::is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
 thm coordinate_space_has_basis_length:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
         $chap2c::has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n)
     by thm standard_coordinate_basis_is_basis(s, scalars, n)
     witness exist basis_vectors &chap1a::FiniteList<finite_seq(s, n), n> st {$chap2b::is_basis(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n, basis_vectors)} from \standard_coordinate_basis<s, scalars, n>
-    by def $chap2c::has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n)
+    by def:
+        ? $chap2c::has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, n)
 thm coordinate_space_dimension_equals_length:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
         $chap2c::admits_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)

@@ -34,7 +34,8 @@ thm identity_linear_map_is_linear:
             \identity_linear_map<s, VSet, V>(V.smul(a, v)) = V.smul(a, \identity_linear_map<s, VSet, V>(v))
         \identity_linear_map<s, VSet, V>(V.smul(a, v)) = V.smul(a, v)
         V.smul(a, \identity_linear_map<s, VSet, V>(v)) = V.smul(a, v)
-    by def $is_linear_map(s, VSet, VSet, V, V, \identity_linear_map<s, VSet, V>)
+    by def:
+        ? $is_linear_map(s, VSet, VSet, V, V, \identity_linear_map<s, VSet, V>)
 
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
     have fn zero_linear_map(v VSet) WSet = W.zero
@@ -55,7 +56,8 @@ thm zero_linear_map_is_linear:
         by thm chap1b::scalar_times_zero_vector(s, WSet, W, a)
         \zero_linear_map<s, VSet, WSet, V, W>(V.smul(a, v)) = W.zero
         W.smul(a, \zero_linear_map<s, VSet, WSet, V, W>(v)) = W.smul(a, W.zero) = W.zero
-    by def $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
 # Result 3.4. A map is uniquely determined by arbitrary prescribed values on a
 # basis. Axler constructs it from the unique coordinate representation.
 # The checked implementation below separates coordinate algebra, one-hot basis
@@ -84,7 +86,8 @@ thm equal_scalar_linear_combination_add:
         by thm chap2a::coefficient_list_add_entry(s, W.scalars, n, left, right, target_sum, idx)
         V.scalars.add(left.entries(idx), right.entries(idx)) = W.scalars.add(left.entries(idx), right.entries(idx))
         source_sum.entries(idx) = V.scalars.add(left.entries(idx), right.entries(idx)) = W.scalars.add(left.entries(idx), right.entries(idx)) = target_sum.entries(idx)
-    by def $chap1a::have_same_finite_list_entries(s, n, source_sum, target_sum)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, source_sum, target_sum)
     by thm chap1a::finite_list_extensionality(s, n, source_sum, target_sum)
     source_sum = target_sum
     by thm chap2a::linear_combination_value_add_coefficients(s, WSet, W, n, left, right, values)
@@ -131,7 +134,8 @@ thm equal_scalar_linear_combination_smul:
         by thm chap2a::coefficient_list_smul_entry(s, W.scalars, n, a, coefficients, target_scaled, idx)
         V.scalars.mul(a, coefficients.entries(idx)) = W.scalars.mul(a, coefficients.entries(idx))
         source_scaled.entries(idx) = V.scalars.mul(a, coefficients.entries(idx)) = W.scalars.mul(a, coefficients.entries(idx)) = target_scaled.entries(idx)
-    by def $chap1a::have_same_finite_list_entries(s, n, source_scaled, target_scaled)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, source_scaled, target_scaled)
     by thm chap1a::finite_list_extensionality(s, n, source_scaled, target_scaled)
     source_scaled = target_scaled
     by thm chap2a::linear_combination_value_smul_coefficients(s, WSet, W, n, a, coefficients, values)
@@ -215,7 +219,8 @@ thm equal_scalar_systems_unit_coefficient_list:
                 \unit_coefficient_entry<s, right, n, k>(j) = right.zero
                 left.zero = right.zero
                 left_unit.entries(j) = \unit_coefficient_entry<s, left, n, k>(j) = left.zero = right.zero = \unit_coefficient_entry<s, right, n, k>(j) = right_unit.entries(j)
-    by def $chap1a::have_same_finite_list_entries(s, n, left_unit, right_unit)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, left_unit, right_unit)
     by thm chap1a::finite_list_extensionality(s, n, left_unit, right_unit)
     left_unit = right_unit
     left_unit = \unit_coefficient_list<s, left, n, k>
@@ -259,7 +264,8 @@ thm coordinate_extension_basis_value:
 thm linear_map_zero_early:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>:
         T(V.zero) = W.zero
-    by def $is_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
     V.smul(V.scalars.zero, V.zero) = V.zero
     by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
     V.scalars.zero = W.scalars.zero
@@ -297,11 +303,13 @@ thm linear_map_lemma:
         $chap2b::is_basis(s, VSet, V, n, basis)
         =>:
             exist! T \linear_map_space<s, VSet, WSet, V, W> st {$has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T)}
-    by def $chap2b::is_basis(s, VSet, V, n, basis)
+    by def:
+        ? $chap2b::is_basis(s, VSet, V, n, basis)
     have fn raw_coordinates by exist!:
         ? forall value VSet:
             exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)}
-        by def $chap2a::spans(s, VSet, V, n, basis)
+        by def:
+            ? $chap2a::spans(s, VSet, V, n, basis)
         \chap2a::span<s, VSet, V, n, basis> = {x VSet: $chap2a::is_linear_combination(s, VSet, V, n, x, basis)}
         value $in VSet
         value $in \chap2a::span<s, VSet, V, n, basis>
@@ -368,8 +376,10 @@ thm linear_map_lemma:
             ? forall a s, v VSet:
                 basis_extension_map(V.smul(a, v)) = W.smul(a, basis_extension_map(v))
             by thm coordinate_extension_smul(s, VSet, WSet, V, W, n, coordinate_map, values, basis_extension_map, a, v)
-        by def $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
-    by def $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
+        by def:
+            ? $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
     \linear_map_space<s, VSet, WSet, V, W> = {T fn(value VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
     basis_extension_map $in {T fn(value VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
     basis_extension_map $in \linear_map_space<s, VSet, WSet, V, W>
@@ -381,7 +391,8 @@ thm linear_map_lemma:
                 =>:
                     basis_extension_map(basis.entries(k)) = values.entries(k)
             by thm coordinate_extension_basis_value(s, VSet, WSet, V, W, n, basis, values, coordinate_map, basis_extension_map, k)
-        by def $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
     $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
     claim:
         ? forall T1, T2 \linear_map_space<s, VSet, WSet, V, W>:
@@ -389,8 +400,10 @@ thm linear_map_lemma:
             $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T2)
             =>:
                 T1 = T2
-        by def $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T1)
-        by def $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T2)
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T1)
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T2)
         claim:
             ? forall k N+:
                 k <= n
@@ -406,8 +419,10 @@ template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet
 thm linear_map_add_preserves_add_general:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>, u, v VSet:
         \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(\linear_map_add<s, VSet, WSet, V, W>(S, T)(u), \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
-    by def $is_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
     \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(S(V.add(u, v)), T(V.add(u, v)))
     S(V.add(u, v)) = W.add(S(u), S(v))
     T(V.add(u, v)) = W.add(T(u), T(v))
@@ -426,8 +441,10 @@ thm linear_map_add_preserves_add_general:
 thm linear_map_add_preserves_smul:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>, a s, v VSet:
         \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.smul(a, \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
-    by def $is_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
     \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.add(S(V.smul(a, v)), T(V.smul(a, v)))
     S(V.smul(a, v)) = W.smul(a, S(v))
     T(V.smul(a, v)) = W.smul(a, T(v))
@@ -439,7 +456,8 @@ thm linear_map_add_preserves_smul:
 thm linear_map_add_is_linear:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>:
         $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
     V.scalars = W.scalars
     claim:
         ? forall u, v VSet:
@@ -449,7 +467,8 @@ thm linear_map_add_is_linear:
         ? forall a s, v VSet:
             \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.smul(a, \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
         by thm linear_map_add_preserves_smul(s, VSet, WSet, V, W, S, T, a, v)
-    by def $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
 
 template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
     have fn linear_map_smul(a s, T fn(x VSet) WSet) fn(z VSet) WSet = fn(v VSet) WSet {W.smul(a, T(v))}
@@ -457,7 +476,8 @@ template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet
 thm linear_map_smul_is_linear:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, a s, T \linear_map_space<s, VSet, WSet, V, W>:
         $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
-    by def $is_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
     claim:
         ? forall u, v VSet:
             \linear_map_smul<s, VSet, WSet, V, W>(a, T)(V.add(u, v)) = W.add(\linear_map_smul<s, VSet, WSet, V, W>(a, T)(u), \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
@@ -480,7 +500,8 @@ thm linear_map_smul_is_linear:
         W.smul(W.scalars.mul(b, a), T(v)) = W.smul(b, W.smul(a, T(v)))
         \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v) = W.smul(a, T(v))
         W.smul(b, W.smul(a, T(v))) = W.smul(b, \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
-    by def $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
 
 thm linear_map_space_has_zero:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
@@ -488,7 +509,8 @@ thm linear_map_space_has_zero:
         =>:
             \zero_linear_map<s, VSet, WSet, V, W> $in \linear_map_space<s, VSet, WSet, V, W>
     by thm zero_linear_map_is_linear(s, VSet, WSet, V, W)
-    by def $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
     \linear_map_space<s, VSet, WSet, V, W> = {T fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
     \zero_linear_map<s, VSet, WSet, V, W> $in {T fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
     \zero_linear_map<s, VSet, WSet, V, W> $in \linear_map_space<s, VSet, WSet, V, W>
@@ -508,7 +530,8 @@ thm linear_map_add_is_in_space:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>:
         \linear_map_add<s, VSet, WSet, V, W>(S, T) $in \linear_map_space<s, VSet, WSet, V, W>
     by thm linear_map_add_is_linear(s, VSet, WSet, V, W, S, T)
-    by def $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
     \linear_map_space<s, VSet, WSet, V, W> = {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
     \linear_map_add<s, VSet, WSet, V, W>(S, T) $in {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
     \linear_map_add<s, VSet, WSet, V, W>(S, T) $in \linear_map_space<s, VSet, WSet, V, W>
@@ -517,7 +540,8 @@ thm linear_map_smul_is_in_space:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, a s, T \linear_map_space<s, VSet, WSet, V, W>:
         \linear_map_smul<s, VSet, WSet, V, W>(a, T) $in \linear_map_space<s, VSet, WSet, V, W>
     by thm linear_map_smul_is_linear(s, VSet, WSet, V, W, a, T)
-    by def $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
     \linear_map_space<s, VSet, WSet, V, W> = {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
     \linear_map_smul<s, VSet, WSet, V, W>(a, T) $in {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
     \linear_map_smul<s, VSet, WSet, V, W>(a, T) $in \linear_map_space<s, VSet, WSet, V, W>
@@ -630,8 +654,10 @@ template<s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s
 thm linear_map_composite_preserves_add:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>, u1, u2 USet:
         \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.add(u1, u2)) = W.add(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u1), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u2))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
-    by def $is_linear_map(s, USet, VSet, U, V, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
     \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.add(u1, u2)) = S(T(U.add(u1, u2)))
     T(U.add(u1, u2)) = V.add(T(u1), T(u2))
     S(T(U.add(u1, u2))) = S(V.add(T(u1), T(u2)))
@@ -643,8 +669,10 @@ thm linear_map_composite_preserves_add:
 thm linear_map_composite_preserves_smul:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>, a s, u USet:
         \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = W.smul(a, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
-    by def $is_linear_map(s, USet, VSet, U, V, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
     \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = S(T(U.smul(a, u)))
     T(U.smul(a, u)) = V.smul(a, T(u))
     S(T(U.smul(a, u))) = S(V.smul(a, T(u)))
@@ -655,8 +683,10 @@ thm linear_map_composite_preserves_smul:
 thm linear_map_compose_is_linear:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>:
         $is_linear_map(s, USet, WSet, U, W, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
-    by def $is_linear_map(s, VSet, WSet, V, W, S)
-    by def $is_linear_map(s, USet, VSet, U, V, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
     U.scalars = W.scalars
     claim:
         ? forall u1, u2 USet:
@@ -666,7 +696,8 @@ thm linear_map_compose_is_linear:
         ? forall a s, u USet:
             \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = W.smul(a, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u))
         by thm linear_map_composite_preserves_smul(s, USet, VSet, WSet, U, V, W, S, T, a, u)
-    by def $is_linear_map(s, USet, WSet, U, W, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+    by def:
+        ? $is_linear_map(s, USet, WSet, U, W, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
 
 thm linear_map_composition_is_associative:
     ? forall s nonempty_set, USet, VSet, WSet, XSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, X &chap1b::VectorSpace<s, XSet>, A \linear_map_space<s, WSet, XSet, W, X>, B \linear_map_space<s, VSet, WSet, V, W>, map_c \linear_map_space<s, USet, VSet, U, V>:
@@ -713,7 +744,8 @@ thm linear_map_addition_distributes_over_composition:
 thm linear_map_composition_distributes_over_addition:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, B \linear_map_space<s, VSet, WSet, V, W>, map_c, D \linear_map_space<s, USet, VSet, U, V>:
         \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D)) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D))
-    by def $is_linear_map(s, VSet, WSet, V, W, B)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, B)
     by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B, map_c)
     by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B, D)
     claim:
@@ -742,7 +774,8 @@ thm algebraic_properties_of_linear_map_products:
 thm linear_maps_take_zero_to_zero:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>:
         T(V.zero) = W.zero
-    by def $is_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
     V.smul(V.scalars.zero, V.zero) = V.zero
     by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
     V.scalars.zero = W.scalars.zero
@@ -795,8 +828,10 @@ template<USet, VSet, WSet nonempty_set, U &chap1b::CVectorSpace<USet>, V &chap1b
 thm linear_map_add_preserves_add:
     ? forall VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>, S, T \c_linear_map_space<VSet, WSet, V, W>, u, v VSet:
         \c_linear_map_add<VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(\c_linear_map_add<VSet, WSet, V, W>(S, T)(u), \c_linear_map_add<VSet, WSet, V, W>(S, T)(v))
-    by def $is_c_linear_map(VSet, WSet, V, W, S)
-    by def $is_c_linear_map(VSet, WSet, V, W, T)
+    by def:
+        ? $is_c_linear_map(VSet, WSet, V, W, S)
+    by def:
+        ? $is_c_linear_map(VSet, WSet, V, W, T)
     \c_linear_map_add<VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(S(V.add(u, v)), T(V.add(u, v)))
     S(V.add(u, v)) = W.add(S(u), S(v))
     T(V.add(u, v)) = W.add(T(u), T(v))

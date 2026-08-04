@@ -145,9 +145,11 @@ thm eigenvalues_of_unitary_operators_have_absolute_value_one:
         $chap5a::is_eigenvalue(s, V, Vinner.vector_space, S, lambda)
         =>:
             Vinner.scalar_geometry.absolute_value(lambda) = 1
-    by def $is_unitary_operator(s, V, Vinner, S)
+    by def:
+        ? $is_unitary_operator(s, V, Vinner, S)
     $is_isometry(s, V, V, Vinner, Vinner, S)
-    by def $is_isometry(s, V, V, Vinner, Vinner, S)
+    by def:
+        ? $is_isometry(s, V, V, Vinner, Vinner, S)
     obtain v from exist v V st {v != &chap1b::VectorSpace<s, V>{Vinner.vector_space}.zero, S(v) = &chap1b::VectorSpace<s, V>{Vinner.vector_space}.smul(lambda, v)}
     by thm chap6a::basic_properties_of_the_norm(s, V, Vinner, v)
     \chap6a::norm<s, V>(Vinner, &chap1b::VectorSpace<s, V>{Vinner.vector_space}.smul(lambda, v)) = Vinner.scalar_geometry.absolute_value(lambda) * \chap6a::norm<s, V>(Vinner, v)

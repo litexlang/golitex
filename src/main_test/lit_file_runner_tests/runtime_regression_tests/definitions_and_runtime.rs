@@ -67,7 +67,8 @@ prop unit_pair(x R, y R):
     y = 1
 
 1 = 1
-by def $unit_pair(1, 1)
+by def:
+    ? $unit_pair(1, 1)
 $unit_pair(1, 1)
 "#;
 
@@ -92,7 +93,8 @@ fn by_def_resolves_an_explicit_current_module_prop() {
 prop unit(x R):
     x = 1
 1 = 1
-by def $Current::unit(1)
+by def:
+    ? $Current::unit(1)
 $Current::unit(1)
 "#;
 
@@ -108,7 +110,7 @@ $Current::unit(1)
             "module-qualified by def should succeed:\n{}",
             run_output
         );
-        assert!(run_output.contains("by def $Current::unit(1)"));
+        assert!(run_output.contains("by def:\\n    ? $Current::unit(1)"));
     });
 }
 
@@ -119,7 +121,8 @@ fn by_def_does_not_short_circuit_on_an_already_known_target() {
 prop is_zero(x R):
     x = 0
 trust $is_zero(1)
-by def $is_zero(1)
+by def:
+    ? $is_zero(1)
 "#;
 
         let mut runtime = Runtime::new();
@@ -144,7 +147,8 @@ fn failed_by_def_does_not_store_its_target() {
         let source_code = r#"
 prop is_zero(x R):
     x = 0
-by def $is_zero(1)
+by def:
+    ? $is_zero(1)
 "#;
 
         let mut runtime = Runtime::new();
@@ -165,17 +169,17 @@ fn by_def_rejects_non_concrete_or_empty_definitions() {
         let cases = [
             (
                 "abstract",
-                "abstract_prop P(x)\nby def $P(1)",
+                "abstract_prop P(x)\nby def:\n    ? $P(1)",
                 "is an abstract_prop and has no concrete definition body",
             ),
             (
                 "empty",
-                "prop P(x R)\nby def $P(1)",
+                "prop P(x R)\nby def:\n    ? $P(1)",
                 "has no definition clauses",
             ),
             (
                 "missing",
-                "by def $P(1)",
+                "by def:\n    ? $P(1)",
                 "concrete prop definition `P` was not found",
             ),
         ];
@@ -196,22 +200,31 @@ fn by_def_rejects_non_concrete_or_empty_definitions() {
 fn by_def_accepts_explicit_builtin_definitions() {
     run_with_large_stack("by_def_builtin_definitions", || {
         let source_code = r#"
-by def {1} $subset {1, 2}
-by def {1, 2} $superset {1}
-by def $proper_subset({1}, {1, 2})
-by def {1, 2} $proper_superset {1}
+by def:
+    ? {1} $subset {1, 2}
+by def:
+    ? {1, 2} $superset {1}
+by def:
+    ? $proper_subset({1}, {1, 2})
+by def:
+    ? {1, 2} $proper_superset {1}
 
 have fn singleton_identity(x {1}) {1} = x
-by def $injective({1}, {1}, singleton_identity)
+by def:
+    ? $injective({1}, {1}, singleton_identity)
 trust forall y {1}:
     exist x {1} st {y = singleton_identity(x)}
-by def $surjective({1}, {1}, singleton_identity)
-by def $bijective({1}, {1}, singleton_identity)
+by def:
+    ? $surjective({1}, {1}, singleton_identity)
+by def:
+    ? $bijective({1}, {1}, singleton_identity)
 
 have fn real_identity(x R) R = x
 have fn second_real_identity(x R) R = x
-by def $fn_eq_in(real_identity, second_real_identity, R)
-by def $fn_eq(real_identity, second_real_identity)
+by def:
+    ? $fn_eq_in(real_identity, second_real_identity, R)
+by def:
+    ? $fn_eq(real_identity, second_real_identity)
 "#;
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("by_def_builtin_definitions");
@@ -234,12 +247,12 @@ fn by_def_reports_argument_count_and_type_failures() {
         let cases = [
             (
                 "arity",
-                "prop P(x R, y R):\n    x = y\nby def $P(1)",
+                "prop P(x R, y R):\n    x = y\nby def:\n    ? $P(1)",
                 "expected 2 argument(s), got 1",
             ),
             (
                 "type",
-                "prop P(x N):\n    x = x\nby def $P(-1)",
+                "prop P(x N):\n    x = x\nby def:\n    ? $P(-1)",
                 "could not verify argument parameter types",
             ),
         ];
@@ -267,7 +280,8 @@ prop holds_for_all(n N):
 claim:
     ? forall s set, n N:
         $holds_for_all(n)
-    by def $holds_for_all(n)
+    by def:
+        ? $holds_for_all(n)
 "#;
 
         let mut runtime = Runtime::new();
@@ -313,7 +327,8 @@ by contra:
 fn known_set_equality_transports_across_alpha_equivalent_set_builders() {
     run_with_large_stack("set_builder_equality_alpha_transport", || {
         let source_code = r#"
-by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+by contra:
+    ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
     by thm set_builder_member(2, {b N: b % 2 = 0})
     2 $in {c N: c % 4 = 0}
     impossible 2 % 4 = 0
@@ -615,7 +630,8 @@ fn unicode_prop_name_works() {
         let source_code = r#"
 prop 是一(x R):
     x = 1
-by def $是一(1)
+by def:
+    ? $是一(1)
 "#;
 
         let mut runtime = Runtime::new();
@@ -752,7 +768,8 @@ thm use_target_thm:
         =>:
             $target_thm_prop(x)
 
-    by def $target_thm_prop(x)
+    by def:
+        ? $target_thm_prop(x)
 
 by thm use_target_thm(1)
 $target_thm_prop(1)
@@ -899,7 +916,8 @@ strategy use_target_strategy:
         =>:
             $target_strategy_prop(x)
 
-    by def $target_strategy_prop(x)
+    by def:
+        ? $target_strategy_prop(x)
 
 use strategy use_target_strategy
 stop strategy use_target_strategy

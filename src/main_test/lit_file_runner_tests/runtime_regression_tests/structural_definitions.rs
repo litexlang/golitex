@@ -1156,7 +1156,8 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
 trust have f fn(n N) R
 trust forall index N:
     f(index) $in {0}
-by def $maps_into(R, f, {0})
+by def:
+    ? $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
@@ -1179,7 +1180,8 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
         f(n) $in S
 
 trust have f fn(n N) R
-by def $maps_into(R, f, {0})
+by def:
+    ? $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
     runtime
@@ -1610,7 +1612,8 @@ template<S nonempty_set, marker S>:
         have fn candidate(x S) S = marker
         forall x S:
             candidate(x) = marker
-        by def $is_constant(S, marker, candidate)
+        by def:
+            ? $is_constant(S, marker, candidate)
         candidate $in \ConstantFunctions<S, marker>
         witness exist value \ConstantFunctions<S, marker> st {$is_constant(S, marker, value)} from candidate
         claim:
@@ -2019,13 +2022,13 @@ exist a Z, b Z* st {sqrt(2) = a / b}
 fn rational_reduced_fraction_representations_are_builtin_rules() {
     let source_code = r#"
 forall a Q:
-    exist p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
+    exist p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 
 forall a Q:
-    exist p Z, q N+ st {p / q = a, forall! z N+: 0 = q % z and 0 = p % z => {1 = z}}
+    exist p Z, q N+ st {p / q = a, forall z N+: 0 = q % z and 0 = p % z => {1 = z}}
 
 forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
+    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#;
 
     let mut runtime = Runtime::new();
@@ -2066,21 +2069,21 @@ fn rational_reduced_fraction_builtin_rejects_nearby_shapes() {
                 (
                     "irrational_target",
                     r#"
-exist p Z, q N+ st {sqrt(2) = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
+exist p Z, q N+ st {sqrt(2) = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#,
                 ),
                 (
                     "wrong_unique_reducedness_conclusion",
                     r#"
 forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 2}}
+    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 2}}
 "#,
                 ),
                 (
                     "wrong_witness_carriers",
                     r#"
 forall a Q:
-    exist p N, q Z* st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
+    exist p N, q Z* st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 "#,
                 ),
             ] {

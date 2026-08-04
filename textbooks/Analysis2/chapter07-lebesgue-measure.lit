@@ -473,7 +473,8 @@ thm measurable_preimage_of_open_set:
         $chap1::is_metric_open(\euclidean_space<m>, \chap6::euclidean_distance<m>, U)
         =>:
             $is_lebesgue_measurable(n, {x domain: f(x) $in U})
-    by def $is_measurable_function(n, m, domain, f)
+    by def:
+        ? $is_measurable_function(n, m, domain, f)
 
 # Lemma 7.5.5. A continuous function applied after a measurable function is
 # measurable.

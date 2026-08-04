@@ -158,7 +158,8 @@ thm list_append_nil:
         $is_list_append(A, L, core, append)
         =>:
             append(target, &ListCore<A, L>{core}.nil) = target
-    by def $is_list_append(A, L, core, append)
+    by def:
+        ? $is_list_append(A, L, core, append)
     have P power_set(L) = {z L: append(z, &ListCore<A, L>{core}.nil) = z}
     append(&ListCore<A, L>{core}.nil, &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.nil
     by thm set_builder_member(&ListCore<A, L>{core}.nil, {z L: append(z, &ListCore<A, L>{core}.nil) = z})
@@ -187,9 +188,12 @@ thm list_map_map:
         $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
         =>:
             map_g(map_f(target)) = map_gf(target)
-    by def $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
-    by def $is_list_map(B, CarrierC, L_B, L_C, core_B, core_C, g, map_g)
-    by def $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
+    by def:
+        ? $is_list_map(A, B, L_A, L_B, core_A, core_B, f, map_f)
+    by def:
+        ? $is_list_map(B, CarrierC, L_B, L_C, core_B, core_C, g, map_g)
+    by def:
+        ? $is_list_map(A, CarrierC, L_A, L_C, core_A, core_C, fn(x A) CarrierC {g(f(x))}, map_gf)
     have P power_set(L_A) = {z L_A: map_g(map_f(z)) = map_gf(z)}
     map_f(&ListCore<A, L_A>{core_A}.nil) = &ListCore<B, L_B>{core_B}.nil
     map_g(&ListCore<B, L_B>{core_B}.nil) = &ListCore<CarrierC, L_C>{core_C}.nil

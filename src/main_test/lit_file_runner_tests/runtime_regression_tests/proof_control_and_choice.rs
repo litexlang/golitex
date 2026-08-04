@@ -433,10 +433,10 @@ by extension:
     ? {1} = {1}
 
 by for:
-    ? forall! n range(0, 3) => {n < 3}
+    ? forall n range(0, 3) => {n < 3}
 
 by enumerate finite_set:
-    ? forall! z {1, 2} => {z $in {1, 2}}
+    ? forall z {1, 2} => {z $in {1, 2}}
 
 prop qgoal_same_obj(x set, y set):
     x = y
@@ -938,7 +938,7 @@ trust exist y R st {y = y}
 #[test]
 fn parser_scope_rejects_active_cross_kind_reuse_and_releases_finished_scopes() {
     let invalid_source_code = r#"
-trust exist x R st {forall! x R => {x = x}}
+trust exist x R st {forall x R => {x = x}}
 "#;
 
     let mut invalid_runtime = Runtime::new();
@@ -1025,9 +1025,11 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
 #[test]
 fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
     let source_code = r#"
-by for forall! n range(0, 3) => {n < 3}
+by for:
+    ? forall n range(0, 3) => {n < 3}
 
-by enumerate finite_set forall! x {1, 2} => {x $in {1, 2}}
+by enumerate finite_set:
+    ? forall x {1, 2} => {x $in {1, 2}}
 "#;
 
     let mut runtime = Runtime::new();
@@ -1191,9 +1193,9 @@ by zorn_lemma: set s, prop leq:
             forall x, y c:
                 $leq(x, y) or $leq(y, x)
             =>:
-                exist u s st {forall! x c => {$leq(x, u)}}
+                exist u s st {forall x c => {$leq(x, u)}}
 
-exist m s st {forall! x s: $leq(m, x) => {x = m}}
+exist m s st {forall x s: $leq(m, x) => {x = m}}
 "#;
 
     let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
@@ -1367,7 +1369,7 @@ by axiom_of_choice: set S:
     trust forall A S:
         $is_nonempty_set(A)
 
-exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
+exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1390,11 +1392,11 @@ claim:
         forall member A:
             $is_nonempty_set(member)
         =>:
-            exist f fn(member A) big_union(A) st {forall! member A => {f(member) $in member}}
+            exist f fn(member A) big_union(A) st {forall member A => {f(member) $in member}}
     by axiom_of_choice: set A:
         forall member A:
             $is_nonempty_set(member)
-    exist f fn(member A) big_union(A) st {forall! member A => {f(member) $in member}}
+    exist f fn(member A) big_union(A) st {forall member A => {f(member) $in member}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1418,7 +1420,7 @@ trust forall A S:
 
 by axiom_of_choice: set S
 
-exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
+exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
@@ -1599,4 +1601,31 @@ by regularity_axiom({})
             run_output
         );
     });
+}
+
+#[test]
+fn by_goal_header_shorthands_are_rejected() {
+    let cases = [
+        "by def 1 = 1",
+        "by cases 1 = 1:\n    case 1 = 1:\n        do_nothing",
+        "by contra 1 = 1:\n    impossible 1 != 1",
+        "by extension {1} = {1}",
+        "by for forall n range(0, 1) => {n < 1}",
+        "by enumerate finite_set forall n {0} => {n = 0}",
+    ];
+
+    for (index, source_code) in cases.iter().enumerate() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(&format!("removed_by_header_{}", index));
+        let (results, error) = run_source_code(source_code, &mut runtime);
+        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        assert!(
+            !succeeded,
+            "removed by-goal header syntax unexpectedly passed: {source_code}"
+        );
+        assert!(
+            output.contains("no longer accepts a goal on the header"),
+            "missing migration diagnostic for {source_code:?}:\n{output}"
+        );
+    }
 }

@@ -106,7 +106,8 @@ thm theorem_V_subgroup_of_Z_is_cyclic:
     obtain m from exist m N st {H = section2::mZ(m)}
     witness exist m1 N st {$section2::is_integer_multiple_set(H, m1)} from m:
         H = section2::mZ(m)
-        by def $section2::is_integer_multiple_set(H, m)
+        by def:
+            ? $section2::is_integer_multiple_set(H, m)
     claim:
         ? forall m1, m2 N:
             $section2::is_integer_multiple_set(H, m1)
@@ -154,12 +155,15 @@ thm standard_remainder_mod_exists_unique:
     x - x % m = (m * section2::integer_quotient(x, m) + x % m) - x % m = m * section2::integer_quotient(x, m)
     witness exist r Z st {0 <= r < m, $has_standard_remainder_mod(m, x, r), $congruent_mod(m, x, r)} from x % m:
         0 <= x % m < m
-        by def $has_standard_remainder_mod(m, x, x % m)
+        by def:
+            ? $has_standard_remainder_mod(m, x, x % m)
         x - x % m = m * section2::integer_quotient(x, m)
         witness exist k Z st {x - x % m = m * k} from section2::integer_quotient(x, m):
             x - x % m = m * section2::integer_quotient(x, m)
-        by def $section1::divides_Z(m, x - x % m)
-        by def $congruent_mod(m, x, x % m)
+        by def:
+            ? $section1::divides_Z(m, x - x % m)
+        by def:
+            ? $congruent_mod(m, x, x % m)
     forall r, r1 Z:
         0 <= r < m
         0 <= r1 < m
@@ -177,17 +181,20 @@ thm congruent_mod_has_same_remainder:
         =>:
             $same_remainder_mod(m, x, y)
     $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, x - y)
     obtain k from exist k Z st {x - y = m * k}
     y = m * section2::integer_quotient(y, m) + y % m
     x = (x - y) + y = m * k + y = y + m * k
     x = y + m * k = (m * section2::integer_quotient(y, m) + y % m) + m * k = m * (section2::integer_quotient(y, m) + k) + y % m
     0 <= y % m < m
     x = m * (section2::integer_quotient(y, m) + k) + y % m
-    by def $section2::euclidean_division_Z(x, m, section2::integer_quotient(y, m) + k, y % m)
+    by def:
+        ? $section2::euclidean_division_Z(x, m, section2::integer_quotient(y, m) + k, y % m)
     by thm section2::euclidean_division_remainder_is_mod(x, m, section2::integer_quotient(y, m) + k, y % m)
     x % m = y % m
-    by def $same_remainder_mod(m, x, y)
+    by def:
+        ? $same_remainder_mod(m, x, y)
 
 thm same_remainder_mod_is_congruent:
     ? forall m N+, x, y Z:
@@ -201,8 +208,10 @@ thm same_remainder_mod_is_congruent:
     x - y = (m * section2::integer_quotient(x, m) + x % m) - (m * section2::integer_quotient(y, m) + x % m) = m * section2::integer_quotient(x, m) - m * section2::integer_quotient(y, m) = m * (section2::integer_quotient(x, m) - section2::integer_quotient(y, m))
     witness exist k Z st {x - y = m * k} from section2::integer_quotient(x, m) - section2::integer_quotient(y, m):
         x - y = m * (section2::integer_quotient(x, m) - section2::integer_quotient(y, m))
-    by def $section1::divides_Z(m, x - y)
-    by def $congruent_mod(m, x, y)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $congruent_mod(m, x, y)
 
 """
 Properties (A), (B), (carrier_C). Congruence modulo m is reflexive, transitive, and
@@ -215,8 +224,10 @@ thm congruent_mod_reflexive:
     x - x = 0 = m * 0
     witness exist k Z st {x - x = m * k} from 0:
         x - x = m * 0
-    by def $section1::divides_Z(m, x - x)
-    by def $congruent_mod(m, x, x)
+    by def:
+        ? $section1::divides_Z(m, x - x)
+    by def:
+        ? $congruent_mod(m, x, x)
 
 thm congruent_mod_transitive:
     ? forall m N+, x, y, z Z:
@@ -226,15 +237,19 @@ thm congruent_mod_transitive:
             $congruent_mod(m, x, z)
     $section1::divides_Z(m, x - y)
     $section1::divides_Z(m, y - z)
-    by def $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, y - z)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, y - z)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {y - z = m * b}
     x - z = (x - y) + (y - z) = m * a + m * b = m * (a + b)
     witness exist k Z st {x - z = m * k} from a + b:
         x - z = m * (a + b)
-    by def $section1::divides_Z(m, x - z)
-    by def $congruent_mod(m, x, z)
+    by def:
+        ? $section1::divides_Z(m, x - z)
+    by def:
+        ? $congruent_mod(m, x, z)
 
 thm congruent_mod_symmetric:
     ? forall m N+, x, y Z:
@@ -242,13 +257,16 @@ thm congruent_mod_symmetric:
         =>:
             $congruent_mod(m, y, x)
     $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, x - y)
     obtain a from exist a Z st {x - y = m * a}
     y - x = -1 * (x - y) = -1 * (m * a) = m * (-1 * a)
     witness exist k Z st {y - x = m * k} from -1 * a:
         y - x = m * (-1 * a)
-    by def $section1::divides_Z(m, y - x)
-    by def $congruent_mod(m, y, x)
+    by def:
+        ? $section1::divides_Z(m, y - x)
+    by def:
+        ? $congruent_mod(m, y, x)
 
 """
 Property (D). Congruences may be added or subtracted.
@@ -262,15 +280,19 @@ thm congruent_mod_add:
             $congruent_mod(m, x + u, y + v)
     $section1::divides_Z(m, x - y)
     $section1::divides_Z(m, u - v)
-    by def $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, u - v)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x + u) - (y + v) = (x - y) + (u - v) = m * a + m * b = m * (a + b)
     witness exist k Z st {(x + u) - (y + v) = m * k} from a + b:
         (x + u) - (y + v) = m * (a + b)
-    by def $section1::divides_Z(m, (x + u) - (y + v))
-    by def $congruent_mod(m, x + u, y + v)
+    by def:
+        ? $section1::divides_Z(m, (x + u) - (y + v))
+    by def:
+        ? $congruent_mod(m, x + u, y + v)
 
 thm congruent_mod_subtract:
     ? forall m N+, x, y, u, v Z:
@@ -280,15 +302,19 @@ thm congruent_mod_subtract:
             $congruent_mod(m, x - u, y - v)
     $section1::divides_Z(m, x - y)
     $section1::divides_Z(m, u - v)
-    by def $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, u - v)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     (x - u) - (y - v) = (x - y) - (u - v) = m * a - m * b = m * (a - b)
     witness exist k Z st {(x - u) - (y - v) = m * k} from a - b:
         (x - u) - (y - v) = m * (a - b)
-    by def $section1::divides_Z(m, (x - u) - (y - v))
-    by def $congruent_mod(m, x - u, y - v)
+    by def:
+        ? $section1::divides_Z(m, (x - u) - (y - v))
+    by def:
+        ? $congruent_mod(m, x - u, y - v)
 
 """
 Property (E). Congruences may be multiplied.  The source uses the identity
@@ -303,8 +329,10 @@ thm congruent_mod_multiply:
             $congruent_mod(m, x * u, y * v)
     $section1::divides_Z(m, x - y)
     $section1::divides_Z(m, u - v)
-    by def $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, u - v)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, u - v)
     obtain a from exist a Z st {x - y = m * a}
     obtain b from exist b Z st {u - v = m * b}
     x * u - y * v = x * (u - v) + (x - y) * v
@@ -313,8 +341,10 @@ thm congruent_mod_multiply:
     x * u - y * v = m * (x * b + a * v)
     witness exist k Z st {x * u - y * v = m * k} from x * b + a * v:
         x * u - y * v = m * (x * b + a * v)
-    by def $section1::divides_Z(m, x * u - y * v)
-    by def $congruent_mod(m, x * u, y * v)
+    by def:
+        ? $section1::divides_Z(m, x * u - y * v)
+    by def:
+        ? $congruent_mod(m, x * u, y * v)
 
 """
 Property (F). If d>0 divides m,x,y, then x=y modulo m is equivalent to
@@ -331,14 +361,17 @@ thm congruent_mod_cancel_common_factor:
         =>:
             $congruent_mod(M, X, Y)
     $section1::divides_Z(m, x - y)
-    by def $section1::divides_Z(m, x - y)
+    by def:
+        ? $section1::divides_Z(m, x - y)
     obtain q from exist q Z st {x - y = m * q}
     d * (X - Y) = d * X - d * Y = x - y = m * q = d * M * q = d * (M * q)
     X - Y = d * (X - Y) / d = d * (M * q) / d = M * q
     witness exist k Z st {X - Y = M * k} from q:
         X - Y = M * q
-    by def $section1::divides_Z(M, X - Y)
-    by def $congruent_mod(M, X, Y)
+    by def:
+        ? $section1::divides_Z(M, X - Y)
+    by def:
+        ? $congruent_mod(M, X, Y)
 
 thm congruent_mod_restore_common_factor:
     ? forall m, d, M N+, x, y, X, Y Z:
@@ -349,14 +382,17 @@ thm congruent_mod_restore_common_factor:
         =>:
             $congruent_mod(m, x, y)
     $section1::divides_Z(M, X - Y)
-    by def $section1::divides_Z(M, X - Y)
+    by def:
+        ? $section1::divides_Z(M, X - Y)
     obtain q from exist q Z st {X - Y = M * q}
     m * q = (d * M) * q = d * M * q
     d * M * q = m * q
     witness exist k Z st {x - y = m * k} from q:
         x - y = d * X - d * Y = d * (X - Y) = d * (M * q) = m * q
-    by def $section1::divides_Z(m, x - y)
-    by def $congruent_mod(m, x, y)
+    by def:
+        ? $section1::divides_Z(m, x - y)
+    by def:
+        ? $congruent_mod(m, x, y)
 
 """
 Definition. The congruence class (x mod m) is the set of all integers congruent
@@ -434,13 +470,15 @@ thm residue_class_carrier_has_unique_standard_representative:
             m > 0
             r1 = m * 0 + r1
             0 <= r1 < m
-            by def $section2::euclidean_division_Z(r1, m, 0, r1)
+            by def:
+                ? $section2::euclidean_division_Z(r1, m, 0, r1)
         claim:
             ? $section2::euclidean_division_Z(r2, m, 0, r2)
             m > 0
             r2 = m * 0 + r2
             0 <= r2 < m
-            by def $section2::euclidean_division_Z(r2, m, 0, r2)
+            by def:
+                ? $section2::euclidean_division_Z(r2, m, 0, r2)
         by thm section2::euclidean_division_remainder_is_mod(r1, m, 0, r1)
         by thm section2::euclidean_division_remainder_is_mod(r2, m, 0, r2)
         r1 = r2
@@ -451,7 +489,8 @@ thm residue_class_eq_of_congruent:
         $congruent_mod(m, x, y)
         =>:
             residue_class_mod(m, x) = residue_class_mod(m, y)
-    by extension residue_class_mod(m, x) = residue_class_mod(m, y):
+    by extension:
+        ? residue_class_mod(m, x) = residue_class_mod(m, y)
         claim:
             ? forall z residue_class_mod(m, x):
                 z $in residue_class_mod(m, y)
@@ -503,17 +542,22 @@ thm theorem_V_residue_classes_disjoint:
         $congruent_mod(m, z, y)
         $section1::divides_Z(m, z - x)
         $section1::divides_Z(m, z - y)
-        by def $section1::divides_Z(m, z - x)
-        by def $section1::divides_Z(m, z - y)
+        by def:
+            ? $section1::divides_Z(m, z - x)
+        by def:
+            ? $section1::divides_Z(m, z - y)
         obtain a from exist a Z st {z - x = m * a}
         obtain b from exist b Z st {z - y = m * b}
         x - z = -1 * (z - x) = -1 * (m * a) = m * (-a)
         x - y = x - z + (z - y) = m * (-a) + m * b = m * (-a + b)
         witness exist k Z st {x - y = m * k} from -a + b:
             x - y = m * (-a + b)
-        by def $section1::divides_Z(m, x - y)
-        by def $congruent_mod(m, x, y)
-    by def $congruence_classes_are_disjoint_mod(m, x, y)
+        by def:
+            ? $section1::divides_Z(m, x - y)
+        by def:
+            ? $congruent_mod(m, x, y)
+    by def:
+        ? $congruence_classes_are_disjoint_mod(m, x, y)
 
 thm theorem_V_residue_classes_partition:
     ? forall m N+:
@@ -528,7 +572,8 @@ thm theorem_V_residue_classes_partition:
         witness exist r1 Z st {0 <= r1 < m, residue_class_mod(m, x) = residue_class_mod(m, r1)} from r:
             0 <= r < m
             residue_class_mod(m, x) = residue_class_mod(m, r)
-    by def $residue_classes_partition_Z_mod(m)
+    by def:
+        ? $residue_classes_partition_Z_mod(m)
 
 """
 Addition of congruence classes is defined by
@@ -622,30 +667,35 @@ thm theorem_V_1_residue_classes_additive_group:
             m > 0
             r1 = m * 0 + r1
             0 <= r1 < m
-            by def $section2::euclidean_division_Z(r1, m, 0, r1)
+            by def:
+                ? $section2::euclidean_division_Z(r1, m, 0, r1)
         claim:
             ? $section2::euclidean_division_Z(r2, m, 0, r2)
             m > 0
             r2 = m * 0 + r2
             0 <= r2 < m
-            by def $section2::euclidean_division_Z(r2, m, 0, r2)
+            by def:
+                ? $section2::euclidean_division_Z(r2, m, 0, r2)
         by thm section2::euclidean_division_remainder_is_mod(r1, m, 0, r1)
         by thm section2::euclidean_division_remainder_is_mod(r2, m, 0, r2)
         r1 = r2
-    by def $injective(0...(m - 1), power_set(Z), class_map)
+    by def:
+        ? $injective(0...(m - 1), power_set(Z), class_map)
     class_map = fn(r 0...(m - 1)) power_set(Z) {residue_class_mod(m, r)}
     claim:
         ? $is_residue_class_carrier_mod(m, Classes)
         witness exist f fn(r 0...(m - 1)) power_set(Z) st {f = fn(r 0...(m - 1)) power_set(Z) {residue_class_mod(m, r)}, Classes = fn_range(f)} from class_map:
             class_map = fn(r 0...(m - 1)) power_set(Z) {residue_class_mod(m, r)}
             Classes = fn_range(class_map)
-        by def $is_residue_class_carrier_mod(m, Classes)
+        by def:
+            ? $is_residue_class_carrier_mod(m, Classes)
     m >= 1
     m - 1 >= 0
     m - 1 $in N
     finite_set_size(Classes) = finite_set_size(fn_range(class_map)) = finite_set_size(0...(m - 1)) = (m - 1) - 0 + 1 = m
     witness exist carrier_C finite_set st {$is_set_of_all_residue_classes_mod(m, carrier_C), finite_set_size(carrier_C) = m} from Classes:
-        by def $is_set_of_all_residue_classes_mod(m, Classes)
+        by def:
+            ? $is_set_of_all_residue_classes_mod(m, Classes)
         finite_set_size(Classes) = m
     claim:
         ? forall carrier_C finite_set:
@@ -703,8 +753,10 @@ thm theorem_V_1_residue_classes_additive_group:
             t = m * section2::integer_quotient(t, m) + r
             t - r = m * section2::integer_quotient(t, m)
             witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
-            by def $section1::divides_Z(m, t - r)
-            by def $congruent_mod(m, t, r)
+            by def:
+                ? $section1::divides_Z(m, t - r)
+            by def:
+                ? $congruent_mod(m, t, r)
             by thm residue_class_eq_of_congruent(m, t, r)
             class_map(r) = residue_class_mod(m, r) = residue_class_mod(m, t)
             residue_class_mod(m, t) $in carrier_C
@@ -731,7 +783,8 @@ thm theorem_V_1_residue_classes_additive_group:
                 B = residue_class_mod(m, y)
                 add(A, B) = residue_class_mod(m, standard_representative(A) + standard_representative(B)) = residue_class_mod(m, x + y) = residue_class_add_mod(m, x, y)
                 witness exist x0, y0 Z st {A = residue_class_mod(m, x0), B = residue_class_mod(m, y0), add(A, B) = residue_class_add_mod(m, x0, y0)} from x, y
-            by def $is_residue_class_addition_operation(m, carrier_C, add, zero)
+            by def:
+                ? $is_residue_class_addition_operation(m, carrier_C, add, zero)
         claim:
             ? $is_abelian_group(carrier_C, add, zero)
             witness $is_nonempty_set(carrier_C) from zero
@@ -803,6 +856,8 @@ thm theorem_V_1_residue_classes_additive_group:
                 residue_class_add_mod(m, 0, standard_representative(A)) = residue_class_mod(m, 0 + standard_representative(A))
                 residue_class_mod(m, standard_representative(zero) + standard_representative(A)) = residue_class_mod(m, 0 + standard_representative(A))
                 add(zero, A) = residue_class_mod(m, standard_representative(zero) + standard_representative(A)) = residue_class_mod(m, 0 + standard_representative(A)) = residue_class_mod(m, standard_representative(A)) = A
-            by def $is_abelian_group(carrier_C, add, zero)
+            by def:
+                ? $is_abelian_group(carrier_C, add, zero)
         witness exist add0 fn(A, B carrier_C) carrier_C, zero0 carrier_C st {$is_residue_class_addition_operation(m, carrier_C, add0, zero0), $is_abelian_group(carrier_C, add0, zero0)} from add, zero
-    by def $congruence_classes_form_additive_group_mod(m)
+    by def:
+        ? $congruence_classes_form_additive_group_mod(m)

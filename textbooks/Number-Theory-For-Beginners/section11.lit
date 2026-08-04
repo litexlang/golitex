@@ -19,9 +19,12 @@ thm solves_power_congruence_mod_has_same_remainder:
         $solves_power_congruence_mod(m, k, a, x)
         =>:
             x ^ k % m = a % m
-    by def $solves_power_congruence_mod(m, k, a, x)
-    by def $section1::divides_Z(m, x ^ k - a)
-    by def $section5::congruent_mod(m, x ^ k, a)
+    by def:
+        ? $solves_power_congruence_mod(m, k, a, x)
+    by def:
+        ? $section1::divides_Z(m, x ^ k - a)
+    by def:
+        ? $section5::congruent_mod(m, x ^ k, a)
     by thm section5::congruent_mod_has_same_remainder(m, x ^ k, a)
 
 thm same_remainder_solves_power_congruence_mod:
@@ -29,13 +32,15 @@ thm same_remainder_solves_power_congruence_mod:
         x ^ k % m = a % m
         =>:
             $solves_power_congruence_mod(m, k, a, x)
-    by def $section5::same_remainder_mod(m, x ^ k, a)
+    by def:
+        ? $section5::same_remainder_mod(m, x ^ k, a)
     x ^ k = m * section2::integer_quotient(x ^ k, m) + (x ^ k) % m
     a = m * section2::integer_quotient(a, m) + a % m
     (x ^ k) % m = a % m
     x ^ k - a = (m * section2::integer_quotient(x ^ k, m) + (x ^ k) % m) - (m * section2::integer_quotient(a, m) + a % m) = (m * section2::integer_quotient(x ^ k, m) + a % m) - (m * section2::integer_quotient(a, m) + a % m) = m * section2::integer_quotient(x ^ k, m) - m * section2::integer_quotient(a, m) = m * (section2::integer_quotient(x ^ k, m) - section2::integer_quotient(a, m))
     witness exist t Z st {x ^ k - a = m * t} from section2::integer_quotient(x ^ k, m) - section2::integer_quotient(a, m)
-    by def $solves_power_congruence_mod(m, k, a, x)
+    by def:
+        ? $solves_power_congruence_mod(m, k, a, x)
 
 # Definition.  A quadratic residue is a square in the residue ring; a
 # nonresidue is exactly the complement of this set of solvable classes.
@@ -104,14 +109,16 @@ thm euler_power_is_one_or_minus_one:
             a ^ h % p = 1 or a ^ h % p = p - 1
     by thm section8::theorem_VIII_Euler(p, a)
     $section8::euler_theorem_conclusion(p, a)
-    by def $section8::euler_theorem_conclusion(p, a)
+    by def:
+        ? $section8::euler_theorem_conclusion(p, a)
     by thm section5::congruent_mod_has_same_remainder(p, a ^ section6::euler_phi(p), 1)
     claim:
         ? $section2::euclidean_division_Z(1, p, 0, 1)
         p > 0
         1 = p * 0 + 1
         0 <= 1 < p
-        by def $section2::euclidean_division_Z(1, p, 0, 1)
+        by def:
+            ? $section2::euclidean_division_Z(1, p, 0, 1)
     by thm section2::euclidean_division_remainder_is_mod(1, p, 0, 1)
     1 % p = 1
     a ^ section6::euler_phi(p) % p = 1
@@ -122,7 +129,8 @@ thm euler_power_is_one_or_minus_one:
     b ^ 2 = (a ^ h) ^ 2 = (a ^ h) * (a ^ h) = a ^ (h + h) = a ^ (2 * h) = a ^ (p - 1)
     b ^ 2 % p = a ^ (p - 1) % p = 1
     1 % p = 1
-    by def $section5::same_remainder_mod(p, b ^ 2, 1)
+    by def:
+        ? $section5::same_remainder_mod(p, b ^ 2, 1)
     b ^ 2 = p * section2::integer_quotient(b ^ 2, p) + (b ^ 2) % p
     1 = p * section2::integer_quotient(1, p) + 1 % p
     b ^ 2 - 1 = (p * section2::integer_quotient(b ^ 2, p) + (b ^ 2) % p) - (p * section2::integer_quotient(1, p) + 1 % p) = (p * section2::integer_quotient(b ^ 2, p) + 1 % p) - (p * section2::integer_quotient(1, p) + 1 % p) = p * section2::integer_quotient(b ^ 2, p) - p * section2::integer_quotient(1, p) = p * (section2::integer_quotient(b ^ 2, p) - section2::integer_quotient(1, p))
@@ -131,18 +139,21 @@ thm euler_power_is_one_or_minus_one:
     b ^ 2 - 1 = (b - 1) * (b + 1)
     witness exist q Z st {(b - 1) * (b + 1) = p * q} from t:
         (b - 1) * (b + 1) = b ^ 2 - 1 = p * t
-    by def $section1::divides_Z(p, (b - 1) * (b + 1))
+    by def:
+        ? $section1::divides_Z(p, (b - 1) * (b + 1))
     by thm section4::theorem_IV_1_prime_divides_binary_product(p, b - 1, b + 1)
     by cases:
         ? a ^ h % p = 1 or a ^ h % p = p - 1
         case $section1::divides_Z(p, b - 1):
-            by def $section5::congruent_mod(p, b, 1)
+            by def:
+                ? $section5::congruent_mod(p, b, 1)
             by thm section5::congruent_mod_has_same_remainder(p, b, 1)
             b % p = 1 % p = 1
             a ^ h % p = 1
         case $section1::divides_Z(p, b + 1):
             b - (-1) = b + 1
-            by def $section5::congruent_mod(p, b, -1)
+            by def:
+                ? $section5::congruent_mod(p, b, -1)
             by thm section5::congruent_mod_has_same_remainder(p, b, -1)
             0 <= p - 1 < p
             p - 1 = p * 0 + (p - 1)
@@ -170,10 +181,12 @@ thm theorem_XI_quadratic_residue_split:
         ? $section2::is_gcd_Z(2, p - 1, 2)
         witness exist q Z st {2 = 2 * q} from 1:
             2 = 2 * 1
-        by def $section1::divides_Z(2, 2)
+        by def:
+            ? $section1::divides_Z(2, 2)
         witness exist q Z st {p - 1 = 2 * q} from h:
             p - 1 = 2 * h
-        by def $section1::divides_Z(2, p - 1)
+        by def:
+            ? $section1::divides_Z(2, p - 1)
         forall exp_e Z:
             exp_e > 0
             $section1::divides_Z(exp_e, 2)
@@ -182,34 +195,45 @@ thm theorem_XI_quadratic_residue_split:
                 $section1::divides_Z(exp_e, 2)
         witness exist x, y Z st {2 = 2 * x + (p - 1) * y} from 1, 0:
             2 = 2 * 1 + (p - 1) * 0
-        by def $section2::is_gcd_Z(2, p - 1, 2)
+        by def:
+            ? $section2::is_gcd_Z(2, p - 1, 2)
     $section2::is_gcd_Z(2, p - 1, section2::gcd_Z(2, p - 1))
     section2::gcd_Z(2, p - 1) = 2
-    by def $power_congruence_prime_condition(p, 2, a, 2)
+    by def:
+        ? $power_congruence_prime_condition(p, 2, a, 2)
     h * 2 = 2 * h = p - 1
     by thm theorem_XI_power_congruence_criterion(p, 2, a, 2, h)
-    by def $power_congruence_prime_criterion(p, 2, a, 2, h)
+    by def:
+        ? $power_congruence_prime_criterion(p, 2, a, 2, h)
     $quadratic_residue_mod(p, a) or not $quadratic_residue_mod(p, a)
     by cases:
         ? $euler_criterion_split(p, a, h)
         case $quadratic_residue_mod(p, a):
-            by def $quadratic_residue_mod(p, a)
-            by def $power_congruence_solvable_mod(p, 2, a)
+            by def:
+                ? $quadratic_residue_mod(p, a)
+            by def:
+                ? $power_congruence_solvable_mod(p, 2, a)
             a ^ h % p = 1
-            by def $euler_residue_condition(p, a, h)
-            by def $euler_criterion_split(p, a, h)
+            by def:
+                ? $euler_residue_condition(p, a, h)
+            by def:
+                ? $euler_criterion_split(p, a, h)
         case not $quadratic_residue_mod(p, a):
-            by def $quadratic_nonresidue_mod(p, a)
+            by def:
+                ? $quadratic_nonresidue_mod(p, a)
             by thm euler_power_is_one_or_minus_one(p, a, h)
             by cases:
                 ? $euler_criterion_split(p, a, h)
                 case a ^ h % p = 1:
                     $power_congruence_solvable_mod(p, 2, a)
-                    by def $quadratic_residue_mod(p, a)
+                    by def:
+                        ? $quadratic_residue_mod(p, a)
                     impossible not $quadratic_residue_mod(p, a)
                 case a ^ h % p = p - 1:
-                    by def $euler_nonresidue_condition(p, a, h)
-                    by def $euler_criterion_split(p, a, h)
+                    by def:
+                        ? $euler_nonresidue_condition(p, a, h)
+                    by def:
+                        ? $euler_criterion_split(p, a, h)
 
 # The parity lemmas below keep the mod-four corollary independent of later
 # Section XII sign-product machinery.
@@ -223,17 +247,21 @@ thm every_natural_has_parity:
         ? $natural_parity(n)
         ? from n = 0:
             0 % 2 = 0
-            by def $natural_parity(0)
+            by def:
+                ? $natural_parity(0)
         ? induc:
-            by def $natural_parity(n)
+            by def:
+                ? $natural_parity(n)
             by cases:
                 ? $natural_parity(n + 1)
                 case n % 2 = 0:
                     (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = (0 + 1) % 2 = 1
-                    by def $natural_parity(n + 1)
+                    by def:
+                        ? $natural_parity(n + 1)
                 case n % 2 = 1:
                     (n + 1) % 2 = (n % 2 + 1 % 2) % 2 = (1 + 1) % 2 = 0
-                    by def $natural_parity(n + 1)
+                    by def:
+                        ? $natural_parity(n + 1)
 
 thm minus_one_even_power:
     ? forall m N:
@@ -251,7 +279,8 @@ thm quadratic_nonresidue_is_not_residue:
         $quadratic_nonresidue_mod(p, a)
         =>:
             not $quadratic_residue_mod(p, a)
-    by def $quadratic_nonresidue_mod(p, a)
+    by def:
+        ? $quadratic_nonresidue_mod(p, a)
 
 # For an odd prime p=2h+1, Euler's split says that -1 is a square exactly
 # when h is even, equivalently when p has the form 4m+1.
@@ -284,7 +313,8 @@ thm theorem_XI_minus_one_quadratic_residue:
             ? exist m N st {p = 4 * m + 1}
             case $euler_residue_condition(p, -1, h):
                 by thm every_natural_has_parity(h)
-                by def $natural_parity(h)
+                by def:
+                    ? $natural_parity(h)
                 by cases:
                     ? exist m N st {p = 4 * m + 1}
                     case h % 2 = 0:
@@ -325,7 +355,8 @@ thm theorem_XI_minus_one_quadratic_residue:
                         p = 2
                         impossible p > 2
             case $euler_nonresidue_condition(p, -1, h):
-                by def $euler_nonresidue_condition(p, -1, h)
+                by def:
+                    ? $euler_nonresidue_condition(p, -1, h)
                 by thm quadratic_nonresidue_is_not_residue(p, -1)
                 impossible $quadratic_residue_mod(p, -1)
     claim:
@@ -346,10 +377,12 @@ thm theorem_XI_minus_one_quadratic_residue:
         by cases:
             ? $quadratic_residue_mod(p, -1)
             case $euler_residue_condition(p, -1, h):
-                by def $euler_residue_condition(p, -1, h)
+                by def:
+                    ? $euler_residue_condition(p, -1, h)
                 $quadratic_residue_mod(p, -1)
             case $euler_nonresidue_condition(p, -1, h):
-                by def $euler_nonresidue_condition(p, -1, h)
+                by def:
+                    ? $euler_nonresidue_condition(p, -1, h)
                 by thm minus_one_even_power(m)
                 (-1) ^ h = (-1) ^ (2 * m) = 1
                 trust 1 % p = 1
@@ -358,4 +391,5 @@ thm theorem_XI_minus_one_quadratic_residue:
                 p - 1 = 1
                 p = 2
                 impossible p > 2
-    by def $minus_one_quadratic_residue_criterion(p, h)
+    by def:
+        ? $minus_one_quadratic_residue_criterion(p, h)

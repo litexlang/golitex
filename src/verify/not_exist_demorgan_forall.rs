@@ -75,10 +75,8 @@ impl Runtime {
             else {
                 return Err(RuntimeError::from(NewFactRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!(
-                            "not exist: `{}` in body cannot be negated here",
-                            FORALL_BANG
-                        ),
+                        "not exist: an inline `forall` in the body cannot be negated here"
+                            .to_string(),
                         conjunct.line_file(),
                     ),
                 )));

@@ -106,8 +106,10 @@ forall i1 range(3, 2):
 forall i1 closed_range(3, 2):
     1 = 0
 
-by for forall! i1 range(3, 2) => {1 = 0}
-by for forall! i1 closed_range(3, 2) => {1 = 0}
+by for:
+    ? forall i1 range(3, 2) => {1 = 0}
+by for:
+    ? forall i1 closed_range(3, 2) => {1 = 0}
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
@@ -1438,7 +1440,8 @@ have fn builder_like(X power_set(R)) power_set(R) = {x R: x = x}
 have X power_set(R)
 trust builder_like(X) $subset X
 trust X $subset builder_like(X)
-by extension builder_like(X) = X
+by extension:
+    ? builder_like(X) = X
 builder_like(X) = X
 "#;
 
@@ -1553,12 +1556,12 @@ fn general_cart_builtin_definition_choice_and_membership_inference() {
             let source_code = r#"
 have I set
 have X nonempty_set
-trust forall! x X => {$is_nonempty_set(x)}
+trust forall x X => {$is_nonempty_set(x)}
 have g fn(alpha I) X
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
 $is_nonempty_set(general_cart(I, X, g))
-general_cart(I, X, g) = {f fn(t I)big_union(X): forall! alpha I => {f(alpha) $in g(alpha)}}
+general_cart(I, X, g) = {f fn(t I)big_union(X): forall alpha I => {f(alpha) $in g(alpha)}}
 have c general_cart(I, X, g)
 c $in fn(t I)big_union(X)
 forall alpha I:
@@ -2183,7 +2186,8 @@ prop marked_eventually_equivalence(x R):
     not $marked(x) or $eventually_in(R, \selected<R>, x)
     not $eventually_in(R, \selected<R>, x) or $marked(x)
 
-by def $marked_eventually_equivalence(1)
+by def:
+    ? $marked_eventually_equivalence(1)
 "#;
 
     let mut runtime = Runtime::new();

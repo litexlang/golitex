@@ -50,7 +50,8 @@ thm euclidean_division_exists:
     ? forall a Z, d N+:
         exist q, r Z st {$euclidean_division_Z(a, d, q, r)}
     witness exist q, r Z st {$euclidean_division_Z(a, d, q, r)} from integer_quotient(a, d), a % d:
-        by def $euclidean_division_Z(a, d, integer_quotient(a, d), a % d)
+        by def:
+            ? $euclidean_division_Z(a, d, integer_quotient(a, d), a % d)
 
 thm euclidean_division_remainder_is_mod:
     ? forall a Z, d N+, q, r Z:
@@ -98,7 +99,8 @@ thm lemma_II_euclidean_division:
                 q = q1
                 r = r1
         by thm euclidean_division_unique(a, d, q, r, q1, r1)
-    by def $has_unique_euclidean_division_Z(a, d)
+    by def:
+        ? $has_unique_euclidean_division_Z(a, d)
 
 # The largest-multiple phrasing follows from the same remainder construction.
 thm remainder_bounds_multiple:
@@ -158,7 +160,8 @@ thm largest_multiple_exists:
         d * z <= d * q + r
         by thm remainder_bounds_multiple(d, q, r, z)
     witness exist q1 Z st {$is_largest_multiple_leq_Z(a, d, q1)} from q:
-        by def $is_largest_multiple_leq_Z(a, d, q)
+        by def:
+            ? $is_largest_multiple_leq_Z(a, d, q)
 
 thm largest_multiple_unique:
     ? forall a Z, d N+, q1, q2 Z:
@@ -275,14 +278,16 @@ thm natural_multiple_in_subtraction_closed_set:
                 0 $in M
                 0 * m = 0
                 k * m $in M
-                by def $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k)
+                by def:
+                    ? $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k)
             ? induc:
                 k * m $in M
                 by thm add_in_subtraction_closed_set(M, k * m, m)
                 k * m + m $in M
                 (k + 1) * m = k * m + m
                 (k + 1) * m $in M
-                by def $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k + 1)
+                by def:
+                    ? $is_nonnegative_multiple_in_subtraction_closed_set(M, m, k + 1)
     $is_nonnegative_multiple_in_subtraction_closed_set(M, m, n)
 
 thm nonnegative_integer_multiple_in_subtraction_closed_set:
@@ -328,7 +333,8 @@ thm zero_subtraction_closed_set:
             M = mZ(0)
     positive_elements(M) = {t Z: t $in M and t > 0}
     mZ(0) = {t Z: $section1::divides_Z(0, t)}
-    by extension M = mZ(0):
+    by extension:
+        ? M = mZ(0)
         claim:
             ? forall x M:
                 x $in mZ(0)
@@ -349,7 +355,8 @@ thm zero_subtraction_closed_set:
                         case z = 0:
                             witness exist k Z st {x = 0 * k} from 0:
                                 x = z = 0 = 0 * 0
-                            by def $section1::divides_Z(0, x)
+                            by def:
+                                ? $section1::divides_Z(0, x)
                             by thm set_builder_member(x, {t Z: $section1::divides_Z(0, t)})
                         case z < 0:
                             by thm neg_in_subtraction_closed_set(M, z)
@@ -379,7 +386,8 @@ thm positive_mZ_generator_unique:
     mZ(n) = {t Z: $section1::divides_Z(n, t)}
     witness exist k Z st {m = m * k} from 1:
         m = m * 1
-    by def $section1::divides_Z(m, m)
+    by def:
+        ? $section1::divides_Z(m, m)
     by thm set_builder_member(m, {t Z: $section1::divides_Z(m, t)})
     m $in mZ(n)
     obtain a from exist a Z st {m = n * a}
@@ -393,7 +401,8 @@ thm positive_mZ_generator_unique:
         case n > 0:
             witness exist k Z st {n = n * k} from 1:
                 n = n * 1
-            by def $section1::divides_Z(n, n)
+            by def:
+                ? $section1::divides_Z(n, n)
             by thm set_builder_member(n, {t Z: $section1::divides_Z(n, t)})
             n $in mZ(m)
             obtain b from exist b Z st {n = m * b}
@@ -433,7 +442,8 @@ thm zero_mZ_generator_unique:
     mZ(0) = {t Z: $section1::divides_Z(0, t)}
     witness exist k Z st {n = n * k} from 1:
         n = n * 1
-    by def $section1::divides_Z(n, n)
+    by def:
+        ? $section1::divides_Z(n, n)
     by thm set_builder_member(n, {t Z: $section1::divides_Z(n, t)})
     n $in mZ(0)
     obtain k from exist k Z st {n = 0 * k}
@@ -449,14 +459,16 @@ thm positive_subtraction_closed_set_has_mZ:
     positive_elements(M) = {t Z: t $in M and t > 0}
     claim:
         ? $section1::is_positive_integer_set(positive_elements(M))
-        by def positive_elements(M) $subset Z
+        by def:
+            ? positive_elements(M) $subset Z
         claim:
             ? forall x positive_elements(M):
                 x $in Z
                 x > 0
             x $in Z
             x > 0
-        by def $section1::is_positive_integer_set(positive_elements(M))
+        by def:
+            ? $section1::is_positive_integer_set(positive_elements(M))
     by thm section1::positive_integer_set_has_least_element(positive_elements(M))
     exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
     obtain m from exist m Z st {$section1::is_least_element_of_integer_set(positive_elements(M), m)}
@@ -467,7 +479,8 @@ thm positive_subtraction_closed_set_has_mZ:
     mN = m
     mZ(mN) = {t Z: $section1::divides_Z(mN, t)}
     witness exist m1 N+ st {M = mZ(m1)} from mN:
-        by extension M = mZ(mN):
+        by extension:
+            ? M = mZ(mN)
             claim:
                 ? forall x M:
                     x $in mZ(mN)
@@ -492,7 +505,8 @@ thm positive_subtraction_closed_set_has_mZ:
                     case r = 0:
                         witness exist k Z st {x = mN * k} from q:
                             x = z = mN * q
-                        by def $section1::divides_Z(mN, x)
+                        by def:
+                            ? $section1::divides_Z(mN, x)
                         by thm set_builder_member(x, {t Z: $section1::divides_Z(mN, t)})
                     case r > 0:
                         by thm set_builder_member(r, {t Z: t $in M and t > 0})
@@ -603,7 +617,8 @@ thm integer_linear_span_is_nonempty:
             ? forall a0 A:
                 terms(a0) = zeros(a0)
             terms(a0) = fn(a Z) Z {c(a) * a}(a0) = c(a0) * a0 = 0 * a0 = 0 = zeros(a0)
-        by def $fn_eq(terms, zeros)
+        by def:
+            ? $fn_eq(terms, zeros)
         terms = zeros
         zeros = fn(a0 A) Z {0}
         finite_set_sum(A, zeros) = finite_set_sum(A, fn(a0 A) Z {0}) = finite_set_size(A) * 0 = 0
@@ -611,7 +626,8 @@ thm integer_linear_span_is_nonempty:
         terms = fn(a0 A) Z {fn(a Z) Z {c(a) * a}(a0)}
         witness exist c1 fn(a Z) Z st {0 = finite_set_sum(A, fn(a0 A) Z {fn(a Z) Z {c1(a) * a}(a0)})} from c:
             0 = finite_set_sum(A, terms) = finite_set_sum(A, fn(a0 A) Z {fn(a Z) Z {c(a) * a}(a0)})
-        by def $is_integer_linear_combination(A, 0)
+        by def:
+            ? $is_integer_linear_combination(A, 0)
         by thm set_builder_member(0, {x Z: $is_integer_linear_combination(A, x)})
 
 thm integer_linear_span_subtraction_closed:
@@ -639,19 +655,22 @@ thm integer_linear_span_subtraction_closed:
             ? forall a0 A:
                 terms_e(a0) = terms_cd(a0)
             terms_e(a0) = exp_e(a0) * a0 = (c(a0) - d(a0)) * a0 = terms_cd(a0)
-        by def $fn_eq(terms_e, terms_cd)
+        by def:
+            ? $fn_eq(terms_e, terms_cd)
         terms_e = terms_cd
         claim:
             ? forall a0 A:
                 terms_cd(a0) = terms_sub(a0)
             terms_cd(a0) = (c(a0) - d(a0)) * a0 = c(a0) * a0 - d(a0) * a0 = terms_sub(a0)
-        by def $fn_eq(terms_cd, terms_sub)
+        by def:
+            ? $fn_eq(terms_cd, terms_sub)
         terms_cd = terms_sub
         claim:
             ? forall a0 A:
                 terms_sub(a0) = terms_add(a0)
             terms_sub(a0) = c(a0) * a0 - d(a0) * a0 = c(a0) * a0 + (-1) * (d(a0) * a0) = terms_add(a0)
-        by def $fn_eq(terms_sub, terms_add)
+        by def:
+            ? $fn_eq(terms_sub, terms_add)
         terms_sub = terms_add
         terms_e = fn(a0 A) Z {fn(a Z) Z {exp_e(a) * a}(a0)}
         terms_cd = fn(a0 A) Z {fn(a Z) Z {(c(a) - d(a)) * a}(a0)}
@@ -675,7 +694,8 @@ thm integer_linear_span_subtraction_closed:
         x = s_c
         y = s_d
         x - y = s_c - s_d = s_c + (-1) * s_d = s_e
-    by def $is_integer_linear_combination(A, x - y)
+    by def:
+        ? $is_integer_linear_combination(A, x - y)
     by thm set_builder_member(x - y, {z Z: $is_integer_linear_combination(A, z)})
 
 thm integer_linear_span_is_closed_under_subtraction:
@@ -685,7 +705,8 @@ thm integer_linear_span_is_closed_under_subtraction:
         ? forall x, y integer_linear_span(A):
             x - y $in integer_linear_span(A)
         by thm integer_linear_span_subtraction_closed(A, x, y)
-    by def $closed_under_subtraction(integer_linear_span(A))
+    by def:
+        ? $closed_under_subtraction(integer_linear_span(A))
 
 thm corollary_II_1_integer_linear_span_is_mZ:
     ? forall A \finite_subsets<Z>:
@@ -713,7 +734,8 @@ thm binary_integer_span_is_nonempty:
     witness $is_nonempty_set(binary_integer_span(a, b)) from 0:
         witness exist u, v Z st {0 = a * u + b * v} from 0, 0:
             0 = a * 0 + b * 0
-        by def $is_binary_integer_linear_combination(a, b, 0)
+        by def:
+            ? $is_binary_integer_linear_combination(a, b, 0)
         by thm set_builder_member(0, {x Z: $is_binary_integer_linear_combination(a, b, x)})
 
 thm binary_integer_span_subtraction_closed:
@@ -727,7 +749,8 @@ thm binary_integer_span_subtraction_closed:
     obtain s, t from exist s, t Z st {y = a * s + b * t}
     witness exist p, q Z st {x - y = a * p + b * q} from u - s, v - t:
         x - y = (a * u + b * v) - (a * s + b * t) = a * (u - s) + b * (v - t)
-    by def $is_binary_integer_linear_combination(a, b, x - y)
+    by def:
+        ? $is_binary_integer_linear_combination(a, b, x - y)
     by thm set_builder_member(x - y, {z Z: $is_binary_integer_linear_combination(a, b, z)})
 
 thm binary_integer_span_is_mZ:
@@ -740,7 +763,8 @@ thm binary_integer_span_is_mZ:
             ? forall x, y binary_integer_span(a, b):
                 x - y $in binary_integer_span(a, b)
             by thm binary_integer_span_subtraction_closed(a, b, x, y)
-        by def $closed_under_subtraction(binary_integer_span(a, b))
+        by def:
+            ? $closed_under_subtraction(binary_integer_span(a, b))
     by thm theorem_II_1_subgroups_of_Z(binary_integer_span(a, b))
 
 """
@@ -769,11 +793,14 @@ thm binary_span_eq_mZ_of_gcd:
             binary_integer_span(a, b) = mZ(d)
     $section1::divides_Z(d, a)
     $section1::divides_Z(d, b)
-    by def $section1::divides_Z(d, a)
-    by def $section1::divides_Z(d, b)
+    by def:
+        ? $section1::divides_Z(d, a)
+    by def:
+        ? $section1::divides_Z(d, b)
     binary_integer_span(a, b) = {z Z: $is_binary_integer_linear_combination(a, b, z)}
     mZ(d) = {z Z: $section1::divides_Z(d, z)}
-    by extension binary_integer_span(a, b) = mZ(d):
+    by extension:
+        ? binary_integer_span(a, b) = mZ(d)
         claim:
             ? forall x binary_integer_span(a, b):
                 x $in mZ(d)
@@ -782,7 +809,8 @@ thm binary_span_eq_mZ_of_gcd:
             obtain q from exist q Z st {b = d * q}
             witness exist k Z st {x = d * k} from u * p + v * q:
                 x = a * u + b * v = d * p * u + d * q * v = d * (u * p + v * q)
-            by def $section1::divides_Z(d, x)
+            by def:
+                ? $section1::divides_Z(d, x)
             by thm set_builder_member(x, {z Z: $section1::divides_Z(d, z)})
         claim:
             ? forall x mZ(d):
@@ -791,7 +819,8 @@ thm binary_span_eq_mZ_of_gcd:
             obtain u, v from exist u, v Z st {d = a * u + b * v}
             witness exist p, q Z st {x = a * p + b * q} from u * k, v * k:
                 x = d * k = (a * u + b * v) * k = a * (u * k) + b * (v * k)
-            by def $is_binary_integer_linear_combination(a, b, x)
+            by def:
+                ? $is_binary_integer_linear_combination(a, b, x)
             by thm set_builder_member(x, {z Z: $is_binary_integer_linear_combination(a, b, z)})
 
 thm theorem_II_2_binary_gcd_exists:
@@ -805,21 +834,24 @@ thm theorem_II_2_binary_gcd_exists:
         ? $is_gcd_Z(a, b, d)
         witness exist u, v Z st {a = a * u + b * v} from 1, 0:
             a = a * 1 + b * 0
-        by def $is_binary_integer_linear_combination(a, b, a)
+        by def:
+            ? $is_binary_integer_linear_combination(a, b, a)
         by thm set_builder_member(a, {z Z: $is_binary_integer_linear_combination(a, b, z)})
         a $in binary_integer_span(a, b)
         a $in mZ(d)
         obtain p from exist p Z st {a = d * p}
         witness exist u, v Z st {b = a * u + b * v} from 0, 1:
             b = a * 0 + b * 1
-        by def $is_binary_integer_linear_combination(a, b, b)
+        by def:
+            ? $is_binary_integer_linear_combination(a, b, b)
         by thm set_builder_member(b, {z Z: $is_binary_integer_linear_combination(a, b, z)})
         b $in binary_integer_span(a, b)
         b $in mZ(d)
         obtain q from exist q Z st {b = d * q}
         witness exist k Z st {d = d * k} from 1:
             d = d * 1
-        by def $section1::divides_Z(d, d)
+        by def:
+            ? $section1::divides_Z(d, d)
         by thm set_builder_member(d, {z Z: $section1::divides_Z(d, z)})
         d $in mZ(d)
         d $in binary_integer_span(a, b)
@@ -835,8 +867,10 @@ thm theorem_II_2_binary_gcd_exists:
             obtain s from exist s Z st {b = exp_e * s}
             witness exist t Z st {d = exp_e * t} from r * x + s * y:
                 d = a * x + b * y = exp_e * r * x + exp_e * s * y = exp_e * (r * x + s * y)
-            by def $section1::divides_Z(exp_e, d)
-        by def $is_gcd_Z(a, b, d)
+            by def:
+                ? $section1::divides_Z(exp_e, d)
+        by def:
+            ? $is_gcd_Z(a, b, d)
     witness exist d1 N st {$is_gcd_Z(a, b, d1)} from d:
         $is_gcd_Z(a, b, d)
     claim:
@@ -939,10 +973,12 @@ thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
     obtain db from exist db Z st {b = d * db}
     witness exist da1 Z st {a1 = d * da1} from p * da + q * db:
         a1 = p * a + q * b = p * (d * da) + q * (d * db) = d * (p * da + q * db)
-    by def $section1::divides_Z(d, a1)
+    by def:
+        ? $section1::divides_Z(d, a1)
     witness exist db1 Z st {b1 = d * db1} from r * da + s * db:
         b1 = r * a + s * b = r * (d * da) + s * (d * db) = d * (r * da + s * db)
-    by def $section1::divides_Z(d, b1)
+    by def:
+        ? $section1::divides_Z(d, b1)
     claim:
         ? forall exp_e Z:
             exp_e > 0
@@ -954,12 +990,15 @@ thm is_gcd_Z_preserved_by_mutual_integer_linear_changes:
         obtain eb1 from exist eb1 Z st {b1 = exp_e * eb1}
         witness exist ea Z st {a = exp_e * ea} from u * ea1 + v * eb1:
             a = u * a1 + v * b1 = u * (exp_e * ea1) + v * (exp_e * eb1) = exp_e * (u * ea1 + v * eb1)
-        by def $section1::divides_Z(exp_e, a)
+        by def:
+            ? $section1::divides_Z(exp_e, a)
         witness exist eb Z st {b = exp_e * eb} from w * ea1 + z * eb1:
             b = w * a1 + z * b1 = w * (exp_e * ea1) + z * (exp_e * eb1) = exp_e * (w * ea1 + z * eb1)
-        by def $section1::divides_Z(exp_e, b)
+        by def:
+            ? $section1::divides_Z(exp_e, b)
         $section1::divides_Z(exp_e, d)
     obtain x, y from exist x, y Z st {d = a * x + b * y}
     witness exist x1, y1 Z st {d = a1 * x1 + b1 * y1} from u * x + w * y, v * x + z * y:
         d = a * x + b * y = (u * a1 + v * b1) * x + (w * a1 + z * b1) * y = a1 * (u * x + w * y) + b1 * (v * x + z * y)
-    by def $is_gcd_Z(a1, b1, d)
+    by def:
+        ? $is_gcd_Z(a1, b1, d)

@@ -188,7 +188,8 @@ forall t R:
 # ```
 
 # ```text
-# by contra <goal>:
+# by contra:
+#     ? <goal>
 #     <proof body>
 #     impossible <atomic fact>
 # ```
@@ -203,7 +204,8 @@ claim:
         a >= 0
         =>:
             a >= 1
-    by contra a >= 1:
+    by contra:
+        ? a >= 1
         a^2 = b^2 + 1 >= 0 + 1 = 1
         a^2 >= 1
         a < 1
@@ -377,7 +379,8 @@ forall y R:
 # ```
 
 # ```text
-# by cases <goal>:
+# by cases:
+#     ? <goal>
 #     case <assumption1>:
 #         <proof for goal under assumption1>
 #     case <assumption2>:
@@ -400,7 +403,8 @@ claim:
         b <= a
         =>:
             a = b
-    by cases a = b:
+    by cases:
+        ? a = b
         case a = b:
             do_nothing
         case a < b:
@@ -425,7 +429,7 @@ claim:
 # ```
 
 # When the branches all prove the same atomic goal, the shorthand
-# `by cases <goal>:` is often enough.
+# `by cases:` with an indented `? <goal>` is often enough.
 
 # The interaction also goes in the other direction. If the goal itself is an `or`,
 # Litex can accept it once one side has been proved. This matches ordinary
@@ -777,7 +781,7 @@ witness exist a, b, c, d N st {a^3 + b^3 = 1729, c^3 + d^3 = 1729, a != c, a != 
 #        <proof steps>
 #    ```
 
-# 3. `by contra:` and `by contra <goal>:` open a temporary contradiction proof.
+# 3. `by contra:` with an indented `? <goal>` opens a temporary contradiction proof.
 #    In the local environment of that block, the fact being proved is negated and
 #    added as a temporary assumption. The proof is expected to derive a
 #    contradiction, and the branch closes with an `impossible <FACT>` line.
@@ -795,12 +799,13 @@ witness exist a, b, c, d N st {a^3 + b^3 = 1729, c^3 + d^3 = 1729, a != c, a != 
 #    Shorthand:
 
 #    ```text
-#    by contra <goal>:
+#    by contra:
+#        ? <goal>
 #        <proof body>
 #        impossible <atomic fact>
 #    ```
 
-# 4. `by cases:` and `by cases <goal>:` split a proof into branches, each written
+# 4. `by cases:` with an indented `? <goal>` splits a proof into branches, each written
 #    as a `case <assumption>:` block. Every branch must establish the same case goal.
 
 #    Long form:
@@ -816,7 +821,8 @@ witness exist a, b, c, d N st {a^3 + b^3 = 1729, c^3 + d^3 = 1729, a != c, a != 
 #    Shorthand:
 
 #    ```text
-#    by cases <goal>:
+#    by cases:
+#        ? <goal>
 #        case <assumption>:
 #            <proof for goal under assumption>
 #    ```
@@ -862,5 +868,5 @@ witness exist a, b, c, d N st {a^3 + b^3 = 1729, c^3 + d^3 = 1729, a != c, a != 
 # can be written on one line as:
 
 # ```text
-# forall! <arg type, ...>: <FACT1> ... <FACTN> => {<THENFACT1> ... <THENFACTN>}
+# forall <arg type, ...>: <FACT1> ... <FACTN> => {<THENFACT1> ... <THENFACTN>}
 # ```

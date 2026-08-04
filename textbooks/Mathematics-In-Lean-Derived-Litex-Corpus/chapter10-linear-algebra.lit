@@ -168,7 +168,8 @@ thm linear_map_add_closed:
         by thm function_substitution(W, W, fn(x W) W {target.add(x, psi(source.smul(a, v)))}, phi(source.smul(a, v)), target.smul(a, phi(v)))
         by thm function_substitution(W, W, fn(y W) W {target.add(target.smul(a, phi(v)), y)}, psi(source.smul(a, v)), target.smul(a, psi(v)))
         \linear_map_add_raw<K, V, W, target>(phi, psi)(source.smul(a, v)) = target.add(phi(source.smul(a, v)), psi(source.smul(a, v))) = target.add(target.smul(a, phi(v)), psi(source.smul(a, v))) = target.add(target.smul(a, phi(v)), target.smul(a, psi(v))) = target.smul(a, target.add(phi(v), psi(v))) = target.smul(a, \linear_map_add_raw<K, V, W, target>(phi, psi)(v))
-    by def $is_linear_map(K, V, W, source, target, \linear_map_add_raw<K, V, W, target>(phi, psi))
+    by def:
+        ? $is_linear_map(K, V, W, source, target, \linear_map_add_raw<K, V, W, target>(phi, psi))
 
 thm linear_map_smul_closed:
     ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, a K, phi fn(v V) W:
@@ -192,7 +193,8 @@ thm linear_map_smul_closed:
         by thm function_substitution(W, W, fn(x W) W {target.smul(a, x)}, phi(source.smul(b, v)), target.smul(b, phi(v)))
         by thm vector_smul_comm(K, W, target, a, b, phi(v))
         \linear_map_smul_raw<K, V, W, target>(a, phi)(source.smul(b, v)) = target.smul(a, phi(source.smul(b, v))) = target.smul(a, target.smul(b, phi(v))) = target.smul(b, target.smul(a, phi(v))) = target.smul(b, \linear_map_smul_raw<K, V, W, target>(a, phi)(v))
-    by def $is_linear_map(K, V, W, source, target, \linear_map_smul_raw<K, V, W, target>(a, phi))
+    by def:
+        ? $is_linear_map(K, V, W, source, target, \linear_map_smul_raw<K, V, W, target>(a, phi))
 
 thm scalar_endomorphism_is_linear:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, a K:
@@ -206,7 +208,8 @@ thm scalar_endomorphism_is_linear:
             \scalar_endomorphism<K, V, space>(a)(space.smul(b, v)) = space.smul(b, \scalar_endomorphism<K, V, space>(a)(v))
         by thm vector_smul_comm(K, V, space, a, b, v)
         \scalar_endomorphism<K, V, space>(a)(space.smul(b, v)) = space.smul(a, space.smul(b, v)) = space.smul(b, space.smul(a, v)) = space.smul(b, \scalar_endomorphism<K, V, space>(a)(v))
-    by def $is_linear_map(K, V, V, space, space, \scalar_endomorphism<K, V, space>(a))
+    by def:
+        ? $is_linear_map(K, V, V, space, space, \scalar_endomorphism<K, V, space>(a))
 
 thm linear_map_composition_closed:
     ? forall K, U, V, W nonempty_set, source &VectorSpace<K, U>, middle &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, psi fn(u U) V:
@@ -236,7 +239,8 @@ thm linear_map_composition_closed:
             \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.smul(a, x)) = target.smul(a, \linear_map_compose_raw<K, U, V, W>(phi, psi)(x))
         by thm function_substitution(V, W, phi, psi(source.smul(a, x)), middle.smul(a, psi(x)))
         \linear_map_compose_raw<K, U, V, W>(phi, psi)(source.smul(a, x)) = phi(psi(source.smul(a, x))) = phi(middle.smul(a, psi(x))) = target.smul(a, phi(psi(x))) = target.smul(a, \linear_map_compose_raw<K, U, V, W>(phi, psi)(x))
-    by def $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
+    by def:
+        ? $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
     $is_linear_map(K, U, W, source, target, \linear_map_compose_raw<K, U, V, W>(phi, psi))
 
 prop is_bijective_linear_map(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
@@ -249,34 +253,43 @@ thm bijective_linear_map_is_equivalence:
         $chap4::bijective_fn(V, W, phi)
         =>:
             $is_bijective_linear_map(K, V, W, source, target, phi)
-    by def $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def:
+        ? $is_bijective_linear_map(K, V, W, source, target, phi)
     $is_bijective_linear_map(K, V, W, source, target, phi)
 
 # A linear equivalence exposes the total inverse selected in Chapter 4.
 template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W: $is_bijective_linear_map(K, V, W, source, target, phi)>:
     have fn linear_equiv_inverse(w W) V = \chap4::inverse<V, W, source.zero, phi>(w)
 
-claim forall! K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, v V: $is_bijective_linear_map(K, V, W, source, target, phi) => {\linear_equiv_inverse<K, V, W, source, target, phi>(phi(v)) = v}:
-    by def $is_bijective_linear_map(K, V, W, source, target, phi)
-    by def $chap4::bijective_fn(V, W, phi)
+claim forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, v V: $is_bijective_linear_map(K, V, W, source, target, phi) => {\linear_equiv_inverse<K, V, W, source, target, phi>(phi(v)) = v}:
+    by def:
+        ? $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def:
+        ? $chap4::bijective_fn(V, W, phi)
     claim:
         ? $chap4::has_preimage(V, W, phi, phi(v))
         witness exist x V st {phi(x) = phi(v)} from v
-        by def $chap4::has_preimage(V, W, phi, phi(v))
+        by def:
+            ? $chap4::has_preimage(V, W, phi, phi(v))
     by thm chap4::inverse_spec(V, W, source.zero, phi, phi(v))
     \linear_equiv_inverse<K, V, W, source, target, phi>(phi(v)) = \chap4::inverse<V, W, source.zero, phi>(phi(v))
     phi(\linear_equiv_inverse<K, V, W, source, target, phi>(phi(v))) = phi(\chap4::inverse<V, W, source.zero, phi>(phi(v))) = phi(v)
-    by def $chap4::injective_fn(V, W, phi)
+    by def:
+        ? $chap4::injective_fn(V, W, phi)
 
-claim forall! K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, w W: $is_bijective_linear_map(K, V, W, source, target, phi) => {phi(\linear_equiv_inverse<K, V, W, source, target, phi>(w)) = w}:
-    by def $is_bijective_linear_map(K, V, W, source, target, phi)
-    by def $chap4::bijective_fn(V, W, phi)
-    by def $chap4::surjective_fn(V, W, phi)
+claim forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W, w W: $is_bijective_linear_map(K, V, W, source, target, phi) => {phi(\linear_equiv_inverse<K, V, W, source, target, phi>(w)) = w}:
+    by def:
+        ? $is_bijective_linear_map(K, V, W, source, target, phi)
+    by def:
+        ? $chap4::bijective_fn(V, W, phi)
+    by def:
+        ? $chap4::surjective_fn(V, W, phi)
     obtain v from exist x V st {w = phi(x)}
     claim:
         ? $chap4::has_preimage(V, W, phi, w)
         witness exist x V st {phi(x) = w} from v
-        by def $chap4::has_preimage(V, W, phi, w)
+        by def:
+            ? $chap4::has_preimage(V, W, phi, w)
     by thm chap4::inverse_spec(V, W, source.zero, phi, w)
     \linear_equiv_inverse<K, V, W, source, target, phi>(w) = \chap4::inverse<V, W, source.zero, phi>(w)
     phi(\linear_equiv_inverse<K, V, W, source, target, phi>(w)) = phi(\chap4::inverse<V, W, source.zero, phi>(w)) = w
@@ -509,7 +522,8 @@ thm product_vector_space_tuple_is_vector_space:
         ? forall x, y cart(V, W):
             \product_vector_add<K, V, W, left, right>(x, y) = \product_vector_add<K, V, W, left, right>(y, x)
         by thm product_vector_add_comm(K, V, W, left, right, x, y)
-    by def $chap2::is_additive_commutative_group(cart(V, W), \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>)
+    by def:
+        ? $chap2::is_additive_commutative_group(cart(V, W), \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>)
     claim:
         ? forall a K, x, y cart(V, W):
             \product_vector_smul<K, V, W, left, right>(a, \product_vector_add<K, V, W, left, right>(x, y)) = \product_vector_add<K, V, W, left, right>(\product_vector_smul<K, V, W, left, right>(a, x), \product_vector_smul<K, V, W, left, right>(a, y))
@@ -527,7 +541,8 @@ thm product_vector_space_tuple_is_vector_space:
         ? forall x cart(V, W):
             \product_vector_smul<K, V, W, left, right>(left.scalar_zero, x) = \product_vector_zero<K, V, W, left, right>
         by thm product_vector_zero_smul(K, V, W, left, right, x)
-    by def $is_vector_space(K, cart(V, W), left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
+    by def:
+        ? $is_vector_space(K, cart(V, W), left.scalar_add, left.scalar_zero, left.scalar_neg, left.scalar_mul, left.scalar_one, left.scalar_inv, \product_vector_add<K, V, W, left, right>, \product_vector_zero<K, V, W, left, right>, \product_vector_neg<K, V, W, left, right>, \product_vector_smul<K, V, W, left, right>)
     left.scalar_add $in fn(x, y K) K
     left.scalar_zero $in K
     left.scalar_neg $in fn(x K) K
@@ -598,7 +613,8 @@ thm linear_product_is_linear:
         ? forall a K, u U:
             \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = product_space_value.smul(a, \linear_product<U, V, W>(phi, psi)(u))
         \linear_product<U, V, W>(phi, psi)(source.smul(a, u)) = \product_vector_smul<K, V, W, left, right>(a, \linear_product<U, V, W>(phi, psi)(u)) = product_space_value.smul(a, \linear_product<U, V, W>(phi, psi)(u))
-    by def $is_linear_map(K, U, cart(V, W), source, product_space_value, \linear_product<U, V, W>(phi, psi))
+    by def:
+        ? $is_linear_map(K, U, cart(V, W), source, product_space_value, \linear_product<U, V, W>(phi, psi))
     $is_linear_map(K, U, cart(V, W), source, \product_vector_space<K, V, W, left, right>, \linear_product<U, V, W>(phi, psi))
 
 thm linear_coproduct_is_linear:
@@ -649,7 +665,8 @@ thm linear_coproduct_is_linear:
         ? forall a K, p cart(V, W):
             \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.smul(a, p)) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
         \linear_coproduct<U, V, W, target.add>(phi, psi)(product_space_value.smul(a, p)) = \linear_coproduct<U, V, W, target.add>(phi, psi)(\product_vector_smul<K, V, W, left, right>(a, p)) = target.smul(a, \linear_coproduct<U, V, W, target.add>(phi, psi)(p))
-    by def $is_linear_map(K, cart(V, W), U, product_space_value, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
+    by def:
+        ? $is_linear_map(K, cart(V, W), U, product_space_value, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
     $is_linear_map(K, cart(V, W), U, \product_vector_space<K, V, W, left, right>, target, \linear_coproduct<U, V, W, target.add>(phi, psi))
 
 # Homogeneous indexed products and their finite-support subcarrier model the
@@ -702,9 +719,11 @@ template<I set, V nonempty_set, zero V>:
                         case idx != selected:
                             candidate(idx) = zero
                             impossible candidate(idx) = zero
-                by def $vector_support_contains_nonzero(I, V, zero, candidate, {selected})
+                by def:
+                    ? $vector_support_contains_nonzero(I, V, zero, candidate, {selected})
             witness exist support finite_set st {$vector_support_contains_nonzero(I, V, zero, candidate, support)} from {selected}
-            by def $has_finite_vector_support(I, V, zero, candidate)
+            by def:
+                ? $has_finite_vector_support(I, V, zero, candidate)
         by thm set_builder_member(candidate, {value fn(idx I) V: $has_finite_vector_support(I, V, zero, value)})
         \indexed_direct_sum<I, V, zero> = {value fn(idx I) V: $has_finite_vector_support(I, V, zero, value)}
         candidate $in \indexed_direct_sum<I, V, zero>
@@ -717,7 +736,8 @@ template<I set, V nonempty_set, zero V>:
                 idx != selected
                 =>:
                     candidate(idx) = zero
-            by def $is_direct_sum_single(I, V, zero, selected, v, candidate)
+            by def:
+                ? $is_direct_sum_single(I, V, zero, selected, v, candidate)
         claim:
             ? forall value1, value2 \indexed_direct_sum<I, V, zero>:
                 $is_direct_sum_single(I, V, zero, selected, v, value1)
@@ -733,7 +753,8 @@ template<I set, V nonempty_set, zero V>:
                         value1(idx) = v = value2(idx)
                     case idx != selected:
                         value1(idx) = zero = value2(idx)
-            by def $fn_eq(value1, value2)
+            by def:
+                ? $fn_eq(value1, value2)
             value1 = value2
 
 template<I set, V, W nonempty_set, zero V, addW fn(x, y W) W>:
@@ -810,7 +831,8 @@ thm subspace_intersection_is_subspace:
         space.smul(a, x) $in W
         by thm set_builder_member(space.smul(a, x), {q V: q $in U and q $in W})
         space.smul(a, x) $in \subspace_intersection<V>(U, W)
-    by def $is_subspace(K, V, space, \subspace_intersection<V>(U, W))
+    by def:
+        ? $is_subspace(K, V, space, \subspace_intersection<V>(U, W))
 
 template<V set>:
     have subspace_top power_set(V) = V
@@ -838,10 +860,12 @@ thm span_contains:
             x $in S
             =>:
                 x $in \span<K, V, space>(S)
-        by def $span_member(K, V, space, S, x)
+        by def:
+            ? $span_member(K, V, space, S, x)
         by thm set_builder_member(x, {q V: $span_member(K, V, space, S, q)})
         x $in \span<K, V, space>(S)
-    by def S $subset \span<K, V, space>(S)
+    by def:
+        ? S $subset \span<K, V, space>(S)
     S $subset \span<K, V, space>(S)
 
 # The intersection-style definition of span inherits zero, addition, and
@@ -852,7 +876,8 @@ thm span_is_subspace:
     \span<K, V, space>(S) = {x V: $span_member(K, V, space, S, x)}
     claim:
         ? $span_member(K, V, space, S, space.zero)
-        by def $span_member(K, V, space, S, space.zero)
+        by def:
+            ? $span_member(K, V, space, S, space.zero)
     by thm set_builder_member(space.zero, {q V: $span_member(K, V, space, S, q)})
     space.zero $in \span<K, V, space>(S)
     claim:
@@ -869,12 +894,15 @@ thm span_is_subspace:
                     space.add(x, y) $in U
             x $in {q V: $span_member(K, V, space, S, q)}
             y $in {q V: $span_member(K, V, space, S, q)}
-            by def $span_member(K, V, space, S, x)
-            by def $span_member(K, V, space, S, y)
+            by def:
+                ? $span_member(K, V, space, S, x)
+            by def:
+                ? $span_member(K, V, space, S, y)
             x $in U
             y $in U
             by thm subspace_add_mem(K, V, space, U, x, y)
-        by def $span_member(K, V, space, S, space.add(x, y))
+        by def:
+            ? $span_member(K, V, space, S, space.add(x, y))
         by thm set_builder_member(space.add(x, y), {q V: $span_member(K, V, space, S, q)})
         space.add(x, y) $in \span<K, V, space>(S)
     claim:
@@ -889,13 +917,16 @@ thm span_is_subspace:
                 =>:
                     space.smul(a, x) $in U
             x $in {q V: $span_member(K, V, space, S, q)}
-            by def $span_member(K, V, space, S, x)
+            by def:
+                ? $span_member(K, V, space, S, x)
             x $in U
             by thm subspace_smul_mem(K, V, space, U, a, x)
-        by def $span_member(K, V, space, S, space.smul(a, x))
+        by def:
+            ? $span_member(K, V, space, S, space.smul(a, x))
         by thm set_builder_member(space.smul(a, x), {q V: $span_member(K, V, space, S, q)})
         space.smul(a, x) $in \span<K, V, space>(S)
-    by def $is_subspace(K, V, space, \span<K, V, space>(S))
+    by def:
+        ? $is_subspace(K, V, space, \span<K, V, space>(S))
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn subspace_join(U, W power_set(V)) power_set(V) = \span<K, V, space>({x V: x $in U or x $in W})
@@ -930,7 +961,8 @@ thm span_universal_property:
             {x V: $span_member(K, V, space, S, x)} $subset U
     forall x {q V: $span_member(K, V, space, S, q)}:
         x $in U
-    by def {x V: $span_member(K, V, space, S, x)} $subset U
+    by def:
+        ? {x V: $span_member(K, V, space, S, x)} $subset U
     {x V: $span_member(K, V, space, S, x)} $subset U
 
 thm span_subset_of_subspace:
@@ -956,7 +988,8 @@ thm subset_of_span_subset:
         by thm span_contains(K, V, space, S)
         x $in \span<K, V, space>(S)
         x $in U
-    by def S $subset U
+    by def:
+        ? S $subset U
     S $subset U
 
 forall K, V nonempty_set, space &VectorSpace<K, V>, S, U power_set(V):
@@ -991,7 +1024,8 @@ thm subspace_map_subset_of_subset_comap:
         obtain x from exist z V st {z $in U, phi(z) = y}
         x $in \subspace_comap<V, W, phi>(F)
         y $in F
-    by def \subspace_map<V, W, phi>(U) $subset F
+    by def:
+        ? \subspace_map<V, W, phi>(U) $subset F
     \subspace_map<V, W, phi>(U) $subset F
 
 thm subspace_subset_comap_of_map_subset:
@@ -1005,7 +1039,8 @@ thm subspace_subset_comap_of_map_subset:
             =>:
                 x $in \subspace_comap<V, W, phi>(F)
         witness exist z V st {z $in U, phi(z) = phi(x)} from x
-        by def $has_linear_map_preimage(V, W, phi, U, phi(x))
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, phi(x))
         by thm set_builder_member(phi(x), {y W: $has_linear_map_preimage(V, W, phi, U, y)})
         \subspace_map<V, W, phi>(U) = {y W: $has_linear_map_preimage(V, W, phi, U, y)}
         phi(x) $in \subspace_map<V, W, phi>(U)
@@ -1013,7 +1048,8 @@ thm subspace_subset_comap_of_map_subset:
         by thm set_builder_member(x, {z V: phi(z) $in F})
         \subspace_comap<V, W, phi>(F) = {z V: phi(z) $in F}
         x $in \subspace_comap<V, W, phi>(F)
-    by def U $subset \subspace_comap<V, W, phi>(F)
+    by def:
+        ? U $subset \subspace_comap<V, W, phi>(F)
     U $subset \subspace_comap<V, W, phi>(F)
 
 forall V, W set, phi fn(v V) W, U power_set(V), F power_set(W):
@@ -1036,7 +1072,8 @@ thm linear_map_map_is_subspace:
     claim:
         ? $has_linear_map_preimage(V, W, phi, U, target.zero)
         witness exist x V st {x $in U, phi(x) = target.zero} from source.zero
-        by def $has_linear_map_preimage(V, W, phi, U, target.zero)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, target.zero)
     by thm set_builder_member(target.zero, {y W: $has_linear_map_preimage(V, W, phi, U, y)})
     target.zero $in \subspace_map<V, W, phi>(U)
     claim:
@@ -1046,14 +1083,17 @@ thm linear_map_map_is_subspace:
             =>:
                 target.add(y1, y2) $in \subspace_map<V, W, phi>(U)
         y1 $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
-        by def $has_linear_map_preimage(V, W, phi, U, y1)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, y1)
         obtain x1 from exist x V st {x $in U, phi(x) = y1}
         y2 $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
-        by def $has_linear_map_preimage(V, W, phi, U, y2)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, y2)
         obtain x2 from exist x V st {x $in U, phi(x) = y2}
         witness exist x V st {x $in U, phi(x) = target.add(y1, y2)} from source.add(x1, x2):
             phi(source.add(x1, x2)) = target.add(phi(x1), phi(x2)) = target.add(y1, y2)
-        by def $has_linear_map_preimage(V, W, phi, U, target.add(y1, y2))
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, target.add(y1, y2))
         by thm set_builder_member(target.add(y1, y2), {q W: $has_linear_map_preimage(V, W, phi, U, q)})
         target.add(y1, y2) $in \subspace_map<V, W, phi>(U)
     claim:
@@ -1062,14 +1102,17 @@ thm linear_map_map_is_subspace:
             =>:
                 target.smul(a, y) $in \subspace_map<V, W, phi>(U)
         y $in {q W: $has_linear_map_preimage(V, W, phi, U, q)}
-        by def $has_linear_map_preimage(V, W, phi, U, y)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, y)
         obtain x from exist v V st {v $in U, phi(v) = y}
         witness exist v V st {v $in U, phi(v) = target.smul(a, y)} from source.smul(a, x):
             phi(source.smul(a, x)) = target.smul(a, phi(x)) = target.smul(a, y)
-        by def $has_linear_map_preimage(V, W, phi, U, target.smul(a, y))
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, U, target.smul(a, y))
         by thm set_builder_member(target.smul(a, y), {q W: $has_linear_map_preimage(V, W, phi, U, q)})
         target.smul(a, y) $in \subspace_map<V, W, phi>(U)
-    by def $is_subspace(K, W, target, \subspace_map<V, W, phi>(U))
+    by def:
+        ? $is_subspace(K, W, target, \subspace_map<V, W, phi>(U))
 
 # The source `preimage` construction is exactly `subspace_comap`. Zero maps to
 # zero, while additivity and homogeneity transport the target closure laws back
@@ -1113,7 +1156,8 @@ thm linear_map_comap_is_subspace:
         phi(source.smul(a, x)) $in F
         by thm set_builder_member(source.smul(a, x), {q V: phi(q) $in F})
         source.smul(a, x) $in \subspace_comap<V, W, phi>(F)
-    by def $is_subspace(K, V, source, \subspace_comap<V, W, phi>(F))
+    by def:
+        ? $is_subspace(K, V, source, \subspace_comap<V, W, phi>(F))
 
 # Every scalar fixes the vector-space zero. Distribute over zero + zero and
 # cancel the duplicated scalar multiple in the additive group.
@@ -1171,7 +1215,8 @@ thm subspace_bottom_is_subspace:
                 space.smul(a, x) $in \subspace_bottom<V, space.zero>
         by thm vector_smul_zero(K, V, space, a)
         space.smul(a, x) = space.smul(a, space.zero) = space.zero
-    by def $is_subspace(K, V, space, \subspace_bottom<V, space.zero>)
+    by def:
+        ? $is_subspace(K, V, space, \subspace_bottom<V, space.zero>)
 
 template<V, W set, zeroW W, phi fn(v V) W>:
     have linear_kernel power_set(V) = {x V: phi(x) = zeroW}
@@ -1213,7 +1258,8 @@ thm linear_map_kernel_is_subspace:
         phi(source.smul(a, x)) = target.smul(a, phi(x)) = target.smul(a, target.zero) = target.zero
         by thm set_builder_member(source.smul(a, x), {z V: phi(z) = target.zero})
         source.smul(a, x) $in \linear_kernel<V, W, target.zero, phi>
-    by def $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, phi>)
+    by def:
+        ? $is_subspace(K, V, source, \linear_kernel<V, W, target.zero, phi>)
 
 # A linear map is injective exactly when its kernel contains only zero.
 thm linear_map_kernel_eq_bottom_of_injective:
@@ -1231,11 +1277,13 @@ thm linear_map_kernel_eq_bottom_of_injective:
             =>:
                 x $in \subspace_bottom<V, source.zero>
         phi(x) = target.zero = phi(source.zero)
-        by def $chap4::injective_fn(V, W, phi)
+        by def:
+            ? $chap4::injective_fn(V, W, phi)
         x = source.zero
         x $in {source.zero}
         x $in \subspace_bottom<V, source.zero>
-    by def \linear_kernel<V, W, target.zero, phi> $subset \subspace_bottom<V, source.zero>
+    by def:
+        ? \linear_kernel<V, W, target.zero, phi> $subset \subspace_bottom<V, source.zero>
     \linear_kernel<V, W, target.zero, phi> $subset \subspace_bottom<V, source.zero>
     claim:
         ? forall x V:
@@ -1247,9 +1295,11 @@ thm linear_map_kernel_eq_bottom_of_injective:
         phi(x) = phi(source.zero) = target.zero
         by thm set_builder_member(x, {z V: phi(z) = target.zero})
         x $in \linear_kernel<V, W, target.zero, phi>
-    by def \subspace_bottom<V, source.zero> $subset \linear_kernel<V, W, target.zero, phi>
+    by def:
+        ? \subspace_bottom<V, source.zero> $subset \linear_kernel<V, W, target.zero, phi>
     \subspace_bottom<V, source.zero> $subset \linear_kernel<V, W, target.zero, phi>
-    by extension \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
+    by extension:
+        ? \linear_kernel<V, W, target.zero, phi> = \subspace_bottom<V, source.zero>
 
 thm linear_map_injective_of_kernel_eq_bottom:
     ? forall K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W:
@@ -1277,7 +1327,8 @@ thm linear_map_injective_of_kernel_eq_bottom:
         by thm chap2::neg_neg(V, source.add, source.zero, source.neg, x1)
         x2 = source.neg(source.neg(x1)) = x1
         x1 = x2
-    by def $chap4::injective_fn(V, W, phi)
+    by def:
+        ? $chap4::injective_fn(V, W, phi)
 
 prop linear_map_injective_iff_kernel_eq_bottom(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, phi fn(v V) W):
     forall:
@@ -1298,7 +1349,8 @@ thm subspace_top_is_subspace:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>:
         $is_subspace(K, V, space, \subspace_top<V>)
     \subspace_top<V> = V
-    by def $is_subspace(K, V, space, \subspace_top<V>)
+    by def:
+        ? $is_subspace(K, V, space, \subspace_top<V>)
 
 template<V, W set, phi fn(v V) W>:
     have linear_range power_set(W) = \subspace_map<V, W, phi>(V)
@@ -1326,18 +1378,22 @@ thm linear_map_range_eq_top_of_surjective:
     claim:
         ? forall y W:
             y $in \linear_range<V, W, phi>
-        by def $chap4::surjective_fn(V, W, phi)
+        by def:
+            ? $chap4::surjective_fn(V, W, phi)
         obtain x from exist z V st {y = phi(z)}
         witness exist z V st {z $in V, phi(z) = y} from x
-        by def $has_linear_map_preimage(V, W, phi, V, y)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, V, y)
         by thm set_builder_member(y, {q W: $has_linear_map_preimage(V, W, phi, V, q)})
         \subspace_map<V, W, phi>(V) = {q W: $has_linear_map_preimage(V, W, phi, V, q)}
         y $in \subspace_map<V, W, phi>(V)
         y $in \linear_range<V, W, phi>
-    by def \subspace_top<W> $subset \linear_range<V, W, phi>
+    by def:
+        ? \subspace_top<W> $subset \linear_range<V, W, phi>
     \subspace_top<W> $subset \linear_range<V, W, phi>
     \linear_range<V, W, phi> $subset \subspace_top<W>
-    by extension \linear_range<V, W, phi> = \subspace_top<W>
+    by extension:
+        ? \linear_range<V, W, phi> = \subspace_top<W>
 
 thm linear_map_surjective_of_range_eq_top:
     ? forall V, W nonempty_set, phi fn(v V) W:
@@ -1354,10 +1410,12 @@ thm linear_map_surjective_of_range_eq_top:
         y $in \subspace_map<V, W, phi>(V)
         \subspace_map<V, W, phi>(V) = {q W: $has_linear_map_preimage(V, W, phi, V, q)}
         y $in {q W: $has_linear_map_preimage(V, W, phi, V, q)}
-        by def $has_linear_map_preimage(V, W, phi, V, y)
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, V, y)
         obtain x from exist z V st {z $in V, phi(z) = y}
         witness exist z V st {y = phi(z)} from x
-    by def $chap4::surjective_fn(V, W, phi)
+    by def:
+        ? $chap4::surjective_fn(V, W, phi)
 
 prop linear_map_surjective_iff_range_eq_top(V, W nonempty_set, phi fn(v V) W):
     forall:
@@ -1475,8 +1533,10 @@ thm inherited_subspace_tuple_is_vector_space:
         space.smul(space.scalar_zero, v) = space.zero
         \inherited_subspace_smul<K, V, space, U>(space.scalar_one, v) = space.smul(space.scalar_one, v) = v
         \inherited_subspace_smul<K, V, space, U>(space.scalar_zero, v) = space.smul(space.scalar_zero, v) = space.zero
-    by def $chap2::is_additive_commutative_group(\inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>)
-    by def $is_vector_space(K, \inherited_subspace_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>)
+    by def:
+        ? $chap2::is_additive_commutative_group(\inherited_subspace_carrier<K, V, space, U>, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>)
+    by def:
+        ? $is_vector_space(K, \inherited_subspace_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \inherited_subspace_add<K, V, space, U>, space.zero, \inherited_subspace_neg<K, V, space, U>, \inherited_subspace_smul<K, V, space, U>)
     space.scalar_add $in fn(x, y K) K
     space.scalar_zero $in K
     space.scalar_neg $in fn(x K) K
@@ -1614,7 +1674,8 @@ thm is_subspace_of_eq:
         x $in A
         space.smul(a, x) $in A
         A = B
-    by def $is_subspace(K, V, space, B)
+    by def:
+        ? $is_subspace(K, V, space, B)
 
 thm subspace_join_is_subspace:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, U, W power_set(V):
@@ -1643,7 +1704,8 @@ thm subspace_translate_mem_of_witness:
         =>:
             x $in \subspace_translate<K, V, space>(U, v)
     witness exist t V st {t $in U, x = space.add(v, t)} from u
-    by def $subspace_translate_member(K, V, space, U, v, x)
+    by def:
+        ? $subspace_translate_member(K, V, space, U, v, x)
     by thm set_builder_member(x, {q V: $subspace_translate_member(K, V, space, U, v, q)})
     \subspace_translate<K, V, space>(U, v) = {q V: $subspace_translate_member(K, V, space, U, v, q)}
     x $in \subspace_translate<K, V, space>(U, v)
@@ -1655,7 +1717,8 @@ thm subspace_translate_witness_of_mem:
             exist u V st {u $in U, x = space.add(v, u)}
     \subspace_translate<K, V, space>(U, v) = {q V: $subspace_translate_member(K, V, space, U, v, q)}
     x $in {q V: $subspace_translate_member(K, V, space, U, v, q)}
-    by def $subspace_translate_member(K, V, space, U, v, x)
+    by def:
+        ? $subspace_translate_member(K, V, space, U, v, x)
     exist u V st {u $in U, x = space.add(v, u)}
 
 prop is_subspace_translate(K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), CarrierC power_set(V)):
@@ -1670,7 +1733,8 @@ thm quotient_projection_mem:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V), v V:
         \subspace_translate<K, V, space>(U, v) $in \quotient_space<K, V, space>(U)
     witness exist x V st {\subspace_translate<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, x)} from v
-    by def $is_subspace_translate(K, V, space, U, \subspace_translate<K, V, space>(U, v))
+    by def:
+        ? $is_subspace_translate(K, V, space, U, \subspace_translate<K, V, space>(U, v))
     by thm set_builder_member(\subspace_translate<K, V, space>(U, v), {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)})
     \quotient_space<K, V, space>(U) = {CarrierC power_set(V): $is_subspace_translate(K, V, space, U, CarrierC)}
     \subspace_translate<K, V, space>(U, v) $in \quotient_space<K, V, space>(U)
@@ -1698,13 +1762,15 @@ thm quotient_projection_surjective:
             exist v V st {CarrierC = fn(x V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, x)}(v)}
         \quotient_space<K, V, space>(U) = {D power_set(V): $is_subspace_translate(K, V, space, U, D)}
         CarrierC $in {D power_set(V): $is_subspace_translate(K, V, space, U, D)}
-        by def $is_subspace_translate(K, V, space, U, CarrierC)
+        by def:
+            ? $is_subspace_translate(K, V, space, U, CarrierC)
         obtain v from exist x V st {CarrierC = \subspace_translate<K, V, space>(U, x)}
         fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(v) = \quotient_projection<K, V, space>(U, v)
         \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
         CarrierC = \subspace_translate<K, V, space>(U, v) = \quotient_projection<K, V, space>(U, v) = fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(v)
         witness exist x V st {CarrierC = fn(z V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, z)}(x)} from v
-    by def $chap4::surjective_fn(V, \quotient_space<K, V, space>(U), fn(v V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, v)})
+    by def:
+        ? $chap4::surjective_fn(V, \quotient_space<K, V, space>(U), fn(v V) \quotient_space<K, V, space>(U) {\quotient_projection<K, V, space>(U, v)})
 
 # A subspace translate contains its center. More generally, every member of a
 # translate is another representative of exactly the same quotient element.
@@ -1734,7 +1800,8 @@ thm subspace_translate_eq_of_mem:
         space.add(u, w) $in U
         z = space.add(x, w) = space.add(space.add(v, u), w) = space.add(v, space.add(u, w))
         by thm subspace_translate_mem_of_witness(K, V, space, U, v, z, space.add(u, w))
-    by def \subspace_translate<K, V, space>(U, x) $subset \subspace_translate<K, V, space>(U, v)
+    by def:
+        ? \subspace_translate<K, V, space>(U, x) $subset \subspace_translate<K, V, space>(U, v)
     \subspace_translate<K, V, space>(U, x) $subset \subspace_translate<K, V, space>(U, v)
     claim:
         ? forall z \subspace_translate<K, V, space>(U, v):
@@ -1756,9 +1823,11 @@ thm subspace_translate_eq_of_mem:
         space.add(x, space.add(space.neg(u), w)) = space.add(space.add(v, u), space.add(space.neg(u), w)) = space.add(v, space.add(u, space.add(space.neg(u), w))) = space.add(v, space.add(space.add(u, space.neg(u)), w)) = space.add(v, space.add(space.zero, w)) = space.add(v, w) = z
         z = space.add(x, space.add(space.neg(u), w))
         by thm subspace_translate_mem_of_witness(K, V, space, U, x, z, space.add(space.neg(u), w))
-    by def \subspace_translate<K, V, space>(U, v) $subset \subspace_translate<K, V, space>(U, x)
+    by def:
+        ? \subspace_translate<K, V, space>(U, v) $subset \subspace_translate<K, V, space>(U, x)
     \subspace_translate<K, V, space>(U, v) $subset \subspace_translate<K, V, space>(U, x)
-    by extension \subspace_translate<K, V, space>(U, x) = \subspace_translate<K, V, space>(U, v)
+    by extension:
+        ? \subspace_translate<K, V, space>(U, x) = \subspace_translate<K, V, space>(U, v)
 
 prop is_quotient_space_lift_compatible(K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K, W>, U power_set(V), phi fn(v V) W):
     $is_linear_map(K, V, W, source, target, phi)
@@ -1817,15 +1886,18 @@ template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspa
         have candidate \quotient_vector_carrier<K, V, space, U> = \subspace_translate<K, V, space>(U, space.add(v, w))
         witness exist s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_add_value(K, V, space, U, q, r, s)} from candidate:
             witness exist v0, w0 V st {q = \subspace_translate<K, V, space>(U, v0), r = \subspace_translate<K, V, space>(U, w0), candidate = \subspace_translate<K, V, space>(U, space.add(v0, w0))} from v, w
-            by def $is_quotient_vector_add_value(K, V, space, U, q, r, candidate)
+            by def:
+                ? $is_quotient_vector_add_value(K, V, space, U, q, r, candidate)
         claim:
             ? forall s1, s2 \quotient_vector_carrier<K, V, space, U>:
                 $is_quotient_vector_add_value(K, V, space, U, q, r, s1)
                 $is_quotient_vector_add_value(K, V, space, U, q, r, s2)
                 =>:
                     s1 = s2
-            by def $is_quotient_vector_add_value(K, V, space, U, q, r, s1)
-            by def $is_quotient_vector_add_value(K, V, space, U, q, r, s2)
+            by def:
+                ? $is_quotient_vector_add_value(K, V, space, U, q, r, s1)
+            by def:
+                ? $is_quotient_vector_add_value(K, V, space, U, q, r, s2)
             obtain v1, w1 from exist a, b V st {q = \subspace_translate<K, V, space>(U, a), r = \subspace_translate<K, V, space>(U, b), s1 = \subspace_translate<K, V, space>(U, space.add(a, b))}
             obtain v2, w2 from exist a, b V st {q = \subspace_translate<K, V, space>(U, a), r = \subspace_translate<K, V, space>(U, b), s2 = \subspace_translate<K, V, space>(U, space.add(a, b))}
             by thm subspace_translate_center_mem(K, V, space, U, v2)
@@ -1858,15 +1930,18 @@ template<K, V nonempty_set, space &VectorSpace<K, V>, U power_set(V): $is_subspa
         have candidate \quotient_vector_carrier<K, V, space, U> = \subspace_translate<K, V, space>(U, space.smul(a, v))
         witness exist s \quotient_vector_carrier<K, V, space, U> st {$is_quotient_vector_smul_value(K, V, space, U, a, q, s)} from candidate:
             witness exist v0 V st {q = \subspace_translate<K, V, space>(U, v0), candidate = \subspace_translate<K, V, space>(U, space.smul(a, v0))} from v
-            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, candidate)
+            by def:
+                ? $is_quotient_vector_smul_value(K, V, space, U, a, q, candidate)
         claim:
             ? forall s1, s2 \quotient_vector_carrier<K, V, space, U>:
                 $is_quotient_vector_smul_value(K, V, space, U, a, q, s1)
                 $is_quotient_vector_smul_value(K, V, space, U, a, q, s2)
                 =>:
                     s1 = s2
-            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, s1)
-            by def $is_quotient_vector_smul_value(K, V, space, U, a, q, s2)
+            by def:
+                ? $is_quotient_vector_smul_value(K, V, space, U, a, q, s1)
+            by def:
+                ? $is_quotient_vector_smul_value(K, V, space, U, a, q, s2)
             obtain v1 from exist x V st {q = \subspace_translate<K, V, space>(U, x), s1 = \subspace_translate<K, V, space>(U, space.smul(a, x))}
             obtain v2 from exist x V st {q = \subspace_translate<K, V, space>(U, x), s2 = \subspace_translate<K, V, space>(U, space.smul(a, x))}
             by thm subspace_translate_center_mem(K, V, space, U, v2)
@@ -1907,9 +1982,11 @@ thm quotient_vector_add_projection:
         \quotient_vector_projection<K, V, space, U>(w) = \quotient_projection<K, V, space>(U, w) = \subspace_translate<K, V, space>(U, w)
         \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \quotient_projection<K, V, space>(U, space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v, w))
         witness exist v0, w0 V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v0), \quotient_vector_projection<K, V, space, U>(w) = \subspace_translate<K, V, space>(U, w0), \quotient_vector_projection<K, V, space, U>(space.add(v, w)) = \subspace_translate<K, V, space>(U, space.add(v0, w0))} from v, w
-        by def $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(space.add(v, w)))
+        by def:
+            ? $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_projection<K, V, space, U>(space.add(v, w)))
     $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)))
-    by def $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)))
+    by def:
+        ? $is_quotient_vector_add_value(K, V, space, U, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)))
     obtain v1, w1 from exist a, b V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, a), \quotient_vector_projection<K, V, space, U>(w) = \subspace_translate<K, V, space>(U, b), \quotient_vector_add<K, V, space, U>(\quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(w)) = \subspace_translate<K, V, space>(U, space.add(a, b))}
     \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
     \quotient_vector_projection<K, V, space, U>(w) = \quotient_projection<K, V, space>(U, w) = \subspace_translate<K, V, space>(U, w)
@@ -1938,9 +2015,11 @@ thm quotient_vector_smul_projection:
         \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
         \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_projection<K, V, space>(U, space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v))
         witness exist v0 V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, v0), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v0))} from v
-        by def $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)))
+        by def:
+            ? $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_projection<K, V, space, U>(space.smul(a, v)))
     $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)))
-    by def $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)))
+    by def:
+        ? $is_quotient_vector_smul_value(K, V, space, U, a, \quotient_vector_projection<K, V, space, U>(v), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)))
     obtain v1 from exist x V st {\quotient_vector_projection<K, V, space, U>(v) = \subspace_translate<K, V, space>(U, x), \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \subspace_translate<K, V, space>(U, space.smul(a, x))}
     \quotient_vector_projection<K, V, space, U>(v) = \quotient_projection<K, V, space>(U, v) = \subspace_translate<K, V, space>(U, v)
     \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_projection<K, V, space>(U, space.smul(a, v)) = \subspace_translate<K, V, space>(U, space.smul(a, v))
@@ -2065,8 +2144,10 @@ thm quotient_vector_tuple_is_vector_space:
         \quotient_vector_zero<K, V, space, U> = \quotient_vector_projection<K, V, space, U>(space.zero)
         \quotient_vector_smul<K, V, space, U>(space.scalar_one, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_one, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_one, v)) = \quotient_vector_projection<K, V, space, U>(v) = q
         \quotient_vector_smul<K, V, space, U>(space.scalar_zero, q) = \quotient_vector_smul<K, V, space, U>(space.scalar_zero, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(space.scalar_zero, v)) = \quotient_vector_projection<K, V, space, U>(space.zero) = \quotient_vector_zero<K, V, space, U>
-    by def $chap2::is_additive_commutative_group(\quotient_vector_carrier<K, V, space, U>, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>)
-    by def $is_vector_space(K, \quotient_vector_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
+    by def:
+        ? $chap2::is_additive_commutative_group(\quotient_vector_carrier<K, V, space, U>, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>)
+    by def:
+        ? $is_vector_space(K, \quotient_vector_carrier<K, V, space, U>, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one, space.scalar_inv, \quotient_vector_add<K, V, space, U>, \quotient_vector_zero<K, V, space, U>, \quotient_vector_neg<K, V, space, U>, \quotient_vector_smul<K, V, space, U>)
     space.scalar_add $in fn(x, y K) K
     space.scalar_zero $in K
     space.scalar_neg $in fn(x K) K
@@ -2107,7 +2188,8 @@ thm quotient_vector_projection_is_linear:
         by thm quotient_vector_smul_projection(K, V, space, U, a, v)
         \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = \quotient_vector_projection<K, V, space, U>(space.smul(a, v))
         \quotient_vector_projection<K, V, space, U>(space.smul(a, v)) = \quotient_vector_smul<K, V, space, U>(a, \quotient_vector_projection<K, V, space, U>(v)) = target.smul(a, \quotient_vector_projection<K, V, space, U>(v))
-    by def $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, target, \quotient_vector_projection<K, V, space, U>)
+    by def:
+        ? $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, target, \quotient_vector_projection<K, V, space, U>)
     $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, target, \quotient_vector_projection<K, V, space, U>)
     $is_linear_map(K, V, \quotient_vector_carrier<K, V, space, U>, space, \quotient_vector_space<K, V, space, U>, \quotient_vector_projection<K, V, space, U>)
 
@@ -2126,7 +2208,8 @@ template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K,
         claim:
             ? exist v0 V st {q = \subspace_translate<K, V, source>(U, v0), candidate = phi(v0)}
             witness exist v0 V st {q = \subspace_translate<K, V, source>(U, v0), candidate = phi(v0)} from v
-        by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, candidate)
+        by def:
+            ? $is_quotient_space_lift_value(K, V, W, source, U, phi, q, candidate)
         witness exist y W st {$is_quotient_space_lift_value(K, V, W, source, U, phi, q, y)} from candidate
         claim:
             ? forall y1, y2 W:
@@ -2134,8 +2217,10 @@ template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K,
                 $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y2)
                 =>:
                     y1 = y2
-            by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y1)
-            by def $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y2)
+            by def:
+                ? $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y1)
+            by def:
+                ? $is_quotient_space_lift_value(K, V, W, source, U, phi, q, y2)
             obtain v1 from exist x V st {q = \subspace_translate<K, V, source>(U, x), y1 = phi(x)}
             obtain v2 from exist x V st {q = \subspace_translate<K, V, source>(U, x), y2 = phi(x)}
             by thm subspace_translate_center_mem(K, V, source, U, v2)
@@ -2165,7 +2250,8 @@ template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K,
         obtain v from exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0)}
         \linear_range<V, W, phi> = \subspace_map<V, W, phi>(V)
         witness exist z V st {z $in V, phi(z) = phi(v)} from v
-        by def $has_linear_map_preimage(V, W, phi, V, phi(v))
+        by def:
+            ? $has_linear_map_preimage(V, W, phi, V, phi(v))
         by thm set_builder_member(phi(v), {y W: $has_linear_map_preimage(V, W, phi, V, y)})
         \subspace_map<V, W, phi>(V) = {y W: $has_linear_map_preimage(V, W, phi, V, y)}
         phi(v) $in \subspace_map<V, W, phi>(V)
@@ -2174,7 +2260,8 @@ template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K,
         claim:
             ? exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0), candidate = phi(v0)}
             witness exist v0 V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, v0), candidate = phi(v0)} from v
-        by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, candidate)
+        by def:
+            ? $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, candidate)
         witness exist y \linear_range<V, W, phi> st {$is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y)} from candidate
         claim:
             ? forall y1, y2 \linear_range<V, W, phi>:
@@ -2182,8 +2269,10 @@ template<K, V, W nonempty_set, source &VectorSpace<K, V>, target &VectorSpace<K,
                 $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y2)
                 =>:
                     y1 = y2
-            by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y1)
-            by def $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y2)
+            by def:
+                ? $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y1)
+            by def:
+                ? $is_linear_first_isomorphism_value(K, V, W, source, target, phi, q, y2)
             obtain v1 from exist x V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, x), y1 = phi(x)}
             obtain v2 from exist x V st {q = \subspace_translate<K, V, source>(\linear_kernel<V, W, target.zero, phi>, x), y2 = phi(x)}
             by thm subspace_translate_center_mem(K, V, source, \linear_kernel<V, W, target.zero, phi>, v2)
@@ -2269,7 +2358,8 @@ thm endomorphism_sub_scalar_raw_eq_linear_combination:
         \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))(v) = space.smul(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)(v)) = space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v))
         \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))(v) = space.add(phi(v), \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))(v)) = space.add(phi(v), space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v)))
         \endomorphism_sub_scalar_raw<K, V, space>(phi, a)(v) = space.add(phi(v), space.neg(space.smul(a, v))) = space.add(phi(v), space.smul(space.scalar_neg(space.scalar_one), space.smul(a, v))) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))(v)
-    by def $fn_eq(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))))
+    by def:
+        ? $fn_eq(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))))
     $fn_eq(\endomorphism_sub_scalar_raw<K, V, space>(phi, a), \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a))))
     \endomorphism_sub_scalar_raw<K, V, space>(phi, a) = \linear_map_add_raw<K, V, V, space>(phi, \linear_map_smul_raw<K, V, V, space>(space.scalar_neg(space.scalar_one), \scalar_endomorphism<K, V, space>(a)))
 
@@ -2326,11 +2416,14 @@ thm eigenspace_eq_kernel_sub_scalar_raw:
         by thm chap2::add_right_cancel(V, space.add, space.zero, space.neg, phi(v), space.neg(space.smul(a, v)), space.smul(a, v))
         by thm set_builder_member(v, {x V: phi(x) = space.smul(a, x)})
         v $in \eigenspace<K, V, space>(phi, a)
-    by def \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    by def:
+        ? \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
     \eigenspace<K, V, space>(phi, a) $subset \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
-    by def \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> $subset \eigenspace<K, V, space>(phi, a)
+    by def:
+        ? \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> $subset \eigenspace<K, V, space>(phi, a)
     \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)> $subset \eigenspace<K, V, space>(phi, a)
-    by extension \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
+    by extension:
+        ? \eigenspace<K, V, space>(phi, a) = \linear_kernel<V, V, space.zero, \endomorphism_sub_scalar_raw<K, V, space>(phi, a)>
 
 # For a genuine endomorphism, the source eigenspace is the kernel of the typed
 # endomorphism phi - a • id.
@@ -2359,28 +2452,34 @@ thm eigenvalue_implies_eigenspace_nontrivial:
         $has_eigenvalue(K, V, space, phi, a)
         =>:
             $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
-    by def $has_eigenvalue(K, V, space, phi, a)
+    by def:
+        ? $has_eigenvalue(K, V, space, phi, a)
     obtain v from exist v V st {$has_eigenvector(K, V, space, phi, a, v)}
-    by def $has_eigenvector(K, V, space, phi, a, v)
+    by def:
+        ? $has_eigenvector(K, V, space, phi, a, v)
     by thm set_builder_member(v, {candidate V: phi(candidate) = space.smul(a, candidate)})
     claim:
         ? exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero}
         witness exist w V st {w $in {candidate V: phi(candidate) = space.smul(a, candidate)}, w != space.zero} from v
-    by def $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
+    by def:
+        ? $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
 
 thm eigenspace_nontrivial_implies_eigenvalue:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>, phi fn(v V) V, a K:
         $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
         =>:
             $has_eigenvalue(K, V, space, phi, a)
-    by def $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
+    by def:
+        ? $eigenspace_nontrivial(V, space.zero, {candidate V: phi(candidate) = space.smul(a, candidate)})
     obtain v from exist v V st {v $in {candidate V: phi(candidate) = space.smul(a, candidate)}, v != space.zero}
     phi(v) = space.smul(a, v)
-    by def $has_eigenvector(K, V, space, phi, a, v)
+    by def:
+        ? $has_eigenvector(K, V, space, phi, a, v)
     claim:
         ? exist w V st {$has_eigenvector(K, V, space, phi, a, w)}
         witness exist w V st {$has_eigenvector(K, V, space, phi, a, w)} from v
-    by def $has_eigenvalue(K, V, space, phi, a)
+    by def:
+        ? $has_eigenvalue(K, V, space, phi, a)
 
 template<K, V nonempty_set, space &VectorSpace<K, V>>:
     have fn zero_endomorphism_raw(v V) V = space.zero
@@ -2397,7 +2496,8 @@ thm zero_endomorphism_raw_is_linear:
             \zero_endomorphism_raw<K, V, space>(space.smul(a, v)) = space.smul(a, \zero_endomorphism_raw<K, V, space>(v))
         by thm vector_smul_zero(K, V, space, a)
         \zero_endomorphism_raw<K, V, space>(space.smul(a, v)) = space.zero = space.smul(a, space.zero) = space.smul(a, \zero_endomorphism_raw<K, V, space>(v))
-    by def $is_linear_map(K, V, V, space, space, fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)})
+    by def:
+        ? $is_linear_map(K, V, V, space, space, fn(v V) V {\zero_endomorphism_raw<K, V, space>(v)})
 
 thm zero_endomorphism_raw_mem:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>:
@@ -2478,7 +2578,8 @@ thm endomorphism_pow_succ:
 thm vector_space_scalar_commutative_ring:
     ? forall K, V nonempty_set, space &VectorSpace<K, V>:
         (space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one) $in &chap7::CommutativeRing<K>
-    by def $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
+    by def:
+        ? $chap7::is_commutative_ring(K, space.scalar_add, space.scalar_zero, space.scalar_neg, space.scalar_mul, space.scalar_one)
     space.scalar_add $in fn(x, y K) K
     space.scalar_zero $in K
     space.scalar_neg $in fn(x K) K

@@ -121,7 +121,8 @@ thm tends_to_by_preimage_intro:
             {x X: f(x) $in V} $in F
         =>:
             $tends_to_by_preimage(X, Y, f, F, G)
-    by def $tends_to_by_preimage(X, Y, f, F, G)
+    by def:
+        ? $tends_to_by_preimage(X, Y, f, F, G)
 
 thm set_preimage_member_of_image_member:
     ? forall X, Y set, f fn(x X) Y, x X, B power_set(Y):
@@ -138,7 +139,8 @@ thm set_image_member_of_source_member:
         =>:
             f(x) $in \chap4::set_image<X, Y, f, A>
     witness exist z X st {z $in A, f(x) = f(z)} from x
-    by def $chap4::has_preimage_in_subset(X, Y, f, A, f(x))
+    by def:
+        ? $chap4::has_preimage_in_subset(X, Y, f, A, f(x))
     by thm set_builder_member(f(x), {y Y: $chap4::has_preimage_in_subset(X, Y, f, A, y)})
     \chap4::set_image<X, Y, f, A> = {y Y: $chap4::has_preimage_in_subset(X, Y, f, A, y)}
     f(x) $in \chap4::set_image<X, Y, f, A>
@@ -172,7 +174,8 @@ thm filter_limits_compose:
                 by thm set_builder_member(z, {x X: g(f(x)) $in V})
                 z $in {x X: g(f(x)) $in V}
                 z $in B
-            by def A $subset B
+            by def:
+                ? A $subset B
         claim:
             ? B $subset A
             claim:
@@ -186,8 +189,10 @@ thm filter_limits_compose:
                 by thm set_builder_member(z, {x X: f(x) $in S})
                 z $in {x X: f(x) $in S}
                 z $in A
-            by def B $subset A
-        by extension A = B
+            by def:
+                ? B $subset A
+        by extension:
+            ? A = B
         A $in F
         B $in F
     by thm tends_to_by_preimage_intro(X, W, fn(x X) W {g(f(x))}, F, H)
@@ -276,9 +281,12 @@ thm eventually_conjunction_on_N:
         by thm natural_tail_contains_later(a, P, n)
         by thm natural_tail_contains_later(b, Qset, n)
     witness exist k N st {$contains_natural_tail_from(k, intersect(P, Qset))} from c:
-        by def $contains_natural_tail_from(c, intersect(P, Qset))
-    by def $contains_natural_tail(intersect(P, Qset))
-    by def $eventually_on_N(intersect(P, Qset))
+        by def:
+            ? $contains_natural_tail_from(c, intersect(P, Qset))
+    by def:
+        ? $contains_natural_tail(intersect(P, Qset))
+    by def:
+        ? $eventually_on_N(intersect(P, Qset))
 
 thm real_sequence_close_later:
     ? forall u fn(n N) R, x0 R, epsilon R+, N0, n N:
@@ -314,10 +322,14 @@ thm eventually_equal_real_sequences_symmetric:
         by thm eventual_equality_later(u, v, a, n)
         by thm set_builder_member(n, {k N: v(k) = u(k)})
     witness exist k N st {$contains_natural_tail_from(k, {n N: v(n) = u(n)})} from a:
-        by def $contains_natural_tail_from(a, {n N: v(n) = u(n)})
-    by def $contains_natural_tail({n N: v(n) = u(n)})
-    by def $eventually_on_N({n N: v(n) = u(n)})
-    by def $eventually_equal_real_sequences(v, u)
+        by def:
+            ? $contains_natural_tail_from(a, {n N: v(n) = u(n)})
+    by def:
+        ? $contains_natural_tail({n N: v(n) = u(n)})
+    by def:
+        ? $eventually_on_N({n N: v(n) = u(n)})
+    by def:
+        ? $eventually_equal_real_sequences(v, u)
 
 # Source `tendsto_congr'`: eventual equality preserves a real-sequence limit.
 # Both directions are kept explicit because the source presents an iff.
@@ -348,8 +360,10 @@ thm eventually_equal_preserves_real_limit_forward:
             by thm real_sequence_close_later(u, x0, epsilon, b, n)
             abs(v(n) - x0) = abs(u(n) - x0) < epsilon
         witness exist N0 N st {$real_sequence_is_epsilon_close_from(v, x0, epsilon, N0)} from c:
-            by def $real_sequence_is_epsilon_close_from(v, x0, epsilon, c)
-    by def $real_sequence_converges(v, x0)
+            by def:
+                ? $real_sequence_is_epsilon_close_from(v, x0, epsilon, c)
+    by def:
+        ? $real_sequence_converges(v, x0)
 
 thm eventually_equal_preserves_real_limit_reverse:
     ? forall u, v fn(n N) R, x0 R:
@@ -408,9 +422,12 @@ thm eventually_implication_on_N:
         $intersection_membership_implies(P, Qset, R0, n)
         by thm _intersection_membership_implies_apply(P, Qset, R0, n)
     witness exist k N st {$contains_natural_tail_from(k, R0)} from c:
-        by def $contains_natural_tail_from(c, R0)
-    by def $contains_natural_tail(R0)
-    by def $eventually_on_N(R0)
+        by def:
+            ? $contains_natural_tail_from(c, R0)
+    by def:
+        ? $contains_natural_tail(R0)
+    by def:
+        ? $eventually_on_N(R0)
 
 # The raw source constructions satisfy the filter laws. The proofs keep the
 # callable set families visible: principal and map use closure under
@@ -433,7 +450,8 @@ thm principal_filter_is_filter:
                 x $in U
                 x $in V
                 x $in intersect(U, V)
-            by def s $subset intersect(U, V)
+            by def:
+                ? s $subset intersect(U, V)
         s $subset intersect(U, V)
         intersect(U, V) $subset U $subset X
         intersect(U, V) $in power_set(X)
@@ -449,7 +467,8 @@ thm principal_filter_is_filter:
         by thm set_builder_member(V, {W power_set(X): s $subset W})
         \principal_filter_sets<X>(s) = {W power_set(X): s $subset W}
         V $in \principal_filter_sets<X>(s)
-    by def $is_filter_on(X, \principal_filter_sets<X>(s))
+    by def:
+        ? $is_filter_on(X, \principal_filter_sets<X>(s))
     by thm set_builder_member(\principal_filter_sets<X>(s), {F power_set(power_set(X)): $is_filter_on(X, F)})
     \Filter<X> = {F power_set(power_set(X)): $is_filter_on(X, F)}
     \principal_filter_sets<X>(s) $in \Filter<X>
@@ -461,11 +480,13 @@ thm at_top_N_is_filter:
         ? N $in at_top_N_sets
         claim:
             ? $contains_natural_tail_from(0, N)
-            by def $contains_natural_tail_from(0, N)
+            by def:
+                ? $contains_natural_tail_from(0, N)
         claim:
             ? exist a N st {$contains_natural_tail_from(a, N)}
             witness exist a N st {$contains_natural_tail_from(a, N)} from 0
-        by def $contains_natural_tail(N)
+        by def:
+            ? $contains_natural_tail(N)
         $contains_natural_tail(N)
         by thm set_builder_member(N, {S power_set(N): $contains_natural_tail(S)})
         at_top_N_sets = {S power_set(N): $contains_natural_tail(S)}
@@ -480,8 +501,10 @@ thm at_top_N_is_filter:
         V $in {S power_set(N): $contains_natural_tail(S)}
         $contains_natural_tail(U)
         $contains_natural_tail(V)
-        by def $eventually_on_N(U)
-        by def $eventually_on_N(V)
+        by def:
+            ? $eventually_on_N(U)
+        by def:
+            ? $eventually_on_N(V)
         by thm eventually_conjunction_on_N(U, V)
         $contains_natural_tail(intersect(U, V))
         intersect(U, V) $subset U $subset N
@@ -498,7 +521,8 @@ thm at_top_N_is_filter:
         at_top_N_sets = {S power_set(N): $contains_natural_tail(S)}
         U $in {S power_set(N): $contains_natural_tail(S)}
         $contains_natural_tail(U)
-        by def $contains_natural_tail(U)
+        by def:
+            ? $contains_natural_tail(U)
         obtain a from exist a0 N st {$contains_natural_tail_from(a0, U)}
         claim:
             ? $contains_natural_tail_from(a, V)
@@ -509,15 +533,18 @@ thm at_top_N_is_filter:
                         n $in V
                 by thm natural_tail_contains_later(a, U, n)
                 n $in V
-            by def $contains_natural_tail_from(a, V)
+            by def:
+                ? $contains_natural_tail_from(a, V)
         claim:
             ? exist a0 N st {$contains_natural_tail_from(a0, V)}
             witness exist a0 N st {$contains_natural_tail_from(a0, V)} from a
-        by def $contains_natural_tail(V)
+        by def:
+            ? $contains_natural_tail(V)
         by thm set_builder_member(V, {S power_set(N): $contains_natural_tail(S)})
         at_top_N_sets = {S power_set(N): $contains_natural_tail(S)}
         V $in at_top_N_sets
-    by def $is_filter_on(N, at_top_N_sets)
+    by def:
+        ? $is_filter_on(N, at_top_N_sets)
     by thm set_builder_member(at_top_N_sets, {F power_set(power_set(N)): $is_filter_on(N, F)})
     \Filter<N> = {F power_set(power_set(N)): $is_filter_on(N, F)}
     at_top_N_sets $in \Filter<N>
@@ -529,7 +556,8 @@ thm map_filter_is_filter:
     \Filter<X> = {source_filter power_set(power_set(X)): $is_filter_on(X, source_filter)}
     F $in {source_filter power_set(power_set(X)): $is_filter_on(X, source_filter)}
     $is_filter_on(X, F)
-    by def $is_filter_on(X, F)
+    by def:
+        ? $is_filter_on(X, F)
     claim:
         ? Y $in \map_filter_sets<X, Y>(f, F)
         have preimage_univ power_set(X) = {x X: f(x) $in Y}
@@ -542,9 +570,11 @@ thm map_filter_is_filter:
                 by thm set_builder_member(x, {z X: f(z) $in Y})
                 x $in {z X: f(z) $in Y}
                 x $in preimage_univ
-            by def X $subset preimage_univ
+            by def:
+                ? X $subset preimage_univ
         preimage_univ $subset X
-        by extension preimage_univ = X
+        by extension:
+            ? preimage_univ = X
         preimage_univ $in F
         by thm set_builder_member(Y, {V power_set(Y): {x X: f(x) $in V} $in F})
         \map_filter_sets<X, Y>(f, F) = {V power_set(Y): {x X: f(x) $in V} $in F}
@@ -583,7 +613,8 @@ thm map_filter_is_filter:
                 x $in preimage_U
                 x $in preimage_V
                 x $in intersect(preimage_U, preimage_V)
-            by def preimage_intersection $subset intersect(preimage_U, preimage_V)
+            by def:
+                ? preimage_intersection $subset intersect(preimage_U, preimage_V)
         claim:
             ? intersect(preimage_U, preimage_V) $subset preimage_intersection
             claim:
@@ -601,8 +632,10 @@ thm map_filter_is_filter:
                 by thm set_builder_member(x, {z X: f(z) $in intersect(U, V)})
                 preimage_intersection = {z X: f(z) $in intersect(U, V)}
                 x $in preimage_intersection
-            by def intersect(preimage_U, preimage_V) $subset preimage_intersection
-        by extension preimage_intersection = intersect(preimage_U, preimage_V)
+            by def:
+                ? intersect(preimage_U, preimage_V) $subset preimage_intersection
+        by extension:
+            ? preimage_intersection = intersect(preimage_U, preimage_V)
         preimage_intersection $in F
         intersect(U, V) $subset U $subset Y
         intersect(U, V) $in power_set(Y)
@@ -634,12 +667,14 @@ thm map_filter_is_filter:
                 by thm set_builder_member(x, {z X: f(z) $in V})
                 preimage_V = {z X: f(z) $in V}
                 x $in preimage_V
-            by def preimage_U $subset preimage_V
+            by def:
+                ? preimage_U $subset preimage_V
         preimage_V $in F
         by thm set_builder_member(V, {W power_set(Y): {x X: f(x) $in W} $in F})
         \map_filter_sets<X, Y>(f, F) = {W power_set(Y): {x X: f(x) $in W} $in F}
         V $in \map_filter_sets<X, Y>(f, F)
-    by def $is_filter_on(Y, \map_filter_sets<X, Y>(f, F))
+    by def:
+        ? $is_filter_on(Y, \map_filter_sets<X, Y>(f, F))
     by thm set_builder_member(\map_filter_sets<X, Y>(f, F), {target_filter power_set(power_set(Y)): $is_filter_on(Y, target_filter)})
     \Filter<Y> = {target_filter power_set(power_set(Y)): $is_filter_on(Y, target_filter)}
     \map_filter_sets<X, Y>(f, F) $in \Filter<Y>
@@ -651,7 +686,8 @@ thm comap_filter_is_filter:
     \Filter<Y> = {source_filter power_set(power_set(Y)): $is_filter_on(Y, source_filter)}
     G $in {source_filter power_set(power_set(Y)): $is_filter_on(Y, source_filter)}
     $is_filter_on(Y, G)
-    by def $is_filter_on(Y, G)
+    by def:
+        ? $is_filter_on(Y, G)
     claim:
         ? X $in \comap_filter_sets<X, Y>(f, G)
         claim:
@@ -660,11 +696,13 @@ thm comap_filter_is_filter:
                 ? forall x {z X: f(z) $in Y}:
                     x $in X
                 x $in X
-            by def {x X: f(x) $in Y} $subset X
+            by def:
+                ? {x X: f(x) $in Y} $subset X
         claim:
             ? exist V G st {{x X: f(x) $in V} $subset X}
             witness exist V G st {{x X: f(x) $in V} $subset X} from Y
-        by def $_contains_filter_preimage(X, Y, f, G, X)
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, X)
         by thm set_builder_member(X, {U power_set(X): $_contains_filter_preimage(X, Y, f, G, U)})
         \comap_filter_sets<X, Y>(f, G) = {U power_set(X): $_contains_filter_preimage(X, Y, f, G, U)}
         X $in \comap_filter_sets<X, Y>(f, G)
@@ -678,8 +716,10 @@ thm comap_filter_is_filter:
         V $in {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)}
         $_contains_filter_preimage(X, Y, f, G, U)
         $_contains_filter_preimage(X, Y, f, G, V)
-        by def $_contains_filter_preimage(X, Y, f, G, U)
-        by def $_contains_filter_preimage(X, Y, f, G, V)
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, U)
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, V)
         obtain large_U from exist A G st {{x X: f(x) $in A} $subset U}
         obtain large_V from exist B G st {{x X: f(x) $in B} $subset V}
         intersect(large_U, large_V) $in G
@@ -696,13 +736,15 @@ thm comap_filter_is_filter:
                 x $in U
                 x $in V
                 x $in intersect(U, V)
-            by def {x X: f(x) $in intersect(large_U, large_V)} $subset intersect(U, V)
+            by def:
+                ? {x X: f(x) $in intersect(large_U, large_V)} $subset intersect(U, V)
         intersect(U, V) $subset U $subset X
         intersect(U, V) $in power_set(X)
         claim:
             ? exist W G st {{x X: f(x) $in W} $subset intersect(U, V)}
             witness exist W G st {{x X: f(x) $in W} $subset intersect(U, V)} from intersect(large_U, large_V)
-        by def $_contains_filter_preimage(X, Y, f, G, intersect(U, V))
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, intersect(U, V))
         by thm set_builder_member(intersect(U, V), {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)})
         \comap_filter_sets<X, Y>(f, G) = {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)}
         intersect(U, V) $in \comap_filter_sets<X, Y>(f, G)
@@ -715,17 +757,20 @@ thm comap_filter_is_filter:
         \comap_filter_sets<X, Y>(f, G) = {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)}
         U $in {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)}
         $_contains_filter_preimage(X, Y, f, G, U)
-        by def $_contains_filter_preimage(X, Y, f, G, U)
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, U)
         obtain large_U from exist A G st {{x X: f(x) $in A} $subset U}
         {x X: f(x) $in large_U} $subset U $subset V
         claim:
             ? exist W G st {{x X: f(x) $in W} $subset V}
             witness exist W G st {{x X: f(x) $in W} $subset V} from large_U
-        by def $_contains_filter_preimage(X, Y, f, G, V)
+        by def:
+            ? $_contains_filter_preimage(X, Y, f, G, V)
         by thm set_builder_member(V, {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)})
         \comap_filter_sets<X, Y>(f, G) = {W power_set(X): $_contains_filter_preimage(X, Y, f, G, W)}
         V $in \comap_filter_sets<X, Y>(f, G)
-    by def $is_filter_on(X, \comap_filter_sets<X, Y>(f, G))
+    by def:
+        ? $is_filter_on(X, \comap_filter_sets<X, Y>(f, G))
     by thm set_builder_member(\comap_filter_sets<X, Y>(f, G), {target_filter power_set(power_set(X)): $is_filter_on(X, target_filter)})
     \Filter<X> = {target_filter power_set(power_set(X)): $is_filter_on(X, target_filter)}
     \comap_filter_sets<X, Y>(f, G) $in \Filter<X>
@@ -735,7 +780,8 @@ thm tends_to_preimage_implies_map:
         $tends_to_by_preimage(X, Y, f, F, G)
         =>:
             $tends_to_by_map(X, Y, f, F, G)
-    by def $tends_to_by_preimage(X, Y, f, F, G)
+    by def:
+        ? $tends_to_by_preimage(X, Y, f, F, G)
     claim:
         ? G $subset \map_filter_sets<X, Y>(f, F)
         claim:
@@ -745,17 +791,22 @@ thm tends_to_preimage_implies_map:
             by thm set_builder_member(V, {W power_set(Y): {x X: f(x) $in W} $in F})
             \map_filter_sets<X, Y>(f, F) = {W power_set(Y): {x X: f(x) $in W} $in F}
             V $in \map_filter_sets<X, Y>(f, F)
-        by def G $subset \map_filter_sets<X, Y>(f, F)
-    by def $filter_le(Y, \map_filter_sets<X, Y>(f, F), G)
-    by def $tends_to_by_map(X, Y, f, F, G)
+        by def:
+            ? G $subset \map_filter_sets<X, Y>(f, F)
+    by def:
+        ? $filter_le(Y, \map_filter_sets<X, Y>(f, F), G)
+    by def:
+        ? $tends_to_by_map(X, Y, f, F, G)
 
 thm tends_to_map_implies_preimage:
     ? forall X, Y set, f fn(x X) Y, F power_set(power_set(X)), G power_set(power_set(Y)):
         $tends_to_by_map(X, Y, f, F, G)
         =>:
             $tends_to_by_preimage(X, Y, f, F, G)
-    by def $tends_to_by_map(X, Y, f, F, G)
-    by def $filter_le(Y, \map_filter_sets<X, Y>(f, F), G)
+    by def:
+        ? $tends_to_by_map(X, Y, f, F, G)
+    by def:
+        ? $filter_le(Y, \map_filter_sets<X, Y>(f, F), G)
     claim:
         ? forall V G:
             {x X: f(x) $in V} $in F
@@ -764,7 +815,8 @@ thm tends_to_map_implies_preimage:
         \map_filter_sets<X, Y>(f, F) = {W power_set(Y): {x X: f(x) $in W} $in F}
         V $in {W power_set(Y): {x X: f(x) $in W} $in F}
         {x X: f(x) $in V} $in F
-    by def $tends_to_by_preimage(X, Y, f, F, G)
+    by def:
+        ? $tends_to_by_preimage(X, Y, f, F, G)
 
 # Chapter 3 already proves the same epsilon-N limit algebra. These two
 # witness-preserving bridges cross only the private helper-predicate names.
@@ -784,8 +836,10 @@ thm real_sequence_converges_to_chap3:
                     =>:
                         abs(u(n) - a) < epsilon
                 by thm real_sequence_close_later(u, a, epsilon, cutoff, n)
-            by def $chap3::_is_eventually_close(u, a, epsilon, cutoff)
-    by def $chap3::converges_to(u, a)
+            by def:
+                ? $chap3::_is_eventually_close(u, a, epsilon, cutoff)
+    by def:
+        ? $chap3::converges_to(u, a)
 
 thm chap3_converges_to_real_sequence:
     ? forall u fn(n N) R, a R:
@@ -802,8 +856,10 @@ thm chap3_converges_to_real_sequence:
                     n >= cutoff
                     =>:
                         abs(u(n) - a) < epsilon
-            by def $real_sequence_is_epsilon_close_from(u, a, epsilon, cutoff)
-    by def $real_sequence_converges(u, a)
+            by def:
+                ? $real_sequence_is_epsilon_close_from(u, a, epsilon, cutoff)
+    by def:
+        ? $real_sequence_converges(u, a)
 
 thm real_sequence_limit_add:
     ? forall u, v fn(n N) R, a, b R:
@@ -915,9 +971,11 @@ thm metric_continuous_maps_sequence_limit:
                         dist_Y(f(u(n)), f(a)) < epsilon
                 dist_X(u(n), a) < delta
                 dist_Y(f(u(n)), f(a)) < epsilon
-            by def $metric_sequence_is_epsilon_close_from(Y, dist_Y, fn(n N) Y {f(u(n))}, f(a), epsilon, N0)
+            by def:
+                ? $metric_sequence_is_epsilon_close_from(Y, dist_Y, fn(n N) Y {f(u(n))}, f(a), epsilon, N0)
         witness exist cutoff N st {$metric_sequence_is_epsilon_close_from(Y, dist_Y, fn(n N) Y {f(u(n))}, f(a), epsilon, cutoff)} from N0
-    by def $metric_sequence_converges(Y, dist_Y, fn(n N) Y {f(u(n))}, f(a))
+    by def:
+        ? $metric_sequence_converges(Y, dist_Y, fn(n N) Y {f(u(n))}, f(a))
 
 thm metric_distance_difference_le:
     ? forall X set, dist fn(x, y X) R, p, q, r, s X:
@@ -1015,9 +1073,12 @@ thm metric_distance_of_continuous_maps:
                     by thm metric_distance_difference_le(Y, dist_Y, f(x), g(x), f(a), g(a))
                     abs(dist_Y(f(x), g(x)) - dist_Y(f(a), g(a))) <= dist_Y(f(x), f(a)) + dist_Y(g(x), g(a)) < epsilon / 2 + epsilon / 2 = epsilon
                     real_distance(fn(point X) R {dist_Y(f(point), g(point))}(x), fn(point X) R {dist_Y(f(point), g(point))}(a)) = abs(dist_Y(f(x), g(x)) - dist_Y(f(a), g(a))) < epsilon
-                by def $is_metric_delta_controlled_at(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))}, a, epsilon, finite_set_min(union({delta_f}, {delta_g})))
-        by def $is_metric_continuous_at(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))}, a)
-    by def $is_metric_continuous(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))})
+                by def:
+                    ? $is_metric_delta_controlled_at(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))}, a, epsilon, finite_set_min(union({delta_f}, {delta_g})))
+        by def:
+            ? $is_metric_continuous_at(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))}, a)
+    by def:
+        ? $is_metric_continuous(X, R, dist_X, real_distance, fn(point X) R {dist_Y(f(point), g(point))})
 
 thm metric_continuous_composition:
     ? forall X, Y, Zset set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, dist_Z fn(x, y Zset) R, f fn(x X) Y, g fn(y Y) Zset:
@@ -1046,9 +1107,12 @@ thm metric_continuous_composition:
                     dist_Y(f(x), f(a)) < eta
                     dist_Z(g(f(x)), g(f(a))) < epsilon
                     dist_Z(fn(point X) Zset {g(f(point))}(x), fn(point X) Zset {g(f(point))}(a)) = dist_Z(g(f(x)), g(f(a))) < epsilon
-                by def $is_metric_delta_controlled_at(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))}, a, epsilon, delta)
-        by def $is_metric_continuous_at(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))}, a)
-    by def $is_metric_continuous(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))})
+                by def:
+                    ? $is_metric_delta_controlled_at(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))}, a, epsilon, delta)
+        by def:
+            ? $is_metric_continuous_at(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))}, a)
+    by def:
+        ? $is_metric_continuous(X, Zset, dist_X, dist_Z, fn(x X) Zset {g(f(x))})
 
 thm real_quadratic_is_metric_continuous:
     ? forall marker {0}:
@@ -1095,9 +1159,12 @@ thm real_quadratic_is_metric_continuous:
                     (x^2 + x) - (a^2 + a) = (x - a) * (x + a + 1)
                     abs((x^2 + x) - (a^2 + a)) = abs((x - a) * (x + a + 1)) = abs(x - a) * abs(x + a + 1) < epsilon
                     real_distance(fn(t R) R {t^2 + t}(x), fn(t R) R {t^2 + t}(a)) = abs((x^2 + x) - (a^2 + a)) < epsilon
-                by def $is_metric_delta_controlled_at(R, R, real_distance, real_distance, fn(x R) R {x^2 + x}, a, epsilon, finite_set_min(union({1}, {epsilon / (2 * abs(a) + 2)})))
-        by def $is_metric_continuous_at(R, R, real_distance, real_distance, fn(x R) R {x^2 + x}, a)
-    by def $is_metric_continuous(R, R, real_distance, real_distance, fn(x R) R {x^2 + x})
+                by def:
+                    ? $is_metric_delta_controlled_at(R, R, real_distance, real_distance, fn(x R) R {x^2 + x}, a, epsilon, finite_set_min(union({1}, {epsilon / (2 * abs(a) + 2)})))
+        by def:
+            ? $is_metric_continuous_at(R, R, real_distance, real_distance, fn(x R) R {x^2 + x}, a)
+    by def:
+        ? $is_metric_continuous(R, R, real_distance, real_distance, fn(x R) R {x^2 + x})
 
 # Source example `x ↦ f (x² + x)`.
 thm metric_continuous_after_real_quadratic:
@@ -1220,7 +1287,8 @@ thm sequence_limit_lies_in_metric_closure:
             dist(a, u(N0)) = dist(u(N0), a)
             u(N0) $in S
             witness exist y S st {dist(a, y) < epsilon} from u(N0)
-        by def $is_metric_adherent_point(X, dist, S, a)
+        by def:
+            ? $is_metric_adherent_point(X, dist, S, a)
     by thm set_builder_member(a, {x X: $is_metric_adherent_point(X, dist, S, x)})
     \metric_closure<X, dist>(S) = {x X: $is_metric_adherent_point(X, dist, S, x)}
     a $in \metric_closure<X, dist>(S)
@@ -1330,9 +1398,11 @@ thm reciprocal_approach_subsequence_converges:
                 (phi(n) + 1) / (p * (phi(n) + 1)) = 1 / p
                 1 / (phi(n) + 1) <= 1 / p
                 dist(u(phi(n)), x) < 1 / (phi(n) + 1) <= 1 / p < epsilon
-            by def $metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {u(phi(n))}, x, epsilon, p)
+            by def:
+                ? $metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {u(phi(n))}, x, epsilon, p)
         witness exist cutoff N st {$metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {u(phi(n))}, x, epsilon, cutoff)} from p
-    by def $metric_sequence_converges(X, dist, fn(n N) X {u(phi(n))}, x)
+    by def:
+        ? $metric_sequence_converges(X, dist, fn(n N) X {u(phi(n))}, x)
 
 have fn reciprocal_natural_radius(n N+) R = 1 / n
 
@@ -1369,9 +1439,11 @@ thm no_complement_ball_gives_reciprocal_hit:
                     y $in intersect(S, \metric_ball<X, dist>(x, reciprocal_natural_radius(n + 1)))
                     y $in {}
                     impossible y $in {}
-            by def \metric_ball<X, dist>(x, epsilon) $subset set_minus(X, S)
+            by def:
+                ? \metric_ball<X, dist>(x, epsilon) $subset set_minus(X, S)
         witness exist radius R+ st {\metric_ball<X, dist>(x, radius) $subset set_minus(X, S)} from epsilon
-        by def $has_metric_complement_ball(X, dist, S, x)
+        by def:
+            ? $has_metric_complement_ball(X, dist, S, x)
         impossible $has_metric_complement_ball(X, dist, S, x)
 
 prop has_reciprocal_pair_approach(X set, dist fn(x, y X) R, u, v fn(n N) X):
@@ -1417,9 +1489,11 @@ thm reciprocal_close_subsequence_shares_limit:
                 dist(u(phi(n)), v(phi(n))) < 1 / (phi(n) + 1) <= 1 / p < epsilon / 2
                 dist(v(phi(n)), u(phi(n))) = dist(u(phi(n)), v(phi(n))) < epsilon / 2
                 dist(v(phi(n)), a) <= dist(v(phi(n)), u(phi(n))) + dist(u(phi(n)), a) < epsilon / 2 + epsilon / 2 = epsilon
-            by def $metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {v(phi(n))}, a, epsilon, Nu + p)
+            by def:
+                ? $metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {v(phi(n))}, a, epsilon, Nu + p)
         witness exist cutoff N st {$metric_sequence_is_epsilon_close_from(X, dist, fn(n N) X {v(phi(n))}, a, epsilon, cutoff)} from Nu + p
-    by def $metric_sequence_converges(X, dist, fn(n N) X {v(phi(n))}, a)
+    by def:
+        ? $metric_sequence_converges(X, dist, fn(n N) X {v(phi(n))}, a)
 
 prop pair_sequence_is_epsilon_close_from(X set, dist fn(x, y X) R, u, v fn(n N) X, epsilon R+, cutoff N):
     forall n N:
@@ -1452,7 +1526,8 @@ thm same_metric_limit_implies_eventually_pair_close:
             dist(v(n), a) < epsilon / 2
             dist(a, v(n)) = dist(v(n), a) < epsilon / 2
             dist(u(n), v(n)) <= dist(u(n), a) + dist(a, v(n)) < epsilon / 2 + epsilon / 2 = epsilon
-        by def $pair_sequence_is_epsilon_close_from(X, dist, u, v, epsilon, Nu + Nv)
+        by def:
+            ? $pair_sequence_is_epsilon_close_from(X, dist, u, v, epsilon, Nu + Nv)
     witness exist cutoff N st {$pair_sequence_is_epsilon_close_from(X, dist, u, v, epsilon, cutoff)} from Nu + Nv
 
 prop is_metric_compact(X set, dist fn(x, y X) R, S power_set(X)):
@@ -1488,7 +1563,8 @@ thm compact_metric_space_universe_is_compact:
         $is_compact_metric_space(X, dist)
         =>:
             $is_metric_compact(X, dist, X)
-    by def $is_compact_metric_space(X, dist)
+    by def:
+        ? $is_compact_metric_space(X, dist)
 
 # Reusable countable choice from Chapter 4's checked total-inverse interface.
 # This block precedes its metric and topology clients because Litex resolves
@@ -1522,7 +1598,8 @@ thm set_equality_implies_subset:
         x $in A
         A = B
         x $in B
-    by def A $subset B
+    by def:
+        ? A $subset B
 
 thm set_valued_object_equality_implies_subset:
     ? forall X, Y set, f fn(x X) power_set(Y), a, b X:
@@ -1572,7 +1649,8 @@ thm countable_nonempty_family_has_choice_sequence:
         default_pair[2] = x0
         default_pair[1] = 0
         x0 $in A(0)
-        by def $_is_countable_choice_pair(X, A, default_pair)
+        by def:
+            ? $_is_countable_choice_pair(X, A, default_pair)
         by thm set_builder_member(default_pair, {pair cart(N, X): $_is_countable_choice_pair(X, A, pair)})
         \countable_choice_pair_carrier<X>(A) = {pair cart(N, X): $_is_countable_choice_pair(X, A, pair)}
         default_pair $in \countable_choice_pair_carrier<X>(A)
@@ -1593,14 +1671,16 @@ thm countable_nonempty_family_has_choice_sequence:
             raw_pair[2] = value
             raw_pair[1] = n
             value $in A(n)
-            by def $_is_countable_choice_pair(X, A, raw_pair)
+            by def:
+                ? $_is_countable_choice_pair(X, A, raw_pair)
             by thm set_builder_member(raw_pair, {candidate_pair cart(N, X): $_is_countable_choice_pair(X, A, candidate_pair)})
             \countable_choice_pair_carrier<X>(A) = {candidate_pair cart(N, X): $_is_countable_choice_pair(X, A, candidate_pair)}
             raw_pair $in \countable_choice_pair_carrier<X>(A)
         have pair choice_pairs = raw_pair
         witness exist candidate choice_pairs st {choice_index(candidate) = n} from pair:
             choice_index(pair) = pair[1] = raw_pair[1] = n
-        by def $chap4::has_preimage(choice_pairs, N, choice_index, n)
+        by def:
+            ? $chap4::has_preimage(choice_pairs, N, choice_index, n)
     claim:
         ? forall n N:
             choice_index(inverse(n)) = n
@@ -1625,7 +1705,8 @@ thm countable_nonempty_family_has_choice_sequence:
         ambient_inverse(n)[2] $in A(n)
         selected(n) = ambient_inverse(n)[2]
         selected(n) $in A(n)
-    by def $is_countable_choice_sequence(X, A, selected)
+    by def:
+        ? $is_countable_choice_sequence(X, A, selected)
     witness exist selection fn(n N) X st {$is_countable_choice_sequence(X, A, selection)} from selected
 
 thm compact_metric_set_is_closed:
@@ -1667,7 +1748,8 @@ thm compact_metric_set_is_closed:
                         by thm countable_choice_member_in_superset(X, hits, selected, n, intersect(S, \metric_ball<X, dist>(x, reciprocal_natural_radius(n + 1))))
                         selected(n) $in intersect(S, \metric_ball<X, dist>(x, reciprocal_natural_radius(n + 1)))
                         selected(n) $in S
-                    by def $is_sequence_in_set(X, S, selected)
+                    by def:
+                        ? $is_sequence_in_set(X, S, selected)
                 claim:
                     ? $has_reciprocal_metric_approach(X, dist, selected, x)
                     claim:
@@ -1681,7 +1763,8 @@ thm compact_metric_set_is_closed:
                         selected(n) $in intersect(S, \metric_ball<X, dist>(x, reciprocal_natural_radius(n + 1)))
                         selected(n) $in \metric_ball<X, dist>(x, reciprocal_natural_radius(n + 1))
                         dist(selected(n), x) < reciprocal_natural_radius(n + 1) = 1 / (n + 1)
-                    by def $has_reciprocal_metric_approach(X, dist, selected, x)
+                    by def:
+                        ? $has_reciprocal_metric_approach(X, dist, selected, x)
                 obtain a, phi from exist limit S, reindex fn(n N) N st {$strictly_increasing_natural_map(reindex), $metric_sequence_converges(X, dist, fn(n N) X {selected(reindex(n))}, limit)}
                 by thm reciprocal_approach_subsequence_converges(X, dist, selected, x, phi)
                 by thm metric_sequence_limit_unique(X, dist, fn(n N) X {selected(phi(n))}, a, x)
@@ -1689,9 +1772,12 @@ thm compact_metric_set_is_closed:
                 a $in S
                 x $in S
                 impossible x $in S
-            by def $has_metric_complement_ball(X, dist, S, x)
-        by def $is_metric_open(X, dist, set_minus(X, S))
-    by def $is_metric_closed(X, dist, S)
+            by def:
+                ? $has_metric_complement_ball(X, dist, S, x)
+        by def:
+            ? $is_metric_open(X, dist, set_minus(X, S))
+    by def:
+        ? $is_metric_closed(X, dist, S)
 
 prop is_uniform_delta_control(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, epsilon R+, delta R+):
     forall a, b X:
@@ -1744,8 +1830,10 @@ thm cauchy_characterizations_equivalent_forward:
                         dist(u(n), u(N0)) < epsilon
                 N0 >= N0
                 dist(u(n), u(N0)) < epsilon
-            by def $is_cauchy_anchored_after(X, dist, u, epsilon, N0)
-    by def $is_cauchy_sequence_anchored(X, dist, u)
+            by def:
+                ? $is_cauchy_anchored_after(X, dist, u, epsilon, N0)
+    by def:
+        ? $is_cauchy_sequence_anchored(X, dist, u)
 
 prop is_complete_metric_space(X set, dist fn(x, y X) R):
     forall u fn(n N) X:
@@ -1898,8 +1986,10 @@ thm geometric_step_is_cauchy_anchored:
                 2 * (1 / 2)^p - 2 * (1 / 2)^n <= 2 * (1 / 2)^p
                 dist(u(p), u(n)) = dist(u(p), u(p + (n - p))) <= 2 * (1 / 2)^p - 2 * (1 / 2)^(p + (n - p)) = 2 * (1 / 2)^p - 2 * (1 / 2)^n <= 2 * (1 / 2)^p < epsilon
                 dist(u(n), u(p)) = dist(u(p), u(n)) < epsilon
-            by def $is_cauchy_anchored_after(X, dist, u, epsilon, p)
-    by def $is_cauchy_sequence_anchored(X, dist, u)
+            by def:
+                ? $is_cauchy_anchored_after(X, dist, u, epsilon, p)
+    by def:
+        ? $is_cauchy_sequence_anchored(X, dist, u)
 
 prop is_metric_dense(X set, dist fn(x, y X) R, S power_set(X)):
     forall x X, epsilon R:
@@ -1920,7 +2010,8 @@ thm countable_intersection_member:
             x $in A(n)
         =>:
             x $in \countable_intersection<X>(A)
-    by def $_belongs_every_countable_set(X, A, x)
+    by def:
+        ? $_belongs_every_countable_set(X, A, x)
     by thm set_builder_member(x, {candidate X: $_belongs_every_countable_set(X, A, candidate)})
     \countable_intersection<X>(A) = {candidate X: $_belongs_every_countable_set(X, A, candidate)}
     x $in \countable_intersection<X>(A)
@@ -1959,7 +2050,8 @@ thm serial_relation_has_path:
     (x0, y0) $in relation
     claim:
         ? (x0, y0) $in \relation_pair_carrier<X>(relation)
-        by def $_belongs_relation_pair_carrier(X, relation, (x0, y0))
+        by def:
+            ? $_belongs_relation_pair_carrier(X, relation, (x0, y0))
         by thm set_builder_member((x0, y0), {pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, pair)})
         \relation_pair_carrier<X>(relation) = {pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, pair)}
         (x0, y0) $in \relation_pair_carrier<X>(relation)
@@ -1976,14 +2068,16 @@ thm serial_relation_has_path:
         claim:
             ? raw_pair $in \relation_pair_carrier<X>(relation)
             raw_pair = (x, y)
-            by def $_belongs_relation_pair_carrier(X, relation, raw_pair)
+            by def:
+                ? $_belongs_relation_pair_carrier(X, relation, raw_pair)
             by thm set_builder_member(raw_pair, {candidate_pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, candidate_pair)})
             \relation_pair_carrier<X>(relation) = {candidate_pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, candidate_pair)}
             raw_pair $in \relation_pair_carrier<X>(relation)
         have pair relation_pairs = raw_pair
         source(pair) = pair[1] = raw_pair[1] = x
         witness exist p relation_pairs st {source(p) = x} from pair
-        by def $chap4::has_preimage(relation_pairs, X, source, x)
+        by def:
+            ? $chap4::has_preimage(relation_pairs, X, source, x)
     by thm chap4::total_inverse_exists(relation_pairs, X, default_pair, source)
     obtain inverse from exist inverse0 fn(x X) relation_pairs st {$chap4::is_total_inverse(relation_pairs, X, default_pair, source, inverse0)}
     claim:
@@ -2001,7 +2095,8 @@ thm serial_relation_has_path:
         \relation_pair_carrier<X>(relation) = {candidate_pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, candidate_pair)}
         ambient_pair(x) $in {candidate_pair cart(X, X): $_belongs_relation_pair_carrier(X, relation, candidate_pair)}
         $_belongs_relation_pair_carrier(X, relation, ambient_pair(x))
-        by def $_belongs_relation_pair_carrier(X, relation, ambient_pair(x))
+        by def:
+            ? $_belongs_relation_pair_carrier(X, relation, ambient_pair(x))
         ambient_pair(x) $in relation
         source(inverse(x)) = inverse(x)[1] = ambient_pair(x)[1]
         source(inverse(x)) = x
@@ -2023,7 +2118,8 @@ thm serial_relation_has_path:
         path(n + 1) = next(path(n + 1 - 1)) = next(path(n))
         (path(n), next(path(n))) $in relation
         (path(n), path(n + 1)) $in relation
-    by def $is_relation_path_from(X, relation, x0, path)
+    by def:
+        ? $is_relation_path_from(X, relation, x0, path)
     witness exist u fn(n N) X st {$is_relation_path_from(X, relation, x0, u)} from path
 
 # The reverse bridge uses the same cutoff and an epsilon/2 triangle estimate.
@@ -2049,8 +2145,10 @@ thm cauchy_characterizations_equivalent_reverse:
                 dist(u(n), u(N0)) < epsilon / 2
                 dist(u(N0), u(n)) = dist(u(n), u(N0)) < epsilon / 2
                 dist(u(m), u(n)) <= dist(u(m), u(N0)) + dist(u(N0), u(n)) < epsilon / 2 + epsilon / 2 = epsilon
-            by def $is_cauchy_after(X, dist, u, epsilon, N0)
-    by def $is_cauchy_sequence(X, dist, u)
+            by def:
+                ? $is_cauchy_after(X, dist, u, epsilon, N0)
+    by def:
+        ? $is_cauchy_sequence(X, dist, u)
 
 # Geometrically shrinking successive steps produce a Cauchy sequence and hence
 # a limit in a complete metric space.
@@ -2096,10 +2194,13 @@ thm not_uniformly_continuous_on_has_failure_epsilon:
                 ? $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
                 not $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
                 witness exist bad_epsilon R+ st {not $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, bad_epsilon)} from epsilon
-                by def $has_uniform_failure_on(X, Y, dist_X, dist_Y, S, f)
+                by def:
+                    ? $has_uniform_failure_on(X, Y, dist_X, dist_Y, S, f)
                 impossible $has_uniform_failure_on(X, Y, dist_X, dist_Y, S, f)
-            by def $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
-        by def $is_uniformly_metric_continuous_on(X, Y, dist_X, dist_Y, S, f)
+            by def:
+                ? $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
+        by def:
+            ? $is_uniformly_metric_continuous_on(X, Y, dist_X, dist_Y, S, f)
         impossible $is_uniformly_metric_continuous_on(X, Y, dist_X, dist_Y, S, f)
 
 prop is_uniform_failure_pair(X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, S power_set(X), f fn(x X) Y, epsilon, delta R+, pair cart(X, X)):
@@ -2117,7 +2218,8 @@ thm uniform_failure_pair_set_nonempty:
         ? not $is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, delta)
         $is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, delta)
         witness exist radius R+ st {$is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, radius)} from delta
-        by def $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
+        by def:
+            ? $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
         impossible $has_uniform_delta_on_at_epsilon(X, Y, dist_X, dist_Y, S, f, epsilon)
     by contra:
         ? {pair cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, delta, pair)} != {}
@@ -2137,11 +2239,13 @@ thm uniform_failure_pair_set_nonempty:
                     pair[2] = right
                     claim:
                         ? $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, delta, pair)
-                        by def $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, delta, pair)
+                        by def:
+                            ? $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, delta, pair)
                     by thm set_builder_member(pair, {candidate cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, delta, candidate)})
                     pair $in {}
                     impossible pair $in {}
-            by def $is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, delta)
+            by def:
+                ? $is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, delta)
         impossible $is_uniform_delta_control_on(X, Y, dist_X, dist_Y, S, f, epsilon, delta)
 
 thm uniform_failure_reciprocal_pair_set_nonempty:
@@ -2176,7 +2280,8 @@ thm uniform_failure_epsilon_has_sequences:
                 ? forall pair {candidate cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, reciprocal_natural_radius(n + 1), candidate)}:
                     pair $in cart(X, X)
                 pair $in cart(X, X)
-            by def {pair cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, reciprocal_natural_radius(n + 1), pair)} $subset cart(X, X)
+            by def:
+                ? {pair cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, reciprocal_natural_radius(n + 1), pair)} $subset cart(X, X)
         {pair cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, reciprocal_natural_radius(n + 1), pair)} $in power_set(cart(X, X))
     have fn bad_pairs(n N) power_set(cart(X, X)) = {pair cart(X, X): $is_uniform_failure_pair(X, Y, dist_X, dist_Y, S, f, epsilon, reciprocal_natural_radius(n + 1), pair)}
     claim:
@@ -2206,7 +2311,8 @@ thm uniform_failure_epsilon_has_sequences:
             selected(n)[1] $in S
             left(n) = selected(n)[1]
             left(n) $in S
-        by def $is_sequence_in_set(X, S, left)
+        by def:
+            ? $is_sequence_in_set(X, S, left)
     claim:
         ? $is_sequence_in_set(X, S, right)
         claim:
@@ -2216,7 +2322,8 @@ thm uniform_failure_epsilon_has_sequences:
             selected(n)[2] $in S
             right(n) = selected(n)[2]
             right(n) $in S
-        by def $is_sequence_in_set(X, S, right)
+        by def:
+            ? $is_sequence_in_set(X, S, right)
     claim:
         ? $has_reciprocal_pair_approach(X, dist_X, left, right)
         claim:
@@ -2230,7 +2337,8 @@ thm uniform_failure_epsilon_has_sequences:
             right(n) = selected(n)[2]
             reciprocal_natural_radius(n + 1) = 1 / (n + 1)
             dist_X(left(n), right(n)) < 1 / (n + 1)
-        by def $has_reciprocal_pair_approach(X, dist_X, left, right)
+        by def:
+            ? $has_reciprocal_pair_approach(X, dist_X, left, right)
     claim:
         ? $has_uniform_output_separation(X, Y, dist_Y, f, left, right, epsilon)
         claim:
@@ -2249,9 +2357,11 @@ thm uniform_failure_epsilon_has_sequences:
             by thm chap9::object_substitution(Y, R, fn(value Y) R {dist_Y(f(selected(n)[1]), value)}, f(right(n)), f(selected(n)[2]))
             dist_Y(f(selected(n)[1]), f(right(n))) = dist_Y(f(selected(n)[1]), f(selected(n)[2]))
             dist_Y(f(left(n)), f(right(n))) = dist_Y(f(selected(n)[1]), f(right(n))) = dist_Y(f(selected(n)[1]), f(selected(n)[2])) >= epsilon
-        by def $has_uniform_output_separation(X, Y, dist_Y, f, left, right, epsilon)
+        by def:
+            ? $has_uniform_output_separation(X, Y, dist_Y, f, left, right, epsilon)
     witness exist u, v fn(n N) X st {$is_sequence_in_set(X, S, u), $is_sequence_in_set(X, S, v), $has_reciprocal_pair_approach(X, dist_X, u, v), $has_uniform_output_separation(X, Y, dist_Y, f, u, v, epsilon)} from left, right
-    by def $has_uniform_failure_sequences(X, Y, dist_X, dist_Y, S, f, epsilon)
+    by def:
+        ? $has_uniform_failure_sequences(X, Y, dist_X, dist_Y, S, f, epsilon)
 
 thm compact_metric_continuous_is_uniformly_continuous_on:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, S power_set(X), f fn(x X) Y:
@@ -2330,7 +2440,8 @@ thm metric_open_dense_refines_ball:
             \metric_ball<X, dist>(y, delta) = {point X: dist(point, y) < delta}
             z $in \metric_ball<X, dist>(y, delta)
             z $in A
-        by def \metric_closed_ball<X, dist>(y, radius) $subset A
+        by def:
+            ? \metric_closed_ball<X, dist>(y, radius) $subset A
     claim:
         ? \metric_closed_ball<X, dist>(y, radius) $subset \metric_ball<X, dist>(x, epsilon)
         claim:
@@ -2343,7 +2454,8 @@ thm metric_open_dense_refines_ball:
             by thm set_builder_member(z, {point X: dist(point, x) < epsilon})
             \metric_ball<X, dist>(x, epsilon) = {point X: dist(point, x) < epsilon}
             z $in \metric_ball<X, dist>(x, epsilon)
-        by def \metric_closed_ball<X, dist>(y, radius) $subset \metric_ball<X, dist>(x, epsilon)
+        by def:
+            ? \metric_closed_ball<X, dist>(y, radius) $subset \metric_ball<X, dist>(x, epsilon)
     witness exist center X, small_radius R+ st {center $in \metric_ball<X, dist>(x, epsilon), center $in A, small_radius <= bound, \metric_closed_ball<X, dist>(center, small_radius) $subset \metric_ball<X, dist>(x, epsilon), \metric_closed_ball<X, dist>(center, small_radius) $subset A} from y, radius
 
 thm metric_closed_ball_is_metric_closed:
@@ -2394,10 +2506,13 @@ thm metric_closed_ball_is_metric_closed:
                             dist(y, center) <= radius
                             impossible dist(y, center) > radius
                     y $in set_minus(X, \metric_closed_ball<X, dist>(center, radius))
-                by def \metric_ball<X, dist>(x, gap / 2) $subset set_minus(X, \metric_closed_ball<X, dist>(center, radius))
+                by def:
+                    ? \metric_ball<X, dist>(x, gap / 2) $subset set_minus(X, \metric_closed_ball<X, dist>(center, radius))
             witness exist epsilon R+ st {\metric_ball<X, dist>(x, epsilon) $subset set_minus(X, \metric_closed_ball<X, dist>(center, radius))} from gap / 2
-        by def $is_metric_open(X, dist, set_minus(X, \metric_closed_ball<X, dist>(center, radius)))
-    by def $is_metric_closed(X, dist, \metric_closed_ball<X, dist>(center, radius))
+        by def:
+            ? $is_metric_open(X, dist, set_minus(X, \metric_closed_ball<X, dist>(center, radius)))
+    by def:
+        ? $is_metric_closed(X, dist, \metric_closed_ball<X, dist>(center, radius))
 
 prop is_baire_nested_ball_step(X set, dist fn(x, y X) R, A fn(n N) power_set(X), left, right cart(N, cart(X, R+))):
     right[1] = left[1] + 1
@@ -2417,7 +2532,8 @@ thm baire_nested_ball_relation_member:
         $is_baire_nested_ball_step(X, dist, A, pair[1], pair[2])
         =>:
             pair $in \baire_nested_ball_relation<X, dist>(A)
-    by def $_is_baire_nested_ball_step_pair(X, dist, A, pair)
+    by def:
+        ? $_is_baire_nested_ball_step_pair(X, dist, A, pair)
     by thm set_builder_member(pair, {candidate cart(cart(N, cart(X, R+)), cart(N, cart(X, R+))): $_is_baire_nested_ball_step_pair(X, dist, A, candidate)})
     \baire_nested_ball_relation<X, dist>(A) = {candidate cart(cart(N, cart(X, R+)), cart(N, cart(X, R+))): $_is_baire_nested_ball_step_pair(X, dist, A, candidate)}
     pair $in \baire_nested_ball_relation<X, dist>(A)
@@ -2449,7 +2565,8 @@ thm baire_nested_ball_relation_is_serial:
             next_radius <= bound = (1 / 2)^next_stage = (1 / 2)^successor[1]
             \metric_closed_ball<X, dist>(successor[2][1], successor[2][2]) $subset \metric_ball<X, dist>(current[2][1], current[2][2])
             \metric_closed_ball<X, dist>(successor[2][1], successor[2][2]) $subset A(successor[1])
-            by def $is_baire_nested_ball_step(X, dist, A, current, successor)
+            by def:
+                ? $is_baire_nested_ball_step(X, dist, A, current, successor)
         have step_pair cart(cart(N, cart(X, R+)), cart(N, cart(X, R+))) = (current, successor)
         claim:
             ? step_pair $in \baire_nested_ball_relation<X, dist>(A)
@@ -2457,7 +2574,8 @@ thm baire_nested_ball_relation_is_serial:
             step_pair[2] = successor
             by thm baire_nested_ball_relation_member(X, dist, A, step_pair)
         witness exist next_state cart(N, cart(X, R+)) st {(current, next_state) $in \baire_nested_ball_relation<X, dist>(A)} from successor
-    by def $is_serial_relation(cart(N, cart(X, R+)), \baire_nested_ball_relation<X, dist>(A))
+    by def:
+        ? $is_serial_relation(cart(N, cart(X, R+)), \baire_nested_ball_relation<X, dist>(A))
 
 thm baire_state_path_radius_is_nonnegative:
     ? forall X set, path fn(n N) cart(N, cart(X, R+)), n N:
@@ -2477,7 +2595,8 @@ thm baire_relation_path_has_step:
     (path(n), path(n + 1)) $in \baire_nested_ball_relation<X, dist>(A)
     have pair cart(cart(N, cart(X, R+)), cart(N, cart(X, R+))) = (path(n), path(n + 1))
     pair $in \baire_nested_ball_relation<X, dist>(A)
-    by def $_is_baire_nested_ball_step_pair(X, dist, A, pair)
+    by def:
+        ? $_is_baire_nested_ball_step_pair(X, dist, A, pair)
     pair[1] = path(n)
     pair[2] = path(n + 1)
     $is_baire_nested_ball_step(X, dist, A, path(n), path(n + 1))
@@ -2590,7 +2709,8 @@ thm baire_relation_path_closed_balls_nested:
                     dist(z, path(k + n)[2][1]) < path(k + n)[2][2]
                     dist(z, path(k + n)[2][1]) <= path(k + n)[2][2]
                     by thm metric_closed_ball_member_of_distance(X, dist, path(k + n)[2][1], z, path(k + n)[2][2])
-                by def \metric_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2]) $subset \metric_closed_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2])
+                by def:
+                    ? \metric_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2]) $subset \metric_closed_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2])
             claim:
                 ? \metric_closed_ball<X, dist>(path(k + n + 1)[2][1], path(k + n + 1)[2][2]) $subset \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2])
                 claim:
@@ -2599,7 +2719,8 @@ thm baire_relation_path_closed_balls_nested:
                     z $in \metric_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2])
                     z $in \metric_closed_ball<X, dist>(path(k + n)[2][1], path(k + n)[2][2])
                     z $in \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2])
-                by def \metric_closed_ball<X, dist>(path(k + n + 1)[2][1], path(k + n + 1)[2][2]) $subset \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2])
+                by def:
+                    ? \metric_closed_ball<X, dist>(path(k + n + 1)[2][1], path(k + n + 1)[2][2]) $subset \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2])
             k + (n + 1) = k + n + 1
             by thm chap9::object_substitution(N, cart(N, cart(X, R+)), path, k + (n + 1), k + n + 1)
             path(k + (n + 1)) = path(k + n + 1)
@@ -2631,7 +2752,8 @@ thm baire_relation_path_has_limit:
             center(n) = path(n)[2][1]
             center(n + 1) = path(n + 1)[2][1]
             dist(center(n), center(n + 1)) <= (1 / 2)^n
-        by def $has_geometric_step_bound(X, dist, center)
+        by def:
+            ? $has_geometric_step_bound(X, dist, center)
     by thm geometric_step_converges_in_complete_metric_space(X, dist, center)
     obtain limit from exist point X st {$metric_sequence_converges(X, dist, center, point)}
     claim:
@@ -2654,9 +2776,11 @@ thm baire_relation_path_has_limit:
                         k + n >= n >= cutoff
                         dist(center(k + n), limit) < eta
                         shifted(n) = center(k + n)
-                    by def $metric_sequence_is_epsilon_close_from(X, dist, shifted, limit, eta, cutoff)
+                    by def:
+                        ? $metric_sequence_is_epsilon_close_from(X, dist, shifted, limit, eta, cutoff)
                 witness exist N0 N st {$metric_sequence_is_epsilon_close_from(X, dist, shifted, limit, eta, N0)} from cutoff
-            by def $metric_sequence_converges(X, dist, shifted, limit)
+            by def:
+                ? $metric_sequence_converges(X, dist, shifted, limit)
         claim:
             ? $is_sequence_in_set(X, \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2]), shifted)
             claim:
@@ -2668,14 +2792,16 @@ thm baire_relation_path_has_limit:
                 by thm baire_relation_path_closed_balls_nested(X, dist, A, state0, path, k, n)
                 path(k + n)[2][1] $in \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2])
                 shifted(n) = center(k + n) = path(k + n)[2][1]
-            by def $is_sequence_in_set(X, \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2]), shifted)
+            by def:
+                ? $is_sequence_in_set(X, \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2]), shifted)
         by thm metric_closed_ball_is_metric_closed(X, dist, path(k)[2][1], path(k)[2][2])
         by thm metric_closed_contains_sequence_limit(X, dist, \metric_closed_ball<X, dist>(path(k)[2][1], path(k)[2][2]), shifted, limit)
     claim:
         ? $metric_sequence_converges(X, dist, fn(n N) X {path(n)[2][1]}, limit)
         center = fn(n N) X {path(n)[2][1]}
         $metric_sequence_converges(X, dist, center, limit)
-    by def $is_baire_relation_path_limit(X, dist, path, limit)
+    by def:
+        ? $is_baire_relation_path_limit(X, dist, path, limit)
     witness exist point X st {$is_baire_relation_path_limit(X, dist, path, point)} from limit
 
 # Baire: a countable intersection of open dense sets is dense in a complete
@@ -2733,7 +2859,8 @@ thm baire_category_metric:
         dist(limit, x) < epsilon_pos
         dist(x, limit) = dist(limit, x) < epsilon_pos = epsilon
         witness exist y \countable_intersection<X>(A) st {dist(x, y) < epsilon} from limit
-    by def $is_metric_dense(X, dist, \countable_intersection<X>(A))
+    by def:
+        ? $is_metric_dense(X, dist, \countable_intersection<X>(A))
 
 prop contains_metric_open_ball(X set, dist fn(x, y X) R, S power_set(X)):
     exist center X, epsilon R+ st {\metric_ball<X, dist>(center, epsilon) $subset S}
@@ -2763,11 +2890,14 @@ thm no_metric_open_ball_implies_dense_complement:
                     dist(y, x) < epsilon
                     dist(x, y) = dist(y, x) < epsilon
                     witness exist z set_minus(X, S) st {dist(x, z) < epsilon} from y
-                    by def $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
+                    by def:
+                        ? $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
                     impossible not $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
-            by def \metric_ball<X, dist>(x, epsilon) $subset S
+            by def:
+                ? \metric_ball<X, dist>(x, epsilon) $subset S
             witness exist center X, radius R+ st {\metric_ball<X, dist>(center, radius) $subset S} from x, epsilon
-            by def $contains_metric_open_ball(X, dist, S)
+            by def:
+                ? $contains_metric_open_ball(X, dist, S)
             impossible not $contains_metric_open_ball(X, dist, S)
     claim:
         ? forall x X, epsilon R:
@@ -2776,8 +2906,10 @@ thm no_metric_open_ball_implies_dense_complement:
                 exist y set_minus(X, S) st {dist(x, y) < epsilon}
         epsilon $in R+
         $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
-        by def $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
-    by def $is_metric_dense(X, dist, set_minus(X, S))
+        by def:
+            ? $has_metric_point_within(X, dist, set_minus(X, S), x, epsilon)
+    by def:
+        ? $is_metric_dense(X, dist, set_minus(X, S))
 
 prop indexed_family_contains_metric_ball(X set, dist fn(x, y X) R, A fn(level N) power_set(X)):
     exist k N, center X, epsilon R+ st {\metric_ball<X, dist>(center, epsilon) $subset A(k)}
@@ -2808,7 +2940,8 @@ thm complete_metric_closed_cover_has_ball_checked:
                 claim:
                     ? $indexed_family_contains_metric_ball(X, dist, A)
                     witness exist level N, point X, radius R+ st {\metric_ball<X, dist>(point, radius) $subset A(level)} from k, center, epsilon
-                    by def $indexed_family_contains_metric_ball(X, dist, A)
+                    by def:
+                        ? $indexed_family_contains_metric_ball(X, dist, A)
                 impossible $indexed_family_contains_metric_ball(X, dist, A)
         have fn complements(k N) power_set(X) = set_minus(X, A(k))
         claim:
@@ -2819,7 +2952,8 @@ thm complete_metric_closed_cover_has_ball_checked:
                 $is_metric_closed(X, dist, A(k))
                 $is_metric_open(X, dist, set_minus(X, A(k)))
                 complements(k) = set_minus(X, A(k))
-            by def $is_countable_family_metric_open(X, dist, complements)
+            by def:
+                ? $is_countable_family_metric_open(X, dist, complements)
         claim:
             ? $is_countable_family_metric_dense(X, dist, complements)
             claim:
@@ -2827,7 +2961,8 @@ thm complete_metric_closed_cover_has_ball_checked:
                     $is_metric_dense(X, dist, complements(k))
                 by thm no_metric_open_ball_implies_dense_complement(X, dist, A(k))
                 complements(k) = set_minus(X, A(k))
-            by def $is_countable_family_metric_dense(X, dist, complements)
+            by def:
+                ? $is_countable_family_metric_dense(X, dist, complements)
         by thm baire_category_metric(X, dist, complements)
         obtain x from exist point X st {point $in X}
         have one R+ = 1
@@ -2850,7 +2985,8 @@ thm complete_metric_closed_cover_has_ball:
         =>:
             exist k N, center X, epsilon R+ st {\metric_ball<X, dist>(center, epsilon) $subset A(k)}
     by thm complete_metric_closed_cover_has_ball_checked(X, dist, A)
-    by def $indexed_family_contains_metric_ball(X, dist, A)
+    by def:
+        ? $indexed_family_contains_metric_ball(X, dist, A)
 
 # ---------------------------------------------------------------------------
 # Section 11.3 — Topological Spaces
@@ -2976,7 +3112,8 @@ thm continuous_iff_open_preimages_forward:
             claim:
                 ? forall U family:
                     U $in T_X
-            by def family $subset T_X
+            by def:
+                ? family $subset T_X
         by thm topology_closed_under_arbitrary_unions(X, T_X, family)
         claim:
             ? \family_union<X>(family) $subset P
@@ -2987,7 +3124,8 @@ thm continuous_iff_open_preimages_forward:
                 obtain U from exist U family st {z $in U}
                 U $subset P
                 z $in P
-            by def \family_union<X>(family) $subset P
+            by def:
+                ? \family_union<X>(family) $subset P
         claim:
             ? P $subset \family_union<X>(family)
             claim:
@@ -2998,7 +3136,8 @@ thm continuous_iff_open_preimages_forward:
                     ? V $in \topological_neighborhood_filter_sets<Y>(T_Y, f(z))
                     witness exist W T_Y st {f(z) $in W, W $subset V} from V:
                         V $subset V
-                    by def $_is_topological_neighborhood(Y, T_Y, f(z), V)
+                    by def:
+                        ? $_is_topological_neighborhood(Y, T_Y, f(z), V)
                     by thm topological_neighborhood_filter_sets_member(Y, T_Y, f(z), V)
                 $is_topologically_continuous_at(X, Y, T_X, T_Y, f, z)
                 $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, z), \topological_neighborhood_filter_sets<Y>(T_Y, f(z)))
@@ -3011,13 +3150,17 @@ thm continuous_iff_open_preimages_forward:
                 U $in {W T_X: W $subset P}
                 U $in family
                 witness exist W family st {z $in W} from U
-                by def $_belongs_family_union(X, family, z)
+                by def:
+                    ? $_belongs_family_union(X, family, z)
                 by thm family_union_member(X, family, z)
-            by def P $subset \family_union<X>(family)
-        by extension \family_union<X>(family) = P
+            by def:
+                ? P $subset \family_union<X>(family)
+        by extension:
+            ? \family_union<X>(family) = P
         P $in T_X
         {q X: f(q) $in V} $in T_X
-    by def $has_open_preimages(X, Y, T_X, T_Y, f)
+    by def:
+        ? $has_open_preimages(X, Y, T_X, T_Y, f)
 
 thm continuous_iff_open_preimages_reverse:
     ? forall X, Y set, T_X \Topology<X>, T_Y \Topology<Y>, f fn(x X) Y:
@@ -3043,15 +3186,20 @@ thm continuous_iff_open_preimages_reverse:
                     f(w) $in V
                     f(w) $in S
                     by thm set_builder_member(w, {q X: f(q) $in S})
-                by def U $subset {q X: f(q) $in S}
+                by def:
+                    ? U $subset {q X: f(q) $in S}
             witness exist U0 T_X st {x $in U0, U0 $subset {q X: f(q) $in S}} from U:
                 f(x) $in V
                 by thm set_builder_member(x, {q X: f(q) $in V})
                 x $in U
-            by def $_is_topological_neighborhood(X, T_X, x, {q X: f(q) $in S})
-        by def $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, x), \topological_neighborhood_filter_sets<Y>(T_Y, f(x)))
-        by def $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
-    by def $is_topologically_continuous(X, Y, T_X, T_Y, f)
+            by def:
+                ? $_is_topological_neighborhood(X, T_X, x, {q X: f(q) $in S})
+        by def:
+            ? $tends_to_by_preimage(X, Y, f, \topological_neighborhood_filter_sets<X>(T_X, x), \topological_neighborhood_filter_sets<Y>(T_Y, f(x)))
+        by def:
+            ? $is_topologically_continuous_at(X, Y, T_X, T_Y, f, x)
+    by def:
+        ? $is_topologically_continuous(X, Y, T_X, T_Y, f)
 
 # Supplementary ordinary continuity-composition lemma. The retained source
 # item changes the middle topology to a coinduced topology and remains in
@@ -3081,7 +3229,8 @@ thm topologically_continuous_composition:
                 g(f(z)) $in U
                 by thm set_builder_member(z, {x A: g(f(x)) $in U})
                 z $in pre2
-            by def pre1 $subset pre2
+            by def:
+                ? pre1 $subset pre2
         claim:
             ? pre2 $subset pre1
             claim:
@@ -3092,8 +3241,10 @@ thm topologically_continuous_composition:
                 f(z) $in V
                 by thm set_builder_member(z, {x A: f(x) $in V})
                 z $in pre1
-            by def pre2 $subset pre1
-        by extension pre1 = pre2
+            by def:
+                ? pre2 $subset pre1
+        by extension:
+            ? pre1 = pre2
         pre2 $in T_A
     claim:
         ? forall U T_C:
@@ -3109,7 +3260,8 @@ thm topologically_continuous_composition:
                 g(f(z)) $in U
                 by thm set_builder_member(z, {candidate A: g(f(candidate)) $in U})
                 z $in direct_preimage
-            by def literal_preimage $subset direct_preimage
+            by def:
+                ? literal_preimage $subset direct_preimage
         claim:
             ? direct_preimage $subset literal_preimage
             claim:
@@ -3120,10 +3272,13 @@ thm topologically_continuous_composition:
                 fn(argument A) CarrierC {g(f(argument))}(z) $in U
                 by thm set_builder_member(z, {candidate A: fn(argument A) CarrierC {g(f(argument))}(candidate) $in U})
                 z $in literal_preimage
-            by def direct_preimage $subset literal_preimage
-        by extension literal_preimage = direct_preimage
+            by def:
+                ? direct_preimage $subset literal_preimage
+        by extension:
+            ? literal_preimage = direct_preimage
         literal_preimage $in T_A
-    by def $has_open_preimages(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
+    by def:
+        ? $has_open_preimages(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
     by thm continuous_iff_open_preimages_reverse(A, CarrierC, T_A, T_C, fn(x A) CarrierC {g(f(x))})
 
 # Source constructions `coinduced` and `induced` are topology-valued functions.
@@ -3183,7 +3338,8 @@ thm set_preimage_empty:
                 have mapped_value Y = f(x)
                 mapped_value $in {}
                 impossible mapped_value $in {}
-        by def {x X: f(x) $in {}} $subset {}
+        by def:
+            ? {x X: f(x) $in {}} $subset {}
     claim:
         ? {} $subset {x X: f(x) $in {}}
         claim:
@@ -3192,8 +3348,10 @@ thm set_preimage_empty:
             by contra:
                 ? x $in {x0 X: f(x0) $in {}}
                 impossible x $in {}
-        by def {} $subset {x X: f(x) $in {}}
-    by extension {x X: f(x) $in {}} = {}
+        by def:
+            ? {} $subset {x X: f(x) $in {}}
+    by extension:
+        ? {x X: f(x) $in {}} = {}
 
 thm set_preimage_universe:
     ? forall X, Y set, f fn(x X) Y:
@@ -3203,7 +3361,8 @@ thm set_preimage_universe:
         claim:
             ? forall x {x0 X: f(x0) $in Y}:
                 x $in X
-        by def {x X: f(x) $in Y} $subset X
+        by def:
+            ? {x X: f(x) $in Y} $subset X
     claim:
         ? X $subset {x X: f(x) $in Y}
         claim:
@@ -3211,8 +3370,10 @@ thm set_preimage_universe:
                 x $in {x0 X: f(x0) $in Y}
             f(x) $in Y
             by thm set_builder_member(x, {x0 X: f(x0) $in Y})
-        by def X $subset {x X: f(x) $in Y}
-    by extension {x X: f(x) $in Y} = X
+        by def:
+            ? X $subset {x X: f(x) $in Y}
+    by extension:
+        ? {x X: f(x) $in Y} = X
 
 thm set_preimage_intersection:
     ? forall X, Y set, f fn(x X) Y, U, V power_set(Y):
@@ -3227,7 +3388,8 @@ thm set_preimage_intersection:
             by thm set_builder_member(x, {x0 X: f(x0) $in U})
             by thm set_builder_member(x, {x0 X: f(x0) $in V})
             x $in intersect({x0 X: f(x0) $in U}, {x0 X: f(x0) $in V})
-        by def {x X: f(x) $in intersect(U, V)} $subset intersect({x X: f(x) $in U}, {x X: f(x) $in V})
+        by def:
+            ? {x X: f(x) $in intersect(U, V)} $subset intersect({x X: f(x) $in U}, {x X: f(x) $in V})
     claim:
         ? intersect({x X: f(x) $in U}, {x X: f(x) $in V}) $subset {x X: f(x) $in intersect(U, V)}
         claim:
@@ -3237,8 +3399,10 @@ thm set_preimage_intersection:
             f(x) $in V
             f(x) $in intersect(U, V)
             by thm set_builder_member(x, {x0 X: f(x0) $in intersect(U, V)})
-        by def intersect({x X: f(x) $in U}, {x X: f(x) $in V}) $subset {x X: f(x) $in intersect(U, V)}
-    by extension {x X: f(x) $in intersect(U, V)} = intersect({x X: f(x) $in U}, {x X: f(x) $in V})
+        by def:
+            ? intersect({x X: f(x) $in U}, {x X: f(x) $in V}) $subset {x X: f(x) $in intersect(U, V)}
+    by extension:
+        ? {x X: f(x) $in intersect(U, V)} = intersect({x X: f(x) $in U}, {x X: f(x) $in V})
 
 prop _is_coinduced_family_preimage(X, Y set, f fn(x X) Y, family power_set(power_set(Y)), P power_set(X)):
     exist V family st {P = {x X: f(x) $in V}}
@@ -3254,7 +3418,8 @@ thm coinduced_family_union_preimage_open:
         claim:
             ? forall P preimage_family:
                 P $in T_X
-        by def preimage_family $subset T_X
+        by def:
+            ? preimage_family $subset T_X
     \family_union<X>(preimage_family) $in T_X
     claim:
         ? \family_union<X>(preimage_family) $subset {x X: f(x) $in \family_union<Y>(family)}
@@ -3268,10 +3433,12 @@ thm coinduced_family_union_preimage_open:
             x $in {x0 X: f(x0) $in V}
             f(x) $in V
             witness exist W family st {f(x) $in W} from V
-            by def $_belongs_family_union(Y, family, f(x))
+            by def:
+                ? $_belongs_family_union(Y, family, f(x))
             by thm family_union_member(Y, family, f(x))
             by thm set_builder_member(x, {x0 X: f(x0) $in \family_union<Y>(family)})
-        by def \family_union<X>(preimage_family) $subset {x X: f(x) $in \family_union<Y>(family)}
+        by def:
+            ? \family_union<X>(preimage_family) $subset {x X: f(x) $in \family_union<Y>(family)}
     claim:
         ? {x X: f(x) $in \family_union<Y>(family)} $subset \family_union<X>(preimage_family)
         claim:
@@ -3284,15 +3451,19 @@ thm coinduced_family_union_preimage_open:
                 ? $_is_coinduced_family_preimage(X, Y, f, family, {x0 X: f(x0) $in V})
                 witness exist W family st {{x0 X: f(x0) $in V} = {x0 X: f(x0) $in W}} from V:
                     {x0 X: f(x0) $in V} = {x0 X: f(x0) $in V}
-                by def $_is_coinduced_family_preimage(X, Y, f, family, {x0 X: f(x0) $in V})
+                by def:
+                    ? $_is_coinduced_family_preimage(X, Y, f, family, {x0 X: f(x0) $in V})
             by thm set_builder_member({x0 X: f(x0) $in V}, {P T_X: $_is_coinduced_family_preimage(X, Y, f, family, P)})
             {x0 X: f(x0) $in V} $in preimage_family
             by thm set_builder_member(x, {x0 X: f(x0) $in V})
             witness exist P preimage_family st {x $in P} from {x0 X: f(x0) $in V}
-            by def $_belongs_family_union(X, preimage_family, x)
+            by def:
+                ? $_belongs_family_union(X, preimage_family, x)
             by thm family_union_member(X, preimage_family, x)
-        by def {x X: f(x) $in \family_union<Y>(family)} $subset \family_union<X>(preimage_family)
-    by extension \family_union<X>(preimage_family) = {x X: f(x) $in \family_union<Y>(family)}
+        by def:
+            ? {x X: f(x) $in \family_union<Y>(family)} $subset \family_union<X>(preimage_family)
+    by extension:
+        ? \family_union<X>(preimage_family) = {x X: f(x) $in \family_union<Y>(family)}
     {x X: f(x) $in \family_union<Y>(family)} $in T_X
 
 prop _is_inducing_family_witness(X, Y set, f fn(x X) Y, family power_set(power_set(X)), V power_set(Y)):
@@ -3309,7 +3480,8 @@ thm induced_family_union_is_induced_open:
         claim:
             ? forall V witness_family:
                 V $in T_Y
-        by def witness_family $subset T_Y
+        by def:
+            ? witness_family $subset T_Y
     \family_union<Y>(witness_family) $in T_Y
     claim:
         ? {x X: f(x) $in \family_union<Y>(witness_family)} $subset \family_union<X>(family)
@@ -3322,9 +3494,11 @@ thm induced_family_union_is_induced_open:
             by thm set_builder_member(x, {x0 X: f(x0) $in V})
             x $in U
             witness exist W family st {x $in W} from U
-            by def $_belongs_family_union(X, family, x)
+            by def:
+                ? $_belongs_family_union(X, family, x)
             by thm family_union_member(X, family, x)
-        by def {x X: f(x) $in \family_union<Y>(witness_family)} $subset \family_union<X>(family)
+        by def:
+            ? {x X: f(x) $in \family_union<Y>(witness_family)} $subset \family_union<X>(family)
     claim:
         ? \family_union<X>(family) $subset {x X: f(x) $in \family_union<Y>(witness_family)}
         claim:
@@ -3338,20 +3512,25 @@ thm induced_family_union_is_induced_open:
                 ? $_is_inducing_family_witness(X, Y, f, family, V)
                 witness exist W family st {{x0 X: f(x0) $in V} = W} from U:
                     {x0 X: f(x0) $in V} = U
-                by def $_is_inducing_family_witness(X, Y, f, family, V)
+                by def:
+                    ? $_is_inducing_family_witness(X, Y, f, family, V)
             by thm set_builder_member(V, {candidate T_Y: $_is_inducing_family_witness(X, Y, f, family, candidate)})
             V $in witness_family
             {x0 X: f(x0) $in V} = U
             x $in {x0 X: f(x0) $in V}
             f(x) $in V
             witness exist W witness_family st {f(x) $in W} from V
-            by def $_belongs_family_union(Y, witness_family, f(x))
+            by def:
+                ? $_belongs_family_union(Y, witness_family, f(x))
             by thm family_union_member(Y, witness_family, f(x))
             by thm set_builder_member(x, {x0 X: f(x0) $in \family_union<Y>(witness_family)})
-        by def \family_union<X>(family) $subset {x X: f(x) $in \family_union<Y>(witness_family)}
-    by extension {x X: f(x) $in \family_union<Y>(witness_family)} = \family_union<X>(family)
+        by def:
+            ? \family_union<X>(family) $subset {x X: f(x) $in \family_union<Y>(witness_family)}
+    by extension:
+        ? {x X: f(x) $in \family_union<Y>(witness_family)} = \family_union<X>(family)
     witness exist V T_Y st {{x X: f(x) $in V} = \family_union<X>(family)} from \family_union<Y>(witness_family)
-    by def $_is_induced_open(X, Y, f, T_Y, \family_union<X>(family))
+    by def:
+        ? $_is_induced_open(X, Y, f, T_Y, \family_union<X>(family))
 
 thm induced_binary_intersection_is_induced_open:
     ? forall X, Y set, f fn(x X) Y, T_Y \Topology<Y>, U, V \induced_open_family<X, Y>(f, T_Y):
@@ -3371,7 +3550,8 @@ thm induced_binary_intersection_is_induced_open:
     intersect(U, V) $subset U $subset X
     intersect(U, V) $in power_set(X)
     witness exist W T_Y st {{x X: f(x) $in W} = intersect(U, V)} from intersect(U_target, V_target)
-    by def $_is_induced_open(X, Y, f, T_Y, intersect(U, V))
+    by def:
+        ? $_is_induced_open(X, Y, f, T_Y, intersect(U, V))
 
 prop is_hausdorff_topology(X set, T power_set(power_set(X))):
     forall x, y X:
@@ -3496,7 +3676,8 @@ thm coinduced_open_family_is_topology:
                     \family_union<Y>(family) $in \coinduced_open_family<X, Y>(f, T_X)
             by thm coinduced_family_union_preimage_open(X, Y, f, T_X, family)
             by thm coinduced_open_family_member(X, Y, f, T_X, \family_union<Y>(family))
-        by def $is_topology_on(Y, \coinduced_open_family<X, Y>(f, T_X))
+        by def:
+            ? $is_topology_on(Y, \coinduced_open_family<X, Y>(f, T_X))
     by thm topology_member(Y, \coinduced_open_family<X, Y>(f, T_X))
 
 # MIL30 ITEM 02 — `TopologicalSpace.induced`.
@@ -3512,7 +3693,8 @@ thm induced_open_family_is_topology:
                 ? $_is_induced_open(X, Y, f, T_Y, {})
                 witness exist V T_Y st {{x X: f(x) $in V} = {}} from {}:
                     by thm set_preimage_empty(X, Y, f)
-                by def $_is_induced_open(X, Y, f, T_Y, {})
+                by def:
+                    ? $_is_induced_open(X, Y, f, T_Y, {})
             by thm induced_open_family_member(X, Y, f, T_Y, {})
         claim:
             ? X $in \induced_open_family<X, Y>(f, T_Y)
@@ -3520,7 +3702,8 @@ thm induced_open_family_is_topology:
                 ? $_is_induced_open(X, Y, f, T_Y, X)
                 witness exist V T_Y st {{x X: f(x) $in V} = X} from Y:
                     by thm set_preimage_universe(X, Y, f)
-                by def $_is_induced_open(X, Y, f, T_Y, X)
+                by def:
+                    ? $_is_induced_open(X, Y, f, T_Y, X)
             by thm induced_open_family_member(X, Y, f, T_Y, X)
         claim:
             ? forall U, V \induced_open_family<X, Y>(f, T_Y):
@@ -3536,7 +3719,8 @@ thm induced_open_family_is_topology:
                     \family_union<X>(family) $in \induced_open_family<X, Y>(f, T_Y)
             by thm induced_family_union_is_induced_open(X, Y, f, T_Y, family)
             by thm induced_open_family_member(X, Y, f, T_Y, \family_union<X>(family))
-        by def $is_topology_on(X, \induced_open_family<X, Y>(f, T_Y))
+        by def:
+            ? $is_topology_on(X, \induced_open_family<X, Y>(f, T_Y))
     by thm topology_member(X, \induced_open_family<X, Y>(f, T_Y))
 
 prop coinduced_induced_adjunction(X, Y set, f fn(x X) Y, T_X power_set(power_set(X)), T_Y power_set(power_set(Y))):
@@ -3560,8 +3744,10 @@ thm coinduced_le_iff_le_induced:
                 by thm coinduced_open_family_preimage_open(X, Y, f, T_X, V)
                 {x X: f(x) $in V} = U
                 U $in T_X
-            by def \induced_open_family<X, Y>(f, T_Y) $subset T_X
-            by def $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y))
+            by def:
+                ? \induced_open_family<X, Y>(f, T_Y) $subset T_X
+            by def:
+                ? $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y))
             not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y) or $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y))
         case not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y):
             not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y) or $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y))
@@ -3576,16 +3762,20 @@ thm coinduced_le_iff_le_induced:
                     ? $_is_induced_open(X, Y, f, T_Y, {x X: f(x) $in V})
                     witness exist W T_Y st {{x X: f(x) $in W} = {x X: f(x) $in V}} from V:
                         {x X: f(x) $in V} = {x X: f(x) $in V}
-                    by def $_is_induced_open(X, Y, f, T_Y, {x X: f(x) $in V})
+                    by def:
+                        ? $_is_induced_open(X, Y, f, T_Y, {x X: f(x) $in V})
                 by thm induced_open_family_member(X, Y, f, T_Y, {x X: f(x) $in V})
                 {x X: f(x) $in V} $in T_X
                 by thm coinduced_open_family_member(X, Y, f, T_X, V)
-            by def T_Y $subset \coinduced_open_family<X, Y>(f, T_X)
-            by def $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
+            by def:
+                ? T_Y $subset \coinduced_open_family<X, Y>(f, T_X)
+            by def:
+                ? $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
             not $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y)) or $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
         case not $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y)):
             not $topology_le(X, T_X, \induced_open_family<X, Y>(f, T_Y)) or $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
-    by def $coinduced_induced_adjunction(X, Y, f, T_X, T_Y)
+    by def:
+        ? $coinduced_induced_adjunction(X, Y, f, T_X, T_Y)
 
 prop topology_open_inclusion(X set, T, Tprime power_set(power_set(X))):
     forall U Tprime:
@@ -3603,12 +3793,14 @@ thm topology_order_iff_open_inclusion:
     by cases:
         ? not $topology_le(X, T, Tprime) or $topology_open_inclusion(X, T, Tprime)
         case $topology_le(X, T, Tprime):
-            by def $topology_le(X, T, Tprime)
+            by def:
+                ? $topology_le(X, T, Tprime)
             claim:
                 ? forall U Tprime:
                     U $in T
                 U $in T
-            by def $topology_open_inclusion(X, T, Tprime)
+            by def:
+                ? $topology_open_inclusion(X, T, Tprime)
             not $topology_le(X, T, Tprime) or $topology_open_inclusion(X, T, Tprime)
         case not $topology_le(X, T, Tprime):
             not $topology_le(X, T, Tprime) or $topology_open_inclusion(X, T, Tprime)
@@ -3616,19 +3808,23 @@ thm topology_order_iff_open_inclusion:
     by cases:
         ? not $topology_open_inclusion(X, T, Tprime) or $topology_le(X, T, Tprime)
         case $topology_open_inclusion(X, T, Tprime):
-            by def $topology_open_inclusion(X, T, Tprime)
+            by def:
+                ? $topology_open_inclusion(X, T, Tprime)
             claim:
                 ? Tprime $subset T
                 claim:
                     ? forall U Tprime:
                         U $in T
                     U $in T
-                by def Tprime $subset T
-            by def $topology_le(X, T, Tprime)
+                by def:
+                    ? Tprime $subset T
+            by def:
+                ? $topology_le(X, T, Tprime)
             not $topology_open_inclusion(X, T, Tprime) or $topology_le(X, T, Tprime)
         case not $topology_open_inclusion(X, T, Tprime):
             not $topology_open_inclusion(X, T, Tprime) or $topology_le(X, T, Tprime)
-    by def $topology_order_characterization(X, T, Tprime)
+    by def:
+        ? $topology_order_characterization(X, T, Tprime)
 
 prop continuity_coinduced_characterization(X, Y set, f fn(x X) Y, T_X power_set(power_set(X)), T_Y power_set(power_set(Y))):
     not $is_topologically_continuous(X, Y, T_X, T_Y, f) or $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
@@ -3650,8 +3846,10 @@ thm continuous_iff_coinduced_le:
                     V $in \coinduced_open_family<X, Y>(f, T_X)
                 {x X: f(x) $in V} $in T_X
                 by thm coinduced_open_family_member(X, Y, f, T_X, V)
-            by def T_Y $subset \coinduced_open_family<X, Y>(f, T_X)
-            by def $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
+            by def:
+                ? T_Y $subset \coinduced_open_family<X, Y>(f, T_X)
+            by def:
+                ? $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
             not $is_topologically_continuous(X, Y, T_X, T_Y, f) or $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
         case not $is_topologically_continuous(X, Y, T_X, T_Y, f):
             not $is_topologically_continuous(X, Y, T_X, T_Y, f) or $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y)
@@ -3664,12 +3862,14 @@ thm continuous_iff_coinduced_le:
                     {x X: f(x) $in V} $in T_X
                 V $in \coinduced_open_family<X, Y>(f, T_X)
                 by thm coinduced_open_family_preimage_open(X, Y, f, T_X, V)
-            by def $has_open_preimages(X, Y, T_X, T_Y, f)
+            by def:
+                ? $has_open_preimages(X, Y, T_X, T_Y, f)
             by thm continuous_iff_open_preimages_reverse(X, Y, T_X, T_Y, f)
             not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y) or $is_topologically_continuous(X, Y, T_X, T_Y, f)
         case not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y):
             not $topology_le(Y, \coinduced_open_family<X, Y>(f, T_X), T_Y) or $is_topologically_continuous(X, Y, T_X, T_Y, f)
-    by def $continuity_coinduced_characterization(X, Y, f, T_X, T_Y)
+    by def:
+        ? $continuity_coinduced_characterization(X, Y, f, T_X, T_Y)
 
 # These two transport helpers isolate the set-family rewrite needed when a
 # nested preimage is normalized to the preimage of an explicit composite.
@@ -3691,7 +3891,8 @@ thm nested_preimage_open_implies_composite_preimage_open:
             by thm set_builder_member(f(x), {y Y: g(y) $in U})
             by thm set_builder_member(x, {x0 X: f(x0) $in {y Y: g(y) $in U}})
             x $in nested_open
-        by def composite_preimage $subset nested_open
+        by def:
+            ? composite_preimage $subset nested_open
     claim:
         ? nested_open $subset composite_preimage
         claim:
@@ -3704,8 +3905,10 @@ thm nested_preimage_open_implies_composite_preimage_open:
             fn(argument X) CarrierZ {g(f(argument))}(x) $in U
             by thm set_builder_member(x, {x0 X: fn(argument X) CarrierZ {g(f(argument))}(x0) $in U})
             x $in composite_preimage
-        by def nested_open $subset composite_preimage
-    by extension composite_preimage = nested_open
+        by def:
+            ? nested_open $subset composite_preimage
+    by extension:
+        ? composite_preimage = nested_open
     composite_preimage $in T
     {x X: fn(argument X) CarrierZ {g(f(argument))}(x) $in U} $in T
 
@@ -3728,7 +3931,8 @@ thm composite_preimage_open_implies_nested_preimage_open:
             fn(argument X) CarrierZ {g(f(argument))}(x) $in U
             by thm set_builder_member(x, {x0 X: fn(argument X) CarrierZ {g(f(argument))}(x0) $in U})
             x $in composite_open
-        by def nested_preimage $subset composite_open
+        by def:
+            ? nested_preimage $subset composite_open
     claim:
         ? composite_open $subset nested_preimage
         claim:
@@ -3740,8 +3944,10 @@ thm composite_preimage_open_implies_nested_preimage_open:
             by thm set_builder_member(f(x), {y Y: g(y) $in U})
             by thm set_builder_member(x, {x0 X: f(x0) $in {y Y: g(y) $in U}})
             x $in nested_preimage
-        by def composite_open $subset nested_preimage
-    by extension nested_preimage = composite_open
+        by def:
+            ? composite_open $subset nested_preimage
+    by extension:
+        ? nested_preimage = composite_open
     nested_preimage $in T
     {x X: f(x) $in {y Y: g(y) $in U}} $in T
 
@@ -3767,7 +3973,8 @@ thm continuous_from_coinduced_iff_composite:
                 {y Y: g(y) $in U} $in \coinduced_open_family<X, Y>(f, T_X)
                 by thm coinduced_open_family_preimage_open(X, Y, f, T_X, {y Y: g(y) $in U})
                 by thm nested_preimage_open_implies_composite_preimage_open(X, Y, CarrierZ, f, g, U, T_X)
-            by def $has_open_preimages(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))})
+            by def:
+                ? $has_open_preimages(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))})
             by thm continuous_iff_open_preimages_reverse(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))})
             not $is_topologically_continuous(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g) or $is_topologically_continuous(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))})
         case not $is_topologically_continuous(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g):
@@ -3793,7 +4000,8 @@ thm continuous_from_coinduced_iff_composite:
                         fn(argument X) CarrierZ {g(f(argument))}(z) $in U
                         by thm set_builder_member(z, {candidate X: fn(argument X) CarrierZ {g(f(argument))}(candidate) $in U})
                         z $in literal_open
-                    by def direct_preimage $subset literal_open
+                    by def:
+                        ? direct_preimage $subset literal_open
                 claim:
                     ? literal_open $subset direct_preimage
                     claim:
@@ -3804,19 +4012,23 @@ thm continuous_from_coinduced_iff_composite:
                         g(f(z)) $in U
                         by thm set_builder_member(z, {candidate X: g(f(candidate)) $in U})
                         z $in direct_preimage
-                    by def literal_open $subset direct_preimage
-                by extension direct_preimage = literal_open
+                    by def:
+                        ? literal_open $subset direct_preimage
+                by extension:
+                    ? direct_preimage = literal_open
                 direct_preimage $in T_X
                 {x X: g(f(x)) $in U} $in T_X
                 by thm composite_preimage_open_implies_nested_preimage_open(X, Y, CarrierZ, f, g, U, T_X)
                 {x X: f(x) $in {y Y: g(y) $in U}} $in T_X
                 by thm coinduced_open_family_member(X, Y, f, T_X, {y Y: g(y) $in U})
-            by def $has_open_preimages(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g)
+            by def:
+                ? $has_open_preimages(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g)
             by thm continuous_iff_open_preimages_reverse(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g)
             not $is_topologically_continuous(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))}) or $is_topologically_continuous(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g)
         case not $is_topologically_continuous(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))}):
             not $is_topologically_continuous(X, CarrierZ, T_X, T_Z, fn(x X) CarrierZ {g(f(x))}) or $is_topologically_continuous(Y, CarrierZ, \coinduced_open_family<X, Y>(f, T_X), T_Z, g)
-    by def $coinduced_continuity_composition_iff(X, Y, CarrierZ, f, g, T_X, T_Z)
+    by def:
+        ? $coinduced_continuity_composition_iff(X, Y, CarrierZ, f, g, T_X, T_Z)
 
 # A uniform-coordinate product topology is characterized by its projections.
 # The fully dependent carrier family remains part of the localized source debt.
@@ -3859,14 +4071,16 @@ thm hausdorff_sequence_limit_unique:
             claim:
                 ? $_is_topological_neighborhood(X, T, a, U)
                 witness exist W T st {a $in W, W $subset U} from U
-                by def $_is_topological_neighborhood(X, T, a, U)
+                by def:
+                    ? $_is_topological_neighborhood(X, T, a, U)
             by thm topological_neighborhood_filter_sets_member(X, T, a, U)
         claim:
             ? V $in \topological_neighborhood_filter_sets<X>(T, b)
             claim:
                 ? $_is_topological_neighborhood(X, T, b, V)
                 witness exist W T st {b $in W, W $subset V} from V
-                by def $_is_topological_neighborhood(X, T, b, V)
+                by def:
+                    ? $_is_topological_neighborhood(X, T, b, V)
             by thm topological_neighborhood_filter_sets_member(X, T, b, V)
         have late_in_U power_set(N) = {n N: u(n) $in U}
         have late_in_V power_set(N) = {n N: u(n) $in V}
@@ -3876,10 +4090,13 @@ thm hausdorff_sequence_limit_unique:
         late_in_V $in at_top_N_sets
         $contains_natural_tail(late_in_U)
         $contains_natural_tail(late_in_V)
-        by def $eventually_on_N(late_in_U)
-        by def $eventually_on_N(late_in_V)
+        by def:
+            ? $eventually_on_N(late_in_U)
+        by def:
+            ? $eventually_on_N(late_in_V)
         by thm eventually_conjunction_on_N(late_in_U, late_in_V)
-        by def $eventually_on_N(intersect(late_in_U, late_in_V))
+        by def:
+            ? $eventually_on_N(intersect(late_in_U, late_in_V))
         $contains_natural_tail(intersect(late_in_U, late_in_V))
         obtain k from exist k0 N st {$contains_natural_tail_from(k0, intersect(late_in_U, late_in_V))}
         k >= k
@@ -3916,11 +4133,13 @@ thm regular_topology_has_closed_neighborhood_basis:
             claim:
                 ? $_is_topological_neighborhood(X, T, a, closed_set)
                 witness exist V T st {a $in V, V $subset closed_set} from W
-                by def $_is_topological_neighborhood(X, T, a, closed_set)
+                by def:
+                    ? $_is_topological_neighborhood(X, T, a, closed_set)
             by thm topological_neighborhood_filter_sets_member(X, T, a, closed_set)
         closed_set $subset O $subset U
         witness exist V power_set(X) st {V $in \topological_neighborhood_filter_sets<X>(T, a), $is_topologically_closed(X, T, V), V $subset U} from closed_set
-    by def $is_closed_neighborhood_basis(X, T, a)
+    by def:
+        ? $is_closed_neighborhood_basis(X, T, a)
 
 prop is_open_neighborhood_basis(X set, T power_set(power_set(X)), a X):
     forall U \topological_neighborhood_filter_sets<X>(T, a):
@@ -3930,7 +4149,8 @@ prop is_open_neighborhood_basis(X set, T power_set(power_set(X)), a X):
 thm topology_has_open_neighborhood_basis:
     ? forall X set, T \Topology<X>, a X:
         $is_open_neighborhood_basis(X, T, a)
-    by def $is_open_neighborhood_basis(X, T, a)
+    by def:
+        ? $is_open_neighborhood_basis(X, T, a)
 
 prop has_open_neighborhood_preimage_refinement(X, Y, A set, T_X power_set(power_set(X)), c fn(a A) X, f fn(a A) Y, x X, F power_set(power_set(Y)), Vprime power_set(Y)):
     exist V power_set(X) st {V $in \topological_neighborhood_filter_sets<X>(T_X, x), V $in T_X, {a A: c(a) $in V} $subset {a A: f(a) $in Vprime}}
@@ -3957,16 +4177,19 @@ thm dense_extension_auxiliary_neighborhood:
             c(index) $in S
             by thm set_builder_member(index, {a A: c(a) $in S})
             index $in {a A: f(a) $in Vprime}
-        by def {a A: c(a) $in V} $subset {a A: f(a) $in Vprime}
+        by def:
+            ? {a A: c(a) $in V} $subset {a A: f(a) $in Vprime}
     claim:
         ? V $in \topological_neighborhood_filter_sets<X>(T_X, x)
         claim:
             ? $_is_topological_neighborhood(X, T_X, x, V)
             witness exist W T_X st {x $in W, W $subset V} from V
-            by def $_is_topological_neighborhood(X, T_X, x, V)
+            by def:
+                ? $_is_topological_neighborhood(X, T_X, x, V)
         by thm topological_neighborhood_filter_sets_member(X, T_X, x, V)
     witness exist W power_set(X) st {W $in \topological_neighborhood_filter_sets<X>(T_X, x), W $in T_X, {a A: c(a) $in W} $subset {a A: f(a) $in Vprime}} from V
-    by def $has_open_neighborhood_preimage_refinement(X, Y, A, T_X, c, f, x, F, Vprime)
+    by def:
+        ? $has_open_neighborhood_preimage_refinement(X, Y, A, T_X, c, f, x, F, Vprime)
 
 # MIL30 ITEM 12 — unproved continuous-extension goal. The existential payload
 # and exact conditional target remain explicit, but no trusted theorem fact is
@@ -4001,7 +4224,8 @@ thm first_countable_adherent_implies_sequential:
                 ? forall point basis(n):
                     point $in X
                 point $in X
-            by def basis(n) $subset X
+            by def:
+                ? basis(n) $subset X
         intersect(basis(n), S) $subset basis(n) $subset X
     have fn hits(n N) power_set(X) = intersect(basis(n), S)
     claim:
@@ -4024,7 +4248,8 @@ thm first_countable_adherent_implies_sequential:
             by thm countable_choice_member_in_superset(X, hits, selected, n, intersect(basis(n), S))
             selected(n) $in intersect(basis(n), S)
             selected(n) $in S
-        by def $is_sequence_in_set(X, S, selected)
+        by def:
+            ? $is_sequence_in_set(X, S, selected)
     claim:
         ? $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
         claim:
@@ -4047,16 +4272,21 @@ thm first_countable_adherent_implies_sequential:
                     selected(n) $in basis(k)
                     selected(n) $in U
                     by thm set_builder_member(n, {index N: selected(index) $in U})
-                by def $contains_natural_tail_from(k, {n N: selected(n) $in U})
+                by def:
+                    ? $contains_natural_tail_from(k, {n N: selected(n) $in U})
             witness exist cutoff N st {$contains_natural_tail_from(cutoff, {n N: selected(n) $in U})} from k
-            by def $contains_natural_tail({n N: selected(n) $in U})
+            by def:
+                ? $contains_natural_tail({n N: selected(n) $in U})
             by thm at_top_N_sets_member({n N: selected(n) $in U})
-        by def $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
+        by def:
+            ? $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
     claim:
         ? $is_sequence_from_set_converging_to(X, T, S, a, selected)
-        by def $is_sequence_from_set_converging_to(X, T, S, a, selected)
+        by def:
+            ? $is_sequence_from_set_converging_to(X, T, S, a, selected)
     witness exist u fn(n N) X st {$is_sequence_from_set_converging_to(X, T, S, a, u)} from selected
-    by def $is_sequential_closure_point(X, T, S, a)
+    by def:
+        ? $is_sequential_closure_point(X, T, S, a)
 
 thm sequential_closure_implies_adherent:
     ? forall X set, T \Topology<X>, S power_set(X), a X:
@@ -4083,7 +4313,8 @@ thm sequential_closure_implies_adherent:
             intersect(U, S) = {}
             u(k) $in {}
             impossible u(k) $in {}
-    by def $is_topological_adherent_point(X, T, S, a)
+    by def:
+        ? $is_topological_adherent_point(X, T, S, a)
 
 thm first_countable_closure_iff_sequence:
     ? forall X set, T \Topology<X>, S power_set(X), a X:
@@ -4106,7 +4337,8 @@ thm first_countable_closure_iff_sequence:
             not $is_sequential_closure_point(X, T, S, a) or $is_topological_adherent_point(X, T, S, a)
         case not $is_sequential_closure_point(X, T, S, a):
             not $is_sequential_closure_point(X, T, S, a) or $is_topological_adherent_point(X, T, S, a)
-    by def $closure_sequence_equivalence(X, T, S, a)
+    by def:
+        ? $closure_sequence_equivalence(X, T, S, a)
 
 prop filters_have_nontrivial_infimum(X set, F, G power_set(power_set(X))):
     forall U F, V G:
@@ -4119,7 +4351,8 @@ thm cluster_point_iff_nontrivial_infimum:
         $is_cluster_point(X, T, F, x)
         =>:
             $filters_have_nontrivial_infimum(X, \topological_neighborhood_filter_sets<X>(T, x), F)
-    by def $filters_have_nontrivial_infimum(X, \topological_neighborhood_filter_sets<X>(T, x), F)
+    by def:
+        ? $filters_have_nontrivial_infimum(X, \topological_neighborhood_filter_sets<X>(T, x), F)
 
 # MIL30 ITEM 15 — compactness by cluster points of proper filters.
 thm compact_iff_filter_cluster_point:
@@ -4173,9 +4406,11 @@ thm sequence_tail_sets_form_filter:
                         n >= 0
                         =>:
                             u(n) $in X
-                by def $sequence_tail_lies_in(X, u, X, 0)
+                by def:
+                    ? $sequence_tail_lies_in(X, u, X, 0)
             witness exist cutoff N st {$sequence_tail_lies_in(X, u, X, cutoff)} from 0
-            by def $contains_sequence_tail_image(X, u, X)
+            by def:
+                ? $contains_sequence_tail_image(X, u, X)
         by thm sequence_tail_filter_sets_member(X, u, X)
     claim:
         ? forall U, V \sequence_tail_filter_sets<X>(u):
@@ -4198,9 +4433,11 @@ thm sequence_tail_sets_form_filter:
                 u(n) $in U
                 u(n) $in V
                 u(n) $in intersect(U, V)
-            by def $sequence_tail_lies_in(X, u, intersect(U, V), cutoff_U + cutoff_V)
+            by def:
+                ? $sequence_tail_lies_in(X, u, intersect(U, V), cutoff_U + cutoff_V)
         witness exist cutoff N st {$sequence_tail_lies_in(X, u, intersect(U, V), cutoff)} from cutoff_U + cutoff_V
-        by def $contains_sequence_tail_image(X, u, intersect(U, V))
+        by def:
+            ? $contains_sequence_tail_image(X, u, intersect(U, V))
         by thm sequence_tail_filter_sets_member(X, u, intersect(U, V))
     claim:
         ? forall U \sequence_tail_filter_sets<X>(u), V power_set(X):
@@ -4218,11 +4455,14 @@ thm sequence_tail_sets_form_filter:
                         u(n) $in V
                 u(n) $in U
                 u(n) $in V
-            by def $sequence_tail_lies_in(X, u, V, cutoff)
+            by def:
+                ? $sequence_tail_lies_in(X, u, V, cutoff)
         witness exist cutoff0 N st {$sequence_tail_lies_in(X, u, V, cutoff0)} from cutoff
-        by def $contains_sequence_tail_image(X, u, V)
+        by def:
+            ? $contains_sequence_tail_image(X, u, V)
         by thm sequence_tail_filter_sets_member(X, u, V)
-    by def $is_filter_on(X, \sequence_tail_filter_sets<X>(u))
+    by def:
+        ? $is_filter_on(X, \sequence_tail_filter_sets<X>(u))
 
 thm sequence_tail_filter_is_proper:
     ? forall X set, u fn(n N) X:
@@ -4238,7 +4478,8 @@ thm sequence_tail_filter_is_proper:
             cutoff >= cutoff
             u(cutoff) $in {}
             impossible u(cutoff) $in {}
-    by def $is_proper_filter_on(X, \sequence_tail_filter_sets<X>(u))
+    by def:
+        ? $is_proper_filter_on(X, \sequence_tail_filter_sets<X>(u))
 
 thm sequence_tail_filter_le_principal:
     ? forall X set, S power_set(X), u fn(n N) X:
@@ -4258,12 +4499,16 @@ thm sequence_tail_filter_le_principal:
                 u(n) $in S
                 S $subset V
                 u(n) $in V
-            by def $sequence_tail_lies_in(X, u, V, 0)
+            by def:
+                ? $sequence_tail_lies_in(X, u, V, 0)
         witness exist cutoff N st {$sequence_tail_lies_in(X, u, V, cutoff)} from 0
-        by def $contains_sequence_tail_image(X, u, V)
+        by def:
+            ? $contains_sequence_tail_image(X, u, V)
         by thm sequence_tail_filter_sets_member(X, u, V)
-    by def \principal_filter_sets<X>(S) $subset \sequence_tail_filter_sets<X>(u)
-    by def $filter_le(X, \sequence_tail_filter_sets<X>(u), \principal_filter_sets<X>(S))
+    by def:
+        ? \principal_filter_sets<X>(S) $subset \sequence_tail_filter_sets<X>(u)
+    by def:
+        ? $filter_le(X, \sequence_tail_filter_sets<X>(u), \principal_filter_sets<X>(S))
 
 prop is_sequence_value_at_or_after(X set, u fn(n N) X, cutoff N, x X):
     exist n N st {n >= cutoff, x = u(n)}
@@ -4307,11 +4552,14 @@ thm sequence_tail_cluster_eventually_hits:
             claim:
                 ? $is_sequence_value_at_or_after(X, u, cutoff, u(n))
                 witness exist m N st {m >= cutoff, u(n) = u(m)} from n
-                by def $is_sequence_value_at_or_after(X, u, cutoff, u(n))
+                by def:
+                    ? $is_sequence_value_at_or_after(X, u, cutoff, u(n))
             by thm sequence_tail_image_from_member(X, u, cutoff, u(n))
-        by def $sequence_tail_lies_in(X, u, \sequence_tail_image_from<X>(u, cutoff), cutoff)
+        by def:
+            ? $sequence_tail_lies_in(X, u, \sequence_tail_image_from<X>(u, cutoff), cutoff)
     witness exist cutoff0 N st {$sequence_tail_lies_in(X, u, \sequence_tail_image_from<X>(u, cutoff), cutoff0)} from cutoff
-    by def $contains_sequence_tail_image(X, u, \sequence_tail_image_from<X>(u, cutoff))
+    by def:
+        ? $contains_sequence_tail_image(X, u, \sequence_tail_image_from<X>(u, cutoff))
     by thm sequence_tail_filter_sets_member(X, u, \sequence_tail_image_from<X>(u, cutoff))
     intersect(U, \sequence_tail_image_from<X>(u, cutoff)) != {}
     intersect(U, \sequence_tail_image_from<X>(u, cutoff)) $subset U $subset X
@@ -4328,7 +4576,8 @@ thm sequence_tail_cluster_eventually_hits:
             x = u(n)
             x $in U
             u(n) $in U
-        by def $has_sequence_hit_after(X, u, U, cutoff)
+        by def:
+            ? $has_sequence_hit_after(X, u, U, cutoff)
 
 prop increases_at_each_successor(phi fn(n N) N):
     forall n N:
@@ -4400,7 +4649,8 @@ thm successor_increase_is_strictly_increasing_map:
             =>:
                 phi(m) < phi(n)
         by thm successor_increase_implies_strictly_increasing(phi, m, n)
-    by def $strictly_increasing_natural_map(phi)
+    by def:
+        ? $strictly_increasing_natural_map(phi)
 
 prop is_subsequence_selection_step(X set, u fn(n N) X, basis fn(n N) power_set(X), left, right cart(N, N)):
     right[1] = left[1] + 1
@@ -4451,15 +4701,18 @@ thm subsequence_selection_relation_is_serial:
             basis(successor[1]) = basis(current[1] + 1)
             u(successor[2]) = u(next_index)
             u(successor[2]) $in basis(successor[1])
-            by def $is_subsequence_selection_step(X, u, basis, current, successor)
+            by def:
+                ? $is_subsequence_selection_step(X, u, basis, current, successor)
         claim:
             ? $_is_subsequence_selection_step_pair(X, u, basis, (current, successor))
             (current, successor)[1] = current
             (current, successor)[2] = successor
-            by def $_is_subsequence_selection_step_pair(X, u, basis, (current, successor))
+            by def:
+                ? $_is_subsequence_selection_step_pair(X, u, basis, (current, successor))
         (current, successor) $in \subsequence_selection_relation<X>(u, basis)
         witness exist next cart(N, N) st {(current, next) $in \subsequence_selection_relation<X>(u, basis)} from successor
-    by def $is_serial_relation(cart(N, N), \subsequence_selection_relation<X>(u, basis))
+    by def:
+        ? $is_serial_relation(cart(N, N), \subsequence_selection_relation<X>(u, basis))
 
 thm subsequence_selection_path_has_step:
     ? forall X set, u fn(n N) X, basis fn(n N) power_set(X), state0 cart(N, N), path fn(n N) cart(N, N), n N:
@@ -4470,7 +4723,8 @@ thm subsequence_selection_path_has_step:
     have pair cart(cart(N, N), cart(N, N)) = (path(n), path(n + 1))
     pair $in \subsequence_selection_relation<X>(u, basis)
     by thm subsequence_selection_relation_is_step_pair(X, u, basis, pair)
-    by def $_is_subsequence_selection_step_pair(X, u, basis, pair)
+    by def:
+        ? $_is_subsequence_selection_step_pair(X, u, basis, pair)
     pair[1] = path(n)
     pair[2] = path(n + 1)
     $is_subsequence_selection_step(X, u, basis, path(n), path(n + 1))
@@ -4557,7 +4811,8 @@ thm compact_sequence_has_convergent_subsequence_checked:
             phi(n) = path(n)[2]
             phi(n + 1) = path(n + 1)[2]
             phi(n) < phi(n + 1)
-        by def $increases_at_each_successor(phi)
+        by def:
+            ? $increases_at_each_successor(phi)
     by thm successor_increase_is_strictly_increasing_map(phi)
     claim:
         ? forall n N:
@@ -4589,16 +4844,20 @@ thm compact_sequence_has_convergent_subsequence_checked:
                     selected(n) $in basis(n)
                     selected(n) $in basis(k)
                     selected(n) $in U
-                by def $contains_natural_tail_from(k, {n N: selected(n) $in U})
+                by def:
+                    ? $contains_natural_tail_from(k, {n N: selected(n) $in U})
             witness exist cutoff N st {$contains_natural_tail_from(cutoff, {n N: selected(n) $in U})} from k
-            by def $contains_natural_tail({n N: selected(n) $in U})
-        by def $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
+            by def:
+                ? $contains_natural_tail({n N: selected(n) $in U})
+        by def:
+            ? $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
     claim:
         ? $tends_to_by_preimage(N, X, fn(n N) X {u(phi(n))}, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
         selected = fn(n N) X {u(phi(n))}
         $tends_to_by_preimage(N, X, selected, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, a))
     witness exist limit S, reindex fn(n N) N st {$strictly_increasing_natural_map(reindex), $tends_to_by_preimage(N, X, fn(n N) X {u(reindex(n))}, at_top_N_sets, \topological_neighborhood_filter_sets<X>(T, limit))} from a, phi
-    by def $has_convergent_subsequence_in(X, T, S, u)
+    by def:
+        ? $has_convergent_subsequence_in(X, T, S, u)
 
 thm compact_sequence_has_convergent_subsequence:
     ? forall X set, T \Topology<X>, S power_set(X), u fn(n N) X:
@@ -4648,7 +4907,8 @@ thm cluster_point_maps_under_continuity_and_tendsto:
                         mapped $in intersect(U, V)
                         mapped $in {}
                         impossible mapped $in {}
-                by def intersect(preimage_U, preimage_V) $subset {}
+                by def:
+                    ? intersect(preimage_U, preimage_V) $subset {}
             claim:
                 ? {} $subset intersect(preimage_U, preimage_V)
                 claim:
@@ -4657,10 +4917,13 @@ thm cluster_point_maps_under_continuity_and_tendsto:
                     by contra:
                         ? z $in intersect(preimage_U, preimage_V)
                         impossible z $in {}
-                by def {} $subset intersect(preimage_U, preimage_V)
-            by extension intersect(preimage_U, preimage_V) = {}
+                by def:
+                    ? {} $subset intersect(preimage_U, preimage_V)
+            by extension:
+                ? intersect(preimage_U, preimage_V) = {}
             impossible intersect(preimage_U, preimage_V) != {}
-    by def $is_cluster_point(Y, T_Y, G, f(x))
+    by def:
+        ? $is_cluster_point(Y, T_Y, G, f(x))
 
 prop _contains_compact_image_pullback_trace(X, Y set, f fn(x X) Y, S power_set(X), G power_set(power_set(Y)), U power_set(X)):
     exist V G st {intersect(S, {x X: f(x) $in V}) $subset U}
@@ -4693,7 +4956,8 @@ thm compact_image_pullback_is_filter:
         intersect(S, {x X: f(x) $in Y}) $subset X
         X $in power_set(X)
         witness exist V G st {intersect(S, {x X: f(x) $in V}) $subset X} from Y
-        by def $_contains_compact_image_pullback_trace(X, Y, f, S, G, X)
+        by def:
+            ? $_contains_compact_image_pullback_trace(X, Y, f, S, G, X)
         by thm compact_image_pullback_filter_sets_member(X, Y, f, S, G, X)
     claim:
         ? forall U, V \compact_image_pullback_filter_sets<X, Y>(f, S, G):
@@ -4718,11 +4982,13 @@ thm compact_image_pullback_is_filter:
                 x $in U
                 x $in V
                 x $in intersect(U, V)
-            by def intersect(S, {x X: f(x) $in intersect(large_U, large_V)}) $subset intersect(U, V)
+            by def:
+                ? intersect(S, {x X: f(x) $in intersect(large_U, large_V)}) $subset intersect(U, V)
         intersect(U, V) $subset U $subset X
         intersect(U, V) $in power_set(X)
         witness exist W G st {intersect(S, {x X: f(x) $in W}) $subset intersect(U, V)} from intersect(large_U, large_V)
-        by def $_contains_compact_image_pullback_trace(X, Y, f, S, G, intersect(U, V))
+        by def:
+            ? $_contains_compact_image_pullback_trace(X, Y, f, S, G, intersect(U, V))
         by thm compact_image_pullback_filter_sets_member(X, Y, f, S, G, intersect(U, V))
     claim:
         ? forall U \compact_image_pullback_filter_sets<X, Y>(f, S, G), V power_set(X):
@@ -4734,9 +5000,11 @@ thm compact_image_pullback_is_filter:
         intersect(S, {x X: f(x) $in large_U}) $subset U $subset V
         V $in power_set(X)
         witness exist W G st {intersect(S, {x X: f(x) $in W}) $subset V} from large_U
-        by def $_contains_compact_image_pullback_trace(X, Y, f, S, G, V)
+        by def:
+            ? $_contains_compact_image_pullback_trace(X, Y, f, S, G, V)
         by thm compact_image_pullback_filter_sets_member(X, Y, f, S, G, V)
-    by def $is_filter_on(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G))
+    by def:
+        ? $is_filter_on(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G))
     by thm filter_member(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G))
 
 thm compact_image_pullback_is_proper:
@@ -4768,7 +5036,8 @@ thm compact_image_pullback_is_proper:
                     case not f(x) $in V:
                         f(x) $in set_minus(Y, V)
                         by thm set_preimage_member_of_image_member(X, Y, f, x, set_minus(Y, V))
-            by def S $subset \chap4::set_preimage<X, Y, f>(set_minus(Y, V))
+            by def:
+                ? S $subset \chap4::set_preimage<X, Y, f>(set_minus(Y, V))
             by thm chap4::image_subset_iff_subset_preimage(X, Y, f, S, set_minus(Y, V))
             claim:
                 ? \chap4::set_image<X, Y, f, S> $subset set_minus(Y, V)
@@ -4790,13 +5059,16 @@ thm compact_image_pullback_is_proper:
                     y $in set_minus(Y, V)
                     not y $in V
                     impossible y $in V
-            by def intersect(V, \chap4::set_image<X, Y, f, S>) $subset {}
+            by def:
+                ? intersect(V, \chap4::set_image<X, Y, f, S>) $subset {}
             {} $subset intersect(V, \chap4::set_image<X, Y, f, S>)
-            by extension intersect(V, \chap4::set_image<X, Y, f, S>) = {}
+            by extension:
+                ? intersect(V, \chap4::set_image<X, Y, f, S>) = {}
             {} $in G
             not {} $in G
             impossible {} $in G
-    by def $is_proper_filter_on(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G))
+    by def:
+        ? $is_proper_filter_on(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G))
 
 thm compact_image_pullback_le_principal:
     ? forall X, Y set, f fn(x X) Y, S power_set(X), G \Filter<Y>:
@@ -4807,10 +5079,13 @@ thm compact_image_pullback_le_principal:
         S $subset U
         intersect(S, {x X: f(x) $in Y}) $subset S $subset U
         witness exist V G st {intersect(S, {x X: f(x) $in V}) $subset U} from Y
-        by def $_contains_compact_image_pullback_trace(X, Y, f, S, G, U)
+        by def:
+            ? $_contains_compact_image_pullback_trace(X, Y, f, S, G, U)
         by thm compact_image_pullback_filter_sets_member(X, Y, f, S, G, U)
-    by def \principal_filter_sets<X>(S) $subset \compact_image_pullback_filter_sets<X, Y>(f, S, G)
-    by def $filter_le(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G), \principal_filter_sets<X>(S))
+    by def:
+        ? \principal_filter_sets<X>(S) $subset \compact_image_pullback_filter_sets<X, Y>(f, S, G)
+    by def:
+        ? $filter_le(X, \compact_image_pullback_filter_sets<X, Y>(f, S, G), \principal_filter_sets<X>(S))
 
 thm compact_image_pullback_tends_to_target:
     ? forall X, Y set, f fn(x X) Y, S power_set(X), G power_set(power_set(Y)):
@@ -4820,9 +5095,11 @@ thm compact_image_pullback_tends_to_target:
             {x X: f(x) $in V} $in \compact_image_pullback_filter_sets<X, Y>(f, S, G)
         intersect(S, {x X: f(x) $in V}) $subset {x X: f(x) $in V}
         witness exist W G st {intersect(S, {x X: f(x) $in W}) $subset {x X: f(x) $in V}} from V
-        by def $_contains_compact_image_pullback_trace(X, Y, f, S, G, {x X: f(x) $in V})
+        by def:
+            ? $_contains_compact_image_pullback_trace(X, Y, f, S, G, {x X: f(x) $in V})
         by thm compact_image_pullback_filter_sets_member(X, Y, f, S, G, {x X: f(x) $in V})
-    by def $tends_to_by_preimage(X, Y, f, \compact_image_pullback_filter_sets<X, Y>(f, S, G), G)
+    by def:
+        ? $tends_to_by_preimage(X, Y, f, \compact_image_pullback_filter_sets<X, Y>(f, S, G), G)
 
 thm continuous_image_of_compact_is_compact:
     ? forall X, Y set, T_X \Topology<X>, T_Y \Topology<Y>, f fn(x X) Y, S power_set(X):
@@ -4848,7 +5125,8 @@ thm continuous_image_of_compact_is_compact:
             ? f(a) $in \chap4::set_image<X, Y, f, S>
             by thm set_image_member_of_source_member(X, Y, f, S, a)
         witness exist b \chap4::set_image<X, Y, f, S> st {$is_cluster_point(Y, T_Y, G, b)} from f(a)
-    by def $is_topologically_compact(Y, T_Y, \chap4::set_image<X, Y, f, S>)
+    by def:
+        ? $is_topologically_compact(Y, T_Y, \chap4::set_image<X, Y, f, S>)
 
 prop is_indexed_open_cover(X, I set, T power_set(power_set(X)), S power_set(X), U fn(index I) power_set(X)):
     forall coordinate I:
@@ -4927,16 +5205,21 @@ thm no_finite_subcover_has_nonempty_remainder:
                                         claim:
                                             ? $has_initial_open_hit(X, I, U, n, chosen, x)
                                             witness exist slot N st {slot < n, x $in U(chosen(slot))} from k
-                                            by def $has_initial_open_hit(X, I, U, n, chosen, x)
+                                            by def:
+                                                ? $has_initial_open_hit(X, I, U, n, chosen, x)
                                         impossible $has_initial_open_hit(X, I, U, n, chosen, x)
-                                by def $avoids_initial_open_choices(X, I, S, U, n, chosen, x)
+                                by def:
+                                    ? $avoids_initial_open_choices(X, I, S, U, n, chosen, x)
                             by thm finite_open_cover_remainder_member(X, I, S, U, n, chosen, x)
                             x $in {}
                             impossible x $in {}
-                    by def $has_initial_open_hit(X, I, U, n, chosen, x)
-                by def $initial_choices_cover(X, I, S, U, n, chosen)
+                    by def:
+                        ? $has_initial_open_hit(X, I, U, n, chosen, x)
+                by def:
+                    ? $initial_choices_cover(X, I, S, U, n, chosen)
             witness exist size N, selection fn(slot N) I st {$initial_choices_cover(X, I, S, U, size, selection)} from n, chosen
-            by def $is_finite_indexed_subcover(X, I, S, U)
+            by def:
+                ? $is_finite_indexed_subcover(X, I, S, U)
             impossible not $is_finite_indexed_subcover(X, I, S, U)
     by thm set_not_empty_implies_nonempty(X, \finite_open_cover_remainder<X, I>(S, U, n, chosen))
 
@@ -4976,9 +5259,11 @@ thm failed_open_cover_sets_form_filter:
                 ? forall x \finite_open_cover_remainder<X, I>(S, U, 0, default_choices):
                     x $in X
                 x $in X
-            by def \finite_open_cover_remainder<X, I>(S, U, 0, default_choices) $subset X
+            by def:
+                ? \finite_open_cover_remainder<X, I>(S, U, 0, default_choices) $subset X
         witness exist n N, chosen fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, n, chosen) $subset X} from 0, default_choices
-        by def $contains_finite_open_remainder(X, I, S, U, X)
+        by def:
+            ? $contains_finite_open_remainder(X, I, S, U, X)
         by thm failed_open_cover_filter_sets_member(X, I, S, U, X)
     claim:
         ? forall V, W \failed_open_cover_filter_sets<X, I>(S, U):
@@ -5010,7 +5295,8 @@ thm failed_open_cover_sets_form_filter:
                             not x $in U(combined(k))
                             combined(k) = chosenV(k)
                             not x $in U(chosenV(k))
-                        by def $avoids_initial_open_choices(X, I, S, U, nV, chosenV, x)
+                        by def:
+                            ? $avoids_initial_open_choices(X, I, S, U, nV, chosenV, x)
                     by thm finite_open_cover_remainder_member(X, I, S, U, nV, chosenV, x)
                 claim:
                     ? x $in \finite_open_cover_remainder<X, I>(S, U, nW, chosenW)
@@ -5029,16 +5315,19 @@ thm failed_open_cover_sets_form_filter:
                             (nV + k) - nV = k
                             chosenW((nV + k) - nV) = chosenW(k)
                             not x $in U(chosenW(k))
-                        by def $avoids_initial_open_choices(X, I, S, U, nW, chosenW, x)
+                        by def:
+                            ? $avoids_initial_open_choices(X, I, S, U, nW, chosenW, x)
                     by thm finite_open_cover_remainder_member(X, I, S, U, nW, chosenW, x)
                 x $in V
                 x $in W
                 x $in intersect(V, W)
-            by def \finite_open_cover_remainder<X, I>(S, U, nV + nW, combined) $subset intersect(V, W)
+            by def:
+                ? \finite_open_cover_remainder<X, I>(S, U, nV + nW, combined) $subset intersect(V, W)
         intersect(V, W) $subset V $subset X
         intersect(V, W) $in power_set(X)
         witness exist n N, chosen fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, n, chosen) $subset intersect(V, W)} from nV + nW, combined
-        by def $contains_finite_open_remainder(X, I, S, U, intersect(V, W))
+        by def:
+            ? $contains_finite_open_remainder(X, I, S, U, intersect(V, W))
         by thm failed_open_cover_filter_sets_member(X, I, S, U, intersect(V, W))
     claim:
         ? forall V \failed_open_cover_filter_sets<X, I>(S, U), W power_set(X):
@@ -5049,9 +5338,11 @@ thm failed_open_cover_sets_form_filter:
         obtain n, chosen from exist size N, selection fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, size, selection) $subset V}
         \finite_open_cover_remainder<X, I>(S, U, n, chosen) $subset V $subset W
         witness exist size N, selection fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, size, selection) $subset W} from n, chosen
-        by def $contains_finite_open_remainder(X, I, S, U, W)
+        by def:
+            ? $contains_finite_open_remainder(X, I, S, U, W)
         by thm failed_open_cover_filter_sets_member(X, I, S, U, W)
-    by def $is_filter_on(X, \failed_open_cover_filter_sets<X, I>(S, U))
+    by def:
+        ? $is_filter_on(X, \failed_open_cover_filter_sets<X, I>(S, U))
 
 thm failed_open_cover_filter_is_proper:
     ? forall X set, I nonempty_set, S power_set(X), U fn(index I) power_set(X):
@@ -5070,7 +5361,8 @@ thm failed_open_cover_filter_is_proper:
             obtain x from exist point \finite_open_cover_remainder<X, I>(S, U, n, chosen) st {point $in \finite_open_cover_remainder<X, I>(S, U, n, chosen)}
             x $in {}
             impossible x $in {}
-    by def $is_proper_filter_on(X, \failed_open_cover_filter_sets<X, I>(S, U))
+    by def:
+        ? $is_proper_filter_on(X, \failed_open_cover_filter_sets<X, I>(S, U))
 
 thm failed_open_cover_filter_le_principal:
     ? forall X set, I nonempty_set, S power_set(X), U fn(index I) power_set(X):
@@ -5088,13 +5380,17 @@ thm failed_open_cover_filter_le_principal:
                     x $in S
                 by thm finite_open_cover_remainder_contains_avoidance(X, I, S, U, 0, default_choices, x)
                 x $in S
-            by def \finite_open_cover_remainder<X, I>(S, U, 0, default_choices) $subset S
+            by def:
+                ? \finite_open_cover_remainder<X, I>(S, U, 0, default_choices) $subset S
         \finite_open_cover_remainder<X, I>(S, U, 0, default_choices) $subset S $subset V
         witness exist size N, selection fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, size, selection) $subset V} from 0, default_choices
-        by def $contains_finite_open_remainder(X, I, S, U, V)
+        by def:
+            ? $contains_finite_open_remainder(X, I, S, U, V)
         by thm failed_open_cover_filter_sets_member(X, I, S, U, V)
-    by def \principal_filter_sets<X>(S) $subset \failed_open_cover_filter_sets<X, I>(S, U)
-    by def $filter_le(X, \failed_open_cover_filter_sets<X, I>(S, U), \principal_filter_sets<X>(S))
+    by def:
+        ? \principal_filter_sets<X>(S) $subset \failed_open_cover_filter_sets<X, I>(S, U)
+    by def:
+        ? $filter_le(X, \failed_open_cover_filter_sets<X, I>(S, U), \principal_filter_sets<X>(S))
 
 thm compact_open_cover_has_finite_subcover_checked:
     ? forall X set, I nonempty_set, T \Topology<X>, S power_set(X), U fn(index I) power_set(X):
@@ -5115,14 +5411,16 @@ thm compact_open_cover_has_finite_subcover_checked:
             claim:
                 ? $_is_topological_neighborhood(X, T, a, U(cover_index))
                 witness exist O T st {a $in O, O $subset U(cover_index)} from U(cover_index)
-                by def $_is_topological_neighborhood(X, T, a, U(cover_index))
+                by def:
+                    ? $_is_topological_neighborhood(X, T, a, U(cover_index))
             by thm topological_neighborhood_filter_sets_member(X, T, a, U(cover_index))
         have fn chosen(k N) I = cover_index
         claim:
             ? \finite_open_cover_remainder<X, I>(S, U, 1, chosen) $in \failed_open_cover_filter_sets<X, I>(S, U)
             \finite_open_cover_remainder<X, I>(S, U, 1, chosen) $subset \finite_open_cover_remainder<X, I>(S, U, 1, chosen)
             witness exist size N, selection fn(slot N) I st {\finite_open_cover_remainder<X, I>(S, U, size, selection) $subset \finite_open_cover_remainder<X, I>(S, U, 1, chosen)} from 1, chosen
-            by def $contains_finite_open_remainder(X, I, S, U, \finite_open_cover_remainder<X, I>(S, U, 1, chosen))
+            by def:
+                ? $contains_finite_open_remainder(X, I, S, U, \finite_open_cover_remainder<X, I>(S, U, 1, chosen))
             by thm failed_open_cover_filter_sets_member(X, I, S, U, \finite_open_cover_remainder<X, I>(S, U, 1, chosen))
         intersect(U(cover_index), \finite_open_cover_remainder<X, I>(S, U, 1, chosen)) != {}
         intersect(U(cover_index), \finite_open_cover_remainder<X, I>(S, U, 1, chosen)) $subset U(cover_index) $subset X

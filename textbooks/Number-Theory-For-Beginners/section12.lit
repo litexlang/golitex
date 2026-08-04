@@ -56,8 +56,10 @@ thm congruent_mod_transport_equalities:
         =>:
             $section5::congruent_mod(m, x, y)
     x - y = x1 - y1
-    by def $section5::congruent_mod(m, x1, y1)
-    by def $section5::congruent_mod(m, x, y)
+    by def:
+        ? $section5::congruent_mod(m, x1, y1)
+    by def:
+        ? $section5::congruent_mod(m, x, y)
 
 thm finite_product_congruence_insert_step:
     ? forall m N+, a set, S finite_set, f, g fn(x union({a}, S)) Z:
@@ -76,7 +78,8 @@ thm finite_product_congruence_insert_step:
         fS(x) = f(x)
         gS(x) = g(x)
         $section5::congruent_mod(m, f(x), g(x))
-    by def $finite_product_congruence_holds(m, S)
+    by def:
+        ? $finite_product_congruence_holds(m, S)
     $section5::congruent_mod( m, finite_set_product(S, fS), finite_set_product(S, gS) )
     $section5::congruent_mod(m, f(a), g(a))
     by thm section5::congruent_mod_multiply( m, finite_set_product(S, fS), finite_set_product(S, gS), f(a), g(a) )
@@ -84,8 +87,10 @@ thm finite_product_congruence_insert_step:
     have fn gR(x S) Z = g(x)
     fR = fn(x S) Z {f(x)}
     gR = fn(x S) Z {g(x)}
-    by def $fn_eq_in(fS, fR, S)
-    by def $fn_eq_in(gS, gR, S)
+    by def:
+        ? $fn_eq_in(fS, fR, S)
+    by def:
+        ? $fn_eq_in(gS, gR, S)
     finite_set_product(S, fR) = finite_set_product(S, fS)
     finite_set_product(S, gR) = finite_set_product(S, gS)
     by thm congruent_mod_transport_equalities( m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a) )
@@ -109,7 +114,8 @@ thm finite_product_congruence:
                 finite_set_product({}, g) = 1
                 by thm section5::congruent_mod_reflexive(m, 1)
                 by thm congruent_mod_transport_equalities( m, finite_set_product({}, f), finite_set_product({}, g), 1, 1 )
-            by def $finite_product_congruence_holds(m, {})
+            by def:
+                ? $finite_product_congruence_holds(m, {})
         ? induc a, S:
             $finite_product_congruence_holds(m, S)
             claim:
@@ -119,7 +125,8 @@ thm finite_product_congruence:
                     =>:
                         $section5::congruent_mod( m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g) )
                 by thm finite_product_congruence_insert_step( m, a, S, f, g )
-            by def $finite_product_congruence_holds( m, union({a}, S) )
+            by def:
+                ? $finite_product_congruence_holds( m, union({a}, S) )
 
 thm relatively_prime_transport_right:
     ? forall a, b, c Z:
@@ -155,13 +162,15 @@ thm finite_product_relprime_insert_step:
         x $in union({z}, S)
         fS(x) = f(x)
         $section3::relatively_prime_Z(a, f(x))
-    by def $finite_product_relprime_holds(a, S)
+    by def:
+        ? $finite_product_relprime_holds(a, S)
     $section3::relatively_prime_Z(a, finite_set_product(S, fS))
     $section3::relatively_prime_Z(a, f(z))
     by thm section3::theorem_III_2_corollary_1( a, finite_set_product(S, fS), f(z) )
     have fn fR(x S) Z = f(x)
     fR = fn(x S) Z {f(x)}
-    by def $fn_eq_in(fS, fR, S)
+    by def:
+        ? $fn_eq_in(fS, fR, S)
     finite_set_product(S, fR) = finite_set_product(S, fS)
     finite_set_product(union({z}, S), f) = finite_set_product(S, fn(x S) Z {f(x)}) * f(z) = finite_set_product(S, fR) * f(z)
     finite_set_product(union({z}, S), f) = finite_set_product(S, fS) * f(z)
@@ -182,7 +191,8 @@ thm finite_product_relprime:
                 finite_set_product({}, f) = 1
                 by thm section3::relatively_prime_Z_one(a)
                 by thm relatively_prime_transport_right( a, finite_set_product({}, f), 1 )
-            by def $finite_product_relprime_holds(a, {})
+            by def:
+                ? $finite_product_relprime_holds(a, {})
         ? induc z, S:
             $finite_product_relprime_holds(a, S)
             claim:
@@ -192,7 +202,8 @@ thm finite_product_relprime:
                     =>:
                         $section3::relatively_prime_Z( a, finite_set_product(union({z}, S), f) )
                 by thm finite_product_relprime_insert_step(a, z, S, f)
-            by def $finite_product_relprime_holds( a, union({z}, S) )
+            by def:
+                ? $finite_product_relprime_holds( a, union({z}, S) )
 
 thm product_mul_algebra:
     ? forall Pfg, Pf, Pg, fz, gz Z:
@@ -260,7 +271,8 @@ thm singleton_disjoint_intersection:
         not z $in S
         =>:
             intersect({z}, intersect(B, S)) = {}
-    by extension intersect({z}, intersect(B, S)) = {}:
+    by extension:
+        ? intersect({z}, intersect(B, S)) = {}
         claim:
             ? forall t intersect({z}, intersect(B, S)):
                 t $in {}
@@ -308,7 +320,8 @@ thm intersect_subset_eq:
         B $subset A
         =>:
             intersect(B, A) = B
-    by extension intersect(B, A) = B:
+    by extension:
+        ? intersect(B, A) = B
         forall x intersect(B, A):
             x $in B
         forall x B:
@@ -446,7 +459,8 @@ thm finite_set_product_bijective_reindex:
                             finite_set_product({}, fn(x {}) Z {q(h(x))}) = finite_set_product(carrier_C, q)
                     claim:
                         ? carrier_C = {}
-                        by extension carrier_C = {}:
+                        by extension:
+                            ? carrier_C = {}
                             claim:
                                 ? forall y carrier_C:
                                     y $in {}
@@ -461,7 +475,8 @@ thm finite_set_product_bijective_reindex:
                                     ? y $in carrier_C
                                     impossible y $in {}
                     finite_set_product({}, fn(x {}) Z {q(h(x))}) = 1 = finite_set_product(carrier_C, q)
-                by def $reindex_holds({})
+                by def:
+                    ? $reindex_holds({})
             ? induc z, S:
                 claim:
                     ? forall carrier_C finite_set, h fn(x union({z}, S)) carrier_C, q fn(y carrier_C) Z:
@@ -502,9 +517,12 @@ thm finite_set_product_bijective_reindex:
                                 x1 = x2
                         h(x1) = h0(x1) = h0(x2) = h(x2)
                         x1 = x2
-                    by def $injective(S, set_minus(carrier_C, {h(z)}), h0)
-                    by def $surjective(S, set_minus(carrier_C, {h(z)}), h0)
-                    by def $bijective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $injective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $surjective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $bijective(S, set_minus(carrier_C, {h(z)}), h0)
                     have fn q0(y set_minus(carrier_C, {h(z)})) Z = q(y)
                     q0 = fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}
                     have fn qh(x S) Z = q(h(x))
@@ -517,11 +535,13 @@ thm finite_set_product_bijective_reindex:
                         h0(x) $in set_minus(carrier_C, {h(z)})
                         h0(x) $in carrier_C
                         qh(x) = q(h(x)) = q(h0(x)) = q0(h0(x)) = q0h0(x)
-                    by def $fn_eq_in(qh, q0h0, S)
+                    by def:
+                        ? $fn_eq_in(qh, q0h0, S)
                     finite_set_product(S, fn(x S) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q0(h0(x))})
                     finite_set_product(S, fn(x S) Z {q0(h0(x))}) = finite_set_product(set_minus(carrier_C, {h(z)}), q0)
                     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q(h(x))}) * q(h(z)) = finite_set_product(S, fn(x S) Z {q0(h0(x))}) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), q0) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}) * q(h(z)) = finite_set_product(carrier_C, q)
-                by def $reindex_holds(union({z}, S))
+                by def:
+                    ? $reindex_holds(union({z}, S))
     $reindex_holds(A)
     finite_set_product(A, fn(x A) Z {g(f(x))}) = finite_set_product(B, g)
 
@@ -549,7 +569,8 @@ thm relatively_prime_right_does_not_divide_left:
         obtain u, v from exist u, v Z st {a * u + p * v = 1}
         1 = a * u + p * v = (p * k) * u + p * v = p * (k * u + v)
         witness exist q Z st {1 = p * q} from k * u + v
-        by def $section1::divides_Z(p, 1)
+        by def:
+            ? $section1::divides_Z(p, 1)
         by thm section1::positive_divisor_of_one_is_one(p)
         impossible p > 1
 
@@ -593,8 +614,10 @@ thm finite_self_injective_is_bijective:
         by thm finite_self_range_contains_every_value(A, f, y)
         obtain x from exist x A st {y = f(x)}
         witness exist z A st {y = f(z)} from x
-    by def $surjective(A, A, f)
-    by def $bijective(A, A, f)
+    by def:
+        ? $surjective(A, A, f)
+    by def:
+        ? $bijective(A, A, f)
 
 have fn gauss_abs_value(p N+, r Z) Z by cases:
     case 2 * r <= p: r
@@ -668,7 +691,8 @@ thm gauss_half_remainder_positive:
         a * x = p * section2::integer_quotient(a * x, p) + (a * x) % p = p * section2::integer_quotient(a * x, p)
         witness exist k Z st {a * x = p * k} from section2::integer_quotient(a * x, p):
             a * x = p * section2::integer_quotient(a * x, p)
-        by def $section1::divides_Z(p, a * x)
+        by def:
+            ? $section1::divides_Z(p, a * x)
         by thm relatively_prime_symmetric(a, p)
         by thm section3::theorem_III_2_euclid_lemma(p, a, x)
         obtain k from exist k Z st {x = p * k}
@@ -770,13 +794,15 @@ thm gauss_equal_remainders_give_divisibility:
         (a * x) % p = (a * y) % p
         =>:
             $section1::divides_Z(p, a * (x - y))
-    by def $section5::same_remainder_mod(p, a * x, a * y)
+    by def:
+        ? $section5::same_remainder_mod(p, a * x, a * y)
     a * x = p * section2::integer_quotient(a * x, p) + (a * x) % p
     a * y = p * section2::integer_quotient(a * y, p) + (a * y) % p
     a * x - a * y = (p * section2::integer_quotient(a * x, p) + (a * x) % p) - (p * section2::integer_quotient(a * y, p) + (a * y) % p) = (p * section2::integer_quotient(a * x, p) + (a * y) % p) - (p * section2::integer_quotient(a * y, p) + (a * y) % p) = p * section2::integer_quotient(a * x, p) - p * section2::integer_quotient(a * y, p) = p * (section2::integer_quotient(a * x, p) - section2::integer_quotient(a * y, p))
     a * (x - y) = a * x - a * y = p * (section2::integer_quotient(a * x, p) - section2::integer_quotient(a * y, p))
     witness exist t Z st {a * (x - y) = p * t} from section2::integer_quotient(a * x, p) - section2::integer_quotient(a * y, p)
-    by def $section1::divides_Z(p, a * (x - y))
+    by def:
+        ? $section1::divides_Z(p, a * (x - y))
 
 thm gauss_equal_remainders_equal_indices:
     ? forall p N+, a Z, h N, x, y 1...h:
@@ -788,7 +814,8 @@ thm gauss_equal_remainders_equal_indices:
     by thm gauss_equal_remainders_give_divisibility(p, a, x, y)
     by thm relatively_prime_symmetric(a, p)
     by thm section3::theorem_III_2_euclid_lemma(p, a, x - y)
-    by def $section5::congruent_mod(p, x, y)
+    by def:
+        ? $section5::congruent_mod(p, x, y)
     by thm section5::congruent_mod_has_same_remainder(p, x, y)
     h <= 2 * h = p - 1 < p
     0 <= x < p
@@ -821,7 +848,8 @@ thm gauss_complementary_remainders_give_divisibility:
     trust a * (x + y) = p * section2::integer_quotient(a * (x + y), p)
     witness exist k Z st {a * (x + y) = p * k} from section2::integer_quotient(a * (x + y), p):
         a * (x + y) = p * section2::integer_quotient(a * (x + y), p)
-    by def $section1::divides_Z(p, a * (x + y))
+    by def:
+        ? $section1::divides_Z(p, a * (x + y))
 
 thm divisible_remainder_zero:
     ? forall p N+, z Z:
@@ -935,14 +963,16 @@ thm gauss_half_map_bijective:
         f(y) = gauss_abs_value(p, (a * y) % p)
         gauss_abs_value(p, (a * x) % p) = gauss_abs_value(p, (a * y) % p)
         by thm gauss_abs_map_collision_is_equal(p, a, h, x, y)
-    by def $injective(1...h, 1...h, f)
+    by def:
+        ? $injective(1...h, 1...h, f)
     by thm finite_self_injective_is_bijective(1...h, f)
     claim:
         ? forall x 1...h:
             f(x) = gauss_abs_value(p, (a * x) % p)
         f(x) = gauss_abs_value(p, (a * x) % p)
     witness exist g fn(x 1...h) 1...h st {$gauss_half_map_spec(p, a, h, g)} from f:
-        by def $gauss_half_map_spec(p, a, h, f)
+        by def:
+            ? $gauss_half_map_spec(p, a, h, f)
 
 thm gauss_signed_abs_congruence_low:
     ? forall p N+, z Z:
@@ -955,8 +985,10 @@ thm gauss_signed_abs_congruence_low:
     z = p * section2::integer_quotient(z, p) + z % p
     witness exist k Z st {z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p) = p * k} from section2::integer_quotient(z, p):
         z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p) = z - z % p = (p * section2::integer_quotient(z, p) + z % p) - z % p = p * section2::integer_quotient(z, p)
-    by def $section1::divides_Z(p, z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
-    by def $section5::congruent_mod(p, z, gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
+    by def:
+        ? $section1::divides_Z(p, z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
+    by def:
+        ? $section5::congruent_mod(p, z, gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
 
 thm gauss_signed_abs_congruence_high:
     ? forall p N+, z Z:
@@ -969,8 +1001,10 @@ thm gauss_signed_abs_congruence_high:
     z = p * section2::integer_quotient(z, p) + z % p
     witness exist k Z st {z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p) = p * k} from section2::integer_quotient(z, p) + 1:
         z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p) = z - (z % p - p) = (p * section2::integer_quotient(z, p) + z % p) - (z % p - p) = p * (section2::integer_quotient(z, p) + 1)
-    by def $section1::divides_Z(p, z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
-    by def $section5::congruent_mod(p, z, gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
+    by def:
+        ? $section1::divides_Z(p, z - gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
+    by def:
+        ? $section5::congruent_mod(p, z, gauss_remainder_sign(p, z % p) * gauss_abs_value(p, z % p))
 
 thm gauss_signed_abs_congruence:
     ? forall p N+, z Z:
@@ -996,7 +1030,8 @@ thm congruent_mod_cancel_coprime_multiplier:
     by thm gauss_equal_remainders_give_divisibility(p, a, x, y)
     by thm relatively_prime_symmetric(a, p)
     by thm section3::theorem_III_2_euclid_lemma(p, a, x - y)
-    by def $section5::congruent_mod(p, x, y)
+    by def:
+        ? $section5::congruent_mod(p, x, y)
 
 thm congruent_mod_negate:
     ? forall p N+, x, y Z:
@@ -1013,8 +1048,10 @@ thm congruent_mod_negate:
     -(section2::integer_quotient(x, p) - section2::integer_quotient(y, p)) = section2::integer_quotient(y, p) - section2::integer_quotient(x, p)
     -x - (-y) = p * (section2::integer_quotient(y, p) - section2::integer_quotient(x, p))
     witness exist u Z st {-x - (-y) = p * u} from section2::integer_quotient(y, p) - section2::integer_quotient(x, p)
-    by def $section1::divides_Z(p, -x - (-y))
-    by def $section5::congruent_mod(p, -x, -y)
+    by def:
+        ? $section1::divides_Z(p, -x - (-y))
+    by def:
+        ? $section5::congruent_mod(p, -x, -y)
 
 thm gaussian_rearrangement_opposite_sign_collision:
     ? forall p N+, h N, A finite_set, u fn(idx_i A) Z, a Z, eps fn(idx_i A) Z, sigma fn(idx_i A) A, x, y A:
@@ -1085,7 +1122,8 @@ thm gaussian_signed_rearrangement_is_bijective:
                     case eps(y) = -1:
                         eps(x) = eps(y)
                         by thm gaussian_rearrangement_equal_sign_collision(p, h, A, u, a, eps, sigma, x, y)
-    by def $injective(A, A, sigma)
+    by def:
+        ? $injective(A, A, sigma)
     by thm finite_self_injective_is_bijective(A, sigma)
 
 thm gaussian_rearrangement_products_are_congruent:
@@ -1104,11 +1142,14 @@ thm gaussian_rearrangement_products_are_congruent:
         right(idx_i) = eps(idx_i) * u(sigma(idx_i))
         $section5::congruent_mod(p, a * u(idx_i), eps(idx_i) * u(sigma(idx_i)))
     by thm finite_product_congruence(p, A)
-    by def $finite_product_congruence_holds(p, A)
+    by def:
+        ? $finite_product_congruence_holds(p, A)
     have fn left0(idx_i A) Z = a * u(idx_i)
     have fn right0(idx_i A) Z = eps(idx_i) * u(sigma(idx_i))
-    by def $fn_eq_in(left, left0, A)
-    by def $fn_eq_in(right, right0, A)
+    by def:
+        ? $fn_eq_in(left, left0, A)
+    by def:
+        ? $fn_eq_in(right, right0, A)
     finite_set_product(A, left0) = finite_set_product(A, left)
     finite_set_product(A, right0) = finite_set_product(A, right)
     by thm congruent_mod_transport_equalities(p, finite_set_product(A, left0), finite_set_product(A, right0), finite_set_product(A, left), finite_set_product(A, right))
@@ -1147,7 +1188,8 @@ thm finite_product_is_relatively_prime:
             $section3::relatively_prime_Z(p, u(idx_i))
         by thm relatively_prime_symmetric(u(idx_i), p)
     by thm finite_product_relprime(p, A)
-    by def $finite_product_relprime_holds(p, A)
+    by def:
+        ? $finite_product_relprime_holds(p, A)
     by thm relatively_prime_symmetric(p, finite_set_product(A, u))
 
 thm gaussian_rearrangement_product_congruence:
@@ -1217,7 +1259,8 @@ thm theorem_XII_Gauss_lemma:
                 ? $gauss_lemma_conclusion(p, a, A, eps)
                 case finite_set_product(A, eps) = 1:
                     $section11::quadratic_residue_mod(p, a) and finite_set_product(A, eps) = 1
-                    by def $gauss_lemma_conclusion(p, a, A, eps)
+                    by def:
+                        ? $gauss_lemma_conclusion(p, a, A, eps)
                 case finite_set_product(A, eps) = -1:
                     finite_set_product(A, eps) % p = (-1) % p = p - 1
                     a ^ h % p = finite_set_product(A, eps) % p = p - 1
@@ -1237,7 +1280,8 @@ thm theorem_XII_Gauss_lemma:
                     impossible p > 2
                 case finite_set_product(A, eps) = -1:
                     $section11::quadratic_nonresidue_mod(p, a) and finite_set_product(A, eps) = -1
-                    by def $gauss_lemma_conclusion(p, a, A, eps)
+                    by def:
+                        ? $gauss_lemma_conclusion(p, a, A, eps)
 
 # Theorem XII.1.  For the canonical Gaussian set 1,...,h, doubling is
 # positive below the midpoint cut and negative above it.  The parity of the
@@ -1287,7 +1331,8 @@ thm coprime_remainder_is_positive:
         z % p = 0
         z = p * section2::integer_quotient(z, p) + z % p = p * section2::integer_quotient(z, p)
         witness exist k Z st {z = p * k} from section2::integer_quotient(z, p)
-        by def $section1::divides_Z(p, z)
+        by def:
+            ? $section1::divides_Z(p, z)
         impossible not $section1::divides_Z(p, z)
 
 thm canonical_gaussian_representative_exists:
@@ -1341,7 +1386,8 @@ thm canonical_gaussian_representatives_are_unique:
             idx_i - (-j) = (p * section2::integer_quotient(idx_i, p) + idx_i % p) - (p * section2::integer_quotient(-j, p) + (-j) % p) = (p * section2::integer_quotient(idx_i, p) + (-j) % p) - (p * section2::integer_quotient(-j, p) + (-j) % p) = p * section2::integer_quotient(idx_i, p) - p * section2::integer_quotient(-j, p) = p * (section2::integer_quotient(idx_i, p) - section2::integer_quotient(-j, p))
             idx_i + j = idx_i - (-j) = p * (section2::integer_quotient(idx_i, p) - section2::integer_quotient(-j, p))
             witness exist t Z st {idx_i + j = p * t} from section2::integer_quotient(idx_i, p) - section2::integer_quotient(-j, p)
-            by def $section1::divides_Z(p, idx_i + j)
+            by def:
+                ? $section1::divides_Z(p, idx_i + j)
             by thm no_positive_half_sum_divisible(p, h, idx_i, j)
             impossible not $section1::divides_Z(p, idx_i + j)
 
@@ -1378,7 +1424,8 @@ thm gaussian_set_pack:
                 idx_i = j
         =>:
             $gaussian_set(p, h, A, u)
-    by def $gaussian_set(p, h, A, u)
+    by def:
+        ? $gaussian_set(p, h, A, u)
 
 have fn canonical_gaussian_family(h N) fn(idx_i 1...h) Z = fn(j 1...h) Z {j}
 
@@ -1442,7 +1489,8 @@ thm canonical_gaussian_rearrangement_pack:
             sigma(idx_i) = gauss_abs_value(p, (a * idx_i) % p)
         =>:
             $canonical_gaussian_rearrangement(p, a, h, eps, sigma)
-    by def $canonical_gaussian_rearrangement(p, a, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, a, h, eps, sigma)
 
 thm canonical_gaussian_rearrangement_data_gives_existence:
     ? forall p N+, a Z, h N, eps fn(idx_i 1...h) Z, sigma fn(idx_i 1...h) 1...h:
@@ -1479,19 +1527,22 @@ thm canonical_gaussian_rearrangement_exists:
                     eps(idx_i) = -1
             by thm gauss_signed_abs_congruence(p, a * idx_i)
             canonical_gaussian_family(h)(idx_i) = idx_i
-            by def $gauss_half_map_spec(p, a, h, sigma)
+            by def:
+                ? $gauss_half_map_spec(p, a, h, sigma)
             sigma(idx_i) = gauss_abs_value(p, (a * idx_i) % p)
             canonical_gaussian_family(h)(sigma(idx_i)) = sigma(idx_i) = gauss_abs_value(p, (a * idx_i) % p)
             eps(idx_i) = gauss_remainder_sign(p, (a * idx_i) % p)
             a * canonical_gaussian_family(h)(idx_i) = a * idx_i
             eps(idx_i) * canonical_gaussian_family(h)(sigma(idx_i)) = gauss_remainder_sign(p, (a * idx_i) % p) * gauss_abs_value(p, (a * idx_i) % p)
-        by def $gaussian_signed_rearrangement(p, a, 1...h, canonical_gaussian_family(h), eps, sigma)
+        by def:
+            ? $gaussian_signed_rearrangement(p, a, 1...h, canonical_gaussian_family(h), eps, sigma)
     claim:
         ? forall idx_i 1...h:
             eps(idx_i) = gauss_remainder_sign(p, (a * idx_i) % p)
             sigma(idx_i) = gauss_abs_value(p, (a * idx_i) % p)
         eps(idx_i) = gauss_remainder_sign(p, (a * idx_i) % p)
-        by def $gauss_half_map_spec(p, a, h, sigma)
+        by def:
+            ? $gauss_half_map_spec(p, a, h, sigma)
         sigma(idx_i) = gauss_abs_value(p, (a * idx_i) % p)
     claim:
         ? $canonical_gaussian_rearrangement(p, a, h, eps, sigma)
@@ -1520,7 +1571,8 @@ thm sign_product_on_upper_range:
             idx_i <= h
             idx_i >= 1
             idx_i $in 1...h
-        by def B $subset 1...h
+        by def:
+            ? B $subset 1...h
     claim:
         ? forall idx_i 1...h:
             idx_i $in B
@@ -1565,7 +1617,8 @@ thm canonical_two_sign_below_cut:
         $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
         =>:
             eps(idx_i) = 1
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm two_index_remainder_itself(p, h, idx_i)
     idx_i <= k - 1
     2 * idx_i <= 2 * (k - 1) <= h
@@ -1582,7 +1635,8 @@ thm canonical_two_sign_at_or_above_cut:
         $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
         =>:
             eps(idx_i) = -1
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm two_index_remainder_itself(p, h, idx_i)
     2 * idx_i >= 2 * k > h
     2 * idx_i >= h + 1
@@ -1684,7 +1738,8 @@ thm gauss_lemma_positive_sign_is_residue:
         =>:
             $section11::quadratic_residue_mod(p, a)
     by thm theorem_XII_Gauss_lemma(p, h, A, u, a, eps, sigma)
-    by def $gauss_lemma_conclusion(p, a, A, eps)
+    by def:
+        ? $gauss_lemma_conclusion(p, a, A, eps)
     by cases:
         ? $section11::quadratic_residue_mod(p, a)
         case $section11::quadratic_residue_mod(p, a) and finite_set_product(A, eps) = 1:
@@ -1706,7 +1761,8 @@ thm gauss_lemma_negative_sign_is_nonresidue:
         =>:
             $section11::quadratic_nonresidue_mod(p, a)
     by thm theorem_XII_Gauss_lemma(p, h, A, u, a, eps, sigma)
-    by def $gauss_lemma_conclusion(p, a, A, eps)
+    by def:
+        ? $gauss_lemma_conclusion(p, a, A, eps)
     by cases:
         ? $section11::quadratic_nonresidue_mod(p, a)
         case $section11::quadratic_residue_mod(p, a) and finite_set_product(A, eps) = 1:
@@ -1784,7 +1840,8 @@ thm theorem_XII_1_case_one_mod_eight:
     by thm canonical_two_sign_product_case_zero_with_cut(p, h, m, k, eps, sigma)
     by thm canonical_gaussian_family_is_gaussian_set(p, h)
     by thm two_is_relatively_prime_to_odd_prime(p)
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm gauss_lemma_positive_sign_is_residue(p, h, 1...h, canonical_gaussian_family(h), 2, eps, sigma)
 
 thm theorem_XII_1_case_three_mod_eight:
@@ -1803,7 +1860,8 @@ thm theorem_XII_1_case_three_mod_eight:
     by thm canonical_two_sign_product_case_one_with_cut(p, h, m, k, eps, sigma)
     by thm canonical_gaussian_family_is_gaussian_set(p, h)
     by thm two_is_relatively_prime_to_odd_prime(p)
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm gauss_lemma_negative_sign_is_nonresidue(p, h, 1...h, canonical_gaussian_family(h), 2, eps, sigma)
 
 thm theorem_XII_1_case_five_mod_eight:
@@ -1822,7 +1880,8 @@ thm theorem_XII_1_case_five_mod_eight:
     by thm canonical_two_sign_product_case_two_with_cut(p, h, m, k, eps, sigma)
     by thm canonical_gaussian_family_is_gaussian_set(p, h)
     by thm two_is_relatively_prime_to_odd_prime(p)
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm gauss_lemma_negative_sign_is_nonresidue(p, h, 1...h, canonical_gaussian_family(h), 2, eps, sigma)
 
 thm theorem_XII_1_case_seven_mod_eight:
@@ -1841,7 +1900,8 @@ thm theorem_XII_1_case_seven_mod_eight:
     by thm canonical_two_sign_product_case_three_with_cut(p, h, m, k, eps, sigma)
     by thm canonical_gaussian_family_is_gaussian_set(p, h)
     by thm two_is_relatively_prime_to_odd_prime(p)
-    by def $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
+    by def:
+        ? $canonical_gaussian_rearrangement(p, 2, h, eps, sigma)
     by thm gauss_lemma_positive_sign_is_residue(p, h, 1...h, canonical_gaussian_family(h), 2, eps, sigma)
 
 # Definition.  On inputs prime to an odd prime p, the Legendre symbol is +1
@@ -1864,13 +1924,17 @@ thm quadratic_residue_transport_congruent:
         =>:
             $section11::quadratic_residue_mod(p, b)
     obtain x from exist x Z st {$section11::solves_power_congruence_mod(p, 2, a, x)}
-    by def $section11::solves_power_congruence_mod(p, 2, a, x)
+    by def:
+        ? $section11::solves_power_congruence_mod(p, 2, a, x)
     obtain t from exist t Z st {x ^ 2 - a = p * t}
     witness exist q Z st {x ^ 2 - a = p * q} from t
-    by def $section1::divides_Z(p, x ^ 2 - a)
-    by def $section5::congruent_mod(p, x ^ 2, a)
+    by def:
+        ? $section1::divides_Z(p, x ^ 2 - a)
+    by def:
+        ? $section5::congruent_mod(p, x ^ 2, a)
     by thm section5::congruent_mod_transitive(p, x ^ 2, a, b)
     by thm section5::congruent_mod_has_same_remainder(p, x ^ 2, b)
     by thm section11::same_remainder_solves_power_congruence_mod(p, 2, b, x)
     witness exist y Z st {$section11::solves_power_congruence_mod(p, 2, b, y)} from x
-    by def $section11::quadratic_residue_mod(p, b)
+    by def:
+        ? $section11::quadratic_residue_mod(p, b)

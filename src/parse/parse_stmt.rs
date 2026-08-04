@@ -162,9 +162,13 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
-    fn by_def_rejects_body_trailing_tokens_and_non_normal_props() {
+    fn by_def_requires_exactly_one_positive_question_goal() {
         let message = parse_one_stmt_error_message("by def $P(1):\n    1 = 1");
-        assert!(message.contains("single-line"), "{}", message);
+        assert!(
+            message.contains("no longer accepts a goal on the header"),
+            "{}",
+            message
+        );
 
         let tokenizer = Tokenizer::new();
         let error = tokenizer
@@ -178,13 +182,15 @@ mod parse_stmt_diagnostic_tests {
         };
         assert!(error.msg.contains("unexpected indent"), "{}", error.msg);
 
-        let message = parse_one_stmt_error_message("by def not $P(1)");
+        let message = parse_one_stmt_error_message("by def:\n    ? not $P(1)");
         assert!(
             message.contains("expects one positive atomic fact"),
             "{message}"
         );
-        assert!(parse_one_stmt("by def $in(1, R)").is_ok());
-        assert!(parse_one_stmt("by def 1 = 1").is_ok());
+        let message = parse_one_stmt_error_message("by def:\n    ? 1 = 1\n    1 = 1");
+        assert!(message.contains("exactly one"), "{message}");
+        assert!(parse_one_stmt("by def:\n    ? $in(1, R)").is_ok());
+        assert!(parse_one_stmt("by def:\n    ? 1 = 1").is_ok());
     }
 
     #[test]

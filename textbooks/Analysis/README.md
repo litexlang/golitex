@@ -63,7 +63,8 @@ switches to builtin `Z` and `Q` arithmetic.
 A representative checked use is:
 
 ```litex
-by def $represent_same_integer((3, 1), (4, 2))
+by def:
+    ? $represent_same_integer((3, 1), (4, 2))
 ```
 
 ## Chapter 6 concept-first surface

@@ -36,7 +36,8 @@ thm epsilon_closeness_is_reflexive:
     abs(x - x) = abs(0) = 0
     chap5::dist_R(x, x) = abs(x - x) = 0
     0 <= epsilon
-    by def $is_epsilon_close_in_R(epsilon, x, x)
+    by def:
+        ? $is_epsilon_close_in_R(epsilon, x, x)
 
 """
 Definition 6.1.3 (Cauchy sequences of reals). Let epsilon > 0 be a real
@@ -83,7 +84,8 @@ thm Archimedean_density_bridge:
         exist delta Q+ st {$is_rational_epsilon_below(delta, epsilon)}
     by thm chap5::archimedean_property(epsilon)
     obtain m from exist m N+ st {1 / m < epsilon}
-    by def $is_rational_epsilon_below(1 / m, epsilon)
+    by def:
+        ? $is_rational_epsilon_below(1 / m, epsilon)
     witness exist eta Q+ st {$is_rational_epsilon_below(eta, epsilon)} from 1 / m
 
 thm cauchy_rational_epsilon_implies_cauchy:
@@ -104,16 +106,20 @@ thm cauchy_rational_epsilon_implies_cauchy:
                 k >= n0
                 =>:
                     abs(a(j) - a(k)) < delta < epsilon
-            by def $is_tail_epsilon_steady(a, epsilon, n0)
-        by def $has_eventual_epsilon_steadiness(a, epsilon)
-    by def $is_cauchy_sequence(a)
+            by def:
+                ? $is_tail_epsilon_steady(a, epsilon, n0)
+        by def:
+            ? $has_eventual_epsilon_steadiness(a, epsilon)
+    by def:
+        ? $is_cauchy_sequence(a)
 
 thm cauchy_implies_cauchy_with_rational_epsilon:
     ? forall a seq(R):
         $is_cauchy_sequence(a)
         =>:
             $is_cauchy_sequence_with_rational_epsilon(a)
-    by def $is_cauchy_sequence_with_rational_epsilon(a)
+    by def:
+        ? $is_cauchy_sequence_with_rational_epsilon(a)
 
 """
 Definition 6.1.5 (Convergence of real sequences). A real sequence converges
@@ -155,7 +161,8 @@ thm convergent_sequence_has_limit:
         $is_convergent_sequence(a)
         =>:
             exist L R st {$has_limit(a, L)}
-    by def $is_convergent_sequence(a)
+    by def:
+        ? $is_convergent_sequence(a)
 
 """
 Examples 6.1.6. Constant sequences converge, while the sequence 1/n converges
@@ -180,9 +187,12 @@ thm constant_sequence_has_limit:
                     abs(c - c) = abs(0) = 0
                     0 < epsilon
                     abs(fn(k N+) R {c}(n) - c) = abs(c - c) = 0 < epsilon
-            by def $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
-        by def $has_eventual_closeness_to(fn(n N+) R {c}, c, epsilon)
-    by def $has_limit(fn(n N+) R {c}, c)
+            by def:
+                ? $is_tail_close_to(fn(n N+) R {c}, c, epsilon, 1)
+        by def:
+            ? $has_eventual_closeness_to(fn(n N+) R {c}, c, epsilon)
+    by def:
+        ? $has_limit(fn(n N+) R {c}, c)
 
 """
 Proposition 6.1.7. Limits are unique.
@@ -273,9 +283,12 @@ thm shifted_sequence_has_limit:
                 =>:
                     n + m >= n >= n0
                     abs(a(n + m) - L) < epsilon
-            by def $is_tail_close_to(fn(n N+) R {a(n + m)}, L, epsilon, n0)
-        by def $has_eventual_closeness_to(fn(n N+) R {a(n + m)}, L, epsilon)
-    by def $has_limit(fn(n N+) R {a(n + m)}, L)
+            by def:
+                ? $is_tail_close_to(fn(n N+) R {a(n + m)}, L, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(fn(n N+) R {a(n + m)}, L, epsilon)
+    by def:
+        ? $has_limit(fn(n N+) R {a(n + m)}, L)
 
 """
 Remark 6.1.10. The dummy index letter in lim_{n -> infinity} a_n is irrelevant.
@@ -327,9 +340,12 @@ claim:
                 n0 <= n
                 1 / n <= 1 / n0 < epsilon
                 abs(reciprocal_nat_seq(n) - 0) = 1 / n <= 1 / n0 < epsilon
-        by def $is_tail_close_to(reciprocal_nat_seq, 0, epsilon, n0)
-    by def $has_eventual_closeness_to(reciprocal_nat_seq, 0, epsilon)
-by def $has_limit(reciprocal_nat_seq, 0)
+        by def:
+            ? $is_tail_close_to(reciprocal_nat_seq, 0, epsilon, n0)
+    by def:
+        ? $has_eventual_closeness_to(reciprocal_nat_seq, 0, epsilon)
+by def:
+    ? $has_limit(reciprocal_nat_seq, 0)
 
 """
 Proposition 6.1.12. Every convergent sequence of reals is Cauchy.
@@ -360,9 +376,12 @@ thm has_limit_implies_cauchy:
                     abs(a(j) - a(k)) = abs((a(j) - L) + (L - a(k))) <= abs(a(j) - L) + abs(L - a(k))
                     abs(a(j) - L) + abs(L - a(k)) = abs(a(j) - L) + abs(a(k) - L) < epsilon / 2 + epsilon / 2 = epsilon
                     abs(a(j) - a(k)) <= abs(a(j) - L) + abs(L - a(k)) < epsilon
-            by def $is_tail_epsilon_steady(a, epsilon, n0)
-        by def $has_eventual_epsilon_steadiness(a, epsilon)
-    by def $is_cauchy_sequence(a)
+            by def:
+                ? $is_tail_epsilon_steady(a, epsilon, n0)
+        by def:
+            ? $has_eventual_epsilon_steadiness(a, epsilon)
+    by def:
+        ? $is_cauchy_sequence(a)
 
 thm convergent_sequence_is_cauchy:
     ? forall a seq(R):
@@ -430,7 +449,8 @@ claim:
         by thm convergent_sequence_is_cauchy(alternating_one_seq)
         impossible not $is_cauchy_sequence(alternating_one_seq)
 
-by def $is_divergent_sequence(alternating_one_seq)
+by def:
+    ? $is_divergent_sequence(alternating_one_seq)
 
 """
 Remark 6.1.14. The converse, Cauchy implies convergent, is postponed.
@@ -506,7 +526,8 @@ claim:
                     i_index = 1
                     abs(a(i_index)) = abs(a(1)) = prefix_bound(a, 1)
                     abs(a(i_index)) <= prefix_bound(a, 1)
-            by def $is_finite_prefix_bounded(a, 1, prefix_bound(a, 1))
+            by def:
+                ? $is_finite_prefix_bounded(a, 1, prefix_bound(a, 1))
 
         ? induc:
             n + 1 > 1
@@ -531,7 +552,8 @@ claim:
                     case i_index >= n + 1:
                         i_index <= n + 1
                         abs(a(i_index)) = abs(a(n + 1)) <= prefix_bound(a, n + 1)
-            by def $is_finite_prefix_bounded(a, n + 1, prefix_bound(a, n + 1))
+            by def:
+                ? $is_finite_prefix_bounded(a, n + 1, prefix_bound(a, n + 1))
 
 thm cauchy_sequence_is_bounded:
     ? forall a seq(R):
@@ -559,9 +581,11 @@ thm cauchy_sequence_is_bounded:
                 abs(a(i_index) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0))
                 1 + abs(a(n0)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
                 abs(a(i_index)) <= abs(a(i_index) - a(n0)) + abs(a(n0)) < 1 + abs(a(n0)) <= prefix_bound(a, n0) + abs(a(n0)) + 1
-    by def $is_bounded_by(a, prefix_bound(a, n0) + abs(a(n0)) + 1)
+    by def:
+        ? $is_bounded_by(a, prefix_bound(a, n0) + abs(a(n0)) + 1)
     witness exist M R st {$is_bounded_by(a, M)} from prefix_bound(a, n0) + abs(a(n0)) + 1
-    by def $is_bounded_sequence(a)
+    by def:
+        ? $is_bounded_sequence(a)
 
 thm convergent_sequence_is_bounded:
     ? forall a seq(R):
@@ -623,7 +647,8 @@ claim:
         by thm convergent_sequence_is_bounded(natural_as_real_seq)
         impossible not $is_bounded_sequence(natural_as_real_seq)
 
-by def $is_divergent_sequence(natural_as_real_seq)
+by def:
+    ? $is_divergent_sequence(natural_as_real_seq)
 
 """
 Theorem 6.1.19. Limit laws for sums, products, scalar multiples, differences,
@@ -681,9 +706,12 @@ thm seq_add_converges_to:
                     abs(b(n) - y) < epsilon / 2
                     abs(a(n) - x) + abs(b(n) - y) < epsilon / 2 + epsilon / 2 = epsilon
                     abs(fn(i_index N+) R {a(i_index) + b(i_index)}(n) - (x + y)) = abs((a(n) - x) + (b(n) - y)) <= abs(a(n) - x) + abs(b(n) - y) < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y, epsilon, sum_tail_start)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y, epsilon)
-    by def $has_limit(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y)
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y, epsilon, sum_tail_start)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y, epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {a(i_index) + b(i_index)}, x + y)
 
 thm seq_sub_converges_to:
     ? forall a, b seq(R), x, y R:
@@ -719,9 +747,12 @@ thm seq_sub_converges_to:
                     abs(b(n) - y) < epsilon / 2
                     abs(a(n) - x) + abs(b(n) - y) < epsilon / 2 + epsilon / 2 = epsilon
                     abs(fn(i_index N+) R {a(i_index) - b(i_index)}(n) - (x - y)) = abs((a(n) - x) + (y - b(n))) <= abs(a(n) - x) + abs(y - b(n)) = abs(a(n) - x) + abs(b(n) - y) < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y, epsilon, sub_tail_start)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y, epsilon)
-    by def $has_limit(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y)
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y, epsilon, sub_tail_start)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y, epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {a(i_index) - b(i_index)}, x - y)
 
 thm seq_const_mul_converges_to:
     ? forall c R, a seq(R), x R:
@@ -745,9 +776,12 @@ thm seq_const_mul_converges_to:
                     fn(i_index N+) R {c * a(i_index)}(n) = c * a(n)
                     abs(c) * abs(a(n) - x) <= abs(c) * (epsilon / (abs(c) + 1)) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
                     abs(fn(i_index N+) R {c * a(i_index)}(n) - c * x) = abs(c * (a(n) - x)) = abs(c) * abs(a(n) - x) < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {c * a(i_index)}, c * x, epsilon, n0)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {c * a(i_index)}, c * x, epsilon)
-    by def $has_limit(fn(i_index N+) R {c * a(i_index)}, c * x)
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {c * a(i_index)}, c * x, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {c * a(i_index)}, c * x, epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {c * a(i_index)}, c * x)
 
 thm seq_mul_converges_to:
     ? forall a, b seq(R), x, y R:
@@ -797,9 +831,12 @@ thm seq_mul_converges_to:
                     abs(a(n)) * abs(b(n) - y) + abs(y) * abs(a(n) - x) < (abs(x) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1)) + (abs(y) + 1) * (epsilon / (abs(x) + 1 + abs(y) + 1)) = epsilon
                     fn(i_index N+) R {a(i_index) * b(i_index)}(n) = a(n) * b(n)
                     abs(fn(i_index N+) R {a(i_index) * b(i_index)}(n) - x * y) = abs(a(n) * b(n) - x * y) = abs(a(n) * (b(n) - y) + y * (a(n) - x)) <= abs(a(n) * (b(n) - y)) + abs(y * (a(n) - x)) = abs(a(n)) * abs(b(n) - y) + abs(y) * abs(a(n) - x) < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y, epsilon, product_tail_start)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y, epsilon)
-    by def $has_limit(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y)
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y, epsilon, product_tail_start)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y, epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {a(i_index) * b(i_index)}, x * y)
 
 thm two_point_max_stability:
     ? forall epsilon R+, u, v, x, y R:
@@ -943,9 +980,12 @@ thm seq_max_converges_to:
                 =>:
                     fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}(n) = finite_set_max(union({a(n)}, { b(n)}))
                     abs(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}(n) - finite_set_max(union({x}, { y}))) = abs(finite_set_max(union({a(n)}, { b(n)})) - finite_set_max(union({x}, { y}))) <= epsilon / 2 < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon, max_tail_start)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon)
-    by def $has_limit(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})))
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon, max_tail_start)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})), epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {finite_set_max(union({a(i_index)}, { b(i_index)}))}, finite_set_max(union({x}, { y})))
 
 thm seq_min_converges_to:
     ? forall a, b seq(R), x, y R:
@@ -987,9 +1027,12 @@ thm seq_min_converges_to:
                 =>:
                     fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}(n) = finite_set_min(union({a(n)}, { b(n)}))
                     abs(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}(n) - finite_set_min(union({x}, { y}))) = abs(finite_set_min(union({a(n)}, { b(n)})) - finite_set_min(union({x}, { y}))) <= epsilon / 2 < epsilon
-            by def $is_tail_close_to(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon, min_tail_start)
-        by def $has_eventual_closeness_to(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon)
-    by def $has_limit(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})))
+            by def:
+                ? $is_tail_close_to(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon, min_tail_start)
+        by def:
+            ? $has_eventual_closeness_to(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})), epsilon)
+    by def:
+        ? $has_limit(fn(i_index N+) R {finite_set_min(union({a(i_index)}, { b(i_index)}))}, finite_set_min(union({x}, { y})))
 
 thm near_nonzero_abs_lower:
     ? forall z, y R:
@@ -1157,7 +1200,8 @@ thm tail_value_at_or_after_start:
         =>:
             $is_tail_value(a, m, a(n))
     witness exist k N+ st {k >= m and a(n) = a(k)} from n
-    by def $is_tail_value(a, m, a(n))
+    by def:
+        ? $is_tail_value(a, m, a(n))
 
 prop is_tail_infimum(a seq(R), m N+, L R):
     $is_tail_lower_bound(a, m, L)
@@ -1253,9 +1297,11 @@ thm bounded_sequence_has_tail_supremum:
             x <= B
         obtain n from exist n N+ st {n >= m and x = a(n)}
         x = a(n) <= abs(a(n)) <= B
-    by def $chap5::is_upper_bound(tail_range, B)
+    by def:
+        ? $chap5::is_upper_bound(tail_range, B)
     witness exist M R st {$chap5::is_upper_bound(tail_range, M)} from B
-    by def $chap5::has_upper_bound(tail_range)
+    by def:
+        ? $chap5::has_upper_bound(tail_range)
     by thm chap5::least_upper_bound_existence(tail_range)
     obtain L from exist L R st {$chap5::is_least_upper_bound(tail_range, L)}
     $chap5::is_upper_bound(tail_range, L)
@@ -1268,7 +1314,8 @@ thm bounded_sequence_has_tail_supremum:
         by thm set_builder_member(a(n), {x R: $is_tail_value(a, m, x)})
         a(n) $in {x R: $is_tail_value(a, m, x)}
         a(n) <= L
-    by def $is_tail_upper_bound(a, m, L)
+    by def:
+        ? $is_tail_upper_bound(a, m, L)
     claim:
         ? forall M R:
             $is_tail_upper_bound(a, m, M)
@@ -1279,10 +1326,13 @@ thm bounded_sequence_has_tail_supremum:
                 x <= M
             obtain n from exist n N+ st {n >= m and x = a(n)}
             x = a(n) <= M
-        by def $chap5::is_upper_bound(tail_range, M)
-    by def $is_tail_supremum(a, m, L)
+        by def:
+            ? $chap5::is_upper_bound(tail_range, M)
+    by def:
+        ? $is_tail_supremum(a, m, L)
     witness exist L0 R st {$is_tail_supremum(a, m, L0)} from L
-    by def $has_tail_supremum(a, m)
+    by def:
+        ? $has_tail_supremum(a, m)
 
 """
 Example 6.3.3. For a_n = (-1)^n, the tail range is {-1,1}, so the supremum is
@@ -1293,7 +1343,8 @@ forall n N+:
     n >= 1
     =>:
         alternating_one_seq(n) = (-1)^n <= 1
-by def $is_tail_upper_bound(alternating_one_seq, 1, 1)
+by def:
+    ? $is_tail_upper_bound(alternating_one_seq, 1, 1)
 claim:
     ? forall M R:
         $is_tail_upper_bound(alternating_one_seq, 1, M)
@@ -1302,14 +1353,16 @@ claim:
     2 >= 1
     alternating_one_seq(2) <= M
     alternating_one_seq(2) = (-1)^2 = 1
-by def $is_tail_supremum(alternating_one_seq, 1, 1)
+by def:
+    ? $is_tail_supremum(alternating_one_seq, 1, 1)
 
 forall n N+:
     n >= 1
     =>:
         -1 <= (-1)^n = alternating_one_seq(n)
         -1 <= alternating_one_seq(n)
-by def $is_tail_lower_bound(alternating_one_seq, 1, -1)
+by def:
+    ? $is_tail_lower_bound(alternating_one_seq, 1, -1)
 claim:
     ? forall M R:
         $is_tail_lower_bound(alternating_one_seq, 1, M)
@@ -1318,12 +1371,15 @@ claim:
     1 >= 1
     M <= alternating_one_seq(1)
     alternating_one_seq(1) = (-1)^1 = -1
-by def $is_tail_infimum(alternating_one_seq, 1, -1)
+by def:
+    ? $is_tail_infimum(alternating_one_seq, 1, -1)
 
 witness exist L R st {$is_tail_supremum(alternating_one_seq, 1, L)} from 1
-by def $has_tail_supremum(alternating_one_seq, 1)
+by def:
+    ? $has_tail_supremum(alternating_one_seq, 1)
 witness exist L R st {$is_tail_infimum(alternating_one_seq, 1, L)} from -1
-by def $has_tail_infimum(alternating_one_seq, 1)
+by def:
+    ? $has_tail_infimum(alternating_one_seq, 1)
 $is_tail_supremum(alternating_one_seq, 1, tail_sup(alternating_one_seq, 1))
 by thm tail_supremum_unique(alternating_one_seq, 1, tail_sup(alternating_one_seq, 1), 1)
 $is_tail_infimum(alternating_one_seq, 1, tail_inf(alternating_one_seq, 1))
@@ -1340,7 +1396,8 @@ forall n N+:
         1 * n > 0
         1 / n = 1 / (1 * n) <= n / (1 * n) = 1
         reciprocal_nat_seq(n) <= 1
-by def $is_tail_upper_bound(reciprocal_nat_seq, 1, 1)
+by def:
+    ? $is_tail_upper_bound(reciprocal_nat_seq, 1, 1)
 claim:
     ? forall M R:
         $is_tail_upper_bound(reciprocal_nat_seq, 1, M)
@@ -1349,14 +1406,16 @@ claim:
     1 >= 1
     reciprocal_nat_seq(1) <= M
     reciprocal_nat_seq(1) = 1 / 1 = 1
-by def $is_tail_supremum(reciprocal_nat_seq, 1, 1)
+by def:
+    ? $is_tail_supremum(reciprocal_nat_seq, 1, 1)
 
 forall n N+:
     n >= 1
     =>:
         0 < 1 / n = reciprocal_nat_seq(n)
         0 <= reciprocal_nat_seq(n)
-by def $is_tail_lower_bound(reciprocal_nat_seq, 1, 0)
+by def:
+    ? $is_tail_lower_bound(reciprocal_nat_seq, 1, 0)
 claim:
     ? forall M R:
         $is_tail_lower_bound(reciprocal_nat_seq, 1, M)
@@ -1370,12 +1429,15 @@ claim:
         n0 >= 1
         M <= reciprocal_nat_seq(n0) = 1 / n0 < M
         impossible M = M
-by def $is_tail_infimum(reciprocal_nat_seq, 1, 0)
+by def:
+    ? $is_tail_infimum(reciprocal_nat_seq, 1, 0)
 
 witness exist L R st {$is_tail_supremum(reciprocal_nat_seq, 1, L)} from 1
-by def $has_tail_supremum(reciprocal_nat_seq, 1)
+by def:
+    ? $has_tail_supremum(reciprocal_nat_seq, 1)
 witness exist L R st {$is_tail_infimum(reciprocal_nat_seq, 1, L)} from 0
-by def $has_tail_infimum(reciprocal_nat_seq, 1)
+by def:
+    ? $has_tail_infimum(reciprocal_nat_seq, 1)
 $is_tail_supremum(reciprocal_nat_seq, 1, tail_sup(reciprocal_nat_seq, 1))
 by thm tail_supremum_unique(reciprocal_nat_seq, 1, tail_sup(reciprocal_nat_seq, 1), 1)
 $is_tail_infimum(reciprocal_nat_seq, 1, tail_inf(reciprocal_nat_seq, 1))
@@ -1393,7 +1455,8 @@ forall n N+:
     =>:
         1 <= n = natural_as_real_seq(n)
         1 <= natural_as_real_seq(n)
-by def $is_tail_lower_bound(natural_as_real_seq, 1, 1)
+by def:
+    ? $is_tail_lower_bound(natural_as_real_seq, 1, 1)
 claim:
     ? forall M R:
         $is_tail_lower_bound(natural_as_real_seq, 1, M)
@@ -1402,10 +1465,12 @@ claim:
     1 >= 1
     M <= natural_as_real_seq(1)
     natural_as_real_seq(1) = 1
-by def $is_tail_infimum(natural_as_real_seq, 1, 1)
+by def:
+    ? $is_tail_infimum(natural_as_real_seq, 1, 1)
 
 witness exist L R st {$is_tail_infimum(natural_as_real_seq, 1, L)} from 1
-by def $has_tail_infimum(natural_as_real_seq, 1)
+by def:
+    ? $has_tail_infimum(natural_as_real_seq, 1)
 $is_tail_infimum(natural_as_real_seq, 1, tail_inf(natural_as_real_seq, 1))
 by thm tail_infimum_unique(natural_as_real_seq, 1, tail_inf(natural_as_real_seq, 1), 1)
 
@@ -1432,7 +1497,8 @@ thm tail_upper_bound_on_later_tail:
         n >= l
         =>:
             a(n) <= M
-    by def $is_tail_upper_bound(a, l, M)
+    by def:
+        ? $is_tail_upper_bound(a, l, M)
 
 thm tail_supremum_le_every_upper_bound:
     ? forall a seq(R), m N+, L R, M R:
@@ -1462,7 +1528,8 @@ thm tail_supremum_crosses_every_lower_threshold:
                     impossible n >= m
                 case not y < a(n):
                     a(n) <= y
-        by def $is_tail_upper_bound(a, m, y)
+        by def:
+            ? $is_tail_upper_bound(a, m, y)
         L <= y < L
         impossible L = L
 
@@ -1504,7 +1571,8 @@ thm tail_infimum_crosses_every_upper_threshold:
                     impossible n >= m
                 case not a(n) < y:
                     y <= a(n)
-        by def $is_tail_lower_bound(a, m, y)
+        by def:
+            ? $is_tail_lower_bound(a, m, y)
         y <= L
         L < y <= L
         impossible L = L
@@ -1552,9 +1620,12 @@ thm increasing_sequence_converges_to_tail_supremum:
                     L - a(n) < L - (L - epsilon) = epsilon
                     -(a(n) - L) = L - a(n) < epsilon
                     abs(a(n) - L) < epsilon
-            by def $is_tail_close_to(a, L, epsilon, n1)
-        by def $has_eventual_closeness_to(a, L, epsilon)
-    by def $has_limit(a, L)
+            by def:
+                ? $is_tail_close_to(a, L, epsilon, n1)
+        by def:
+            ? $has_eventual_closeness_to(a, L, epsilon)
+    by def:
+        ? $has_limit(a, L)
 
 thm decreasing_sequence_converges_to_tail_infimum:
     ? forall a seq(R), m N+, L R:
@@ -1578,9 +1649,12 @@ thm decreasing_sequence_converges_to_tail_infimum:
                     -epsilon < 0 <= a(n) - L < epsilon
                     -(a(n) - L) <= 0 < epsilon
                     abs(a(n) - L) < epsilon
-            by def $is_tail_close_to(a, L, epsilon, n1)
-        by def $has_eventual_closeness_to(a, L, epsilon)
-    by def $has_limit(a, L)
+            by def:
+                ? $is_tail_close_to(a, L, epsilon, n1)
+        by def:
+            ? $has_eventual_closeness_to(a, L, epsilon)
+    by def:
+        ? $has_limit(a, L)
 
 """
 Example 6.3.9. The decimal approximations 3, 3.1, 3.14, ... are increasing and
@@ -1621,7 +1695,8 @@ thm least_upper_bound_member_above:
                 x <= M - epsilon
             not M - epsilon < x
             x <= M - epsilon
-        by def $chap5::is_upper_bound(E, M - epsilon)
+        by def:
+            ? $chap5::is_upper_bound(E, M - epsilon)
         $chap5::is_upper_bound(E, M - epsilon)
         forall B R:
             $chap5::is_upper_bound(E, B)
@@ -1686,10 +1761,12 @@ thm bounded_above_sequence_range_has_upper_bound:
             x <= M
         have by preimage n from x $in fn_range(a)
         x = a(n) <= M
-    by def $chap5::is_upper_bound(fn_range(a), M)
+    by def:
+        ? $chap5::is_upper_bound(fn_range(a), M)
     $chap5::is_upper_bound(fn_range(a), M)
     witness exist B R st {$chap5::is_upper_bound(fn_range(a), B)} from M
-    by def $chap5::has_upper_bound(fn_range(a))
+    by def:
+        ? $chap5::has_upper_bound(fn_range(a))
 
 thm increasing_sequence_converges_to_range_supremum:
     ? forall a seq(R), L R:
@@ -1721,9 +1798,12 @@ thm increasing_sequence_converges_to_range_supremum:
                     L - a(n) < L - (L - epsilon) = epsilon
                     -(a(n) - L) = L - a(n) < epsilon
                     abs(a(n) - L) < epsilon
-            by def $is_tail_close_to(a, L, epsilon, m)
-        by def $has_eventual_closeness_to(a, L, epsilon)
-    by def $has_limit(a, L)
+            by def:
+                ? $is_tail_close_to(a, L, epsilon, m)
+        by def:
+            ? $has_eventual_closeness_to(a, L, epsilon)
+    by def:
+        ? $has_limit(a, L)
 
 thm bounded_increasing_sequence_converges:
     ? forall a seq(R):
@@ -1737,7 +1817,8 @@ thm bounded_increasing_sequence_converges:
     obtain L from exist L R st {$chap5::is_least_upper_bound(fn_range(a), L)}
     by thm increasing_sequence_converges_to_range_supremum(a, L)
     witness exist L1 R st {$has_limit(a, L1)} from L
-    by def $is_convergent_sequence(a)
+    by def:
+        ? $is_convergent_sequence(a)
 
 have fn seq_const_mul(c R, a seq(R)) fn(k N+) R = fn(n N+) R {c * a(n)}
 
@@ -1755,7 +1836,8 @@ thm negated_decreasing_sequence_is_increasing:
         a(n + 1) <= a(n)
         -a(n) <= -a(n + 1)
         seq_const_mul(-1, a)(n) = -a(n) <= -a(n + 1) = seq_const_mul(-1, a)(n + 1)
-    by def $is_increasing_sequence(seq_const_mul(-1, a))
+    by def:
+        ? $is_increasing_sequence(seq_const_mul(-1, a))
 
 thm negated_lower_bounded_sequence_is_upper_bounded:
     ? forall a seq(R):
@@ -1769,9 +1851,11 @@ thm negated_lower_bounded_sequence_is_upper_bounded:
         M <= a(n)
         -a(n) <= -M
         seq_const_mul(-1, a)(n) = -a(n) <= -M
-    by def $is_sequence_upper_bound(seq_const_mul(-1, a), -M)
+    by def:
+        ? $is_sequence_upper_bound(seq_const_mul(-1, a), -M)
     witness exist B R st {$is_sequence_upper_bound(seq_const_mul(-1, a), B)} from -M
-    by def $is_bounded_above_sequence(seq_const_mul(-1, a))
+    by def:
+        ? $is_bounded_above_sequence(seq_const_mul(-1, a))
 
 thm negated_sequence_limit_implies_original_limit:
     ? forall a seq(R), L R:
@@ -1792,9 +1876,12 @@ thm negated_sequence_limit_implies_original_limit:
                     seq_const_mul(-1, a)(n) - L = -a(n) - L = -(a(n) - (-L))
                     abs(seq_const_mul(-1, a)(n) - L) = abs(-(a(n) - (-L))) = abs(a(n) - (-L))
                     abs(a(n) - (-L)) = abs(seq_const_mul(-1, a)(n) - L) < epsilon
-            by def $is_tail_close_to(a, -L, epsilon, n0)
-        by def $has_eventual_closeness_to(a, -L, epsilon)
-    by def $has_limit(a, -L)
+            by def:
+                ? $is_tail_close_to(a, -L, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(a, -L, epsilon)
+    by def:
+        ? $has_limit(a, -L)
 
 thm bounded_decreasing_sequence_converges:
     ? forall a seq(R):
@@ -1808,7 +1895,8 @@ thm bounded_decreasing_sequence_converges:
     obtain L from exist L R st {$has_limit(seq_const_mul(-1, a), L)}
     by thm negated_sequence_limit_implies_original_limit(a, L)
     witness exist L1 R st {$has_limit(a, L1)} from -L
-    by def $is_convergent_sequence(a)
+    by def:
+        ? $is_convergent_sequence(a)
 
 have fn seq_shift(a seq(R)) fn(k N+) R = fn(n N+) R {a(n + 1)}
 
@@ -1841,7 +1929,8 @@ thm shifted_geometric_sequence_has_scaled_limit:
         seq_shift(geom_seq(x))(n) = geom_seq(x)(n + 1) = x^(n + 1)
         x^(n + 1) = x^n * x = x * x^n
         x * x^n = x * geom_seq(x)(n) = fn(k N+) R {x * geom_seq(x)(k)}(n)
-    by def $fn_eq(seq_shift(geom_seq(x)), fn(k N+) R {x * geom_seq(x)(k)})
+    by def:
+        ? $fn_eq(seq_shift(geom_seq(x)), fn(k N+) R {x * geom_seq(x)(k)})
     $fn_eq(seq_shift(geom_seq(x)), fn(k N+) R {x * geom_seq(x)(k)})
     seq_shift(geom_seq(x)) = fn(k N+) R {x * geom_seq(x)(k)}
     by thm seq_const_mul_converges_to(x, geom_seq(x), L)
@@ -1858,14 +1947,17 @@ thm geometric_nonnegative_lt_one_converges_to_zero:
         0 <= x^n
         x <= 1
         geom_seq(x)(n + 1) = x^(n + 1) = x^n * x <= x^n * 1 = x^n = geom_seq(x)(n)
-    by def $is_decreasing_sequence(geom_seq(x))
+    by def:
+        ? $is_decreasing_sequence(geom_seq(x))
     claim:
         ? forall n N+:
             0 <= geom_seq(x)(n)
         geom_seq(x)(n) = x^n >= 0
-    by def $is_sequence_lower_bound(geom_seq(x), 0)
+    by def:
+        ? $is_sequence_lower_bound(geom_seq(x), 0)
     witness exist M R st {$is_sequence_lower_bound(geom_seq(x), M)} from 0
-    by def $is_bounded_below_sequence(geom_seq(x))
+    by def:
+        ? $is_bounded_below_sequence(geom_seq(x))
     by thm bounded_decreasing_sequence_converges(geom_seq(x))
     obtain L from exist L R st {$has_limit(geom_seq(x), L)}
     by thm seq_shift_has_limit(geom_seq(x), L)
@@ -1884,7 +1976,8 @@ thm geometric_positive_lt_one_converges_to_zero:
         x < 1
         =>:
             $has_limit(fn(n N+) R {x^n}, 0)
-    by def $fn_eq(geom_seq(x), fn(n N+) R {x^n})
+    by def:
+        ? $fn_eq(geom_seq(x), fn(n N+) R {x^n})
     $fn_eq(geom_seq(x), fn(n N+) R {x^n})
     geom_seq(x) = fn(n N+) R {x^n}
     by thm geometric_nonnegative_lt_one_converges_to_zero(x)
@@ -1949,8 +2042,10 @@ claim:
         alternating_one_seq(2 * n_tail) = (-1)^(2 * n_tail) = 1
         alternating_one_seq(2 * n_tail) - 1 = 0
         abs(alternating_one_seq(2 * n_tail) - 1) = abs(0) = 0
-    by def $is_epsilon_adherent_to_sequence(alternating_one_seq, 1, epsilon, n_tail)
-by def $is_limit_point(alternating_one_seq, 1)
+    by def:
+        ? $is_epsilon_adherent_to_sequence(alternating_one_seq, 1, epsilon, n_tail)
+by def:
+    ? $is_limit_point(alternating_one_seq, 1)
 
 claim:
     ? forall epsilon R+, n_tail N+:
@@ -1971,8 +2066,10 @@ claim:
         alternating_one_seq(2 * n_tail + 1) = -1
         alternating_one_seq(2 * n_tail + 1) - -1 = 0
         abs(alternating_one_seq(2 * n_tail + 1) - -1) = abs(0) = 0
-    by def $is_epsilon_adherent_to_sequence(alternating_one_seq, -1, epsilon, n_tail)
-by def $is_limit_point(alternating_one_seq, -1)
+    by def:
+        ? $is_epsilon_adherent_to_sequence(alternating_one_seq, -1, epsilon, n_tail)
+by def:
+    ? $is_limit_point(alternating_one_seq, -1)
 
 claim:
     ? not $is_limit_point(alternating_one_seq, 0)
@@ -2019,8 +2116,10 @@ thm convergent_sequence_limit_is_limit_point:
         adherence_start $in N+
         witness exist n N+ st {n >= n_tail and abs(a(n) - c) < epsilon} from adherence_start:
             abs(a(adherence_start) - c) < epsilon
-        by def $is_epsilon_adherent_to_sequence(a, c, epsilon, n_tail)
-    by def $is_limit_point(a, c)
+        by def:
+            ? $is_epsilon_adherent_to_sequence(a, c, epsilon, n_tail)
+    by def:
+        ? $is_limit_point(a, c)
 
 thm convergent_sequence_limit_point_unique:
     ? forall a seq(R), c, x R:
@@ -2187,8 +2286,10 @@ claim:
             n >= 1
             =>:
                 alternating_one_seq(n) <= 1 < x
-        by def $is_eventually_below_threshold(alternating_one_seq, x, 1)
-by def $is_eventually_below_every_threshold_above(alternating_one_seq, 1)
+        by def:
+            ? $is_eventually_below_threshold(alternating_one_seq, x, 1)
+by def:
+    ? $is_eventually_below_every_threshold_above(alternating_one_seq, 1)
 claim:
     ? forall x R:
         x < 1
@@ -2200,9 +2301,12 @@ claim:
         2 * n_tail >= n_tail
         by thm alternating_one_even_value(n_tail)
         witness exist n N+ st {n >= n_tail and x < alternating_one_seq(n)} from 2 * n_tail
-    by def $exceeds_threshold_arbitrarily_late(alternating_one_seq, x)
-by def $exceeds_every_threshold_below_arbitrarily_late(alternating_one_seq, 1)
-by def $has_finite_limit_superior(alternating_one_seq, 1)
+    by def:
+        ? $exceeds_threshold_arbitrarily_late(alternating_one_seq, x)
+by def:
+    ? $exceeds_every_threshold_below_arbitrarily_late(alternating_one_seq, 1)
+by def:
+    ? $has_finite_limit_superior(alternating_one_seq, 1)
 
 claim:
     ? forall y R:
@@ -2214,8 +2318,10 @@ claim:
             n >= 1
             =>:
                 y < -1 <= alternating_one_seq(n)
-        by def $is_eventually_above_threshold(alternating_one_seq, y, 1)
-by def $is_eventually_above_every_threshold_below(alternating_one_seq, -1)
+        by def:
+            ? $is_eventually_above_threshold(alternating_one_seq, y, 1)
+by def:
+    ? $is_eventually_above_every_threshold_below(alternating_one_seq, -1)
 claim:
     ? forall y R:
         y > -1
@@ -2227,9 +2333,12 @@ claim:
         2 * n_tail + 1 >= n_tail
         by thm alternating_one_odd_value(n_tail)
         witness exist n N+ st {n >= n_tail and alternating_one_seq(n) < y} from 2 * n_tail + 1
-    by def $falls_below_threshold_arbitrarily_late(alternating_one_seq, y)
-by def $falls_below_every_threshold_above_arbitrarily_late(alternating_one_seq, -1)
-by def $has_finite_limit_inferior(alternating_one_seq, -1)
+    by def:
+        ? $falls_below_threshold_arbitrarily_late(alternating_one_seq, y)
+by def:
+    ? $falls_below_every_threshold_above_arbitrarily_late(alternating_one_seq, -1)
+by def:
+    ? $has_finite_limit_inferior(alternating_one_seq, -1)
 
 # The two checked finite facts above are the complete Litex formulation:
 # `limsup = 1` and `liminf = -1` use real witnesses directly.
@@ -2286,8 +2395,10 @@ claim:
         x < n0 <= upper_late_start <= 2 * upper_late_start + 1
         by thm alternating_signed_nat_odd_value(upper_late_start)
         witness exist n N+ st {n >= n_tail and x < alternating_signed_nat_seq(n)} from 2 * upper_late_start + 1
-    by def $exceeds_threshold_arbitrarily_late(alternating_signed_nat_seq, x)
-by def $has_limit_superior_pos_infinity(alternating_signed_nat_seq)
+    by def:
+        ? $exceeds_threshold_arbitrarily_late(alternating_signed_nat_seq, x)
+by def:
+    ? $has_limit_superior_pos_infinity(alternating_signed_nat_seq)
 
 claim:
     ? forall y R:
@@ -2309,8 +2420,10 @@ claim:
         -2 * lower_late_start = -(2 * lower_late_start) < -(-y) = y
         by thm alternating_signed_nat_even_value(lower_late_start)
         witness exist n N+ st {n >= n_tail and alternating_signed_nat_seq(n) < y} from 2 * lower_late_start
-    by def $falls_below_threshold_arbitrarily_late(alternating_signed_nat_seq, y)
-by def $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
+    by def:
+        ? $falls_below_threshold_arbitrarily_late(alternating_signed_nat_seq, y)
+by def:
+    ? $has_limit_inferior_neg_infinity(alternating_signed_nat_seq)
 
 # The checked propositions above are the direct statements `limsup = +infty`
 # and `liminf = -infty`; no endpoint object is introduced.
@@ -2365,8 +2478,10 @@ claim:
                 1 / n <= 1 / n0 < x
                 reciprocal_nat_seq(n) = 1 / n < x
                 alternating_reciprocal_seq(n) <= reciprocal_nat_seq(n) < x
-        by def $is_eventually_below_threshold(alternating_reciprocal_seq, x, n0)
-by def $is_eventually_below_every_threshold_above(alternating_reciprocal_seq, 0)
+        by def:
+            ? $is_eventually_below_threshold(alternating_reciprocal_seq, x, n0)
+by def:
+    ? $is_eventually_below_every_threshold_above(alternating_reciprocal_seq, 0)
 claim:
     ? forall x R:
         x < 0
@@ -2388,9 +2503,12 @@ claim:
         reciprocal_nat_seq(2 * n_tail + 1) = 1 / (2 * n_tail + 1) > 0
         x < 0 < alternating_reciprocal_seq(2 * n_tail + 1)
         witness exist n N+ st {n >= n_tail and x < alternating_reciprocal_seq(n)} from 2 * n_tail + 1
-    by def $exceeds_threshold_arbitrarily_late(alternating_reciprocal_seq, x)
-by def $exceeds_every_threshold_below_arbitrarily_late(alternating_reciprocal_seq, 0)
-by def $has_finite_limit_superior(alternating_reciprocal_seq, 0)
+    by def:
+        ? $exceeds_threshold_arbitrarily_late(alternating_reciprocal_seq, x)
+by def:
+    ? $exceeds_every_threshold_below_arbitrarily_late(alternating_reciprocal_seq, 0)
+by def:
+    ? $has_finite_limit_superior(alternating_reciprocal_seq, 0)
 
 claim:
     ? forall y R:
@@ -2411,8 +2529,10 @@ claim:
                 reciprocal_nat_seq(n) = 1 / n < -y
                 y = -(-y) < -(reciprocal_nat_seq(n)) = -reciprocal_nat_seq(n)
                 y < -reciprocal_nat_seq(n) <= alternating_reciprocal_seq(n)
-        by def $is_eventually_above_threshold(alternating_reciprocal_seq, y, n0)
-by def $is_eventually_above_every_threshold_below(alternating_reciprocal_seq, 0)
+        by def:
+            ? $is_eventually_above_threshold(alternating_reciprocal_seq, y, n0)
+by def:
+    ? $is_eventually_above_every_threshold_below(alternating_reciprocal_seq, 0)
 claim:
     ? forall y R:
         y > 0
@@ -2434,9 +2554,12 @@ claim:
         reciprocal_nat_seq(2 * n_tail) = 1 / (2 * n_tail) > 0
         alternating_reciprocal_seq(2 * n_tail) < 0 < y
         witness exist n N+ st {n >= n_tail and alternating_reciprocal_seq(n) < y} from 2 * n_tail
-    by def $falls_below_threshold_arbitrarily_late(alternating_reciprocal_seq, y)
-by def $falls_below_every_threshold_above_arbitrarily_late(alternating_reciprocal_seq, 0)
-by def $has_finite_limit_inferior(alternating_reciprocal_seq, 0)
+    by def:
+        ? $falls_below_threshold_arbitrarily_late(alternating_reciprocal_seq, y)
+by def:
+    ? $falls_below_every_threshold_above_arbitrarily_late(alternating_reciprocal_seq, 0)
+by def:
+    ? $has_finite_limit_inferior(alternating_reciprocal_seq, 0)
 
 """
 Example 6.4.10. The sequence 1, 2, 3, 4, ... has both limit superior and
@@ -2464,8 +2587,10 @@ claim:
         natural_as_real_seq(natural_late_start) = natural_late_start
         x < n0 <= natural_late_start = natural_as_real_seq(natural_late_start)
         witness exist n N+ st {n >= n_tail and x < natural_as_real_seq(n)} from natural_late_start
-    by def $exceeds_threshold_arbitrarily_late(natural_as_real_seq, x)
-by def $has_limit_superior_pos_infinity(natural_as_real_seq)
+    by def:
+        ? $exceeds_threshold_arbitrarily_late(natural_as_real_seq, x)
+by def:
+    ? $has_limit_superior_pos_infinity(natural_as_real_seq)
 
 claim:
     ? forall y R:
@@ -2479,8 +2604,10 @@ claim:
                 natural_as_real_seq(n) = n
                 y < n0 <= n
                 y < natural_as_real_seq(n)
-        by def $is_eventually_above_threshold(natural_as_real_seq, y, n0)
-by def $has_limit_inferior_pos_infinity(natural_as_real_seq)
+        by def:
+            ? $is_eventually_above_threshold(natural_as_real_seq, y, n0)
+by def:
+    ? $has_limit_inferior_pos_infinity(natural_as_real_seq)
 
 # These two checked threshold facts state both `limsup = +infty` and
 # `liminf = +infty`; together they also express divergence to `+infty`.
@@ -2525,7 +2652,8 @@ thm bounded_sequence_tail_sup_sequence_decreasing:
         b(n) = tail_sup(a, n)
         by thm bounded_sequence_tail_sup_values_decrease(a, n)
         b(n + 1) = tail_sup(a, n + 1) <= tail_sup(a, n) = b(n)
-    by def $is_decreasing_sequence(b)
+    by def:
+        ? $is_decreasing_sequence(b)
     b = fn(m N+) R {tail_sup(a, m)}
 
 thm bounded_sequence_tail_sup_value_lower_bound:
@@ -2558,9 +2686,11 @@ thm bounded_sequence_tail_sup_sequence_bounded_below:
         by thm bounded_sequence_tail_sup_value_lower_bound(a, B, m)
         b(m) = tail_sup(a, m)
         -B <= tail_sup(a, m) = b(m)
-    by def $is_sequence_lower_bound(b, -B)
+    by def:
+        ? $is_sequence_lower_bound(b, -B)
     witness exist M R st {$is_sequence_lower_bound(b, M)} from -B
-    by def $is_bounded_below_sequence(b)
+    by def:
+        ? $is_bounded_below_sequence(b)
     b = fn(m N+) R {tail_sup(a, m)}
 
 thm bounded_sequence_tail_sup_sequence_converges:
@@ -2604,8 +2734,10 @@ thm tail_sup_limit_is_finite_limsup:
                 n >= n0
                 =>:
                     a(n) <= tail_sup(a, n0) = b(n0) < x
-            by def $is_eventually_below_threshold(a, x, n0)
-    by def $is_eventually_below_every_threshold_above(a, L)
+            by def:
+                ? $is_eventually_below_threshold(a, x, n0)
+    by def:
+        ? $is_eventually_below_every_threshold_above(a, L)
     claim:
         ? forall x R:
             x < L
@@ -2633,9 +2765,12 @@ thm tail_sup_limit_is_finite_limsup:
             by thm tail_supremum_crosses_every_lower_threshold(a, m0, tail_sup(a, m0), x)
             obtain n1 from exist n1 N+ st {n1 >= m0 and x < a(n1)}
             witness exist n N+ st {n >= n_tail and x < a(n)} from n1
-        by def $exceeds_threshold_arbitrarily_late(a, x)
-    by def $exceeds_every_threshold_below_arbitrarily_late(a, L)
-    by def $has_finite_limit_superior(a, L)
+        by def:
+            ? $exceeds_threshold_arbitrarily_late(a, x)
+    by def:
+        ? $exceeds_every_threshold_below_arbitrarily_late(a, L)
+    by def:
+        ? $has_finite_limit_superior(a, L)
 
 thm bounded_sequence_has_finite_limsup:
     ? forall a seq(R):
@@ -2661,9 +2796,12 @@ thm bounded_sequence_has_finite_limsup:
                 =>:
                     b(n) = tail_sup(a, n) = fn(m N+) R {tail_sup(a, m)}(n)
                     abs(b(n) - Lplus) = abs(fn(m N+) R {tail_sup(a, m)}(n) - Lplus) < epsilon
-            by def $is_tail_close_to(b, Lplus, epsilon, n0)
-        by def $has_eventual_closeness_to(b, Lplus, epsilon)
-    by def $has_limit(b, Lplus)
+            by def:
+                ? $is_tail_close_to(b, Lplus, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(b, Lplus, epsilon)
+    by def:
+        ? $has_limit(b, Lplus)
     by thm tail_sup_limit_is_finite_limsup(a, b, Lplus)
     witness exist L0 R st {$has_finite_limit_superior(a, L0)} from Lplus
 
@@ -2842,8 +2980,10 @@ thm finite_limsup_is_limit_point:
             Lplus - a(n) < Lplus - (Lplus - epsilon) = epsilon
             -(a(n) - Lplus) = Lplus - a(n) < epsilon
             abs(a(n) - Lplus) < epsilon
-        by def $is_epsilon_adherent_to_sequence(a, Lplus, epsilon, n_tail)
-    by def $is_limit_point(a, Lplus)
+        by def:
+            ? $is_epsilon_adherent_to_sequence(a, Lplus, epsilon, n_tail)
+    by def:
+        ? $is_limit_point(a, Lplus)
 
 thm finite_liminf_is_limit_point:
     ? forall a seq(R), Lminus R:
@@ -2877,8 +3017,10 @@ thm finite_liminf_is_limit_point:
             Lminus - a(n) < Lminus - (Lminus - epsilon) = epsilon
             -(a(n) - Lminus) = Lminus - a(n) < epsilon
             abs(a(n) - Lminus) < epsilon
-        by def $is_epsilon_adherent_to_sequence(a, Lminus, epsilon, n_tail)
-    by def $is_limit_point(a, Lminus)
+        by def:
+            ? $is_epsilon_adherent_to_sequence(a, Lminus, epsilon, n_tail)
+    by def:
+        ? $is_limit_point(a, Lminus)
 
 thm convergent_sequence_has_finite_lims:
     ? forall a seq(R), c R:
@@ -2900,8 +3042,10 @@ thm convergent_sequence_has_finite_lims:
                     a(n) - c <= abs(a(n) - c) < x - c
                     a(n) = (a(n) - c) + c < (x - c) + c = x
                     a(n) < x
-            by def $is_eventually_below_threshold(a, x, n0)
-    by def $is_eventually_below_every_threshold_above(a, c)
+            by def:
+                ? $is_eventually_below_threshold(a, x, n0)
+    by def:
+        ? $is_eventually_below_every_threshold_above(a, c)
     claim:
         ? forall x R:
             x < c
@@ -2923,9 +3067,12 @@ thm convergent_sequence_has_finite_lims:
             witness exist n N+ st {n >= n_tail and x < a(n)} from above_hit_start:
                 c - a(above_hit_start) <= abs(c - a(above_hit_start)) = abs(a(above_hit_start) - c) < c - x
                 x = c - (c - x) < c - (c - a(above_hit_start)) = a(above_hit_start)
-        by def $exceeds_threshold_arbitrarily_late(a, x)
-    by def $exceeds_every_threshold_below_arbitrarily_late(a, c)
-    by def $has_finite_limit_superior(a, c)
+        by def:
+            ? $exceeds_threshold_arbitrarily_late(a, x)
+    by def:
+        ? $exceeds_every_threshold_below_arbitrarily_late(a, c)
+    by def:
+        ? $has_finite_limit_superior(a, c)
     claim:
         ? forall y R:
             y < c
@@ -2940,8 +3087,10 @@ thm convergent_sequence_has_finite_lims:
                     c - a(n) <= abs(c - a(n)) = abs(a(n) - c) < c - y
                     y = c - (c - y) < c - (c - a(n)) = a(n)
                     y < a(n)
-            by def $is_eventually_above_threshold(a, y, n0)
-    by def $is_eventually_above_every_threshold_below(a, c)
+            by def:
+                ? $is_eventually_above_threshold(a, y, n0)
+    by def:
+        ? $is_eventually_above_every_threshold_below(a, c)
     claim:
         ? forall y R:
             y > c
@@ -2963,9 +3112,12 @@ thm convergent_sequence_has_finite_lims:
             witness exist n N+ st {n >= n_tail and a(n) < y} from below_hit_start:
                 a(below_hit_start) - c <= abs(a(below_hit_start) - c) < y - c
                 a(below_hit_start) = (a(below_hit_start) - c) + c < (y - c) + c = y
-        by def $falls_below_threshold_arbitrarily_late(a, y)
-    by def $falls_below_every_threshold_above_arbitrarily_late(a, c)
-    by def $has_finite_limit_inferior(a, c)
+        by def:
+            ? $falls_below_threshold_arbitrarily_late(a, y)
+    by def:
+        ? $falls_below_every_threshold_above_arbitrarily_late(a, c)
+    by def:
+        ? $has_finite_limit_inferior(a, c)
 
 thm equal_finite_lims_converge:
     ? forall a seq(R), c R:
@@ -3003,9 +3155,12 @@ thm equal_finite_lims_converge:
                     c - a(n) < c - (c - epsilon) = epsilon
                     -(a(n) - c) = c - a(n) < epsilon
                     abs(a(n) - c) < epsilon
-            by def $is_tail_close_to(a, c, epsilon, equal_lims_start)
-        by def $has_eventual_closeness_to(a, c, epsilon)
-    by def $has_limit(a, c)
+            by def:
+                ? $is_tail_close_to(a, c, epsilon, equal_lims_start)
+        by def:
+            ? $has_eventual_closeness_to(a, c, epsilon)
+    by def:
+        ? $has_limit(a, c)
 
 """
 Lemma 6.4.13. Comparison principle for suprema, infima, limsup, and liminf.
@@ -3121,9 +3276,12 @@ thm squeeze_converges_to:
                     L - b(n) < L - (L - epsilon) = epsilon
                     -(b(n) - L) = L - b(n) < epsilon
                     abs(b(n) - L) < epsilon
-            by def $is_tail_close_to(b, L, epsilon, squeeze_start)
-        by def $has_eventual_closeness_to(b, L, epsilon)
-    by def $has_limit(b, L)
+            by def:
+                ? $is_tail_close_to(b, L, epsilon, squeeze_start)
+        by def:
+            ? $has_eventual_closeness_to(b, L, epsilon)
+    by def:
+        ? $has_limit(b, L)
 
 """
 Example 6.4.15. Sequences squeezed between -2/n and 2/n converge to 0.
@@ -3142,7 +3300,8 @@ forall n N+:
     2 * reciprocal_nat_seq(n) = 2 * (1 / n) = 2 / n
     two_over_nat_seq(n) = 2 / n = 2 * reciprocal_nat_seq(n)
 two_over_nat_seq = fn(n N+) R {2 / n}
-by def $fn_eq(fn(n N+) R {2 / n}, fn(n N+) R {2 * reciprocal_nat_seq(n)})
+by def:
+    ? $fn_eq(fn(n N+) R {2 / n}, fn(n N+) R {2 * reciprocal_nat_seq(n)})
 fn(n N+) R {2 / n} = fn(n N+) R {2 * reciprocal_nat_seq(n)}
 two_over_nat_seq = fn(n N+) R {2 * reciprocal_nat_seq(n)}
 $has_limit(two_over_nat_seq, 0)
@@ -3153,7 +3312,8 @@ forall n N+:
     -2 * reciprocal_nat_seq(n) = -2 * (1 / n) = -2 / n
     neg_two_over_nat_seq(n) = -2 / n = -2 * reciprocal_nat_seq(n)
 neg_two_over_nat_seq = fn(n N+) R {-2 / n}
-by def $fn_eq(fn(n N+) R {-2 / n}, fn(n N+) R {-2 * reciprocal_nat_seq(n)})
+by def:
+    ? $fn_eq(fn(n N+) R {-2 / n}, fn(n N+) R {-2 * reciprocal_nat_seq(n)})
 fn(n N+) R {-2 / n} = fn(n N+) R {-2 * reciprocal_nat_seq(n)}
 neg_two_over_nat_seq = fn(n N+) R {-2 * reciprocal_nat_seq(n)}
 $has_limit(neg_two_over_nat_seq, 0)
@@ -3205,9 +3365,12 @@ thm sequence_abs_converges_to_zero:
                     seq_abs(a)(n) >= 0
                     abs(seq_abs(a)(n) - 0) = abs(seq_abs(a)(n)) = seq_abs(a)(n) = abs(a(n)) = abs(a(n) - 0)
                     abs(seq_abs(a)(n) - 0) < epsilon
-            by def $is_tail_close_to(seq_abs(a), 0, epsilon, n0)
-        by def $has_eventual_closeness_to(seq_abs(a), 0, epsilon)
-    by def $has_limit(seq_abs(a), 0)
+            by def:
+                ? $is_tail_close_to(seq_abs(a), 0, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(seq_abs(a), 0, epsilon)
+    by def:
+        ? $has_limit(seq_abs(a), 0)
 
 thm sequence_abs_zero_limit_reflects:
     ? forall a seq(R):
@@ -3229,9 +3392,12 @@ thm sequence_abs_zero_limit_reflects:
                     seq_abs(a)(n) >= 0
                     abs(a(n) - 0) = abs(a(n)) = seq_abs(a)(n) = abs(seq_abs(a)(n)) = abs(seq_abs(a)(n) - 0)
                     abs(a(n) - 0) < epsilon
-            by def $is_tail_close_to(a, 0, epsilon, n0)
-        by def $has_eventual_closeness_to(a, 0, epsilon)
-    by def $has_limit(a, 0)
+            by def:
+                ? $is_tail_close_to(a, 0, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(a, 0, epsilon)
+    by def:
+        ? $has_limit(a, 0)
 
 """
 Theorem 6.4.18 (Completeness for real sequences). A real sequence is Cauchy
@@ -3266,9 +3432,11 @@ thm cauchy_sequence_converges:
                 -1 < -(a(n0) - a(n))
                 a(n0) - 1 < a(n0) - (a(n0) - a(n)) = a(n)
                 a(n0) - 1 <= a(n)
-        by def $is_tail_lower_bound(a, n0, a(n0) - 1)
+        by def:
+            ? $is_tail_lower_bound(a, n0, a(n0) - 1)
         witness exist n1 N+ st {$is_tail_lower_bound(a, n1, a(n0) - 1)} from n0
-        by def $has_eventual_lower_bound(a, a(n0) - 1)
+        by def:
+            ? $has_eventual_lower_bound(a, a(n0) - 1)
         by thm set_builder_member(a(n0) - 1, {x R: $has_eventual_lower_bound(a, x)})
         a(n0) - 1 $in {x R: $has_eventual_lower_bound(a, x)}
         a(n0) - 1 $in E
@@ -3291,9 +3459,11 @@ thm cauchy_sequence_converges:
         a(upper_bound_start) = (a(upper_bound_start) - a(upper_n0)) + a(upper_n0) < 1 + a(upper_n0) = a(upper_n0) + 1
         a(upper_bound_start) <= a(upper_n0) + 1
         x <= a(upper_bound_start) <= a(upper_n0) + 1
-    by def $chap5::is_upper_bound(E, a(upper_n0) + 1)
+    by def:
+        ? $chap5::is_upper_bound(E, a(upper_n0) + 1)
     witness exist M R st {$chap5::is_upper_bound(E, M)} from a(upper_n0) + 1
-    by def $chap5::has_upper_bound(E)
+    by def:
+        ? $chap5::has_upper_bound(E)
     by thm chap5::least_upper_bound_existence(E)
     obtain L from exist L R st {$chap5::is_least_upper_bound(E, L)}
     $chap5::is_upper_bound(E, L)
@@ -3316,9 +3486,11 @@ thm cauchy_sequence_converges:
                         a(n) - a(k) <= abs(a(n) - a(k)) < epsilon / 2
                         a(n) - epsilon / 2 = (a(n) - a(k)) + a(k) - epsilon / 2 < epsilon / 2 + a(k) - epsilon / 2 = a(k)
                         a(n) - epsilon / 2 <= a(k)
-                by def $is_tail_lower_bound(a, n0, a(n) - epsilon / 2)
+                by def:
+                    ? $is_tail_lower_bound(a, n0, a(n) - epsilon / 2)
                 witness exist n1 N+ st {$is_tail_lower_bound(a, n1, a(n) - epsilon / 2)} from n0
-                by def $has_eventual_lower_bound(a, a(n) - epsilon / 2)
+                by def:
+                    ? $has_eventual_lower_bound(a, a(n) - epsilon / 2)
                 by thm set_builder_member(a(n) - epsilon / 2, {x R: $has_eventual_lower_bound(a, x)})
                 a(n) - epsilon / 2 $in {x R: $has_eventual_lower_bound(a, x)}
                 a(n) - epsilon / 2 $in E
@@ -3342,7 +3514,8 @@ thm cauchy_sequence_converges:
                     a(epsilon_upper_start) = (a(epsilon_upper_start) - a(n)) + a(n) < epsilon / 2 + a(n) = a(n) + epsilon / 2
                     a(epsilon_upper_start) <= a(n) + epsilon / 2
                     x <= a(epsilon_upper_start) <= a(n) + epsilon / 2
-                by def $chap5::is_upper_bound(E, a(n) + epsilon / 2)
+                by def:
+                    ? $chap5::is_upper_bound(E, a(n) + epsilon / 2)
                 L <= a(n) + epsilon / 2
             a(n) - epsilon / 2 <= L <= a(n) + epsilon / 2
             a(n) - L <= a(n) - (a(n) - epsilon / 2) = epsilon / 2
@@ -3351,12 +3524,16 @@ thm cauchy_sequence_converges:
             -(a(n) - L) <= epsilon / 2
             abs(a(n) - L) <= epsilon / 2
             abs(a(n) - L) <= epsilon / 2 < epsilon
-        by def $is_tail_close_to(a, L, epsilon, n0)
+        by def:
+            ? $is_tail_close_to(a, L, epsilon, n0)
         witness exist n1 N+ st {$is_tail_close_to(a, L, epsilon, n1)} from n0
-        by def $has_eventual_closeness_to(a, L, epsilon)
-    by def $has_limit(a, L)
+        by def:
+            ? $has_eventual_closeness_to(a, L, epsilon)
+    by def:
+        ? $has_limit(a, L)
     witness exist L0 R st {$has_limit(a, L0)} from L
-    by def $is_convergent_sequence(a)
+    by def:
+        ? $is_convergent_sequence(a)
 
 thm convergent_sequence_is_cauchy_for_completeness_theorem:
     ? forall a seq(R):
@@ -3472,9 +3649,12 @@ thm reciprocal_kth_root_sequence_converges_to_zero:
                 n >= n0
                 =>:
                     abs(a(n) - 0) < epsilon
-            by def $is_tail_close_to(a, 0, epsilon, n0)
-        by def $has_eventual_closeness_to(a, 0, epsilon)
-    by def $has_limit(a, 0)
+            by def:
+                ? $is_tail_close_to(a, 0, epsilon, n0)
+        by def:
+            ? $has_eventual_closeness_to(a, 0, epsilon)
+    by def:
+        ? $has_limit(a, 0)
 
 """
 Lemma 6.5.2. The geometric sequence x^n tends to 0 when |x| < 1, tends to 1
@@ -3504,7 +3684,8 @@ thm geometric_abs_lt_one_converges_to_zero:
         -abs(x^n) <= x^n <= abs(x^n)
         fn(i_index N+) R {-1 * geom_seq(abs(x))(i_index)}(n) <= geom_seq(x)(n)
         geom_seq(x)(n) <= geom_seq(abs(x))(n)
-    by def $is_pointwise_between(fn(i_index N+) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)))
+    by def:
+        ? $is_pointwise_between(fn(i_index N+) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)))
     $is_pointwise_between(fn(i_index N+) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)))
     by thm squeeze_converges_to(fn(i_index N+) R {-1 * geom_seq(abs(x))(i_index)}, geom_seq(x), geom_seq(abs(x)), 0)
 
@@ -3516,7 +3697,8 @@ thm geometric_one_converges_to_one:
     by thm constant_sequence_has_limit(1)
     forall n N+:
         geom_seq(x)(n) = x^n = 1^n = 1 = fn(k N+) R {1}(n)
-    by def $fn_eq(geom_seq(x), fn(n N+) R {1})
+    by def:
+        ? $fn_eq(geom_seq(x), fn(n N+) R {1})
     $fn_eq(geom_seq(x), fn(n N+) R {1})
     geom_seq(x) = fn(n N+) R {1}
 
@@ -3527,7 +3709,8 @@ thm geometric_minus_one_diverges:
             $is_divergent_sequence(geom_seq(x))
     forall n N+:
         geom_seq(x)(n) = x^n = (-1)^n = alternating_one_seq(n)
-    by def $fn_eq(geom_seq(x), alternating_one_seq)
+    by def:
+        ? $fn_eq(geom_seq(x), alternating_one_seq)
     $fn_eq(geom_seq(x), alternating_one_seq)
     geom_seq(x) = alternating_one_seq
     $is_divergent_sequence(alternating_one_seq)
@@ -3540,7 +3723,8 @@ thm not_divergent_sequence_is_convergent:
     by contra:
         ? $is_convergent_sequence(a)
         not $is_convergent_sequence(a)
-        by def $is_divergent_sequence(a)
+        by def:
+            ? $is_divergent_sequence(a)
         $is_divergent_sequence(a)
         impossible not $is_divergent_sequence(a)
 
@@ -3627,7 +3811,8 @@ thm geometric_base_gt_one_is_increasing:
         geom_seq(y)(n) = y^n
         geom_seq(y)(n + 1) > geom_seq(y)(n)
         geom_seq(y)(n) <= geom_seq(y)(n + 1)
-    by def $is_increasing_sequence(geom_seq(y))
+    by def:
+        ? $is_increasing_sequence(geom_seq(y))
 
 thm geometric_base_gt_one_exceeds_threshold:
     ? forall y, B R:
@@ -3641,9 +3826,11 @@ thm geometric_base_gt_one_exceeds_threshold:
                 geom_seq(y)(n) <= B
             not geom_seq(y)(n) > B
             geom_seq(y)(n) <= B
-        by def $is_sequence_upper_bound(geom_seq(y), B)
+        by def:
+            ? $is_sequence_upper_bound(geom_seq(y), B)
         witness exist M R st {$is_sequence_upper_bound(geom_seq(y), M)} from B
-        by def $is_bounded_above_sequence(geom_seq(y))
+        by def:
+            ? $is_bounded_above_sequence(geom_seq(y))
         by thm geometric_base_gt_one_is_increasing(y)
         by thm bounded_increasing_sequence_converges(geom_seq(y))
         y > 1 > 0
@@ -3666,7 +3853,8 @@ thm geometric_base_gt_one_eventually_exceeds_threshold:
                 B < geom_seq(y)(n)
         by thm increasing_seq_le_of_le(geom_seq(y), n0, n)
         B < geom_seq(y)(n0) <= geom_seq(y)(n)
-    by def $is_eventually_above_threshold(geom_seq(y), B, n0)
+    by def:
+        ? $is_eventually_above_threshold(geom_seq(y), B, n0)
     witness exist n1 N+ st {$is_eventually_above_threshold(geom_seq(y), B, n1)} from n0
 
 thm nth_root_sequence_term_positive:
@@ -3704,7 +3892,8 @@ thm nth_root_sequence_eventually_below_one_plus_epsilon:
         x < geom_seq(1 + epsilon)(n)
         (a(n))^n = x < geom_seq(1 + epsilon)(n) = (1 + epsilon)^n
         by thm nonnegative_power_lt_implies_lt(a(n), 1 + epsilon, n)
-    by def $is_eventually_below_threshold(a, 1 + epsilon, n0)
+    by def:
+        ? $is_eventually_below_threshold(a, 1 + epsilon, n0)
     witness exist n1 N+ st {$is_eventually_below_threshold(a, 1 + epsilon, n1)} from n0
 
 thm nth_root_sequence_eventually_above_one_minus_small_epsilon:
@@ -3738,7 +3927,8 @@ thm nth_root_sequence_eventually_above_one_minus_small_epsilon:
         (1 - epsilon)^n < x = (a(n))^n
         by thm nth_root_sequence_term_positive(x, a, n)
         by thm nonnegative_power_lt_implies_lt(1 - epsilon, a(n), n)
-    by def $is_eventually_above_threshold(a, 1 - epsilon, n0)
+    by def:
+        ? $is_eventually_above_threshold(a, 1 - epsilon, n0)
     witness exist n1 N+ st {$is_eventually_above_threshold(a, 1 - epsilon, n1)} from n0
 
 thm nth_root_sequence_converges_to_one:
@@ -3783,7 +3973,8 @@ thm nth_root_sequence_converges_to_one:
                             -epsilon = (1 - epsilon) - 1 < a(n) - 1 < (1 + epsilon) - 1 = epsilon
                             -epsilon < a(n) - 1 < epsilon
                             abs(a(n) - 1) < epsilon
-    by def $has_limit(a, 1)
+    by def:
+        ? $has_limit(a, 1)
 
 # 6.6 Subsequences
 
@@ -3816,7 +4007,8 @@ thm subsequence_witness_exists:
         $has_subsequence(a, b)
         =>:
             exist phi fn(k N+) N+ st {$is_subsequence_along(a, b, phi)}
-    by def $has_subsequence(a, b)
+    by def:
+        ? $has_subsequence(a, b)
 
 """
 Example 6.6.2. The even-indexed terms of a sequence form a subsequence.
@@ -3829,7 +4021,8 @@ have fn subsequence_even_index(k N+) N+ = 2 * k
 forall k N+:
     subsequence_even_index(k) = 2 * k < 2 * (k + 1) = subsequence_even_index(k + 1)
     subsequence_even_index(k) < subsequence_even_index(k + 1)
-by def $is_subsequence_index(subsequence_even_index)
+by def:
+    ? $is_subsequence_index(subsequence_even_index)
 
 """
 Example 6.6.3. The two alternating decimal components in Tao's example are
@@ -3850,7 +4043,8 @@ forall k N+:
     2 * (k - 1) + 1 < 2 * k + 1
     subsequence_odd_index(k) = 2 * (k - 1) + 1 < 2 * k + 1 = 2 * ((k + 1) - 1) + 1 = subsequence_odd_index(k + 1)
     subsequence_odd_index(k) < subsequence_odd_index(k + 1)
-by def $is_subsequence_index(subsequence_odd_index)
+by def:
+    ? $is_subsequence_index(subsequence_odd_index)
 
 have fn subsequence_even_terms(a seq(R)) fn(k N+) R = fn(i_index N+) R {a(subsequence_even_index(i_index))}
 have fn subsequence_odd_terms(a seq(R)) fn(k N+) R = fn(i_index N+) R {a(subsequence_odd_index(i_index))}
@@ -3858,16 +4052,20 @@ have fn subsequence_odd_terms(a seq(R)) fn(k N+) R = fn(i_index N+) R {a(subsequ
 thm even_terms_form_subsequence:
     ? forall a seq(R):
         $has_subsequence(a, subsequence_even_terms(a))
-    by def $is_subsequence_along(a, subsequence_even_terms(a), subsequence_even_index)
+    by def:
+        ? $is_subsequence_along(a, subsequence_even_terms(a), subsequence_even_index)
     witness exist phi fn(k N+) N+ st {$is_subsequence_along(a, subsequence_even_terms(a), phi)} from subsequence_even_index
-    by def $has_subsequence(a, subsequence_even_terms(a))
+    by def:
+        ? $has_subsequence(a, subsequence_even_terms(a))
 
 thm odd_terms_form_subsequence:
     ? forall a seq(R):
         $has_subsequence(a, subsequence_odd_terms(a))
-    by def $is_subsequence_along(a, subsequence_odd_terms(a), subsequence_odd_index)
+    by def:
+        ? $is_subsequence_along(a, subsequence_odd_terms(a), subsequence_odd_index)
     witness exist phi fn(k N+) N+ st {$is_subsequence_along(a, subsequence_odd_terms(a), phi)} from subsequence_odd_index
-    by def $has_subsequence(a, subsequence_odd_terms(a))
+    by def:
+        ? $has_subsequence(a, subsequence_odd_terms(a))
 
 """
 Lemma 6.6.4. The subsequence relation is reflexive and transitive.
@@ -3882,7 +4080,8 @@ have fn subsequence_identity_index(k N+) N+ = k
 forall k N+:
     subsequence_identity_index(k) = k < k + 1 = subsequence_identity_index(k + 1)
     subsequence_identity_index(k) < subsequence_identity_index(k + 1)
-by def $is_subsequence_index(subsequence_identity_index)
+by def:
+    ? $is_subsequence_index(subsequence_identity_index)
 
 thm sequence_is_subsequence_of_itself:
     ? forall a seq(R):
@@ -3890,9 +4089,11 @@ thm sequence_is_subsequence_of_itself:
     forall k N+:
         subsequence_identity_index(k) = k
         a(k) = a(subsequence_identity_index(k))
-    by def $is_subsequence_along(a, a, subsequence_identity_index)
+    by def:
+        ? $is_subsequence_along(a, a, subsequence_identity_index)
     witness exist phi fn(k N+) N+ st {$is_subsequence_along(a, a, phi)} from subsequence_identity_index
-    by def $has_subsequence(a, a)
+    by def:
+        ? $has_subsequence(a, a)
 
 # Transitivity is the exercise part of Lemma 6.6.4.  The proof composes two
 # strictly increasing index maps and verifies the pointwise equality for the
@@ -3939,16 +4140,19 @@ thm subsequence_transitive:
         phi(psi(k)) < phi(psi(k + 1))
         theta(k) = phi(psi(k)) < phi(psi(k + 1)) = theta(k + 1)
         theta(k) < theta(k + 1)
-    by def $is_subsequence_index(theta)
+    by def:
+        ? $is_subsequence_index(theta)
     claim:
         ? forall k N+:
             c(k) = a(theta(k))
         theta(k) = phi(psi(k))
         a(theta(k)) = a(phi(psi(k)))
         c(k) = b(psi(k)) = a(phi(psi(k))) = a(theta(k))
-    by def $is_subsequence_along(a, c, theta)
+    by def:
+        ? $is_subsequence_along(a, c, theta)
     witness exist theta0 fn(k N+) N+ st {$is_subsequence_along(a, c, theta0)} from theta
-    by def $has_subsequence(a, c)
+    by def:
+        ? $has_subsequence(a, c)
 
 """
 Proposition 6.6.5. A sequence converges to L iff every subsequence converges
@@ -3999,10 +4203,13 @@ thm subsequence_along_preserves_limit:
             b(n) = a(phi(n))
             b(n) - L = a(phi(n)) - L
             abs(b(n) - L) = abs(a(phi(n)) - L)
-        by def $is_tail_close_to(b, L, epsilon, n0)
+        by def:
+            ? $is_tail_close_to(b, L, epsilon, n0)
         witness exist n1 N+ st {$is_tail_close_to(b, L, epsilon, n1)} from n0
-        by def $has_eventual_closeness_to(b, L, epsilon)
-    by def $has_limit(b, L)
+        by def:
+            ? $has_eventual_closeness_to(b, L, epsilon)
+    by def:
+        ? $has_limit(b, L)
 
 thm every_subsequence_of_convergent_sequence_converges:
     ? forall a seq(R), L R, b seq(R):
@@ -4057,8 +4264,10 @@ thm convergent_subsequence_limit_is_limit_point:
         a(phi(common_tail_index)) - L = b(common_tail_index) - L
         abs(a(phi(common_tail_index)) - L) = abs(b(common_tail_index) - L)
         witness exist n N+ st {n >= n_tail and abs(a(n) - L) < epsilon} from phi(common_tail_index)
-        by def $is_epsilon_adherent_to_sequence(a, L, epsilon, n_tail)
-    by def $is_limit_point(a, L)
+        by def:
+            ? $is_epsilon_adherent_to_sequence(a, L, epsilon, n_tail)
+    by def:
+        ? $is_limit_point(a, L)
 
 thm limit_point_has_convergent_subsequence:
     ? forall a seq(R), L R:
@@ -4088,7 +4297,7 @@ thm limit_point_has_convergent_subsequence:
     by axiom_of_choice: set fn_range(F):
         forall A fn_range(F):
             $is_nonempty_set(A)
-    obtain choice_index from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {forall! A fn_range(F) => {f(A) $in A}}
+    obtain choice_index from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {forall A fn_range(F) => {f(A) $in A}}
     forall A fn_range(F):
         choice_index(A) $in A
         A $subset N+
@@ -4112,10 +4321,13 @@ thm limit_point_has_convergent_subsequence:
         phi(k + 1) >= phi(k) + 1
         phi(k) < phi(k) + 1 <= phi(k + 1)
         phi(k) < phi(k + 1)
-    by def $is_subsequence_index(phi)
-    by def $is_subsequence_along(a, b, phi)
+    by def:
+        ? $is_subsequence_index(phi)
+    by def:
+        ? $is_subsequence_along(a, b, phi)
     witness exist phi0 fn(k N+) N+ st {$is_subsequence_along(a, b, phi0)} from phi
-    by def $has_subsequence(a, b)
+    by def:
+        ? $has_subsequence(a, b)
     claim:
         ? forall epsilon R+:
             $has_eventual_closeness_to(b, L, epsilon)
@@ -4144,10 +4356,13 @@ thm limit_point_has_convergent_subsequence:
                     b(n) - L = a(phi(n)) - L
                     abs(b(n) - L) = abs(a(phi(n)) - L)
                     abs(b(n) - L) = abs(a(phi(n)) - L) < 1 / n <= 1 / n0 < epsilon
-            by def $is_tail_close_to(b, L, epsilon, n0 + 1)
+            by def:
+                ? $is_tail_close_to(b, L, epsilon, n0 + 1)
         witness exist n1 N+ st {$is_tail_close_to(b, L, epsilon, n1)} from n0 + 1
-        by def $has_eventual_closeness_to(b, L, epsilon)
-    by def $has_limit(b, L)
+        by def:
+            ? $has_eventual_closeness_to(b, L, epsilon)
+    by def:
+        ? $has_limit(b, L)
     witness exist b0 seq(R) st {$has_subsequence(a, b0), $has_limit(b0, L)} from b
 
 thm convergent_subsequence_gives_limit_point:
@@ -4188,7 +4403,8 @@ thm bolzano_weierstrass_convergent_subsequence:
     by thm limit_point_has_convergent_subsequence(a, Lplus)
     obtain b from exist b seq(R) st {$has_subsequence(a, b), $has_limit(b, Lplus)}
     witness exist L0 R st {$has_limit(b, L0)} from Lplus
-    by def $is_convergent_sequence(b)
+    by def:
+        ? $is_convergent_sequence(b)
     witness exist b0 seq(R) st {$has_subsequence(a, b0), $is_convergent_sequence(b0)} from b
 
 """
@@ -4292,11 +4508,15 @@ thm rational_approximation_sequence_exists:
                 =>:
                     q(n) = a(n)
                     abs(q(n) - alpha) = abs(a(n) - alpha) < epsilon
-            by def $is_tail_close_to(q, alpha, epsilon, n0)
+            by def:
+                ? $is_tail_close_to(q, alpha, epsilon, n0)
         witness exist N0 N+ st {$is_tail_close_to(q, alpha, epsilon, N0)} from n0
-        by def $has_eventual_closeness_to(q, alpha, epsilon)
-    by def $has_limit(q, alpha)
-    by def $is_rational_approximation_sequence(q, alpha)
+        by def:
+            ? $has_eventual_closeness_to(q, alpha, epsilon)
+    by def:
+        ? $has_limit(q, alpha)
+    by def:
+        ? $is_rational_approximation_sequence(q, alpha)
     witness exist q0 seq(R) st {$is_rational_approximation_sequence(q0, alpha)} from q
 
 thm real_power_is_rational_approximation_limit:
@@ -4310,7 +4530,8 @@ thm real_power_agrees_with_rational_power:
     ? forall x R+, q Q:
         $has_limit(rational_power_approx_seq(x, fn(n N+) R {q}), x^q)
     by thm constant_sequence_has_limit(q)
-    by def $is_rational_approximation_sequence(fn(n N+) R {q}, q)
+    by def:
+        ? $is_rational_approximation_sequence(fn(n N+) R {q}, q)
     by thm rational_power_approx_seq_has_limit(x, q, fn(n N+) R {q})
 
 """

@@ -94,7 +94,8 @@ not $prime(341)
 not $prime(561)
 $prime(18446744073709551557)
 not $prime(18446744073709551615)
-by def $prime(97)
+by def:
+    ? $prime(97)
 
 claim:
     ? forall p N+:
@@ -103,7 +104,8 @@ claim:
             p % d != 0
         =>:
             $prime(p)
-    by def $prime(p)
+    by def:
+        ? $prime(p)
 
 forall p N+:
     $prime(p)

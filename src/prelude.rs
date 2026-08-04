@@ -15,7 +15,7 @@ pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
-    KnownObjValue,
+    KnownEquality, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -517,7 +517,6 @@ pub use crate::common::keywords::FN_LOWER_CASE;
 pub use crate::common::keywords::FN_RANGE;
 pub use crate::common::keywords::FOR;
 pub use crate::common::keywords::FORALL;
-pub use crate::common::keywords::FORALL_BANG;
 pub use crate::common::keywords::FROM;
 pub use crate::common::keywords::GCD;
 pub use crate::common::keywords::GENERAL_CART;

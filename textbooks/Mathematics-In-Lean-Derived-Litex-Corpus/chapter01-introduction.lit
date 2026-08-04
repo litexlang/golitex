@@ -29,4 +29,5 @@ thm even_mul:
     obtain k from exist k N st {n = 2 * k}
     witness exist l N st {m * n = 2 * l} from m * k:
         m * n = m * (2 * k) = 2 * (m * k)
-    by def $even(m * n)
+    by def:
+        ? $even(m * n)

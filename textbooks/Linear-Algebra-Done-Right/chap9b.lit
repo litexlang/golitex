@@ -47,7 +47,8 @@ thm zero_multilinear_form_is_multilinear:
                 $is_linear_in_slot(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>, original, k)
         have ell fn(v VSet) s = \chap3a::zero_linear_map<s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>>
         by thm chap3f::dual_space_has_zero(s, VSet, V)
-        by def $chap3f::is_linear_functional(s, VSet, V, ell)
+        by def:
+            ? $chap3f::is_linear_functional(s, VSet, V, ell)
         claim:
             ? forall value VSet, changed finite_seq(VSet, m):
                 $is_slot_replacement(VSet, m, original, changed, k, value)
@@ -55,18 +56,22 @@ thm zero_multilinear_form_is_multilinear:
                     ell(value) = \zero_multilinear_form<s, VSet, V, m>(changed)
             ell(value) = \chap3a::zero_linear_map<s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>>(value) = V.scalars.zero
             \zero_multilinear_form<s, VSet, V, m>(changed) = V.scalars.zero
-        by def $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, ell)
+        by def:
+            ? $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, ell)
         witness exist slot_map fn(v VSet) s st {$chap3f::is_linear_functional(s, VSet, V, slot_map), $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, slot_map)} from ell:
             $chap3f::is_linear_functional(s, VSet, V, ell)
             $agrees_with_form_in_slot(s, VSet, m, \zero_multilinear_form<s, VSet, V, m>, original, k, ell)
-        by def $is_linear_in_slot(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>, original, k)
-    by def $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+        by def:
+            ? $is_linear_in_slot(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>, original, k)
+    by def:
+        ? $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
 
 thm multilinear_form_space_is_nonempty:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:
         $is_nonempty_set(\multilinear_form_space<s, VSet, V, m>)
     by thm zero_multilinear_form_is_multilinear(s, VSet, V, m)
-    by def $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    by def:
+        ? $is_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
     \multilinear_form_space<s, VSet, V, m> = {alpha fn(values finite_seq(VSet, m)) s: $is_multilinear_form(s, VSet, V, m, alpha)}
     \zero_multilinear_form<s, VSet, V, m> $in {alpha fn(values finite_seq(VSet, m)) s: $is_multilinear_form(s, VSet, V, m, alpha)}
     \zero_multilinear_form<s, VSet, V, m> $in \multilinear_form_space<s, VSet, V, m>
@@ -139,8 +144,10 @@ thm zero_multilinear_form_is_alternating:
             =>:
                 \zero_multilinear_form<s, VSet, V, m>(values) = V.scalars.zero
         \zero_multilinear_form<s, VSet, V, m>(values) = V.scalars.zero
-    by def $vanishes_on_repeated_multilinear_inputs(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
-    by def $is_alternating_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    by def:
+        ? $vanishes_on_repeated_multilinear_inputs(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
+    by def:
+        ? $is_alternating_multilinear_form(s, VSet, V, m, \zero_multilinear_form<s, VSet, V, m>)
 
 thm alternating_multilinear_form_space_is_nonempty:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, m N+:

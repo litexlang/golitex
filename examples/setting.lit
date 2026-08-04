@@ -12,3 +12,5 @@ forall [PairedElements], z X:
 
 forall [PairedElements]:
     x = x
+
+forall [PairedElements] => {x = x}

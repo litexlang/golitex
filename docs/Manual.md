@@ -417,7 +417,8 @@ Litex exposes sets, membership, and set operations directly.
 2 $in intersect({1, 2}, {2, 3})
 2 $in set_minus({1, 2}, {1})
 
-by def {x R: 0 <= x} $subset R
+by def:
+    ? {x R: 0 <= x} $subset R
 ```
 
 | Form | Meaning |
@@ -464,11 +465,11 @@ the set of choice functions selecting an element of each `g(alpha)`:
 ```litex
 have I set
 have S nonempty_set
-trust forall! A S => {$is_nonempty_set(A)}
+trust forall A S => {$is_nonempty_set(A)}
 have g fn(alpha I) S
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
-general_cart(I, S, g) = {f fn(t I) big_union(S): forall! alpha I => {f(alpha) $in g(alpha)}}
+general_cart(I, S, g) = {f fn(t I) big_union(S): forall alpha I => {f(alpha) $in g(alpha)}}
 ```
 
 The `trust` line makes the required factor-nonemptiness background explicit,
@@ -818,7 +819,7 @@ not $prime(1)
 
 `$prime(p)` is a native predicate on `N+`. Concrete positive integer
 literals that fit in `u64` are decided exactly; larger literals are left to
-proof rather than guessed. `by def $prime(p)` exposes the symbolic
+proof rather than guessed. A `by def:` block with `? $prime(p)` exposes the symbolic
 trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).
 
 An object expression alone is not a fact:
@@ -880,13 +881,13 @@ The second line is an `error` because the existential `x` is out of scope. Use
 `obtain` to introduce a fresh witness name.
 
 Existential bodies may contain atomic facts, conjunctions, chains,
-disjunctions, and compact `forall!` conditions. Braces delimit the body:
+disjunctions, and compact `forall` conditions. Braces delimit the body:
 
 ```litex
 forall:
-    exist f fn(x R) R st {forall! x R => {f(x) = x}}
+    exist f fn(x R) R st {forall x R => {f(x) = x}}
     =>:
-        exist f fn(x R) R st {forall! x R => {f(x) = x}}
+        exist f fn(x R) R st {forall x R => {f(x) = x}}
 ```
 
 ### Universal facts
@@ -932,6 +933,8 @@ setting EqualPair:
 
 forall [EqualPair], z X:
     z = z
+
+forall [EqualPair] => {x = y}
 ```
 
 This elaborates to the ordinary fact:
@@ -949,16 +952,19 @@ it only abbreviates the corresponding `forall` prefix. Every use allocates
 fresh binders, even when the same setting is used several times. Extra
 parameters require a comma after the closing bracket.
 
-The first version supports settings in block `forall [Name]` headers, including
-goal and `not forall` blocks because they use the same universal parser. It does
-not expand inside `forall!`, definition headers, template headers, or object
-expressions. A module-qualified setting may be referenced as
-`forall [Module::Name]:`.
+Settings are supported in block `forall [Name]` headers and in the inline form
+`forall [Name] => {...}`. The inline form uses exactly the parameters and
+shared assumptions stored by the setting; add extra parameters with block
+syntax. Goal and negated universal positions use the same expansion paths. A
+module-qualified setting may be referenced as `forall [Module::Name]:` or
+`forall [Module::Name] => {...}`. Settings do not expand in definition
+headers, template headers, or object expressions.
 
-`forall!` is the one-line form used inside braced fact bodies:
+Inside braced fact bodies, `forall` is forced into its one-line form because
+that syntactic position cannot own an indented body:
 
 ```litex
-forall! x R => {x = x}
+forall x R => {x = x}
 ```
 
 ### Universal equivalence and negated universals
@@ -1006,9 +1012,9 @@ This is a parse `error`; write `not forall ...` on one header.
 | Non-existence | `not exist params st {facts}` |
 | Universal implication | `forall params: assumptions =>: conclusions` |
 | Universal equivalence | `forall params: =>: left <=>: right` |
-| Inline universal | `forall! params => {facts}` |
+| Inline universal | `forall params => {facts}` |
 | Negated universal | `not forall params: facts` |
-| Inline negated universal | `not forall! params => {facts}` |
+| Inline negated universal | `not forall params => {facts}` |
 
 ---
 
@@ -1026,8 +1032,10 @@ $is_nonempty_set({1})
 $is_finite_set({1, 2})
 
 1 $in {1, 2}
-by def {1} $subset {1, 2}
-by def {1, 2} $superset {1}
+by def:
+    ? {1} $subset {1, 2}
+by def:
+    ? {1, 2} $superset {1}
 ```
 
 | Positive form | Negative form | Meaning |
@@ -1068,8 +1076,10 @@ global equality after compatible function-space information is checked.
 have fn f(x R) R = x
 have fn g(x R) R = x
 
-by def $fn_eq_in(f, g, R)
-by def $fn_eq(f, g)
+by def:
+    ? $fn_eq_in(f, g, R)
+by def:
+    ? $fn_eq(f, g)
 ```
 
 Once a verified `$fn_eq(f, g)` is stored, forward inference also stores the
@@ -1113,7 +1123,8 @@ its name and parameter shape.
 prop is_zero(x R):
     x = 0
 
-by def $is_zero(0)
+by def:
+    ? $is_zero(0)
 ```
 
 ```text
@@ -1183,7 +1194,8 @@ struct Point:
     x R
     y R
 
-by def $is_origin(0, 0)
+by def:
+    ? $is_origin(0, 0)
 by thm struct_member((0, 0), &Point)
 ```
 
@@ -1491,7 +1503,8 @@ strategy use_is_one:
         =>:
             $is_one(x)
     x = 1
-    by def $is_one(x)
+    by def:
+        ? $is_one(x)
 
 $is_one(1)
 stop strategy use_is_one
@@ -1632,7 +1645,7 @@ explanation; this index does not repeat its examples.
 | Multiple names in one domain | `x, y R` | [Universal facts](#universal-facts) |
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
-| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` | [Named universal settings](#named-universal-settings) |
+| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` or `forall [Name] => {...}` | [Named universal settings](#named-universal-settings) |
 | Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) |
 
 ### Object syntax index
@@ -1653,7 +1666,7 @@ explanation; this index does not repeat its examples.
 | Atomic | equality, order, membership, set relations, named predicates | [Atomic facts](#atomic-facts) |
 | Compound | `and`, relation chains, `or` | [Conjunctions, chains, and disjunctions](#conjunctions-chains-and-disjunctions) |
 | Existential | `exist`, `exist!`, `not exist` | [Existential facts](#existential-facts) |
-| Universal | `forall`, `forall [Setting]`, `forall!`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
+| Universal | `forall`, `forall [Setting]`, `forall`, `forall ... <=>:`, `not forall` | [Universal facts](#universal-facts) |
 | Function predicates | `$fn_eq_in`, `$fn_eq`, mapping properties | [Function predicates](#function-predicates) |
 
 ### Statement syntax index
@@ -1672,7 +1685,7 @@ explanation; this index does not repeat its examples.
   division bind more tightly than addition and subtraction.
 - `[]` is index access. Function arguments use `()`.
 - `{a, b}` is a displayed set; `{x S: facts}` is a set comprehension.
-- `st { ... }` delimits an existential body; `forall! ... => { ... }` is the
+- `st { ... }` delimits an existential body; `forall ... => { ... }` is the
   compact universal form inside such bodies.
 - `#` starts a line comment. Indentation defines block structure.
 - Matrix operators contain an apostrophe: `'+`, `'-`, `'*`, `*'`, and `'^`.
@@ -1769,8 +1782,8 @@ This includes packaging an exact existential clause already established by a
 `witness`. Once an accepted positive predicate is stored, forward inference may
 also expose its positive defining consequences; that is the other direction.
 
-Use `by def $P(args)` when the proof should request and record the definition
-route explicitly. Unlike ordinary atomic verification, explicit `by def`
+Use `by def:` followed by `? $P(args)` when the proof should request and record
+the definition route explicitly. Unlike ordinary atomic verification, explicit `by def`
 rechecks the definition even if the target predicate is already known.
 
 `by def` also names the mathematical-definition route for these builtin
@@ -1794,14 +1807,16 @@ prop is_unit_pair(x, y R):
     x = 1
     y = 1
 
-by def $is_unit_pair(1, 1)
+by def:
+    ? $is_unit_pair(1, 1)
 ```
 
 `by def` requires a positive concrete `prop` call:
 
 ```text
 abstract_prop P(x)
-by def $P(1)
+by def:
+    ? $P(1)
 ```
 
 This is an `error` because an abstract predicate has no definition to unfold.
@@ -1944,8 +1959,9 @@ by enumerate finite_set:
 This is an `error` because `N` is not a finite displayed domain available for
 exhaustive enumeration.
 
-The related forms are `by enumerate range`, `by enumerate closed_range`, and
-inline `by enumerate finite_set forall! ...`.
+The related forms are `by enumerate range` and `by enumerate closed_range`.
+`by enumerate finite_set` always takes its universal target from an indented
+`? forall ...` goal block.
 
 ### Integer and finite-set induction
 
@@ -1997,9 +2013,11 @@ Cartesian products. `by extension` proves set equality through mutual
 membership.
 
 ```litex
-by for forall! i1 range(0, 3) => {i1 < 3}
+by for:
+    ? forall i1 range(0, 3) => {i1 < 3}
 
-by extension {1, 2} = {2, 1}:
+by extension:
+    ? {1, 2} = {2, 1}
     by enumerate finite_set:
         ? forall x {1, 2}:
             x $in {2, 1}
@@ -2011,7 +2029,8 @@ by extension {1, 2} = {2, 1}:
 Extensionality still has to prove both membership directions:
 
 ```text
-by extension 1 = 2
+by extension:
+    ? 1 = 2
 ```
 
 The proof reaches `unknown` because membership in `1` and `2` does not match;
@@ -2078,7 +2097,7 @@ claim:
         forall A S:
             $is_nonempty_set(A)
         =>:
-            exist f fn(A S) big_union(S) st {forall! A S => {f(A) $in A}}
+            exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
     by axiom_of_choice: set S
 ```
 
@@ -2405,7 +2424,8 @@ This rule only answers membership goals; it does not rewrite an order goal
 such as `0 < x` into membership in a positive-number set.
 
 ```litex
-by def {1} $subset {1, 2}
+by def:
+    ? {1} $subset {1, 2}
 
 forall B set, A power_set(B), x A:
     x $in B
@@ -2417,10 +2437,13 @@ claim:
         =>:
             A $proper_subset B
             B $proper_superset A
-    by def A $proper_subset B
-    by def B $proper_superset A
+    by def:
+        ? A $proper_subset B
+    by def:
+        ? B $proper_superset A
 
-by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
+by def:
+    ? $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 `$fn_eq` and `$fn_eq_in` do not have ordinary negated atomic forms. The
@@ -2434,7 +2457,7 @@ a rational number with positive denominator.
 
 ```litex
 forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall! z N+: p % z = 0 and q % z = 0 => {z = 1}}
+    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 ```
 
 This rule recognizes the displayed representation; it is not a general gcd
@@ -2575,7 +2598,8 @@ The second line is `unknown`; `R` contains positive, zero, and negative values.
 ### Subset, superset, and order inference
 
 ```litex
-by def {1} $subset {1, 2}
+by def:
+    ? {1} $subset {1, 2}
 
 forall x {1}:
     x $in {1, 2}

@@ -63,10 +63,12 @@ thm left_coset_has_subgroup_cardinality:
         h2 = mul(one, h2) = mul(mul(inv_x, x), h2) = mul(inv_x, mul(x, h2))
         mul(x, h1) = translate(h1) = translate(h2) = mul(x, h2)
         h1 = mul(inv_x, mul(x, h1)) = mul(inv_x, mul(x, h2)) = h2
-    by def $injective(H, G, translate)
+    by def:
+        ? $injective(H, G, translate)
     $is_finite_set(fn_range(translate))
     finite_set_size(fn_range(translate)) = finite_set_size(H)
-    by extension fn_range(translate) = \left_coset<G, mul>(H, x):
+    by extension:
+        ? fn_range(translate) = \left_coset<G, mul>(H, x)
         claim:
             ? forall y fn_range(translate):
                 y $in \left_coset<G, mul>(H, x)
@@ -74,7 +76,8 @@ thm left_coset_has_subgroup_cardinality:
             h $in H
             y = translate(h) = mul(x, h)
             witness exist h0 G st {h0 $in H, y = mul(x, h0)} from h
-            by def $left_coset_member(G, mul, H, x, y)
+            by def:
+                ? $left_coset_member(G, mul, H, x, y)
             \left_coset<G, mul>(H, x) = {t G: $left_coset_member(G, mul, H, x, t)}
             by thm set_builder_member(y, {t G: $left_coset_member(G, mul, H, x, t)})
         claim:
@@ -100,7 +103,8 @@ thm left_cosets_overlap_implies_equal:
     obtain h from exist h0 G st {h0 $in H, z = mul(x, h0)}
     $left_coset_member(G, mul, H, y, z)
     obtain k from exist k0 G st {k0 $in H, z = mul(y, k0)}
-    by extension \left_coset<G, mul>(H, x) = \left_coset<G, mul>(H, y):
+    by extension:
+        ? \left_coset<G, mul>(H, x) = \left_coset<G, mul>(H, y)
         claim:
             ? forall w \left_coset<G, mul>(H, x):
                 w $in \left_coset<G, mul>(H, y)
@@ -120,7 +124,8 @@ thm left_cosets_overlap_implies_equal:
             witness exist q G st {q $in H, w = mul(y, q)} from mul(k, mul(inv_h, u)):
                 mul(k, mul(inv_h, u)) $in H
                 w = mul(y, mul(k, mul(inv_h, u)))
-            by def $left_coset_member(G, mul, H, y, w)
+            by def:
+                ? $left_coset_member(G, mul, H, y, w)
             by thm left_coset_member_is_member(G, mul, H, y, w)
             w $in \left_coset<G, mul>(H, y)
         claim:
@@ -142,10 +147,12 @@ thm left_cosets_overlap_implies_equal:
             witness exist q G st {q $in H, w = mul(x, q)} from mul(h, mul(inv_k, v)):
                 mul(h, mul(inv_k, v)) $in H
                 w = mul(x, mul(h, mul(inv_k, v)))
-            by def $left_coset_member(G, mul, H, x, w)
+            by def:
+                ? $left_coset_member(G, mul, H, x, w)
             by thm left_coset_member_is_member(G, mul, H, x, w)
             w $in \left_coset<G, mul>(H, x)
-    by def $cosets_equal(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
+    by def:
+        ? $cosets_equal(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
 
 # The remaining finite partition lemma follows immediately from the preceding
 # overlap lemma once Litex has a reusable constant-fibre finite-cover count.
@@ -161,7 +168,8 @@ thm left_cosets_equal_or_disjoint:
         case $cosets_overlap(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y)):
             by thm left_cosets_overlap_implies_equal(G, mul, one, x, y, H)
         case not $cosets_overlap(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y)):
-            by def $cosets_disjoint(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
+            by def:
+                ? $cosets_disjoint(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
 
 # A finite cover keeps its index domain fixed while its finite active index set
 # varies.  This avoids changing a family function's type in the deletion step
@@ -190,7 +198,8 @@ thm fixed_indexed_subfamily_intro:
     T $subset D
     forall K T:
         F(K) $subset S
-    by def $fixed_indexed_subfamily(U, D, S, T, F)
+    by def:
+        ? $fixed_indexed_subfamily(U, D, S, T, F)
 
 thm fixed_unique_cover_distinct_fibers_are_disjoint:
     ? forall U, D set, S, T finite_set, F fn(K D) power_set(U), K1, K2 T:
@@ -202,7 +211,8 @@ thm fixed_unique_cover_distinct_fibers_are_disjoint:
     $fixed_indexed_subfamily(U, D, S, T, F)
     forall x S:
         exist! K0 T st {x $in F(K0)}
-    by extension intersect(F(K1), F(K2)) = {}:
+    by extension:
+        ? intersect(F(K1), F(K2)) = {}
         claim:
             ? forall x intersect(F(K1), F(K2)):
                 x $in {}
@@ -241,7 +251,8 @@ thm fixed_unique_cover_remove_inserted_index:
         set_minus(A, F(K)) $subset U
         I $subset union({K}, I)
         union({K}, I) $subset D
-        by def I $subset D
+        by def:
+            ? I $subset D
         I $subset D
         claim:
             ? forall L I:
@@ -264,9 +275,11 @@ thm fixed_unique_cover_remove_inserted_index:
                         x $in {}
                         impossible not x $in {}
                 x $in set_minus(A, F(K))
-            by def F(L) $subset set_minus(A, F(K))
+            by def:
+                ? F(L) $subset set_minus(A, F(K))
             F(L) $subset set_minus(A, F(K))
-    by def $fixed_indexed_subfamily(U, D, set_minus(A, F(K)), I, F)
+    by def:
+        ? $fixed_indexed_subfamily(U, D, set_minus(A, F(K)), I, F)
     claim:
         ? forall x set_minus(A, F(K)):
             exist! L I st {x $in F(L)}
@@ -295,7 +308,8 @@ thm fixed_unique_cover_remove_inserted_index:
                     L2 $in union({K}, I)
                     exist! L3 union({K}, I) st {x $in F(L3)}
                     L1 = L2
-    by def $fixed_unique_cover_of(U, D, set_minus(A, F(K)), I, F)
+    by def:
+        ? $fixed_unique_cover_of(U, D, set_minus(A, F(K)), I, F)
 
 thm finite_set_size_disjoint_union_fixed_cover:
     ? forall A, B finite_set:
@@ -336,7 +350,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                         finite_set_size(A) = finite_set_size({}) * n
                 claim:
                     ? A = {}
-                    by extension A = {}:
+                    by extension:
+                        ? A = {}
                         claim:
                             ? forall x A:
                                 x $in {}
@@ -352,7 +367,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                                 ? x $in A
                                 impossible x $in {}
                 finite_set_size(A) = finite_set_size({}) = 0 = 0 * n
-            by def $fixed_unique_cover_constant_size_holds(U, D, {}, n)
+            by def:
+                ? $fixed_unique_cover_constant_size_holds(U, D, {}, n)
         ? induc K, I:
             $fixed_unique_cover_constant_size_holds(U, D, I, n)
             forall S0 finite_set, F0 fn(L D) power_set(U):
@@ -393,7 +409,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                 finite_set_size(F(K)) = n
                 claim:
                     ? A = union(F(K), A0)
-                    by extension A = union(F(K), A0):
+                    by extension:
+                        ? A = union(F(K), A0)
                         claim:
                             ? forall x A:
                                 x $in union(F(K), A0)
@@ -421,7 +438,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                                     x $in A
                 claim:
                     ? intersect(F(K), A0) = {}
-                    by extension intersect(F(K), A0) = {}:
+                    by extension:
+                        ? intersect(F(K), A0) = {}
                         claim:
                             ? forall x intersect(F(K), A0):
                                 x $in {}
@@ -441,7 +459,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                 finite_set_size(A) = finite_set_size(union(F(K), A0)) = finite_set_size(F(K)) + finite_set_size(A0) = n + finite_set_size(I) * n = (finite_set_size(I) + 1) * n
                 claim:
                     ? intersect({K}, I) = {}
-                    by extension intersect({K}, I) = {}:
+                    by extension:
+                        ? intersect({K}, I) = {}
                         claim:
                             ? forall L intersect({K}, I):
                                 L $in {}
@@ -464,7 +483,8 @@ thm finite_set_size_over_fixed_unique_constant_cover:
                 finite_set_size(union({K}, I)) = finite_set_size({K}) + finite_set_size(I) - finite_set_size(intersect({K}, I))
                 finite_set_size(union({K}, I)) = 1 + finite_set_size(I) - 0 = finite_set_size(I) + 1
                 finite_set_size(A) = finite_set_size(union({K}, I)) * n
-            by def $fixed_unique_cover_constant_size_holds(U, D, union({K}, I), n)
+            by def:
+                ? $fixed_unique_cover_constant_size_holds(U, D, union({K}, I), n)
 
 prop is_power_set_identity(G set, F fn(carrier_C power_set(G)) power_set(G)):
     forall carrier_C power_set(G):
@@ -549,7 +569,8 @@ thm equal_left_coset_carriers_from_shared_member:
         C2 = \left_coset<G, mul>(H, y)
         g $in C1
         g $in C2
-    by def $cosets_overlap(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
+    by def:
+        ? $cosets_overlap(G, \left_coset<G, mul>(H, x), \left_coset<G, mul>(H, y))
     by thm left_cosets_overlap_implies_equal(G, mul, one, x, y, H)
     \left_coset<G, mul>(H, x) = \left_coset<G, mul>(H, y)
     C1 = C2
@@ -599,7 +620,8 @@ thm left_coset_carriers_form_unique_cover:
             witness exist h G st {h $in H, g = mul(g, h)} from one:
                 one $in H
                 g = mul(g, one)
-            by def $left_coset_member(G, mul, H, g, g)
+            by def:
+                ? $left_coset_member(G, mul, H, g, g)
             by thm left_coset_member_is_member(G, mul, H, g, g)
             g $in \left_coset<G, mul>(H, g)
             g $in C0
@@ -611,7 +633,8 @@ thm left_coset_carriers_form_unique_cover:
                     =>:
                         C1 = C2
                 by thm equal_left_coset_carriers_from_shared_member(G, mul, one, H, T, F, L, g, C1, C2)
-    by def $fixed_unique_cover_of(G, power_set(G), G, T, F)
+    by def:
+        ? $fixed_unique_cover_of(G, power_set(G), G, T, F)
 
 prop subgroup_order_divides_group_order(G set, mul fn(x, y G) G, one G, H power_set(G)):
     $section7::is_group(G, mul, one)
@@ -648,7 +671,8 @@ thm theorem_VIII_Lagrange:
         ? $is_left_coset_carrier_map(G, mul, H, L)
         forall x G:
             L(x) = \left_coset<G, mul>(H, x)
-        by def $is_left_coset_carrier_map(G, mul, H, L)
+        by def:
+            ? $is_left_coset_carrier_map(G, mul, H, L)
     $is_finite_set(fn_range(L))
     have T finite_set = fn_range(L)
     have fn F(carrier_C power_set(G)) power_set(G) = carrier_C
@@ -656,7 +680,8 @@ thm theorem_VIII_Lagrange:
         ? $is_power_set_identity(G, F)
         forall carrier_C power_set(G):
             F(carrier_C) = carrier_C
-        by def $is_power_set_identity(G, F)
+        by def:
+            ? $is_power_set_identity(G, F)
     by thm left_coset_carriers_form_unique_cover(G, mul, one, H, T, F, L)
     claim:
         ? forall carrier_C T:
@@ -679,8 +704,10 @@ thm theorem_VIII_Lagrange:
             finite_set_size(S) = finite_set_size(T) * finite_set_size(H)
     finite_set_size(G) = finite_set_size(T) * finite_set_size(H) = finite_set_size(H) * finite_set_size(T)
     witness exist q Z st {finite_set_size(G) = finite_set_size(H) * q} from finite_set_size(T)
-    by def $section1::divides_Z(finite_set_size(H), finite_set_size(G))
-    by def $subgroup_order_divides_group_order(G, mul, one, H)
+    by def:
+        ? $section1::divides_Z(finite_set_size(H), finite_set_size(G))
+    by def:
+        ? $subgroup_order_divides_group_order(G, mul, one, H)
 
 # Corollary to Theorem VIII.2.  The order of an element is the size of its
 # finite generated subgroup, so Lagrange makes it divide the group order.
@@ -691,13 +718,16 @@ thm theorem_VIII_element_order_divides_group_order:
         $section7::group_element_has_order(G, mul, one, x, m)
         =>:
             $section1::divides_Z(m, finite_set_size(G))
-    by def $section7::group_element_has_order(G, mul, one, x, m)
+    by def:
+        ? $section7::group_element_has_order(G, mul, one, x, m)
     obtain H from exist H power_set(G) st {$section7::generated_subgroup(G, mul, one, x, H), $is_finite_set(H), finite_set_size(H) = m}
-    by def $section7::generated_subgroup(G, mul, one, x, H)
+    by def:
+        ? $section7::generated_subgroup(G, mul, one, x, H)
     $section7::generated_subgroup_by(G, mul, one, {x}, H)
     $section7::is_subgroup(G, mul, one, H)
     by thm theorem_VIII_Lagrange(G, mul, one, H)
-    by def $subgroup_order_divides_group_order(G, mul, one, H)
+    by def:
+        ? $subgroup_order_divides_group_order(G, mul, one, H)
 
 thm integer_is_congruent_to_its_remainder_mod:
     ? forall m N+, t Z:
@@ -705,8 +735,10 @@ thm integer_is_congruent_to_its_remainder_mod:
     t = m * section2::integer_quotient(t, m) + t % m
     t - (t % m) = m * section2::integer_quotient(t, m)
     witness exist k Z st {t - (t % m) = m * k} from section2::integer_quotient(t, m)
-    by def $section1::divides_Z(m, t - (t % m))
-    by def $section5::congruent_mod(m, t, t % m)
+    by def:
+        ? $section1::divides_Z(m, t - (t % m))
+    by def:
+        ? $section5::congruent_mod(m, t, t % m)
 
 thm congruent_representative_of_coprime_is_coprime:
     ? forall m N+, t, u Z:
@@ -716,7 +748,8 @@ thm congruent_representative_of_coprime_is_coprime:
             $section3::relatively_prime_Z(u, m)
     by thm section5::residue_class_eq_of_congruent(m, t, u)
     section5::residue_class_mod(m, t) = section5::residue_class_mod(m, u)
-    by def $section6::residue_class_prime_to_mod(m, t)
+    by def:
+        ? $section6::residue_class_prime_to_mod(m, t)
     by thm section6::residue_class_prime_to_mod_is_representative_independent(m, t, u)
     $section6::residue_class_prime_to_mod(m, u)
     $section3::relatively_prime_Z(u, m)
@@ -737,7 +770,8 @@ thm reduced_residue_multiplication_closes:
     by thm congruent_representative_of_coprime_is_coprime(m, a * r, a * r % m)
     $section3::relatively_prime_Z(a * r % m, m)
     0 <= a * r % m < m
-    by def $section6::coprime_remainder_mod(m, a * r % m)
+    by def:
+        ? $section6::coprime_remainder_mod(m, a * r % m)
     by thm section6::coprime_remainder_is_member_of_coprime_remainders_mod(m, a * r % m)
     a * r % m $in section6::coprime_remainders_mod(m)
 
@@ -770,7 +804,8 @@ thm reduced_residue_multiplication_map_is_bijective:
         perm(r1) = a * r1 % m
         perm(r2) = a * r2 % m
         a * r1 % m = a * r2 % m
-        by def $section5::same_remainder_mod(m, a * r1, a * r2)
+        by def:
+            ? $section5::same_remainder_mod(m, a * r1, a * r2)
         by thm section5::same_remainder_mod_is_congruent(m, a * r1, a * r2)
         by thm finite_product_toolkit::congruent_mod_cancel_coprime_multiplier(m, a, r1, r2)
         by thm section5::congruent_mod_has_same_remainder(m, r1, r2)
@@ -781,17 +816,20 @@ thm reduced_residue_multiplication_map_is_bijective:
             m > 0
             r1 = m * 0 + r1
             0 <= r1 < m
-            by def $section2::euclidean_division_Z(r1, m, 0, r1)
+            by def:
+                ? $section2::euclidean_division_Z(r1, m, 0, r1)
         claim:
             ? $section2::euclidean_division_Z(r2, m, 0, r2)
             m > 0
             r2 = m * 0 + r2
             0 <= r2 < m
-            by def $section2::euclidean_division_Z(r2, m, 0, r2)
+            by def:
+                ? $section2::euclidean_division_Z(r2, m, 0, r2)
         by thm section2::euclidean_division_remainder_is_mod(r1, m, 0, r1)
         by thm section2::euclidean_division_remainder_is_mod(r2, m, 0, r2)
         r1 = r1 % m = r2 % m = r2
-    by def $injective(S, S, perm)
+    by def:
+        ? $injective(S, S, perm)
     by thm finite_product_toolkit::finite_self_injective_is_bijective(S, perm)
 
 thm reduced_residue_product_is_coprime:
@@ -806,10 +844,12 @@ thm reduced_residue_product_is_coprime:
     claim:
         ? $section3::finite_product_of_integer_set(S, P)
         S $subset Z
-        by def $fn_eq_in(identity, fn(r S) Z {r}, S)
+        by def:
+            ? $fn_eq_in(identity, fn(r S) Z {r}, S)
         finite_set_product(S, identity) = finite_set_product(S, fn(r S) Z {r})
         P = finite_set_product(S, identity) = finite_set_product(S, fn(r S) Z {r})
-        by def $section3::finite_product_of_integer_set(S, P)
+        by def:
+            ? $section3::finite_product_of_integer_set(S, P)
     claim:
         ? forall r S:
             $section3::relatively_prime_Z(m, r)
@@ -829,7 +869,8 @@ thm theorem_VIII_Euler:
         ? forall r S:
             r $in Z
         by thm section6::member_of_coprime_remainders_mod_is_coprime_remainder(m, r)
-    by def S $subset Z
+    by def:
+        ? S $subset Z
     claim:
         ? forall r S:
             a * r % m $in S
@@ -856,7 +897,8 @@ thm theorem_VIII_Euler:
         mapped(r) = identity(perm(r)) = perm(r) = a * r % m
         by thm integer_is_congruent_to_its_remainder_mod(m, a * r)
     by thm finite_product_toolkit::finite_product_congruence(m, S)
-    by def $finite_product_toolkit::finite_product_congruence_holds(m, S)
+    by def:
+        ? $finite_product_toolkit::finite_product_congruence_holds(m, S)
     $section5::congruent_mod(m, finite_set_product(S, scaled), finite_set_product(S, mapped))
 
     have fn constant(r S) Z = a
@@ -866,7 +908,8 @@ thm theorem_VIII_Euler:
             scaled(r) = constant(r) * identity(r)
         scaled(r) = a * r
         constant(r) * identity(r) = a * r
-    by def $fn_eq_in(scaled, fn(r S) Z {constant(r) * identity(r)}, S)
+    by def:
+        ? $fn_eq_in(scaled, fn(r S) Z {constant(r) * identity(r)}, S)
     finite_set_product(S, scaled) = finite_set_product(S, fn(r S) Z {constant(r) * identity(r)})
     finite_set_product(S, scaled) = finite_set_product(S, fn(r S) Z {constant(r) * identity(r)}) = finite_set_product(S, constant) * finite_set_product(S, identity)
     by thm finite_product_toolkit::finite_set_product_constant_formula(S, a)
@@ -874,7 +917,8 @@ thm theorem_VIII_Euler:
         ? forall r S:
             constant(r) = a
         constant(r) = a
-    by def $fn_eq_in(constant, fn(r S) Z {a}, S)
+    by def:
+        ? $fn_eq_in(constant, fn(r S) Z {a}, S)
     finite_set_product(S, constant) = finite_set_product(S, fn(r S) Z {a}) = a ^ finite_set_size(S)
     $section6::euler_phi_spec(m, section6::euler_phi(m))
     finite_set_size(S) = finite_set_size(section6::coprime_remainders_mod(m)) = section6::euler_phi(m)
@@ -893,7 +937,8 @@ thm theorem_VIII_Euler:
     P = P * 1
     by thm finite_product_toolkit::congruent_mod_transport_equalities(m, P * a ^ section6::euler_phi(m), P * 1, a ^ section6::euler_phi(m) * P, P)
     by thm finite_product_toolkit::congruent_mod_cancel_coprime_multiplier(m, P, a ^ section6::euler_phi(m), 1)
-    by def $euler_theorem_conclusion(m, a)
+    by def:
+        ? $euler_theorem_conclusion(m, a)
 
 # Fermat's little theorem is the prime-modulus corollary of Euler's theorem.
 # The divisible case is kept explicit so the statement applies to every
@@ -919,13 +964,17 @@ thm theorem_VIII_Fermat:
             a * (a ^ (p - 1) - 1) = (p * k) * (a ^ (p - 1) - 1)
             (p * k) * (a ^ (p - 1) - 1) = p * (k * (a ^ (p - 1) - 1))
             witness exist t Z st {a ^ p - a = p * t} from k * (a ^ (p - 1) - 1)
-            by def $section1::divides_Z(p, a ^ p - a)
-            by def $section5::congruent_mod(p, a ^ p, a)
-            by def $fermat_little_theorem_conclusion(p, a)
+            by def:
+                ? $section1::divides_Z(p, a ^ p - a)
+            by def:
+                ? $section5::congruent_mod(p, a ^ p, a)
+            by def:
+                ? $fermat_little_theorem_conclusion(p, a)
         case $section3::relatively_prime_Z(p, a):
             by thm section6::relatively_prime_Z_symmetric(p, a)
             by thm theorem_VIII_Euler(p, a)
-            by def $euler_theorem_conclusion(p, a)
+            by def:
+                ? $euler_theorem_conclusion(p, a)
             by thm section6::euler_phi_prime_value(p)
             by thm section5::congruent_mod_reflexive(p, a)
             by thm section5::congruent_mod_multiply(p, a ^ section6::euler_phi(p), 1, a, a)
@@ -933,4 +982,5 @@ thm theorem_VIII_Fermat:
             a ^ section6::euler_phi(p) * a = a ^ (section6::euler_phi(p) + 1) = a ^ p
             1 * a = a
             by thm finite_product_toolkit::congruent_mod_transport_equalities(p, a ^ p, a, a ^ section6::euler_phi(p) * a, 1 * a)
-            by def $fermat_little_theorem_conclusion(p, a)
+            by def:
+                ? $fermat_little_theorem_conclusion(p, a)

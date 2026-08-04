@@ -1315,7 +1315,7 @@ mod tests {
     #[test]
     fn fact_graph_flattens_definition_dependencies_into_fact_edges() {
         let output = fact_graph_output(
-            "abstract_prop p(x)\nabstract_prop q(x)\nprop packed(x R):\n    $p(x)\n    $q(x)\nthm packed_from_facts:\n    ? forall x R:\n        $p(x)\n        $q(x)\n        =>:\n            $packed(x)\n    by def $packed(x)\n",
+            "abstract_prop p(x)\nabstract_prop q(x)\nprop packed(x R):\n    $p(x)\n    $q(x)\nthm packed_from_facts:\n    ? forall x R:\n        $p(x)\n        $q(x)\n        =>:\n            $packed(x)\n    by def:\n        ? $packed(x)\n",
         );
 
         assert!(output.contains(r#""kind": "unfolds""#));
@@ -1325,8 +1325,9 @@ mod tests {
 
     #[test]
     fn fact_graph_records_by_def_target_and_unfolding_edges() {
-        let output =
-            fact_graph_output("prop unit(x R):\n    x = 1\n1 = 1\nby def $unit(1)\n$unit(1)\n");
+        let output = fact_graph_output(
+            "prop unit(x R):\n    x = 1\n1 = 1\nby def:\n    ? $unit(1)\n$unit(1)\n",
+        );
 
         assert!(output.contains("$unit(1)"));
         assert!(output.contains(r#""store_reason": "proof by definition""#));

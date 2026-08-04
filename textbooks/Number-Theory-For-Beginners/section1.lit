@@ -132,7 +132,8 @@ claim:
         $divides_Z(a, a)
     witness exist x Z st {a = a * x} from 1:
         a = a * 1
-    by def $divides_Z(a, a)
+    by def:
+        ? $divides_Z(a, a)
 
 claim:
     ? forall a, b, c Z:
@@ -144,7 +145,8 @@ claim:
     obtain y from exist y Z st {c = a * y}
     witness exist t Z st {b + c = a * t} from x + y:
         b + c = a * x + a * y = a * (x + y)
-    by def $divides_Z(a, b + c)
+    by def:
+        ? $divides_Z(a, b + c)
 
 # Any common divisor also divides every integer linear combination.  This is
 # the direct algebraic move behind the concrete gcd computations in Section II.
@@ -158,7 +160,8 @@ thm divides_Z_linear_combination:
     obtain q from exist q Z st {b = d * q}
     witness exist k Z st {x * a + y * b = d * k} from x * p + y * q:
         x * a + y * b = x * (d * p) + y * (d * q) = d * (x * p + y * q)
-    by def $divides_Z(d, x * a + y * b)
+    by def:
+        ? $divides_Z(d, x * a + y * b)
 
 # This is the small endpoint used by the reverse direction of Bézout's
 # criterion: a positive integer divisor of 1 cannot be anything but 1.
@@ -254,7 +257,8 @@ thm intersect_with_singleton:
         a $in T
         =>:
             intersect(T, {a}) = {a}
-    by extension intersect(T, {a}) = {a}:
+    by extension:
+        ? intersect(T, {a}) = {a}
         forall z intersect(T, {a}):
             z $in T
             z $in {a}
@@ -293,7 +297,8 @@ thm finite_N_subset_size_one_has_least:
                 not $is_nonempty_set(set_minus(T, {a}))
                 witness $is_nonempty_set(set_minus(T, {a})) from y
                 impossible not $is_nonempty_set(set_minus(T, {a}))
-        by def $is_least_element_of_N_set(T, a)
+        by def:
+            ? $is_least_element_of_N_set(T, a)
 
 thm finite_N_subset_successor_has_least:
     ? forall n Z, T finite_set:
@@ -333,7 +338,8 @@ thm finite_N_subset_successor_has_least:
                             not y $in {a}
                             y $in set_minus(T, {a})
                             b <= y
-                by def $is_least_element_of_N_set(T, b)
+                by def:
+                    ? $is_least_element_of_N_set(T, b)
         case b > a:
             a <= b
             witness exist x N st {$is_least_element_of_N_set(T, x)} from a:
@@ -350,7 +356,8 @@ thm finite_N_subset_successor_has_least:
                             y $in set_minus(T, {a})
                             b <= y
                             a <= b <= y
-                by def $is_least_element_of_N_set(T, a)
+                by def:
+                    ? $is_least_element_of_N_set(T, a)
 
 thm every_N_finite_subset_has_least_by_count_induction:
     ? forall n N+:
@@ -366,7 +373,8 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
                 by thm finite_N_subset_size_one_has_least(T)
-            by def $every_N_finite_subset_of_n_elements_has_least(1)
+            by def:
+                ? $every_N_finite_subset_of_n_elements_has_least(1)
             $every_N_finite_subset_of_n_elements_has_least(n)
         ? induc:
             claim:
@@ -377,7 +385,8 @@ thm every_N_finite_subset_has_least_by_count_induction:
                     =>:
                         exist a N st {$is_least_element_of_N_set(T, a)}
                 by thm finite_N_subset_successor_has_least(n, T)
-            by def $every_N_finite_subset_of_n_elements_has_least(n + 1)
+            by def:
+                ? $every_N_finite_subset_of_n_elements_has_least(n + 1)
 
 # Start with any a in S and restrict S to the finite interval 0,...,a.
 # The cardinality induction above supplies a least point of that finite part;
@@ -399,8 +408,10 @@ thm positive_integer_set_has_least_element:
     a $in 0...aN
     a $in intersect(S, 0...aN)
     a $in T
-    by def 0...aN $subset N
-    by def T $subset N
+    by def:
+        ? 0...aN $subset N
+    by def:
+        ? T $subset N
     witness $is_nonempty_set(T) from a
     finite_set_size(T) >= 1
     finite_set_size(T) $in N+
@@ -427,7 +438,8 @@ thm positive_integer_set_has_least_element:
                     m <= x
                 case x > aN:
                     m <= aN < x
-        by def $is_least_element_of_integer_set(S, m)
+        by def:
+            ? $is_least_element_of_integer_set(S, m)
 
 """
 Induction principle. If a statement about positive integers is true at the
@@ -470,7 +482,8 @@ thm section_I_strong_induction:
                     0 $in S
                     x $in S
                     impossible not x $in S
-            by def $is_positive_integer_set(bad)
+            by def:
+                ? $is_positive_integer_set(bad)
         by thm positive_integer_set_has_least_element(bad)
         obtain m from exist m Z st {$is_least_element_of_integer_set(bad, m)}
         claim:

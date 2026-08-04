@@ -122,7 +122,8 @@ $fn_eq_in(f, g, R) or $fn_eq_in(g, f, R)
                 r#"
 have f fn(x R) R
 have g fn(x R) R
-by contra $fn_eq(f, g):
+by contra:
+    ? $fn_eq(f, g)
     impossible $fn_eq(g, f)
 $fn_eq(f, g)
 "#,
@@ -314,8 +315,8 @@ claim:
             r#"
 trust:
     forall S nonempty_set:
-        exist w S st {w = w, forall! a R => {exist z R st {z = z, forall! b R => {b = b}}}}
-exist v N st {v = v, forall! c R => {exist z R st {z = z, forall! d R => {d = c}}}}
+        exist w S st {w = w, forall a R => {exist z R st {z = z, forall b R => {b = b}}}}
+exist v N st {v = v, forall c R => {exist z R st {z = z, forall d R => {d = c}}}}
 "#,
         ),
         (
@@ -484,8 +485,8 @@ have fn f(Y X) R by cases:
             r#"
 trust:
     forall S set:
-        exist x S st {forall! u x => {u = u}}
-exist y N st {forall! v y => {v = v}}
+        exist x S st {forall u x => {u = u}}
+exist y N st {forall v y => {v = v}}
 "#,
         ),
         (
@@ -737,9 +738,12 @@ thm unsound_eventually_changes_set:
             =>:
                 n $in Qset
                 n $in R0
-        by def $contains_natural_tail_from_unsound(b, R0)
-    by def $contains_natural_tail_unsound(R0)
-    by def $eventually_on_N_unsound(R0)
+        by def:
+            ? $contains_natural_tail_from_unsound(b, R0)
+    by def:
+        ? $contains_natural_tail_unsound(R0)
+    by def:
+        ? $eventually_on_N_unsound(R0)
 "#;
 
     let (run_succeeded, run_output) =
