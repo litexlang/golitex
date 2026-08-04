@@ -4,27 +4,26 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_cases_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CASES)?;
-        // `by cases goal:` puts the goal on the header line; body starts with `case` arms.
-        let (then_facts, case_body_skip): (Vec<Fact>, usize) = if tb.current()? == COLON {
-            tb.skip_token(COLON)?;
-            if tb.body.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "cases: expects at least one body block".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            self.parse_goal_fact_list_blocks(&mut tb.body, "by cases", tb.line_file.clone())?
-        } else {
-            let fact = self.parse_header_fact_before_trailing_colon(
-                tb,
-                "by cases",
-                "by cases => <fact>:",
-                "by cases <fact>:",
-            )?;
-            (vec![fact], 0)
-        };
+        if tb.current()? != COLON {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by cases no longer accepts a goal on the header; use `by cases:` followed by `? <fact>`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        tb.skip_token(COLON)?;
+        if tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "cases: expects at least one `? <fact>` goal and one `case` arm".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let (then_facts, case_body_skip) =
+            self.parse_goal_fact_list_blocks(&mut tb.body, "by cases", tb.line_file.clone())?;
 
         let min_body = case_body_skip + 1;
         if tb.body.len() < min_body {

@@ -2,107 +2,19 @@ use crate::prelude::*;
 
 impl Runtime {
     /// `by contra:` then a `?` goal block, optional proof statements, then `impossible` atomic fact.
-    ///
-    /// Shorthand: `by contra goal:` embeds the goal on the header line; body is optional proof
-    /// statement blocks followed by `impossible ...` as the last block.
     pub fn parse_by_contra_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(CONTRA)?;
-        if tb.current()? == RIGHT_ARROW {
+        if tb.current()? != COLON {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by contra: use `by contra <goal>:` instead of `by contra => <goal>:`"
+                    "by contra no longer accepts a goal on the header; use `by contra:` followed by `? <fact>`"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        let (to_prove, inline_goal): (Fact, bool) = if tb.current()? != COLON {
-            let header = &tb.header;
-            if header.len() < tb.parse_index + 2 || header.last().map(|t| t.as_str()) != Some(COLON)
-            {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra ... : expected one goal and a trailing `:` on the same line"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let colon_pos = header.len() - 1;
-            let fact_tokens = header[tb.parse_index..colon_pos].to_vec();
-            if fact_tokens.is_empty() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra ... : expected a non-empty goal after `by contra`".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut fact_tb = TokenBlock::new(fact_tokens, vec![], tb.line_file.clone());
-            let fact = self.parse_fact(&mut fact_tb)?;
-            if !fact_tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra ... : unfinished tokens in goal".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            tb.parse_index = colon_pos + 1;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra ... : unexpected tokens after `:`".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            (fact, true)
-        } else {
-            tb.skip_token(COLON)?;
-            if !tb.exceed_end_of_head() {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra: expected end of head after by contra:".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            if tb.body.len() < 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra: expects a `? <fact>` goal block and impossible ... tail"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let to_prove = {
-                let goal_block = tb.body.get_mut(0).ok_or_else(|| {
-                    RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "Expected body".to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    ))
-                })?;
-                self.parse_goal_fact_block(goal_block, "by contra")?
-            };
-            (to_prove, false)
-        };
-
-        let n = tb.body.len();
-        if inline_goal {
-            if n < 1 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "by contra ... : expects a final `impossible ...` block in the body"
-                            .to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-        } else if n < 2 {
+        tb.skip_token(COLON)?;
+        if !tb.exceed_end_of_head() || tb.body.len() < 2 {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "by contra: expects a `? <fact>` goal block and impossible ... tail"
@@ -111,14 +23,15 @@ impl Runtime {
                 ),
             )));
         }
+        let to_prove = self.parse_goal_fact_block(&mut tb.body[0], "by contra")?;
 
+        let n = tb.body.len();
         let proof_hi = n.saturating_sub(1);
-        let proof_lo = if inline_goal { 0 } else { 1 };
         let (proof, impossible_fact) =
             self.run_in_local_proof_parsing_scope(|this| -> Result<_, RuntimeError> {
                 let mut proof = Vec::new();
-                if proof_lo < proof_hi {
-                    for block in tb.body[proof_lo..proof_hi].iter_mut() {
+                if 1 < proof_hi {
+                    for block in tb.body[1..proof_hi].iter_mut() {
                         proof.push(this.parse_stmt(block)?);
                     }
                 }

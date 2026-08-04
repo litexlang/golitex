@@ -48,7 +48,8 @@ thm upper_bound_of_fn_add:
         f(x) <= a
         g(x) <= b
         f(x) + g(x) <= a + b
-    by def $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+    by def:
+        ? $is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
 
 # The dual source example shows that pointwise addition also adds lower bounds.
 thm lower_bound_of_fn_add:
@@ -61,7 +62,8 @@ thm lower_bound_of_fn_add:
         a <= f(x)
         b <= g(x)
         a + b <= f(x) + g(x)
-    by def $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
+    by def:
+        ? $is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, a + b)
 
 # The source also records the useful nonnegative-product instance.
 thm nonnegative_fn_product:
@@ -74,7 +76,8 @@ thm nonnegative_fn_product:
         0 <= f(x)
         0 <= g(x)
         0 <= f(x) * g(x)
-    by def $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
+    by def:
+        ? $is_lower_bound_of_fn(fn(x R) R {f(x) * g(x)}, 0)
 
 # Generic source orders are represented extensionally as sets of ordered
 # pairs. This keeps the carrier explicit while making the relation callable in
@@ -164,7 +167,8 @@ thm upper_bound_of_fn_add_by_relation:
         $order_holds(A, le_rel, f(x), a)
         $order_holds(A, le_rel, g(x), b)
         $order_holds(A, le_rel, add(f(x), g(x)), add(a, b))
-    by def $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
+    by def:
+        ? $is_upper_bound_of_fn_by_relation(D, A, le_rel, fn(x D) A {add(f(x), g(x))}, add(a, b))
 
 # Source definitions FnEven and FnOdd describe symmetry under x |-> -x.
 prop is_even_fn(f fn(x R) R):
@@ -186,7 +190,8 @@ thm even_fn_add:
         f(x) = f(-x)
         g(x) = g(-x)
         f(x) + g(x) = f(-x) + g(-x)
-    by def $is_even_fn(fn(x R) R {f(x) + g(x)})
+    by def:
+        ? $is_even_fn(fn(x R) R {f(x) + g(x)})
 
 # The product of two odd functions is even.
 thm odd_fn_mul_odd_fn:
@@ -200,7 +205,8 @@ thm odd_fn_mul_odd_fn:
         g(x) = -g(-x)
         f(x) * g(x) = (-f(-x)) * (-g(-x)) = f(-x) * g(-x)
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = f(-x) * g(-x) = fn(z R) R {f(z) * g(z)}(-x)
-    by def $is_even_fn(fn(x R) R {f(x) * g(x)})
+    by def:
+        ? $is_even_fn(fn(x R) R {f(x) * g(x)})
 
 # The product of an even and an odd function is odd.
 thm even_fn_mul_odd_fn:
@@ -214,7 +220,8 @@ thm even_fn_mul_odd_fn:
         g(x) = -g(-x)
         f(x) * g(x) = f(-x) * (-g(-x)) = -(f(-x) * g(-x))
         fn(z R) R {f(z) * g(z)}(x) = f(x) * g(x) = -(f(-x) * g(-x)) = -(fn(z R) R {f(z) * g(z)}(-x))
-    by def $is_odd_fn(fn(x R) R {f(x) * g(x)})
+    by def:
+        ? $is_odd_fn(fn(x R) R {f(x) * g(x)})
 
 # Composing an even function with an odd one gives an even function.
 thm even_fn_comp_odd_fn:
@@ -230,7 +237,8 @@ thm even_fn_comp_odd_fn:
         f(-g(x)) = f(g(-x))
         f(g(x)) = f(-g(x)) = f(g(-x))
         fn(z R) R {f(g(z))}(x) = f(g(x)) = f(g(-x)) = fn(z R) R {f(g(z))}(-x)
-    by def $is_even_fn(fn(x R) R {f(g(x))})
+    by def:
+        ? $is_even_fn(fn(x R) R {f(g(x))})
 
 # Source theorems Subset.refl and Subset.trans. Litex has subset as a builtin,
 # so both statements follow directly from membership propagation.
@@ -248,7 +256,8 @@ thm subset_trans:
     forall x R0:
         x $in S
         x $in T
-    by def R0 $subset T
+    by def:
+        ? R0 $subset T
     R0 $subset T
 
 # Source definition SetUb. The source carrier is an arbitrary partial order, so
@@ -269,7 +278,8 @@ thm upper_bound_of_set_mono:
         $order_holds(A, le_rel, x, a)
         $order_holds(A, le_rel, a, b)
         $order_holds(A, le_rel, x, b)
-    by def $is_upper_bound_of_set(A, le_rel, S, b)
+    by def:
+        ? $is_upper_bound_of_set(A, le_rel, S, b)
 
 # 3.2 The Existential Quantifier
 
@@ -293,7 +303,8 @@ thm has_upper_bound_add:
     obtain b from exist b R st {$is_upper_bound_of_fn(g, b)}
     by thm upper_bound_of_fn_add(f, g, a, b)
     witness exist c R st {$is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
-    by def $has_upper_bound(fn(x R) R {f(x) + g(x)})
+    by def:
+        ? $has_upper_bound(fn(x R) R {f(x) + g(x)})
 
 thm has_lower_bound_add:
     ? forall f, g fn(x R) R:
@@ -305,7 +316,8 @@ thm has_lower_bound_add:
     obtain b from exist b R st {$is_lower_bound_of_fn(g, b)}
     by thm lower_bound_of_fn_add(f, g, a, b)
     witness exist c R st {$is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
-    by def $has_lower_bound(fn(x R) R {f(x) + g(x)})
+    by def:
+        ? $has_lower_bound(fn(x R) R {f(x) + g(x)})
 
 # Source definition SumOfSquares. The carrier and its operations are explicit,
 # so the definition remains generic instead of silently specializing to R.
@@ -365,10 +377,12 @@ thm not_monotone_iff_forward:
                     by contra:
                         ? f(x) <= f(y)
                         f(x) > f(y)
-                        by def $_is_monotonicity_counterexample(x, y)
+                        by def:
+                            ? $_is_monotonicity_counterexample(x, y)
                         $_is_monotonicity_counterexample(x, y)
                         impossible $_is_monotonicity_counterexample(x, y)
-                by def $is_monotone_fn(f)
+                by def:
+                    ? $is_monotone_fn(f)
                 $is_monotone_fn(f)
                 impossible not $is_monotone_fn(f)
         obtain x, y from exist x, y R st {$_is_monotonicity_counterexample(x, y)}
@@ -542,7 +556,8 @@ thm converges_to_const:
                 =>:
                     a - a = 0
                     abs(fn(k N) R {a}(n) - a) = abs(a - a) = 0 < epsilon
-            by def $_is_eventually_close(fn(n N) R {a}, a, epsilon, 0)
+            by def:
+                ? $_is_eventually_close(fn(n N) R {a}, a, epsilon, 0)
     trust $converges_to(fn(n N) R {a}, a)
 
 # Source theorem convergesTo_add. Use epsilon/2 for each input sequence and the
@@ -572,7 +587,8 @@ thm converges_to_add:
                     abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) = abs((s(n) + t(n)) - (a + b)) = abs((s(n) - a) + (t(n) - b))
                     abs((s(n) - a) + (t(n) - b)) <= abs(s(n) - a) + abs(t(n) - b) < epsilon / 2 + epsilon / 2 = epsilon
                     abs(fn(k N) R {s(k) + t(k)}(n) - (a + b)) < epsilon
-            by def $_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
+            by def:
+                ? $_is_eventually_close(fn(k N) R {s(k) + t(k)}, a + b, epsilon, finite_set_max(union({Ns}, {Nt})))
     trust $converges_to(fn(k N) R {s(k) + t(k)}, a + b)
 
 # Source theorem convergesTo_mul_const. The always-positive scale |c| + 1
@@ -599,7 +615,8 @@ thm converges_to_mul_const:
                     abs(s(n) - a) >= 0
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            by def $_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+            by def:
+                ? $_is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
     trust $converges_to(fn(n N) R {c * s(n)}, c * a)
 
 # Source theorem exists_abs_le_of_convergesTo. Convergence at epsilon = 1 gives
@@ -618,7 +635,8 @@ thm exists_abs_bound_of_converges_to:
                 abs(s(n) - a) < 1
                 abs(s(n)) = abs((s(n) - a) + a) <= abs(s(n) - a) + abs(a) < 1 + abs(a) = abs(a) + 1
                 abs(s(n) - 0) = abs(s(n)) < abs(a) + 1
-        by def $_is_eventually_close(s, 0, abs(a) + 1, N0)
+        by def:
+            ? $_is_eventually_close(s, 0, abs(a) + 1, N0)
 
 # Source theorems aux and convergesTo_mul. The auxiliary product-with-zero
 # result is kept local because only multiplication consumes it.
@@ -668,7 +686,8 @@ thm converges_to_mul:
                         abs(u(n) * v(n) - 0) = abs(u(n) * v(n)) = abs(u(n)) * abs(v(n))
                         abs(u(n)) * abs(v(n)) <= B * abs(v(n)) < B * (epsilon / B) = epsilon
                         abs(fn(k N) R {u(k) * v(k)}(n) - 0) < epsilon
-                by def $_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, finite_set_max(union({Nu}, {Nv})))
+                by def:
+                    ? $_is_eventually_close(fn(n N) R {u(n) * v(n)}, 0, epsilon, finite_set_max(union({Nu}, {Nv})))
         trust $converges_to(fn(n N) R {u(n) * v(n)}, 0)
 
     trust $converges_to(fn(n N) R {s(n) * (t(n) - b)}, 0)

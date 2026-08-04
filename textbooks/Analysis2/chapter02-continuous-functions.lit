@@ -27,7 +27,8 @@ thm metric_continuous_implies_continuous_at:
         $is_metric_continuous(X, Y, dist_X, dist_Y, f)
         =>:
             $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
-    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    by def:
+        ? $is_metric_continuous(X, Y, dist_X, dist_Y, f)
     $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
 
 # The two residual relations below expose statements (b) and (c) of Theorem
@@ -69,10 +70,12 @@ thm metric_continuous_at_implies_preserves_limits:
         claim:
             ? forall epsilon R+:
                 $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon)
-            by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+            by def:
+                ? $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
             obtain delta from exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
             delta / 2 $in R+
-            by def $chap1::has_metric_limit(X, dist_X, u, a)
+            by def:
+                ? $chap1::has_metric_limit(X, dist_X, u, a)
             $chap1::has_eventual_metric_closeness(X, dist_X, u, a, delta / 2)
             obtain N0 from exist N0 N+ st {$chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)}
             claim:
@@ -83,16 +86,22 @@ thm metric_continuous_at_implies_preserves_limits:
                             n >= N0
                             =>:
                                 dist_Y(fn(k N+) Y {f(u(k))}(n), f(a)) <= epsilon
-                        by def $chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)
+                        by def:
+                            ? $chap1::is_metric_tail_close_to(X, dist_X, u, a, delta / 2, N0)
                         dist_X(u(n), a) <= delta / 2 < delta
-                        by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
+                        by def:
+                            ? $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
                         dist_Y(f(u(n)), f(a)) < epsilon
                         fn(k N+) Y {f(u(k))}(n) = f(u(n))
                         dist_Y(fn(k N+) Y {f(u(k))}(n), f(a)) = dist_Y(f(u(n)), f(a)) < epsilon
-                    by def $chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon, N0)
-            by def $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon)
-        by def $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
-    by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+                    by def:
+                        ? $chap1::is_metric_tail_close_to(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon, N0)
+            by def:
+                ? $chap1::has_eventual_metric_closeness(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a), epsilon)
+        by def:
+            ? $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
+    by def:
+        ? $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
 
 thm preserves_limits_implies_metric_continuous_at:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y, a X:
@@ -161,9 +170,11 @@ thm metric_continuous_implies_preserves_all_limits:
                 $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
         by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
         by thm metric_continuous_at_implies_preserves_limits(X, Y, dist_X, dist_Y, f, a)
-        by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+        by def:
+            ? $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
         $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
-    by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+    by def:
+        ? $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
 
 thm preserves_all_limits_implies_metric_continuous:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
@@ -182,11 +193,14 @@ thm preserves_all_limits_implies_metric_continuous:
                     $chap1::has_metric_limit(X, dist_X, u, a)
                     =>:
                         $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
-                by def $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
+                by def:
+                    ? $preserves_metric_limits(X, Y, dist_X, dist_Y, f)
                 $chap1::has_metric_limit(Y, dist_Y, fn(n N+) Y {f(u(n))}, f(a))
-            by def $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
+            by def:
+                ? $preserves_metric_limits_at(X, Y, dist_X, dist_Y, f, a)
         by thm preserves_limits_implies_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
-    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+    by def:
+        ? $is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 thm metric_continuous_implies_pulls_back_open_sets:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
@@ -239,9 +253,11 @@ thm metric_continuous_at_composition:
     claim:
         ? forall epsilon R+:
             exist delta R+ st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)}
-        by def $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
+        by def:
+            ? $is_metric_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
         obtain eta from exist eta R+ st {$is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)}
-        by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+        by def:
+            ? $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
         obtain delta from exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)}
         witness exist radius R+ st {$is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, radius)} from delta:
             claim:
@@ -249,15 +265,19 @@ thm metric_continuous_at_composition:
                     dist_X(x, a) < delta
                     =>:
                         dist_W(fn(t X) W {g(f(t))}(x), fn(t X) W {g(f(t))}(a)) < epsilon
-                by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)
+                by def:
+                    ? $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, eta, delta)
                 dist_Y(f(x), f(a)) < eta
-                by def $is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)
+                by def:
+                    ? $is_metric_delta_controlled_at(Y, W, dist_Y, dist_W, g, f(a), epsilon, eta)
                 dist_W(g(f(x)), g(f(a))) < epsilon
                 fn(t X) W {g(f(t))}(x) = g(f(x))
                 fn(t X) W {g(f(t))}(a) = g(f(a))
                 dist_W(fn(t X) W {g(f(t))}(x), fn(t X) W {g(f(t))}(a)) = dist_W(g(f(x)), g(f(a))) < epsilon
-            by def $is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)
-    by def $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
+            by def:
+                ? $is_metric_delta_controlled_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a, epsilon, delta)
+    by def:
+        ? $is_metric_continuous_at(X, W, dist_X, dist_W, fn(x X) W {g(f(x))}, a)
 
 thm metric_continuous_composition:
     ? forall X, Y, W set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, dist_W fn(x, y W) R, f fn(x X) Y, g fn(y Y) W:
@@ -274,7 +294,8 @@ thm metric_continuous_composition:
         by thm metric_continuous_implies_continuous_at(X, Y, dist_X, dist_Y, f, a)
         by thm metric_continuous_implies_continuous_at(Y, W, dist_Y, dist_W, g, f(a))
         by thm metric_continuous_at_composition(X, Y, W, dist_X, dist_Y, dist_W, f, g, a)
-    by def $is_metric_continuous(X, W, dist_X, dist_W, fn(x X) W {g(f(x))})
+    by def:
+        ? $is_metric_continuous(X, W, dist_X, dist_W, fn(x X) W {g(f(x))})
 
 # Lemma 2.2.1. A real-valued function pair is represented in the existing
 # two-dimensional finite-vector carrier.
@@ -321,7 +342,8 @@ thm real_function_pair_continuous_implies_components:
                 $is_metric_continuous_at(X, R, dist, chap1::real_distance, f, a)
             by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
             by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
-        by def $is_metric_continuous(X, R, dist, chap1::real_distance, f)
+        by def:
+            ? $is_metric_continuous(X, R, dist, chap1::real_distance, f)
     claim:
         ? $is_metric_continuous(X, R, dist, chap1::real_distance, g)
         claim:
@@ -329,7 +351,8 @@ thm real_function_pair_continuous_implies_components:
                 $is_metric_continuous_at(X, R, dist, chap1::real_distance, g, a)
             by thm metric_continuous_implies_continuous_at(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>, a)
             by thm real_function_pair_continuous_at_implies_components(X, dist, f, g, a)
-        by def $is_metric_continuous(X, R, dist, chap1::real_distance, g)
+        by def:
+            ? $is_metric_continuous(X, R, dist, chap1::real_distance, g)
 
 thm real_components_continuous_imply_pair:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -344,7 +367,8 @@ thm real_components_continuous_imply_pair:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm real_components_continuous_at_imply_pair(X, dist, f, g, a)
-    by def $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, \chap1::finite_real_vector<2>, dist, \chap1::l2_distance<2>, \real_function_pair<X, f, g>)
 
 # Lemma 2.2.2. These are the concrete arithmetic maps whose continuity the
 # source assigns to Exercise 2.2.2.
@@ -463,7 +487,8 @@ thm continuous_real_function_sum:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_sum(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_sum<X, f, g>)
 
 thm continuous_at_real_function_difference:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R, a X:
@@ -538,7 +563,8 @@ thm continuous_real_function_difference:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_difference(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_difference<X, f, g>)
 
 thm continuous_real_function_product:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -553,7 +579,8 @@ thm continuous_real_function_product:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_product(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_product<X, f, g>)
 
 thm continuous_real_function_maximum:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -568,7 +595,8 @@ thm continuous_real_function_maximum:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_maximum(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_maximum<X, f, g>)
 
 thm continuous_real_function_minimum:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -583,7 +611,8 @@ thm continuous_real_function_minimum:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_minimum(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_minimum<X, f, g>)
 
 thm continuous_real_function_scalar_multiple:
     ? forall X set, dist fn(x, y X) R, f fn(x X) R, c R:
@@ -596,7 +625,8 @@ thm continuous_real_function_scalar_multiple:
             $is_metric_continuous_at(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm continuous_at_real_function_scalar_multiple(X, dist, f, c, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_scalar_multiple<X, f, c>)
 
 thm continuous_real_function_quotient:
     ? forall X set, dist fn(x, y X) R, f, g fn(x X) R:
@@ -612,7 +642,8 @@ thm continuous_real_function_quotient:
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, f, a)
         by thm metric_continuous_implies_continuous_at(X, R, dist, chap1::real_distance, g, a)
         by thm continuous_at_real_function_quotient(X, dist, f, g, a)
-    by def $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>)
+    by def:
+        ? $is_metric_continuous(X, R, dist, chap1::real_distance, \real_function_quotient<X, f, g>)
 
 # Theorem 2.3.1 (Continuous maps preserve compactness).
 prop has_preimage_in_subset(X, Y set, K power_set(X), f fn(x X) Y, y Y):
@@ -695,7 +726,8 @@ thm metric_uniformly_continuous_implies_continuous:
         claim:
             ? forall epsilon R+:
                 exist delta R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)}
-            by def $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
+            by def:
+                ? $is_metric_uniformly_continuous(X, Y, dist_X, dist_Y, f)
             obtain delta from exist delta R+ st {$is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)}
             witness exist radius R+ st {$is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, radius)} from delta:
                 claim:
@@ -703,11 +735,15 @@ thm metric_uniformly_continuous_implies_continuous:
                         dist_X(x, a) < delta
                         =>:
                             dist_Y(f(x), f(a)) < epsilon
-                    by def $is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)
+                    by def:
+                        ? $is_uniform_delta_controlled(X, Y, dist_X, dist_Y, f, epsilon, delta)
                     dist_Y(f(x), f(a)) < epsilon
-                by def $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
-        by def $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
-    by def $is_metric_continuous(X, Y, dist_X, dist_Y, f)
+                by def:
+                    ? $is_metric_delta_controlled_at(X, Y, dist_X, dist_Y, f, a, epsilon, delta)
+        by def:
+            ? $is_metric_continuous_at(X, Y, dist_X, dist_Y, f, a)
+    by def:
+        ? $is_metric_continuous(X, Y, dist_X, dist_Y, f)
 
 thm compact_metric_continuous_implies_uniformly_continuous:
     ? forall X, Y set, dist_X fn(x, y X) R, dist_Y fn(x, y Y) R, f fn(x X) Y:
@@ -879,10 +915,12 @@ thm example_253_metric_ball_is_neighborhood:
             $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
     by thm chap1::metric_open_and_closed_ball_properties(X, dist, center, radius)
     $chap1::is_metric_open(X, dist, \chap1::metric_ball<X, dist>(center, radius))
-    by def $is_topology_induced_by_metric(X, dist, T)
+    by def:
+        ? $is_topology_induced_by_metric(X, dist, T)
     \chap1::metric_ball<X, dist>(center, radius) $in T
     center $in \chap1::metric_ball<X, dist>(center, radius)
-    by def $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
+    by def:
+        ? $is_topological_neighborhood(X, T, center, \chap1::metric_ball<X, dist>(center, radius))
 
 # Definition 2.5.4 (Topological convergence).
 prop is_eventually_in_topological_neighborhood(X set, u fn(n N+) X, V power_set(X), N0 N+):

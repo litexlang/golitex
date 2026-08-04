@@ -58,13 +58,14 @@ prop even(a Z):
 # verified body into the named proposition `$odd(7)`.
 
 witness exist k Z st {7 = 2 * k + 1} from 3
-by def $odd(7)
+by def:
+    ? $odd(7)
 
 # In Litex, the `witness <EXIST FACT> from <OBJECTS>` keyword proves an
 # existential fact by providing objects that satisfy the existentially quantified
 # conditions. It does not silently introduce a user-defined proposition whose
 # body happens to be that fact; positive predicate introduction is written
-# explicitly as `by def $predicate(...)`.
+# explicitly as `by def:` followed by `? $predicate(...)`.
 
 # ```lean
 # def Odd (a : ℤ) : Prop := ∃ k, a = 2 * k + 1
@@ -85,7 +86,8 @@ by def $odd(7)
 # Show that -3 is odd.
 
 witness exist k Z st {-3 = 2 * k + 1} from -2
-by def $odd(-3)
+by def:
+    ? $odd(-3)
 
 # 3.1.3
 
@@ -99,7 +101,8 @@ claim:
     obtain k from exist k Z st {n = 2 * k + 1}
     witness exist l Z st {3 * n + 2 = 2 * l + 1} from 3 * k + 2:
         3 * n + 2 = 3 * (2 * k + 1) + 2 = 2 * (3 * k + 2) + 1
-    by def $odd(3 * n + 2)
+    by def:
+        ? $odd(3 * n + 2)
 
 # The line `obtain k` uses the from exist k Z st {n = 2 * k + 1}
 # existential information inside `$odd(n)` to introduce a concrete object `k`
@@ -115,11 +118,12 @@ claim:
 # existential statement instead of reusing `k`, because `k` has already been
 # introduced as the witness for `n = 2 * k + 1`.
 
-claim forall! n Z: $odd(n) => {$odd(3 * n+ 2)}:
+claim forall n Z: $odd(n) => {$odd(3 * n+ 2)}:
     obtain k from exist k Z st {n = 2 * k + 1}
     witness exist l Z st {3 * n + 2 = 2 * l + 1} from 3 * k + 2:
         3 * n + 2 = 3 * (2 * k + 1) + 2 = 2 * (3 * k + 2) + 1
-    by def $odd(3 * n + 2)
+    by def:
+        ? $odd(3 * n + 2)
 
 # Litex provides both multi-line and one-line versions of `forall` and `claim`.
 # The multi-line form is easier to read when the assumptions or goal need space;
@@ -132,57 +136,62 @@ claim forall! n Z: $odd(n) => {$odd(3 * n+ 2)}:
 
 # Let n be an integer. Prove that if n is odd, then 7n - 4 is odd.
 
-claim forall! n Z: $odd(n) => {$odd(7 * n - 4)}:
+claim forall n Z: $odd(n) => {$odd(7 * n - 4)}:
     obtain k from exist k Z st {n = 2 * k + 1}
     witness exist l Z st {7 * n - 4 = 2 * l + 1} from 7 * k + 1:
         7 * n - 4 = 7 * (2 * k + 1) - 4 = 2 * (7 * k + 1) + 1
-    by def $odd(7 * n - 4)
+    by def:
+        ? $odd(7 * n - 4)
 
 # 3.1.5
 
 # Prove that if the integers x and y are odd, then x + y + 1 is odd.
 
-claim forall! x, y Z: $odd(x) and $odd(y) => {$odd(x + y + 1)}:
+claim forall x, y Z: $odd(x) and $odd(y) => {$odd(x + y + 1)}:
     $odd(x)
     $odd(y)
     obtain k from exist k Z st {x = 2 * k + 1}
     obtain l from exist l Z st {y = 2 * l + 1}
     witness exist m Z st {x + y + 1 = 2 * m + 1} from k + l + 1:
         x + y + 1 = (2 * k + 1) + (2 * l + 1) + 1 = 2 * (k + l + 1) + 1
-    by def $odd(x + y + 1)
+    by def:
+        ? $odd(x + y + 1)
 
 # 3.1.6
 
 # Prove that if the integers x and y are odd, then x*y + 2*y is odd.
 
-claim forall! x, y Z: $odd(x) and $odd(y) => {$odd(x * y + 2 * y)}:
+claim forall x, y Z: $odd(x) and $odd(y) => {$odd(x * y + 2 * y)}:
     $odd(x)
     $odd(y)
     obtain k from exist k Z st {x = 2 * k + 1}
     obtain l from exist l Z st {y = 2 * l + 1}
     witness exist m Z st {x * y + 2 * y = 2 * m + 1} from 2 * k * l + 3 * l + k + 1:
         x * y + 2 * y = (2 * k + 1) * (2 * l + 1) + 2 * (2 * l + 1) = 2 * (2 * k * l + 3 * l + k + 1) + 1
-    by def $odd(x * y + 2 * y)
+    by def:
+        ? $odd(x * y + 2 * y)
 
 # 3.1.7
 
 # Let m be an integer. Prove that if m is odd, then 3m - 5 is even.
 
-claim forall! m Z: $odd(m) => {$even(3 * m - 5)}:
+claim forall m Z: $odd(m) => {$even(3 * m - 5)}:
     obtain k from exist k Z st {m = 2 * k + 1}
     witness exist l Z st {3 * m - 5 = 2 * l} from 3 * k - 1:
         3 * m - 5 = 3 * (2 * k + 1) - 5 = 2 * (3 * k - 1)
-    by def $even(3 * m - 5)
+    by def:
+        ? $even(3 * m - 5)
 
 # 3.1.8
 
 # Let n be an even integer. Prove that n^2 + 2n - 5 is odd.
 
-claim forall! n Z: $even(n) => {$odd(n^2 + 2 * n - 5)}:
+claim forall n Z: $even(n) => {$odd(n^2 + 2 * n - 5)}:
     obtain k from exist k Z st {n = 2 * k}
     witness exist l Z st {n^2 + 2 * n - 5 = 2 * l + 1} from 2 * k^2 + 2 * k - 3:
         n^2 + 2 * n - 5 = (2 * k)^2 + 2 * (2 * k) - 5 = 2 * (2 * k^2 + 2 * k - 3) + 1
-    by def $odd(n^2 + 2 * n - 5)
+    by def:
+        ? $odd(n^2 + 2 * n - 5)
 
 # 3.1.9
 
@@ -191,21 +200,24 @@ claim forall! n Z: $even(n) => {$odd(n^2 + 2 * n - 5)}:
 claim:
     ? forall n Z:
         $even(n) or $odd(n)
-    by cases $even(n) or $odd(n):
+    by cases:
+        ? $even(n) or $odd(n)
         case n % 2 = 0:
             witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
                 n = 2 * basics::integer_quotient(n, 2) + n % 2
             obtain k from exist k Z st {n = 2 * k + n % 2}
             n = 2 * k + 0 = 2 * k
             witness exist l Z st {n = 2 * l} from k
-            by def $even(n)
+            by def:
+                ? $even(n)
         case n % 2 = 1:
             witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
                 n = 2 * basics::integer_quotient(n, 2) + n % 2
             obtain k from exist k Z st {n = 2 * k + n % 2}
             n = 2 * k + 1
             witness exist l Z st {n = 2 * l + 1} from k
-            by def $odd(n)
+            by def:
+                ? $odd(n)
 
 claim:
     ? forall n Z:
@@ -216,12 +228,14 @@ claim:
             obtain k from exist k Z st {n = 2 * k}
             witness exist l Z st {n^2 + n + 4 = 2 * l} from 2 * k^2 + k + 2:
                 n^2 + n + 4 = (2 * k)^2 + 2 * k + 4 = 2 * (2 * k^2 + k + 2)
-            by def $even(n^2 + n + 4)
+            by def:
+                ? $even(n^2 + n + 4)
         case $odd(n):
             obtain k from exist k Z st {n = 2 * k + 1}
             witness exist l Z st {n^2 + n + 4 = 2 * l} from 2 * k^2 + 3 * k + 3:
                 n^2 + n + 4 = (2 * k + 1)^2 + (2 * k + 1) + 4 = 2 * (2 * k^2 + 3 * k + 3)
-            by def $even(n^2 + n + 4)
+            by def:
+                ? $even(n^2 + n + 4)
 
 # Two builtin facts about remainders do the main work here. First, for any integer
 # `a` and positive integer `b`, Litex knows that the remainder must be one of
@@ -281,7 +295,8 @@ prop dvdN(a N, b N):
 witness exist c N st {88 = 11 * c} from 8:
     88 = 11 * 8
 
-by def $dvdN(11, 88)
+by def:
+    ? $dvdN(11, 88)
 
 # 3.2.2
 
@@ -290,10 +305,11 @@ by def $dvdN(11, 88)
 claim $dvdZ(-2, 6):
     witness exist c Z st {6 = (-2) * c} from -3:
         6 = (-2) * (-3)
-    by def $dvdZ(-2, 6)
+    by def:
+        ? $dvdZ(-2, 6)
 
 # > **Two ways to write the same proof.** Example 3.2.1 is the flat style: write
-# > `witness ...`, then write `by def $dvdN(11, 88)` on the next line. Example
+# > `witness ...`, then write `by def:` and `? $dvdN(11, 88)` on the next lines. Example
 # > 3.2.2 wraps the same pattern in `claim`. The mathematics is the same; the
 # > difference is what stays in the main environment afterward. In the flat style,
 # > every verified line — including `88 = 11 * 8` from the witness body — is
@@ -305,11 +321,12 @@ claim $dvdZ(-2, 6):
 
 # Let a and b be integers and suppose that a | b. Show that a | b^2 + 2b.
 
-claim forall! a, b Z: $dvdZ(a, b) => {$dvdZ(a, b^2 + 2 * b)}:
+claim forall a, b Z: $dvdZ(a, b) => {$dvdZ(a, b^2 + 2 * b)}:
     obtain k from exist k Z st {b = a * k}
     witness exist l Z st {b^2 + 2 * b = a * l} from a * k^2 + 2 * k:
         b^2 + 2 * b = (a * k)^2 + 2 * (a * k) = a^2 * k^2 + 2 * a * k = a * (a * k^2 + 2 * k)
-    by def $dvdZ(a, b^2 + 2 * b)
+    by def:
+        ? $dvdZ(a, b^2 + 2 * b)
 
 # 3.2.4
 
@@ -329,7 +346,8 @@ sketch:
         obtain l from exist l N st {c = b^2 * l}
         witness exist t N st {c = a^2 * t} from k * k * l:
             c = b^2 * l = b * b * l = (a * k) * (a * k) * l = a^2 * (k * k * l)
-        by def $dvdN_square_chain(a^2, c)
+        by def:
+            ? $dvdN_square_chain(a^2, c)
 
 # This proof unpacks two divisibility hypotheses. If `b = a * k` and
 # `c = b^2 * l`, then `c = a^2 * (k * k * l)`, so the witness for `a^2 | c`
@@ -347,7 +365,8 @@ claim:
     obtain k from exist k N st {z = (x * y) * k}
     witness exist c N st {z = x * c} from y * k:
         z = (x * y) * k = x * (y * k)
-    by def $dvdN(x, z)
+    by def:
+        ? $dvdN(x, z)
 
 # This is a good example of why the witness matters. From `(x * y) | z`, Litex
 # extracts some `k` such that `z = (x * y) * k`. To show `x | z`, the new
@@ -359,7 +378,8 @@ claim:
 
 claim:
     ? not $dvdN(5, 12)
-    by contra not $dvdN(5, 12):
+    by contra:
+        ? not $dvdN(5, 12)
         obtain a from exist c N st {12 = 5 * c}
         a $in N
         a $in Z
@@ -385,7 +405,8 @@ claim:
         =>:
             a <= b
     obtain k from exist k N st {b = a * k}
-    by cases a <= b:
+    by cases:
+        ? a <= b
         case k = 0:
             b = a * k = 0
             impossible b > 0
@@ -426,7 +447,8 @@ claim:
         b > 0
         =>:
             0 < a
-    by cases 0 < a:
+    by cases:
+        ? 0 < a
         case a = 0:
             obtain k from exist k N st {b = a * k}
             b = a * k = 0 * k = 0
@@ -454,7 +476,8 @@ claim:
     ? $mod_eq(11, 3, 4)
     witness exist k Z st {11 - 3 = 4 * k} from 2:
         11 - 3 = 4 * 2
-    by def $mod_eq(11, 3, 4)
+    by def:
+        ? $mod_eq(11, 3, 4)
 
 # 3.3.2
 
@@ -464,7 +487,8 @@ claim:
     ? $mod_eq(-5, 1, 3)
     witness exist k Z st {(-5) - 1 = 3 * k} from -2:
         (-5) - 1 = 3 * (-2)
-    by def $mod_eq(-5, 1, 3)
+    by def:
+        ? $mod_eq(-5, 1, 3)
 
 # 3.3.3
 
@@ -484,7 +508,8 @@ claim:
     obtain y from exist y Z st {c - d = n * y}
     witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
         (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
-    by def $mod_eq(a + c, b + d, n)
+    by def:
+        ? $mod_eq(a + c, b + d, n)
 
 # 3.3.4
 
@@ -501,7 +526,8 @@ claim:
     obtain y from exist y Z st {c - d = n * y}
     witness exist k Z st {(a - c) - (b - d) = n * k} from x - y:
         (a - c) - (b - d) = (a - b) - (c - d) = n * x - n * y = n * (x - y)
-    by def $mod_eq(a - c, b - d, n)
+    by def:
+        ? $mod_eq(a - c, b - d, n)
 
 # 3.3.5
 
@@ -516,7 +542,8 @@ claim:
     obtain x from exist x Z st {a - b = n * x}
     witness exist k Z st {(-a) - (-b) = n * k} from -x:
         (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
-    by def $mod_eq(-a, -b, n)
+    by def:
+        ? $mod_eq(-a, -b, n)
 
 # 3.3.6
 
@@ -533,7 +560,8 @@ claim:
     obtain y from exist y Z st {c - d = n * y}
     witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
         a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
-    by def $mod_eq(a * c, b * d, n)
+    by def:
+        ? $mod_eq(a * c, b * d, n)
 
 # 3.3.7
 
@@ -560,7 +588,8 @@ claim:
     obtain x from exist x Z st {a - b = n * x}
     witness exist k Z st {a^2 - b^2 = n * k} from x * (a + b):
         a^2 - b^2 = (a - b) * (a + b) = n * x * (a + b) = n * (x * (a + b))
-    by def $mod_eq(a^2, b^2, n)
+    by def:
+        ? $mod_eq(a^2, b^2, n)
 
 # 3.3.9
 
@@ -575,7 +604,8 @@ claim:
     obtain x from exist x Z st {a - b = n * x}
     witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
         a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
-    by def $mod_eq(a^3, b^3, n)
+    by def:
+        ? $mod_eq(a^3, b^3, n)
 
 # The same pattern works for higher powers: factor `a^m - b^m`, then use the
 # known quotient for `a - b`.
@@ -589,7 +619,8 @@ claim:
         $mod_eq(a, a, n)
     witness exist k Z st {a - a = n * k} from 0:
         a - a = n * 0
-    by def $mod_eq(a, a, n)
+    by def:
+        ? $mod_eq(a, a, n)
 
 # 3.3.11
 
@@ -607,7 +638,8 @@ claim:
     obtain x from exist x Z st {a - 2 = 4 * x}
     witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
         a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
-    by def $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
+    by def:
+        ? $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
 
 # 3.4 Modular arithmetic: calculations
 
@@ -636,7 +668,8 @@ claim:
     obtain x from exist x Z st {a - 2 = 4 * x}
     witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
         a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
-    by def $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
+    by def:
+        ? $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
 
 # 3.4.2
 
@@ -668,7 +701,8 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
             a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
-        by def $mod_eq(a * c, b * d, n)
+        by def:
+            ? $mod_eq(a * c, b * d, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -680,14 +714,16 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
-        by def $mod_eq(a + c, b + d, n)
+        by def:
+            ? $mod_eq(a + c, b + d, n)
 
     claim:
         ? forall a, n Z:
             $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
-        by def $mod_eq(a, a, n)
+        by def:
+            ? $mod_eq(a, a, n)
 
     claim:
         ? forall a, b, c, n Z:
@@ -699,8 +735,10 @@ sketch:
         obtain y from exist y Z st {b - c = n * y}
         witness exist k Z st {a - c = n * k} from x + y:
             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
-        by def $mod_eq(a, c, n)
-        by def $mod_eq_trans(a, b, c, n)
+        by def:
+            ? $mod_eq(a, c, n)
+        by def:
+            ? $mod_eq_trans(a, b, c, n)
 
     claim:
         ? forall a, b, n Z:
@@ -710,7 +748,8 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
             a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
-        by def $mod_eq(a^3, b^3, n)
+        by def:
+            ? $mod_eq(a^3, b^3, n)
 
     claim:
         ? forall a, b Z:
@@ -727,7 +766,8 @@ sketch:
         $mod_eq(a * b + b^3 + 3, 4 * 3 + 3^3 + 3, 5)
         witness exist k Z st {4 * 3 + 3^3 + 3 - 2 = 5 * k} from 8:
             4 * 3 + 3^3 + 3 - 2 = 5 * 8
-        by def $mod_eq(4 * 3 + 3^3 + 3, 2, 5)
+        by def:
+            ? $mod_eq(4 * 3 + 3^3 + 3, 2, 5)
         $mod_eq_trans(a * b + b^3 + 3, 4 * 3 + 3^3 + 3, 2, 5)
         $mod_eq(a * b + b^3 + 3, 2, 5)
 
@@ -745,7 +785,8 @@ claim:
     witness exist a Z st {$mod_eq(6 * a, 4, 11)} from 8:
         witness exist k Z st {6 * 8 - 4 = 11 * k} from 4:
             6 * 8 - 4 = 11 * 4
-        by def $mod_eq(6 * 8, 4, 11)
+        by def:
+            ? $mod_eq(6 * 8, 4, 11)
 
 # 3.4.4
 
@@ -757,7 +798,8 @@ claim:
 claim:
     ? forall x Z:
         $mod_eq(x^3, x, 3)
-    by cases $mod_eq(x^3, x, 3):
+    by cases:
+        ? $mod_eq(x^3, x, 3)
         case x % 3 = 0:
             witness exist q Z st {x = 3 * q + x % 3} from basics::integer_quotient(x, 3):
                 x = 3 * basics::integer_quotient(x, 3) + x % 3
@@ -765,7 +807,8 @@ claim:
             x = 3 * k + x % 3 = 3 * k
             witness exist m Z st {x^3 - x = 3 * m} from k * (9 * k^2 - 1):
                 x^3 - x = (3 * k)^3 - 3 * k = 3 * k * (9 * k^2 - 1)
-            by def $mod_eq(x^3, x, 3)
+            by def:
+                ? $mod_eq(x^3, x, 3)
         case x % 3 = 1:
             witness exist q Z st {x = 3 * q + x % 3} from basics::integer_quotient(x, 3):
                 x = 3 * basics::integer_quotient(x, 3) + x % 3
@@ -773,7 +816,8 @@ claim:
             x = 3 * k + x % 3 = 3 * k + 1
             witness exist m Z st {x^3 - x = 3 * m} from k * (9 * k^2 + 9 * k + 2):
                 x^3 - x = (3 * k + 1)^3 - (3 * k + 1) = 3 * k * (9 * k^2 + 9 * k + 2)
-            by def $mod_eq(x^3, x, 3)
+            by def:
+                ? $mod_eq(x^3, x, 3)
         case x % 3 = 2:
             witness exist q Z st {x = 3 * q + x % 3} from basics::integer_quotient(x, 3):
                 x = 3 * basics::integer_quotient(x, 3) + x % 3
@@ -781,7 +825,8 @@ claim:
             x = 3 * k + x % 3 = 3 * k + 2
             witness exist m Z st {x^3 - x = 3 * m} from 9 * k^3 + 18 * k^2 + 11 * k + 2:
                 x^3 - x = (3 * k + 2)^3 - (3 * k + 2) = 3 * (9 * k^3 + 18 * k^2 + 11 * k + 2)
-            by def $mod_eq(x^3, x, 3)
+            by def:
+                ? $mod_eq(x^3, x, 3)
 
 # 3.5 Bézout’s identity
 
@@ -795,7 +840,8 @@ claim:
             $dvdZ(8, n)
     witness exist c Z st {n = 8 * c} from -3 * a + 2 * n:
         n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
-    by def $dvdZ(8, n)
+    by def:
+        ? $dvdZ(8, n)
 
 claim:
     ? forall n, x Z:
@@ -804,7 +850,8 @@ claim:
             $dvdZ(5, n)
     witness exist c Z st {n = 5 * c} from 2 * x - n:
         n = 2 * (3 * n) - 5 * n = 2 * (5 * x) - 5 * n = 5 * (2 * x - n)
-    by def $dvdZ(5, n)
+    by def:
+        ? $dvdZ(5, n)
 
 claim:
     ? forall m, a, b Z:
@@ -814,7 +861,8 @@ claim:
             $dvdZ(40, m)
     witness exist c Z st {m = 40 * c} from -3 * a + 2 * b:
         m = -15 * m + 16 * m = -15 * (8 * a) + 16 * (5 * b) = 40 * (-3 * a + 2 * b)
-    by def $dvdZ(40, m)
+    by def:
+        ? $dvdZ(40, m)
 
 # 3.5.1
 
@@ -847,7 +895,7 @@ claim:
 #    below it. For example, `$odd(a)` means the existential fact in the
 #    definition of `odd`.
 
-# 2. `by def $name(args...)` explicitly introduces a positive instance of a
+# 2. `by def:` with `? $name(args...)` explicitly introduces a positive instance of a
 #    user-defined proposition after its definition body has been verified. A
 #    witness for the body alone does not silently fold the named proposition.
 
@@ -855,7 +903,7 @@ claim:
 #    `$mod_eq` package number-theoretic ideas so later proofs read like ordinary
 #    mathematics instead of repeating long existential formulas.
 
-# 4. `forall! ...` and `claim forall! ... => {...}:` are compact one-line forms
+# 4. `forall ...` and `claim forall ... => {...}:` are compact one-line forms
 #    for short universal statements and claims.
 
 # 5. `%` connects to the existential definitions of parity and divisibility.

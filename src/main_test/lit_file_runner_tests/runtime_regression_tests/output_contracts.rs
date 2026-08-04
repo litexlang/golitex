@@ -6,7 +6,8 @@ fn by_def_output_and_summary_report_definition_checks() {
 prop unit(x R):
     x = 1
 1 = 1
-by def $unit(1)
+by def:
+    ? $unit(1)
 "#;
 
     let mut runtime = Runtime::new();
@@ -269,7 +270,8 @@ claim:
     ? 1 = 1
     1 = 1
 
-by cases 1 = 1:
+by cases:
+    ? 1 = 1
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -400,7 +402,8 @@ claim:
     ? 1 = 1
     1 = 1
 
-by cases 1 = 1:
+by cases:
+    ? 1 = 1
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -1922,7 +1925,8 @@ thm one_eq_one:
 
 by thm one_eq_one()
 
-by cases 1 = 1:
+by cases:
+    ? 1 = 1
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -2049,7 +2053,8 @@ by cases:
 fn by_cases_detail_output_expands_case_inside_results() {
     run_with_large_stack("by_cases_detail_output_expands_case_inside_results", || {
         let source_code = r#"
-by cases 1 = 1:
+by cases:
+    ? 1 = 1
     case 1 = 1:
         do_nothing
     case 1 != 1:
@@ -2080,7 +2085,8 @@ fn by_contra_normal_output_keeps_readable_proof_tree() {
         "by_contra_output_explains_reverse_assumption_proof_and_impossible_checks",
         || {
             let source_code = r#"
-by contra 1 = 1:
+by contra:
+    ? 1 = 1
     do_nothing
     impossible 1 != 1
 "#;
@@ -2146,7 +2152,8 @@ claim:
         y = 1 or y = 2
     by closed_range as cases: y $in 1...2
 
-by extension {1} = {1}
+by extension:
+    ? {1} = {1}
 "#;
 
             let mut runtime = Runtime::new();
@@ -2246,7 +2253,7 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             forall x, y c:
                 $local_leq(x, y) or $local_leq(y, x)
             =>:
-                exist u local_ordered_set st {forall! x c => {$local_leq(x, u)}}
+                exist u local_ordered_set st {forall x c => {$local_leq(x, u)}}
 "#;
 
             let mut runtime = Runtime::new();
@@ -2600,7 +2607,8 @@ fn by_cases_failure_reports_case_split_failure_context() {
         "by_cases_failure_reports_case_split_failure_context",
         || {
             let source_code = r#"
-by cases 1 = 1:
+by cases:
+    ? 1 = 1
     case 1 = 2:
         do_nothing
 "#;

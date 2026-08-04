@@ -119,7 +119,8 @@ thm standard_simplex_midpoint_closed:
     finite_set_sum(range(0, n), a) = 1
     finite_set_sum(range(0, n), b) = 1
     finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a) + (1 / 2) * finite_set_sum(range(0, n), b) = (1 / 2) * 1 + (1 / 2) * 1 = 1
-    by def $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
+    by def:
+        ? $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
 
 # The midpoint remains a callable function-valued construction. Its checked
 # codomain law is the preceding source-facing closure theorem.

@@ -90,7 +90,8 @@ thm inverse_fiber_nonempty:
         case $has_preimage(S, T, f, y):
             obtain x from exist x S st {f(x) = y}
             f(x) = y or $is_default_inverse_fiber_member(S, T, default, f, y, x)
-            by def $inverse_fiber_member(S, T, default, f, y, x)
+            by def:
+                ? $inverse_fiber_member(S, T, default, f, y, x)
             by thm set_builder_member(x, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
             x $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
@@ -98,9 +99,11 @@ thm inverse_fiber_nonempty:
             witness $is_nonempty_set(\inverse_fiber<S, T, default, f>(y)) from x
         case not $has_preimage(S, T, f, y):
             default = default
-            by def $is_default_inverse_fiber_member(S, T, default, f, y, default)
+            by def:
+                ? $is_default_inverse_fiber_member(S, T, default, f, y, default)
             f(default) = y or $is_default_inverse_fiber_member(S, T, default, f, y, default)
-            by def $inverse_fiber_member(S, T, default, f, y, default)
+            by def:
+                ? $inverse_fiber_member(S, T, default, f, y, default)
             by thm set_builder_member(default, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
             default $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
             \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
@@ -116,7 +119,8 @@ thm total_inverse_exists:
         ? forall A \inverse_fiber_family<S, T, default, f>:
             $is_nonempty_set(A)
         A $in {B power_set(S): $is_inverse_fiber(S, T, default, f, B)}
-        by def $is_inverse_fiber(S, T, default, f, A)
+        by def:
+            ? $is_inverse_fiber(S, T, default, f, A)
         obtain y from exist y T st {A = \inverse_fiber<S, T, default, f>(y)}
         by thm inverse_fiber_nonempty(S, T, default, f, y)
         $is_nonempty_set(\inverse_fiber<S, T, default, f>(y))
@@ -124,7 +128,7 @@ thm total_inverse_exists:
     by axiom_of_choice: set \inverse_fiber_family<S, T, default, f>:
         forall A \inverse_fiber_family<S, T, default, f>:
             $is_nonempty_set(A)
-    obtain chooser from exist c fn(A \inverse_fiber_family<S, T, default, f>) big_union(\inverse_fiber_family<S, T, default, f>) st {forall! A \inverse_fiber_family<S, T, default, f> => {c(A) $in A}}
+    obtain chooser from exist c fn(A \inverse_fiber_family<S, T, default, f>) big_union(\inverse_fiber_family<S, T, default, f>) st {forall A \inverse_fiber_family<S, T, default, f> => {c(A) $in A}}
     thm chooser_mem:
         ? forall A \inverse_fiber_family<S, T, default, f>:
             chooser(A) $in A
@@ -133,7 +137,8 @@ thm total_inverse_exists:
         ? forall y T:
             \inverse_fiber<S, T, default, f>(y) $in \inverse_fiber_family<S, T, default, f>
         witness exist z T st {\inverse_fiber<S, T, default, f>(y) = \inverse_fiber<S, T, default, f>(z)} from y
-        by def $is_inverse_fiber(S, T, default, f, \inverse_fiber<S, T, default, f>(y))
+        by def:
+            ? $is_inverse_fiber(S, T, default, f, \inverse_fiber<S, T, default, f>(y))
         by thm set_builder_member(\inverse_fiber<S, T, default, f>(y), {A power_set(S): $is_inverse_fiber(S, T, default, f, A)})
         \inverse_fiber<S, T, default, f>(y) $in {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
         \inverse_fiber_family<S, T, default, f> = {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
@@ -157,13 +162,15 @@ thm total_inverse_exists:
         chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
         \inverse_fiber<S, T, default, f>(y) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
         chooser(\inverse_fiber<S, T, default, f>(y)) $in {x S: $inverse_fiber_member(S, T, default, f, y, x)}
-        by def $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+        by def:
+            ? $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
         by cases:
             ? f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
             case f(chooser(\inverse_fiber<S, T, default, f>(y))) = y:
                 f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
             case $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y))):
-                by def $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+                by def:
+                    ? $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
                 impossible $has_preimage(S, T, f, y)
     claim:
         ? forall y T:
@@ -173,15 +180,18 @@ thm total_inverse_exists:
         chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
         \inverse_fiber<S, T, default, f>(y) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
         chooser(\inverse_fiber<S, T, default, f>(y)) $in {x S: $inverse_fiber_member(S, T, default, f, y, x)}
-        by def $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+        by def:
+            ? $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
         by cases:
             ? chooser(\inverse_fiber<S, T, default, f>(y)) = default
             case f(chooser(\inverse_fiber<S, T, default, f>(y))) = y:
                 witness exist x S st {f(x) = y} from chooser(\inverse_fiber<S, T, default, f>(y))
-                by def $has_preimage(S, T, f, y)
+                by def:
+                    ? $has_preimage(S, T, f, y)
                 impossible not $has_preimage(S, T, f, y)
             case $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y))):
-                by def $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+                by def:
+                    ? $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
                 chooser(\inverse_fiber<S, T, default, f>(y)) = default
     have fn chosen_inverse(y T) S = chooser(\inverse_fiber<S, T, default, f>(y))
     claim:
@@ -199,7 +209,8 @@ thm total_inverse_exists:
                 =>:
                     chosen_inverse(y) = default
             chosen_inverse(y) = chooser(\inverse_fiber<S, T, default, f>(y)) = default
-        by def $is_total_inverse(S, T, default, f, chosen_inverse)
+        by def:
+            ? $is_total_inverse(S, T, default, f, chosen_inverse)
     witness exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)} from chosen_inverse
 
 # Package existence as a constraint so the selected inverse can be used as a
@@ -211,7 +222,8 @@ thm total_inverse_available:
     ? forall S nonempty_set, T set, default S, f fn(x S) T:
         $has_total_inverse(S, T, default, f)
     by thm total_inverse_exists(S, T, default, f)
-    by def $has_total_inverse(S, T, default, f)
+    by def:
+        ? $has_total_inverse(S, T, default, f)
 
 template<S nonempty_set, T set, default S, f fn(x S) T: $has_total_inverse(S, T, default, f)>:
     obtain inverse from exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)}
@@ -270,11 +282,13 @@ thm inverse_left_of_injective:
         ? forall x S:
             \inverse<S, T, default, f>(f(x)) = x
         witness exist z S st {f(z) = f(x)} from x
-        by def $has_preimage(S, T, f, f(x))
+        by def:
+            ? $has_preimage(S, T, f, f(x))
         by thm inverse_spec(S, T, default, f, f(x))
         f(\inverse<S, T, default, f>(f(x))) = f(x)
         \inverse<S, T, default, f>(f(x)) = x
-    by def $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
+    by def:
+        ? $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
 
 thm injective_of_left_inverse:
     ? forall S, T set, f fn(x S) T, g fn(y T) S:
@@ -290,7 +304,8 @@ thm injective_of_left_inverse:
         g(f(x1)) = x1
         g(f(x2)) = x2
         x1 = x2
-    by def $injective_fn(S, T, f)
+    by def:
+        ? $injective_fn(S, T, f)
 
 thm inverse_right_of_surjective:
     ? forall S nonempty_set, T set, default S, f fn(x S) T:
@@ -303,9 +318,11 @@ thm inverse_right_of_surjective:
             f(\inverse<S, T, default, f>(y)) = y
         obtain x from exist z S st {y = f(z)}
         witness exist z S st {f(z) = y} from x
-        by def $has_preimage(S, T, f, y)
+        by def:
+            ? $has_preimage(S, T, f, y)
         by thm inverse_spec(S, T, default, f, y)
-    by def $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
+    by def:
+        ? $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
 
 thm surjective_of_right_inverse:
     ? forall S, T set, f fn(x S) T, g fn(y T) S:
@@ -316,7 +333,8 @@ thm surjective_of_right_inverse:
         ? forall y T:
             exist x S st {y = f(x)}
         witness exist x S st {y = f(x)} from g(y)
-    by def $surjective_fn(S, T, f)
+    by def:
+        ? $surjective_fn(S, T, f)
 
 forall S nonempty_set, T set, default S, f fn(x S) T:
     =>:
@@ -633,13 +651,15 @@ thm sb_next_mem:
         =>:
             g(f(x)) $in \sb_aux<S, T, f, g>(n + 1)
     witness exist z S st {z $in \sb_aux<S, T, f, g>(n), f(x) = f(z)} from x
-    by def $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n), f(x))
+    by def:
+        ? $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n), f(x))
     by thm set_builder_member(f(x), {y T: $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n), y)})
     f(x) $in {y T: $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n), y)}
     \set_image<S, T, f, \sb_aux<S, T, f, g>(n)> = {y T: $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n), y)}
     f(x) $in \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>
     witness exist y T st {y $in \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, g(f(x)) = g(y)} from f(x)
-    by def $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, g(f(x)))
+    by def:
+        ? $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, g(f(x)))
     by thm set_builder_member(g(f(x)), {z S: $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, z)})
     g(f(x)) $in {z S: $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, z)}
     \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>> = {z S: $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>, z)}
@@ -695,17 +715,20 @@ thm sb_right_inv:
                 by contra:
                     ? not x $in \set_image<T, S, g, T>
                     x $in {z S: $has_preimage_in_subset(T, S, g, T, z)}
-                    by def $has_preimage_in_subset(T, S, g, T, x)
+                    by def:
+                        ? $has_preimage_in_subset(T, S, g, T, x)
                     obtain pre from exist q T st {q $in T, x = g(q)}
                     witness exist q T st {g(q) = x} from pre
-                    by def $has_preimage(T, S, g, x)
+                    by def:
+                        ? $has_preimage(T, S, g, x)
                     impossible not $has_preimage(T, S, g, x)
             x $in set_minus(S, \set_image<T, S, g, T>)
             by thm sb_aux_zero(S, T, f, g)
             \sb_aux<S, T, f, g>(0) = set_minus(S, \set_image<T, S, g, T>)
             x $in \sb_aux<S, T, f, g>(0)
             witness exist n N st {x $in \sb_aux<S, T, f, g>(n)} from 0
-            by def $sb_set_member(S, T, f, g, x)
+            by def:
+                ? $sb_set_member(S, T, f, g, x)
             by thm set_builder_member(x, {z S: $sb_set_member(S, T, f, g, z)})
             x $in {z S: $sb_set_member(S, T, f, g, z)}
             \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
@@ -719,11 +742,13 @@ thm sb_set_closed:
             g(f(x)) $in \sb_set<S, T, f, g>
     \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
     x $in {z S: $sb_set_member(S, T, f, g, z)}
-    by def $sb_set_member(S, T, f, g, x)
+    by def:
+        ? $sb_set_member(S, T, f, g, x)
     obtain n from exist n N st {x $in \sb_aux<S, T, f, g>(n)}
     by thm sb_next_mem(S, T, f, g, n, x)
     witness exist k N st {g(f(x)) $in \sb_aux<S, T, f, g>(k)} from n + 1
-    by def $sb_set_member(S, T, f, g, g(f(x)))
+    by def:
+        ? $sb_set_member(S, T, f, g, g(f(x)))
     by thm set_builder_member(g(f(x)), {z S: $sb_set_member(S, T, f, g, z)})
     g(f(x)) $in {z S: $sb_set_member(S, T, f, g, z)}
     \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
@@ -779,7 +804,8 @@ thm sb_injective:
                         by thm sb_right_inv(S, T, default, f, g, x1)
                         by thm sb_right_inv(S, T, default, f, g, x2)
                         x1 = g(\inverse<T, S, default, g>(x1)) = g(\inverse<T, S, default, g>(x2)) = x2
-    by def $injective_fn(S, T, \sb_fun<S, T, default, f, g>)
+    by def:
+        ? $injective_fn(S, T, \sb_fun<S, T, default, f, g>)
 
 # If g is injective, every y in T has an sb_fun preimage. When g(y) lies in
 # sb_set, its positive recursive layer supplies an earlier x with f(x)=y.
@@ -797,7 +823,8 @@ thm sb_surjective:
                 exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
         \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
         g(y) $in {z S: $sb_set_member(S, T, f, g, z)}
-        by def $sb_set_member(S, T, f, g, g(y))
+        by def:
+            ? $sb_set_member(S, T, f, g, g(y))
         obtain n from exist n N st {g(y) $in \sb_aux<S, T, f, g>(n)}
         by cases:
             ? exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
@@ -806,7 +833,8 @@ thm sb_surjective:
                 g(y) $in set_minus(S, \set_image<T, S, g, T>)
                 not g(y) $in \set_image<T, S, g, T>
                 witness exist q T st {q $in T, g(y) = g(q)} from y
-                by def $has_preimage_in_subset(T, S, g, T, g(y))
+                by def:
+                    ? $has_preimage_in_subset(T, S, g, T, g(y))
                 by thm set_builder_member(g(y), {z S: $has_preimage_in_subset(T, S, g, T, z)})
                 g(y) $in {z S: $has_preimage_in_subset(T, S, g, T, z)}
                 \set_image<T, S, g, T> = {z S: $has_preimage_in_subset(T, S, g, T, z)}
@@ -821,15 +849,18 @@ thm sb_surjective:
                 g(y) $in \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>>
                 \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>> = {z S: $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>, z)}
                 g(y) $in {z S: $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>, z)}
-                by def $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>, g(y))
+                by def:
+                    ? $has_preimage_in_subset(T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>, g(y))
                 obtain mid from exist mid T st {mid $in \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>, g(y) = g(mid)}
                 y = mid
                 \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)> = {z T: $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n - 1), z)}
                 mid $in {z T: $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n - 1), z)}
-                by def $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n - 1), mid)
+                by def:
+                    ? $has_preimage_in_subset(S, T, f, \sb_aux<S, T, f, g>(n - 1), mid)
                 obtain pre from exist pre S st {pre $in \sb_aux<S, T, f, g>(n - 1), mid = f(pre)}
                 witness exist k N st {pre $in \sb_aux<S, T, f, g>(k)} from n - 1
-                by def $sb_set_member(S, T, f, g, pre)
+                by def:
+                    ? $sb_set_member(S, T, f, g, pre)
                 by thm set_builder_member(pre, {z S: $sb_set_member(S, T, f, g, z)})
                 pre $in {z S: $sb_set_member(S, T, f, g, z)}
                 \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
@@ -850,7 +881,8 @@ thm sb_surjective:
                 by thm sb_fun_off_set(S, T, default, f, g, g(y))
                 \sb_fun<S, T, default, f, g>(g(y)) = \inverse<T, S, default, g>(g(y)) = y
                 witness exist x S st {y = \sb_fun<S, T, default, f, g>(x)} from g(y)
-    by def $surjective_fn(S, T, \sb_fun<S, T, default, f, g>)
+    by def:
+        ? $surjective_fn(S, T, \sb_fun<S, T, default, f, g>)
 
 # The source theorem. The constructed piecewise function is injective by the
 # f branch argument and surjective by the g branch argument.
@@ -862,5 +894,6 @@ thm schroeder_bernstein:
             exist h fn(x S) T st {$bijective_fn(S, T, h)}
     by thm sb_injective(S, T, default, f, g)
     by thm sb_surjective(S, T, default, f, g)
-    by def $bijective_fn(S, T, \sb_fun<S, T, default, f, g>)
+    by def:
+        ? $bijective_fn(S, T, \sb_fun<S, T, default, f, g>)
     witness exist h fn(x S) T st {$bijective_fn(S, T, h)} from \sb_fun<S, T, default, f, g>

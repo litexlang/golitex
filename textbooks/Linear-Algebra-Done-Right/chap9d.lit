@@ -131,7 +131,8 @@ thm tensor_product_elements_are_additive:
         ? forall phi \chap3f::dual_space<s, VSet, V>, tau \chap3f::dual_space<s, WSet, W>:
             left1(phi, tau) = right1(phi, tau)
         $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
-        by def $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
+        by def:
+            ? $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
         phi(V.add(v1, v2)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, V.scalars>}.add(phi(v1), phi(v2))
         &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, V.scalars>}.add(phi(v1), phi(v2)) = V.scalars.add(phi(v1), phi(v2))
         left1(phi, tau) = \tensor_product_element<s, VSet, WSet, V, W>(V.add(v1, v2), w)(phi, tau)
@@ -160,7 +161,8 @@ thm tensor_product_elements_are_additive:
         ? forall phi \chap3f::dual_space<s, VSet, V>, tau \chap3f::dual_space<s, WSet, W>:
             left2(phi, tau) = right2(phi, tau)
         $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
-        by def $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
+        by def:
+            ? $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
         tau(W.add(w1, w2)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, W.scalars>}.add(tau(w1), tau(w2))
         &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, W.scalars>}.add(tau(w1), tau(w2)) = W.scalars.add(tau(w1), tau(w2)) = V.scalars.add(tau(w1), tau(w2))
         left2(phi, tau) = \tensor_product_element<s, VSet, WSet, V, W>(v, W.add(w1, w2))(phi, tau)
@@ -204,7 +206,8 @@ thm tensor_product_elements_have_scalar_compatibility:
         ? forall phi \chap3f::dual_space<s, VSet, V>, tau \chap3f::dual_space<s, WSet, W>:
             left1(phi, tau) = right1(phi, tau)
         $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
-        by def $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
+        by def:
+            ? $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
         phi(V.smul(a, v)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, V.scalars>}.smul(a, phi(v))
         &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, V.scalars>}.smul(a, phi(v)) = V.scalars.mul(a, phi(v))
         left1(phi, tau) = \bilinear_functional_smul<s, \chap3f::dual_space<s, VSet, V>, \chap3f::dual_space<s, WSet, W>, \chap3f::dual_vector_space<s, VSet, V>, \chap3f::dual_vector_space<s, WSet, W>>(a, \tensor_product_element<s, VSet, WSet, V, W>(v, w))(phi, tau)
@@ -223,9 +226,11 @@ thm tensor_product_elements_have_scalar_compatibility:
         ? forall phi \chap3f::dual_space<s, VSet, V>, tau \chap3f::dual_space<s, WSet, W>:
             left2(phi, tau) = right2(phi, tau)
         $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
-        by def $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
+        by def:
+            ? $chap3a::is_linear_map(s, VSet, s, V, \chap3f::scalar_vector_space<s, V.scalars>, phi)
         $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
-        by def $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
+        by def:
+            ? $chap3a::is_linear_map(s, WSet, s, W, \chap3f::scalar_vector_space<s, W.scalars>, tau)
         phi(V.smul(a, v)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, V.scalars>}.smul(a, phi(v)) = V.scalars.mul(a, phi(v))
         tau(W.smul(a, w)) = &chap1b::VectorSpace<s, s>{\chap3f::scalar_vector_space<s, W.scalars>}.smul(a, tau(w)) = W.scalars.mul(a, tau(w)) = V.scalars.mul(a, tau(w))
         left2(phi, tau) = \tensor_product_element<s, VSet, WSet, V, W>(V.smul(a, v), w)(phi, tau)

@@ -279,12 +279,12 @@ fn inline_forall_fact_string(forall_fact: &ForallFact) -> String {
     if forall_fact.dom_facts.is_empty() {
         return format!(
             "{} {} {} {}",
-            FORALL_BANG, forall_fact.params_def_with_type, RIGHT_ARROW, then_facts
+            FORALL, forall_fact.params_def_with_type, RIGHT_ARROW, then_facts
         );
     }
     format!(
         "{} {}{} {} {} {}",
-        FORALL_BANG,
+        FORALL,
         forall_fact.params_def_with_type,
         COLON,
         vec_to_string_join_by_comma(

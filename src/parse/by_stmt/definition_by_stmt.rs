@@ -3,29 +3,29 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_def_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(DEF)?;
-        if !tb.body.is_empty() {
+        if tb.current()? != COLON {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by def is a single-line statement and does not accept a body".to_string(),
+                    "by def no longer accepts a goal on the header; use `by def:` followed by `? <fact>`"
+                        .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-
-        let fact = self.parse_atomic_fact(tb, true)?;
+        tb.skip_token(COLON)?;
+        if !tb.exceed_end_of_head() || tb.body.len() != 1 {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by def expects exactly one `? <fact>` goal block".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let fact = self.parse_goal_atomic_fact_block(&mut tb.body[0], "by def")?;
         if !fact.is_true() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "by def expects one positive atomic fact".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        if !tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by def is a single-line statement and does not accept trailing tokens or `:`"
-                        .to_string(),
                     tb.line_file.clone(),
                 ),
             )));

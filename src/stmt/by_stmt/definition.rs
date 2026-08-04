@@ -19,6 +19,13 @@ impl ByDefStmt {
 
 impl fmt::Display for ByDefStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{} {} {}", BY, DEF, self.fact)
+        write!(
+            f,
+            "{} {}{}\n{}",
+            BY,
+            DEF,
+            COLON,
+            add_four_spaces_at_beginning(format!("{} {}", QUESTION_GOAL, self.fact), 1,)
+        )
     }
 }

@@ -68,7 +68,8 @@ thm even_of_even_sqr:
     q $in N
     witness exist k N st {m = 2 * k} from q:
         m = 2 * q
-    by def $chap1::even(m)
+    by def:
+        ? $chap1::even(m)
     $chap1::even(m)
 
 # The classical irrational-square contradiction: coprime numerator and
@@ -83,7 +84,8 @@ thm coprime_square_not_twice_square:
         m^2 = 2 * n^2
         witness exist k N st {m^2 = 2 * k} from n^2:
             m^2 = 2 * n^2
-        by def $chap1::even(m^2)
+        by def:
+            ? $chap1::even(m^2)
         $chap1::even(m^2)
         by thm even_of_even_sqr(m)
         $chap1::even(m)
@@ -93,18 +95,21 @@ thm coprime_square_not_twice_square:
         n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
         witness exist k N st {n^2 = 2 * k} from a^2:
             n^2 = 2 * a^2
-        by def $chap1::even(n^2)
+        by def:
+            ? $chap1::even(n^2)
         $chap1::even(n^2)
         by thm even_of_even_sqr(n)
         $chap1::even(n)
         obtain b from exist b N st {n = 2 * b}
         witness exist q Z st {m = 2 * q} from a:
             m = 2 * a
-        by def $chap2::divides(2, m)
+        by def:
+            ? $chap2::divides(2, m)
         $chap2::divides(2, m)
         witness exist q Z st {n = 2 * q} from b:
             n = 2 * b
-        by def $chap2::divides(2, n)
+        by def:
+            ? $chap2::divides(2, n)
         $chap2::divides(2, n)
         m != 0 or n != 0
         gcd(m, n) = 1
@@ -217,7 +222,8 @@ thm positive_index_divides_factorial:
                         j = 0
                         j != 0
                         impossible j != 0
-                by def $_all_positive_indices_divide_factorial(k)
+                by def:
+                    ? $_all_positive_indices_divide_factorial(k)
                 $_all_positive_indices_divide_factorial(k)
             ? induc:
                 $_all_positive_indices_divide_factorial(k)
@@ -242,7 +248,8 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from (k + 1) * q:
                                     factorial(k + 1) = j * ((k + 1) * q)
-                            by def $chap2::divides(j, factorial(k + 1))
+                            by def:
+                                ? $chap2::divides(j, factorial(k + 1))
                             $chap2::divides(j, factorial(k + 1))
                         case j > k:
                             j >= k + 1
@@ -253,9 +260,11 @@ thm positive_index_divides_factorial:
                                 ? exist q1 Z st {factorial(k + 1) = j * q1}
                                 witness exist q1 Z st {factorial(k + 1) = j * q1} from factorial(k):
                                     factorial(k + 1) = j * factorial(k)
-                            by def $chap2::divides(j, factorial(k + 1))
+                            by def:
+                                ? $chap2::divides(j, factorial(k + 1))
                             $chap2::divides(j, factorial(k + 1))
-                by def $_all_positive_indices_divide_factorial(k + 1)
+                by def:
+                    ? $_all_positive_indices_divide_factorial(k + 1)
                 $_all_positive_indices_divide_factorial(k + 1)
     $_all_positive_indices_divide_factorial(n)
     $chap2::divides(idx, factorial(n))
@@ -451,10 +460,12 @@ thm exists_prime_factor:
     by strong_induc n from 2:
         ? exist p N+ st {$prime(p), $chap2::divides(p, n)}
         ? from n = 2:
-            by def $prime(2)
+            by def:
+                ? $prime(2)
             witness exist k Z st {2 = 2 * k} from 1:
                 2 = 2 * 1
-            by def $chap2::divides(2, 2)
+            by def:
+                ? $chap2::divides(2, 2)
             witness exist p N+ st {$prime(p), $chap2::divides(p, 2)} from 2
         ? strong_induc:
             forall y N:
@@ -468,7 +479,8 @@ thm exists_prime_factor:
                 case $prime(n + 1):
                     witness exist k Z st {n + 1 = (n + 1) * k} from 1:
                         n + 1 = (n + 1) * 1
-                    by def $chap2::divides(n + 1, n + 1)
+                    by def:
+                        ? $chap2::divides(n + 1, n + 1)
                     witness exist p N+ st {$prime(p), $chap2::divides(p, n + 1)} from n + 1
                 case not $prime(n + 1):
                     claim:
@@ -477,18 +489,21 @@ thm exists_prime_factor:
                             ? exist d range(2, n + 1) st {(n + 1) % d = 0}
                             forall d range(2, n + 1):
                                 (n + 1) % d != 0
-                            by def $prime(n + 1)
+                            by def:
+                                ? $prime(n + 1)
                             impossible not $prime(n + 1)
                     obtain d from exist d range(2, n + 1) st {(n + 1) % d = 0}
                     obtain k from exist k Z st {n + 1 = d * k}
-                    by def $chap2::divides(d, n + 1)
+                    by def:
+                        ? $chap2::divides(d, n + 1)
                     d <= (n + 1) - 1 = n
                     obtain p from exist p N+ st {$prime(p), $chap2::divides(p, d)}
                     obtain a from exist a Z st {d = p * a}
                     obtain b from exist b Z st {n + 1 = d * b}
                     witness exist factor Z st {n + 1 = p * factor} from a * b:
                         n + 1 = d * b = p * a * b = p * (a * b)
-                    by def $chap2::divides(p, n + 1)
+                    by def:
+                        ? $chap2::divides(p, n + 1)
                     witness exist q N+ st {$prime(q), $chap2::divides(q, n + 1)} from p
 
 # Source theorem: primes_infinite. This keeps Euclid's route: choose a prime
@@ -512,7 +527,8 @@ thm primes_infinite:
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
             witness exist q Z st {1 = p * q} from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
-            by def $chap2::divides(p, 1)
+            by def:
+                ? $chap2::divides(p, 1)
             $chap2::divides(p, 1)
             by thm chap2::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
@@ -683,7 +699,8 @@ thm fib_eq:
             ? from k = 0:
                 fibonacci(0) = 0 = binet(0)
                 fibonacci(0 + 1) = fibonacci(1) = 1 = binet(1) = binet(0 + 1)
-                by def $_fibonacci_binet_pair(0)
+                by def:
+                    ? $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(0)
                 $_fibonacci_binet_pair(k)
             ? induc:
@@ -694,7 +711,8 @@ thm fib_eq:
                 fibonacci(k + 2) = fibonacci(k) + fibonacci(k + 1) = binet(k) + binet(k + 1) = binet(k + 2)
                 fibonacci((k + 1) + 1) = fibonacci(k + 2) = binet(k + 2) = binet((k + 1) + 1)
                 fibonacci(k + 1) = binet(k + 1)
-                by def $_fibonacci_binet_pair(k + 1)
+                by def:
+                    ? $_fibonacci_binet_pair(k + 1)
                 $_fibonacci_binet_pair(k + 1)
     $_fibonacci_binet_pair(n)
     fibonacci(n) = binet(n) = (phi^n - phi_conjugate^n) / sqrt(5)
@@ -715,7 +733,8 @@ thm _gcd_add_right_for_fibonacci:
     obtain r from exist r Z st {b = gcd(a, b) * r}
     witness exist s Z st {a + b = gcd(a, b) * s} from q + r:
         a + b = gcd(a, b) * q + gcd(a, b) * r = gcd(a, b) * (q + r)
-    by def $chap2::divides(gcd(a, b), a + b)
+    by def:
+        ? $chap2::divides(gcd(a, b), a + b)
     by thm chap2::common_divisor_le_gcd(a, a + b, gcd(a, b))
     gcd(a, b) <= gcd(a, a + b)
 
@@ -726,7 +745,8 @@ thm _gcd_add_right_for_fibonacci:
     obtain v from exist v Z st {a + b = gcd(a, a + b) * v}
     witness exist s Z st {b = gcd(a, a + b) * s} from v - u:
         b = (a + b) - a = gcd(a, a + b) * v - gcd(a, a + b) * u = gcd(a, a + b) * (v - u)
-    by def $chap2::divides(gcd(a, a + b), b)
+    by def:
+        ? $chap2::divides(gcd(a, a + b), b)
     by thm chap2::common_divisor_le_gcd(a, b, gcd(a, a + b))
     gcd(a, a + b) <= gcd(a, b)
     gcd(a, b) = gcd(a, a + b)
@@ -760,7 +780,8 @@ thm fib_coprime_fib_succ:
             by thm chap2::gcd_euclidean_base(1)
             gcd(1, 0) = abs(1) = 1
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
-            by def $coprime(fibonacci(n), fibonacci(n + 1))
+            by def:
+                ? $coprime(fibonacci(n), fibonacci(n + 1))
             $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
@@ -781,7 +802,8 @@ thm fib_coprime_fib_succ:
             gcd(fibonacci(n + 1), fibonacci(n)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n))
             gcd(fibonacci(n + 1), fibonacci((n + 1) + 1)) = gcd(fibonacci(n + 1), fibonacci(n + 1) + fibonacci(n)) = 1
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
-            by def $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
+            by def:
+                ? $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
             $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
 
 # Source definition: fib'. This tail-recursive state machine is a callable
@@ -815,7 +837,8 @@ thm fibonacci_fast_aux_eq:
                     ? forall j N:
                         fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(k + j)
                     fibonacci_fast_aux(k, fibonacci(j), fibonacci(j + 1)) = fibonacci(j) = fibonacci(k + j)
-                by def $_fibonacci_fast_invariant(k)
+                by def:
+                    ? $_fibonacci_fast_invariant(k)
                 $_fibonacci_fast_invariant(k)
             ? induc:
                 $_fibonacci_fast_invariant(k)
@@ -832,7 +855,8 @@ thm fibonacci_fast_aux_eq:
                     fibonacci_fast_aux(k + 1, fibonacci(j), fibonacci(j + 1)) = fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci(j) + fibonacci(j + 1))
                     fibonacci_fast_aux(k, fibonacci(j + 1), fibonacci((j + 1) + 1)) = fibonacci(k + (j + 1))
                     fibonacci(k + (j + 1)) = fibonacci((k + 1) + j)
-                by def $_fibonacci_fast_invariant(k + 1)
+                by def:
+                    ? $_fibonacci_fast_invariant(k + 1)
                 $_fibonacci_fast_invariant(k + 1)
     $_fibonacci_fast_invariant(n)
     fibonacci_fast_aux(n, fibonacci(m), fibonacci(m + 1)) = fibonacci(n + m)
@@ -870,7 +894,8 @@ thm fib_add:
                     fibonacci(k + 1) = fibonacci(1) = 1
                     fibonacci(j + k + 1) = fibonacci(j + 1)
                     fibonacci(j) * fibonacci(k) + fibonacci(j + 1) * fibonacci(k + 1) = fibonacci(j) * 0 + fibonacci(j + 1) * 1 = fibonacci(j + 1)
-                by def $_fibonacci_addition_at(k)
+                by def:
+                    ? $_fibonacci_addition_at(k)
                 $_fibonacci_addition_at(k)
             ? induc:
                 $_fibonacci_addition_at(k)
@@ -888,7 +913,8 @@ thm fib_add:
                     fibonacci(j + 1) * fibonacci(k) + fibonacci((j + 1) + 1) * fibonacci(k + 1) = fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1)
                     fibonacci(j + 1) * fibonacci(k) + (fibonacci(j) + fibonacci(j + 1)) * fibonacci(k + 1) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1))
                     fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * (fibonacci(k) + fibonacci(k + 1)) = fibonacci(j) * fibonacci(k + 1) + fibonacci(j + 1) * fibonacci((k + 1) + 1)
-                by def $_fibonacci_addition_at(k + 1)
+                by def:
+                    ? $_fibonacci_addition_at(k + 1)
                 $_fibonacci_addition_at(k + 1)
     $_fibonacci_addition_at(n)
     fibonacci(m + n + 1) = fibonacci(m) * fibonacci(n) + fibonacci(m + 1) * fibonacci(n + 1)
@@ -921,7 +947,8 @@ thm ne_one_iff_exists_prime_dvd_forward:
                     $prime(2)
                     witness exist q Z st {n = 2 * q} from 0:
                         n = 0 = 2 * 0
-                    by def $chap2::divides(2, n)
+                    by def:
+                        ? $chap2::divides(2, n)
                     $chap2::divides(2, n)
             case n != 0:
                 n $in N+

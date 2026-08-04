@@ -82,14 +82,16 @@ thm measurable_empty:
         $is_measurable_space_on(X, M)
         =>:
             $is_measurable_set(X, M, {})
-    by def $is_measurable_set(X, M, {})
+    by def:
+        ? $is_measurable_set(X, M, {})
 
 thm measurable_universe:
     ? forall X set, M power_set(power_set(X)):
         $is_measurable_space_on(X, M)
         =>:
             $is_measurable_set(X, M, X)
-    by extension set_minus(X, {}) = X:
+    by extension:
+        ? set_minus(X, {}) = X
         claim:
             ? forall x set_minus(X, {}):
                 x $in X
@@ -101,7 +103,8 @@ thm measurable_universe:
             x $in set_minus(X, {})
     set_minus(X, {}) $in M
     X $in M
-    by def $is_measurable_set(X, M, X)
+    by def:
+        ? $is_measurable_set(X, M, X)
 
 thm measurable_complement:
     ? forall X set, M power_set(power_set(X)), S power_set(X):
@@ -109,7 +112,8 @@ thm measurable_complement:
         $is_measurable_set(X, M, S)
         =>:
             $is_measurable_set(X, M, set_minus(X, S))
-    by def $is_measurable_set(X, M, set_minus(X, S))
+    by def:
+        ? $is_measurable_set(X, M, set_minus(X, S))
 
 # The closure theorems keep the membership set builders visible for their
 # elementwise proofs; the named symbolic countable-set templates also unfold.
@@ -119,7 +123,8 @@ thm measurable_countable_union:
         $is_measurable_sequence(X, M, A)
         =>:
             $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
-    by def $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
+    by def:
+        ? $is_measurable_set(X, M, {x X: $_member_of_countable_union(X, A, x)})
 
 thm measurable_countable_intersection:
     ? forall X set, M power_set(power_set(X)), A fn(n N) power_set(X):
@@ -137,30 +142,35 @@ thm measurable_countable_intersection:
             set_minus(X, A(n)) $in M
             claim:
                 ? {y X: not y $in A(n)} = set_minus(X, A(n))
-                by extension {y X: not y $in A(n)} = set_minus(X, A(n)):
-                    claim forall! y {q X: not q $in A(n)} => {y $in set_minus(X, A(n))}:
+                by extension:
+                    ? {y X: not y $in A(n)} = set_minus(X, A(n))
+                    claim forall y {q X: not q $in A(n)} => {y $in set_minus(X, A(n))}:
                         y $in X
                         not y $in A(n)
                         y $in set_minus(X, A(n))
-                    claim forall! y set_minus(X, A(n)) => {y $in {q X: not q $in A(n)}}:
+                    claim forall y set_minus(X, A(n)) => {y $in {q X: not q $in A(n)}}:
                         not y $in A(n)
                         by thm set_builder_member(y, {q X: not q $in A(n)})
             {y X: not y $in A(n)} $in M
             (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
             (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) $in M
-        by def $is_measurable_sequence(X, M, fn(k N) power_set(X) {{y X: not y $in A(k)}})
+        by def:
+            ? $is_measurable_sequence(X, M, fn(k N) power_set(X) {{y X: not y $in A(k)}})
     {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)} $in M
     set_minus(X, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}) $in M
-    by extension {x X: $_member_of_countable_intersection(X, A, x)} = set_minus(X, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}):
+    by extension:
+        ? {x X: $_member_of_countable_intersection(X, A, x)} = set_minus(X, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)})
         claim:
             ? forall x1 {x X: $_member_of_countable_intersection(X, A, x)}:
                 x1 $in set_minus(X, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)})
-            by def $_member_of_countable_intersection(X, A, x1)
+            by def:
+                ? $_member_of_countable_intersection(X, A, x1)
             x1 $in A(0)
             x1 $in X
             claim:
                 ? not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
-                by contra not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}:
+                by contra:
+                    ? not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
                     x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
                     obtain n from exist n N st {x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n)}
                     (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
@@ -184,13 +194,16 @@ thm measurable_countable_intersection:
                     (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
                     x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n)
                     witness exist j N st {x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(j)} from n
-                    by def $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x1)
+                    by def:
+                        ? $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x1)
                     by thm set_builder_member(x1, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)})
                     impossible not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
-            by def $_member_of_countable_intersection(X, A, x1)
+            by def:
+                ? $_member_of_countable_intersection(X, A, x1)
             by thm set_builder_member(x1, {x X: $_member_of_countable_intersection(X, A, x)})
     {x X: $_member_of_countable_intersection(X, A, x)} $in M
-    by def $is_measurable_set(X, M, {x X: $_member_of_countable_intersection(X, A, x)})
+    by def:
+        ? $is_measurable_set(X, M, {x X: $_member_of_countable_intersection(X, A, x)})
 
 # ---------------------------------------------------------------------------
 # Section 13.3 — Countably Additive Measure Candidates
@@ -276,7 +289,8 @@ thm almost_everywhere_iff_eventually:
             ? not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
             case $holds_almost_everywhere(X, V, M, zero, mu, P):
                 by thm ae_large_sets_member(X, V, M, zero, mu, P)
-                by def $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
+                by def:
+                    ? $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
                 not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
             case not $holds_almost_everywhere(X, V, M, zero, mu, P):
                 not $holds_almost_everywhere(X, V, M, zero, mu, P) or $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P)
@@ -291,7 +305,8 @@ thm almost_everywhere_iff_eventually:
                 not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
             case not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P):
                 not $eventually_in_filter(X, \ae_large_sets<X, V, M, zero, mu>, P) or $holds_almost_everywhere(X, V, M, zero, mu, P)
-    by def $almost_everywhere_eventually_equivalence(X, V, M, zero, mu, P)
+    by def:
+        ? $almost_everywhere_eventually_equivalence(X, V, M, zero, mu, P)
 
 # ---------------------------------------------------------------------------
 # Resumed MIL C13 S01 source slice

@@ -24,7 +24,8 @@ claim:
         identity(index) $in N
     identity(index) = index
     index $in N
-by def $maps_into(N, identity, N)
+by def:
+    ? $maps_into(N, identity, N)
 
 # Integer ranges preserve a natural carrier when their lower endpoint is
 # natural. Filtering such a finite range stays finite, so its minimum can be

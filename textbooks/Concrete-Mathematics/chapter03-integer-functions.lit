@@ -1120,7 +1120,8 @@ claim:
 claim:
     ? forall q josephus_moduli_319, population N+:
         $is_first_josephus_threshold_319(q, population, josephus_threshold_index_319(q, population))
-    by def $is_first_josephus_threshold_319(q, population, josephus_threshold_index_319(q, population))
+    by def:
+        ? $is_first_josephus_threshold_319(q, population, josephus_threshold_index_319(q, population))
 
 # Minimality supplies D_{k-1} <= (q-1)n. The recurrence then gives D_k <= qn,
 # hence the source survivor formula is a strictly positive integer.
@@ -1741,19 +1742,22 @@ claim:
     ? forall alpha R, n N:
         discrepancy_329(alpha, n) >= 0
     $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
-    by def $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
+    by def:
+        ? $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
 
 claim:
     ? forall alpha R, n N, v '[0, 1]:
         abs(discrepancy_sum_329(alpha, n, v)) <= discrepancy_329(alpha, n)
     $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
-    by def $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
+    by def:
+        ? $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
 
 claim:
     ? forall alpha R, n N:
         exist v '[0, 1] st {discrepancy_329(alpha, n) = abs(discrepancy_sum_329(alpha, n, v))}
     $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
-    by def $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
+    by def:
+        ? $is_discrepancy_maximum_329(alpha, n, discrepancy_329(alpha, n))
 
 discrepancy_sum_329(2, 0, 0.5) = 0
 claim:
@@ -1766,7 +1770,8 @@ claim:
     witness exist v '[0, 1] st {0 = abs(discrepancy_sum_329(2, 0, v))} from 0.5:
         discrepancy_sum_329(2, 0, 0.5) = 0
         0 = abs(0) = abs(discrepancy_sum_329(2, 0, 0.5))
-    by def $is_discrepancy_maximum_329(2, 0, 0)
+    by def:
+        ? $is_discrepancy_maximum_329(2, 0, 0)
 discrepancy_329(2, 0) = 0
 
 # Equation (3.30). These checked auxiliaries name exactly the source's changed

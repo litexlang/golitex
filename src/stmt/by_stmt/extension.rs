@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// Prove set equality by extensionality (`by extension …`).
+/// Prove set equality by extensionality (`by extension:` with a `?` equality goal).
 #[derive(Clone)]
 pub struct ByExtensionStmt {
     pub left: Obj,
@@ -12,24 +12,25 @@ pub struct ByExtensionStmt {
 
 impl fmt::Display for ByExtensionStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self.proof.len() {
-            0 => write!(
+        write!(
+            f,
+            "{} {}{}\n{}",
+            BY,
+            EXTENSION,
+            COLON,
+            add_four_spaces_at_beginning(
+                format!("{} {} {} {}", QUESTION_GOAL, self.left, EQUAL, self.right),
+                1,
+            )
+        )?;
+        if !self.proof.is_empty() {
+            write!(
                 f,
-                "{} {} {} {} {}",
-                BY, EXTENSION, self.left, EQUAL, self.right
-            ),
-            _ => write!(
-                f,
-                "{} {} {} {} {}{}\n{}",
-                BY,
-                EXTENSION,
-                self.left,
-                EQUAL,
-                self.right,
-                COLON,
+                "\n{}",
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
-            ),
+            )?;
         }
+        Ok(())
     }
 }
 

@@ -12,7 +12,8 @@ thm named_restricted_return_set_supports_nested_function_use:
         encode(u)(i1) = fn(j closed_range(1, 2)) U {u}(i1)
     encode(u) $in P
     encode(u) $in fn(i1 closed_range(1, 2)) U
-    by def $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
+    by def:
+        ? $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
     $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})
     witness exist h fn(p {u}) P st {$fn_eq(h(u), fn(i1 closed_range(1, 2)) U {u})} from encode:
         $fn_eq(encode(u), fn(i1 closed_range(1, 2)) U {u})

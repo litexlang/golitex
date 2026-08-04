@@ -29,6 +29,40 @@ forall [EqualPair], z X:
 }
 
 #[test]
+fn setting_expands_in_inline_forall_positions() {
+    let source = r#"
+setting EqualPair:
+    X nonempty_set
+    x, y X
+    x = y
+
+forall [EqualPair] => {x = y}
+
+trust not forall [EqualPair] => {x != y}
+
+trust exist z R st {forall [EqualPair] => {x = y}}
+"#;
+    let (succeeded, output) = run_setting_source(source, "setting_inline_expansion");
+    assert!(succeeded, "inline setting fixture failed:\n{}", output);
+    assert!(output.contains("forall X nonempty_set, x, y X:"));
+    assert!(output.contains("not forall X nonempty_set, x, y X:"));
+}
+
+#[test]
+fn plain_forall_uses_inline_syntax_only_where_a_body_is_impossible() {
+    let source = r#"
+trust exist x R st {forall y R => {y = y}}
+trust {x R: forall y R => {y = y}} = {x R: forall y R => {y = y}}
+
+have x R:
+    forall y R:
+        y = y
+"#;
+    let (succeeded, output) = run_setting_source(source, "forall_context_dispatch");
+    assert!(succeeded, "forall context fixture failed:\n{}", output);
+}
+
+#[test]
 fn repeated_setting_uses_allocate_distinct_forall_bindings() {
     let source = r#"
 setting OneElement:
@@ -75,6 +109,11 @@ forall [OneElement]:
 fn setting_reports_unknown_collision_order_and_duplicate_errors() {
     let cases = [
         ("forall [Missing]:\n    1 = 1", "unknown setting `Missing`"),
+        ("forall [Missing] => {1 = 1}", "unknown setting `Missing`"),
+        (
+            "setting S:\n    X nonempty_set\nforall [S], x X => {x = x}",
+            "must be followed by `=>`",
+        ),
         (
             "setting S:\n    X nonempty_set\nforall [S], X nonempty_set:\n    1 = 1",
             "already active",

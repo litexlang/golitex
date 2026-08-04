@@ -58,7 +58,8 @@ thm finite_set_has_bijective_index:
             $bijective(range(0, finite_set_size(T)), T, prev)
             =>:
                 exist idx fn(i1 range(0, finite_set_size(union({a}, T)))) union({a}, T) st {$bijective(range(0, finite_set_size(union({a}, T))), union({a}, T), idx)}
-        by extension intersect({a}, T) = {}:
+        by extension:
+            ? intersect({a}, T) = {}
             claim:
                 ? forall z intersect({a}, T):
                     z $in {}
@@ -224,16 +225,20 @@ thm prime_implies_prime_by_trial_division:
         $prime(p)
         =>:
             $prime_by_trial_division(p)
-    by def $prime_by_trial_division(p)
-    by def $prime(p)
+    by def:
+        ? $prime_by_trial_division(p)
+    by def:
+        ? $prime(p)
 
 thm prime_by_trial_division_implies_prime:
     ? forall p N+:
         $prime_by_trial_division(p)
         =>:
             $prime(p)
-    by def $prime_by_trial_division(p)
-    by def $prime(p)
+    by def:
+        ? $prime_by_trial_division(p)
+    by def:
+        ? $prime(p)
 
 # The Euclidean quotient is an ordinary source-defined selection. The kernel
 # verifies only the narrow unique-existence fact used by this declaration.

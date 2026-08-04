@@ -31,10 +31,12 @@ thm linear_combination_value_exists:
                 =>:
                     partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
             partial_sums(k) = space.add(partial_sums(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
-        by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums)
+        by def:
+            ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums)
     witness exist value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)} from partial_sums(n):
         witness exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace), partial_sums(n) = trace(n)} from partial_sums
-        by def $has_linear_combination_value(s, v, space, n, coefficients, vectors, partial_sums(n))
+        by def:
+            ? $has_linear_combination_value(s, v, space, n, coefficients, vectors, partial_sums(n))
 thm linear_combination_value_exists_unique:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
         exist! value v st {$has_linear_combination_value(s, v, space, n, coefficients, vectors, value)}
@@ -48,8 +50,10 @@ thm linear_combination_value_exists_unique:
                 x1 = x2
         obtain trace1 from exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace), x1 = trace(n)}
         obtain trace2 from exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace), x2 = trace(n)}
-        by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace1)
-        by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace2)
+        by def:
+            ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace1)
+        by def:
+            ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace2)
         have fn extended_trace1(k N) v by cases:
             case k <= n: trace1(k)
             case k > n: space.zero
@@ -177,7 +181,8 @@ thm zero_coefficients_trace:
         trust zero_trace(k - 1) = space.zero
         space.add(space.zero, space.zero) = space.zero
         trust zero_trace(k) = space.add(zero_trace(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, zero_trace)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, zero_trace)
     $is_linear_combination_partial_sum_sequence(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, fn(k closed_range(0, n)) v {space.zero})
 
 thm zero_coefficients_trace_exists:
@@ -191,7 +196,8 @@ thm zero_coefficients_has_zero_value:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
         $has_linear_combination_value(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, space.zero)
     by thm zero_coefficients_trace_exists(s, v, space, n, vectors)
-    by def $has_linear_combination_value(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, space.zero)
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, \zero_coefficient_list<s, space.scalars, n>, vectors, space.zero)
 
 thm linear_combination_value_zero_coefficients:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
@@ -240,17 +246,20 @@ thm add_coefficients_trace:
         space.smul(result.entries(k), vectors.entries(k)) = space.add(space.smul(left.entries(k), vectors.entries(k)), space.smul(right.entries(k), vectors.entries(k)))
         trust trace_sum(k - 1) = space.add(trace1(k - 1), trace2(k - 1))
         trust trace_sum(k) = space.add(trace_sum(k - 1), space.smul(result.entries(k), vectors.entries(k)))
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, trace_sum)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, trace_sum)
     $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, fn(k closed_range(0, n)) v {space.add(trace1(k), trace2(k))})
 
 thm add_coefficients_trace_exists:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, left, right &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
         exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, trace), space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors)) = trace(n)}
     by thm linear_combination_value_satisfies_spec(s, v, space, n, left, vectors)
-    by def $has_linear_combination_value(s, v, space, n, left, vectors, \linear_combination_value<s, v, space, n>(left, vectors))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, left, vectors, \linear_combination_value<s, v, space, n>(left, vectors))
     obtain trace1 from exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, left, vectors, trace), \linear_combination_value<s, v, space, n>(left, vectors) = trace(n)}
     by thm linear_combination_value_satisfies_spec(s, v, space, n, right, vectors)
-    by def $has_linear_combination_value(s, v, space, n, right, vectors, \linear_combination_value<s, v, space, n>(right, vectors))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, right, vectors, \linear_combination_value<s, v, space, n>(right, vectors))
     obtain trace2 from exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, right, vectors, trace), \linear_combination_value<s, v, space, n>(right, vectors) = trace(n)}
     by thm add_coefficients_trace(s, v, space, n, left, right, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, trace1, trace2)
     space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors)) = space.add(trace1(n), trace2(n)) = (fn(k closed_range(0, n)) v {space.add(trace1(k), trace2(k))})(n)
@@ -260,7 +269,8 @@ thm linear_combination_value_add_coefficients:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, left, right &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
         \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors) = space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors))
     by thm add_coefficients_trace_exists(s, v, space, n, left, right, vectors)
-    by def $has_linear_combination_value(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors)))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors, space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors)))
     by thm linear_combination_value_exists_unique(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors)
     by thm linear_combination_value_satisfies_spec(s, v, space, n, \coefficient_list_add<s, space.scalars, n>(left, right), vectors)
     \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors) = space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors))
@@ -295,7 +305,8 @@ thm smul_coefficients_trace:
         $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
         =>:
             $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, fn(k closed_range(0, n)) v {space.smul(a, trace(k))})
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
     trace(0) = space.zero
     by thm chap1b::scalar_times_zero_vector(s, v, space, a)
     (fn(j closed_range(0, n)) v {space.smul(a, trace(j))})(0) = space.smul(a, trace(0)) = space.smul(a, space.zero) = space.zero
@@ -307,13 +318,15 @@ thm smul_coefficients_trace:
         trace(k) = space.add(trace(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
         by thm smul_trace_step(s, v, space, n, a, coefficients, result, vectors, trace, k)
         (fn(j closed_range(0, n)) v {space.smul(a, trace(j))})(k) = space.add((fn(j closed_range(0, n)) v {space.smul(a, trace(j))})(k - 1), space.smul(result.entries(k), vectors.entries(k)))
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, fn(k closed_range(0, n)) v {space.smul(a, trace(k))})
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, result, vectors, fn(k closed_range(0, n)) v {space.smul(a, trace(k))})
 
 thm smul_coefficients_trace_exists:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, a s, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
         exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors, trace), space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors)) = trace(n)}
     by thm linear_combination_value_satisfies_spec(s, v, space, n, coefficients, vectors)
-    by def $has_linear_combination_value(s, v, space, n, coefficients, vectors, \linear_combination_value<s, v, space, n>(coefficients, vectors))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, coefficients, vectors, \linear_combination_value<s, v, space, n>(coefficients, vectors))
     obtain source_trace from exist trace fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace), \linear_combination_value<s, v, space, n>(coefficients, vectors) = trace(n)}
     by thm smul_coefficients_trace(s, v, space, n, a, coefficients, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors, source_trace)
     space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors)) = space.smul(a, source_trace(n)) = (fn(k closed_range(0, n)) v {space.smul(a, source_trace(k))})(n)
@@ -323,7 +336,8 @@ thm linear_combination_value_smul_coefficients:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, a s, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<v, n>:
         \linear_combination_value<s, v, space, n>(\coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors) = space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors))
     by thm smul_coefficients_trace_exists(s, v, space, n, a, coefficients, vectors)
-    by def $has_linear_combination_value(s, v, space, n, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors, space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors)))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors, space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors)))
     by thm linear_combination_value_exists_unique(s, v, space, n, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors)
     by thm linear_combination_value_satisfies_spec(s, v, space, n, \coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors)
     \linear_combination_value<s, v, space, n>(\coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors) = space.smul(a, \linear_combination_value<s, v, space, n>(coefficients, vectors))
@@ -344,7 +358,8 @@ thm coefficient_add_neg_is_zero:
         by thm zero_coefficient_list_entry(s, scalars, n, zero, idx)
         scalars.add(coefficients.entries(idx), scalars.neg(coefficients.entries(idx))) = scalars.zero
         summed.entries(idx) = scalars.add(coefficients.entries(idx), negated.entries(idx)) = scalars.add(coefficients.entries(idx), scalars.neg(coefficients.entries(idx))) = scalars.zero = zero.entries(idx)
-    by def $chap1a::have_same_finite_list_entries(s, n, summed, zero)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, summed, zero)
     by thm chap1a::finite_list_extensionality(s, n, summed, zero)
     summed = zero
     \coefficient_list_add<s, scalars, n>(coefficients, \coefficient_list_neg<s, scalars, n>(coefficients)) = \zero_coefficient_list<s, scalars, n>
@@ -400,7 +415,8 @@ thm span_zero_member:
     by thm linear_combination_value_zero_coefficients(s, v, space, n, vectors)
     space.zero = \linear_combination_value<s, v, space, n>(\zero_coefficient_list<s, space.scalars, n>, vectors)
     witness exist coefficients &chap1a::FiniteList<s, n> st {space.zero = \linear_combination_value<s, v, space, n>(coefficients, vectors)} from \zero_coefficient_list<s, space.scalars, n>
-    by def $is_linear_combination(s, v, space, n, space.zero, vectors)
+    by def:
+        ? $is_linear_combination(s, v, space, n, space.zero, vectors)
     # The witness is checked above; the updated runtime does not fold direct
     # membership in this instantiated set-builder.
     space.zero $in {value v: $is_linear_combination(s, v, space, n, value, vectors)}
@@ -422,7 +438,8 @@ thm span_add_closed:
     space.add(\linear_combination_value<s, v, space, n>(left, vectors), y) = space.add(\linear_combination_value<s, v, space, n>(left, vectors), \linear_combination_value<s, v, space, n>(right, vectors))
     space.add(x, y) = \linear_combination_value<s, v, space, n>(\coefficient_list_add<s, space.scalars, n>(left, right), vectors)
     witness exist coefficients &chap1a::FiniteList<s, n> st {space.add(x, y) = \linear_combination_value<s, v, space, n>(coefficients, vectors)} from \coefficient_list_add<s, space.scalars, n>(left, right)
-    by def $is_linear_combination(s, v, space, n, space.add(x, y), vectors)
+    by def:
+        ? $is_linear_combination(s, v, space, n, space.add(x, y), vectors)
     # Keep the checked coefficient witness; trust only the unsupported
     # one-layer set-builder membership fold.
     space.add(x, y) $in {value v: $is_linear_combination(s, v, space, n, value, vectors)}
@@ -438,7 +455,8 @@ thm span_smul_closed:
     by thm linear_combination_value_smul_coefficients(s, v, space, n, a, coefficients, vectors)
     space.smul(a, x) = \linear_combination_value<s, v, space, n>(\coefficient_list_smul<s, space.scalars, n>(a, coefficients), vectors)
     witness exist result &chap1a::FiniteList<s, n> st {space.smul(a, x) = \linear_combination_value<s, v, space, n>(result, vectors)} from \coefficient_list_smul<s, space.scalars, n>(a, coefficients)
-    by def $is_linear_combination(s, v, space, n, space.smul(a, x), vectors)
+    by def:
+        ? $is_linear_combination(s, v, space, n, space.smul(a, x), vectors)
     # Keep the checked coefficient witness; trust only the unsupported
     # one-layer set-builder membership fold.
     space.smul(a, x) $in {value v: $is_linear_combination(s, v, space, n, value, vectors)}
@@ -468,7 +486,8 @@ thm span_is_subspace:
         by thm span_smul_closed(s, v, space, n, vectors, a, x)
         space.smul(a, x) $in \span<s, v, space, n, vectors>
         space.smul(a, x) $in \span_carrier<s, v, space, n, vectors>
-    by def $chap1c::is_subspace(s, v, space, \span_carrier<s, v, space, n, vectors>)
+    by def:
+        ? $chap1c::is_subspace(s, v, space, \span_carrier<s, v, space, n, vectors>)
 
 thm list_entry_is_linear_combination:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, idx N+:
@@ -496,7 +515,8 @@ thm span_contains_list_entries:
         \span<s, v, space, n, vectors> = {value v: $is_linear_combination(s, v, space, n, value, vectors)}
         vectors.entries(idx) $in \span<s, v, space, n, vectors>
         vectors.entries(idx) $in \span_carrier<s, v, space, n, vectors>
-    by def $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
+    by def:
+        ? $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
 
 thm partial_trace_step_in_subspace:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, coefficients &chap1a::FiniteList<s, n>, trace fn(j closed_range(0, n)) v, U power_set(v), k N+:
@@ -507,8 +527,10 @@ thm partial_trace_step_in_subspace:
         trace(k) = space.add(trace(k - 1), space.smul(coefficients.entries(k), vectors.entries(k)))
         =>:
             trace(k) $in U
-    by def $chap1c::is_subspace(s, v, space, U)
-    by def $contains_list_entries(v, n, vectors, U)
+    by def:
+        ? $chap1c::is_subspace(s, v, space, U)
+    by def:
+        ? $contains_list_entries(v, n, vectors, U)
     vectors.entries(k) $in U
     space.smul(coefficients.entries(k), vectors.entries(k)) $in U
     space.add(trace(k - 1), space.smul(coefficients.entries(k), vectors.entries(k))) $in U
@@ -521,8 +543,10 @@ thm partial_trace_in_subspace:
         $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
         =>:
             trace(k) $in U
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
-    by def $chap1c::is_subspace(s, v, space, U)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
+    by def:
+        ? $chap1c::is_subspace(s, v, space, U)
     space.zero $in U
     have fn extended_trace(j N) v by cases:
         case j <= n: trace(j)
@@ -578,13 +602,15 @@ thm span_is_smallest_subspace:
         $is_linear_combination(s, v, space, n, x, vectors)
         obtain coefficients from exist coefficients &chap1a::FiniteList<s, n> st {x = \linear_combination_value<s, v, space, n>(coefficients, vectors)}
         by thm linear_combination_value_satisfies_spec(s, v, space, n, coefficients, vectors)
-        by def $has_linear_combination_value(s, v, space, n, coefficients, vectors, \linear_combination_value<s, v, space, n>(coefficients, vectors))
+        by def:
+            ? $has_linear_combination_value(s, v, space, n, coefficients, vectors, \linear_combination_value<s, v, space, n>(coefficients, vectors))
         obtain trace from exist partial_sums fn(k closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, partial_sums), \linear_combination_value<s, v, space, n>(coefficients, vectors) = partial_sums(n)}
         by thm partial_trace_in_subspace(s, v, space, n, vectors, coefficients, trace, U, n)
         trace(n) $in U
         x = \linear_combination_value<s, v, space, n>(coefficients, vectors) = trace(n)
         x $in U
-    by def \span_carrier<s, v, space, n, vectors> $subset U
+    by def:
+        ? \span_carrier<s, v, space, n, vectors> $subset U
 # Definition 2.7. A list spans its ambient vector space precisely when its
 # span carrier is the whole vector carrier.
 prop spans(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
@@ -694,12 +720,16 @@ thm polynomial_degree_exists_unique:
             $has_polynomial_degree(s, scalars, p, degree2)
             =>:
                 degree1 = degree2
-        by def $has_polynomial_degree(s, scalars, p, degree1)
-        by def $has_polynomial_degree(s, scalars, p, degree2)
+        by def:
+            ? $has_polynomial_degree(s, scalars, p, degree1)
+        by def:
+            ? $has_polynomial_degree(s, scalars, p, degree2)
         degree1 = p.degree = degree2
-    by def $has_polynomial_degree(s, scalars, p, p.degree)
+    by def:
+        ? $has_polynomial_degree(s, scalars, p, p.degree)
     witness exist! degree &PolynomialDegree st {$has_polynomial_degree(s, scalars, p, degree)} from p.degree
-    by def $admits_unique_polynomial_degree(s, scalars, p)
+    by def:
+        ? $admits_unique_polynomial_degree(s, scalars, p)
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, p &Polynomial<s, scalars>>:
     have degree &PolynomialDegree = p.degree
@@ -765,7 +795,8 @@ thm nonzero_coefficients_have_largest_index:
                         j $in support
                         witness $is_nonempty_set(support) from j
                         impossible $is_nonempty_set(support)
-            by def $has_only_zero_coefficients(s, scalars, n, coefficients)
+            by def:
+                ? $has_only_zero_coefficients(s, scalars, n, coefficients)
             impossible $has_only_zero_coefficients(s, scalars, n, coefficients)
     $is_finite_set(closed_range(1, n))
     $is_finite_set(set_minus(closed_range(1, n), zero_indices))
@@ -777,7 +808,8 @@ thm nonzero_coefficients_have_largest_index:
             j $in closed_range(1, n)
             j $in Z
             j $in R
-        by def support $subset R
+        by def:
+            ? support $subset R
     have maximum R = finite_set_max(support)
     finite_set_max(support) $in support
     maximum $in support
@@ -815,7 +847,8 @@ thm nonzero_coefficients_have_largest_index:
                 j $in support
                 j <= finite_set_max(support) = k
                 impossible j > k
-    by def $is_largest_nonzero_coefficient_index(s, scalars, n, coefficients, k)
+    by def:
+        ? $is_largest_nonzero_coefficient_index(s, scalars, n, coefficients, k)
     witness exist selected N+ st {$is_largest_nonzero_coefficient_index(s, scalars, n, coefficients, selected)} from k
 
 prop is_linearly_independent(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>):
@@ -878,7 +911,8 @@ thm linear_combination_trace_constant_after_zero_tail:
                 coefficients.entries(j) = space.scalars.zero
         =>:
             trace(n) = trace(k)
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
     have fn capped_trace(j N) v by cases:
         case j <= n: trace(j)
         case j > n: trace(n)
@@ -970,9 +1004,12 @@ thm linear_combination_trace_prefix_value:
         $is_prefix_of_length(v, n, m, vectors, prefix_vectors)
         =>:
             \linear_combination_value<s, v, space, m>(prefix_coefficients, prefix_vectors) = trace(m)
-    by def $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
-    by def $is_prefix_of_length(s, n, m, coefficients, prefix_coefficients)
-    by def $is_prefix_of_length(v, n, m, vectors, prefix_vectors)
+    by def:
+        ? $is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, vectors, trace)
+    by def:
+        ? $is_prefix_of_length(s, n, m, coefficients, prefix_coefficients)
+    by def:
+        ? $is_prefix_of_length(v, n, m, vectors, prefix_vectors)
     have fn prefix_trace(j closed_range(0, m)) v = trace(j)
     claim:
         ? $is_linear_combination_partial_sum_sequence(s, v, space, m, prefix_coefficients, prefix_vectors, prefix_trace)
@@ -990,12 +1027,14 @@ thm linear_combination_trace_prefix_value:
             trust prefix_trace(j - 1) = trace(j - 1)
             trace(j) = space.add(trace(j - 1), space.smul(coefficients.entries(j), vectors.entries(j)))
             prefix_trace(j) = trace(j) = space.add(trace(j - 1), space.smul(coefficients.entries(j), vectors.entries(j))) = space.add(prefix_trace(j - 1), space.smul(prefix_coefficients.entries(j), prefix_vectors.entries(j)))
-        by def $is_linear_combination_partial_sum_sequence(s, v, space, m, prefix_coefficients, prefix_vectors, prefix_trace)
+        by def:
+            ? $is_linear_combination_partial_sum_sequence(s, v, space, m, prefix_coefficients, prefix_vectors, prefix_trace)
     claim:
         ? $has_linear_combination_value(s, v, space, m, prefix_coefficients, prefix_vectors, trace(m))
         trace(m) = prefix_trace(m)
         witness exist selected_trace fn(j closed_range(0, m)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, m, prefix_coefficients, prefix_vectors, selected_trace), trace(m) = selected_trace(m)} from prefix_trace
-        by def $has_linear_combination_value(s, v, space, m, prefix_coefficients, prefix_vectors, trace(m))
+        by def:
+            ? $has_linear_combination_value(s, v, space, m, prefix_coefficients, prefix_vectors, trace(m))
     by thm linear_combination_value_exists_unique(s, v, space, m, prefix_coefficients, prefix_vectors)
     by thm linear_combination_value_satisfies_spec(s, v, space, m, prefix_coefficients, prefix_vectors)
     \linear_combination_value<s, v, space, m>(prefix_coefficients, prefix_vectors) = trace(m)
@@ -1028,7 +1067,8 @@ thm solve_nonzero_coefficient_into_span:
     by thm linear_combination_value_smul_coefficients(s, v, space, m, inverse_coefficient, \coefficient_list_neg<s, space.scalars, m>(coefficients), vectors)
     \linear_combination_value<s, v, space, m>(solution, vectors) = \linear_combination_value<s, v, space, m>(\coefficient_list_smul<s, space.scalars, m>(inverse_coefficient, \coefficient_list_neg<s, space.scalars, m>(coefficients)), vectors) = space.smul(inverse_coefficient, \linear_combination_value<s, v, space, m>(\coefficient_list_neg<s, space.scalars, m>(coefficients), vectors)) = space.smul(inverse_coefficient, \chap1b::vector_neg<s, v, space>(prefix_value)) = x
     witness exist selected &chap1a::FiniteList<s, m> st {x = \linear_combination_value<s, v, space, m>(selected, vectors)} from solution
-    by def $is_linear_combination(s, v, space, m, x, vectors)
+    by def:
+        ? $is_linear_combination(s, v, space, m, x, vectors)
     x $in {value v: $is_linear_combination(s, v, space, m, value, vectors)}
     \span<s, v, space, m, vectors> = {value v: $is_linear_combination(s, v, space, m, value, vectors)}
     x $in \span<s, v, space, m, vectors>
@@ -1058,7 +1098,8 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
             vectors.entries(k) $in \span_carrier<s, v, space, k - 1, predecessors>
             \span_carrier<s, v, space, n - 1, reduced> = \span_carrier<s, v, space, n, vectors>
     by thm largest_nonzero_coefficient_entry_in_predecessor_span(s, v, space, n, vectors, coefficients, k, predecessors)
-    by def $is_list_with_index_removed(v, n, vectors, k, reduced)
+    by def:
+        ? $is_list_with_index_removed(v, n, vectors, k, reduced)
     by thm span_is_subspace(s, v, space, n, vectors)
     by thm span_is_subspace(s, v, space, n - 1, reduced)
     by thm span_contains_list_entries(s, v, space, n, vectors)
@@ -1075,7 +1116,8 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
                 case idx < k:
                     reduced.entries(idx) = vectors.entries(idx)
                     idx <= n
-                    by def $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
+                    by def:
+                        ? $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
                     vectors.entries(idx) $in \span_carrier<s, v, space, n, vectors>
                 case idx >= k:
                     n - 1 < n
@@ -1083,9 +1125,11 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
                     idx < n
                     reduced.entries(idx) = vectors.entries(idx + 1)
                     idx + 1 <= n
-                    by def $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
+                    by def:
+                        ? $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n, vectors>)
                     vectors.entries(idx + 1) $in \span_carrier<s, v, space, n, vectors>
-        by def $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n, vectors>)
+        by def:
+            ? $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n, vectors>)
     by thm span_is_smallest_subspace(s, v, space, n - 1, reduced, \span_carrier<s, v, space, n, vectors>)
     \span_carrier<s, v, space, n - 1, reduced> $subset \span_carrier<s, v, space, n, vectors>
     claim:
@@ -1095,7 +1139,8 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
                 idx <= k - 1
                 =>:
                     predecessors.entries(idx) $in \span_carrier<s, v, space, n - 1, reduced>
-            by def $is_prefix_of_length(v, n, k - 1, vectors, predecessors)
+            by def:
+                ? $is_prefix_of_length(v, n, k - 1, vectors, predecessors)
             k - 1 < k
             idx <= k - 1 < k
             idx < k
@@ -1103,9 +1148,11 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
             idx <= k - 1 <= n - 1
             idx <= n - 1
             reduced.entries(idx) = vectors.entries(idx) = predecessors.entries(idx)
-            by def $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
+            by def:
+                ? $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
             reduced.entries(idx) $in \span_carrier<s, v, space, n - 1, reduced>
-        by def $contains_list_entries(v, k - 1, predecessors, \span_carrier<s, v, space, n - 1, reduced>)
+        by def:
+            ? $contains_list_entries(v, k - 1, predecessors, \span_carrier<s, v, space, n - 1, reduced>)
     by thm span_is_smallest_subspace(s, v, space, k - 1, predecessors, \span_carrier<s, v, space, n - 1, reduced>)
     \span_carrier<s, v, space, k - 1, predecessors> $subset \span_carrier<s, v, space, n - 1, reduced>
     vectors.entries(k) $in \span_carrier<s, v, space, n - 1, reduced>
@@ -1122,7 +1169,8 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
                     idx < n
                     idx <= n - 1
                     reduced.entries(idx) = vectors.entries(idx)
-                    by def $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
+                    by def:
+                        ? $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
                     reduced.entries(idx) $in \span_carrier<s, v, space, n - 1, reduced>
                 case idx >= k:
                     by cases:
@@ -1149,12 +1197,15 @@ thm largest_nonzero_coefficient_deletion_preserves_span:
                             previous_index + 1 = (idx - 1) + 1 = idx
                             previous_index + 1 = idx
                             reduced.entries(previous_index) = vectors.entries(idx)
-                            by def $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
+                            by def:
+                                ? $contains_list_entries(v, n - 1, reduced, \span_carrier<s, v, space, n - 1, reduced>)
                             reduced.entries(previous_index) $in \span_carrier<s, v, space, n - 1, reduced>
-        by def $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n - 1, reduced>)
+        by def:
+            ? $contains_list_entries(v, n, vectors, \span_carrier<s, v, space, n - 1, reduced>)
     by thm span_is_smallest_subspace(s, v, space, n, vectors, \span_carrier<s, v, space, n - 1, reduced>)
     \span_carrier<s, v, space, n, vectors> $subset \span_carrier<s, v, space, n - 1, reduced>
-    by extension \span_carrier<s, v, space, n - 1, reduced> = \span_carrier<s, v, space, n, vectors>
+    by extension:
+        ? \span_carrier<s, v, space, n - 1, reduced> = \span_carrier<s, v, space, n, vectors>
 
 thm linear_dependence_lemma:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
@@ -1212,7 +1263,8 @@ thm inserting_into_spanning_list_preserves_spanning:
         =>:
             $spans(s, v, space, old_length + 1, inserted)
     by thm span_contains_list_entries(s, v, space, old_length + 1, inserted)
-    by def $is_list_with_index_inserted(v, old_length, old_list, inserted, k)
+    by def:
+        ? $is_list_with_index_inserted(v, old_length, old_list, inserted, k)
     claim:
         ? $contains_list_entries(v, old_length, old_list, \span_carrier<s, v, space, old_length + 1, inserted>)
         claim:
@@ -1229,17 +1281,21 @@ thm inserting_into_spanning_list_preserves_spanning:
                     idx + 1 <= old_length + 1
                     old_list.entries(idx) = inserted.entries(idx + 1)
                     inserted.entries(idx + 1) $in \span_carrier<s, v, space, old_length + 1, inserted>
-        by def $contains_list_entries(v, old_length, old_list, \span_carrier<s, v, space, old_length + 1, inserted>)
+        by def:
+            ? $contains_list_entries(v, old_length, old_list, \span_carrier<s, v, space, old_length + 1, inserted>)
     by thm span_is_subspace(s, v, space, old_length + 1, inserted)
     by thm span_is_smallest_subspace(s, v, space, old_length, old_list, \span_carrier<s, v, space, old_length + 1, inserted>)
-    by def $spans(s, v, space, old_length, old_list)
+    by def:
+        ? $spans(s, v, space, old_length, old_list)
     by thm span_carrier_spec(s, v, space, old_length, old_list)
     v $subset \span_carrier<s, v, space, old_length + 1, inserted>
     \span_carrier<s, v, space, old_length + 1, inserted> $subset v
-    by extension \span_carrier<s, v, space, old_length + 1, inserted> = v
+    by extension:
+        ? \span_carrier<s, v, space, old_length + 1, inserted> = v
     by thm span_carrier_spec(s, v, space, old_length + 1, inserted)
     \span<s, v, space, old_length + 1, inserted> = v
-    by def $spans(s, v, space, old_length + 1, inserted)
+    by def:
+        ? $spans(s, v, space, old_length + 1, inserted)
 
 thm inserting_vector_from_old_span_has_nontrivial_dependence:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, old_length N, old_list &chap1a::FiniteList<v, old_length>, inserted &chap1a::FiniteList<v, old_length + 1>, k N+:
@@ -1259,23 +1315,27 @@ thm inserting_vector_from_old_span_makes_dependence:
         =>:
             $is_linearly_dependent(s, v, space, old_length + 1, inserted)
     by thm inserting_vector_from_old_span_has_nontrivial_dependence(s, v, space, old_length, old_list, inserted, k)
-    by def $has_nontrivial_dependence_coefficients(s, v, space, old_length + 1, inserted)
+    by def:
+        ? $has_nontrivial_dependence_coefficients(s, v, space, old_length + 1, inserted)
     obtain coefficients from exist selected &chap1a::FiniteList<s, old_length + 1> st {\linear_combination_value<s, v, space, old_length + 1>(selected, inserted) = space.zero, not $has_only_zero_coefficients(s, space.scalars, old_length + 1, selected)}
     claim:
         ? not $is_linearly_independent(s, v, space, old_length + 1, inserted)
         by contra:
             ? not $is_linearly_independent(s, v, space, old_length + 1, inserted)
-            by def $is_linearly_independent(s, v, space, old_length + 1, inserted)
+            by def:
+                ? $is_linearly_independent(s, v, space, old_length + 1, inserted)
             $has_only_zero_coefficients(s, space.scalars, old_length + 1, coefficients)
             impossible not $has_only_zero_coefficients(s, space.scalars, old_length + 1, coefficients)
-    by def $is_linearly_dependent(s, v, space, old_length + 1, inserted)
+    by def:
+        ? $is_linearly_dependent(s, v, space, old_length + 1, inserted)
 
 thm linearly_dependent_has_nontrivial_coefficients:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
         $is_linearly_dependent(s, v, space, n, vectors)
         =>:
             $has_nontrivial_dependence_coefficients(s, v, space, n, vectors)
-    by def $is_linearly_dependent(s, v, space, n, vectors)
+    by def:
+        ? $is_linearly_dependent(s, v, space, n, vectors)
     by contra:
         ? $has_nontrivial_dependence_coefficients(s, v, space, n, vectors)
         claim:
@@ -1286,9 +1346,11 @@ thm linearly_dependent_has_nontrivial_coefficients:
             by contra:
                 ? $has_only_zero_coefficients(s, space.scalars, n, coefficients)
                 witness exist selected &chap1a::FiniteList<s, n> st {\linear_combination_value<s, v, space, n>(selected, vectors) = space.zero, not $has_only_zero_coefficients(s, space.scalars, n, selected)} from coefficients
-                by def $has_nontrivial_dependence_coefficients(s, v, space, n, vectors)
+                by def:
+                    ? $has_nontrivial_dependence_coefficients(s, v, space, n, vectors)
                 impossible $has_nontrivial_dependence_coefficients(s, v, space, n, vectors)
-        by def $is_linearly_independent(s, v, space, n, vectors)
+        by def:
+            ? $is_linearly_independent(s, v, space, n, vectors)
         impossible $is_linearly_independent(s, v, space, n, vectors)
 
 thm dependent_prefix_has_nontrivial_coefficients_in_full_list:
@@ -1307,16 +1369,19 @@ thm dependent_prefix_makes_full_list_dependent:
         =>:
             $is_linearly_dependent(s, v, space, full_length, full_list)
     by thm dependent_prefix_has_nontrivial_coefficients_in_full_list(s, v, space, full_length, prefix_length, full_list, prefix)
-    by def $has_nontrivial_dependence_coefficients(s, v, space, full_length, full_list)
+    by def:
+        ? $has_nontrivial_dependence_coefficients(s, v, space, full_length, full_list)
     obtain coefficients from exist selected &chap1a::FiniteList<s, full_length> st {\linear_combination_value<s, v, space, full_length>(selected, full_list) = space.zero, not $has_only_zero_coefficients(s, space.scalars, full_length, selected)}
     claim:
         ? not $is_linearly_independent(s, v, space, full_length, full_list)
         by contra:
             ? not $is_linearly_independent(s, v, space, full_length, full_list)
-            by def $is_linearly_independent(s, v, space, full_length, full_list)
+            by def:
+                ? $is_linearly_independent(s, v, space, full_length, full_list)
             $has_only_zero_coefficients(s, space.scalars, full_length, coefficients)
             impossible not $has_only_zero_coefficients(s, space.scalars, full_length, coefficients)
-    by def $is_linearly_dependent(s, v, space, full_length, full_list)
+    by def:
+        ? $is_linearly_dependent(s, v, space, full_length, full_list)
 
 thm independent_entry_not_in_predecessor_span:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, k N+, predecessors &chap1a::FiniteList<v, k - 1>:
@@ -1345,8 +1410,10 @@ thm dependence_deletion_index_follows_shared_independent_prefix:
         claim:
             ? $is_prefix_of_length(v, source_length, k - 1, source, predecessors)
             k - 1 <= k <= source_length
-            by def $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
-            by def $is_prefix_of_length(v, long_length, k - 1, long_list, predecessors)
+            by def:
+                ? $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
+            by def:
+                ? $is_prefix_of_length(v, long_length, k - 1, long_list, predecessors)
             claim:
                 ? forall idx N+:
                     idx <= k - 1
@@ -1356,10 +1423,12 @@ thm dependence_deletion_index_follows_shared_independent_prefix:
                 predecessors.entries(idx) = long_list.entries(idx)
                 long_list.entries(idx) = source.entries(idx)
                 predecessors.entries(idx) = source.entries(idx)
-            by def $is_prefix_of_length(v, source_length, k - 1, source, predecessors)
+            by def:
+                ? $is_prefix_of_length(v, source_length, k - 1, source, predecessors)
         by thm independent_entry_not_in_predecessor_span(s, v, space, source_length, source, k, predecessors)
         not source.entries(k) $in \span_carrier<s, v, space, k - 1, predecessors>
-        by def $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
+        by def:
+            ? $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
         long_list.entries(k) = source.entries(k)
         source.entries(k) $in \span_carrier<s, v, space, k - 1, predecessors>
         impossible not source.entries(k) $in \span_carrier<s, v, space, k - 1, predecessors>
@@ -1371,8 +1440,10 @@ thm deletion_after_shared_prefix_preserves_initial_agreement:
         k > prefix_length
         =>:
             $agrees_on_initial_segment(v, source_length, long_length - 1, source, reduced, prefix_length)
-    by def $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
-    by def $is_list_with_index_removed(v, long_length, long_list, k, reduced)
+    by def:
+        ? $agrees_on_initial_segment(v, source_length, long_length, source, long_list, prefix_length)
+    by def:
+        ? $is_list_with_index_removed(v, long_length, long_list, k, reduced)
     prefix_length < k <= long_length
     prefix_length <= long_length - 1
     claim:
@@ -1384,7 +1455,8 @@ thm deletion_after_shared_prefix_preserves_initial_agreement:
         reduced.entries(idx) = long_list.entries(idx)
         long_list.entries(idx) = source.entries(idx)
         reduced.entries(idx) = source.entries(idx)
-    by def $agrees_on_initial_segment(v, source_length, long_length - 1, source, reduced, prefix_length)
+    by def:
+        ? $agrees_on_initial_segment(v, source_length, long_length - 1, source, reduced, prefix_length)
 
 thm spanning_replacement_adds_next_independent_entry:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, source_length, current_length N, source &chap1a::FiniteList<v, source_length>, current &chap1a::FiniteList<v, current_length>, prefix_length N:
@@ -1398,7 +1470,8 @@ thm spanning_replacement_adds_next_independent_entry:
     by thm insert_next_entry_after_shared_prefix(v, source_length, source, current_length, current, prefix_length)
     obtain augmented from exist selected &chap1a::FiniteList<v, current_length + 1> st {$agrees_on_initial_segment(v, source_length, current_length + 1, source, selected, prefix_length + 1), $is_list_with_index_inserted(v, current_length, current, selected, prefix_length + 1)}
     by thm inserting_into_spanning_list_preserves_spanning(s, v, space, current_length, current, augmented, prefix_length + 1)
-    by def $spans(s, v, space, current_length, current)
+    by def:
+        ? $spans(s, v, space, current_length, current)
     by thm span_carrier_spec(s, v, space, current_length, current)
     \span_carrier<s, v, space, current_length, current> = v
     augmented.entries(prefix_length + 1) $in v
@@ -1409,12 +1482,14 @@ thm spanning_replacement_adds_next_independent_entry:
     obtain k, predecessors, reduced from exist selected_k N+, selected_predecessors &chap1a::FiniteList<v, selected_k - 1>, selected_reduced &chap1a::FiniteList<v, current_length + 1 - 1> st {selected_k <= current_length + 1, $is_prefix_of_length(v, current_length + 1, selected_k - 1, augmented, selected_predecessors), augmented.entries(selected_k) $in \span_carrier<s, v, space, selected_k - 1, selected_predecessors>, $is_list_with_index_removed(v, current_length + 1, augmented, selected_k, selected_reduced), \span_carrier<s, v, space, current_length + 1 - 1, selected_reduced> = \span_carrier<s, v, space, current_length + 1, augmented>}
     by thm dependence_deletion_index_follows_shared_independent_prefix(s, v, space, source_length, current_length + 1, source, augmented, prefix_length + 1, k, predecessors)
     by thm deletion_after_shared_prefix_preserves_initial_agreement(v, source_length, source, current_length + 1, augmented, prefix_length + 1, k, reduced)
-    by def $spans(s, v, space, current_length + 1, augmented)
+    by def:
+        ? $spans(s, v, space, current_length + 1, augmented)
     \span_carrier<s, v, space, current_length + 1, augmented> = v
     \span_carrier<s, v, space, current_length + 1 - 1, reduced> = v
     by thm span_carrier_spec(s, v, space, current_length + 1 - 1, reduced)
     \span<s, v, space, current_length + 1 - 1, reduced> = v
-    by def $spans(s, v, space, current_length + 1 - 1, reduced)
+    by def:
+        ? $spans(s, v, space, current_length + 1 - 1, reduced)
     current_length + 1 - 1 = current_length
     have replacement_list &chap1a::FiniteList<v, current_length> = reduced
     $spans(s, v, space, current_length, replacement_list)
@@ -1445,9 +1520,11 @@ thm spanning_replacement_exists_for_each_bounded_prefix_core:
                         idx >= 1
                         idx <= 0
                         impossible idx >= 1
-                by def $agrees_on_initial_segment(v, source_length, current_length, source, initial, 0)
+                by def:
+                    ? $agrees_on_initial_segment(v, source_length, current_length, source, initial, 0)
             witness exist selected_base &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, selected_base), $agrees_on_initial_segment(v, source_length, current_length, source, selected_base, 0)} from initial
-            by def $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, 0)
+            by def:
+                ? $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, 0)
             0 > source_length or 0 > current_length or $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, 0)
         ? induc:
             by cases:
@@ -1476,13 +1553,15 @@ thm spanning_replacement_exists_for_each_bounded_prefix_core:
                                         impossible not prefix_length > current_length
                                     case $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length):
                                         $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
-                            by def $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
+                            by def:
+                                ? $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
                             obtain stage_current from exist selected &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, selected), $agrees_on_initial_segment(v, source_length, current_length, source, selected, prefix_length)}
                             prefix_length < current_length
                             by thm spanning_replacement_adds_next_independent_entry(s, v, space, source_length, current_length, source, stage_current, prefix_length)
                             obtain next_list from exist selected &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, selected), $agrees_on_initial_segment(v, source_length, current_length, source, selected, prefix_length + 1)}
                             witness exist finished_list &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, finished_list), $agrees_on_initial_segment(v, source_length, current_length, source, finished_list, prefix_length + 1)} from next_list
-                            by def $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length + 1)
+                            by def:
+                                ? $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length + 1)
                             prefix_length + 1 > source_length or prefix_length + 1 > current_length or $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length + 1)
 
 thm spanning_replacement_exists_for_each_bounded_prefix:
@@ -1506,7 +1585,8 @@ thm spanning_replacement_exists_for_each_bounded_prefix:
                 impossible not prefix_length > current_length
             case $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length):
                 $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
-    by def $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
+    by def:
+        ? $has_spanning_replacement_for_prefix(s, v, space, source_length, current_length, source, prefix_length)
     obtain result_list from exist selected &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, selected), $agrees_on_initial_segment(v, source_length, current_length, source, selected, prefix_length)}
     witness exist selected &chap1a::FiniteList<v, current_length> st {$spans(s, v, space, current_length, selected), $agrees_on_initial_segment(v, source_length, current_length, source, selected, prefix_length)} from result_list
 
@@ -1528,7 +1608,8 @@ thm independent_length_le_spanning_length:
         by thm insert_next_entry_after_shared_prefix(v, independent_length, independent_vectors, spanning_length, current, spanning_length)
         obtain augmented from exist selected &chap1a::FiniteList<v, spanning_length + 1> st {$agrees_on_initial_segment(v, independent_length, spanning_length + 1, independent_vectors, selected, spanning_length + 1), $is_list_with_index_inserted(v, spanning_length, current, selected, spanning_length + 1)}
         by thm inserting_into_spanning_list_preserves_spanning(s, v, space, spanning_length, current, augmented, spanning_length + 1)
-        by def $spans(s, v, space, spanning_length, current)
+        by def:
+            ? $spans(s, v, space, spanning_length, current)
         by thm span_carrier_spec(s, v, space, spanning_length, current)
         \span_carrier<s, v, space, spanning_length, current> = v
         augmented.entries(spanning_length + 1) $in v
@@ -1582,10 +1663,13 @@ thm append_outside_span_forces_zero_coefficients:
     by thm append_outside_span_forces_last_coefficient_zero(s, v, space, n, vectors, x, appended, coefficients)
     by thm zero_append_combination_has_zero_prefix_combination(s, v, space, n, vectors, x, appended, coefficients)
     obtain prefix_coefficients from exist selected &chap1a::FiniteList<s, n> st {$is_prefix_of_length(s, n + 1, n, coefficients, selected), \linear_combination_value<s, v, space, n>(selected, vectors) = space.zero}
-    by def $is_linearly_independent(s, v, space, n, vectors)
+    by def:
+        ? $is_linearly_independent(s, v, space, n, vectors)
     $has_only_zero_coefficients(s, space.scalars, n, prefix_coefficients)
-    by def $has_only_zero_coefficients(s, space.scalars, n, prefix_coefficients)
-    by def $is_prefix_of_length(s, n + 1, n, coefficients, prefix_coefficients)
+    by def:
+        ? $has_only_zero_coefficients(s, space.scalars, n, prefix_coefficients)
+    by def:
+        ? $is_prefix_of_length(s, n + 1, n, coefficients, prefix_coefficients)
     claim:
         ? forall idx N+:
             idx <= n + 1
@@ -1601,7 +1685,8 @@ thm append_outside_span_forces_zero_coefficients:
                 idx <= n + 1
                 idx = n + 1
                 coefficients.entries(idx) = coefficients.entries(n + 1) = space.scalars.zero
-    by def $has_only_zero_coefficients(s, space.scalars, n + 1, coefficients)
+    by def:
+        ? $has_only_zero_coefficients(s, space.scalars, n + 1, coefficients)
 
 thm append_outside_span_preserves_independence:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, x v, appended &chap1a::FiniteList<v, n + 1>:
@@ -1617,7 +1702,8 @@ thm append_outside_span_preserves_independence:
             =>:
                 $has_only_zero_coefficients(s, space.scalars, n + 1, coefficients)
         by thm append_outside_span_forces_zero_coefficients(s, v, space, n, vectors, x, appended, coefficients)
-    by def $is_linearly_independent(s, v, space, n + 1, appended)
+    by def:
+        ? $is_linearly_independent(s, v, space, n + 1, appended)
 
 thm empty_finite_list_is_linearly_independent:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, vectors &chap1a::FiniteList<v, 0>:
@@ -1637,8 +1723,10 @@ thm empty_finite_list_is_linearly_independent:
                 idx >= 1
                 idx <= 0
                 impossible idx >= 1
-        by def $has_only_zero_coefficients(s, space.scalars, 0, coefficients)
-    by def $is_linearly_independent(s, v, space, 0, vectors)
+        by def:
+            ? $has_only_zero_coefficients(s, space.scalars, 0, coefficients)
+    by def:
+        ? $is_linearly_independent(s, v, space, 0, vectors)
 
 thm lifted_subspace_list_contains_entries:
     ? forall v nonempty_set, U power_set(v), n N, source &chap1a::FiniteList<U, n>, lifted &chap1a::FiniteList<v, n>:
@@ -1651,7 +1739,8 @@ thm lifted_subspace_list_contains_entries:
             lifted.entries(idx) = source.entries(idx)
             source.entries(idx) $in U
             lifted.entries(idx) $in U
-    by def $contains_list_entries(v, n, lifted, U)
+    by def:
+        ? $contains_list_entries(v, n, lifted, U)
 
 thm ambient_partial_trace_restricts_to_inherited_subspace:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), n N, source &chap1a::FiniteList<U, n>, lifted &chap1a::FiniteList<v, n>, coefficients &chap1a::FiniteList<s, n>, ambient_trace fn(j closed_range(0, n)) v:
@@ -1671,7 +1760,8 @@ thm ambient_zero_combination_restricts_to_inherited_subspace:
         =>:
             \linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
     by thm linear_combination_value_satisfies_spec(s, v, space, n, coefficients, lifted)
-    by def $has_linear_combination_value(s, v, space, n, coefficients, lifted, \linear_combination_value<s, v, space, n>(coefficients, lifted))
+    by def:
+        ? $has_linear_combination_value(s, v, space, n, coefficients, lifted, \linear_combination_value<s, v, space, n>(coefficients, lifted))
     obtain ambient_trace from exist trace fn(j closed_range(0, n)) v st {$is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, lifted, trace), \linear_combination_value<s, v, space, n>(coefficients, lifted) = trace(n)}
     by thm ambient_partial_trace_restricts_to_inherited_subspace(s, v, space, U, n, source, lifted, coefficients, ambient_trace)
     have subspace_zero U = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
@@ -1680,7 +1770,8 @@ thm ambient_zero_combination_restricts_to_inherited_subspace:
         ? $has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
         subspace_zero = space.zero = ambient_trace(n) = (fn(j closed_range(0, n)) U {ambient_trace(j)})(n)
         witness exist trace fn(j closed_range(0, n)) U st {$is_linear_combination_partial_sum_sequence(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, trace), subspace_zero = trace(n)} from fn(j closed_range(0, n)) U {ambient_trace(j)}
-        by def $has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
+        by def:
+            ? $has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
     by thm linear_combination_value_exists_unique(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
     by thm linear_combination_value_satisfies_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
     \linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = subspace_zero = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
@@ -1692,7 +1783,8 @@ thm inherited_subspace_independence_lifts_to_ambient:
         lifted = (n, fn(idx N+: idx <= n) v {source.entries(idx)})
         =>:
             $is_linearly_independent(s, v, space, n, lifted)
-    by def $is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+    by def:
+        ? $is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
     claim:
         ? forall coefficients &chap1a::FiniteList<s, n>:
             \linear_combination_value<s, v, space, n>(coefficients, lifted) = space.zero
@@ -1702,7 +1794,8 @@ thm inherited_subspace_independence_lifts_to_ambient:
         $has_only_zero_coefficients(s, &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars, n, coefficients)
         &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars = space.scalars
         $has_only_zero_coefficients(s, space.scalars, n, coefficients)
-    by def $is_linearly_independent(s, v, space, n, lifted)
+    by def:
+        ? $is_linearly_independent(s, v, space, n, lifted)
 
 prop has_inherited_independent_list_length(s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), n N):
     $chap1c::is_subspace(s, v, space, U)
@@ -1724,11 +1817,14 @@ thm proper_subset_has_outside_member:
             by contra:
                 ? selected $in A
                 witness exist candidate X st {not candidate $in A} from selected
-                by def $has_member_outside_subset(X, A)
+                by def:
+                    ? $has_member_outside_subset(X, A)
                 impossible $has_member_outside_subset(X, A)
-        by def X $subset A
+        by def:
+            ? X $subset A
         A $subset X
-        by extension A = X
+        by extension:
+            ? A = X
         impossible A != X
 
 thm inherited_independent_length_le_ambient_spanning_length:
@@ -1753,10 +1849,12 @@ thm nonspanning_independent_list_has_longer_independent_append:
         by contra:
             ? \span_carrier<s, X, space, n, vectors> != X
             \span<s, X, space, n, vectors> = \span_carrier<s, X, space, n, vectors> = X
-            by def $spans(s, X, space, n, vectors)
+            by def:
+                ? $spans(s, X, space, n, vectors)
             impossible $spans(s, X, space, n, vectors)
     by thm proper_subset_has_outside_member(X, \span_carrier<s, X, space, n, vectors>)
-    by def $has_member_outside_subset(X, \span_carrier<s, X, space, n, vectors>)
+    by def:
+        ? $has_member_outside_subset(X, \span_carrier<s, X, space, n, vectors>)
     obtain x from exist selected X st {not selected $in \span_carrier<s, X, space, n, vectors>}
     by thm finite_list_can_append_entry(X, n, vectors, x)
     obtain appended from exist selected &chap1a::FiniteList<X, n + 1> st {$is_list_with_index_inserted(X, n, vectors, selected, n + 1), selected.entries(n + 1) = x}

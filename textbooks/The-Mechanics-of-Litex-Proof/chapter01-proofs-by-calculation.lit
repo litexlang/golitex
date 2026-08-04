@@ -120,7 +120,8 @@ sketch:
     prop between(a, b, c R):
         a <= b <= c
 
-    by def $between(1, 2, 3)
+    by def:
+        ? $between(1, 2, 3)
 
 # The definition says what it means for `b` to be between `a` and `c`. The final
 # line asks Litex to check that `2` is between `1` and `3`.

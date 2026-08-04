@@ -288,8 +288,8 @@ an explicit reserved builtin theorem call such as
 `by thm set_builder_member(x, B)` or
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
-Mathematical definitions similarly use explicit `by def`; for example,
-`by def A $subset B` and `by def $injective(A, B, f)`. At the outer verification
+Mathematical definitions similarly use explicit `by def:` goal blocks; for
+example, `? A $subset B` and `? $injective(A, B, f)`. At the outer verification
 round, a bare positive concrete predicate can also be proved from its defining
 clauses before known `forall` matching and user strategies. `by def` remains
 useful when that proof route and its output should be explicit.

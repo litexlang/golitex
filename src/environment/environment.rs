@@ -39,7 +39,7 @@ pub struct Environment {
     pub defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
     pub defined_strategy_stmts: HashMap<StrategyName, DefStrategyStmt>,
 
-    pub known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
+    pub known_equality: KnownEquality,
 
     pub known_atomic_facts_with_0_or_more_than_2_args:
         HashMap<(AtomicFactKey, bool), Vec<AtomicFact>>,
@@ -105,7 +105,7 @@ impl Environment {
         structs: HashMap<StructName, DefStructStmt>,
         templates: HashMap<TemplateName, DefTemplateStmt>,
         defined_thm_stmts: HashMap<ThmName, DefThmStmt>,
-        known_equality: HashMap<ObjString, (HashMap<ObjString, AtomicFact>, Rc<Vec<Obj>>)>,
+        known_equality: KnownEquality,
         known_fn_in_fn_set: HashMap<ObjString, KnownFnInfo>,
         known_atomic_facts_with_0_or_more_than_2_args: HashMap<
             (AtomicFactKey, bool),
@@ -667,172 +667,7 @@ impl Environment {
     }
 
     pub fn store_equality(&mut self, equality: &EqualFact) -> Result<(), RuntimeError> {
-        let left_raw_string: ObjString = equality.left.to_string();
-        let right_raw_string: ObjString = equality.right.to_string();
-        let left_as_string: ObjString = obj_equality_key(&equality.left);
-        let right_as_string: ObjString = obj_equality_key(&equality.right);
-        if left_as_string == right_as_string {
-            return Ok(());
-        }
-
-        let left_rc = self
-            .known_equality
-            .get(&left_as_string)
-            .map(|(_, rc)| Rc::clone(rc));
-        let right_rc = self
-            .known_equality
-            .get(&right_as_string)
-            .map(|(_, rc)| Rc::clone(rc));
-
-        let equal_atomic_fact = AtomicFact::EqualFact(equality.clone());
-
-        match (left_rc, right_rc) {
-            (Some(ref left_class_rc), Some(ref right_class_rc)) => {
-                if Rc::ptr_eq(left_class_rc, right_class_rc) {
-                    return Ok(());
-                }
-                let merged_vec: Vec<Obj> = {
-                    let left_vec: &Vec<Obj> = left_class_rc.as_ref();
-                    let right_vec: &Vec<Obj> = right_class_rc.as_ref();
-                    let mut merged = Vec::with_capacity(left_vec.len() + right_vec.len());
-                    for obj in left_vec.iter().chain(right_vec.iter()) {
-                        merged.push(obj.clone());
-                    }
-                    merged.sort_by_key(obj_equality_key);
-                    merged.dedup_by(|a_obj, b_obj| {
-                        obj_equality_key(a_obj) == obj_equality_key(b_obj)
-                    });
-                    merged
-                };
-                let new_equiv_rc = Rc::new(merged_vec);
-
-                let keys_in_either_class: Vec<ObjString> = self
-                    .known_equality
-                    .iter()
-                    .filter(|(_, (_, class_rc))| {
-                        Rc::ptr_eq(class_rc, left_class_rc) || Rc::ptr_eq(class_rc, right_class_rc)
-                    })
-                    .map(|(k, _)| k.clone())
-                    .collect();
-
-                for key_in_class in keys_in_either_class {
-                    let removed_entry = match self.known_equality.remove(&key_in_class) {
-                        Some(entry) => entry,
-                        None => continue,
-                    };
-                    let (mut direct_equality_proof_map, _) = removed_entry;
-                    if key_in_class == left_as_string {
-                        direct_equality_proof_map
-                            .insert(right_as_string.clone(), equal_atomic_fact.clone());
-                    }
-                    if key_in_class == right_as_string {
-                        direct_equality_proof_map
-                            .insert(left_as_string.clone(), equal_atomic_fact.clone());
-                    }
-                    self.known_equality.insert(
-                        key_in_class,
-                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
-                    );
-                }
-            }
-            (Some(existing_class_rc), None) => {
-                let mut new_vec = (*existing_class_rc).clone();
-                new_vec.push(equality.right.clone());
-                let new_equiv_rc = Rc::new(new_vec);
-
-                let keys_in_existing_class: Vec<ObjString> = self
-                    .known_equality
-                    .iter()
-                    .filter(|(_, (_, class_rc))| Rc::ptr_eq(class_rc, &existing_class_rc))
-                    .map(|(k, _)| k.clone())
-                    .collect();
-
-                for key_in_class in keys_in_existing_class {
-                    let removed_entry = match self.known_equality.remove(&key_in_class) {
-                        Some(entry) => entry,
-                        None => continue,
-                    };
-                    let (mut direct_equality_proof_map, _) = removed_entry;
-                    if key_in_class == left_as_string {
-                        direct_equality_proof_map
-                            .insert(right_as_string.clone(), equal_atomic_fact.clone());
-                    }
-                    self.known_equality.insert(
-                        key_in_class,
-                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
-                    );
-                }
-
-                let mut proof_for_new_right: HashMap<ObjString, AtomicFact> = HashMap::new();
-                proof_for_new_right.insert(left_as_string.clone(), equal_atomic_fact.clone());
-                self.known_equality
-                    .insert(right_as_string.clone(), (proof_for_new_right, new_equiv_rc));
-            }
-            (None, Some(existing_class_rc)) => {
-                let mut new_vec = (*existing_class_rc).clone();
-                new_vec.push(equality.left.clone());
-                let new_equiv_rc = Rc::new(new_vec);
-
-                let keys_in_existing_class: Vec<ObjString> = self
-                    .known_equality
-                    .iter()
-                    .filter(|(_, (_, class_rc))| Rc::ptr_eq(class_rc, &existing_class_rc))
-                    .map(|(k, _)| k.clone())
-                    .collect();
-
-                for key_in_class in keys_in_existing_class {
-                    let removed_entry = match self.known_equality.remove(&key_in_class) {
-                        Some(entry) => entry,
-                        None => continue,
-                    };
-                    let (mut direct_equality_proof_map, _) = removed_entry;
-                    if key_in_class == right_as_string {
-                        direct_equality_proof_map
-                            .insert(left_as_string.clone(), equal_atomic_fact.clone());
-                    }
-                    self.known_equality.insert(
-                        key_in_class,
-                        (direct_equality_proof_map, Rc::clone(&new_equiv_rc)),
-                    );
-                }
-
-                let mut proof_for_new_left: HashMap<ObjString, AtomicFact> = HashMap::new();
-                proof_for_new_left.insert(right_as_string.clone(), equal_atomic_fact.clone());
-                self.known_equality
-                    .insert(left_as_string.clone(), (proof_for_new_left, new_equiv_rc));
-            }
-            (None, None) => {
-                let equiv_members = vec![equality.left.clone(), equality.right.clone()];
-                let new_equiv_rc = Rc::new(equiv_members);
-
-                let mut left_direct_proof_map: HashMap<ObjString, AtomicFact> = HashMap::new();
-                left_direct_proof_map.insert(right_as_string.clone(), equal_atomic_fact.clone());
-
-                let mut right_direct_proof_map: HashMap<ObjString, AtomicFact> = HashMap::new();
-                right_direct_proof_map.insert(left_as_string.clone(), equal_atomic_fact);
-
-                self.known_equality.insert(
-                    left_as_string.clone(),
-                    (left_direct_proof_map, Rc::clone(&new_equiv_rc)),
-                );
-                self.known_equality.insert(
-                    right_as_string.clone(),
-                    (right_direct_proof_map, new_equiv_rc),
-                );
-            }
-        }
-
-        for (raw_key, normalized_key) in [
-            (left_raw_string, left_as_string.clone()),
-            (right_raw_string, right_as_string.clone()),
-        ] {
-            if raw_key == normalized_key {
-                continue;
-            }
-            if let Some(entry) = self.known_equality.get(&normalized_key).cloned() {
-                self.known_equality.insert(raw_key, entry);
-            }
-        }
+        self.known_equality.store(equality);
 
         if let Some(derived) =
             super::equality_linear_derive::maybe_derived_linear_equal_fact(equality)
@@ -855,7 +690,7 @@ impl Environment {
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),
-            HashMap::new(),
+            KnownEquality::new(),
             HashMap::new(),
             HashMap::new(),
             HashMap::new(),

@@ -156,7 +156,8 @@ thm coordinate_space_tuple_is_vector_space:
             \chap1a::coordinate_add<s, scalars, n>(y, z)(idx) = scalars.add(y(idx), z(idx))
             right(idx) = scalars.add(x(idx), scalars.add(y(idx), z(idx)))
             left(idx) = right(idx)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
     claim:
         ? forall x, y finite_seq(s, n):
@@ -175,7 +176,8 @@ thm coordinate_space_tuple_is_vector_space:
             \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x)(idx) = scalars.add(\chap1a::coordinate_zero<s, scalars, n>(idx), x(idx))
             \chap1a::coordinate_zero<s, scalars, n>(idx) = scalars.zero
             left(idx) = scalars.add(scalars.zero, x(idx)) = x(idx)
-        by def $fn_eq(left, x)
+        by def:
+            ? $fn_eq(left, x)
         left = x
     claim:
         ? forall x finite_seq(s, n):
@@ -193,7 +195,8 @@ thm coordinate_space_tuple_is_vector_space:
             y(idx) = \chap1a::coordinate_neg<s, scalars, n>(x)(idx) = scalars.neg(x(idx))
             right(idx) = \chap1a::coordinate_zero<s, scalars, n>(idx) = scalars.zero
             left(idx) = scalars.add(x(idx), scalars.neg(x(idx))) = scalars.zero = right(idx)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
         witness exist y2 finite_seq(s, n) st {\chap1a::coordinate_add<s, scalars, n>(x, y2) = \chap1a::coordinate_zero<s, scalars, n>} from y
     claim:
@@ -213,7 +216,8 @@ thm coordinate_space_tuple_is_vector_space:
             \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx) = scalars.mul(b, x(idx))
             right(idx) = scalars.mul(a, scalars.mul(b, x(idx)))
             left(idx) = right(idx)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
     claim:
         ? forall a, b s, x finite_seq(s, n):
@@ -238,7 +242,8 @@ thm coordinate_space_tuple_is_vector_space:
             \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx) = scalars.mul(b, x(idx))
             right(idx) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(b, x(idx)))
             left(idx) = right(idx)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
     claim:
         ? forall a s, x, y finite_seq(s, n):
@@ -261,7 +266,8 @@ thm coordinate_space_tuple_is_vector_space:
             \chap1a::coordinate_smul<s, scalars, n>(a, y)(idx) = scalars.mul(a, y(idx))
             right(idx) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(a, y(idx)))
             left(idx) = right(idx)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
     claim:
         ? forall x finite_seq(s, n):
@@ -273,7 +279,8 @@ thm coordinate_space_tuple_is_vector_space:
                 =>:
                     left(idx) = x(idx)
             left(idx) = \chap1a::coordinate_smul<s, scalars, n>(scalars.one, x)(idx) = scalars.mul(scalars.one, x(idx)) = x(idx)
-        by def $fn_eq(left, x)
+        by def:
+            ? $fn_eq(left, x)
         left = x
     by thm struct_member((scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>), &VectorSpace<s, finite_seq(s, n)>)
 

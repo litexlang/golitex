@@ -251,10 +251,10 @@ equalities can make two arguments match. For example, a known `$P(a)` may close
 **Concrete definitions.** A concrete `prop` gives Litex defining clauses for
 the predicate. At outer round 0, ordinary atomic verification instantiates the
 definition and verifies all clauses with the full verifier before known
-`forall` matching or user strategies. `by def $P(args)` requests the same
+`forall` matching or user strategies. `by def:` with `? $P(args)` requests the same
 mathematical direction explicitly and rechecks it even when `$P(args)` is
 already known. Supported builtin definitions use the same statement, including
-`by def A $subset B` and `by def $injective(A, B, f)`.
+goals `? A $subset B` and `? $injective(A, B, f)` under `by def:`.
 
 **Known universal facts.** Suppose the context contains:
 
@@ -336,7 +336,7 @@ unrelated verifier.
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
-| `by def fact` | No persistent child scope. | The target must be a concrete positive prop or supported positive builtin definition. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
+| `by def:` + `? fact` | No persistent child scope. | The target must be a concrete positive prop or supported positive builtin definition. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
 | `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. | Verify theorem domains or explicit builtin requirements with the full verifier. | Store conclusions and infer only after all checks succeed. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. | Prove the cases are exhaustive, then prove every target in every branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |

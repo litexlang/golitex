@@ -133,7 +133,8 @@ thm integer_ring_laws:
         fn(a, b Z) Z {a + b}(0, x) = 0 + x = x
         fn(a, b Z) Z {a + b}(x, 0) = x + 0 = x
         fn(a Z) Z {-a}(x) + x = -x + x = 0
-    by def $chap2::is_additive_commutative_group(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x})
+    by def:
+        ? $chap2::is_additive_commutative_group(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x})
     claim:
         ? forall x, y, z Z:
             fn(a, b Z) Z {a * b}(fn(a, b Z) Z {a * b}(x, y), z) = fn(a, b Z) Z {a * b}(x, fn(a, b Z) Z {a * b}(y, z))
@@ -148,7 +149,8 @@ thm integer_ring_laws:
             fn(a, b Z) Z {a * b}(x, 1) = x
         fn(a, b Z) Z {a * b}(1, x) = 1 * x = x
         fn(a, b Z) Z {a * b}(x, 1) = x * 1 = x
-    by def $chap2::is_ring(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
+    by def:
+        ? $chap2::is_ring(Z, fn(x, y Z) Z {x + y}, 0, fn(x Z) Z {-x}, fn(x, y Z) Z {x * y}, 1)
 
 by thm integer_ring_laws(0)
 by thm fn_set_member(fn(x, y Z) Z {x + y}, fn(x, y Z) Z)
@@ -354,7 +356,8 @@ thm _inherited_submonoid_tuple_is_monoid:
         y $in M
         z $in M
         (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})((fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, y), z) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, y), z) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(y, z)) = (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(x, (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(y, z))
-    by def $is_semigroup(carrier, fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)})
+    by def:
+        ? $is_semigroup(carrier, fn(x, y carrier) carrier {&Monoid<M>{monoid}.mul(x, y)})
     forall x carrier:
         x $in M
         (fn(a, b carrier) carrier {&Monoid<M>{monoid}.mul(a, b)})(&Monoid<M>{monoid}.one, x) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.one, x) = x
@@ -390,7 +393,8 @@ thm submonoid_intersection_closed:
         &Monoid<M>{monoid}.mul(x, y) $in right
         by thm set_builder_member(&Monoid<M>{monoid}.mul(x, y), {z M: z $in left and z $in right})
         &Monoid<M>{monoid}.mul(x, y) $in {z M: z $in left and z $in right}
-    by def $is_submonoid(M, monoid, {x M: x $in left and x $in right})
+    by def:
+        ? $is_submonoid(M, monoid, {x M: x $in left and x $in right})
 
 # Source Submonoid.Setoid. The relation is correctly a prop because its
 # candidate elements x and y are explicit parameters.
@@ -413,7 +417,8 @@ thm fraction_relation_reflexive:
         =>:
             $submonoid_fraction_equiv(M, monoid, carrier, x, x)
     witness exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(x, z)} from &Monoid<M>{monoid}.one, &Monoid<M>{monoid}.one
-    by def $submonoid_fraction_equiv(M, monoid, carrier, x, x)
+    by def:
+        ? $submonoid_fraction_equiv(M, monoid, carrier, x, x)
 
 thm fraction_relation_symmetric:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M:
@@ -422,7 +427,8 @@ thm fraction_relation_symmetric:
             $submonoid_fraction_equiv(M, monoid, carrier, y, x)
     obtain w, z from exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, z)}
     witness exist w2, z2 M st {w2 $in carrier, z2 $in carrier, &Monoid<M>{monoid}.mul(y, w2) = &Monoid<M>{monoid}.mul(x, z2)} from z, w
-    by def $submonoid_fraction_equiv(M, monoid, carrier, y, x)
+    by def:
+        ? $submonoid_fraction_equiv(M, monoid, carrier, y, x)
 
 thm fraction_relation_transitive:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y, z M:
@@ -454,7 +460,8 @@ thm fraction_relation_transitive:
     by thm function_substitution(M, M, fn(q M) M {&Monoid<M>{monoid}.mul(z, q)}, &Monoid<M>{monoid}.mul(z_num, y_num), &Monoid<M>{monoid}.mul(y_num, z_num))
     &Monoid<M>{monoid}.mul(x, left_den) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(x_den, y_den)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, x_den), y_den) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_num), y_den) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_num, y_den)) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_den, y_num)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_den), y_num) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(z, z_num), y_num) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(z_num, y_num)) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(y_num, z_num)) = &Monoid<M>{monoid}.mul(z, right_num)
     witness exist w, q M st {w $in carrier, q $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(z, q)} from left_den, right_num
-    by def $submonoid_fraction_equiv(M, monoid, carrier, x, z)
+    by def:
+        ? $submonoid_fraction_equiv(M, monoid, carrier, x, z)
 
 # Source quotient constructor. The represented-class carrier becomes a genuine
 # quotient only for a commutative monoid and a submonoid carrier.

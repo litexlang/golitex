@@ -130,7 +130,8 @@ thm column_of_matrix_product:
         \matrix_vector_mul<s, scalars, m, n>(A, \matrix_column<s, n, p>(B, k))(j) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), \matrix_column<s, n, p>(B, k)(r))})
         right(j) = \matrix_vector_mul<s, scalars, m, n>(A, \matrix_column<s, n, p>(B, k))(j)
         left(j) = right(j)
-    by def $fn_eq(left, right)
+    by def:
+        ? $fn_eq(left, right)
     left = right
     \matrix_column<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), k) = \matrix_vector_mul<s, scalars, m, n>(A, \matrix_column<s, n, p>(B, k))
 # A coordinate vector is the unique column of its associated n-by-1 matrix.
@@ -154,7 +155,8 @@ thm matrix_times_vector_is_column_combination:
         left(j) = \matrix_column<s, n, 1>(\coordinate_column_matrix<s, n>(c), 1)(j)
         \matrix_column<s, n, 1>(\coordinate_column_matrix<s, n>(c), 1)(j) = \coordinate_column_matrix<s, n>(c)(j, 1) = c(j) = right(j)
         left(j) = right(j)
-    by def $fn_eq(left, right)
+    by def:
+        ? $fn_eq(left, right)
     left = right
     \matrix_column<s, n, 1>(\coordinate_column_matrix<s, n>(c), 1) = c
     \matrix_vector_mul<s, scalars, m, n>(A, \matrix_column<s, n, 1>(\coordinate_column_matrix<s, n>(c), 1)) = \matrix_vector_mul<s, scalars, m, n>(A, c)
@@ -208,10 +210,12 @@ thm matrix_product_column_and_row_descriptions:
             trust \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))}) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), B(r, k))})
             right(k) = \vector_matrix_mul<s, scalars, n, p>(\matrix_row<s, m, n>(A, j), B)(k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), B(r, k))})
             left(k) = right(k)
-        by def $fn_eq(left, right)
+        by def:
+            ? $fn_eq(left, right)
         left = right
         \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j) = \vector_matrix_mul<s, scalars, n, p>(\matrix_row<s, m, n>(A, j), B)
-    by def $has_matrix_product_column_and_row_descriptions(s, scalars, m, n, p, A, B)
+    by def:
+        ? $has_matrix_product_column_and_row_descriptions(s, scalars, m, n, p, A, B)
 # Definition 3.52. Column rank and row rank are the dimensions of the spans of
 # the matrix's columns and rows. They remain callable canonical values.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:

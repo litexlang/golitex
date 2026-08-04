@@ -641,7 +641,8 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     by thm _positive_divisor_le_abs(d, a)
                     d <= abs(a)
                     d $in closed_range(1, abs(a))
-                by def CarrierC $subset closed_range(1, abs(a))
+                by def:
+                    ? CarrierC $subset closed_range(1, abs(a))
                 CarrierC $subset closed_range(1, abs(a))
                 CarrierC = set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC))
                 $is_finite_set(set_minus(closed_range(1, abs(a)), set_minus(closed_range(1, abs(a)), CarrierC)))
@@ -657,7 +658,8 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
                     by thm _positive_divisor_le_abs(d, b)
                     d <= abs(b)
                     d $in closed_range(1, abs(b))
-                by def CarrierC $subset closed_range(1, abs(b))
+                by def:
+                    ? CarrierC $subset closed_range(1, abs(b))
                 CarrierC $subset closed_range(1, abs(b))
                 CarrierC = set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC))
                 $is_finite_set(set_minus(closed_range(1, abs(b)), set_minus(closed_range(1, abs(b)), CarrierC)))
@@ -666,11 +668,13 @@ thm _gcd_divisor_set_is_finite_and_nonempty:
         1 $in N+
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
-        by def $divides(1, a)
+        by def:
+            ? $divides(1, a)
         $divides(1, a)
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
-        by def $divides(1, b)
+        by def:
+            ? $divides(1, b)
         $divides(1, b)
         by thm set_builder_member(1, {d N+: $divides(d, a), $divides(d, b)})
         1 $in {d N+: $divides(d, a), $divides(d, b)}
@@ -696,7 +700,8 @@ thm gcd_divides_left:
     by thm gcd_positive(a, b)
     a % gcd(a, b) = 0
     exist k Z st {a = gcd(a, b) * k}
-    by def $divides(gcd(a, b), a)
+    by def:
+        ? $divides(gcd(a, b), a)
     $divides(gcd(a, b), a)
 
 thm gcd_divides_right:
@@ -707,7 +712,8 @@ thm gcd_divides_right:
     by thm gcd_positive(a, b)
     b % gcd(a, b) = 0
     exist k Z st {b = gcd(a, b) * k}
-    by def $divides(gcd(a, b), b)
+    by def:
+        ? $divides(gcd(a, b), b)
     $divides(gcd(a, b), b)
 
 thm common_divisor_le_gcd:
@@ -746,15 +752,18 @@ thm gcd_euclidean_base:
             abs(a) * 1 = a * 1
             a = abs(a) * 1
             witness exist k Z st {a = abs(a) * k} from 1
-            by def $divides(abs(a), a)
+            by def:
+                ? $divides(abs(a), a)
         case a < 0:
             abs(a) = -a
             a = abs(a) * (-1)
             witness exist k Z st {a = abs(a) * k} from -1
-            by def $divides(abs(a), a)
+            by def:
+                ? $divides(abs(a), a)
     witness exist k Z st {0 = abs(a) * k} from 0:
         0 = abs(a) * 0
-    by def $divides(abs(a), 0)
+    by def:
+        ? $divides(abs(a), 0)
     $divides(abs(a), 0)
     by thm common_divisor_le_gcd(a, 0, abs(a))
     abs(a) <= gcd(a, 0)
@@ -771,7 +780,8 @@ claim:
     obtain l from exist l Z st {z = y * l}
     witness exist m Z st {z = x * m} from k * l:
         z = y * l = (x * k) * l = x * (k * l)
-    by def $divides(x, z)
+    by def:
+        ? $divides(x, z)
 
 # A factor divides any product containing it. Commutativity places x first and
 # exposes y*z as the witness.
@@ -780,7 +790,8 @@ claim:
         $divides(x, y * x * z)
     witness exist k Z st {y * x * z = x * k} from y * z:
         y * x * z = x * (y * z)
-    by def $divides(x, y * x * z)
+    by def:
+        ? $divides(x, y * x * z)
 
 # Every natural number divides its square, witnessed by the number itself in Z.
 claim:
@@ -788,7 +799,8 @@ claim:
         $divides(x, x^2)
     witness exist k Z st {x^2 = x * k} from x:
         x^2 = x * x
-    by def $divides(x, x^2)
+    by def:
+        ? $divides(x, x^2)
 
 # Gcd symmetry on the nonzero natural pairs supported by the local construction.
 # Unlike the source's total Nat.gcd, this gcd is undefined
@@ -1092,7 +1104,8 @@ thm ring_mul_le_mul_right_of_nonnegative:
             (ring.mul(a, c), ring.mul(b, c)) $in le_rel
     by thm ring_sub_nonnegative_of_le(s, ring, le_rel, a, b)
     (ring.zero, ring.mul(ring.add(b, ring.neg(a)), c)) $in le_rel
-    by def $is_ring(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
+    by def:
+        ? $is_ring(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one)
     by thm neg_mul_left(s, ring.add, ring.zero, ring.neg, ring.mul, ring.one, a, c)
     ring.mul(ring.add(b, ring.neg(a)), c) = ring.add(ring.mul(b, c), ring.mul(ring.neg(a), c)) = ring.add(ring.mul(b, c), ring.neg(ring.mul(a, c)))
     (ring.zero, ring.add(ring.mul(b, c), ring.neg(ring.mul(a, c)))) $in le_rel

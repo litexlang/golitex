@@ -37,7 +37,8 @@ thm theorem_IV_prime_divisor_from_least:
     a > 1
     witness exist k Z st {a = a * k} from 1:
         a = a * 1
-    by def $section1::divides_Z(a, a)
+    by def:
+        ? $section1::divides_Z(a, a)
     by thm set_builder_member(a, {d Z: d > 1 and $section1::divides_Z(d, a)})
     a $in D
     witness $is_nonempty_set(D) from a:
@@ -51,8 +52,10 @@ thm theorem_IV_prime_divisor_from_least:
             d $in Z
             d > 1
             d > 0
-        by def D $subset Z
-        by def $section1::is_positive_integer_set(D)
+        by def:
+            ? D $subset Z
+        by def:
+            ? $section1::is_positive_integer_set(D)
     by thm section1::positive_integer_set_has_least_element(D)
     obtain p from exist p Z st {$section1::is_least_element_of_integer_set(D, p)}
     p $in D
@@ -77,7 +80,8 @@ thm theorem_IV_prime_divisor_from_least:
                     obtain r from exist r Z st {a = p * r}
                     witness exist q Z st {a = d * q} from k * r:
                         a = p * r = d * k * r = d * (k * r)
-                    by def $section1::divides_Z(d, a)
+                    by def:
+                        ? $section1::divides_Z(d, a)
                     by thm set_builder_member(d, {exp_e Z: exp_e > 1 and $section1::divides_Z(exp_e, a)})
                     d $in D
                     p <= d
@@ -97,7 +101,8 @@ thm theorem_IV_prime_divisor_from_least:
                             d * k = -1 * (-1 * (d * k)) <= 0
                             p = d * k <= 0
                             impossible p > 1
-        by def $is_prime_Z(p)
+        by def:
+            ? $is_prime_Z(p)
     witness exist p1 Z st {$is_prime_Z(p1), $section1::divides_Z(p1, a)} from p:
         $is_prime_Z(p)
         $section1::divides_Z(p, a)
@@ -121,7 +126,8 @@ thm prime_divides_or_is_relatively_prime:
             by cases:
                 ? $section1::divides_Z(p, a) or $section3::relatively_prime_Z(p, a)
                 case section2::gcd_Z(p, a) = 1:
-                    by def $section3::relatively_prime_Z(p, a)
+                    by def:
+                        ? $section3::relatively_prime_Z(p, a)
                 case section2::gcd_Z(p, a) = p:
                     by thm section2::gcd_Z_dvd_right(p, a)
                     $section1::divides_Z(p, a)
@@ -168,7 +174,8 @@ claim:
             case d > 1:
                 d >= 2
                 d = 2
-    by def $is_prime_Z(2)
+    by def:
+        ? $is_prime_Z(2)
 
 """
 Theorem IV.1. If a prime divides a product of integers, then it divides at
@@ -219,7 +226,8 @@ thm theorem_IV_1_prime_divides_finite_product:
                     obtain q from exist q Z st {section3::finite_product_from_one(f, 1) = p * q}
                     witness exist r Z st {section3::finite_product_from_one(f, 0) * f(1) = p * r} from q:
                         section3::finite_product_from_one(f, 0) * f(1) = section3::finite_product_from_one(f, 1) = p * q
-                    by def $section1::divides_Z(p, section3::finite_product_from_one(f, 0) * f(1))
+                    by def:
+                        ? $section1::divides_Z(p, section3::finite_product_from_one(f, 0) * f(1))
                     by thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, 0), f(1))
                     by cases:
                         ? $prime_divides_some_factor(p, 1, f)
@@ -232,8 +240,10 @@ thm theorem_IV_1_prime_divides_finite_product:
                             witness exist idx_i N+ st {idx_i <= 1, $section1::divides_Z(p, f(idx_i))} from 1:
                                 1 <= 1
                                 $section1::divides_Z(p, f(1))
-                            by def $prime_divides_some_factor(p, 1, f)
-                by def $theorem_IV_1_at(1)
+                            by def:
+                                ? $prime_divides_some_factor(p, 1, f)
+                by def:
+                    ? $theorem_IV_1_at(1)
             ? induc:
                 claim:
                     ? forall:
@@ -244,7 +254,8 @@ thm theorem_IV_1_prime_divides_finite_product:
                     obtain q from exist q Z st {section3::finite_product_from_one(f, k + 1) = p * q}
                     witness exist r Z st {section3::finite_product_from_one(f, k) * f(k + 1) = p * r} from q:
                         section3::finite_product_from_one(f, k) * f(k + 1) = section3::finite_product_from_one(f, k + 1) = p * q
-                    by def $section1::divides_Z(p, section3::finite_product_from_one(f, k) * f(k + 1))
+                    by def:
+                        ? $section1::divides_Z(p, section3::finite_product_from_one(f, k) * f(k + 1))
                     by thm theorem_IV_1_prime_divides_binary_product(p, section3::finite_product_from_one(f, k), f(k + 1))
                     by cases:
                         ? $prime_divides_some_factor(p, k + 1, f)
@@ -254,13 +265,16 @@ thm theorem_IV_1_prime_divides_finite_product:
                             witness exist j N+ st {j <= k + 1, $section1::divides_Z(p, f(j))} from idx_i:
                                 idx_i <= k <= k + 1
                                 $section1::divides_Z(p, f(idx_i))
-                            by def $prime_divides_some_factor(p, k + 1, f)
+                            by def:
+                                ? $prime_divides_some_factor(p, k + 1, f)
                         case $section1::divides_Z(p, f(k + 1)):
                             witness exist idx_i N+ st {idx_i <= k + 1, $section1::divides_Z(p, f(idx_i))} from k + 1:
                                 k + 1 <= k + 1
                                 $section1::divides_Z(p, f(k + 1))
-                            by def $prime_divides_some_factor(p, k + 1, f)
-                by def $theorem_IV_1_at(k + 1)
+                            by def:
+                                ? $prime_divides_some_factor(p, k + 1, f)
+                by def:
+                    ? $theorem_IV_1_at(k + 1)
     $theorem_IV_1_at(n)
     $prime_divides_some_factor(p, n, f)
 
@@ -310,7 +324,8 @@ thm prime_factorization_exists:
                 section3::finite_product_from_one(f2, 0) = 1
                 f2(1) = 2
                 section3::finite_product_from_one(f2, 1) = section3::finite_product_from_one(f2, 0) * f2(1) = 1 * 2 = 2
-                by def $prime_factorization_Z(2, 1, f2)
+                by def:
+                    ? $prime_factorization_Z(2, 1, f2)
             witness exist n N+, f fn(idx_i N+) Z st {$prime_factorization_Z(2, n, f)} from 1, f2:
                 $prime_factorization_Z(2, 1, f2)
             claim:
@@ -363,7 +378,8 @@ thm prime_factorization_exists:
                             section3::finite_product_from_one(fp, 0) = 1
                             fp(1) = p
                             section3::finite_product_from_one(fp, 1) = section3::finite_product_from_one(fp, 0) * fp(1) = 1 * p = p = b + 1
-                            by def $prime_factorization_Z(b + 1, 1, fp)
+                            by def:
+                                ? $prime_factorization_Z(b + 1, 1, fp)
                         witness exist r N+, f fn(idx_i N+) Z st {$prime_factorization_Z(b + 1, r, f)} from 1, fp:
                             $prime_factorization_Z(b + 1, 1, fp)
                     case q > 1:
@@ -410,7 +426,8 @@ thm prime_factorization_exists:
                                         g(idx_i) = f(idx_i - 1)
                             by thm section3::finite_product_from_one_prepend(p, f, g, r)
                             b + 1 = p * q = p * section3::finite_product_from_one(f, r) = section3::finite_product_from_one(g, r + 1)
-                            by def $prime_factorization_Z(b + 1, r + 1, g)
+                            by def:
+                                ? $prime_factorization_Z(b + 1, r + 1, g)
                         witness exist s N+, h fn(idx_i N+) Z st {$prime_factorization_Z(b + 1, s, h)} from r + 1, g:
                             $prime_factorization_Z(b + 1, r + 1, g)
     exist n N+, f fn(idx_i N+) Z st {$prime_factorization_Z(a, n, f)}
@@ -470,7 +487,8 @@ thm theorem_IV_2_prime_factorization:
         $prime_factorization_Z(a, m, g)
         =>:
             $prime_factorizations_equivalent_up_to_order(a, n, f, m, g)
-    by def $prime_factorization_statement(a)
+    by def:
+        ? $prime_factorization_statement(a)
 
 """
 The first primes are 2,3,5,7,11,13,17,19,23,29, and every a>1 has a finite
@@ -536,7 +554,8 @@ thm positive_index_divides_factorial_Z:
                         j = 0
                         j != 0
                         impossible j != 0
-                by def $all_positive_indices_divide_factorial_Z(k)
+                by def:
+                    ? $all_positive_indices_divide_factorial_Z(k)
             ? induc:
                 $all_positive_indices_divide_factorial_Z(k)
                 claim:
@@ -558,7 +577,8 @@ thm positive_index_divides_factorial_Z:
                             factorial_Z(k + 1) = j * ((k + 1) * q)
                             witness exist q1 Z st {factorial_Z(k + 1) = j * q1} from (k + 1) * q:
                                 factorial_Z(k + 1) = j * ((k + 1) * q)
-                            by def $section1::divides_Z(j, factorial_Z(k + 1))
+                            by def:
+                                ? $section1::divides_Z(j, factorial_Z(k + 1))
                         case j > k:
                             j >= k + 1
                             j = k + 1
@@ -566,8 +586,10 @@ thm positive_index_divides_factorial_Z:
                             factorial_Z(k + 1) = j * factorial_Z(k)
                             witness exist q1 Z st {factorial_Z(k + 1) = j * q1} from factorial_Z(k):
                                 factorial_Z(k + 1) = j * factorial_Z(k)
-                            by def $section1::divides_Z(j, factorial_Z(k + 1))
-                by def $all_positive_indices_divide_factorial_Z(k + 1)
+                            by def:
+                                ? $section1::divides_Z(j, factorial_Z(k + 1))
+                by def:
+                    ? $all_positive_indices_divide_factorial_Z(k + 1)
     $all_positive_indices_divide_factorial_Z(n)
     $section1::divides_Z(idx_i, factorial_Z(n))
 
@@ -594,7 +616,8 @@ thm theorem_IV_3_infinitely_many_primes:
             obtain b from exist b Z st {factorial_Z(n) + 1 = p * b}
             witness exist q Z st {1 = p * q} from b - a:
                 1 = (factorial_Z(n) + 1) - factorial_Z(n) = p * b - p * a = p * (b - a)
-            by def $section1::divides_Z(p, 1)
+            by def:
+                ? $section1::divides_Z(p, 1)
             by thm section1::positive_divisor_of_one_is_one(p)
             p = 1
             impossible p > 1

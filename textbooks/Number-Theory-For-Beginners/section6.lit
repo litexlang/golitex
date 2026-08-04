@@ -159,8 +159,10 @@ thm theorem_VI_1_residue_classes_unitary_ring:
         t = m * section2::integer_quotient(t, m) + r
         t - r = m * section2::integer_quotient(t, m)
         witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
-        by def $section1::divides_Z(m, t - r)
-        by def $section5::congruent_mod(m, t, r)
+        by def:
+            ? $section1::divides_Z(m, t - r)
+        by def:
+            ? $section5::congruent_mod(m, t, r)
         by thm section5::residue_class_eq_of_congruent(m, t, r)
         section5::residue_class_mod(m, r) = section5::residue_class_mod(m, t)
         section5::residue_class_mod(m, t) $in carrier_C
@@ -185,7 +187,8 @@ thm theorem_VI_1_residue_classes_unitary_ring:
             representative(A) * representative(B) = x * y
             mul(A, B) = section5::residue_class_mod(m, x * y) = residue_class_mul_mod(m, x, y)
             witness exist x0, y0 Z st {A = section5::residue_class_mod(m, x0), B = section5::residue_class_mod(m, y0), mul(A, B) = residue_class_mul_mod(m, x0, y0)} from x, y
-        by def $is_residue_class_multiplication_operation(m, carrier_C, mul)
+        by def:
+            ? $is_residue_class_multiplication_operation(m, carrier_C, mul)
     claim:
         ? $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
         $section5::is_abelian_group(carrier_C, add, zero)
@@ -231,7 +234,8 @@ thm theorem_VI_1_residue_classes_unitary_ring:
             by thm section5::residue_class_addition_formula(m, representative(A) * b, representative(A) * d)
             add(mul(A, B), mul(A, D)) = section5::residue_class_add_mod(m, u, v) = section5::residue_class_add_mod(m, representative(A) * b, representative(A) * d) = section5::residue_class_mod(m, representative(A) * b + representative(A) * d)
             mul(A, add(B, D)) = add(mul(A, B), mul(A, D))
-        by def $is_commutative_ring(carrier_C, add, mul, zero)
+        by def:
+            ? $is_commutative_ring(carrier_C, add, mul, zero)
         claim:
             ? forall A carrier_C:
                 mul(one, A) = A
@@ -243,9 +247,11 @@ thm theorem_VI_1_residue_classes_unitary_ring:
             1 * representative(A) = representative(A)
             residue_class_mul_mod(m, 1, representative(A)) = section5::residue_class_mod(m, representative(A))
             mul(one, A) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, 1, representative(A)) = section5::residue_class_mod(m, representative(A)) = A
-        by def $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
+        by def:
+            ? $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
     witness exist C0 finite_set, add0 fn(A, B C0) C0, mul0 fn(A, B C0) C0, zero0 C0, one0 C0 st {$section5::is_set_of_all_residue_classes_mod(m, C0), finite_set_size(C0) = m, $section5::is_residue_class_addition_operation(m, C0, add0, zero0), $is_residue_class_multiplication_operation(m, C0, mul0), one0 = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(C0, add0, mul0, zero0, one0)} from carrier_C, add, mul, zero, one
-    by def $residue_classes_form_unitary_ring_mod(m)
+    by def:
+        ? $residue_classes_form_unitary_ring_mod(m)
 
 """
 A zero-divisor is a nonzero ring element that annihilates another nonzero
@@ -296,8 +302,10 @@ thm residue_classes_two_and_three_mod_six_are_zero_divisors:
     2 * 3 = 6
     residue_class_mul_mod(6, 2, 3) = section5::residue_class_mod(6, 2 * 3) = section5::residue_class_mod(6, 6)
     witness exist k Z st {6 - 0 = 6 * k} from 1
-    by def $section1::divides_Z(6, 6 - 0)
-    by def $section5::congruent_mod(6, 6, 0)
+    by def:
+        ? $section1::divides_Z(6, 6 - 0)
+    by def:
+        ? $section5::congruent_mod(6, 6, 0)
     by thm section5::residue_class_eq_of_congruent(6, 6, 0)
     residue_class_mul_mod(6, 2, 3) = section5::residue_class_mod(6, 6) = section5::residue_class_mod(6, 0)
 
@@ -330,7 +338,8 @@ thm residue_class_prime_to_mod_is_representative_independent:
     by thm section5::theorem_V_residue_classes_disjoint(m, x, x1)
     $section5::congruent_mod(m, x, x1)
     $section1::divides_Z(m, x - x1)
-    by def $section1::divides_Z(m, x - x1)
+    by def:
+        ? $section1::divides_Z(m, x - x1)
     obtain t from exist t Z st {x - x1 = m * t}
     $section3::relatively_prime_Z(x, m)
     section2::gcd_Z(x, m) = 1
@@ -345,8 +354,10 @@ thm residue_class_prime_to_mod_is_representative_independent:
     by thm section2::is_gcd_Z_preserved_by_mutual_integer_linear_changes(x, m, x1, m, 1, 1, -t, 0, 1, 1, t, 0, 1)
     $section2::is_gcd_Z(x, m, 1)
     $section2::is_gcd_Z(x1, m, 1)
-    by def $section3::relatively_prime_Z(x1, m)
-    by def $residue_class_prime_to_mod(m, x1)
+    by def:
+        ? $section3::relatively_prime_Z(x1, m)
+    by def:
+        ? $residue_class_prime_to_mod(m, x1)
 
 # Relative primality is symmetric.  This short Bézout bridge is used by both
 # the class-product argument and the later multiplicative-group corollary.
@@ -387,18 +398,22 @@ thm prime_to_residue_class_cannot_annihilate_nonzero_class:
     by thm section5::theorem_V_residue_classes_disjoint(m, a * b, 0)
     $section5::congruent_mod(m, a * b, 0)
     $section1::divides_Z(m, a * b - 0)
-    by def $section1::divides_Z(m, a * b - 0)
+    by def:
+        ? $section1::divides_Z(m, a * b - 0)
     obtain k from exist k Z st {a * b - 0 = m * k}
     witness exist q Z st {a * b = m * q} from k:
         a * b = a * b - 0 = m * k
-    by def $section1::divides_Z(m, a * b)
+    by def:
+        ? $section1::divides_Z(m, a * b)
     by thm relatively_prime_Z_symmetric(a, m)
     by thm section3::theorem_III_2_euclid_lemma(m, a, b)
     obtain q from exist q Z st {b = m * q}
     witness exist h Z st {b - 0 = m * h} from q:
         b - 0 = b = m * q
-    by def $section1::divides_Z(m, b - 0)
-    by def $section5::congruent_mod(m, b, 0)
+    by def:
+        ? $section1::divides_Z(m, b - 0)
+    by def:
+        ? $section5::congruent_mod(m, b, 0)
     by thm section5::residue_class_eq_of_congruent(m, b, 0)
 
 """
@@ -440,10 +455,12 @@ thm theorem_VI_2_gcd_divides_implies_solvable:
     obtain u, v from exist u, v Z st {section2::gcd_Z(a, m) = a * u + m * v}
     witness exist k Z st {a * (u * t) - b = m * k} from -v * t:
         a * (u * t) - b = a * u * t - (a * u + m * v) * t = m * (-v * t)
-    by def $solves_linear_congruence_mod(m, a, b, u * t)
+    by def:
+        ? $solves_linear_congruence_mod(m, a, b, u * t)
     witness exist x Z st {$solves_linear_congruence_mod(m, a, b, x)} from u * t:
         $solves_linear_congruence_mod(m, a, b, u * t)
-    by def $linear_congruence_solvable_mod(m, a, b)
+    by def:
+        ? $linear_congruence_solvable_mod(m, a, b)
 
 thm gcd_Z_nonzero_for_positive_second:
     ? forall a Z, m N+:
@@ -532,12 +549,14 @@ thm theorem_VI_2_solution_family:
         d * (A * (x1 - x)) = (d * A) * (x1 - x) = a * (x1 - x) = m * (k1 - k) = (d * M) * (k1 - k) = d * (M * (k1 - k))
         A * (x1 - x) = d * (A * (x1 - x)) / d = d * (M * (k1 - k)) / d = M * (k1 - k)
         witness exist h Z st {A * (x1 - x) = M * h} from k1 - k
-        by def $section1::divides_Z(M, A * (x1 - x))
+        by def:
+            ? $section1::divides_Z(M, A * (x1 - x))
         by thm section3::theorem_III_2_euclid_lemma(M, A, x1 - x)
         obtain q from exist q Z st {x1 - x = M * q}
         x1 = x + (x1 - x) = x + M * q = x + (m / section2::gcd_Z(a, m)) * q
         witness exist q0 Z st {x1 = x + (m / section2::gcd_Z(a, m)) * q0} from q
-    by def $linear_congruence_solution_family_mod(m, a, b, x)
+    by def:
+        ? $linear_congruence_solution_family_mod(m, a, b, x)
 
 thm theorem_VI_2_exact_solution_class_count:
     ? forall m N+, a, b, x Z:
@@ -597,20 +616,24 @@ thm theorem_VI_2_exact_solution_class_count:
             d > 0
             u1 = d * 0 + u1
             0 <= u1 < d
-            by def $section2::euclidean_division_Z(u1, d, 0, u1)
+            by def:
+                ? $section2::euclidean_division_Z(u1, d, 0, u1)
         claim:
             ? $section2::euclidean_division_Z(u2, d, 0, u2)
             d > 0
             u2 = d * 0 + u2
             0 <= u2 < d
-            by def $section2::euclidean_division_Z(u2, d, 0, u2)
+            by def:
+                ? $section2::euclidean_division_Z(u2, d, 0, u2)
         by thm section2::euclidean_division_remainder_is_mod(u1, d, 0, u1)
         by thm section2::euclidean_division_remainder_is_mod(u2, d, 0, u2)
         u1 = u2
-    by def $injective(0...(d - 1), power_set(Z), solution_class)
+    by def:
+        ? $injective(0...(d - 1), power_set(Z), solution_class)
     claim:
         ? linear_congruence_solution_classes_mod(m, a, b) = fn_range(solution_class)
-        by extension linear_congruence_solution_classes_mod(m, a, b) = fn_range(solution_class):
+        by extension:
+            ? linear_congruence_solution_classes_mod(m, a, b) = fn_range(solution_class)
             claim:
                 ? forall S linear_congruence_solution_classes_mod(m, a, b):
                     S $in fn_range(solution_class)
@@ -628,8 +651,10 @@ thm theorem_VI_2_exact_solution_class_count:
                 q - r = (d * section2::integer_quotient(q, d) + r) - r = d * section2::integer_quotient(q, d)
                 y - (x + M * r) = (x + M * q) - (x + M * r) = M * (q - r) = M * (d * section2::integer_quotient(q, d)) = (M * d) * section2::integer_quotient(q, d) = m * section2::integer_quotient(q, d)
                 witness exist k Z st {y - (x + M * r) = m * k} from section2::integer_quotient(q, d)
-                by def $section1::divides_Z(m, y - (x + M * r))
-                by def $section5::congruent_mod(m, y, x + M * r)
+                by def:
+                    ? $section1::divides_Z(m, y - (x + M * r))
+                by def:
+                    ? $section5::congruent_mod(m, y, x + M * r)
                 by thm section5::residue_class_eq_of_congruent(m, y, x + M * r)
                 S = section5::residue_class_mod(m, y) = section5::residue_class_mod(m, x + M * r) = solution_class(r)
                 solution_class(r) $in fn_range(solution_class)
@@ -646,9 +671,11 @@ thm theorem_VI_2_exact_solution_class_count:
                 a * M * u = (d * A) * M * u = (d * M) * A * u = m * A * u = m * (A * u)
                 a * (x + M * u) - b = (a * x - b) + a * M * u = m * k + m * (A * u) = m * (k + A * u)
                 witness exist h Z st {a * (x + M * u) - b = m * h} from k + A * u
-                by def $solves_linear_congruence_mod(m, a, b, x + M * u)
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, x + M * u)
                 witness exist y Z st {$solves_linear_congruence_mod(m, a, b, y), S = section5::residue_class_mod(m, y)} from x + M * u
-                by def $is_linear_congruence_solution_class_mod(m, a, b, S)
+                by def:
+                    ? $is_linear_congruence_solution_class_mod(m, a, b, S)
                 by thm linear_congruence_solution_class_is_member(m, a, b, S)
             forall S fn_range(solution_class):
                 S $in linear_congruence_solution_classes_mod(m, a, b)
@@ -706,20 +733,24 @@ thm theorem_VI_2_solvable_right_hand_side_count:
             M0 > 0
             z1 = M0 * 0 + z1
             0 <= z1 < M0
-            by def $section2::euclidean_division_Z(z1, M0, 0, z1)
+            by def:
+                ? $section2::euclidean_division_Z(z1, M0, 0, z1)
         claim:
             ? $section2::euclidean_division_Z(z2, M0, 0, z2)
             M0 > 0
             z2 = M0 * 0 + z2
             0 <= z2 < M0
-            by def $section2::euclidean_division_Z(z2, M0, 0, z2)
+            by def:
+                ? $section2::euclidean_division_Z(z2, M0, 0, z2)
         by thm section2::euclidean_division_remainder_is_mod(z1, M0, 0, z1)
         by thm section2::euclidean_division_remainder_is_mod(z2, M0, 0, z2)
         z1 = z2
-    by def $injective(0...(M0 - 1), power_set(Z), right_hand_side_class)
+    by def:
+        ? $injective(0...(M0 - 1), power_set(Z), right_hand_side_class)
     claim:
         ? solvable_right_hand_side_classes_mod(m, a) = fn_range(right_hand_side_class)
-        by extension solvable_right_hand_side_classes_mod(m, a) = fn_range(right_hand_side_class):
+        by extension:
+            ? solvable_right_hand_side_classes_mod(m, a) = fn_range(right_hand_side_class)
             claim:
                 ? forall S solvable_right_hand_side_classes_mod(m, a):
                     S $in fn_range(right_hand_side_class)
@@ -737,8 +768,10 @@ thm theorem_VI_2_solvable_right_hand_side_count:
                 q - r = (M0 * section2::integer_quotient(q, M0) + r) - r = M0 * section2::integer_quotient(q, M0)
                 b - d * r = d * q - d * r = d * (q - r) = d * (M0 * section2::integer_quotient(q, M0)) = (d * M0) * section2::integer_quotient(q, M0) = m * section2::integer_quotient(q, M0)
                 witness exist k Z st {b - d * r = m * k} from section2::integer_quotient(q, M0)
-                by def $section1::divides_Z(m, b - d * r)
-                by def $section5::congruent_mod(m, b, d * r)
+                by def:
+                    ? $section1::divides_Z(m, b - d * r)
+                by def:
+                    ? $section5::congruent_mod(m, b, d * r)
                 by thm section5::residue_class_eq_of_congruent(m, b, d * r)
                 S = section5::residue_class_mod(m, b) = section5::residue_class_mod(m, d * r) = right_hand_side_class(r)
                 right_hand_side_class(r) $in fn_range(right_hand_side_class)
@@ -751,9 +784,11 @@ thm theorem_VI_2_solvable_right_hand_side_count:
                 have by preimage z from S $in fn_range(right_hand_side_class)
                 S = right_hand_side_class(z) = section5::residue_class_mod(m, d * z)
                 witness exist q Z st {d * z = d * q} from z
-                by def $section1::divides_Z(d, d * z)
+                by def:
+                    ? $section1::divides_Z(d, d * z)
                 witness exist b Z st {$section1::divides_Z(section2::gcd_Z(a, m), b), S = section5::residue_class_mod(m, b)} from d * z
-                by def $is_solvable_right_hand_side_class_mod(m, a, S)
+                by def:
+                    ? $is_solvable_right_hand_side_class_mod(m, a, S)
                 by thm solvable_right_hand_side_class_is_member(m, a, S)
             forall S fn_range(right_hand_side_class):
                 S $in solvable_right_hand_side_classes_mod(m, a)
@@ -806,7 +841,8 @@ thm coprime_remainders_mod_is_finite:
         0 <= a < m
         0 <= a <= m - 1
         a $in 0...(m - 1)
-    by def coprime_remainders_mod(m) $subset 0...(m - 1)
+    by def:
+        ? coprime_remainders_mod(m) $subset 0...(m - 1)
     coprime_remainders_mod(m) = set_minus(0...(m - 1), set_minus(0...(m - 1), coprime_remainders_mod(m)))
     $is_finite_set(0...(m - 1))
     $is_finite_set(set_minus(0...(m - 1), set_minus(0...(m - 1), coprime_remainders_mod(m))))
@@ -839,7 +875,8 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
         ? $is_reduced_residue_class_carrier_mod(m, U)
         unit_map = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}
         witness exist f fn(r coprime_remainders_mod(m)) power_set(Z) st {f = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}, U = fn_range(f)} from unit_map
-        by def $is_reduced_residue_class_carrier_mod(m, U)
+        by def:
+            ? $is_reduced_residue_class_carrier_mod(m, U)
     claim:
         ? forall t Z:
             $section3::relatively_prime_Z(t, m)
@@ -853,14 +890,18 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
         r = t % m
         t - r = (m * section2::integer_quotient(t, m) + r) - r = m * section2::integer_quotient(t, m)
         witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
-        by def $section1::divides_Z(m, t - r)
-        by def $section5::congruent_mod(m, t, r)
+        by def:
+            ? $section1::divides_Z(m, t - r)
+        by def:
+            ? $section5::congruent_mod(m, t, r)
         by thm section5::residue_class_eq_of_congruent(m, t, r)
         section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
-        by def $residue_class_prime_to_mod(m, t)
+        by def:
+            ? $residue_class_prime_to_mod(m, t)
         by thm residue_class_prime_to_mod_is_representative_independent(m, t, r)
         $section3::relatively_prime_Z(r, m)
-        by def $coprime_remainder_mod(m, r)
+        by def:
+            ? $coprime_remainder_mod(m, r)
         by thm coprime_remainder_is_member_of_coprime_remainders_mod(m, r)
         unit_map(r) $in fn_range(unit_map)
         section5::residue_class_mod(m, r) = unit_map(r)
@@ -913,7 +954,8 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
             residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, b)
             mul(A, B) = mulC(A, B) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, b) = section5::residue_class_mod(m, a * b)
             witness exist a0, b0 Z st {$section3::relatively_prime_Z(a0, m), $section3::relatively_prime_Z(b0, m), A = section5::residue_class_mod(m, a0), B = section5::residue_class_mod(m, b0), mul(A, B) = section5::residue_class_mod(m, a0 * b0)} from a, b
-        by def $is_reduced_residue_class_multiplication_operation(m, U, mul, one)
+        by def:
+            ? $is_reduced_residue_class_multiplication_operation(m, U, mul, one)
     claim:
         ? $section5::is_abelian_group(U, mul, one)
         witness $is_nonempty_set(U) from one
@@ -953,7 +995,8 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
             section2::gcd_Z(a, m) = 1
             witness exist b_factor Z st {b = section2::gcd_Z(a, m) * b_factor} from b:
                 b = 1 * b = section2::gcd_Z(a, m) * b
-            by def $section1::divides_Z(section2::gcd_Z(a, m), b)
+            by def:
+                ? $section1::divides_Z(section2::gcd_Z(a, m), b)
             by thm theorem_VI_2_gcd_divides_implies_solvable(m, a, b)
             obtain z from exist z Z st {$solves_linear_congruence_mod(m, a, b, z)}
             obtain k from exist k Z st {a * z - b = m * k}
@@ -971,8 +1014,10 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
             by thm residue_class_multiplication_well_defined(m, x, y, a, z)
             residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, z)
             witness exist h Z st {a * z - b = m * h} from k
-            by def $section1::divides_Z(m, a * z - b)
-            by def $section5::congruent_mod(m, a * z, b)
+            by def:
+                ? $section1::divides_Z(m, a * z - b)
+            by def:
+                ? $section5::congruent_mod(m, a * z, b)
             by thm section5::residue_class_eq_of_congruent(m, a * z, b)
             mulC(A, Z0) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, z) = section5::residue_class_mod(m, a * z)
             mul(A, Z0) = mulC(A, Z0) = section5::residue_class_mod(m, a * z) = section5::residue_class_mod(m, b) = unit_map(b) = B
@@ -997,12 +1042,15 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
                 by thm section5::representative_belongs_to_residue_class(m, a * z1)
                 a * z1 $in section5::residue_class_mod(m, b)
                 by thm section5::member_of_residue_class_is_congruent(m, b, a * z1)
-                by def $section5::congruent_mod(m, a * z1, b)
+                by def:
+                    ? $section5::congruent_mod(m, a * z1, b)
                 $section1::divides_Z(m, a * z1 - b)
-                by def $section1::divides_Z(m, a * z1 - b)
+                by def:
+                    ? $section1::divides_Z(m, a * z1 - b)
                 obtain k1 from exist k1 Z st {a * z1 - b = m * k1}
                 witness exist k0 Z st {a * z1 - b = m * k0} from k1
-                by def $solves_linear_congruence_mod(m, a, b, z1)
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, z1)
                 obtain q1 from exist q1 Z st {z1 = z + (m / section2::gcd_Z(a, m)) * q1}
                 obtain x2, y2 from exist x2, y2 Z st {A = section5::residue_class_mod(m, x2), Z2 = section5::residue_class_mod(m, y2), mulC(A, Z2) = residue_class_mul_mod(m, x2, y2)}
                 section5::residue_class_mod(m, x2) = A = unit_map(a) = section5::residue_class_mod(m, a)
@@ -1014,12 +1062,15 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
                 by thm section5::representative_belongs_to_residue_class(m, a * z2)
                 a * z2 $in section5::residue_class_mod(m, b)
                 by thm section5::member_of_residue_class_is_congruent(m, b, a * z2)
-                by def $section5::congruent_mod(m, a * z2, b)
+                by def:
+                    ? $section5::congruent_mod(m, a * z2, b)
                 $section1::divides_Z(m, a * z2 - b)
-                by def $section1::divides_Z(m, a * z2 - b)
+                by def:
+                    ? $section1::divides_Z(m, a * z2 - b)
                 obtain k2 from exist k2 Z st {a * z2 - b = m * k2}
                 witness exist k0 Z st {a * z2 - b = m * k0} from k2
-                by def $solves_linear_congruence_mod(m, a, b, z2)
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, z2)
                 obtain q2 from exist q2 Z st {z2 = z + (m / section2::gcd_Z(a, m)) * q2}
                 section2::gcd_Z(a, m) = 1
                 m / section2::gcd_Z(a, m) = m / 1 = m
@@ -1027,8 +1078,10 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
                 z2 = z + (m / section2::gcd_Z(a, m)) * q2 = z + m * q2
                 z1 - z2 = (z + m * q1) - (z + m * q2) = m * q1 - m * q2 = m * (q1 - q2)
                 witness exist congruence_factor Z st {z1 - z2 = m * congruence_factor} from q1 - q2
-                by def $section1::divides_Z(m, z1 - z2)
-                by def $section5::congruent_mod(m, z1, z2)
+                by def:
+                    ? $section1::divides_Z(m, z1 - z2)
+                by def:
+                    ? $section5::congruent_mod(m, z1, z2)
                 by thm section5::residue_class_eq_of_congruent(m, z1, z2)
                 Z1 = unit_map(z1) = section5::residue_class_mod(m, z1) = section5::residue_class_mod(m, z2) = unit_map(z2) = Z2
             exist! Z1 U st {mul(A, Z1) = B}
@@ -1038,9 +1091,11 @@ thm theorem_VI_2_reduced_residue_classes_form_group:
             one = section5::residue_class_mod(m, 1) = oneC
             A $in carrier_C
             mul(one, A) = mulC(oneC, A) = A
-        by def $section5::is_abelian_group(U, mul, one)
+        by def:
+            ? $section5::is_abelian_group(U, mul, one)
     witness exist U0 finite_set, mul0 fn(A, B U0) U0, one0 U0 st {$is_reduced_residue_class_carrier_mod(m, U0), $is_reduced_residue_class_multiplication_operation(m, U0, mul0, one0), $section5::is_abelian_group(U0, mul0, one0)} from U, mul, one
-    by def $reduced_residue_classes_form_multiplicative_group_mod(m)
+    by def:
+        ? $reduced_residue_classes_form_multiplicative_group_mod(m)
 
 """
 Definition. Euler's function phi(m) is the number of congruence classes
@@ -1060,7 +1115,8 @@ have fn euler_phi by exist!:
     witness exist n1 N st {$euler_phi_spec(m, n1)} from n:
         $is_finite_set(coprime_remainders_mod(m))
         finite_set_size(coprime_remainders_mod(m)) = n
-        by def $euler_phi_spec(m, n)
+        by def:
+            ? $euler_phi_spec(m, n)
     forall n1, n2 N:
         $euler_phi_spec(m, n1)
         $euler_phi_spec(m, n2)
@@ -1095,20 +1151,24 @@ thm reduced_residue_class_carrier_has_euler_phi_elements:
             m > 0
             r1 = m * 0 + r1
             0 <= r1 < m
-            by def $section2::euclidean_division_Z(r1, m, 0, r1)
+            by def:
+                ? $section2::euclidean_division_Z(r1, m, 0, r1)
         claim:
             ? $section2::euclidean_division_Z(r2, m, 0, r2)
             m > 0
             r2 = m * 0 + r2
             0 <= r2 < m
-            by def $section2::euclidean_division_Z(r2, m, 0, r2)
+            by def:
+                ? $section2::euclidean_division_Z(r2, m, 0, r2)
         by thm section2::euclidean_division_remainder_is_mod(r1, m, 0, r1)
         by thm section2::euclidean_division_remainder_is_mod(r2, m, 0, r2)
         r1 = r2
-    by def $injective(coprime_remainders_mod(m), power_set(Z), unit_map)
+    by def:
+        ? $injective(coprime_remainders_mod(m), power_set(Z), unit_map)
     by thm coprime_remainders_mod_is_finite(m)
     $euler_phi_spec(m, euler_phi(m))
-    by def $euler_phi_spec(m, euler_phi(m))
+    by def:
+        ? $euler_phi_spec(m, euler_phi(m))
     finite_set_size(U) = finite_set_size(fn_range(unit_map)) = finite_set_size(coprime_remainders_mod(m)) = euler_phi(m)
 
 thm euler_phi_one_value:
@@ -1118,7 +1178,8 @@ thm euler_phi_one_value:
             euler_phi(m) = 1
     claim:
         ? coprime_remainders_mod(1) = {0}
-        by extension coprime_remainders_mod(1) = {0}:
+        by extension:
+            ? coprime_remainders_mod(1) = {0}
             forall a coprime_remainders_mod(1):
                 0 <= a < 1
                 a = 0
@@ -1129,14 +1190,16 @@ thm euler_phi_one_value:
                 a = 0
                 0 <= a < 1
                 by thm section3::relatively_prime_Z_one(a)
-                by def $coprime_remainder_mod(1, a)
+                by def:
+                    ? $coprime_remainder_mod(1, a)
                 by thm coprime_remainder_is_member_of_coprime_remainders_mod(1, a)
                 a $in coprime_remainders_mod(1)
             forall a {0}:
                 a $in coprime_remainders_mod(1)
     by thm coprime_remainders_mod_is_finite(1)
     $euler_phi_spec(1, euler_phi(1))
-    by def $euler_phi_spec(1, euler_phi(1))
+    by def:
+        ? $euler_phi_spec(1, euler_phi(1))
     finite_set_size(coprime_remainders_mod(1)) = euler_phi(1)
     finite_set_size({0}) = 1
     euler_phi(m) = euler_phi(1) = finite_set_size(coprime_remainders_mod(1)) = finite_set_size({0}) = 1
@@ -1188,7 +1251,8 @@ thm euler_phi_prime_value:
                 obtain x, y from exist x, y Z st {a * x + p * y = 1}
                 witness exist q Z st {1 = p * q} from y:
                     1 = a * x + p * y = 0 * x + p * y = p * y
-                by def $section1::divides_Z(p, 1)
+                by def:
+                    ? $section1::divides_Z(p, 1)
                 by thm section1::positive_divisor_of_one_is_one(p)
                 p = 1
                 impossible p > 1
@@ -1230,17 +1294,20 @@ thm euler_phi_prime_value:
                     a * y + p * x = p * x + a * y = 1
                 by thm section3::theorem_III_1_bezout_implies_relprime_pair(a, p)
                 $section3::relatively_prime_Z(a, p)
-        by def $coprime_remainder_mod(p, a)
+        by def:
+            ? $coprime_remainder_mod(p, a)
         by thm coprime_remainder_is_member_of_coprime_remainders_mod(p, a)
         a $in coprime_remainders_mod(p)
-    by extension coprime_remainders_mod(p) = 1...(p - 1):
+    by extension:
+        ? coprime_remainders_mod(p) = 1...(p - 1)
         forall a coprime_remainders_mod(p):
             a $in 1...(p - 1)
         forall a 1...(p - 1):
             a $in coprime_remainders_mod(p)
     by thm coprime_remainders_mod_is_finite(p)
     $euler_phi_spec(p, euler_phi(p))
-    by def $euler_phi_spec(p, euler_phi(p))
+    by def:
+        ? $euler_phi_spec(p, euler_phi(p))
     finite_set_size(coprime_remainders_mod(p)) = euler_phi(p)
     p > 1
     p - 1 >= 1
@@ -1277,8 +1344,10 @@ thm theorem_VI_3_residue_field_iff_prime:
             t = m * section2::integer_quotient(t, m) + r
             t - r = m * section2::integer_quotient(t, m)
             witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
-            by def $section1::divides_Z(m, t - r)
-            by def $section5::congruent_mod(m, t, r)
+            by def:
+                ? $section1::divides_Z(m, t - r)
+            by def:
+                ? $section5::congruent_mod(m, t, r)
             by thm section5::residue_class_eq_of_congruent(m, t, r)
             section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
             section5::residue_class_mod(m, t) $in carrier_C
@@ -1296,12 +1365,15 @@ thm theorem_VI_3_residue_field_iff_prime:
                     by thm section5::representative_belongs_to_residue_class(m, 0)
                     0 $in section5::residue_class_mod(m, 1)
                     by thm section5::member_of_residue_class_is_congruent(m, 1, 0)
-                    by def $section5::congruent_mod(m, 0, 1)
-                    by def $section1::divides_Z(m, 0 - 1)
+                    by def:
+                        ? $section5::congruent_mod(m, 0, 1)
+                    by def:
+                        ? $section1::divides_Z(m, 0 - 1)
                     obtain k from exist k Z st {0 - 1 = m * k}
                     witness exist q Z st {1 = m * q} from -k:
                         1 = -(0 - 1) = -(m * k) = m * (-k)
-                    by def $section1::divides_Z(m, 1)
+                    by def:
+                        ? $section1::divides_Z(m, 1)
                     by thm section1::positive_divisor_of_one_is_one(m)
                     m = 1
                     impossible m > 1
@@ -1320,8 +1392,10 @@ thm theorem_VI_3_residue_field_iff_prime:
                             obtain q from exist q Z st {a = m * q}
                             witness exist k Z st {a - 0 = m * k} from q:
                                 a - 0 = a = m * q
-                            by def $section1::divides_Z(m, a - 0)
-                            by def $section5::congruent_mod(m, a, 0)
+                            by def:
+                                ? $section1::divides_Z(m, a - 0)
+                            by def:
+                                ? $section5::congruent_mod(m, a, 0)
                             by thm section5::residue_class_eq_of_congruent(m, a, 0)
                             A = section5::residue_class_mod(m, a) = section5::residue_class_mod(m, 0) = zero
                             impossible A != zero
@@ -1340,8 +1414,10 @@ thm theorem_VI_3_residue_field_iff_prime:
                 residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, u)
                 witness exist k Z st {a * u - 1 = m * k} from -v:
                     a * u - 1 = a * u - (a * u + m * v) = m * (-v)
-                by def $section1::divides_Z(m, a * u - 1)
-                by def $section5::congruent_mod(m, a * u, 1)
+                by def:
+                    ? $section1::divides_Z(m, a * u - 1)
+                by def:
+                    ? $section5::congruent_mod(m, a * u, 1)
                 by thm section5::residue_class_eq_of_congruent(m, a * u, 1)
                 mul(A, B) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, u) = section5::residue_class_mod(m, a * u) = section5::residue_class_mod(m, 1) = one
                 witness exist B0 carrier_C st {mul(A, B0) = one} from B
@@ -1354,9 +1430,11 @@ thm theorem_VI_3_residue_field_iff_prime:
                     mul(B2, B1) = mul(B1, B2)
                     B1 = mul(one, B1) = mul(mul(A, B2), B1) = mul(A, mul(B2, B1)) = mul(A, mul(B1, B2)) = mul(mul(A, B1), B2) = mul(one, B2) = B2
                 exist! B0 carrier_C st {mul(A, B0) = one}
-            by def $is_field(carrier_C, add, mul, zero, one)
+            by def:
+                ? $is_field(carrier_C, add, mul, zero, one)
         witness exist Classes finite_set, add0 fn(A, B Classes) Classes, mul0 fn(A, B Classes) Classes, zero0 Classes, one0 Classes st {$section5::is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m, $section5::is_residue_class_addition_operation(m, Classes, add0, zero0), $is_residue_class_multiplication_operation(m, Classes, mul0), one0 = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add0, mul0, zero0, one0), $is_field(Classes, add0, mul0, zero0, one0)} from carrier_C, add, mul, zero, one
-        by def $residue_classes_form_field_mod(m)
+        by def:
+            ? $residue_classes_form_field_mod(m)
     claim:
         ? forall:
             $residue_classes_form_field_mod(m)
@@ -1382,8 +1460,10 @@ thm theorem_VI_3_residue_field_iff_prime:
             t = m * section2::integer_quotient(t, m) + r
             t - r = m * section2::integer_quotient(t, m)
             witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
-            by def $section1::divides_Z(m, t - r)
-            by def $section5::congruent_mod(m, t, r)
+            by def:
+                ? $section1::divides_Z(m, t - r)
+            by def:
+                ? $section5::congruent_mod(m, t, r)
             by thm section5::residue_class_eq_of_congruent(m, t, r)
             section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
             section5::residue_class_mod(m, t) $in carrier_C
@@ -1398,8 +1478,10 @@ thm theorem_VI_3_residue_field_iff_prime:
                 one = section5::residue_class_mod(m, 1)
                 witness exist k Z st {0 - 1 = m * k} from -1:
                     0 - 1 = -1 = 1 * (-1) = m * (-1)
-                by def $section1::divides_Z(m, 0 - 1)
-                by def $section5::congruent_mod(m, 0, 1)
+                by def:
+                    ? $section1::divides_Z(m, 0 - 1)
+                by def:
+                    ? $section5::congruent_mod(m, 0, 1)
                 by thm section5::residue_class_eq_of_congruent(m, 0, 1)
                 zero = section5::residue_class_mod(m, 0) = section5::residue_class_mod(m, 1) = one
                 impossible zero != one
@@ -1419,8 +1501,10 @@ thm theorem_VI_3_residue_field_iff_prime:
                     by thm section5::representative_belongs_to_residue_class(m, d)
                     d $in section5::residue_class_mod(m, 0)
                     by thm section5::member_of_residue_class_is_congruent(m, 0, d)
-                    by def $section5::congruent_mod(m, d, 0)
-                    by def $section1::divides_Z(m, d - 0)
+                    by def:
+                        ? $section5::congruent_mod(m, d, 0)
+                    by def:
+                        ? $section1::divides_Z(m, d - 0)
                     obtain q from exist q Z st {d - 0 = m * q}
                     witness exist q0 Z st {d = m * q0} from q:
                         d = d - 0 = m * q
@@ -1461,8 +1545,10 @@ thm theorem_VI_3_residue_field_iff_prime:
                     by thm section5::representative_belongs_to_residue_class(m, x)
                     x $in section5::residue_class_mod(m, d)
                     by thm section5::member_of_residue_class_is_congruent(m, d, x)
-                    by def $section5::congruent_mod(m, x, d)
-                    by def $section1::divides_Z(m, x - d)
+                    by def:
+                        ? $section5::congruent_mod(m, x, d)
+                    by def:
+                        ? $section1::divides_Z(m, x - d)
                     obtain k from exist k Z st {x - d = m * k}
                     mul(D, E) = one = section5::residue_class_mod(m, 1)
                     residue_class_mul_mod(m, x, y) = section5::residue_class_mod(m, x * y)
@@ -1470,19 +1556,25 @@ thm theorem_VI_3_residue_field_iff_prime:
                     by thm section5::representative_belongs_to_residue_class(m, x * y)
                     x * y $in section5::residue_class_mod(m, 1)
                     by thm section5::member_of_residue_class_is_congruent(m, 1, x * y)
-                    by def $section5::congruent_mod(m, x * y, 1)
-                    by def $section1::divides_Z(m, x * y - 1)
+                    by def:
+                        ? $section5::congruent_mod(m, x * y, 1)
+                    by def:
+                        ? $section1::divides_Z(m, x * y - 1)
                     obtain n from exist n Z st {x * y - 1 = m * n}
                     x = (x - d) + d = m * k + d = d + m * k
                     1 = x * y - (x * y - 1) = x * y - m * n = (d + m * k) * y - m * n = d * y + m * (k * y - n)
                     witness exist h Z st {d = d * h} from 1:
                         d = d * 1
-                    by def $section1::divides_Z(d, d)
+                    by def:
+                        ? $section1::divides_Z(d, d)
                     obtain M from exist M Z st {m = d * M}
                     1 = d * y + m * (k * y - n) = d * y + d * M * (k * y - n) = d * (y + M * (k * y - n))
                     witness exist h Z st {1 = d * h} from y + M * (k * y - n)
-                    by def $section1::divides_Z(d, 1)
+                    by def:
+                        ? $section1::divides_Z(d, 1)
                     by thm section1::positive_divisor_of_one_is_one(d)
                     d = 1
-        by def $section4::is_prime_Z(m)
-    by def $residue_field_iff_prime(m)
+        by def:
+            ? $section4::is_prime_Z(m)
+    by def:
+        ? $residue_field_iff_prime(m)

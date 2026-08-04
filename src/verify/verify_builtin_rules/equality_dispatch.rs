@@ -2918,7 +2918,7 @@ impl Runtime {
     }
 
     // General Cartesian product definition as a canonical set-builder.
-    // Example: `general_cart(I, s, g) = {f fn(t I)big_union(s): forall! a I => {f(a) $in g(a)}}`.
+    // Example: `general_cart(I, s, g) = {f fn(t I)big_union(s): forall a I => {f(a) $in g(a)}}`.
     fn try_verify_general_cart_set_builder_equality(
         &mut self,
         left: &Obj,

@@ -279,7 +279,8 @@ thm finite_list_equal_implies_same_entries:
         x.entries = x[2]
         y.entries = y[2]
         x.entries = y.entries
-    by def $have_same_finite_list_entries(s, n, x, y)
+    by def:
+        ? $have_same_finite_list_entries(s, n, x, y)
 
 thm finite_list_extensionality:
     ? forall s set, n N, x, y &FiniteList<s, n>:
@@ -293,9 +294,11 @@ thm finite_list_extensionality:
             idx <= n
             =>:
                 left_entries(idx) = right_entries(idx)
-        by def $have_same_finite_list_entries(s, n, x, y)
+        by def:
+            ? $have_same_finite_list_entries(s, n, x, y)
         left_entries(idx) = x.entries(idx) = y.entries(idx) = right_entries(idx)
-    by def $fn_eq(left_entries, right_entries)
+    by def:
+        ? $fn_eq(left_entries, right_entries)
     left_entries = right_entries
     x.entries = left_entries = right_entries = y.entries
     x[1] = x.length = n = y.length = y[1]
@@ -370,7 +373,8 @@ thm coordinate_add_commutative:
         left(idx) = scalars.add(x(idx), y(idx))
         scalars.add(x(idx), y(idx)) = scalars.add(y(idx), x(idx))
         scalars.add(y(idx), x(idx)) = right(idx)
-    by def $fn_eq(left, right)
+    by def:
+        ? $fn_eq(left, right)
     left = right
     \coordinate_add<s, scalars, n>(x, y) = \coordinate_add<s, scalars, n>(y, x)
 # Notation 1.15. The zero vector is the constant coordinate list whose value

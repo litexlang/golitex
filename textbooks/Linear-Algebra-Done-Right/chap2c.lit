@@ -14,8 +14,10 @@ thm basis_length_unique:
             length1 = length2
     obtain basis1 from exist basis_vectors &chap1a::FiniteList<v, length1> st {$chap2b::is_basis(s, v, space, length1, basis_vectors)}
     obtain basis2 from exist basis_vectors &chap1a::FiniteList<v, length2> st {$chap2b::is_basis(s, v, space, length2, basis_vectors)}
-    by def $chap2b::is_basis(s, v, space, length1, basis1)
-    by def $chap2b::is_basis(s, v, space, length2, basis2)
+    by def:
+        ? $chap2b::is_basis(s, v, space, length1, basis1)
+    by def:
+        ? $chap2b::is_basis(s, v, space, length2, basis2)
     by thm chap2a::independent_length_le_spanning_length(s, v, space, length1, length2, basis1, basis2)
     by thm chap2a::independent_length_le_spanning_length(s, v, space, length2, length1, basis2, basis1)
     length1 = length2
@@ -33,9 +35,11 @@ thm finite_dimensional_admits_basis_length:
     by thm chap2b::finite_dimensional_has_basis(s, v, space)
     obtain n, basis_vectors from exist n N, basis_vectors &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, v, space, n, basis_vectors)}
     witness exist basis &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, v, space, n, basis)} from basis_vectors
-    by def $has_basis_length(s, v, space, n)
+    by def:
+        ? $has_basis_length(s, v, space, n)
     witness exist basis_length N st {$has_basis_length(s, v, space, basis_length)} from n
-    by def $admits_basis_length(s, v, space)
+    by def:
+        ? $admits_basis_length(s, v, space)
 # Definition 2.35. dimension is a template-selected natural-number object.
 # The template header supplies existence, and Result 2.34 makes every selected
 # basis length equal; callers use exactly \dimension<s,space.scalars,v,space>.
@@ -57,7 +61,8 @@ thm basis_length_equals_dimension:
         =>:
             n = \dimension<s, v, space>
     witness exist basis_vectors &chap1a::FiniteList<v, n> st {$chap2b::is_basis(s, v, space, n, basis_vectors)} from basis
-    by def $has_basis_length(s, v, space, n)
+    by def:
+        ? $has_basis_length(s, v, space, n)
     by thm dimension_has_basis_length(s, v, space)
     by thm basis_length_unique(s, v, space, n, \dimension<s, v, space>)
 
@@ -75,7 +80,8 @@ thm lifted_finite_list_contains_source_entries:
             lifted.entries(idx) = source.entries(idx)
             source.entries(idx) $in U
             lifted.entries(idx) $in U
-    by def $chap2a::contains_list_entries(v, n, lifted, U)
+    by def:
+        ? $chap2a::contains_list_entries(v, n, lifted, U)
 
 # A basis for an inherited subspace remains independent after its entries are
 # lifted to the ambient carrier. The mathematical operations are identical;
@@ -95,7 +101,8 @@ thm ambient_partial_trace_restricts_to_subspace:
     have inherited &chap1b::VectorSpace<s, U> = \chap1c::subspace_vector_space<s, v, space, U>
     inherited = (space.scalars, space.zero, fn(x, y U) U {space.add(x, y)}, fn(a s, x U) U {space.smul(a, x)})
     inherited.zero = space.zero
-    by def $chap2a::is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, lifted, ambient_trace)
+    by def:
+        ? $chap2a::is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, lifted, ambient_trace)
     have fn restricted_trace(j closed_range(0, n)) U = ambient_trace(j)
     restricted_trace(0) = ambient_trace(0) = space.zero = inherited.zero
     claim:
@@ -107,7 +114,8 @@ thm ambient_partial_trace_restricts_to_subspace:
         ambient_trace(j) = space.add(ambient_trace(j - 1), space.smul(coefficients.entries(j), lifted.entries(j)))
         trust inherited.add(restricted_trace(j - 1), inherited.smul(coefficients.entries(j), source.entries(j))) = space.add(ambient_trace(j - 1), space.smul(coefficients.entries(j), source.entries(j)))
         trust restricted_trace(j) = inherited.add(restricted_trace(j - 1), inherited.smul(coefficients.entries(j), source.entries(j)))
-    by def $chap2a::is_linear_combination_partial_sum_sequence(s, U, inherited, n, coefficients, source, restricted_trace)
+    by def:
+        ? $chap2a::is_linear_combination_partial_sum_sequence(s, U, inherited, n, coefficients, source, restricted_trace)
 
 thm ambient_zero_combination_is_subspace_zero_combination:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), n N, source &chap1a::FiniteList<U, n>, lifted &chap1a::FiniteList<v, n>, coefficients &chap1a::FiniteList<s, n>:
@@ -117,7 +125,8 @@ thm ambient_zero_combination_is_subspace_zero_combination:
         =>:
             \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
     by thm chap2a::linear_combination_value_satisfies_spec(s, v, space, n, coefficients, lifted)
-    by def $chap2a::has_linear_combination_value(s, v, space, n, coefficients, lifted, \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted))
+    by def:
+        ? $chap2a::has_linear_combination_value(s, v, space, n, coefficients, lifted, \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted))
     obtain ambient_trace from exist trace fn(j closed_range(0, n)) v st {$chap2a::is_linear_combination_partial_sum_sequence(s, v, space, n, coefficients, lifted, trace), \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = trace(n)}
     by thm ambient_partial_trace_restricts_to_subspace(s, v, space, U, n, source, lifted, coefficients, ambient_trace)
     have subspace_zero U = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
@@ -126,7 +135,8 @@ thm ambient_zero_combination_is_subspace_zero_combination:
         ? $chap2a::has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
         subspace_zero = space.zero = ambient_trace(n) = (fn(j closed_range(0, n)) U {ambient_trace(j)})(n)
         witness exist trace fn(j closed_range(0, n)) U st {$chap2a::is_linear_combination_partial_sum_sequence(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, trace), subspace_zero = trace(n)} from fn(j closed_range(0, n)) U {ambient_trace(j)}
-        by def $chap2a::has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
+        by def:
+            ? $chap2a::has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source, subspace_zero)
     by thm chap2a::linear_combination_value_exists_unique(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
     by thm chap2a::linear_combination_value_satisfies_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, coefficients, source)
     \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = subspace_zero = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
@@ -138,8 +148,10 @@ thm inherited_subspace_basis_is_ambient_independent:
         lifted = (n, fn(idx N+: idx <= n) v {source.entries(idx)})
         =>:
             $chap2a::is_linearly_independent(s, v, space, n, lifted)
-    by def $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
-    by def $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+    by def:
+        ? $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+    by def:
+        ? $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
     claim:
         ? forall coefficients &chap1a::FiniteList<s, n>:
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = space.zero
@@ -149,7 +161,8 @@ thm inherited_subspace_basis_is_ambient_independent:
         $chap2a::has_only_zero_coefficients(s, &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars, n, coefficients)
         &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars = space.scalars
         $chap2a::has_only_zero_coefficients(s, space.scalars, n, coefficients)
-    by def $chap2a::is_linearly_independent(s, v, space, n, lifted)
+    by def:
+        ? $chap2a::is_linearly_independent(s, v, space, n, lifted)
 # Example 2.36. The standard coordinate and monomial lists give
 # dim F^n=n and dim P_m(F)=m+1. The two displayed coordinate subspaces of F^3
 # each have the explicit two-vector basis recorded by the source.
@@ -187,7 +200,8 @@ thm independent_list_of_dimension_length_is_basis:
     by thm chap2b::independent_list_extends_to_basis(s, v, space, n, vectors)
     obtain m, basis_vectors from exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$chap2b::is_order_preserving_sublist(v, m, n, basis_vectors, vectors), $chap2b::is_basis(s, v, space, m, basis_vectors)}
     witness exist basis &chap1a::FiniteList<v, m> st {$chap2b::is_basis(s, v, space, m, basis)} from basis_vectors
-    by def $has_basis_length(s, v, space, m)
+    by def:
+        ? $has_basis_length(s, v, space, m)
     by thm dimension_has_basis_length(s, v, space)
     by thm basis_length_unique(s, v, space, m, \dimension<s, v, space>)
     m = \dimension<s, v, space> = n
@@ -230,7 +244,8 @@ thm spanning_list_of_dimension_length_is_basis:
     by thm chap2b::spanning_list_reduces_to_basis(s, v, space, n, vectors)
     obtain m, basis_vectors from exist m N, basis_vectors &chap1a::FiniteList<v, m> st {$chap2b::is_order_preserving_sublist(v, n, m, vectors, basis_vectors), $chap2b::is_basis(s, v, space, m, basis_vectors)}
     witness exist basis &chap1a::FiniteList<v, m> st {$chap2b::is_basis(s, v, space, m, basis)} from basis_vectors
-    by def $has_basis_length(s, v, space, m)
+    by def:
+        ? $has_basis_length(s, v, space, m)
     by thm dimension_has_basis_length(s, v, space)
     by thm basis_length_unique(s, v, space, m, \dimension<s, v, space>)
     m = \dimension<s, v, space> = n
@@ -259,7 +274,8 @@ thm subspace_intersection_is_subspace:
         z $in v
     intersect(U, W) $subset v
     intersect(U, W) $in power_set(v)
-    by def $chap1c::is_subspace(s, v, space, intersect(U, W))
+    by def:
+        ? $chap1c::is_subspace(s, v, space, intersect(U, W))
 
 thm subspace_intersection_is_inherited_subspace_of_left:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v):
@@ -289,7 +305,8 @@ thm subspace_intersection_is_inherited_subspace_of_left:
         inherited.smul(a, x) $in intersect(U, W)
     intersect(U, W) $subset U
     intersect(U, W) $in power_set(U)
-    by def $chap1c::is_subspace(s, U, inherited, intersect(U, W))
+    by def:
+        ? $chap1c::is_subspace(s, U, inherited, intersect(U, W))
 # For the binary sum, zero is 0+0; sums regroup the U-parts and W-parts; and
 # scalar multiplication distributes over each decomposition. The one trusted
 # regrouping equality is the current callable-field congruence boundary.
@@ -301,7 +318,8 @@ thm subspace_sum_pair_is_subspace:
             $chap1c::is_subspace(s, v, space, \chap1c::subspace_sum_pair<s, v, space>(U, W))
     space.add(space.zero, space.zero) = space.zero
     witness exist u U, w W st {u $in v, w $in v, space.zero = space.add(u, w)} from space.zero, space.zero
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.zero)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.zero)
     space.zero $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
     witness $is_nonempty_set(\chap1c::subspace_sum_pair<s, v, space>(U, W)) from space.zero
     claim:
@@ -325,7 +343,8 @@ thm subspace_sum_pair_is_subspace:
         space.add(u, space.add(p, space.add(w, q))) = space.add(space.add(u, p), space.add(w, q))
         space.add(space.add(u, w), space.add(p, q)) = space.add(space.add(u, p), space.add(w, q))
         witness exist u1 U, w1 W st {u1 $in v, w1 $in v, space.add(x, y) = space.add(u1, w1)} from space.add(u, p), space.add(w, q)
-        by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.add(x, y))
+        by def:
+            ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.add(x, y))
         space.add(x, y) $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
     claim:
         ? forall a s, x v:
@@ -337,9 +356,11 @@ thm subspace_sum_pair_is_subspace:
         space.smul(a, w) $in W
         space.smul(a, x) = space.smul(a, space.add(u, w)) = space.add(space.smul(a, u), space.smul(a, w))
         witness exist u1 U, w1 W st {u1 $in v, w1 $in v, space.smul(a, x) = space.add(u1, w1)} from space.smul(a, u), space.smul(a, w)
-        by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.smul(a, x))
+        by def:
+            ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, space.smul(a, x))
         space.smul(a, x) $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
-    by def $chap1c::is_subspace(s, v, space, \chap1c::subspace_sum_pair<s, v, space>(U, W))
+    by def:
+        ? $chap1c::is_subspace(s, v, space, \chap1c::subspace_sum_pair<s, v, space>(U, W))
 
 thm direct_sum_member_is_prefix_tail_join_combination:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), left_length, right_length N, full &chap1a::FiniteList<v, left_length + right_length>, left &chap1a::FiniteList<v, left_length>, right &chap1a::FiniteList<v, right_length>, x v:
@@ -349,7 +370,8 @@ thm direct_sum_member_is_prefix_tail_join_combination:
         x $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
         =>:
             x $in \chap2a::span<s, v, space, left_length + right_length, full>
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
     obtain u, w from exist selected_u U, selected_w W st {selected_u $in v, selected_w $in v, x = space.add(selected_u, selected_w)}
     u $in \chap2a::span_carrier<s, v, space, left_length, left>
     w $in \chap2a::span_carrier<s, v, space, right_length, right>
@@ -357,8 +379,10 @@ thm direct_sum_member_is_prefix_tail_join_combination:
     by thm chap2a::span_carrier_spec(s, v, space, right_length, right)
     u $in \chap2a::span<s, v, space, left_length, left>
     w $in \chap2a::span<s, v, space, right_length, right>
-    by def $chap2a::is_linear_combination(s, v, space, left_length, u, left)
-    by def $chap2a::is_linear_combination(s, v, space, right_length, w, right)
+    by def:
+        ? $chap2a::is_linear_combination(s, v, space, left_length, u, left)
+    by def:
+        ? $chap2a::is_linear_combination(s, v, space, right_length, w, right)
     obtain left_coefficients from exist selected &chap1a::FiniteList<s, left_length> st {u = \chap2a::linear_combination_value<s, v, space, left_length>(selected, left)}
     obtain right_coefficients from exist selected &chap1a::FiniteList<s, right_length> st {w = \chap2a::linear_combination_value<s, v, space, right_length>(selected, right)}
     by thm chap2b::finite_lists_have_prefix_tail_join(s, left_length, right_length, left_coefficients, right_coefficients, space.scalars.zero)
@@ -366,7 +390,8 @@ thm direct_sum_member_is_prefix_tail_join_combination:
     by thm chap2b::linear_combination_splits_over_prefix_and_tail(s, v, space, left_length, right_length, full, left, right, full_coefficients, left_coefficients, right_coefficients)
     x = space.add(u, w) = \chap2a::linear_combination_value<s, v, space, left_length + right_length>(full_coefficients, full)
     witness exist selected &chap1a::FiniteList<s, left_length + right_length> st {x = \chap2a::linear_combination_value<s, v, space, left_length + right_length>(selected, full)} from full_coefficients
-    by def $chap2a::is_linear_combination(s, v, space, left_length + right_length, x, full)
+    by def:
+        ? $chap2a::is_linear_combination(s, v, space, left_length + right_length, x, full)
     x $in \chap2a::span<s, v, space, left_length + right_length, full>
 
 thm prefix_tail_split_of_zero_lists_is_zero:
@@ -403,12 +428,14 @@ thm prefix_tail_join_independent_for_direct_sum:
         have u v = \chap2a::linear_combination_value<s, v, space, left_length>(left_coefficients, left)
         have w v = \chap2a::linear_combination_value<s, v, space, right_length>(right_coefficients, right)
         witness exist selected &chap1a::FiniteList<s, left_length> st {u = \chap2a::linear_combination_value<s, v, space, left_length>(selected, left)} from left_coefficients
-        by def $chap2a::is_linear_combination(s, v, space, left_length, u, left)
+        by def:
+            ? $chap2a::is_linear_combination(s, v, space, left_length, u, left)
         u $in \chap2a::span<s, v, space, left_length, left>
         by thm chap2a::span_carrier_spec(s, v, space, left_length, left)
         u $in \chap2a::span_carrier<s, v, space, left_length, left>
         witness exist selected &chap1a::FiniteList<s, right_length> st {w = \chap2a::linear_combination_value<s, v, space, right_length>(selected, right)} from right_coefficients
-        by def $chap2a::is_linear_combination(s, v, space, right_length, w, right)
+        by def:
+            ? $chap2a::is_linear_combination(s, v, space, right_length, w, right)
         w $in \chap2a::span<s, v, space, right_length, right>
         by thm chap2a::span_carrier_spec(s, v, space, right_length, right)
         w $in \chap2a::span_carrier<s, v, space, right_length, right>
@@ -420,12 +447,15 @@ thm prefix_tail_join_independent_for_direct_sum:
         by thm chap1c::direct_sum_pair_unique_spec(s, v, space, U, W, u, space.zero, w, space.zero)
         u = space.zero
         w = space.zero
-        by def $chap2a::is_linearly_independent(s, v, space, left_length, left)
-        by def $chap2a::is_linearly_independent(s, v, space, right_length, right)
+        by def:
+            ? $chap2a::is_linearly_independent(s, v, space, left_length, left)
+        by def:
+            ? $chap2a::is_linearly_independent(s, v, space, right_length, right)
         $chap2a::has_only_zero_coefficients(s, space.scalars, left_length, left_coefficients)
         $chap2a::has_only_zero_coefficients(s, space.scalars, right_length, right_coefficients)
         by thm prefix_tail_split_of_zero_lists_is_zero(s, space.scalars, left_length, right_length, full_coefficients, left_coefficients, right_coefficients)
-    by def $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
+    by def:
+        ? $chap2a::is_linearly_independent(s, v, space, left_length + right_length, full)
 
 thm direct_sum_pair_bases_join_to_basis:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v), left_length, right_length N, basisU &chap1a::FiniteList<U, left_length>, basisW &chap1a::FiniteList<W, right_length>:
@@ -458,8 +488,10 @@ thm dimension_of_direct_sum_pair:
     by thm dimension_has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
     $has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
     $has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW)
-    by def $has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
-    by def $has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW)
+    by def:
+        ? $has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    by def:
+        ? $has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW)
     obtain basisU from exist selected &chap1a::FiniteList<U, dimU> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU, selected)}
     obtain basisW from exist selected &chap1a::FiniteList<W, dimW> st {$chap2b::is_basis(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW, selected)}
     by thm direct_sum_pair_bases_join_to_basis(s, v, space, U, W, dimU, dimW, basisU, basisW)
@@ -487,7 +519,8 @@ thm old_entry_lies_in_inserted_span:
         $chap2a::is_list_with_index_inserted(v, old_length, old_list, inserted, k)
         =>:
             old_list.entries(idx) $in \chap2a::span_carrier<s, v, space, old_length + 1, inserted>
-    by def $chap2a::is_list_with_index_inserted(v, old_length, old_list, inserted, k)
+    by def:
+        ? $chap2a::is_list_with_index_inserted(v, old_length, old_list, inserted, k)
     by thm chap2a::span_contains_list_entries(s, v, space, old_length + 1, inserted)
     by cases:
         ? old_list.entries(idx) $in \chap2a::span_carrier<s, v, space, old_length + 1, inserted>
@@ -523,7 +556,8 @@ thm nested_ambient_subspace_is_inherited_subspace:
         space.smul(a, x) $in A
     A $subset W
     A $in power_set(W)
-    by def $chap1c::is_subspace(s, W, inherited, A)
+    by def:
+        ? $chap1c::is_subspace(s, W, inherited, A)
 
 thm inherited_subspace_is_ambient_subspace:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, W power_set(v), complement power_set(W):
@@ -534,10 +568,12 @@ thm inherited_subspace_is_ambient_subspace:
             $chap1c::is_subspace(s, v, space, complement)
     have inherited &chap1b::VectorSpace<s, W> = \chap1c::subspace_vector_space<s, v, space, W>
     inherited = (space.scalars, space.zero, fn(x, y W) W {space.add(x, y)}, fn(a s, x W) W {space.smul(a, x)})
-    by def $chap1c::is_subspace(s, W, \chap1c::subspace_vector_space<s, v, space, W>, complement)
+    by def:
+        ? $chap1c::is_subspace(s, W, \chap1c::subspace_vector_space<s, v, space, W>, complement)
     complement $subset W
     W $subset v
-    by def complement $subset v
+    by def:
+        ? complement $subset v
     complement $in power_set(v)
     &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.zero $in complement
     &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.zero = inherited.zero = space.zero
@@ -552,7 +588,8 @@ thm inherited_subspace_is_ambient_subspace:
             space.smul(a, x) $in complement
         &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.smul(a, x) $in complement
         &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.smul(a, x) = inherited.smul(a, x) = space.smul(a, x)
-    by def $chap1c::is_subspace(s, v, space, complement)
+    by def:
+        ? $chap1c::is_subspace(s, v, space, complement)
 
 thm inherited_sum_member_is_ambient_sum_member:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, W power_set(v), A, complement power_set(W), x W:
@@ -564,13 +601,15 @@ thm inherited_sum_member_is_ambient_sum_member:
             x $in \chap1c::subspace_sum_pair<s, v, space>(A, complement)
     have inherited &chap1b::VectorSpace<s, W> = \chap1c::subspace_vector_space<s, v, space, W>
     inherited = (space.scalars, space.zero, fn(a, b W) W {space.add(a, b)}, fn(r s, a W) W {space.smul(r, a)})
-    by def $chap1c::is_subspace_sum_pair_member(s, W, \chap1c::subspace_vector_space<s, v, space, W>, A, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, W, \chap1c::subspace_vector_space<s, v, space, W>, A, complement, x)
     obtain a, c from exist selected_a A, selected_c complement st {selected_a $in W, selected_c $in W, x = &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.add(selected_a, selected_c)}
     a $in v
     c $in v
     x = &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.add(a, c) = inherited.add(a, c) = space.add(a, c)
     witness exist selected_a A, selected_c complement st {selected_a $in v, selected_c $in v, x = space.add(selected_a, selected_c)} from a, c
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, A, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, A, complement, x)
     x $in \chap1c::subspace_sum_pair<s, v, space>(A, complement)
 
 thm ambient_sum_member_is_inherited_sum_member:
@@ -584,7 +623,8 @@ thm ambient_sum_member_is_inherited_sum_member:
             x $in \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement)
     have inherited &chap1b::VectorSpace<s, W> = \chap1c::subspace_vector_space<s, v, space, W>
     inherited = (space.scalars, space.zero, fn(a, b W) W {space.add(a, b)}, fn(r s, a W) W {space.smul(r, a)})
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, A, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, A, complement, x)
     obtain a, c from exist selected_a A, selected_c complement st {selected_a $in v, selected_c $in v, x = space.add(selected_a, selected_c)}
     a $in W
     c $in W
@@ -592,7 +632,8 @@ thm ambient_sum_member_is_inherited_sum_member:
     x $in W
     x = space.add(a, c) = inherited.add(a, c) = &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.add(a, c)
     witness exist selected_a A, selected_c complement st {selected_a $in W, selected_c $in W, x = &chap1b::VectorSpace<s, W>{\chap1c::subspace_vector_space<s, v, space, W>}.add(selected_a, selected_c)} from a, c
-    by def $chap1c::is_subspace_sum_pair_member(s, W, \chap1c::subspace_vector_space<s, v, space, W>, A, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, W, \chap1c::subspace_vector_space<s, v, space, W>, A, complement, x)
     x $in \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement)
 
 thm inherited_pair_sum_is_ambient:
@@ -611,7 +652,8 @@ thm inherited_pair_sum_is_ambient:
         ? forall x \chap1c::subspace_sum_pair<s, v, space>(A, complement):
             x $in \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement)
         by thm ambient_sum_member_is_inherited_sum_member(s, v, space, W, A, complement, x)
-    by extension \chap1c::subspace_sum_pair<s, v, space>(A, complement) = \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement)
+    by extension:
+        ? \chap1c::subspace_sum_pair<s, v, space>(A, complement) = \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement)
     \chap1c::subspace_sum_pair<s, v, space>(A, complement) = \chap1c::subspace_sum_pair<s, W, \chap1c::subspace_vector_space<s, v, space, W>>(A, complement) = W
 
 thm inherited_pair_directness_is_ambient:
@@ -672,7 +714,8 @@ thm intersection_complement_is_direct_with_larger_subspace:
             space.zero $in U
             space.zero $in complement
             x $in intersect(U, complement)
-        by extension intersect(U, complement) = {space.zero}
+        by extension:
+            ? intersect(U, complement) = {space.zero}
     by thm chap1c::zero_intersection_implies_direct_sum_pair(s, v, space, U, complement)
 
 thm smaller_complement_sum_member_is_original_sum_member:
@@ -681,11 +724,13 @@ thm smaller_complement_sum_member_is_original_sum_member:
         x $in \chap1c::subspace_sum_pair<s, v, space>(U, complement)
         =>:
             x $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, complement, x)
     obtain u, c from exist selected_u U, selected_c complement st {selected_u $in v, selected_c $in v, x = space.add(selected_u, selected_c)}
     c $in W
     witness exist selected_u U, selected_w W st {selected_u $in v, selected_w $in v, x = space.add(selected_u, selected_w)} from u, c
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
     x $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
 
 thm intersection_complement_decomposes_member:
@@ -695,7 +740,8 @@ thm intersection_complement_decomposes_member:
         =>:
             exist common intersect(U, W), c complement st {common $in v, c $in v, w = space.add(common, c)}
     w $in \chap1c::subspace_sum_pair<s, v, space>(intersect(U, W), complement)
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, intersect(U, W), complement, w)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, intersect(U, W), complement, w)
     obtain common, c from exist selected_common intersect(U, W), selected_c complement st {selected_common $in v, selected_c $in v, w = space.add(selected_common, selected_c)}
     witness exist selected_common intersect(U, W), selected_c complement st {selected_common $in v, selected_c $in v, w = space.add(selected_common, selected_c)} from common, c
 
@@ -711,7 +757,8 @@ thm regrouped_intersection_complement_decomposition_is_sum_member:
     space.add(u, common) $in v
     c $in v
     witness exist selected_u U, selected_c complement st {selected_u $in v, selected_c $in v, x = space.add(selected_u, selected_c)} from space.add(u, common), c
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, complement, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, complement, x)
     x $in \chap1c::subspace_sum_pair<s, v, space>(U, complement)
 
 thm original_sum_member_is_intersection_complement_sum_member:
@@ -723,7 +770,8 @@ thm original_sum_member_is_intersection_complement_sum_member:
         x $in \chap1c::subspace_sum_pair<s, v, space>(U, W)
         =>:
             x $in \chap1c::subspace_sum_pair<s, v, space>(U, complement)
-    by def $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
+    by def:
+        ? $chap1c::is_subspace_sum_pair_member(s, v, space, U, W, x)
     obtain u, w from exist selected_u U, selected_w W st {selected_u $in v, selected_w $in v, x = space.add(selected_u, selected_w)}
     obtain common, c from exist selected_common intersect(U, W), selected_c complement st {selected_common $in v, selected_c $in v, w = space.add(selected_common, selected_c)}
     x = space.add(u, w) = space.add(u, space.add(common, c))
@@ -751,7 +799,8 @@ thm intersection_complement_preserves_sum:
         ? forall x \chap1c::subspace_sum_pair<s, v, space>(U, W):
             x $in \chap1c::subspace_sum_pair<s, v, space>(U, complement)
         by thm original_sum_member_is_intersection_complement_sum_member(s, v, space, U, W, complement, x)
-    by extension \chap1c::subspace_sum_pair<s, v, space>(U, complement) = \chap1c::subspace_sum_pair<s, v, space>(U, W)
+    by extension:
+        ? \chap1c::subspace_sum_pair<s, v, space>(U, complement) = \chap1c::subspace_sum_pair<s, v, space>(U, W)
 
 thm intersection_complement_extends_to_sum_complement:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W, complement power_set(v):
@@ -788,11 +837,13 @@ thm ambient_independent_span_restricts_to_subspace_basis:
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
             &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero = space.zero
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero = space.zero
-            by def $chap2a::is_linearly_independent(s, v, space, n, lifted)
+            by def:
+                ? $chap2a::is_linearly_independent(s, v, space, n, lifted)
             $chap2a::has_only_zero_coefficients(s, space.scalars, n, coefficients)
             &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars = space.scalars
             $chap2a::has_only_zero_coefficients(s, &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars, n, coefficients)
-        by def $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+        by def:
+            ? $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
     claim:
         ? $chap2a::spans(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
         claim:
@@ -801,21 +852,26 @@ thm ambient_independent_span_restricts_to_subspace_basis:
             x $in \chap2a::span_carrier<s, v, space, n, lifted>
             by thm chap2a::span_carrier_spec(s, v, space, n, lifted)
             x $in \chap2a::span<s, v, space, n, lifted>
-            by def $chap2a::is_linear_combination(s, v, space, n, x, lifted)
+            by def:
+                ? $chap2a::is_linear_combination(s, v, space, n, x, lifted)
             obtain coefficients from exist selected &chap1a::FiniteList<s, n> st {x = \chap2a::linear_combination_value<s, v, space, n>(selected, lifted)}
             by thm chap2b::inherited_linear_combination_equals_ambient_lift(s, v, space, U, n, source, lifted, coefficients)
             \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
             x = \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
             witness exist selected &chap1a::FiniteList<s, n> st {x = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(selected, source)} from coefficients
-            by def $chap2a::is_linear_combination(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, x, source)
+            by def:
+                ? $chap2a::is_linear_combination(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, x, source)
             x $in {value U: $chap2a::is_linear_combination(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, value, source)}
             \chap2a::span<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source> = {value U: $chap2a::is_linear_combination(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, value, source)}
         claim:
             ? forall x \chap2a::span<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source>:
                 x $in U
-        by extension \chap2a::span<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source> = U
-        by def $chap2a::spans(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
-    by def $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+        by extension:
+            ? \chap2a::span<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source> = U
+        by def:
+            ? $chap2a::spans(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+    by def:
+        ? $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
 
 thm direct_sum_pair_bases_join_to_sum_basis:
     ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, A, B power_set(v), left_length, right_length N, basisA &chap1a::FiniteList<A, left_length>, basisB &chap1a::FiniteList<B, right_length>:
@@ -887,7 +943,8 @@ thm intersection_has_ambient_complement_inside_right:
     by thm inherited_subspace_is_ambient_subspace(s, v, space, W, complement)
     complement $in power_set(v)
     $chap1c::is_subspace(s, v, space, complement)
-    by def $chap1c::is_subspace(s, W, \chap1c::subspace_vector_space<s, v, space, W>, complement)
+    by def:
+        ? $chap1c::is_subspace(s, W, \chap1c::subspace_vector_space<s, v, space, W>, complement)
     complement $subset W
     by thm inherited_pair_sum_and_directness_are_ambient(s, v, space, W, intersect(U, W), complement)
     \chap1c::subspace_sum_pair<s, v, space>(intersect(U, W), complement) = W

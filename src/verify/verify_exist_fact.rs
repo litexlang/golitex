@@ -608,7 +608,7 @@ impl Runtime {
         }
 
         // Every rational has one unique reduced integer fraction with a positive
-        // denominator. Example: `exist! p Z, q N+ st {a = p / q, forall! z
+        // denominator. Example: `exist! p Z, q N+ st {a = p / q, forall z
         // N+: p % z = 0 and q % z = 0 => {z = 1}}` for `a Q`.
         if let Some(rational) = rational_reduced_fraction_exist_fact_non_witness_operand(exist_fact)
         {

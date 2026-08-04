@@ -34,8 +34,10 @@ thm congruent_mod_transport_equalities:
         =>:
             $section5::congruent_mod(m, x, y)
     x - y = x1 - y1
-    by def $section5::congruent_mod(m, x1, y1)
-    by def $section5::congruent_mod(m, x, y)
+    by def:
+        ? $section5::congruent_mod(m, x1, y1)
+    by def:
+        ? $section5::congruent_mod(m, x, y)
 
 thm finite_product_congruence_insert_step:
     ? forall m N+, a set, S finite_set, f, g fn(x union({a}, S)) Z:
@@ -54,7 +56,8 @@ thm finite_product_congruence_insert_step:
         fS(x) = f(x)
         gS(x) = g(x)
         $section5::congruent_mod(m, f(x), g(x))
-    by def $finite_product_congruence_holds(m, S)
+    by def:
+        ? $finite_product_congruence_holds(m, S)
     $section5::congruent_mod(m, finite_set_product(S, fS), finite_set_product(S, gS))
     $section5::congruent_mod(m, f(a), g(a))
     by thm section5::congruent_mod_multiply(m, finite_set_product(S, fS), finite_set_product(S, gS), f(a), g(a))
@@ -62,8 +65,10 @@ thm finite_product_congruence_insert_step:
     have fn gR(x S) Z = g(x)
     fR = fn(x S) Z {f(x)}
     gR = fn(x S) Z {g(x)}
-    by def $fn_eq_in(fS, fR, S)
-    by def $fn_eq_in(gS, gR, S)
+    by def:
+        ? $fn_eq_in(fS, fR, S)
+    by def:
+        ? $fn_eq_in(gS, gR, S)
     finite_set_product(S, fR) = finite_set_product(S, fS)
     finite_set_product(S, gR) = finite_set_product(S, gS)
     by thm congruent_mod_transport_equalities(m, finite_set_product(S, fR) * f(a), finite_set_product(S, gR) * g(a), finite_set_product(S, fS) * f(a), finite_set_product(S, gS) * g(a))
@@ -87,7 +92,8 @@ thm finite_product_congruence:
                 finite_set_product({}, g) = 1
                 by thm section5::congruent_mod_reflexive(m, 1)
                 by thm congruent_mod_transport_equalities(m, finite_set_product({}, f), finite_set_product({}, g), 1, 1)
-            by def $finite_product_congruence_holds(m, {})
+            by def:
+                ? $finite_product_congruence_holds(m, {})
         ? induc a, S:
             $finite_product_congruence_holds(m, S)
             claim:
@@ -97,7 +103,8 @@ thm finite_product_congruence:
                     =>:
                         $section5::congruent_mod(m, finite_set_product(union({a}, S), f), finite_set_product(union({a}, S), g))
                 by thm finite_product_congruence_insert_step(m, a, S, f, g)
-            by def $finite_product_congruence_holds(m, union({a}, S))
+            by def:
+                ? $finite_product_congruence_holds(m, union({a}, S))
 
 thm product_mul_algebra:
     ? forall Pfg, Pf, Pg, fz, gz Z:
@@ -158,7 +165,8 @@ thm finite_set_product_bijective_reindex:
                             finite_set_product({}, fn(x {}) Z {q(h(x))}) = finite_set_product(carrier_C, q)
                     claim:
                         ? carrier_C = {}
-                        by extension carrier_C = {}:
+                        by extension:
+                            ? carrier_C = {}
                             claim:
                                 ? forall y carrier_C:
                                     y $in {}
@@ -173,7 +181,8 @@ thm finite_set_product_bijective_reindex:
                                     ? y $in carrier_C
                                     impossible y $in {}
                     finite_set_product({}, fn(x {}) Z {q(h(x))}) = 1 = finite_set_product(carrier_C, q)
-                by def $reindex_holds({})
+                by def:
+                    ? $reindex_holds({})
             ? induc z, S:
                 claim:
                     ? forall carrier_C finite_set, h fn(x union({z}, S)) carrier_C, q fn(y carrier_C) Z:
@@ -214,9 +223,12 @@ thm finite_set_product_bijective_reindex:
                                 x1 = x2
                         h(x1) = h0(x1) = h0(x2) = h(x2)
                         x1 = x2
-                    by def $injective(S, set_minus(carrier_C, {h(z)}), h0)
-                    by def $surjective(S, set_minus(carrier_C, {h(z)}), h0)
-                    by def $bijective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $injective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $surjective(S, set_minus(carrier_C, {h(z)}), h0)
+                    by def:
+                        ? $bijective(S, set_minus(carrier_C, {h(z)}), h0)
                     have fn q0(y set_minus(carrier_C, {h(z)})) Z = q(y)
                     q0 = fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}
                     have fn qh(x S) Z = q(h(x))
@@ -229,11 +241,13 @@ thm finite_set_product_bijective_reindex:
                         h0(x) $in set_minus(carrier_C, {h(z)})
                         h0(x) $in carrier_C
                         qh(x) = q(h(x)) = q(h0(x)) = q0(h0(x)) = q0h0(x)
-                    by def $fn_eq_in(qh, q0h0, S)
+                    by def:
+                        ? $fn_eq_in(qh, q0h0, S)
                     finite_set_product(S, fn(x S) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q0(h0(x))})
                     finite_set_product(S, fn(x S) Z {q0(h0(x))}) = finite_set_product(set_minus(carrier_C, {h(z)}), q0)
                     finite_set_product(union({z}, S), fn(x union({z}, S)) Z {q(h(x))}) = finite_set_product(S, fn(x S) Z {q(h(x))}) * q(h(z)) = finite_set_product(S, fn(x S) Z {q0(h0(x))}) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), q0) * q(h(z)) = finite_set_product(set_minus(carrier_C, {h(z)}), fn(y set_minus(carrier_C, {h(z)})) Z {q(y)}) * q(h(z)) = finite_set_product(carrier_C, q)
-                by def $reindex_holds(union({z}, S))
+                by def:
+                    ? $reindex_holds(union({z}, S))
     $reindex_holds(A)
     finite_set_product(A, fn(x A) Z {g(f(x))}) = finite_set_product(B, g)
 
@@ -277,21 +291,25 @@ thm finite_self_injective_is_bijective:
         by thm finite_self_range_contains_every_value(A, f, y)
         obtain x from exist x A st {y = f(x)}
         witness exist z A st {y = f(z)} from x
-    by def $surjective(A, A, f)
-    by def $bijective(A, A, f)
+    by def:
+        ? $surjective(A, A, f)
+    by def:
+        ? $bijective(A, A, f)
 
 thm equal_remainders_after_multiplication_give_divisibility:
     ? forall m N+, a, x, y Z:
         (a * x) % m = (a * y) % m
         =>:
             $section1::divides_Z(m, a * (x - y))
-    by def $section5::same_remainder_mod(m, a * x, a * y)
+    by def:
+        ? $section5::same_remainder_mod(m, a * x, a * y)
     a * x = m * section2::integer_quotient(a * x, m) + (a * x) % m
     a * y = m * section2::integer_quotient(a * y, m) + (a * y) % m
     a * x - a * y = (m * section2::integer_quotient(a * x, m) + (a * x) % m) - (m * section2::integer_quotient(a * y, m) + (a * y) % m) = (m * section2::integer_quotient(a * x, m) + (a * y) % m) - (m * section2::integer_quotient(a * y, m) + (a * y) % m) = m * section2::integer_quotient(a * x, m) - m * section2::integer_quotient(a * y, m) = m * (section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m))
     a * (x - y) = a * x - a * y = m * (section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m))
     witness exist t Z st {a * (x - y) = m * t} from section2::integer_quotient(a * x, m) - section2::integer_quotient(a * y, m)
-    by def $section1::divides_Z(m, a * (x - y))
+    by def:
+        ? $section1::divides_Z(m, a * (x - y))
 
 thm congruent_mod_cancel_coprime_multiplier:
     ? forall m N+, a, x, y Z:
@@ -303,7 +321,8 @@ thm congruent_mod_cancel_coprime_multiplier:
     by thm equal_remainders_after_multiplication_give_divisibility(m, a, x, y)
     by thm section6::relatively_prime_Z_symmetric(a, m)
     by thm section3::theorem_III_2_euclid_lemma(m, a, x - y)
-    by def $section5::congruent_mod(m, x, y)
+    by def:
+        ? $section5::congruent_mod(m, x, y)
 
 thm finite_set_product_constant_formula:
     ? forall A finite_set, a Z:

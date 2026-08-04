@@ -61,11 +61,13 @@ have fn index_mod by exist!:
         $section3::relatively_prime_Z(a, m)
         =>:
             exist! x N st {$index_mod_spec(m, g, a, x)}
-    by def $primitive_root_mod(m, g)
+    by def:
+        ? $primitive_root_mod(m, g)
     exist! z N st {g ^ z % m = a % m, z < section6::euler_phi(m)}
     obtain x from exist! z N st {g ^ z % m = a % m, z < section6::euler_phi(m)}
     witness exist y N st {$index_mod_spec(m, g, a, y)} from x:
-        by def $index_mod_spec(m, g, a, x)
+        by def:
+            ? $index_mod_spec(m, g, a, x)
     forall x1, x2 N:
         g ^ x1 % m = a % m
         x1 < section6::euler_phi(m)

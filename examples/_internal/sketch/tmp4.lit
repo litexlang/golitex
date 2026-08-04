@@ -22,7 +22,8 @@ by cases:
         impossible 1 = 1
 
 # By contra: reversed assumption, proof steps, and impossible checks.
-by contra 1 = 1:
+by contra:
+    ? 1 = 1
     do_nothing
     impossible 1 != 1
 
@@ -59,7 +60,8 @@ claim:
     by closed_range as cases: y $in 1...2
 
 # By extension: checks both subset directions before storing set equality.
-by extension {1} = {1}
+by extension:
+    ? {1} = {1}
 
 # By induc: structured base and induction-step proof trace.
 abstract_prop tmp_induc_p(a)
@@ -86,7 +88,8 @@ by reflexive_prop:
     ? forall x set:
         $tmp_same_obj(x, x)
     x = x
-    by def $tmp_same_obj(x, x)
+    by def:
+        ? $tmp_same_obj(x, x)
 
 by transitive_prop:
     ? forall x, y, z set:
@@ -141,4 +144,4 @@ by zorn_lemma: set tmp_ordered_set, prop tmp_leq:
             forall x, y c:
                 $tmp_leq(x, y) or $tmp_leq(y, x)
             =>:
-                exist u tmp_ordered_set st {forall! x c => {$tmp_leq(x, u)}}
+                exist u tmp_ordered_set st {forall x c => {$tmp_leq(x, u)}}

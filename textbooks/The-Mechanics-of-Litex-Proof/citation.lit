@@ -23,7 +23,8 @@ thm gcd_divides_left:
     by thm basics::gcd_divides_left(a, b)
     obtain k from exist k Z st {a = gcd(a, b) * k}
     witness exist t Z st {a = gcd(a, b) * t} from k
-    by def $divides(gcd(a, b), a)
+    by def:
+        ? $divides(gcd(a, b), a)
 
 thm gcd_divides_right:
     ? forall a, b Z:
@@ -33,7 +34,8 @@ thm gcd_divides_right:
     by thm basics::gcd_divides_right(a, b)
     obtain k from exist k Z st {b = gcd(a, b) * k}
     witness exist t Z st {b = gcd(a, b) * t} from k
-    by def $divides(gcd(a, b), b)
+    by def:
+        ? $divides(gcd(a, b), b)
 
 thm common_divisor_le_gcd:
     ? forall a, b Z, d N+:
@@ -42,8 +44,10 @@ thm common_divisor_le_gcd:
         $divides(d, b)
         =>:
             d <= gcd(a, b)
-    by def $basics::divides(d, a)
-    by def $basics::divides(d, b)
+    by def:
+        ? $basics::divides(d, a)
+    by def:
+        ? $basics::divides(d, b)
     by thm basics::common_divisor_le_gcd(a, b, d)
 
 thm gcd_euclidean_base:

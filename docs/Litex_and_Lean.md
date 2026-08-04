@@ -212,7 +212,8 @@ have fn k(z R) R by cases:
     case z = 2: 3
     case z != 2: 4
 have x R
-by cases k(x) > 2:
+by cases:
+    ? k(x) > 2
     case x = 2:
         k(x) = 3 > 2
     case x != 2:
@@ -237,7 +238,8 @@ have fn k(z R) R by cases:
 
 have x R
 
-by cases k(x) > 2:
+by cases:
+    ? k(x) > 2
     case x = 2:
         k(x) = 3 > 2
     case x != 2:
@@ -481,7 +483,8 @@ example (p q : ℝ → ℝ → Prop)
 
 <!-- litex:skip-test -->
 ```litex
-by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+by contra:
+    ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
     by thm set_builder_member(2, {a N: a % 2 = 0})
     2 $in {a N: a % 2 = 0}
     2 $in {a N: a % 4 = 0}
@@ -503,7 +506,8 @@ example : ({a : ℕ | a % 4 = 0} : Set ℕ) ≠ {a : ℕ | a % 2 = 0} := by
 **What differs.** Litex uses `2` as the counterexample directly. Under the temporary equality assumption, membership transfers from the even naturals to the multiples of `4`, and the arithmetic contradiction closes the proof. Lean names the equality, rewrites the membership goal, and lets `norm_num` discharge the false modular fact.
 
 ```litex
-by contra {a N: a % 4 = 0} != {a N: a % 2 = 0}:
+by contra:
+    ? {a N: a % 4 = 0} != {a N: a % 2 = 0}
     by thm set_builder_member(2, {a N: a % 2 = 0})
     2 $in {a N: a % 2 = 0}
     2 $in {a N: a % 4 = 0}
@@ -1029,7 +1033,8 @@ claim:
             exist k N+ st {k > a, $prime(k)}
     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
-    by cases k > a:
+    by cases:
+        ? k > a
         case k <= a:
             product(1, a, fn(x N+) N+ {x}) % k = 0
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1

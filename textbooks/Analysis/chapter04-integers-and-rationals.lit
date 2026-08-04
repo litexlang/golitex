@@ -19,7 +19,8 @@ prop represent_same_integer(p, q cart(N, N)):
 
 # For example, `(3,1)` and `(4,2)` both represent the integer two.
 
-by def $represent_same_integer((3, 1), (4, 2))
+by def:
+    ? $represent_same_integer((3, 1), (4, 2))
 
 """
 Definition 4.1.2. Addition of formal differences is
@@ -54,7 +55,8 @@ thm addition_respects_formal_difference_equivalence:
     add_formal_differences(q, r)[1] = q[1] + r[1]
     add_formal_differences(q, r)[2] = q[2] + r[2]
     add_formal_differences(p, r)[1] + add_formal_differences(q, r)[2] = (p[1] + r[1]) + (q[2] + r[2]) = (p[1] + q[2]) + (r[1] + r[2]) = (q[1] + p[2]) + (r[1] + r[2]) = (q[1] + r[1]) + (p[2] + r[2]) = add_formal_differences(q, r)[1] + add_formal_differences(p, r)[2]
-    by def $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
+    by def:
+        ? $represent_same_integer(add_formal_differences(p, r), add_formal_differences(q, r))
 
 thm multiplication_respects_formal_difference_equivalence:
     ? forall p, q, r cart(N, N):
@@ -70,7 +72,8 @@ thm multiplication_respects_formal_difference_equivalence:
     multiply_formal_differences(q, r)[2] = q[1] * r[2] + q[2] * r[1]
     p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1]
     multiply_formal_differences(p, r)[1] + multiply_formal_differences(q, r)[2] = (p[1] * r[1] + p[2] * r[2]) + (q[1] * r[2] + q[2] * r[1]) = (p[1] + q[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (p[2] + q[1]) * r[2] = (q[1] + p[2]) * r[1] + (q[2] + p[1]) * r[2] = (q[1] * r[1] + q[2] * r[2]) + (p[1] * r[2] + p[2] * r[1]) = multiply_formal_differences(q, r)[1] + multiply_formal_differences(p, r)[2]
-    by def $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
+    by def:
+        ? $represent_same_integer(multiply_formal_differences(p, r), multiply_formal_differences(q, r))
 
 # Natural-number arithmetic agrees with the representative embedding `n |->
 # (n,0)`.
@@ -101,7 +104,8 @@ thm negation_respects_formal_difference_equivalence:
     negate_formal_difference(q)[1] = q[2]
     negate_formal_difference(q)[2] = q[1]
     negate_formal_difference(p)[1] + negate_formal_difference(q)[2] = p[2] + q[1] = q[1] + p[2] = p[1] + q[2] = q[2] + p[1] = negate_formal_difference(q)[1] + negate_formal_difference(p)[2]
-    by def $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
+    by def:
+        ? $represent_same_integer(negate_formal_difference(p), negate_formal_difference(q))
 
 # The swapped representative is the additive inverse.
 
@@ -946,7 +950,8 @@ because d(0.99,1.01)=|0.99-1.01|=0.02 is larger than 0.01. The numbers 2 and
 sketch:
     dist_Q(0.99, 1.01) = abs(0.99 - 1.01) = abs(-0.02) = 0.02
     0.02 <= 0.1
-    by def $is_close_in_Q(0.1, 0.99, 1.01)
+    by def:
+        ? $is_close_in_Q(0.1, 0.99, 1.01)
     0.02 > 0.01
     claim:
         ? not $is_close_in_Q(0.01, 0.99, 1.01)
@@ -958,7 +963,8 @@ sketch:
             $is_close_in_Q(epsilon, 2, 2)
         dist_Q(2, 2) = abs(2 - 2) = 0
         0 <= epsilon
-        by def $is_close_in_Q(epsilon, 2, 2)
+        by def:
+            ? $is_close_in_Q(epsilon, 2, 2)
 
 """
 Proposition 4.3.7. Epsilon-closeness is reflexive, symmetric, and transitive
@@ -974,7 +980,8 @@ thm rational_closeness_is_reflexive:
         $is_close_in_Q(epsilon, x, x)
     dist_Q(x, x) = abs(x - x) = 0
     0 <= epsilon
-    by def $is_close_in_Q(epsilon, x, x)
+    by def:
+        ? $is_close_in_Q(epsilon, x, x)
 
 # Relaxing the tolerance preserves closeness: a bound by `epsilon` is also a
 # bound by any larger positive `epsilon_prime`.
@@ -986,7 +993,8 @@ claim:
         =>:
             $is_close_in_Q(epsilon_prime, x, y)
     dist_Q(x, y) <= epsilon < epsilon_prime
-    by def $is_close_in_Q(epsilon_prime, x, y)
+    by def:
+        ? $is_close_in_Q(epsilon_prime, x, y)
 
 # Proposition 4.3.7(a), converse direction: if two rationals are epsilon-close
 # for every positive epsilon, then they are equal.  The contradiction chooses
@@ -1019,7 +1027,8 @@ thm rational_closeness_is_symmetric:
         =>:
             $is_close_in_Q(epsilon, y, x)
     dist_Q(y, x) = dist_Q(x, y) <= epsilon
-    by def $is_close_in_Q(epsilon, y, x)
+    by def:
+        ? $is_close_in_Q(epsilon, y, x)
 
 # Proposition 4.3.7(c): closeness composes, with errors adding.
 
@@ -1031,7 +1040,8 @@ thm rational_closeness_is_transitive:
             $is_close_in_Q(epsilon + delta, x, z)
     by thm rational_distance_triangle_inequality(x, y, z)
     dist_Q(x, z) <= dist_Q(x, y) + dist_Q(y, z) <= epsilon + delta
-    by def $is_close_in_Q(epsilon + delta, x, z)
+    by def:
+        ? $is_close_in_Q(epsilon + delta, x, z)
 
 # Proposition 4.3.7(d): addition and subtraction preserve closeness, with the
 # two errors adding.
@@ -1045,8 +1055,10 @@ thm rational_closeness_preserved_by_addition_and_subtraction:
             $is_close_in_Q(epsilon + delta, x - z, y - w)
     dist_Q(x + z, y + w) = abs((x + z) - (y + w)) = abs((x - y) + (z - w)) <= abs(x - y) + abs(z - w) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
     dist_Q(x - z, y - w) = abs((x - z) - (y - w)) = abs((x - y) + (w - z)) <= abs(x - y) + abs(w - z) = dist_Q(x, y) + dist_Q(z, w) <= epsilon + delta
-    by def $is_close_in_Q(epsilon + delta, x + z, y + w)
-    by def $is_close_in_Q(epsilon + delta, x - z, y - w)
+    by def:
+        ? $is_close_in_Q(epsilon + delta, x + z, y + w)
+    by def:
+        ? $is_close_in_Q(epsilon + delta, x - z, y - w)
 
 # Proposition 4.3.7(f): if two endpoints are epsilon-close to `x`, then every
 # point between those endpoints is also epsilon-close to `x`.
@@ -1070,7 +1082,8 @@ thm rational_closeness_of_between_points:
     -epsilon <= y - x <= w - x
     w - x <= z - x <= epsilon
     dist_Q(w, x) = abs(w - x) <= epsilon
-    by def $is_close_in_Q(epsilon, w, x)
+    by def:
+        ? $is_close_in_Q(epsilon, w, x)
 
 thm rational_closeness_of_reverse_between_points:
     ? forall epsilon Q+, x, y, z, w Q:
@@ -1092,7 +1105,8 @@ thm rational_closeness_scaled_by_nonzero_factor:
         =>:
             $is_close_in_Q(epsilon * abs(z), x * z, y * z)
     dist_Q(x * z, y * z) = abs(x * z - y * z) = abs((x - y) * z) = abs(x - y) * abs(z) = dist_Q(x, y) * abs(z) <= epsilon * abs(z)
-    by def $is_close_in_Q(epsilon * abs(z), x * z, y * z)
+    by def:
+        ? $is_close_in_Q(epsilon * abs(z), x * z, y * z)
 
 # Proposition 4.3.7 rewrites `xz-yw` as
 # `(x-y)z + x(z-w) - (x-y)(z-w)` and applies the triangle inequality to the
@@ -1126,7 +1140,8 @@ thm rational_closeness_of_products:
     abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z + x * (z - w)) + abs((x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w))
     abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
     dist_Q(x * z, y * w) = abs(x * z - y * w) = abs((x - y) * z + x * (z - w) - (x - y) * (z - w)) <= abs((x - y) * z) + abs(x * (z - w)) + abs((x - y) * (z - w)) <= epsilon * abs(z) + delta * abs(x) + epsilon * delta
-    by def $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
+    by def:
+        ? $is_close_in_Q(epsilon * abs(z) + delta * abs(x) + epsilon * delta, x * z, y * w)
 
 """
 Remark 4.3.8. It is often useful to think of the notion of "epsilon-close" as an approximate substitute for that of equality in analysis.
@@ -1463,8 +1478,8 @@ thm integer_square_multiple_of_two_has_even_base:
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
         exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
-    exist p Z, q N+ st {x = p / q, forall! k N+: p % k = 0 and q % k = 0 => {k = 1}}
-    obtain p, q from exist p Z, q N+ st {x = p / q, forall! k N+: p % k = 0 and q % k = 0 => {k = 1}}
+    exist p Z, q N+ st {x = p / q, forall k N+: p % k = 0 and q % k = 0 => {k = 1}}
+    obtain p, q from exist p Z, q N+ st {x = p / q, forall k N+: p % k = 0 and q % k = 0 => {k = 1}}
     claim:
         ? p % 2 != 0 or q % 2 != 0
         p % 2 = 0 or p % 2 = 1
@@ -1486,7 +1501,8 @@ thm rational_reduced_fraction_parity_witness:
 thm rational_square_not_two:
     ? forall x Q:
         x^2 != 2
-    by contra x^2 != 2:
+    by contra:
+        ? x^2 != 2
         by thm rational_reduced_fraction_parity_witness(x)
         obtain p, q from exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
         (p / q)^2 = x^2 = 2
@@ -1538,7 +1554,8 @@ thm rational_sqrt_two_no_gap_step:
         ? not 2 < (y + epsilon)^2
         by contra:
             ? not 2 < (y + epsilon)^2
-            by def $is_rational_sqrt_two_gap_witness(epsilon, y)
+            by def:
+                ? $is_rational_sqrt_two_gap_witness(epsilon, y)
             impossible not $is_rational_sqrt_two_gap_witness(epsilon, y)
     by thm rational_square_not_two(y + epsilon)
     (y + epsilon)^2 != 2

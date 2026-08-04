@@ -6,7 +6,8 @@ have fn g(x R) Z = 0
 
 # A function expected on Z is passed as the explicit value g | Z.
 by thm fn_set_member(fn(x Z) Z {g(x)}, fn(x Z) Z)
-by def $is_integer_endomorphism(fn(x Z) Z {g(x)})
+by def:
+    ? $is_integer_endomorphism(fn(x Z) Z {g(x)})
 $is_integer_endomorphism(fn(x Z) Z {g(x)})
 
 thm function_space_membership_from_pointwise_values:

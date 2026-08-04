@@ -274,7 +274,8 @@ thm intersect_with_singleton:
         a $in s
         =>:
             intersect(s, {a}) = {a}
-    by extension intersect(s, {a}) = {a}:
+    by extension:
+        ? intersect(s, {a}) = {a}
         forall z intersect(s, {a}):
             z $in s
             z $in {a}

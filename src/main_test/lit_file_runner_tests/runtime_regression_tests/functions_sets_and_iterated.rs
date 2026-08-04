@@ -202,7 +202,8 @@ claim:
         finite_set_sum(range(0, n), fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2}) = 1
         =>:
             $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
-    by def $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
+    by def:
+        ? $simplex_shape(n, fn(i1 range(0, n)) R {(a(i1) + b(i1)) / 2})
 "#;
 
             let mut runtime = Runtime::new();
@@ -1994,7 +1995,8 @@ forall x1, x2 {1, 2, 3}:
     identity_on_three(x1) = identity_on_three(x2)
     =>:
         x1 = identity_on_three(x1) = identity_on_three(x2) = x2
-by def $injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+by def:
+    ? $injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
 $injective({1, 2, 3}, {1, 2, 3}, identity_on_three)
 
 claim:
@@ -2002,9 +2004,11 @@ claim:
         exist x {1, 2, 3} st {y = identity_on_three(x)}
     y = identity_on_three(y)
     witness exist x {1, 2, 3} st {y = identity_on_three(x)} from y
-by def $surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+by def:
+    ? $surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
 $surjective({1, 2, 3}, {1, 2, 3}, identity_on_three)
-by def $bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
+by def:
+    ? $bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
 $bijective({1, 2, 3}, {1, 2, 3}, identity_on_three)
 
 thm builtin_injective_unfolds:
@@ -2059,7 +2063,8 @@ fn builtin_function_property_negation_uses_by_contra() {
         let source_code = r#"
 have fn constant(x {1, 2}) {0} = 0
 
-by contra not $injective({1, 2}, {0}, constant):
+by contra:
+    ? not $injective({1, 2}, {0}, constant)
     constant(1) = 0
     constant(2) = 0
     constant(1) = 0 = constant(2)

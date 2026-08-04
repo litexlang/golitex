@@ -116,7 +116,8 @@ prop norm_zero_equivalence(E nonempty_set, space &RealNormedSpace<E>, x E):
 thm norm_eq_zero_iff:
     ? forall E nonempty_set, space &RealNormedSpace<E>, x E:
         $norm_zero_equivalence(E, space, x)
-    by def $norm_zero_equivalence(E, space, x)
+    by def:
+        ? $norm_zero_equivalence(E, space, x)
 
 thm norm_add_le:
     ? forall E nonempty_set, space &RealNormedSpace<E>, x, y E:
@@ -225,14 +226,17 @@ thm identity_is_continuous_linear:
         (fn(z E) E {z})(space.add(x, y)) = space.add(x, y) = space.add((fn(z E) E {z})(x), (fn(z E) E {z})(y))
     forall a R, x E:
         (fn(z E) E {z})(space.smul(a, x)) = space.smul(a, x) = space.smul(a, (fn(z E) E {z})(x))
-    by def $is_real_linear_map(E, E, space, space, fn(x E) E {x})
+    by def:
+        ? $is_real_linear_map(E, E, space, space, fn(x E) E {x})
     witness exist CarrierC R st {$is_operator_bound(E, E, space, space, fn(x E) E {x}, CarrierC)} from 1:
         1 >= 0
         forall x E:
             space.norm((fn(z E) E {z})(x)) = space.norm(x) = 1 * space.norm(x)
             space.norm((fn(z E) E {z})(x)) <= 1 * space.norm(x)
-        by def $is_operator_bound(E, E, space, space, fn(x E) E {x}, 1)
-    by def $is_continuous_real_linear_map(E, E, space, space, fn(x E) E {x})
+        by def:
+            ? $is_operator_bound(E, E, space, space, fn(x E) E {x}, 1)
+    by def:
+        ? $is_continuous_real_linear_map(E, E, space, space, fn(x E) E {x})
 
 # A continuous linear map is already stored as a callable function, so the
 # source coercion example needs no separate wrapper.
@@ -392,7 +396,8 @@ thm pointwise_bound_ball_gives_shell_bound:
             shell_bound_constant(level, epsilon / 2) * (epsilon / 2) = level + level
             level + level <= shell_bound_constant(level, epsilon / 2) * source.norm(y)
             target.norm(g(j)(y)) <= shell_bound_constant(level, epsilon / 2) * source.norm(y)
-    by def $is_operator_shell_bound(E, F, source, target, g(j), epsilon / 2, epsilon, shell_bound_constant(level, epsilon / 2))
+    by def:
+        ? $is_operator_shell_bound(E, F, source, target, g(j), epsilon / 2, epsilon, shell_bound_constant(level, epsilon / 2))
 
 # Banach–Steinhaus (uniform boundedness principle), in the real-scalar
 # specialization supported by this chapter.  Pointwise boundedness produces a
@@ -424,8 +429,10 @@ thm banach_steinhaus:
             $is_continuous_real_linear_map(E, F, source, target, g(j))
             by thm pointwise_bound_ball_gives_shell_bound(Index, E, F, source, target, g, level, center, epsilon, j)
             by thm operator_norm_le_of_shell(E, F, source, target, g(j), epsilon / 2, epsilon, shell_bound_constant(level, epsilon / 2))
-        by def $is_uniform_operator_norm_bound(Index, E, F, source, target, g, shell_bound_constant(level, epsilon / 2))
-    by def $is_uniformly_bounded_continuous_linear_map_family(Index, E, F, source, target, g)
+        by def:
+            ? $is_uniform_operator_norm_bound(Index, E, F, source, target, g, shell_bound_constant(level, epsilon / 2))
+    by def:
+        ? $is_uniformly_bounded_continuous_linear_map_family(Index, E, F, source, target, g)
 
 # Asymptotic relations are genuine properties of candidate functions and a
 # filter, not selected functions.
