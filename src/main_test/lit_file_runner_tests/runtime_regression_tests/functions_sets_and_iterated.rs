@@ -1752,6 +1752,68 @@ fn(x N) R {x} = fn(x R) R {x}
 }
 
 #[test]
+fn anonymous_fn_applications_beta_reduce_before_structural_equality_replay() {
+    run_with_large_stack(
+        "anonymous_fn_applications_beta_reduce_before_structural_equality_replay",
+        || {
+            let positive_source_code = r#"
+forall f, g fn(x R) R, a R:
+    forall x R:
+        f(x) = f(-x)
+        g(x) = g(-x)
+    =>:
+        f(a) = f(-a)
+        g(a) = g(-a)
+        fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
+"#;
+
+            let mut positive_runtime = Runtime::new();
+            positive_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_applications_beta_reduce_before_structural_equality_replay_positive",
+            );
+            let (positive_stmt_results, positive_runtime_error) =
+                run_source_code(positive_source_code, &mut positive_runtime);
+            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
+                &positive_runtime,
+                &positive_stmt_results,
+                &positive_runtime_error,
+                false,
+            );
+            assert!(
+                positive_run_succeeded,
+                "anonymous applications should beta-reduce before their bodies are compared structurally:\n{}",
+                positive_run_output
+            );
+
+            let negative_source_code = r#"
+forall f, g fn(x R) R, a, b R:
+    f(a) = f(b)
+    =>:
+        fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(b)
+"#;
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "anonymous_fn_applications_beta_reduce_before_structural_equality_replay_negative",
+            );
+            let (negative_stmt_results, negative_runtime_error) =
+                run_source_code(negative_source_code, &mut negative_runtime);
+            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_stmt_results,
+                &negative_runtime_error,
+                false,
+            );
+            assert!(
+                !negative_run_succeeded,
+                "beta reduction plus structural equality must not invent the missing equality g(a) = g(b):\n{}",
+                negative_run_output
+            );
+        },
+    );
+}
+
+#[test]
 fn curried_have_fn_equal_unfolds_pointwise() {
     let source_code = r#"
 have fn seq_add(a, b seq(R)) fn(k N+) R = fn(n N+) R {a(n) + b(n)}

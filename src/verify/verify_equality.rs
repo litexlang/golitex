@@ -158,7 +158,7 @@ impl Runtime {
                 candidate_left,
                 candidate_right,
                 line_file,
-                "known non-forall equality, pure computation, bounded symbolic normalization, or structural congruence",
+                "known non-forall equality, pure computation, bounded symbolic normalization, anonymous-function beta reduction, or structural congruence",
             )));
         }
 
@@ -242,36 +242,6 @@ impl Runtime {
             )));
         }
         Ok(None)
-    }
-
-    fn beta_reduce_complete_anonymous_application_once(
-        &self,
-        obj: &Obj,
-    ) -> Result<Option<Obj>, RuntimeError> {
-        let Obj::FnObj(fn_obj) = obj else {
-            return Ok(None);
-        };
-        let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() else {
-            return Ok(None);
-        };
-        let args = fn_obj
-            .body
-            .iter()
-            .flat_map(|group| group.iter().map(|arg| (**arg).clone()))
-            .collect::<Vec<_>>();
-        let param_defs = &anonymous_fn.body.params_def_with_set;
-        if args.len() != ParamGroupWithSet::number_of_params(param_defs) {
-            return Ok(None);
-        }
-
-        let param_to_arg_map =
-            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
-        self.inst_obj(
-            anonymous_fn.equal_to.as_ref(),
-            &param_to_arg_map,
-            ParamObjType::FnSet,
-        )
-        .map(Some)
     }
 
     /// Build equality closures without merging the underlying environments.
@@ -626,7 +596,7 @@ fn known_equality_representative_replay_success(
     let fact: Fact =
         EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into();
     let msg = format!(
-        "{} via known equality representatives `{}` and `{}`; comparison nodes may use stored non-forall equalities, pure computation, bounded symbolic normalization, or constructor descent, but never ordinary builtin rules, known forall, or recursive definition replay",
+        "{} via known equality representatives `{}` and `{}`; comparison nodes may use stored non-forall equalities, pure computation, bounded symbolic normalization, capture-avoiding beta reduction of complete anonymous-function applications, or constructor descent, but never ordinary builtin rules, known forall, or recursive definition replay",
         reason, candidate_left, candidate_right
     );
     let verified_by = VerifiedByResult::fact_with_note(fact.clone(), Some(msg));
@@ -693,6 +663,7 @@ mod tests {
             .expect("central structural matcher must follow the replay-safe comparator");
         assert!(replay_safe_comparator
             .contains("verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation"));
+        assert!(replay_safe_comparator.contains("beta_reduce_complete_anonymous_application_once"));
         assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_one_builtin_rule"));
         assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_builtin_rules_inner"));
         assert!(!replay_safe_comparator.contains("resolve_obj"));

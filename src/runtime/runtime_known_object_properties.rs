@@ -284,6 +284,42 @@ impl Runtime {
         ))
     }
 
+    /// Capture-avoiding beta reduction for one complete anonymous-function
+    /// application layer. Any remaining curried application layers are kept on
+    /// the substituted result when that result is callable.
+    pub(crate) fn beta_reduce_complete_anonymous_application_once(
+        &self,
+        application: &Obj,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        let Obj::FnObj(fn_obj) = application else {
+            return Ok(None);
+        };
+        let FnObjHead::AnonymousFnLiteral(anonymous_fn) = fn_obj.head.as_ref() else {
+            return Ok(None);
+        };
+        let param_defs = &anonymous_fn.body.params_def_with_set;
+        let n_params = ParamGroupWithSet::number_of_params(param_defs);
+        if n_params == 0 {
+            return Ok(None);
+        }
+        let Some((args, extra_layers)) =
+            split_fn_body_at_complete_layer_for_unfolding(&fn_obj.body, n_params)
+        else {
+            return Ok(None);
+        };
+        let param_to_arg_map =
+            ParamGroupWithSet::param_defs_and_args_to_param_to_arg_map(param_defs, &args);
+        let reduced = self.inst_obj(
+            anonymous_fn.equal_to.as_ref(),
+            &param_to_arg_map,
+            ParamObjType::FnSet,
+        )?;
+        Ok(apply_extra_curried_layers_for_unfolding(
+            reduced,
+            extra_layers,
+        ))
+    }
+
     fn get_known_fn_info_for_obj(&self, obj: &Obj) -> Option<KnownFnInfo> {
         let key = obj.to_string();
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(&key) {

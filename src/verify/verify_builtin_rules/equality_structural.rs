@@ -128,6 +128,29 @@ impl Runtime {
             return Ok(true);
         }
 
+        // Anonymous applications expose their substituted bodies to the same
+        // replay-safe comparison. This introduces no new proof route: after
+        // beta reduction, every leaf is still limited to stored non-forall
+        // equality or obligation-free builtin computation.
+        let reduced_left = self.beta_reduce_complete_anonymous_application_once(left)?;
+        let reduced_right = self.beta_reduce_complete_anonymous_application_once(right)?;
+        if reduced_left.is_some() || reduced_right.is_some() {
+            let candidate_left = reduced_left.as_ref().unwrap_or(left);
+            let candidate_right = reduced_right.as_ref().unwrap_or(right);
+            let made_progress =
+                !objs_equal_with_nested_binder_alpha_equivalence(left, candidate_left)
+                    || !objs_equal_with_nested_binder_alpha_equivalence(right, candidate_right);
+            if made_progress
+                && self.objs_are_congruent_by_replay_safe_equality_routes(
+                    candidate_left,
+                    candidate_right,
+                    line_file.clone(),
+                )?
+            {
+                return Ok(true);
+            }
+        }
+
         Self::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
             self.objs_are_congruent_by_replay_safe_equality_routes(
                 left_arg,

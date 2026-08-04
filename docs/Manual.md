@@ -2272,13 +2272,36 @@ supported constructor, the central constructor matcher compares them
 componentwise. Each comparison node first tries syntactic identity (including
 binder alpha-equivalence where applicable), an already stored non-forall
 equality class, pure numeric computation, bounded obligation-free rational
-expression normalization, and constructor descent. The normalization matcher
-is terminating and creates no proof obligations; it handles shapes such as
-`a * t + 0 = a * t` without opening the ordinary builtin dispatcher. The
-replay-depth guard prevents comparison from instantiating known `forall` facts
-or reopening checked-definition replay. Consequently a representative
-`a * t` can prove `a * t + 0`, but a comparison cannot silently use another
-mathematical builtin rule or unfold a second named function.
+expression normalization, capture-avoiding beta reduction of one complete
+anonymous-function application layer, and constructor descent. Extra curried
+application layers are preserved when the substituted result is callable. The
+normalization and beta-reduction matchers are terminating and create no proof
+obligations; they handle shapes such as `a * t + 0 = a * t` and expose
+`fn(x R) R {f(x) * g(x)}(a)` as `f(a) * g(a)` without opening the ordinary
+builtin dispatcher. The replay-depth guard prevents comparison from
+instantiating known `forall` facts or reopening checked-definition replay.
+Consequently a representative `a * t` can prove `a * t + 0`, but a comparison
+cannot silently use another mathematical builtin rule or unfold a second named
+function.
+
+For example, after the first two conclusions below have been verified and
+stored, the last comparison beta-reduces both sides transiently. Multiplication
+congruence then checks exactly the two stored leaf equalities; the intermediate
+product equality is not added to the environment:
+
+```litex
+forall f, g fn(x R) R, a R:
+    forall x R:
+        f(x) = f(-x)
+        g(x) = g(-x)
+    =>:
+        f(a) = f(-a)
+        g(a) = g(-a)
+        fn(x R) R {f(x) * g(x)}(a) = fn(x R) R {f(x) * g(x)}(-a)
+```
+
+Removing either stored leaf equality makes the final line unknown; beta
+reduction itself does not instantiate the preceding `forall`.
 
 The ordinary known-only equality route can still check identity, direct
 lookup/calculation, and stored equality classes. Separately, the full equality
