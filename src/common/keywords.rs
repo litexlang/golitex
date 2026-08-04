@@ -167,6 +167,7 @@ pub const IMPORT: &str = "import";
 pub const STD: &str = "std";
 pub const AS: &str = "as";
 pub const HAVE: &str = "have";
+pub const LET: &str = "let";
 pub const OBTAIN: &str = "obtain";
 pub const CLEAR: &str = "clear";
 pub const DO_NOTHING: &str = "do_nothing";
@@ -338,6 +339,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         AS,
         ENUMERATE,
         HAVE,
+        LET,
         OBTAIN,
         CLEAR,
         DO_NOTHING,
@@ -518,5 +520,10 @@ mod tests {
     #[test]
     fn by_def_uses_a_contextual_keyword() {
         assert!(!is_keyword(DEF));
+    }
+
+    #[test]
+    fn let_is_a_source_keyword() {
+        assert!(is_keyword(LET));
     }
 }

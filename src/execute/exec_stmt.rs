@@ -48,6 +48,7 @@ impl Runtime {
             Stmt::Fact(fact) => self.exec_fact(fact),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(s)) => self.exec_trust_stmt(s),
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(d)) => self.exec_trust_have_stmt(d),
+            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(d)) => self.exec_let_obj_stmt(d),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(d)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt(d)
             }
@@ -156,6 +157,9 @@ impl Runtime {
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(s)) => {
                 self.exec_trust_have_stmt_affect_environment_only(s)
+            }
+            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(s)) => {
+                self.exec_let_obj_stmt_affect_environment_only(s)
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(s)) => {
                 self.exec_have_obj_in_nonempty_set_or_param_type_stmt_affect_environment_only(s)

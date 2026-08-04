@@ -727,6 +727,7 @@ have fn reciprocal(x R: x != 0) R = 1 / x
 have fn root(x R: 0 <= x) R = sqrt(x)
 
 reciprocal(2) = 1 / 2
+sqrt(4) = 2
 root(4) = 2
 ```
 
@@ -1162,12 +1163,28 @@ Common binder forms are:
 
 | Form | Effect |
 |---|---|
+| `let x = value` | Preview: introduce `x` without declaring a set or type, then store `x = value`. |
 | `have x S` | Introduce `x $in S`; `S` must be nonempty. |
 | `have x S = value` | Introduce `x`, its membership, and its defining equality. |
 | `have x S:` followed by facts | Introduce a witness satisfying a supported body. |
 | `have A set` | Introduce a set. |
 | `have A nonempty_set` | Introduce a nonempty set. |
 | `have A finite_set` | Introduce a finite set. |
+
+`let` is the minimal form for naming an already well-defined object:
+
+```litex
+let x = 1
+x = 1
+```
+
+Litex checks the right side before committing the new name, then records the
+ordinary equality `x = value`. The declaration itself does not require or
+create a declared type or membership fact. It accepts exactly one fresh name
+and one value: `let x = x` fails when there was no earlier `x`, and multiple
+bindings, destructuring, recursive definitions, and template-body `let` forms
+are not part of this preview. The word `let` is reserved and cannot be reused
+as an identifier.
 
 The words `set`, `nonempty_set`, and `finite_set` are binder kinds, not one
 ordinary set containing all sets. They cannot be used as function input sets:
@@ -1618,7 +1635,7 @@ The claim is `unknown` because the target was never established.
 
 | Family | Public forms |
 |---|---|
-| Facts and binders | bare fact; `have`; `trust have`; `obtain`; `have by preimage` |
+| Facts and binders | bare fact; `let`; `have`; `trust have`; `obtain`; `have by preimage` |
 | Definitions | `prop`; `abstract_prop`; `struct`; `template`; `setting`; all `have fn` forms; symbolic tuple/cart/sequence/matrix forms |
 | Proof interfaces | `claim`; `thm`; `axiom`; `by thm`; `sketch`; `try`; `trust` |
 | Proof control | `witness`; `by cases`; `by contra`; `by def`; enumeration; induction; `by for`; `by extension` |
@@ -2186,12 +2203,26 @@ After the resulting `$fn_eq(f, g)` is stored, inference materializes `f = g` in
 the ordinary known-equality class; equality verification does not separately
 scan for `$fn_eq` facts.
 
-Known-equality replay of a checked function body remains bounded to one step
-against a simple arithmetic expression. Known-only equality first checks object
-identity, direct lookup/calculation, and already stored equality classes. It
-then reuses one central constructor matcher for componentwise congruence, with
-every leaf restricted to those same known equalities. At outer round 0, the full
-equality route reuses that matcher while recursively allowing bounded builtin
+At outer round 0, checked-definition equality replay considers the original
+objects together with every available representative from their stored
+equality classes. For each representative pair it may unfold one checked outer
+definition on either side. Each comparison has at most one unfolded side; it
+never compares two freshly unfolded results or unfolds another definition at a
+child. When the unfolded result and the other representative have the same
+supported constructor, the central constructor matcher compares them
+componentwise. Each comparison node first tries syntactic identity (including
+binder alpha-equivalence where applicable), an already stored non-forall
+equality class, direct evaluation, and constructor descent. If those fail, the
+node may apply one ordinary depth-limited builtin rule. Premises of that rule
+may use stored non-forall facts or terminal computation, but cannot apply a
+second builtin rule. The replay-depth guard also prevents those premises from
+instantiating known `forall` facts or reopening checked-definition replay.
+Consequently a representative `a * t` can prove `a * t + 0`, but a comparison
+cannot silently unfold a second named function.
+
+The ordinary known-only equality route can still check identity, direct
+lookup/calculation, and stored equality classes. Separately, the full equality
+route reuses the constructor matcher while recursively allowing bounded builtin
 and known-equality child proofs. Function applications align argument groups
 from right to left and then compare the remaining function prefixes. Thus
 several arguments may change in one equality, and
@@ -2652,6 +2683,7 @@ change:
 - proper subset and proper superset relations;
 - injective, surjective, and bijective mapping predicates;
 - explicit `by def`;
+- untyped object definitions with `let x = value`;
 - modules, manifests, flattening, and localized output;
 - one-step membership verification through a known subset or superset;
 - direct-file `-trust-before-line` development checks;

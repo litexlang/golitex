@@ -255,6 +255,14 @@ pub struct HaveByPreimageStmt {
 }
 
 #[derive(Clone)]
+pub struct LetObjStmt {
+    pub name: String,
+    pub symbol_binding: SymbolBinding,
+    pub value: Obj,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone)]
 pub struct HaveObjEqualStmt {
     pub param_def: ParamDefWithType,
     pub objs_equal_to: Vec<Obj>,
@@ -424,6 +432,32 @@ impl fmt::Display for HaveObjByExistFactsStmt {
             COLON,
             vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.facts, 1)
         )
+    }
+}
+
+impl LetObjStmt {
+    pub fn new(
+        name: String,
+        symbol_binding: SymbolBinding,
+        value: Obj,
+        line_file: LineFile,
+    ) -> Self {
+        LetObjStmt {
+            name,
+            symbol_binding,
+            value,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        "object definition"
+    }
+}
+
+impl fmt::Display for LetObjStmt {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(f, "{} {} {} {}", LET, self.name, EQUAL, self.value)
     }
 }
 

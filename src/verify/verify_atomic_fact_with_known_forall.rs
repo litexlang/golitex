@@ -10,6 +10,10 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if self.known_equality_candidate_replay_depth != 0 {
+            return Ok((StmtUnknown::new()).into());
+        }
+
         if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
             return Ok(memoized_result);
         }

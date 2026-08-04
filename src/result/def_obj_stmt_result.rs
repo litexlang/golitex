@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 #[derive(Debug)]
 pub enum DefObjStmtResult {
+    LetObjStmt(NonFactualStmtSuccess),
     HaveObjInNonemptySetStmt(NonFactualStmtSuccess),
     HaveObjEqualStmt(NonFactualStmtSuccess),
     HaveObjByExistFactsStmt(NonFactualStmtSuccess),
@@ -21,6 +22,7 @@ pub enum DefObjStmtResult {
 impl DefObjStmtResult {
     pub fn new(success: NonFactualStmtSuccess) -> Self {
         match &success.stmt {
+            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(_)) => DefObjStmtResult::LetObjStmt(success),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(_)) => {
                 DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             }
@@ -67,7 +69,8 @@ impl DefObjStmtResult {
 
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
-            DefObjStmtResult::HaveObjInNonemptySetStmt(success)
+            DefObjStmtResult::LetObjStmt(success)
+            | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
             | DefObjStmtResult::HaveByExistStmt(success)
@@ -86,7 +89,8 @@ impl DefObjStmtResult {
 
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
-            DefObjStmtResult::HaveObjInNonemptySetStmt(success)
+            DefObjStmtResult::LetObjStmt(success)
+            | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
             | DefObjStmtResult::HaveByExistStmt(success)
@@ -105,7 +109,8 @@ impl DefObjStmtResult {
 
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
-            DefObjStmtResult::HaveObjInNonemptySetStmt(success)
+            DefObjStmtResult::LetObjStmt(success)
+            | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
             | DefObjStmtResult::HaveByExistStmt(success)

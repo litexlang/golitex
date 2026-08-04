@@ -6,7 +6,7 @@ That note explains the mathematical meaning of objects, facts, statements, and
 context growth.  This cheat sheet is a dense executor/reference map.
 
 For the complete language-level glossary -- 72 core object forms, 52 fact
-forms, 63 statement forms, definitions, and the atomic verification loop -- read
+forms, 64 statement forms, definitions, and the atomic verification loop -- read
 [Litex System Map](Litex_System_Map.md).
 
 This note summarizes the current executor behavior by separating each statement
@@ -74,6 +74,7 @@ explicit `&StructName{obj}.field` form to select another view at one access.
 | `trust` | Rejected in strict mode; each fact must be well-defined. | None. | Stores each fact as an unsafe assumption and runs inference. |
 | `axiom name` | Rejected in strict mode; the `? forall ...` fact must be well-defined. | None. | Stores a named theorem-like `forall` fact for matching and `by thm`. |
 | `trust have` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stores names, parameter type facts, attached facts, and inferred consequences. |
+| `let a = x` (preview) | `a` must be unused and `x` must already be well-defined; exactly one name and one value are accepted. | None beyond checking the right-side object. | Stores the object name and the ordinary equality `a = x`; it declares no type or set membership. |
 | `have a R` | `a` must be unused; `R` must be a well-defined object. | Checks `R` is nonempty, for example `$is_nonempty_set(R)`. | Stores the object name `a`, stores `a $in R`, and runs inference. |
 | `have a T = x` | Parameter count must match assigned objects; declared types are instantiated; `x` must be well-defined. | Verifies each assigned object satisfies its declared type. | Stores the object name, its type fact, `a = x`, and sequence or matrix value caches when relevant. |
 | `obtain ... from exist` | Existential shape and parameter count must match the named witnesses. | Verifies the existential fact. | Stores witness names, witness type facts, instantiated body facts, and inference results. |

@@ -79,6 +79,7 @@ impl UnsafeStmt {
 impl DefObjStmt {
     pub fn line_file(&self) -> LineFile {
         match self {
+            DefObjStmt::LetObjStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveObjInNonemptySetStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveObjEqualStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
@@ -98,6 +99,7 @@ impl DefObjStmt {
 
     pub fn stmt_type_name(&self) -> String {
         match self {
+            DefObjStmt::LetObjStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveObjInNonemptySetStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveObjEqualStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
@@ -117,6 +119,7 @@ impl DefObjStmt {
 
     pub fn output_type_string(&self) -> String {
         match self {
+            DefObjStmt::LetObjStmt(_) => LetObjStmt::output_type_string(),
             DefObjStmt::HaveObjInNonemptySetStmt(_) => {
                 HaveObjInNonemptySetOrParamTypeStmt::output_type_string()
             }

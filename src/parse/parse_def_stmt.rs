@@ -519,6 +519,33 @@ impl Runtime {
         Ok(TrustHaveStmt::new(param_def, facts, tb.line_file.clone()).into())
     }
 
+    pub fn parse_let_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+        tb.skip_token(LET)?;
+        let name = tb.advance()?;
+        is_valid_litex_name(&name).map_err(|msg| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+            ))
+        })?;
+        tb.skip_token(EQUAL)?;
+        let value = self.parse_obj(tb)?;
+        if !tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unexpected token after let value expression".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+
+        let symbol_binding = self.allocate_declared_symbol_binding(name.clone())?;
+        self.register_local_existing_identifier_bindings_for_parse(
+            &[symbol_binding.clone()],
+            tb.line_file.clone(),
+        )?;
+        Ok(LetObjStmt::new(name, symbol_binding, value, tb.line_file.clone()).into())
+    }
+
     // return HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, or HaveObjByExistFactsStmt
     pub fn parse_have_obj_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(HAVE)?;

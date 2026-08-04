@@ -1,13 +1,15 @@
 use super::*;
 
 #[test]
-fn known_equality_candidate_replays_checked_function_bodies_structurally() {
+fn known_equality_candidate_replays_checked_function_bodies_with_bounded_builtin_leaves() {
     let source_code = r#"
 have fn left(k N+) R = k
 have fn right(k N+) R = k + 1
 have fn combined(k N+) R = left(k) + right(k)
 
-have value R = 1 + 2
+left(1) = 1
+right(1) = 1 + 1
+have value R = 1 + (1 + 1)
 value = combined(1)
 "#;
 
@@ -20,7 +22,100 @@ value = combined(1)
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "a known equality candidate should compare corresponding constructor arguments after one checked-function replay:\n{}",
+        "a checked-function replay should compare structural leaves through stored non-forall equalities or direct computation:\n{}",
+        run_output
+    );
+
+    let recursive_unfold_source = r#"
+have fn left(k N+) R = k
+have fn right(k N+) R = k + 1
+have fn combined(k N+) R = left(k) + right(k)
+
+have value R = 1 + (1 + 1)
+value = combined(1)
+"#;
+    let mut recursive_unfold_runtime = Runtime::new();
+    recursive_unfold_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_does_not_recursively_unfold_structural_leaves",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(recursive_unfold_source, &mut recursive_unfold_runtime);
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &recursive_unfold_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        !run_succeeded,
+        "structural leaves must not recursively unfold more function definitions:\n{}",
+        run_output
+    );
+
+    let builtin_leaf_source = r#"
+have q R
+have fn with_zero(t R) cart(R, R) = (0 + t, t)
+have value cart(R, R) = with_zero(q)
+value = (q, q)
+"#;
+    let mut builtin_leaf_runtime = Runtime::new();
+    builtin_leaf_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_uses_one_builtin_rule_for_structural_leaves",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(builtin_leaf_source, &mut builtin_leaf_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&builtin_leaf_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a structural leaf may use one depth-limited builtin equality rule:\n{}",
+        run_output
+    );
+
+    let builtin_representative_source = r#"
+have a, t R
+have k R = a * t
+k = a * t + 0
+"#;
+    let mut builtin_representative_runtime = Runtime::new();
+    builtin_representative_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_uses_builtin_rule_after_selecting_representative",
+    );
+    let (stmt_results, runtime_error) = run_source_code(
+        builtin_representative_source,
+        &mut builtin_representative_runtime,
+    );
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &builtin_representative_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        run_succeeded,
+        "the representative `a * t` should be compared with `a * t + 0` by one builtin rule:\n{}",
+        run_output
+    );
+
+    let forall_leaf_source = r#"
+trust have f, h fn(t R) R
+trust forall t R:
+    h(f(t)) = f(t)
+have fn wrapped(t R) cart(R, R) = (h(f(t)), t)
+have value cart(R, R) = wrapped(1)
+value = (f(1), 1)
+"#;
+    let mut forall_leaf_runtime = Runtime::new();
+    forall_leaf_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_does_not_use_forall_for_structural_leaves",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(forall_leaf_source, &mut forall_leaf_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&forall_leaf_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "structural leaves must not instantiate known forall facts:\n{}",
         run_output
     );
 
@@ -126,6 +221,62 @@ f(a, b) = g(1, 2)(3, 4)
     assert!(
         run_succeeded,
         "curried applications should align trailing argument groups and compare the remaining function parts:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn equality_representative_replays_template_definition_to_tuple() {
+    let source_code = r#"
+struct AdditiveCarrier<v nonempty_set>:
+    zero v
+    add fn(a, b v) v
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &AdditiveCarrier<VSet>, W &AdditiveCarrier<WSet>>:
+    have fn product_add(x, y cart(VSet, WSet)) cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
+
+have s, VSet, WSet nonempty_set
+have v0 VSet
+have w0 WSet
+have V &AdditiveCarrier<VSet> = (v0, fn(a, b VSet) VSet {v0})
+have W &AdditiveCarrier<WSet> = (w0, fn(a, b WSet) WSet {w0})
+have x, y cart(VSet, WSet)
+have xy cart(VSet, WSet) = \product_add<s, VSet, WSet, V, W>(x, y)
+have expected cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
+
+xy = expected
+xy = (V.add(x[1], y[1]), W.add(x[2], y[2]))
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "equality_representative_replays_template_definition_to_tuple",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "one checked template definition should expose a tuple after enumerating both sides' stored equality representatives:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn checked_definition_replay_allows_direct_pure_computation() {
+    let source_code = r#"
+have fn square(t R) R = t^2
+square(2) = 4
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "checked_definition_replay_allows_direct_pure_computation",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "one checked definition replay may finish by direct terminating computation:\n{}",
         run_output
     );
 }

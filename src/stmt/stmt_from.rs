@@ -30,6 +30,12 @@ impl From<HaveObjInNonemptySetOrParamTypeStmt> for Stmt {
     }
 }
 
+impl From<LetObjStmt> for Stmt {
+    fn from(v: LetObjStmt) -> Self {
+        DefObjStmt::LetObjStmt(v).into()
+    }
+}
+
 impl From<HaveObjEqualStmt> for Stmt {
     fn from(v: HaveObjEqualStmt) -> Self {
         DefObjStmt::HaveObjEqualStmt(v).into()

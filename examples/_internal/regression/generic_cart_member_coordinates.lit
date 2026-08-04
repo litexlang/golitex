@@ -72,6 +72,7 @@ claim:
     claim:
         ? forall i1 closed_range(1, n):
             raw_choice_tuple_encode(p)(i1) $in X(i1)
+        fn(j closed_range(1, n)) R {p[j]}(i1) = p[i1]
         raw_choice_tuple_encode(p)(i1) = p[i1]
         p[i1] $in proj(c, i1)
         proj(c, i1) = R = X(i1)

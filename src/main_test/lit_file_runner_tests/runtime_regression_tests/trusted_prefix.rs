@@ -260,6 +260,27 @@ prefix_object = prefix_object
 }
 
 #[test]
+fn trust_before_line_replays_a_let_definition_for_the_verified_suffix() {
+    let fixture = TrustedPrefixFixture::new(
+        "let_object_reference",
+        r#"let prefix_object = 1
+
+prefix_object = 1
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+
+    assert!(
+        error.is_none(),
+        "a trusted let definition should supply its name and equality to the suffix"
+    );
+    assert_eq!(results.len(), 2);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+}
+
+#[test]
 fn trust_before_line_reuses_a_suffix_object_fact_without_provenance() {
     let fixture = TrustedPrefixFixture::new(
         "suffix_object_propagation",

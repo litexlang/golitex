@@ -19,6 +19,17 @@ impl Runtime {
         self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
     }
 
+    pub(crate) fn verify_atomic_fact_with_one_builtin_rule_for_equality_representative_replay(
+        &mut self,
+        goal: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        // Equality-representative replay may use one ordinary builtin rule.
+        // Its depth guard makes every generated premise a known-non-forall or
+        // computation leaf and prevents recursive definition replay.
+        let builtin_state = UseBuiltinRuleVerifyState::new();
+        self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
+    }
+
     pub(crate) fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
         &mut self,
         goal: &AtomicFact,

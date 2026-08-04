@@ -2,6 +2,90 @@ use super::*;
 use std::path::Path;
 
 #[test]
+fn let_defines_an_untyped_object_and_stores_its_equality() {
+    let source_code = r#"
+let x = 1
+x = 1
+try:
+    let y = x
+    y = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "let_defines_an_untyped_object_and_stores_its_equality",
+    );
+    runtime.detail_output = true;
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "let should define a name and store its equality:\n{}",
+        run_output
+    );
+    assert!(runtime.is_name_used_for_identifier("x"));
+    assert!(run_output.contains("\"kind\": \"declare_object\""));
+    assert!(run_output.contains("\"name\": \"x\""));
+    assert!(run_output.contains("\"value\": \"1\""));
+    assert!(run_output.contains("\"name\": \"x\",\n          \"value\": \"1\""));
+    assert!(run_output.contains("\"fact\": \"x = 1\""));
+}
+
+#[test]
+fn let_rejects_undefined_right_sides_duplicate_names_and_extra_values() {
+    let cases = [
+        ("self reference", "let x = x", "identifier `x` not defined"),
+        (
+            "undefined right side",
+            "let x = missing",
+            "identifier `missing` not defined",
+        ),
+        (
+            "duplicate name",
+            "let x = 1\nlet x = 2",
+            "identifier `x` is already bound",
+        ),
+        (
+            "extra value",
+            "let x = 1, 2",
+            "unexpected token after let value expression",
+        ),
+        (
+            "template body",
+            "template<s set>:\n    let x = s",
+            "template body only supports `have` and `trust have` definition statements",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(format!("let_{}", label).as_str());
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+        assert!(
+            run_output.contains(expected_message),
+            "{} should report `{}`:\n{}",
+            label,
+            expected_message,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn let_object_definition_has_latex_output() {
+    let output = to_latex_from_source("let x = 1", "let_object_definition_has_latex_output")
+        .expect("let object definition should convert to LaTeX");
+
+    assert!(output.contains(r"\mathrm{let}\ \mathit{x} = 1"));
+}
+
+#[test]
 fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
     let builtin_rules_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("src")
