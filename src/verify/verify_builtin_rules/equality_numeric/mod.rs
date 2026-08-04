@@ -7,7 +7,6 @@ use crate::verify::verify_equality_by_builtin_rules::*;
 use crate::verify::verify_number_in_standard_set::is_integer_after_simplification;
 
 mod absolute_value;
-mod algebra_context;
 mod elementary;
 mod finite_set_product;
 mod finite_set_sum;

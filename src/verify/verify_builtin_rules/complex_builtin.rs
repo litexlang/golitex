@@ -333,26 +333,6 @@ impl Runtime {
             return Ok(Some(("img: real embedding".to_string(), steps)));
         }
 
-        // Coordinates respect a known equality of complex numbers.
-        // Example: `z = w` implies `re(z) = re(w)` and `img(z) = img(w)`.
-        let expected_coordinate_arg = match expected {
-            Obj::RealPart(real_part) if is_real_part => Some(real_part.arg.as_ref()),
-            Obj::ImaginaryPart(imaginary_part) if !is_real_part => {
-                Some(imaginary_part.arg.as_ref())
-            }
-            _ => None,
-        };
-        if let Some(expected_arg) = expected_coordinate_arg {
-            let known =
-                self.verify_objs_are_equal_by_known_equality(arg, expected_arg, line_file.clone());
-            if known.is_true() {
-                return Ok(Some((
-                    format!("{coordinate}: coordinates respect complex equality"),
-                    vec![known],
-                )));
-            }
-        }
-
         // Complex coordinates distribute over addition and subtraction.
         // Example: `re(z + w) = re(z) + re(w)` and `img(z - w) = img(z) - img(w)`.
         let additive_target = match arg {

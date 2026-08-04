@@ -1,6 +1,72 @@
 use super::*;
 
 #[test]
+fn struct_field_projection_is_a_structural_definitional_reduction() {
+    run_with_large_stack(
+        "struct_field_projection_is_a_structural_definitional_reduction",
+        || {
+            let source_code = r#"
+struct Pair<S set>:
+    first S
+    second S
+
+forall p &Pair<R>, a, b R:
+    p = (a, b)
+    =>:
+        p.first = a
+        p.second = b
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "struct_field_projection_is_a_structural_definitional_reduction",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "struct fields should reduce to their tuple projections:\n{run_output}"
+            );
+            assert_eq!(
+                run_output
+                    .matches("replay-safe structural equality")
+                    .count(),
+                2,
+                "both field equalities should use structural provenance:\n{run_output}"
+            );
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "struct_field_projection_does_not_select_the_wrong_component",
+            );
+            let (negative_results, negative_error) = run_source_code(
+                r#"
+struct Pair<S set>:
+    first S
+    second S
+
+forall p &Pair<R>, a, b R:
+    p = (a, b)
+    =>:
+        p.second = a
+"#,
+                &mut negative_runtime,
+            );
+            let (negative_succeeded, negative_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_results,
+                &negative_error,
+                false,
+            );
+            assert!(
+                !negative_succeeded,
+                "field reduction must preserve the declared component index:\n{negative_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn typed_have_admits_literal_dependent_struct_constructor() {
     let source_code = r#"
 struct SizedList<X set, n N>:

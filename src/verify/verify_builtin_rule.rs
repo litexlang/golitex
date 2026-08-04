@@ -9,8 +9,10 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result =
-            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+        let leaf_result = self
+            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
+                goal,
+            )?;
         if leaf_result.is_true() {
             return Ok(leaf_result);
         }
@@ -29,6 +31,41 @@ impl Runtime {
         }
 
         let result = self.verify_atomic_fact_by_builtin_computation(goal);
+        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
+    }
+
+    /// The replay-safe structural comparator is a leaf capability, not an
+    /// ordinary builtin rule. It may use stored non-forall equalities,
+    /// obligation-free computation/normalization, definitional reduction, and
+    /// constructor descent, but it cannot consume another builtin-rule step.
+    fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
+        &mut self,
+        goal: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let leaf_result =
+            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+        if leaf_result.is_true() {
+            return Ok(leaf_result);
+        }
+
+        let AtomicFact::EqualFact(equal_fact) = goal else {
+            return Ok(leaf_result);
+        };
+        if !self.objs_are_congruent_by_replay_safe_equality_routes(
+            &equal_fact.left,
+            &equal_fact.right,
+            equal_fact.line_file.clone(),
+        )? {
+            return Ok(leaf_result);
+        }
+
+        let result: StmtResult =
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                equal_fact.clone().into(),
+                "replay-safe structural equality".to_string(),
+                Vec::new(),
+            )
+            .into();
         Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
 
@@ -52,8 +89,10 @@ impl Runtime {
         child: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result =
-            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(child)?;
+        let leaf_result = self
+            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
+                child,
+            )?;
         if leaf_result.is_true() {
             return Ok(leaf_result);
         }

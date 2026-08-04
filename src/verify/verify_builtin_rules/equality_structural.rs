@@ -128,12 +128,12 @@ impl Runtime {
             return Ok(true);
         }
 
-        // Anonymous applications expose their substituted bodies to the same
+        // Definitional redexes expose their reduced objects to the same
         // replay-safe comparison. This introduces no new proof route: after
-        // beta reduction, every leaf is still limited to stored non-forall
+        // one reduction, every leaf is still limited to stored non-forall
         // equality or obligation-free builtin computation.
-        let reduced_left = self.beta_reduce_complete_anonymous_application_once(left)?;
-        let reduced_right = self.beta_reduce_complete_anonymous_application_once(right)?;
+        let reduced_left = self.reduce_structural_equality_obj_once(left)?;
+        let reduced_right = self.reduce_structural_equality_obj_once(right)?;
         if reduced_left.is_some() || reduced_right.is_some() {
             let candidate_left = reduced_left.as_ref().unwrap_or(left);
             let candidate_right = reduced_right.as_ref().unwrap_or(right);
@@ -158,6 +158,69 @@ impl Runtime {
                 line_file.clone(),
             )
         })
+    }
+
+    /// Perform one obligation-free definitional reduction used by structural
+    /// equality. Keep this deliberately narrower than ordinary builtin rules:
+    /// beta reduction, struct-field iota reduction, and literal projection are
+    /// syntax-directed and create no mathematical subgoals.
+    fn reduce_structural_equality_obj_once(&self, obj: &Obj) -> Result<Option<Obj>, RuntimeError> {
+        if let Some(reduced) = self.beta_reduce_complete_anonymous_application_once(obj)? {
+            return Ok(Some(reduced));
+        }
+
+        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = obj {
+            return self.struct_field_access_projection(field_access).map(Some);
+        }
+
+        let Obj::ObjAtIndex(obj_at_index) = obj else {
+            return Ok(None);
+        };
+        let Some(index) = Self::structural_projection_literal_positive_usize(&obj_at_index.index)
+        else {
+            return Ok(None);
+        };
+
+        if let Some(component) = Self::structural_component_at_index(&obj_at_index.obj, index) {
+            return Ok(Some(component));
+        }
+
+        let target_key = obj_equality_key(&obj_at_index.obj);
+        for env in self.iter_environments_from_top() {
+            let Some((_, equal_objs)) = env.known_equality.get(&target_key) else {
+                continue;
+            };
+            for equal_obj in equal_objs.iter() {
+                if let Some(component) = Self::structural_component_at_index(equal_obj, index) {
+                    return Ok(Some(component));
+                }
+            }
+        }
+
+        Ok(None)
+    }
+
+    fn structural_projection_literal_positive_usize(index: &Obj) -> Option<usize> {
+        let number = index.evaluate_to_normalized_decimal_number()?;
+        let parsed = number.normalized_value.parse::<usize>().ok()?;
+        (parsed > 0).then_some(parsed)
+    }
+
+    fn structural_component_at_index(obj: &Obj, index: usize) -> Option<Obj> {
+        match obj {
+            Obj::Tuple(tuple) => tuple
+                .args
+                .get(index - 1)
+                .map(|value| value.as_ref().clone()),
+            Obj::ListSet(list_set) => list_set
+                .list
+                .get(index - 1)
+                .map(|value| value.as_ref().clone()),
+            Obj::FiniteSeqListObj(list) => {
+                list.objs.get(index - 1).map(|value| value.as_ref().clone())
+            }
+            _ => None,
+        }
     }
 
     pub(crate) fn same_shape_and_corresponding_args_match<E>(
@@ -215,6 +278,7 @@ impl Runtime {
             (Obj::FnObj(left), Obj::FnObj(right)) => {
                 let mut left_group_count = left.body.len();
                 let mut right_group_count = right.body.len();
+                let mut peeled_application_group = false;
                 while left_group_count > 0 && right_group_count > 0 {
                     let left_group = &left.body[left_group_count - 1];
                     let right_group = &right.body[right_group_count - 1];
@@ -228,6 +292,13 @@ impl Runtime {
                     }
                     left_group_count -= 1;
                     right_group_count -= 1;
+                    peeled_application_group = true;
+                }
+                if !peeled_application_group {
+                    // Comparing the unchanged pair again would recurse forever
+                    // for a malformed or zero-layer FnObj. Exact identity was
+                    // already handled by the replay-safe leaf above.
+                    return Ok(false);
                 }
                 let left_prefix = left.prefix_obj(left_group_count);
                 let right_prefix = right.prefix_obj(right_group_count);
@@ -267,6 +338,9 @@ impl Runtime {
                 compare_pairs!((&left.base, &right.base), (&left.arg, &right.arg),)
             }
             (Obj::Abs(left), Obj::Abs(right)) => compare(&left.arg, &right.arg),
+            (Obj::RealPart(left), Obj::RealPart(right)) => compare(&left.arg, &right.arg),
+            (Obj::ImaginaryPart(left), Obj::ImaginaryPart(right)) => compare(&left.arg, &right.arg),
+            (Obj::ComplexAbs(left), Obj::ComplexAbs(right)) => compare(&left.arg, &right.arg),
             (Obj::Floor(left), Obj::Floor(right)) => compare(&left.arg, &right.arg),
             (Obj::Ceil(left), Obj::Ceil(right)) => compare(&left.arg, &right.arg),
             (Obj::Exp(left), Obj::Exp(right)) => compare(&left.arg, &right.arg),
@@ -397,6 +471,11 @@ impl Runtime {
             (Obj::Tuple(left), Obj::Tuple(right)) => compare_slices!(left.args, right.args),
             (Obj::ListSet(left), Obj::ListSet(right)) => compare_slices!(left.list, right.list),
             (Obj::Cart(left), Obj::Cart(right)) => compare_slices!(left.args, right.args),
+            (Obj::GeneralCart(left), Obj::GeneralCart(right)) => compare_pairs!(
+                (&left.index_set, &right.index_set),
+                (&left.family_set, &right.family_set),
+                (&left.family_fn, &right.family_fn),
+            ),
             _ => Ok(false),
         }
     }
@@ -448,5 +527,82 @@ impl Runtime {
             left_resolved,
             right_resolved,
         ))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn matcher_accepts_with_one_known_leaf(left: &Obj, right: &Obj, x: &Obj, y: &Obj) -> bool {
+        Runtime::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
+            Ok::<bool, ()>(
+                verify_equality_by_they_are_the_same(left_arg, right_arg)
+                    || (verify_equality_by_they_are_the_same(left_arg, x)
+                        && verify_equality_by_they_are_the_same(right_arg, y)),
+            )
+        })
+        .expect("structural matching is infallible in this test")
+    }
+
+    #[test]
+    fn central_matcher_covers_obligation_free_complex_and_general_cart_congruence() {
+        let x: Obj = Identifier::new("x".to_string()).into();
+        let y: Obj = Identifier::new("y".to_string()).into();
+        let index_set: Obj = Identifier::new("I".to_string()).into();
+        let family_set: Obj = Identifier::new("S".to_string()).into();
+
+        let pairs: Vec<(Obj, Obj)> = vec![
+            (
+                RealPart::new(x.clone()).into(),
+                RealPart::new(y.clone()).into(),
+            ),
+            (
+                ImaginaryPart::new(x.clone()).into(),
+                ImaginaryPart::new(y.clone()).into(),
+            ),
+            (
+                ComplexAbs::new(x.clone()).into(),
+                ComplexAbs::new(y.clone()).into(),
+            ),
+            (
+                GeneralCart::new(index_set.clone(), family_set.clone(), x.clone()).into(),
+                GeneralCart::new(index_set, family_set, y.clone()).into(),
+            ),
+        ];
+
+        for (left, right) in pairs {
+            assert!(
+                matcher_accepts_with_one_known_leaf(&left, &right, &x, &y),
+                "central structural matcher should descend through {left} and {right}"
+            );
+        }
+    }
+
+    #[test]
+    fn pure_congruence_and_definitional_reduction_are_not_ordinary_equality_builtins() {
+        let dispatch = include_str!("equality_dispatch.rs");
+        let function_rules = include_str!("equality_function.rs");
+        let complex_rules = include_str!("complex_builtin.rs");
+        let sqrt_rules = include_str!("equality_numeric/square_root.rs");
+        let abs_rules = include_str!("equality_numeric/absolute_value.rs");
+        let numeric_modules = include_str!("equality_numeric/mod.rs");
+
+        for removed_entry in [
+            "try_verify_same_algebra_context_by_equal_args",
+            "try_verify_projection_from_known_tuple_equality",
+            "try_verify_anonymous_fn_application_equals_other_side",
+            "anonymous fn: identical surface syntax",
+        ] {
+            assert!(
+                !dispatch.contains(removed_entry),
+                "ordinary equality dispatch still contains `{removed_entry}`"
+            );
+        }
+        assert!(!function_rules.contains("substitute args into the body"));
+        assert!(!complex_rules.contains("coordinates respect complex equality"));
+        assert!(!sqrt_rules.contains("try_verify_sqrt_equal_args_identity"));
+        assert!(!abs_rules.contains("try_verify_abs_sign_invariance"));
+        assert!(!numeric_modules.contains("mod algebra_context"));
     }
 }
