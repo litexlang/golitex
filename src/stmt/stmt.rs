@@ -24,6 +24,7 @@ pub enum UnsafeStmt {
 
 #[derive(Clone)]
 pub enum DefObjStmt {
+    LetObjStmt(LetObjStmt),
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),

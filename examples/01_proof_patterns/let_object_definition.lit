@@ -1,0 +1,14 @@
+# Tracer: untyped object definition
+#
+# Before (did not work):
+# let x = 1
+# Former behavior: ParseError: Expected operator or $prop in fact
+#
+# Now (verified):
+let x = 1
+x = 1
+# Current behavior: x is defined and the ordinary fact x = 1 is stored.
+#
+# Boundary: the right side must already be well-defined; `let x = x` is rejected.
+# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/let_object_definition.lit
+# Implementation: src/parse/parse_def_stmt.rs and src/execute/exec_let_obj_stmt.rs

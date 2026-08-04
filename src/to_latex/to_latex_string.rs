@@ -1159,6 +1159,16 @@ impl HaveObjEqualStmt {
     }
 }
 
+impl LetObjStmt {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\mathrm{{let}}\ {} = {}",
+            latex_local_ident(&self.name),
+            self.value.to_latex_string()
+        )
+    }
+}
+
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn to_latex_string(&self) -> String {
         format!(r"\mathrm{{have}}\ {}", self.param_def.to_latex_string())
@@ -2265,6 +2275,7 @@ impl Stmt {
             Stmt::Fact(x) => x.to_latex_string(),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(x)) => x.to_latex_string(),
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::LetObjStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),

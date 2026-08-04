@@ -227,19 +227,22 @@ equality `f = g`. Later root and nested equality checks use the normal equality
 class and constructor congruence; the equality verifier does not run a separate
 `$fn_eq` lookup.
 
-Known equality candidates may replay one checked function body against simple
-arithmetic. Known-only equality first checks identity, direct lookup/calculation,
-or an already stored equality class, then reuses one central constructor matcher
-for congruence whose leaves must be known equalities. At outer round 0, the full
-equality route reuses that matcher while recursively allowing bounded builtin
-and known-equality child proofs. Function applications align trailing argument
-groups and then compare their remaining function prefixes, so the two sides
-need not have the same number of curried application groups. Other atomic-fact
-lookup may use known-only congruence for transport, but does not start the fuller
-child-proof route. One-step function unfolding is best-effort: a template
-candidate captured under an already closed local binder scope is skipped when
-it can no longer be materialized, while a direct ill-defined template use is
-still rejected by the ordinary well-definedness check.
+At outer round 0, equality replay enumerates each side's original object and
+stored equality representatives. Per representative pair, it may unfold one
+checked outer definition on one side and feed equal top-level constructors to
+the central structural matcher. Every comparison node first tries identity, a
+stored non-forall equality class, direct computation, and constructor descent.
+On failure it may apply one depth-limited builtin rule whose premises are
+restricted to stored non-forall facts or terminal computation. The replay
+guard blocks known `forall`, a second builtin layer, comparison of two freshly
+unfolded sides, and recursive checked-definition replay. Function applications
+align trailing argument groups and then compare their remaining function
+prefixes, so the two sides need not have the same number of curried application
+groups. Other atomic-fact lookup may use known-only congruence for transport,
+but does not start the fuller child-proof route. One-step function unfolding is best-effort: a
+template candidate captured under an already closed local binder scope is
+skipped when it can no longer be materialized, while a direct ill-defined
+template use is still rejected by the ordinary well-definedness check.
 The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid
 weakening from `x >= 0`.
 
@@ -301,6 +304,7 @@ not persist or propagate trust metadata through later facts and theorems.
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | Bare `fact` | Determined by the fact shape. | Every object and binder must be well-defined. | Verify using the fact-shape and atomic loops. | Store the accepted fact or its reusable components, then infer. | Adds no new trust. |
+| `let x = value` (preview) | The new object name becomes visible only after the right side passes. | `x` must be fresh; `value` must already be well-defined; the form accepts one name and one value. | No type or membership subgoal. | Bind `x`, store the ordinary equality `x = value`, then run existing equality inference. | Checked object definition with no declared carrier. |
 | `have x S` | Introduces `x` in the current scope only after checks pass. | `x` must be unused; `S` must be well-defined. | Prove that `S` is nonempty. | Bind `x`, store `x $in S`, then infer. | Checked object introduction. |
 | `have x S = value` | The defining value is checked before `x` is committed. | Name, type, and value must be well-defined. | Prove `value $in S`. | Bind `x`; store its type/membership and `x = value`; then infer. | Checked definition. |
 | `have x S: body` | Uses an existential binder while checking the obligation. | The corresponding `exist x S st {body}` must be well-defined. | Prove that corresponding existential fact. | Bind an opaque witness `x`; store its type and instantiated body facts; then infer. | Checked existence, not unrestricted witness creation. |

@@ -38,6 +38,7 @@ impl fmt::Display for UnsafeStmt {
 impl fmt::Display for DefObjStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
+            DefObjStmt::LetObjStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),

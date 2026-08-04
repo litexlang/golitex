@@ -238,6 +238,12 @@ impl TrustHaveStmt {
     }
 }
 
+impl LetObjStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "LetObjStmt".to_string()
+    }
+}
+
 impl HaveObjInNonemptySetOrParamTypeStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveObjInNonemptySetOrParamTypeStmt".to_string()
@@ -535,6 +541,12 @@ impl DefPropStmt {
 impl TrustHaveStmt {
     pub fn output_type_string() -> String {
         "unproved object definition".to_string()
+    }
+}
+
+impl LetObjStmt {
+    pub fn output_type_string() -> String {
+        "object definition".to_string()
     }
 }
 

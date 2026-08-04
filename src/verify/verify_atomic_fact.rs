@@ -6,6 +6,11 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if self.known_equality_candidate_replay_depth != 0 {
+            return self
+                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(fact);
+        }
+
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&fact.clone().into())
         {

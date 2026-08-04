@@ -258,13 +258,23 @@ equivalence `a <= b <=> a < b + 1`.
 Constructor and definition strategies remain local. They can check a dependent
 tuple as a struct, project a callable field through one checked constructor,
 or unfold one literal/checked/template set builder or one exact indexed named
-builder for membership. They do not scan all local named definitions. Equality replay can
-unfold one checked body against simple arithmetic. Known-only equality first
-checks identity, direct lookup/calculation, or an already stored equality
-class, then applies structural congruence using only those same known-equality
-leaves. Separately, at outer round 0, a full equality goal reuses the same
-constructor matcher while allowing each corresponding child equality to use
-the bounded builtin/equality verifier. Function applications align
+builder for membership. They do not scan all local named definitions.
+
+At outer round 0, equality replay enumerates the original objects and their
+stored equality representatives. For each pair it may unfold one checked outer
+definition on one side. If that exposes the same supported constructor, the
+central matcher descends componentwise. A comparison node first tries identity,
+an already stored non-forall equality class, direct evaluation, and structural
+descent. If those fail, that node may launch one ordinary depth-limited builtin
+rule. Its premises may use stored non-forall facts or terminal computation, but
+cannot launch another builtin rule. Equality replay also blocks known `forall`
+instantiation, comparison of two freshly unfolded sides, and recursive child
+definition unfolding. Thus `k = a * t` can bridge `k = a * t + 0`, while a
+second named function definition is not silently unfolded.
+
+Separately, a full equality goal reuses the same constructor matcher while
+allowing each corresponding child equality to use the bounded builtin/equality
+verifier. Function applications align
 from the final argument group backwards, so `f(a, b) = g(1, 2)(a, b)` reduces
 to the function-part equality `f = g(1, 2)` together with the corresponding
 argument equalities. Known-fact lookup can transport another predicate through

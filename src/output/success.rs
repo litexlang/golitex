@@ -1744,6 +1744,24 @@ fn environment_effect_values(
 
 fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -> Vec<JsonValue> {
     match stmt {
+        Stmt::DefObjStmt(DefObjStmt::LetObjStmt(let_stmt)) => {
+            vec![JsonValue::Object(vec![
+                (
+                    "kind".to_string(),
+                    JsonValue::JsonString("declare_object".to_string()),
+                ),
+                (
+                    "name".to_string(),
+                    JsonValue::JsonString(let_stmt.name.clone()),
+                ),
+                (
+                    "value".to_string(),
+                    JsonValue::JsonString(user_visible_stmt_or_msg_text(
+                        &let_stmt.value.to_string(),
+                    )),
+                ),
+            ])]
+        }
         Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(have_stmt)) => have_stmt
             .param_def
             .collect_param_names_with_types()

@@ -15,6 +15,7 @@ impl Runtime {
         match tb.current()? {
             PROP => self.parse_def_prop_stmt(tb),
             ABSTRACT_PROP => self.parse_def_abstract_prop_stmt(tb),
+            LET => self.parse_let_obj_stmt(tb),
             HAVE => match tb.token_at_add_index(1) {
                 ALGO => match tb.token_at_add_index(2) {
                     FOR => self.parse_have_algo_for_stmt(tb),

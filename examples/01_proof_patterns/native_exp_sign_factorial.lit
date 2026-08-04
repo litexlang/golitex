@@ -76,6 +76,7 @@ forall n N:
 # Native objects remain usable inside first-class function literals.
 have fn apply_real_map(f fn(t R) R, x R) R = f(x)
 by thm fn_set_member(fn(y R) R {exp(y)}, fn(t R) R)
+fn(y R) R {exp(y)}(0) = 1
 apply_real_map(fn(y R) R {exp(y)}, 0) = 1
 
 eval exp(0)
