@@ -29,26 +29,6 @@ impl Runtime {
             return direct_result;
         }
 
-        let componentwise_result: Result<bool, ()> = Self::same_shape_and_corresponding_args_match(
-            left,
-            right,
-            &mut |left_arg, right_arg| {
-                Ok(self.objs_are_congruent_by_known_equalities(
-                    left_arg,
-                    right_arg,
-                    line_file.clone(),
-                ))
-            },
-        );
-        if componentwise_result.expect("known-equality comparison is infallible") {
-            return factual_equal_success_by_builtin_reason(
-                left,
-                right,
-                line_file,
-                "same shape and corresponding arguments are known equal",
-            );
-        }
-
         StmtResult::Unknown(StmtUnknown::new())
     }
 
@@ -137,44 +117,24 @@ impl Runtime {
         left: &Obj,
         right: &Obj,
         line_file: LineFile,
-        builtin_steps: &mut Vec<StmtResult>,
     ) -> Result<bool, RuntimeError> {
-        if verify_equality_by_they_are_the_same(left, right)
-            || self.objs_have_same_known_equality_rc_in_some_env(left, right)
-            || left.two_objs_can_be_calculated_and_equal_by_calculation(right)
-        {
-            return Ok(true);
-        }
-
-        let steps_before_children = builtin_steps.len();
-        let structurally_equal = Self::same_shape_and_corresponding_args_match(
-            left,
-            right,
-            &mut |left_arg, right_arg| {
-                self.objs_are_congruent_by_replay_safe_equality_routes(
-                    left_arg,
-                    right_arg,
-                    line_file.clone(),
-                    builtin_steps,
-                )
-            },
-        )?;
-        if structurally_equal {
-            return Ok(true);
-        }
-        builtin_steps.truncate(steps_before_children);
-
         let candidate_fact: AtomicFact =
-            EqualFact::new(left.clone(), right.clone(), line_file).into();
-        let builtin_result = self
-            .verify_atomic_fact_with_one_builtin_rule_for_equality_representative_replay(
+            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+        let leaf_result = self
+            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
                 &candidate_fact,
             )?;
-        if !builtin_result.is_true() {
-            return Ok(false);
+        if leaf_result.is_true() {
+            return Ok(true);
         }
-        builtin_steps.push(builtin_result);
-        Ok(true)
+
+        Self::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
+            self.objs_are_congruent_by_replay_safe_equality_routes(
+                left_arg,
+                right_arg,
+                line_file.clone(),
+            )
+        })
     }
 
     pub(crate) fn same_shape_and_corresponding_args_match<E>(

@@ -185,9 +185,10 @@ sign(2.5) = 1
 factorial(10) = 3628800
 ```
 
-`exp` maps reals to positive reals. `ln` accepts positive real arguments and
-agrees with `log(e, x)`. The two functions expose their inverse and elementary
-algebra laws. Litex does not decimal-approximate transcendental values:
+`exp` maps reals to positive reals and preserves strict and weak order. `ln`
+accepts positive real arguments, agrees with `log(e, x)`, and preserves strict
+and weak order on that domain. The two functions expose their inverse and
+elementary algebra laws. Litex does not decimal-approximate transcendental values:
 `exp(2)` and `ln(2)` remain symbolic.
 
 ```litex
@@ -204,6 +205,16 @@ forall x R:
 
 forall a, b R:
     exp(a + b) = exp(a) * exp(b)
+
+forall a, b R:
+    a < b
+    =>:
+        exp(a) < exp(b)
+
+forall a, b R+:
+    a <= b
+    =>:
+        ln(a) <= ln(b)
 ```
 
 `sign` always returns an integer between `-1` and `1`, selects the expected
@@ -2212,13 +2223,14 @@ child. When the unfolded result and the other representative have the same
 supported constructor, the central constructor matcher compares them
 componentwise. Each comparison node first tries syntactic identity (including
 binder alpha-equivalence where applicable), an already stored non-forall
-equality class, direct evaluation, and constructor descent. If those fail, the
-node may apply one ordinary depth-limited builtin rule. Premises of that rule
-may use stored non-forall facts or terminal computation, but cannot apply a
-second builtin rule. The replay-depth guard also prevents those premises from
-instantiating known `forall` facts or reopening checked-definition replay.
-Consequently a representative `a * t` can prove `a * t + 0`, but a comparison
-cannot silently unfold a second named function.
+equality class, pure numeric computation, bounded obligation-free rational
+expression normalization, and constructor descent. The normalization matcher
+is terminating and creates no proof obligations; it handles shapes such as
+`a * t + 0 = a * t` without opening the ordinary builtin dispatcher. The
+replay-depth guard prevents comparison from instantiating known `forall` facts
+or reopening checked-definition replay. Consequently a representative
+`a * t` can prove `a * t + 0`, but a comparison cannot silently use another
+mathematical builtin rule or unfold a second named function.
 
 The ordinary known-only equality route can still check identity, direct
 lookup/calculation, and stored equality classes. Separately, the full equality

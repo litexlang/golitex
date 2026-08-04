@@ -1,3 +1,4 @@
+use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
@@ -127,6 +128,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_native_exp_ln_monotonicity(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
         let Some((verified, subgoals)) =
             self.native_exp_sign_factorial_order_shape(atomic_fact, builtin_state)?
         else {
@@ -206,6 +212,65 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some((true, vec![premise_result])))
+    }
+
+    fn try_verify_native_exp_ln_monotonicity(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Natural exp is strictly increasing on R, and natural ln is strictly
+        // increasing on R+. Examples: `a < b => exp(a) < exp(b)` and
+        // `0 < a < b => ln(a) < ln(b)`; weak order is preserved as well.
+        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let (left, right, strict, line_file) = match &normalized {
+            AtomicFact::LessFact(f) => (&f.left, &f.right, true, f.line_file.clone()),
+            AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false, f.line_file.clone()),
+            _ => return Ok(None),
+        };
+
+        let (left_arg, right_arg, function_name, require_positive) = match (left, right) {
+            (Obj::Exp(left_exp), Obj::Exp(right_exp)) => {
+                (left_exp.arg.as_ref(), right_exp.arg.as_ref(), EXP, false)
+            }
+            (Obj::Ln(left_ln), Obj::Ln(right_ln)) => {
+                (left_ln.arg.as_ref(), right_ln.arg.as_ref(), LN, true)
+            }
+            _ => return Ok(None),
+        };
+
+        let mut premises = Vec::new();
+        if require_positive {
+            let zero: Obj = Number::new("0".to_string()).into();
+            premises.push(LessFact::new(zero.clone(), left_arg.clone(), line_file.clone()).into());
+            premises.push(LessFact::new(zero, right_arg.clone(), line_file.clone()).into());
+        }
+        if strict {
+            premises.push(LessFact::new(left_arg.clone(), right_arg.clone(), line_file).into());
+        } else {
+            premises
+                .push(LessEqualFact::new(left_arg.clone(), right_arg.clone(), line_file).into());
+        }
+
+        let mut results = Vec::new();
+        for premise in premises {
+            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        let order_kind = if strict { "strict" } else { "weak" };
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                format!("native {function_name} preserves {order_kind} order"),
+                results,
+            )
+            .into(),
+        ))
     }
 }
 
