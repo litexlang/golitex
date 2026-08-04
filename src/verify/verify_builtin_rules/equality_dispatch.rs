@@ -210,53 +210,6 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = left {
-            let projected = self.struct_field_access_projection(field_access)?;
-            let projected_fact: AtomicFact =
-                EqualFact::new(projected.clone(), right.clone(), line_file.clone()).into();
-            let projected_result = match self.try_verify_projection_from_known_tuple_equality(
-                &projected,
-                right,
-                line_file.clone(),
-            )? {
-                Some(result) => result,
-                None => self.verify_builtin_rule_premise(&projected_fact, builtin_state)?,
-            };
-            if projected_result.is_true() {
-                return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                        "struct field access is the corresponding tuple projection".to_string(),
-                        vec![projected_result],
-                    )
-                    .into(),
-                );
-            }
-        }
-        if let Obj::ObjAsStructInstanceWithFieldAccess(field_access) = right {
-            let projected = self.struct_field_access_projection(field_access)?;
-            let projected_fact: AtomicFact =
-                EqualFact::new(left.clone(), projected.clone(), line_file.clone()).into();
-            let projected_result = match self.try_verify_projection_from_known_tuple_equality(
-                left,
-                &projected,
-                line_file.clone(),
-            )? {
-                Some(result) => result,
-                None => self.verify_builtin_rule_premise(&projected_fact, builtin_state)?,
-            };
-            if projected_result.is_true() {
-                return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                        "struct field access is the corresponding tuple projection".to_string(),
-                        vec![projected_result],
-                    )
-                    .into(),
-                );
-            }
-        }
-
         if let Some(done) = self.try_verify_general_cart_set_builder_equality(
             left,
             right,
@@ -615,15 +568,6 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_pow_reciprocal_exponent_equals_root_by_power(
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_same_algebra_context_by_equal_args(
             left,
             right,
             line_file.clone(),
@@ -998,47 +942,6 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_projection_from_known_tuple_equality(left, right, line_file.clone())?
-        {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
-            left,
-            right,
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
-            return Ok(done);
-        }
-        if let Some(done) = self.try_verify_anonymous_fn_application_equals_other_side(
-            left,
-            right,
-            right,
-            left,
-            line_file.clone(),
-            builtin_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let (Obj::AnonymousFn(l), Obj::AnonymousFn(r)) = (left, right) {
-            if l.to_string() == r.to_string() {
-                return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                        "anonymous fn: identical surface syntax (params, dom, ret, body)"
-                            .to_string(),
-                        Vec::new(),
-                    ))
-                    .into(),
-                );
-            }
-        }
-
         Ok((StmtUnknown::new()).into())
     }
 
@@ -1091,88 +994,6 @@ impl Runtime {
         }
 
         Ok(None)
-    }
-
-    fn try_verify_projection_from_known_tuple_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if let Some(done) = self.try_verify_one_projection_from_known_tuple_equality(
-            left,
-            right,
-            line_file.clone(),
-        )? {
-            return Ok(Some(done));
-        }
-        self.try_verify_one_projection_from_known_tuple_equality(right, left, line_file)
-    }
-
-    fn try_verify_one_projection_from_known_tuple_equality(
-        &mut self,
-        projection_side: &Obj,
-        other_side: &Obj,
-        line_file: LineFile,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Obj::ObjAtIndex(obj_at_index) = projection_side else {
-            return Ok(None);
-        };
-        let Some(index) = self.obj_at_index_literal_positive_usize(obj_at_index.index.as_ref())
-        else {
-            return Ok(None);
-        };
-        let target_key = obj_equality_key(obj_at_index.obj.as_ref());
-        for env in self.iter_environments_from_top() {
-            let Some((_, equal_objs)) = env.known_equality.get(&target_key) else {
-                continue;
-            };
-            for equal_obj in equal_objs.iter() {
-                if let Some(component) = Self::component_at_index(equal_obj, index) {
-                    if self
-                        .verify_objs_are_equal_by_known_equality(
-                            &component,
-                            other_side,
-                            line_file.clone(),
-                        )
-                        .is_true()
-                    {
-                        return Ok(Some(
-                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                                EqualFact::new(
-                                    projection_side.clone(),
-                                    other_side.clone(),
-                                    line_file,
-                                )
-                                .into(),
-                                "projection from known tuple equality".to_string(),
-                                Vec::new(),
-                            )
-                            .into(),
-                        ));
-                    }
-                }
-            }
-        }
-        Ok(None)
-    }
-
-    fn obj_at_index_literal_positive_usize(&self, index_obj: &Obj) -> Option<usize> {
-        let number = self.resolve_obj_to_number(index_obj)?;
-        let parsed = number.normalized_value.parse::<usize>().ok()?;
-        if parsed == 0 {
-            None
-        } else {
-            Some(parsed)
-        }
-    }
-
-    fn component_at_index(obj: &Obj, index: usize) -> Option<Obj> {
-        match obj {
-            Obj::Tuple(tuple) => tuple.args.get(index - 1).map(|x| x.as_ref().clone()),
-            Obj::ListSet(list_set) => list_set.list.get(index - 1).map(|x| x.as_ref().clone()),
-            _ => None,
-        }
     }
 
     fn try_verify_union_set_equalities(

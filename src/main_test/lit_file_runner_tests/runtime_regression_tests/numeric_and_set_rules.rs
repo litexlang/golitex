@@ -1,6 +1,58 @@
 use super::*;
 
 #[test]
+fn algebra_and_square_root_congruence_use_central_structural_equality() {
+    run_with_large_stack(
+        "algebra_and_square_root_congruence_use_central_structural_equality",
+        || {
+            let source_code = r#"
+forall x, y R+:
+    x = y
+    =>:
+        x + 1 = y + 1
+        (x + 1) * (x + 2) = (y + 1) * (y + 2)
+        sqrt(x) = sqrt(y)
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "algebra_and_square_root_congruence_use_central_structural_equality",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "algebra and sqrt congruence should remain checkable:\n{run_output}"
+            );
+            assert_eq!(
+                run_output
+                    .matches("replay-safe structural equality")
+                    .count(),
+                3,
+                "all pure congruence conclusions should use structural provenance:\n{run_output}"
+            );
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "algebra_congruence_does_not_invent_argument_equality",
+            );
+            let (negative_results, negative_error) =
+                run_source_code("forall x, y R+:\n    x + 1 = y + 1", &mut negative_runtime);
+            let (negative_succeeded, negative_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_results,
+                &negative_error,
+                false,
+            );
+            assert!(
+                !negative_succeeded,
+                "structural congruence must require corresponding argument equality:\n{negative_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn finite_sum_pointwise_congruence_uses_a_range_guarded_forall() {
     let source_code = r#"
 have f fn(f_index Z) Z

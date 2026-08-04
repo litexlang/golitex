@@ -200,6 +200,66 @@ finite_set_product({1, 2}, fn(k N) N {k}) $in N
 }
 
 #[test]
+fn native_complex_congruence_composes_with_structural_beta_reduction() {
+    run_with_large_stack(
+        "native_complex_congruence_composes_with_structural_beta_reduction",
+        || {
+            let source_code = r#"
+forall z, w C:
+    z = w
+    =>:
+        re(z) = re(w)
+        img(z) = img(w)
+        C_abs(z) = C_abs(w)
+        1 + C_abs(z) = 1 + C_abs(w)
+
+forall z, w C:
+    z = w
+    =>:
+        fn(x C) R {re(x)}(z) = fn(x C) R {re(w)}(z)
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "native_complex_congruence_composes_with_structural_beta_reduction",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "complex constructors should use central structural congruence:\n{run_output}"
+            );
+            assert!(
+                run_output
+                    .matches("replay-safe structural equality")
+                    .count()
+                    >= 5,
+                "complex congruence should expose structural provenance:\n{run_output}"
+            );
+
+            let mut negative_runtime = Runtime::new();
+            negative_runtime.new_file_path_new_env_new_name_scope(
+                "native_complex_congruence_does_not_invent_argument_equality",
+            );
+            let (negative_results, negative_error) = run_source_code(
+                "forall z, w C:\n    C_abs(z) = C_abs(w)",
+                &mut negative_runtime,
+            );
+            let (negative_succeeded, negative_output) = render_run_source_code_output(
+                &negative_runtime,
+                &negative_results,
+                &negative_error,
+                false,
+            );
+            assert!(
+                !negative_succeeded,
+                "structural congruence must require argument equality:\n{negative_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn complex_expressions_do_not_acquire_real_only_properties() {
     run_with_large_stack(
         "complex_expressions_do_not_acquire_real_only_properties",

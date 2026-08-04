@@ -239,7 +239,7 @@ process:
 
 ```text
 target/release/litex -compact -session -before \
-  scripts/textbooks_drafts/Concrete-Mathematics/chapter01-recurrent-problems.lit
+  scripts/Concrete-Mathematics-A-Foundation-For-Computer-Science/textbook/chapter01-recurrent-problems.lit
 ```
 
 After the `ready` event, submit the function definition as block `H001`:
@@ -390,7 +390,7 @@ At a coherent theorem or file checkpoint:
 5. run the clean file gate:
 
 ```text
-target/release/litex -compact -f path/to/current-file.lit
+target/release/litex -compact -runner -f path/to/current-file.lit
 ```
 
 The session result and clean file result are different claims. A block can
@@ -401,7 +401,7 @@ results.
 Use a repository or module run only for an explicit larger checkpoint:
 
 ```text
-target/release/litex -compact -r path/to/module
+target/release/litex -compact -runner -r path/to/module
 ```
 
 Do not pay the whole-module cost for every local proof repair.
@@ -427,8 +427,8 @@ hanoi_moves(3) = 2 * hanoi_moves(2) + 1 = 7
 Then run the registered-file checkpoint:
 
 ```text
-target/release/litex -compact -f \
-  scripts/textbooks_drafts/Concrete-Mathematics/chapter01-recurrent-problems.lit
+target/release/litex -compact -runner -f \
+  scripts/Concrete-Mathematics-A-Foundation-For-Computer-Science/textbook/chapter01-recurrent-problems.lit
 ```
 
 This cold run reparses and replays the configured source prefix from disk. It
@@ -1041,7 +1041,7 @@ higher-order constructor and the `kernel_problem`; the todo points to the
 future refinement-propagation fix. Nothing requires trusting the whole
 section, weakening the theorem, or pretending the general constructor works.
 
-## Complete walkthrough: from a textbook TXT to a checked Litex draft
+## Complete walkthrough: from a textbook TXT to a checked Litex module
 
 Suppose a user has one local plain-text book and asks an AI agent to formalize
 it:
@@ -1074,8 +1074,8 @@ mathematics with those from the real book.
 ### What will exist at the end
 
 Keep source-facing records and verifier-experience artifacts outside the
-mathematical module. Keep the clean Litex draft, its configuration, and its one
-documentation pair inside the draft module:
+mathematical module. Keep the clean Litex source, its configuration, and its
+one documentation pair inside the workspace-owned `textbook/` module:
 
 ```text
 scripts/My-Discrete-Math-Notes/
@@ -1086,20 +1086,18 @@ scripts/My-Discrete-Math-Notes/
     proof_journals/chapter01-recurrences.json
     experience/problem_notes/
     todo.md
-
-scripts/textbooks_drafts/My-Discrete-Math-Notes/
-    litex.config
-    README.md
-    math_collections.md
-    chapter01-recurrences.lit
+    textbook/
+        litex.config
+        README.md
+        math_collections.md
+        chapter01-recurrences.lit
 ```
 
-These two directories have different jobs. The first preserves what was read,
-what was selected, how attempts behaved, and what remains unfinished. The
-second is the canonical development draft a mathematical reader can run. Do
-not put a private source transcript, failure log, or chain-of-thought dump into
-the `.lit` module. Do not edit `textbooks/My-Discrete-Math-Notes/` unless the
-user explicitly requests publication.
+The workspace root preserves what was read, what was selected, how attempts
+behaved, and what remains unfinished. Its `textbook/` child is the one
+canonical module a mathematical reader can run. Do not put a private source
+transcript, failure log, or chain-of-thought dump into that module, and do not
+create a second central draft or publication copy.
 
 ### Step 1: enter the repository and lock the source
 
@@ -1112,7 +1110,7 @@ cd /absolute/path/to/golitex
 BOOK_SLUG=My-Discrete-Math-Notes
 SOURCE_FILE=/absolute/path/to/my_discrete_math_notes.txt
 SOURCE_WORKSPACE="scripts/$BOOK_SLUG"
-DRAFT_DIR="scripts/textbooks_drafts/$BOOK_SLUG"
+TEXTBOOK_DIR="$SOURCE_WORKSPACE/textbook"
 
 test -f Cargo.toml
 test -f "$SOURCE_FILE"
@@ -1143,9 +1141,9 @@ We are starting a Litex textbook translation in the golitex repository.
 Input:
 - locked source: scripts/My-Discrete-Math-Notes/source/book.txt
 - source workspace: scripts/My-Discrete-Math-Notes/
-- canonical draft: scripts/textbooks_drafts/My-Discrete-Math-Notes/
+- canonical module: scripts/My-Discrete-Math-Notes/textbook/
 
-For this stage, do not write any .lit code and do not modify textbooks/.
+For this stage, do not write any .lit code or create a second textbook copy.
 Read the locked TXT as evidence. Create source_manifest.yaml and
 formalization_plan.md in the source workspace.
 
@@ -1286,33 +1284,21 @@ The record prevents a common modeling drift. Later lines apply `A(n)`, so the
 definition must expose a callable function. A proposition relating `n` to a
 candidate value would not preserve the source interface.
 
-### Step 3: create the canonical draft without publishing it
+### Step 3: create and register the canonical textbook module
 
-There are two different initialization cases.
-
-If a published module already exists under
-`textbooks/My-Discrete-Math-Notes/`, use the repository initializer exactly
-once:
+Create the module directly inside its source workspace. Refuse to overwrite an
+existing `textbook/`; it may already contain work owned by that book:
 
 ```bash
-scripts/textbooks_drafts/init_draft.sh My-Discrete-Math-Notes
-```
-
-That script intentionally refuses to overwrite an existing draft and
-intentionally refuses to initialize a book that has never been published.
-
-For a genuinely new local TXT with no public module, create a new draft
-workspace:
-
-```bash
-mkdir -p "$DRAFT_DIR"
+test ! -e "$TEXTBOOK_DIR"
+mkdir -p "$TEXTBOOK_DIR"
 touch \
-  "$DRAFT_DIR/README.md" \
-  "$DRAFT_DIR/math_collections.md" \
-  "$DRAFT_DIR/chapter01-recurrences.lit"
+  "$TEXTBOOK_DIR/README.md" \
+  "$TEXTBOOK_DIR/math_collections.md" \
+  "$TEXTBOOK_DIR/chapter01-recurrences.lit"
 ```
 
-Create `scripts/textbooks_drafts/My-Discrete-Math-Notes/litex.config` with:
+Create `scripts/My-Discrete-Math-Notes/textbook/litex.config` with:
 
 ```text
 [hierarchy]
@@ -1326,11 +1312,18 @@ Export order is mathematical execution order. When Chapter 2 is added later,
 append it after Chapter 1. Do not add `README.md`, `math_collections.md`,
 source manifests, or journals to `[export]`.
 
+Add the workspace name `My-Discrete-Math-Notes` as one line in
+`scripts/.textbooks`, then validate that the registry and module agree:
+
+```bash
+python3 scripts/textbook_gate.py --validate-only
+```
+
 Now initialize the module documentation with this prompt:
 
 ```text
 Create the initial README.md and math_collections.md for
-scripts/textbooks_drafts/My-Discrete-Math-Notes/.
+scripts/My-Discrete-Math-Notes/textbook/.
 
 README.md must describe only the API that is actually implemented now. Because
 the chapter file is still empty, say that no public mathematical API is
@@ -1346,7 +1339,7 @@ math_collections.md is the design manual. For the first source slice, record:
 - any proof or well-definedness holes still unknown.
 
 Maintain exactly this one README.md and one math_collections.md for the whole
-book draft. Do not create per-chapter copies and do not modify textbooks/.
+book module. Do not create per-chapter or central copies.
 ```
 
 At this point the project is registered but the chapter is empty. That is the
@@ -1420,8 +1413,8 @@ cargo build --release
 The registered file baseline should also succeed while the file is empty:
 
 ```bash
-target/release/litex -compact -f \
-  "$DRAFT_DIR/chapter01-recurrences.lit"
+target/release/litex -compact -runner -f \
+  "$TEXTBOOK_DIR/chapter01-recurrences.lit"
 ```
 
 Before sending a candidate, create
@@ -1431,8 +1424,8 @@ Its initial content should be one valid JSON object:
 ```json
 {
   "schema_version": 1,
-  "target": "scripts/textbooks_drafts/My-Discrete-Math-Notes/chapter01-recurrences.lit",
-  "session_command": "target/release/litex -compact -session -before scripts/textbooks_drafts/My-Discrete-Math-Notes/chapter01-recurrences.lit",
+  "target": "scripts/My-Discrete-Math-Notes/textbook/chapter01-recurrences.lit",
+  "session_command": "target/release/litex -compact -session -before scripts/My-Discrete-Math-Notes/textbook/chapter01-recurrences.lit",
   "proof_spine": [
     "define the N-valued recurrence",
     "check source small values one stored equation at a time",
@@ -1457,7 +1450,7 @@ For a new, partial, or failing registered chapter, start:
 
 ```bash
 target/release/litex -compact -session -before \
-  "$DRAFT_DIR/chapter01-recurrences.lit"
+  "$TEXTBOOK_DIR/chapter01-recurrences.lit"
 ```
 
 Wait for a `ready` JSON event. Keep that same process alive. The transport
@@ -1487,7 +1480,7 @@ This is the execution prompt to give the AI:
 ```text
 Start exactly one release session:
 target/release/litex -compact -session -before
-scripts/textbooks_drafts/My-Discrete-Math-Notes/chapter01-recurrences.lit
+scripts/My-Discrete-Math-Notes/textbook/chapter01-recurrences.lit
 
 Wait for the ready event and keep the process alive. Before every submission:
 1. append the planned candidate to the JSON journal;
@@ -1650,8 +1643,8 @@ reader; do not add verifier-debug narration.
 Then run a clean registered-file gate:
 
 ```bash
-target/release/litex -compact -f \
-  "$DRAFT_DIR/chapter01-recurrences.lit"
+target/release/litex -compact -runner -f \
+  "$TEXTBOOK_DIR/chapter01-recurrences.lit"
 ```
 
 The warm session and the cold file gate answer different questions. Session
@@ -1664,7 +1657,7 @@ Ask the AI to checkpoint with:
 ```text
 Materialize only the contiguous accepted prefix B001-B002 from
 scripts/My-Discrete-Math-Notes/proof_journals/chapter01-recurrences.json into
-scripts/textbooks_drafts/My-Discrete-Math-Notes/chapter01-recurrences.lit.
+scripts/My-Discrete-Math-Notes/textbook/chapter01-recurrences.lit.
 
 Requirements:
 - preserve source order;
@@ -1672,7 +1665,7 @@ Requirements:
 - remove outer try wrappers;
 - keep failure history only in the journal;
 - update block status to materialized;
-- run the release -compact -f gate;
+- run the release `-compact -runner -f` gate;
 - record the exact gate command and result in materialization;
 - if the gate fails, keep JSON as the source of truth and resume at the first
   affected block instead of overwriting the journal.
@@ -1689,7 +1682,7 @@ The end of the journal should name the materialized blocks and the clean gate:
 {
   "materialization": {
     "block_ids": ["B001", "B002"],
-    "file_gate_command": "target/release/litex -compact -f scripts/textbooks_drafts/My-Discrete-Math-Notes/chapter01-recurrences.lit",
+    "file_gate_command": "target/release/litex -compact -runner -f scripts/My-Discrete-Math-Notes/textbook/chapter01-recurrences.lit",
     "file_gate_result": "ok"
   }
 }
@@ -1726,7 +1719,7 @@ Then use:
 
 ```bash
 target/release/litex -compact -session -before \
-  "$DRAFT_DIR/chapter02-counting.lit"
+  "$TEXTBOOK_DIR/chapter02-counting.lit"
 ```
 
 This loads the checked Chapter 1 prefix once, excludes the unfinished Chapter
@@ -1736,24 +1729,25 @@ start:
 
 ```bash
 target/release/litex -compact -session -f \
-  "$DRAFT_DIR/chapter01-recurrences.lit"
+  "$TEXTBOOK_DIR/chapter01-recurrences.lit"
 ```
 
-At every chapter checkpoint, run `-f`. At a complete-book milestone, run:
+At every chapter checkpoint, run `-runner -f`. At a complete-book milestone,
+run the registry-backed gate:
 
 ```bash
-target/release/litex -compact -r "$DRAFT_DIR"
+python3 scripts/textbook_gate.py "$BOOK_SLUG"
 ```
 
 If the book is claimed to be free of user trust and axioms, also run the
 stricter audit:
 
 ```bash
-target/release/litex -compact -strict -r "$DRAFT_DIR"
+target/release/litex -compact -strict -runner -r "$TEXTBOOK_DIR"
 ```
 
-Publication is a separate, explicit operation. A clean draft does not by
-itself authorize copying it into `textbooks/`.
+The verified module remains in its owning workspace and is versioned there;
+do not synchronize it through a second repository-root tree.
 
 ### Step 11: turn the book's attempts into reusable experience
 
@@ -1829,14 +1823,14 @@ Required artifacts:
    under scripts/My-Discrete-Math-Notes/;
 2. source item records with source, problem, proof_idea, litex_code, and
    comments;
-3. canonical draft under
-   scripts/textbooks_drafts/My-Discrete-Math-Notes/ with exactly one README.md,
+3. canonical module under
+   scripts/My-Discrete-Math-Notes/textbook/ with exactly one README.md,
    one math_collections.md, litex.config, and the first chapter .lit file;
 4. one persistent JSON proof journal for the chapter;
 5. concise experience notes and todo entries for unresolved boundaries.
 
 Hard boundaries:
-- do not edit textbooks/ or publish anything;
+- do not create a central draft or publication mirror;
 - do not reproduce long source passages;
 - record OCR/source reconstruction separately from Litex failures;
 - omit standalone exercises;
@@ -1860,9 +1854,9 @@ Execution protocol:
 - when a real blocker is identified, keep the intended statement, use the
   narrowest legal trust, update todo.md, and continue;
 - materialize only a contiguous accepted prefix at a coherent checkpoint;
-- run clean `-compact -f <chapter>` and record warm versus cold results;
+- run clean `-compact -runner -f <chapter>` and record warm versus cold results;
 - run the proof-liveness audit;
-- run `-compact -r <draft-module>` at the bounded-slice milestone.
+- run `python3 scripts/textbook_gate.py <workspace>` at the bounded-slice milestone.
 
 Do not hide failed attempts by overwriting them. Record concise rationale and
 decision evidence, not private chain-of-thought. Stop after the selected slice
@@ -1971,8 +1965,8 @@ At the checkpoint, materialize the accepted wrapper and probes in source
 order, remove the outer `try:`, and run:
 
 ```text
-target/release/litex -compact -f \
-  scripts/textbooks_drafts/Concrete-Mathematics/chapter02-sums.lit
+target/release/litex -compact -runner -f \
+  scripts/Concrete-Mathematics-A-Foundation-For-Computer-Science/textbook/chapter02-sums.lit
 ```
 
 Finally, audit the source. The wrapper is source-facing and has later

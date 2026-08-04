@@ -4,10 +4,6 @@
 # From former litex/.gitignore (paths now at root)
 binary/
 scripts/*
-!scripts/textbooks_drafts/
-scripts/textbooks_drafts/*
-!scripts/textbooks_drafts/README.md
-!scripts/textbooks_drafts/init_draft.sh
 !scripts/update_external_repos.sh
 !scripts/build_dataset_current_data.py
 !scripts/dataset_review_dashboard.html

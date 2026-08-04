@@ -467,7 +467,7 @@ litex -strict -runner -isolated -f examples/tmp.lit
 Generate a relation graph:
 
 ```bash
-litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
+litex -graph -f scripts/Analysis/textbook/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
 ```
 
 Generate a fact-only verification chain:

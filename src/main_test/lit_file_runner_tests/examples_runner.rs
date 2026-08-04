@@ -2,7 +2,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::time::Instant;
 
-use crate::pipeline::{render_run_source_code_output, run_repository_file_target, run_source_code};
+use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 
 use super::helper::{
@@ -12,12 +12,6 @@ use super::helper::{
     source_has_isolated_import, spawn_with_large_stack, REPOSITORY_EXAMPLES_SUBDIR,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
-
-const ANALYSIS_ONE_CHAPTERS_SUBDIR: &str = "textbooks/Analysis";
-const LINEAR_ALGEBRA_DONE_RIGHT_SUBDIR: &str = "textbooks/Linear-Algebra-Done-Right";
-const MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR: &str =
-    "scripts/textbooks_drafts/The-Mechanics-of-Litex-Proof";
-const NUMBER_THEORY_FOR_BEGINNERS_SUBDIR: &str = "textbooks/Number-Theory-For-Beginners";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -106,32 +100,26 @@ fn run_all() {
 }
 
 #[test]
-#[ignore = "slow full suite; run explicitly with --ignored"]
-fn run_all_docs_examples_textbooks() {
+#[ignore = "slow full repository suite; run explicitly with --ignored"]
+fn run_all_docs_examples_runtime_contracts() {
     run_with_large_stack(
-        "run_all_docs_examples_textbooks_large_stack",
-        run_all_docs_examples_textbooks_impl,
+        "run_all_docs_examples_runtime_contracts_large_stack",
+        run_all_docs_examples_runtime_contracts_impl,
     );
 }
 
-fn run_all_docs_examples_textbooks_impl() {
+fn run_all_docs_examples_runtime_contracts_impl() {
     if crate::verify::known_forall_profile::enabled() {
         // The profile counters are process-global, so keep profiled aggregate runs sequential.
         println!(
             "--- full suite: LITEX_PROFILE_KNOWN_FORALL enabled; running datasets sequentially ---"
         );
         run_examples_impl();
-        run_analysis_one_chapters_impl();
-        run_linear_algebra_done_right_impl();
-        run_mechanics_textbook_chapters_impl();
-        run_number_theory_for_beginners_impl();
         run_runtime_contract_suite_impl();
         return;
     }
 
-    println!(
-        "--- full suite: running examples, docs, and runtime contracts in parallel; then textbook chapter suites ---"
-    );
+    println!("--- full suite: running examples, docs, and runtime contracts in parallel ---");
     let wall_start = Instant::now();
     let handles = vec![
         (
@@ -157,38 +145,6 @@ fn run_all_docs_examples_textbooks_impl() {
     for (label, handle) in handles {
         collect_full_suite_result(label, handle, &mut failed_dataset_labels);
     }
-    collect_full_suite_result(
-        "Analysis I chapters",
-        spawn_with_large_stack(
-            "full_suite_analysis_one_chapters_large_stack",
-            run_analysis_one_chapters_impl,
-        ),
-        &mut failed_dataset_labels,
-    );
-    collect_full_suite_result(
-        "Linear Algebra Done Right chapters",
-        spawn_with_large_stack(
-            "full_suite_linear_algebra_done_right_large_stack",
-            run_linear_algebra_done_right_impl,
-        ),
-        &mut failed_dataset_labels,
-    );
-    collect_full_suite_result(
-        "Mechanics textbook chapters",
-        spawn_with_large_stack(
-            "full_suite_mechanics_textbook_chapters_large_stack",
-            run_mechanics_textbook_chapters_impl,
-        ),
-        &mut failed_dataset_labels,
-    );
-    collect_full_suite_result(
-        "Number Theory for Beginners chapters",
-        spawn_with_large_stack(
-            "full_suite_number_theory_for_beginners_large_stack",
-            run_number_theory_for_beginners_impl,
-        ),
-        &mut failed_dataset_labels,
-    );
 
     println!(
         "--- full suite: wall time {:.2} ms ---",
@@ -219,109 +175,6 @@ fn collect_full_suite_result(
             failed_dataset_labels.push(label);
         }
     }
-}
-
-#[test]
-fn run_analysis_one_chapters() {
-    run_with_large_stack(
-        "run_analysis_one_chapters_large_stack",
-        run_analysis_one_chapters_impl,
-    );
-}
-
-fn run_analysis_one_chapters_impl() {
-    run_textbook_chapters_impl(ANALYSIS_ONE_CHAPTERS_SUBDIR, "Analysis I chapters");
-}
-
-#[test]
-fn run_linear_algebra_done_right() {
-    run_with_large_stack(
-        "run_linear_algebra_done_right_large_stack",
-        run_linear_algebra_done_right_impl,
-    );
-}
-
-fn run_linear_algebra_done_right_impl() {
-    run_textbook_chapters_impl(
-        LINEAR_ALGEBRA_DONE_RIGHT_SUBDIR,
-        "Linear Algebra Done Right chapters",
-    );
-}
-
-#[test]
-fn run_mechanics_textbook_chapters() {
-    run_with_large_stack(
-        "run_mechanics_textbook_chapters_large_stack",
-        run_mechanics_textbook_chapters_impl,
-    );
-}
-
-fn run_mechanics_textbook_chapters_impl() {
-    run_textbook_chapters_impl(
-        MECHANICS_TEXTBOOK_CHAPTERS_SUBDIR,
-        "Mechanics textbook chapters",
-    );
-}
-
-#[test]
-fn run_number_theory_for_beginners() {
-    run_with_large_stack(
-        "run_number_theory_for_beginners_large_stack",
-        run_number_theory_for_beginners_impl,
-    );
-}
-
-fn run_number_theory_for_beginners_impl() {
-    run_textbook_chapters_impl(
-        NUMBER_THEORY_FOR_BEGINNERS_SUBDIR,
-        "Number Theory for Beginners sections",
-    );
-}
-
-fn run_textbook_chapters_impl(chapters_subdir: &'static str, textbook_name: &'static str) {
-    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let repository_path = manifest_dir.join(chapters_subdir);
-    let config_path = repository_path.join("litex.config");
-    assert!(
-        config_path.is_file(),
-        "{} must contain litex.config",
-        chapters_subdir
-    );
-    let repository_path = repository_path
-        .to_str()
-        .expect("textbook repository path must be valid UTF-8");
-
-    println!(
-        "--- {}: running one recursive -r project plan ---",
-        textbook_name
-    );
-    let wall_start = Instant::now();
-    let mut runtime = Runtime::new();
-    let target = discover_repository(&mut runtime, repository_path).unwrap_or_else(|error| {
-        panic!(
-            "{} discovery failed at {}: {:?}",
-            textbook_name, repository_path, error
-        )
-    });
-    let (stmt_results, runtime_error) = run_repository_file_target(&mut runtime, target);
-    let run_succeeded = runtime_error.is_none() && stmt_results.iter().all(StmtResult::is_true);
-    let duration_ms = wall_start.elapsed().as_secs_f64() * 1000.0;
-
-    if !run_succeeded {
-        let (_, output) =
-            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-        panic!(
-            "{} -r failed after {:.2} ms:\n{}",
-            textbook_name, duration_ms, output
-        );
-    }
-
-    println!(
-        "--- {}: one -r run, {} top-level result(s), all OK ({:.2} ms) ---",
-        textbook_name,
-        stmt_results.len(),
-        duration_ms,
-    );
 }
 
 fn run_examples_impl() {

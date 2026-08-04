@@ -134,7 +134,7 @@ The same run can also generate a relation graph. For example, the command
 below produces the data behind the Analysis I Chapter 6 graph:
 
 ```bash
-litex -graph -f textbooks/Analysis/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
+litex -graph -f scripts/Analysis/textbook/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
 ```
 
 This repository's Analysis I material supplies a real example rather than a

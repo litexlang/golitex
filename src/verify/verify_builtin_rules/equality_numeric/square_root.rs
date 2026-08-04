@@ -88,38 +88,6 @@ impl Runtime {
         Ok(None)
     }
 
-    // Equal nonnegative arguments have equal principal square roots.
-    // Example: from `x = y`, prove `sqrt(x) = sqrt(y)`.
-    pub(crate) fn try_verify_sqrt_equal_args_identity(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (Obj::Sqrt(left_sqrt), Obj::Sqrt(right_sqrt)) = (left, right) else {
-            return Ok(None);
-        };
-        let arg_result = self.verify_objs_are_equal_in_equality_builtin(
-            left_sqrt.arg.as_ref(),
-            right_sqrt.arg.as_ref(),
-            line_file.clone(),
-            builtin_state,
-        )?;
-        if !arg_result.is_true() {
-            return Ok(None);
-        }
-
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "sqrt: sqrt(x) = sqrt(y) from x = y".to_string(),
-                vec![arg_result],
-            )
-            .into(),
-        ))
-    }
-
     // Principal square root of a square returns the nonnegative root.
     // Example: from `a >= 0` and `x = a^2`, prove `sqrt(x) = a`.
     pub(crate) fn try_verify_sqrt_of_square_identity(
@@ -330,11 +298,6 @@ impl Runtime {
         }
         if let Some(done) =
             self.try_verify_sqrt_zero_one_identity(left, right, line_file.clone(), builtin_state)?
-        {
-            return Ok(Some(done));
-        }
-        if let Some(done) =
-            self.try_verify_sqrt_equal_args_identity(left, right, line_file.clone(), builtin_state)?
         {
             return Ok(Some(done));
         }
