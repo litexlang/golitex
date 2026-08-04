@@ -19,17 +19,6 @@ impl Runtime {
         self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
     }
 
-    pub(crate) fn verify_atomic_fact_with_one_builtin_rule_for_equality_representative_replay(
-        &mut self,
-        goal: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        // Equality-representative replay may use one ordinary builtin rule.
-        // Its depth guard makes every generated premise a known-non-forall or
-        // computation leaf and prevents recursive definition replay.
-        let builtin_state = UseBuiltinRuleVerifyState::new();
-        self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
-    }
-
     pub(crate) fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
         &mut self,
         goal: &AtomicFact,
@@ -74,7 +63,10 @@ impl Runtime {
         self.verify_atomic_fact_with_one_builtin_rule(child, builtin_state)
     }
 
-    fn verify_atomic_fact_by_builtin_computation(&self, fact: &AtomicFact) -> StmtResult {
+    pub(crate) fn verify_atomic_fact_by_builtin_computation(
+        &self,
+        fact: &AtomicFact,
+    ) -> StmtResult {
         match fact {
             AtomicFact::InFact(fact) => {
                 let Obj::StandardSet(set) = &fact.set else {
@@ -122,6 +114,32 @@ impl Runtime {
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     fact.clone().into(),
                     "number comparison".to_string(),
+                    Vec::new(),
+                )
+                .into()
+            }
+            AtomicFact::EqualFact(fact) => {
+                let left_resolved = self.resolve_obj(&fact.left);
+                let right_resolved = self.resolve_obj(&fact.right);
+                let reason = if fact
+                    .left
+                    .two_objs_can_be_calculated_and_equal_by_calculation(&fact.right)
+                    || left_resolved
+                        .two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
+                {
+                    "direct numeric computation"
+                } else if objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right)
+                    || objs_equal_by_rational_expression_evaluation(&left_resolved, &right_resolved)
+                {
+                    // Bounded, obligation-free symbolic normalization. Example:
+                    // `a * t + 0 = a * t`.
+                    "bounded symbolic normalization"
+                } else {
+                    return StmtUnknown::new().into();
+                };
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    fact.clone().into(),
+                    reason.to_string(),
                     Vec::new(),
                 )
                 .into()
@@ -251,7 +269,7 @@ mod tests {
     }
 
     #[test]
-    fn structural_equality_reuses_one_shape_matcher() {
+    fn structural_equality_uses_one_shape_matcher_only_in_structural_routes() {
         let common_leaf = include_str!("verify_builtin_rule.rs");
         let common_leaf_impl = common_leaf
             .split("#[cfg(test)]")
@@ -275,7 +293,7 @@ mod tests {
             .next()
             .expect("direct known-only implementation must follow the public entry");
         assert!(known_only_impl.contains("verify_objs_are_equal_directly_known_only("));
-        assert!(known_only_impl.contains("same_shape_and_corresponding_args_match("));
+        assert!(!known_only_impl.contains("same_shape_and_corresponding_args_match("));
         assert!(
             !equality_structural.contains("try_verify_equality_by_corresponding_known_equalities")
         );
@@ -286,6 +304,14 @@ mod tests {
             1,
             "constructor decomposition must have one implementation",
         );
+        let replay_safe_impl = equality_structural
+            .split("pub(crate) fn objs_are_congruent_by_replay_safe_equality_routes(")
+            .nth(1)
+            .expect("replay-safe structural equality implementation must exist")
+            .split("pub(crate) fn same_shape_and_corresponding_args_match")
+            .next()
+            .expect("central matcher must follow replay-safe comparison");
+        assert!(replay_safe_impl.contains("same_shape_and_corresponding_args_match("));
 
         let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
         assert!(

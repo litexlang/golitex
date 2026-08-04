@@ -122,6 +122,77 @@ forall x R:
 }
 
 #[test]
+fn native_exp_ln_order_is_preserved() {
+    assert_source_succeeds(
+        r#"
+forall a, b R:
+    a < b
+    =>:
+        exp(a) < exp(b)
+
+forall a, b R:
+    a <= b
+    =>:
+        exp(a) <= exp(b)
+
+forall a, b R:
+    a > b
+    =>:
+        exp(a) > exp(b)
+
+forall a, b R:
+    a >= b
+    =>:
+        exp(a) >= exp(b)
+
+forall a, b R+:
+    a < b
+    =>:
+        ln(a) < ln(b)
+
+forall a, b R+:
+    a <= b
+    =>:
+        ln(a) <= ln(b)
+
+forall a, b R+:
+    a > b
+    =>:
+        ln(a) > ln(b)
+
+forall a, b R+:
+    a >= b
+    =>:
+        ln(a) >= ln(b)
+"#,
+        "native_exp_ln_order_is_preserved",
+    );
+
+    for (label, source) in [
+        (
+            "exp_weak_does_not_imply_strict",
+            r#"
+forall a, b R:
+    a <= b
+    =>:
+        exp(a) < exp(b)
+"#,
+        ),
+        (
+            "ln_weak_does_not_imply_strict",
+            r#"
+forall a, b R+:
+    a <= b
+    =>:
+        ln(a) < ln(b)
+"#,
+        ),
+    ] {
+        assert_source_fails(source, label);
+    }
+}
+
+#[test]
 fn native_exp_sign_factorial_reject_invalid_domains_and_arities() {
     for (label, source) in [
         ("exp_set", "exp({1}) = 1"),

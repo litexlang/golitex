@@ -24,6 +24,40 @@ forall a, b R:
     exp(a + b) = exp(a) * exp(b)
     exp(a - b) = exp(a) / exp(b)
 
+# Tracer: native exp/ln order preservation.
+#
+# Before (did not work):
+# forall a, b R:
+#     a < b
+#     =>:
+#         exp(a) < exp(b)
+# Former behavior: the final strict-order goal was unknown.
+#
+# Now (verified):
+forall a, b R:
+    a < b
+    =>:
+        exp(a) < exp(b)
+
+forall a, b R:
+    a <= b
+    =>:
+        exp(a) <= exp(b)
+
+forall a, b R+:
+    a < b
+    =>:
+        ln(a) < ln(b)
+
+forall a, b R+:
+    a >= b
+    =>:
+        ln(a) >= ln(b)
+# Current behavior: native exp and ln preserve strict and weak real order.
+# Boundary: a weak argument order does not prove a strict result order.
+# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/native_exp_sign_factorial.lit
+# Implementation: src/verify/verify_builtin_rules/native_exp_sign_factorial.rs
+
 forall a, b R:
     a > 0
     b > 0

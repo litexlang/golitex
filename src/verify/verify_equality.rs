@@ -147,26 +147,18 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let mut comparison_steps = Vec::new();
         if self.objs_are_congruent_by_replay_safe_equality_routes(
             candidate_left,
             candidate_right,
             line_file.clone(),
-            &mut comparison_steps,
         )? {
-            let reason = if comparison_steps.is_empty() {
-                "known non-forall equality, direct computation, or structural congruence"
-            } else {
-                "one depth-limited builtin rule in structural comparison"
-            };
             return Ok(Some(known_equality_representative_replay_success(
                 statement_left,
                 statement_right,
                 candidate_left,
                 candidate_right,
                 line_file,
-                reason,
-                comparison_steps,
+                "known non-forall equality, pure computation, bounded symbolic normalization, or structural congruence",
             )));
         }
 
@@ -199,9 +191,10 @@ impl Runtime {
         line_file: LineFile,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        // Replay exactly one checked outer definition. Comparison may use one
-        // depth-limited builtin rule per syntax node, but builtin premises cannot
-        // instantiate forall facts or reopen definition replay.
+        // Replay exactly one checked outer definition. Comparison uses only
+        // known non-forall facts, obligation-free computation/normalization,
+        // and constructor descent; it cannot instantiate forall facts or
+        // reopen definition replay.
         let reduced = match self.unfold_known_fn_application_once(application_side, verify_state)? {
             Some(reduced) => reduced,
             None => {
@@ -225,13 +218,11 @@ impl Runtime {
         for comparison_candidate in comparison_candidates {
             let alpha_equal =
                 objs_equal_with_nested_binder_alpha_equivalence(&comparison_candidate, other_side);
-            let mut comparison_steps = Vec::new();
             let compared_equal = alpha_equal
                 || self.objs_are_congruent_by_replay_safe_equality_routes(
                     &comparison_candidate,
                     other_side,
                     line_file.clone(),
-                    &mut comparison_steps,
                 )?;
             if !compared_equal {
                 continue;
@@ -248,7 +239,6 @@ impl Runtime {
                 other_side,
                 line_file,
                 &reason,
-                comparison_steps,
             )));
         }
         Ok(None)
@@ -632,16 +622,15 @@ fn known_equality_representative_replay_success(
     candidate_right: &Obj,
     line_file: LineFile,
     reason: &str,
-    subgoals: Vec<StmtResult>,
 ) -> StmtResult {
     let fact: Fact =
         EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into();
     let msg = format!(
-        "{} via known equality representatives `{}` and `{}`; comparison nodes may use stored non-forall equalities, direct computation, or one depth-limited builtin rule, but never known forall or recursive definition replay",
+        "{} via known equality representatives `{}` and `{}`; comparison nodes may use stored non-forall equalities, pure computation, bounded symbolic normalization, or constructor descent, but never ordinary builtin rules, known forall, or recursive definition replay",
         reason, candidate_left, candidate_right
     );
     let verified_by = VerifiedByResult::fact_with_note(fact.clone(), Some(msg));
-    FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, subgoals).into()
+    FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
 }
 
 #[cfg(test)]
@@ -676,7 +665,7 @@ mod tests {
     }
 
     #[test]
-    fn checked_definition_replay_allows_one_builtin_but_blocks_forall_and_recursive_replay() {
+    fn checked_definition_replay_uses_only_safe_leaves() {
         let source = include_str!("verify_equality.rs");
         let replay_impl = source
             .split("fn try_verify_one_equality_representative_pair(")
@@ -702,12 +691,10 @@ mod tests {
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
             .expect("central structural matcher must follow the replay-safe comparator");
-        assert!(
-            replay_safe_comparator.contains("two_objs_can_be_calculated_and_equal_by_calculation")
-        );
-        assert!(replay_safe_comparator.contains(
-            "verify_atomic_fact_with_one_builtin_rule_for_equality_representative_replay"
-        ));
+        assert!(replay_safe_comparator
+            .contains("verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation"));
+        assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_one_builtin_rule"));
+        assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_builtin_rules_inner"));
         assert!(!replay_safe_comparator.contains("resolve_obj"));
         assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_known_forall"));
         assert!(!replay_safe_comparator.contains("verify_equal_fact"));
@@ -741,7 +728,7 @@ mod tests {
     }
 
     #[test]
-    fn replay_safe_comparator_allows_direct_computation_without_using_a_builtin_step() {
+    fn replay_safe_comparator_allows_computation_and_bounded_symbolic_normalization() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("replay_safe_computation");
         let one: Obj = Number::new("1".to_string()).into();
@@ -753,15 +740,23 @@ mod tests {
             &two,
             default_line_file(),
         ));
-        let mut builtin_steps = Vec::new();
         assert!(runtime
             .objs_are_congruent_by_replay_safe_equality_routes(
                 &one_plus_one,
                 &two,
                 default_line_file(),
-                &mut builtin_steps,
             )
             .expect("replay-safe comparison"));
-        assert!(builtin_steps.is_empty());
+
+        let x: Obj = Identifier::new("x".to_string()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let x_plus_zero: Obj = Add::new(x.clone(), zero).into();
+        assert!(runtime
+            .objs_are_congruent_by_replay_safe_equality_routes(
+                &x_plus_zero,
+                &x,
+                default_line_file(),
+            )
+            .expect("bounded symbolic normalization"));
     }
 }

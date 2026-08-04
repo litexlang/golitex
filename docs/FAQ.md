@@ -264,13 +264,13 @@ At outer round 0, equality replay enumerates the original objects and their
 stored equality representatives. For each pair it may unfold one checked outer
 definition on one side. If that exposes the same supported constructor, the
 central matcher descends componentwise. A comparison node first tries identity,
-an already stored non-forall equality class, direct evaluation, and structural
-descent. If those fail, that node may launch one ordinary depth-limited builtin
-rule. Its premises may use stored non-forall facts or terminal computation, but
-cannot launch another builtin rule. Equality replay also blocks known `forall`
-instantiation, comparison of two freshly unfolded sides, and recursive child
-definition unfolding. Thus `k = a * t` can bridge `k = a * t + 0`, while a
-second named function definition is not silently unfolded.
+an already stored non-forall equality class, pure numeric computation, bounded
+obligation-free rational-expression normalization, and structural descent. It
+does not launch the ordinary builtin dispatcher. Equality replay also blocks
+known `forall` instantiation, comparison of two freshly unfolded sides, and
+recursive child definition unfolding. Thus `k = a * t` can bridge
+`k = a * t + 0`, while a semantic builtin theorem or second named function
+definition is not silently used.
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality

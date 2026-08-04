@@ -231,15 +231,15 @@ At outer round 0, equality replay enumerates each side's original object and
 stored equality representatives. Per representative pair, it may unfold one
 checked outer definition on one side and feed equal top-level constructors to
 the central structural matcher. Every comparison node first tries identity, a
-stored non-forall equality class, direct computation, and constructor descent.
-On failure it may apply one depth-limited builtin rule whose premises are
-restricted to stored non-forall facts or terminal computation. The replay
-guard blocks known `forall`, a second builtin layer, comparison of two freshly
-unfolded sides, and recursive checked-definition replay. Function applications
-align trailing argument groups and then compare their remaining function
-prefixes, so the two sides need not have the same number of curried application
-groups. Other atomic-fact lookup may use known-only congruence for transport,
-but does not start the fuller child-proof route. One-step function unfolding is best-effort: a
+stored non-forall equality class, pure numeric computation, bounded
+obligation-free rational-expression normalization, and constructor descent.
+It never opens the ordinary builtin dispatcher. The replay guard blocks known
+`forall`, comparison of two freshly unfolded sides, and recursive
+checked-definition replay. Function applications align trailing argument
+groups and then compare their remaining function prefixes, so the two sides
+need not have the same number of curried application groups. Other atomic-fact
+lookup may use known-only congruence for transport, but does not start the
+fuller child-proof route. One-step function unfolding is best-effort: a
 template candidate captured under an already closed local binder scope is
 skipped when it can no longer be materialized, while a direct ill-defined
 template use is still rejected by the ordinary well-definedness check.

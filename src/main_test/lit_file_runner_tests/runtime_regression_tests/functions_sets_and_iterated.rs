@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn known_equality_candidate_replays_checked_function_bodies_with_bounded_builtin_leaves() {
+fn known_equality_candidate_replays_checked_function_bodies_with_safe_leaves() {
     let source_code = r#"
 have fn left(k N+) R = k
 have fn right(k N+) R = k + 1
@@ -52,48 +52,52 @@ value = combined(1)
         run_output
     );
 
-    let builtin_leaf_source = r#"
+    let normalization_leaf_source = r#"
 have q R
 have fn with_zero(t R) cart(R, R) = (0 + t, t)
 have value cart(R, R) = with_zero(q)
 value = (q, q)
 "#;
-    let mut builtin_leaf_runtime = Runtime::new();
-    builtin_leaf_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_uses_one_builtin_rule_for_structural_leaves",
+    let mut normalization_leaf_runtime = Runtime::new();
+    normalization_leaf_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_uses_bounded_normalization_for_structural_leaves",
     );
     let (stmt_results, runtime_error) =
-        run_source_code(builtin_leaf_source, &mut builtin_leaf_runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&builtin_leaf_runtime, &stmt_results, &runtime_error, false);
-    assert!(
-        run_succeeded,
-        "a structural leaf may use one depth-limited builtin equality rule:\n{}",
-        run_output
-    );
-
-    let builtin_representative_source = r#"
-have a, t R
-have k R = a * t
-k = a * t + 0
-"#;
-    let mut builtin_representative_runtime = Runtime::new();
-    builtin_representative_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_uses_builtin_rule_after_selecting_representative",
-    );
-    let (stmt_results, runtime_error) = run_source_code(
-        builtin_representative_source,
-        &mut builtin_representative_runtime,
-    );
+        run_source_code(normalization_leaf_source, &mut normalization_leaf_runtime);
     let (run_succeeded, run_output) = render_run_source_code_output(
-        &builtin_representative_runtime,
+        &normalization_leaf_runtime,
         &stmt_results,
         &runtime_error,
         false,
     );
     assert!(
         run_succeeded,
-        "the representative `a * t` should be compared with `a * t + 0` by one builtin rule:\n{}",
+        "a structural leaf may use bounded obligation-free symbolic normalization:\n{}",
+        run_output
+    );
+
+    let normalization_representative_source = r#"
+have a, t R
+have k R = a * t
+k = a * t + 0
+"#;
+    let mut normalization_representative_runtime = Runtime::new();
+    normalization_representative_runtime.new_file_path_new_env_new_name_scope(
+        "known_candidate_replay_normalizes_after_selecting_representative",
+    );
+    let (stmt_results, runtime_error) = run_source_code(
+        normalization_representative_source,
+        &mut normalization_representative_runtime,
+    );
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &normalization_representative_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        run_succeeded,
+        "the representative `a * t` should normalize against `a * t + 0` without an ordinary builtin rule:\n{}",
         run_output
     );
 
