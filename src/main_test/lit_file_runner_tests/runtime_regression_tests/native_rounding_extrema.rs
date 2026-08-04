@@ -1,6 +1,14 @@
 use super::*;
 
 #[test]
+fn symbolic_finite_set_size_is_nonnegative() {
+    assert_source_succeeds(
+        "have T finite_set\nfinite_set_size(T) >= 0",
+        "symbolic_finite_set_size_is_nonnegative",
+    );
+}
+
+#[test]
 fn native_rounding_extrema_names_ids_and_kinds_are_stable() {
     for name in [LCM, FLOOR, CEIL, MIN, MAX] {
         assert!(is_keyword(name));
@@ -105,9 +113,83 @@ forall a, b Z:
     a != 0 or b != 0
     =>:
         lcm(a, b) * gcd(a, b) = abs(a * b)
+
+forall a, b Z:
+    lcm(a, b) = lcm(b, a)
+
+forall a Z:
+    lcm(a, 0) = 0
+    lcm(0, a) = 0
+
+forall a, b Z:
+    a != 0
+    b != 0
+    =>:
+        lcm(a, b) % abs(a) = 0
+        lcm(a, b) % abs(b) = 0
+
+forall a, b Z*, m N+:
+    m % abs(a) = 0
+    m % abs(b) = 0
+    =>:
+        lcm(a, b) <= m
 "#,
         "native_rounding_extrema_symbolic_contracts_are_available",
     );
+}
+
+#[test]
+fn native_rounding_extrema_order_and_lattice_connections_are_available() {
+    assert_source_succeeds(
+        r#"
+forall a, b R:
+    a <= b
+    =>:
+        floor(a) <= floor(b)
+        ceil(a) <= ceil(b)
+
+forall a, b, c, d R:
+    a <= c
+    b <= d
+    =>:
+        min(a, b) <= min(c, d)
+        max(a, b) <= max(c, d)
+
+forall a, b, c R:
+    min(a, b) = min(b, a)
+    max(a, b) = max(b, a)
+    min(a, a) = a
+    max(a, a) = a
+    min(min(a, b), c) = min(a, min(b, c))
+    max(max(a, b), c) = max(a, max(b, c))
+    min(a, max(a, b)) = a
+    max(a, min(a, b)) = a
+
+forall x R, n Z:
+    floor(-x) = -ceil(x)
+    ceil(-x) = -floor(x)
+    floor(x + n) = floor(x) + n
+    ceil(x + n) = ceil(x) + n
+"#,
+        "native_rounding_extrema_order_and_lattice_connections_are_available",
+    );
+
+    for (label, source) in [
+        (
+            "floor_strict_order_is_not_preserved",
+            "forall a, b R:\n    a < b\n    =>:\n        floor(a) < floor(b)",
+        ),
+        (
+            "min_needs_both_component_orders",
+            "forall a, b, c, d R:\n    a <= c\n    =>:\n        min(a, b) <= min(c, d)",
+        ),
+        (
+            "floor_translation_needs_integer_shift",
+            "forall x, y R:\n    floor(x + y) = floor(x) + y",
+        ),
+    ] {
+        assert_source_fails(source, label);
+    }
 }
 
 #[test]

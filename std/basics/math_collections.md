@@ -123,6 +123,22 @@ still identify trial-division primality with `$prime`. This node supports the
 divisor laws, Euclidean reduction, Bezout's identity, reduced fractions, and
 the prime-divisor dichotomy.
 
+Native `lcm` follows the dual public pattern: the object and its primitive
+remainder/minimality rules remain in the kernel, while checked source theorems
+connect them to the transparent `divides` predicate. For positive inputs the
+module exports left and right divisibility and the least-positive-common-
+multiple theorem. The same quotient witness pattern exposes the native
+factorial remainder law as `earlier_factorial_divides_later`.
+
+## Native monotone and sign interfaces
+
+Strictly monotone native objects must be usable in both directions. The kernel
+therefore owns exp/ln order preservation, order reflection, and injectivity;
+this module gives the reflection directions stable theorem names. The sign
+object similarly owns its algebra and zero/nonzero characterization in the
+kernel, with named checked bridge theorems here. These are wrappers around
+mathematical consequences, not competing source-defined functions.
+
 ## Reduced rational fractions
 
 `is_reduced_fraction(a, b)` says that an integer numerator and positive

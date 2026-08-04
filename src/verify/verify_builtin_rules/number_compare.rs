@@ -163,7 +163,9 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_rounding_extrema_order(atomic_fact) {
+        if let Some(result) =
+            self.try_verify_native_rounding_extrema_order(atomic_fact, builtin_state)?
+        {
             return Ok(result);
         }
         if let Some(result) =
@@ -184,11 +186,18 @@ impl Runtime {
         {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_complex_abs_nonnegative(atomic_fact) {
+        if let Some(result) =
+            self.try_verify_native_complex_abs_order(atomic_fact, builtin_state)?
+        {
             return Ok(result);
         }
         if let Some(result) =
             self.try_verify_finite_nonempty_set_size_at_least_one(atomic_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_finite_set_size_nonnegative(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -445,8 +454,9 @@ impl Runtime {
     }
 }
 
-// Euler's number and pi are primitive positive real constants, and e is greater than one.
-// Example: `0 < e`, `pi > 0`, and `e > 1`.
+// Euler's number and pi are primitive positive real constants. The canonical
+// rational bounds expose `e > 1` and `3 < pi < 4` without decimal approximation.
+// Example: `0 < e`, `e > 1`, `3 < pi`, and `pi < 4`.
 fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<StmtResult> {
     let is_zero = |obj: &Obj| {
         matches!(
@@ -462,14 +472,20 @@ fn try_verify_native_real_constant_positive(atomic_fact: &AtomicFact) -> Option<
         )
     };
     let is_e = |obj: &Obj| matches!(obj, Obj::EulerNumber(_));
+    let is_pi = |obj: &Obj| matches!(obj, Obj::Pi(_));
+    let is_number = |obj: &Obj, expected: &str| matches!(obj, Obj::Number(number) if number.normalized_value == expected);
     let applies = match atomic_fact {
         AtomicFact::LessFact(fact) => {
             (is_zero(&fact.left) && is_native_positive_constant(&fact.right))
                 || (is_one(&fact.left) && is_e(&fact.right))
+                || (is_number(&fact.left, "3") && is_pi(&fact.right))
+                || (is_pi(&fact.left) && is_number(&fact.right, "4"))
         }
         AtomicFact::GreaterFact(fact) => {
             (is_native_positive_constant(&fact.left) && is_zero(&fact.right))
                 || (is_e(&fact.left) && is_one(&fact.right))
+                || (is_pi(&fact.left) && is_number(&fact.right, "3"))
+                || (is_number(&fact.left, "4") && is_pi(&fact.right))
         }
         _ => false,
     };
@@ -842,6 +858,40 @@ impl Runtime {
                 InferResult::new(),
                 "finite_nonempty_set_size_at_least_one".to_string(),
                 vec![finite_result, nonempty_result],
+            )
+            .into(),
+        ))
+    }
+
+    // Cardinality is nonnegative even when the finite set may be empty.
+    // Keep this direct bridge separate from the nonempty lower bound so a
+    // symbolic `finite_set` parameter does not need a recursive N-membership
+    // round merely to prove `finite_set_size(S) >= 0`.
+    fn try_verify_finite_set_size_nonnegative(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let is_zero =
+            |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
+        let (size, line_file) = match atomic_fact {
+            AtomicFact::GreaterEqualFact(f) if is_zero(&f.right) => (&f.left, f.line_file.clone()),
+            AtomicFact::LessEqualFact(f) if is_zero(&f.left) => (&f.right, f.line_file.clone()),
+            _ => return Ok(None),
+        };
+        let Obj::FiniteSetSize(size) = size else {
+            return Ok(None);
+        };
+        let finite: AtomicFact = IsFiniteSetFact::new(size.set.as_ref().clone(), line_file).into();
+        let result = self.verify_builtin_rule_premise(&finite, builtin_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "finite set cardinality is nonnegative".to_string(),
+                vec![result],
             )
             .into(),
         ))

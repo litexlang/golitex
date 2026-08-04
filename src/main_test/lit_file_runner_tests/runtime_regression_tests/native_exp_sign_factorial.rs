@@ -193,6 +193,105 @@ forall a, b R+:
 }
 
 #[test]
+fn native_exp_ln_order_and_equality_are_reflected() {
+    assert_source_succeeds(
+        r#"
+forall a, b R:
+    exp(a) < exp(b)
+    =>:
+        a < b
+
+forall a, b R:
+    exp(a) <= exp(b)
+    =>:
+        a <= b
+
+forall a, b R:
+    exp(a) = exp(b)
+    =>:
+        a = b
+
+forall a, b R+:
+    ln(a) < ln(b)
+    =>:
+        a < b
+
+forall a, b R+:
+    ln(a) <= ln(b)
+    =>:
+        a <= b
+
+forall a, b R+:
+    ln(a) = ln(b)
+    =>:
+        a = b
+"#,
+        "native_exp_ln_order_and_equality_are_reflected",
+    );
+}
+
+#[test]
+fn native_sign_order_and_algebra_connections_are_available() {
+    assert_source_succeeds(
+        r#"
+forall a, b R:
+    a <= b
+    =>:
+        sign(a) <= sign(b)
+
+forall a, b R:
+    sign(-a) = -sign(a)
+    sign(a * b) = sign(a) * sign(b)
+
+forall x R:
+    sign(x) = 0
+    =>:
+        x = 0
+
+forall x R:
+    x != 0
+    =>:
+        sign(x) != 0
+
+forall x R:
+    sign(x) != 0
+    =>:
+        x != 0
+"#,
+        "native_sign_order_and_algebra_connections_are_available",
+    );
+
+    assert_source_fails(
+        "forall a, b R:\n    a < b\n    =>:\n        sign(a) < sign(b)",
+        "sign_does_not_preserve_strict_order",
+    );
+}
+
+#[test]
+fn native_factorial_order_and_divisibility_connections_are_available() {
+    assert_source_succeeds(
+        r#"
+forall m, n N:
+    m <= n
+    =>:
+        factorial(m) <= factorial(n)
+        factorial(n) % factorial(m) = 0
+
+forall m, n N+:
+    m < n
+    =>:
+        factorial(m) < factorial(n)
+"#,
+        "native_factorial_order_and_divisibility_connections_are_available",
+    );
+
+    assert_source_fails(
+        "factorial(0) < factorial(1)",
+        "factorial_is_not_strictly_monotone_at_zero",
+    );
+}
+
+#[test]
 fn native_exp_sign_factorial_reject_invalid_domains_and_arities() {
     for (label, source) in [
         ("exp_set", "exp({1}) = 1"),

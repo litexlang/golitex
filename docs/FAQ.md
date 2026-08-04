@@ -768,6 +768,31 @@ The built-in `seq(S)` can still have special syntax or verifier support. The
 template version shows the underlying set-theoretic shape: a sequence type is a
 parameterized family of function spaces.
 
+## If AI can write Lean proofs, what is Litex for?
+
+AI can make theorem-prover code much cheaper to generate. It can often find
+lemma names, write tactic calls, and discharge routine side conditions. That
+is valuable, but generation cost and understanding cost are different. A
+machine-generated proof can be accepted by a kernel while still requiring a
+mathematician to reconstruct the simple mathematical idea from a large amount
+of system-facing code.
+
+Litex tests whether the durable artifact can stay closer to that mathematical
+idea. AI may fill routine details, while the checked source records the facts,
+witnesses, cases, definitions, and calculation chains that a reader needs to
+understand and modify the argument. When Litex omits a routine step from the
+surface, its verifier output should still expose the rule, known fact,
+definition, theorem, or explicit assumption that justified the step.
+
+This is not a claim that Lean proofs must be long or unreadable. Lean has
+powerful automation and can support concise, well-designed interfaces. Litex
+is testing a different default interface: can checked mathematics remain
+readable after AI has made proof generation abundant? The epsilon-product
+example in [Litex and Lean](Litex_and_Lean.md#ai-lowers-generation-cost-not-automatically-understanding-cost)
+is the concrete test: the durable proof should preserve the short estimate
+`abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon` while keeping
+its side conditions auditable.
+
 ## What is fundamentally different about Litex?
 
 Litex's core difference is its matching-and-substitution verification
@@ -854,6 +879,14 @@ For example, a function application must have an argument in the function's
 domain, and a division must have a nonzero denominator. If those facts are not
 available, Litex should report a problem with the expression, not merely say
 that the desired equality is `unknown`.
+
+A function name need not carry its signature directly when it is already known
+equal to a registered function. After `let g = f`, well-definedness may follow
+the stored equality class from `g` to `f`, reuse `f`'s checked signature, and
+then check the actual arguments against `f`'s domain. This is not circular
+truth checking: Litex reads only equalities and callable metadata that are
+already in the context, and it does not launch general equality or `forall`
+search from well-definedness.
 
 This design matters because many mathematical mistakes are not false theorems
 but ill-formed statements: applying a function outside its domain, using a

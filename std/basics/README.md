@@ -84,6 +84,10 @@ they belong to the set and bound every member. Literal calls such as
 | `gcd_euclidean_step(a, b)` | `gcd(a, b) = gcd(b, a % abs(b))` when `b != 0` |
 | `bezout_identity(a, b)` | there are `x, y : Z` with `gcd(a, b) = x * a + y * b` |
 | `gcd_of_prime_is_one_or_prime(a, p)` | for prime `p`, `gcd(a, p)` is `1` or `p` |
+| `lcm_is_multiple_of_left(a, b)` | positive `a` divides `lcm(a, b)` |
+| `lcm_is_multiple_of_right(a, b)` | positive `b` divides `lcm(a, b)` |
+| `lcm_le_common_positive_multiple(a, b, m)` | `lcm(a, b) <= m` for every positive common multiple `m` |
+| `earlier_factorial_divides_later(m, n)` | `factorial(m)` divides `factorial(n)` when `m <= n` |
 
 Except where a row states a stronger condition, gcd theorems require
 `a != 0 or b != 0`.
@@ -96,6 +100,20 @@ that construction equal to native `gcd`.
 `prime_implies_prime_by_trial_division` and
 `prime_by_trial_division_implies_prime` connect the source and native prime
 interfaces.
+
+### Native monotone-function connections
+
+| Theorem | Conclusion |
+| --- | --- |
+| `exp_injective(a, b)` | `exp(a) = exp(b)` implies `a = b` |
+| `exp_reflects_strict_order(a, b)` | `exp(a) < exp(b)` implies `a < b` |
+| `exp_reflects_weak_order(a, b)` | `exp(a) <= exp(b)` implies `a <= b` |
+| `ln_injective(a, b)` | `ln(a) = ln(b)` implies `a = b` on `R+` |
+| `ln_reflects_strict_order(a, b)` | `ln(a) < ln(b)` implies `a < b` on `R+` |
+| `ln_reflects_weak_order(a, b)` | `ln(a) <= ln(b)` implies `a <= b` on `R+` |
+| `sign_zero_implies_zero(x)` | `sign(x) = 0` implies `x = 0` |
+| `sign_nonzero_iff_argument_nonzero_forward(x)` | `x != 0` implies `sign(x) != 0` |
+| `sign_nonzero_iff_argument_nonzero_reverse(x)` | `sign(x) != 0` implies `x != 0` |
 
 ## Minimal use
 

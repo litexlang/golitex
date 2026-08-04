@@ -128,11 +128,11 @@ impl Runtime {
                         .two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
                 {
                     "direct numeric computation"
-                } else if objs_equal_by_rational_expression_evaluation(&fact.left, &fact.right)
-                    || objs_equal_by_rational_expression_evaluation(&left_resolved, &right_resolved)
+                } else if objs_equal_by_bounded_symbolic_normalization(&fact.left, &fact.right)
+                    || objs_equal_by_bounded_symbolic_normalization(&left_resolved, &right_resolved)
                 {
                     // Bounded, obligation-free symbolic normalization. Example:
-                    // `a * t + 0 = a * t`.
+                    // `a * t + 0 = a * t` and `abs(x - y) = abs(y - x)`.
                     "bounded symbolic normalization"
                 } else {
                     return StmtUnknown::new().into();
@@ -203,6 +203,22 @@ impl Runtime {
         let result = self.verify_atomic_fact_with_builtin_rules_inner(goal, &child_state)?;
         Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
+}
+
+fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool {
+    if objs_equal_by_rational_expression_evaluation(left, right) {
+        return true;
+    }
+
+    // Absolute value is invariant under sign change. This remains a bounded
+    // computation leaf: it creates no proof obligations and applies no rules.
+    // Example: `abs(x - y) = abs(y - x)`.
+    let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (left, right) else {
+        return false;
+    };
+    let negative_one: Obj = Number::new("-1".to_string()).into();
+    let negated_right: Obj = Mul::new(negative_one, right_abs.arg.as_ref().clone()).into();
+    objs_equal_by_rational_expression_evaluation(left_abs.arg.as_ref(), &negated_right)
 }
 
 #[cfg(test)]

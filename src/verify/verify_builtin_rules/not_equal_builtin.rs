@@ -13,6 +13,16 @@ impl Runtime {
         if let Some(result) = self.try_verify_native_i_nonzero(not_equal_fact) {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_native_complex_abs_nonzero(not_equal_fact, builtin_state)?
+        {
+            return Ok(result);
+        }
+        if let Some(result) =
+            self.try_verify_native_sign_nonzero_characterization(not_equal_fact)?
+        {
+            return Ok(result);
+        }
         if let Some(result) = try_verify_native_real_constant_nonzero(not_equal_fact) {
             return Ok(result);
         }

@@ -24,6 +24,130 @@ impl Runtime {
         None
     }
 
+    // Strict monotonicity makes exp injective on R and ln injective on R+.
+    // Example: a known `exp(a) = exp(b)` proves `a = b`.
+    pub(super) fn try_verify_native_exp_ln_injectivity(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let exp_left: Obj = Exp::new(left.clone()).into();
+        let exp_right: Obj = Exp::new(right.clone()).into();
+        let exp_result =
+            self.verify_objs_are_equal_by_known_equality(&exp_left, &exp_right, line_file.clone());
+        if exp_result.is_true() {
+            return Ok(Some(native_equal_success(
+                left,
+                right,
+                line_file,
+                "injectivity of native exp",
+                vec![exp_result],
+            )));
+        }
+        let ln_left: Obj = Ln::new(left.clone()).into();
+        let ln_right: Obj = Ln::new(right.clone()).into();
+        let ln_result =
+            self.verify_objs_are_equal_by_known_equality(&ln_left, &ln_right, line_file.clone());
+        if !ln_result.is_true() {
+            return Ok(None);
+        }
+        let zero: Obj = Number::new("0".to_string()).into();
+        let mut positivity_results = Vec::new();
+        for arg in [left, right] {
+            let positive: AtomicFact =
+                LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
+            let result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            positivity_results.push(result);
+        }
+        positivity_results.push(ln_result);
+        Ok(Some(native_equal_success(
+            left,
+            right,
+            line_file,
+            "injectivity of native ln",
+            positivity_results,
+        )))
+    }
+
+    // The zero value of sign characterizes the zero argument.
+    // Example: a known `sign(x) = 0` proves `x = 0`.
+    pub(super) fn try_verify_native_sign_zero_reflection(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        _builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let arg = if normalized_number_is(left, "0") {
+            right
+        } else if normalized_number_is(right, "0") {
+            left
+        } else {
+            return Ok(None);
+        };
+        let sign: Obj = Sign::new(arg.clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let result = self.verify_objs_are_equal_by_known_equality(&sign, &zero, line_file.clone());
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(native_equal_success(
+            left,
+            right,
+            line_file,
+            "sign is zero only at zero",
+            vec![result],
+        )))
+    }
+
+    // Nonzeroness is likewise reflected by sign.
+    // Examples: `x != 0 => sign(x) != 0` and the converse.
+    pub(super) fn try_verify_native_sign_nonzero_characterization(
+        &mut self,
+        goal: &NotEqualFact,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let zero: Obj = Number::new("0".to_string()).into();
+        let (nonzero_obj, zero_on_right) = if normalized_number_is(&goal.right, "0") {
+            (&goal.left, true)
+        } else if normalized_number_is(&goal.left, "0") {
+            (&goal.right, false)
+        } else {
+            return Ok(None);
+        };
+        let premise: AtomicFact = if let Obj::Sign(sign) = nonzero_obj {
+            NotEqualFact::new(
+                sign.arg.as_ref().clone(),
+                zero.clone(),
+                goal.line_file.clone(),
+            )
+            .into()
+        } else {
+            let sign: Obj = Sign::new(nonzero_obj.clone()).into();
+            if zero_on_right {
+                NotEqualFact::new(sign, zero.clone(), goal.line_file.clone()).into()
+            } else {
+                NotEqualFact::new(zero.clone(), sign, goal.line_file.clone()).into()
+            }
+        };
+        let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                goal.clone().into(),
+                "sign is nonzero exactly for nonzero arguments".to_string(),
+                vec![result],
+            )
+            .into(),
+        ))
+    }
+
     // Exponential turns sums into products and differences into quotients;
     // natural logarithm turns positive products into sums and quotients into differences.
     // Examples: `exp(a+b)=exp(a)*exp(b)` and `ln(a*b)=ln(a)+ln(b)`.
@@ -101,6 +225,27 @@ impl Runtime {
         None
     }
 
+    // Sign is odd and multiplicative on real inputs.
+    // Examples: `sign(-x) = -sign(x)` and
+    // `sign(a*b) = sign(a)*sign(b)`.
+    pub(super) fn try_verify_native_sign_algebra(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        if !sign_algebra_shape(left, right) && !sign_algebra_shape(right, left) {
+            return None;
+        }
+        Some(native_equal_success(
+            left,
+            right,
+            line_file,
+            "native sign oddness or multiplicativity",
+            Vec::new(),
+        ))
+    }
+
     // Natural factorial obeys the successor recurrence.
     // Example: `factorial(n + 1) = (n + 1) * factorial(n)`.
     pub(super) fn try_verify_native_factorial_recurrence(
@@ -121,6 +266,46 @@ impl Runtime {
         None
     }
 
+    // Earlier factorials divide later factorials.
+    // Example: `m <= n => factorial(n) % factorial(m) = 0`.
+    pub(super) fn try_verify_native_factorial_divisibility(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (remainder, zero) = match (left, right) {
+            (Obj::Mod(remainder), zero) | (zero, Obj::Mod(remainder)) => (remainder, zero),
+            _ => return Ok(None),
+        };
+        if !normalized_number_is(zero, "0") {
+            return Ok(None);
+        }
+        let (Obj::Factorial(later), Obj::Factorial(earlier)) =
+            (remainder.left.as_ref(), remainder.right.as_ref())
+        else {
+            return Ok(None);
+        };
+        let premise: AtomicFact = LessEqualFact::new(
+            earlier.arg.as_ref().clone(),
+            later.arg.as_ref().clone(),
+            line_file.clone(),
+        )
+        .into();
+        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(native_equal_success(
+            left,
+            right,
+            line_file,
+            "earlier factorial divides later factorial",
+            vec![result],
+        )))
+    }
+
     // Characteristic bounds for the second native-function batch.
     // Examples: `0 < exp(x)`, `-1 <= sign(x) <= 1`, and `1 <= factorial(n)`.
     pub(super) fn try_verify_native_exp_sign_factorial_order(
@@ -128,6 +313,16 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_native_factorial_monotonicity(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
+        if let Some(result) =
+            self.try_verify_native_sign_monotonicity(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
         if let Some(result) =
             self.try_verify_native_exp_ln_monotonicity(atomic_fact, builtin_state)?
         {
@@ -146,6 +341,105 @@ impl Runtime {
                 atomic_fact.clone().into(),
                 "native exp/sign/factorial characteristic order bound".to_string(),
                 subgoals,
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_native_factorial_monotonicity(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Factorial preserves weak order on N and strict order from a positive
+        // smaller argument. Examples: `m <= n => m! <= n!` and
+        // `m in N+, m < n => m! < n!`.
+        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let (left, right, strict, line_file) = match &normalized {
+            AtomicFact::LessFact(f) => (&f.left, &f.right, true, f.line_file.clone()),
+            AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false, f.line_file.clone()),
+            _ => return Ok(None),
+        };
+        let (Obj::Factorial(left), Obj::Factorial(right)) = (left, right) else {
+            return Ok(None);
+        };
+        let mut premises: Vec<AtomicFact> = Vec::new();
+        if strict {
+            premises.push(
+                InFact::new(
+                    left.arg.as_ref().clone(),
+                    StandardSet::NPos.into(),
+                    line_file.clone(),
+                )
+                .into(),
+            );
+            premises.push(
+                LessFact::new(
+                    left.arg.as_ref().clone(),
+                    right.arg.as_ref().clone(),
+                    line_file,
+                )
+                .into(),
+            );
+        } else {
+            premises.push(
+                LessEqualFact::new(
+                    left.arg.as_ref().clone(),
+                    right.arg.as_ref().clone(),
+                    line_file,
+                )
+                .into(),
+            );
+        }
+        let mut results = Vec::new();
+        for premise in premises {
+            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "native factorial monotonicity".to_string(),
+                results,
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_native_sign_monotonicity(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // The real sign function preserves weak order but not strict order.
+        // Example: `a <= b => sign(a) <= sign(b)`.
+        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        else {
+            return Ok(None);
+        };
+        let (Obj::Sign(left), Obj::Sign(right)) = (&f.left, &f.right) else {
+            return Ok(None);
+        };
+        let premise: AtomicFact = LessEqualFact::new(
+            left.arg.as_ref().clone(),
+            right.arg.as_ref().clone(),
+            f.line_file.clone(),
+        )
+        .into();
+        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "native sign preserves weak order".to_string(),
+                vec![result],
             )
             .into(),
         ))
@@ -230,6 +524,74 @@ impl Runtime {
             AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false, f.line_file.clone()),
             _ => return Ok(None),
         };
+
+        // Order reflection is the converse interface supplied by strict
+        // monotonicity. Try it before the forward native-object shapes below.
+        let reflected_premises: Vec<AtomicFact> = if strict {
+            vec![
+                LessFact::new(
+                    Exp::new(left.clone()).into(),
+                    Exp::new(right.clone()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+                LessFact::new(
+                    Ln::new(left.clone()).into(),
+                    Ln::new(right.clone()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+            ]
+        } else {
+            vec![
+                LessEqualFact::new(
+                    Exp::new(left.clone()).into(),
+                    Exp::new(right.clone()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+                LessEqualFact::new(
+                    Ln::new(left.clone()).into(),
+                    Ln::new(right.clone()).into(),
+                    line_file.clone(),
+                )
+                .into(),
+            ]
+        };
+        for (index, premise) in reflected_premises.into_iter().enumerate() {
+            let result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&premise)?;
+            if !result.is_true() {
+                continue;
+            }
+            let mut subgoals = Vec::new();
+            if index == 1 {
+                let zero: Obj = Number::new("0".to_string()).into();
+                for arg in [left, right] {
+                    let positive: AtomicFact =
+                        LessFact::new(zero.clone(), arg.clone(), line_file.clone()).into();
+                    let result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+                    if !result.is_true() {
+                        subgoals.clear();
+                        break;
+                    }
+                    subgoals.push(result);
+                }
+                if subgoals.len() != 2 {
+                    continue;
+                }
+            }
+            subgoals.push(result);
+            let order_kind = if strict { "strict" } else { "weak" };
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    format!("native exp/ln reflects {order_kind} order"),
+                    subgoals,
+                )
+                .into(),
+            ));
+        }
 
         let (left_arg, right_arg, function_name, require_positive) = match (left, right) {
             (Obj::Exp(left_exp), Obj::Exp(right_exp)) => {
@@ -377,6 +739,45 @@ fn sign_abs_identity_shape(product: &Obj, other: &Obj) -> bool {
         _ => return false,
     };
     same(&sign.arg, &abs.arg) && same(&sign.arg, other)
+}
+
+fn sign_algebra_shape(native: &Obj, other: &Obj) -> bool {
+    let Obj::Sign(sign) = native else {
+        return false;
+    };
+    if let (Obj::Mul(product), Obj::Mul(other_product)) = (sign.arg.as_ref(), other) {
+        if let (Obj::Sign(left_sign), Obj::Sign(right_sign)) =
+            (other_product.left.as_ref(), other_product.right.as_ref())
+        {
+            if same(&product.left, &left_sign.arg) && same(&product.right, &right_sign.arg) {
+                return true;
+            }
+        }
+    }
+
+    let Some(inner) = negative_one_factor(sign.arg.as_ref()) else {
+        return false;
+    };
+    let Some(other_inner) = negative_one_factor(other) else {
+        return false;
+    };
+    let Obj::Sign(other_sign) = other_inner else {
+        return false;
+    };
+    same(inner, &other_sign.arg)
+}
+
+fn negative_one_factor(obj: &Obj) -> Option<&Obj> {
+    let Obj::Mul(product) = obj else {
+        return None;
+    };
+    if normalized_number_is(&product.left, "-1") {
+        Some(product.right.as_ref())
+    } else if normalized_number_is(&product.right, "-1") {
+        Some(product.left.as_ref())
+    } else {
+        None
+    }
 }
 
 fn factorial_recurrence_shape(factorial: &Obj, product: &Obj) -> bool {

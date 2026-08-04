@@ -1,3 +1,4 @@
+use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
@@ -33,6 +34,48 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 format!("{name} fixes integer inputs"),
+                vec![premise_result],
+            )
+            .into(),
+        ))
+    }
+
+    // Floor and ceiling are dual under negation and commute with integer shifts.
+    // Examples: `floor(-x) = -ceil(x)` and
+    // `n in Z => floor(x+n) = floor(x)+n`.
+    pub(super) fn try_verify_native_rounding_algebra_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    "native floor/ceil negation duality".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            ));
+        }
+
+        let shift = rounding_integer_translation_shift(left, right)
+            .or_else(|| rounding_integer_translation_shift(right, left));
+        let Some(shift) = shift else {
+            return Ok(None);
+        };
+        let premise: AtomicFact =
+            InFact::new(shift, StandardSet::Z.into(), line_file.clone()).into();
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if !premise_result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "native floor/ceil integer translation".to_string(),
                 vec![premise_result],
             )
             .into(),
@@ -92,13 +135,24 @@ impl Runtime {
     // Examples: `floor(x) <= x < floor(x)+1`, `ceil(x)-1 < x <= ceil(x)`,
     // `min(a,b) <= a`, and `a <= max(a,b)`.
     pub(super) fn try_verify_native_rounding_extrema_order(
-        &self,
+        &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Option<StmtResult> {
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_native_lcm_le_common_positive_multiple(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
+        if let Some(result) =
+            self.try_verify_native_rounding_extrema_monotonicity(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
         let (left, right, is_strict) = match atomic_fact {
             AtomicFact::LessFact(f) => (&f.left, &f.right, true),
             AtomicFact::LessEqualFact(f) => (&f.left, &f.right, false),
-            _ => return None,
+            _ => return Ok(None),
         };
         let verified = if is_strict {
             floor_upper_shape(left, right) || ceil_lower_shape(left, right)
@@ -108,14 +162,176 @@ impl Runtime {
                 || min_lower_shape(left, right)
                 || max_upper_shape(left, right)
         };
-        verified.then(|| {
+        Ok(verified.then(|| {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
                 "native rounding/extremum characteristic order bound".to_string(),
                 Vec::new(),
             )
             .into()
-        })
+        }))
+    }
+
+    fn try_verify_native_lcm_le_common_positive_multiple(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // A positive common multiple bounds the least common multiple.
+        // The modulo premises intentionally use abs(input), matching the
+        // Euclidean remainder interface for signed integers.
+        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        else {
+            return Ok(None);
+        };
+        let Obj::Lcm(lcm) = &f.left else {
+            return Ok(None);
+        };
+        let zero: Obj = Number::new("0".to_string()).into();
+        let premises: Vec<AtomicFact> = vec![
+            InFact::new(
+                f.right.clone(),
+                StandardSet::NPos.into(),
+                f.line_file.clone(),
+            )
+            .into(),
+            EqualFact::new(
+                Mod::new(f.right.clone(), Abs::new(lcm.left.as_ref().clone()).into()).into(),
+                zero.clone(),
+                f.line_file.clone(),
+            )
+            .into(),
+            EqualFact::new(
+                Mod::new(f.right.clone(), Abs::new(lcm.right.as_ref().clone()).into()).into(),
+                zero,
+                f.line_file.clone(),
+            )
+            .into(),
+        ];
+        let mut results = Vec::new();
+        for premise in premises {
+            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "native lcm is bounded by every positive common multiple".to_string(),
+                results,
+            )
+            .into(),
+        ))
+    }
+
+    fn try_verify_native_rounding_extrema_monotonicity(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Floor, ceiling, min, and max preserve weak componentwise order.
+        // Examples: `a <= b => floor(a) <= floor(b)` and
+        // `a <= c, b <= d => min(a,b) <= min(c,d)`.
+        let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
+        else {
+            return Ok(None);
+        };
+        let (premises, reason) = match (&f.left, &f.right) {
+            (Obj::Floor(left), Obj::Floor(right)) => (
+                vec![LessEqualFact::new(
+                    left.arg.as_ref().clone(),
+                    right.arg.as_ref().clone(),
+                    f.line_file.clone(),
+                )
+                .into()],
+                "native floor preserves weak order",
+            ),
+            (Obj::Ceil(left), Obj::Ceil(right)) => (
+                vec![LessEqualFact::new(
+                    left.arg.as_ref().clone(),
+                    right.arg.as_ref().clone(),
+                    f.line_file.clone(),
+                )
+                .into()],
+                "native ceil preserves weak order",
+            ),
+            (Obj::Min(left), Obj::Min(right)) => (
+                vec![
+                    LessEqualFact::new(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                    LessEqualFact::new(
+                        left.right.as_ref().clone(),
+                        right.right.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                ],
+                "native min preserves componentwise weak order",
+            ),
+            (Obj::Max(left), Obj::Max(right)) => (
+                vec![
+                    LessEqualFact::new(
+                        left.left.as_ref().clone(),
+                        right.left.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                    LessEqualFact::new(
+                        left.right.as_ref().clone(),
+                        right.right.as_ref().clone(),
+                        f.line_file.clone(),
+                    )
+                    .into(),
+                ],
+                "native max preserves componentwise weak order",
+            ),
+            _ => return Ok(None),
+        };
+
+        let mut results = Vec::new();
+        for premise in premises {
+            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                reason.to_string(),
+                results,
+            )
+            .into(),
+        ))
+    }
+
+    // Min and max form the ordinary lattice operations on real numbers.
+    // Examples: `min(a,b)=min(b,a)`, `min(a,a)=a`, and
+    // `min(a,max(a,b))=a`, with dual max laws.
+    pub(super) fn try_verify_native_min_max_lattice_equality(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        if !min_max_lattice_shape(left, right) && !min_max_lattice_shape(right, left) {
+            return None;
+        }
+        Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "native min/max lattice identity".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
     }
 
     // The least common multiple and positive gcd satisfy lcm(a,b)gcd(a,b)=|ab|.
@@ -134,6 +350,28 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "lcm times gcd is the absolute product".to_string(),
+                Vec::new(),
+            )
+            .into(),
+        )
+    }
+
+    // Lcm is symmetric, vanishes with a zero argument, and is divisible by
+    // either nonzero input. Examples: `lcm(a,b)=lcm(b,a)` and
+    // `lcm(a,b) % abs(a) = 0` when the remainder is well-defined.
+    pub(super) fn try_verify_native_lcm_basic_equality(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+    ) -> Option<StmtResult> {
+        if !lcm_basic_shape(left, right) && !lcm_basic_shape(right, left) {
+            return None;
+        }
+        Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "native lcm symmetry, zero law, or divisibility".to_string(),
                 Vec::new(),
             )
             .into(),
@@ -217,4 +455,187 @@ fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
         && verify_equality_by_they_are_the_same(&lcm.right, &gcd.right)
         && verify_equality_by_they_are_the_same(&lcm.left, &arguments_product.left)
         && verify_equality_by_they_are_the_same(&lcm.right, &arguments_product.right)
+}
+
+fn lcm_basic_shape(native: &Obj, other: &Obj) -> bool {
+    if let Obj::Lcm(lcm) = native {
+        if let Obj::Lcm(swapped) = other {
+            if same(&lcm.left, &swapped.right) && same(&lcm.right, &swapped.left) {
+                return true;
+            }
+        }
+        if normalized_number_is(other, "0")
+            && (normalized_number_is(&lcm.left, "0") || normalized_number_is(&lcm.right, "0"))
+        {
+            return true;
+        }
+    }
+    let Obj::Mod(remainder) = native else {
+        return false;
+    };
+    if !normalized_number_is(other, "0") {
+        return false;
+    }
+    let Obj::Lcm(lcm) = remainder.left.as_ref() else {
+        return false;
+    };
+    let Obj::Abs(modulus) = remainder.right.as_ref() else {
+        return false;
+    };
+    same(&modulus.arg, &lcm.left) || same(&modulus.arg, &lcm.right)
+}
+
+fn min_max_lattice_shape(lattice: &Obj, other: &Obj) -> bool {
+    match lattice {
+        Obj::Min(min) => {
+            if same(&min.left, &min.right) && same(&min.left, other) {
+                return true;
+            }
+            if let Obj::Min(swapped) = other {
+                if same(&min.left, &swapped.right) && same(&min.right, &swapped.left) {
+                    return true;
+                }
+            }
+            if same(&min.left, other) && max_contains(min.right.as_ref(), other) {
+                return true;
+            }
+            if same(&min.right, other) && max_contains(min.left.as_ref(), other) {
+                return true;
+            }
+            min_associative_shape(min, other)
+        }
+        Obj::Max(max) => {
+            if same(&max.left, &max.right) && same(&max.left, other) {
+                return true;
+            }
+            if let Obj::Max(swapped) = other {
+                if same(&max.left, &swapped.right) && same(&max.right, &swapped.left) {
+                    return true;
+                }
+            }
+            if same(&max.left, other) && min_contains(max.right.as_ref(), other) {
+                return true;
+            }
+            if same(&max.right, other) && min_contains(max.left.as_ref(), other) {
+                return true;
+            }
+            max_associative_shape(max, other)
+        }
+        _ => false,
+    }
+}
+
+fn min_associative_shape(left: &Min, other: &Obj) -> bool {
+    let Obj::Min(left_inner) = left.left.as_ref() else {
+        return false;
+    };
+    let Obj::Min(right_outer) = other else {
+        return false;
+    };
+    let Obj::Min(right_inner) = right_outer.right.as_ref() else {
+        return false;
+    };
+    same(&left_inner.left, &right_outer.left)
+        && same(&left_inner.right, &right_inner.left)
+        && same(&left.right, &right_inner.right)
+}
+
+fn max_associative_shape(left: &Max, other: &Obj) -> bool {
+    let Obj::Max(left_inner) = left.left.as_ref() else {
+        return false;
+    };
+    let Obj::Max(right_outer) = other else {
+        return false;
+    };
+    let Obj::Max(right_inner) = right_outer.right.as_ref() else {
+        return false;
+    };
+    same(&left_inner.left, &right_outer.left)
+        && same(&left_inner.right, &right_inner.left)
+        && same(&left.right, &right_inner.right)
+}
+
+fn min_contains(obj: &Obj, expected: &Obj) -> bool {
+    let Obj::Min(min) = obj else {
+        return false;
+    };
+    same(&min.left, expected) || same(&min.right, expected)
+}
+
+fn max_contains(obj: &Obj, expected: &Obj) -> bool {
+    let Obj::Max(max) = obj else {
+        return false;
+    };
+    same(&max.left, expected) || same(&max.right, expected)
+}
+
+fn same(left: &Obj, right: &Obj) -> bool {
+    verify_equality_by_they_are_the_same(left, right)
+}
+
+fn rounding_negation_shape(native: &Obj, other: &Obj) -> bool {
+    let (arg, expect_floor) = match native {
+        Obj::Floor(floor) => (floor.arg.as_ref(), false),
+        Obj::Ceil(ceil) => (ceil.arg.as_ref(), true),
+        _ => return false,
+    };
+    let Some(inner) = negative_one_factor(arg) else {
+        return false;
+    };
+    let Some(other_rounding) = negative_one_factor(other) else {
+        return false;
+    };
+    match other_rounding {
+        Obj::Floor(floor) if expect_floor => same(inner, &floor.arg),
+        Obj::Ceil(ceil) if !expect_floor => same(inner, &ceil.arg),
+        _ => false,
+    }
+}
+
+fn rounding_integer_translation_shift(native: &Obj, other: &Obj) -> Option<Obj> {
+    let (arg, is_floor) = match native {
+        Obj::Floor(floor) => (floor.arg.as_ref(), true),
+        Obj::Ceil(ceil) => (ceil.arg.as_ref(), false),
+        _ => return None,
+    };
+    let Obj::Add(argument_sum) = arg else {
+        return None;
+    };
+    let Obj::Add(result_sum) = other else {
+        return None;
+    };
+    for (rounded, shift) in [
+        (result_sum.left.as_ref(), result_sum.right.as_ref()),
+        (result_sum.right.as_ref(), result_sum.left.as_ref()),
+    ] {
+        let rounded_arg = match rounded {
+            Obj::Floor(floor) if is_floor => floor.arg.as_ref(),
+            Obj::Ceil(ceil) if !is_floor => ceil.arg.as_ref(),
+            _ => continue,
+        };
+        if (same(&argument_sum.left, rounded_arg) && same(&argument_sum.right, shift))
+            || (same(&argument_sum.right, rounded_arg) && same(&argument_sum.left, shift))
+        {
+            return Some(shift.clone());
+        }
+    }
+    None
+}
+
+fn negative_one_factor(obj: &Obj) -> Option<&Obj> {
+    let Obj::Mul(product) = obj else {
+        return None;
+    };
+    if normalized_number_is(&product.left, "-1") {
+        Some(product.right.as_ref())
+    } else if normalized_number_is(&product.right, "-1") {
+        Some(product.left.as_ref())
+    } else {
+        None
+    }
+}
+
+fn normalized_number_is(obj: &Obj, expected: &str) -> bool {
+    obj.evaluate_to_normalized_decimal_number()
+        .is_some_and(|number| number.normalized_value == expected)
 }
