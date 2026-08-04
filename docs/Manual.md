@@ -147,10 +147,13 @@ min(7, -2) = -2
 max(7, -2) = 7
 ```
 
-Their symbolic core is intentionally small. Floor and ceiling return integers
-and expose their characteristic bounds; `min` and `max` expose their two
-argument bounds and select an argument once its order is known. For
-non-all-zero integer pairs, `lcm(a, b) * gcd(a, b) = abs(a * b)`.
+Floor and ceiling return integers, expose their characteristic bounds, preserve
+weak order, commute with integer translation, and are dual under negation.
+`min` and `max` expose their argument bounds, componentwise monotonicity, and
+the usual commutative, associative, idempotent, and absorption laws. Native
+`lcm` is symmetric, divides by either nonzero input in the Euclidean-remainder
+sense, is bounded by every positive common multiple, and satisfies
+`lcm(a, b) * gcd(a, b) = abs(a * b)` for non-all-zero integer pairs.
 
 ```litex
 forall x R:
@@ -166,6 +169,16 @@ forall a, b R:
     =>:
         min(a, b) = a
         max(a, b) = b
+
+forall a, b R:
+    a <= b
+    =>:
+        floor(a) <= floor(b)
+        ceil(a) <= ceil(b)
+
+forall x R, n Z:
+    floor(x + n) = floor(x) + n
+    floor(-x) = -ceil(x)
 ```
 
 The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
@@ -187,9 +200,10 @@ factorial(10) = 3628800
 
 `exp` maps reals to positive reals and preserves strict and weak order. `ln`
 accepts positive real arguments, agrees with `log(e, x)`, and preserves strict
-and weak order on that domain. The two functions expose their inverse and
-elementary algebra laws. Litex does not decimal-approximate transcendental values:
-`exp(2)` and `ln(2)` remain symbolic.
+and weak order on that domain. Both functions also reflect strict/weak order
+and equality, so their outputs can be used to recover input facts. The two
+functions expose their inverse and elementary algebra laws. Litex does not
+decimal-approximate transcendental values: `exp(2)` and `ln(2)` remain symbolic.
 
 ```litex
 forall x R:
@@ -215,12 +229,24 @@ forall a, b R+:
     a <= b
     =>:
         ln(a) <= ln(b)
+
+forall a, b R:
+    exp(a) = exp(b)
+    =>:
+        a = b
+
+forall a, b R+:
+    ln(a) < ln(b)
+    =>:
+        a < b
 ```
 
-`sign` always returns an integer between `-1` and `1`, selects the expected
-value from comparison with zero, and satisfies `sign(x) * abs(x) = x`.
-`factorial` accepts `N`, returns `N+`, and exposes the successor recurrence
-`factorial(n + 1) = (n + 1) * factorial(n)`. All four names are hard-reserved.
+`sign` always returns an integer between `-1` and `1`, preserves weak order,
+is odd and multiplicative, and characterizes zero and nonzero arguments. It
+also satisfies `sign(x) * abs(x) = x`. `factorial` accepts `N`, returns `N+`,
+exposes the successor recurrence, preserves weak order (and strict order away
+from the `0! = 1!` boundary), and makes every earlier factorial divide a later
+one. All four names are hard-reserved.
 Python extraction uses `math.exp`, `math.log`, a conditional sign expression,
 and `math.factorial`; Lean extraction uses the corresponding `Real`/`Nat`
 objects.
@@ -337,10 +363,16 @@ forall x R:
         cot(x + pi) = cot(x)
 ```
 
+The kernel also supplies `3 < pi < 4`, the standard sign intervals for sine,
+cosine, tangent, and cotangent, and local monotonicity for sine on
+`[-pi/2, pi/2]`, cosine on `[0, pi]`, tangent on `(-pi/2, pi/2)`, and
+cotangent on `(0, pi)`. Tangent and cotangent statements must still make each
+argument's open-domain bounds available for well-definedness.
+
 The preview intentionally does not assign every familiar special-angle value;
 for example, `sin(pi / 6) = 1 / 2` still needs an explicit source fact.
 Complex trigonometry, inverse trigonometric functions, analytic definitions,
-and continuity or monotonicity theorems are also outside this interface.
+and continuity theorems are also outside this interface.
 
 The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
@@ -392,9 +424,11 @@ are available for complex objects. Ordered comparisons, signs, real intervals,
 
 Known complex equalities can be observed through `re` and `img`. The verifier
 also supplies the standard coordinate formulas for native complex addition,
-subtraction, and multiplication. Thus a proof can reason directly about
-`re(z * w)` and `img(z * w)` without introducing a coordinate-pair
-compatibility layer.
+subtraction, multiplication, division/inverses, and natural successor powers.
+The modulus is multiplicative, satisfies the triangle and reverse-triangle
+inequalities, and is strictly positive exactly away from zero. Thus a proof can
+reason directly about `re(z * w)`, `img(z / w)`, and `C_abs(z * w)` without
+introducing a coordinate-pair compatibility layer.
 
 Natural powers `z^n` are defined for `z` in `C` and `n` in `N`, including the
 existing convention `0^0 = 1`. The additional integer-exponent branch requires
@@ -1197,6 +1231,14 @@ bindings, destructuring, recursive definitions, and template-body `let` forms
 are not part of this preview. The word `let` is reserved and cannot be reused
 as an identifier.
 
+If a later application uses a `let` name, callable well-definedness first
+looks for a signature registered directly on that name. If none exists, it may
+reuse the signature of an object in the name's already stored equality class.
+For example, after `let g = f`, a checked signature and definition for `f` can
+justify `g(a)` and one checked unfolding of that application. This fallback
+does not prove a new equality, instantiate a `forall`, or skip the original
+function's arity, domain, or side-condition checks.
+
 The words `set`, `nonempty_set`, and `finite_set` are binder kinds, not one
 ordinary set containing all sets. They cannot be used as function input sets:
 
@@ -1742,6 +1784,12 @@ For an ordinary atomic fact, the main order is:
    and verify its instantiated premises.
 7. Try registered predicate properties or enabled strategies where applicable.
 8. On success, store the fact and run builtin inference.
+
+During step 1, function application uses direct callable metadata first. Only
+when the callee has no direct signature does it inspect the callee's stored
+equality representatives for already registered callable metadata. This is a
+bounded context lookup, not an invocation of the equality verifier; truth
+verification still starts only after well-definedness succeeds.
 
 ```litex
 abstract_prop P(x)

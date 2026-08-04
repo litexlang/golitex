@@ -157,6 +157,85 @@ fn native_tan_and_cot_require_their_denominators() {
 }
 
 #[test]
+fn native_trigonometric_interval_order_connections_are_available() {
+    let source_code = r#"
+3 < pi < 4
+
+forall x R:
+    x > 0
+    x < pi
+    =>:
+        sin(x) > 0
+
+forall x R:
+    x > -pi / 2
+    x < pi / 2
+    =>:
+        cos(x) > 0
+
+forall a, b R:
+    a >= -pi / 2
+    b <= pi / 2
+    a < b
+    =>:
+        sin(a) < sin(b)
+
+forall a, b R:
+    a >= 0
+    b <= pi
+    a <= b
+    =>:
+        cos(a) >= cos(b)
+
+forall x R:
+    x > 0
+    x < pi / 2
+    =>:
+        tan(x) > 0
+        cot(x) > 0
+
+forall a, b R:
+    a > -pi / 2
+    a < pi / 2
+    b > -pi / 2
+    b < pi / 2
+    a < b
+    =>:
+        tan(a) < tan(b)
+
+forall a, b R:
+    a > 0
+    a < pi
+    b > 0
+    b < pi
+    a <= b
+    =>:
+        cot(a) >= cot(b)
+"#;
+    let (run_succeeded, run_output) =
+        run_trigonometric_source(source_code, "native_trigonometric_interval_order");
+    assert!(run_succeeded, "interval order rules failed:\n{run_output}");
+
+    let (run_succeeded, run_output) = run_trigonometric_source(
+        "forall a, b R:\n    a < b\n    =>:\n        sin(a) < sin(b)",
+        "sine_is_not_globally_monotone",
+    );
+    assert!(
+        !run_succeeded,
+        "global sine monotonicity must fail:\n{run_output}"
+    );
+
+    let (run_succeeded, run_output) = run_trigonometric_source(
+        "forall a, b R:\n    cos(a) != 0\n    cos(b) != 0\n    a < b\n    =>:\n        tan(a) < tan(b)",
+        "tangent_is_not_globally_monotone",
+    );
+    assert!(
+        !run_succeeded,
+        "global tangent monotonicity must fail:\n{run_output}"
+    );
+}
+
+#[test]
 fn native_trigonometry_rejects_nonreal_arguments() {
     for (label, source_code) in [("sin_of_i", "sin(i) = 0"), ("cos_of_i", "cos(i) = 0")] {
         let (run_succeeded, run_output) = run_trigonometric_source(source_code, label);

@@ -64,9 +64,17 @@ impl Runtime {
     }
 
     pub fn get_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
-        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
-            if let Some((body, _)) = info.fn_set.as_ref() {
-                return Some(body.clone());
+        if let Some(body) = self.get_direct_object_in_fn_set(obj) {
+            return Some(body);
+        }
+
+        // Equality transports callable shape. For example, after `g = f`, a
+        // stored signature for `f` also makes `g(a)` eligible for the ordinary
+        // domain check. This is a bounded lookup over stored representatives;
+        // it does not enter equality proof search from well-definedness.
+        for representative in self.get_all_obj_representatives_equal_to_given(obj) {
+            if let Some(body) = self.get_direct_object_in_fn_set(&representative) {
+                return Some(body);
             }
         }
 
@@ -201,10 +209,24 @@ impl Runtime {
             FnObjHead::InstantiatedTemplateObj(i) => vec![i.to_string()],
             _ => return Ok(None),
         };
-        let Some((fn_set_body, equal_to_expr, _)) = keys
+        let direct_definition = keys
             .iter()
-            .find_map(|key| self.get_known_fn_body_and_equal_to_for_key(key))
-        else {
+            .find_map(|key| self.get_known_fn_body_and_equal_to_for_key(key));
+        let known_definition = direct_definition.or_else(|| {
+            let function_name_obj: Obj = (*fn_obj.head).clone().into();
+            self.get_all_obj_representatives_equal_to_given(&function_name_obj)
+                .into_iter()
+                .find_map(|representative| {
+                    let info = self.get_known_fn_info_for_obj(&representative)?;
+                    match (info.fn_set, info.equal_to) {
+                        (Some((body, _)), Some((equal_to, line_file))) => {
+                            Some((body, equal_to, line_file))
+                        }
+                        _ => None,
+                    }
+                })
+        });
+        let Some((fn_set_body, equal_to_expr, _)) = known_definition else {
             return Ok(None);
         };
 
@@ -284,6 +306,11 @@ impl Runtime {
         }
 
         None
+    }
+
+    fn get_direct_object_in_fn_set(&self, obj: &Obj) -> Option<FnSetBody> {
+        let info = self.get_known_fn_info_for_obj(obj)?;
+        info.fn_set.map(|(body, _)| body)
     }
 
     fn get_known_fn_info_for_key(&self, key: &str) -> Option<KnownFnInfo> {

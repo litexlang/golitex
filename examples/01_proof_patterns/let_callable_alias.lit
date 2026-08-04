@@ -1,0 +1,21 @@
+# Tracer: callable shape follows an ordinary stored equality.
+#
+# Before (did not work):
+# have fn f(x R) R = x + 1
+# let g = f
+# g(1) = 2
+# Former behavior: well-definedness stopped at `function g not defined`, so
+# equality verification never ran.
+#
+# Now (verified):
+have fn f(x R) R = x + 1
+let g = f
+g(1) = 2
+fn_range(g) = fn_range(f)
+# Current behavior: direct signature lookup falls back to a callable member of
+# g's already stored equality class, then checks the ordinary argument domain.
+#
+# Boundary: equality does not bypass arity or domain checks; `g(1, 2)` remains
+# rejected by the executable Rust regression.
+# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/let_callable_alias.lit
+# Implementation: src/runtime/runtime_known_object_properties.rs

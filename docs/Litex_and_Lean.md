@@ -30,11 +30,74 @@ difference is simple: Lean usually asks the user to guide a proof state with
 theorems or tactics; Litex lets the user write a target fact and matches it
 against context, builtin rules, and known facts.
 
+AI makes this interface question more important, not less. A model can often
+generate correct theorem names, tactic calls, side-condition proofs, and other
+proof-assistant machinery. That lowers generation cost. It does not by itself
+lower the cost for a mathematician to understand the resulting artifact,
+change one assumption, or review why a step is valid. Litex's intended role is
+to let AI fill routine machine details while keeping the durable source at the
+level of recognizable mathematical facts, with the hidden verification route
+available for inspection.
+
 This page keeps the existing examples as the main comparison. A partial,
 ongoing Litex-to-Lean compiler is described near the end: Litex code is first
 executed and verified, then supported statements are emitted as Lean and
 checked independently. The current MVP is small; exact proof-path replay will
 eventually require structured provenance.
+
+---
+
+## AI Lowers Generation Cost, Not Automatically Understanding Cost
+
+Suppose `0 < epsilon <= 1`, `abs(x) < epsilon`, and `abs(y) < epsilon`. The
+mathematical proof that `abs(x * y) < epsilon` is the short estimate
+
+\[
+|xy| = |x||y| < \varepsilon^2 \leq \varepsilon.
+\]
+
+In a lower-level formal proof, this estimate may also expose reflexivity,
+absolute-value nonnegativity, multiplication monotonicity, and strict-versus-
+nonstrict order conversions. Those are real obligations. An AI system can
+write them cheaply, but a reader may still have to recover the estimate from
+the generated interface code.
+
+The following runnable Litex tracer keeps one general product-monotonicity
+premise in the context and leaves the main argument as the recognizable
+calculation:
+
+```litex
+claim:
+    ? forall x, y, epsilon R:
+        forall a, b, c, d R:
+            0 <= a < c
+            0 <= b < d
+            =>:
+                a * b < c * d
+        0 < epsilon
+        epsilon <= 1
+        abs(x) < epsilon
+        abs(y) < epsilon
+        =>:
+            abs(x * y) < epsilon
+    0 <= abs(x) < epsilon
+    0 <= abs(y) < epsilon
+    abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon * 1 = epsilon
+```
+
+The claim is not that Lean cannot present a concise proof; Lean has powerful
+automation, abstractions, and libraries, and AI can use them. The hypothesis
+being tested is different: the checked source that survives after generation
+should remain a mathematical explanation rather than merely valid generated
+code. Litex therefore needs two coupled layers:
+
+1. a short source layer containing definitions, facts, witnesses, cases, and
+   calculation chains that mathematicians can read and edit; and
+2. an audit layer showing which known fact, definition, builtin rule, theorem,
+   or explicit assumption justified each accepted step.
+
+If automation makes the source short but its reasoning cannot be inspected,
+Litex has only traded one understanding problem for another.
 
 ---
 
@@ -613,6 +676,11 @@ formalization. Verification efficiency is not only the time spent inside one
 checker call. It is the whole loop: write a candidate statement, run it, read
 the exact failure, make the next small correction, and grow the local
 mathematical background when a missing rule or definition is discovered.
+
+The objective is not to make an AI agent emit fewer tokens for its own sake.
+It is to make the accepted artifact cheaper for the next human or agent to
+understand, repair, and reuse. Generated proof machinery may be disposable;
+the mathematical explanation and its auditable dependencies should not be.
 
 Litex is deliberately friendly to that loop. It runs directly, has a small
 surface syntax, and lets many library-like background facts be added as ordinary

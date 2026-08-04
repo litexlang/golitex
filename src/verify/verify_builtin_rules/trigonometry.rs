@@ -168,6 +168,11 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        if let Some(result) =
+            self.try_verify_trigonometric_interval_order(atomic_fact, builtin_state)?
+        {
+            return Ok(Some(result));
+        }
         let Some(AtomicFact::LessEqualFact(f)) = normalize_positive_order_atomic_fact(atomic_fact)
         else {
             return Ok(None);
@@ -226,6 +231,342 @@ impl Runtime {
         ))
     }
 
+    fn try_verify_trigonometric_interval_order(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        // Canonical interval facts connect trigonometric objects to real order.
+        // Examples: `0 < x < pi => 0 < sin(x)`, sine is increasing on
+        // `[-pi/2, pi/2]`, and cosine is decreasing on `[0, pi]`.
+        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
+        };
+        let pi: Obj = Pi::new().into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let two: Obj = Number::new("2".to_string()).into();
+        let half_pi: Obj = Div::new(pi.clone(), two.clone()).into();
+        let negative_half_pi: Obj =
+            Mul::new(Number::new("-1".to_string()).into(), half_pi.clone()).into();
+        let negative_pi: Obj = Mul::new(Number::new("-1".to_string()).into(), pi.clone()).into();
+
+        let (premises, reason) = match &normalized {
+            AtomicFact::LessFact(f) if obj_is_number(&f.left, "0") => match &f.right {
+                Obj::Sin(sin) => (
+                    vec![
+                        LessFact::new(zero.clone(), sin.arg.as_ref().clone(), f.line_file.clone())
+                            .into(),
+                        LessFact::new(sin.arg.as_ref().clone(), pi.clone(), f.line_file.clone())
+                            .into(),
+                    ],
+                    "sine is positive on (0, pi)",
+                ),
+                Obj::Cos(cos) => (
+                    vec![
+                        LessFact::new(
+                            negative_half_pi.clone(),
+                            cos.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        LessFact::new(
+                            cos.arg.as_ref().clone(),
+                            half_pi.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                    ],
+                    "cosine is positive on (-pi/2, pi/2)",
+                ),
+                Obj::Tan(tan) => (
+                    vec![
+                        LessFact::new(zero.clone(), tan.arg.as_ref().clone(), f.line_file.clone())
+                            .into(),
+                        LessFact::new(
+                            tan.arg.as_ref().clone(),
+                            half_pi.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                    ],
+                    "tangent is positive on (0, pi/2)",
+                ),
+                Obj::Cot(cot) => (
+                    vec![
+                        LessFact::new(zero.clone(), cot.arg.as_ref().clone(), f.line_file.clone())
+                            .into(),
+                        LessFact::new(
+                            cot.arg.as_ref().clone(),
+                            half_pi.clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                    ],
+                    "cotangent is positive on (0, pi/2)",
+                ),
+                _ => return Ok(None),
+            },
+            AtomicFact::LessFact(f) if obj_is_number(&f.right, "0") => match &f.left {
+                Obj::Sin(sin) => (
+                    vec![
+                        LessFact::new(
+                            negative_pi.clone(),
+                            sin.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        LessFact::new(sin.arg.as_ref().clone(), zero.clone(), f.line_file.clone())
+                            .into(),
+                    ],
+                    "sine is negative on (-pi, 0)",
+                ),
+                Obj::Tan(tan) => (
+                    vec![
+                        LessFact::new(
+                            negative_half_pi.clone(),
+                            tan.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        LessFact::new(tan.arg.as_ref().clone(), zero.clone(), f.line_file.clone())
+                            .into(),
+                    ],
+                    "tangent is negative on (-pi/2, 0)",
+                ),
+                Obj::Cot(cot) => (
+                    vec![
+                        LessFact::new(
+                            half_pi.clone(),
+                            cot.arg.as_ref().clone(),
+                            f.line_file.clone(),
+                        )
+                        .into(),
+                        LessFact::new(cot.arg.as_ref().clone(), pi.clone(), f.line_file.clone())
+                            .into(),
+                    ],
+                    "cotangent is negative on (pi/2, pi)",
+                ),
+                _ => return Ok(None),
+            },
+            AtomicFact::LessFact(f) => {
+                if let (Obj::Sin(left), Obj::Sin(right)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessEqualFact::new(
+                                negative_half_pi.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                right.arg.as_ref().clone(),
+                                half_pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "sine preserves strict order on [-pi/2, pi/2]",
+                    )
+                } else if let (Obj::Cos(right), Obj::Cos(left)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessEqualFact::new(
+                                zero.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                right.arg.as_ref().clone(),
+                                pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "cosine reverses strict order on [0, pi]",
+                    )
+                } else if let (Obj::Tan(left), Obj::Tan(right)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessFact::new(
+                                negative_half_pi.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                right.arg.as_ref().clone(),
+                                half_pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "tangent preserves strict order on (-pi/2, pi/2)",
+                    )
+                } else if let (Obj::Cot(right), Obj::Cot(left)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessFact::new(
+                                zero.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                right.arg.as_ref().clone(),
+                                pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "cotangent reverses strict order on (0, pi)",
+                    )
+                } else {
+                    return Ok(None);
+                }
+            }
+            AtomicFact::LessEqualFact(f) => {
+                if let (Obj::Sin(left), Obj::Sin(right)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessEqualFact::new(
+                                negative_half_pi,
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                right.arg.as_ref().clone(),
+                                half_pi,
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "sine preserves weak order on [-pi/2, pi/2]",
+                    )
+                } else if let (Obj::Cos(right), Obj::Cos(left)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessEqualFact::new(
+                                zero,
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(right.arg.as_ref().clone(), pi, f.line_file.clone())
+                                .into(),
+                            LessEqualFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "cosine reverses weak order on [0, pi]",
+                    )
+                } else if let (Obj::Tan(left), Obj::Tan(right)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessFact::new(
+                                negative_half_pi.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                right.arg.as_ref().clone(),
+                                half_pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "tangent preserves weak order on (-pi/2, pi/2)",
+                    )
+                } else if let (Obj::Cot(right), Obj::Cot(left)) = (&f.left, &f.right) {
+                    (
+                        vec![
+                            LessFact::new(
+                                zero.clone(),
+                                left.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessFact::new(
+                                right.arg.as_ref().clone(),
+                                pi.clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                            LessEqualFact::new(
+                                left.arg.as_ref().clone(),
+                                right.arg.as_ref().clone(),
+                                f.line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        "cotangent reverses weak order on (0, pi)",
+                    )
+                } else {
+                    return Ok(None);
+                }
+            }
+            _ => return Ok(None),
+        };
+
+        let mut results = Vec::new();
+        for premise in premises {
+            let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            results.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                format!("trigonometry: {reason}"),
+                results,
+            )
+            .into(),
+        ))
+    }
+
     // Transfer non-zero goals through the same canonical trigonometric expansion.
     // Example: `cos(x) != 0` implies `cos(x + pi) != 0`.
     pub(crate) fn try_verify_trigonometric_not_equal(
@@ -237,6 +578,103 @@ impl Runtime {
             && first_trig_arg(&not_equal_fact.right).is_none()
         {
             return Ok(None);
+        }
+        let trig = if obj_is_number(&not_equal_fact.right, "0") {
+            Some(&not_equal_fact.left)
+        } else if obj_is_number(&not_equal_fact.left, "0") {
+            Some(&not_equal_fact.right)
+        } else {
+            None
+        };
+        let pi: Obj = Pi::new().into();
+        let half_pi: Obj = Div::new(pi.clone(), Number::new("2".to_string()).into()).into();
+        let negative_half_pi: Obj =
+            Mul::new(Number::new("-1".to_string()).into(), half_pi.clone()).into();
+        let zero: Obj = Number::new("0".to_string()).into();
+        let interval_candidates: Vec<Vec<AtomicFact>> = match trig {
+            Some(Obj::Sin(sin)) => vec![
+                vec![
+                    LessFact::new(
+                        zero.clone(),
+                        sin.arg.as_ref().clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                    LessFact::new(
+                        sin.arg.as_ref().clone(),
+                        pi.clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                ],
+                vec![
+                    LessFact::new(
+                        zero.clone(),
+                        sin.arg.as_ref().clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                    LessFact::new(
+                        sin.arg.as_ref().clone(),
+                        half_pi.clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                ],
+            ],
+            Some(Obj::Cos(cos)) => vec![
+                vec![
+                    LessFact::new(
+                        negative_half_pi.clone(),
+                        cos.arg.as_ref().clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                    LessFact::new(
+                        cos.arg.as_ref().clone(),
+                        half_pi.clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                ],
+                vec![
+                    LessFact::new(
+                        zero.clone(),
+                        cos.arg.as_ref().clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                    LessFact::new(
+                        cos.arg.as_ref().clone(),
+                        half_pi.clone(),
+                        not_equal_fact.line_file.clone(),
+                    )
+                    .into(),
+                ],
+            ],
+            _ => Vec::new(),
+        };
+        for premises in interval_candidates {
+            let mut results = Vec::new();
+            for premise in premises {
+                let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+                if !result.is_true() {
+                    results.clear();
+                    break;
+                }
+                results.push(result);
+            }
+            if results.len() == 2 {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        not_equal_fact.clone().into(),
+                        "trigonometry: sine/cosine is nonzero on a canonical sign interval"
+                            .to_string(),
+                        results,
+                    )
+                    .into(),
+                ));
+            }
         }
         if let Some(reduced_left) = shifted_trig_nonzero_reduction(&not_equal_fact.left) {
             let reduced: AtomicFact = NotEqualFact::new(

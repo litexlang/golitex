@@ -74,6 +74,7 @@ fn runtime_contract_builtin_and_clear() {
 }
 
 mod builtin_interfaces;
+mod callable_aliases;
 mod complex_scalars;
 mod core_definitions_and_syntax;
 mod definitions_and_runtime;

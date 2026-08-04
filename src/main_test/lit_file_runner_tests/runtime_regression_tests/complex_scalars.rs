@@ -55,6 +55,10 @@ forall z, w C:
     re(z * w) = re(z) * re(w) - img(z) * img(w)
     img(z * w) = re(z) * img(w) + img(z) * re(w)
 
+forall z C, n N:
+    re(z ^ (n + 1)) = re(z ^ n) * re(z) - img(z ^ n) * img(z)
+    img(z ^ (n + 1)) = re(z ^ n) * img(z) + img(z ^ n) * re(z)
+
 forall z, w C:
     z = w
     =>:
@@ -90,6 +94,24 @@ forall z C:
     C_abs(z) = 0
     =>:
         z = 0
+
+forall z, w C:
+    C_abs(z * w) = C_abs(z) * C_abs(w)
+    C_abs(z + w) <= C_abs(z) + C_abs(w)
+    abs(C_abs(z) - C_abs(w)) <= C_abs(z - w)
+
+forall z C:
+    z != 0
+    =>:
+        C_abs(z) > 0
+        C_abs(z) != 0
+
+forall z, w C:
+    w != 0
+    =>:
+        C_abs(w) != 0
+        re(z / w) = (re(z) * re(w) + img(z) * img(w)) / C_abs(w)^2
+        img(z / w) = (img(z) * re(w) - re(z) * img(w)) / C_abs(w)^2
 
 forall z, w C:
     z + w $in C

@@ -53,7 +53,27 @@ forall a, b R+:
     a >= b
     =>:
         ln(a) >= ln(b)
-# Current behavior: native exp and ln preserve strict and weak real order.
+
+forall a, b R:
+    exp(a) < exp(b)
+    =>:
+        a < b
+
+forall a, b R:
+    exp(a) = exp(b)
+    =>:
+        a = b
+
+forall a, b R+:
+    ln(a) <= ln(b)
+    =>:
+        a <= b
+
+forall a, b R+:
+    ln(a) = ln(b)
+    =>:
+        a = b
+# Current behavior: native exp and ln preserve and reflect strict/weak order and equality.
 # Boundary: a weak argument order does not prove a strict result order.
 # Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/native_exp_sign_factorial.lit
 # Implementation: src/verify/verify_builtin_rules/native_exp_sign_factorial.rs
@@ -97,6 +117,30 @@ forall x R:
     =>:
         sign(x) = -1
 
+forall a, b R:
+    a <= b
+    =>:
+        sign(a) <= sign(b)
+
+forall a, b R:
+    sign(-a) = -sign(a)
+    sign(a * b) = sign(a) * sign(b)
+
+forall x R:
+    sign(x) = 0
+    =>:
+        x = 0
+
+forall x R:
+    x != 0
+    =>:
+        sign(x) != 0
+
+forall x R:
+    sign(x) != 0
+    =>:
+        x != 0
+
 forall n N:
     factorial(n) $in N+
     factorial(n) >= 1
@@ -106,6 +150,17 @@ forall n N:
     n >= 1
     =>:
         factorial(n) = n * factorial(n - 1)
+
+forall m, n N:
+    m <= n
+    =>:
+        factorial(m) <= factorial(n)
+        factorial(n) % factorial(m) = 0
+
+forall m, n N+:
+    m < n
+    =>:
+        factorial(m) < factorial(n)
 
 # Native objects remain usable inside first-class function literals.
 have fn apply_real_map(f fn(t R) R, x R) R = f(x)

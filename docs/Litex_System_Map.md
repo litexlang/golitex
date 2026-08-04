@@ -318,6 +318,14 @@ not persist or propagate trust metadata through later facts and theorems.
 | `have algo for f(params)` | Implementation parameters and cases are local. | `f` must already be a function; parameters must match its mathematical signature. | Check each executable result and case against the established function facts. | Attach executable data used by `eval`; do not replace the mathematical definition. | Adds no mathematical assumption. |
 | `eval expression` | None. | The expression must be supported and evaluable. | Compute the supported value; there is no separate proof of the resulting equality. | Report and store `expression = value`. | No user trust; the evaluator is part of the implementation's trusted surface. |
 
+Callable lookup is direct-first. If an application head has no directly
+registered function signature, the runtime may inspect its already stored
+equality class and reuse a representative's checked signature and one-step
+definition. It then performs the same arity, domain, and side-condition checks
+as a direct call. This well-definedness fallback reads existing indexes only;
+it does not enter general equality, builtin, definition, or `forall` proof
+search.
+
 ### Proofs, Theorems, and Trust
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |

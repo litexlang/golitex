@@ -36,6 +36,58 @@ sin(pi) = 0
 cos(pi) = -1
 sin(2 * pi) = 0
 cos(2 * pi) = 1
+3 < pi < 4
+
+forall x R:
+    x > 0
+    x < pi
+    =>:
+        sin(x) > 0
+
+forall x R:
+    x > -pi / 2
+    x < pi / 2
+    =>:
+        cos(x) > 0
+
+forall a, b R:
+    a >= -pi / 2
+    b <= pi / 2
+    a < b
+    =>:
+        sin(a) < sin(b)
+
+forall a, b R:
+    a >= 0
+    b <= pi
+    a <= b
+    =>:
+        cos(a) >= cos(b)
+
+forall x R:
+    x > 0
+    x < pi / 2
+    =>:
+        tan(x) > 0
+        cot(x) > 0
+
+forall a, b R:
+    a > -pi / 2
+    a < pi / 2
+    b > -pi / 2
+    b < pi / 2
+    a < b
+    =>:
+        tan(a) < tan(b)
+
+forall a, b R:
+    a > 0
+    a < pi
+    b > 0
+    b < pi
+    a <= b
+    =>:
+        cot(a) >= cot(b)
 
 forall x R:
     sin(pi / 2 - x) = cos(x)

@@ -6,7 +6,13 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 ## Background
 
-The arrival of AI is rapidly increasing the amount of generated mathematical proof, making verification an increasingly important bottleneck. Litex tests the following hypothesis: can we design a formal language that, like everyday mathematics, centers objects and facts while still being checked rigorously by a machine? Can such a language make the distance between writing mathematics and verifying it short enough that users can genuinely understand the formal tool they are using, its trusted boundary, and exactly why a conclusion was accepted? The design of the Litex language and its output should serve this stricter goal.
+The arrival of AI is rapidly increasing the amount of generated mathematical proof. AI can make theorem names, tactic calls, and routine side-condition code cheap to produce, but cheap generation does not automatically make the resulting artifact cheap to understand, modify, or review. Verification is therefore not the only bottleneck; mathematical comprehension remains one too.
+
+> AI should be able to fill routine machine details while the durable source
+> remains recognizable mathematics whose verification can be inspected on
+> demand.
+
+Litex tests the following hypothesis: can we design a formal language that, like everyday mathematics, centers objects and facts while still being checked rigorously by a machine? Can such a language make the distance between writing mathematics and verifying it short enough that users can genuinely understand the formal tool they are using, its trusted boundary, and exactly why a conclusion was accepted? The design of the Litex language and its output should serve this stricter goal. Fewer proof commands are useful only when they reduce understanding cost rather than hiding the proof inside opaque automation.
 
 ## Starting from the Everyday Mathematical Workflow
 

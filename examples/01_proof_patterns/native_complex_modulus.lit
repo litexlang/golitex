@@ -1,0 +1,33 @@
+# Tracer: native complex modulus connections.
+#
+# Before (did not work):
+# forall z, w C:
+#     C_abs(z * w) = C_abs(z) * C_abs(w)
+# Former behavior: the multiplicative modulus goal was unknown.
+#
+# Now (verified):
+forall z, w C:
+    C_abs(z * w) = C_abs(z) * C_abs(w)
+    C_abs(z + w) <= C_abs(z) + C_abs(w)
+    abs(C_abs(z) - C_abs(w)) <= C_abs(z - w)
+
+forall z C:
+    z != 0
+    =>:
+        C_abs(z) > 0
+        C_abs(z) != 0
+
+forall z, w C:
+    w != 0
+    =>:
+        C_abs(w) != 0
+        re(z / w) = (re(z) * re(w) + img(z) * img(w)) / C_abs(w)^2
+        img(z / w) = (img(z) * re(w) - re(z) * img(w)) / C_abs(w)^2
+
+forall z C, n N:
+    re(z ^ (n + 1)) = re(z ^ n) * re(z) - img(z ^ n) * img(z)
+    img(z ^ (n + 1)) = re(z ^ n) * img(z) + img(z ^ n) * re(z)
+# Current behavior: modulus connects to products, sums, nonzero facts, quotient coordinates, and natural-power coordinate recurrences.
+# Boundary: ordered comparisons remain invalid on complex values themselves.
+# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/native_complex_modulus.lit
+# Implementation: src/verify/verify_builtin_rules/complex_builtin.rs

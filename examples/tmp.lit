@@ -1,5 +1,0 @@
-forall a, b R:
-    a < b
-    =>:
-        1 + exp(a) < 1 + exp(b)
-        ln(1 + exp(a)) < ln(1 + exp(b))

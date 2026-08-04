@@ -1,3 +1,4 @@
+use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::verify_equality_by_they_are_the_same;
 
@@ -182,27 +183,92 @@ impl Runtime {
         None
     }
 
-    pub(super) fn try_verify_native_complex_abs_nonnegative(
-        &self,
+    pub(super) fn try_verify_native_complex_abs_order(
+        &mut self,
         atomic_fact: &AtomicFact,
-    ) -> Option<StmtResult> {
-        let matches = match atomic_fact {
-            AtomicFact::LessEqualFact(f) => {
-                obj_is_literal_zero(&f.left) && matches!(&f.right, Obj::ComplexAbs(_))
-            }
-            AtomicFact::GreaterEqualFact(f) => {
-                obj_is_literal_zero(&f.right) && matches!(&f.left, Obj::ComplexAbs(_))
-            }
-            _ => false,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Some(normalized) = normalize_positive_order_atomic_fact(atomic_fact) else {
+            return Ok(None);
         };
-        matches.then(|| {
+        match &normalized {
+            AtomicFact::LessEqualFact(f) => {
+                if obj_is_literal_zero(&f.left) && matches!(&f.right, Obj::ComplexAbs(_)) {
+                    return Ok(Some(complex_order_result(
+                        atomic_fact,
+                        "complex modulus is a nonnegative real",
+                        Vec::new(),
+                    )));
+                }
+                if complex_triangle_shape(&f.left, &f.right) {
+                    return Ok(Some(complex_order_result(
+                        atomic_fact,
+                        "complex modulus triangle inequality",
+                        Vec::new(),
+                    )));
+                }
+                if complex_reverse_triangle_shape(&f.left, &f.right) {
+                    return Ok(Some(complex_order_result(
+                        atomic_fact,
+                        "complex modulus reverse triangle inequality",
+                        Vec::new(),
+                    )));
+                }
+            }
+            AtomicFact::LessFact(f) if obj_is_literal_zero(&f.left) => {
+                let Obj::ComplexAbs(complex_abs) = &f.right else {
+                    return Ok(None);
+                };
+                let premise: AtomicFact = NotEqualFact::new(
+                    complex_abs.arg.as_ref().clone(),
+                    Number::new("0".to_string()).into(),
+                    f.line_file.clone(),
+                )
+                .into();
+                let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+                if result.is_true() {
+                    return Ok(Some(complex_order_result(
+                        atomic_fact,
+                        "complex modulus is positive for a nonzero argument",
+                        vec![result],
+                    )));
+                }
+            }
+            _ => {}
+        }
+        Ok(None)
+    }
+
+    // A nonzero complex number has nonzero modulus.
+    // Example: `z != 0 => C_abs(z) != 0`.
+    pub(super) fn try_verify_native_complex_abs_nonzero(
+        &mut self,
+        not_equal_fact: &NotEqualFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let complex_abs = match (&not_equal_fact.left, &not_equal_fact.right) {
+            (Obj::ComplexAbs(complex_abs), right) if obj_is_literal_zero(right) => complex_abs,
+            (left, Obj::ComplexAbs(complex_abs)) if obj_is_literal_zero(left) => complex_abs,
+            _ => return Ok(None),
+        };
+        let premise: AtomicFact = NotEqualFact::new(
+            complex_abs.arg.as_ref().clone(),
+            Number::new("0".to_string()).into(),
+            not_equal_fact.line_file.clone(),
+        )
+        .into();
+        let result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if !result.is_true() {
+            return Ok(None);
+        }
+        Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                "complex modulus is a nonnegative real".to_string(),
-                Vec::new(),
+                not_equal_fact.clone().into(),
+                "complex modulus is nonzero for a nonzero argument".to_string(),
+                vec![result],
             )
-            .into()
-        })
+            .into(),
+        ))
     }
 
     fn try_verify_native_coordinate_equality(
@@ -361,6 +427,108 @@ impl Runtime {
             }
         }
 
+        // Coordinates of natural successor powers follow by multiplying the
+        // previous power once more. This gives a reusable recurrence without
+        // pretending that arbitrary complex powers have a simpler closed form.
+        // Example: `re(z^(n+1)) = re(z^n)re(z) - img(z^n)img(z)`.
+        if let Some((base, predecessor)) = complex_successor_power_base_and_exponent(arg) {
+            let previous_power: Obj = Pow::new(base.clone(), predecessor.clone()).into();
+            let previous_re = native_coordinate(&previous_power, true);
+            let previous_img = native_coordinate(&previous_power, false);
+            let base_re = native_coordinate(base, true);
+            let base_img = native_coordinate(base, false);
+            let target: Obj = if is_real_part {
+                Sub::new(
+                    Mul::new(previous_re, base_re).into(),
+                    Mul::new(previous_img, base_img).into(),
+                )
+                .into()
+            } else {
+                Add::new(
+                    Mul::new(previous_re, base_img).into(),
+                    Mul::new(previous_img, base_re).into(),
+                )
+                .into()
+            };
+            if verify_equality_by_they_are_the_same(&target, expected) {
+                let Some(mut steps) =
+                    self.verify_objects_are_known_complex(&[base], &line_file, builtin_state)?
+                else {
+                    return Ok(None);
+                };
+                let exponent_in_n: AtomicFact = InFact::new(
+                    predecessor.clone(),
+                    StandardSet::N.into(),
+                    line_file.clone(),
+                )
+                .into();
+                let exponent_result =
+                    self.verify_builtin_rule_premise(&exponent_in_n, builtin_state)?;
+                if !exponent_result.is_true() {
+                    return Ok(None);
+                }
+                steps.push(exponent_result);
+                return Ok(Some((
+                    format!("{coordinate}: coordinate recurrence for complex natural powers"),
+                    steps,
+                )));
+            }
+        }
+
+        // Coordinates of a quotient use the standard conjugate-denominator formulas.
+        // Example: `re(z/w) = (re(z)re(w)+img(z)img(w))/C_abs(w)^2`.
+        if let Obj::Div(div) = arg {
+            let numerator_re = native_coordinate(div.left.as_ref(), true);
+            let numerator_img = native_coordinate(div.left.as_ref(), false);
+            let denominator_re = native_coordinate(div.right.as_ref(), true);
+            let denominator_img = native_coordinate(div.right.as_ref(), false);
+            let numerator: Obj = if is_real_part {
+                Add::new(
+                    Mul::new(numerator_re, denominator_re.clone()).into(),
+                    Mul::new(numerator_img, denominator_img.clone()).into(),
+                )
+                .into()
+            } else {
+                Sub::new(
+                    Mul::new(numerator_img, denominator_re).into(),
+                    Mul::new(numerator_re, denominator_img).into(),
+                )
+                .into()
+            };
+            let denominator: Obj = Pow::new(
+                ComplexAbs::new(div.right.as_ref().clone()).into(),
+                Number::new("2".to_string()).into(),
+            )
+            .into();
+            let target: Obj = Div::new(numerator, denominator).into();
+            if verify_equality_by_they_are_the_same(&target, expected) {
+                let Some(mut steps) = self.verify_objects_are_known_complex(
+                    &[div.left.as_ref(), div.right.as_ref()],
+                    &line_file,
+                    builtin_state,
+                )?
+                else {
+                    return Ok(None);
+                };
+                let denominator_nonzero: AtomicFact = NotEqualFact::new(
+                    div.right.as_ref().clone(),
+                    Number::new("0".to_string()).into(),
+                    line_file.clone(),
+                )
+                .into();
+                let nonzero_result =
+                    self.verify_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
+                if !nonzero_result.is_true() {
+                    return Ok(None);
+                }
+                steps.push(nonzero_result);
+                return Ok(Some((
+                    format!("{coordinate}: coordinate of complex quotient"),
+                    steps,
+                )));
+            }
+        }
+
         Ok(None)
     }
 
@@ -436,6 +604,25 @@ impl Runtime {
                 )));
             }
         }
+        if let Obj::Mul(product) = arg {
+            let Obj::Mul(expected_product) = expected else {
+                return Ok(None);
+            };
+            let (Obj::ComplexAbs(left_abs), Obj::ComplexAbs(right_abs)) = (
+                expected_product.left.as_ref(),
+                expected_product.right.as_ref(),
+            ) else {
+                return Ok(None);
+            };
+            if verify_equality_by_they_are_the_same(&product.left, &left_abs.arg)
+                && verify_equality_by_they_are_the_same(&product.right, &right_abs.arg)
+            {
+                return Ok(Some((
+                    "complex modulus is multiplicative".to_string(),
+                    Vec::new(),
+                )));
+            }
+        }
         Ok(None)
     }
 
@@ -486,6 +673,22 @@ fn complex_equality_result(
     complex_equality_result_with_steps(left, right, line_file, reason, Vec::new())
 }
 
+fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> {
+    let Obj::Pow(power) = obj else {
+        return None;
+    };
+    let Obj::Add(successor) = power.exponent.as_ref() else {
+        return None;
+    };
+    if obj_is_literal_one(successor.right.as_ref()) {
+        Some((power.base.as_ref(), successor.left.as_ref()))
+    } else if obj_is_literal_one(successor.left.as_ref()) {
+        Some((power.base.as_ref(), successor.right.as_ref()))
+    } else {
+        None
+    }
+}
+
 fn complex_equality_result_with_steps(
     left: &Obj,
     right: &Obj,
@@ -499,6 +702,60 @@ fn complex_equality_result_with_steps(
         steps,
     )
     .into()
+}
+
+fn complex_order_result(
+    atomic_fact: &AtomicFact,
+    reason: &str,
+    steps: Vec<StmtResult>,
+) -> StmtResult {
+    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        atomic_fact.clone().into(),
+        reason.to_string(),
+        steps,
+    )
+    .into()
+}
+
+fn complex_triangle_shape(left: &Obj, right: &Obj) -> bool {
+    let Obj::ComplexAbs(sum_abs) = left else {
+        return false;
+    };
+    let Obj::Add(sum) = sum_abs.arg.as_ref() else {
+        return false;
+    };
+    let Obj::Add(bound) = right else {
+        return false;
+    };
+    let (Obj::ComplexAbs(left_abs), Obj::ComplexAbs(right_abs)) =
+        (bound.left.as_ref(), bound.right.as_ref())
+    else {
+        return false;
+    };
+    verify_equality_by_they_are_the_same(&sum.left, &left_abs.arg)
+        && verify_equality_by_they_are_the_same(&sum.right, &right_abs.arg)
+}
+
+fn complex_reverse_triangle_shape(left: &Obj, right: &Obj) -> bool {
+    let Obj::Abs(difference_abs) = left else {
+        return false;
+    };
+    let Obj::Sub(difference) = difference_abs.arg.as_ref() else {
+        return false;
+    };
+    let (Obj::ComplexAbs(left_abs), Obj::ComplexAbs(right_abs)) =
+        (difference.left.as_ref(), difference.right.as_ref())
+    else {
+        return false;
+    };
+    let Obj::ComplexAbs(bound_abs) = right else {
+        return false;
+    };
+    let Obj::Sub(bound_difference) = bound_abs.arg.as_ref() else {
+        return false;
+    };
+    verify_equality_by_they_are_the_same(&left_abs.arg, &bound_difference.left)
+        && verify_equality_by_they_are_the_same(&right_abs.arg, &bound_difference.right)
 }
 
 fn native_i_normal_form(obj: &Obj) -> Option<(Obj, &'static str)> {

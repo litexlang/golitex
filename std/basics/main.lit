@@ -249,6 +249,115 @@ have fn integer_quotient by exist!:
 prop divides(a Z, b Z):
     exist k Z st {b = a * k}
 
+# Named source interfaces for the native exp, ln, sign, lcm, and factorial
+# objects. Their primitive mathematical steps are checked kernel rules; these
+# declarations make the connections discoverable and reusable through
+# `std/basics`.
+thm exp_injective:
+    ? forall a, b R:
+        exp(a) = exp(b)
+        =>:
+            a = b
+    a = b
+
+thm exp_reflects_strict_order:
+    ? forall a, b R:
+        exp(a) < exp(b)
+        =>:
+            a < b
+    a < b
+
+thm exp_reflects_weak_order:
+    ? forall a, b R:
+        exp(a) <= exp(b)
+        =>:
+            a <= b
+    a <= b
+
+thm ln_injective:
+    ? forall a, b R+:
+        ln(a) = ln(b)
+        =>:
+            a = b
+    a = b
+
+thm ln_reflects_strict_order:
+    ? forall a, b R+:
+        ln(a) < ln(b)
+        =>:
+            a < b
+    a < b
+
+thm ln_reflects_weak_order:
+    ? forall a, b R+:
+        ln(a) <= ln(b)
+        =>:
+            a <= b
+    a <= b
+
+thm sign_zero_implies_zero:
+    ? forall x R:
+        sign(x) = 0
+        =>:
+            x = 0
+    x = 0
+
+thm sign_nonzero_iff_argument_nonzero_forward:
+    ? forall x R:
+        x != 0
+        =>:
+            sign(x) != 0
+    sign(x) != 0
+
+thm sign_nonzero_iff_argument_nonzero_reverse:
+    ? forall x R:
+        sign(x) != 0
+        =>:
+            x != 0
+    x != 0
+
+thm lcm_is_multiple_of_left:
+    ? forall a, b N+:
+        $divides(a, lcm(a, b))
+    abs(a) = a
+    lcm(a, b) % abs(a) = 0
+    lcm(a, b) % a = 0
+    witness exist k Z st {lcm(a, b) = a * k} from integer_quotient(lcm(a, b), a):
+        lcm(a, b) = a * integer_quotient(lcm(a, b), a) + lcm(a, b) % a = a * integer_quotient(lcm(a, b), a)
+
+thm lcm_is_multiple_of_right:
+    ? forall a, b N+:
+        $divides(b, lcm(a, b))
+    abs(b) = b
+    lcm(a, b) % abs(b) = 0
+    lcm(a, b) % b = 0
+    witness exist k Z st {lcm(a, b) = b * k} from integer_quotient(lcm(a, b), b):
+        lcm(a, b) = b * integer_quotient(lcm(a, b), b) + lcm(a, b) % b = b * integer_quotient(lcm(a, b), b)
+
+thm lcm_le_common_positive_multiple:
+    ? forall a, b, m N+:
+        $divides(a, m)
+        $divides(b, m)
+        =>:
+            lcm(a, b) <= m
+    obtain ka from exist k Z st {m = a * k}
+    obtain kb from exist k Z st {m = b * k}
+    abs(a) = a
+    abs(b) = b
+    m % abs(a) = m % a = (a * ka) % a = 0
+    m % abs(b) = m % b = (b * kb) % b = 0
+    lcm(a, b) <= m
+
+thm earlier_factorial_divides_later:
+    ? forall m, n N:
+        m <= n
+        =>:
+            $divides(factorial(m), factorial(n))
+    factorial(m) $in N+
+    factorial(n) % factorial(m) = 0
+    witness exist k Z st {factorial(n) = factorial(m) * k} from integer_quotient(factorial(n), factorial(m)):
+        factorial(n) = factorial(m) * integer_quotient(factorial(n), factorial(m)) + factorial(n) % factorial(m) = factorial(m) * integer_quotient(factorial(n), factorial(m))
+
 # A positive divisor of a nonzero integer is at most its absolute value.
 # This is proof machinery for the Euclidean and prime-related theorems below.
 thm _positive_divisor_le_abs:

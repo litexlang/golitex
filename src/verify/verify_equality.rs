@@ -758,5 +758,24 @@ mod tests {
                 default_line_file(),
             )
             .expect("bounded symbolic normalization"));
+
+        let y: Obj = Identifier::new("y".to_string()).into();
+        let x_minus_y: Obj = Sub::new(x.clone(), y.clone()).into();
+        let y_minus_x: Obj = Sub::new(y.clone(), x.clone()).into();
+        let abs_x_minus_y: Obj = Abs::new(x_minus_y).into();
+        let abs_y_minus_x: Obj = Abs::new(y_minus_x).into();
+        assert!(runtime
+            .objs_are_congruent_by_replay_safe_equality_routes(
+                &abs_x_minus_y,
+                &abs_y_minus_x,
+                default_line_file(),
+            )
+            .expect("absolute-value sign normalization"));
+
+        let abs_x: Obj = Abs::new(x).into();
+        let abs_y: Obj = Abs::new(y).into();
+        assert!(!runtime
+            .objs_are_congruent_by_replay_safe_equality_routes(&abs_x, &abs_y, default_line_file())
+            .expect("unrelated absolute values must not compare equal"));
     }
 }

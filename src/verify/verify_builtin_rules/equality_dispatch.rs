@@ -52,7 +52,20 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_native_min_max_lattice_equality(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_native_rounding_integer_equality(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_rounding_algebra_equality(
             left,
             right,
             line_file.clone(),
@@ -65,8 +78,29 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) =
+            self.try_verify_native_lcm_basic_equality(left, right, line_file.clone())
+        {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_native_exp_ln_identity(left, right, line_file.clone())
         {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_exp_ln_injectivity(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_sign_zero_reflection(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_native_exp_ln_algebra(left, right, line_file.clone())
@@ -83,9 +117,20 @@ impl Runtime {
         {
             return Ok(result);
         }
+        if let Some(result) = self.try_verify_native_sign_algebra(left, right, line_file.clone()) {
+            return Ok(result);
+        }
         if let Some(result) =
             self.try_verify_native_factorial_recurrence(left, right, line_file.clone())
         {
+            return Ok(result);
+        }
+        if let Some(result) = self.try_verify_native_factorial_divisibility(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(result);
         }
         if let Some(result) = self.try_verify_minus_one_odd_natural_power(
