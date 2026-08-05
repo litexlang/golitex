@@ -2818,6 +2818,29 @@ fn error_output_preserves_failed_step_and_step_indexes_in_all_styles() {
     assert!(outputs[2].contains("\"phases\": {"));
 }
 
+#[test]
+fn by_thm_selected_fact_output_distinguishes_temporary_and_parent_facts() {
+    let source_code = "by thm set_builder_member(1, {x R: x > 0}) => 1 $in {x R: x > 0}";
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("by_thm_selected_fact_output");
+    runtime.set_output_style(OutputStyle::Detailed);
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "selected by thm fixture failed:\n{run_output}"
+    );
+    assert!(run_output.contains("\"mode\": \"select_atomic_fact\""));
+    assert!(!run_output.contains("\"stored_then_facts\":"));
+    assert!(run_output.contains("\"temporary_then_facts\": ["));
+    assert!(run_output.contains("\"selected_fact\": \"1 $in {x R: x > 0}\""));
+    assert!(run_output.contains("\"target_check\": {"));
+    assert!(run_output.contains("\"parent_stored_facts\": ["));
+    assert!(run_output.contains("selected theorem consequence"));
+}
+
 fn render_failure_for_output_style(
     source_code: &str,
     source_label: &str,

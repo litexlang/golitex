@@ -374,6 +374,27 @@ fn trust_before_line_replays_builtin_theorem_conclusions_without_rechecking_requ
 }
 
 #[test]
+fn trust_before_line_replays_only_the_selected_builtin_theorem_fact() {
+    let fixture = TrustedPrefixFixture::new(
+        "selected_builtin_theorem_replay",
+        r#"by thm set_builder_member(0, {x R: x = 1}) => 0 $in {x R: x = 1}
+
+0 $in {x R: x = 1}
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+
+    assert!(
+        error.is_none(),
+        "trusted-prefix replay should restore only the selected fact: {error:?}"
+    );
+    assert_eq!(results.len(), 2);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+}
+
+#[test]
 fn trust_before_line_still_checks_builtin_theorem_arity() {
     let fixture = TrustedPrefixFixture::new(
         "builtin_theorem_bad_arity",

@@ -1,0 +1,32 @@
+# Tracer: select one atomic consequence from a scoped theorem application
+#
+# Before (did not work):
+# thm expose_zero_sides:
+#     ? forall x R:
+#         x + 0 = x
+#         0 + x = x
+#
+#     x + 0 = x
+#     0 + x = x
+#
+# by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+# Former behavior: the call was rejected with
+# `by thm: unexpected token after theorem call`.
+#
+# Now (verified):
+thm expose_zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+
+    x + 0 = x
+    0 + x = x
+
+by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+# Current behavior: both theorem conclusions exist while the target is checked,
+# but only `2 + 0 = 0 + 2` is selected for the parent environment.
+#
+# Boundary: `=>` accepts exactly one atomic fact; compound `and`, `or`,
+# `forall`, `exist`, and chain targets remain rejected by parser regressions.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/by_theorem_selected_fact.lit
+# Implementation: src/parse/by_stmt/thm_by_stmt.rs and src/execute/by_stmt/thm_by_stmt.rs

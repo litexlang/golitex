@@ -865,6 +865,147 @@ $target_thm_prop(1)
 }
 
 #[test]
+fn by_thm_selected_fact_uses_temporary_expansion_and_commits_only_the_target() {
+    run_with_large_stack(
+        "by_thm_selected_fact_uses_temporary_expansion_and_commits_only_the_target",
+        || {
+            let source_code = r#"
+abstract_prop selected_middle(x)
+abstract_prop selected_sibling(x)
+abstract_prop selected_target(x)
+
+axiom selected_middle_to_target:
+    ? forall x R:
+        $selected_middle(x)
+        =>:
+            $selected_target(x)
+
+thm selected_expand:
+    ? forall x R:
+        x = x
+        =>:
+            $selected_middle(x)
+            $selected_sibling(x)
+
+    # Trusted facts isolate this runtime scoping regression from predicate definitions.
+    trust $selected_middle(x)
+    trust $selected_sibling(x)
+
+by thm selected_expand(1) => $selected_target(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_thm_selected_fact_uses_temporary_expansion_and_commits_only_the_target",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "selected by thm should succeed:\n{run_output}"
+            );
+            assert!(runtime.cache_known_facts_contains("$selected_target(1)").0);
+            assert!(!runtime.cache_known_facts_contains("$selected_middle(1)").0);
+            assert!(!runtime.cache_known_facts_contains("$selected_sibling(1)").0);
+        },
+    );
+}
+
+#[test]
+fn by_thm_selected_fact_failure_discards_the_temporary_expansion() {
+    run_with_large_stack(
+        "by_thm_selected_fact_failure_discards_the_temporary_expansion",
+        || {
+            let source_code = r#"
+abstract_prop selected_middle(x)
+abstract_prop selected_sibling(x)
+abstract_prop selected_unproved(x)
+
+thm selected_expand:
+    ? forall x R:
+        x = x
+        =>:
+            $selected_middle(x)
+            $selected_sibling(x)
+
+    # Trusted facts isolate this runtime scoping regression from predicate definitions.
+    trust $selected_middle(x)
+    trust $selected_sibling(x)
+
+by thm selected_expand(1) => $selected_unproved(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_thm_selected_fact_failure_discards_the_temporary_expansion",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "unproved selected fact should fail:\n{run_output}"
+            );
+            assert!(run_output.contains(
+                "selected fact `$selected_unproved(1)` is not verified after theorem application"
+            ));
+            assert!(!runtime.cache_known_facts_contains("$selected_middle(1)").0);
+            assert!(!runtime.cache_known_facts_contains("$selected_sibling(1)").0);
+            assert!(
+                !runtime
+                    .cache_known_facts_contains("$selected_unproved(1)")
+                    .0
+            );
+        },
+    );
+}
+
+#[test]
+fn by_thm_selected_fact_must_be_well_defined_before_temporary_expansion() {
+    run_with_large_stack(
+        "by_thm_selected_fact_must_be_well_defined_before_temporary_expansion",
+        || {
+            let source_code = r#"
+have selected_callable set
+
+thm selected_signature:
+    ? forall token R:
+        token = 0
+        =>:
+            selected_callable $in fn(x R) R
+
+    # This background signature is intentionally available only through the theorem.
+    trust selected_callable $in fn(x R) R
+
+by thm selected_signature(0) => selected_callable(1) = selected_callable(1)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "by_thm_selected_fact_must_be_well_defined_before_temporary_expansion",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "parent well-definedness should fail:\n{run_output}"
+            );
+            assert!(run_output.contains("is not well-defined in the parent environment"));
+            assert!(
+                !runtime
+                    .cache_known_facts_contains("selected_callable $in fn(x R) R")
+                    .0
+            );
+        },
+    );
+}
+
+#[test]
 fn strategy_definition_auto_enables_strategy() {
     let source_code = r#"
 prop target_strategy_prop(x R):

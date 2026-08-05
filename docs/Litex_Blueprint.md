@@ -166,6 +166,41 @@ Lean's ordinary interactive theorem proving is goal-directed and typically works
 
 This is a difference in default workflow, not an absolute expressive boundary. Lean can accumulate forward facts with `have`, local lemmas, and independent top-level theorems; Litex can organize explicitly goal-directed work with forms such as `claim` and `thm`. The direction of development changes, not the standard of correctness: scope, well-definedness, and mathematical justification remain mandatory for every accepted Litex fact.
 
+The following local-rewriting example makes this difference in direction more concrete. In Lean, the user starts from the pending Goal, and each `rw` specifies which fact to invoke and in which direction to match and replace:
+
+```lean
+-- Using facts from the local context.
+example (a b c d g f : ℝ) (h : a * b = c * d) (h' : g = f) :
+    a * (b * g) = c * (d * f) := by
+  rw [h']
+  rw [← mul_assoc]
+  rw [h]
+  rw [mul_assoc]
+```
+
+The corresponding Litex proof reverses Lean's four Goal transformations into one equality chain. It starts from the right-hand side of the Goal, `c * (d * f)`, states the intermediate results in turn, and ends at the left-hand side, `a * (b * g)`:
+
+```litex
+claim:
+    ?forall a, b, c, d, g, f R:
+        a * b = c * d
+        g = f
+        =>:
+            a * (b * g) = c * (d * f)
+    c * (d * f) = (c * d) * f = (a * b) * f = a * (b * f) = a * (b * g)
+```
+
+1. The first equality corresponds to `rw [mul_assoc]`.
+2. The second equality corresponds to `rw [h]`.
+3. The third equality corresponds to `rw [← mul_assoc]`.
+4. The fourth equality corresponds to `rw [h']`.
+
+These four equalities correspond to Lean's four `rw` commands in reverse order. The Lean code tells the system which fact to invoke next and in which direction to rewrite the Goal. The Litex code instead tells the system which important intermediate results should appear if the reasoning succeeds. The checker then looks for support for each adjacent equality in the current context, equality matching, and structural rules.
+
+The user therefore does not have to recall a library identifier such as `mul_assoc` or explicitly orchestrate the order and direction in which `h`, `h'`, and associativity are used. Instead, the user writes a mathematically meaningful chain of intermediate results. If one jump is too large, the added guidance is another intermediate expression rather than a step-by-step search instruction. This example deliberately avoids automation that could normalize the whole algebraic goal at once: the point is to compare the default direction of interaction, not code length.
+
+The example also makes “bottom-up” concrete. Lean begins with the complete Goal and rewrites it until only an evident equality remains. Litex establishes checkable equality links until one chain connects the two sides of the Goal. Ordinary mathematical writing often works similarly: definitions, known facts, and decisive intermediate results are recorded first and then converge on a conclusion, rather than always decomposing a formal Goal backward into subgoals. For both people and AI systems, proposing meaningful intermediate expressions is often more natural than continually remembering library identifiers such as `pow_two` and `mul_assoc` together with their invocation directions. This does not mean that every mathematical discovery or proof is strictly bottom-up: induction, contradiction, existence proofs, and complex theorems may still need an explicit goal structure.
+
 ## Next Steps
 
 For an overview of the components of the Litex system, see the [Litex System Map](https://litexlang.com/doc/Litex_System_Map). To try Litex examples and inspect the generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com). For the Litex kernel, see the [golitex repository](https://github.com/litexlang/golitex).

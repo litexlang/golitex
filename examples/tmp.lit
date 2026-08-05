@@ -1,6 +1,13 @@
-thm subset_refl_manual:
-    ? forall s set:
-        s $subset s
-    by def s $subset s
+claim:
+	?forall a, b, c, d, g, f R:
+		a * b = c * d
+		g = f
+		=>:
+			a * (b * g) = c * (d * f)
+	(c * d) * f = c * (d * f) # 对应 rw [mul_assoc]
+	(c * d) * f = (a * b) * f # 对应 rw [h]
+	a * (b * f) = c * (d * f) # 对应 rw [← mul_assoc]
+	a * (b * g) = a * (b * f) # 对应 rw [h']
+	
 
-{1, 2} $subset {1, 2}
+	

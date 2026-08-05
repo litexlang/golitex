@@ -705,7 +705,17 @@ impl Runtime {
                 for arg in s.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
                 }
-                Ok(ByThmStmt::new(s.name.clone(), args, line_file.clone()).into())
+                let selected_fact = if let Some(fact) = s.selected_fact.as_ref() {
+                    Some(self.inst_atomic_fact(
+                        fact,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file),
+                    )?)
+                } else {
+                    None
+                };
+                Ok(ByThmStmt::new(s.name.clone(), args, selected_fact, line_file.clone()).into())
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => {
                 let fact = self.inst_atomic_fact(

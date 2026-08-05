@@ -161,10 +161,14 @@ pub struct ByChoiceVerificationResult {
 pub struct ByTheoremVerificationResult {
     pub theorem: String,
     pub theorem_source: String,
+    pub mode: String,
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
     pub requirement_roles: Vec<String>,
     pub stored_then_facts: Vec<String>,
+    pub temporary_then_facts: Vec<String>,
+    pub selected_fact: Option<String>,
+    pub parent_stored_facts: Vec<String>,
     pub provenance: Option<String>,
 }
 
@@ -987,13 +991,18 @@ impl ByTheoremVerificationResult {
         domain_facts: Vec<String>,
         stored_then_facts: Vec<String>,
     ) -> Self {
+        let parent_stored_facts = stored_then_facts.clone();
         ByTheoremVerificationResult {
             theorem,
             theorem_source: "litex".to_string(),
+            mode: "release_all".to_string(),
             arguments,
             domain_facts,
             requirement_roles: vec![],
             stored_then_facts,
+            temporary_then_facts: vec![],
+            selected_fact: None,
+            parent_stored_facts,
             provenance: None,
         }
     }
@@ -1006,15 +1015,28 @@ impl ByTheoremVerificationResult {
         stored_then_facts: Vec<String>,
         provenance: Option<String>,
     ) -> Self {
+        let parent_stored_facts = stored_then_facts.clone();
         ByTheoremVerificationResult {
             theorem,
             theorem_source: "builtin_rule".to_string(),
+            mode: "release_all".to_string(),
             arguments,
             domain_facts: requirement_facts,
             requirement_roles,
             stored_then_facts,
+            temporary_then_facts: vec![],
+            selected_fact: None,
+            parent_stored_facts,
             provenance,
         }
+    }
+
+    pub fn select_atomic_fact(&mut self, selected_fact: String) {
+        self.mode = "select_atomic_fact".to_string();
+        self.temporary_then_facts = self.stored_then_facts.clone();
+        self.stored_then_facts.clear();
+        self.parent_stored_facts = vec![selected_fact.clone()];
+        self.selected_fact = Some(selected_fact);
     }
 }
 

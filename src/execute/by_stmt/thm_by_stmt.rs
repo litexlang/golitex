@@ -2,6 +2,9 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_by_thm_stmt(&mut self, stmt: &ByThmStmt) -> Result<StmtResult, RuntimeError> {
+        if stmt.selected_fact.is_some() {
+            return self.exec_by_thm_stmt_select_atomic_fact(stmt);
+        }
         if let Some(result) = self.exec_builtin_thm_stmt(stmt)? {
             return Ok(result);
         }
@@ -163,6 +166,9 @@ impl Runtime {
         &mut self,
         stmt: &ByThmStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        if stmt.selected_fact.is_some() {
+            return self.exec_by_thm_stmt_select_atomic_fact_affect_environment_only(stmt);
+        }
         if let Some(result) = self.exec_builtin_thm_stmt_affect_environment_only(stmt)? {
             return Ok(result);
         }
@@ -233,6 +239,189 @@ impl Runtime {
             infer_result,
             vec![],
             by_verification.into(),
+        )
+        .into())
+    }
+
+    fn exec_by_thm_stmt_select_atomic_fact(
+        &mut self,
+        stmt: &ByThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let selected_fact = stmt
+            .selected_fact
+            .as_ref()
+            .expect("selected by thm execution requires a target")
+            .clone();
+        let verify_state = UseContextVerifyState::new(0, false);
+        self.verify_atomic_fact_well_defined(&selected_fact, &verify_state)
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by thm `{}`: selected fact `{}` is not well-defined in the parent environment",
+                        stmt.name, selected_fact
+                    ),
+                    Some(error),
+                    vec![],
+                )
+            })?;
+
+        let expanded_stmt = ByThmStmt::new(
+            stmt.name.clone(),
+            stmt.args.clone(),
+            None,
+            stmt.line_file.clone(),
+        );
+        let (mut expanded_success, target_result) = self.run_in_local_env(|rt| {
+            let expanded_result = rt.exec_by_thm_stmt(&expanded_stmt).map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by thm `{}`: temporary theorem application failed",
+                        stmt.name
+                    ),
+                    Some(error),
+                    vec![],
+                )
+            })?;
+            let target_result = rt
+                .verify_atomic_fact(
+                    &selected_fact,
+                    &verify_state.with_well_defined_already_verified(),
+                )
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "by thm `{}`: failed to verify selected fact `{}` after theorem application",
+                            stmt.name, selected_fact
+                        ),
+                        Some(error),
+                        vec![],
+                    )
+                })?;
+            if target_result.is_unknown() {
+                return Err(short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by thm `{}`: selected fact `{}` is not verified after theorem application",
+                        stmt.name, selected_fact
+                    ),
+                    None,
+                    vec![target_result],
+                ));
+            }
+            let expanded_success = expanded_result
+                .into_non_factual_success()
+                .expect("by thm application must return a non-factual success");
+            Ok((expanded_success, target_result))
+        })?;
+
+        let infer_result = self
+            .run_in_local_env_and_commit(|rt| {
+                rt.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    selected_fact.clone(),
+                    ByThmStmt::selected_fact_store_reason(),
+                )
+            })
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by thm `{}`: failed to store selected fact `{}`",
+                        stmt.name, selected_fact
+                    ),
+                    Some(error),
+                    vec![],
+                )
+            })?;
+
+        let Some(ByVerificationResult::Theorem(mut verification)) =
+            expanded_success.by_verification.take()
+        else {
+            unreachable!("by thm application must contain theorem verification metadata")
+        };
+        verification.select_atomic_fact(selected_fact.to_string());
+        let mut inside_results = expanded_success.inside_results;
+        inside_results.push(target_result);
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            inside_results,
+            verification.into(),
+        )
+        .into())
+    }
+
+    fn exec_by_thm_stmt_select_atomic_fact_affect_environment_only(
+        &mut self,
+        stmt: &ByThmStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        let selected_fact = stmt
+            .selected_fact
+            .as_ref()
+            .expect("selected by thm execution requires a target")
+            .clone();
+        let expanded_stmt = ByThmStmt::new(
+            stmt.name.clone(),
+            stmt.args.clone(),
+            None,
+            stmt.line_file.clone(),
+        );
+        let mut expanded_success = self.run_in_local_env(|rt| {
+            rt.exec_by_thm_stmt_affect_environment_only(&expanded_stmt)
+                .map_err(|error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "by thm `{}`: temporary theorem application failed",
+                            stmt.name
+                        ),
+                        Some(error),
+                        vec![],
+                    )
+                })?
+                .into_non_factual_success()
+                .ok_or_else(|| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        "by thm: theorem application returned an invalid result".to_string(),
+                        None,
+                        vec![],
+                    )
+                })
+        })?;
+
+        let infer_result = self
+            .run_in_local_env_and_commit(|rt| {
+                rt.store_trusted_fact_and_infer_with_reason(
+                    selected_fact.clone().into(),
+                    InferReason::Other(ByThmStmt::selected_fact_store_reason().to_string()),
+                )
+            })
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!(
+                        "by thm `{}`: failed to store selected fact `{}`",
+                        stmt.name, selected_fact
+                    ),
+                    Some(error),
+                    vec![],
+                )
+            })?;
+
+        let Some(ByVerificationResult::Theorem(mut verification)) =
+            expanded_success.by_verification.take()
+        else {
+            unreachable!("by thm application must contain theorem verification metadata")
+        };
+        verification.select_atomic_fact(selected_fact.to_string());
+        Ok(NonFactualStmtSuccess::new_with_by_verification(
+            stmt.clone().into(),
+            infer_result,
+            expanded_success.inside_results,
+            verification.into(),
         )
         .into())
     }

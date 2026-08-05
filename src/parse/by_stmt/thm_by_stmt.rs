@@ -10,6 +10,37 @@ impl Runtime {
             self.parse_module_qualified_reference_name(tb)?
         };
         let args = self.parse_braced_objs(tb)?;
+        if !tb.body.is_empty() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "by thm does not accept an indented body".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
+        let selected_fact = if tb.current_token_is_equal_to(RIGHT_ARROW) {
+            tb.skip_token(RIGHT_ARROW)?;
+            if tb.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by thm: `=>` expects one atomic fact".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let fact = self.parse_atomic_fact(tb, true)?;
+            if !tb.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by thm: `=>` expects exactly one atomic fact".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            Some(fact)
+        } else {
+            None
+        };
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -18,6 +49,64 @@ impl Runtime {
                 ),
             )));
         }
-        Ok(ByThmStmt::new(name, args, tb.line_file.clone()).into())
+        Ok(ByThmStmt::new(name, args, selected_fact, tb.line_file.clone()).into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::parse::Tokenizer;
+    use crate::prelude::*;
+    use std::rc::Rc;
+
+    fn parse_one(source: &str) -> Result<Stmt, RuntimeError> {
+        let mut runtime = Runtime::new();
+        let mut blocks = Tokenizer::new()
+            .parse_blocks(source, Rc::from("by_thm_selected_fact_test.lit"))
+            .expect("tokenize by thm statement");
+        assert_eq!(blocks.len(), 1);
+        runtime.parse_stmt(&mut blocks[0])
+    }
+
+    #[test]
+    fn by_thm_parses_optional_selected_atomic_fact() {
+        let legacy = parse_one("by thm T(a)").expect("parse legacy by thm");
+        let Stmt::By(ByStmt::ByThmStmt(legacy)) = legacy else {
+            panic!("expected by thm statement")
+        };
+        assert!(legacy.selected_fact.is_none());
+
+        let selected =
+            parse_one("by thm T(a) => not $P(a)").expect("parse by thm with selected atomic fact");
+        let Stmt::By(ByStmt::ByThmStmt(selected)) = selected else {
+            panic!("expected by thm statement")
+        };
+        assert!(selected
+            .selected_fact
+            .as_ref()
+            .is_some_and(|fact| !fact.is_true()));
+        assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
+    }
+
+    #[test]
+    fn by_thm_selected_fact_rejects_missing_compound_and_indented_targets() {
+        let cases = [
+            ("by thm T(a) =>", "by thm: `=>` expects one atomic fact"),
+            (
+                "by thm T(a) => $P(a) and $Q(a)",
+                "by thm: `=>` expects exactly one atomic fact",
+            ),
+            (
+                "by thm T(a):\n    do_nothing",
+                "by thm does not accept an indented body",
+            ),
+        ];
+        for (source, expected) in cases {
+            let error = parse_one(source).expect_err("invalid by thm target should fail");
+            let RuntimeError::ParseError(error) = error else {
+                panic!("{source}: expected parse error")
+            };
+            assert!(error.msg.contains(expected), "{source}: {}", error.msg);
+        }
     }
 }
