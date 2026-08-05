@@ -1,0 +1,20 @@
+# Tracer: bodyless proof cases
+#
+# Before (required an administrative body):
+# by cases:
+#     ? 1 = 1
+#     case 1 = 1:
+#         do_nothing
+# Former limitation: `case 1 = 1` ended with `Unexpected end of tokens`.
+#
+# Now (verified):
+by cases:
+    ? 1 = 1
+    case 1 = 1
+# Current behavior: the case assumption is installed, zero proof statements run,
+# and the existing branch-final check proves the goal.
+#
+# Boundary: an empty case whose assumption does not prove every goal still fails;
+# the executable negative regression lives in `proof_control_and_choice.rs`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bodyless_by_cases.lit
+# Implementation: src/parse/by_stmt/cases_by_stmt.rs

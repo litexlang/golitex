@@ -490,6 +490,57 @@ by induc n from 0:
 }
 
 #[test]
+fn by_cases_accepts_bodyless_closed_cases_and_rejects_unclosed_cases() {
+    run_with_large_stack("by_cases_bodyless_cases", || {
+        let positive_source = r#"
+by cases:
+    ? 1 = 1
+    case 1 = 1
+    case 1 != 1:
+        impossible 1 = 1
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("bodyless_case_closed");
+        let (stmt_results, runtime_error) = run_source_code(positive_source, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "a bodyless case should succeed when its assumption closes the goal:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("case 1 = 1\\n"),
+            "bodyless case output should omit the proof-body colon:\n{}",
+            run_output
+        );
+
+        let negative_source = r#"
+by cases:
+    ? 1 = 2
+    case 1 = 1
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("bodyless_case_unclosed");
+        let (stmt_results, runtime_error) = run_source_code(negative_source, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "a bodyless case must not bypass the final goal check:\n{}",
+            run_output
+        );
+        assert!(
+            run_output.contains("by cases: failed to prove `1 = 2` under case `1 = 1`"),
+            "the failure should identify the unclosed goal and active case:\n{}",
+            run_output
+        );
+    });
+}
+
+#[test]
 fn prove_is_available_as_an_identifier() {
     run_with_large_stack("prove_is_available_as_an_identifier", || {
         let source_code = r#"
@@ -1023,18 +1074,28 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
 }
 
 #[test]
-fn inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon() {
+fn inline_by_extension_for_and_enumerate_match_block_forms() {
     let source_code = r#"
+by extension {1} = {1}
+
+by extension:
+    ? {2} = {2}
+
+by for forall n range(0, 3) => {n < 3}
+
 by for:
-    ? forall n range(0, 3) => {n < 3}
+    ? forall m closed_range(0, 2) => {m <= 2}
+
+by enumerate finite_set forall x {1, 2} => {x $in {1, 2}}
 
 by enumerate finite_set:
-    ? forall x {1, 2} => {x $in {1, 2}}
+    ? forall y {3, 4}:
+        y = 3 or y = 4
 "#;
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "inline_by_for_and_enumerate_allow_empty_proof_without_trailing_colon",
+        "inline_by_extension_for_and_enumerate_match_block_forms",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1042,9 +1103,64 @@ by enumerate finite_set:
 
     assert!(
         run_succeeded,
-        "inline by-for/by-enumerate empty proof syntax failed:\n{}",
+        "inline and block proof-method goal forms should use the same executors:\n{}",
         run_output
     );
+    assert!(
+        run_output.contains("\"type\": \"proof by extension\"")
+            && run_output.contains("\"type\": \"proof by finite set enumeration\"")
+            && run_output.contains("\"type\": \"proof by universal introduction\""),
+        "all three inline forms should retain their existing proof provenance:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn inline_by_proof_methods_keep_body_and_target_shape_boundaries() {
+    let body_cases = [
+        "by extension {1} = {1}:\n    do_nothing",
+        "by for forall n range(0, 1) => {n < 1}:\n    do_nothing",
+        "by enumerate finite_set forall n {0} => {n = 0}:\n    do_nothing",
+    ];
+
+    for (index, source_code) in body_cases.iter().enumerate() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(&format!("inline_by_body_{}", index));
+        let (results, error) = run_source_code(source_code, &mut runtime);
+        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        assert!(
+            !succeeded,
+            "an inline proof method must not accept an indented body: {source_code}"
+        );
+        assert!(
+            output.contains("does not accept an indented body"),
+            "the diagnostic should direct bodyful proofs to block form:\n{output}"
+        );
+    }
+
+    let target_cases = [
+        ("by extension 1 < 2", "goal expects equal fact"),
+        ("by for 1 = 1", "expects a single forall fact"),
+        (
+            "by enumerate finite_set 1 = 1",
+            "expects a single forall fact",
+        ),
+    ];
+
+    for (index, (source_code, expected)) in target_cases.iter().enumerate() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(&format!("inline_by_target_{}", index));
+        let (results, error) = run_source_code(source_code, &mut runtime);
+        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        assert!(
+            !succeeded,
+            "an inline proof method must retain its target shape: {source_code}"
+        );
+        assert!(
+            output.contains(expected),
+            "the diagnostic should identify the required target shape:\n{output}"
+        );
+    }
 }
 
 #[test]
@@ -1604,14 +1720,10 @@ by regularity_axiom({})
 }
 
 #[test]
-fn by_goal_header_shorthands_are_rejected() {
+fn remaining_by_goal_header_shorthands_are_rejected() {
     let cases = [
-        "by def 1 = 1",
         "by cases 1 = 1:\n    case 1 = 1:\n        do_nothing",
         "by contra 1 = 1:\n    impossible 1 != 1",
-        "by extension {1} = {1}",
-        "by for forall n range(0, 1) => {n < 1}",
-        "by enumerate finite_set forall n {0} => {n = 0}",
     ];
 
     for (index, source_code) in cases.iter().enumerate() {

@@ -1121,18 +1121,21 @@ impl Runtime {
         )?;
         let (def, header_map) = self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
         let field_types = self.instantiated_struct_field_types(struct_obj, verify_state)?;
-        let cart_obj: Obj = Cart::new(field_types).into();
-        let cart_membership: AtomicFact =
-            InFact::new(in_fact.element.clone(), cart_obj, in_fact.line_file.clone()).into();
-        let cart_result = if let Obj::Tuple(tuple) = &in_fact.element {
+        let carrier_obj = self.struct_carrier_from_field_types(field_types.clone());
+        let carrier_membership: AtomicFact = InFact::new(
+            in_fact.element.clone(),
+            carrier_obj,
+            in_fact.line_file.clone(),
+        )
+        .into();
+        let carrier_result = if field_types.len() == 1 {
+            self.verify_atomic_fact(&carrier_membership, verify_state)?
+        } else if let Obj::Tuple(tuple) = &in_fact.element {
             if tuple.args.len() != def.fields.len() {
                 return Ok((StmtUnknown::new()).into());
             }
-            let instantiated_field_types =
-                self.instantiated_struct_field_types(struct_obj, verify_state)?;
             let mut field_results = Vec::with_capacity(tuple.args.len());
-            for (field_value, field_type) in tuple.args.iter().zip(instantiated_field_types.iter())
-            {
+            for (field_value, field_type) in tuple.args.iter().zip(field_types.iter()) {
                 let field_result = self.verify_obj_satisfies_param_type(
                     field_value.as_ref().clone(),
                     &ParamType::Obj(field_type.clone()),
@@ -1144,31 +1147,35 @@ impl Runtime {
                 field_results.push(field_result);
             }
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                cart_membership.into(),
+                carrier_membership.into(),
                 "dependent struct constructor: each literal tuple field has its instantiated carrier"
                     .to_string(),
                 field_results,
             )
             .into()
         } else {
-            self.verify_atomic_fact(&cart_membership, verify_state)?
+            self.verify_atomic_fact(&carrier_membership, verify_state)?
         };
-        if !cart_result.is_true() {
+        if !carrier_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let mut step_results = vec![cart_result];
+        let mut step_results = vec![carrier_result];
         let mut field_map = HashMap::new();
         for (index, (field_binding, _)) in
             def.field_bindings.iter().zip(def.fields.iter()).enumerate()
         {
-            let field_obj = match &in_fact.element {
-                Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
-                _ => ObjAtIndex::new(
-                    in_fact.element.clone(),
-                    Number::new((index + 1).to_string()).into(),
-                )
-                .into(),
+            let field_obj = if def.fields.len() == 1 {
+                in_fact.element.clone()
+            } else {
+                match &in_fact.element {
+                    Obj::Tuple(tuple) => (*tuple.args[index]).clone(),
+                    _ => ObjAtIndex::new(
+                        in_fact.element.clone(),
+                        Number::new((index + 1).to_string()).into(),
+                    )
+                    .into(),
+                }
             };
             insert_symbol_substitution(&mut field_map, field_binding, field_obj);
         }
@@ -1198,7 +1205,7 @@ impl Runtime {
 
         Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
             in_fact.clone().into(),
-            "struct membership: element is in the named cart base and satisfies struct equivalent facts".to_string(),
+            "struct membership: element is in the named structure carrier and satisfies struct equivalent facts".to_string(),
             step_results,
         )
         .into())

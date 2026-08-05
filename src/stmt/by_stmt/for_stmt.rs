@@ -21,8 +21,8 @@ pub enum ByForExpansion {
     },
 }
 
-/// `by for:` with `?` and one `forall`: `range` / `closed_range` parameters, or one tuple
-/// parameter with type `cart({...}, {...}, ...)` (list-set factors).
+/// `by for` with one inline or goal-block `forall`: `range` / `closed_range` parameters, or
+/// one tuple parameter with type `cart({...}, {...}, ...)` (list-set factors).
 #[derive(Clone)]
 pub struct ByForStmt {
     pub forall_fact: ForallFact,

@@ -304,11 +304,12 @@ an explicit reserved builtin theorem call such as
 `by thm set_builder_member(x, B)` or
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
-Mathematical definitions similarly use explicit `by def:` goal blocks; for
-example, `? A $subset B` and `? $injective(A, B, f)`. At the outer verification
-round, a bare positive concrete predicate can also be proved from its defining
-clauses before known `forall` matching and user strategies. `by def` remains
-useful when that proof route and its output should be explicit.
+Mathematical definitions similarly use explicit `by def A $subset B` and
+`by def $injective(A, B, f)` statements. The equivalent block spelling is
+`by def:` followed by one `? fact` goal. At the outer verification round, a
+bare positive concrete predicate can also be proved from its defining clauses
+before known `forall` matching and user strategies. `by def` remains useful
+when that proof route and its output should be explicit.
 
 This convenience is also part of the trust boundary. Builtin objects, builtin
 facts, builtin statement behavior, and builtin verification rules all deserve
@@ -595,6 +596,12 @@ the Manual.
 A `struct` is not a class or a record object with hidden fields. It is a named
 view of a subset of a Cartesian product. The field names label the positions in
 that product.
+
+There is one deliberate degenerate case: a one-field structure is a named view
+of that field's carrier itself, and selecting the field is the identity
+projection. This lets a metric space store only its distance or a partial
+order store only its relation. Litex does not require a dummy second field,
+but it still rejects a structure with no fields.
 
 For example:
 

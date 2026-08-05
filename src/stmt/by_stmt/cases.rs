@@ -43,14 +43,32 @@ impl fmt::Display for ByCasesStmt {
             .zip(self.impossible_facts.iter())
             .map(|((case, proof), impossible_fact)| {
                 if let Some(impossible_fact) = impossible_fact {
-                    format!(
-                        "{} {}{}\n{}\n{} {}",
+                    let case_header = format!(
+                        "{} {}{}",
                         add_four_spaces_at_beginning(CASE.to_string(), 1),
                         case,
-                        COLON,
-                        vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2),
+                        COLON
+                    );
+                    let impossible_line = format!(
+                        "{} {}",
                         add_four_spaces_at_beginning(IMPOSSIBLE.to_string(), 2),
                         &impossible_fact.to_string()
+                    );
+                    if proof.is_empty() {
+                        format!("{}\n{}", case_header, impossible_line)
+                    } else {
+                        format!(
+                            "{}\n{}\n{}",
+                            case_header,
+                            vec_to_string_add_four_spaces_at_beginning_of_each_line(proof, 2),
+                            impossible_line
+                        )
+                    }
+                } else if proof.is_empty() {
+                    format!(
+                        "{} {}",
+                        add_four_spaces_at_beginning(CASE.to_string(), 1),
+                        case
                     )
                 } else {
                     format!(

@@ -130,15 +130,15 @@ machine-friendly success record, and `-detail` when auditing recursive
 verification data and effects for the whole run. Any `RuntimeError` is rendered
 with the full detailed diagnostic in all three modes, so `-compact` never hides
 the available failure context.
-The same run can also generate a relation graph. For example, the command
-below produces the data behind the Analysis I Chapter 6 graph:
+The same run can also generate a relation graph from a repository-owned
+example:
 
 ```bash
-litex -graph -f scripts/Analysis/textbook/chapter06-sequential-limits.lit tmp/graphs/chapter06_graph.json
+litex -graph -f examples/01_proof_patterns/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
 ```
 
-This repository's Analysis I material supplies a real example rather than a
-toy diagram:
+The larger diagram below was generated from Analysis I Chapter 6 in its
+separately owned textbook workspace:
 
 <p align="center">
   <img src="assets/knowledge_graph.svg" alt="A Litex relation graph generated from Analysis I Chapter 6, showing concepts and theorems connected by uses_prop and justified_by relationships" width="920">

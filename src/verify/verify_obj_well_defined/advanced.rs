@@ -118,13 +118,17 @@ impl Runtime {
             if membership_result.is_true() {
                 let field_types =
                     self.instantiated_struct_field_types(&struct_obj, verify_state)?;
-                let cart_membership: AtomicFact = InFact::new(
-                    (*x.obj).clone(),
-                    Cart::new(field_types).into(),
-                    default_line_file(),
-                )
-                .into();
-                self.store_atomic_fact_without_well_defined_verified_and_infer(cart_membership)?;
+                if field_types.len() > 1 {
+                    let cart_membership: AtomicFact = InFact::new(
+                        (*x.obj).clone(),
+                        Cart::new(field_types).into(),
+                        default_line_file(),
+                    )
+                    .into();
+                    self.store_atomic_fact_without_well_defined_verified_and_infer(
+                        cart_membership,
+                    )?;
+                }
             }
         }
 

@@ -230,7 +230,7 @@ impl Runtime {
                 if tb.body.is_empty() {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "struct definition expects at least two fields".to_string(),
+                            "struct definition expects at least one field".to_string(),
                             tb.line_file.clone(),
                         ),
                     )));
@@ -291,10 +291,10 @@ impl Runtime {
                     }
                 }
 
-                if fields.len() < 2 {
+                if fields.is_empty() {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "struct definition expects at least two fields".to_string(),
+                            "struct definition expects at least one field".to_string(),
                             tb.line_file.clone(),
                         ),
                     )));

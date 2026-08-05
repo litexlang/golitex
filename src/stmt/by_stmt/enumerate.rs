@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::fmt;
 
-/// List-set enumeration: `by enumerate finite_set:` then `?` / one `forall`.
+/// List-set enumeration with one inline or goal-block `forall` target.
 #[derive(Clone)]
 pub struct ByEnumerateFiniteSetStmt {
     pub forall_fact: ForallFact,

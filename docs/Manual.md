@@ -644,6 +644,14 @@ A `struct` defines a named view of a Cartesian product. `&Name<args>` is the
 set-like struct object. Select a view explicitly with `&Name{obj}.field`, or
 bind a fresh name with an explicit struct type and then use `obj.field`.
 
+A structure with two or more fields uses that Cartesian-product
+representation. A one-field structure is instead a named view of the sole
+field carrier, and selecting its only field is an identity projection. This
+supports mathematically natural objects such as a metric space carrying only
+its distance operation or a partial order carrying only its order relation,
+without inventing a dummy field. A structure must still declare at least one
+field.
+
 ```litex
 struct Point:
     x R
@@ -865,8 +873,9 @@ not $prime(1)
 
 `$prime(p)` is a native predicate on `N+`. Concrete positive integer
 literals that fit in `u64` are decided exactly; larger literals are left to
-proof rather than guessed. A `by def:` block with `? $prime(p)` exposes the symbolic
-trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).
+proof rather than guessed. `by def $prime(p)` (or the equivalent block form)
+exposes the symbolic trial-divisor contract (`2 <= p` and no divisor in
+`range(2, p)`).
 
 An object expression alone is not a fact:
 
@@ -1858,9 +1867,17 @@ This includes packaging an exact existential clause already established by a
 `witness`. Once an accepted positive predicate is stored, forward inference may
 also expose its positive defining consequences; that is the other direction.
 
-Use `by def:` followed by `? $P(args)` when the proof should request and record
-the definition route explicitly. Unlike ordinary atomic verification, explicit `by def`
-rechecks the definition even if the target predicate is already known.
+Use `by def $P(args)` when the proof should request and record the definition
+route explicitly. The block form remains equivalent:
+
+```text
+by def:
+    ? $P(args)
+```
+
+Unlike ordinary atomic verification, explicit `by def` rechecks the definition
+even if the target predicate is already known. Both forms accept exactly one
+positive atomic target.
 
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
@@ -1883,16 +1900,14 @@ prop is_unit_pair(x, y R):
     x = 1
     y = 1
 
-by def:
-    ? $is_unit_pair(1, 1)
+by def $is_unit_pair(1, 1)
 ```
 
 `by def` requires a positive concrete `prop` call:
 
 ```text
 abstract_prop P(x)
-by def:
-    ? $P(1)
+by def $P(1)
 ```
 
 This is an `error` because an abstract predicate has no definition to unfold.
@@ -1968,6 +1983,21 @@ by cases:
         k(x) > 2
 ```
 
+When a case assumption already proves every target, omit both the branch body
+and its colon. The bodyless form runs zero proof statements and still performs
+the ordinary branch-final checks:
+
+```litex
+by cases:
+    ? 1 = 1
+    case 1 = 1
+    case 1 != 1:
+        impossible 1 = 1
+```
+
+This shorthand is only for proof `by cases`. Function and algorithm cases
+still require their return expressions.
+
 Every branch must establish the target:
 
 ```text
@@ -2020,9 +2050,16 @@ by enumerate finite_set:
     ? forall x P:
         x = 1 or x = 2 or x = 3
 
+by enumerate finite_set forall y {1, 2, 3} => {y = 1 or y = 2 or y = 3}
+
 have i1 closed_range(1, 3)
 by closed_range as cases: i1 $in 1...3
 ```
+
+The inline form is available when enumeration needs no user-written proof
+statements. It accepts exactly one inline `forall` target and constructs the
+same finite-set enumeration proof as the block form. If helper statements are
+needed, keep the target in the indented `? forall ...` block.
 
 Enumeration is not an unbounded decision procedure:
 
@@ -2036,8 +2073,6 @@ This is an `error` because `N` is not a finite displayed domain available for
 exhaustive enumeration.
 
 The related forms are `by enumerate range` and `by enumerate closed_range`.
-`by enumerate finite_set` always takes its universal target from an indented
-`? forall ...` goal block.
 
 ### Integer and finite-set induction
 
@@ -2087,6 +2122,17 @@ form `by induc S in A` proves the result only for finite subsets of `A`.
 `by for` is a bounded proof shell for integer ranges and supported finite
 Cartesian products. `by extension` proves set equality through mutual
 membership.
+
+When the generated obligations close without helper statements, put the
+complete target on the same line:
+
+```litex
+by for forall i1 range(0, 3) => {i1 < 3}
+by extension {1} = {1}
+```
+
+These inline forms do not accept an indented body. Use the goal-block forms
+when the proof needs additional statements:
 
 ```litex
 by for:

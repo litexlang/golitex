@@ -1,0 +1,17 @@
+# Tracer: inline explicit definition proof
+#
+# Before (did not parse):
+# by def {1} $subset {1}
+# Former behavior: `by def` rejected a goal on its header and required:
+# by def:
+#     ? {1} $subset {1}
+#
+# Now (verified):
+by def {1} $subset {1}
+# Current behavior: the inline target uses the same explicit definition checker
+# and commit path as the block goal form.
+#
+# Boundary: only positive concrete props and supported positive builtin definitions
+# are accepted; `by def 1 = 1` remains an executable negative Rust regression.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/inline_by_definition.lit
+# Implementation: src/parse/by_stmt/definition_by_stmt.rs

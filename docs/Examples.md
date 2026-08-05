@@ -78,8 +78,7 @@ unfold and verify its defining facts.
 prop is_unit_distance_from_two(t R):
     abs(t - 2) = 1
 
-by def:
-    ? $is_unit_distance_from_two(3)
+by def $is_unit_distance_from_two(3)
 ```
 
 ### 5. Existential Facts Use Witnesses
@@ -198,12 +197,14 @@ forall alpha I:
 - Category: `proof pattern`
 - Purpose: Shows case splits over proposition and order alternatives.
 
+Write `case fact` without `:` when the case assumption already closes every
+goal; branches with proof statements keep `case fact:`.
+
 ```litex
 sketch:
     by cases:
         ? 1 + 1 = 2
-        case 1 + 1 = 2:
-            do_nothing
+        case 1 + 1 = 2
         case 1 + 1 != 2:
             1 + 1 = 2
             impossible 1 + 1 = 2
@@ -234,8 +235,7 @@ claim:
 
 by cases:
     ? 1 = 1
-    case 1 = 1:
-        do_nothing
+    case 1 = 1
     case 1 != 1:
         impossible 1 = 1
 ```
@@ -751,8 +751,7 @@ claim:
         case n  = 0:
             n >  0
             impossible 0 > 0
-        case n = 1:
-            do_nothing
+        case n = 1
 ```
 
 ```litex
@@ -802,8 +801,7 @@ claim:
         ? $q()
         case $p():
             impossible not $p()
-        case $q():
-            do_nothing
+        case $q()
 ```
 
 ### 22. Matching A Free Parameter In A Universal Fact
@@ -2031,8 +2029,8 @@ not $prime(1)
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
 presentation choice rather than a prerequisite. `$prime(p)` is a native
 predicate on `N+`; concrete literals in the `u64` range are decided
-exactly, while `by def:` with `? $prime(p)` exposes the symbolic trial-divisor
-definition.
+exactly, while `by def $prime(p)` (or the equivalent block form) exposes the
+symbolic trial-divisor definition.
 
 For symbolic examples, see
 [`examples/01_proof_patterns/gcd_and_prime_builtin.lit`](../examples/01_proof_patterns/gcd_and_prime_builtin.lit).
@@ -2257,8 +2255,7 @@ claim:
             x != 0 or y != 0
     by cases:
         ? x != 0 or y != 0
-        case x != 0:
-            do_nothing
+        case x != 0
         case x = 0:
             by contra:
                 ? y != 0
@@ -3851,12 +3848,12 @@ prop is_unit_pair(x R, y R):
     y = 1
 
 1 = 1
-by def:
-    ? $is_unit_pair(1, 1)
+by def $is_unit_pair(1, 1)
 ```
 
-`by def` is single-line in this preview: it accepts neither `:` nor an
-indented proof body.
+The block form `by def:` followed by one `? fact` remains equivalent. Neither
+form accepts an arbitrary fact: the target must be a positive concrete prop or
+a supported positive builtin definition.
 
 #### 18. Local Proof Blocks With `claim`
 
@@ -3926,8 +3923,7 @@ Purpose: tell Litex which proof shape to use for a local target.
 ```litex
 by cases:
     ? 1 + 1 = 2
-    case 1 + 1 = 2:
-        do_nothing
+    case 1 + 1 = 2
     case 1 + 1 != 2:
         impossible 1 + 1 = 2
 ```

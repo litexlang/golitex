@@ -1,6 +1,76 @@
 use super::*;
 
 #[test]
+fn one_field_struct_is_a_named_view_of_its_field_carrier() {
+    run_with_large_stack(
+        "one_field_struct_is_a_named_view_of_its_field_carrier",
+        || {
+            let source_code = r#"
+struct MetricSpace<X set>:
+    dist fn(x, y X) R
+    <=>:
+        forall x, y X:
+            dist(x, y) >= 0
+
+have fn discrete_distance(x, y R) R = 0
+forall x, y R:
+    discrete_distance(x, y) = 0
+    discrete_distance(x, y) >= 0
+by thm struct_member(discrete_distance, &MetricSpace<R>)
+have metric &MetricSpace<R> = discrete_distance
+metric.dist(1, 0) = metric(1, 0) = 0
+forall candidate &MetricSpace<R>, x, y R:
+    candidate(x, y) >= 0
+
+struct PartialOrder<S set>:
+    le_rel power_set(cart(S, S))
+    <=>:
+        forall x, y, z S:
+            (x, y) $in le_rel
+            (y, z) $in le_rel
+            =>:
+                (x, z) $in le_rel
+
+struct OrderedContainer<S set>:
+    order &PartialOrder<S>
+    marker R
+
+forall container &OrderedContainer<R>, x, y, z R:
+    (x, y) $in container.order.le_rel
+    (y, z) $in container.order.le_rel
+    =>:
+        (x, z) $in container.order.le_rel
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "one_field_struct_is_a_named_view_of_its_field_carrier",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "a one-field struct should retain its field carrier, identity projection, and laws through a nested field:\n{run_output}"
+            );
+
+            let mut empty_runtime = Runtime::new();
+            empty_runtime.new_file_path_new_env_new_name_scope("zero_field_struct_still_rejects");
+            let (empty_results, empty_error) = run_source_code(
+                "struct Empty:\n    <=>:\n        0 = 0\n",
+                &mut empty_runtime,
+            );
+            let (empty_succeeded, empty_output) =
+                render_run_source_code_output(&empty_runtime, &empty_results, &empty_error, false);
+            assert!(
+                !empty_succeeded
+                    && empty_output.contains("struct definition expects at least one field"),
+                "zero-field structs must remain outside the named-view model:\n{empty_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn struct_field_projection_is_a_structural_definitional_reduction() {
     run_with_large_stack(
         "struct_field_projection_is_a_structural_definitional_reduction",

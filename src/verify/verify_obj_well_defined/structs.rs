@@ -123,6 +123,15 @@ impl Runtime {
         Ok(fields)
     }
 
+    /// A one-field structure is a named view of its sole field carrier.
+    /// Multi-field structures retain their Cartesian-product representation.
+    pub(crate) fn struct_carrier_from_field_types(&self, mut field_types: Vec<Obj>) -> Obj {
+        if field_types.len() == 1 {
+            return field_types.remove(0);
+        }
+        Cart::new(field_types).into()
+    }
+
     pub(crate) fn struct_field_index(
         &self,
         struct_obj: &StructObj,
@@ -158,6 +167,20 @@ impl Runtime {
         field_access: &ObjAsStructInstanceWithFieldAccess,
     ) -> Result<Obj, RuntimeError> {
         let index = self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
+        let struct_name = field_access.struct_obj.name.to_string();
+        let def = self
+            .get_struct_definition_by_name(&struct_name)
+            .ok_or_else(|| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "struct `{}` is not defined",
+                        struct_name
+                    )),
+                ))
+            })?;
+        if def.fields.len() == 1 {
+            return Ok((*field_access.obj).clone());
+        }
         Ok(ObjAtIndex::new(
             (*field_access.obj).clone(),
             Number::new(index.to_string()).into(),
