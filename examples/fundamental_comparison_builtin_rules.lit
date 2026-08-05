@@ -65,7 +65,6 @@ claim:
             a <= b / c
         case a * c <= b:
             a <= b / c
-    a <= b / c
 
 forall a, b, c R:
     0 < c

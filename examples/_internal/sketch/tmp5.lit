@@ -67,7 +67,6 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     $is_finite_set(set_minus(s, {a}))
     $is_finite_set(intersect(s, {a}))
     finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
-    set_minus(s, {a}) = {}
 
 thm index_function_for_singleton:
     ? forall s finite_set:
@@ -172,7 +171,6 @@ claim:
                     =>:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_for_singleton(s)
-                exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
             by def $finite_set_size_has_index(1)
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
@@ -186,7 +184,6 @@ claim:
                     =>:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_step(n, s)
-                exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
             by def $finite_set_size_has_index(n + 1)
             $finite_set_size_has_index(n + 1)
 

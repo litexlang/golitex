@@ -1,6 +1,3 @@
-forall a, b R:
-    a < b
-    =>:
-        not b < a
-
-prop 
+have f fn(x R) R
+forall a R:
+    f(a) = f(a)

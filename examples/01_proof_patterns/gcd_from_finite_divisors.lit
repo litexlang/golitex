@@ -41,7 +41,6 @@ thm common_divisor_set_is_finite_and_nonempty:
                     d >= 1
                     $basics::divides(d, a)
                     by thm positive_divisor_le_abs(d, a)
-                    d $in closed_range(1, abs(a))
                 by def c $subset closed_range(1, abs(a))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(a)))
             case b != 0:
@@ -53,7 +52,6 @@ thm common_divisor_set_is_finite_and_nonempty:
                     d >= 1
                     $basics::divides(d, b)
                     by thm positive_divisor_le_abs(d, b)
-                    d $in closed_range(1, abs(b))
                 by def c $subset closed_range(1, abs(b))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(b)))
     witness $is_nonempty_set(c) from 1:
@@ -95,4 +93,3 @@ thm gcd_from_finite_divisors_eq_native:
     by thm set_builder_member(gcd(a, b), {d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) <= finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) <= gcd_from_finite_divisors(a, b)
-    gcd_from_finite_divisors(a, b) = gcd(a, b)

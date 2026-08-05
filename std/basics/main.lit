@@ -20,7 +20,6 @@ thm subset_of_finite_set_is_finite:
             $is_finite_set(A)
     A = set_minus(B, set_minus(B, A))
     $is_finite_set(set_minus(B, set_minus(B, A)))
-    $is_finite_set(A)
 
 # ---------------------------------------------------------------------------
 # Rational normalization
@@ -254,63 +253,54 @@ thm exp_injective:
         exp(a) = exp(b)
         =>:
             a = b
-    a = b
 
 thm exp_reflects_strict_order:
     ? forall a, b R:
         exp(a) < exp(b)
         =>:
             a < b
-    a < b
 
 thm exp_reflects_weak_order:
     ? forall a, b R:
         exp(a) <= exp(b)
         =>:
             a <= b
-    a <= b
 
 thm ln_injective:
     ? forall a, b R+:
         ln(a) = ln(b)
         =>:
             a = b
-    a = b
 
 thm ln_reflects_strict_order:
     ? forall a, b R+:
         ln(a) < ln(b)
         =>:
             a < b
-    a < b
 
 thm ln_reflects_weak_order:
     ? forall a, b R+:
         ln(a) <= ln(b)
         =>:
             a <= b
-    a <= b
 
 thm sign_zero_implies_zero:
     ? forall x R:
         sign(x) = 0
         =>:
             x = 0
-    x = 0
 
 thm sign_nonzero_iff_argument_nonzero_forward:
     ? forall x R:
         x != 0
         =>:
             sign(x) != 0
-    sign(x) != 0
 
 thm sign_nonzero_iff_argument_nonzero_reverse:
     ? forall x R:
         sign(x) != 0
         =>:
             x != 0
-    x != 0
 
 thm lcm_is_multiple_of_left:
     ? forall a, b N+:
@@ -342,7 +332,6 @@ thm lcm_le_common_positive_multiple:
     abs(b) = b
     m % abs(a) = m % a = (a * ka) % a = 0
     m % abs(b) = m % b = (b * kb) % b = 0
-    lcm(a, b) <= m
 
 thm earlier_factorial_divides_later:
     ? forall m, n N:
@@ -396,14 +385,12 @@ thm gcd_comm:
     b % gcd(b, a) = 0
     a % gcd(b, a) = 0
     gcd(b, a) <= gcd(a, b)
-    gcd(a, b) = gcd(b, a)
 
 thm gcd_positive:
     ? forall a, b Z:
         a != 0 or b != 0
         =>:
             gcd(a, b) $in N+
-    gcd(a, b) $in N+
 
 thm gcd_divides_left:
     ? forall a, b Z:
@@ -436,7 +423,6 @@ thm common_divisor_le_gcd:
     obtain kb from exist k Z st {b = d * k}
     a % d = (d * ka) % d = 0
     b % d = (d * kb) % d = 0
-    d <= gcd(a, b)
 
 thm gcd_euclidean_base:
     ? forall a Z:
@@ -466,7 +452,6 @@ thm gcd_euclidean_base:
     $divides(abs(a), 0)
     by thm common_divisor_le_gcd(a, 0, abs(a))
     abs(a) <= gcd(a, 0)
-    gcd(a, 0) = abs(a)
 
 thm gcd_euclidean_step:
     ? forall a, b Z:
@@ -518,7 +503,6 @@ thm gcd_euclidean_step:
     $divides(gcd(a, b), a % abs(b))
     by thm common_divisor_le_gcd(b, a % abs(b), gcd(a, b))
     gcd(a, b) <= gcd(b, a % abs(b))
-    gcd(a, b) = gcd(b, a % abs(b))
 
 # The Euclidean remainder has strictly smaller absolute value than a nonzero divisor.
 # This must be available before the recursive Bezout coefficient definition.
@@ -532,7 +516,6 @@ thm _euclidean_remainder_abs_lt_abs:
     u % abs(v) >= 0
     abs(u % abs(v)) = u % abs(v)
     u % abs(v) < abs(v)
-    abs(u % abs(v)) < abs(v)
 
 thm bezout_identity:
     ? forall a, b Z:
@@ -701,7 +684,6 @@ thm bezout_identity:
                     euclid_bezout_r(v, r) * u + (euclid_bezout_l(v, r) + integer_quotient(u, abs(v)) * euclid_bezout_r(v, r)) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v)))
                     euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * (u + v * integer_quotient(u, abs(v))) = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r
                     euclid_bezout_l(u, v) * u + euclid_bezout_r(u, v) * v = euclid_bezout_l(v, r) * v + euclid_bezout_r(v, r) * r = gcd(v, r) = gcd(u, v)
-        $euclid_bezout_identity_at_measure(m + 1)
 
     by strong_induc m from 0:
         ? $euclid_bezout_identity_at_measure(m)

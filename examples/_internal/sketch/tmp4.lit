@@ -31,7 +31,6 @@ by contra:
 thm tmp_one_eq_one:
     ? forall:
         1 = 1
-    1 = 1
 
 by thm tmp_one_eq_one()
 
