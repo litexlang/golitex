@@ -78,8 +78,7 @@ claim:
         proj(c, i1) = R = X(i1)
         p[i1] $in X(i1)
         raw_choice_tuple_encode(p)(i1) $in X(i1)
-    by def:
-        ? $has_X_values(raw_choice_tuple_encode(p))
+    by def $has_X_values(raw_choice_tuple_encode(p))
     $has_X_values(raw_choice_tuple_encode(p))
     by thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
     raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}

@@ -166,7 +166,7 @@ mod parse_stmt_diagnostic_tests {
     fn by_def_requires_exactly_one_positive_question_goal() {
         let message = parse_one_stmt_error_message("by def $P(1):\n    1 = 1");
         assert!(
-            message.contains("no longer accepts a goal on the header"),
+            message.contains("inline by def does not accept an indented body"),
             "{}",
             message
         );

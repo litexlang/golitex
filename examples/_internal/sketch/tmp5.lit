@@ -96,8 +96,7 @@ thm index_function_for_singleton:
             witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from 1:
                 1 <= finite_set_size(s)
                 y = idx0(1)
-        by def:
-            ? $is_index_fn(s, idx0)
+        by def $is_index_fn(s, idx0)
         $is_index_fn(s, idx0)
 
 thm index_function_step:
@@ -156,8 +155,7 @@ thm index_function_step:
                     witness exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)} from j:
                         j <= finite_set_size(s)
                         y = idx0(j)
-        by def:
-            ? $is_index_fn(s, idx0)
+        by def $is_index_fn(s, idx0)
         $is_index_fn(s, idx0)
 
 claim:
@@ -175,8 +173,7 @@ claim:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_for_singleton(s)
                 exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
-            by def:
-                ? $finite_set_size_has_index(1)
+            by def $finite_set_size_has_index(1)
             $finite_set_size_has_index(1)
             $finite_set_size_has_index(n)
 
@@ -190,8 +187,7 @@ claim:
                         exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
                 by thm index_function_step(n, s)
                 exist idx fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx)}
-            by def:
-                ? $finite_set_size_has_index(n + 1)
+            by def $finite_set_size_has_index(n + 1)
             $finite_set_size_has_index(n + 1)
 
 claim:

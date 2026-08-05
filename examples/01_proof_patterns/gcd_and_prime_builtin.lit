@@ -15,13 +15,11 @@ thm prime_is_at_least_two:
         $prime(p)
         =>:
             2 <= p
-    by def:
-        ? $prime(p)
+    by def $prime(p)
 
 thm prime_has_no_trial_divisor:
     ? forall p N+, d range(2, p):
         $prime(p)
         =>:
             p % d != 0
-    by def:
-        ? $prime(p)
+    by def $prime(p)

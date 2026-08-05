@@ -738,12 +738,9 @@ thm unsound_eventually_changes_set:
             =>:
                 n $in Qset
                 n $in R0
-        by def:
-            ? $contains_natural_tail_from_unsound(b, R0)
-    by def:
-        ? $contains_natural_tail_unsound(R0)
-    by def:
-        ? $eventually_on_N_unsound(R0)
+        by def $contains_natural_tail_from_unsound(b, R0)
+    by def $contains_natural_tail_unsound(R0)
+    by def $eventually_on_N_unsound(R0)
 "#;
 
     let (run_succeeded, run_output) =

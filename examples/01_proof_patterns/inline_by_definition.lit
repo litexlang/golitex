@@ -8,10 +8,12 @@
 #
 # Now (verified):
 by def {1} $subset {1}
-# Current behavior: the inline target uses the same explicit definition checker
-# and commit path as the block goal form.
+# Current behavior: the inline target is the canonical source and output form;
+# it uses the explicit definition checker and commit path.
 #
-# Boundary: only positive concrete props and supported positive builtin definitions
-# are accepted; `by def 1 = 1` remains an executable negative Rust regression.
+# Boundary: the older goal block remains parser-compatible, but new source uses
+# the inline form. Only positive concrete props and supported positive builtin
+# definitions are accepted; `by def 1 = 1` remains a negative Rust regression.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/inline_by_definition.lit
 # Implementation: src/parse/by_stmt/definition_by_stmt.rs
+# and src/stmt/by_stmt/definition.rs

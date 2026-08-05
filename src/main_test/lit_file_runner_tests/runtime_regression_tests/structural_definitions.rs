@@ -1292,8 +1292,7 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
 trust have f fn(n N) R
 trust forall index N:
     f(index) $in {0}
-by def:
-    ? $maps_into(R, f, {0})
+by def $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
@@ -1316,8 +1315,7 @@ prop maps_into(A set, f fn(n N) A, S power_set(A)):
         f(n) $in S
 
 trust have f fn(n N) R
-by def:
-    ? $maps_into(R, f, {0})
+by def $maps_into(R, f, {0})
 "#;
     let mut runtime = Runtime::new();
     runtime
@@ -1748,8 +1746,7 @@ template<S nonempty_set, marker S>:
         have fn candidate(x S) S = marker
         forall x S:
             candidate(x) = marker
-        by def:
-            ? $is_constant(S, marker, candidate)
+        by def $is_constant(S, marker, candidate)
         candidate $in \ConstantFunctions<S, marker>
         witness exist value \ConstantFunctions<S, marker> st {$is_constant(S, marker, value)} from candidate
         claim:

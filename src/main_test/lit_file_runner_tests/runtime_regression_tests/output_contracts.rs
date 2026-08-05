@@ -6,8 +6,7 @@ fn by_def_output_and_summary_report_definition_checks() {
 prop unit(x R):
     x = 1
 1 = 1
-by def:
-    ? $unit(1)
+by def $unit(1)
 "#;
 
     let mut runtime = Runtime::new();

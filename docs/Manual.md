@@ -462,8 +462,7 @@ Litex exposes sets, membership, and set operations directly.
 2 $in intersect({1, 2}, {2, 3})
 2 $in set_minus({1, 2}, {1})
 
-by def:
-    ? {x R: 0 <= x} $subset R
+by def {x R: 0 <= x} $subset R
 ```
 
 | Form | Meaning |
@@ -873,9 +872,8 @@ not $prime(1)
 
 `$prime(p)` is a native predicate on `N+`. Concrete positive integer
 literals that fit in `u64` are decided exactly; larger literals are left to
-proof rather than guessed. `by def $prime(p)` (or the equivalent block form)
-exposes the symbolic trial-divisor contract (`2 <= p` and no divisor in
-`range(2, p)`).
+proof rather than guessed. `by def $prime(p)` exposes the symbolic
+trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).
 
 An object expression alone is not a fact:
 
@@ -1087,10 +1085,8 @@ $is_nonempty_set({1})
 $is_finite_set({1, 2})
 
 1 $in {1, 2}
-by def:
-    ? {1} $subset {1, 2}
-by def:
-    ? {1, 2} $superset {1}
+by def {1} $subset {1, 2}
+by def {1, 2} $superset {1}
 ```
 
 | Positive form | Negative form | Meaning |
@@ -1131,10 +1127,8 @@ global equality after compatible function-space information is checked.
 have fn f(x R) R = x
 have fn g(x R) R = x
 
-by def:
-    ? $fn_eq_in(f, g, R)
-by def:
-    ? $fn_eq(f, g)
+by def $fn_eq_in(f, g, R)
+by def $fn_eq(f, g)
 ```
 
 Once a verified `$fn_eq(f, g)` is stored, forward inference also stores the
@@ -1178,8 +1172,7 @@ its name and parameter shape.
 prop is_zero(x R):
     x = 0
 
-by def:
-    ? $is_zero(0)
+by def $is_zero(0)
 ```
 
 ```text
@@ -1273,8 +1266,7 @@ struct Point:
     x R
     y R
 
-by def:
-    ? $is_origin(0, 0)
+by def $is_origin(0, 0)
 by thm struct_member((0, 0), &Point)
 ```
 
@@ -1612,8 +1604,7 @@ strategy use_is_one:
         =>:
             $is_one(x)
     x = 1
-    by def:
-        ? $is_one(x)
+    by def $is_one(x)
 
 $is_one(1)
 stop strategy use_is_one
@@ -1897,17 +1888,16 @@ This includes packaging an exact existential clause already established by a
 `witness`. Once an accepted positive predicate is stored, forward inference may
 also expose its positive defining consequences; that is the other direction.
 
-Use `by def $P(args)` when the proof should request and record the definition
-route explicitly. The block form remains equivalent:
+Use the canonical inline form when the proof should request and record the
+definition route explicitly:
 
 ```text
-by def:
-    ? $P(args)
+by def $P(args)
 ```
 
 Unlike ordinary atomic verification, explicit `by def` rechecks the definition
-even if the target predicate is already known. Both forms accept exactly one
-positive atomic target.
+even if the target predicate is already known. It accepts exactly one positive
+atomic target. The older `by def:` goal block remains accepted for compatibility.
 
 `by def` also names the mathematical-definition route for these builtin
 positive forms: subset, superset, proper subset, proper superset,
@@ -2614,8 +2604,7 @@ This rule only answers membership goals; it does not rewrite an order goal
 such as `0 < x` into membership in a positive-number set.
 
 ```litex
-by def:
-    ? {1} $subset {1, 2}
+by def {1} $subset {1, 2}
 
 forall B set, A power_set(B), x A:
     x $in B
@@ -2627,13 +2616,10 @@ claim:
         =>:
             A $proper_subset B
             B $proper_superset A
-    by def:
-        ? A $proper_subset B
-    by def:
-        ? B $proper_superset A
+    by def A $proper_subset B
+    by def B $proper_superset A
 
-by def:
-    ? $fn_eq(fn(x R) R {x}, fn(y R) R {y})
+by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 `$fn_eq` and `$fn_eq_in` do not have ordinary negated atomic forms. The
@@ -2788,8 +2774,7 @@ The second line is `unknown`; `R` contains positive, zero, and negative values.
 ### Subset, superset, and order inference
 
 ```litex
-by def:
-    ? {1} $subset {1, 2}
+by def {1} $subset {1, 2}
 
 forall x {1}:
     x $in {1, 2}

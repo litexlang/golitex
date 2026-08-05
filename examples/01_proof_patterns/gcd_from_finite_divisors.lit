@@ -42,8 +42,7 @@ thm common_divisor_set_is_finite_and_nonempty:
                     $basics::divides(d, a)
                     by thm positive_divisor_le_abs(d, a)
                     d $in closed_range(1, abs(a))
-                by def:
-                    ? c $subset closed_range(1, abs(a))
+                by def c $subset closed_range(1, abs(a))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(a)))
             case b != 0:
                 claim:
@@ -55,19 +54,16 @@ thm common_divisor_set_is_finite_and_nonempty:
                     $basics::divides(d, b)
                     by thm positive_divisor_le_abs(d, b)
                     d $in closed_range(1, abs(b))
-                by def:
-                    ? c $subset closed_range(1, abs(b))
+                by def c $subset closed_range(1, abs(b))
                 by thm basics::subset_of_finite_set_is_finite(c, closed_range(1, abs(b)))
     witness $is_nonempty_set(c) from 1:
         1 $in N+
         witness exist k Z st {a = 1 * k} from a:
             a = 1 * a
-        by def:
-            ? $basics::divides(1, a)
+        by def $basics::divides(1, a)
         witness exist k Z st {b = 1 * k} from b:
             b = 1 * b
-        by def:
-            ? $basics::divides(1, b)
+        by def $basics::divides(1, b)
         by thm set_builder_member(1, {d N+: $basics::divides(d, a), $basics::divides(d, b)})
         1 $in c
     $is_finite_set({d N+: $basics::divides(d, a), $basics::divides(d, b)})
@@ -94,10 +90,8 @@ thm gcd_from_finite_divisors_eq_native:
     gcd(a, b) $in N+
     a % gcd(a, b) = 0
     b % gcd(a, b) = 0
-    by def:
-        ? $basics::divides(gcd(a, b), a)
-    by def:
-        ? $basics::divides(gcd(a, b), b)
+    by def $basics::divides(gcd(a, b), a)
+    by def $basics::divides(gcd(a, b), b)
     by thm set_builder_member(gcd(a, b), {d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) <= finite_set_max({d N+: $basics::divides(d, a), $basics::divides(d, b)})
     gcd(a, b) <= gcd_from_finite_divisors(a, b)
