@@ -499,7 +499,7 @@ mod tests {
             )
             .unwrap(),
         );
-        let iff_forall = ForallFact::new(
+        let iff_forall = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![]),
             vec![forall_equality(&runtime, "iff_dom").into()],
             vec![forall_equality(&runtime, "iff_then").into()],
@@ -512,14 +512,14 @@ mod tests {
             default_line_file(),
         )
         .unwrap();
-        let negated_forall = ForallFact::new(
+        let negated_forall = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![]),
             vec![],
             vec![forall_equality(&runtime, "not_forall").into()],
             default_line_file(),
         )
         .unwrap();
-        let inline_forall = ForallFact::new(
+        let inline_forall = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![runtime
                 .fresh_param_group_with_type(
                     vec!["bound".to_string()],
@@ -664,7 +664,7 @@ mod tests {
     #[test]
     fn contains_forall_param_checks_occurrences_not_only_binder_headers() {
         let runtime = Runtime::new();
-        let inline_forall = ForallFact::new(
+        let inline_forall = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![runtime
                 .fresh_param_group_with_type(vec!["bound".to_string()], ParamType::Set(Set::new()))
                 .unwrap()]),

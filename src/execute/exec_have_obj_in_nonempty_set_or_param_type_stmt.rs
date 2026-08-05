@@ -12,6 +12,9 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, checks)).into())
     }
 
+    /// Mathematical contract: an object introduction is meaningful when each
+    /// declared parameter type is meaningful in dependency order; nonemptiness
+    /// of object carriers is proved in the following verification phase.
     fn exec_have_obj_in_nonempty_set_or_param_type_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveObjInNonemptySetOrParamTypeStmt,

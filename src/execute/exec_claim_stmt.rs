@@ -9,6 +9,8 @@ impl Runtime {
         Ok(result.with_infers(infer_result_after_store))
     }
 
+    /// Mathematical contract: a claim can be proved only when its complete
+    /// goal fact is well-defined in the current context.
     fn exec_claim_stmt_verify_well_definedness(
         &mut self,
         stmt: &ClaimStmt,

@@ -1,0 +1,26 @@
+# Tracer: nested forall conclusions are canonicalized before verification and storage.
+#
+# Before (did not parse):
+# forall x R:
+#     x > 0
+#     =>:
+#         forall y R:
+#             y > 0
+#             =>:
+#                 x + y > 0
+# Former behavior: ParseError, "Expected exist or and chain atomic fact".
+#
+# Now (verified):
+forall x R:
+    x > 0
+    =>:
+        forall y R:
+            y > 0
+            =>:
+                x + y > 0
+# Current behavior: the parser lowers this to one canonical forall over x and y.
+#
+# Boundary: a nested forall cannot share its direct then block with another fact.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/nested_forall_then_normalization.lit
+# Implementation: src/fact/forall_fact.rs and src/parse/parse_fact.rs
+# Broader gates: cargo test --release run_examples -- --nocapture; cargo test --release run_all -- --nocapture

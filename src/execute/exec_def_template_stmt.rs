@@ -14,6 +14,9 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new_with_stmt(def_template_stmt.clone().into()).into())
     }
 
+    /// Mathematical contract: a template declaration has meaningful typed
+    /// arguments and domain assumptions, and its entire body declaration is
+    /// executable and well-defined under those local assumptions.
     fn def_template_stmt_check_well_defined(
         &mut self,
         def_template_stmt: &DefTemplateStmt,

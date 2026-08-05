@@ -143,7 +143,7 @@ fn axiom_of_choice_members_nonempty_fact(
     let a_group =
         runtime.fresh_param_group_with_type(vec![a_name], ParamType::Obj(family.clone()))?;
     let a = obj_for_bound_param_in_scope(&a_group.params[0], ParamObjType::Forall);
-    Ok(ForallFact::new(
+    Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![a_group]),
         vec![],
         vec![IsNonemptySetFact::new(a, line_file.clone()).into()],
@@ -193,7 +193,7 @@ fn axiom_of_choice_value_fact(
     let a = obj_for_bound_param_in_scope(&a_group.params[0], ParamObjType::Forall);
     let f_head: FnObjHead = ExistFreeParamObj::new(f_binding).into();
     let f_of_a: Obj = FnObj::new(f_head, vec![vec![Box::new(a.clone())]]).into();
-    ForallFact::new(
+    ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![a_group]),
         vec![],
         vec![InFact::new(f_of_a, a, line_file.clone()).into()],

@@ -27,6 +27,9 @@ impl Runtime {
         .into())
     }
 
+    /// Mathematical contract: an `abstract_prop` header contains only an
+    /// uninterpreted name and untyped formal argument names, so it introduces
+    /// no object-domain obligation at this phase.
     fn exec_def_abstract_prop_stmt_verify_well_definedness(
         &mut self,
         _def_abstract_prop_stmt: &DefAbstractPropStmt,

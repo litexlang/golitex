@@ -1,6 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: `sum(a,b,f)` requires well-defined integer
+    /// endpoints with `a <= b` and a unary scalar-valued function defined at
+    /// every integer of the closed interval.
     pub(in crate::verify) fn verify_sum_obj_well_defined(
         &mut self,
         x: &Sum,
@@ -19,6 +22,7 @@ impl Runtime {
             "sum: cannot verify start <= end for the summation range".to_string(),
         )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_function_has_scalar_return_set("sum", &x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
             x.start.as_ref(),
@@ -28,6 +32,9 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: `finite_set_sum(S,f)` requires a well-defined
+    /// finite set and a unary scalar-valued function defined on exactly `S`
+    /// (or demonstrably at every member for an extensional literal).
     pub(in crate::verify) fn verify_finite_set_sum_obj_well_defined(
         &mut self,
         x: &SumOfFiniteSet,
@@ -45,6 +52,11 @@ impl Runtime {
             )));
         }
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_function_has_scalar_return_set(
+            "finite_set_sum",
+            &x.func,
+            verify_state,
+        )?;
         if let Obj::ListSet(list_set) = x.set.as_ref() {
             return self.verify_finite_set_sum_list_summand_well_defined(
                 list_set,
@@ -53,6 +65,17 @@ impl Runtime {
             );
         }
         if let Obj::ClosedRange(range) = x.set.as_ref() {
+            let empty_fact: AtomicFact =
+                NotIsNonemptySetFact::new((*x.set).clone(), default_line_file()).into();
+            if self
+                .verify_atomic_fact(&empty_fact, verify_state)?
+                .is_true()
+            {
+                return self.verify_empty_finite_set_aggregate_has_unary_iterand(
+                    "finite_set_sum",
+                    &x.func,
+                );
+            }
             let range_sum = Sum::new(
                 range.start.as_ref().clone(),
                 range.end.as_ref().clone(),
@@ -79,6 +102,10 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: a symbolic finite-set aggregate accepts only a
+    /// unary, unconditional function whose declared domain is syntactically
+    /// the aggregate set; callers can construct an explicit restriction when
+    /// starting from a function on a larger carrier.
     fn verify_finite_set_iterand_has_exact_domain(
         &self,
         operation: &str,
@@ -120,6 +147,93 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a sum or product combines scalar values, so its
+    /// unary iterand must declare a return set contained in `C`.  For a
+    /// dependent function set, the containment obligation is checked under
+    /// the parameter memberships and domain assumptions of that function set.
+    fn verify_iterated_function_has_scalar_return_set(
+        &mut self,
+        operation: &str,
+        function: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        let Some(mut body) = self.get_fn_range_function_body(function) else {
+            // The operation-specific callable/domain check reports a more
+            // precise diagnostic when the object has no known function set.
+            return Ok(());
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Ok(());
+        }
+
+        let bindings = body.params_def_with_set.collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::FnSet)?;
+        if !rename_map.is_empty() {
+            body = self.alpha_rename_fn_set_body(&body, &rename_map)?;
+        }
+
+        self.run_in_local_env(|rt| {
+            for param in body.params_def_with_set.iter() {
+                rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
+            }
+            for domain_fact in body.dom_facts.iter() {
+                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                    domain_fact,
+                    verify_state,
+                )?;
+            }
+            rt.verify_obj_well_defined_and_store_cache(&body.ret_set, verify_state)?;
+
+            let scalar_return_fact: AtomicFact = SubsetFact::new(
+                (*body.ret_set).clone(),
+                StandardSet::C.into(),
+                default_line_file(),
+            )
+            .into();
+            if rt
+                .verify_atomic_fact(&scalar_return_fact, verify_state)?
+                .is_unknown()
+            {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "{operation}: iterand return set {} is not verified to be a subset of C",
+                        body.ret_set
+                    )),
+                )));
+            }
+            Ok(())
+        })
+    }
+
+    /// Mathematical contract: an aggregate over a provably empty finite set
+    /// never evaluates its iterand, but the aggregate syntax still requires a
+    /// unary callable with a known function-set signature.
+    fn verify_empty_finite_set_aggregate_has_unary_iterand(
+        &self,
+        operation: &str,
+        function: &Obj,
+    ) -> Result<(), RuntimeError> {
+        let Some(body) = self.get_fn_range_function_body(function) else {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{operation}: iterand must be a unary function with a known function set"
+                )),
+            )));
+        };
+        if body.params_def_with_set.number_of_params() != 1 {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "{operation}: iterand must be unary (one parameter)"
+                )),
+            )));
+        }
+        Ok(())
+    }
+
+    /// Mathematical contract: over an extensional finite set, the summand is
+    /// unary, any anonymous body satisfies its return carrier, and each
+    /// concrete application is well-defined.
     pub(in crate::verify) fn verify_finite_set_sum_list_summand_well_defined(
         &mut self,
         list_set: &ListSet,
@@ -192,6 +306,9 @@ impl Runtime {
         Ok(FnObj::new(head, vec![vec![Box::new(arg.clone())]]).into())
     }
 
+    /// Mathematical contract: `finite_set_product(S,f)` requires a
+    /// well-defined finite set and a unary scalar-valued function defined on
+    /// exactly `S` (or demonstrably at every extensional member).
     pub(in crate::verify) fn verify_finite_set_product_obj_well_defined(
         &mut self,
         x: &ProductOfFiniteSet,
@@ -209,6 +326,11 @@ impl Runtime {
             )));
         }
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_function_has_scalar_return_set(
+            "finite_set_product",
+            &x.func,
+            verify_state,
+        )?;
         if let Obj::ListSet(list_set) = x.set.as_ref() {
             return self.verify_finite_set_product_list_factor_well_defined(
                 list_set,
@@ -217,6 +339,17 @@ impl Runtime {
             );
         }
         if let Obj::ClosedRange(range) = x.set.as_ref() {
+            let empty_fact: AtomicFact =
+                NotIsNonemptySetFact::new((*x.set).clone(), default_line_file()).into();
+            if self
+                .verify_atomic_fact(&empty_fact, verify_state)?
+                .is_true()
+            {
+                return self.verify_empty_finite_set_aggregate_has_unary_iterand(
+                    "finite_set_product",
+                    &x.func,
+                );
+            }
             let range_product = Product::new(
                 range.start.as_ref().clone(),
                 range.end.as_ref().clone(),
@@ -243,6 +376,9 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: over an extensional finite set, the factor is
+    /// unary, any anonymous body satisfies its return carrier, and each
+    /// concrete application is well-defined.
     pub(in crate::verify) fn verify_finite_set_product_list_factor_well_defined(
         &mut self,
         list_set: &ListSet,
@@ -315,6 +451,9 @@ impl Runtime {
         Ok(FnObj::new(head, vec![vec![Box::new(arg.clone())]]).into())
     }
 
+    /// Mathematical contract: `product(a,b,f)` requires well-defined integer
+    /// endpoints with `a <= b` and a unary scalar-valued function defined at
+    /// every integer of the closed interval.
     pub(in crate::verify) fn verify_product_obj_well_defined(
         &mut self,
         x: &Product,
@@ -333,6 +472,7 @@ impl Runtime {
             "product: cannot verify start <= end for the product range".to_string(),
         )?;
         self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_iterated_function_has_scalar_return_set("product", &x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
             x.start.as_ref(),
@@ -355,8 +495,10 @@ impl Runtime {
         None
     }
 
-    /// Require the whole closed integer interval to lie in the iterand's declared domain.
-    /// Example: a `N` iterand accepts `sum(m, n, f)` only when `m $in N` is known.
+    /// Mathematical contract: every integer of the requested closed interval
+    /// must lie in the iterand's declared parameter carrier. Example: a `N`
+    /// iterand accepts `sum(m,n,f)` only when the nonnegative lower endpoint is
+    /// provable.
     pub(in crate::verify) fn verify_closed_range_each_integer_satisfies_unary_param_set(
         &mut self,
         start: &Obj,
@@ -438,6 +580,9 @@ impl Runtime {
         )))
     }
 
+    /// Mathematical contract: a stored range iterand is unary, covers the
+    /// complete integer interval, satisfies every declared domain predicate
+    /// there, and has a meaningful return carrier under those assumptions.
     pub(in crate::verify) fn verify_iterated_op_summand_with_stored_fn_set_body(
         &mut self,
         fs_body: FnSetBody,
@@ -555,6 +700,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: a range iterand must resolve to either a unary
+    /// anonymous function or a defined unary function whose domain covers the
+    /// complete integer interval.
     pub(in crate::verify) fn verify_iterated_op_summand_under_integer_index_interval(
         &mut self,
         func: &Obj,
@@ -630,6 +778,10 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: an anonymous range iterand is unary, its
+    /// parameter carrier covers the interval, each domain condition holds
+    /// throughout it, and its body is meaningful and belongs to the declared
+    /// return set under those local assumptions.
     pub(in crate::verify) fn verify_unary_iterated_anonymous_in_interval(
         &mut self,
         af: &AnonymousFn,
@@ -738,6 +890,8 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: a half-open integer range is meaningful when
+    /// both endpoints are well-defined integers; it may be empty.
     pub(in crate::verify) fn verify_range_well_defined(
         &mut self,
         x: &Range,
@@ -750,6 +904,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a closed integer range is meaningful when both
+    /// endpoints are well-defined integers; it may be empty.
     pub(in crate::verify) fn verify_closed_range_well_defined(
         &mut self,
         x: &ClosedRange,
@@ -762,6 +918,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: at every listed index, an anonymous aggregate
+    /// body's instantiated value belongs to its instantiated return carrier.
     fn verify_finite_list_anonymous_iterand_return(
         &mut self,
         op: &str,
@@ -803,6 +961,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: for a symbolic or empty finite domain, check an
+    /// anonymous aggregate body universally under its parameter membership,
+    /// including the direct identity-function subset consequence.
     fn verify_symbolic_finite_set_anonymous_iterand_return(
         &mut self,
         op: &str,
@@ -869,6 +1030,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: prove that every element admitted by the
+    /// iterand domain also belongs to its declared return set, using either a
+    /// subset proof or sound structural reductions of the domain expression.
     fn verify_iterand_domain_is_contained_in_return_set(
         &mut self,
         domain: &Obj,

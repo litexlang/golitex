@@ -19,6 +19,10 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
+    /// Mathematical contract: preimage extraction targets a known function or
+    /// replacement relation of the expected arity and introduces exactly one
+    /// available name per input coordinate; source membership is proved in the
+    /// following verification phase.
     fn exec_have_by_preimage_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveByPreimageStmt,

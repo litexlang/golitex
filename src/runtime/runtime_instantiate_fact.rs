@@ -1075,7 +1075,7 @@ impl Runtime {
                 inst_lf,
             )?);
         }
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             params_def_with_type,
             dom_facts,
             then_facts,
@@ -1228,7 +1228,7 @@ impl Runtime {
             )?);
         }
 
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(groups),
             dom_facts,
             then_facts,
@@ -1452,7 +1452,7 @@ mod capture_avoidance_tests {
             default_line_file(),
         )
         .into();
-        let fact = ForallFact::new(
+        let fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![n_group.clone()]),
             vec![],
             vec![body.into()],
@@ -1567,7 +1567,7 @@ mod capture_avoidance_tests {
                 ParamType::Obj(ForallFreeParamObj::new(&first_group.params[0]).into()),
             )
             .unwrap();
-        let fact = ForallFact::new(
+        let fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
             vec![],
             vec![AtomicFact::from(EqualFact::new(

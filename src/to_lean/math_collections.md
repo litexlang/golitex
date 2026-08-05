@@ -22,6 +22,15 @@ expression and exposes whether denominator clearing is required. Polynomial
 equalities use `ring`; remaining denominators use `field_simp` with the
 translated explicit nonzero premises and then `ring`.
 
+## Chained division
+
+Division is left-associative in the Litex parser. Consequently,
+`1 / 2 / 3 / 4` reaches this model as `(((1 / 2) / 3) / 4)`, and the recursive
+rule accumulates the pair `(1, (2 * 3) * 4)`. This is intentionally a structural
+normal form rather than a reduced numeric fraction. For a closed numeric
+equality such as `1 / 2 / 3 / 4 = 1 / 24`, Lean's `norm_num` checks that the
+two recursively built forms denote the same real number.
+
 ## Boundary
 
 The ideal later interface could normalize numerator and denominator polynomials

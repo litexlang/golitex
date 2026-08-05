@@ -162,7 +162,7 @@ impl Runtime {
         let Some(fx2) = function_applied_to_one_arg(&function, x2.clone()) else {
             return Err(function_property_application_error(&function, line_file));
         };
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![params]),
             vec![EqualFact::new(fx1, fx2, line_file.clone()).into()],
             vec![EqualFact::new(x1, x2, line_file.clone()).into()],
@@ -193,7 +193,7 @@ impl Runtime {
             vec![EqualFact::new(y, fx, line_file.clone()).into()],
             line_file.clone(),
         )?;
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![y_group]),
             vec![],
             vec![ExistFactEnum::ExistFact(exist_body).into()],

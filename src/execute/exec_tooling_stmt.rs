@@ -18,6 +18,8 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results).into())
     }
 
+    /// Mathematical contract: a no-op statement contains no mathematical
+    /// object or fact and is therefore vacuously well-defined.
     fn exec_do_nothing_stmt_verify_well_definedness(
         &mut self,
         _stmt: &DoNothingStmt,
@@ -39,6 +41,8 @@ impl Runtime {
         Ok(InferResult::new())
     }
 
+    /// Mathematical contract: `clear` is an environment operation with no
+    /// mathematical expression to type or define.
     fn exec_clear_stmt_verify_well_definedness(
         &mut self,
         _stmt: &ClearStmt,

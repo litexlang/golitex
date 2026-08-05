@@ -13,6 +13,10 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into())
     }
 
+    /// Mathematical contract: an existential witness supplies exactly one
+    /// well-defined value per bound variable, the existential formula itself
+    /// is meaningful, and every witness value satisfies its instantiated
+    /// declared parameter type.
     fn exec_witness_exist_fact_stmt_verify_well_definedness(
         &mut self,
         stmt: &WitnessExistFact,
@@ -250,6 +254,9 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into())
     }
 
+    /// Mathematical contract: a nonemptiness witness refers to a well-defined
+    /// candidate object and a well-defined target set; the following proof
+    /// phase must establish the candidate's membership.
     fn exec_witness_nonempty_set_stmt_verify_well_definedness(
         &mut self,
         stmt: &WitnessNonemptySet,

@@ -58,7 +58,7 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let trial_division: Fact = ForallFact::new(
+        let trial_division: Fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![divisor_group]),
             Vec::new(),
             vec![no_divisor.into()],

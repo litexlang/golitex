@@ -1011,7 +1011,7 @@ impl Runtime {
             vec![ExistBodyFact::AtomicFact(body_fact)],
             line_file.clone(),
         )?;
-        let forall_fact = ForallFact::new(
+        let forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![x_group]),
             vec![],
             vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],

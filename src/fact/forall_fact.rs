@@ -10,7 +10,78 @@ pub struct ForallFact {
 }
 
 impl ForallFact {
+    /// Build a forall from surface facts, flattening a sole positive forall conclusion.
+    ///
+    /// `forall x: P => forall y: Q => R` is stored canonically as
+    /// `forall x, y: P, Q => R`. A nested forall must be the only direct
+    /// conclusion because one canonical [`ForallFact`] cannot represent the
+    /// distributive result of mixing quantified and unquantified conclusions.
     pub fn new(
+        params_def_with_type: ParamDefWithType,
+        mut dom_facts: Vec<Fact>,
+        mut then_facts: Vec<Fact>,
+        line_file: LineFile,
+    ) -> Result<Self, RuntimeError> {
+        if then_facts.len() == 1 {
+            let only_fact = then_facts.remove(0);
+            if let Fact::ForallFact(inner_forall) = only_fact {
+                let mut groups = params_def_with_type.groups;
+                groups.extend(inner_forall.params_def_with_type.groups);
+                dom_facts.extend(inner_forall.dom_facts);
+                return Self::new_canonical_forall(
+                    ParamDefWithType::new(groups),
+                    dom_facts,
+                    inner_forall.then_facts,
+                    line_file,
+                );
+            }
+            then_facts.push(only_fact);
+        }
+
+        let mut canonical_then_facts = Vec::with_capacity(then_facts.len());
+        for fact in then_facts {
+            match fact {
+                Fact::AtomicFact(fact) => canonical_then_facts.push(fact.into()),
+                Fact::ExistFact(fact) => canonical_then_facts.push(fact.into()),
+                Fact::OrFact(fact) => canonical_then_facts.push(fact.into()),
+                Fact::AndFact(fact) => canonical_then_facts.push(fact.into()),
+                Fact::ChainFact(fact) => canonical_then_facts.push(fact.into()),
+                Fact::ForallFact(_) => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "a nested forall must be the only direct fact in a forall then clause"
+                                .to_string(),
+                            line_file,
+                        ),
+                    )))
+                }
+                Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "this quantified fact is not supported in a forall then clause"
+                                .to_string(),
+                            line_file,
+                        ),
+                    )))
+                }
+            }
+        }
+
+        Self::new_canonical_forall(
+            params_def_with_type,
+            dom_facts,
+            canonical_then_facts,
+            line_file,
+        )
+    }
+
+    /// Build the canonical internal forall representation.
+    ///
+    /// The restricted conclusion type is intentional: parameters and premises
+    /// from every positive nested forall must already be flattened before this
+    /// constructor is called, so stored forall conclusions can never contain
+    /// another forall.
+    pub fn new_canonical_forall(
         params_def_with_type: ParamDefWithType,
         dom_facts: Vec<Fact>,
         then_facts: Vec<ExistOrAndChainAtomicFact>,
@@ -88,7 +159,7 @@ mod tests {
     #[test]
     fn new_rejects_nested_forall_reusing_outer_param() {
         let runtime = Runtime::new();
-        let inner = ForallFact::new(
+        let inner = ForallFact::new_canonical_forall(
             set_param(&runtime, "x"),
             vec![],
             vec![],
@@ -96,7 +167,7 @@ mod tests {
         )
         .unwrap();
 
-        let outer = ForallFact::new(
+        let outer = ForallFact::new_canonical_forall(
             set_param(&runtime, "x"),
             vec![inner.into()],
             vec![],

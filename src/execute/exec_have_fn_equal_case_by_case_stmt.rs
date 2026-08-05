@@ -104,7 +104,7 @@ impl Runtime {
                 have_fn_equal_case_by_case_stmt.line_file.clone(),
             )
             .into();
-            let forall_fact = ForallFact::new(
+            let forall_fact = ForallFact::new_canonical_forall(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
                 vec![function_equals_equal_to_fact.into()],
@@ -131,6 +131,9 @@ impl Runtime {
         Ok(infer_result)
     }
 
+    /// Mathematical contract: a case-defined function starts with a meaningful
+    /// function-set signature and one value expression per case; each case
+    /// body is checked under its own condition in the body checker below.
     fn exec_have_fn_equal_case_by_case_stmt_verify_well_definedness(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
@@ -320,6 +323,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: under the declared function domain and this
+    /// case condition, the selected branch value is well-defined and belongs
+    /// to the declared return carrier.
     fn have_fn_equal_case_by_case_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_case_by_case_stmt: &HaveFnEqualCaseByCaseStmt,
@@ -435,7 +441,7 @@ impl Runtime {
             )?;
             let equation: AtomicFact =
                 EqualFact::new(function_obj.clone(), equal_to, stmt.line_file.clone()).into();
-            let forall = ForallFact::new(
+            let forall = ForallFact::new_canonical_forall(
                 param_defs_with_type.clone(),
                 forall_dom_facts,
                 vec![equation.into()],

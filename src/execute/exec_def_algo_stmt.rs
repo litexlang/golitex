@@ -315,7 +315,7 @@ impl Runtime {
         )
         .into()];
 
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             algo_param_defs_with_type.clone(),
             case_dom_facts,
             case_then_facts,
@@ -397,7 +397,7 @@ impl Runtime {
             algo_param_to_forall_obj,
             ParamObjType::BinderRetag(BinderRetagSource::DefAlgo),
         )?;
-        let verification_fact: Fact = ForallFact::new(
+        let verification_fact: Fact = ForallFact::new_canonical_forall(
             algo_param_defs_with_type.clone(),
             dom_facts,
             vec![EqualFact::new(
@@ -457,7 +457,7 @@ impl Runtime {
             case_conditions.push(inst_condition.into());
         }
         let coverage_or_fact = OrFact::new(case_conditions, def_algo_stmt.line_file.clone());
-        let coverage_forall_fact = ForallFact::new(
+        let coverage_forall_fact = ForallFact::new_canonical_forall(
             algo_param_defs_with_type.clone(),
             requirement_dom_facts
                 .iter()

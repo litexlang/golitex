@@ -338,7 +338,7 @@ fn replace_in_inline_forall_for_exist_alpha(
         .map(|fact| replace_in_exist_or_and_chain_for_exist_alpha(fact, from, to))
         .collect();
 
-    ForallFact::new(
+    ForallFact::new_canonical_forall(
         forall_fact.params_def_with_type,
         dom_facts,
         then_facts,

@@ -28,6 +28,17 @@ impl Runtime {
             return Ok(direct_result);
         }
 
+        if let Some(indexed_result) = self
+            .verify_indexed_value_in_declared_return_set_via_cart_projection(
+                &value,
+                &declared_return_set,
+                &line_file,
+                verify_state,
+            )?
+        {
+            return Ok(indexed_result);
+        }
+
         let Obj::AnonymousFn(value_fn) = value else {
             return Ok(direct_result);
         };
@@ -66,6 +77,95 @@ impl Runtime {
         Ok(direct_result)
     }
 
+    /// Recover the carrier of a symbolic Cartesian coordinate when validating a
+    /// function result. For `p $in C`, the cart contract gives
+    /// `p[i] $in proj(C, i)`; an equal or wider declared return set can then be
+    /// used without requiring the definition site to restate those two facts.
+    fn verify_indexed_value_in_declared_return_set_via_cart_projection(
+        &mut self,
+        value: &Obj,
+        declared_return_set: &Obj,
+        line_file: &LineFile,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let Obj::ObjAtIndex(indexed) = value else {
+            return Ok(None);
+        };
+
+        for owner_set in self.known_sets_containing_obj(indexed.obj.as_ref()) {
+            let is_cart_fact: AtomicFact =
+                IsCartFact::new(owner_set.clone(), line_file.clone()).into();
+            let is_cart_result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
+            if !is_cart_result.is_true() {
+                continue;
+            }
+
+            let coordinate_set: Obj = Proj::new(owner_set, indexed.index.as_ref().clone()).into();
+            let coordinate_membership: AtomicFact =
+                InFact::new(value.clone(), coordinate_set.clone(), line_file.clone()).into();
+            let coordinate_result =
+                self.verify_atomic_fact(&coordinate_membership, verify_state)?;
+            if !coordinate_result.is_true() {
+                continue;
+            }
+
+            let equal_set_fact: AtomicFact = EqualFact::new(
+                coordinate_set.clone(),
+                declared_return_set.clone(),
+                line_file.clone(),
+            )
+            .into();
+            let mut equal_set_result = self.verify_atomic_fact(&equal_set_fact, verify_state)?;
+            if !equal_set_result.is_true() {
+                // Anonymous-function well-definedness can itself run beneath an
+                // equality well-definedness boundary, where the inherited state
+                // deliberately disables known-forall equality search. This
+                // projection check is a fresh, bounded proof obligation whose
+                // objects were just verified above, so allow its one forall
+                // lookup explicitly.
+                equal_set_result =
+                    self.verify_atomic_fact(&equal_set_fact, &UseContextVerifyState::new(0, true))?;
+            }
+            let carrier_result = if equal_set_result.is_true() {
+                equal_set_result
+            } else {
+                let subset_fact: AtomicFact = SubsetFact::new(
+                    coordinate_set,
+                    declared_return_set.clone(),
+                    line_file.clone(),
+                )
+                .into();
+                let mut subset_result = self.verify_atomic_fact(&subset_fact, verify_state)?;
+                if !subset_result.is_true() {
+                    subset_result = self
+                        .verify_atomic_fact(&subset_fact, &UseContextVerifyState::new(0, true))?;
+                }
+                if !subset_result.is_true() {
+                    continue;
+                }
+                subset_result
+            };
+
+            let membership_fact: Fact = InFact::new(
+                value.clone(),
+                declared_return_set.clone(),
+                line_file.clone(),
+            )
+            .into();
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    membership_fact,
+                    "indexed result inherits its carrier from a symbolic Cartesian projection"
+                        .to_string(),
+                    vec![is_cart_result, coordinate_result, carrier_result],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
+    }
+
     /// A named function with the same input signature belongs to a narrower
     /// function space when its values are known to lie in the target return set.
     /// Example: `forall x I: f(x) $in X` proves `f $in fn(x I) X`.
@@ -89,7 +189,7 @@ impl Runtime {
             flow.in_fact.line_file.clone(),
         )
         .into()];
-        let forall = ForallFact::new(
+        let forall = ForallFact::new_canonical_forall(
             flow.forall_params,
             flow.forall_dom_facts,
             then_facts,
@@ -226,12 +326,15 @@ impl Runtime {
         Ok(known_norm.to_string() == expected_norm.to_string())
     }
 
+    /// Mathematical contract: the pointwise application used to prove
+    /// function-space membership must itself be meaningful under the target
+    /// function space's universally bound parameters and domain assumptions.
     fn verify_fn_membership_application_well_defined(
         &mut self,
         flow: &FnMembershipProofFlow,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        let stub = ForallFact::new(
+        let stub = ForallFact::new_canonical_forall(
             flow.forall_params.clone(),
             flow.forall_dom_facts.clone(),
             Vec::new(),

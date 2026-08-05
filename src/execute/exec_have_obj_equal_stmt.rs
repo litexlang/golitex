@@ -18,6 +18,10 @@ impl Runtime {
         .into())
     }
 
+    /// Mathematical contract: an equality-backed object introduction has one
+    /// defining value per declared parameter and meaningful dependent
+    /// parameter types; value/type compatibility is proved immediately after
+    /// this scope-construction check.
     fn exec_have_obj_equal_stmt_verify_well_definedness(
         &mut self,
         have_obj_equal_stmt: &HaveObjEqualStmt,

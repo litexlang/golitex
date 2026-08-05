@@ -1,6 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: a finite interval literal is meaningful when
+    /// both endpoints are well-defined real numbers; endpoint order may
+    /// describe an empty interval and is not a definedness condition.
     pub(in crate::verify) fn verify_interval_obj_well_defined(
         &mut self,
         x: &IntervalObj,
@@ -13,6 +16,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a one-sided infinite interval is meaningful
+    /// when its finite endpoint is a well-defined real number.
     pub(in crate::verify) fn verify_one_side_infinity_interval_obj_well_defined(
         &mut self,
         x: &OneSideInfinityIntervalObj,
@@ -23,6 +28,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `finite_seq_set(S,n)` requires a well-defined
+    /// set carrier `S` and a positive-integer length `n`.
     pub(in crate::verify) fn verify_finite_seq_set_well_defined(
         &mut self,
         x: &FiniteSeqSet,
@@ -58,6 +65,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: an infinite sequence carrier is meaningful when
+    /// its codomain is a well-defined object provably known to be a set.
     pub(in crate::verify) fn verify_seq_set_well_defined(
         &mut self,
         x: &SeqSet,
@@ -77,6 +86,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a finite sequence literal is nonempty and every
+    /// listed value is a well-defined object.
     pub(in crate::verify) fn verify_finite_seq_list_obj_well_defined(
         &mut self,
         x: &FiniteSeqListObj,
@@ -95,6 +106,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `matrix(S,m,n)` requires a well-defined set of
+    /// entries and positive-integer row and column counts.
     pub(in crate::verify) fn verify_matrix_set_well_defined(
         &mut self,
         x: &MatrixSet,
@@ -133,6 +146,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a matrix literal is a nonempty rectangular
+    /// array and every cell is a well-defined object.
     pub(in crate::verify) fn verify_matrix_list_obj_well_defined(
         &mut self,
         x: &MatrixListObj,
@@ -167,6 +182,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: matrix addition requires two real matrices with
+    /// equal row and column dimensions.
     pub(in crate::verify) fn verify_matrix_add_well_defined(
         &mut self,
         ma: &MatrixAdd,
@@ -181,6 +198,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: matrix subtraction requires two real matrices
+    /// with equal row and column dimensions.
     pub(in crate::verify) fn verify_matrix_sub_well_defined(
         &mut self,
         ms: &MatrixSub,
@@ -195,6 +214,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: matrix multiplication requires real matrices
+    /// whose left column count equals the right row count.
     pub(in crate::verify) fn verify_matrix_mul_well_defined(
         &mut self,
         mm: &MatrixMul,
@@ -208,6 +229,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: matrix scalar multiplication requires a real
+    /// scalar and a real matrix of known dimensions.
     pub(in crate::verify) fn verify_matrix_scalar_mul_well_defined(
         &mut self,
         m: &MatrixScalarMul,
@@ -228,6 +251,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: matrix exponentiation requires a square real
+    /// matrix and a positive-integer exponent.
     pub(in crate::verify) fn verify_matrix_pow_well_defined(
         &mut self,
         m: &MatrixPow,
@@ -255,7 +280,8 @@ impl Runtime {
         Ok(())
     }
 
-    /// Return the formal `matrix(R, m, n)` type of a matrix expression.
+    /// Mathematical contract: return the formal `matrix(R,m,n)` type only for
+    /// an expression whose matrix shape is known and whose entries are real.
     ///
     /// This is the well-definedness boundary for real matrix algebra. For example,
     /// `A '+ B` is accepted only when both operands have real entries and equal dimensions.
@@ -389,6 +415,8 @@ impl Runtime {
         Ok(result)
     }
 
+    /// Mathematical contract: a matrix shape constraint holds only when the
+    /// two symbolic dimensions are provably equal in the current environment.
     fn require_same_matrix_dimension(
         &self,
         left: &Obj,
@@ -409,6 +437,8 @@ impl Runtime {
         }
         Ok(())
     }
+    /// Mathematical contract: a literal matrix has a unique `(rows,columns)`
+    /// shape only when every row has the same length.
     pub(in crate::verify) fn rectangular_shape_of_matrix_list_obj(
         m: &MatrixListObj,
     ) -> Result<(usize, usize), RuntimeError> {

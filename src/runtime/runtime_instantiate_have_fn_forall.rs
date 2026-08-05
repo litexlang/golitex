@@ -75,7 +75,7 @@ impl Runtime {
             )?);
         }
 
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(groups),
             dom_facts,
             then_facts,

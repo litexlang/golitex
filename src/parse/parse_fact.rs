@@ -216,7 +216,7 @@ impl Runtime {
         &mut self,
         tb: &mut TokenBlock,
         has_colon: bool,
-    ) -> Result<(Vec<Fact>, Vec<ExistOrAndChainAtomicFact>), RuntimeError> {
+    ) -> Result<(Vec<Fact>, Vec<Fact>), RuntimeError> {
         if tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -300,11 +300,15 @@ impl Runtime {
         }
     }
 
-    fn parse_inline_forall_then(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
-        Self::reject_inline_forall_in_then(tb)?;
+    fn parse_inline_forall_then(&mut self, tb: &mut TokenBlock) -> Result<Vec<Fact>, RuntimeError> {
+        if tb.exceed_end_of_head() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!("unexpected end of tokens in inline `{}` `then`", FORALL),
+                    tb.line_file.clone(),
+                ),
+            )));
+        }
         if tb.current()? == LEFT_CURLY_BRACE {
             return self.parse_inline_forall_braced_then_list(tb);
         }
@@ -322,10 +326,9 @@ impl Runtime {
     fn parse_inline_forall_braced_then_list(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Vec<ExistOrAndChainAtomicFact>, RuntimeError> {
+    ) -> Result<Vec<Fact>, RuntimeError> {
         tb.skip_token(LEFT_CURLY_BRACE)?;
-        Self::reject_inline_forall_in_then(tb)?;
-        let fact = self.parse_exist_or_and_chain_atomic_fact(tb)?;
+        let fact = self.parse_inline_fact(tb, true)?;
         if tb.current()? != RIGHT_CURLY_BRACE {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -339,29 +342,6 @@ impl Runtime {
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
         Ok(vec![fact])
-    }
-
-    fn reject_inline_forall_in_then(tb: &TokenBlock) -> Result<(), RuntimeError> {
-        if tb.exceed_end_of_head() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!("unexpected end of tokens in inline `{}` `then`", FORALL),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        if tb.current()? == FORALL || (tb.current()? == NOT && tb.token_at_add_index(1) == FORALL) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "nested `{}` is not allowed in the `then` part of an inline `{}`",
-                        FORALL, FORALL
-                    ),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        Ok(())
     }
 
     // fact_hierarchy 1
@@ -405,7 +385,7 @@ impl Runtime {
                     })?;
                 this.fresh_setting_forall_prefix(&setting, tb.line_file.clone())?
             } else {
-                ForallFact::new(
+                ForallFact::new_canonical_forall(
                     ParamDefWithType::new(Vec::new()),
                     Vec::new(),
                     Vec::new(),
@@ -471,7 +451,7 @@ impl Runtime {
         setting: &DefSettingStmt,
         use_line_file: LineFile,
     ) -> Result<ForallFact, RuntimeError> {
-        let skeleton = ForallFact::new(
+        let skeleton = ForallFact::new_canonical_forall(
             setting.param_def.clone(),
             setting.dom_facts.clone(),
             Vec::new(),
@@ -547,7 +527,12 @@ impl Runtime {
             dom_facts.push(self.parse_fact(block)?);
         }
 
-        let forall_fact = ForallFact::new(param_def, dom_facts, then_facts, tb.line_file.clone())?;
+        let forall_fact = ForallFact::new_canonical_forall(
+            param_def,
+            dom_facts,
+            then_facts,
+            tb.line_file.clone(),
+        )?;
 
         Ok(ForallFactWithIff::new(forall_fact, iff_facts, tb.line_file.clone())?.into())
     }
@@ -580,9 +565,9 @@ impl Runtime {
                 ))
             })?;
             last.skip_token_and_colon_and_exceed_end_of_head(RIGHT_ARROW)?;
-            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+            let mut then_facts: Vec<Fact> = Vec::new();
             for block in last.body.iter_mut() {
-                then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+                then_facts.push(self.parse_fact(block)?);
             }
             Ok(ForallFact::new(
                 param_def,
@@ -592,9 +577,9 @@ impl Runtime {
             )?
             .into())
         } else {
-            let mut then_facts: Vec<ExistOrAndChainAtomicFact> = Vec::new();
+            let mut then_facts: Vec<Fact> = Vec::new();
             for block in tb.body.iter_mut() {
-                then_facts.push(self.parse_exist_or_and_chain_atomic_fact(block)?);
+                then_facts.push(self.parse_fact(block)?);
             }
             Ok(ForallFact::new(
                 param_def,
@@ -1098,12 +1083,41 @@ mod inline_forall_parse_tests {
     }
 
     #[test]
-    fn inline_forall_then_may_not_contain_inline_forall() {
-        let err = parse_one_fact_line("forall x R: x > 0 => { forall y R: y > 0 => { y > x } }")
-            .unwrap_err();
-        let RuntimeError::ParseError(s) = err else {
-            panic!("expected parse error, got {err:?}");
+    fn inline_forall_then_flattens_inline_forall() {
+        let fact =
+            parse_one_fact_line("forall x R: x > 0 => { forall y R: y > 0 => { x + y > 0 } }")
+                .unwrap();
+        let Fact::ForallFact(forall_fact) = fact else {
+            panic!("expected a flattened forall fact");
         };
-        assert!(s.msg.contains("then"), "{}", s.msg);
+        assert_eq!(forall_fact.params_def_with_type.number_of_params(), 2);
+        assert_eq!(forall_fact.dom_facts.len(), 2);
+        assert_eq!(forall_fact.then_facts.len(), 1);
+    }
+
+    #[test]
+    fn nested_forall_flattening_recomputes_dependent_parameter_indices() {
+        let fact = parse_one_fact_line(
+            "forall S nonempty_set => { forall x S => { forall y S => { x = y } } }",
+        )
+        .unwrap();
+        let Fact::ForallFact(forall_fact) = fact else {
+            panic!("expected a recursively flattened forall fact");
+        };
+        assert_eq!(forall_fact.params_def_with_type.number_of_params(), 3);
+        assert_eq!(
+            forall_fact
+                .params_def_with_type
+                .param_type_cited_param_indices,
+            vec![vec![], vec![0], vec![0]]
+        );
+    }
+
+    #[test]
+    fn forall_then_rejects_nested_forall_with_sibling_fact() {
+        let msg = parse_error_msg(
+            "forall x R:\n    x > 0\n    =>:\n        x = x\n        forall y R:\n            y = y",
+        );
+        assert!(msg.contains("only direct fact"), "{}", msg);
     }
 }

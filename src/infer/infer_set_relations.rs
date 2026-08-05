@@ -59,7 +59,7 @@ impl Runtime {
             subset_fact.line_file.clone(),
         )
         .into();
-        let inferred_forall_fact = ForallFact::new(
+        let inferred_forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],
@@ -104,7 +104,7 @@ impl Runtime {
             superset_fact.line_file.clone(),
         )
         .into();
-        let inferred_forall_fact = ForallFact::new(
+        let inferred_forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![parameter_definition]),
             vec![],
             vec![in_fact_for_forall_then],

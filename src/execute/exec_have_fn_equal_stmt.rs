@@ -103,6 +103,9 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: an explicit function definition has a
+    /// well-formed function-set signature and an anonymous defining function
+    /// that is universally meaningful and return-typed.
     fn exec_have_fn_equal_stmt_verify_well_definedness(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
@@ -132,6 +135,9 @@ impl Runtime {
         Ok(fn_set_stored)
     }
 
+    /// Mathematical contract implementation: in an isolated scope, validate
+    /// both the anonymous function (including `body in return_set`) and the
+    /// function carrier that will be stored for its declared name.
     fn have_fn_equal_stmt_verify_well_defined_body(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,

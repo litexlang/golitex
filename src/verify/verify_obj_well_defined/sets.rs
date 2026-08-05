@@ -1,6 +1,8 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: `union(A,B)` is meaningful when both operand
+    /// expressions are well-defined set-theoretic objects.
     pub(in crate::verify) fn verify_union_well_defined(
         &mut self,
         x: &Union,
@@ -11,6 +13,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `intersect(A,B)` is meaningful when both
+    /// operand expressions are well-defined set-theoretic objects.
     pub(in crate::verify) fn verify_intersect_well_defined(
         &mut self,
         x: &Intersect,
@@ -21,6 +25,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: set subtraction is meaningful when both
+    /// operand expressions are well-defined set-theoretic objects.
     pub(in crate::verify) fn verify_set_minus_well_defined(
         &mut self,
         x: &SetMinus,
@@ -31,6 +37,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: symmetric set difference is meaningful when
+    /// both operand expressions are well-defined set-theoretic objects.
     pub(in crate::verify) fn verify_set_diff_well_defined(
         &mut self,
         x: &SetDiff,
@@ -41,6 +49,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: big union is meaningful when its family
+    /// expression is well-defined.
     pub(in crate::verify) fn verify_big_union_well_defined(
         &mut self,
         x: &BigUnion,
@@ -50,6 +60,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: big intersection is meaningful when its family
+    /// expression is well-defined.
     pub(in crate::verify) fn verify_big_intersect_well_defined(
         &mut self,
         x: &BigIntersect,
@@ -59,6 +71,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a finite extensional literal is meaningful when
+    /// every element is well-defined and the literal's entries are provably
+    /// pairwise distinct, as required by Litex's canonical-list invariant.
     pub(in crate::verify) fn verify_list_set_well_defined(
         &mut self,
         x: &ListSet,
@@ -108,6 +123,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `{x in S: P(x)}` is meaningful when `S` is
+    /// well-defined and each defining fact is meaningful under the local
+    /// assumption `x in S` and all preceding defining facts.
     pub(in crate::verify) fn verify_set_builder_well_defined(
         &mut self,
         x: &SetBuilder,
@@ -207,6 +225,10 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: a function set is meaningful when its dependent
+    /// parameter carriers are meaningful in order, its domain facts are
+    /// meaningful under those binders, and its return carrier is meaningful
+    /// under the parameter and domain assumptions.
     pub(in crate::verify) fn verify_fn_set_well_defined(
         &mut self,
         x: &FnSet,
@@ -267,6 +289,10 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `fn(params) T {body}` is meaningful when its
+    /// function-set signature is meaningful, `body` is meaningful under that
+    /// local domain, and the verifier proves `body in T` for every admissible
+    /// parameter assignment.
     pub(in crate::verify) fn verify_anonymous_fn_well_defined(
         &mut self,
         x: &AnonymousFn,
@@ -346,7 +372,33 @@ impl Runtime {
                 default_line_file(),
                 verify_state,
             )?;
-            if return_value_result.is_unknown() {
+            let mut return_value_verified = !return_value_result.is_unknown();
+            if !return_value_verified {
+                for param_group in x.body.params_def_with_set.iter() {
+                    let body_is_bound_param = param_group.params.iter().any(|binding| {
+                        let param_obj =
+                            obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                        objs_equal_with_nested_binder_alpha_equivalence(
+                            x.equal_to.as_ref(),
+                            &param_obj,
+                        )
+                    });
+                    if !body_is_bound_param {
+                        continue;
+                    }
+                    let subset_fact: AtomicFact = SubsetFact::new(
+                        param_group.set_obj().clone(),
+                        (*x.body.ret_set).clone(),
+                        default_line_file(),
+                    )
+                    .into();
+                    if rt.verify_atomic_fact(&subset_fact, verify_state)?.is_true() {
+                        return_value_verified = true;
+                        break;
+                    }
+                }
+            }
+            if !return_value_verified {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
                         "anonymous function body {} is not verified to belong to declared return set {}",
@@ -359,30 +411,38 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: the primitive standard set `N+` is total.
     pub(in crate::verify) fn verify_n_pos_obj_well_defined(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `N` is total.
     pub(in crate::verify) fn verify_n_obj_well_defined(&mut self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Q` is total.
     pub(in crate::verify) fn verify_q_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Z` is total.
     pub(in crate::verify) fn verify_z_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `R` is total.
     pub(in crate::verify) fn verify_r_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `C` is total.
     pub(in crate::verify) fn verify_c_obj_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: a finite Cartesian carrier is meaningful when
+    /// every factor expression is well-defined.
     pub(in crate::verify) fn verify_cart_well_defined(
         &mut self,
         x: &Cart,
@@ -394,6 +454,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `cart_dim(S)` is meaningful when `S` is a
+    /// well-defined Cartesian-product carrier.
     pub(in crate::verify) fn verify_cart_dim_well_defined(
         &mut self,
         x: &CartDim,
@@ -415,6 +477,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `proj(S,i)` requires a well-defined Cartesian
+    /// carrier `S` and a positive integer `i <= cart_dim(S)`.
     pub(in crate::verify) fn verify_proj_well_defined(
         &mut self,
         x: &Proj,
@@ -481,6 +545,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `tuple_dim(t)` is meaningful exactly for a
+    /// well-defined object provably known to be a tuple.
     pub(in crate::verify) fn verify_dim_well_defined(
         &mut self,
         x: &TupleDim,
@@ -502,6 +568,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a tuple literal is meaningful when every
+    /// component is a well-defined object.
     pub(in crate::verify) fn verify_tuple_well_defined(
         &mut self,
         x: &Tuple,
@@ -513,6 +581,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `finite_set_size(S)` is meaningful when `S` is
+    /// a well-defined object provably known to be a finite set.
     pub(in crate::verify) fn verify_finite_set_size_well_defined(
         &mut self,
         x: &FiniteSetSize,
@@ -532,6 +602,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `finite_set_max(S)` requires a finite,
+    /// nonempty set whose elements are provably real.
     pub(in crate::verify) fn verify_finite_set_max_well_defined(
         &mut self,
         x: &FiniteSetMax,
@@ -540,6 +612,8 @@ impl Runtime {
         self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MAX, verify_state)
     }
 
+    /// Mathematical contract: `finite_set_min(S)` requires a finite,
+    /// nonempty set whose elements are provably real.
     pub(in crate::verify) fn verify_finite_set_min_well_defined(
         &mut self,
         x: &FiniteSetMin,
@@ -548,6 +622,8 @@ impl Runtime {
         self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MIN, verify_state)
     }
 
+    /// Mathematical contract: either finite-set extremum requires a
+    /// well-defined, finite, nonempty subset of `R`.
     fn verify_finite_set_extremum_well_defined(
         &mut self,
         set: &Obj,
@@ -570,6 +646,8 @@ impl Runtime {
         self.verify_set_elements_are_known_reals(set, operator_name, verify_state)
     }
 
+    /// Mathematical contract: every possible member of the supplied set must
+    /// be provably real; structural set forms reduce this to their carriers.
     fn verify_set_elements_are_known_reals(
         &mut self,
         set: &Obj,
@@ -632,6 +710,8 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: `fn_range(f)` is meaningful when `f` is a
+    /// well-defined callable with a known function-set signature.
     pub(in crate::verify) fn verify_fn_range_well_defined(
         &mut self,
         x: &FnRange,
@@ -649,6 +729,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `replacement(P,S)` requires a well-defined
+    /// source set, a binary user predicate `P`, and a previously proved
+    /// uniqueness theorem for the output associated with every input in `S`.
     pub(in crate::verify) fn verify_replacement_well_defined(
         &mut self,
         x: &Replacement,
@@ -720,7 +803,7 @@ impl Runtime {
         let y2_obj = obj_for_bound_param_in_scope(&y_group.params[1], ParamObjType::Forall);
         let line_file = default_line_file();
 
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![x_group, y_group]),
             vec![
                 NormalAtomicFact::new(

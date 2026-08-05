@@ -2,6 +2,9 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 impl Runtime {
+    /// Mathematical contract: outside an explicitly trusted source boundary,
+    /// a fact is stored and used for inference only after central
+    /// well-definedness succeeds.
     pub fn verify_well_defined_and_store_and_infer(
         &mut self,
         fact: Fact,
@@ -14,6 +17,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: adding a provenance reason does not change the
+    /// fact's well-definedness obligations or inferred mathematics.
     pub fn verify_well_defined_and_store_and_infer_with_reason(
         &mut self,
         fact: Fact,
@@ -28,6 +33,9 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract implementation: cached facts reuse their prior
+    /// check, ordinary sources are centrally checked, and only the repository's
+    /// explicit trusted-file boundary may bypass this gate.
     fn verify_well_defined_and_store_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
@@ -56,6 +64,8 @@ impl Runtime {
         self.store_and_infer_fact_without_well_defined_verified_with_reason_text(fact, reason_text)
     }
 
+    /// Mathematical contract: enforce the same fact contract using the
+    /// verifier state appropriate to quantified versus non-quantified facts.
     pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
         &mut self,
         fact: Fact,
@@ -66,6 +76,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: provenance does not alter the default-state
+    /// well-definedness check selected for the fact's quantifier form.
     pub fn verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
         &mut self,
         fact: Fact,
@@ -195,7 +207,7 @@ impl Runtime {
                     // parameters whose independent domains are known nonempty.
                     // Example: `forall a,b R, x,y E: norm(a • x)=...` exposes
                     // `forall a R, x E: norm(a • x)=...` when `E` is nonempty.
-                    projected_forall_facts.push(ForallFact::new(
+                    projected_forall_facts.push(ForallFact::new_canonical_forall(
                         ParamDefWithType::new(retained_groups),
                         forall_fact.dom_facts.clone(),
                         vec![then_fact.clone()],
@@ -499,6 +511,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: store a fact without deriving consequences only
+    /// after central well-definedness succeeds, except at the explicit
+    /// trusted-file boundary.
     pub(crate) fn verify_well_defined_and_store_without_infer(
         &mut self,
         fact: Fact,

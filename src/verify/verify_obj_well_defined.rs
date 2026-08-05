@@ -9,6 +9,9 @@ mod sets;
 mod structs;
 
 impl Runtime {
+    /// Mathematical contract support: reuse a successful
+    /// check of the same rendered object; absence from the cache proves
+    /// nothing and falls through to the constructor-specific obligations.
     fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
         let key = obj.to_string();
         if self.cache_well_defined_obj_contains(&key) {
@@ -18,6 +21,10 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: an object is well-defined exactly when all of
+    /// its subobjects are meaningful and its constructor-specific domain
+    /// conditions hold (for example, a divisor is nonzero and a function
+    /// application satisfies its declared parameter domain).
     pub fn verify_obj_well_defined_and_store_cache(
         &mut self,
         obj: &Obj,
@@ -178,6 +185,9 @@ impl Runtime {
 }
 
 impl Runtime {
+    /// Mathematical contract: an object-valued parameter carrier must itself
+    /// be a well-defined object; the primitive `set`, `nonempty set`, and
+    /// `finite set` parameter kinds are meaningful without another carrier.
     pub fn verify_param_type_well_defined(
         &mut self,
         param_type: &ParamType,

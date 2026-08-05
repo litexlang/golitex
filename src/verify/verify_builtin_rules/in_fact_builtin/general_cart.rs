@@ -40,7 +40,7 @@ pub(crate) fn general_cart_member_pointwise_fact(
     let family_at_param: Obj =
         FnObj::new(family_head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![param_group]),
             vec![],
             vec![InFact::new(member_at_param, family_at_param, line_file.clone()).into()],

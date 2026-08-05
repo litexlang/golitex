@@ -10,6 +10,9 @@ impl Runtime {
         Ok(result.with_infers(infer_result))
     }
 
+    /// Mathematical contract: every requested conclusion of a case proof must
+    /// be a meaningful fact; the accepted quantified-goal shape must also be
+    /// representable by the case engine before branch coverage is attempted.
     fn exec_by_cases_stmt_verify_well_definedness(
         &mut self,
         stmt: &ByCasesStmt,

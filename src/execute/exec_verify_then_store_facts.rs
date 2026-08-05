@@ -1,6 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: before assuming an existential/compound fact,
+    /// verify every binder, object, and component fact, then store the checked
+    /// fact and its sound consequences.
     pub fn verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
@@ -13,6 +16,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: identical to the compound-fact check above;
+    /// `reason` changes provenance only, never the proof obligations.
     pub fn verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
@@ -36,6 +41,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: before assuming an atomic/conjunctive/chain/or
+    /// fact, verify all of its mathematical objects and subfacts, then store
+    /// the checked fact and its consequences.
     pub fn verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
         &mut self,
         fact: &OrAndChainAtomicFact,
@@ -48,6 +56,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: identical to the restricted compound-fact check
+    /// above; the supplied reason records provenance without weakening it.
     pub fn verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason(
         &mut self,
         fact: &OrAndChainAtomicFact,
@@ -71,6 +81,8 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: a fact may enter the environment only after the
+    /// central fact checker establishes its complete well-definedness contract.
     pub fn verify_fact_well_defined_and_store_and_infer(
         &mut self,
         fact: Fact,
@@ -83,6 +95,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: the provenance-bearing variant enforces the
+    /// same fact well-definedness obligations before storage and inference.
     pub fn verify_fact_well_defined_and_store_and_infer_with_reason(
         &mut self,
         fact: Fact,
