@@ -182,6 +182,9 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
+    /// Mathematical contract: a sequence or matrix definition uses a fresh
+    /// function name and yields a coherent internal anonymous function whose
+    /// surface carrier and full function signature are meaningful.
     fn exec_have_indexed_fn_definition_verify_well_definedness(
         &mut self,
         stmt: Stmt,
@@ -302,6 +305,8 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: check the indexed definition in an isolated
+    /// binder scope so index parameters and derived facts cannot leak.
     fn verify_have_indexed_fn_definition_well_defined(
         &mut self,
         stmt: Stmt,
@@ -319,6 +324,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract implementation: the surface sequence/matrix
+    /// carrier, anonymous value function (including its return membership),
+    /// and stored function-set carrier must all be well-defined.
     fn verify_have_indexed_fn_definition_well_defined_body(
         &mut self,
         stmt: Stmt,

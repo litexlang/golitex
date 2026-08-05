@@ -11,6 +11,9 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new_with_stmt(def_struct_stmt.clone().into()).into())
     }
 
+    /// Mathematical contract: a struct declaration has meaningful header
+    /// parameters and domain facts, meaningful field carriers, and meaningful
+    /// equivalent facts under locally bound fields of those carriers.
     fn def_struct_stmt_check_well_defined(
         &mut self,
         def_struct_stmt: &DefStructStmt,

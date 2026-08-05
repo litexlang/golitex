@@ -337,7 +337,7 @@ impl Runtime {
                 SubsetFact::new(param.clone(), carrier_set.clone(), stmt.line_file.clone()).into(),
             );
         }
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_names[0].clone()],
                 ParamType::FiniteSet(FiniteSet::new()),

@@ -11,6 +11,10 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(trust_have_stmt.clone().into(), infer_result, vec![]).into())
     }
 
+    /// Mathematical contract implementation: `trust have` has no separate
+    /// well-definedness preflight. Its environment phase defines the declared
+    /// parameters and, outside the explicit trusted-file boundary, checks each
+    /// attached fact before assuming it; strict mode rejects it first.
     fn exec_trust_have_stmt_verify_well_definedness(
         &mut self,
         _trust_have_stmt: &TrustHaveStmt,

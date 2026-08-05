@@ -18,6 +18,9 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, check_results).into())
     }
 
+    /// Mathematical contract: a tuple-family declaration uses a fresh name
+    /// and has a value expression meaningful for a locally bound positive
+    /// coordinate up to its declared dimension.
     fn exec_have_tuple_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveTupleStmt,
@@ -84,6 +87,9 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 
+    /// Mathematical contract: a Cartesian-family declaration uses a fresh
+    /// name and has a factor expression meaningful for a locally bound
+    /// positive coordinate up to its declared dimension.
     fn exec_have_cart_stmt_verify_well_definedness(
         &mut self,
         stmt: &HaveCartStmt,
@@ -249,7 +255,7 @@ impl Runtime {
         let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],
@@ -267,7 +273,7 @@ impl Runtime {
         let target = self.declared_identifier_obj(&stmt.name);
         let left: Obj = Proj::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             tuple_or_cart_index_param_def(&index_names[0], stmt.dimension.clone()),
             vec![],
             vec![equal_fact.into()],

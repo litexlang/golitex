@@ -53,7 +53,15 @@ fn lean_declaration(statement: &Stmt, index: usize) -> Result<String, RuntimeErr
 
     match fact {
         Fact::AtomicFact(AtomicFact::EqualFact(equality)) => {
-            lean_equality_declaration(equality, index, String::new(), Vec::new())
+            if !closed_rational_expression(&equality.left)
+                || !closed_rational_expression(&equality.right)
+            {
+                return Err(to_lean_error(
+                    &equality.line_file,
+                    "To-Lean direct equalities must be closed rational expressions",
+                ));
+            }
+            lean_equality_declaration(equality, index, String::new(), Vec::new(), true)
         }
         Fact::ForallFact(forall) => lean_forall_equality_declaration(forall, index),
         _ => Err(to_lean_error(
@@ -98,6 +106,14 @@ fn lean_forall_equality_declaration(
             ));
         };
         let name = format!("h{}", premise_index + 1);
+        if !forall_rational_expression(&not_equal.left)
+            || !forall_rational_expression(&not_equal.right)
+        {
+            return Err(to_lean_error(
+                &not_equal.line_file,
+                "To-Lean universal premises may contain only their `R` parameters",
+            ));
+        }
         let left = LeanRationalExpression::from_obj(&not_equal.left)?;
         let right = LeanRationalExpression::from_obj(&not_equal.right)?;
         binder_parts.push(format!(
@@ -121,13 +137,19 @@ fn lean_forall_equality_declaration(
             "To-Lean rational experiment requires an equality conclusion",
         ));
     };
+    if !forall_rational_expression(&equality.left) || !forall_rational_expression(&equality.right) {
+        return Err(to_lean_error(
+            &equality.line_file,
+            "To-Lean universal conclusions may contain only their `R` parameters",
+        ));
+    }
 
     let binders = if binder_parts.is_empty() {
         String::new()
     } else {
         format!(" {}", binder_parts.join(" "))
     };
-    lean_equality_declaration(equality, index, binders, nonzero_names)
+    lean_equality_declaration(equality, index, binders, nonzero_names, false)
 }
 
 fn lean_equality_declaration(
@@ -135,15 +157,22 @@ fn lean_equality_declaration(
     index: usize,
     binders: String,
     nonzero_names: Vec<String>,
+    closed_numeric: bool,
 ) -> Result<String, RuntimeError> {
     let left = LeanRationalExpression::from_obj(&equality.left)?;
     let right = LeanRationalExpression::from_obj(&equality.right)?;
-    let tactic = if left.has_denominator() || right.has_denominator() {
-        if nonzero_names.is_empty() {
-            "field_simp <;> ring".to_string()
+    let tactic = if closed_numeric {
+        "norm_num".to_string()
+    } else if left.has_denominator() || right.has_denominator() {
+        let field_simp = if nonzero_names.is_empty() {
+            "field_simp".to_string()
         } else {
-            format!("field_simp [{}] <;> ring", nonzero_names.join(", "))
-        }
+            format!("field_simp [{}]", nonzero_names.join(", "))
+        };
+        format!(
+            "solve\n        | {}\n        | {} <;> ring",
+            field_simp, field_simp
+        )
     } else {
         "ring".to_string()
     };
@@ -177,6 +206,50 @@ fn to_lean_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeErr
         vec![],
     ))
     .into()
+}
+
+fn closed_rational_expression(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(_) => true,
+        Obj::Add(add) => {
+            closed_rational_expression(&add.left) && closed_rational_expression(&add.right)
+        }
+        Obj::Sub(sub) => {
+            closed_rational_expression(&sub.left) && closed_rational_expression(&sub.right)
+        }
+        Obj::Mul(mul) => {
+            closed_rational_expression(&mul.left) && closed_rational_expression(&mul.right)
+        }
+        Obj::Div(div) => {
+            closed_rational_expression(&div.left) && closed_rational_expression(&div.right)
+        }
+        Obj::Pow(pow) => {
+            closed_rational_expression(&pow.base) && matches!(pow.exponent.as_ref(), Obj::Number(_))
+        }
+        _ => false,
+    }
+}
+
+fn forall_rational_expression(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(_) | Obj::Atom(AtomObj::Forall(_)) => true,
+        Obj::Add(add) => {
+            forall_rational_expression(&add.left) && forall_rational_expression(&add.right)
+        }
+        Obj::Sub(sub) => {
+            forall_rational_expression(&sub.left) && forall_rational_expression(&sub.right)
+        }
+        Obj::Mul(mul) => {
+            forall_rational_expression(&mul.left) && forall_rational_expression(&mul.right)
+        }
+        Obj::Div(div) => {
+            forall_rational_expression(&div.left) && forall_rational_expression(&div.right)
+        }
+        Obj::Pow(pow) => {
+            forall_rational_expression(&pow.base) && matches!(pow.exponent.as_ref(), Obj::Number(_))
+        }
+        _ => false,
+    }
 }
 
 #[cfg(test)]
@@ -236,6 +309,29 @@ forall a, b R:
     }
 
     #[test]
+    fn chained_numeric_division_reaches_the_recursive_fraction_pipeline() {
+        run_with_large_stack(
+            "chained_numeric_division_reaches_the_recursive_fraction_pipeline",
+            || {
+                let output = to_lean_from_source(
+                    "1 / 2 / 3 / 4 = 1 / 24",
+                    "to-lean-chained-division-tracer",
+                )
+                .unwrap();
+
+                assert!(output.contains(
+                    "-- left recursive fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))"
+                ));
+                assert!(output.contains("-- right recursive fraction: (1 : ℝ) / (24 : ℝ)"));
+                assert!(output.contains("theorem litex_rational_1"));
+                assert!(output.contains("\n      norm_num\n"));
+                assert!(!output.contains("field_simp"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
     fn rejects_non_rational_objects() {
         run_with_large_stack("rejects_non_rational_objects", || {
             let error = to_lean_from_source("sin(0) = 0", "to-lean-boundary-test")
@@ -243,7 +339,7 @@ forall a, b R:
                 .trace_message();
 
             assert!(
-                error.contains("rational experiment does not support object"),
+                error.contains("direct equalities must be closed rational expressions"),
                 "{error}"
             );
         });

@@ -1222,7 +1222,7 @@ impl Runtime {
             then_facts.push(ExistOrAndChainAtomicFact::AtomicFact(eq.into()));
         }
 
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(forall_groups),
             dom_facts,
             then_facts,

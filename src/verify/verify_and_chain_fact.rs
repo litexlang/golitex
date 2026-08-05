@@ -131,7 +131,7 @@ impl Runtime {
             return Ok(None);
         };
 
-        let verified_by_known_forall_fact = ForallFact::new(
+        let verified_by_known_forall_fact = ForallFact::new_canonical_forall(
             known_forall.params_def.clone(),
             known_forall.dom.clone(),
             vec![and_fact_in_known_forall.clone().into()],

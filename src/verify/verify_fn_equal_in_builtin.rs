@@ -41,7 +41,7 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
         let param_def = ParamDefWithType::new(vec![x_group]);
-        let forall_f = ForallFact::new(
+        let forall_f = ForallFact::new_canonical_forall(
             param_def,
             vec![],
             vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
@@ -96,7 +96,7 @@ impl Runtime {
                 Some(o) => o,
                 None => return Ok(StmtUnknown::new().into()),
             };
-            let pointwise = ForallFact::new(
+            let pointwise = ForallFact::new_canonical_forall(
                 param_def,
                 dom_facts,
                 vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],
@@ -152,7 +152,7 @@ impl Runtime {
             Some(o) => o,
             None => return Ok(StmtUnknown::new().into()),
         };
-        let forall_f = ForallFact::new(
+        let forall_f = ForallFact::new_canonical_forall(
             param_def,
             dom_facts,
             vec![EqualFact::new(left_ap, right_ap, f.line_file.clone()).into()],

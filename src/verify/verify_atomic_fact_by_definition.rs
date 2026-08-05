@@ -97,7 +97,7 @@ impl Runtime {
             vec![bound_param_name],
             ParamType::Obj(subset_fact.left.clone()),
         )?;
-        let membership_forall_fact = ForallFact::new(
+        let membership_forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(
@@ -133,7 +133,7 @@ impl Runtime {
             vec![bound_param_name],
             ParamType::Obj(superset_fact.right.clone()),
         )?;
-        let membership_forall_fact = ForallFact::new(
+        let membership_forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![bound_param.clone()]),
             vec![],
             vec![InFact::new(

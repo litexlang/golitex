@@ -90,7 +90,7 @@ impl Runtime {
         } else {
             ExistOrAndChainAtomicFact::OrFact(OrFact::new(disjuncts, lf.clone()))
         };
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(forall_groups),
             vec![],
             vec![then_fact],

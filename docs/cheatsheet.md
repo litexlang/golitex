@@ -51,6 +51,7 @@ object-introduction family of `have` statements listed below.
 | `cart(A, B, ...)` | Cartesian product of the factor sets. | Factor objects must be well-defined sets; tuple membership checks each coordinate against its factor. |
 | `fn(x S) T` | Function-space object from inputs in `S` to values in `T`, possibly with domain side conditions. | Parameter sets, side conditions, and return set must be well-defined. |
 | Anonymous function `fn(x S) T {body}` | A function value written inline by binding `x` in `S` and returning `body`. | The body must be well-defined and must belong to `T` under the parameter and side-condition assumptions. |
+| `sum(a, b, f)`, `product(a, b, f)`, and finite-set variants | A finite scalar aggregate of a unary iterand. | The iterand must be defined throughout the index domain and its declared return set must be provably contained in `C`; range forms also require integer `a <= b`. |
 | `fn_range(f)` | The image of a function over its declared domain. | `f` must be a supported function value. For an image restricted to `S`, use `fn_range(fn(x S) T {f(x)})`. |
 | `seq(S)`, `finite_seq(S, n)` | Infinite positive-integer-indexed sequences and finite length-`n` sequences with values in `S`. | `S` must be a set; finite-sequence length must be positive and match literal length when a literal is used. |
 | `matrix(S, r, c)` and matrix literals | Rectangular row-column indexed arrays with entries in `S`. | Row and column counts must be positive; literals must be rectangular and entries must belong to `S`. |
@@ -65,6 +66,11 @@ Default struct views are also preview syntax. An explicit `obj &StructName`
 binding selects that view; a directly struct-typed field supplies the next
 view in a consecutive chain. A membership fact does not. Use the fully
 explicit `&StructName{obj}.field` form to select another view at one access.
+
+A positive `forall` may use another `forall` as its sole direct conclusion.
+This preview syntax is flattened before checking and storage by appending the
+inner parameters and assumptions. A nested universal mixed with a sibling
+conclusion is rejected rather than stored with changed empty-domain semantics.
 
 ## Facts And Object Introduction
 

@@ -24,6 +24,10 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, inside_results)).into())
     }
 
+    /// Mathematical contract: choice of a function from unique existence is
+    /// meaningful only when the source universal-existential statement and
+    /// its derived function signature are structurally valid and the complete
+    /// quantified fact is well-defined.
     fn exec_have_fn_by_forall_exist_unique_verify_well_definedness(
         &mut self,
         stmt: &HaveFnByForallExistUniqueStmt,
@@ -370,7 +374,7 @@ impl Runtime {
             then_facts.push(Self::then_fact_from_exist_body_fact(stmt, inst_body_fact)?);
         }
 
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             stmt.forall.params_def_with_type.clone(),
             stmt.forall.dom_facts.clone(),
             then_facts,
@@ -441,7 +445,7 @@ impl Runtime {
         }
 
         let equal_fact = EqualFact::new(witness_obj, function_obj, stmt.line_file.clone());
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(params),
             dom_facts,
             vec![ExistOrAndChainAtomicFact::AtomicFact(equal_fact.into())],

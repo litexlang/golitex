@@ -1,6 +1,8 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: `power_set(S)` is meaningful when its base
+    /// object `S` is well-defined; sethood is handled by the set semantics.
     pub(in crate::verify) fn verify_power_set_well_defined(
         &mut self,
         x: &PowerSet,
@@ -10,6 +12,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a general Cartesian product has a set-valued
+    /// index domain `I`, a nonempty family carrier `S`, and a family selector
+    /// of type `fn(i I) S`; all three objects must be well-defined.
     pub(in crate::verify) fn verify_general_cart_well_defined(
         &mut self,
         x: &GeneralCart,
@@ -64,6 +69,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a[i]` is meaningful when `a` is a tuple, `i`
+    /// is a positive integer, and `i <= tuple_dim(a)`; both operands must also
+    /// be well-defined.
     pub(in crate::verify) fn verify_obj_at_index_well_defined(
         &mut self,
         x: &ObjAtIndex,
@@ -223,6 +231,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: instantiate a callable's declared return carrier
+    /// through every supplied argument group; intermediate carriers must remain
+    /// function-like for a curried application to continue.
     pub(crate) fn fn_obj_return_set_after_application(
         &self,
         fn_obj: &FnObj,
@@ -254,6 +265,8 @@ impl Runtime {
         Ok(None)
     }
 
+    /// Mathematical contract: a dependent return carrier is interpreted after
+    /// substituting the current argument values for its formal parameters.
     pub(in crate::verify) fn fn_set_return_set_after_args(
         &self,
         space: &FnSetSpace,
@@ -266,6 +279,9 @@ impl Runtime {
         self.inst_obj(&space.ret_set_obj(), &param_to_arg_map, space.binding())
     }
 
+    /// Mathematical contract: a curried return can be called again only when
+    /// its carrier, a refined base carrier, or an equal representative denotes
+    /// a function/sequence/matrix space.
     pub(crate) fn fn_set_space_from_return_set_obj(
         &self,
         return_set: Obj,
@@ -320,34 +336,42 @@ impl Runtime {
         FnSetSpace::from_ret_obj(original_return_set)
     }
 
+    /// Mathematical contract: the primitive standard set `Q+` is total.
     pub(in crate::verify) fn verify_q_pos_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `R+` is total.
     pub(in crate::verify) fn verify_r_pos_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Q-` is total.
     pub(in crate::verify) fn verify_q_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Z-` is total.
     pub(in crate::verify) fn verify_z_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `R-` is total.
     pub(in crate::verify) fn verify_r_neg_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Q\\{0}` is total.
     pub(in crate::verify) fn verify_q_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `Z\\{0}` is total.
     pub(in crate::verify) fn verify_z_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
+    /// Mathematical contract: the primitive standard set `R\\{0}` is total.
     pub(in crate::verify) fn verify_r_nz_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }

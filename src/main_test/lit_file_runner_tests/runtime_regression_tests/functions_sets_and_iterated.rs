@@ -1372,6 +1372,128 @@ forall S set, f \FunctionCarrier<S>:
 }
 
 #[test]
+fn anonymous_function_body_must_belong_to_declared_return_set() {
+    let invalid_source = r#"
+fn(x R) N {x}(1 / 2) $in N
+"#;
+
+    let mut invalid_runtime = Runtime::new();
+    invalid_runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_function_body_must_belong_to_declared_return_set",
+    );
+    let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "an anonymous function must not trust an incompatible declared return set:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(
+            "anonymous function body x is not verified to belong to declared return set N"
+        ),
+        "the rejection should identify the body and declared return set:\n{}",
+        run_output
+    );
+
+    let valid_source = r#"
+fn(x R) R {x}(1 / 2) = 1 / 2
+"#;
+    let mut valid_runtime = Runtime::new();
+    valid_runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_function_body_in_declared_return_set_is_well_defined",
+    );
+    let (stmt_results, runtime_error) = run_source_code(valid_source, &mut valid_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&valid_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a compatible anonymous function should remain well-defined:\n{}",
+        run_output
+    );
+
+    let symbolic_cart_source = r#"
+have n N+ = 3
+have cart c for i1 <= n, proj(c, i1) = R
+have fn coordinate_fn(p c) fn(i1 closed_range(1, n)) R = fn(j closed_range(1, n)) R {p[j]}
+"#;
+    let mut symbolic_cart_runtime = Runtime::new();
+    symbolic_cart_runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_function_cart_coordinate_in_declared_return_set",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(symbolic_cart_source, &mut symbolic_cart_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&symbolic_cart_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a symbolic Cartesian coordinate should retain its proved carrier:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn iterated_operators_require_scalar_return_sets() {
+    let invalid_cases = [
+        (
+            "range_sum",
+            "sum(1, 2, fn(k Z) power_set(R) {R}) = sum(1, 2, fn(k Z) power_set(R) {R})",
+            "sum: iterand return set power_set(R) is not verified to be a subset of C",
+        ),
+        (
+            "range_product",
+            "product(1, 2, fn(k Z) power_set(R) {R}) = product(1, 2, fn(k Z) power_set(R) {R})",
+            "product: iterand return set power_set(R) is not verified to be a subset of C",
+        ),
+        (
+            "finite_set_sum",
+            "finite_set_sum({1, 2}, fn(k {1, 2}) power_set(R) {R}) = finite_set_sum({1, 2}, fn(k {1, 2}) power_set(R) {R})",
+            "finite_set_sum: iterand return set power_set(R) is not verified to be a subset of C",
+        ),
+        (
+            "finite_set_product",
+            "finite_set_product({1, 2}, fn(k {1, 2}) power_set(R) {R}) = finite_set_product({1, 2}, fn(k {1, 2}) power_set(R) {R})",
+            "finite_set_product: iterand return set power_set(R) is not verified to be a subset of C",
+        ),
+    ];
+
+    for (label, source_code, expected_error) in invalid_cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(label);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "{label} must reject a set-valued iterand:\n{run_output}"
+        );
+        assert!(
+            run_output.contains(expected_error),
+            "{label} should identify the non-scalar declared return set:\n{run_output}"
+        );
+    }
+
+    let valid_source = r#"
+sum(1, 2, fn(k Z) Z {k}) = sum(1, 2, fn(k Z) Z {k})
+product(1, 2, fn(k Z) Z {k}) = product(1, 2, fn(k Z) Z {k})
+finite_set_sum({1, 2}, fn(k {1, 2}) Z {k}) = finite_set_sum({1, 2}, fn(k {1, 2}) Z {k})
+finite_set_product({1, 2}, fn(k {1, 2}) Z {k}) = finite_set_product({1, 2}, fn(k {1, 2}) Z {k})
+finite_set_sum(3...1, fn(k Z) Z {0}) = 0
+finite_set_product(3...1, fn(k Z) Z {1}) = 1
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("iterated_scalar_return_sets_remain_valid");
+    let (stmt_results, runtime_error) = run_source_code(valid_source, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "scalar-valued iterands should remain well-defined:\n{run_output}"
+    );
+}
+
+#[test]
 fn anonymous_fn_restriction_over_abstract_subset_is_well_defined() {
     run_with_large_stack(
         "anonymous_fn_restriction_over_abstract_subset_is_well_defined_large_stack",

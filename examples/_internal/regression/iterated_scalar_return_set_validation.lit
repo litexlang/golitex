@@ -1,0 +1,21 @@
+# Tracer: scalar return carriers for finite aggregates
+#
+# Before (incorrectly verified):
+# sum(1, 2, fn(k Z) power_set(R) {R}) = sum(1, 2, fn(k Z) power_set(R) {R})
+# finite_set_sum({1, 2}, fn(k {1, 2}) power_set(R) {R}) = finite_set_sum({1, 2}, fn(k {1, 2}) power_set(R) {R})
+# Former behavior: aggregate checking accepted a set-valued iterand even though
+# addition and multiplication combine scalars.
+
+sum(1, 2, fn(k Z) Z {k}) = sum(1, 2, fn(k Z) Z {k})
+product(1, 2, fn(k Z) Z {k}) = product(1, 2, fn(k Z) Z {k})
+finite_set_sum({1, 2}, fn(k {1, 2}) Z {k}) = finite_set_sum({1, 2}, fn(k {1, 2}) Z {k})
+finite_set_product({1, 2}, fn(k {1, 2}) Z {k}) = finite_set_product({1, 2}, fn(k {1, 2}) Z {k})
+finite_set_sum(3...1, fn(k Z) Z {0}) = 0
+finite_set_product(3...1, fn(k Z) Z {1}) = 1
+
+# Boundary: all four forms reject `power_set(R)` as their iterand return set
+# because it is not provably a subset of C.
+# A reversed closed range is a provably empty finite set, so its aggregate is
+# still well-defined as long as the scalar iterand has a unary signature.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/_internal/regression/iterated_scalar_return_set_validation.lit
+# Implementation: src/verify/verify_obj_well_defined/iterated.rs

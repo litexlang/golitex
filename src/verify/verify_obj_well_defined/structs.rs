@@ -2,6 +2,9 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    /// Mathematical contract: a struct instantiation names a declared struct,
+    /// supplies exactly its header arity, and gives well-defined arguments
+    /// satisfying every declared parameter type and domain condition.
     pub(crate) fn struct_header_param_to_arg_map(
         &mut self,
         struct_obj: &StructObj,
@@ -109,6 +112,8 @@ impl Runtime {
         Ok((def, param_to_arg_map))
     }
 
+    /// Mathematical contract: field carriers of a struct instance are the
+    /// declared field expressions after sound header-parameter substitution.
     pub(crate) fn instantiated_struct_field_types(
         &mut self,
         struct_obj: &StructObj,
@@ -123,7 +128,8 @@ impl Runtime {
         Ok(fields)
     }
 
-    /// A one-field structure is a named view of its sole field carrier.
+    /// Mathematical contract: a one-field structure is a named view of its
+    /// sole field carrier.
     /// Multi-field structures retain their Cartesian-product representation.
     pub(crate) fn struct_carrier_from_field_types(&self, mut field_types: Vec<Obj>) -> Obj {
         if field_types.len() == 1 {
@@ -132,6 +138,8 @@ impl Runtime {
         Cart::new(field_types).into()
     }
 
+    /// Mathematical contract: a field projection index exists exactly when
+    /// the instantiated struct names a declared field of that name.
     pub(crate) fn struct_field_index(
         &self,
         struct_obj: &StructObj,
@@ -162,6 +170,9 @@ impl Runtime {
             })
     }
 
+    /// Mathematical contract: field access denotes the value itself for a
+    /// one-field struct and the corresponding one-based tuple projection for a
+    /// multi-field struct.
     pub(crate) fn struct_field_access_projection(
         &self,
         field_access: &ObjAsStructInstanceWithFieldAccess,
@@ -188,6 +199,10 @@ impl Runtime {
         .into())
     }
 
+    /// Mathematical contract: an instantiated struct carrier is meaningful
+    /// when its header contract holds, every instantiated field carrier is
+    /// meaningful, and each equivalent fact is meaningful under locally bound
+    /// fields of those carriers.
     pub(in crate::verify) fn verify_struct_obj_well_defined(
         &mut self,
         struct_obj: &StructObj,
@@ -249,6 +264,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a template application is meaningful when its
+    /// template exists and materialization verifies the instantiated template
+    /// parameters, body declarations, and resulting object.
     pub(in crate::verify) fn verify_instantiated_template_obj_well_defined(
         &mut self,
         template_obj: &InstantiatedTemplateObj,
@@ -257,6 +275,9 @@ impl Runtime {
         self.materialize_instantiated_template_obj(template_obj, verify_state)
     }
 
+    /// Mathematical contract: `value.field` is meaningful when the struct and
+    /// field are declared, `value` is well-defined, and `value` is provably an
+    /// instance of the instantiated struct carrier.
     pub(in crate::verify) fn verify_obj_as_struct_instance_with_field_access_well_defined(
         &mut self,
         field_access: &ObjAsStructInstanceWithFieldAccess,

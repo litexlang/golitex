@@ -1,8 +1,9 @@
 use crate::prelude::*;
 
-// well-defined check for fact: 1. predicate is defined 2. all args are well-defined
-// store verified related facts during the verification process, e.g. when verifying f(a)(b) is well-defined, we store f(a) in the set where f returns, and store f(a)(b) in the set where f(a) returns
 impl Runtime {
+    /// Mathematical contract: a fact is well-defined when its predicate/fact
+    /// form exists and every object, binder type, premise, and conclusion is
+    /// meaningful in the scope introduced by that fact.
     pub fn verify_fact_well_defined(
         &mut self,
         fact: &Fact,
@@ -34,6 +35,10 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: an atomic fact is well-defined when its
+    /// predicate is defined at the supplied arity and every argument object is
+    /// well-defined. Concrete proposition parameter carriers are proof-time
+    /// requirements when the definition is unfolded, not part of this gate.
     pub fn verify_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -47,6 +52,8 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: `left = right` is meaningful exactly when both
+    /// sides denote well-defined objects; equality itself is untyped.
     fn verify_equal_fact_well_defined(
         &mut self,
         equal_fact: &EqualFact,
@@ -57,6 +64,10 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a non-equality predicate application is
+    /// meaningful only at its declared arity with well-defined arguments.
+    /// Builtin partial predicates additionally require their mathematical
+    /// domains, such as real operands for order and `N+` for primality.
     fn verify_non_equational_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -198,6 +209,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a conjunction is well-defined when every
+    /// conjunct is well-defined in the same context.
     pub fn verify_and_fact_well_defined(
         &mut self,
         and_fact: &AndFact,
@@ -209,6 +222,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a comparison chain is well-defined when every
+    /// adjacent atomic comparison produced by the chain is well-defined.
     pub fn verify_chain_fact_well_defined(
         &mut self,
         chain_fact: &ChainFact,
@@ -221,6 +236,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a disjunction is well-defined only when every
+    /// branch is meaningful, independently of which branch is true.
     pub fn verify_or_fact_well_defined(
         &mut self,
         or_fact: &OrFact,
@@ -232,6 +249,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: this restricted compound fact is well-defined
+    /// exactly when the atomic, conjunction, or chain form it contains is.
     fn verify_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &AndChainAtomicFact,
@@ -249,6 +268,10 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `exist x T st {body}` is well-defined when each
+    /// binder type is meaningful in dependency order and every body fact is
+    /// meaningful under the bound-variable type facts and preceding body
+    /// assumptions.
     pub fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFactEnum,
@@ -328,6 +351,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: `forall x T: premises => conclusions` is
+    /// well-defined when the binder types and premises are meaningful in order
+    /// and every conclusion is meaningful under those local assumptions.
     pub fn verify_forall_fact_well_defined(
         &mut self,
         forall_fact: &ForallFact,
@@ -346,6 +372,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: the domain portion of a universal fact is
+    /// well-defined when its dependent binder types and premises are
+    /// meaningful in source order.
     pub fn verify_forall_fact_params_and_dom_well_defined(
         &mut self,
         forall_fact: &ForallFact,
@@ -356,6 +385,10 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract implementation: check the universal domain
+    /// inside the already-created
+    /// local scope, retaining each checked premise as an assumption for the
+    /// obligations that follow it.
     fn verify_forall_fact_params_and_dom_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
@@ -400,6 +433,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract implementation: in one local scope, bind the
+    /// domain, assume its premises, then check every conclusion.
     fn verify_forall_fact_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
@@ -426,6 +461,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: this non-quantified compound fact is
+    /// well-defined exactly when its selected atomic/and/chain/or form is.
     pub fn verify_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &OrAndChainAtomicFact,
@@ -446,6 +483,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: this compound fact is well-defined exactly when
+    /// its selected atomic/and/chain/or/exist form is.
     pub fn verify_exist_or_and_chain_atomic_fact_well_defined(
         &mut self,
         fact: &ExistOrAndChainAtomicFact,
@@ -471,6 +510,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: a universal equivalence is well-defined when
+    /// its binders, shared premises, forward conclusions, and reverse-side
+    /// facts are all meaningful in the same bound-variable scope.
     pub fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
@@ -488,6 +530,8 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: negating a universal fact adds no new object
+    /// domain; it is well-defined exactly when the underlying universal is.
     pub fn verify_not_forall_fact_well_defined(
         &mut self,
         not_forall: &NotForallFact,

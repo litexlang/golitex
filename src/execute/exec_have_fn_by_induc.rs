@@ -56,6 +56,10 @@ impl Runtime {
         self.verify_have_fn_by_induc_case_list(stmt, &stmt.cases)
     }
 
+    /// Mathematical contract: an inductive function declaration has a fresh
+    /// name, a meaningful function signature, and well-defined measure and
+    /// lower-bound expressions under its parameter domain. Integrality,
+    /// descent, cases, and return values are checked in the proof phase.
     fn exec_have_fn_by_induc_verify_well_definedness(
         &mut self,
         stmt: &HaveFnByInducStmt,

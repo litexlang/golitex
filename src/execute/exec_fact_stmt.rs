@@ -10,6 +10,9 @@ impl Runtime {
         Ok(result.with_infers(infer_result))
     }
 
+    /// Mathematical contract: a standalone fact is meaningful exactly when
+    /// the central fact checker validates its predicate, arguments, binders,
+    /// premises, and conclusions.
     fn exec_fact_stmt_verify_well_definedness(&mut self, fact: &Fact) -> Result<(), RuntimeError> {
         self.verify_fact_well_defined(fact, &UseContextVerifyState::new(0, false))
     }

@@ -9,6 +9,9 @@ impl Runtime {
         Ok(body_exec_result.with_infers(infer_result_after_store))
     }
 
+    /// Mathematical contract: a theorem or axiom statement is meaningful when
+    /// its complete universal fact is well-defined; strict mode additionally
+    /// forbids introducing an axiom trust boundary.
     fn exec_def_thm_stmt_verify_well_definedness(
         &mut self,
         stmt: &DefThmStmt,

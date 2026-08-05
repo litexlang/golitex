@@ -92,7 +92,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let coordinate_forall: Fact = ForallFact::new(
+        let coordinate_forall: Fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![index_group]),
             vec![],
             vec![coordinate_fact.into()],

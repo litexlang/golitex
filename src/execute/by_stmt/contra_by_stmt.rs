@@ -10,6 +10,9 @@ impl Runtime {
         Ok(result.with_infers(infer_result))
     }
 
+    /// Mathematical contract: contradiction proof begins only from a
+    /// well-defined target fact; the proof phase separately requires a
+    /// supported logical negation and derives an explicit contradiction.
     fn exec_by_contra_stmt_verify_well_definedness(
         &mut self,
         stmt: &ByContraStmt,

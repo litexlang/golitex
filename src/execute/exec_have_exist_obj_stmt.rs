@@ -99,6 +99,9 @@ impl Runtime {
         Ok((NonFactualStmtSuccess::new(stmt, infer_result, inside_results)).into())
     }
 
+    /// Mathematical contract: existential elimination introduces exactly one
+    /// fresh object name for each existential parameter, and the complete
+    /// existential formula is meaningful before those witnesses enter scope.
     fn exec_have_exist_obj_stmt_verify_well_definedness(
         &mut self,
         stmt: Stmt,

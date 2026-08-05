@@ -266,4 +266,18 @@ mod tests {
         assert_eq!(rational.numerator, "(a ^ 2)");
         assert_eq!(rational.denominator, "(b ^ 2)");
     }
+
+    #[test]
+    fn recursively_accumulates_left_associative_divisors() {
+        let one: Obj = Number::new("1".to_string()).into();
+        let two: Obj = Number::new("2".to_string()).into();
+        let three: Obj = Number::new("3".to_string()).into();
+        let four: Obj = Number::new("4".to_string()).into();
+        let expression: Obj =
+            Div::new(Div::new(Div::new(one, two).into(), three).into(), four).into();
+
+        let rational = LeanRationalExpression::from_obj(&expression).unwrap();
+        assert_eq!(rational.numerator, "(1 : ℝ)");
+        assert_eq!(rational.denominator, "(((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))");
+    }
 }

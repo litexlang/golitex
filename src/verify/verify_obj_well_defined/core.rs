@@ -2,6 +2,8 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    /// Mathematical contract: an unqualified symbol denotes an object only if
+    /// that identifier or struct constructor is visible in the current scope.
     pub(in crate::verify) fn verify_identifier_well_defined(
         &self,
         identifier: &Identifier,
@@ -23,6 +25,9 @@ impl Runtime {
         }
     }
 
+    /// Mathematical contract: a qualified symbol denotes an object only if
+    /// its identifier or struct constructor exists in the named current or
+    /// imported module.
     pub(in crate::verify) fn verify_identifier_with_mod_well_defined(
         &self,
         x: &IdentifierWithMod,
@@ -53,6 +58,10 @@ impl Runtime {
         )))
     }
 
+    /// Mathematical contract: a function application is well-defined when
+    /// its callable has a known function space and one candidate space accepts
+    /// every argument group, including arity, parameter carriers, and domain
+    /// predicates. Literal sequence and matrix callables obey their index laws.
     pub(in crate::verify) fn verify_fn_obj_well_defined(
         &mut self,
         fn_obj: &FnObj,
@@ -201,6 +210,9 @@ impl Runtime {
         )))
     }
 
+    /// Mathematical contract: each successive argument group must inhabit the
+    /// current function domain; a curried continuation is meaningful only
+    /// when the instantiated return carrier is itself function-like.
     pub(in crate::verify) fn verify_fn_obj_well_defined_against_space(
         &mut self,
         fn_obj: &FnObj,
@@ -277,6 +289,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: one application stage is meaningful when its
+    /// arguments are well-defined, match the declared parameter carriers in
+    /// dependency order, and satisfy every instantiated domain condition.
     pub(in crate::verify) fn verify_fn_obj_well_defined_against_fn_like_space(
         &mut self,
         args: &Vec<Box<Obj>>,
@@ -351,6 +366,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: each function argument belongs to its declared
+    /// carrier after substituting all earlier dependent parameters; resolving
+    /// an equal representative may discharge the same membership obligation.
     pub(in crate::verify) fn verify_args_satisfy_fn_param_groups(
         &mut self,
         params_def_with_set: &ParamDefWithSet,

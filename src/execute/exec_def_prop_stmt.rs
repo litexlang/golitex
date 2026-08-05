@@ -15,6 +15,8 @@ impl Runtime {
         )
     }
 
+    /// Mathematical contract: a concrete proposition definition is checked in
+    /// a fresh local scope containing its typed formal parameters.
     fn exec_def_prop_stmt_verify_well_definedness(
         &mut self,
         def_prop_stmt: &DefPropStmt,
@@ -24,6 +26,9 @@ impl Runtime {
         })
     }
 
+    /// Mathematical contract: every parameter type is meaningful in
+    /// dependency order and every defining iff-fact is meaningful under those
+    /// parameters and preceding local definition facts.
     fn exec_def_prop_stmt_verify_well_definedness_body(
         &mut self,
         def_prop_stmt: &DefPropStmt,

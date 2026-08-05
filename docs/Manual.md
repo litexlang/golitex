@@ -612,6 +612,16 @@ product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1
 | `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]` | Bounded real intervals |
 | `'(a,)`, `'[a,)`, `'(,b)`, `'(,b]` | Real rays |
 
+All four aggregate forms require the iterand to be unary and to declare a
+scalar return carrier: Litex must prove `return_set $subset C` under the
+function's parameter and domain assumptions. The function body must separately
+belong to that declared return carrier. Range `sum` and `product` also require
+integer endpoints with `first <= last`; finite-set aggregates require a finite
+set and a function defined on the aggregated domain.
+Consequently, `finite_set_sum(3...1, fn(k Z) Z {0}) = 0` and the analogous
+empty product equal to `1` are well-defined, while range `sum(3,1,...)` and
+`product(3,1,...)` remain outside the nonempty range-aggregate contract.
+
 Integer ranges are always subsets of `Z` (and its standard supersets). If the
 lower endpoint is known in `N` or `N+`, the range is also a subset of that
 carrier. A set-builder over any finite base is finite, so a finite, nonempty
@@ -803,8 +813,9 @@ Every row also requires its subobjects to be well-defined.
 | Object | Required information |
 |---|---|
 | A name | The name is builtin, locally introduced, or imported. |
-| `a + b`, `a - b`, `a * b`, `abs(a)` | The relevant arguments are real. |
-| `a / b` | `a, b $in R` and `b != 0`. |
+| `a + b`, `a - b`, `a * b` | `a, b $in C`. |
+| `a / b` | `a, b $in C` and `b != 0`. |
+| `abs(a)` | `a $in R`; use complex modulus for a general `C` argument. |
 | `a % b` | `a, b $in Z` and `b != 0`. |
 | `a^b` | One of Litex's supported real/integer power-domain combinations holds. |
 | `sqrt(a)` | `a $in R` and `0 <= a`. |
@@ -822,13 +833,14 @@ Every row also requires its subobjects to be well-defined.
 | A set comprehension | The base is a set and every filter fact is well-defined. |
 | `replacement(P, A)` | `A` is a set and `P` gives a unique output for each input used. |
 | `general_cart(I, S, g)` | `I` is a set, `S` is nonempty, and `g $in fn(alpha I) S`; factor nonemptiness is needed for nonemptiness. |
-| `fn(...)` | Parameter domains, conditions, and return set are well-defined. |
+| `fn(...) T` | Parameter domains, conditions, and return set `T` are well-defined. |
+| `fn(...) T {body}` | The function-space conditions hold, `body` is well-defined under them, and `body $in T` is provable there. |
 | `f(args)` | `f` has a known function set and the arguments satisfy all domains. |
 | `fn_range(f)` | `f` has a known function set. |
 | Tuple or product projection | The product shape, dimension, and index are valid. |
 | Sequence or matrix access | The index lies in the declared bounds. |
-| A finite sum or product | Bounds, indexed function, and numeric codomain are suitable. |
-| A real interval | Finite endpoints are real and the endpoint ordering is compatible. |
+| A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its declared return set is a subset of `C`. |
+| A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
 
@@ -961,6 +973,26 @@ forall x R:
         x + 1 = 3
 ```
 
+As a preview convenience, the sole direct conclusion of a positive `forall`
+may itself be a `forall`. Litex combines the parameters and assumptions before
+well-definedness, verification, and storage:
+
+```litex
+forall x R:
+    x > 0
+    =>:
+        forall y R:
+            y > 0
+            =>:
+                x + y > 0
+```
+
+The stored rule is the flat fact
+`forall x R, y R: x > 0; y > 0 => x + y > 0`. The nested universal must be the
+only fact in its direct conclusion block; mixing it with a sibling conclusion
+is an `error`. This normalization does not apply to a universal premise, to
+`not forall`, or to either side of `forall ... <=>:`.
+
 An assumption is local; it does not become a global fact:
 
 ```text
@@ -1066,6 +1098,7 @@ This is a parse `error`; write `not forall ...` on one header.
 | Unique existence | `exist! params st {facts}` |
 | Non-existence | `not exist params st {facts}` |
 | Universal implication | `forall params: assumptions =>: conclusions` |
+| Nested universal conclusion (preview) | `forall outer: assumptions =>: forall inner: assumptions =>: conclusions` |
 | Universal equivalence | `forall params: =>: left <=>: right` |
 | Inline universal | `forall params => {facts}` |
 | Negated universal | `not forall params: facts` |
@@ -2835,6 +2868,7 @@ change:
 - one-step membership verification through a known subset or superset;
 - direct-file `-trust-before-line` development checks;
 - reduced rational fraction verification;
+- positive nested-`forall` conclusion normalization;
 - trusted Zorn, choice, and regularity proof steps.
 
 ### Trust and strict mode

@@ -949,7 +949,7 @@ fn general_cart_global_family_nonempty_fact(
         )
         .expect("internal binder identity counter exhausted");
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
-    ForallFact::new(
+    ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![param_group]),
         vec![],
         vec![IsNonemptySetFact::new(param_obj, source_fact.line_file.clone()).into()],
@@ -975,7 +975,7 @@ fn general_cart_pointwise_family_nonempty_fact(
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
     let factor: Obj = FnObj::new(head, vec![vec![Box::new(param_obj.clone())]]).into();
     Ok(Some(
-        ForallFact::new(
+        ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![param_group]),
             vec![],
             vec![IsNonemptySetFact::new(factor, source_fact.line_file.clone()).into()],

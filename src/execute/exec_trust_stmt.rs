@@ -8,6 +8,10 @@ impl Runtime {
         Ok(NonFactualStmtSuccess::new(trust_stmt.clone().into(), infer_result, vec![]).into())
     }
 
+    /// Mathematical contract implementation: `trust` has no separate
+    /// well-definedness preflight. Outside the explicit trusted-file boundary,
+    /// its environment phase still checks each fact before assuming it; strict
+    /// mode rejects the statement in the following verification phase.
     fn exec_trust_stmt_verify_well_definedness(
         &mut self,
         _trust_stmt: &TrustStmt,

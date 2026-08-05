@@ -1,6 +1,7 @@
 use crate::prelude::*;
 
 impl Runtime {
+    /// Mathematical contract: require the object to be provably complex.
     pub(in crate::verify) fn require_obj_in_c(
         &mut self,
         obj: &Obj,
@@ -17,6 +18,9 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: require the object to be provably real; the
+    /// recognized real-valued constructors discharge this through their own
+    /// domain contracts.
     pub(in crate::verify) fn require_obj_in_r(
         &mut self,
         obj: &Obj,
@@ -48,6 +52,7 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: require the object to be provably integral.
     pub(in crate::verify) fn require_obj_in_z(
         &mut self,
         obj: &Obj,
@@ -69,6 +74,7 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: require the object to be provably natural.
     pub(in crate::verify) fn require_obj_in_n(
         &mut self,
         obj: &Obj,
@@ -85,7 +91,8 @@ impl Runtime {
         Ok(())
     }
 
-    /// Require `left <= right` to be verifiable; does not store the fact.
+    /// Mathematical contract: require `left <= right` to be provable in the
+    /// current context; checking the obligation does not assume or store it.
     pub(in crate::verify) fn require_less_equal_verified(
         &mut self,
         left: &Obj,
@@ -104,6 +111,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a + b` is meaningful when both operands are
+    /// well-defined complex scalars.
     pub(in crate::verify) fn verify_add_well_defined(
         &mut self,
         add: &Add,
@@ -116,6 +125,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a - b` is meaningful when both operands are
+    /// well-defined complex scalars.
     pub(in crate::verify) fn verify_sub_well_defined(
         &mut self,
         sub: &Sub,
@@ -128,6 +139,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a * b` is meaningful when both operands are
+    /// well-defined complex scalars.
     pub(in crate::verify) fn verify_mul_well_defined(
         &mut self,
         mul: &Mul,
@@ -140,6 +153,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a / b` is meaningful when `a,b in C` and the
+    /// divisor `b` is provably nonzero.
     pub(in crate::verify) fn verify_div_well_defined(
         &mut self,
         div: &Div,
@@ -166,6 +181,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `a mod b` is meaningful for integral operands
+    /// with a provably nonzero modulus; a well-defined gcd is already nonzero.
     pub(in crate::verify) fn verify_mod_well_defined(
         &mut self,
         m: &Mod,
@@ -193,6 +210,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `gcd(a,b)` is meaningful for integers when at
+    /// least one of `a` and `b` is provably nonzero.
     pub(in crate::verify) fn verify_gcd_well_defined(
         &mut self,
         gcd: &Gcd,
@@ -250,6 +269,8 @@ impl Runtime {
         )))
     }
 
+    /// Mathematical contract: real absolute value `abs(x)` requires a
+    /// well-defined real argument.
     pub(in crate::verify) fn verify_abs_well_defined(
         &mut self,
         abs: &Abs,
@@ -260,6 +281,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `lcm(a,b)` is meaningful for well-defined
+    /// integer operands, including the all-zero case.
     pub(in crate::verify) fn verify_lcm_well_defined(
         &mut self,
         lcm: &Lcm,
@@ -271,6 +294,7 @@ impl Runtime {
         self.require_obj_in_z(&lcm.right, verify_state)
     }
 
+    /// Mathematical contract: `floor(x)` requires a well-defined real `x`.
     pub(in crate::verify) fn verify_floor_well_defined(
         &mut self,
         floor: &Floor,
@@ -280,6 +304,7 @@ impl Runtime {
         self.require_obj_in_r(&floor.arg, verify_state)
     }
 
+    /// Mathematical contract: `ceil(x)` requires a well-defined real `x`.
     pub(in crate::verify) fn verify_ceil_well_defined(
         &mut self,
         ceil: &Ceil,
@@ -289,6 +314,7 @@ impl Runtime {
         self.require_obj_in_r(&ceil.arg, verify_state)
     }
 
+    /// Mathematical contract: `min(a,b)` requires two well-defined reals.
     pub(in crate::verify) fn verify_min_well_defined(
         &mut self,
         min: &Min,
@@ -300,6 +326,7 @@ impl Runtime {
         self.require_obj_in_r(&min.right, verify_state)
     }
 
+    /// Mathematical contract: `max(a,b)` requires two well-defined reals.
     pub(in crate::verify) fn verify_max_well_defined(
         &mut self,
         max: &Max,
@@ -311,6 +338,8 @@ impl Runtime {
         self.require_obj_in_r(&max.right, verify_state)
     }
 
+    /// Mathematical contract: real exponential `exp(x)` requires a
+    /// well-defined real exponent.
     pub(in crate::verify) fn verify_exp_well_defined(
         &mut self,
         exp: &Exp,
@@ -320,6 +349,8 @@ impl Runtime {
         self.require_obj_in_r(&exp.arg, verify_state)
     }
 
+    /// Mathematical contract: `ln(x)` requires a well-defined positive real
+    /// argument.
     pub(in crate::verify) fn verify_ln_well_defined(
         &mut self,
         ln: &Ln,
@@ -346,6 +377,7 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `sign(x)` requires a well-defined real `x`.
     pub(in crate::verify) fn verify_sign_well_defined(
         &mut self,
         sign: &Sign,
@@ -355,6 +387,8 @@ impl Runtime {
         self.require_obj_in_r(&sign.arg, verify_state)
     }
 
+    /// Mathematical contract: `factorial(n)` requires a well-defined natural
+    /// number `n`.
     pub(in crate::verify) fn verify_factorial_well_defined(
         &mut self,
         factorial: &Factorial,
@@ -364,6 +398,7 @@ impl Runtime {
         self.require_obj_in_n(&factorial.arg, verify_state)
     }
 
+    /// Mathematical contract: `sin(x)` requires a well-defined real `x`.
     pub(in crate::verify) fn verify_sin_well_defined(
         &mut self,
         sin: &Sin,
@@ -373,6 +408,7 @@ impl Runtime {
         self.require_obj_in_r(&sin.arg, verify_state)
     }
 
+    /// Mathematical contract: `cos(x)` requires a well-defined real `x`.
     pub(in crate::verify) fn verify_cos_well_defined(
         &mut self,
         cos: &Cos,
@@ -382,6 +418,8 @@ impl Runtime {
         self.require_obj_in_r(&cos.arg, verify_state)
     }
 
+    /// Mathematical contract: `tan(x)` requires a well-defined real `x` and
+    /// a provably nonzero denominator `cos(x)`.
     pub(in crate::verify) fn verify_tan_well_defined(
         &mut self,
         tan: &Tan,
@@ -405,6 +443,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `cot(x)` requires a well-defined real `x` and
+    /// a provably nonzero denominator `sin(x)`.
     pub(in crate::verify) fn verify_cot_well_defined(
         &mut self,
         cot: &Cot,
@@ -428,6 +468,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `real_part(z)` requires a well-defined complex
+    /// argument.
     pub(in crate::verify) fn verify_real_part_well_defined(
         &mut self,
         real_part: &RealPart,
@@ -438,6 +480,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `imaginary_part(z)` requires a well-defined
+    /// complex argument.
     pub(in crate::verify) fn verify_imaginary_part_well_defined(
         &mut self,
         imaginary_part: &ImaginaryPart,
@@ -448,6 +492,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: complex modulus requires a well-defined complex
+    /// argument.
     pub(in crate::verify) fn verify_complex_abs_well_defined(
         &mut self,
         complex_abs: &ComplexAbs,
@@ -458,6 +504,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: real `sqrt(x)` requires a well-defined real
+    /// argument with a provable lower bound `0 <= x`.
     pub(in crate::verify) fn verify_sqrt_well_defined(
         &mut self,
         sqrt: &Sqrt,
@@ -480,6 +528,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `log(base,arg)` requires real operands,
+    /// `base > 0`, `base != 1`, and `arg > 0`.
     pub(in crate::verify) fn verify_log_well_defined(
         &mut self,
         log: &Log,
@@ -517,6 +567,8 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: exponentiation is defined on the explicit
+    /// complex-natural, nonzero-complex-integer, and real-power domains below.
     // Complex and real pow domain (well-defined check): every complex base has natural powers;
     // a nonzero complex base has integer powers. Existing real-power branches stay available.
     // Example: `i^2` and `z^(-3)` for `z C, z != 0` are defined, while `0^(-1)` is not.
@@ -526,6 +578,8 @@ impl Runtime {
     // (integer powers for nonzero bases); or base in R and exp in N, including 0^0 = 1.
     // Negative base with non-integer real exp stays out. Uses Z + base!=0 instead of exp mod 2 so
     // rational exponents do not pull Mod(...) into every Or disjunct's well-defined pass.
+    /// Mathematical contract implementation: accept exactly the power-domain
+    /// alternatives documented immediately above.
     pub(in crate::verify) fn verify_pow_well_defined(
         &mut self,
         pow: &Pow,

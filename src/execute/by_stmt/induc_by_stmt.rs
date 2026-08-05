@@ -108,7 +108,7 @@ impl Runtime {
             ParamObjType::BinderRetag(BinderRetagSource::Induc),
             None,
         )?;
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![inner],
                 ParamType::Obj(StandardSet::Z.into()),
@@ -148,7 +148,7 @@ impl Runtime {
             ParamObjType::BinderRetag(BinderRetagSource::Induc),
             None,
         )?;
-        let inner_forall: Fact = ForallFact::new(
+        let inner_forall: Fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![inner],
                 ParamType::Obj(StandardSet::Z.into()),
@@ -173,7 +173,7 @@ impl Runtime {
             None,
         )?;
 
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![outer],
                 ParamType::Obj(StandardSet::Z.into()),
@@ -395,7 +395,7 @@ impl Runtime {
                 None,
             )?);
         }
-        Ok(ForallFact::new(
+        Ok(ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_name],
                 ParamType::Obj(StandardSet::Z.into()),
@@ -609,7 +609,7 @@ impl Runtime {
             None,
         )?;
 
-        let corresponding_forall_fact = ForallFact::new(
+        let corresponding_forall_fact = ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![ParamGroupWithParamType::new(
                 vec![forall_names[0].clone()],
                 ParamType::Obj(StandardSet::Z.into()),

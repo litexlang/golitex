@@ -1204,9 +1204,9 @@ declared rational-equality subset:
 ```text
 Litex source
   -> execute and verify with Litex
-  -> retain a direct equality or one universal equality over R
+  -> retain a closed direct equality or one universal equality over R
   -> recursively lower each side to (numerator, denominator)
-  -> emit a named Lean theorem using ring or field_simp; ring
+  -> emit a named Lean theorem using norm_num, ring, or field_simp; ring
   -> ask Lean and Mathlib to check the generated file
 ```
 
@@ -1296,16 +1296,30 @@ Generated Lean ends with:
 ```lean
 theorem litex_rational_1 (a b x : ℝ) (h1 : x ≠ 0) :
     (a + b) / x = a / x + b / x := by
-  field_simp [h1] <;> ring
+  calc
+    (a + b) / x = (a + b) / x := by
+      solve
+        | field_simp [h1]
+        | field_simp [h1] <;> ring
+    _ = (a * x + b * x) / (x * x) := by
+      solve
+        | field_simp [h1]
+        | field_simp [h1] <;> ring
+    _ = a / x + b / x := by
+      solve
+        | field_simp [h1]
+        | field_simp [h1] <;> ring
 ```
 
-Without symbolic denominators the generated proof uses `ring` directly. The
-recursive lowering handles numbers, real atoms, addition, subtraction,
-multiplication, division, and literal natural powers. Definitions, named
-theorem bodies, claims, conjunctions, transcendental and complex objects,
-implicit denominator evidence, complete-module translation, and exact
-proof-path replay are intentionally rejected. No `sorry`, `admit`, or Lean
-axiom is generated.
+Closed numeric equalities use `norm_num`; variable-only polynomial equalities
+use `ring` directly. The recursive lowering handles numbers, real atoms,
+addition, subtraction, multiplication, division, and literal natural powers.
+For example, the left-associative expression `1 / 2 / 3 / 4` lowers
+structurally to `1 / ((2 * 3) * 4)`, which `norm_num` can compare with
+`1 / 24`. Definitions, named theorem bodies, claims, conjunctions,
+transcendental and complex objects, implicit denominator evidence,
+complete-module translation, and exact proof-path replay are intentionally
+rejected. No `sorry`, `admit`, or Lean axiom is generated.
 
 ## Appendix: Foundations And Design Intent
 
