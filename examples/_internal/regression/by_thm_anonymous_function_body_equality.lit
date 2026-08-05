@@ -7,7 +7,6 @@ thm direct_anonymous_function_body_equality:
     ? forall g fn(x R) R:
         fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
     by def $fn_eq(fn(x R) R {-1 * 1 * g(x)}, fn(x R) R {-1 * g(x)})
-    fn(x R) R {-1 * 1 * g(x)} = fn(x R) R {-1 * g(x)}
 
 thm probe_scalar_multiplication:
     ? forall f fn(x R) R, c R:

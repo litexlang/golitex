@@ -77,12 +77,10 @@ claim:
         p[i1] $in proj(c, i1)
         proj(c, i1) = R = X(i1)
         p[i1] $in X(i1)
-        raw_choice_tuple_encode(p)(i1) $in X(i1)
     by def $has_X_values(raw_choice_tuple_encode(p))
     $has_X_values(raw_choice_tuple_encode(p))
     by thm set_builder_member(raw_choice_tuple_encode(p), {f fn(i1 closed_range(1, n)) R: $has_X_values(f)})
     raw_choice_tuple_encode(p) $in {f fn(i1 closed_range(1, n)) R: $has_X_values(f)}
-    raw_choice_tuple_encode(p) $in P
 
 have fn choice_tuple_encode(p c) P = raw_choice_tuple_encode(p)
 
@@ -95,7 +93,6 @@ claim:
     1 <= m
     have tuple symbolic_tuple for i1 <= m, symbolic_tuple[i1] = 0
     tuple_dim(symbolic_tuple) = m
-    m = m
 
 claim:
     ? forall m N+, V set, Y fn(i1 closed_range(1, m)) power_set(V), S set:
@@ -110,5 +107,3 @@ claim:
         g $in {h fn(i1 closed_range(1, m)) V: $has_values_in_family(m, V, Y, h)}
         have tuple tuple_from_member for i1 <= m, tuple_from_member[i1] = g(i1)
         tuple_dim(tuple_from_member) = m
-        g = g
-    S = S

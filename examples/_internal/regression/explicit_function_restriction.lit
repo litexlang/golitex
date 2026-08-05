@@ -18,4 +18,3 @@ thm function_space_membership_from_pointwise_values:
     forall alpha I:
         f(alpha) $in X
     by thm fn_set_member(f, fn(alpha I) X)
-    f $in fn(alpha I) X

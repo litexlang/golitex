@@ -18,7 +18,6 @@ have fn id_tmp(t R) R = t
 thm tmp_one_eq_one:
     ? forall:
         4 = 4
-    4 = 4
 
 by thm tmp_one_eq_one()
 

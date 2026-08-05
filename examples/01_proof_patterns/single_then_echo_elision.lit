@@ -1,0 +1,28 @@
+# Tracer: omit an exact final proof echo for one then-clause
+#
+# Before (verified but redundant):
+# thm exp_injective_with_then_echo:
+#     ? forall a, b R:
+#         exp(a) = exp(b)
+#         =>:
+#             a = b
+#     a = b
+# Former behavior: the proof line checked `a = b`, stored it, and then the
+# theorem wrapper checked the identical sole then-clause again.
+#
+# Now (verified):
+thm exp_injective_without_then_echo:
+    ? forall a, b R:
+        exp(a) = exp(b)
+        =>:
+            a = b
+
+# Current behavior: the theorem wrapper checks `a = b` directly from the
+# proof context, so an identical final proof line is unnecessary.
+#
+# Boundary: this only removes an exact final top-level echo when there is one
+# then-clause. This also covers a premise-free `? forall`, where source omits
+# `=>:` but the single indented fact is still the sole then-clause. Keep
+# distinct bridge facts and proof steps used by later goals.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/single_then_echo_elision.lit
+# Implementation: src/execute/exec_def_thm_stmt.rs

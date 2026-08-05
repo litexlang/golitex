@@ -196,7 +196,6 @@ claim:
     $presentation_reflection_swap_rule(G, r, f)
     $presentation_normal_form_cover(G, r, f)
     $presentation_normal_form_slot_bound(G, r, f)
-    $presentation_normal_form_bound(G, r, f)
 
 # The regular-octagon dihedral group has exactly eight rotations and eight reflections.
 trust forall D set, rho, sigma D:

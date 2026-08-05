@@ -4,17 +4,14 @@
 thm add_comm:
     ? forall a, b R:
         a + b = b + a
-    a + b = b + a
 
 thm zero_add:
     ? forall a R:
         0 + a = a
-    0 + a = a
 
 thm left_distrib:
     ? forall a, b, c R:
         a * (b + c) = a * b + a * c
-    a * (b + c) = a * b + a * c
 
 by thm add_comm(2, 3)
 2 + 3 = 3 + 2
