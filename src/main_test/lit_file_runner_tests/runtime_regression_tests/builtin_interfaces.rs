@@ -197,8 +197,7 @@ $positive_and_large(1)
     let explicit = r#"
 prop positive(x R):
     x > 0
-by def:
-    ? $positive(1)
+by def $positive(1)
 $positive(1)
 "#;
     let (_, succeeded, output) = run_source(explicit, "explicit_definition_enabled", false);

@@ -409,8 +409,7 @@ sketch:
         ? forall n range(2, 2):
             2 % n != 0
 
-    by def:
-        ? $Prime(2)
+    by def $Prime(2)
 
     claim:
         ? forall n N+:
@@ -419,11 +418,9 @@ sketch:
             $Prime(1^(1^n) + 1)
         1^n = 1
         1^(1^n) + 1 = 1^1 + 1 = 2
-        by def:
-            ? $Prime(1^(1^n) + 1)
+        by def $Prime(1^(1^n) + 1)
 
-    by def:
-        ? $superpowered(1)
+    by def $superpowered(1)
 
     by contra:
         ? not $superpowered(2)
@@ -510,15 +507,13 @@ sketch:
         ? forall x set:
             $same_obj(x, x)
         x = x
-        by def:
-            ? $same_obj(x, x)
+        by def $same_obj(x, x)
 
     by reflexive_prop:
         ? forall x set:
             $r(x, x)
         x = x
-        by def:
-            ? $r(x, x)
+        by def $r(x, x)
 
     by symmetric_prop:
         ? forall x, y set:
@@ -527,8 +522,7 @@ sketch:
                 $p(y, x)
         x = y
         y = x
-        by def:
-            ? $p(y, x)
+        by def $p(y, x)
 
     by antisymmetric_prop:
         ? forall x, y set:
@@ -1121,8 +1115,7 @@ strategy prove_p:
         =>:
             $p(x)
     x = 1
-    by def:
-        ? $p(x)
+    by def $p(x)
 
 ## A verified strategy is enabled immediately after definition.
 $p(1)
@@ -1133,8 +1126,7 @@ strategy prove_q:
         =>:
             $q(x)
     x = x
-    by def:
-        ? $q(x)
+    by def $q(x)
 
 ## A stopped strategy still leaves its proved forall available to ordinary proofs.
 strategy prove_r:
@@ -1143,8 +1135,7 @@ strategy prove_r:
         =>:
             $r(x)
     x = 1
-    by def:
-        ? $r(x)
+    by def $r(x)
 
 stop strategy prove_r
 claim:
@@ -1225,13 +1216,11 @@ claim:
     witness exist e1 Z st {x = 2 * e1} from 4 * d:
         x = 8 * d
         8 * d = 2 * (4 * d)
-    by def:
-        ? $can_be_divided_by_2(x)
+    by def $can_be_divided_by_2(x)
 
 witness exist d Z st {8 = 8 * d} from 1:
     8 = 8 * 1
-by def:
-    ? $can_be_divided_by_8(8)
+by def $can_be_divided_by_8(8)
 $can_be_divided_by_2(8)
 ```
 
@@ -1361,11 +1350,9 @@ thm thm_stored_forall:
         =>:
             $thm_match_q(x)
     x = 1
-    by def:
-        ? $thm_match_q(x)
+    by def $thm_match_q(x)
 
-by def:
-    ? $thm_match_p(1)
+by def $thm_match_p(1)
 $thm_match_q(1)
 
 ## The explicit theorem call remains available when theorem-instantiation
@@ -1620,10 +1607,8 @@ claim:
         =>:
             A $proper_subset B
             B $proper_superset A
-    by def:
-        ? A $proper_subset B
-    by def:
-        ? B $proper_superset A
+    by def A $proper_subset B
+    by def B $proper_superset A
 
 forall A, B set:
     A $proper_subset B
@@ -1636,8 +1621,7 @@ claim:
         A $subset B $proper_subset c
         =>:
             A $proper_subset c
-    by def:
-        ? A $proper_subset c
+    by def A $proper_subset c
 
 claim:
     ? forall A, B set:
@@ -2029,8 +2013,8 @@ not $prime(1)
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
 presentation choice rather than a prerequisite. `$prime(p)` is a native
 predicate on `N+`; concrete literals in the `u64` range are decided
-exactly, while `by def $prime(p)` (or the equivalent block form) exposes the
-symbolic trial-divisor definition.
+exactly, while `by def $prime(p)` exposes the symbolic trial-divisor
+definition.
 
 For symbolic examples, see
 [`examples/01_proof_patterns/gcd_and_prime_builtin.lit`](../examples/01_proof_patterns/gcd_and_prime_builtin.lit).
@@ -2668,15 +2652,13 @@ sketch:
         ? $mod_eq(11, 3, 4)
         witness exist k Z st {11 - 3 = 4 * k} from 2:
             11 - 3 = 4 * 2
-        by def:
-            ? $mod_eq(11, 3, 4)
+        by def $mod_eq(11, 3, 4)
 
     claim:
         ? $mod_eq(-5, 1, 3)
         witness exist k Z st {(-5) - 1 = 3 * k} from -2:
             (-5) - 1 = 3 * (-2)
-        by def:
-            ? $mod_eq(-5, 1, 3)
+        by def $mod_eq(-5, 1, 3)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2688,8 +2670,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
-        by def:
-            ? $mod_eq(a + c, b + d, n)
+        by def $mod_eq(a + c, b + d, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2701,8 +2682,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {(a - c) - (b - d) = n * k} from x - y:
             (a - c) - (b - d) = (a - b) - (c - d) = n * x - n * y = n * (x - y)
-        by def:
-            ? $mod_eq(a - c, b - d, n)
+        by def $mod_eq(a - c, b - d, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2712,8 +2692,7 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {(-a) - (-b) = n * k} from -x:
             (-a) - (-b) = -(a - b) = -(n * x) = n * (-x)
-        by def:
-            ? $mod_eq(-a, -b, n)
+        by def $mod_eq(-a, -b, n)
 
     claim:
         ? forall a, b, c, d, n Z:
@@ -2725,8 +2704,7 @@ sketch:
         obtain y from exist y Z st {c - d = n * y}
         witness exist k Z st {a * c - b * d = n * k} from x * c + b * y:
             a * c - b * d = (a - b) * c + b * (c - d) = n * x * c + b * (n * y) = n * (x * c + b * y)
-        by def:
-            ? $mod_eq(a * c, b * d, n)
+        by def $mod_eq(a * c, b * d, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2736,8 +2714,7 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^2 - b^2 = n * k} from x * (a + b):
             a^2 - b^2 = (a - b) * (a + b) = n * x * (a + b) = n * (x * (a + b))
-        by def:
-            ? $mod_eq(a^2, b^2, n)
+        by def $mod_eq(a^2, b^2, n)
 
     claim:
         ? forall a, b, n Z:
@@ -2747,16 +2724,14 @@ sketch:
         obtain x from exist x Z st {a - b = n * x}
         witness exist k Z st {a^3 - b^3 = n * k} from x * (a^2 + a * b + b^2):
             a^3 - b^3 = (a - b) * (a^2 + a * b + b^2) = n * x * (a^2 + a * b + b^2) = n * (x * (a^2 + a * b + b^2))
-        by def:
-            ? $mod_eq(a^3, b^3, n)
+        by def $mod_eq(a^3, b^3, n)
 
     claim:
         ? forall a, n Z:
             $mod_eq(a, a, n)
         witness exist k Z st {a - a = n * k} from 0:
             a - a = n * 0
-        by def:
-            ? $mod_eq(a, a, n)
+        by def $mod_eq(a, a, n)
 
     claim:
         ? forall a, b Z:
@@ -2766,8 +2741,7 @@ sketch:
         obtain x from exist x Z st {a - 2 = 4 * x}
         witness exist k Z st {a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = 4 * k} from x * (b^2 + a * b + 2 * b + 3):
             a * b^2 + a^2 * b + 3 * a - (2 * b^2 + 2^2 * b + 3 * 2) = (a - 2) * (b^2 + a * b + 2 * b + 3) = 4 * x * (b^2 + a * b + 2 * b + 3) = 4 * (x * (b^2 + a * b + 2 * b + 3))
-        by def:
-            ? $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
+        by def $mod_eq(a * b^2 + a^2 * b + 3 * a, 2 * b^2 + 2^2 * b + 3 * 2, 4)
 
     claim:
         ? forall a, b Z:
@@ -3178,8 +3152,7 @@ thm finite_set_product_pointwise_substitution_example:
         $is_finite_set(X)
         =>:
             finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
-    by def:
-        ? $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
+    by def $fn_eq(fn(x X) Z {x + 0}, fn(x X) Z {x})
     finite_set_product(X, fn(x X) Z {x + 0}) = finite_set_product(X, fn(x X) Z {x})
 
 ## Reindex: same summand, parallel shift of both bounds, pointwise on the (rhs) range.
@@ -3327,8 +3300,7 @@ have fn shift(x R) R = x + 1
 shift $in fn(x R) R
 shift(2) = 3
 fn(x R) R {x + 1}(2) = 3
-by def:
-    ? $fn_eq(fn(x R) R {x}, fn(y R) R {y})
+by def $fn_eq(fn(x R) R {x}, fn(y R) R {y})
 ```
 
 #### 8. Function Images
@@ -3341,8 +3313,7 @@ restriction explicit as `fn(x S) T {f(x)}`.
 have fn shift(x R) R = x + 1
 
 shift(2) $in fn_range(shift)
-by def:
-    ? fn_range(shift) $subset R
+by def fn_range(shift) $subset R
 
 have by preimage x from shift(2) $in fn_range(shift)
 x $in R
@@ -3353,8 +3324,7 @@ shift(2) = shift(x)
 have a finite_seq(R, 3) = [1, 2, 3]
 
 fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
-by def:
-    ? fn_range(fn(x 1...3) R {a(x)}) $subset R
+by def fn_range(fn(x 1...3) R {a(x)}) $subset R
 $is_finite_set(fn_range(fn(x 1...3) R {a(x)}))
 
 have by preimage k from fn(x 1...3) R {a(x)}(2) $in fn_range(fn(x 1...3) R {a(x)})
@@ -3757,8 +3727,7 @@ Purpose: introduce named predicates for reusable mathematical properties.
 prop is_one(x R):
     x = 1
 
-by def:
-    ? $is_one(1)
+by def $is_one(1)
 
 abstract_prop related(x, y)
 trust $related(1, 1)
@@ -3851,7 +3820,8 @@ prop is_unit_pair(x R, y R):
 by def $is_unit_pair(1, 1)
 ```
 
-The block form `by def:` followed by one `? fact` remains equivalent. Neither
+Examples use the canonical inline `by def fact` spelling. The older block form
+remains accepted for compatibility. Neither
 form accepts an arbitrary fact: the target must be a positive concrete prop or
 a supported positive builtin definition.
 
@@ -4033,8 +4003,7 @@ have origin &Point = (0, 0)
 
 &Point{origin}.x = 0
 &Point{origin}.y = 0
-by def:
-    ? $lies_on_x_axis(origin)
+by def $lies_on_x_axis(origin)
 ```
 
 ### 2. A Small Algebraic Interface
@@ -4055,8 +4024,7 @@ struct PointedOperation<s nonempty_set>:
     <=>:
         $HasAdditiveIdentity(s, op, identity)
 
-by def:
-    ? $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
+by def $HasAdditiveIdentity(Z, fn(x, y Z) Z {x + y}, 0)
 
 by thm struct_member((fn(x, y Z) Z {x + y}, 0), &PointedOperation<Z>)
 ```
@@ -4136,8 +4104,7 @@ claim:
     ? forall s nonempty_set, g &Group<s>, h power_set(s):
         exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)}
     witness exist! q power_set(power_set(s)) st {$is_group_quotient_set(s, g, h, q)} from {c power_set(s): $is_left_coset(s, g, h, c)}:
-        by def:
-            ? $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
+        by def $is_group_quotient_set(s, g, h, {c power_set(s): $is_left_coset(s, g, h, c)})
         claim:
             ? forall q1, q2 power_set(power_set(s)):
                 $is_group_quotient_set(s, g, h, q1)
@@ -4278,10 +4245,8 @@ struct Field<s nonempty_set>:
     <=>:
         $is_field(s, zero, one, add, neg, mul, inv)
 
-by def:
-    ? $is_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
-by def:
-    ? $is_abelian_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+by def $is_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
+by def $is_abelian_group(Z, fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
 by thm struct_member((fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0), &AbelianGroup<Z>)
 have Z_additive_group &AbelianGroup<Z> = (fn(x Z) Z {-x}, fn(x, y Z) Z {x + y}, 0)
 ```

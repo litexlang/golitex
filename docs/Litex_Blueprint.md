@@ -17,11 +17,24 @@ Existing formal languages have achieved enormous success. Mathematicians, howeve
 3. Use a known fact, definition, or computation to write the next fact.
 4. Add that fact to the context for subsequent reasoning.
 
+Litex turns this everyday workflow into its default execution model. The user writes a result that should hold; the checker verifies that its objects are well-defined, searches builtin rules and the verified context for proof support, reports why the result was accepted, and then adds the verified fact to the context available to later statements. The central chain is:
+
+> **Litex: the user states what should hold → the checker searches for proof support → the output explains why and how the statement was verified → the verified fact enlarges the context → the proof grows bottom-up.**
+>
+> **Lean tactics: the theorem states the final Goal → the user states how to rewrite, decompose, or close it → Infoview shows which Goals remain → tactics construct the proof term → the kernel checks the term.**
+
+Along these two axes, the default interactions point in opposite directions.
+
+1. **Litex grows bottom-up; Lean tactic proofs work top-down.** In Litex, each verified fact extends the context until the accumulated facts support a conclusion. Lean tactic proofs normally begin with the final Goal and work backward, transforming it into smaller Goals until they can be closed by known facts.
+2. **Litex users state *what* should hold; Lean tactic users state *how* the Goal should be proved.** The Litex checker searches for matching proof support and explains the route it found. Lean tactic elaboration follows the user's proof instructions to construct the corresponding proof term, the server shows the resulting Goals, and the kernel checks the term.
+
+Lean's mechanism provides a highly flexible and general proof-programming environment. Litex deliberately chooses a narrower default interaction so that beginning a proof can be easier and the source can remain closer to ordinary textbook mathematics. This is a difference in default interface, not an absolute capability boundary: Lean supports forward reasoning, and Litex also provides explicitly goal-directed proof forms. The comparison and design goals below develop these two workflows, their common ground, and their different tradeoffs in detail.
+
 Ordinary handwritten mathematics can of course omit steps, so “like everyday mathematics” cannot mean “giving up rigor.” Litex aims to do the opposite: preserve this order of writing while asking the checker to verify every fact, the well-definedness of every object, and every reuse of a matching fact.
 
 ## A Small but Complete Comparison: Uniqueness of the Identity in a Group
 
-This example illustrates three points at once: local facts need not all be named; definitions and proofs appear in mathematical order; and structures and carriers are presented explicitly as set-theoretic objects.
+The group-identity example makes the two workflow differences above concrete. It shows who states the result, who supplies the proof route, and whether the proof is organized from a final Goal downward or from verified facts upward. It also presents definitions and proofs in mathematical order and treats structures and carriers explicitly as set-theoretic objects.
 
 ### Lean: An Explicit Record, Named Hypotheses, and a Proof Script
 
@@ -51,11 +64,15 @@ theorem one_unique
 
 This is good Lean code. It makes the steps required by the proof term explicit. The hypothesis `hleft` remains because the statement says that `e` is a two-sided identity, although the conclusion itself only needs the right-identity law for the candidate `e` and the left-identity law for `G.one`.
 
-This example clearly motivates the goals that Litex is trying to achieve.
+Read through the two workflow differences above, this example motivates five connected design goals rather than a collection of independent syntax features.
 
-1. Write facts directly and reuse them by shape
+1. Users state results directly; the system searches for proof support
 
-In this Lean code, names such as `mul_assoc`, `one_mul`, and `hleft` identify facts, while expressions such as `(G.one_mul e).symm` and `hright G.one` specify how those facts are invoked, instantiated, or transformed. As the number of facts grows, users must not only remember their names but also know how to combine them. Could a language let users state mathematical facts directly and then reuse verified facts by matching their shape, without requiring every fact to be named or every proof step to be orchestrated in advance?
+This is the most fundamental difference in division of labor between Litex and typical Lean tactic interaction. A Litex user primarily states what the result should be; the checker then searches builtin rules, the current context, and known universal facts for proof support by matching their shapes. In a Lean tactic proof, the user primarily states how the current Goal should be rewritten or decomposed; the system follows those instructions to construct and check the final proof term.
+
+This division of labor also makes the two interactive outputs approximately dual. Tactics in Lean source primarily say how to advance the proof, so the Lean server's [Infoview](https://lean-lang.org/doc/reference/latest/Tactic-Proofs/Reading-Proof-States/) shows which Goals remain after the tactic at the cursor. Litex source already states what should be proved, so Litex output primarily supplies the other half: which builtin rule, known fact, or `forall` instance verified that fact.
+
+In the Lean code above, `(G.one_mul e).symm` and `hright G.one` explicitly specify which fact to use next, how to instantiate it, and in which direction to use it. Litex instead aims to let the user state mathematically meaningful intermediate and final results, leaving the checker to identify which verified facts support them. Reuse by shape is the mechanism that implements this division of labor, not the final objective itself.
 
 2. Present set-theoretic objects at the surface instead of requiring users to learn type universes first
 
@@ -100,9 +117,9 @@ forall s nonempty_set, G &Group<s>, identity s:
 
 This example shows concretely how Litex pursues the five goals above.
 
-1. Write facts directly and reuse them by shape
+1. Users state results directly; the system searches for proof support
 
-The group laws are written directly in the `<=>:` section of the structure definition; they do not first need individual names. The uniqueness proof also follows the mathematical narrative: state that the candidate `identity` satisfies the left- and right-identity laws, then write the equality chain `identity = G.mul(G.one, identity) = G.one`. The user submits local facts and a conclusion to be checked, rather than a sequence of commands that manipulate a proof state.
+The group laws are written directly in the `<=>:` section of the structure definition; they do not first need individual names. The uniqueness proof also follows the mathematical narrative: the user directly states that the candidate `identity` satisfies the left- and right-identity laws, then states the result chain `identity = G.mul(G.one, identity) = G.one`. The user submits mathematical results that should hold, rather than a sequence of commands that manipulate a proof state.
 
 The checker can recognize `G.mul(G.one, identity) = identity` from the group identity law and use symmetry for the first step of the equality chain. It can also instantiate the candidate identity law `G.mul(a, identity) = a` at `a = G.one` to obtain the second step. No names such as `one_mul` or `hright` are invoked. Reuse happens by matching verified `forall` facts against the current expression.
 
@@ -128,9 +145,18 @@ This is a difference in default proof organization, not an absolute boundary bet
 
 ## How Litex Pursues These Goals
 
-### 1. Write Facts Directly and Reuse Them by Shape
+The sections below follow the same chain. Litex first changes what the user is expected to write and what the checker is expected to supply. It then gives those user-written results a set-theoretic, mathematically shaped surface; keeps the checking route visible; and lets each verified result enlarge the context from which later results can be established.
 
-Common facts such as `1 + 1 = 2`, the union of finite sets being finite, or `x^2 >= 0` should not require users to recall a lemma name and repeat a tactic sequence each time. The user writes a fact. Litex first checks that its objects are well-defined, then tries builtin rules, known facts, and known universally quantified facts.
+### 1. Users State Results Directly; the System Searches for Proof Support
+
+What Litex first changes is not code length but the division of labor between user and system. The user writes results that should hold, such as `1 + 1 = 2`, the union of finite sets being finite, or `x^2 >= 0`. Litex first checks that their objects are well-defined, then searches builtin rules, known facts, and known universally quantified facts for support. In typical Lean tactic interaction, the conclusion is first given as a Goal; the user then specifies which facts to invoke and how to rewrite or decompose the Goal, and the system constructs the complete proof accordingly.
+
+| Default interaction | User source primarily states | Interactive output primarily supplies |
+|---|---|---|
+| Lean tactics + server/Infoview | How to rewrite, decompose, or close the current Goal | Which Goals remain after each step |
+| Litex facts + checker output | The next fact or result that should hold | Why that fact passed and its immediate verification source |
+
+In short, Lean tactic source emphasizes *how*, while server output supplies *what remains*; Litex source emphasizes *what*, while checker output supplies *why/how*. This describes the center of gravity of the two default interactions, not an exclusive capability boundary: Lean can state intermediate results explicitly, and Litex can organize proofs around explicit Goals.
 
 Litex currently encodes hundreds of small, concrete mathematical patterns as builtin verification rules, covering common cases involving numbers, equality, order, sets, functions, tuples, and membership. These rules are not intended to form an invisible “big automation button.” Each rule should have a readable mathematical meaning, an implementation, tests, and a checkable explanation in the output. The precise rule catalog will evolve, so the number of rules is not treated here as a stable headline metric.
 
@@ -199,7 +225,36 @@ These four equalities correspond to Lean's four `rw` commands in reverse order. 
 
 The user therefore does not have to recall a library identifier such as `mul_assoc` or explicitly orchestrate the order and direction in which `h`, `h'`, and associativity are used. Instead, the user writes a mathematically meaningful chain of intermediate results. If one jump is too large, the added guidance is another intermediate expression rather than a step-by-step search instruction. This example deliberately avoids automation that could normalize the whole algebraic goal at once: the point is to compare the default direction of interaction, not code length.
 
-The example also makes “bottom-up” concrete. Lean begins with the complete Goal and rewrites it until only an evident equality remains. Litex establishes checkable equality links until one chain connects the two sides of the Goal. Ordinary mathematical writing often works similarly: definitions, known facts, and decisive intermediate results are recorded first and then converge on a conclusion, rather than always decomposing a formal Goal backward into subgoals. For both people and AI systems, proposing meaningful intermediate expressions is often more natural than continually remembering library identifiers such as `pow_two` and `mul_assoc` together with their invocation directions. This does not mean that every mathematical discovery or proof is strictly bottom-up: induction, contradiction, existence proofs, and complex theorems may still need an explicit goal structure.
+A completely non-computational example transports membership along set inclusions. Lean starts from the Goal `x ∈ c` and uses `apply` to state, step by step, how it should be proved:
+
+```lean
+import Mathlib
+
+example {α : Type} {A B c : Set α}
+    (hAB : A ⊆ B) (hBc : B ⊆ c)
+    {x : α} (hx : x ∈ A) :
+    x ∈ c := by
+  apply hBc
+  apply hAB
+  exact hx
+```
+
+Litex instead directly states the intermediate and final results that should be established, and the checker searches the current context for their support:
+
+```litex
+forall A, B, c set, x A:
+    A $subset B
+    B $subset c
+    =>:
+        x $in B
+        x $in c
+```
+
+In Lean, the user tells the system how to take the next proof step. The system decomposes `x ∈ c` backward into `x ∈ B`, then into the known fact `x ∈ A`. In Litex, the user tells the system what the next result is. Starting from `x ∈ A`, the checker confirms `x ∈ B` and then `x ∈ c`. The former typically unfolds backward from a complete Goal and is top-down; the latter accumulates verified facts toward the conclusion and is bottom-up.
+
+The outputs expose the part that each source leaves unstated. In Lean, as the cursor moves through these tactics, the Infoview displays `x ∈ c`, `x ∈ B`, `x ∈ A`, and finally `no goals`. In Litex, `x $in B` and `x $in c` are already present in the source; the runner output instead reports their `why_verified` fields. Here both steps are verified by the rule labeled “membership through a known direct set inclusion.”
+
+Together, the two examples make “bottom-up” concrete. Lean begins with a complete Goal and rewrites or decomposes it until it reaches known facts. Litex establishes checkable equalities or membership facts until they support the final conclusion. Ordinary mathematical writing often works similarly: definitions, known facts, and decisive intermediate results are recorded first and then converge on a conclusion, rather than always decomposing a formal Goal backward into subgoals. For both people and AI systems, proposing meaningful intermediate expressions is often more natural than continually remembering library identifiers such as `pow_two` and `mul_assoc` together with their invocation directions. This does not mean that every mathematical discovery or proof is strictly bottom-up: induction, contradiction, existence proofs, and complex theorems may still need an explicit goal structure.
 
 ## Next Steps
 

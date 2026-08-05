@@ -3,5 +3,4 @@ prop is_unit_pair(x R, y R):
     y = 1
 
 1 = 1
-by def:
-    ? $is_unit_pair(1, 1)
+by def $is_unit_pair(1, 1)

@@ -100,8 +100,7 @@ a named function become reusable parts of a small mathematical world:
 prop is_one(x R):
     x = 1
 
-by def:
-    ? $is_one(1)
+by def $is_one(1)
 
 have fn f(x R) R = x^2 + 1
 f(3) = 10

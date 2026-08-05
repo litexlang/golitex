@@ -2270,8 +2270,7 @@ prop marked_eventually_equivalence(x R):
     not $marked(x) or $eventually_in(R, \selected<R>, x)
     not $eventually_in(R, \selected<R>, x) or $marked(x)
 
-by def:
-    ? $marked_eventually_equivalence(1)
+by def $marked_eventually_equivalence(1)
 "#;
 
     let mut runtime = Runtime::new();

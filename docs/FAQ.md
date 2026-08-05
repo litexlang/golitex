@@ -311,8 +311,9 @@ other theorem conclusions. Only the selected fact is committed to the parent;
 its normal inferred consequences may still be stored. The selected fact must
 already be well-defined in the parent, and a compound target is rejected.
 Mathematical definitions similarly use explicit `by def A $subset B` and
-`by def $injective(A, B, f)` statements. The equivalent block spelling is
-`by def:` followed by one `? fact` goal. At the outer verification round, a
+`by def $injective(A, B, f)` statements. New code should use this inline
+spelling; the older `by def:` plus one `? fact` goal remains accepted for
+compatibility. At the outer verification round, a
 bare positive concrete predicate can also be proved from its defining clauses
 before known `forall` matching and user strategies. `by def` remains useful
 when that proof route and its output should be explicit.
