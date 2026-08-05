@@ -87,6 +87,49 @@ $unit_pair(1, 1)
 }
 
 #[test]
+fn by_def_accepts_inline_and_block_goal_forms() {
+    run_with_large_stack("by_def_inline_and_block", || {
+        let source_code = r#"
+by def {1} $subset {1, 2}
+by def:
+    ? {2} $subset {1, 2}
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("by_def_inline_and_block");
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            run_succeeded,
+            "inline and block by def forms should share definition verification:\n{}",
+            run_output
+        );
+        assert!(runtime.cache_known_facts_contains("{1} $subset {1, 2}").0);
+        assert!(runtime.cache_known_facts_contains("{2} $subset {1, 2}").0);
+    });
+}
+
+#[test]
+fn inline_by_def_keeps_the_supported_definition_boundary() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("inline_by_def_unsupported_fact");
+    let (stmt_results, runtime_error) = run_source_code("by def 1 = 1", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "inline by def must not turn an arbitrary atomic fact into a definition:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("has no supported builtin definition"),
+        "the failure should retain the existing definition boundary:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn by_def_resolves_an_explicit_current_module_prop() {
     run_with_large_stack("by_def_module_qualified", || {
         let source_code = r#"

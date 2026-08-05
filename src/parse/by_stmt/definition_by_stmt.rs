@@ -3,25 +3,46 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_def_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(DEF)?;
-        if tb.current()? != COLON {
+        if tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by def no longer accepts a goal on the header; use `by def:` followed by `? <fact>`"
+                    "by def expects an inline positive atomic fact or `:` followed by one `? <fact>` goal block"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        tb.skip_token(COLON)?;
-        if !tb.exceed_end_of_head() || tb.body.len() != 1 {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by def expects exactly one `? <fact>` goal block".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        let fact = self.parse_goal_atomic_fact_block(&mut tb.body[0], "by def")?;
+        let fact = if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            if !tb.exceed_end_of_head() || tb.body.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by def expects exactly one `? <fact>` goal block".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            self.parse_goal_atomic_fact_block(&mut tb.body[0], "by def")?
+        } else {
+            if !tb.body.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "inline by def does not accept an indented body".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let fact = self.parse_atomic_fact(tb, true)?;
+            if !tb.exceed_end_of_head() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "inline by def expects exactly one atomic fact".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            fact
+        };
         if !fact.is_true() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(

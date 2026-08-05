@@ -78,7 +78,14 @@ impl Runtime {
                 self.run_in_local_proof_parsing_scope(|this| {
                     block.skip_token(CASE)?;
                     let case = this.parse_and_chain_atomic_fact_allow_leading_not(block)?;
-                    block.skip_token(COLON)?;
+                    let bodyless = block.body.is_empty();
+                    if bodyless {
+                        if block.current_token_is_equal_to(COLON) {
+                            block.skip_token(COLON)?;
+                        }
+                    } else {
+                        block.skip_token(COLON)?;
+                    }
                     if !block.exceed_end_of_head() {
                         return Err(RuntimeError::from(ParseRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -88,7 +95,7 @@ impl Runtime {
                         )));
                     }
                     let n = block.body.len();
-                    if block.body.is_empty() {
+                    if bodyless {
                         return Ok((case, vec![], None));
                     }
                     let (proof_stmts, impossible) = if block.body[n - 1]

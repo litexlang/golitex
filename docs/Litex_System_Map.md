@@ -212,8 +212,10 @@ set-builder as a filtered subset of its base, so finiteness recurses only to
 that base.
 
 Definition-facing structural strategies are also bounded: dependent tuple
-constructors are checked field by field; callable struct fields project through
-one checked constructor; and set-builder membership unfolds one literal, one
+constructors are checked field by field; a one-field struct uses its sole
+field carrier directly and projects that field by identity; callable fields
+of multi-field structs project through one checked constructor; and
+set-builder membership unfolds one literal, one
 checked function/template definition, or one exact indexed named-builder
 equality. The indexed route does not scan the environment for approximate
 named definitions.
@@ -258,10 +260,11 @@ equalities can make two arguments match. For example, a known `$P(a)` may close
 **Concrete definitions.** A concrete `prop` gives Litex defining clauses for
 the predicate. At outer round 0, ordinary atomic verification instantiates the
 definition and verifies all clauses with the full verifier before known
-`forall` matching or user strategies. `by def:` with `? $P(args)` requests the same
+`forall` matching or user strategies. `by def $P(args)` requests the same
 mathematical direction explicitly and rechecks it even when `$P(args)` is
-already known. Supported builtin definitions use the same statement, including
-goals `? A $subset B` and `? $injective(A, B, f)` under `by def:`.
+already known. The equivalent block form is `by def:` followed by
+`? $P(args)`. Supported builtin definitions use both spellings, including
+`by def A $subset B` and `by def $injective(A, B, f)`.
 
 **Known universal facts.** Suppose the context contains:
 
@@ -352,16 +355,16 @@ unrelated verifier.
 
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
-| `by def:` + `? fact` | No persistent child scope. | The target must be a concrete positive prop or supported positive builtin definition. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
+| `by def fact` or `by def:` + `? fact` | No persistent child scope. | The single target must be a concrete positive prop or supported positive builtin definition. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
 | `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. | Verify theorem domains or explicit builtin requirements with the full verifier. | Store conclusions and infer only after all checks succeed. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
-| `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. | Prove the cases are exhaustive, then prove every target in every branch. | Store the common target facts and infer. | Checked case analysis. |
+| `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. `case fact` denotes a zero-statement proof branch; branches with statements use `case fact:`. | Prove the cases are exhaustive, then prove every target in every branch, including after zero proof steps in a bodyless branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |
 | `by induc` / `by strong_induc` | Separate base and step scopes with ordinary or strong induction hypotheses. | Parameter, starting point, target, and induction shape must be valid. | Verify base and step obligations. | Store the resulting universal fact and infer. | Checked induction. |
 | `by induc P:` (finite-set induction) | Separate empty/base and insertion-step scopes. | The finite-set parameter and goal shape must be valid. | Verify the base and element-adjoining step. | Store the resulting universal fact and infer. | Checked induction. |
-| `by extension` | Element arguments and subset directions are checked in local scopes. | Both sides must be well-defined sets of the supported shape. | Prove both inclusion directions. | Store set equality and infer. | Checked extensionality proof. |
-| `by enumerate finite_set` | One child assignment for each displayed element. | The finite set and universal target must have the expected finite shape. | Verify the target for every assignment. | Store the universal fact and infer. | Checked finite proof. |
+| `by extension A = B` or its goal-block form | Element arguments and subset directions are checked in local scopes. | Both sides must be well-defined sets of the supported shape. Inline syntax is accepted only with no indented proof body. | Prove both inclusion directions. | Store set equality and infer. | Checked extensionality proof. |
+| `by enumerate finite_set forall ...` or its goal-block form | One child assignment for each displayed element. | The finite set and universal target must have the expected finite shape. Inline syntax is accepted only with no indented proof body. | Verify the target for every assignment. | Store the universal fact and infer. | Checked finite proof. |
 | `by enumerate range` / `by closed_range as cases` | No proof facts escape beyond the generated result. | Membership and integer endpoints must be well-defined. | Verify the membership prerequisites and expose the corresponding equality cases. | Store the generated equality or disjunction. | Checked range expansion. |
-| `by for` | One child assignment per supported finite iteration value. | Iteration domain and universal target must be well-defined and finite in the supported form. | Verify the target for every assignment. | Store the universal fact and infer. | Checked finite iteration. |
+| `by for forall ...` or its goal-block form | One child assignment per supported finite iteration value. | Iteration domain and universal target must be well-defined and finite in the supported form. Inline syntax is accepted only with no indented proof body. | Verify the target for every assignment. | Store the universal fact and infer. | Checked finite iteration. |
 
 ## Context Growth as a Closed Loop
 

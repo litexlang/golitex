@@ -125,7 +125,7 @@ impl Runtime {
                 // laws. Example: `(n, entries)` returned as `&FiniteList<T,n>`.
                 // Keep this constructor check local to typed object/function
                 // admission; named members still use their stored membership.
-                if let (Obj::Tuple(_), Obj::StructObj(struct_obj)) = (&obj, set_obj) {
+                if let Obj::StructObj(struct_obj) = set_obj {
                     let in_fact = InFact::new(obj, set_obj.clone(), default_line_file());
                     return self.verify_in_fact_by_struct_obj(&in_fact, struct_obj, verify_state);
                 }

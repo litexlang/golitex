@@ -1,0 +1,33 @@
+# One-field structures are named views of their sole field carrier.
+# Focused check:
+# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/single_field_struct.lit
+
+# Before this feature, the parser rejected this declaration with
+# `struct definition expects at least two fields`:
+# struct MetricSpace<X set>:
+#     dist fn(x, y X) R
+#     <=>:
+#         forall x, y X:
+#             dist(x, y) >= 0
+
+# Now the same declaration is active. The object is itself a distance
+# function, and selecting its only field is an identity projection.
+struct MetricSpace<X set>:
+    dist fn(x, y X) R
+    <=>:
+        forall x, y X:
+            dist(x, y) >= 0
+
+have fn zero_distance(x, y R) R = 0
+forall x, y R:
+    zero_distance(x, y) = 0
+    zero_distance(x, y) >= 0
+by thm struct_member(zero_distance, &MetricSpace<R>)
+have metric &MetricSpace<R> = zero_distance
+metric.dist(1, 0) = metric(1, 0) = 0
+
+# Remaining boundary: a struct must still declare at least one field.
+# struct Empty:
+#     <=>:
+#         0 = 0
+

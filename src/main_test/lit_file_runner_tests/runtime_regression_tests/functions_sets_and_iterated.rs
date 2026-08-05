@@ -1457,6 +1457,14 @@ have fn f(x R) R by cases:
                     "block header missing body",
                 ),
                 (
+                    "casewise_function_bodyless_case",
+                    r#"
+have fn f(x R) R by cases:
+    case x = 0
+"#,
+                    "Unexpected end of tokens",
+                ),
+                (
                     "casewise_function_overlapping_cases_with_same_value",
                     r#"
 have fn f(x R) R by cases:

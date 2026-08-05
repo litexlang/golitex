@@ -646,7 +646,20 @@ impl Runtime {
                     Obj::Tuple(tuple) => Some(tuple),
                     _ => None,
                 };
-                if tuple.is_some() {
+                if field_types.len() == 1 {
+                    let carrier_membership: Fact = InFact::new(
+                        in_fact.element.clone(),
+                        field_types[0].clone(),
+                        in_fact.line_file.clone(),
+                    )
+                    .into();
+                    infer_result.new_fact(&carrier_membership);
+                    infer_result.new_infer_result_inside(
+                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            carrier_membership,
+                        )?,
+                    );
+                } else if tuple.is_some() {
                     let cart_membership: Fact = InFact::new(
                         in_fact.element.clone(),
                         Cart::new(field_types.clone()).into(),
@@ -662,6 +675,7 @@ impl Runtime {
                 }
 
                 let mut field_map: HashMap<String, Obj> = HashMap::new();
+                let mut identity_projection_field_map = (def.fields.len() == 1).then(HashMap::new);
                 let mut projection_field_map = tuple.map(|_| HashMap::new());
                 let field_access_element = match &in_fact.element {
                     Obj::Atom(AtomObj::Identifier(identifier)) => self
@@ -691,7 +705,21 @@ impl Runtime {
                         field_name.clone(),
                     )
                     .into();
-                    insert_symbol_substitution(&mut field_map, field_binding, field_access.clone());
+                    let law_field_value = if def.fields.len() == 1 {
+                        field_access_element.clone()
+                    } else {
+                        field_access.clone()
+                    };
+                    insert_symbol_substitution(&mut field_map, field_binding, law_field_value);
+                    if let Some(identity_projection_field_map) =
+                        identity_projection_field_map.as_mut()
+                    {
+                        insert_symbol_substitution(
+                            identity_projection_field_map,
+                            field_binding,
+                            field_access.clone(),
+                        );
+                    }
 
                     let field_in_type: Fact = InFact::new(
                         field_access,
@@ -753,6 +781,23 @@ impl Runtime {
                             "struct membership filter",
                         )?,
                     );
+
+                    if let Some(identity_projection_field_map) =
+                        identity_projection_field_map.as_ref()
+                    {
+                        let identity_projection_fact = self.inst_fact(
+                            &after_header,
+                            identity_projection_field_map,
+                            ParamObjType::DefStructField,
+                            Some(in_fact.line_file.clone()),
+                        )?;
+                        infer_result.new_infer_result_inside(
+                            self.store_fact_without_forall_coverage_check_and_infer_with_reason(
+                                identity_projection_fact,
+                                "one-field struct identity-projection filter",
+                            )?,
+                        );
+                    }
 
                     if let Some(projection_field_map) = projection_field_map.as_ref() {
                         let projected_fact = self.inst_fact(

@@ -1,0 +1,17 @@
+# Tracer: proof methods with a complete goal and no user-written proof body
+#
+# Before (did not work):
+# by extension {1} = {1}
+# by enumerate finite_set forall x {1, 2} => {x = 1 or x = 2}
+# by for forall i1 range(0, 3) => {i1 < 3}
+# Former behavior: each line was rejected because its goal appeared on the by-header.
+#
+# Now (verified):
+by extension {1} = {1}
+by enumerate finite_set forall x {1, 2} => {x = 1 or x = 2}
+by for forall i1 range(0, 3) => {i1 < 3}
+# Current behavior: each line constructs the existing proof statement with an empty user proof.
+#
+# Boundary: an inline goal cannot also own an indented proof body; use the existing
+# `by extension:`, `by enumerate finite_set:`, or `by for:` goal-block form instead.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/inline_by_proof_methods.lit

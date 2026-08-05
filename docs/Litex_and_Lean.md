@@ -1107,8 +1107,7 @@ claim:
             product(1, a, fn(x N+) N+ {x}) % k = 0
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
             impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
-        case k > a:
-            do_nothing
+        case k > a
     witness exist k N+ st {k > a, $prime(k)} from k
 ```
 
