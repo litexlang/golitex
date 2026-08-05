@@ -17,7 +17,7 @@ AI的到来让数学证明的生成越来越多，而验证会越来越成为瓶
 3. 使用已经知道的事实、定义或计算，写出下一条事实；
 4. 让这条事实成为后续推理的上下文。
 
-Litex 把这种日常数学工作流变成它默认的运行逻辑。用户写出一个应当成立的结果；checker 检查其中的对象是否定义良好，从 builtin rules 和已验证的上下文中寻找证明依据，说明这个结果为什么通过，再把它作为已验证事实加入后续陈述可用的上下文。整个过程可以概括为：
+Litex 把这种日常数学工作流变成它默认的运行逻辑。整个过程可以概括为：
 
 > **Litex：用户声明“什么应当成立” → checker 寻找证明依据 → output 解释该陈述为何以及如何通过验证 → 已验证事实扩展当前上下文 → proof 自下而上生长。**
 >
@@ -26,9 +26,13 @@ Litex 把这种日常数学工作流变成它默认的运行逻辑。用户写�
 在下面两个维度上，两种默认交互的方向恰好相反。
 
 1. **Litex 证明自下而上；Lean tactic 证明自上而下。** 在 Litex 中，每条已验证事实都会扩展上下文，直到积累的事实足以支持结论。Lean tactic 证明通常从最终 Goal 出发，向后把它转化为更小的 Goal，直到能够由已知事实关闭。
-2. **Litex 用户声明 *what* 应当成立；Lean tactic 用户声明应当 *how* 证明 Goal。** Litex checker 寻找能与结果匹配的证明依据，并解释找到的验证路径。Lean tactic elaboration 按照用户的证明指令构造相应的 proof term，server 显示变化后的 Goal，kernel 检查该 term。
+2. **Litex 用户声明 *what*：“什么应当成立”；Lean tactic 用户声明 *how*：“应当怎样证明 Goal”。** Litex checker 寻找能与结果匹配的证明依据，并解释找到的验证路径。Lean tactic elaboration 按照用户的证明指令构造对应的 proof term，server 显示变化后的 Goal，kernel 检查该 term。
 
-Lean 的机制提供了非常灵活、通用的 proof-programming 环境。Litex 则有意选择更窄的默认交互，让开始写证明更容易，也让源码更接近日常教科书的数学写法。这是默认接口的差异，不是绝对的能力边界：Lean 也支持向前推理，Litex 也提供显式的 goal-directed 证明形式。后文的对照和五个设计目标，会继续展开这两种工作流的异同及各自的取舍。
+Lean 的机制提供了非常灵活、通用的 proof-programming 环境。Litex 则有意选择更窄的默认交互，让开始写证明更容易，也让源码更接近
+日常教科书的数学写法。这是默认接口的差异，不是绝对的能力边界：
+Lean 也支持向前推理，Litex 也提供显式的 goal-directed 证明形式
+。后文的对照和五个设计目标，会继续展开这两种工作流的异同及各自
+的取舍。
 
 ## 一个完整的小对照：群的单位元唯一性
 
@@ -71,6 +75,34 @@ theorem one_unique
 这种分工也使两者的交互输出呈现出近似对偶的关系。Lean 源码中的 tactic 主要写“怎样推进证明”，因此 Lean server 的 [Infoview](https://lean-lang.org/doc/reference/latest/Tactic-Proofs/Reading-Proof-States/) 会在光标位置显示 tactic 执行后还剩什么 Goal。Litex 源码已经写出“要证明出什么”，因此 Litex output 主要补出另一半：这条事实是由哪条 builtin rule、哪个已知事实或哪个 `forall` 实例验证的。
 
 在这段 Lean 代码中，`(G.one_mul e).symm` 和 `hright G.one` 显式指定了下一步调用哪个事实、如何实例化以及朝哪个方向使用。Litex 则尝试让用户直接写下数学上有意义的中间结果和最终结果，再由 checker 识别哪些已验证事实足以支持它们。按形状复用事实是实现这种分工的机制，而不是最终目的。
+
+> **给 Lean 用户的 hint：什么是 Litex 的 builtin rule？**
+
+一个便于理解的心智模型是：Litex 预置了数百个小型证明模式——当前数量级在 500+ 左右——它们往往可以对应为少量常见 Lean lemma 和 tactic 的组合。builtin rule 先观察目标的形状，匹配相应的数学模式，并可以递归地让 verifier 检查更小的前置条件。如果这些条件已经存在或能够继续被验证，目标就可以通过。这是帮助 Lean 用户理解的概念对应，不表示 Litex 在实现上真的存储或执行 Lean tactic script；具体数量和规则目录会随实现演进。
+
+例如，Lean 用户可以显式组合严格序的传递性和不反自性，证明一个严格不等式不可能反向成立：
+
+```lean
+import Mathlib
+
+variable (a b : ℝ)
+
+example (h : a < b) : ¬ b < a := by
+  intro h'
+  have haa : a < a := lt_trans h h'
+  exact (lt_irrefl a) haa
+```
+
+对应的 Litex 源码直接声明结果：
+
+```litex
+forall a, b R:
+    a < b
+    =>:
+        not b < a
+```
+
+这里，builtin strategy 把目标 `not b < a` 识别为严格序的反向矛盾，然后检查 `a < b` 是否已经成立。该事实已经是前提，所以结论通过；runner 把它的直接验证路径记录为 `builtin strategy`。这种匹配由专用代码按 pattern 定向完成，不是枚举任意 tactic program；对这类小型 builtin 步骤，用户通常不需要管理 proof-search 的效率问题。
 
 2. 以集合论式对象为表面，而不是要求用户先学习类型宇宙
 
@@ -252,10 +284,18 @@ forall A, B, c set, x A:
 
 这两个例子也让“自下而上”变得具体：Lean 从完整 Goal 开始，逐步把它改写或分解到已知事实；Litex 则逐段建立可以确认的等式或成员关系，直到它们支持最终结论。日常数学书写往往也是先记录定义、已知事实和关键中间结果，再让它们汇聚成结论，而不是始终从一个形式化 Goal 出发，把它不断反向分解成子目标。对人和 AI 来说，提出有意义的中间表达式，通常也比持续记忆 `pow_two`、`mul_assoc` 一类库名称及其调用方向更自然。它不表示所有数学发现或证明都严格自下而上；归纳、反证、存在性证明和复杂定理仍可能需要明确的目标结构。
 
-## 接下来
+## 总结
 
 对Litex系统的基本组成感兴趣的话，可以看https://litexlang.com/doc/Litex_System_Map。如果单纯想试试Litex的例子，看看litex会生成什么样子的输出和知识图谱，可以看litexlang.com。对litex内核感兴趣，可以看https://github.com/litexlang/golitex。
 
 Litex 的承诺不应是“省略证明”，而是更严格也更朴素的一件事：让用户先写自己真正想说的数学事实，再让机器把验证、来源和边界清楚地摆出来。
 
-Litex 也正在设计并实现一条到 Lean 的编译路径：对受支持的 Litex 内容，目标是先由 Litex 检查，再生成 Lean 并由 Lean 独立检查。因此，读者不必仅因 builtin rule 的数量多，就先把“Litex 是否可靠”当作理解和使用它的阻断性疑虑。按设计，每条 builtin rule 都是小而具体的数学模式，通常可直接对应为少数常见的 Lean 证明步骤或 tactic 组合。这个 compiler 仍在进行中；在它覆盖所有需要的规则以前，可靠性判断仍应以可检查的规则实现、验证输出、测试和显式的 `trust` 边界为准。这样才能确保litex虽然是有非常大的内核的形式化语言，但依然有严格性保证。
+> **说得尖锐一点：Lean 常见的 tactic 工作流，就像强制要求你读一本数学书时从最后一页开始读，写一篇论文时从最后一页开始写——先固定最终 Goal，再向后反推前面必须补出什么。**
+
+对于数学探索、学习和教材式叙述而言，这种顺序很别扭。Litex 的设计判断是：它不应成为书写形式化数学时唯一或默认的方式。
+
+> **同样尖锐地说：Litex 的第一性原理上最大的问题，是它的可信内核太大。Litex 把数百个常见证明模式放进 builtin 和 infer rules，把工作从用户的 proof script 移进了可信计算基。证明工作并没有消失，只是被系统吸收了。Litex代码需要能被编译成Lean代码，才能确保其正确性。**
+
+正因如此，Litex 正在设计并实现一条到 Lean 的编译路径。它不只是一个便利功能或互操作功能，而是 Litex 预期正确性路线的核心。对受支持、不含 `trust` 的内容，目标流程是：先由 Litex 检查源码，再生成等价的 Lean 陈述和证明，最后由 Lean 独立检查生成结果。按设计，每条 builtin rule 都是小而具体的数学模式，通常可以对应为少量常见的 Lean 证明步骤或 tactic 组合。
+
+编译器只是生成语法正确的 Lean，并不会自动带来正确性保证：翻译本身还必须保持 Litex 源码的数学意义，覆盖范围必须明示，不支持或含 `trust` 的内容必须被拒绝或显式标记。compiler 仍在开发中。在它的覆盖率和语义保持证据足够强之前，对 Litex 可靠性的判断仍必须以可检查的规则实现、verifier output、回归测试和显式的 `trust` 边界为准，而不能宣称已经获得了成熟小内核证明助手的同等保证。
