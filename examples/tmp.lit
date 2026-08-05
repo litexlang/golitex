@@ -2,3 +2,5 @@ forall a, b R:
     a < b
     =>:
         not b < a
+
+prop 

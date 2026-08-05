@@ -296,4 +296,12 @@ For mathematical exploration, learning, and textbook-style exposition, this orde
 
 For this reason, Litex is designing and implementing a compilation path to Lean. This is not merely a convenience or interoperability feature; it is central to Litex's intended correctness story. For supported, trust-free content, the target pipeline is: check the source with Litex, generate an equivalent Lean statement and proof, and have Lean check the generated result independently. By design, each builtin rule is a small, concrete mathematical pattern that can usually correspond to a small number of ordinary Lean proof steps or tactic combinations.
 
+> A complete LEGO instruction manual contains two kinds of information: first, how
+> to perform each step; and second, what the entire partially
+> assembled model should look like after that step. Lean tactic
+> source code primarily records the first kind—how to manipulate the
+> proof state next. Litex source code primarily records the second—
+> what mathematical fact has been established after each step of
+> reasoning.
+
 Compilation does not create a guarantee merely by emitting syntactically valid Lean: the translation itself must preserve the meaning of the Litex source, its coverage must be explicit, and unsupported or trusted content must remain rejected or visibly marked. The compiler remains under development. Until its coverage and semantic-preservation evidence are strong enough, Litex acceptance must continue to be judged relative to inspectable rule implementations, verifier output, regression tests, and explicit `trust` boundaries—not advertised as the same guarantee provided by a mature small-kernel proof assistant.
