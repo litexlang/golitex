@@ -304,6 +304,12 @@ an explicit reserved builtin theorem call such as
 `by thm set_builder_member(x, B)` or
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
+When only one atomic consequence should escape, use the preview form
+`by thm name(args) => atomic_fact`. Litex applies the ordinary theorem in a
+temporary child context, checks the selected fact there, and then discards all
+other theorem conclusions. Only the selected fact is committed to the parent;
+its normal inferred consequences may still be stored. The selected fact must
+already be well-defined in the parent, and a compound target is rejected.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. The equivalent block spelling is
 `by def:` followed by one `? fact` goal. At the outer verification round, a

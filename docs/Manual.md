@@ -1526,6 +1526,36 @@ thm positive_is_nonzero:
 by thm positive_is_nonzero(1)
 ```
 
+The preview selection form keeps the ordinary theorem application explicit but
+commits only one requested atomic consequence:
+
+```litex
+thm expose_zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+    x + 0 = x
+    0 + x = x
+
+by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+```
+
+For `by thm name(args) => fact`, `fact` must already be well-defined in the
+parent context. Litex then applies the theorem with the existing `by thm`
+semantics in a temporary child environment, so all instantiated conclusions
+and their ordinary inferred consequences are available while the full atomic
+verifier checks `fact`. The child is discarded afterward. On success, only
+`fact` is committed as the parent seed and ordinary inference runs from that
+seed; on failure, the parent environment is unchanged. The target may be a
+positive or negative atomic fact and need not be a direct theorem conclusion,
+but compound, quantified, existential, disjunctive, conjunctive, and chain
+targets are not accepted.
+
+Detailed output uses `"mode": "select_atomic_fact"`, reports the scoped
+conclusions as `temporary_then_facts`, records `target_check`, and separates
+the committed `parent_stored_facts`. The legacy call without `=>` remains
+`"mode": "release_all"` and stores every instantiated conclusion as before.
+
 There is no separate `lemma` keyword in the current parser:
 
 ```text
@@ -2812,6 +2842,7 @@ change:
 - proper subset and proper superset relations;
 - injective, surjective, and bijective mapping predicates;
 - explicit `by def`;
+- selected atomic consequences with `by thm name(args) => fact`;
 - untyped object definitions with `let x = value`;
 - modules, manifests, flattening, and localized output;
 - one-step membership verification through a known subset or superset;

@@ -1228,11 +1228,23 @@ fn by_theorem_verification_value(
             statement_check_value(runtime, role, statement, result, output_style)
         })
         .collect::<Vec<_>>();
+    let target_check = if verification.selected_fact.is_some() {
+        inside_results
+            .last()
+            .map(|result| stmt_exec_result_json_value(runtime, result, output_style))
+            .unwrap_or(JsonValue::Null)
+    } else {
+        JsonValue::Null
+    };
 
     JsonValue::Object(vec![
         (
             "type".to_string(),
             JsonValue::JsonString("by thm proof".to_string()),
+        ),
+        (
+            "mode".to_string(),
+            JsonValue::JsonString(verification.mode.clone()),
         ),
         (
             "theorem".to_string(),
@@ -1255,6 +1267,23 @@ fn by_theorem_verification_value(
         (
             "stored_then_facts".to_string(),
             JsonValue::Array(string_items(&verification.stored_then_facts)),
+        ),
+        (
+            "temporary_then_facts".to_string(),
+            JsonValue::Array(string_items(&verification.temporary_then_facts)),
+        ),
+        (
+            "selected_fact".to_string(),
+            verification
+                .selected_fact
+                .as_ref()
+                .map(|fact| JsonValue::JsonString(user_visible_stmt_or_msg_text(fact)))
+                .unwrap_or(JsonValue::Null),
+        ),
+        ("target_check".to_string(), target_check),
+        (
+            "parent_stored_facts".to_string(),
+            JsonValue::Array(string_items(&verification.parent_stored_facts)),
         ),
         (
             "provenance".to_string(),
