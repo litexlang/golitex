@@ -10,6 +10,62 @@ struct FnMembershipProofFlow {
 }
 
 impl Runtime {
+    /// Verify a value against a declared return set, including anonymous functions whose
+    /// declared carrier is equal to a function space or set builder.
+    pub(crate) fn verify_value_in_declared_return_set(
+        &mut self,
+        value: Obj,
+        declared_return_set: Obj,
+        line_file: LineFile,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let direct_result = self.verify_obj_satisfies_param_type(
+            value.clone(),
+            &ParamType::Obj(declared_return_set.clone()),
+            verify_state,
+        )?;
+        if !direct_result.is_unknown() {
+            return Ok(direct_result);
+        }
+
+        let Obj::AnonymousFn(value_fn) = value else {
+            return Ok(direct_result);
+        };
+        let mut return_set_representatives = vec![declared_return_set.clone()];
+        return_set_representatives
+            .extend(self.get_all_obj_representatives_equal_to_given(&declared_return_set));
+        for return_set_representative in return_set_representatives {
+            let representative_kind = match &return_set_representative {
+                Obj::FnSet(_) => "equal function-space representative",
+                Obj::SetBuilder(_) => "equal set-builder representative",
+                _ => continue,
+            };
+            let representative_result = self.verify_obj_satisfies_param_type(
+                value_fn.clone().into(),
+                &ParamType::Obj(return_set_representative),
+                verify_state,
+            )?;
+            if !representative_result.is_true() {
+                continue;
+            }
+            let membership_fact: Fact =
+                InFact::new(value_fn.clone().into(), declared_return_set, line_file).into();
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    membership_fact,
+                    format!(
+                        "anonymous fn satisfies a declared return set through an equal {}",
+                        representative_kind
+                    ),
+                    vec![representative_result],
+                )
+                .into(),
+            );
+        }
+
+        Ok(direct_result)
+    }
+
     /// A named function with the same input signature belongs to a narrower
     /// function space when its values are known to lie in the target return set.
     /// Example: `forall x I: f(x) $in X` proves `f $in fn(x I) X`.

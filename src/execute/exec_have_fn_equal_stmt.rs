@@ -218,23 +218,12 @@ impl Runtime {
                     dom_fact.clone(),
                 )?;
             }
-            let result = rt.verify_obj_satisfies_param_type(
+            rt.verify_value_in_declared_return_set(
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
-                &ParamType::Obj((*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone()),
+                (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
+                have_fn_equal_stmt.line_file.clone(),
                 &UseContextVerifyState::new(0, false),
-            )?;
-            if !result.is_unknown() {
-                return Ok(result);
-            }
-
-            if let Some(result) = rt.verify_anonymous_fn_in_declared_return_set_by_definition(
-                have_fn_equal_stmt,
-                &UseContextVerifyState::new(0, false),
-            )? {
-                return Ok(result);
-            }
-
-            Ok(result)
+            )
         })
         .map_err(|verify_error| {
             short_exec_error(
@@ -244,67 +233,5 @@ impl Runtime {
                 vec![],
             )
         })
-    }
-
-    fn verify_anonymous_fn_in_declared_return_set_by_definition(
-        &mut self,
-        have_fn_equal_stmt: &HaveFnEqualStmt,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Obj::AnonymousFn(value_fn) = have_fn_equal_stmt
-            .equal_to_anonymous_fn
-            .equal_to
-            .as_ref()
-            .clone()
-        else {
-            return Ok(None);
-        };
-
-        let declared_return_set = have_fn_equal_stmt
-            .equal_to_anonymous_fn
-            .body
-            .ret_set
-            .as_ref()
-            .clone();
-        let mut return_set_representatives = vec![declared_return_set.clone()];
-        return_set_representatives
-            .extend(self.get_all_obj_representatives_equal_to_given(&declared_return_set));
-        for return_set_representative in return_set_representatives {
-            // A named carrier may unfold to a function space.
-            // Example: `\Matrix<F, field, m, n> = fn(i, j) F` accepts an
-            // anonymous row-column function as a `matrix_add` return value.
-            let representative_kind = match &return_set_representative {
-                Obj::FnSet(_) => "equal function-space representative",
-                Obj::SetBuilder(_) => "equal set-builder representative",
-                _ => continue,
-            };
-            let representative_result = self.verify_obj_satisfies_param_type(
-                value_fn.clone().into(),
-                &ParamType::Obj(return_set_representative),
-                verify_state,
-            )?;
-            if !representative_result.is_true() {
-                continue;
-            }
-            let membership_fact: Fact = InFact::new(
-                value_fn.clone().into(),
-                declared_return_set,
-                have_fn_equal_stmt.line_file.clone(),
-            )
-            .into();
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    membership_fact,
-                    format!(
-                        "anonymous fn satisfies a declared return set through an equal {}",
-                        representative_kind
-                    ),
-                    vec![representative_result],
-                )
-                .into(),
-            ));
-        }
-
-        Ok(None)
     }
 }

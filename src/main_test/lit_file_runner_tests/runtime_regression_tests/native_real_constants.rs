@@ -1,5 +1,4 @@
 use super::*;
-use crate::to_lean::to_lean_from_source;
 
 #[test]
 fn native_real_constants_do_not_use_builtin_symbol_ids() {
@@ -113,13 +112,6 @@ fn native_real_constants_have_backend_specific_output() {
         .expect("native real constants should convert to LaTeX");
     assert!(latex.contains(r"\mathrm{e}"), "{latex}");
     assert!(latex.contains(r"\pi"), "{latex}");
-
-    let lean = to_lean_from_source("0 < e\n0 < pi", "native_real_constants_have_lean_output")
-        .expect("native real constants should convert to Lean");
-    assert!(lean.contains("Real.exp 1"), "{lean}");
-    assert!(lean.contains("Real.pi"), "{lean}");
-    assert!(lean.contains("Real.exp_pos 1"), "{lean}");
-    assert!(lean.contains("Real.pi_pos"), "{lean}");
 
     let python = to_python_from_source(
         "have e_copy R = e\nhave pi_copy R = pi",

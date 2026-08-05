@@ -39,11 +39,11 @@ to let AI fill routine machine details while keeping the durable source at the
 level of recognizable mathematical facts, with the hidden verification route
 available for inspection.
 
-This page keeps the existing examples as the main comparison. A partial,
-ongoing Litex-to-Lean compiler is described near the end: Litex code is first
-executed and verified, then supported statements are emitted as Lean and
-checked independently. The current MVP is small; exact proof-path replay will
-eventually require structured provenance.
+This page keeps the existing examples as the main comparison. A narrow
+Litex-to-Lean experiment is described near the end: it currently accepts only
+verified rational equalities over `R`, recursively exposes their numerator and
+denominator structure, and emits `ring` or `field_simp` followed by `ring`.
+Exact proof-path replay remains future work and requires structured provenance.
 
 ---
 
@@ -1198,14 +1198,15 @@ Both systems require mathematics. Litex is not a way to avoid proving things. It
 
 ## Ongoing Project: Compiling Litex To Lean
 
-The current bridge runs the Litex verifier first, because later facts depend on
-the verified context and inference produced by earlier statements:
+The current experiment runs the Litex verifier first and then handles only its
+declared rational-equality subset:
 
 ```text
 Litex source
   -> execute and verify with Litex
-  -> retain supported verified statements
-  -> emit named Lean theorems
+  -> retain a direct equality or one universal equality over R
+  -> recursively lower each side to (numerator, denominator)
+  -> emit a named Lean theorem using ring or field_simp; ring
   -> ask Lean and Mathlib to check the generated file
 ```
 
@@ -1278,81 +1279,33 @@ also require a formal semantics and a proof relating the implementation to it.
 The faithful Lean artifact instead certifies the particular materialized run,
 within the supported lowering and with every trust boundary disclosed.
 
-The following pairs show the current mapping. The examples omit the generated
-`import Mathlib` and namespace wrapper.
-
-The 0.9.110 beta verifier also has a native symbolic complex interface:
-`C`, `i`, `re`, `img`, and `C_abs`. The current Lean bridge does not lower
-genuinely complex-valued expressions. It reports them as unsupported instead
-of emitting an expression over `ℝ`; complex extraction and its proof replay
-contract remain future work.
-
-The same boundary applies to native `sin`, `cos`, `tan`, and `cot`. Litex can
-verify their current symbolic real interface, but the bridge does not yet map
-it to Mathlib's analytic trigonometric definitions. It reports native
-trigonometric expressions as unsupported.
-
-### Closed Fact
+The faithful materialization contract above is a future target, not current
+coverage. The actual experiment has one representative mapping.
 
 Litex:
 
 ```text
-1 + 1 = 2
-```
-
-Generated Lean:
-
-```text
-theorem litex_fact_1 : ((1 : ℝ) + (1 : ℝ)) = (2 : ℝ) := by
-  nlinarith
-```
-
-### Universal Fact With A Premise
-
-Litex:
-
-```text
-forall x R:
-    x = 2
+forall a, b, x R:
+    x != 0
     =>:
-        x + 1 = 3
+        (a + b) / x = a / x + b / x
 ```
 
-Generated Lean:
+Generated Lean ends with:
 
-```text
-theorem litex_fact_1 : ∀(x : ℝ) (_h1 : x = (2 : ℝ)),
-    (x + (1 : ℝ)) = (3 : ℝ) := by
-  intro x h1
-  nlinarith
+```lean
+theorem litex_rational_1 (a b x : ℝ) (h1 : x ≠ 0) :
+    (a + b) / x = a / x + b / x := by
+  field_simp [h1] <;> ring
 ```
 
-### Named Theorem
-
-Litex:
-
-```text
-thm add_comm:
-    ? forall a, b R:
-        a + b = b + a
-    a + b = b + a
-```
-
-Generated Lean:
-
-```text
-theorem add_comm (a b : ℝ) : (a + b) = (b + a) := by
-  have litex_fact_1 : (a + b) = (b + a) := by
-    nlinarith
-  nlinarith
-```
-
-The MVP currently reconstructs a Lean proof from statement shape. Litex's
-human-readable messages are not yet machine-readable proof certificates, so
-faithful replay will need fact IDs, rule IDs, scope IDs, and dependency traces.
-Unsupported or explicitly trusted forms are rejected instead of hidden behind
-`sorry`, `admit`, or generated axioms. Sets, functions, complete module
-translation, and exact proof-path replay remain future work.
+Without symbolic denominators the generated proof uses `ring` directly. The
+recursive lowering handles numbers, real atoms, addition, subtraction,
+multiplication, division, and literal natural powers. Definitions, named
+theorem bodies, claims, conjunctions, transcendental and complex objects,
+implicit denominator evidence, complete-module translation, and exact
+proof-path replay are intentionally rejected. No `sorry`, `admit`, or Lean
+axiom is generated.
 
 ## Appendix: Foundations And Design Intent
 

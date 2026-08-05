@@ -1,5 +1,4 @@
 use super::*;
-use crate::to_lean::to_lean_from_source;
 
 #[test]
 fn native_trigonometric_objects_have_reserved_syntax_and_stable_kinds() {
@@ -368,14 +367,6 @@ fn native_trigonometry_has_explicit_backend_boundaries() {
     assert!(
         python_error.contains("does not support native trigonometric"),
         "{python_error}"
-    );
-
-    let lean_error = to_lean_from_source("sin(0) = 0", "native_trigonometry_lean_is_symbolic")
-        .expect_err("Lean extraction must reject native trigonometric expressions")
-        .trace_message();
-    assert!(
-        lean_error.contains("does not support native trigonometric"),
-        "{lean_error}"
     );
 
     let (run_succeeded, run_output) =

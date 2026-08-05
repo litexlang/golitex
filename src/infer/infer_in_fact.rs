@@ -166,11 +166,27 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
     ) -> Result<InferResult, RuntimeError> {
+        // A local proof binder may be tested against the same ambient carrier
+        // many times while that carrier is equal to an arbitrarily deep user
+        // template result. Eagerly replaying every opaque representative here
+        // unfolds the whole template for every fresh binder. Explicit goals can
+        // already transport membership through known equality and unfold the
+        // one-layer definition on demand, so keep eager inference for concrete
+        // set constructors but defer opaque function/template applications.
+        let element_is_local_proof_binder = matches!(
+            &in_fact.element,
+            Obj::Atom(AtomObj::Forall(_)) | Obj::Atom(AtomObj::Exist(_))
+        );
         let mut infer_result = InferResult::new();
         for equal_set in self
             .get_all_obj_representatives_equal_to_given(&in_fact.set)
             .into_iter()
         {
+            if element_is_local_proof_binder
+                && matches!(equal_set, Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_))
+            {
+                continue;
+            }
             let expanded_fact: AtomicFact = InFact::new(
                 in_fact.element.clone(),
                 equal_set,

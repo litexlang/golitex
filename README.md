@@ -220,13 +220,12 @@ and more modest: let users first write the mathematical facts they actually
 mean, then let the machine expose the verification, provenance, and boundaries
 clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
 
-Litex is also designing and implementing a compilation path to Lean. For
-supported Litex content, the goal is to check it with Litex, generate Lean, and
-then check the result independently with Lean.
-
-The compiler is ongoing research. Its current MVP covers a limited, trust-free
-arithmetic subset; the group example above illustrates the intended language
-relationship, not current compiler coverage. See
+Litex is also researching a compilation path to Lean. The current repository
+keeps only a narrow experiment: verified rational equalities over `R` are
+lowered recursively to numerator/denominator pairs and emitted with `ring`, or
+`field_simp` followed by `ring`. This is not yet a general compiler or proof
+certificate path; the group example above illustrates the intended language
+relationship, not current coverage. See
 [Litex and Lean](https://litexlang.com/doc/Litex_and_Lean) for the supported
 subset and current boundary.
 

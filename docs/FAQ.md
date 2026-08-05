@@ -492,9 +492,11 @@ normalizer.
 `sin` and `cos` are total on `R`. A use of `tan(x)` requires
 `cos(x) != 0`, while `cot(x)` requires `sin(x) != 0`; an undefined expression
 fails well-definedness before equality checking. The preview remains symbolic:
-`eval`, Python extraction, and Lean extraction reject native trigonometric
-expressions explicitly. It also does not yet include inverse or complex
-trigonometry, analytic definitions, or every common special-angle value.
+`eval` and Python extraction reject native trigonometric expressions explicitly.
+The current To-Lean experiment accepts only rational equalities, so
+trigonometric expressions are outside its declared subset as well. The preview
+also does not yet include inverse or complex trigonometry, analytic definitions,
+or every common special-angle value.
 
 ## Does the native `C` scalar system turn every number into a complex value?
 
@@ -511,11 +513,11 @@ with a nonnegative real result.
 
 The native complex layer is symbolic in this release. Verification supports
 the builtin imaginary unit, coordinates, modulus interface, legal integer
-powers, and finite aggregation, but `eval`, Python extraction, and the current
-Lean bridge do not acquire a complex runtime representation. Those backends
-report unsupported complex expressions rather than silently treating them as
-real values. Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as
-ordinary identifiers must migrate; see
+powers, and finite aggregation, but `eval` and Python extraction do not acquire
+a complex runtime representation. The current To-Lean experiment is limited to
+rational equalities over `R` and therefore does not accept complex expressions.
+Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as ordinary
+identifiers must migrate; see
 [Complex Scalar Migration](Complex_Scalar_Migration.md).
 
 ## Why not just import a big library and cite the theorem?

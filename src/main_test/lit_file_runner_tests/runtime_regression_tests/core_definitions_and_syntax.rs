@@ -2256,6 +2256,70 @@ $marked(1)
 }
 
 #[test]
+fn bound_membership_defers_opaque_equal_set_expansion_until_demanded() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+have Ambient set
+trust Ambient = \selected<R>
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "bound_membership_defers_opaque_equal_set_expansion_until_demanded",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "opaque equal-set setup should succeed:\n{}",
+        run_output
+    );
+
+    let ambient_symbol = runtime
+        .resolved_identifier_symbol("Ambient")
+        .expect("Ambient should have a runtime symbol");
+    let ambient: Obj = Identifier::new_bound("Ambient".to_string(), ambient_symbol).into();
+    let opaque_set = runtime
+        .get_all_obj_representatives_equal_to_given(&ambient)
+        .into_iter()
+        .find(|candidate| matches!(candidate, Obj::InstantiatedTemplateObj(_)))
+        .expect("Ambient should be equal to the instantiated selected-set template");
+
+    let local_result: Result<(), RuntimeError> = runtime.run_in_local_env(|rt| {
+        let group =
+            rt.fresh_param_group_with_type(vec!["x".to_string()], ParamType::Obj(ambient.clone()))?;
+        let binding = group.params[0].clone();
+        rt.define_params_with_type(
+            &ParamDefWithType::new(vec![group]),
+            false,
+            ParamObjType::Forall,
+        )?;
+        let x = obj_for_bound_param_in_scope(&binding, ParamObjType::Forall);
+        let expanded_membership: AtomicFact =
+            InFact::new(x, opaque_set.clone(), default_line_file()).into();
+
+        assert!(
+            !rt.cache_known_facts_contains(&expanded_membership.to_string())
+                .0,
+            "a bound ambient membership must not eagerly unfold every opaque equal set"
+        );
+        let on_demand =
+            rt.verify_atomic_fact(&expanded_membership, &UseContextVerifyState::new(0, false))?;
+        assert!(
+            on_demand.is_true(),
+            "the deferred membership must remain provable through equality on demand"
+        );
+        Ok(())
+    });
+    local_result.expect("local opaque equal-set membership check should succeed");
+}
+
+#[test]
 fn template_set_builder_membership_definition_forms_equivalence() {
     let source_code = r#"
 abstract_prop marked(x)

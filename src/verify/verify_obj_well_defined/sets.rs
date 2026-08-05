@@ -340,6 +340,21 @@ impl Runtime {
                 )));
             }
 
+            let return_value_result = rt.verify_value_in_declared_return_set(
+                (*x.equal_to).clone(),
+                (*x.body.ret_set).clone(),
+                default_line_file(),
+                verify_state,
+            )?;
+            if return_value_result.is_unknown() {
+                return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "anonymous function body {} is not verified to belong to declared return set {}",
+                        x.equal_to, x.body.ret_set
+                    )),
+                )));
+            }
+
             Ok(())
         })
     }

@@ -294,7 +294,7 @@ For mathematical exploration, learning, and textbook-style exposition, this orde
 
 > **Equally sharply: Litex's biggest first-principles problem is that its trusted kernel is too large. Litex moves hundreds of common proof patterns into builtin and inference rules, shifting work from the user's proof script into the trusted computing base. The proof work did not disappear; the system absorbed it. Litex code must be compilable to Lean and checked there if its correctness is to be guaranteed.**
 
-For this reason, Litex is designing and implementing a compilation path to Lean. This is not merely a convenience or interoperability feature; it is central to Litex's intended correctness story. For supported, trust-free content, the target pipeline is: check the source with Litex, generate an equivalent Lean statement and proof, and have Lean check the generated result independently. By design, each builtin rule is a small, concrete mathematical pattern that can usually correspond to a small number of ordinary Lean proof steps or tactic combinations.
+For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository keeps only a narrow experiment: it handles verified rational equalities over `R`, recursively constructs numerator and denominator expressions, and emits Lean checked by `ring`, or by `field_simp` followed by `ring`. It is not yet a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
 
 > A complete LEGO instruction manual contains two kinds of information: first, how
 > to perform each step; and second, what the entire partially

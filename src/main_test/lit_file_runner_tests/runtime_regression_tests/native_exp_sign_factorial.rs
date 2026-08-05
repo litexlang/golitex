@@ -330,7 +330,7 @@ fn native_exp_sign_factorial_latex_uses_standard_notation() {
 }
 
 #[test]
-fn native_exp_sign_factorial_python_and_lean_outputs_are_explicit() {
+fn native_exp_sign_factorial_python_output_is_explicit() {
     let python = to_python_from_source(
         r#"
 have fn second_batch(x R) R = exp(x) + ln(exp(x)) + sign(x)
@@ -346,16 +346,6 @@ have factorial_value N = factorial(6)
     assert!(python.contains("math.log(math.exp(x))"), "{python}");
     assert!(python.contains("(1 if x > 0 else"), "{python}");
     assert!(python.contains("math.factorial(int(6.0))"), "{python}");
-
-    let lean = crate::to_lean::to_lean_from_source(
-        "exp(0) = 1\nln(1) = 0\nsign(-2) = -1\nfactorial(5) = 120",
-        "native_exp_sign_factorial_lean_output",
-    )
-    .expect("native functions should convert to Lean");
-    assert!(lean.contains("Real.exp"), "{lean}");
-    assert!(lean.contains("Real.log"), "{lean}");
-    assert!(lean.contains("if "), "{lean}");
-    assert!(lean.contains("Nat.factorial"), "{lean}");
 }
 
 fn assert_source_succeeds(source: &str, label: &str) {

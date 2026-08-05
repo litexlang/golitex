@@ -1,0 +1,11 @@
+abstract_prop marked(x)
+
+template<T set>:
+    have selected power_set(T) = {x T: $marked(x)}
+
+have Ambient set
+trust Ambient = \selected<R>
+
+thm opaque_equal_set_membership_is_available_on_demand:
+    ? forall x Ambient:
+        $marked(x)
