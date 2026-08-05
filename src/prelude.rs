@@ -14,8 +14,8 @@ pub use crate::common::name_types::{
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, Environment, KnownFnInfo, KnownForallFactParamsAndDom,
-    KnownEquality, KnownObjValue,
+    AtomicFactInForallArgShapeKey, Environment, KnownEquality, KnownFnInfo,
+    KnownForallFactParamsAndDom, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;

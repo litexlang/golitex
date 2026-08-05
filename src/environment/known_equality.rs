@@ -63,9 +63,7 @@ impl KnownEquality {
         })
     }
 
-    pub fn values(
-        &self,
-    ) -> impl Iterator<Item = (&HashMap<ObjString, AtomicFact>, &[Obj])> {
+    pub fn values(&self) -> impl Iterator<Item = (&HashMap<ObjString, AtomicFact>, &[Obj])> {
         self.entries.values().map(|entry| {
             let root_id = self.root_id(entry.node_id);
             (
@@ -159,7 +157,8 @@ impl KnownEquality {
             return;
         }
 
-        let (large_root, small_root) = if self.nodes[left_root].size >= self.nodes[right_root].size {
+        let (large_root, small_root) = if self.nodes[left_root].size >= self.nodes[right_root].size
+        {
             (left_root, right_root)
         } else {
             (right_root, left_root)

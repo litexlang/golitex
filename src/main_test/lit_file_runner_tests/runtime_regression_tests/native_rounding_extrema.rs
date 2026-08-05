@@ -230,7 +230,7 @@ fn native_rounding_extrema_latex_uses_standard_notation() {
 }
 
 #[test]
-fn native_rounding_extrema_python_and_lean_outputs_are_explicit() {
+fn native_rounding_extrema_python_output_is_explicit() {
     let python = to_python_from_source(
         r#"
 have fn round_total(x R) R = floor(x) + ceil(x) + min(x, 0) + max(x, 0)
@@ -247,17 +247,6 @@ have common_multiple N = lcm(6, 4)
     assert!(python.contains("min(x, 0.0)"), "{python}");
     assert!(python.contains("max(x, 0.0)"), "{python}");
     assert!(python.contains("math.lcm(int(6.0), int(4.0))"), "{python}");
-
-    let lean = crate::to_lean::to_lean_from_source(
-        "floor(3.5) = 3\nceil(3.5) = 4\nmin(2, 3) = 2\nmax(2, 3) = 3\nlcm(6, 4) = 12",
-        "native_rounding_extrema_lean_output",
-    )
-    .expect("native rounding/extrema should convert to Lean");
-    assert!(lean.contains("Int.floor"), "{lean}");
-    assert!(lean.contains("Int.ceil"), "{lean}");
-    assert!(lean.contains("(min "), "{lean}");
-    assert!(lean.contains("(max "), "{lean}");
-    assert!(lean.contains("Nat.lcm"), "{lean}");
 }
 
 fn assert_source_succeeds(source: &str, label: &str) {

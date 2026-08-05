@@ -82,9 +82,10 @@ and [Litex and Lean](Litex_and_Lean.md).
 Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
-`trust` records an assumption; it is not a proof. The proposed compiler to Lean
-is still under development, so current reliability claims must be grounded in
-inspectable rules, tests, verifier output, and explicit trust reporting.
+`trust` records an assumption; it is not a proof. The current To-Lean code is a
+narrow rational-equality experiment, not a general compiler, so reliability
+claims must remain grounded in inspectable rules, tests, verifier output, and
+explicit trust reporting.
 
 ---
 
@@ -183,8 +184,8 @@ forall x R, n Z:
 
 The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
 minimum, maximum, and least-common-multiple notation. Python extraction uses
-`math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`; Lean extraction uses
-the corresponding Mathlib integer-rounding, order, and natural-lcm objects.
+`math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`. These objects are
+outside the current To-Lean rational-equality experiment.
 
 The second native-function batch adds `exp`, `ln`, `sign`, and `factorial`.
 Their exact special values and finite integer calculations normalize directly:
@@ -246,10 +247,9 @@ is odd and multiplicative, and characterizes zero and nonzero arguments. It
 also satisfies `sign(x) * abs(x) = x`. `factorial` accepts `N`, returns `N+`,
 exposes the successor recurrence, preserves weak order (and strict order away
 from the `0! = 1!` boundary), and makes every earlier factorial divide a later
-one. All four names are hard-reserved.
-Python extraction uses `math.exp`, `math.log`, a conditional sign expression,
-and `math.factorial`; Lean extraction uses the corresponding `Real`/`Nat`
-objects.
+one. All four names are hard-reserved. Python extraction uses `math.exp`,
+`math.log`, a conditional sign expression, and `math.factorial`. These objects
+are outside the current To-Lean rational-equality experiment.
 
 The parser does not make an invalid expression meaningful:
 
@@ -294,7 +294,9 @@ approximations:
 |---|---|---|
 | LaTeX | `\mathrm{e}` | `\pi` |
 | Python extractor | `math.e` | `math.pi` |
-| Lean extractor | `Real.exp 1` | `Real.pi` |
+
+The current To-Lean rational-equality experiment does not lower these symbolic
+constants.
 
 The symbolic evaluator likewise does not assign decimal runtime values to
 these constants.
@@ -377,9 +379,9 @@ and continuity theorems are also outside this interface.
 The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
 `fn(x R) R {sin(x)}`. LaTeX emits standard trigonometric notation. The
-evaluator and current Python and Lean extractors report native trigonometric
-expressions as unsupported rather than choosing a numerical or library
-semantics silently.
+evaluator and current Python extractor report native trigonometric expressions
+as unsupported. They are also outside the current To-Lean rational-equality
+experiment rather than being assigned a library semantics silently.
 
 ### Complex scalars (beta preview)
 
