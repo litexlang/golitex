@@ -318,7 +318,7 @@ no goals
 
 ## 总结
 
-如果想了解 Litex 系统的基本组成，可以阅读 [Litex System Map](https://litexlang.com/doc/Litex_System_Map)；如果想直接试用例子，查看 Litex 生成的输出和知识图谱，可以访问 [litexlang.com](https://litexlang.com)；如果关注内核实现，可以查看 [golitex 仓库](https://github.com/litexlang/golitex)。
+如果想直接试用例子，查看 Litex 生成的输出和知识图谱，可以访问 [litexlang.com](https://litexlang.com)；如果关注内核实现，可以查看 [golitex 仓库](https://github.com/litexlang/golitex)。
 
 这些入口分别提供系统说明、可运行体验和实现源码。回到本文的主线，Litex 的承诺不应是“省略证明”，而是更严格也更朴素的一件事：让用户先写自己真正想说的数学事实，再让机器把验证、来源和边界清楚地摆出来。
 

@@ -3829,6 +3829,24 @@ reduce(1, 3, id_z, add_z, 0) = sum(1, 3, id_z)
 reduce(1, 3, id_z, mul_z, 1) = product(1, 3, id_z)
 reduce(1, 4, id_z, sub_z, 0) = reduce(3, 4, id_z, sub_z, reduce(1, 2, id_z, sub_z, 0))
 
+forall T set, a, b Z, f fn(x Z) T, op fn(x, y T) T, seed T:
+    a <= b
+    =>:
+        reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) T {f(a + k)}, op, seed)
+        reduce(a, b, f, op, seed) = reduce(a + 1, b, f, op, op(seed, f(a)))
+        reduce(a, b, f, op, seed) = op(reduce(a, b - 1, f, op, seed), f(b))
+
+forall a, b, c, d Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+    a <= b
+    b - a = d - c
+    =>:
+        reduce(a, b, f, op, seed) = reduce(c, d, fn(k Z) Z {f(a + (k - c))}, op, seed)
+
+forall a, b Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+    b < a
+    =>:
+        reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) Z {f(a + k)}, op, seed)
+
 finite_set_reduce({3, 1, 2}, id_z, add_z, 0) = 6
 finite_set_reduce({}, id_z, add_z, 5) = 5
 finite_set_reduce({1, 2}, id_z, add_z, 0) $in Z
@@ -3949,6 +3967,28 @@ forall A, B finite_set, f fn(x A) Z, g fn(y B) A:
             assert!(
                 !run_succeeded,
                 "finite_set_reduce reindexing must not invent a bijection:\n{}",
+                run_output
+            );
+
+            let reversed_order_source = r#"
+have fn id_z(x Z) Z = x
+have fn decimal_append_z(x, y Z) Z = 10 * x + y
+reduce(1, 2, id_z, decimal_append_z, 0) = reduce(1, 2, fn(k Z) Z {id_z(3 - k)}, decimal_append_z, 0)
+"#;
+            let mut reversed_order_runtime = Runtime::new();
+            reversed_order_runtime
+                .new_file_path_new_env_new_name_scope("reduce_rejects_order_reversal");
+            let (stmt_results, runtime_error) =
+                run_source_code(reversed_order_source, &mut reversed_order_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &reversed_order_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                !run_succeeded,
+                "reduce must not treat an arbitrary reordering as an order-preserving translation:\n{}",
                 run_output
             );
         },

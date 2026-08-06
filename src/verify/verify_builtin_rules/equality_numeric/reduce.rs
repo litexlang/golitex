@@ -649,6 +649,247 @@ impl Runtime {
         }
     }
 
+    /// An ordered reduction is invariant under translating its closed integer
+    /// interval when the pulled-back function supplies the same values in the
+    /// same order. No associativity or commutativity is required.
+    /// Example: `reduce(a,b,f,op,s) = reduce(0,b-a,fn(k Z) T {f(a+k)},op,s)`.
+    pub(crate) fn try_verify_reduce_order_preserving_translation(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (source_side, translated_side) in [(left, right), (right, left)] {
+            let (Obj::Reduce(source), Obj::Reduce(translated)) = (source_side, translated_side)
+            else {
+                continue;
+            };
+
+            let mut subgoals = Vec::new();
+            let mut structural_match = true;
+            for (actual, expected) in [
+                (source.op.as_ref(), translated.op.as_ref()),
+                (source.seed.as_ref(), translated.seed.as_ref()),
+            ] {
+                let result = self.verify_objs_are_equal_in_equality_builtin(
+                    actual,
+                    expected,
+                    line_file.clone(),
+                    builtin_state,
+                )?;
+                if !result.is_true() {
+                    structural_match = false;
+                    break;
+                }
+                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+            }
+            if !structural_match {
+                continue;
+            }
+
+            let source_length: Obj =
+                Sub::new(source.end.as_ref().clone(), source.start.as_ref().clone()).into();
+            let translated_length: Obj = Sub::new(
+                translated.end.as_ref().clone(),
+                translated.start.as_ref().clone(),
+            )
+            .into();
+            let length_result = self.verify_objs_are_equal_in_equality_builtin(
+                &source_length,
+                &translated_length,
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !length_result.is_true() {
+                continue;
+            }
+            subgoals.extend(equality_builtin_match_subgoals(
+                &source_length,
+                &translated_length,
+                length_result,
+            ));
+
+            let nonempty: AtomicFact = LessEqualFact::new(
+                source.start.as_ref().clone(),
+                source.end.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            let nonempty_result = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
+            if !nonempty_result.is_true() {
+                let empty: AtomicFact = LessFact::new(
+                    source.end.as_ref().clone(),
+                    source.start.as_ref().clone(),
+                    line_file.clone(),
+                )
+                .into();
+                let empty_result = self.verify_builtin_rule_premise(&empty, builtin_state)?;
+                if !empty_result.is_true() {
+                    continue;
+                }
+                subgoals.push(empty_result);
+                return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                    left,
+                    right,
+                    line_file,
+                    "equality: reduce substitution translates equally long empty intervals",
+                    subgoals,
+                )));
+            }
+            subgoals.push(nonempty_result);
+
+            let source_func = source.func.as_ref().clone();
+            let translated_func = translated.func.as_ref().clone();
+            let source_start = source.start.as_ref().clone();
+            let translated_start = translated.start.as_ref().clone();
+            let translated_set: Obj = ClosedRange::new(
+                translated.start.as_ref().clone(),
+                translated.end.as_ref().clone(),
+            )
+            .into();
+            let pointwise_result = self.run_in_local_env(|rt| {
+                let index_name = rt.generate_random_unused_name();
+                let (index_binding, index) =
+                    rt.fresh_bound_param(index_name, ParamObjType::Forall)?;
+                let params = ParamDefWithType::new(vec![ParamGroupWithParamType::new(
+                    vec![index_binding],
+                    ParamType::Obj(translated_set),
+                )]);
+                rt.define_params_with_type(&params, false, ParamObjType::Forall)?;
+
+                let offset: Obj = Sub::new(index.clone(), translated_start).into();
+                let source_index: Obj = Add::new(source_start, offset).into();
+                let Some(source_value) =
+                    rt.instantiate_reduce_function_at(&source_func, &[source_index])?
+                else {
+                    return Ok(StmtUnknown::new().into());
+                };
+                let Some(translated_value) =
+                    rt.instantiate_reduce_function_at(&translated_func, &[index])?
+                else {
+                    return Ok(StmtUnknown::new().into());
+                };
+                let equality: AtomicFact =
+                    EqualFact::new(source_value, translated_value, line_file.clone()).into();
+                let known_forall = rt.verify_atomic_fact_with_known_forall(
+                    &equality,
+                    &UseContextVerifyState::new(0, true),
+                )?;
+                if known_forall.is_true() {
+                    return Ok(known_forall);
+                }
+                rt.verify_builtin_rule_premise(&equality, builtin_state)
+            })?;
+            if !pointwise_result.is_true() {
+                continue;
+            }
+            subgoals.push(pointwise_result);
+
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                left,
+                right,
+                line_file,
+                "equality: reduce substitution by an order-preserving interval translation",
+                subgoals,
+            )));
+        }
+        Ok(None)
+    }
+
+    /// A nonempty ordered reduction may consume its first value into the seed
+    /// and continue at the next integer, without any operation laws.
+    /// Example: `reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))`.
+    pub(crate) fn try_verify_reduce_first_step(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (full_side, tail_side) in [(left, right), (right, left)] {
+            let (Obj::Reduce(full), Obj::Reduce(tail)) = (full_side, tail_side) else {
+                continue;
+            };
+            let one: Obj = Number::new("1".to_string()).into();
+            let expected_tail_start: Obj = Add::new(full.start.as_ref().clone(), one).into();
+
+            let mut subgoals = Vec::new();
+            let mut structural_match = true;
+            for (actual, expected) in [
+                (tail.start.as_ref(), &expected_tail_start),
+                (tail.end.as_ref(), full.end.as_ref()),
+                (tail.func.as_ref(), full.func.as_ref()),
+                (tail.op.as_ref(), full.op.as_ref()),
+            ] {
+                let result = self.verify_objs_are_equal_in_equality_builtin(
+                    actual,
+                    expected,
+                    line_file.clone(),
+                    builtin_state,
+                )?;
+                if !result.is_true() {
+                    structural_match = false;
+                    break;
+                }
+                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+            }
+            if !structural_match {
+                continue;
+            }
+
+            let nonempty: AtomicFact = LessEqualFact::new(
+                full.start.as_ref().clone(),
+                full.end.as_ref().clone(),
+                line_file.clone(),
+            )
+            .into();
+            let nonempty_result = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
+            if !nonempty_result.is_true() {
+                continue;
+            }
+            subgoals.push(nonempty_result);
+
+            let Some(first_value) = self.instantiate_reduce_function_at(
+                full.func.as_ref(),
+                &[full.start.as_ref().clone()],
+            )?
+            else {
+                continue;
+            };
+            let Some(expected_seed) = self.instantiate_reduce_function_at(
+                full.op.as_ref(),
+                &[full.seed.as_ref().clone(), first_value],
+            )?
+            else {
+                continue;
+            };
+            let seed_result = self.verify_objs_are_equal_in_equality_builtin(
+                tail.seed.as_ref(),
+                &expected_seed,
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !seed_result.is_true() {
+                continue;
+            }
+            subgoals.extend(equality_builtin_match_subgoals(
+                tail.seed.as_ref(),
+                &expected_seed,
+                seed_result,
+            ));
+
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                left,
+                right,
+                line_file,
+                "equality: nonempty reduce consumes its first value into the seed",
+                subgoals,
+            )));
+        }
+        Ok(None)
+    }
+
     /// An ordered reduction can be resumed on the immediately adjacent tail,
     /// preserving order even for noncommutative operations.
     /// Example: `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))`.
