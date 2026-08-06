@@ -109,6 +109,8 @@ pub const SUM: &str = "sum";
 pub const FINITE_SET_SUM: &str = "finite_set_sum";
 pub const PRODUCT: &str = "product";
 pub const FINITE_SET_PRODUCT: &str = "finite_set_product";
+pub const REDUCE: &str = "reduce";
+pub const FINITE_SET_REDUCE: &str = "finite_set_reduce";
 pub const EXIST: &str = "exist";
 /// User-facing spelling for unique existence (`exist` + `!` as two tokens in the source).
 pub const EXIST_BANG: &str = "exist!";
@@ -302,6 +304,8 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         FINITE_SET_SUM,
         PRODUCT,
         FINITE_SET_PRODUCT,
+        REDUCE,
+        FINITE_SET_REDUCE,
         FINITE_SEQ,
         SEQ,
         MATRIX,

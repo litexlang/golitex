@@ -1226,6 +1226,52 @@ impl Runtime {
             tb.skip()?;
             return self.parse_replacement_obj(tb);
         }
+        if tok == REDUCE {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 5 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "reduce expects 5 arguments (start, end, function, operation, seed)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let [start, end, func, op, seed]: [Obj; 5] = args.try_into().map_err(|_| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "reduce expects 5 arguments (start, end, function, operation, seed)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(Reduce::new(start, end, func, op, seed).into());
+        }
+        if tok == FINITE_SET_REDUCE {
+            tb.skip()?;
+            let args = self.parse_braced_objs(tb)?;
+            if args.len() != 4 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_reduce expects 4 arguments (set, function, operation, seed)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            let [set, func, op, seed]: [Obj; 4] = args.try_into().map_err(|_| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "finite_set_reduce expects 4 arguments (set, function, operation, seed)"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                ))
+            })?;
+            return Ok(FiniteSetReduce::new(set, func, op, seed).into());
+        }
         if tok == SUM {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;

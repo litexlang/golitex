@@ -397,6 +397,19 @@ impl Runtime {
                 Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
                     || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
             }
+            Obj::Reduce(x) => {
+                Self::obj_depends_on_given_exist_param(x.start.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.end.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.op.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.seed.as_ref(), names)
+            }
+            Obj::FiniteSetReduce(x) => {
+                Self::obj_depends_on_given_exist_param(x.set.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.func.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.op.as_ref(), names)
+                    || Self::obj_depends_on_given_exist_param(x.seed.as_ref(), names)
+            }
             Obj::ListSet(x) => Self::obj_list_depends_on_given_exist_param(&x.list, names),
             Obj::Cart(x) => Self::obj_list_depends_on_given_exist_param(&x.args, names),
             Obj::Tuple(x) => Self::obj_list_depends_on_given_exist_param(&x.args, names),

@@ -379,6 +379,16 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(s.set.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(s.func.as_ref(), coverage_by_forall_param);
         }
+        Obj::Reduce(r) => {
+            for child in [&r.start, &r.end, &r.func, &r.op, &r.seed] {
+                mark_forall_param_coverage_in_obj(child.as_ref(), coverage_by_forall_param);
+            }
+        }
+        Obj::FiniteSetReduce(r) => {
+            for child in [&r.set, &r.func, &r.op, &r.seed] {
+                mark_forall_param_coverage_in_obj(child.as_ref(), coverage_by_forall_param);
+            }
+        }
         Obj::Range(range) => {
             mark_forall_param_coverage_in_obj(range.start.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(range.end.as_ref(), coverage_by_forall_param);

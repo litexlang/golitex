@@ -266,6 +266,14 @@ impl Runtime {
                 Obj::ProductOfFiniteSet(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
+            Obj::Reduce(a) => match right {
+                Obj::Reduce(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
+            Obj::FiniteSetReduce(a) => match right {
+                Obj::FiniteSetReduce(b) => a.to_string() == b.to_string(),
+                _ => false,
+            },
             Obj::Range(a) => match right {
                 Obj::Range(b) => a.to_string() == b.to_string(),
                 _ => false,

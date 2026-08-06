@@ -216,6 +216,19 @@ impl Obj {
                 product.set.contains_native_complex_syntax()
                     || product.func.contains_native_complex_syntax()
             }
+            Obj::Reduce(reduce) => {
+                reduce.start.contains_native_complex_syntax()
+                    || reduce.end.contains_native_complex_syntax()
+                    || reduce.func.contains_native_complex_syntax()
+                    || reduce.op.contains_native_complex_syntax()
+                    || reduce.seed.contains_native_complex_syntax()
+            }
+            Obj::FiniteSetReduce(reduce) => {
+                reduce.set.contains_native_complex_syntax()
+                    || reduce.func.contains_native_complex_syntax()
+                    || reduce.op.contains_native_complex_syntax()
+                    || reduce.seed.contains_native_complex_syntax()
+            }
             Obj::Range(range) => {
                 range.start.contains_native_complex_syntax()
                     || range.end.contains_native_complex_syntax()
@@ -474,6 +487,19 @@ impl Obj {
             Obj::ProductOfFiniteSet(product) => {
                 product.set.contains_native_transcendental_syntax()
                     || product.func.contains_native_transcendental_syntax()
+            }
+            Obj::Reduce(reduce) => {
+                reduce.start.contains_native_transcendental_syntax()
+                    || reduce.end.contains_native_transcendental_syntax()
+                    || reduce.func.contains_native_transcendental_syntax()
+                    || reduce.op.contains_native_transcendental_syntax()
+                    || reduce.seed.contains_native_transcendental_syntax()
+            }
+            Obj::FiniteSetReduce(reduce) => {
+                reduce.set.contains_native_transcendental_syntax()
+                    || reduce.func.contains_native_transcendental_syntax()
+                    || reduce.op.contains_native_transcendental_syntax()
+                    || reduce.seed.contains_native_transcendental_syntax()
             }
             Obj::Range(range) => {
                 range.start.contains_native_transcendental_syntax()

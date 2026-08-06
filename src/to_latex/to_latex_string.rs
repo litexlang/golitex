@@ -643,6 +643,33 @@ impl Product {
     }
 }
 
+impl Reduce {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {}, {}, {} \right)",
+            REDUCE,
+            self.start.to_latex_string(),
+            self.end.to_latex_string(),
+            self.func.to_latex_string(),
+            self.op.to_latex_string(),
+            self.seed.to_latex_string()
+        )
+    }
+}
+
+impl FiniteSetReduce {
+    pub fn to_latex_string(&self) -> String {
+        format!(
+            r"\operatorname{{{}}}\left( {}, {}, {}, {} \right)",
+            FINITE_SET_REDUCE,
+            self.set.to_latex_string(),
+            self.func.to_latex_string(),
+            self.op.to_latex_string(),
+            self.seed.to_latex_string()
+        )
+    }
+}
+
 impl BigUnion {
     pub fn to_latex_string(&self) -> String {
         format!(r"\bigcup\left( {}\right)", self.left.to_latex_string())
@@ -2225,6 +2252,8 @@ impl Obj {
             Obj::SumOfFiniteSet(x) => x.to_latex_string(),
             Obj::Product(x) => x.to_latex_string(),
             Obj::ProductOfFiniteSet(x) => x.to_latex_string(),
+            Obj::Reduce(x) => x.to_latex_string(),
+            Obj::FiniteSetReduce(x) => x.to_latex_string(),
             Obj::Range(x) => x.to_latex_string(),
             Obj::ClosedRange(x) => x.to_latex_string(),
             Obj::FiniteSeqSet(x) => x.to_latex_string(),

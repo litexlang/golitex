@@ -180,6 +180,19 @@ impl Obj {
                 x.set.collect_free_param_names_into(collector);
                 x.func.collect_free_param_names_into(collector);
             }
+            Obj::Reduce(x) => {
+                x.start.collect_free_param_names_into(collector);
+                x.end.collect_free_param_names_into(collector);
+                x.func.collect_free_param_names_into(collector);
+                x.op.collect_free_param_names_into(collector);
+                x.seed.collect_free_param_names_into(collector);
+            }
+            Obj::FiniteSetReduce(x) => {
+                x.set.collect_free_param_names_into(collector);
+                x.func.collect_free_param_names_into(collector);
+                x.op.collect_free_param_names_into(collector);
+                x.seed.collect_free_param_names_into(collector);
+            }
             Obj::Range(x) => collect_forall_free_param_names_in_pair(&x.start, &x.end, collector),
             Obj::ClosedRange(x) => {
                 collect_forall_free_param_names_in_pair(&x.start, &x.end, collector);

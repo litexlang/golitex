@@ -1021,6 +1021,16 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
             collect_module_names_from_obj(&x.set, module_names);
             collect_module_names_from_obj(&x.func, module_names);
         }
+        Obj::Reduce(x) => {
+            for child in [&x.start, &x.end, &x.func, &x.op, &x.seed] {
+                collect_module_names_from_obj(child, module_names);
+            }
+        }
+        Obj::FiniteSetReduce(x) => {
+            for child in [&x.set, &x.func, &x.op, &x.seed] {
+                collect_module_names_from_obj(child, module_names);
+            }
+        }
         Obj::Abs(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Floor(x) => collect_module_names_from_obj(&x.arg, module_names),
         Obj::Ceil(x) => collect_module_names_from_obj(&x.arg, module_names),

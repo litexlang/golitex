@@ -1038,6 +1038,10 @@ impl Runtime {
                 left.func.as_ref(),
                 given_arg,
             ),
+            Obj::Reduce(ref left) => self.match_arg_when_left_is_reduce(left, given_arg),
+            Obj::FiniteSetReduce(ref left) => {
+                self.match_arg_when_left_is_finite_set_reduce(left, given_arg)
+            }
             Obj::Range(ref left) => {
                 self.match_arg_when_left_is_range(left.start.as_ref(), left.end.as_ref(), given_arg)
             }
@@ -1716,6 +1720,58 @@ impl Runtime {
             None => return Ok(None),
         };
         Ok(self.merge_arg_match_maps(map12, map3))
+    }
+
+    fn match_arg_quaternary_then_merge(
+        &mut self,
+        a1: &Obj,
+        a2: &Obj,
+        a3: &Obj,
+        a4: &Obj,
+        b1: &Obj,
+        b2: &Obj,
+        b3: &Obj,
+        b4: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Some(mut merged) = self.match_arg_ternary_then_merge(a1, a2, a3, b1, b2, b3)? else {
+            return Ok(None);
+        };
+        let Some(last) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(a4, b4)?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, last) {
+            return Ok(None);
+        }
+        Ok(Some(merged))
+    }
+
+    fn match_arg_quinary_then_merge(
+        &mut self,
+        a1: &Obj,
+        a2: &Obj,
+        a3: &Obj,
+        a4: &Obj,
+        a5: &Obj,
+        b1: &Obj,
+        b2: &Obj,
+        b3: &Obj,
+        b4: &Obj,
+        b5: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Some(mut merged) =
+            self.match_arg_quaternary_then_merge(a1, a2, a3, a4, b1, b2, b3, b4)?
+        else {
+            return Ok(None);
+        };
+        let Some(last) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(a5, b5)?
+        else {
+            return Ok(None);
+        };
+        if !self.merge_arg_match_map_into(&mut merged, last) {
+            return Ok(None);
+        }
+        Ok(Some(merged))
     }
 
     /// Merge `from` into `into`. Returns `false` when a key is already bound to a different object.
@@ -2989,6 +3045,48 @@ impl Runtime {
             ),
             _ => Ok(None),
         }
+    }
+
+    fn match_arg_when_left_is_reduce(
+        &mut self,
+        left: &Reduce,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::Reduce(given) = given_arg else {
+            return Ok(None);
+        };
+        self.match_arg_quinary_then_merge(
+            left.start.as_ref(),
+            left.end.as_ref(),
+            left.func.as_ref(),
+            left.op.as_ref(),
+            left.seed.as_ref(),
+            given.start.as_ref(),
+            given.end.as_ref(),
+            given.func.as_ref(),
+            given.op.as_ref(),
+            given.seed.as_ref(),
+        )
+    }
+
+    fn match_arg_when_left_is_finite_set_reduce(
+        &mut self,
+        left: &FiniteSetReduce,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        let Obj::FiniteSetReduce(given) = given_arg else {
+            return Ok(None);
+        };
+        self.match_arg_quaternary_then_merge(
+            left.set.as_ref(),
+            left.func.as_ref(),
+            left.op.as_ref(),
+            left.seed.as_ref(),
+            given.set.as_ref(),
+            given.func.as_ref(),
+            given.op.as_ref(),
+            given.seed.as_ref(),
+        )
     }
 
     fn match_arg_when_left_is_closed_range(

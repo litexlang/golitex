@@ -203,6 +203,10 @@ impl Runtime {
             Obj::ProductOfFiniteSet(inner) => {
                 self.inst_finite_set_product(inner, param_to_arg_map, param_obj_type)
             }
+            Obj::Reduce(inner) => self.inst_reduce(inner, param_to_arg_map, param_obj_type),
+            Obj::FiniteSetReduce(inner) => {
+                self.inst_finite_set_reduce(inner, param_to_arg_map, param_obj_type)
+            }
             Obj::Range(inner) => self.inst_range(inner, param_to_arg_map, param_obj_type),
             Obj::ClosedRange(inner) => {
                 self.inst_closed_range(inner, param_to_arg_map, param_obj_type)
@@ -1338,6 +1342,37 @@ impl Runtime {
         Ok(ProductOfFiniteSet::new(
             self.inst_obj(&product.set, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&product.func, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_reduce(
+        &self,
+        reduce: &Reduce,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(Reduce::new(
+            self.inst_obj(&reduce.start, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.end, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.func, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.op, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.seed, param_to_arg_map, param_obj_type)?,
+        )
+        .into())
+    }
+
+    pub fn inst_finite_set_reduce(
+        &self,
+        reduce: &FiniteSetReduce,
+        param_to_arg_map: &HashMap<String, Obj>,
+        param_obj_type: ParamObjType,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FiniteSetReduce::new(
+            self.inst_obj(&reduce.set, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.func, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.op, param_to_arg_map, param_obj_type)?,
+            self.inst_obj(&reduce.seed, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }

@@ -63,6 +63,8 @@ pub enum Obj {
     SumOfFiniteSet(SumOfFiniteSet),
     Product(Product),
     ProductOfFiniteSet(ProductOfFiniteSet),
+    Reduce(Reduce),
+    FiniteSetReduce(FiniteSetReduce),
     Range(Range),
     ClosedRange(ClosedRange),
     FiniteSeqSet(FiniteSeqSet),
@@ -176,6 +178,8 @@ pub enum ObjKind {
     Ln = 87,
     Sign = 88,
     Factorial = 89,
+    Reduce = 90,
+    FiniteSetReduce = 91,
 }
 
 impl ObjKind {
@@ -436,6 +440,27 @@ pub struct Product {
 pub struct ProductOfFiniteSet {
     pub set: Box<Obj>,
     pub func: Box<Obj>,
+}
+
+/// An ascending left fold over the closed integer interval `[start, end]`.
+/// The empty interval evaluates to `seed`.
+#[derive(Clone)]
+pub struct Reduce {
+    pub start: Box<Obj>,
+    pub end: Box<Obj>,
+    pub func: Box<Obj>,
+    pub op: Box<Obj>,
+    pub seed: Box<Obj>,
+}
+
+/// An order-independent fold over a finite set. Well-definedness requires
+/// `op` to be associative and commutative on its carrier.
+#[derive(Clone)]
+pub struct FiniteSetReduce {
+    pub set: Box<Obj>,
+    pub func: Box<Obj>,
+    pub op: Box<Obj>,
+    pub seed: Box<Obj>,
 }
 
 #[derive(Clone)]
@@ -1352,6 +1377,29 @@ impl ProductOfFiniteSet {
     }
 }
 
+impl Reduce {
+    pub fn new(start: Obj, end: Obj, func: Obj, op: Obj, seed: Obj) -> Self {
+        Reduce {
+            start: Box::new(start),
+            end: Box::new(end),
+            func: Box::new(func),
+            op: Box::new(op),
+            seed: Box::new(seed),
+        }
+    }
+}
+
+impl FiniteSetReduce {
+    pub fn new(set: Obj, func: Obj, op: Obj, seed: Obj) -> Self {
+        FiniteSetReduce {
+            set: Box::new(set),
+            func: Box::new(func),
+            op: Box::new(op),
+            seed: Box::new(seed),
+        }
+    }
+}
+
 /// Arithmetic precedence for display; smaller numbers bind tighter.
 fn precedence(o: &Obj) -> u8 {
     match o {
@@ -1465,6 +1513,8 @@ impl Obj {
             Obj::SumOfFiniteSet(_) => ObjKind::SumOfFiniteSet,
             Obj::Product(_) => ObjKind::Product,
             Obj::ProductOfFiniteSet(_) => ObjKind::ProductOfFiniteSet,
+            Obj::Reduce(_) => ObjKind::Reduce,
+            Obj::FiniteSetReduce(_) => ObjKind::FiniteSetReduce,
             Obj::Range(_) => ObjKind::Range,
             Obj::ClosedRange(_) => ObjKind::ClosedRange,
             Obj::FiniteSeqSet(_) => ObjKind::FiniteSeqSet,
@@ -1547,6 +1597,8 @@ impl Obj {
             Obj::SumOfFiniteSet(_) => FINITE_SET_SUM.to_string(),
             Obj::Product(_) => PRODUCT.to_string(),
             Obj::ProductOfFiniteSet(_) => FINITE_SET_PRODUCT.to_string(),
+            Obj::Reduce(_) => REDUCE.to_string(),
+            Obj::FiniteSetReduce(_) => FINITE_SET_REDUCE.to_string(),
             Obj::Range(_) => RANGE.to_string(),
             Obj::ClosedRange(_) => CLOSED_RANGE.to_string(),
             Obj::MatrixAdd(_) => MATRIX_ADD.to_string(),
@@ -1745,6 +1797,8 @@ impl Obj {
             Obj::SumOfFiniteSet(x) => write!(f, "{}", x)?,
             Obj::Product(x) => write!(f, "{}", x)?,
             Obj::ProductOfFiniteSet(x) => write!(f, "{}", x)?,
+            Obj::Reduce(x) => write!(f, "{}", x)?,
+            Obj::FiniteSetReduce(x) => write!(f, "{}", x)?,
             Obj::Range(x) => write!(f, "{}", x)?,
             Obj::ClosedRange(x) => write!(f, "{}", x)?,
             Obj::FiniteSeqSet(x) => write!(f, "{}", x)?,
@@ -2061,6 +2115,21 @@ impl Obj {
             Obj::ProductOfFiniteSet(x) => ProductOfFiniteSet::new(
                 Obj::replace_bound_identifier(*x.set, from, to),
                 Obj::replace_bound_identifier(*x.func, from, to),
+            )
+            .into(),
+            Obj::Reduce(x) => Reduce::new(
+                Obj::replace_bound_identifier(*x.start, from, to),
+                Obj::replace_bound_identifier(*x.end, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+                Obj::replace_bound_identifier(*x.op, from, to),
+                Obj::replace_bound_identifier(*x.seed, from, to),
+            )
+            .into(),
+            Obj::FiniteSetReduce(x) => FiniteSetReduce::new(
+                Obj::replace_bound_identifier(*x.set, from, to),
+                Obj::replace_bound_identifier(*x.func, from, to),
+                Obj::replace_bound_identifier(*x.op, from, to),
+                Obj::replace_bound_identifier(*x.seed, from, to),
             )
             .into(),
             Obj::Range(x) => Range::new(
@@ -2673,6 +2742,39 @@ impl fmt::Display for ProductOfFiniteSet {
             "{}{}",
             FINITE_SET_PRODUCT,
             braced_vec_to_string(&vec![self.set.as_ref(), self.func.as_ref()])
+        )
+    }
+}
+
+impl fmt::Display for Reduce {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}{}",
+            REDUCE,
+            braced_vec_to_string(&vec![
+                self.start.as_ref(),
+                self.end.as_ref(),
+                self.func.as_ref(),
+                self.op.as_ref(),
+                self.seed.as_ref(),
+            ])
+        )
+    }
+}
+
+impl fmt::Display for FiniteSetReduce {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{}{}",
+            FINITE_SET_REDUCE,
+            braced_vec_to_string(&vec![
+                self.set.as_ref(),
+                self.func.as_ref(),
+                self.op.as_ref(),
+                self.seed.as_ref(),
+            ])
         )
     }
 }
@@ -3427,6 +3529,18 @@ impl From<Product> for Obj {
 impl From<ProductOfFiniteSet> for Obj {
     fn from(p: ProductOfFiniteSet) -> Self {
         Obj::ProductOfFiniteSet(p)
+    }
+}
+
+impl From<Reduce> for Obj {
+    fn from(r: Reduce) -> Self {
+        Obj::Reduce(r)
+    }
+}
+
+impl From<FiniteSetReduce> for Obj {
+    fn from(r: FiniteSetReduce) -> Self {
+        Obj::FiniteSetReduce(r)
     }
 }
 

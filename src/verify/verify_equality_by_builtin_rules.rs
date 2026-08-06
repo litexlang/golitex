@@ -139,6 +139,19 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             obj_expr_mentions_bare_id(p.set.as_ref(), id)
                 || obj_expr_mentions_bare_id(p.func.as_ref(), id)
         }
+        Obj::Reduce(r) => {
+            obj_expr_mentions_bare_id(r.start.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.end.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.func.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.op.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.seed.as_ref(), id)
+        }
+        Obj::FiniteSetReduce(r) => {
+            obj_expr_mentions_bare_id(r.set.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.func.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.op.as_ref(), id)
+                || obj_expr_mentions_bare_id(r.seed.as_ref(), id)
+        }
         Obj::FiniteSeqListObj(f) => f
             .objs
             .iter()

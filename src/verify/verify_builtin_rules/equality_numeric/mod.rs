@@ -16,5 +16,6 @@ mod modulo;
 mod power_identities;
 mod power_inverses;
 mod power_rules;
+mod reduce;
 mod square_root;
 mod square_sums;

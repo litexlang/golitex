@@ -619,6 +619,8 @@ Finite sets, integer ranges, and real intervals have dedicated object forms.
 finite_set_size({1, 2, 3}) = 3
 sum(1, 3, fn(i1 Z) Z {i1}) = sum(1, 2, fn(i1 Z) Z {i1}) + fn(i1 Z) Z {i1}(3)
 product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1}(3)
+reduce(1, 3, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x - y}, 0) = -6
+finite_set_reduce({3, 1, 2}, fn(i1 Z) Z {i1}, fn(x, y Z) Z {x + y}, 0) = 6
 
 2 $in range(0, 3)
 3 $in closed_range(0, 3)
@@ -630,6 +632,8 @@ product(1, 3, fn(i1 Z) Z {i1}) = product(1, 2, fn(i1 Z) Z {i1}) * fn(i1 Z) Z {i1
 | `finite_set_size(S)` | Cardinality of a finite set |
 | `finite_set_sum(S, f)`, `finite_set_product(S, f)` | Aggregate over a finite set |
 | `sum(first, last, f)`, `product(first, last, f)` | Aggregate over a closed integer index range |
+| `reduce(first, last, f, op, seed)` | Ascending left fold over a closed integer index range |
+| `finite_set_reduce(S, f, op, seed)` | Order-independent fold over a finite set |
 | `range(a, b)` | Integers `a <= x < b` |
 | `closed_range(a, b)`, `a...b` | Integers `a <= x <= b` |
 | `'(a, b)`, `'(a, b]`, `'[a, b)`, `'[a, b]` | Bounded real intervals |
@@ -644,6 +648,20 @@ set and a function defined on the aggregated domain.
 Consequently, `finite_set_sum(3...1, fn(k Z) Z {0}) = 0` and the analogous
 empty product equal to `1` are well-defined, while range `sum(3,1,...)` and
 `product(3,1,...)` remain outside the nonempty range-aggregate contract.
+
+The generic folds are not restricted to scalar arithmetic. For both forms,
+`op` must have an unconditional homogeneous signature `fn(x, y T) T`, `f`
+must be unary with return set `T`, and `seed` must belong to `T`; the result
+then belongs to `T`. `reduce` visits the closed integer interval from left to
+right and returns `seed` when `last < first`. Thus its defining nonempty step
+is `op(reduce(first, last - 1, f, op, seed), f(last))`.
+
+Because a finite set has no iteration order, `finite_set_reduce` additionally
+requires Litex to verify that `op` is associative and commutative on `T`.
+Displayed-set order is used only to produce an evaluation witness. The empty
+set returns `seed`; `seed` need not be an identity element. If order matters
+or `op` is noncommutative, provide an explicit integer enumeration and use
+`reduce` instead.
 
 Integer ranges are always subsets of `Z` (and its standard supersets). If the
 lower endpoint is known in `N` or `N+`, the range is also a subset of that

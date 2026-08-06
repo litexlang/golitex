@@ -1,6 +1,41 @@
 use super::*;
 
 impl Runtime {
+    /// A generic reduce inhabits the homogeneous carrier declared by its
+    /// binary operation. This rule is intentionally carrier-generic rather
+    /// than restricted to the standard number hierarchy.
+    pub(super) fn verify_reduce_membership_from_operation_carrier(
+        &self,
+        in_fact: &InFact,
+    ) -> Option<StmtResult> {
+        let (operation, name) = match &in_fact.element {
+            Obj::Reduce(reduce) => (reduce.op.as_ref(), "reduce"),
+            Obj::FiniteSetReduce(reduce) => (reduce.op.as_ref(), "finite_set_reduce"),
+            _ => return None,
+        };
+        let carrier = self.reduce_carrier_from_operation(operation)?;
+        let carrier_is_contained = verify_equality_by_they_are_the_same(&carrier, &in_fact.set)
+            || matches!(
+                (&carrier, &in_fact.set),
+                (Obj::StandardSet(source), Obj::StandardSet(target))
+                    if Self::standard_set_is_subset_eq(source, target)
+            );
+        if !carrier_is_contained {
+            return None;
+        }
+        Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                format!(
+                    "{name}: operation carrier {carrier} is contained in {}",
+                    in_fact.set
+                ),
+                Vec::new(),
+            )
+            .into(),
+        )
+    }
+
     pub(super) fn verify_refined_integer_carrier_from_known_sign(
         &mut self,
         in_fact: &InFact,
