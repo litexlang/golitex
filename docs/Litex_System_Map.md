@@ -146,6 +146,16 @@ nesting of compound facts.
 | `forall ... <=> ...` | Convert the equivalence into two universal directions, then check and verify each direction in an independent local scope containing the shared premises and that direction's antecedent. | Store both directions for later matching. |
 | `not forall ...` | Establish the negation of the universal fact, often with an explicit contradiction proof. | Store the negated universal fact and any representable counterexample consequence. |
 
+Well-definedness constructs quantified contexts incrementally. In a `forall`
+premise list and an `exist`/`exist!` body, facts are checked in source
+order inside the binder's child environment. Each successful check stores the
+fact there and runs guarded inference before the next fact is checked. Thus a
+positive concrete predicate can expose a definition clause such as a known
+universal, and a later division or function body can consume the resulting
+side condition. The inference reentrancy guard prevents recursive definition
+cycles; abstract predicates have no clauses to expose; the child environment
+is discarded after checking, so none of these temporary assumptions escape.
+
 ### The Atomic Verification Loop
 
 Most proof obligations eventually ask for an atomic target. The public model is:

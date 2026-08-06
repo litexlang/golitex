@@ -225,9 +225,9 @@ keeps only a narrow experiment: verified rational equalities over `R` are
 lowered recursively to numerator/denominator pairs and emitted with `ring`, or
 `field_simp` followed by `ring`. This is not yet a general compiler or proof
 certificate path; the group example above illustrates the intended language
-relationship, not current coverage. See
-[Litex and Lean](https://litexlang.com/doc/Litex_and_Lean) for the supported
-subset and current boundary.
+relationship, not current coverage. See the
+[compiler README](src/to_lean/README.md) for the supported subset and current
+boundary.
 
 ## Real mathematics is the pressure test
 

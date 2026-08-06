@@ -866,7 +866,8 @@ This is not a claim that Lean proofs must be long or unreadable. Lean has
 powerful automation and can support concise, well-designed interfaces. Litex
 is testing a different default interface: can checked mathematics remain
 readable after AI has made proof generation abundant? The epsilon-product
-example in [Litex and Lean](Litex_and_Lean.md#ai-lowers-generation-cost-not-automatically-understanding-cost)
+example in [Representative Lean–Litex Example
+Comparisons](Representative_Lean_Litex_Example_Comparisons.md#ai-lowers-generation-cost-not-automatically-understanding-cost)
 is the concrete test: the durable proof should preserve the short estimate
 `abs(x * y) = abs(x) * abs(y) < epsilon * epsilon <= epsilon` while keeping
 its side conditions auditable.
@@ -970,6 +971,25 @@ This design matters because many mathematical mistakes are not false theorems
 but ill-formed statements: applying a function outside its domain, using a
 projection from the wrong Cartesian product, or writing an expression with a
 missing side condition. Litex tries to make that distinction explicit.
+
+## Can a predicate premise make a later expression well-defined?
+
+Yes, when it is a positive concrete predicate whose checked definition has the
+needed consequence. Inside a `forall` premise list or an `exist` body, Litex
+checks facts from left to right in a temporary scope. Each checked fact
+is then assumed there and may expose sound definition consequences before the
+next fact is checked.
+
+For example, if `$nonzero_on(E, g)` is defined by `forall x E: g(x) != 0`, a
+later anonymous-function body may safely contain `1 / g(x)`. The definition
+supplies exactly the denominator obligation. Without that earlier premise,
+the same expression is rejected as ill-defined.
+
+This does not run arbitrary proof search while deciding whether syntax is
+meaningful. It unfolds concrete positive definitions through the ordinary
+guarded inference path; recursive definitions are cycle-protected,
+`abstract_prop` supplies no clauses, and all temporary consequences disappear
+when the quantified check ends.
 
 ## Why does Litex have both `claim` and `thm`?
 

@@ -1343,6 +1343,31 @@ forall I power_set(R), f, g fn(x I) R:
 }
 
 #[test]
+fn anonymous_quotient_lambda_without_nonzero_premise_is_rejected() {
+    let source_code = r#"
+forall E power_set(R), f, g fn(x E) R:
+    fn(x E) R {f(x) / g(x)} $in fn(x E) R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_quotient_lambda_without_nonzero_premise_is_rejected",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "an anonymous quotient lambda without a nonzero premise must remain ill-defined"
+    );
+    assert!(
+        run_output.contains("must be non-zero"),
+        "the rejection should identify the missing divisor obligation:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate() {
     run_with_large_stack(
         "anonymous_quotient_lambda_in_existential_respects_nonzero_on_predicate",
@@ -1373,6 +1398,53 @@ thm nested_existential_quotient_is_well_defined:
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn existential_well_definedness_uses_preceding_predicate_definition() {
+    let source_code = r#"
+prop nonzero(value R):
+    value != 0
+
+trust exist denominator R st {$nonzero(denominator), 1 / denominator = 1 / denominator}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "existential_well_definedness_uses_preceding_predicate_definition",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "a checked existential body should expose definition consequences to later facts:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn existential_well_definedness_still_requires_a_nonzero_premise() {
+    let source_code = r#"
+trust exist denominator R st {1 / denominator = 1 / denominator}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "existential_well_definedness_still_requires_a_nonzero_premise",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "division without a preceding nonzero premise must remain ill-defined"
+    );
+    assert!(
+        run_output.contains("must be non-zero"),
+        "the rejection should identify the missing divisor obligation:\n{}",
+        run_output
     );
 }
 

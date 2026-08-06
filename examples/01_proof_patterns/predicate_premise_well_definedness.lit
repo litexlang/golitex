@@ -1,0 +1,34 @@
+# Tracer: checked predicate premises expose definition consequences to later
+# well-definedness obligations in the same quantified scope.
+#
+# Before (incorrectly rejected):
+# prop nonzero_on(E power_set(R), g fn(x E) R):
+#     forall x E:
+#         g(x) != 0
+#
+# forall E power_set(R), f, g fn(x E) R:
+#     $nonzero_on(E, g)
+#     =>:
+#         fn(x E) R {f(x) / g(x)} $in fn(x E) R
+# Former behavior: well-definedness stored `$nonzero_on(E, g)` without
+# unfolding its definition, so it could not prove that `g(x) != 0`.
+#
+# Now (verified):
+prop nonzero_on(E power_set(R), g fn(x E) R):
+    forall x E:
+        g(x) != 0
+
+forall E power_set(R), f, g fn(x E) R:
+    $nonzero_on(E, g)
+    =>:
+        fn(x E) R {f(x) / g(x)} $in fn(x E) R
+# Current behavior: quantified premises are checked in source order, and each
+# checked premise plus its sound definition consequences is available while
+# checking later premises and conclusions in the same temporary scope.
+#
+# Boundary: omitting `$nonzero_on(E, g)` still makes the division ill-defined.
+# Executable positive and negative regressions live in
+# src/main_test/lit_file_runner_tests/runtime_regression_tests/proof_control_and_choice.rs.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/predicate_premise_well_definedness.lit
+# Implementation: src/verify/verify_fact_well_defined.rs and
+# src/verify/verify_non_equational_atomic_fact.rs
