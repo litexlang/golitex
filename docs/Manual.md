@@ -74,8 +74,10 @@ Read [Objects](#objects), [Well-Defined Objects](#well-defined-objects),
 fact does not close. The rule and inference catalogues are lookup sections.
 
 Long worked developments belong in [Litex Examples](Examples.md). Design
-rationale belongs in the [FAQ](FAQ.md), [Litex Blueprint](Litex_Blueprint.md),
-and [Litex and Lean](Litex_and_Lean.md).
+rationale belongs in the [FAQ](FAQ.md) and [Litex
+Blueprint](Litex_Blueprint.md). Focused interface comparisons belong in
+[Representative Lean–Litex Example
+Comparisons](Representative_Lean_Litex_Example_Comparisons.md).
 
 ### Trust boundary
 
@@ -858,6 +860,32 @@ sqrt(x) = 0
 Both factual lines produce `error`: the first lacks `x != 0`; the second lacks
 `0 <= x`.
 
+### Ordered assumptions during well-definedness
+
+The premises of a `forall` and the facts in an `exist` body are checked
+from left to right in their temporary binder scope. After one fact is known to
+be well-defined, Litex records it there as an assumption and runs its sound
+inference. A positive concrete predicate may therefore expose its definition,
+including a universal clause needed by a later object obligation.
+
+```litex
+prop nonzero_on(E power_set(R), g fn(x E) R):
+    forall x E:
+        g(x) != 0
+
+forall E power_set(R), f, g fn(x E) R:
+    $nonzero_on(E, g)
+    =>:
+        fn(x E) R {f(x) / g(x)} $in fn(x E) R
+```
+
+Here the checked predicate premise exposes `forall x E: g(x) != 0`, so the
+anonymous function body is meaningful throughout `E`. This is scoped
+definition use, not unrestricted proof search: recursion guards still apply,
+an `abstract_prop` has no body to expose, and omitting the predicate premise
+still leaves the division ill-defined. The temporary assumptions and inferred
+facts do not escape the quantified or existential check.
+
 ### Main object criteria
 
 Every row also requires its subobjects to be well-defined.
@@ -896,6 +924,11 @@ Every row also requires its subobjects to be well-defined.
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
 | `unfold value` in an argument list | The value has a compile-time tuple arity or an explicit/default struct view; every expanded argument then passes its ordinary checks. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
+
+After `fn(...) T {body}` has passed these checks, Litex can prove that it
+belongs to an alpha-equivalent `fn(...) T` directly from the matching
+signature. That membership rule relies on the already-checked obligation
+`body $in T`; signature matching does not bypass return-value checking.
 
 ### Introducing an object is also checked
 

@@ -7,6 +7,27 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
         post_process: bool,
     ) -> Result<StmtResult, RuntimeError> {
+        // A well-defined anonymous function belongs to a function space with
+        // the same signature. Example: `fn(x E) R {f(x)} $in fn(x E) R`.
+        // `verify_atomic_fact` establishes well-definedness before entering
+        // this non-equational proof phase, so matching the signature here also
+        // relies on the checked return-value obligation.
+        if let AtomicFact::InFact(in_fact) = atomic_fact {
+            if let (Obj::AnonymousFn(anonymous_fn), Obj::FnSet(expected_fn_set)) =
+                (&in_fact.element, &in_fact.set)
+            {
+                let result = self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                    anonymous_fn,
+                    expected_fn_set,
+                    in_fact,
+                    verify_state,
+                )?;
+                if result.is_true() {
+                    return Ok(result);
+                }
+            }
+        }
+
         let mut result = self
             .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)?;
         if result.is_true() {

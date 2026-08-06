@@ -270,8 +270,8 @@ impl Runtime {
 
     /// Mathematical contract: `exist x T st {body}` is well-defined when each
     /// binder type is meaningful in dependency order and every body fact is
-    /// meaningful under the bound-variable type facts and preceding body
-    /// assumptions.
+    /// meaningful under the bound-variable type facts, preceding body
+    /// assumptions, and their sound inferred consequences.
     pub fn verify_exist_fact_well_defined(
         &mut self,
         exist_fact: &ExistFactEnum,
@@ -306,19 +306,9 @@ impl Runtime {
                     ExistBodyFact::AtomicFact(f) => {
                         let body_fact = OrAndChainAtomicFact::AtomicFact(f.clone());
                         rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
-                        match f {
-                            AtomicFact::NormalAtomicFact(_) => {
-                                rt.verify_well_defined_and_store_without_infer(
-                                    f.clone().into(),
-                                    InferReason::VerifiedStatement,
-                                )?;
-                            }
-                            _ => {
-                                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                                    body_fact,
-                                )?;
-                            }
-                        }
+                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                            body_fact,
+                        )?;
                     }
                     ExistBodyFact::AndFact(f) => {
                         let body_fact = OrAndChainAtomicFact::AndFact(f.clone());
@@ -387,8 +377,8 @@ impl Runtime {
 
     /// Mathematical contract implementation: check the universal domain
     /// inside the already-created
-    /// local scope, retaining each checked premise as an assumption for the
-    /// obligations that follow it.
+    /// local scope, retaining each checked premise and its sound inferred
+    /// consequences as assumptions for the obligations that follow it.
     fn verify_forall_fact_params_and_dom_well_defined_inner(
         &mut self,
         forall_fact: &ForallFact,
@@ -410,15 +400,8 @@ impl Runtime {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            let store_result = match dom_fact {
-                Fact::AtomicFact(AtomicFact::NormalAtomicFact(_)) => self
-                    .verify_well_defined_and_store_without_infer(
-                        dom_fact.clone(),
-                        InferReason::VerifiedStatement,
-                    ),
-                _ => self
-                    .verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state),
-            };
+            let store_result =
+                self.verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state);
             if let Err(exec_stmt_error) = store_result {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
