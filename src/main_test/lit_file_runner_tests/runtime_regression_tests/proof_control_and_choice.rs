@@ -1074,6 +1074,124 @@ fn failed_statement_parse_rolls_back_all_new_bindings() {
 }
 
 #[test]
+fn trust_statements_are_atomic() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("trust_statements_are_atomic");
+
+    let failed_source = r#"
+trust:
+    777 = 778
+    1 / 0 = 0
+"#;
+    let (failed_results, failed_error) = run_source_code(failed_source, &mut runtime);
+    assert!(failed_results.is_empty());
+    assert!(failed_error.is_some(), "the ill-defined fact must fail");
+    assert!(
+        !runtime.cache_known_facts_contains("777 = 778").0,
+        "a failed trust statement must not retain its valid prefix"
+    );
+
+    let failed_summary =
+        display_run_summary_json_with_runtime(&runtime, &failed_results, &failed_error);
+    assert!(failed_summary.contains("\"direct_trust\": 0"));
+    assert!(failed_summary.contains("\"known_facts\": 0"));
+
+    let successful_source = r#"
+trust:
+    777 = 778
+    888 = 889
+"#;
+    let (successful_results, successful_error) = run_source_code(successful_source, &mut runtime);
+    assert!(successful_error.is_none());
+    assert_eq!(successful_results.len(), 1);
+    assert!(runtime.cache_known_facts_contains("777 = 778").0);
+    assert!(runtime.cache_known_facts_contains("888 = 889").0);
+
+    let later_failure = r#"
+trust:
+    999 = 1000
+    1 / 0 = 0
+"#;
+    let (_, later_error) = run_source_code(later_failure, &mut runtime);
+    assert!(later_error.is_some());
+    assert!(
+        runtime.cache_known_facts_contains("777 = 778").0,
+        "a later failed statement must not roll back an earlier successful statement"
+    );
+    assert!(!runtime.cache_known_facts_contains("999 = 1000").0);
+}
+
+#[test]
+fn trust_have_statements_are_atomic() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("trust_have_statements_are_atomic");
+
+    let failed_source = r#"
+trust have rollback_probe R:
+    rollback_probe = rollback_probe
+    1 / 0 = 0
+"#;
+    let (failed_results, failed_error) = run_source_code(failed_source, &mut runtime);
+    assert!(failed_results.is_empty());
+    assert!(
+        failed_error.is_some(),
+        "the ill-defined attached fact must fail"
+    );
+    assert!(
+        !runtime.is_name_used_for_identifier("rollback_probe"),
+        "a failed trust have statement must not retain its object binding"
+    );
+    assert!(
+        !runtime
+            .cache_known_facts_contains("rollback_probe = rollback_probe")
+            .0
+    );
+
+    let (retry_results, retry_error) = run_source_code("trust have rollback_probe R", &mut runtime);
+    let (retry_succeeded, retry_output) =
+        render_run_source_code_output(&runtime, &retry_results, &retry_error, false);
+    assert!(
+        retry_succeeded,
+        "the rolled-back name must be reusable immediately:\n{}",
+        retry_output
+    );
+
+    let mut dependent_runtime = Runtime::new();
+    dependent_runtime.new_file_path_new_env_new_name_scope("trust_have_keeps_local_prefix_visible");
+    let dependent_source = r#"
+trust have denominator R:
+    denominator != 0
+    1 / denominator = 1 / denominator
+"#;
+    let (dependent_results, dependent_error) =
+        run_source_code(dependent_source, &mut dependent_runtime);
+    let (dependent_succeeded, dependent_output) = render_run_source_code_output(
+        &dependent_runtime,
+        &dependent_results,
+        &dependent_error,
+        false,
+    );
+    assert!(
+        dependent_succeeded,
+        "later facts must see earlier facts inside the transaction:\n{}",
+        dependent_output
+    );
+
+    let committed_probe = r#"
+denominator != 0
+2 / denominator = 2 / denominator
+"#;
+    let (probe_results, probe_error) = run_source_code(committed_probe, &mut dependent_runtime);
+    let (probe_succeeded, probe_output) =
+        render_run_source_code_output(&dependent_runtime, &probe_results, &probe_error, false);
+    assert!(
+        probe_succeeded,
+        "the complete trust have transaction must be reusable afterward:\n{}",
+        probe_output
+    );
+}
+
+#[test]
 fn inline_by_extension_for_and_enumerate_match_block_forms() {
     let source_code = r#"
 by extension {1} = {1}

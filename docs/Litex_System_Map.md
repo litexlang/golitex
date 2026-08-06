@@ -117,17 +117,33 @@ witness names from an existential that is already known.
 Compound facts are not all handled in the same way. Their logical shape
 determines which local assumptions or subgoals Litex creates.
 
+The parser and AST deliberately maintain a canonical fact hierarchy:
+
+- `AndFact` contains `Vec<AtomicFact>`: conjunction is flat and atomic-only.
+- `OrFact` contains `Vec<AndChainAtomicFact>`: `or` is the outer grammar layer
+  and receives already parsed atomic, chain, or flat-conjunction branches.
+- `ForallFact::new(..., Vec<Fact>, ...)` is the surface-facing constructor. It
+  may flatten a sole positive nested `forall` by merging parameters and
+  premises. `new_canonical_forall(..., Vec<ExistOrAndChainAtomicFact>, ...)`
+  accepts only the non-`forall` conclusion shapes used for storage.
+
+Consequently, `$p(a) and $q(a) or $t(a)` has the two `or` branches
+`($p(a) and $q(a))` and `$t(a)`. The `or` layer is above the `and` layer in the
+grammar/AST; equivalently, `and` binds more tightly in operator-precedence
+terminology. These types encode a fixed normal form, not arbitrary recursive
+nesting of compound facts.
+
 | Fact shape | Verification meaning | Context effect after success |
 |---|---|---|
 | Atomic fact, such as `x = y`, `x $in S`, or `$P(x)` | Check object well-definedness, then seek evidence through the atomic verification loop below. | Store the atomic fact and run its inference routines. |
 | Chain, such as `0 <= x <= 1` | Expand the chain into its adjacent atomic relations and verify every step. | Make the component relations, and supported chain consequences, available. |
-| Conjunction, such as `A and B` | Verify every component. Failure of one component fails the conjunction. | Store the component facts; each can be reused independently. |
-| Disjunction, such as `A or B` | Establish at least one branch, reuse an already known disjunction, or close the whole disjunction through a matching rule. | Store the disjunction. It does not make an unproved branch available. |
+| Flat conjunction, such as `A and B` for atomic `A` and `B` | Verify every atomic component. Failure of one component fails the conjunction. | Store the component facts; each can be reused independently. |
+| Outer disjunction, such as `A or B` where each branch is atomic, a chain, or a flat conjunction | Establish at least one branch, reuse an already known disjunction, or close the whole disjunction through a matching rule. | Store the disjunction. It does not make an unproved branch available. |
 | `exist x S st {...}` | Establish existence through an explicit witness, a known existential, a known universal result, or a builtin mathematical route. | Store existence only. It does not bind `x` outside the fact. |
 | `exist! x S st {...}` | Establish both existence and uniqueness. An explicit `witness exist!` must discharge the uniqueness obligation as well as the body. | Store unique existence and expose its routine uniqueness consequence. |
 | `not exist x S st {...}` | Establish nonexistence as a fact, usually from known facts or an explicit proof route. | Store nonexistence and any representable routine logical consequence. |
 | `forall x S: premises =>: conclusions` | In a child scope, bind arbitrary `x`, assume the premises, and verify every conclusion. A sole positive nested `forall` conclusion is first flattened by appending its parameters and premises. | Store a reusable flat universal rule. Local parameters and premises disappear, and no stored then-clause contains another `forall`. |
-| `forall ... <=> ...` | Convert the equivalence into two universal directions and verify both. | Store both directions for later matching. |
+| `forall ... <=> ...` | Convert the equivalence into two universal directions, then check and verify each direction in an independent local scope containing the shared premises and that direction's antecedent. | Store both directions for later matching. |
 | `not forall ...` | Establish the negation of the universal fact, often with an explicit contradiction proof. | Store the negated universal fact and any representable counterexample consequence. |
 
 ### The Atomic Verification Loop
@@ -324,7 +340,7 @@ not persist or propagate trust metadata through later facts and theorems.
 | `obtain names from exist ...` | Opens existential binders into the current scope. | Witness count, parameter types, and existential shape must match. | Verify the source existential fact from the current context. | Bind opaque witness names and store the instantiated direct body facts; positive concrete predicate bodies recursively expose their positive clauses under cycle guards. | Adds no new trust. |
 | `prop P(params): clauses` | Parameters are local while the definition is checked. | Name, parameter domains, and clauses must be well-defined. | The clauses are not proved; they declare the meaning of `P`. | Store the concrete predicate definition. | A definition, not a theorem or assumption about existing objects. |
 | `abstract_prop P(params)` | Parameters describe an interface only. | Name and parameter shape must be valid and nonconflicting. | None. There is no defining body. | Store the predicate symbol and arity. | Introduces no fact; later properties still need proof or explicit trust. |
-| `have fn f(params) T = body` | Parameters and domain conditions are local. | Signature, domain conditions, return set, and body must be well-defined. | Prove `body $in T` under the parameter and domain assumptions; an annotation never supplies this fact by itself. | Store `f`, its function type, defining equation, and callable body facts. | Checked mathematical definition. |
+| `have fn f(params) T = body` | Parameters and domain conditions are local. | Signature, domain conditions, return set, and body must be well-defined. Later domains may cite earlier parameters; the return set may cite all function parameters and is instantiated with actual arguments at application. | Prove `body $in T` under the parameter and domain assumptions; an annotation never supplies this fact by itself. | Store `f`, its function type, defining equation, and callable body facts. | Checked mathematical definition. |
 | `have fn f(...) T by cases` | Each case is checked under its own local condition. | Signature, cases, conditions, and return expressions must be well-defined. | Prove coverage, mutual exclusivity, and return membership for every case. | Store the function and the case-specific universal equations. | Checked mathematical definition. |
 | `have fn f(...) T by induc ...` | Base and recursive cases receive induction-local bindings. | Signature, measure, lower bound, cases, and recursive calls must have valid shapes. | Check the lower bound, coverage, return membership, and strict decrease of recursive calls. | Store the recursive function definition and its usable equations. | Checked definition with termination obligations. |
 | `have fn f by exist!` | Its proof, when supplied, runs in a child scope; template materialization substitutes through local `obtain`, `witness`, equal-object and function definitions, case, and extension statements. | The source must have the expected parameterized unique-existence shape. Refined function-space return carriers remain callable after materialization. | Verify the source `forall ... exist! ...` fact or its proof block. | Store the selected function, its type, defining property, uniqueness fact, and materialized local proof consequences. | Checked use of unique existence. |
@@ -346,8 +362,8 @@ search.
 | `claim: ? target ...` | Proof steps run in a child scope; a universal target also opens parameters and premises there. | The target must be well-defined. `claim` does not accept a universal equivalence target. | Execute the proof, then verify the target or all universal conclusions. | Store the target and infer in the parent scope. | Checked; any explicit trusted step remains visible as its own statement result. |
 | `thm name: ? forall ...` | Theorem parameters and premises live in a child proof scope. | The name must be unused and the universal statement well-defined. | Execute the proof and verify every conclusion. | Store the named theorem and its universal fact. | The theorem itself carries no transitive trust tag; direct trusted proof steps remain separately countable. |
 | `axiom name: ? forall ...` | No proof scope is needed. | The named universal statement must be well-defined. | No truth proof. | Store a named theorem-like interface and universal fact. | Explicit axiom; rejected in strict mode. |
-| `trust facts` | Current scope. | In user code, every assumed fact must still be well-defined and storable. | No truth proof. | Store the facts as unsafe assumptions and run inference. | Explicit proof debt; rejected in strict mode. |
-| `trust have ...` | Current scope. | Bindings, types, and attached facts must be valid enough to store. | No truth proof of the attached facts. | Store names, type facts, attached assumptions, and inferred consequences. | Explicit proof debt; rejected in strict mode. |
+| `trust facts` | The statement stages all facts in a temporary child environment; later facts can use earlier staged facts. | In user code, every assumed fact must still be well-defined and storable. | No truth proof. | Atomically merge all unsafe assumptions and inferred consequences only after every fact succeeds; discard the child on failure. | Explicit proof debt; rejected in strict mode. |
+| `trust have ...` | The new bindings, their facts, and inference run in one temporary child environment. | Bindings, types, and attached facts must be valid enough to store. | No truth proof of the attached facts. | Atomically merge the names, type facts, attached assumptions, and inferred consequences; discard all of them on failure. | Explicit proof debt; rejected in strict mode. |
 | `sketch: ...` | All nested statements run in a child scope. | Each nested statement performs its normal checks. | Nested proof obligations run normally. | Nothing. The outer context is unchanged. | Any nested trust remains visible in the result but is not exported. |
 | `try: ...` | All nested statements run in a child scope. | Each statement performs normal checks; controls that cannot be merged are rejected. | Every step must succeed; `unknown` aborts the block. | Commit the complete child environment atomically. | Inherits any trust used by committed nested statements. |
 | `witness exist ... from values` | Existential parameters are locally equated with the proposed values. | Witness count, values, types, and existential body must be well-defined. | Check witness types and every instantiated body fact; `exist!` also checks uniqueness. | Store the existential fact and infer. Witness parameter names do not escape. | Checked witness proof. |
@@ -417,7 +433,7 @@ specified result is released.
 |---|---|---|
 | `true` | The statement was structurally valid, its objects were well-defined, and its required verification route or declaration action succeeded. | The statement's documented commit effect occurs, followed by inference where applicable. |
 | `unknown` | The verifier found the target meaningful but could not establish it from the visible context and supported routes. This does not mean false. A bare top-level fact surfaces this as a verification failure whose reason is `unknown`, not as a successful statement. | The target is not committed as a proved fact. Add a missing premise, equality, witness, case, or intermediate result. |
-| `error` | Parsing, name resolution, statement shape, scope, or well-definedness failed, or a proof block violated its execution contract. | The failed target is not committed as a verified result. Supporting facts produced while checking well-definedness may already be present; general statement failure is not a rollback promise. |
+| `error` | Parsing, name resolution, statement shape, scope, or well-definedness failed, or a proof block violated its execution contract. | The failed target is not committed as a verified result. Supporting effects may already be present unless the form explicitly documents a discarded child or atomic commit. In particular, failed `trust`, `trust have`, and `try` statements do not expose their child-environment effects. |
 | Direct trusted statement | The source explicitly uses `axiom`, `trust`, `trust have`, or another trusted proof form. This is a statement classification, not a fourth truth value. | The declared fact can enter the context. Strict mode rejects the source-level trusted form; later results are not transitively tagged by the runtime. |
 
 A useful explanation separates:

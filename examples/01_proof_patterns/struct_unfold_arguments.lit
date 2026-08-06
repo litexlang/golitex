@@ -1,0 +1,64 @@
+# Tracer: unfold spreads compile-time tuple elements or struct fields through an argument list.
+#
+# Before (did not parse):
+# struct GroupData<S nonempty_set>:
+#     identity S
+#     inverse fn(x S) S
+#     combine fn(x, y S) S
+# have fn consume(identity R, inverse fn(x R) R, combine fn(x, y R) R) R = identity
+# consume(unfold G)
+# Former behavior: ParseError, "Expected token: )" at the call.
+#
+# Now (verified):
+struct GroupData<S nonempty_set>:
+    identity S
+    inverse fn(x S) S
+    combine fn(x, y S) S
+    <=>:
+        forall x S:
+            combine(identity, x) = x
+
+have fn consume(identity R, inverse fn(x R) R, combine fn(x, y R) R) R = identity
+
+prop has_group_fields(identity R, inverse fn(x R) R, combine fn(x, y R) R):
+    identity = identity
+
+thm consume_group_fields:
+    ? forall identity R, inverse fn(x R) R, combine fn(x, y R) R:
+        consume(identity, inverse, combine) = identity
+    consume(identity, inverse, combine) = identity
+
+thm struct_unfold_reaches_function_prop_and_theorem:
+    ? forall G &GroupData<R>:
+        consume(unfold G) = G.identity
+        $has_group_fields(unfold G)
+    by thm consume_group_fields(unfold G)
+    by def $has_group_fields(unfold G)
+
+thm explicit_struct_unfold_selects_the_view:
+    ? forall G &GroupData<R>:
+        consume(unfold &GroupData<R>{G}) = G.identity
+    by thm consume_group_fields(unfold &GroupData<R>{G})
+
+have fn first_of_three(x, y, z R) R = x
+first_of_three(unfold (1, 2, 3)) = 1
+
+thm statically_typed_tuple_unfold_uses_index_order:
+    ? forall values cart(R, R, R):
+        first_of_three(unfold values) = values[1]
+    first_of_three(unfold values) = values[1]
+
+have named_values cart(R, R, R) = (1, 2, 3)
+first_of_three(unfold named_values) = 1
+
+# Current behavior: GroupData expands strictly to identity, inverse, combine.
+# The header parameter S and the <=>: law are not positional arguments.
+#
+# Boundary: unfold is argument-list syntax. A scalar, a Cartesian-product set,
+# or a tuple whose arity is not known at compile time is rejected. An explicit
+# &Struct{object} view still has to pass ordinary struct-membership verification.
+# Those failures are executable Rust regressions rather than trusted Litex
+# statements.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/struct_unfold_arguments.lit
+# Negative evidence: cargo test --release struct_unfold -- --nocapture
+# Implementation: src/parse/parse_obj.rs

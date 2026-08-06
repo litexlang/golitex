@@ -166,6 +166,105 @@ forall a {1, 2, 3}:
     a = 1 or a = 2 or a = 3
 ```
 
+### One Epsilon Proof, Two Interfaces
+
+For a more substantial comparison, suppose a real sequence `s` converges to
+`a`. Multiplying every term by a real constant `c` should produce a sequence
+that converges to `c * a`.
+
+Here is a Lean proof using the usual epsilon definition. It splits on `c = 0`;
+in the nonzero case it applies convergence at `epsilon / |c|` and then uses
+the absolute-value product law.
+
+```lean
+import MIL.Common
+import Mathlib.Data.Real.Basic
+
+def ConvergesTo (s : ℕ → ℝ) (a : ℝ) :=
+  ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
+
+theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _x : ℕ ↦ a) a := by
+  intro ε εpos
+  use 0
+  intro n nge
+  rw [sub_self, abs_zero]
+  apply εpos
+
+theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
+    (cs : ConvergesTo s a) :
+    ConvergesTo (fun n ↦ c * s n) (c * a) := by
+  by_cases h : c = 0
+  · convert convergesTo_const 0
+    · rw [h]
+      ring
+    rw [h]
+    ring
+  have acpos : 0 < |c| := abs_pos.mpr h
+  intro ε εpos
+  dsimp
+  have εcpos : 0 < ε / |c| := by
+    exact div_pos εpos acpos
+  rcases cs (ε / |c|) εcpos with ⟨Ns, hs⟩
+  use Ns
+  intro n ngt
+  calc
+    |c * s n - c * a| = |c| * |s n - a| := by rw [← abs_mul, mul_sub]
+    _ < |c| * (ε / |c|) := mul_lt_mul_of_pos_left (hs n ngt) acpos
+    _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
+```
+
+The Litex proof chooses `epsilon / (abs(c) + 1)` instead. Since the denominator
+is always positive, the same estimate covers `c = 0` and `c != 0` without a
+case split.
+
+```litex
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
+```
+
+Both proofs use the same mathematical core: obtain a tail bound for a smaller
+positive tolerance, reuse the same cutoff, and estimate the scaled absolute
+difference. The interface difference is visible in the durable proof text.
+Lean exposes named hypotheses, a case split, rewriting, and library lemmas;
+Litex exposes the nested convergence facts, the witness, and the inequality
+chain directly, while its checker supplies routine arithmetic and definition
+folding.
+
+This comparison is not a claim that Lean needs the displayed proof shape or
+cannot use the `abs(c) + 1` argument. Lean can formalize that uniform argument
+too, and Mathlib offers much broader analysis infrastructure. The example
+shows how the two default proof interfaces organize one elementary analysis
+argument, not a difference in what mathematics they can express.
+
 ---
 
 ## The Manual Mental Model
@@ -1156,6 +1255,53 @@ forall P Prop:
 ```
 
 **What differs.** Lean can quantify over `P : Prop` and treat proofs as terms. Litex does not make facts ordinary objects, keeping the object/fact split explicit.
+
+### Proposition Composition Uses a Canonical Surface Grammar
+
+Lean propositions compose recursively. A universal proposition, a conjunction,
+and a disjunction are all propositions again, so Lean can directly write a
+shape such as:
+
+```lean
+example (α : Type) (P : α → Prop) (Q R : Prop) (h : ∀ x, P x) :
+    (∀ x, P x) ∨ (Q ∧ R) :=
+  Or.inl h
+```
+
+Litex makes a smaller parser and AST choice. A flat `and` contains atomic
+facts, while the outer `or` collects atomic, chain, or completed flat-`and`
+branches. A `forall` is not one of those `or` branch shapes. Consequently, the
+following anonymous recursive shape is not Litex syntax:
+
+```text
+(forall x R: x = x) or (1 = 1 and 2 = 2)
+```
+
+This is a surface-expressiveness trade-off, not a claim that the mathematical
+proposition is meaningless. A closed compound proposition can first be given
+a zero-parameter `prop` name. The resulting prop call is atomic and can occupy
+the outer branch position:
+
+```litex
+prop all_reals_reflexive():
+    forall x R:
+        x = x
+
+by def $all_reals_reflexive()
+$all_reals_reflexive() or 1 = 1 and 2 = 2
+```
+
+The `prop` definition makes `$all_reals_reflexive()` definitionally equivalent
+to its `forall` body; it does not assert either side merely by being declared.
+Here `by def` verifies the body and stores the atomic call. If the compound
+subclaim has free mathematical objects, those objects should be parameters of
+the named `prop` rather than hidden in a zero-parameter declaration.
+
+**What differs.** Lean keeps arbitrary anonymous proposition composition in
+the term language. Litex keeps a canonical set of directly parsed fact shapes
+and asks the user to name a compound subclaim when it must cross that shape
+boundary. The named call is still a fact interface, not a first-class `Prop`
+object or a proof term.
 
 ### Statements And Proofs As Values is not Litex
 

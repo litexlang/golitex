@@ -182,8 +182,9 @@ pub struct ParamDefWithSet {
     /// For each parameter group, the flat indices of earlier parameters cited by that group's set.
     ///
     /// Later parameter sets may depend on earlier arguments, e.g.
-    /// `fn(n N+, x closed_range(1, n)) R`; function return sets are intentionally outside this
-    /// dependent parameter list and must not cite these parameters.
+    /// `fn(n N+, x closed_range(1, n)) R`. A function return set is stored on
+    /// the containing function-set node rather than in this per-domain index;
+    /// it may cite function parameters and is instantiated at application.
     pub param_set_cited_param_indices: Vec<Vec<usize>>,
 }
 
@@ -423,7 +424,7 @@ impl ParamGroupWithSet {
     }
 
     /// Membership facts for parameters; each element must use the same symbol binding
-    /// and scope role as [`define_params_with_set_in_scope`].
+    /// and scope role as [`Runtime::define_params_with_set_in_scope`].
     pub fn facts_for_binding_scope(&self, binding_scope: ParamObjType) -> Vec<Fact> {
         let mut facts = Vec::with_capacity(self.params.len());
         for binding in self.params.iter() {

@@ -472,6 +472,9 @@ impl Runtime {
             if let ParamType::Obj(Obj::StructObj(struct_obj)) = &group.param_type {
                 self.register_default_struct_view(&group.params, struct_obj);
             }
+            if let ParamType::Obj(Obj::Cart(cart)) = &group.param_type {
+                self.register_default_tuple_view(&group.params, cart);
+            }
         }
         fresh.line_file = use_line_file;
         Ok(fresh)

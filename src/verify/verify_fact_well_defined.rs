@@ -510,24 +510,18 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract: a universal equivalence is well-defined when
-    /// its binders, shared premises, forward conclusions, and reverse-side
-    /// facts are all meaningful in the same bound-variable scope.
+    /// Mathematical contract: a universal equivalence is well-defined only
+    /// when both generated implication directions are independently
+    /// well-defined.
     pub fn verify_forall_fact_with_iff_well_defined(
         &mut self,
         forall_fact_with_iff: &ForallFactWithIff,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.run_in_local_env(|rt| {
-            rt.verify_forall_fact_well_defined_inner(
-                &forall_fact_with_iff.forall_fact,
-                verify_state,
-            )?;
-            for fact in forall_fact_with_iff.iff_facts.iter() {
-                rt.verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)?;
-            }
-            Ok(())
-        })
+        let (forall_then_implies_iff, forall_iff_implies_then) =
+            forall_fact_with_iff.to_two_forall_facts()?;
+        self.verify_forall_fact_well_defined(&forall_then_implies_iff, verify_state)?;
+        self.verify_forall_fact_well_defined(&forall_iff_implies_then, verify_state)
     }
 
     /// Mathematical contract: negating a universal fact adds no new object

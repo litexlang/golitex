@@ -1,6 +1,10 @@
 use crate::prelude::*;
 use std::fmt;
 
+/// Canonical flat conjunction.
+///
+/// The atomic-only payload is intentional. Compound branches belong to the
+/// outer [`OrFact`] layer rather than recursively nesting inside `and`.
 #[derive(Clone)]
 pub struct AndFact {
     pub facts: Vec<AtomicFact>,

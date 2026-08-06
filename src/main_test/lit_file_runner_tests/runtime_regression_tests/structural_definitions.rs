@@ -826,6 +826,148 @@ p $in &CoordinatePair
 }
 
 #[test]
+fn struct_unfold_spreads_declared_fields_through_call_argument_lists() {
+    run_with_large_stack(
+        "struct_unfold_spreads_declared_fields_through_call_argument_lists",
+        || {
+            let source_code = r#"
+struct GroupData<S nonempty_set>:
+    identity S
+    inverse fn(x S) S
+    combine fn(x, y S) S
+    <=>:
+        forall x S:
+            combine(identity, x) = x
+
+have fn consume(identity R, inverse fn(x R) R, combine fn(x, y R) R) R = identity
+
+prop has_group_fields(identity R, inverse fn(x R) R, combine fn(x, y R) R):
+    identity = identity
+
+thm consume_group_fields:
+    ? forall identity R, inverse fn(x R) R, combine fn(x, y R) R:
+        consume(identity, inverse, combine) = identity
+    consume(identity, inverse, combine) = identity
+
+thm default_struct_unfold_reaches_function_prop_and_theorem:
+    ? forall G &GroupData<R>:
+        consume(unfold G) = G.identity
+        $has_group_fields(unfold G)
+    by thm consume_group_fields(unfold G)
+    by def $has_group_fields(unfold G)
+
+thm explicit_struct_unfold_selects_the_view:
+    ? forall G &GroupData<R>:
+        consume(unfold &GroupData<R>{G}) = G.identity
+    by thm consume_group_fields(unfold &GroupData<R>{G})
+
+have fn first_of_three(x, y, z R) R = x
+first_of_three(unfold (1, 2, 3)) = 1
+
+thm statically_typed_tuple_unfold_uses_index_order:
+    ? forall values cart(R, R, R):
+        first_of_three(unfold values) = values[1]
+    first_of_three(unfold values) = values[1]
+
+have named_values cart(R, R, R) = (1, 2, 3)
+first_of_three(unfold named_values) = 1
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "struct_unfold_spreads_declared_fields_through_call_argument_lists",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "unfold should spread tuple elements and struct fields through function, prop, and theorem calls:\n{}",
+                run_output
+            );
+            assert!(
+                !run_output.contains("consume(unfold G)")
+                    && !run_output.contains("$has_group_fields(unfold G)")
+                    && !run_output.contains("first_of_three(unfold (1, 2, 3))")
+                    && !run_output.contains("first_of_three(unfold values)")
+                    && run_output.contains("&GroupData<R>{G}.identity")
+                    && run_output.contains("&GroupData<R>{G}.inverse")
+                    && run_output.contains("&GroupData<R>{G}.combine")
+                    && run_output.contains("first_of_three(values[1], values[2], values[3])"),
+                "unfold should disappear during parsing and leave explicit field accesses:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn struct_unfold_rejects_missing_views_and_unverified_explicit_views() {
+    let scalar_source = r#"
+have fn identity(x R) R = x
+identity(unfold 1) = 1
+"#;
+    let mut scalar_runtime = Runtime::new();
+    scalar_runtime
+        .new_file_path_new_env_new_name_scope("struct_unfold_rejects_non_tuple_non_struct_objects");
+    let (stmt_results, runtime_error) = run_source_code(scalar_source, &mut scalar_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&scalar_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded
+            && run_output.contains(
+                "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
+            ),
+        "unfold must reject an object without a compile-time tuple or struct view:\n{}",
+        run_output
+    );
+
+    let explicit_view_source = r#"
+struct Pair:
+    first R
+    second R
+
+have fn add_pair(first, second R) R = first + second
+add_pair(unfold &Pair{1}) = 1
+"#;
+    let mut explicit_view_runtime = Runtime::new();
+    explicit_view_runtime.new_file_path_new_env_new_name_scope(
+        "struct_unfold_explicit_view_still_requires_struct_membership",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(explicit_view_source, &mut explicit_view_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&explicit_view_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "an explicit unfold view must not bypass ordinary struct-membership verification:\n{}",
+        run_output
+    );
+
+    let cart_set_source = r#"
+have ProductSet set = cart(R, R)
+have fn first(left, right R) R = left
+first(unfold ProductSet) = first(unfold ProductSet)
+"#;
+    let mut cart_set_runtime = Runtime::new();
+    cart_set_runtime.new_file_path_new_env_new_name_scope(
+        "struct_unfold_does_not_treat_a_cartesian_product_set_as_a_tuple_value",
+    );
+    let (stmt_results, runtime_error) = run_source_code(cart_set_source, &mut cart_set_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&cart_set_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded
+            && run_output.contains(
+                "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
+            ),
+        "a set equal to cart(A, B) is not itself a tuple value and must not unfold:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn default_struct_view_replays_from_theorem_goal_into_proof() {
     run_with_large_stack(
         "default_struct_view_replays_from_theorem_goal_into_proof",

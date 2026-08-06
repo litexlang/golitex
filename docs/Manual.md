@@ -545,6 +545,23 @@ square_plus_one(3) $in fn_range(square_plus_one)
 | `fn_range(f)` | Image of the known domain of `f` |
 | `fn_range(fn(x A) T {f(x)})` | Image of an explicit restriction to `A` |
 
+Function parameter domains are read from left to right, so a later domain may
+cite an earlier parameter. The return set is checked in the scope of all
+function parameters and may cite them too. At application, Litex substitutes
+the actual arguments into that return set before checking later calls or
+membership facts:
+
+```litex
+have g fn(S power_set(R)) fn(x S) R
+g(R)(0) = g(R)(0)
+```
+
+Here the first application instantiates the return set of `g(R)` as
+`fn(x R) R`. This is controlled set-valued dependency inside Litex's
+set-theoretic function model. It does not make the binder kinds `set`,
+`nonempty_set`, or `finite_set` into ordinary function domains; use `template`
+for a family parameterized by an arbitrary set.
+
 A declared codomain does not waive the input condition:
 
 ```text
@@ -674,6 +691,41 @@ have p &Point = (1, 2)
 &Point{p}.x = 1
 p.y = 2
 ```
+
+Inside a parenthesized function, proposition, or theorem argument list,
+`unfold` is a compile-time argument spread. For a struct value it contributes
+all declared fields, strictly in declaration order:
+
+```litex
+struct Point:
+    x R
+    y R
+
+by thm struct_member((1, 2), &Point)
+have p &Point = (1, 2)
+
+prop has_point_coordinates(x, y R):
+    x = x
+
+by def:
+    ? $has_point_coordinates(unfold p)
+by def:
+    ? $has_point_coordinates(unfold &Point{p})
+```
+
+Both calls elaborate to `$has_point_coordinates(p.x, p.y)`. The first uses
+the default view selected by `p &Point`; the second selects the view
+explicitly and still verifies `p $in &Point`. Only fields are spread. Struct
+header parameters and `<=>:` facts are not positional arguments. Consequently,
+adding, removing, or reordering a struct field intentionally changes the
+argument list produced by `unfold`.
+
+Tuple literals can also be spread, as in `f(unfold (a, b, c))`. A named tuple
+is accepted when its arity is known at compile time, including a binder typed
+by `cart(A, B, C)`; it elaborates to `f(t[1], t[2], t[3])`. A tuple known only
+to satisfy `$is_tuple(t)` has no static arity and is rejected. `unfold` is not
+a runtime object, and ordinary arity, membership, and function-domain checks
+run on the expanded arguments.
 
 If a selected field is itself declared directly with a struct type, field
 notation may continue through that declared view:
@@ -842,6 +894,7 @@ Every row also requires its subobjects to be well-defined.
 | A finite sum or product | The index domain is suitable, the unary iterand is defined throughout it, and its declared return set is a subset of `C`. |
 | A real interval | Finite endpoints are real; reversed endpoints denote an empty interval rather than an ill-defined object. |
 | `&Struct<args>` or field access | The struct, arguments, field, and membership obligations check. |
+| `unfold value` in an argument list | The value has a compile-time tuple arity or an explicit/default struct view; every expanded argument then passes its ordinary checks. |
 | `\Template<args>` | The template exists and its parameter obligations check. |
 
 ### Introducing an object is also checked
@@ -908,6 +961,24 @@ chain, and `or` for alternatives.
 1 <= 2 = 2 < 3
 1 < 2 or 1 >= 2
 ```
+
+The fact grammar has a deliberate canonical hierarchy rather than arbitrary
+recursive nesting. A conjunction is a flat list of atomic facts. A disjunction
+is the outer layer, and each of its branches is one atomic fact, one relation
+chain, or one flat conjunction. Thus the grammar/AST layer for `or` sits above
+the `and` layer; in the usual operator-binding terminology, `and` binds more
+tightly than `or`.
+
+For example:
+
+```text
+$p(a) and $q(a) or $t(a)
+```
+
+has two `or` branches: `($p(a) and $q(a))` and `$t(a)`. It is not read as
+`$p(a) and ($q(a) or $t(a))`. Allowing an `or` branch to be a completed
+conjunction preserves this fixed hierarchy; it does not make `and` or `or`
+arbitrarily nestable.
 
 Verification of an `or` proves that at least one branch holds; it does not add
 an arbitrary branch as a known fact.
@@ -1059,6 +1130,12 @@ forall x R => {x = x}
 `forall ... <=>:` stores both directions of an equivalence. The left side is
 introduced after `=>:` even when it has no shared assumptions.
 
+Well-definedness is checked separately for the two generated universal
+directions. Each check receives the shared assumptions and its own antecedent,
+but it cannot borrow a side condition from the opposite side. Put any side
+condition needed to make both directions meaningful before `=>:` as a shared
+assumption.
+
 ```litex
 forall x, y R:
     =>:
@@ -1091,14 +1168,14 @@ This is a parse `error`; write `not forall ...` on one header.
 | Shape | Syntax |
 |---|---|
 | Atomic | `a = b`, `a $in A`, `$P(a)` |
-| Conjunction | `atomic and atomic` |
+| Flat conjunction | `atomic and atomic` |
 | Chain | `a <= b = c < d` |
-| Disjunction | `branch or branch` |
+| Outer disjunction | `(atomic, chain, or flat-conjunction branch) or branch` |
 | Existence | `exist params st {facts}` |
 | Unique existence | `exist! params st {facts}` |
 | Non-existence | `not exist params st {facts}` |
 | Universal implication | `forall params: assumptions =>: conclusions` |
-| Nested universal conclusion (preview) | `forall outer: assumptions =>: forall inner: assumptions =>: conclusions` |
+| Nested universal conclusion (preview; flattened before storage) | `forall outer: assumptions =>: forall inner: assumptions =>: conclusions` |
 | Universal equivalence | `forall params: =>: left <=>: right` |
 | Inline universal | `forall params => {facts}` |
 | Negated universal | `not forall params: facts` |
@@ -1612,6 +1689,19 @@ trust have a R:
 
 $background(a)
 ```
+
+Each `trust` or `trust have` statement commits atomically. Litex stages its
+bindings, assumed facts, and inferred consequences in a temporary child
+environment. Facts later in the same statement may use facts staged earlier
+in that child, but the parent environment receives the complete child only
+after every fact succeeds. If any binding, well-definedness check, storage
+step, or inference fails, none of that statement's effects escape.
+
+This is a statement boundary, not a process boundary. A persistent REPL may
+continue after the error with its parent environment unchanged, while an
+earlier, separately successful `trust` statement remains committed. Audit
+summaries and graphs count only committed trust statements and their effects;
+the failed attempt remains visible in its error object.
 
 Do not use `trust` to make an ordinary worked example appear complete:
 

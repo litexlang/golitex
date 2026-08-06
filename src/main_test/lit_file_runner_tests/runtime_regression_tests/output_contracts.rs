@@ -259,6 +259,39 @@ witness exist z R st {z = 1} from 1:
 }
 
 #[test]
+fn failed_atomic_trust_is_absent_from_audit_artifacts() {
+    let failed_trust = r#"
+trust:
+    777 = 778
+    1 / 0 = 0
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("failed_atomic_trust_audit");
+    let (stmt_results, runtime_error) = run_source_code(failed_trust, &mut runtime);
+    let summary_output =
+        display_run_summary_json_with_runtime(&runtime, &stmt_results, &runtime_error);
+
+    assert!(runtime_error.is_some());
+    assert!(summary_output.contains("\"direct_trust\": 0"));
+    assert!(summary_output.contains("\"known_facts\": 0"));
+
+    let (fact_graph_ok, fact_graph_output) =
+        run_fact_graph_for_code(failed_trust, "failed_atomic_trust_graph", true);
+    assert!(!fact_graph_ok);
+    assert!(fact_graph_output.contains("\"nodes\": []"));
+
+    let failed_trust_have = r#"
+trust have audit_probe R:
+    audit_probe = audit_probe
+    1 / 0 = 0
+"#;
+    let (definition_graph_ok, definition_graph_output) =
+        run_definition_graph_for_code(failed_trust_have, "failed_atomic_trust_have_graph", true);
+    assert!(!definition_graph_ok);
+    assert!(definition_graph_output.contains("\"nodes\": []"));
+}
+
+#[test]
 fn normal_output_projects_proof_level_inside_results() {
     run_with_large_stack("normal_output_projects_proof_level_inside_results", || {
         let source_code = r#"

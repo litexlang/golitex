@@ -54,6 +54,9 @@ pub struct Runtime {
     /// Parser-only notation metadata. A source binder written as `a &Struct`
     /// records the struct view used to lower later `a.field` expressions.
     pub(crate) default_struct_views: HashMap<SymbolId, StructObj>,
+    /// Parser-only argument-spread metadata. A binder declared in a finite
+    /// Cartesian carrier records its compile-time tuple arity for `unfold a`.
+    pub(crate) default_tuple_views: HashMap<SymbolId, Cart>,
     /// Struct declarations retained by parse-only consumers such as LaTeX output.
     /// These declarations never enter the verified environment.
     pub(crate) parsed_struct_definitions: HashMap<String, DefStructStmt>,
@@ -84,6 +87,7 @@ impl Runtime {
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             default_struct_views: HashMap::new(),
+            default_tuple_views: HashMap::new(),
             parsed_struct_definitions: HashMap::new(),
             detail_output: false,
             output_style: OutputStyle::Normal,

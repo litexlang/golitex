@@ -1,0 +1,23 @@
+# Tracer: forall-iff well-definedness is checked in both directions.
+#
+# Before (incorrectly accepted):
+# trust forall x R:
+#     =>:
+#         x != 0
+#     <=>:
+#         1 / x = 1 / x
+# Former behavior: the reverse rule borrowed x != 0 from the opposite side.
+#
+# Now (verified): a condition needed by both directions is a shared premise.
+forall x R:
+    x != 0
+    =>:
+        x != 0
+    <=>:
+        1 / x = 1 / x
+# Current behavior: both generated forall directions are independently well-defined.
+#
+# Boundary: omitting the shared x != 0 premise is rejected; the executable
+# negative regression is forall_iff_well_definedness_checks_both_directions_independently.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/forall_iff_well_definedness.lit
+# Implementation: src/verify/verify_fact_well_defined.rs

@@ -114,6 +114,18 @@ impl Runtime {
         self.default_struct_views.get(&symbol.id()).cloned()
     }
 
+    pub(crate) fn register_default_tuple_view(&mut self, bindings: &[SymbolBinding], cart: &Cart) {
+        for binding in bindings {
+            self.default_tuple_views
+                .entry(binding.id())
+                .or_insert_with(|| cart.clone());
+        }
+    }
+
+    pub(crate) fn default_tuple_view_for_symbol(&self, symbol: &SymbolRef) -> Option<Cart> {
+        self.default_tuple_views.get(&symbol.id()).cloned()
+    }
+
     pub(crate) fn register_parsed_struct_definition(&mut self, def: &DefStructStmt) {
         let name = self
             .current_parse_namespace()

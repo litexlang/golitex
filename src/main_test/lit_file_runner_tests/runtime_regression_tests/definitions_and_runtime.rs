@@ -470,6 +470,43 @@ forall a, b R+, c R:
 }
 
 #[test]
+fn forall_iff_well_definedness_checks_both_directions_independently() {
+    let invalid_sources = [
+        r#"
+trust forall x R:
+    =>:
+        x != 0
+    <=>:
+        1 / x = 1 / x
+"#,
+        r#"
+trust forall x R:
+    =>:
+        1 / x = 1 / x
+    <=>:
+        x != 0
+"#,
+    ];
+
+    for (index, source_code) in invalid_sources.iter().enumerate() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("forall_iff_independent_well_definedness_{}", index).as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "an iff direction must not borrow its opposite side's assumptions:\n{}",
+            run_output
+        );
+        assert!(run_output.contains("divisor `x` must be non-zero"));
+    }
+}
+
+#[test]
 fn definition_namespaces_reject_same_spelling_across_kinds() {
     run_with_large_stack(
         "definition_namespaces_reject_same_spelling_across_kinds",

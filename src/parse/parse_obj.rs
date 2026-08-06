@@ -291,6 +291,9 @@ impl Runtime {
                 if let Some(struct_obj) = default_struct_view {
                     this.register_default_struct_view(&bindings, &struct_obj);
                 }
+                if let Obj::Cart(cart) = &param_set {
+                    this.register_default_tuple_view(&bindings, cart);
+                }
                 params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
 
                 if tb.current_token_is_equal_to(COMMA) {
@@ -366,6 +369,9 @@ impl Runtime {
                 )?;
                 if let Some(struct_obj) = default_struct_view {
                     this.register_default_struct_view(&bindings, &struct_obj);
+                }
+                if let Obj::Cart(cart) = &param_set {
+                    this.register_default_tuple_view(&bindings, cart);
                 }
                 params_def_with_set.push(ParamGroupWithSet::new(bindings, param_set));
 
@@ -1436,13 +1442,137 @@ impl Runtime {
             tb.skip_token(RIGHT_BRACE)?;
             return Ok(vec![]);
         }
-        let mut objs = vec![self.parse_obj(tb)?];
+        let mut objs = self.parse_call_argument_or_unfold(tb)?;
         while tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;
-            objs.push(self.parse_obj(tb)?);
+            objs.extend(self.parse_call_argument_or_unfold(tb)?);
         }
         tb.skip_token(RIGHT_BRACE)?;
         Ok(objs)
+    }
+
+    /// `unfold value` is an argument-list spread. A tuple literal contributes
+    /// its elements; a struct view contributes its declared fields in source
+    /// order. Struct header parameters and `<=>:` facts are never arguments.
+    /// Example: `f(unfold pair, unfold group)`.
+    fn parse_call_argument_or_unfold(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<Vec<Obj>, RuntimeError> {
+        if !tb.current_token_is_equal_to(UNFOLD) {
+            return Ok(vec![self.parse_obj(tb)?]);
+        }
+
+        let line_file = tb.line_file.clone();
+        tb.skip_token(UNFOLD)?;
+        if tb.exceed_end_of_head()
+            || tb.current_token_is_equal_to(COMMA)
+            || tb.current_token_is_equal_to(RIGHT_BRACE)
+        {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "unfold expects a tuple value or a struct-view object".to_string(),
+                    line_file,
+                ),
+            )));
+        }
+
+        let (obj, explicit_struct_view) = if tb.current_token_is_equal_to(STRUCT_VIEW_PREFIX) {
+            tb.skip_token(STRUCT_VIEW_PREFIX)?;
+            let struct_obj = self.parse_struct_obj_after_prefix(tb)?;
+            if tb.exceed_end_of_head() || !tb.current_token_is_equal_to(LEFT_CURLY_BRACE) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "explicit struct unfold expects `unfold &Struct{object}`".to_string(),
+                        line_file,
+                    ),
+                )));
+            }
+            tb.skip_token(LEFT_CURLY_BRACE)?;
+            let obj = self.parse_obj(tb)?;
+            tb.skip_token(RIGHT_CURLY_BRACE)?;
+            if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "unfold accepts a struct object, not one selected field".to_string(),
+                        line_file,
+                    ),
+                )));
+            }
+            (obj, Some(struct_obj))
+        } else {
+            (self.parse_obj(tb)?, None)
+        };
+
+        if explicit_struct_view.is_none() {
+            if let Obj::Tuple(tuple) = &obj {
+                return Ok(tuple.args.iter().map(|arg| arg.as_ref().clone()).collect());
+            }
+
+            let known_tuple_arity = self
+                .get_obj_equal_to_tuple(&obj.to_string())
+                .map(|tuple| tuple.args.len())
+                .or_else(|| {
+                    let symbol = match &obj {
+                        Obj::Atom(atom) => atom.symbol_ref(),
+                        _ => None,
+                    }?;
+                    self.default_tuple_view_for_symbol(symbol)
+                        .map(|cart| cart.args.len())
+                })
+                .or_else(|| {
+                    self.get_obj_tuple_cart(&obj.to_string())
+                        .map(|cart| cart.args.len())
+                });
+            if let Some(arity) = known_tuple_arity {
+                return Ok((1..=arity)
+                    .map(|index| {
+                        ObjAtIndex::new(obj.clone(), Number::new(index.to_string()).into()).into()
+                    })
+                    .collect());
+            }
+        }
+
+        let struct_obj = match explicit_struct_view {
+            Some(struct_obj) => struct_obj,
+            None => self
+                .struct_view_for_field_access_receiver(&obj, line_file.clone())
+                .map_err(|cause| {
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        "unfold expects a tuple with compile-time arity or an object with an explicit/default struct view"
+                            .to_string(),
+                        line_file.clone(),
+                        Some(cause),
+                        vec![],
+                    )))
+                })?,
+        };
+        let struct_name = struct_obj.name.to_string();
+        let definition = self
+            .get_struct_definition_by_name(&struct_name)
+            .or_else(|| self.parsed_struct_definition_by_name(&struct_name))
+            .ok_or_else(|| {
+                RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        format!("cannot unfold undefined struct `{}`", struct_name),
+                        line_file.clone(),
+                    ),
+                ))
+            })?;
+
+        Ok(definition
+            .fields
+            .iter()
+            .map(|(field_name, _)| {
+                ObjAsStructInstanceWithFieldAccess::new(
+                    struct_obj.clone(),
+                    obj.clone(),
+                    field_name.clone(),
+                )
+                .into()
+            })
+            .collect())
     }
 
     fn parse_two_sided_interval_literal(
