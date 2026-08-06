@@ -222,10 +222,12 @@ clearly. (Since Litex operates on a higher mathematical abstraction level, it us
 
 Litex is also researching a compilation path to Lean. The current repository
 keeps only a narrow experiment: verified rational equalities over `R` are
-lowered recursively to numerator/denominator pairs and emitted with `ring`, or
-`field_simp` followed by `ring`. This is not yet a general compiler or proof
-certificate path; the group example above illustrates the intended language
-relationship, not current coverage. See the
+first checked by ordinary Litex execution, then handed to To-Lean through the
+current per-statement JSON rule description. They are lowered recursively to
+numerator/denominator pairs and emitted with `ring`, or `field_simp` followed
+by `ring`. This JSON adapter is a tracer bullet, not yet a stable proof IR,
+general compiler, or proof-certificate path; the group example above
+illustrates the intended language relationship, not current coverage. See the
 [compiler README](src/to_lean/README.md) for the supported subset and current
 boundary.
 

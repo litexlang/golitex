@@ -1,0 +1,30 @@
+# Tracer: struct equivalent facts provide ordered local well-definedness context.
+#
+# Before (incorrectly rejected):
+# struct NonzeroRealView:
+#     value R
+#     <=>:
+#         value != 0
+#         1 / value = 1 / value
+# Former behavior: every equivalent fact was checked independently, so the
+# reciprocal could not use the preceding nonzero filter.
+#
+# Now (verified):
+struct NonzeroRealView:
+    value R
+    <=>:
+        value != 0
+        1 / value = 1 / value
+
+forall candidate &NonzeroRealView:
+    candidate.value != 0
+# Current behavior: equivalent facts are checked from left to right in a local
+# scope, and every checked fact is staged without running definition inference.
+# The same rule is applied when an instantiated struct carrier is checked.
+#
+# Boundary: omitting `value != 0`, or placing it after the reciprocal, remains
+# ill-defined. The executable regressions live in
+# struct_equivalent_facts_provide_sequential_well_definedness_context.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/struct_equivalent_fact_well_definedness.lit
+# Implementation: src/execute/exec_def_struct_stmt.rs and
+# src/verify/verify_obj_well_defined/structs.rs

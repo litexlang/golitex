@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use std::collections::HashSet;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
@@ -693,23 +694,28 @@ impl Runtime {
         initial_keys: &[String],
     ) {
         let mut keys = initial_keys.to_vec();
+        let mut known_keys = keys.iter().cloned().collect::<HashSet<_>>();
+        let mut result_keys = result.iter().map(obj_equality_key).collect::<HashSet<_>>();
+        let mut scanned_classes = HashSet::new();
         let mut next_index = 0;
         while next_index < keys.len() {
             let current = keys[next_index].clone();
             next_index += 1;
-            for environment in environments {
-                let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+            for (environment_index, environment) in environments.iter().enumerate() {
+                let Some((class_id, _, equivalent_objects)) =
+                    environment.known_equality.get_with_class_id(&current)
+                else {
                     continue;
                 };
+                if !scanned_classes.insert((environment_index, class_id)) {
+                    continue;
+                }
                 for object in equivalent_objects.iter() {
                     let object_key = obj_equality_key(object);
-                    if !keys.contains(&object_key) {
+                    if known_keys.insert(object_key.clone()) {
                         keys.push(object_key.clone());
                     }
-                    if !result
-                        .iter()
-                        .any(|known_obj: &Obj| obj_equality_key(known_obj) == object_key)
-                    {
+                    if result_keys.insert(object_key) {
                         result.push(object.clone());
                     }
                 }
@@ -729,20 +735,28 @@ impl Runtime {
         given: &str,
     ) -> Vec<String> {
         let mut result = vec![given.to_string()];
+        let mut known_keys = HashSet::new();
+        known_keys.insert(given.to_string());
+        let mut scanned_classes = HashSet::new();
         let mut next_index = 0;
         let mut found_equality = false;
 
         while next_index < result.len() {
             let current = result[next_index].clone();
             next_index += 1;
-            for environment in environments {
-                let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+            for (environment_index, environment) in environments.iter().enumerate() {
+                let Some((class_id, _, equivalent_objects)) =
+                    environment.known_equality.get_with_class_id(&current)
+                else {
                     continue;
                 };
                 found_equality = true;
+                if !scanned_classes.insert((environment_index, class_id)) {
+                    continue;
+                }
                 for object in equivalent_objects.iter() {
                     let object_key = object.to_string();
-                    if !result.contains(&object_key) {
+                    if known_keys.insert(object_key.clone()) {
                         result.push(object_key);
                     }
                 }

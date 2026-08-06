@@ -411,6 +411,31 @@ a = c
 }
 
 #[test]
+fn known_equality_closure_keeps_cross_environment_bridges() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_equality_closure_keeps_cross_environment_bridges",
+    );
+
+    let a: Obj = Identifier::new("a".to_string()).into();
+    let b: Obj = Identifier::new("b".to_string()).into();
+    let c: Obj = Identifier::new("c".to_string()).into();
+    runtime
+        .top_level_env()
+        .store_equality(&EqualFact::new(a.clone(), b.clone(), default_line_file()))
+        .unwrap();
+
+    let local_result: Result<(), RuntimeError> = runtime.run_in_local_env(|rt| {
+        rt.top_level_env()
+            .store_equality(&EqualFact::new(b, c, default_line_file()))?;
+        let closure = rt.get_all_objs_equal_to_given(&obj_equality_key(&a));
+        assert!(closure.contains(&"c".to_string()));
+        Ok(())
+    });
+    local_result.unwrap();
+}
+
+#[test]
 fn positive_real_power_closure_enables_log_inverse() {
     let source_code = r#"
 forall a R+, x R:

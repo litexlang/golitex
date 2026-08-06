@@ -541,27 +541,32 @@ fn known_equality_class_across_environments(
     initial_keys: &[String],
 ) -> Option<Rc<Vec<Obj>>> {
     let mut keys = initial_keys.to_vec();
+    let mut known_keys = keys.iter().cloned().collect::<HashSet<_>>();
     let mut objects = Vec::new();
+    let mut object_keys = HashSet::new();
+    let mut scanned_classes = HashSet::new();
     let mut next_index = 0;
     let mut found_equality = false;
 
     while next_index < keys.len() {
         let current = keys[next_index].clone();
         next_index += 1;
-        for environment in environments {
-            let Some((_, equivalent_objects)) = environment.known_equality.get(&current) else {
+        for (environment_index, environment) in environments.iter().enumerate() {
+            let Some((class_id, _, equivalent_objects)) =
+                environment.known_equality.get_with_class_id(&current)
+            else {
                 continue;
             };
             found_equality = true;
+            if !scanned_classes.insert((environment_index, class_id)) {
+                continue;
+            }
             for object in equivalent_objects.iter() {
                 let object_key = obj_equality_key(object);
-                if !keys.contains(&object_key) {
+                if known_keys.insert(object_key.clone()) {
                     keys.push(object_key.clone());
                 }
-                if !objects
-                    .iter()
-                    .any(|known: &Obj| obj_equality_key(known) == object_key)
-                {
+                if object_keys.insert(object_key) {
                     objects.push(object.clone());
                 }
             }

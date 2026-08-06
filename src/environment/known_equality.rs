@@ -40,9 +40,19 @@ impl KnownEquality {
     }
 
     pub fn get(&self, key: &str) -> Option<(&HashMap<ObjString, AtomicFact>, &[Obj])> {
+        let (_, direct_proof_map, members) = self.get_with_class_id(key)?;
+        Some((direct_proof_map, members))
+    }
+
+    /// The class id is local to this store and stable until the next mutation.
+    pub(crate) fn get_with_class_id(
+        &self,
+        key: &str,
+    ) -> Option<(usize, &HashMap<ObjString, AtomicFact>, &[Obj])> {
         let entry = self.entries.get(key)?;
         let root_id = self.root_id(entry.node_id);
         Some((
+            root_id,
             &entry.direct_proof_map,
             self.nodes[root_id].members.as_slice(),
         ))
@@ -200,6 +210,23 @@ mod tests {
             let mut member_keys = members.iter().map(obj_equality_key).collect::<Vec<_>>();
             member_keys.sort();
             assert_eq!(member_keys, vec!["x0", "x1", "x2", "x3"]);
+        }
+    }
+
+    #[test]
+    fn equality_class_id_is_shared_by_every_member() {
+        let mut known = KnownEquality::new();
+        known.store(&equality("x0", "x1"));
+        known.store(&equality("x2", "x3"));
+
+        let left_class = known.get_with_class_id("x0").unwrap().0;
+        let right_class = known.get_with_class_id("x2").unwrap().0;
+        assert_ne!(left_class, right_class);
+
+        known.store(&equality("x1", "x2"));
+        let merged_class = known.get_with_class_id("x0").unwrap().0;
+        for key in ["x1", "x2", "x3"] {
+            assert_eq!(known.get_with_class_id(key).unwrap().0, merged_class);
         }
     }
 

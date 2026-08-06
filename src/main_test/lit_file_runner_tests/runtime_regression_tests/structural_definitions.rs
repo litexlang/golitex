@@ -1,6 +1,69 @@
 use super::*;
 
 #[test]
+fn struct_equivalent_facts_provide_sequential_well_definedness_context() {
+    let source_code = r#"
+struct NonzeroRealView:
+    value R
+    <=>:
+        value != 0
+        1 / value = 1 / value
+
+forall candidate &NonzeroRealView:
+    candidate.value != 0
+"#;
+    let mut runtime = Runtime::new();
+    runtime.isolated = true;
+    runtime.new_file_path_new_env_new_name_scope(
+        "struct_equivalent_facts_provide_sequential_well_definedness_context",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "an earlier struct equivalent fact should justify later well-definedness both at declaration and carrier use:\n{run_output}"
+    );
+
+    for (name, source) in [
+        (
+            "struct_equivalent_fact_still_requires_nonzero_guard",
+            r#"
+struct UnrestrictedReciprocalView:
+    value R
+    <=>:
+        1 / value = 1 / value
+"#,
+        ),
+        (
+            "struct_equivalent_fact_order_remains_significant",
+            r#"
+struct ReversedNonzeroRealView:
+    value R
+    <=>:
+        1 / value = 1 / value
+        value != 0
+"#,
+        ),
+    ] {
+        let mut boundary_runtime = Runtime::new();
+        boundary_runtime.isolated = true;
+        boundary_runtime.new_file_path_new_env_new_name_scope(name);
+        let (boundary_results, boundary_error) = run_source_code(source, &mut boundary_runtime);
+        let (boundary_succeeded, boundary_output) = render_run_source_code_output(
+            &boundary_runtime,
+            &boundary_results,
+            &boundary_error,
+            false,
+        );
+        assert!(
+            !boundary_succeeded && boundary_output.contains("must be non-zero"),
+            "a reciprocal before its nonzero guard must remain ill-defined for {name}:\n{boundary_output}"
+        );
+    }
+}
+
+#[test]
 fn one_field_struct_is_a_named_view_of_its_field_carrier() {
     run_with_large_stack(
         "one_field_struct_is_a_named_view_of_its_field_carrier",

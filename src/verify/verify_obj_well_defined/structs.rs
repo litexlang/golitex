@@ -257,7 +257,13 @@ impl Runtime {
                     ParamObjType::AlphaRename,
                     None,
                 )?;
-                rt.verify_fact_well_defined(&instantiated_fact, verify_state)?;
+                rt.verify_well_defined_and_store_without_infer(
+                    instantiated_fact,
+                    InferReason::ByDefinition(ByDefinitionReason::new(
+                        None,
+                        Some(def.name.clone()),
+                    )),
+                )?;
             }
             Ok::<(), RuntimeError>(())
         })?;
