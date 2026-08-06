@@ -334,7 +334,7 @@ bottom-up pattern illustrated by the calculation and inclusion examples.
 
 ## Conclusions
 
-For an overview of the components of the Litex system, see the [Litex System Map](https://litexlang.com/doc/Litex_System_Map). To try Litex examples and inspect the generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com). For the Litex kernel, see the [golitex repository](https://github.com/litexlang/golitex).
+To try Litex examples and inspect the generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com). For the Litex kernel, see the [golitex repository](https://github.com/litexlang/golitex).
 
 These entry points provide, respectively, a system overview, an interactive way to try Litex, and the implementation source. Returning to the main thread of this document, Litex should not promise to “omit proof.” Its intended promise is both stricter and more modest: let users first write the mathematical facts they actually mean, then let the machine expose the verification, provenance, and boundaries clearly.
 

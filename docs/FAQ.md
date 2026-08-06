@@ -318,6 +318,17 @@ can be user-defined: a verified concrete prop whose unfolding supplies
 congruence, while an already-known `$bijective` fact supplies finite-set
 reindexing. The checker uses these facts but does not invent them.
 
+Range reduction has a stricter reindexing rule because it remembers order.
+Equal-length integer intervals may be translated without any operation law:
+`reduce(a,b,f,op,s)` equals
+`reduce(c,d,fn(k Z) T {f(a+(k-c))},op,s)` when `a <= b` and
+`b-a = d-c`. In particular, choose `c = 0` to rebase the indices to
+`0...(b-a)`. The first or last endpoint may also be peeled off while threading
+the accumulator seed in left-fold order. A bare `$bijective` fact is not
+enough to reverse or permute these indices; that order-insensitive route is
+available through `finite_set_reduce` after associativity and commutativity
+have been verified.
+
 The generic disjoint-union law retains exactly one copy of the seed:
 `F(union(A,B),s) = F(A,F(B,s))` after `intersect(A,B) = {}` is known. The
 seemingly more familiar `op(F(A,s),F(B,s))` would count `s` twice and is false

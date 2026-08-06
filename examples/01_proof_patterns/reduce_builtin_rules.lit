@@ -1,3 +1,25 @@
+# Tracer: reduce preserves order under an integer-interval translation.
+#
+# Before (did not work):
+# forall a, b Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+#     a <= b
+#     =>:
+#         reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) Z {f(a + k)}, op, seed)
+# Former behavior: both reductions were well-defined, but equality verification
+# returned unknown because reduce had no order-preserving substitution rule.
+#
+# Now (verified):
+forall a, b Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+    a <= b
+    =>:
+        reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) Z {f(a + k)}, op, seed)
+# Current behavior: equal-length translated ranges verify when the pulled-back
+# function supplies the same values in the same order. No operation law is used.
+#
+# Boundary: reversing or arbitrarily permuting the indices still requires the
+# associative-commutative finite_set_reduce route; a bijection alone is not
+# enough for an order-sensitive reduce.
+
 # Tracer: generic reductions connect to existing aggregate objects and props.
 #
 # Before (did not work):
@@ -12,6 +34,27 @@ have fn reduce_identity_z(x Z) Z = x
 have fn reduce_sub_z(x, y Z) Z = x - y
 have fn reduce_add_z(x, y Z) Z = x + y
 have fn reduce_mul_z(x, y Z) Z = x * y
+
+# The zero-based form is one instance of a general interval translation.
+forall a, b, c, d Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+    a <= b
+    b - a = d - c
+    =>:
+        reduce(a, b, f, op, seed) = reduce(c, d, fn(k Z) Z {f(a + (k - c))}, op, seed)
+
+# A fold can consume either endpoint. These equations preserve the exact
+# left-fold order and work over an arbitrary carrier without algebraic laws.
+forall T set, a, b Z, f fn(x Z) T, op fn(x, y T) T, seed T:
+    a <= b
+    =>:
+        reduce(a, b, f, op, seed) = reduce(a + 1, b, f, op, op(seed, f(a)))
+        reduce(a, b, f, op, seed) = op(reduce(a, b - 1, f, op, seed), f(b))
+
+# Translating an empty interval also leaves the seed unchanged.
+forall a, b Z, f fn(x Z) Z, op fn(x, y Z) Z, seed Z:
+    b < a
+    =>:
+        reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) Z {f(a + k)}, op, seed)
 
 reduce(1, 3, reduce_identity_z, reduce_add_z, 0) = sum(1, 3, reduce_identity_z)
 reduce(1, 3, reduce_identity_z, reduce_mul_z, 1) = product(1, 3, reduce_identity_z)
@@ -97,6 +140,10 @@ finite_set_reduce(union({3}, {1, 2}), reduce_identity_z, reduce_add_z, 0) = 3 + 
 
 # Boundary: the sum bridge requires additive identity seed zero.
 # reduce(1, 3, reduce_identity_z, reduce_add_z, 1) = sum(1, 3, reduce_identity_z)
+
+# Boundary: this reversal changes an order-sensitive fold from 12 to 21.
+# have fn reduce_decimal_append_z(x, y Z) Z = 10 * x + y
+# reduce(1, 2, reduce_identity_z, reduce_decimal_append_z, 0) = reduce(1, 2, fn(k Z) Z {reduce_identity_z(3 - k)}, reduce_decimal_append_z, 0)
 
 # Evidence:
 # target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/reduce_builtin_rules.lit

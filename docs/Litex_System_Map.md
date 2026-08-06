@@ -254,6 +254,13 @@ Ordered adjacent-range composition is separate and remains valid for
 noncommutative operations. A concrete prop may expose a matching operation
 law as a known `forall`, but none of these routes invents an operation law,
 pointwise equality, disjointness proof, or bijection.
+For ordered `reduce`, an additional bounded rule recognizes translations
+between equal-length closed integer ranges. It checks the pullback value at one
+fresh target index, so `k` corresponds to `a + (k - c)` and the original value
+order is unchanged. First- and last-step equations thread the accumulator
+through the corresponding endpoint. Arbitrary bijections remain confined to
+the associative-commutative `finite_set_reduce` route because a set bijection
+does not preserve the ascending enumeration used by `reduce`.
 Integer adjacency is another direct one-step rule: known integer objects and
 `a < b + 1` prove `a <= b`, without recursively deriving an intermediate
 shifted comparison.

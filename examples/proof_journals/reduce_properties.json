@@ -9,7 +9,8 @@
   "proof_spine": [
     "Recognize addition with seed zero and multiplication with seed one as specializations of generic reduction.",
     "Transport reductions across pointwise-equal functions on the exact index set.",
-    "Relate finite-set reduction to membership, disjoint union, and bijective reindexing without assuming an iteration order."
+    "Relate finite-set reduction to membership, disjoint union, and bijective reindexing without assuming an iteration order.",
+    "Translate closed integer intervals without changing reduce order, and expose both endpoint equations."
   ],
   "blocks": [
     {
@@ -165,10 +166,52 @@
       "accepted_litex": null,
       "reusable_lesson": "Aggregate specialization depends on the exact identity seed, and reindexing depends on an explicit bijection.",
       "status": "negative_regression"
+    },
+    {
+      "id": "B007",
+      "source_order": 7,
+      "intent": "Reindex an ordered reduce along an equal-length integer-interval translation and expose its endpoint equations.",
+      "dependencies": ["existing empty, last-step, and adjacent-partition reduce rules"],
+      "attempts": [
+        {
+          "candidate": "forall a,b Z with a<=b: reduce(a,b,f,op,s) = reduce(0,b-a,fn(k Z) Z {f(a+k)},op,s)",
+          "result": "failed",
+          "verifier_evidence": "session reindex_before: well-definedness succeeded and equality verification returned unknown",
+          "diagnosis": "The checker had no rule relating the ascending enumerations of translated closed integer ranges.",
+          "next_change": "Compare interval lengths and verify the pulled-back function at one arbitrary target index."
+        },
+        {
+          "candidate": "forall a,b Z with a<=b: reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))",
+          "result": "failed",
+          "verifier_evidence": "session first_step_before: well-definedness succeeded and equality verification returned unknown",
+          "diagnosis": "Only the last-step equation was previously available.",
+          "next_change": "Add the symmetric first-step rule while preserving left-fold seed order."
+        },
+        {
+          "candidate": "The zero-based rule, a general equal-length translation, and the first-step equation over arbitrary operations and carriers.",
+          "result": "accepted",
+          "verifier_evidence": "sessions reindex_after, translated_interval_after, generic_carrier_after, and generic_first_step_after: ok true"
+        },
+        {
+          "candidate": "The same zero-based translation under b<a.",
+          "result": "failed_then_accepted",
+          "verifier_evidence": "session empty_reindex_existing first returned unknown; final session empty_zero_rebase returned ok true after adding the explicit equally-long empty-interval branch",
+          "diagnosis": "The older empty rule did not automatically derive b-a<0 while recursively comparing two reductions.",
+          "next_change": "Use source emptiness plus equal signed interval lengths to recognize that both translated folds return the same seed."
+        },
+        {
+          "candidate": "Reverse 1...2 under op(x,y)=10*x+y, which would claim 12=21.",
+          "result": "failed_as_expected",
+          "verifier_evidence": "final session reversal_boundary: well-definedness succeeded and equality verification rejected the reordered fold"
+        }
+      ],
+      "accepted_litex": "forall T set, a, b Z, f fn(x Z) T, op fn(x, y T) T, seed T:\n    a <= b\n    =>:\n        reduce(a, b, f, op, seed) = reduce(0, b - a, fn(k Z) T {f(a + k)}, op, seed)\n        reduce(a, b, f, op, seed) = reduce(a + 1, b, f, op, op(seed, f(a)))\n        reduce(a, b, f, op, seed) = op(reduce(a, b - 1, f, op, seed), f(b))",
+      "reusable_lesson": "A closed_range object forgets order, but reduce uses its ascending enumeration. Equal-length translations preserve that enumeration for every operation; arbitrary bijections remain valid only through the associative-commutative finite_set_reduce route.",
+      "status": "materialized"
     }
   ],
   "materialization": {
-    "block_ids": ["B001", "B002", "B003", "B004", "B005"],
+    "block_ids": ["B001", "B002", "B003", "B004", "B005", "B007"],
     "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/reduce_builtin_rules.lit",
     "file_gate_result": "exit 0; runner envelope ok true",
     "harness_command": "cargo test --release run_examples -- --nocapture",

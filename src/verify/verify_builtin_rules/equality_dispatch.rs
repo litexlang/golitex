@@ -645,6 +645,21 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_reduce_order_preserving_translation(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_reduce_first_step(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_reduce_adjacent_partition(
             left,
             right,

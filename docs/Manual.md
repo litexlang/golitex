@@ -654,7 +654,9 @@ The generic folds are not restricted to scalar arithmetic. For both forms,
 must be unary with return set `T`, and `seed` must belong to `T`; the result
 then belongs to `T`. `reduce` visits the closed integer interval from left to
 right and returns `seed` when `last < first`. Thus its defining nonempty step
-is `op(reduce(first, last - 1, f, op, seed), f(last))`.
+is `op(reduce(first, last - 1, f, op, seed), f(last))`. Equivalently, it may
+consume the first value into the seed and continue at `first + 1`:
+`reduce(first + 1, last, f, op, op(seed, f(first)))`.
 
 Because a finite set has no iteration order, `finite_set_reduce` additionally
 requires Litex to verify that `op` is associative and commutative on `T`.
@@ -673,6 +675,9 @@ through the following direct rules:
 | `finite_set_reduce(S,f,op,0) = finite_set_sum(S,g)` | Equal finite sets, pointwise equality on `S`, and additive `op` |
 | `finite_set_reduce(S,f,op,1) = finite_set_product(S,g)` | Equal finite sets, pointwise equality on `S`, and multiplicative `op` |
 | two reductions with otherwise equal arguments | `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)` |
+| `reduce(a,b,f,op,s) = reduce(c,d,fn(k Z) T {f(a+(k-c))},op,s)` | `a <= b` and `b-a = d-c`; this is an order-preserving translation, so no operation law is needed |
+| `reduce(a,b,f,op,s) = reduce(a+1,b,f,op,op(s,f(a)))` | `a <= b`; consume the first value into the seed |
+| `reduce(a,b,f,op,s) = op(reduce(a,b-1,f,op,s),f(b))` | `a <= b`; consume the last value after the prefix |
 | `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))` | `a <= b < c`; no commutativity assumption |
 | `finite_set_reduce(union(A,B),f,op,s) = finite_set_reduce(A,f,op,finite_set_reduce(B,f,op,s))` | `intersect(A,B) = {}` |
 | a finite-set pullback written as `fn(y B) T {f(g(y))}` | `$bijective(B,A,g)`; a checked named function may unfold once to the same shape |
@@ -684,6 +689,20 @@ fact. Likewise, congruence consumes the existing `$fn_eq_in` predicate, and
 reindexing consumes the existing `$bijective` predicate. These are one-step
 builtin rules: they use relationships already present in the context but do
 not invent a pointwise proof, disjointness fact, or bijection.
+
+For interval translation, the target index `k` is sent to
+`a + (k - c)`. Equal differences `b - a = d - c` ensure that the two closed
+integer ranges have the same length, and the pullback condition ensures that
+the folds see the same value sequence. The common zero-based form takes
+`c = 0` and `d = b - a`. If `b < a`, equally long translated intervals are
+both empty and therefore return the same seed.
+
+This rule is deliberately not arbitrary bijective reindexing. A
+`closed_range` is a set object, but `reduce` uses its ascending enumeration;
+a bijection may reverse that order. When `op` is associative and commutative,
+first bridge the range reduction to `finite_set_reduce` and use its existing
+`$bijective` substitution rule. Otherwise the translation must preserve the
+index order.
 
 The disjoint-union formula deliberately nests the second reduction as the
 first reduction's seed. Writing `op(reduce(A,...,s), reduce(B,...,s))` would
