@@ -14,7 +14,12 @@
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
-Litex is experimental research software. It is not ready for mission-critical work. *VISIT [OUR WEBSITE](litexlang.com) FOR EXECUTABLE INTRODUCTION OF LITEX*
+Litex is experimental research software developed in public, so this
+repository intentionally includes drafts, experiments, and incomplete work.
+Public availability is not a completion claim; rely on tagged releases,
+current tests, and the stated `trust` boundaries and known limitations. It is
+not ready for mission-critical work. *VISIT [OUR WEBSITE](litexlang.com) FOR
+EXECUTABLE INTRODUCTION OF LITEX*
 
 </div>
 
@@ -222,12 +227,10 @@ clearly. (Since Litex operates on a higher mathematical abstraction level, it us
 
 Litex is also researching a compilation path to Lean. The current repository
 keeps only a narrow experiment: verified rational equalities over `R` are
-first checked by ordinary Litex execution, then handed to To-Lean through the
-current per-statement JSON rule description. They are lowered recursively to
-numerator/denominator pairs and emitted with `ring`, or `field_simp` followed
-by `ring`. This JSON adapter is a tracer bullet, not yet a stable proof IR,
-general compiler, or proof-certificate path; the group example above
-illustrates the intended language relationship, not current coverage. See the
+lowered recursively to numerator/denominator pairs and emitted with `ring`, or
+`field_simp` followed by `ring`. This is not yet a general compiler or proof
+certificate path; the group example above illustrates the intended language
+relationship, not current coverage. See the
 [compiler README](src/to_lean/README.md) for the supported subset and current
 boundary.
 

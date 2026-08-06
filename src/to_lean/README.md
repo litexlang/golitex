@@ -1,65 +1,10 @@
 # To-Lean Rational Experiment
 
-This module deliberately keeps the existing public entrypoints while using one
-small handoff experiment. Litex first runs normally and produces its existing
-per-statement JSON. The To-Lean adapter then reads only the JSON `result`,
-`statement`, and `rule` fields; it does not call the verifier. If that JSON says
-the equality was checked by `bounded symbolic normalization` (or the existing
-rational-simplification label), the adapter reparses only the statement text,
-lowers its two rational expressions, and emits Lean. Closed `calculation`
-results remain supported for compatibility.
-
-The JSON is intentionally the current human-facing output, not a stable proof
-IR or proof certificate. This is a tracer bullet for the desired direction,
-with that limitation kept explicit.
-
-## Tracer: current JSON handoff
-
-### Before
-
-`to_lean` parsed the source statement and immediately called
-`run_stmt_at_global_env`. After success it selected Lean code from the equality
-shape, without requiring the normal Litex JSON to say which route had worked.
-
-### Now
-
-For the central example, normal Litex output contains:
-
-```json
-{
-  "result": "success",
-  "statement": "forall a, b, x R:\n    x != 0\n    =>:\n        (a + b) / x = a / x + b / x",
-  "conclusions": [
-    {
-      "statement": "(a + b) / x = a / x + b / x",
-      "why_verified": {
-        "type": "builtin rule",
-        "rule": "bounded symbolic normalization"
-      }
-    }
-  ]
-}
-```
-
-`to_lean_from_statement_json` can see only this object. It accepts the exact
-rule, extracts and reparses the top-level `statement`, and emits a Lean proof
-whose comment records `rational expression simplification`. Replacing the JSON
-rule with `same known equality class` makes the adapter reject the same
-statement.
-
-### Boundary
-
-This adapter relies on current JSON field names, spacing-independent string
-extraction, and English rule labels. It does not validate a general proof tree,
-connect nested evidence nodes, or establish that the JSON is authentic. Those
-are deliberately deferred instead of being disguised as an IR.
-
-### Evidence
-
-```text
-cargo test --release normal_statement_json_drives_the_rational_tracer -- --nocapture
-cargo test --release current_json_adapter_rejects_a_different_proof_route -- --nocapture
-```
+This module deliberately keeps the existing public entrypoints while replacing
+the former broad emitter with one small experiment: verified equalities over
+`R` are lowered recursively to rational-expression pairs and discharged in Lean
+with `norm_num` for closed numeric facts, `ring` for polynomial facts, or
+`field_simp` followed by `ring` when a symbolic denominator remains.
 
 ## Tracer: chained numeric division
 
@@ -148,9 +93,9 @@ This is not a general Litex-to-Lean compiler. It accepts only closed direct
 equalities and universal equalities with `R` parameters, plus explicit `!=`
 premises when symbolic denominators need them. Transcendental functions,
 definitions, claims, theorem bodies,
-conjunctions, and general proof provenance are intentionally outside the
-experiment. Only the current JSON rule label for this rational route is
-consumed; it is not yet translated into a Lean proof certificate.
+conjunctions, and proof provenance are intentionally outside the experiment.
+The existence of a Litex verification result is not yet translated into a Lean
+proof certificate.
 
 ### Evidence
 
@@ -159,5 +104,5 @@ target/release/litex -compact -runner -e '<the active tracer above>'
 cargo test --release to_lean:: -- --nocapture
 ```
 
-Implementation: `src/to_lean/current_json.rs`,
-`src/to_lean/rational_expression.rs`, and `src/to_lean/to_lean_pipeline.rs`.
+Implementation: `src/to_lean/rational_expression.rs` and
+`src/to_lean/to_lean_pipeline.rs`.

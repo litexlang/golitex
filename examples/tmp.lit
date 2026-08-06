@@ -1,4 +1,4 @@
-forall a N+:
-    23 <= a
+forall s, t, u set:
+    s $subset t
     =>:
-        11 <= a
+        intersect(s, u) $subset intersect(t, u)

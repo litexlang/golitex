@@ -1519,7 +1519,7 @@ forall b R:
                 "ordered finite endpoints should establish nonemptiness through bounded strategy children:\n{run_output}"
             );
             assert!(
-                run_output.matches("\"type\": \"builtin strategy\"").count() >= 8,
+                run_output.matches("\"type\": \"builtin strategy\"").count() >= 4,
                 "finite-endpoint nonemptiness should retain strategy provenance:\n{run_output}"
             );
 

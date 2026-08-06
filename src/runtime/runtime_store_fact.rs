@@ -519,18 +519,30 @@ impl Runtime {
         fact: Fact,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
-        let reason_text = reason.store_reason();
-        if self.non_forall_fact_is_cached(&fact) {
-            return Ok(InferResult::new());
-        }
         let verify_state = match &fact {
             Fact::ForallFact(_) | Fact::ForallFactWithIff(_) => {
                 UseContextVerifyState::new(0, false)
             }
             _ => UseContextVerifyState::new_with_final_round(false),
         };
+        self.verify_well_defined_and_store_without_infer_with_state(fact, &verify_state, reason)
+    }
+
+    /// Mathematical contract: the state-aware form preserves a caller's
+    /// recursion restrictions while staging a checked fact without deriving
+    /// consequences from it.
+    pub(crate) fn verify_well_defined_and_store_without_infer_with_state(
+        &mut self,
+        fact: Fact,
+        verify_state: &UseContextVerifyState,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        let reason_text = reason.store_reason();
+        if self.non_forall_fact_is_cached(&fact) {
+            return Ok(InferResult::new());
+        }
         if !self.current_execution_is_trusted_file() {
-            self.verify_fact_well_defined(&fact, &verify_state)?;
+            self.verify_fact_well_defined(&fact, verify_state)?;
         }
 
         self.top_level_env().store_fact(fact.clone())?;

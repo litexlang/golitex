@@ -8,6 +8,13 @@ This page collects common questions about Litex's design, performance model,
 and intended proof style. It is written as a living note: answers should stay
 concrete, modest, and close to the current verifier behavior.
 
+## Does everything in the public repository count as finished?
+
+No. Litex is developed in public, so drafts, experiments, and incomplete
+translations remain visible and available for reuse. Treat a feature or proof
+as complete only when its current tests, dated status, explicit `trust`
+boundary, and known limitations support that claim.
+
 Litex source code stays the same across languages, but CLI output supports
 localized JSON keys and explanatory labels with `litex -lang <code> ...`.
 See [`docs/cli.md`](cli.md) for the supported language codes.
@@ -284,8 +291,9 @@ try one fresh direct rule on its immediate children. Neither route calls known
 Detailed output distinguishes `builtin rule` from `builtin strategy` and
 returns nested child results to the root.
 
-Finite intervals are a representative example. Nonemptiness of
-`closed_range(a, b)` reduces structurally to `a <= b`; nonemptiness of
+Finite intervals are a representative example. Already-known or computational
+endpoint order uses a direct fast path. Otherwise nonemptiness of
+`closed_range(a, b)` reduces structurally to `a <= b`, and nonemptiness of
 `range(a, b)` reduces to `a < b`. A closed real interval `'[a, b]` uses weak
 order, while a real interval with either endpoint open uses strict order. The
 smaller order child receives one fresh direct-rule layer, so a local bound such

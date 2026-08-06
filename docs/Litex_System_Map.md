@@ -156,6 +156,13 @@ side condition. The inference reentrancy guard prevents recursive definition
 cycles; abstract predicates have no clauses to expose; the child environment
 is discarded after checking, so none of these temporary assumptions escape.
 
+A `struct` `<=>:` block likewise checks its equivalent facts in source order
+inside the temporary field scope, but stages each successful fact without
+definition inference. Earlier filter guards can therefore justify the
+well-definedness of later partial expressions. Declaration checking and later
+instantiated-carrier checking use the same rule; reversing a required guard
+still fails, and no staged fact escapes the struct check.
+
 ### The Atomic Verification Loop
 
 Most proof obligations eventually ask for an atomic target. The public model is:
@@ -211,6 +218,14 @@ children; each layer may try one fresh direct rule before repeating only that
 strategy. Neither route enters the full verifier, known `forall` matching,
 definitions, or user strategies, and the child result tree is returned to the
 root.
+
+Finite-endpoint nonemptiness first has a direct fast path for already-known or
+computational order. Otherwise `closed_range(a, b)` and the closed real
+interval `'[a, b]` reduce structurally to `a <= b`; half-open integer
+`range(a, b)` and real intervals with an open endpoint reduce to `a < b`. The
+endpoint-order fact is the smaller child and may use one fresh direct rule.
+Missing order does not establish nonemptiness, and equal endpoints remain
+empty whenever an end is open.
 
 Finite-product equality uses this split directly: pointwise congruence is a
 structural strategy, while pointwise multiplication and substitution along an
@@ -350,6 +365,7 @@ not persist or propagate trust metadata through later facts and theorems.
 | `obtain names from exist ...` | Opens existential binders into the current scope. | Witness count, parameter types, and existential shape must match. | Verify the source existential fact from the current context. | Bind opaque witness names and store the instantiated direct body facts; positive concrete predicate bodies recursively expose their positive clauses under cycle guards. | Adds no new trust. |
 | `prop P(params): clauses` | Parameters are local while the definition is checked. | Name, parameter domains, and clauses must be well-defined. | The clauses are not proved; they declare the meaning of `P`. | Store the concrete predicate definition. | A definition, not a theorem or assumption about existing objects. |
 | `abstract_prop P(params)` | Parameters describe an interface only. | Name and parameter shape must be valid and nonconflicting. | None. There is no defining body. | Store the predicate symbol and arity. | Introduces no fact; later properties still need proof or explicit trust. |
+| `struct Name: fields <=>: filters` | Header parameters, fields, and filter facts live in temporary definition scopes. | Field carriers are checked in declaration order. Equivalent facts are checked left to right and each successful fact is staged without inference for later well-definedness; instantiated carriers repeat the same check. | The filters are not proved; they define membership in the named product view. | Store the struct definition only after the complete check succeeds. | A checked definition, not an assumption that arbitrary field values satisfy its filters. |
 | `have fn f(params) T = body` | Parameters and domain conditions are local. | Signature, domain conditions, return set, and body must be well-defined. Later domains may cite earlier parameters; the return set may cite all function parameters and is instantiated with actual arguments at application. | Prove `body $in T` under the parameter and domain assumptions; an annotation never supplies this fact by itself. | Store `f`, its function type, defining equation, and callable body facts. | Checked mathematical definition. |
 | `have fn f(...) T by cases` | Each case is checked under its own local condition. | Signature, cases, conditions, and return expressions must be well-defined. | Prove coverage, mutual exclusivity, and return membership for every case. | Store the function and the case-specific universal equations. | Checked mathematical definition. |
 | `have fn f(...) T by induc ...` | Base and recursive cases receive induction-local bindings. | Signature, measure, lower bound, cases, and recursive calls must have valid shapes. | Check the lower bound, coverage, return membership, and strict decrease of recursive calls. | Store the recursive function definition and its usable equations. | Checked definition with termination obligations. |
