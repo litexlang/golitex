@@ -197,6 +197,11 @@ warnings. These are direct statement counts; the runtime does not classify
 theorems or derived facts by transitive trust dependency. It also includes
 `statement_type_counts`, `output_type_counts`, and a `statements` array with
 line numbers and rendered statement text for editor-side cursor selection.
+Only successfully committed statements contribute to these counts. A failed
+atomic `trust` or `trust have` remains visible in the error object, but its
+staged facts, bindings, and inference do not appear in the environment summary
+or graph artifacts. An earlier, separately successful statement remains part
+of the successful prefix.
 Prefer:
 
 ```bash

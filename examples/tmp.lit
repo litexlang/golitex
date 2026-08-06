@@ -1,3 +1,31 @@
-have f fn(x R) R
-forall a R:
-    f(a) = f(a)
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)

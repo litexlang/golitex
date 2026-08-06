@@ -21,6 +21,9 @@ impl Runtime {
         if let Some(struct_obj) = default_struct_view {
             self.register_default_struct_view(&bindings, &struct_obj);
         }
+        if let ParamType::Obj(Obj::Cart(cart)) = &param_type {
+            self.register_default_tuple_view(&bindings, cart);
+        }
         let param_def_with_param_type = ParamGroupWithParamType::new(bindings, param_type);
         if tb.current_token_is_equal_to(COMMA) {
             tb.skip_token(COMMA)?;

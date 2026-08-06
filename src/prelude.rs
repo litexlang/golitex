@@ -619,6 +619,7 @@ pub use crate::common::keywords::TRUST;
 pub use crate::common::keywords::TRY;
 pub use crate::common::keywords::TUPLE;
 pub use crate::common::keywords::TUPLE_DIM;
+pub use crate::common::keywords::UNFOLD;
 pub use crate::common::keywords::UNION;
 pub use crate::common::keywords::UNKNOWN_COLON;
 pub use crate::common::keywords::USE;

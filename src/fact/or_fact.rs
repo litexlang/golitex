@@ -1,6 +1,11 @@
 use crate::prelude::*;
 use std::fmt;
 
+/// Canonical outer disjunction.
+///
+/// Each branch has already been parsed as an atomic fact, relation chain, or
+/// flat conjunction. This preserves the fixed `and`-before-`or` binding
+/// hierarchy without making compound facts recursively nestable.
 #[derive(Clone)]
 pub struct OrFact {
     pub facts: Vec<AndChainAtomicFact>,

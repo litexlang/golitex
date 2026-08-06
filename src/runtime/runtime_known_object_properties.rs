@@ -492,6 +492,24 @@ impl Runtime {
         None
     }
 
+    pub fn get_obj_tuple_cart(&self, name: &str) -> Option<Cart> {
+        for env in self.iter_environments_from_top() {
+            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(name) {
+                return Some(known_cart_obj.clone());
+            }
+        }
+        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
+            for env in self.imported_module_environments(module_name) {
+                if let Some((_, Some(known_cart_obj), _)) =
+                    env.known_objs_equal_to_tuple.get(local_name)
+                {
+                    return Some(known_cart_obj.clone());
+                }
+            }
+        }
+        None
+    }
+
     pub fn get_obj_equal_to_finite_seq_list(&self, name: &str) -> Option<FiniteSeqListObj> {
         for env in self.iter_environments_from_top() {
             if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {

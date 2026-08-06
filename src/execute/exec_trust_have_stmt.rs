@@ -7,14 +7,14 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_trust_have_stmt_verify_well_definedness(trust_have_stmt)?;
         self.exec_trust_have_stmt_verify_process(trust_have_stmt)?;
-        let infer_result = self.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
-        Ok(NonFactualStmtSuccess::new(trust_have_stmt.clone().into(), infer_result, vec![]).into())
+        self.exec_trust_have_stmt_affect_environment_only(trust_have_stmt)
     }
 
     /// Mathematical contract implementation: `trust have` has no separate
     /// well-definedness preflight. Its environment phase defines the declared
     /// parameters and, outside the explicit trusted-file boundary, checks each
-    /// attached fact before assuming it; strict mode rejects it first.
+    /// attached fact before assuming it. The bindings, facts, and inferred
+    /// consequences are committed atomically; strict mode rejects it first.
     fn exec_trust_have_stmt_verify_well_definedness(
         &mut self,
         _trust_have_stmt: &TrustHaveStmt,
@@ -37,7 +37,7 @@ impl Runtime {
         Ok(vec![])
     }
 
-    pub(crate) fn exec_trust_have_stmt_affect_environment(
+    fn exec_trust_have_stmt_affect_environment(
         &mut self,
         trust_have_stmt: &TrustHaveStmt,
     ) -> Result<InferResult, RuntimeError> {
@@ -79,7 +79,12 @@ impl Runtime {
         &mut self,
         trust_have_stmt: &TrustHaveStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let infer_result = self.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
-        Ok(NonFactualStmtSuccess::new(trust_have_stmt.clone().into(), infer_result, vec![]).into())
+        self.run_in_local_env_and_commit(|rt| {
+            let infer_result = rt.exec_trust_have_stmt_affect_environment(trust_have_stmt)?;
+            Ok(
+                NonFactualStmtSuccess::new(trust_have_stmt.clone().into(), infer_result, vec![])
+                    .into(),
+            )
+        })
     }
 }

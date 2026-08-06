@@ -124,6 +124,53 @@ and mathematical familiarity with as few first-class forms as possible, rather
 than starting from a maximally general programming language or proof-term
 calculus.
 
+## Why can an `or` branch contain an `and` if `and` contains only atomic facts?
+
+Because Litex uses a fixed precedence hierarchy for facts. An `and` is
+deliberately flat and contains only atomic facts. The parser finishes one
+atomic, relation-chain, or flat-`and` branch before the outer `or` collects
+those branches. Internally, this is why an `AndFact` stores atomic facts while
+an `OrFact` stores `AndChainAtomicFact` branches.
+
+For example, Litex reads
+
+```text
+$p(a) and $q(a) or $t(a)
+```
+
+as the two `or` branches `($p(a) and $q(a))` and `$t(a)`. Saying that `or` is
+the higher grammar/AST layer and saying that `and` has tighter operator-binding
+precedence describe the same parse from two viewpoints. This does not make the
+fact grammar recursively nestable: `and` still contains only atomic facts, and
+`or` only collects completed atomic, chain, or flat-conjunction branches.
+
+The sole positive nested-`forall` conclusion follows the same canonical
+principle. The surface parser accepts it for convenience, then merges its
+parameters and premises into the outer `forall`; the stored conclusion remains
+non-`forall`. A nested universal mixed with sibling conclusions is rejected
+rather than stored as a different logical shape.
+
+This means that some ordinary logical shapes have no direct anonymous Litex
+syntax. In particular, a `forall` cannot be used directly as one branch of an
+`or`, even though Lean can recursively compose that proposition shape. For a
+closed subclaim, name the compound fact with a zero-parameter `prop`, then use
+the resulting atomic call in the outer fact:
+
+```litex
+prop all_reals_reflexive():
+    forall x R:
+        x = x
+
+by def $all_reals_reflexive()
+$all_reals_reflexive() or 1 = 1 and 2 = 2
+```
+
+The declaration defines `$all_reals_reflexive()` to be equivalent to its body;
+it does not make the body true automatically. If the subclaim has free objects,
+give the `prop` corresponding parameters. This naming step preserves Litex's
+canonical fact representation while still exposing the intended mathematical
+statement through an atomic interface.
+
 ## What are builtin objects and builtin rules?
 
 Litex is easiest to understand through four related layers:
@@ -382,12 +429,15 @@ objects with the corresponding set-theoretic properties.
 
 Function "types" are also set-theoretic function spaces. A declaration such as
 `fn(x S) T` means a function object whose inputs come from `S` and whose values
-come from `T`. The domain and return set are ordinary set objects; broader
-parameter kinds such as `set`, `nonempty_set`, and `finite_set` belong in
-definition or theorem headers, not as ordinary function input domains. This is
-why `fn(x set) R` is not the right way to say "a function that accepts any
-set." Set-theoretic functions must have one concrete domain object, and Litex
-does not treat "the collection of all sets" as one ordinary set object.
+come from `T`. Later parameter domains may cite earlier parameters, and the
+return set may cite the function parameters; an application substitutes its
+actual arguments into those set expressions. These domains and return sets are
+still ordinary set objects. Broader parameter kinds such as `set`,
+`nonempty_set`, and `finite_set` belong in definition or theorem headers, not
+as ordinary function input domains. This is why `fn(x set) R` is not the right
+way to say "a function that accepts any set." Set-theoretic functions must have
+one concrete domain object, and Litex does not treat "the collection of all
+sets" as one ordinary set object.
 
 This has an important consequence: a Litex object does not have one unique
 canonical type that determines all later notation. The same object may be known
@@ -589,13 +639,19 @@ verified context of facts.
 
 The design keeps some dependent-looking forms because ordinary mathematics
 needs them. Later parameter domains may depend on earlier parameters, as in
-`fn(c1, c2 q) q`, and `template` supports parameterized families such as
-structures, sequence spaces, and quotient constructions indexed by a carrier
-or by hypotheses. But Litex does not currently expose general dependent return
-types, universe-polymorphic type families, or proof terms as ordinary
-computational data. The choice is pragmatic: the project is testing whether a
-fact-oriented, readable, set-theoretic interface can cover a large amount of
-day-to-day mathematics with a smaller user-facing language.
+`fn(c1, c2 q) q`. A return set may also depend on the current function
+parameters and is instantiated at application. For example, after
+`have g fn(S power_set(R)) fn(x S) R`, the partial application `g(R)` has the
+instantiated carrier `fn(x R) R`.
+
+This is controlled set-valued dependency, not full dependent type theory.
+`template` supports families such as structures, sequence spaces, and quotient
+constructions indexed by an arbitrary carrier or by hypotheses. Litex still
+does not expose universe-polymorphic type families, proof-indexed computational
+types, or proof terms as ordinary computational data. The choice is pragmatic:
+the project is testing whether a fact-oriented, readable, set-theoretic
+interface can cover a large amount of day-to-day mathematics with a smaller
+user-facing language.
 
 For a concrete quotient-group construction, see the quotient-group section in
 the Manual.
@@ -937,8 +993,34 @@ often makes the proof easier to audit.
 ## Is proof debt a proof?
 
 No. `trust` is explicit assumption injection, not a proof-producing command. It
-adds a fact to the current context after checking that the statement is
-meaningful enough to store. Later checked facts may depend on it.
+is Litex's closest analogue to Lean's `by sorry`: it deliberately lets the
+author cross the ordinary proof boundary. For example, both of these are
+intentional uses of `trust`, not verifier bugs:
+
+```litex
+prop positive_real(x R):
+    x > 0
+
+trust 0 = 1
+trust $positive_real({})
+```
+
+The second line is accepted even though `{}` was not previously known to
+belong to `R`. A concrete `prop` parameter carrier is a proof-time condition
+when the definition is used normally; it is not a formation check that limits
+what the author may inject with `trust`. After the trusted proposition is
+stored, ordinary definition inference may also record its declared parameter
+fact, here `{} $in R`, and other consequences of the definition. Those are
+consequences of the unsafe assumption, not independently checked discoveries.
+
+`trust` is therefore intentionally very powerful. It still requires parsable
+Litex, a known predicate with the correct arity, and argument objects that the
+runtime can represent; it is not a way to submit arbitrary malformed syntax.
+But it may assume a false equality, place an object outside a proposition's
+previously established carrier, and make later statements succeed through the
+resulting trusted context. Tightening concrete proposition calls to reject
+such a trusted argument would weaken the intended escape hatch, so this
+behavior should not be classified as a well-definedness bug.
 
 In documentation and audits, read `trust P` as "assume P from this point onward."
 If a later `verification`
@@ -959,7 +1041,8 @@ This is useful for three narrow purposes:
 The cost is explicit. If a false statement is introduced with `trust`, later
 results can inherit that assumption. Serious Litex developments should keep
 remaining `trust` facts visible and treat them as assumptions or proof debt, not
-as completed proof.
+as completed proof. Litex reports this trust boundary, and strict mode rejects
+source-level `trust` entirely.
 
 ## Why does Litex infer extra facts after accepting a line?
 
