@@ -6,9 +6,7 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 ## Background
 
-The arrival of AI is rapidly increasing the amount of generated mathematical proof, making verification an increasingly important bottleneck. Litex tests the following hypothesis: can we design a formal language that, like everyday mathematics, centers objects and facts while still being checked rigorously by a machine? Can such a language make the distance between writing mathematics and verifying it short enough that users can genuinely understand the formal tool they are using, its trusted boundary, and exactly why a conclusion was accepted? The design of the Litex language and its output should serve this stricter goal.
-
-Litex develops this hypothesis in public, so the repository intentionally exposes experiments and unfinished work as well as checked results. Public availability is not a completion claim; each claim should be read against its current tests, dated status, trust boundary, and known limitations.
+Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning in a form close to ordinary mathematics while every conclusion is rigorously checked by a machine.
 
 ## Starting from the Everyday Mathematical Workflow
 
@@ -106,9 +104,60 @@ second five-point summary here.
 
 ## How Litex Pursues These Goals
 
-### 1. Users State Results Directly; the System Searches for Proof Support
+### 1. Users State Mathematical Patterns and Results; the System Searches for Concrete Proof Support
 
-What Litex first changes is not code length but the division of labor between user and system. The user writes results that should hold, such as `1 + 1 = 2`, the union of finite sets being finite, or `x^2 >= 0`. Litex first checks that their objects are well-defined, then searches builtin rules, known facts, and known universally quantified facts for support. In typical Lean tactic interaction, the conclusion is first given as a Goal; the user then specifies which facts to invoke and how to rewrite or decompose the Goal, and the system constructs the complete proof accordingly.
+Litex is pattern-first and proof-mechanics-second: source records reusable mathematical structure and the result that should hold, while the checker finds and explains concrete proof support for the current instance. What Litex first changes is not code length but the division of labor between user and system. The user writes results such as `1 + 1 = 2`, the union of finite sets being finite, or `x^2 >= 0`. Litex first checks that their objects are well-defined, then searches builtin rules, known facts, and known universally quantified facts for support. In typical Lean tactic interaction, the conclusion is first given as a Goal; the user then specifies which facts to invoke and how to rewrite or decompose the Goal, and the system constructs the complete proof accordingly.
+
+A small set theorem makes that division of labor concrete. If `s` is a subset
+of `t`, intersecting both with the same set `u` preserves the inclusion. In
+Litex, the user can state that result directly:
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+This is a complete fact submitted to the checker, not a proof hole. Its
+ordinary mathematical reading is enough to describe the argument: a member of
+`intersect(s, u)` belongs to `s` and `u`; membership passes from `s` to `t`, so
+the member belongs to `intersect(t, u)`.
+
+The sets chapter of *Mathematics in Lean* gives an explicit unfolding proof:
+
+```lean
+import Mathlib.Data.Set.Lattice
+
+section
+variable {α : Type*}
+variable (s t u : Set α)
+open Set
+
+example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u := by
+  rw [subset_def, inter_def, inter_def]
+  rw [subset_def] at h
+  simp only [mem_setOf]
+  rintro x ⟨xs, xu⟩
+  exact ⟨h _ xs, xu⟩
+end
+```
+
+Lean can also express the same proof as a compact, generic proof term:
+
+```lean
+example {α : Type*} {s t u : Set α} (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
+  fun _x ⟨xs, xu⟩ ↦ ⟨h xs, xu⟩
+```
+
+The Lean versions show explicit control and elegant generality; the latter is
+even shorter and ranges over every carrier type `α`. The difference is not
+line count but the default starting point. Litex asks the user to state the
+next mathematical fact without first learning library names such as
+`subset_def` or proof-term construction. That lowers the initial barrier and
+keeps the source close to ordinary mathematical writing. The tradeoff is that
+the routine reasoning moves into the Litex checker and must remain tested and
+auditable.
 
 | Default interaction | User source primarily states | Interactive output primarily supplies |
 |---|---|---|
@@ -316,3 +365,5 @@ asks the user what should follow next, leaving the checker to find and explain
 the support. This is not an attempt to replace Lean. It is another direction
 worth practicing and testing for how humans and AI might write formal
 mathematics together.
+
+> Litex develops its mission in public, so the repository intentionally exposes experiments and unfinished work as well as checked results. Public availability is not a completion claim; each claim should be read against its current tests, dated status, trust boundary, and known limitations.
