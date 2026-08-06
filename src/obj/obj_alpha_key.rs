@@ -152,6 +152,19 @@ fn collect_obj_binder_bindings(
             collect_obj_binder_bindings(&x.set, bindings, seen, depth);
             collect_obj_binder_bindings(&x.func, bindings, seen, depth);
         }
+        Obj::Reduce(x) => {
+            collect_obj_binder_bindings(&x.start, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.end, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.func, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.op, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.seed, bindings, seen, depth);
+        }
+        Obj::FiniteSetReduce(x) => {
+            collect_obj_binder_bindings(&x.set, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.func, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.op, bindings, seen, depth);
+            collect_obj_binder_bindings(&x.seed, bindings, seen, depth);
+        }
         Obj::Range(x) => {
             collect_obj_binder_bindings(&x.start, bindings, seen, depth);
             collect_obj_binder_bindings(&x.end, bindings, seen, depth);

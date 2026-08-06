@@ -123,6 +123,10 @@ impl Runtime {
             Obj::ProductOfFiniteSet(x) => {
                 self.verify_finite_set_product_obj_well_defined(x, verify_state)
             }
+            Obj::Reduce(x) => self.verify_reduce_obj_well_defined(x, verify_state),
+            Obj::FiniteSetReduce(x) => {
+                self.verify_finite_set_reduce_obj_well_defined(x, verify_state)
+            }
             Obj::Range(x) => self.verify_range_well_defined(x, verify_state),
             Obj::ClosedRange(x) => self.verify_closed_range_well_defined(x, verify_state),
             Obj::IntervalObj(x) => self.verify_interval_obj_well_defined(x, verify_state),

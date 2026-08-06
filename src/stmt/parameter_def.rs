@@ -997,6 +997,26 @@ fn collect_cited_param_indices_from_obj(
                 out,
             );
         }
+        Obj::Reduce(x) => {
+            for child in [&x.start, &x.end, &x.func, &x.op, &x.seed] {
+                collect_cited_param_indices_from_obj(
+                    child,
+                    previous_param_indices,
+                    shadowed_names,
+                    out,
+                );
+            }
+        }
+        Obj::FiniteSetReduce(x) => {
+            for child in [&x.set, &x.func, &x.op, &x.seed] {
+                collect_cited_param_indices_from_obj(
+                    child,
+                    previous_param_indices,
+                    shadowed_names,
+                    out,
+                );
+            }
+        }
         Obj::Product(x) => {
             collect_cited_param_indices_from_obj(
                 &x.start,

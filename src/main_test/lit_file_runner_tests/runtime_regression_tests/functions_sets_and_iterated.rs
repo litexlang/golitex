@@ -3810,3 +3810,64 @@ sketch:
         },
     );
 }
+
+#[test]
+fn reduce_and_finite_set_reduce_obey_order_empty_and_operation_law_contracts() {
+    run_with_large_stack(
+        "reduce_and_finite_set_reduce_obey_order_empty_and_operation_law_contracts",
+        || {
+            let positive_source = r#"
+have fn id_z(x Z) Z = x
+have fn sub_z(x, y Z) Z = x - y
+have fn add_z(x, y Z) Z = x + y
+
+reduce(1, 3, id_z, sub_z, 0) = -6
+reduce(3, 2, id_z, sub_z, 10) = 10
+reduce(1, 3, id_z, sub_z, 0) $in Z
+
+finite_set_reduce({3, 1, 2}, id_z, add_z, 0) = 6
+finite_set_reduce({}, id_z, add_z, 5) = 5
+finite_set_reduce({1, 2}, id_z, add_z, 0) $in Z
+finite_set_reduce(1...3, id_z, add_z, 0) = reduce(1, 3, id_z, add_z, 0)
+
+not 3 $in {1, 2}
+finite_set_reduce(union({3}, {1, 2}), id_z, add_z, 0) = 3 + finite_set_reduce({1, 2}, id_z, add_z, 0)
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("reduce_positive_contracts");
+            let (stmt_results, runtime_error) = run_source_code(positive_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "reduce positive contracts should verify:\n{}",
+                run_output
+            );
+
+            let noncommutative_source = r#"
+finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0) = finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0)
+"#;
+            let mut rejected_runtime = Runtime::new();
+            rejected_runtime
+                .new_file_path_new_env_new_name_scope("finite_set_reduce_rejects_subtraction");
+            let (stmt_results, runtime_error) =
+                run_source_code(noncommutative_source, &mut rejected_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &rejected_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                !run_succeeded,
+                "finite_set_reduce must reject a nonassociative operation:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("not verified associative"),
+                "the rejection should expose the failed operation law:\n{}",
+                run_output
+            );
+        },
+    );
+}

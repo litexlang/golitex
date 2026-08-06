@@ -159,6 +159,9 @@ impl Runtime {
         if direct_superset_result.is_true() {
             return Ok(direct_superset_result);
         }
+        if let Some(result) = self.verify_reduce_membership_from_operation_carrier(in_fact) {
+            return Ok(result);
+        }
         if let Some(result) =
             self.verify_refined_integer_carrier_from_known_sign(in_fact, builtin_state)?
         {

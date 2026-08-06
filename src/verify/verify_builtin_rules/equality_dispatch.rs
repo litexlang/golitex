@@ -619,6 +619,57 @@ impl Runtime {
         }
 
         if let Some(done) =
+            self.try_verify_reduce_empty(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_reduce_literal_expansion(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_reduce_step(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_empty(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_list_expansion(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_closed_range_bridge(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_fresh_insertion(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) =
             self.try_verify_literal_zero_range_sum_is_zero(left, right, line_file.clone())?
         {
             return Ok(done);

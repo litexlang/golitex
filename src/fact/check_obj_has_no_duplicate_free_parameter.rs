@@ -332,6 +332,26 @@ fn check_obj_has_no_duplicate_free_parameter(
                 params_already_used,
             )
         }
+        Obj::Reduce(obj) => {
+            for child in [&obj.start, &obj.end, &obj.func, &obj.op, &obj.seed] {
+                check_obj_has_no_duplicate_free_parameter(
+                    child,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
+        Obj::FiniteSetReduce(obj) => {
+            for child in [&obj.set, &obj.func, &obj.op, &obj.seed] {
+                check_obj_has_no_duplicate_free_parameter(
+                    child,
+                    free_param_type,
+                    params_already_used,
+                )?;
+            }
+            Ok(())
+        }
         Obj::Product(obj) => {
             check_obj_has_no_duplicate_free_parameter(
                 &obj.start,

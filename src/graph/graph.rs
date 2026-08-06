@@ -1175,6 +1175,16 @@ impl DepCollector {
                 self.collect_obj(&x.set);
                 self.collect_obj(&x.func);
             }
+            Obj::Reduce(x) => {
+                for child in [&x.start, &x.end, &x.func, &x.op, &x.seed] {
+                    self.collect_obj(child);
+                }
+            }
+            Obj::FiniteSetReduce(x) => {
+                for child in [&x.set, &x.func, &x.op, &x.seed] {
+                    self.collect_obj(child);
+                }
+            }
             Obj::Abs(x) => self.collect_obj(&x.arg),
             Obj::Floor(x) => self.collect_obj(&x.arg),
             Obj::Ceil(x) => self.collect_obj(&x.arg),

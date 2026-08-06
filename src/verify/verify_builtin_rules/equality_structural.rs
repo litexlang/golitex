@@ -415,6 +415,19 @@ impl Runtime {
                 (&left.end, &right.end),
                 (left.func.as_ref(), right.func.as_ref()),
             ),
+            (Obj::Reduce(left), Obj::Reduce(right)) => compare_pairs!(
+                (left.start.as_ref(), right.start.as_ref()),
+                (left.end.as_ref(), right.end.as_ref()),
+                (left.func.as_ref(), right.func.as_ref()),
+                (left.op.as_ref(), right.op.as_ref()),
+                (left.seed.as_ref(), right.seed.as_ref()),
+            ),
+            (Obj::FiniteSetReduce(left), Obj::FiniteSetReduce(right)) => compare_pairs!(
+                (left.set.as_ref(), right.set.as_ref()),
+                (left.func.as_ref(), right.func.as_ref()),
+                (left.op.as_ref(), right.op.as_ref()),
+                (left.seed.as_ref(), right.seed.as_ref()),
+            ),
             (Obj::ClosedRange(left), Obj::ClosedRange(right)) => {
                 compare_pairs!((&left.start, &right.start), (&left.end, &right.end),)
             }

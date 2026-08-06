@@ -2,3 +2,11 @@ forall s, t, u set:
     s $subset t
     =>:
         intersect(s, u) $subset intersect(t, u)
+
+have fn tmp_reduce_identity_z(x Z) Z = x
+have fn tmp_reduce_sub_z(x, y Z) Z = x - y
+have fn tmp_reduce_add_z(x, y Z) Z = x + y
+
+reduce(1, 3, tmp_reduce_identity_z, tmp_reduce_sub_z, 0) = -6
+reduce(3, 2, tmp_reduce_identity_z, tmp_reduce_sub_z, 10) = 10
+finite_set_reduce({3, 1, 2}, tmp_reduce_identity_z, tmp_reduce_add_z, 0) = 6
