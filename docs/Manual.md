@@ -663,6 +663,34 @@ set returns `seed`; `seed` need not be an identity element. If order matters
 or `op` is noncommutative, provide an explicit integer enumeration and use
 `reduce` instead.
 
+Generic reductions connect to the existing aggregate and function interfaces
+through the following direct rules:
+
+| Verified shape | Required relationship |
+|---|---|
+| `reduce(a,b,f,op,0) = sum(a,b,g)` | Same bounds, `f` and `g` pointwise equal on `a...b`, and `op(x,y) = x + y` on its carrier |
+| `reduce(a,b,f,op,1) = product(a,b,g)` | Same bounds, pointwise-equal functions, and `op(x,y) = x * y` |
+| `finite_set_reduce(S,f,op,0) = finite_set_sum(S,g)` | Equal finite sets, pointwise equality on `S`, and additive `op` |
+| `finite_set_reduce(S,f,op,1) = finite_set_product(S,g)` | Equal finite sets, pointwise equality on `S`, and multiplicative `op` |
+| two reductions with otherwise equal arguments | `$fn_eq_in(f,g,a...b)` or `$fn_eq_in(f,g,S)` |
+| `reduce(a,c,f,op,s) = reduce(b+1,c,f,op,reduce(a,b,f,op,s))` | `a <= b < c`; no commutativity assumption |
+| `finite_set_reduce(union(A,B),f,op,s) = finite_set_reduce(A,f,op,finite_set_reduce(B,f,op,s))` | `intersect(A,B) = {}` |
+| a finite-set pullback written as `fn(y B) T {f(g(y))}` | `$bijective(B,A,g)`; a checked named function may unfold once to the same shape |
+
+The operation test is extensional rather than name-based. A user-defined prop
+may provide `forall x, y T: op(x,y) = x + y`; once that prop is verified and
+its definition has unfolded into the proof context, the sum bridge can use the
+fact. Likewise, congruence consumes the existing `$fn_eq_in` predicate, and
+reindexing consumes the existing `$bijective` predicate. These are one-step
+builtin rules: they use relationships already present in the context but do
+not invent a pointwise proof, disjointness fact, or bijection.
+
+The disjoint-union formula deliberately nests the second reduction as the
+first reduction's seed. Writing `op(reduce(A,...,s), reduce(B,...,s))` would
+count a non-identity seed twice, so that more familiar formula is not a generic
+law. With additive seed `0` or multiplicative seed `1`, first bridge to
+`finite_set_sum` or `finite_set_product` and use their existing union rules.
+
 Integer ranges are always subsets of `Z` (and its standard supersets). If the
 lower endpoint is known in `N` or `N+`, the range is also a subset of that
 carrier. A set-builder over any finite base is finite, so a finite, nonempty

@@ -309,6 +309,22 @@ justify equality of the corresponding sums. Integer-shift reindexing can use
 the same kind of guarded fact after translating the bounds. Neither rule
 invents a bijection or assumes equality outside the stated range.
 
+`reduce` and `finite_set_reduce` are generic objects, but they are not isolated
+from the older mathematical vocabulary. When the operation is pointwise
+addition and the seed is `0`, they bridge to `sum` and `finite_set_sum`; the
+multiplication/`1` pair bridges to the corresponding products. The operation
+can be user-defined: a verified concrete prop whose unfolding supplies
+`forall x, y T: op(x,y) = x + y` is enough. `$fn_eq_in` supplies pointwise
+congruence, while an already-known `$bijective` fact supplies finite-set
+reindexing. The checker uses these facts but does not invent them.
+
+The generic disjoint-union law retains exactly one copy of the seed:
+`F(union(A,B),s) = F(A,F(B,s))` after `intersect(A,B) = {}` is known. The
+seemingly more familiar `op(F(A,s),F(B,s))` would count `s` twice and is false
+unless additional identity assumptions are available. For seed `0` addition
+or seed `1` multiplication, bridge to the existing finite sum/product object
+and use its specialized laws.
+
 Some common one-step implications are direct rules themselves. For example,
 known facts `n $in N` and `n > 0` directly establish `n - 1 $in N`; the rule
 does not need to derive an intermediate `1 <= n` through a second builtin call.

@@ -3820,18 +3820,58 @@ fn reduce_and_finite_set_reduce_obey_order_empty_and_operation_law_contracts() {
 have fn id_z(x Z) Z = x
 have fn sub_z(x, y Z) Z = x - y
 have fn add_z(x, y Z) Z = x + y
+have fn mul_z(x, y Z) Z = x * y
 
 reduce(1, 3, id_z, sub_z, 0) = -6
 reduce(3, 2, id_z, sub_z, 10) = 10
 reduce(1, 3, id_z, sub_z, 0) $in Z
+reduce(1, 3, id_z, add_z, 0) = sum(1, 3, id_z)
+reduce(1, 3, id_z, mul_z, 1) = product(1, 3, id_z)
+reduce(1, 4, id_z, sub_z, 0) = reduce(3, 4, id_z, sub_z, reduce(1, 2, id_z, sub_z, 0))
 
 finite_set_reduce({3, 1, 2}, id_z, add_z, 0) = 6
 finite_set_reduce({}, id_z, add_z, 5) = 5
 finite_set_reduce({1, 2}, id_z, add_z, 0) $in Z
 finite_set_reduce(1...3, id_z, add_z, 0) = reduce(1, 3, id_z, add_z, 0)
+finite_set_reduce({1, 2, 3}, id_z, add_z, 0) = finite_set_sum({1, 2, 3}, id_z)
+finite_set_reduce({1, 2, 3}, id_z, mul_z, 1) = finite_set_product({1, 2, 3}, id_z)
 
 not 3 $in {1, 2}
 finite_set_reduce(union({3}, {1, 2}), id_z, add_z, 0) = 3 + finite_set_reduce({1, 2}, id_z, add_z, 0)
+
+prop is_add_operation_z(op fn(x, y Z) Z):
+    forall x, y Z:
+        op(x, y) = x + y
+
+forall op fn(x, y Z) Z:
+    $is_add_operation_z(op)
+    =>:
+        reduce(1, 3, id_z, op, 0) = sum(1, 3, id_z)
+
+forall f, g fn(x Z) Z:
+    $fn_eq_in(f, g, 1...3)
+    =>:
+        reduce(1, 3, f, add_z, 0) = reduce(1, 3, g, add_z, 0)
+        finite_set_reduce(1...3, f, add_z, 0) = finite_set_reduce(1...3, g, add_z, 0)
+
+forall A, B finite_set:
+    A $subset Z
+    B $subset Z
+    intersect(A, B) = {}
+    =>:
+        finite_set_reduce(union(A, B), id_z, add_z, 5) = finite_set_reduce(A, id_z, add_z, finite_set_reduce(B, id_z, add_z, 5))
+
+prop reduce_assoc_comm(T set, op fn(x, y T) T):
+    forall x, y, z T:
+        op(op(x, y), z) = op(x, op(y, z))
+    forall x, y T:
+        op(x, y) = op(y, x)
+
+forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A:
+    $reduce_assoc_comm(T, op)
+    $bijective(B, A, g)
+    =>:
+        finite_set_reduce(A, f, op, seed) = finite_set_reduce(B, fn(y B) T {f(g(y))}, op, seed)
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("reduce_positive_contracts");
@@ -3866,6 +3906,49 @@ finite_set_reduce({1, 2}, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0) = finite_set_r
             assert!(
                 run_output.contains("not verified associative"),
                 "the rejection should expose the failed operation law:\n{}",
+                run_output
+            );
+
+            let wrong_seed_source = r#"
+have fn id_z(x Z) Z = x
+have fn add_z(x, y Z) Z = x + y
+reduce(1, 3, id_z, add_z, 1) = sum(1, 3, id_z)
+"#;
+            let mut wrong_seed_runtime = Runtime::new();
+            wrong_seed_runtime.new_file_path_new_env_new_name_scope("reduce_wrong_sum_seed");
+            let (stmt_results, runtime_error) =
+                run_source_code(wrong_seed_source, &mut wrong_seed_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &wrong_seed_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                !run_succeeded,
+                "the sum bridge must reject a nonzero seed:\n{}",
+                run_output
+            );
+
+            let missing_bijection_source = r#"
+have fn add_z(x, y Z) Z = x + y
+forall A, B finite_set, f fn(x A) Z, g fn(y B) A:
+    finite_set_reduce(A, f, add_z, 0) = finite_set_reduce(B, fn(y B) Z {f(g(y))}, add_z, 0)
+"#;
+            let mut missing_bijection_runtime = Runtime::new();
+            missing_bijection_runtime
+                .new_file_path_new_env_new_name_scope("reduce_requires_bijection_for_reindexing");
+            let (stmt_results, runtime_error) =
+                run_source_code(missing_bijection_source, &mut missing_bijection_runtime);
+            let (run_succeeded, run_output) = render_run_source_code_output(
+                &missing_bijection_runtime,
+                &stmt_results,
+                &runtime_error,
+                false,
+            );
+            assert!(
+                !run_succeeded,
+                "finite_set_reduce reindexing must not invent a bijection:\n{}",
                 run_output
             );
         },
