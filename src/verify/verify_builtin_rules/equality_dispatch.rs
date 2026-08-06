@@ -618,6 +618,60 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) = self.try_verify_reduce_specialized_aggregate_bridge(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_specialized_aggregate_bridge(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_reduce_pointwise_congruence(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_reduce_adjacent_partition(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_disjoint_union(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_finite_set_reduce_bijective_reindexing(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
+
         if let Some(done) =
             self.try_verify_reduce_empty(left, right, line_file.clone(), builtin_state)?
         {

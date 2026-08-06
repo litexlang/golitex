@@ -1,14 +1,72 @@
-# Before: Litex had dedicated sum/product objects, but no generic fold whose
-# value carrier and combining operation were supplied by the user.
-# reduce(1, 3, fn(x Z) Z {x}, fn(x, y Z) Z {x - y}, 0) was parsed as an
-# undefined function application.
+# Tracer: generic reductions connect to existing aggregate objects and props.
+#
+# Before (did not work):
+# reduce(1, 3, reduce_identity_z, reduce_add_z, 0) = sum(1, 3, reduce_identity_z)
+# Former behavior: well-definedness succeeded, but equality verification
+# returned unknown because generic and specialized aggregates were unrelated.
+#
+# Now (verified): the active bridge statements below connect reduce to
+# sum/product, and finite_set_reduce to their finite-set variants.
 
-# Now: reduce is an ascending left fold over the closed integer interval.
-# Subtraction distinguishes this contract from a right fold:
-# (((0 - 1) - 2) - 3) = -6.
 have fn reduce_identity_z(x Z) Z = x
 have fn reduce_sub_z(x, y Z) Z = x - y
 have fn reduce_add_z(x, y Z) Z = x + y
+have fn reduce_mul_z(x, y Z) Z = x * y
+
+reduce(1, 3, reduce_identity_z, reduce_add_z, 0) = sum(1, 3, reduce_identity_z)
+reduce(1, 3, reduce_identity_z, reduce_mul_z, 1) = product(1, 3, reduce_identity_z)
+finite_set_reduce({1, 2, 3}, reduce_identity_z, reduce_add_z, 0) = finite_set_sum({1, 2, 3}, reduce_identity_z)
+finite_set_reduce({1, 2, 3}, reduce_identity_z, reduce_mul_z, 1) = finite_set_product({1, 2, 3}, reduce_identity_z)
+
+# An operation need not have a privileged name. A concrete prop unfolds its
+# pointwise operation law into the context, where the bridge can consume it.
+prop reduce_is_add_operation_z(op fn(x, y Z) Z):
+    forall x, y Z:
+        op(x, y) = x + y
+
+forall op fn(x, y Z) Z:
+    $reduce_is_add_operation_z(op)
+    =>:
+        reduce(1, 3, reduce_identity_z, op, 0) = sum(1, 3, reduce_identity_z)
+
+# The local function predicate is exactly the congruence interface: equality
+# is needed only on the indices visited by the reduction.
+forall f, g fn(x Z) Z:
+    $fn_eq_in(f, g, 1...3)
+    =>:
+        reduce(1, 3, f, reduce_add_z, 0) = reduce(1, 3, g, reduce_add_z, 0)
+        finite_set_reduce(1...3, f, reduce_add_z, 0) = finite_set_reduce(1...3, g, reduce_add_z, 0)
+
+# Ordered reduction can be resumed on an adjacent tail. This remains valid for
+# subtraction because no commutativity is assumed and the order is unchanged.
+reduce(1, 4, reduce_identity_z, reduce_sub_z, 0) = reduce(3, 4, reduce_identity_z, reduce_sub_z, reduce(1, 2, reduce_identity_z, reduce_sub_z, 0))
+
+# A disjoint union uses one seed, even when that seed is not an identity.
+forall A, B finite_set:
+    A $subset Z
+    B $subset Z
+    intersect(A, B) = {}
+    =>:
+        finite_set_reduce(union(A, B), reduce_identity_z, reduce_add_z, 5) = finite_set_reduce(A, reduce_identity_z, reduce_add_z, finite_set_reduce(B, reduce_identity_z, reduce_add_z, 5))
+
+# Associativity and commutativity may likewise come from a user prop. Together
+# with the existing bijective predicate, they support a genuinely generic
+# finite-set reindexing over an arbitrary carrier T.
+prop reduce_assoc_comm(T set, op fn(x, y T) T):
+    forall x, y, z T:
+        op(op(x, y), z) = op(x, op(y, z))
+    forall x, y T:
+        op(x, y) = op(y, x)
+
+forall T set, op fn(x, y T) T, seed T, A, B finite_set, f fn(x A) T, g fn(y B) A:
+    $reduce_assoc_comm(T, op)
+    $bijective(B, A, g)
+    =>:
+        finite_set_reduce(A, f, op, seed) = finite_set_reduce(B, fn(y B) T {f(g(y))}, op, seed)
+
+# The original generic-fold behavior remains available. reduce is an ascending
+# left fold, so subtraction distinguishes it from a right fold:
+# (((0 - 1) - 2) - 3) = -6.
 
 reduce(1, 3, reduce_identity_z, reduce_sub_z, 0) = -6
 
@@ -37,5 +95,11 @@ finite_set_reduce(union({3}, {1, 2}), reduce_identity_z, reduce_add_z, 0) = 3 + 
 # order matters.
 # finite_set_reduce({1, 2}, reduce_identity_z, reduce_sub_z, 0) = -3
 
+# Boundary: the sum bridge requires additive identity seed zero.
+# reduce(1, 3, reduce_identity_z, reduce_add_z, 1) = sum(1, 3, reduce_identity_z)
+
 # Evidence:
 # target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/reduce_builtin_rules.lit
+# Implementation: src/verify/verify_builtin_rules/equality_numeric/reduce.rs
+# Rust boundary regression:
+# cargo test --release reduce_and_finite_set_reduce_obey_order_empty_and_operation_law_contracts -- --nocapture

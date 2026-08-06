@@ -243,6 +243,17 @@ Finite-range aggregation follows the same bounded design. Equality of two
 that exact integer range. Integer-shift reindexing may consume the analogous
 guarded equality on the target range; it normalizes a constant bound shift but
 does not search for arbitrary reindexing maps.
+Generic reductions use the same bounded layer. Extensional operation checks
+connect additive seed-zero and multiplicative seed-one folds to `sum`,
+`product`, `finite_set_sum`, and `finite_set_product`. Reduction congruence
+consumes `$fn_eq_in` on the visited range or finite set, finite-set reindexing
+consumes an already-known `$bijective` fact, and disjoint-union reduction
+consumes `intersect(A, B) = {}`. The generic union result nests one reduction
+as the other's seed instead of assuming that an arbitrary seed is an identity.
+Ordered adjacent-range composition is separate and remains valid for
+noncommutative operations. A concrete prop may expose a matching operation
+law as a known `forall`, but none of these routes invents an operation law,
+pointwise equality, disjointness proof, or bijection.
 Integer adjacency is another direct one-step rule: known integer objects and
 `a < b + 1` prove `a <= b`, without recursively deriving an intermediate
 shifted comparison.
