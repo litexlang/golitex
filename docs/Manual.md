@@ -15,8 +15,12 @@ builtin inference. The [Syntax Reference](#syntax-reference) is an index into
 those sections, not a second tutorial.
 
 > **Beta notice:** Litex is still experimental. Syntax, diagnostics, builtin
-> rules, and preview features may change. Do not use it for mission-critical
-> proof work.
+> rules, and preview features may change. Development is public by default, so
+> repository contents may include drafts and incomplete work; visibility alone
+> is not a completion claim. Use versioned documentation, current tests, and
+> explicit `trust` reporting and known limitations to determine what is
+> supported. Do
+> not use it for mission-critical proof work.
 
 ### The core reading model
 
@@ -85,11 +89,9 @@ Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. The current To-Lean code is a
-narrow rational-equality experiment: its tracer consumes the existing
-per-statement JSON rule label after ordinary Litex verification, not a stable
-proof IR or certificate. It is not a general compiler, so reliability claims
-must remain grounded in inspectable rules, tests, verifier output, and explicit
-trust reporting.
+narrow rational-equality experiment, not a general compiler, so reliability
+claims must remain grounded in inspectable rules, tests, verifier output, and
+explicit trust reporting.
 
 ---
 
@@ -2473,13 +2475,14 @@ strictly smaller structural pattern. It never enters known `forall` matching,
 definitions, user strategies, or the full verifier. Detailed output preserves
 the child proof tree and labels the outer route as `builtin strategy`.
 
-Finite-endpoint nonemptiness uses this structural route. For integers,
-`closed_range(a, b)` reduces to `a <= b`, while the half-open `range(a, b)`
-reduces to `a < b`. For real intervals, `'[a, b]` uses `a <= b`; any open
-endpoint uses `a < b`. The order fact is a strictly smaller child, so a local
-stronger bound such as `2 <= n` may establish the needed `1 <= n` or `1 < n`
-through one fresh direct rule. No order premise means no positive nonemptiness
-result, and `range(n, n)` and `'(x, x)` remain empty.
+Finite-endpoint nonemptiness has a direct fast path when its endpoint order is
+already known or computationally decidable. When that order itself needs one
+builtin step, the structural route reduces `closed_range(a, b)` to `a <= b`
+and the half-open `range(a, b)` to `a < b`. For real intervals, `'[a, b]` uses
+`a <= b`; any open endpoint uses `a < b`. This order fact is a strictly smaller
+child, so a local stronger bound such as `2 <= n` may establish the needed
+`1 <= n` or `1 < n` through one fresh direct rule. No order premise means no
+positive nonemptiness result, and `range(n, n)` and `'(x, x)` remain empty.
 
 For an ordinary atomic goal the search order is: known non-`forall` fact,
 one-layer builtin rule, builtin strategy, an applicable known `forall`, then a

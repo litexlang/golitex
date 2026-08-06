@@ -257,8 +257,9 @@ impl Runtime {
                     ParamObjType::AlphaRename,
                     None,
                 )?;
-                rt.verify_well_defined_and_store_without_infer(
+                rt.verify_well_defined_and_store_without_infer_with_state(
                     instantiated_fact,
+                    verify_state,
                     InferReason::ByDefinition(ByDefinitionReason::new(
                         None,
                         Some(def.name.clone()),

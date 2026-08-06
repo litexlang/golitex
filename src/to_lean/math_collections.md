@@ -1,30 +1,5 @@
 # Rational-Expression Translation Model
 
-## Current JSON handoff
-
-The current experiment separates verification from lowering with the smallest
-available boundary:
-
-```text
-ordinary Litex execution
-    -> existing per-statement JSON
-    -> exact `statement` plus supported `rule` label
-    -> rational-expression lowering
-    -> Lean source
-```
-
-The To-Lean consumer is intentionally limited to what that JSON reveals. For
-the representative universal equality, the decisive value is
-`"rule": "bounded symbolic normalization"`. The consumer reparses the JSON's
-top-level statement only to recover its mathematical syntax; it never reruns
-verification. A different rule label is rejected even when the statement text
-has a shape the old direct emitter understood.
-
-This is not the ideal long-term interface. Human-facing labels do not identify
-subrules, premise nodes, equality paths, scopes, or trust closure. The value of
-this model is architectural: it makes verification happen first and makes
-To-Lean downstream of an observable output before a dedicated proof IR exists.
-
 ## Recursive fraction pair
 
 The experiment maps a supported real expression `e` to a pair `(p, q)` meaning
@@ -60,7 +35,6 @@ two recursively built forms denote the same real number.
 
 The ideal later interface could normalize numerator and denominator polynomials
 inside Litex and carry proof evidence for every denominator. This experiment
-does neither. Its nearest rejected forms are an existing JSON rule other than
-calculation/rational simplification, a nonliteral exponent, a non-rational
-object such as `sin(x)`, or a denominator whose nonzero evidence is only
-implicit rather than an explicit universal premise.
+does neither. Its nearest rejected forms are a nonliteral exponent, a
+non-rational object such as `sin(x)`, or a denominator whose nonzero evidence is
+only implicit rather than an explicit universal premise.

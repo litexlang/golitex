@@ -8,6 +8,8 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 The arrival of AI is rapidly increasing the amount of generated mathematical proof, making verification an increasingly important bottleneck. Litex tests the following hypothesis: can we design a formal language that, like everyday mathematics, centers objects and facts while still being checked rigorously by a machine? Can such a language make the distance between writing mathematics and verifying it short enough that users can genuinely understand the formal tool they are using, its trusted boundary, and exactly why a conclusion was accepted? The design of the Litex language and its output should serve this stricter goal.
 
+Litex develops this hypothesis in public, so the repository intentionally exposes experiments and unfinished work as well as checked results. Public availability is not a completion claim; each claim should be read against its current tests, dated status, trust boundary, and known limitations.
+
 ## Starting from the Everyday Mathematical Workflow
 
 Existing formal languages have achieved enormous success. Mathematicians, however, do not usually begin by creating a proof state and then translating every step into a sequence of commands. A more typical process is:
@@ -295,7 +297,7 @@ For mathematical exploration, learning, and textbook-style exposition, this orde
 
 > **Equally sharply: Litex's biggest first-principles problem is that its trusted kernel is too large. Litex moves hundreds of common proof patterns into builtin and inference rules, shifting work from the user's proof script into the trusted computing base. The proof work did not disappear; the system absorbed it. Litex code must be compilable to Lean and checked there if its correctness is to be guaranteed.**
 
-For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository keeps only a narrow experiment: ordinary Litex execution first checks a rational equality over `R`; a thin adapter then reads the existing per-statement JSON `statement` and rational-normalization `rule`, recursively constructs numerator and denominator expressions, and emits Lean checked by `ring`, or by `field_simp` followed by `ring`. This current JSON handoff is a tracer bullet rather than a stable proof IR, and it is not yet a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
+For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository keeps only a narrow experiment: it handles verified rational equalities over `R`, recursively constructs numerator and denominator expressions, and emits Lean checked by `ring`, or by `field_simp` followed by `ring`. It is not yet a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
 
 Another major difference is that **Litex users state *what* should hold, while
 Lean tactic users state *how* the Goal should be proved.** The Litex checker

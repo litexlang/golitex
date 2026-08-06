@@ -8,6 +8,8 @@ Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
 
 AI的到来让数学证明的生成越来越多，而验证会越来越成为瓶颈。Litex 要检验的假设是：能否设计一门像日常数学一样以对象和事实为中心、但仍由机器严格检查的形式化语言，让写下和验证数学之间的距离足够短。让使用者真的能理解自己正在使用的形式化工具、它的可信边界，以及一条结论究竟凭什么通过。Litex 的语言设计和输出都应当服务于这个更严格的问题。
 
+Litex 默认公开研究过程，因此仓库会同时保留已经检查的成果、实验以及尚未完成的工作。公开可见不等于宣称完成；每项能力应以当前测试、带日期的状态说明、可信边界和已知限制为准。
+
 ## 从日常数学的工作流出发
 
 现有的形式化语言已获得了巨大的成功。数学家通常不是先创建一个 proof state，再把每一步翻译成一串操作命令。更常见的过程是：
@@ -102,6 +104,47 @@ forall s nonempty_set, G &Group<s>, identity s:
 ### 1. 用户直接声明结果，系统寻找证明依据
 
 Litex 首先要改变的不是代码长度，而是用户与系统的分工。用户写出 `1 + 1 = 2`、有限集的并仍是有限集、`x^2 >= 0` 这类应当成立的结果；Litex 先检查对象是否良好定义，再从 builtin 规则、已知事实和已知的全称事实中寻找依据。在典型的 Lean tactic 交互中，结论先作为 Goal 给出，用户再逐步指定应当调用什么事实、如何改写或如何分解它，系统据此构造完整的证明。
+
+一个很小的集合命题就能看出这种分工。如果 `s` 是 `t` 的子集，那么它们分别与同一个集合 `u` 取交集后，包含关系仍然保持。Litex 用户可以直接写下这个结果：
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+这不是一个留待补全的证明空洞，而是交给 checker 检查的完整事实。它的日常数学读法就是：取 `intersect(s, u)` 的任意成员，它同时属于 `s` 和 `u`；由 `s $subset t` 可知它也属于 `t`，因而属于 `intersect(t, u)`。用户声明应当得到的数学结果，checker 负责从交集成员的展开、成员关系沿子集的传递，以及右侧交集成员的重新组合中寻找验证路径。
+
+*Mathematics in Lean* 的集合章节给出了一个显式展开版本：
+
+```lean
+import Mathlib.Data.Set.Lattice
+
+section
+variable {α : Type*}
+variable (s t u : Set α)
+open Set
+
+example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u := by
+  rw [subset_def, inter_def, inter_def]
+  rw [subset_def] at h
+  simp only [mem_setOf]
+  rintro x ⟨xs, xu⟩
+  exact ⟨h _ xs, xu⟩
+end
+```
+
+这个 Lean 证明很精确：它显式展开子集和交集的定义，引入一个任意成员，拆出两个成员性证明，再构造结果。Lean 还能把同一证明写成非常精巧的 proof term：
+
+```lean
+example {α : Type*} {s t u : Set α} (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
+  fun _x ⟨xs, xu⟩ ↦ ⟨h xs, xu⟩
+```
+
+后一种写法很短，而且通过多态参数 `α` 精确地泛化到任意载体类型。但是，要自然地写出或读懂它，用户需要已经理解 `Type*`、`Set α`、子集证明如何被当作函数使用、交集成员性如何成为一对证明，以及 `fun`、模式解构和隐式参数的含义。显式 tactic 版本则要求用户知道 `subset_def`、`inter_def`、`rw`、`simp only [mem_setOf]` 和 `rintro` 这些定义名与操作。Lean 的这种知识密度换来了很强的泛化能力和对 proof term 的精细控制。
+
+因此，这里的差异不能用行数衡量，也不是“Lean 能不能把证明写短”。Litex 鼓励用户先像日常数学书写那样问：“根据已知条件，下一条应当成立的事实是什么？”然后直接写下它。例如上面的 `intersect(s, u) $subset intersect(t, u)`，使用者不必先记住 `subset_def` 一类库中定义名才能开始证明。这降低了入门门槛，也让源码更接近数学家希望传达的结果。代价是，这些常规展开和成员关系推理被移入了 Litex checker，因而必须通过实现、测试、输出依据和后续的独立交叉检查来持续审计。
 
 | 默认交互 | 用户源码主要写出 | 交互输出主要补出 |
 |---|---|---|

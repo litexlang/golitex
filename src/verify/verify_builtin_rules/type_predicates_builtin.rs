@@ -69,6 +69,96 @@ impl Runtime {
                 ))
                 .into(),
             ),
+            // Direct fast path for an already-known or computational endpoint order.
+            // The structural strategy handles the separate case where the order itself
+            // needs one fresh builtin rule, such as deriving `1 <= n` from `2 <= n`.
+            Obj::ClosedRange(closed_range) => {
+                let endpoint_order: AtomicFact = LessEqualFact::new(
+                    closed_range.start.as_ref().clone(),
+                    closed_range.end.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        "closed_range_nonempty_when_start_le_end".to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
+            // A half-open integer range is nonempty when its known endpoints are
+            // strictly ordered. Derived endpoint order is delegated to the strategy.
+            Obj::Range(range) => {
+                let endpoint_order: AtomicFact = LessFact::new(
+                    range.start.as_ref().clone(),
+                    range.end.as_ref().clone(),
+                    is_nonempty_set_fact.line_file.clone(),
+                )
+                .into();
+                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        "range_nonempty_when_start_lt_end".to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
+            // Closed/closed real intervals use weak order; any open end uses strict
+            // order. This direct path preserves constructor composition when the
+            // endpoint relation is already known or computationally decidable.
+            Obj::IntervalObj(interval) => {
+                let both_closed = interval.left_closed() && interval.right_closed();
+                let endpoint_order: AtomicFact = if both_closed {
+                    LessEqualFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into()
+                } else {
+                    LessFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        is_nonempty_set_fact.line_file.clone(),
+                    )
+                    .into()
+                };
+                let result = self.verify_builtin_rule_premise(&endpoint_order, builtin_state)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                let rule = match interval {
+                    IntervalObj::LeftOpenRightOpen(_) => "open_interval_nonempty_when_start_lt_end",
+                    IntervalObj::LeftOpenRightClosed(_) => {
+                        "left_open_right_closed_interval_nonempty_when_start_lt_end"
+                    }
+                    IntervalObj::LeftClosedRightOpen(_) => {
+                        "left_closed_right_open_interval_nonempty_when_start_lt_end"
+                    }
+                    IntervalObj::LeftClosedRightClosed(_) => {
+                        "closed_interval_nonempty_when_start_le_end"
+                    }
+                };
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        is_nonempty_set_fact.clone().into(),
+                        rule.to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
             // Half-infinite real intervals are nonempty whenever their finite endpoint is well-defined.
             // Example: `$is_nonempty_set('[a,))` after `a $in R`.
             Obj::OneSideInfinityIntervalObj(interval) => {
@@ -920,6 +1010,7 @@ fn obj_can_trigger_nonempty_structural_builtin(obj: &Obj) -> bool {
             | Obj::ListSet(_)
             | Obj::PowerSet(_)
             | Obj::ClosedRange(_)
+            | Obj::Range(_)
             | Obj::IntervalObj(_)
             | Obj::OneSideInfinityIntervalObj(_)
             | Obj::Union(_)
