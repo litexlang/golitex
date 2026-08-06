@@ -452,6 +452,50 @@ declared domains. Lean's surface begins with typed terms, so the examples say
 is more general and deeply integrated with dependent type theory; Litex's is
 intended to put the set-theoretic reading first.
 
+### Intersections preserve inclusion
+
+Here is an explicit unfolding proof from the sets chapter of *Mathematics in
+Lean*. If `s` is a subset of `t`, intersecting both sets with the same set `u`
+preserves that inclusion:
+
+```lean
+import Mathlib.Data.Set.Lattice
+
+open Set
+
+example {alpha : Type*} (s t u : Set alpha) (h : s ⊆ t) :
+    s ∩ u ⊆ t ∩ u := by
+  rw [subset_def, inter_def, inter_def]
+  rw [subset_def] at h
+  simp only [mem_setOf]
+  rintro x ⟨xs, xu⟩
+  exact ⟨h _ xs, xu⟩
+```
+
+The corresponding Litex fact is the mathematical statement itself:
+
+```litex
+forall s, t, u set:
+    s $subset t
+    =>:
+        intersect(s, u) $subset intersect(t, u)
+```
+
+The mathematical argument is simply that a member of `intersect(s, u)` lies
+in both `s` and `u`; subset transport puts it in `t`, hence in
+`intersect(t, u)`. In Litex's default interface, a learner does not need to
+remember unfolding names and proof commands such as `subset_def`, `inter_def`,
+`rw`, or `simp only [mem_setOf]` just to expose that argument. This lowers the
+initial learning burden and keeps this routine proof at the level of sets and
+membership.
+
+This is not a claim that Lean requires the explicit script above: Lean also
+supports a shorter elementwise proof and stronger automation. It illustrates
+a difference in the default division of labor. Litex's checker performs the
+routine unfolding and membership transport, which also places those rules
+inside Litex's implementation and audit surface; Lean lets a proof author
+expose or control those steps through terms and tactics.
+
 Structures over a carrier set are illustrated by the complete group-identity
 example in the [Litex
 Blueprint](https://litexlang.com/doc/Litex_Blueprint#a-small-but-complete-comparison-uniqueness-of-the-identity-in-a-group).

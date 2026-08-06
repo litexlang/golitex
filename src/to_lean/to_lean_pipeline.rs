@@ -1,34 +1,65 @@
 use crate::prelude::*;
 
+use super::current_json::{statement_and_route_from_current_json, CurrentJsonProofRoute};
 use super::rational_expression::{lean_name, LeanRationalExpression};
 
 pub fn to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
-    let tokenizer = Tokenizer::new();
-    let current_file_path = runtime.current_file_path_rc();
-    let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
-    let mut declarations = Vec::new();
-
-    for (index, mut block) in blocks.into_iter().enumerate() {
-        let statement = runtime.parse_stmt(&mut block)?;
-        let result = run_stmt_at_global_env(&statement, runtime)?;
-        if result.is_unknown() {
-            return Err(to_lean_error(
-                &statement.line_file(),
-                "To-Lean received an unverified Litex statement",
-            ));
-        }
-        declarations.push(lean_declaration(&statement, index + 1)?);
+    let normalized = source_code.replace('\r', "");
+    let (stmt_results, runtime_error) = run_source_code(normalized.as_str(), runtime);
+    if let Some(error) = runtime_error {
+        return Err(error);
     }
+    let previous_output_style = runtime.output_style;
+    let previous_detail_output = runtime.detail_output;
+    let previous_output_language = runtime.output_language;
+    runtime.set_output_style(OutputStyle::Normal);
+    runtime.output_language = OutputLanguage::English;
+    let statement_jsons = stmt_results
+        .iter()
+        .map(|result| display_stmt_exec_result_json(runtime, result, true))
+        .collect::<Vec<_>>();
+    runtime.output_style = previous_output_style;
+    runtime.detail_output = previous_detail_output;
+    runtime.output_language = previous_output_language;
+    to_lean_from_statement_jsons(&statement_jsons)
+}
 
-    if declarations.is_empty() {
+pub fn to_lean_from_statement_json(statement_json: &str) -> Result<String, RuntimeError> {
+    to_lean_from_statement_jsons(&[statement_json.to_string()])
+}
+
+pub fn to_lean_from_statement_jsons(statement_jsons: &[String]) -> Result<String, RuntimeError> {
+    if statement_jsons.is_empty() {
         return Err(to_lean_error(
             &default_line_file(),
-            "To-Lean rational experiment requires at least one equality",
+            "To-Lean current-JSON adapter requires at least one statement JSON object",
         ));
     }
 
+    let tokenizer = Tokenizer::new();
+    let mut parse_runtime = Runtime::new();
+    parse_runtime.new_file_path_new_env_new_name_scope("to-lean-current-json");
+    let mut declarations = Vec::new();
+    for (index, statement_json) in statement_jsons.iter().enumerate() {
+        let (statement_source, proof_route) =
+            statement_and_route_from_current_json(statement_json)?;
+        let blocks = tokenizer.parse_blocks(
+            statement_source.as_str(),
+            parse_runtime.current_file_path_rc(),
+        )?;
+        if blocks.len() != 1 {
+            return Err(to_lean_error(
+                &default_line_file(),
+                "To-Lean current-JSON adapter requires exactly one statement per JSON object",
+            ));
+        }
+        let mut block = blocks.into_iter().next().unwrap();
+        let statement = parse_runtime.parse_stmt(&mut block)?;
+        declarations.push(lean_declaration(&statement, index + 1, proof_route)?);
+    }
+
     Ok(format!(
-        "import Mathlib\n\nnamespace LitexGenerated\n\n-- Experimental recursive rational-expression translation.\n{}\n\nend LitexGenerated",
+        "import Mathlib\n\nnamespace LitexGenerated\n\n-- Experimental translation driven only by current Litex statement JSON.\n{}\n\nend LitexGenerated",
         declarations.join("\n\n")
     ))
 }
@@ -40,7 +71,11 @@ pub fn to_lean_from_source(source_code: &str, entry_label: &str) -> Result<Strin
     to_lean(&normalized, &mut runtime)
 }
 
-fn lean_declaration(statement: &Stmt, index: usize) -> Result<String, RuntimeError> {
+fn lean_declaration(
+    statement: &Stmt,
+    index: usize,
+    proof_route: CurrentJsonProofRoute,
+) -> Result<String, RuntimeError> {
     let Stmt::Fact(fact) = statement else {
         return Err(to_lean_error(
             &statement.line_file(),
@@ -61,9 +96,16 @@ fn lean_declaration(statement: &Stmt, index: usize) -> Result<String, RuntimeErr
                     "To-Lean direct equalities must be closed rational expressions",
                 ));
             }
-            lean_equality_declaration(equality, index, String::new(), Vec::new(), true)
+            lean_equality_declaration(
+                equality,
+                index,
+                String::new(),
+                Vec::new(),
+                proof_route,
+                true,
+            )
         }
-        Fact::ForallFact(forall) => lean_forall_equality_declaration(forall, index),
+        Fact::ForallFact(forall) => lean_forall_equality_declaration(forall, index, proof_route),
         _ => Err(to_lean_error(
             &fact.line_file(),
             format!(
@@ -77,6 +119,7 @@ fn lean_declaration(statement: &Stmt, index: usize) -> Result<String, RuntimeErr
 fn lean_forall_equality_declaration(
     forall: &ForallFact,
     index: usize,
+    proof_route: CurrentJsonProofRoute,
 ) -> Result<String, RuntimeError> {
     let mut binder_parts = Vec::new();
     for group in forall.params_def_with_type.iter() {
@@ -149,7 +192,7 @@ fn lean_forall_equality_declaration(
     } else {
         format!(" {}", binder_parts.join(" "))
     };
-    lean_equality_declaration(equality, index, binders, nonzero_names, false)
+    lean_equality_declaration(equality, index, binders, nonzero_names, proof_route, false)
 }
 
 fn lean_equality_declaration(
@@ -157,11 +200,12 @@ fn lean_equality_declaration(
     index: usize,
     binders: String,
     nonzero_names: Vec<String>,
+    proof_route: CurrentJsonProofRoute,
     closed_numeric: bool,
 ) -> Result<String, RuntimeError> {
     let left = LeanRationalExpression::from_obj(&equality.left)?;
     let right = LeanRationalExpression::from_obj(&equality.right)?;
-    let tactic = if closed_numeric {
+    let tactic = if closed_numeric || proof_route == CurrentJsonProofRoute::Calculation {
         "norm_num".to_string()
     } else if left.has_denominator() || right.has_denominator() {
         let field_simp = if nonzero_names.is_empty() {
@@ -180,7 +224,8 @@ fn lean_equality_declaration(
     let right_fraction = right.fraction_expression();
 
     Ok(format!(
-        "-- left recursive fraction: {}\n-- right recursive fraction: {}\ntheorem litex_rational_{}{} : {} = {} := by\n  calc\n    {} = {} := by\n      {}\n    _ = {} := by\n      {}\n    _ = {} := by\n      {}",
+        "-- Litex JSON verification rule: {}\n-- left recursive fraction: {}\n-- right recursive fraction: {}\ntheorem litex_rational_{}{} : {} = {} := by\n  calc\n    {} = {} := by\n      {}\n    _ = {} := by\n      {}\n    _ = {} := by\n      {}",
+        proof_route.output_label(),
         left.fraction(),
         right.fraction(),
         index,
@@ -339,7 +384,7 @@ forall a, b R:
                 .trace_message();
 
             assert!(
-                error.contains("direct equalities must be closed rational expressions"),
+                error.contains("does not support verification rule `trigonometry layer 0"),
                 "{error}"
             );
         });
@@ -357,6 +402,56 @@ forall a, x R:
                 let result = to_lean_from_source(source, "to-lean-nonzero-boundary-test");
 
                 assert!(result.is_err());
+            },
+        );
+    }
+
+    #[test]
+    fn normal_statement_json_drives_the_rational_tracer() {
+        run_with_large_stack("normal_statement_json_drives_the_rational_tracer", || {
+            let source = r#"
+forall a, b, x R:
+    x != 0
+    =>:
+        (a + b) / x = a / x + b / x
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("to-lean-json-tracer");
+            let (results, error) = run_source_code(source, &mut runtime);
+            assert!(error.is_none());
+            assert_eq!(results.len(), 1);
+            let json = display_stmt_exec_result_json(&runtime, &results[0], true);
+            assert!(json.contains("\"rule\": \"bounded symbolic normalization\""));
+
+            let lean = to_lean_from_statement_json(json.as_str()).unwrap();
+            assert!(lean
+                .contains("-- Litex JSON verification rule: rational expression simplification"));
+            assert!(lean.contains("field_simp [h1] <;> ring"));
+        });
+    }
+
+    #[test]
+    fn current_json_adapter_rejects_a_different_proof_route() {
+        run_with_large_stack(
+            "current_json_adapter_rejects_a_different_proof_route",
+            || {
+                let source = r#"
+forall a, b R:
+    (a + b)^2 = a^2 + 2 * a * b + b^2
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("to-lean-json-boundary");
+                let (results, error) = run_source_code(source, &mut runtime);
+                assert!(error.is_none());
+                let json = display_stmt_exec_result_json(&runtime, &results[0], true).replace(
+                    "bounded symbolic normalization",
+                    "same known equality class",
+                );
+
+                let error = to_lean_from_statement_json(json.as_str())
+                    .expect_err("To-Lean must obey the proof route in current JSON")
+                    .trace_message();
+                assert!(error.contains("does not support verification rule"));
             },
         );
     }

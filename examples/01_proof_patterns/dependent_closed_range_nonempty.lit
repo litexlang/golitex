@@ -1,0 +1,46 @@
+# Tracer: dependent finite intervals reduce nonemptiness to endpoint order.
+#
+# Before (incorrectly rejected during template well-definedness):
+# template<n N+: 2 <= n>:
+#     have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
+# Former behavior: checking the generated index carrier
+# `closed_range(1, n)` consumed the direct builtin-rule layer before trying to
+# derive `1 <= n` from the stronger local bound `2 <= n`.
+#
+# Now (verified): finite interval constructors use a structural strategy whose
+# strictly smaller child is the required endpoint-order fact.
+template<n N+: 2 <= n>:
+    have tuple tuple_by_dim for i1 <= n, tuple_by_dim[i1] = i1
+
+$is_tuple(\tuple_by_dim<3>)
+tuple_dim(\tuple_by_dim<3>) = 3
+
+template<n N+: 2 <= n>:
+    have cart cart_by_dim for i1 <= n, proj(cart_by_dim, i1) = R
+
+$is_cart(\cart_by_dim<3>)
+cart_dim(\cart_by_dim<3>) = 3
+
+forall n Z:
+    2 <= n
+    =>:
+        $is_nonempty_set(closed_range(1, n))
+        $is_nonempty_set(range(1, n))
+
+forall b R:
+    2 <= b
+    =>:
+        $is_nonempty_set('[1, b])
+        $is_nonempty_set('(1, b))
+        $is_nonempty_set('(1, b])
+        $is_nonempty_set('[1, b))
+# Current behavior: `closed_range(a, b)` and `'[a, b]` require `a <= b`;
+# half-open integer ranges and real intervals with an open end require `a < b`.
+#
+# Boundary: no order premise must not establish nonemptiness; `range(n, n)` and
+# `'(b, b)` remain empty. Executable positive and negative regressions live in
+# finite_endpoint_nonempty_strategies_use_order_children, while the real caller
+# is covered by template_can_define_symbolic_tuple_and_cart.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/dependent_closed_range_nonempty.lit
+# Implementation: src/verify/verify_builtin_strategies/type_predicates.rs and
+# src/verify/verify_helper.rs

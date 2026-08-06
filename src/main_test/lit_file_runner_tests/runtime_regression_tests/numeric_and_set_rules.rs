@@ -1481,6 +1481,92 @@ right $in '(,a)
 }
 
 #[test]
+fn finite_endpoint_nonempty_strategies_use_order_children() {
+    run_with_large_stack(
+        "finite_endpoint_nonempty_strategies_use_order_children",
+        || {
+            let positive_source = r#"
+forall n Z:
+    2 <= n
+    =>:
+        $is_nonempty_set(closed_range(1, n))
+        $is_nonempty_set(range(1, n))
+
+forall b R:
+    2 <= b
+    =>:
+        $is_nonempty_set('[1, b])
+        $is_nonempty_set('(1, b))
+        $is_nonempty_set('(1, b])
+        $is_nonempty_set('[1, b))
+
+forall n Z:
+    $is_nonempty_set(closed_range(n, n))
+
+forall b R:
+    $is_nonempty_set('[b, b])
+"#;
+            let mut runtime = Runtime::new();
+            runtime.isolated = true;
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_endpoint_nonempty_strategies_use_order_children",
+            );
+            let (stmt_results, runtime_error) = run_source_code(positive_source, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+            assert!(
+                run_succeeded,
+                "ordered finite endpoints should establish nonemptiness through bounded strategy children:\n{run_output}"
+            );
+            assert!(
+                run_output.matches("\"type\": \"builtin strategy\"").count() >= 8,
+                "finite-endpoint nonemptiness should retain strategy provenance:\n{run_output}"
+            );
+
+            let negative_sources = [
+                (
+                    "closed_range_without_endpoint_order",
+                    "forall n Z:\n    $is_nonempty_set(closed_range(1, n))",
+                ),
+                (
+                    "range_without_endpoint_order",
+                    "forall n Z:\n    $is_nonempty_set(range(1, n))",
+                ),
+                (
+                    "empty_half_open_integer_range",
+                    "forall n Z:\n    $is_nonempty_set(range(n, n))",
+                ),
+                (
+                    "closed_real_interval_without_endpoint_order",
+                    "forall b R:\n    $is_nonempty_set('[1, b])",
+                ),
+                (
+                    "empty_open_real_interval",
+                    "forall b R:\n    $is_nonempty_set('(b, b))",
+                ),
+            ];
+            for (name, source) in negative_sources {
+                let mut boundary_runtime = Runtime::new();
+                boundary_runtime.isolated = true;
+                boundary_runtime.new_file_path_new_env_new_name_scope(name);
+                let (boundary_results, boundary_error) =
+                    run_source_code(source, &mut boundary_runtime);
+                let (boundary_succeeded, boundary_output) = render_run_source_code_output(
+                    &boundary_runtime,
+                    &boundary_results,
+                    &boundary_error,
+                    false,
+                );
+                assert!(
+                    !boundary_succeeded,
+                    "nonemptiness must not be invented for {name}:\n{boundary_output}"
+                );
+            }
+        },
+    );
+}
+
+#[test]
 fn strict_even_power_requires_real_base() {
     run_with_large_stack("strict_even_power_requires_real_base", || {
         let positive_source = r#"

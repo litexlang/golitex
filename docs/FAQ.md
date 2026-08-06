@@ -284,6 +284,14 @@ try one fresh direct rule on its immediate children. Neither route calls known
 Detailed output distinguishes `builtin rule` from `builtin strategy` and
 returns nested child results to the root.
 
+Finite intervals are a representative example. Nonemptiness of
+`closed_range(a, b)` reduces structurally to `a <= b`; nonemptiness of
+`range(a, b)` reduces to `a < b`. A closed real interval `'[a, b]` uses weak
+order, while a real interval with either endpoint open uses strict order. The
+smaller order child receives one fresh direct-rule layer, so a local bound such
+as `2 <= n` can justify an index carrier beginning at `1` without allowing
+unbounded verifier recursion.
+
 For finite products, the direct rules also recognize pointwise multiplication
 and a pullback along an already-known bijection. They do not search for or
 construct the bijection.
@@ -306,6 +314,13 @@ Constructor and definition strategies remain local. They can check a dependent
 tuple as a struct, project a callable field through one checked constructor,
 or unfold one literal/checked/template set builder or one exact indexed named
 builder for membership. They do not scan all local named definitions.
+
+Inside a `struct` `<=>:` block, equivalent facts instead form an ordered local
+filter context. After a fact is well-defined it is staged without definition
+inference, so an earlier `value != 0` can make a later `1 / value`
+well-defined. Reversing those two facts still fails. The same ordered check is
+used at declaration time and whenever the instantiated struct carrier is
+checked; the temporary facts never leak into the surrounding environment.
 
 At outer round 0, equality replay enumerates the original objects and their
 stored equality representatives. For each pair it may unfold one checked outer

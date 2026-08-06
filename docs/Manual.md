@@ -85,9 +85,11 @@ Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. The current To-Lean code is a
-narrow rational-equality experiment, not a general compiler, so reliability
-claims must remain grounded in inspectable rules, tests, verifier output, and
-explicit trust reporting.
+narrow rational-equality experiment: its tracer consumes the existing
+per-statement JSON rule label after ordinary Litex verification, not a stable
+proof IR or certificate. It is not a general compiler, so reliability claims
+must remain grounded in inspectable rules, tests, verifier output, and explicit
+trust reporting.
 
 ---
 
@@ -885,6 +887,25 @@ definition use, not unrestricted proof search: recursion guards still apply,
 an `abstract_prop` has no body to expose, and omitting the predicate premise
 still leaves the division ill-defined. The temporary assumptions and inferred
 facts do not escape the quantified or existential check.
+
+The equivalent facts in a `struct` `<=>:` block are also checked from left to
+right in a temporary field scope. Each successful fact is staged without
+definition inference before the next fact is checked. This lets a filter guard
+justify a later partial expression, both when the struct is declared and when
+an instantiated struct carrier is checked:
+
+```litex
+struct NonzeroRealView:
+    value R
+    <=>:
+        value != 0
+        1 / value = 1 / value
+```
+
+Source order is significant: omitting `value != 0`, or placing it after the
+reciprocal, leaves the reciprocal ill-defined. These temporary filter facts do
+not escape the struct check and are not proved merely by appearing in the
+definition.
 
 ### Main object criteria
 
@@ -2451,6 +2472,14 @@ fresh direct builtin rule for each immediate child, then repeats only its own
 strictly smaller structural pattern. It never enters known `forall` matching,
 definitions, user strategies, or the full verifier. Detailed output preserves
 the child proof tree and labels the outer route as `builtin strategy`.
+
+Finite-endpoint nonemptiness uses this structural route. For integers,
+`closed_range(a, b)` reduces to `a <= b`, while the half-open `range(a, b)`
+reduces to `a < b`. For real intervals, `'[a, b]` uses `a <= b`; any open
+endpoint uses `a < b`. The order fact is a strictly smaller child, so a local
+stronger bound such as `2 <= n` may establish the needed `1 <= n` or `1 < n`
+through one fresh direct rule. No order premise means no positive nonemptiness
+result, and `range(n, n)` and `'(x, x)` remain empty.
 
 For an ordinary atomic goal the search order is: known non-`forall` fact,
 one-layer builtin rule, builtin strategy, an applicable known `forall`, then a

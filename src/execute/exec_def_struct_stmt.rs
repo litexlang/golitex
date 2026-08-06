@@ -43,7 +43,13 @@ impl Runtime {
             }
 
             for fact in def_struct_stmt.equivalent_facts.iter() {
-                rt.verify_fact_well_defined(fact, &verify_state)?;
+                rt.verify_well_defined_and_store_without_infer(
+                    fact.clone(),
+                    InferReason::ByDefinition(ByDefinitionReason::new(
+                        None,
+                        Some(def_struct_stmt.name.clone()),
+                    )),
+                )?;
             }
             Ok::<(), RuntimeError>(())
         })?;

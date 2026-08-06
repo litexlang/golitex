@@ -136,6 +136,90 @@ impl Runtime {
         fact: &IsNonemptySetFact,
     ) -> Result<StmtResult, RuntimeError> {
         match &fact.set {
+            // An integer closed range is nonempty exactly when its endpoints are ordered.
+            // Example: `2 <= n` proves `$is_nonempty_set(closed_range(1, n))`.
+            Obj::ClosedRange(closed_range) => {
+                let endpoint_order: AtomicFact = LessEqualFact::new(
+                    closed_range.start.as_ref().clone(),
+                    closed_range.end.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
+                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                        fact.clone().into(),
+                        "nonempty-set strategy: closed integer range has ordered endpoints"
+                            .to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
+            // An integer half-open range is nonempty exactly when its start is below its end.
+            // Example: `2 <= n` proves `$is_nonempty_set(range(1, n))`.
+            Obj::Range(range) => {
+                let endpoint_order: AtomicFact = LessFact::new(
+                    range.start.as_ref().clone(),
+                    range.end.as_ref().clone(),
+                    fact.line_file.clone(),
+                )
+                .into();
+                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                        fact.clone().into(),
+                        "nonempty-set strategy: half-open integer range has strictly ordered endpoints"
+                            .to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
+            // A finite real interval needs weak endpoint order only when both ends are closed;
+            // any open endpoint requires strict order. Examples: `'[a, b]` uses `a <= b`,
+            // while `'(a, b]` uses `a < b`.
+            Obj::IntervalObj(interval) => {
+                let both_closed = interval.left_closed() && interval.right_closed();
+                let endpoint_order: AtomicFact = if both_closed {
+                    LessEqualFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        fact.line_file.clone(),
+                    )
+                    .into()
+                } else {
+                    LessFact::new(
+                        interval.start().clone(),
+                        interval.end().clone(),
+                        fact.line_file.clone(),
+                    )
+                    .into()
+                };
+                let result = self.verify_builtin_strategy_child(&endpoint_order)?;
+                if !result.is_true() {
+                    return Ok(StmtUnknown::new().into());
+                }
+                let reason = if both_closed {
+                    "nonempty-set strategy: closed real interval has weakly ordered endpoints"
+                } else {
+                    "nonempty-set strategy: real interval with an open endpoint has strictly ordered endpoints"
+                };
+                Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                        fact.clone().into(),
+                        reason.to_string(),
+                        vec![result],
+                    )
+                    .into(),
+                )
+            }
             Obj::Union(union) => {
                 for set in [union.left.as_ref(), union.right.as_ref()] {
                     let child = IsNonemptySetFact::new(set.clone(), fact.line_file.clone());

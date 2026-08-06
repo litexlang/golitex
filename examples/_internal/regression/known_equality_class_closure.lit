@@ -1,0 +1,48 @@
+# Tracer: scan each known-equality class once per environment.
+#
+# Before (verified but repeatedly rescanned the same class):
+# have rep_000 R = 1
+# have rep_001 R = rep_000
+# have rep_002 R = rep_000
+# have rep_003 R = rep_000
+# have rep_004 R = rep_000
+# have rep_005 R = rep_000
+# have rep_006 R = rep_000
+# have rep_007 R = rep_000
+# have rep_008 R = rep_000
+# have rep_009 R = rep_000
+# have rep_010 R = rep_000
+# have rep_011 R = rep_000
+# have rep_012 R = rep_000
+# have rep_013 R = rep_000
+# have rep_014 R = rep_000
+# have rep_015 R = rep_000
+# rep_000 < 2
+# Former behavior: querying one member enqueued every member, then each member
+# caused the same complete union-find class to be scanned again.
+#
+# Now (verified):
+have rep_000 R = 1
+have rep_001 R = rep_000
+have rep_002 R = rep_000
+have rep_003 R = rep_000
+have rep_004 R = rep_000
+have rep_005 R = rep_000
+have rep_006 R = rep_000
+have rep_007 R = rep_000
+have rep_008 R = rep_000
+have rep_009 R = rep_000
+have rep_010 R = rep_000
+have rep_011 R = rep_000
+have rep_012 R = rep_000
+have rep_013 R = rep_000
+have rep_014 R = rep_000
+have rep_015 R = rep_000
+rep_000 < 2
+# Current behavior: each union-find class is expanded once in each environment;
+# keys discovered there may still bridge into a different environment.
+#
+# Boundary: this does not remove cross-environment closure or the upper-level
+# known-fact candidate search.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/_internal/regression/known_equality_class_closure.lit
+# Implementation: src/environment/known_equality.rs and src/runtime/runtime_known_object_properties.rs
