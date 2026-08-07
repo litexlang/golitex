@@ -17,5 +17,5 @@ fn_range(g) = fn_range(f)
 #
 # Boundary: equality does not bypass arity or domain checks; `g(1, 2)` remains
 # rejected by the executable Rust regression.
-# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/let_callable_alias.lit
+# Evidence: target/release/litex -compact -isolated -f examples/03_language_features/let_callable_alias.lit
 # Implementation: src/runtime/runtime_known_object_properties.rs

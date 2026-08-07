@@ -267,12 +267,12 @@ impl Runtime {
         }
     }
 
-    fn equality_rewrites_for_known_atomic_fact(
+    fn equality_transport_for_known_atomic_fact(
         &self,
         known_fact: &AtomicFact,
         goal: &AtomicFact,
         module_names: &[String],
-    ) -> Option<Vec<KnownEqualityProofStep>> {
+    ) -> Option<EqualityTransportEvidence> {
         if known_fact.key() != goal.key() || known_fact.is_true() != goal.is_true() {
             return None;
         }
@@ -286,7 +286,7 @@ impl Runtime {
             .zip(goal_args.iter())
             .all(|(known, goal)| obj_equality_key(known) == obj_equality_key(goal))
         {
-            return Some(Vec::new());
+            return Some(EqualityTransportEvidence::new(Vec::new()));
         }
 
         // Equality lookup already combines nested runtime environments. Build
@@ -302,21 +302,54 @@ impl Runtime {
             }
         }
 
-        let mut rewrites = Vec::new();
+        let mut steps = Vec::new();
         for (known_arg, goal_arg) in known_args.iter().zip(goal_args.iter()) {
-            rewrites.extend(equalities.proof_path(known_arg, goal_arg)?);
+            let path = equalities.proof_path(known_arg, goal_arg)?;
+            for proof_step in path {
+                let equality_fact: Fact = AtomicFact::EqualFact(proof_step.equality.clone()).into();
+                let equality_fact_id =
+                    self.fact_id_for_transport_fact(&equality_fact, module_names);
+                steps.push(EqualityTransportStep::new(
+                    proof_step.from,
+                    proof_step.to,
+                    proof_step.equality,
+                    equality_fact_id,
+                ));
+            }
         }
-        Some(rewrites)
+        Some(EqualityTransportEvidence::new(steps))
     }
 
     fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &Environment) {
-        for (direct_proofs, _) in environment.known_equality.values() {
-            for proof in direct_proofs.values() {
-                if let AtomicFact::EqualFact(equality) = proof {
-                    equalities.store(equality);
+        for equality in environment.known_equality.direct_equalities().iter() {
+            equalities.store(equality);
+        }
+    }
+
+    fn fact_id_for_transport_fact(&self, fact: &Fact, module_names: &[String]) -> Option<FactId> {
+        let display_key = fact.to_string();
+        let normalized_key = nested_obj_binder_normalized_fact_key(fact);
+        let find_in_environment = |environment: &Environment| {
+            environment
+                .cache_known_fact
+                .get(&display_key)
+                .or_else(|| environment.cache_known_fact.get(&normalized_key))
+                .map(|cached| cached.fact_id)
+        };
+
+        for environment in self.iter_environments_from_top() {
+            if let Some(fact_id) = find_in_environment(environment) {
+                return Some(fact_id);
+            }
+        }
+        for module_name in module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                if let Some(fact_id) = find_in_environment(environment) {
+                    return Some(fact_id);
                 }
             }
         }
+        None
     }
 
     fn cited_known_atomic_fact(
@@ -326,17 +359,17 @@ impl Runtime {
         module_names: &[String],
         detail: Option<String>,
     ) -> VerifiedByResult {
-        match self.equality_rewrites_for_known_atomic_fact(known_fact, goal, module_names) {
-            Some(rewrites) => VerifiedByResult::cited_fact_with_equality_rewrites(
-                goal.clone().into(),
-                known_fact.clone().into(),
-                rewrites,
-                detail,
-            ),
-            None => {
-                VerifiedByResult::cited_fact(goal.clone().into(), known_fact.clone().into(), detail)
-            }
-        }
+        let source_fact: Fact = known_fact.clone().into();
+        let source_fact_id = self.fact_id_for_transport_fact(&source_fact, module_names);
+        let equality_transport =
+            self.equality_transport_for_known_atomic_fact(known_fact, goal, module_names);
+        VerifiedByResult::cited_fact_with_provenance(
+            goal.clone().into(),
+            source_fact,
+            source_fact_id,
+            equality_transport,
+            detail,
+        )
     }
 
     fn atomic_fact_with_resolved_unary_operand(fact: &AtomicFact, x: Obj) -> AtomicFact {

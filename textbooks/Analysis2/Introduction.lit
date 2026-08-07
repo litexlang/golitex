@@ -1,0 +1,52 @@
+# About This Project
+#
+# Litex source:
+# Canonical module: scripts/Analysis2/textbook
+#
+# This project is an ongoing Litex formalization inspired by Terence Tao's
+# Analysis II. It follows the book's development from metric spaces and
+# continuity through Fourier analysis, multivariable calculus, measure, and
+# integration. It is an independent translation project, not an official
+# edition of or substitute for the original book.
+#
+# Translation conventions
+#
+# Standalone items explicitly labelled Exercise or Exercises are outside this
+# translation and are omitted without declarations or coverage placeholders.
+# A named non-exercise result is retained when the source merely assigns its
+# proof, or one proof step, as an exercise; the deferred argument is then
+# exposed locally as `trust`.
+#
+# This project preserves the mathematical order and identity of the source
+# rather than transcribing every sentence or proof step. It uses Litex's
+# builtin number systems, sets, functions, arithmetic, and other established
+# interfaces when they already express the intended mathematics. Source
+# constructions may consequently remain as alternate routes or visible proof
+# debt. Implicit reasoning is expanded when useful, but a long supporting
+# argument may be deferred when it would hide the chapter's main idea behind
+# infrastructure.
+#
+# Coverage and verification are different claims. Included declarations may be
+# checked or may contain a narrowly placed `trust`; a trusted step is accepted
+# proof debt, not a verifier-checked proof. Missing non-exercise material and
+# unfinished proofs remain project work even when all chapter files exist.
+#
+# Most declarations included here are accepted by the Litex verifier, but the
+# project is not a complete formalization of every argument in the source. All
+# known unchecked steps remain visible as explicit trust boundaries. Some
+# reflect proof steps that the original exposition leaves to exercises or
+# compresses; others expose current gaps in Litex's library, automation, or the
+# translation itself. We fill in implicit reasoning where it illuminates the
+# mathematics, while occasionally retaining a clearly marked omission to
+# preserve the source's pace and avoid obscuring the main ideas with routine
+# infrastructure.
+#
+# The chapters on metric-space convergence, uniform convergence, power and
+# Fourier series, several-variable calculus, Lebesgue measure, and Lebesgue
+# integration provide particularly interesting examples of Litex handling
+# layered definitions and long dependency chains. They also make the remaining
+# boundaries of the system concrete rather than hiding them.
+#
+# We hope readers learn useful analysis from the formal development and see how
+# Litex turns mathematical statements into readable, reusable, and checkable
+# facts while reporting unfinished proof obligations honestly.

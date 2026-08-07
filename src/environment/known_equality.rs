@@ -104,6 +104,38 @@ impl KnownEquality {
         })
     }
 
+    /// Returns each stored proof-forest edge once in a deterministic order.
+    ///
+    /// Adjacency is stored in both directions and raw aliases may clone an
+    /// entry. Consumers that rebuild equality evidence across environments
+    /// must not inherit `HashMap` iteration order from either representation.
+    pub fn direct_equalities(&self) -> Vec<EqualFact> {
+        let mut seen = HashSet::new();
+        let mut equalities = Vec::new();
+        for entry in self.entries.values() {
+            for proof in entry.direct_proof_map.values() {
+                let AtomicFact::EqualFact(equality) = proof else {
+                    continue;
+                };
+                let left_key = obj_equality_key(&equality.left);
+                let right_key = obj_equality_key(&equality.right);
+                let edge_key = if left_key <= right_key {
+                    (left_key, right_key)
+                } else {
+                    (right_key, left_key)
+                };
+                if seen.insert(edge_key.clone()) {
+                    equalities.push((edge_key, equality.clone()));
+                }
+            }
+        }
+        equalities.sort_by(|left, right| left.0.cmp(&right.0));
+        equalities
+            .into_iter()
+            .map(|(_, equality)| equality)
+            .collect()
+    }
+
     /// Returns an ordered proof path from `from` to `to` when the equality
     /// store contains one. This exposes the checked direct edges rather than
     /// merely reporting that both objects share a union-find class.
@@ -340,6 +372,37 @@ mod tests {
             .map(|(proofs, _)| proofs.len())
             .sum::<usize>();
         assert_eq!(proof_count_after, proof_count_before);
+    }
+
+    #[test]
+    fn direct_equalities_are_unique_and_deterministically_ordered() {
+        let mut known = KnownEquality::new();
+        known.store(&equality("x2", "x3"));
+        known.store(&equality("x0", "x1"));
+        known.store(&equality("x1", "x2"));
+
+        let edges = known
+            .direct_equalities()
+            .iter()
+            .map(|equality| {
+                let left = obj_equality_key(&equality.left);
+                let right = obj_equality_key(&equality.right);
+                if left <= right {
+                    (left, right)
+                } else {
+                    (right, left)
+                }
+            })
+            .collect::<Vec<_>>();
+
+        assert_eq!(
+            edges,
+            vec![
+                ("x0".to_string(), "x1".to_string()),
+                ("x1".to_string(), "x2".to_string()),
+                ("x2".to_string(), "x3".to_string()),
+            ]
+        );
     }
 
     #[test]

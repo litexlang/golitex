@@ -94,9 +94,11 @@ impl Runtime {
                 }
             }
             VerifiedByResult::Fact(result) => {
-                if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
-                    if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
-                        result.source_fact_id = Some(fact_id);
+                if result.source_fact_id.is_none() {
+                    if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
+                        if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
+                            result.source_fact_id = Some(fact_id);
+                        }
                     }
                 }
             }
@@ -113,9 +115,13 @@ impl Runtime {
                             }
                         }
                         VerifiedBysEnum::ByFact(result) => {
-                            if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
-                                if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
-                                    result.source_fact_id = Some(fact_id);
+                            if result.source_fact_id.is_none() {
+                                if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
+                                    if let Some(fact_id) =
+                                        self.known_fact_id_for_fact(source_fact)?
+                                    {
+                                        result.source_fact_id = Some(fact_id);
+                                    }
                                 }
                             }
                         }

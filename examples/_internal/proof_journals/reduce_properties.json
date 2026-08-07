@@ -1,10 +1,10 @@
 {
   "schema_version": 1,
-  "target": "examples/01_proof_patterns/reduce_builtin_rules.lit",
+  "target": "examples/02_builtin_math/reduce_builtin_rules.lit",
   "session_command": "target/release/litex -compact -isolated -session -f examples/tmp.lit",
   "setup_notes": [
     "The examples tree has no direct-parent litex.config, so the tracer uses one isolated release session preloaded with examples/tmp.lit.",
-    "The stable acceptance artifact is examples/01_proof_patterns/reduce_builtin_rules.lit."
+    "The stable acceptance artifact is examples/02_builtin_math/reduce_builtin_rules.lit."
   ],
   "proof_spine": [
     "Recognize addition with seed zero and multiplication with seed one as specializations of generic reduction.",
@@ -212,7 +212,7 @@
   ],
   "materialization": {
     "block_ids": ["B001", "B002", "B003", "B004", "B005", "B007"],
-    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/reduce_builtin_rules.lit",
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/02_builtin_math/reduce_builtin_rules.lit",
     "file_gate_result": "exit 0; runner envelope ok true",
     "harness_command": "cargo test --release run_examples -- --nocapture",
     "harness_result": "exit 0; 376 example and documentation runs passed",

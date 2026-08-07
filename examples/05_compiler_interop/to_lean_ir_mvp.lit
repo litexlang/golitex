@@ -25,6 +25,24 @@ forall a, b set:
     =>:
         $transported(b)
 
+# The proof forest keeps one deterministic witness path. Here the useful path
+# is a -> b -> c -> g -> f. The later shortcut a = c, the attached side branch
+# b -> h -> u -> v, and the disconnected w = z component must not appear in
+# the equality premises consumed by To-Lean.
+forall a, b, c, f, g, h, u, v, w, z set:
+    a = b
+    b = c
+    a = c
+    c = g
+    f = g
+    h = b
+    h = u
+    u = v
+    w = z
+    $transported(a)
+    =>:
+        $transported(f)
+
 # Broader first-slice coverage:
 abstract_prop marked(x)
 
@@ -64,10 +82,12 @@ forall a, b, x R:
     x != 0
     =>:
         (a + b) / x = a / x + b / x
-# Current behavior: the verifier retains the ordered equality path and local
-# premise FactIds. To-Lean represents the conclusion as a `RuleApplication`
+# Current behavior: while the local premise environment is alive, the verifier
+# freezes the ordered equality path together with every source/equality FactId.
+# To-Lean represents the conclusion as a `RuleApplication`
 # containing `EqualityRewrite`, a cited source-fact premise, and equality-proof
-# premises. The emitter then gives the introduced premises, replayed source,
+# premises; it does not rediscover equality identities after the local scope
+# has ended. The emitter then gives the introduced premises, replayed source,
 # equality evidence, and checked result consecutive coordinates in that proof
 # space. Known-forall IR separately records typed Obj arguments, parameter and
 # domain requirements, its direct instantiated conclusion, and any outer
@@ -80,7 +100,7 @@ forall a, b, x R:
 # compilation. Directly compiling `$marked(1)` also still requires a nested
 # numeric proof backend. Neither boundary becomes `sorry` or an implicit axiom.
 #
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/to_lean_ir_mvp.lit
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
 # Compiler evidence: cargo test --release to_lean:: -- --nocapture
 # Implementation: src/environment/known_equality.rs,
 # src/verify/verify_known_atomic_facts.rs, src/result/runtime_success.rs,

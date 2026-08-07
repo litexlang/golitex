@@ -1,25 +1,5 @@
 use crate::prelude::*;
 
-/// Split a rendered module-qualified object key without letting an internal
-/// symbol-identity spine become part of the module name.
-///
-/// For example, `#17#lib::main::value` is represented as the display key
-/// `lib::main::value`, module `lib::main`, and local name `value`.
-pub(crate) fn split_module_qualified_display_key(
-    key: &str,
-) -> Option<(String, String, String)> {
-    let display_key = strip_free_param_numeric_tags_in_display(key);
-    let (module_name, local_name) = display_key.rsplit_once(MOD_SIGN)?;
-    if module_name.is_empty() || local_name.is_empty() {
-        return None;
-    }
-    Some((
-        display_key.clone(),
-        module_name.to_string(),
-        local_name.to_string(),
-    ))
-}
-
 impl FnSetBody {
     pub(crate) fn contains_native_complex_syntax(&self) -> bool {
         self.params_def_with_set

@@ -1422,6 +1422,29 @@ forall a, b set:
                 for mut block in blocks {
                     let statement = runtime.parse_stmt(&mut block).unwrap();
                     let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                    if statement_irs.len() == 1 {
+                        let success = result.factual_success().expect("forall success");
+                        let VerifiedByResult::ForallProof(forall_proof) = &success.verified_by
+                        else {
+                            panic!("second statement should retain its forall proof");
+                        };
+                        let conclusion = forall_proof.proves[0]
+                            .result
+                            .factual_success()
+                            .expect("forall conclusion success");
+                        let VerifiedByResult::Fact(citation) =
+                            underlying_test_verified_by(&conclusion.verified_by)
+                        else {
+                            panic!("transported conclusion should cite a known fact");
+                        };
+                        let transport = citation
+                            .equality_transport
+                            .as_ref()
+                            .expect("transport evidence should be captured by the verifier");
+                        assert!(citation.source_fact_id.is_some());
+                        assert_eq!(transport.steps.len(), 1);
+                        assert!(transport.steps[0].equality_fact_id.is_some());
+                    }
                     statement_irs.push(result.to_lean_ir().unwrap().clone());
                 }
 
@@ -1518,6 +1541,97 @@ forall a, b set:
     }
 
     #[test]
+    fn equality_transport_ignores_redundant_shortcuts_and_side_branches() {
+        run_with_large_stack(
+            "equality_transport_ignores_redundant_shortcuts_and_side_branches",
+            || {
+                let source = r#"
+abstract_prop t(x)
+
+forall a, b, c, f, g, h, u, v, w, z set:
+    a = b
+    b = c
+    a = c
+    c = g
+    f = g
+    h = b
+    h = u
+    u = v
+    w = z
+    $t(a)
+    =>:
+        $t(f)
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("branched-equality-transport");
+                runtime.replace_to_lean_mode(true);
+                let tokenizer = Tokenizer::new();
+                let blocks = tokenizer
+                    .parse_blocks(source, runtime.current_file_path_rc())
+                    .unwrap();
+                let mut statement_irs = Vec::new();
+                for mut block in blocks {
+                    let statement = runtime.parse_stmt(&mut block).unwrap();
+                    let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                    statement_irs.push(result.to_lean_ir().unwrap().clone());
+                }
+
+                let StmtToLeanIR::Fact(forall) = &statement_irs[1] else {
+                    panic!("second IR item should be the forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &forall.fact.proof
+                else {
+                    panic!("forall should retain introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                    premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("conclusion should retain equality transport");
+                };
+                let equality_premises = premises[1..]
+                    .iter()
+                    .map(|premise| {
+                        strip_parsing_free_param_tags_for_user_display(
+                            &premise.proposition.to_string(),
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                assert_eq!(
+                    equality_premises,
+                    vec![
+                        "a = b".to_string(),
+                        "b = c".to_string(),
+                        "c = g".to_string(),
+                        "f = g".to_string(),
+                    ]
+                );
+                assert_eq!(rewrite.steps.len(), 4);
+                assert_eq!(
+                    rewrite.steps[3].direction,
+                    EqualityRewriteDirectionToLeanIR::Backward
+                );
+
+                let first_output = to_lean_from_source(source, "branched-equality-output").unwrap();
+                assert!(!first_output.contains(": a = c :="));
+                assert!(!first_output.contains(": h = b :="));
+                assert!(!first_output.contains(": h = u :="));
+                assert!(!first_output.contains(": u = v :="));
+                assert!(!first_output.contains(": w = z :="));
+                assert!(!first_output.contains("sorry"));
+                for _ in 0..12 {
+                    assert_eq!(
+                        to_lean_from_source(source, "branched-equality-output").unwrap(),
+                        first_output
+                    );
+                }
+            },
+        );
+    }
+
+    #[test]
     fn unstructured_fact_transport_is_an_explicit_unsupported_rule() {
         run_with_large_stack(
             "unstructured_fact_transport_is_an_explicit_unsupported_rule",
@@ -1529,6 +1643,30 @@ forall a, b set:
 
                 assert!(error.contains("OtherUnsupported"));
                 assert!(error.contains("without structured rewrite evidence"));
+            },
+        );
+    }
+
+    #[test]
+    fn equality_transport_without_stored_edge_provenance_fails_closed() {
+        run_with_large_stack(
+            "equality_transport_without_stored_edge_provenance_fails_closed",
+            || {
+                let source = r#"
+abstract_prop t(x)
+
+forall x R:
+    x + 1 = 3
+    $t(x)
+    =>:
+        $t(2)
+"#;
+                let error = to_lean_from_source(source, "derived-equality-transport")
+                    .expect_err("a derived equality without proof provenance must be rejected")
+                    .trace_message();
+
+                assert!(error.contains("has no compiler proof provenance"));
+                assert!(!error.contains("sorry"));
             },
         );
     }
@@ -1860,5 +1998,12 @@ $marked2(1, 2)
             proof = source.as_ref();
         }
         proof
+    }
+
+    fn underlying_test_verified_by(mut verified_by: &VerifiedByResult) -> &VerifiedByResult {
+        while let VerifiedByResult::StatementMemo(source) = verified_by {
+            verified_by = &source.verified_by;
+        }
+        verified_by
     }
 }

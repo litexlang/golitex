@@ -11,5 +11,5 @@ forall p Z:
 
 # Boundary: the analogous mod-3 statement is unsupported and false because 3 does not divide 8.
 # The executable negative boundary lives in the focused Rust regression.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/modulo_compatible_moduli.lit
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/modulo_compatible_moduli.lit
 # Implementation: src/verify/verify_builtin_rules/equality_numeric/modulo.rs

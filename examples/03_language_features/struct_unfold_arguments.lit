@@ -59,6 +59,6 @@ first_of_three(unfold named_values) = 1
 # &Struct{object} view still has to pass ordinary struct-membership verification.
 # Those failures are executable Rust regressions rather than trusted Litex
 # statements.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/struct_unfold_arguments.lit
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/struct_unfold_arguments.lit
 # Negative evidence: cargo test --release struct_unfold -- --nocapture
 # Implementation: src/parse/parse_obj.rs

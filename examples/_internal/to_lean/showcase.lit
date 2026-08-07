@@ -87,7 +87,7 @@ import Mathlib
 
 universe uLitex
 
-namespace tmp2
+namespace showcase
 
 -- Litex's primitive notion of a set.
 abbrev LitexSet := Type uLitex
@@ -213,5 +213,5 @@ theorem global_fact_109 : marked2 (1 : ℝ) (2 : ℝ) := by
     convert proof_fact_8_1 using 1 <;> norm_num
   exact proof_fact_8_2
 
-end tmp2
+end showcase
 """

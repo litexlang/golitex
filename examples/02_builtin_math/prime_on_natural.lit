@@ -24,5 +24,5 @@ thm natural_prime_is_at_least_two:
 #
 # Boundary: `$prime(z)` remains ill-defined when `z` is known only to belong to
 # `Z` or `R`; an executable Rust regression checks both rejected carriers.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prime_on_natural.lit
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/prime_on_natural.lit
 # Implementation: src/verify/verify_fact_well_defined.rs

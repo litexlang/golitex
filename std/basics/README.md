@@ -93,7 +93,7 @@ Except where a row states a stronger condition, gcd theorems require
 `a != 0 or b != 0`.
 
 These theorems use the native gcd contract directly. The teaching example
-[`gcd_from_finite_divisors.lit`](../../examples/01_proof_patterns/gcd_from_finite_divisors.lit)
+[`gcd_from_finite_divisors.lit`](../../examples/04_case_studies/gcd_from_finite_divisors.lit)
 separately constructs gcd as the largest positive common divisor and proves
 that construction equal to native `gcd`.
 

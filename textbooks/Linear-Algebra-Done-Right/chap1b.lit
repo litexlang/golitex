@@ -1,0 +1,435 @@
+# Linear Algebra Done Right, fourth edition, Section 1B: Definition of Vector Space.
+# Definition 1.19. An addition on v is a function v x v -> v, and a scalar
+# multiplication is a function s x v -> v. These templates expose the two
+# function carriers directly; later code passes and applies actual maps.
+template<v nonempty_set>:
+    have addition_on set = fn(x, y v) v
+
+template<s nonempty_set, v nonempty_set>:
+    have scalar_multiplication_on set = fn(a s, x v) v
+# Definition 1.20. A VectorSpace packages a vector zero, callable addition,
+# and callable scalar multiplication together with exactly the source axioms.
+# The selected ScalarSystem supplies the scalar zero, one, addition, and
+# multiplication used by those axioms.
+struct VectorSpace<s nonempty_set, v nonempty_set>:
+    scalars &chap1a::ScalarSystem<s>
+    zero v
+    add fn(x, y v) v
+    smul fn(a s, x v) v
+    <=>:
+        forall x, y, z v:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y v:
+            add(x, y) = add(y, x)
+        forall x v:
+            add(zero, x) = x
+            exist y v st {add(x, y) = zero}
+        forall a, b s, x v:
+            smul(scalars.mul(a, b), x) = smul(a, smul(b, x))
+            smul(scalars.add(a, b), x) = add(smul(a, x), smul(b, x))
+        forall a s, x, y v:
+            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
+        forall x v:
+            smul(scalars.one, x) = x
+
+prop is_vector_space(s nonempty_set, scalars &chap1a::ScalarSystem<s>, v nonempty_set, vector_zero v, vector_add fn(x, y v) v, vector_smul fn(a s, x v) v):
+    (scalars, vector_zero, vector_add, vector_smul) $in &VectorSpace<s, v>
+
+# Definition 1.22, complex case. CVectorSpace is the book-facing structure.
+# It exposes zero, addition, and builtin-C scalar multiplication directly. Its
+# `general` field stores the already-checked generic view, and the four
+# compatibility equations keep both views synchronized without reconstructing
+# and revalidating a VectorSpace tuple at every theorem call.
+struct CVectorSpace<v nonempty_set>:
+    zero v
+    add fn(x, y v) v
+    smul fn(a C, x v) v
+    general &VectorSpace<C, v>
+    <=>:
+        general.scalars = chap1a::complex_scalars
+        general.zero = zero
+        general.add = add
+        general.smul = smul
+        forall x, y, z v:
+            add(add(x, y), z) = add(x, add(y, z))
+        forall x, y v:
+            add(x, y) = add(y, x)
+        forall x v:
+            add(zero, x) = x
+            exist y v st {add(x, y) = zero}
+        forall a, b C, x v:
+            smul(a * b, x) = smul(a, smul(b, x))
+            smul(a + b, x) = add(smul(a, x), smul(b, x))
+        forall a C, x, y v:
+            smul(a, add(x, y)) = add(smul(a, x), smul(a, y))
+        forall x v:
+            smul(1, x) = x
+
+# A generic complex vector space whose scalar record is canonical computes with
+# builtin complex addition and multiplication. The field-equality theorem uses
+# tuple projections once; function congruence then supplies the applied values.
+thm vector_space_scalar_operation_values:
+    ? forall VSet nonempty_set, G &VectorSpace<C, VSet>, a, b C:
+        G.scalars = chap1a::complex_scalars
+        =>:
+            G.scalars.one = 1
+            G.scalars.add(a, b) = a + b
+            G.scalars.mul(a, b) = a * b
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(C, G.scalars, chap1a::complex_scalars)
+    G.scalars.one = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.one
+    G.scalars.add = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add
+    G.scalars.mul = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul
+    by thm chap1a::complex_scalar_adapter_values(a, b)
+    G.scalars.one = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.one = 1
+    G.scalars.add(a, b) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.add(a, b) = a + b
+    G.scalars.mul(a, b) = &chap1a::ScalarSystem<C>{chap1a::complex_scalars}.mul(a, b) = a * b
+
+# The reverse constructor checks the native C laws once and stores the supplied
+# generic object as the cached general view.
+thm vector_space_as_c_vector_space_well_defined:
+    ? forall VSet nonempty_set, G &VectorSpace<C, VSet>:
+        G.scalars = chap1a::complex_scalars
+        =>:
+            (G.zero, G.add, G.smul, G) $in &CVectorSpace<VSet>
+    claim:
+        ? forall a, b C, x VSet:
+            G.smul(a * b, x) = G.smul(a, G.smul(b, x))
+            G.smul(a + b, x) = G.add(G.smul(a, x), G.smul(b, x))
+        by thm vector_space_scalar_operation_values(VSet, G, a, b)
+        G.scalars.mul(a, b) = a * b
+        G.scalars.add(a, b) = a + b
+        G.smul(a * b, x) = G.smul(G.scalars.mul(a, b), x) = G.smul(a, G.smul(b, x))
+        G.smul(a + b, x) = G.smul(G.scalars.add(a, b), x) = G.add(G.smul(a, x), G.smul(b, x))
+    claim:
+        ? forall x VSet:
+            G.smul(1, x) = x
+        by thm vector_space_scalar_operation_values(VSet, G, 0, 0)
+        G.scalars.one = 1
+        G.smul(1, x) = G.smul(G.scalars.one, x) = x
+    by thm struct_member((G.zero, G.add, G.smul, G), &CVectorSpace<VSet>)
+
+# The forward bridge is a stored object lookup, not a reconstructed structure.
+template<VSet nonempty_set, V &CVectorSpace<VSet>>:
+    have as_vector_space &VectorSpace<C, VSet> = V.general
+
+thm c_vector_space_bridge_is_well_defined:
+    ? forall VSet nonempty_set, V &CVectorSpace<VSet>:
+        \as_vector_space<VSet, V> $in &VectorSpace<C, VSet>
+    \as_vector_space<VSet, V> = V.general
+    V.general $in &VectorSpace<C, VSet>
+
+thm c_vector_space_bridge_fields:
+    ? forall VSet nonempty_set, V &CVectorSpace<VSet>:
+        &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.scalars = chap1a::complex_scalars
+        &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.zero = V.zero
+        &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.add = V.add
+        &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.smul = V.smul
+    \as_vector_space<VSet, V> = V.general
+    &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.scalars = V.general.scalars = chap1a::complex_scalars
+    &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.zero = V.general.zero = V.zero
+    &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.add = V.general.add = V.add
+    &VectorSpace<C, VSet>{\as_vector_space<VSet, V>}.smul = V.general.smul = V.smul
+
+template<VSet nonempty_set, G &VectorSpace<C, VSet>: G.scalars = chap1a::complex_scalars>:
+    have as_c_vector_space &CVectorSpace<VSet> = (G.zero, G.add, G.smul, G)
+# The coordinate-space tuple satisfies every vector-space law pointwise.
+thm coordinate_space_tuple_is_vector_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        (scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>) $in &VectorSpace<s, finite_seq(s, n)>
+    claim:
+        ? forall x, y, z finite_seq(s, n):
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_add<s, scalars, n>(x, y), z) = \chap1a::coordinate_add<s, scalars, n>(x, \chap1a::coordinate_add<s, scalars, n>(y, z))
+        have left finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_add<s, scalars, n>(x, y), z)
+        have right finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(x, \chap1a::coordinate_add<s, scalars, n>(y, z))
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = right(idx)
+            left(idx) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_add<s, scalars, n>(x, y), z)(idx)
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_add<s, scalars, n>(x, y), z)(idx) = scalars.add(\chap1a::coordinate_add<s, scalars, n>(x, y)(idx), z(idx))
+            \chap1a::coordinate_add<s, scalars, n>(x, y)(idx) = scalars.add(x(idx), y(idx))
+            left(idx) = scalars.add(scalars.add(x(idx), y(idx)), z(idx))
+            scalars.add(scalars.add(x(idx), y(idx)), z(idx)) = scalars.add(x(idx), scalars.add(y(idx), z(idx)))
+            right(idx) = \chap1a::coordinate_add<s, scalars, n>(x, \chap1a::coordinate_add<s, scalars, n>(y, z))(idx)
+            \chap1a::coordinate_add<s, scalars, n>(x, \chap1a::coordinate_add<s, scalars, n>(y, z))(idx) = scalars.add(x(idx), \chap1a::coordinate_add<s, scalars, n>(y, z)(idx))
+            \chap1a::coordinate_add<s, scalars, n>(y, z)(idx) = scalars.add(y(idx), z(idx))
+            right(idx) = scalars.add(x(idx), scalars.add(y(idx), z(idx)))
+        by def:
+            ? $fn_eq(left, right)
+        left = right
+    claim:
+        ? forall x, y finite_seq(s, n):
+            \chap1a::coordinate_add<s, scalars, n>(x, y) = \chap1a::coordinate_add<s, scalars, n>(y, x)
+        by thm chap1a::coordinate_add_commutative(s, scalars, n, x, y)
+    claim:
+        ? forall x finite_seq(s, n):
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x) = x
+        have left finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x)
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = x(idx)
+            left(idx) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x)(idx)
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_zero<s, scalars, n>, x)(idx) = scalars.add(\chap1a::coordinate_zero<s, scalars, n>(idx), x(idx))
+            \chap1a::coordinate_zero<s, scalars, n>(idx) = scalars.zero
+            left(idx) = scalars.add(scalars.zero, x(idx)) = x(idx)
+        by def:
+            ? $fn_eq(left, x)
+        left = x
+    claim:
+        ? forall x finite_seq(s, n):
+            exist y finite_seq(s, n) st {\chap1a::coordinate_add<s, scalars, n>(x, y) = \chap1a::coordinate_zero<s, scalars, n>}
+        have y finite_seq(s, n) = \chap1a::coordinate_neg<s, scalars, n>(x)
+        have left finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(x, y)
+        have right finite_seq(s, n) = \chap1a::coordinate_zero<s, scalars, n>
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = right(idx)
+            left(idx) = \chap1a::coordinate_add<s, scalars, n>(x, y)(idx)
+            \chap1a::coordinate_add<s, scalars, n>(x, y)(idx) = scalars.add(x(idx), y(idx))
+            y(idx) = \chap1a::coordinate_neg<s, scalars, n>(x)(idx) = scalars.neg(x(idx))
+            right(idx) = \chap1a::coordinate_zero<s, scalars, n>(idx) = scalars.zero
+            left(idx) = scalars.add(x(idx), scalars.neg(x(idx))) = scalars.zero = right(idx)
+        by def:
+            ? $fn_eq(left, right)
+        left = right
+        witness exist y2 finite_seq(s, n) st {\chap1a::coordinate_add<s, scalars, n>(x, y2) = \chap1a::coordinate_zero<s, scalars, n>} from y
+    claim:
+        ? forall a, b s, x finite_seq(s, n):
+            \chap1a::coordinate_smul<s, scalars, n>(scalars.mul(a, b), x) = \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_smul<s, scalars, n>(b, x))
+        have left finite_seq(s, n) = \chap1a::coordinate_smul<s, scalars, n>(scalars.mul(a, b), x)
+        have right finite_seq(s, n) = \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_smul<s, scalars, n>(b, x))
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = right(idx)
+            left(idx) = \chap1a::coordinate_smul<s, scalars, n>(scalars.mul(a, b), x)(idx) = scalars.mul(scalars.mul(a, b), x(idx))
+            scalars.mul(scalars.mul(a, b), x(idx)) = scalars.mul(a, scalars.mul(b, x(idx)))
+            right(idx) = \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_smul<s, scalars, n>(b, x))(idx)
+            \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_smul<s, scalars, n>(b, x))(idx) = scalars.mul(a, \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx))
+            \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx) = scalars.mul(b, x(idx))
+            right(idx) = scalars.mul(a, scalars.mul(b, x(idx)))
+        by def:
+            ? $fn_eq(left, right)
+        left = right
+    claim:
+        ? forall a, b s, x finite_seq(s, n):
+            \chap1a::coordinate_smul<s, scalars, n>(scalars.add(a, b), x) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(b, x))
+        have left finite_seq(s, n) = \chap1a::coordinate_smul<s, scalars, n>(scalars.add(a, b), x)
+        have right finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(b, x))
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = right(idx)
+            left(idx) = \chap1a::coordinate_smul<s, scalars, n>(scalars.add(a, b), x)(idx) = scalars.mul(scalars.add(a, b), x(idx))
+            scalars.mul(scalars.add(a, b), x(idx)) = scalars.mul(x(idx), scalars.add(a, b))
+            scalars.mul(x(idx), scalars.add(a, b)) = scalars.add(scalars.mul(x(idx), a), scalars.mul(x(idx), b))
+            scalars.mul(x(idx), a) = scalars.mul(a, x(idx))
+            scalars.mul(x(idx), b) = scalars.mul(b, x(idx))
+            scalars.add(scalars.mul(x(idx), a), scalars.mul(x(idx), b)) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(b, x(idx)))
+            scalars.mul(scalars.add(a, b), x(idx)) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(b, x(idx)))
+            right(idx) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(b, x))(idx)
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(b, x))(idx) = scalars.add(\chap1a::coordinate_smul<s, scalars, n>(a, x)(idx), \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx))
+            \chap1a::coordinate_smul<s, scalars, n>(a, x)(idx) = scalars.mul(a, x(idx))
+            \chap1a::coordinate_smul<s, scalars, n>(b, x)(idx) = scalars.mul(b, x(idx))
+            right(idx) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(b, x(idx)))
+        by def:
+            ? $fn_eq(left, right)
+        left = right
+    claim:
+        ? forall a s, x, y finite_seq(s, n):
+            \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_add<s, scalars, n>(x, y)) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(a, y))
+        have left finite_seq(s, n) = \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_add<s, scalars, n>(x, y))
+        have right finite_seq(s, n) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(a, y))
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = right(idx)
+            left(idx) = \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_add<s, scalars, n>(x, y))(idx)
+            \chap1a::coordinate_smul<s, scalars, n>(a, \chap1a::coordinate_add<s, scalars, n>(x, y))(idx) = scalars.mul(a, \chap1a::coordinate_add<s, scalars, n>(x, y)(idx))
+            \chap1a::coordinate_add<s, scalars, n>(x, y)(idx) = scalars.add(x(idx), y(idx))
+            left(idx) = scalars.mul(a, scalars.add(x(idx), y(idx)))
+            scalars.mul(a, scalars.add(x(idx), y(idx))) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(a, y(idx)))
+            right(idx) = \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(a, y))(idx)
+            \chap1a::coordinate_add<s, scalars, n>(\chap1a::coordinate_smul<s, scalars, n>(a, x), \chap1a::coordinate_smul<s, scalars, n>(a, y))(idx) = scalars.add(\chap1a::coordinate_smul<s, scalars, n>(a, x)(idx), \chap1a::coordinate_smul<s, scalars, n>(a, y)(idx))
+            \chap1a::coordinate_smul<s, scalars, n>(a, x)(idx) = scalars.mul(a, x(idx))
+            \chap1a::coordinate_smul<s, scalars, n>(a, y)(idx) = scalars.mul(a, y(idx))
+            right(idx) = scalars.add(scalars.mul(a, x(idx)), scalars.mul(a, y(idx)))
+        by def:
+            ? $fn_eq(left, right)
+        left = right
+    claim:
+        ? forall x finite_seq(s, n):
+            \chap1a::coordinate_smul<s, scalars, n>(scalars.one, x) = x
+        have left finite_seq(s, n) = \chap1a::coordinate_smul<s, scalars, n>(scalars.one, x)
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left(idx) = x(idx)
+            left(idx) = \chap1a::coordinate_smul<s, scalars, n>(scalars.one, x)(idx) = scalars.mul(scalars.one, x(idx)) = x(idx)
+        by def:
+            ? $fn_eq(left, x)
+        left = x
+    by thm struct_member((scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>), &VectorSpace<s, finite_seq(s, n)>)
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
+    have coordinate_space &VectorSpace<s, finite_seq(s, n)> = (scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>)
+# Definition 1.21. Elements x of the carrier v are called vectors or points.
+# The real Litex interface is the parameter declaration `x v`; no redundant
+# is_vector predicate is introduced because the carrier already records it.
+# Definition 1.22. A real vector space specializes the scalar carrier to R.
+# Complex vector spaces use the CVectorSpace structure above.
+prop is_real_vector_space(v nonempty_set, space &VectorSpace<R, v>):
+    space.scalars = chap1a::real_scalars
+# Example 1.23. F^infinity is the sequence carrier seq(s); evaluation remains
+# callable, and its intended addition and scalar multiplication are pointwise.
+sketch:
+    have real_sequence seq(R) = fn(n N+) R {n}
+    real_sequence(3) = 3
+# Notation 1.24. F^S is the function carrier fn(x S)s. The four templates
+# below construct its zero, addition, negation, and scalar multiplication as
+# callable pointwise maps rather than predicates about proposed functions.
+template<s nonempty_set, X set>:
+    have function_space set = fn(x X) s
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, X set>:
+    have function_zero fn(x X) s = fn(x X) s {scalars.zero}
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, X set>:
+    have fn function_add(f fn(p X) s, g fn(q X) s) fn(r X) s = fn(t X) s {scalars.add(f(t), g(t))}
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, X set>:
+    have fn function_neg(f fn(p X) s) fn(q X) s = fn(t X) s {scalars.neg(f(t))}
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, X set>:
+    have fn function_smul(a s, f fn(p X) s) fn(q X) s = fn(t X) s {scalars.mul(a, f(t))}
+# Example 1.25. For nonempty S, the preceding pointwise operations give F^S
+# the expected vector-space operations. The sketch checks the concrete
+# sequence case; the generic VectorSpace proof needs function extensionality.
+sketch:
+    have f seq(R) = fn(n N+) R {n}
+    \function_add<R, chap1a::real_scalars, N+>(f, f) $in seq(R)
+    \function_smul<R, chap1a::real_scalars, N+>(2, f) $in seq(R)
+# Remark on the function-space viewpoint. Vectors need not be coordinate
+# lists: finite lists and infinite sequences can both be read as functions on
+# an index set. A formal equivalence would be an isomorphism and is not needed
+# for the carrier and operation interfaces used here.
+# Result 1.26. An additive identity for a fixed vector-space addition is
+# unique. The source proof compares a proposed identity e with the zero field
+# of the VectorSpace by evaluating both identities at one another.
+thm additive_identity_unique:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, identity_candidate v:
+        forall x v:
+            space.add(identity_candidate, x) = x
+        =>:
+            identity_candidate = space.zero
+    space.add(identity_candidate, space.zero) = space.zero
+    space.add(identity_candidate, space.zero) = space.add(space.zero, identity_candidate) = identity_candidate
+# Result 1.27. Every vector has a unique additive inverse for the fixed
+# VectorSpace addition and zero.
+# Existence is a VectorSpace field.  Uniqueness first commutes the second
+# inverse equation, then uses the source's equality chain through y2+(x+y1).
+thm additive_inverse_exists_unique:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        exist! y v st {space.add(x, y) = space.zero}
+    obtain y from exist y v st {space.add(x, y) = space.zero}
+    forall y1, y2 v:
+        space.add(x, y1) = space.zero
+        space.add(x, y2) = space.zero
+        =>:
+            space.add(y2, x) = space.add(x, y2) = space.zero
+            y1 = space.add(space.zero, y1) = space.add(space.add(y2, x), y1) = space.add(y2, space.add(x, y1)) = space.add(y2, space.zero) = space.add(space.zero, y2) = y2
+    witness exist! y2 v st {space.add(x, y2) = space.zero} from y
+# Notation 1.28. vector_neg selects the unique inverse from Result 1.27, and
+# vector_sub is the derived callable subtraction map w-v = w+(-v).
+template<s nonempty_set, v nonempty_set, space &VectorSpace<s, v>>:
+    have fn vector_neg by exist!:
+        ? forall x v:
+            exist! y v st {space.add(x, y) = space.zero}
+        by thm additive_inverse_exists_unique(s, v, space, x)
+# The selected witness equation is registered when this template is
+# instantiated, so the notation's defining specification is checked directly.
+thm vector_neg_spec:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.add(x, \vector_neg<s, v, space>(x)) = space.zero
+
+template<s nonempty_set, v nonempty_set, space &VectorSpace<s, v>>:
+    have fn vector_sub(w, x v) v = space.add(w, \vector_neg<s, v, space>(x))
+# Proof plumbing used repeatedly below: vector addition admits cancellation.
+thm add_left_cancel:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x, y, z v:
+        space.add(x, y) = space.add(x, z)
+        =>:
+            y = z
+    by thm vector_neg_spec(s, v, space, x)
+    space.add(\vector_neg<s, v, space>(x), x) = space.add(x, \vector_neg<s, v, space>(x)) = space.zero
+    space.add(\vector_neg<s, v, space>(x), space.add(x, y)) = space.add(space.add(\vector_neg<s, v, space>(x), x), y)
+    space.add(space.add(\vector_neg<s, v, space>(x), x), y) = space.add(space.zero, y) = y
+    space.add(\vector_neg<s, v, space>(x), space.add(x, z)) = space.add(space.add(\vector_neg<s, v, space>(x), x), z)
+    space.add(space.add(\vector_neg<s, v, space>(x), x), z) = space.add(space.zero, z) = z
+
+thm add_right_cancel:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x, y, z v:
+        space.add(x, z) = space.add(y, z)
+        =>:
+            x = y
+    space.add(z, x) = space.add(x, z) = space.add(y, z) = space.add(z, y)
+    by thm add_left_cancel(s, v, space, z, x, y)
+# Notation 1.29. From this point onward, the formal standing context is `s`,
+# `v`, and `space`; the selected ScalarSystem is available as
+# `space.scalars`.
+# Result 1.30. Scalar zero times every vector equals the vector zero.  As in
+# the source, distribute 0+0 and cancel with the unique additive inverse.
+thm zero_scalar_times_vector:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.smul(space.scalars.zero, x) = space.zero
+    have p v = space.smul(space.scalars.zero, x)
+    space.scalars.add(space.scalars.zero, space.scalars.zero) = space.scalars.zero
+    space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x))
+    space.smul(space.scalars.add(space.scalars.zero, space.scalars.zero), x) = p
+    space.add(space.smul(space.scalars.zero, x), space.smul(space.scalars.zero, x)) = space.add(p, p)
+    p = space.add(p, p)
+    space.add(p, space.zero) = space.add(space.zero, p) = p
+    space.add(p, p) = space.add(p, space.zero)
+    by thm add_left_cancel(s, v, space, p, p, space.zero)
+    p = space.zero
+# Result 1.31. Every scalar times the vector zero equals the vector zero.  The
+# same cancellation calculation now starts from a(0+0)=a0+a0.
+thm scalar_times_zero_vector:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, a s:
+        space.smul(a, space.zero) = space.zero
+    have q v = space.smul(a, space.zero)
+    space.add(space.zero, space.zero) = space.zero
+    space.smul(a, space.add(space.zero, space.zero)) = space.add(space.smul(a, space.zero), space.smul(a, space.zero))
+    space.smul(a, space.add(space.zero, space.zero)) = q
+    space.add(space.smul(a, space.zero), space.smul(a, space.zero)) = space.add(q, q)
+    q = space.add(q, q)
+    space.add(q, space.zero) = space.add(space.zero, q) = q
+    space.add(q, q) = space.add(q, space.zero)
+    by thm add_left_cancel(s, v, space, q, q, space.zero)
+    q = space.zero
+# Result 1.32. Multiplication by scalar -1 gives the canonical additive
+# inverse selected in Notation 1.28.  Scalar distributivity makes it an
+# inverse of x, and Result 1.27 supplies uniqueness.
+thm minus_one_times_vector:
+    ? forall s nonempty_set, v nonempty_set, space &VectorSpace<s, v>, x v:
+        space.smul(space.scalars.neg(space.scalars.one), x) = \vector_neg<s, v, space>(x)
+    by thm vector_neg_spec(s, v, space, x)
+    space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)) = space.scalars.zero
+    space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x))
+    space.smul(space.scalars.zero, x) = space.zero
+    space.smul(space.scalars.one, x) = x
+    space.smul(space.scalars.add(space.scalars.one, space.scalars.neg(space.scalars.one)), x) = space.smul(space.scalars.zero, x) = space.zero
+    space.add(space.smul(space.scalars.one, x), space.smul(space.scalars.neg(space.scalars.one), x)) = space.add(x, space.smul(space.scalars.neg(space.scalars.one), x))
+    space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.zero
+    space.add(x, \vector_neg<s, v, space>(x)) = space.zero
+    space.add(x, space.smul(space.scalars.neg(space.scalars.one), x)) = space.add(x, \vector_neg<s, v, space>(x))
+    by thm add_left_cancel(s, v, space, x, space.smul(space.scalars.neg(space.scalars.one), x), \vector_neg<s, v, space>(x))

@@ -1,0 +1,22 @@
+# Scratch slot for `cargo test --release run_tmp1_to_lean -- --nocapture`.
+
+abstract_prop scratch(x)
+
+
+"""
+import Mathlib
+
+universe uLitex
+
+namespace tmp1
+
+-- Litex's primitive notion of a set.
+abbrev LitexSet := Type uLitex
+
+-- Every generated proposition has this codomain.
+abbrev LitexFact := Prop
+
+opaque scratch {α_x_1 : Sort uLitex} : α_x_1 → LitexFact
+
+end tmp1
+"""

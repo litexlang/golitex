@@ -1,0 +1,1329 @@
+# Section XIII: Gaussian integers, norm, division, and sums of two squares.
+
+# Complex numbers, i, re, img, and C_abs are native Litex objects. A Gaussian
+# integer is a complex number x+y*i with integer coordinates.
+prop is_gaussian_integer(z C):
+    exist x, y Z st {z = x + y * i}
+
+have gaussian_integers power_set(C) = {z C: $is_gaussian_integer(z)}
+
+have fn gaussian_conjugate(z C) C = re(z) - img(z) * i
+
+thm gaussian_integers_closed_under_addition:
+    ? forall z, w gaussian_integers:
+        z + w $in gaussian_integers
+    by def:
+        ? $is_gaussian_integer(z)
+    by def:
+        ? $is_gaussian_integer(w)
+    obtain x, y from exist x, y Z st {z = x + y * i}
+    obtain u, v from exist u, v Z st {w = u + v * i}
+    witness exist a, b Z st {z + w = a + b * i} from x + u, y + v:
+        z + w = (x + y * i) + (u + v * i) = (x + u) + (y + v) * i
+    by def:
+        ? $is_gaussian_integer(z + w)
+    by thm set_builder_member(z + w, {a C: $is_gaussian_integer(a)})
+    z + w $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_integers_closed_under_multiplication:
+    ? forall z, w gaussian_integers:
+        z * w $in gaussian_integers
+    by def:
+        ? $is_gaussian_integer(z)
+    by def:
+        ? $is_gaussian_integer(w)
+    obtain x, y from exist x, y Z st {z = x + y * i}
+    obtain u, v from exist u, v Z st {w = u + v * i}
+    witness exist a, b Z st {z * w = a + b * i} from x * u - y * v, x * v + y * u:
+        z * w = (x + y * i) * (u + v * i)
+        (x + y * i) * (u + v * i) = x * u + x * v * i + y * u * i + y * v * i ^ 2
+        i ^ 2 = -1
+        x * u + x * v * i + y * u * i + y * v * i ^ 2 = (x * u - y * v) + (x * v + y * u) * i
+    by def:
+        ? $is_gaussian_integer(z * w)
+    by thm set_builder_member(z * w, {a C: $is_gaussian_integer(a)})
+    z * w $in {a C: $is_gaussian_integer(a)}
+
+# Gaussian coordinates are integers because the carrier supplies an
+# integer-coordinate representation and re/img preserve complex equality.
+thm gaussian_integer_coordinates_are_integers:
+    ? forall z gaussian_integers:
+        re(z) $in Z
+        img(z) $in Z
+    by def:
+        ? $is_gaussian_integer(z)
+    obtain x, y from exist x, y Z st {z = x + y * i}
+    re(z) = re(x + y * i) = x
+    img(z) = img(x + y * i) = y
+
+prop gaussian_norm_spec(z gaussian_integers, n Z):
+    n = re(z) ^ 2 + img(z) ^ 2
+
+have fn gaussian_norm by exist!:
+    ? forall z gaussian_integers:
+        exist! n Z st {$gaussian_norm_spec(z, n)}
+    by thm gaussian_integer_coordinates_are_integers(z)
+    witness exist n Z st {$gaussian_norm_spec(z, n)} from re(z) ^ 2 + img(z) ^ 2:
+        by def:
+            ? $gaussian_norm_spec(z, re(z) ^ 2 + img(z) ^ 2)
+    claim:
+        ? forall n1, n2 Z:
+            $gaussian_norm_spec(z, n1)
+            $gaussian_norm_spec(z, n2)
+            =>:
+                n1 = n2
+        by def:
+            ? $gaussian_norm_spec(z, n1)
+        by def:
+            ? $gaussian_norm_spec(z, n2)
+        n1 = re(z) ^ 2 + img(z) ^ 2 = n2
+    forall n1, n2 Z:
+        $gaussian_norm_spec(z, n1)
+        $gaussian_norm_spec(z, n2)
+        =>:
+            n1 = n2
+    exist! n Z st {$gaussian_norm_spec(z, n)}
+
+thm complex_with_integer_coordinates_is_gaussian:
+    ? forall z C:
+        re(z) $in Z
+        img(z) $in Z
+        =>:
+            z $in gaussian_integers
+    witness exist x, y Z st {z = x + y * i} from re(z), img(z):
+        z = re(z) + img(z) * i
+    by def:
+        ? $is_gaussian_integer(z)
+    by thm set_builder_member(z, {a C: $is_gaussian_integer(a)})
+    z $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_zero_is_gaussian_integer:
+    ? forall:
+        0 $in gaussian_integers
+    witness exist x, y Z st {0 = x + y * i} from 0, 0:
+        0 = 0 + 0 * i
+    by def:
+        ? $is_gaussian_integer(0)
+    by thm set_builder_member(0, {a C: $is_gaussian_integer(a)})
+    0 $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_one_is_gaussian_integer:
+    ? forall:
+        1 $in gaussian_integers
+    witness exist x, y Z st {1 = x + y * i} from 1, 0:
+        1 = 1 + 0 * i
+    by def:
+        ? $is_gaussian_integer(1)
+    by thm set_builder_member(1, {a C: $is_gaussian_integer(a)})
+    1 $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_i_is_gaussian_integer:
+    ? forall:
+        i $in gaussian_integers
+    witness exist x, y Z st {i = x + y * i} from 0, 1:
+        i = 0 + 1 * i
+    by def:
+        ? $is_gaussian_integer(i)
+    by thm set_builder_member(i, {a C: $is_gaussian_integer(a)})
+    i $in {a C: $is_gaussian_integer(a)}
+
+thm rational_integer_is_gaussian:
+    ? forall n Z:
+        n $in gaussian_integers
+    witness exist x, y Z st {n = x + y * i} from n, 0:
+        n = n + 0 * i
+    by def:
+        ? $is_gaussian_integer(n)
+    by thm set_builder_member(n, {a C: $is_gaussian_integer(a)})
+    n $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_norm_is_multiplicative:
+    ? forall z, w gaussian_integers:
+        gaussian_norm(z * w) = gaussian_norm(z) * gaussian_norm(w)
+    by thm gaussian_integers_closed_under_multiplication(z, w)
+    $gaussian_norm_spec(z * w, gaussian_norm(z * w))
+    $gaussian_norm_spec(z, gaussian_norm(z))
+    $gaussian_norm_spec(w, gaussian_norm(w))
+    by def:
+        ? $gaussian_norm_spec(z * w, gaussian_norm(z * w))
+    by def:
+        ? $gaussian_norm_spec(z, gaussian_norm(z))
+    by def:
+        ? $gaussian_norm_spec(w, gaussian_norm(w))
+    gaussian_norm(z * w) = re(z * w) ^ 2 + img(z * w) ^ 2
+    re(z * w) ^ 2 + img(z * w) ^ 2 = (re(z) * re(w) - img(z) * img(w)) ^ 2 + (re(z) * img(w) + img(z) * re(w)) ^ 2
+    (re(z) * re(w) - img(z) * img(w)) ^ 2 + (re(z) * img(w) + img(z) * re(w)) ^ 2 = (re(z) ^ 2 + img(z) ^ 2) * (re(w) ^ 2 + img(w) ^ 2)
+    (re(z) ^ 2 + img(z) ^ 2) * (re(w) ^ 2 + img(w) ^ 2) = gaussian_norm(z) * gaussian_norm(w)
+
+thm gaussian_conjugate_is_gaussian:
+    ? forall z gaussian_integers:
+        gaussian_conjugate(z) $in gaussian_integers
+    by thm gaussian_integer_coordinates_are_integers(z)
+    witness exist x, y Z st {gaussian_conjugate(z) = x + y * i} from re(z), -img(z):
+        gaussian_conjugate(z) = re(z) - img(z) * i = re(z) + (-img(z)) * i
+    by def:
+        ? $is_gaussian_integer(gaussian_conjugate(z))
+    by thm set_builder_member(gaussian_conjugate(z), {a C: $is_gaussian_integer(a)})
+    gaussian_conjugate(z) $in {a C: $is_gaussian_integer(a)}
+
+thm gaussian_conjugate_is_involution:
+    ? forall z C:
+        gaussian_conjugate(gaussian_conjugate(z)) = z
+    gaussian_conjugate(z) = re(z) - img(z) * i = re(z) + (-img(z)) * i
+    re(gaussian_conjugate(z)) = re(re(z) + (-img(z)) * i) = re(z)
+    img(gaussian_conjugate(z)) = img(re(z) + (-img(z)) * i) = -img(z)
+    gaussian_conjugate(gaussian_conjugate(z)) = re(gaussian_conjugate(z)) - img(gaussian_conjugate(z)) * i
+    re(gaussian_conjugate(z)) - img(gaussian_conjugate(z)) * i = re(z) - img(gaussian_conjugate(z)) * i
+    re(z) - img(gaussian_conjugate(z)) * i = re(z) - (-img(z)) * i = re(z) + img(z) * i = z
+
+thm gaussian_conjugate_coordinates:
+    ? forall z C:
+        re(gaussian_conjugate(z)) = re(z)
+        img(gaussian_conjugate(z)) = -img(z)
+    gaussian_conjugate(z) = re(z) - img(z) * i = re(z) + (-img(z)) * i
+    re(gaussian_conjugate(z)) = re(re(z) + (-img(z)) * i) = re(z)
+    img(gaussian_conjugate(z)) = img(re(z) + (-img(z)) * i) = -img(z)
+
+thm gaussian_conjugate_preserves_addition:
+    ? forall z, w C:
+        gaussian_conjugate(z + w) = gaussian_conjugate(z) + gaussian_conjugate(w)
+    by thm gaussian_conjugate_coordinates(z + w)
+    by thm gaussian_conjugate_coordinates(z)
+    by thm gaussian_conjugate_coordinates(w)
+    gaussian_conjugate(z + w) = re(z + w) - img(z + w) * i = (re(z) + re(w)) - (img(z) + img(w)) * i = (re(z) - img(z) * i) + (re(w) - img(w) * i) = gaussian_conjugate(z) + gaussian_conjugate(w)
+
+thm gaussian_conjugate_preserves_multiplication:
+    ? forall z, w C:
+        gaussian_conjugate(z * w) = gaussian_conjugate(z) * gaussian_conjugate(w)
+    by thm gaussian_conjugate_coordinates(z * w)
+    by thm gaussian_conjugate_coordinates(z)
+    by thm gaussian_conjugate_coordinates(w)
+    gaussian_conjugate(z * w) = re(z * w) - img(z * w) * i
+    re(z * w) - img(z * w) * i = (re(z) * re(w) - img(z) * img(w)) - (re(z) * img(w) + img(z) * re(w)) * i
+    trust (re(z) * re(w) - img(z) * img(w)) - (re(z) * img(w) + img(z) * re(w)) * i = (re(z) - img(z) * i) * (re(w) - img(w) * i)
+    (re(z) - img(z) * i) * (re(w) - img(w) * i) = gaussian_conjugate(z) * gaussian_conjugate(w)
+
+thm gaussian_norm_zero_coordinates:
+    ? forall z gaussian_integers:
+        gaussian_norm(z) = 0
+        =>:
+            z = 0
+    $gaussian_norm_spec(z, gaussian_norm(z))
+    by def:
+        ? $gaussian_norm_spec(z, gaussian_norm(z))
+    re(z) ^ 2 + img(z) ^ 2 = gaussian_norm(z) = 0
+    re(z) = 0
+    img(z) = 0
+    re(0) = 0
+    img(0) = 0
+    re(z) = 0 = re(0)
+    img(z) = 0 = img(0)
+    have zeroC C = 0
+    zeroC = re(zeroC) + img(zeroC) * i
+    z = re(z) + img(z) * i = re(zeroC) + img(zeroC) * i = zeroC = 0
+
+# A Gaussian integer a divides b when b=a*q for a Gaussian integer q.
+prop gaussian_divides(a, b gaussian_integers):
+    exist q gaussian_integers st {b = a * q}
+
+thm gaussian_conjugate_product_is_norm:
+    ? forall z gaussian_integers:
+        z * gaussian_conjugate(z) = gaussian_norm(z)
+    by thm gaussian_conjugate_is_gaussian(z)
+    by thm gaussian_conjugate_coordinates(z)
+    $gaussian_norm_spec(z, gaussian_norm(z))
+    by def:
+        ? $gaussian_norm_spec(z, gaussian_norm(z))
+    re(z * gaussian_conjugate(z)) = re(z) * re(gaussian_conjugate(z)) - img(z) * img(gaussian_conjugate(z))
+    re(z) * re(gaussian_conjugate(z)) - img(z) * img(gaussian_conjugate(z)) = re(z) * re(z) - img(z) * img(gaussian_conjugate(z))
+    re(z) * re(z) - img(z) * img(gaussian_conjugate(z)) = re(z) * re(z) - img(z) * (-img(z)) = re(z) ^ 2 + img(z) ^ 2 = gaussian_norm(z) = re(gaussian_norm(z))
+    img(z * gaussian_conjugate(z)) = re(z) * img(gaussian_conjugate(z)) + img(z) * re(gaussian_conjugate(z))
+    re(z) * img(gaussian_conjugate(z)) + img(z) * re(gaussian_conjugate(z)) = re(z) * (-img(z)) + img(z) * re(gaussian_conjugate(z))
+    re(z) * (-img(z)) + img(z) * re(gaussian_conjugate(z)) = re(z) * (-img(z)) + img(z) * re(z) = 0 = img(gaussian_norm(z))
+    have lhs C = z * gaussian_conjugate(z)
+    have rhs C = gaussian_norm(z)
+    lhs = re(lhs) + img(lhs) * i
+    rhs = re(rhs) + img(rhs) * i
+    trust re(lhs) + img(lhs) * i = re(rhs) + img(rhs) * i
+    z * gaussian_conjugate(z) = lhs = re(lhs) + img(lhs) * i = re(rhs) + img(rhs) * i = rhs = gaussian_norm(z)
+
+thm every_gaussian_integer_divides_its_norm:
+    ? forall z gaussian_integers:
+        $gaussian_divides(z, gaussian_norm(z))
+    by thm gaussian_conjugate_is_gaussian(z)
+    witness exist q gaussian_integers st {gaussian_norm(z) = z * q} from gaussian_conjugate(z):
+        by thm gaussian_conjugate_product_is_norm(z)
+    by def:
+        ? $gaussian_divides(z, gaussian_norm(z))
+
+thm gaussian_divisibility_implies_norm_divisibility:
+    ? forall a, b gaussian_integers:
+        $gaussian_divides(a, b)
+        =>:
+            $section1::divides_Z(gaussian_norm(a), gaussian_norm(b))
+    by def:
+        ? $gaussian_divides(a, b)
+    obtain q from exist q gaussian_integers st {b = a * q}
+    by thm gaussian_norm_is_multiplicative(a, q)
+    witness exist k Z st {gaussian_norm(b) = gaussian_norm(a) * k} from gaussian_norm(q)
+    by def:
+        ? $section1::divides_Z(gaussian_norm(a), gaussian_norm(b))
+
+prop gaussian_unit(z gaussian_integers):
+    $gaussian_divides(z, 1)
+
+thm gaussian_norm_one_is_unit:
+    ? forall z gaussian_integers:
+        gaussian_norm(z) = 1
+        =>:
+            $gaussian_unit(z)
+    by thm gaussian_conjugate_is_gaussian(z)
+    witness exist q gaussian_integers st {1 = z * q} from gaussian_conjugate(z):
+        by thm gaussian_conjugate_product_is_norm(z)
+        z * gaussian_conjugate(z) = gaussian_norm(z) = 1
+    by def:
+        ? $gaussian_divides(z, 1)
+    by def:
+        ? $gaussian_unit(z)
+
+thm gaussian_unit_has_norm_one:
+    ? forall z gaussian_integers:
+        $gaussian_unit(z)
+        =>:
+            gaussian_norm(z) = 1
+    by def:
+        ? $gaussian_unit(z)
+    by def:
+        ? $gaussian_divides(z, 1)
+    obtain q from exist q gaussian_integers st {1 = z * q}
+    by thm gaussian_norm_is_multiplicative(z, q)
+    $gaussian_norm_spec(1, gaussian_norm(1))
+    by def:
+        ? $gaussian_norm_spec(1, gaussian_norm(1))
+    re(1) = 1
+    img(1) = 0
+    gaussian_norm(1) = re(1) ^ 2 + img(1) ^ 2
+    re(1) ^ 2 + img(1) ^ 2 = 1 ^ 2 + img(1) ^ 2
+    1 ^ 2 + img(1) ^ 2 = 1 ^ 2 + 0 ^ 2 = 1
+    gaussian_norm(z) * gaussian_norm(q) = gaussian_norm(z * q) = gaussian_norm(1) = 1
+    $gaussian_norm_spec(z, gaussian_norm(z))
+    by def:
+        ? $gaussian_norm_spec(z, gaussian_norm(z))
+    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 >= 0
+    gaussian_norm(z) = 0 or gaussian_norm(z) > 0
+    by cases:
+        ? gaussian_norm(z) > 0
+        case gaussian_norm(z) = 0:
+            gaussian_norm(z) * gaussian_norm(q) = 0 * gaussian_norm(q) = 0
+            impossible 1 > 0
+        case gaussian_norm(z) > 0:
+            gaussian_norm(z) > 0
+    witness exist k Z st {1 = gaussian_norm(z) * k} from gaussian_norm(q)
+    by def:
+        ? $section1::divides_Z(gaussian_norm(z), 1)
+    by thm section1::positive_divisor_of_one_is_one(gaussian_norm(z))
+
+thm gaussian_units_are_four:
+    ? forall z gaussian_integers:
+        $gaussian_unit(z)
+        =>:
+            z = 1 or z = -1 or z = i or z = -i
+    by thm gaussian_unit_has_norm_one(z)
+    $gaussian_norm_spec(z, gaussian_norm(z))
+    by def:
+        ? $gaussian_norm_spec(z, gaussian_norm(z))
+    by thm gaussian_integer_coordinates_are_integers(z)
+    re(z) ^ 2 >= 0
+    img(z) ^ 2 >= 0
+    re(z) ^ 2 <= re(z) ^ 2 + img(z) ^ 2 = gaussian_norm(z) = 1
+    img(z) ^ 2 <= re(z) ^ 2 + img(z) ^ 2 = gaussian_norm(z) = 1
+    claim:
+        ? forall x Z:
+            x ^ 2 <= 1
+            =>:
+                x = -1 or x = 0 or x = 1
+        x ^ 2 >= 0
+        x ^ 2 = 0 or x ^ 2 > 0
+        by cases:
+            ? x = -1 or x = 0 or x = 1
+            case x ^ 2 = 0:
+                x * x = 0
+                x = 0 or x = 0
+                x = 0
+            case x ^ 2 > 0:
+                x ^ 2 $in Z
+                1 <= x ^ 2
+                x ^ 2 = 1
+                (x - 1) * (x + 1) = x ^ 2 - 1 = 0
+                x - 1 = 0 or x + 1 = 0
+                by cases:
+                    ? x = -1 or x = 0 or x = 1
+                    case x - 1 = 0:
+                        x = 1
+                    case x + 1 = 0:
+                        x = -1
+    re(z) = -1 or re(z) = 0 or re(z) = 1
+    img(z) = -1 or img(z) = 0 or img(z) = 1
+    by cases:
+        ? z = 1 or z = -1 or z = i or z = -i
+        case re(z) = -1:
+            by cases:
+                ? z = 1 or z = -1 or z = i or z = -i
+                case img(z) = -1:
+                    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 = (-1) ^ 2 + (-1) ^ 2 = 2
+                    impossible gaussian_norm(z) = 1
+                case img(z) = 0:
+                    z = re(z) + img(z) * i = -1
+                case img(z) = 1:
+                    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 = (-1) ^ 2 + 1 ^ 2 = 2
+                    impossible gaussian_norm(z) = 1
+        case re(z) = 0:
+            by cases:
+                ? z = 1 or z = -1 or z = i or z = -i
+                case img(z) = -1:
+                    z = re(z) + img(z) * i = -i
+                case img(z) = 0:
+                    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 = 0 ^ 2 + 0 ^ 2 = 0
+                    impossible gaussian_norm(z) = 1
+                case img(z) = 1:
+                    z = re(z) + img(z) * i = i
+        case re(z) = 1:
+            by cases:
+                ? z = 1 or z = -1 or z = i or z = -i
+                case img(z) = -1:
+                    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 = 1 ^ 2 + (-1) ^ 2 = 2
+                    impossible gaussian_norm(z) = 1
+                case img(z) = 0:
+                    z = re(z) + img(z) * i = 1
+                case img(z) = 1:
+                    gaussian_norm(z) = re(z) ^ 2 + img(z) ^ 2 = 1 ^ 2 + 1 ^ 2 = 2
+                    impossible gaussian_norm(z) = 1
+
+prop gaussian_associate(a, b gaussian_integers):
+    $gaussian_divides(a, b)
+    $gaussian_divides(b, a)
+
+prop gaussian_normalized(z gaussian_integers):
+    re(z) > 0
+    img(z) >= 0
+
+prop gaussian_prime(z gaussian_integers):
+    gaussian_norm(z) > 1
+    forall d gaussian_integers:
+        $gaussian_divides(d, z)
+        =>:
+            $gaussian_unit(d) or $gaussian_associate(d, z)
+
+thm gaussian_one_plus_i_is_gaussian_integer:
+    ? forall:
+        1 + i $in gaussian_integers
+    by thm gaussian_one_is_gaussian_integer()
+    by thm gaussian_i_is_gaussian_integer()
+    by thm gaussian_integers_closed_under_addition(1, i)
+
+thm gaussian_one_plus_i_is_normalized:
+    ? forall:
+        $gaussian_normalized(1 + i)
+    re(1) = 1
+    re(i) = 0
+    img(1) = 0
+    img(i) = 1
+    i $in C
+    re(1 + i) = re(1) + re(i) = 1
+    img(1 + i) = img(1) + img(i) = 1
+    re(1 + i) = 1 > 0
+    img(1 + i) = 1 >= 0
+    by def:
+        ? $gaussian_normalized(1 + i)
+
+thm gaussian_divisor_with_equal_positive_norm_is_associate:
+    ? forall a, d gaussian_integers:
+        $gaussian_divides(d, a)
+        gaussian_norm(a) = gaussian_norm(d)
+        gaussian_norm(a) > 0
+        =>:
+            $gaussian_associate(d, a)
+    by def:
+        ? $gaussian_divides(d, a)
+    obtain q from exist q gaussian_integers st {a = d * q}
+    by thm gaussian_norm_is_multiplicative(d, q)
+    gaussian_norm(d) = gaussian_norm(a) = gaussian_norm(d * q) = gaussian_norm(d) * gaussian_norm(q)
+    gaussian_norm(d) > 0
+    gaussian_norm(q) = (gaussian_norm(d) * gaussian_norm(q)) / gaussian_norm(d) = gaussian_norm(d) / gaussian_norm(d) = 1
+    by thm gaussian_norm_one_is_unit(q)
+    by def:
+        ? $gaussian_unit(q)
+    by def:
+        ? $gaussian_divides(q, 1)
+    obtain s from exist s gaussian_integers st {1 = q * s}
+    witness exist t gaussian_integers st {d = a * t} from s:
+        d = d * 1 = d * (q * s) = (d * q) * s = a * s
+    by def:
+        ? $gaussian_divides(a, d)
+    by def:
+        ? $gaussian_associate(d, a)
+
+thm gaussian_prime_norm_is_rational_prime:
+    ? forall z gaussian_integers, p N+:
+        $section4::is_prime_Z(p)
+        gaussian_norm(z) = p
+        =>:
+            $gaussian_prime(z)
+    by def:
+        ? $section4::is_prime_Z(p)
+    gaussian_norm(z) = p > 1
+    claim:
+        ? forall d gaussian_integers:
+            $gaussian_divides(d, z)
+            =>:
+                $gaussian_unit(d) or $gaussian_associate(d, z)
+        by thm gaussian_divisibility_implies_norm_divisibility(d, z)
+        $gaussian_norm_spec(d, gaussian_norm(d))
+        by def:
+            ? $gaussian_norm_spec(d, gaussian_norm(d))
+        gaussian_norm(d) = re(d) ^ 2 + img(d) ^ 2 >= 0
+        gaussian_norm(d) = 0 or gaussian_norm(d) > 0
+        by cases:
+            ? $gaussian_unit(d) or $gaussian_associate(d, z)
+            case gaussian_norm(d) = 0:
+                by thm gaussian_norm_zero_coordinates(d)
+                by def:
+                    ? $gaussian_divides(d, z)
+                obtain q from exist q gaussian_integers st {z = d * q}
+                z = d * q = 0 * q = 0
+                $gaussian_norm_spec(0, gaussian_norm(0))
+                by def:
+                    ? $gaussian_norm_spec(0, gaussian_norm(0))
+                gaussian_norm(0) = re(0) ^ 2 + img(0) ^ 2 = 0
+                impossible gaussian_norm(z) > 1
+            case gaussian_norm(d) > 0:
+                $section1::divides_Z(gaussian_norm(d), gaussian_norm(z))
+                gaussian_norm(z) = p
+                $section1::divides_Z(gaussian_norm(d), p)
+                gaussian_norm(d) = 1 or gaussian_norm(d) = p
+                by cases:
+                    ? $gaussian_unit(d) or $gaussian_associate(d, z)
+                    case gaussian_norm(d) = 1:
+                        by thm gaussian_norm_one_is_unit(d)
+                        $gaussian_unit(d)
+                    case gaussian_norm(d) = p:
+                        gaussian_norm(d) = p = gaussian_norm(z)
+                        by thm gaussian_divisor_with_equal_positive_norm_is_associate(z, d)
+                        $gaussian_associate(d, z)
+    by def:
+        ? $gaussian_prime(z)
+
+# Gaussian Euclidean division writes a=b*q+r with a smaller remainder norm.
+prop gaussian_division_statement(a, b, q, r gaussian_integers):
+    b != 0
+    a = b * q + r
+    2 * gaussian_norm(r) <= gaussian_norm(b)
+
+thm theorem_XIII_gaussian_division:
+    ? forall a, b gaussian_integers:
+        b != 0
+        =>:
+            exist q, r gaussian_integers st {$gaussian_division_statement(a, b, q, r)}
+    by thm gaussian_conjugate_is_gaussian(b)
+    by thm gaussian_integers_closed_under_multiplication(a, gaussian_conjugate(b))
+    have c gaussian_integers = a * gaussian_conjugate(b)
+    by thm gaussian_integer_coordinates_are_integers(c)
+    $gaussian_norm_spec(b, gaussian_norm(b))
+    by def:
+        ? $gaussian_norm_spec(b, gaussian_norm(b))
+    gaussian_norm(b) = re(b) ^ 2 + img(b) ^ 2 >= 0
+    by contra:
+        ? gaussian_norm(b) != 0
+        gaussian_norm(b) = 0
+        by thm gaussian_norm_zero_coordinates(b)
+        impossible b != 0
+    gaussian_norm(b) = 0 or gaussian_norm(b) > 0
+    by cases:
+        ? gaussian_norm(b) > 0
+        case gaussian_norm(b) = 0:
+            impossible gaussian_norm(b) != 0
+        case gaussian_norm(b) > 0:
+            gaussian_norm(b) > 0
+    have d N+ = gaussian_norm(b)
+    have D N+ = 2 * d
+    have qx Z = section2::integer_quotient(2 * re(c) + d, D)
+    have qy Z = section2::integer_quotient(2 * img(c) + d, D)
+    have q C = qx + qy * i
+    re(q) = re(qx + qy * i) = qx
+    img(q) = img(qx + qy * i) = qy
+    by thm complex_with_integer_coordinates_is_gaussian(q)
+    q $in gaussian_integers
+    by thm gaussian_integers_closed_under_multiplication(b, q)
+    have r C = a - b * q
+    by thm gaussian_integer_coordinates_are_integers(a)
+    by thm gaussian_integer_coordinates_are_integers(b * q)
+    re(r) = re(a - b * q) = re(a) - re(b * q)
+    img(r) = img(a - b * q) = img(a) - img(b * q)
+    witness exist x, y Z st {r = x + y * i} from re(a) - re(b * q), img(a) - img(b * q):
+        r = re(r) + img(r) * i = (re(a) - re(b * q)) + (img(a) - img(b * q)) * i
+    by def:
+        ? $is_gaussian_integer(r)
+    by thm set_builder_member(r, {z C: $is_gaussian_integer(z)})
+    r $in {z C: $is_gaussian_integer(z)}
+    r $in gaussian_integers
+    witness exist q1, r1 gaussian_integers st {$gaussian_division_statement(a, b, q1, r1)} from q, r:
+        b != 0
+        a = b * q + (a - b * q) = b * q + r
+        2 * re(c) + d $in Z
+        2 * img(c) + d $in Z
+        0 <= (2 * re(c) + d) % D < D
+        0 <= (2 * img(c) + d) % D < D
+        have mx Z = (2 * re(c) + d) % D
+        have my Z = (2 * img(c) + d) % D
+        0 <= mx < D
+        0 <= my < D
+        have ex Z = mx - d
+        have ey Z = my - d
+        D = 2 * d
+        -d = 0 - d <= mx - d = ex
+        ex = mx - d < D - d = 2 * d - d = d
+        -d = 0 - d <= my - d = ey
+        ey = my - d < D - d = 2 * d - d = d
+        section2::integer_quotient(2 * re(c) + d, D) = qx
+        section2::integer_quotient(2 * img(c) + d, D) = qy
+        2 * re(c) + d = D * section2::integer_quotient(2 * re(c) + d, D) + (2 * re(c) + d) % D
+        D * section2::integer_quotient(2 * re(c) + d, D) + (2 * re(c) + d) % D = D * qx + mx
+        D * qx + mx = 2 * d * qx + mx
+        2 * re(c) + d = 2 * d * qx + mx
+        2 * img(c) + d = D * section2::integer_quotient(2 * img(c) + d, D) + (2 * img(c) + d) % D
+        D * section2::integer_quotient(2 * img(c) + d, D) + (2 * img(c) + d) % D = D * qy + my
+        D * qy + my = 2 * d * qy + my
+        2 * img(c) + d = 2 * d * qy + my
+        mx = 2 * re(c) + d - 2 * d * qx
+        ex = mx - d = (2 * re(c) + d - 2 * d * qx) - d
+        (2 * re(c) + d - 2 * d * qx) - d = 2 * (re(c) - d * qx)
+        ex = 2 * (re(c) - d * qx)
+        my = 2 * img(c) + d - 2 * d * qy
+        ey = my - d = (2 * img(c) + d - 2 * d * qy) - d
+        (2 * img(c) + d - 2 * d * qy) - d = 2 * (img(c) - d * qy)
+        ey = 2 * (img(c) - d * qy)
+        d - ex > 0
+        d + ex >= d + (-d) = 0
+        (d - ex) * (d + ex) >= 0
+        (d - ex) * (d + ex) = d ^ 2 - ex ^ 2
+        ex ^ 2 <= d ^ 2
+        d - ey > 0
+        d + ey >= d + (-d) = 0
+        (d - ey) * (d + ey) >= 0
+        (d - ey) * (d + ey) = d ^ 2 - ey ^ 2
+        ey ^ 2 <= d ^ 2
+        ex ^ 2 + ey ^ 2 <= d ^ 2 + ey ^ 2 <= d ^ 2 + d ^ 2 = 2 * d ^ 2
+        by thm gaussian_conjugate_coordinates(b)
+        re(c) = re(a * gaussian_conjugate(b)) = re(a) * re(gaussian_conjugate(b)) - img(a) * img(gaussian_conjugate(b)) = re(a) * re(b) - img(a) * (-img(b)) = re(a) * re(b) + img(a) * img(b)
+        img(c) = img(a * gaussian_conjugate(b)) = re(a) * img(gaussian_conjugate(b)) + img(a) * re(gaussian_conjugate(b)) = re(a) * (-img(b)) + img(a) * re(b) = img(a) * re(b) - re(a) * img(b)
+        re(b * q) = re(b) * re(q) - img(b) * img(q) = re(b) * qx - img(b) * qy
+        img(b * q) = re(b) * img(q) + img(b) * re(q) = re(b) * qy + img(b) * qx
+        re(r) = re(a) - re(b * q) = re(a) - (re(b) * qx - img(b) * qy)
+        img(r) = img(a) - img(b * q) = img(a) - (re(b) * qy + img(b) * qx)
+        d = gaussian_norm(b) = re(b) ^ 2 + img(b) ^ 2
+        re(b) * re(r) + img(b) * img(r) = re(b) * (re(a) - (re(b) * qx - img(b) * qy)) + img(b) * (img(a) - (re(b) * qy + img(b) * qx)) = re(a) * re(b) + img(a) * img(b) - (re(b) ^ 2 + img(b) ^ 2) * qx = re(c) - d * qx
+        re(b) * img(r) - img(b) * re(r) = re(b) * (img(a) - (re(b) * qy + img(b) * qx)) - img(b) * (re(a) - (re(b) * qx - img(b) * qy)) = img(a) * re(b) - re(a) * img(b) - (re(b) ^ 2 + img(b) ^ 2) * qy = img(c) - d * qy
+        (re(c) - d * qx) ^ 2 + (img(c) - d * qy) ^ 2 = (re(b) * re(r) + img(b) * img(r)) ^ 2 + (re(b) * img(r) - img(b) * re(r)) ^ 2 = (re(b) ^ 2 + img(b) ^ 2) * (re(r) ^ 2 + img(r) ^ 2) = d * (re(r) ^ 2 + img(r) ^ 2)
+        ex ^ 2 = (2 * (re(c) - d * qx)) ^ 2 = 4 * (re(c) - d * qx) ^ 2
+        ey ^ 2 = (2 * (img(c) - d * qy)) ^ 2 = 4 * (img(c) - d * qy) ^ 2
+        ex ^ 2 + ey ^ 2 = 4 * (re(c) - d * qx) ^ 2 + 4 * (img(c) - d * qy) ^ 2 = 4 * ((re(c) - d * qx) ^ 2 + (img(c) - d * qy) ^ 2)
+        4 * ((re(c) - d * qx) ^ 2 + (img(c) - d * qy) ^ 2) = 4 * (d * (re(r) ^ 2 + img(r) ^ 2)) = 4 * d * (re(r) ^ 2 + img(r) ^ 2)
+        ex ^ 2 + ey ^ 2 = 4 * d * (re(r) ^ 2 + img(r) ^ 2)
+        $gaussian_norm_spec(r, gaussian_norm(r))
+        by def:
+            ? $gaussian_norm_spec(r, gaussian_norm(r))
+        gaussian_norm(r) = re(r) ^ 2 + img(r) ^ 2
+        4 * d * gaussian_norm(r) = 4 * d * (re(r) ^ 2 + img(r) ^ 2) = ex ^ 2 + ey ^ 2 <= 2 * d ^ 2
+        4 * gaussian_norm(r) = (4 * d * gaussian_norm(r)) / d <= (2 * d ^ 2) / d = 2 * d
+        2 * gaussian_norm(r) = (4 * gaussian_norm(r)) / 2 <= (2 * d) / 2 = d
+        2 * gaussian_norm(r) <= gaussian_norm(b)
+        by def:
+            ? $gaussian_division_statement(a, b, q, r)
+
+# A Gaussian ideal contains zero and is closed under addition and multiplication
+# by arbitrary Gaussian integers.
+prop gaussian_ideal(M power_set(gaussian_integers)):
+    0 $in M
+    forall a, b M:
+        a + b $in M
+    forall a M, q gaussian_integers:
+        a * q $in M
+
+prop is_generator_of_gaussian_ideal(M power_set(gaussian_integers), d gaussian_integers):
+    d $in M
+    forall a M:
+        exist q gaussian_integers st {a = d * q}
+
+prop gaussian_ideal_generator_up_to_associates(M power_set(gaussian_integers), d gaussian_integers):
+    $is_generator_of_gaussian_ideal(M, d)
+    forall g gaussian_integers:
+        $is_generator_of_gaussian_ideal(M, g)
+        =>:
+            $gaussian_associate(d, g)
+
+prop theorem_XIII_1_conclusion(M power_set(gaussian_integers)):
+    exist d gaussian_integers st {$gaussian_ideal_generator_up_to_associates(M, d)}
+
+# Theorem XIII.1. Every Gaussian ideal is principal, uniquely up to associates.
+thm theorem_XIII_1_principal_gaussian_ideals:
+    ? forall M power_set(gaussian_integers):
+        $gaussian_ideal(M)
+        =>:
+            $theorem_XIII_1_conclusion(M)
+    prop ideal_has_nonzero_member():
+        exist a M st {not a $in {0}}
+    $ideal_has_nonzero_member() or not $ideal_has_nonzero_member()
+    by cases:
+        ? $theorem_XIII_1_conclusion(M)
+        case not $ideal_has_nonzero_member():
+            by thm gaussian_zero_is_gaussian_integer()
+            witness exist d gaussian_integers st {$gaussian_ideal_generator_up_to_associates(M, d)} from 0:
+                claim:
+                    ? $is_generator_of_gaussian_ideal(M, 0)
+                    claim:
+                        ? forall a M:
+                            exist q gaussian_integers st {a = 0 * q}
+                        a $in {0} or not a $in {0}
+                        by cases:
+                            ? exist q gaussian_integers st {a = 0 * q}
+                            case a $in {0}:
+                                a = 0
+                                witness exist q gaussian_integers st {a = 0 * q} from 0:
+                                    a = 0 = 0 * 0
+                            case not a $in {0}:
+                                witness exist z M st {not z $in {0}} from a:
+                                    not a $in {0}
+                                by def:
+                                    ? $ideal_has_nonzero_member()
+                                impossible not $ideal_has_nonzero_member()
+                    by def:
+                        ? $gaussian_ideal(M)
+                    by def:
+                        ? $is_generator_of_gaussian_ideal(M, 0)
+                claim:
+                    ? forall g gaussian_integers:
+                        $is_generator_of_gaussian_ideal(M, g)
+                        =>:
+                            $gaussian_associate(0, g)
+                    by def:
+                        ? $is_generator_of_gaussian_ideal(M, 0)
+                    by def:
+                        ? $is_generator_of_gaussian_ideal(M, g)
+                    obtain q0 from exist q0 gaussian_integers st {g = 0 * q0}
+                    obtain qg from exist qg gaussian_integers st {0 = g * qg}
+                    witness exist q gaussian_integers st {g = 0 * q} from q0:
+                        g = 0 * q0
+                    by def:
+                        ? $gaussian_divides(0, g)
+                    witness exist q gaussian_integers st {0 = g * q} from qg:
+                        0 = g * qg
+                    by def:
+                        ? $gaussian_divides(g, 0)
+                    by def:
+                        ? $gaussian_associate(0, g)
+                by def:
+                    ? $gaussian_ideal_generator_up_to_associates(M, 0)
+            by def:
+                ? $theorem_XIII_1_conclusion(M)
+        case $ideal_has_nonzero_member():
+            obtain a0 from exist a M st {not a $in {0}}
+            claim:
+                ? a0 != 0
+                by contra:
+                    ? a0 != 0
+                    a0 = 0
+                    a0 $in {0}
+                    impossible not a0 $in {0}
+            prop is_positive_norm_of_ideal_member(n Z):
+                n > 0
+                exist a M st {gaussian_norm(a) = n}
+            have Norms power_set(Z) = {n Z: $is_positive_norm_of_ideal_member(n)}
+            $gaussian_norm_spec(a0, gaussian_norm(a0))
+            by def:
+                ? $gaussian_norm_spec(a0, gaussian_norm(a0))
+            gaussian_norm(a0) $in Z
+            gaussian_norm(a0) = re(a0) ^ 2 + img(a0) ^ 2 >= 0
+            gaussian_norm(a0) = 0 or gaussian_norm(a0) > 0
+            by cases:
+                ? gaussian_norm(a0) > 0
+                case gaussian_norm(a0) = 0:
+                    by thm gaussian_norm_zero_coordinates(a0)
+                    impossible a0 != 0
+                case gaussian_norm(a0) > 0:
+                    gaussian_norm(a0) > 0
+            witness exist a M st {gaussian_norm(a) = gaussian_norm(a0)} from a0:
+                gaussian_norm(a0) = gaussian_norm(a0)
+            by def:
+                ? $is_positive_norm_of_ideal_member(gaussian_norm(a0))
+            by thm set_builder_member(gaussian_norm(a0), {n Z: $is_positive_norm_of_ideal_member(n)})
+            gaussian_norm(a0) $in {n Z: $is_positive_norm_of_ideal_member(n)}
+            gaussian_norm(a0) $in Norms
+            witness $is_nonempty_set(Norms) from gaussian_norm(a0):
+                gaussian_norm(a0) $in Norms
+            claim:
+                ? $section1::is_positive_integer_set(Norms)
+                Norms $subset Z
+                forall n Norms:
+                    n > 0
+                by def:
+                    ? $section1::is_positive_integer_set(Norms)
+            by thm section1::positive_integer_set_has_least_element(Norms)
+            obtain d from exist d Z st {$section1::is_least_element_of_integer_set(Norms, d)}
+            by def:
+                ? $section1::is_least_element_of_integer_set(Norms, d)
+            by def:
+                ? $is_positive_norm_of_ideal_member(d)
+            obtain delta from exist delta M st {gaussian_norm(delta) = d}
+            claim:
+                ? delta != 0
+                by contra:
+                    ? delta != 0
+                    delta = 0
+                    by thm gaussian_zero_is_gaussian_integer()
+                    $gaussian_norm_spec(0, gaussian_norm(0))
+                    by def:
+                        ? $gaussian_norm_spec(0, gaussian_norm(0))
+                    re(0) = 0
+                    img(0) = 0
+                    gaussian_norm(0) = re(0) ^ 2 + img(0) ^ 2 = 0
+                    d = gaussian_norm(delta) = gaussian_norm(0) = 0
+                    impossible d > 0
+            claim:
+                ? $is_generator_of_gaussian_ideal(M, delta)
+                claim:
+                    ? forall a M:
+                        exist q gaussian_integers st {a = delta * q}
+                    by thm theorem_XIII_gaussian_division(a, delta)
+                    obtain q, r from exist q, r gaussian_integers st {$gaussian_division_statement(a, delta, q, r)}
+                    by def:
+                        ? $gaussian_division_statement(a, delta, q, r)
+                    by thm rational_integer_is_gaussian(-1)
+                    by thm gaussian_integers_closed_under_multiplication(-1, q)
+                    have minus_q gaussian_integers = (-1) * q
+                    minus_q = (-1) * q = -q
+                    by def:
+                        ? $gaussian_ideal(M)
+                    delta * minus_q $in M
+                    a + delta * minus_q $in M
+                    a + delta * minus_q = a + delta * (-q) = a - delta * q
+                    a - delta * q = (delta * q + r) - delta * q = r
+                    r $in M
+                    2 * gaussian_norm(r) <= gaussian_norm(delta) = d
+                    claim:
+                        ? gaussian_norm(r) < d
+                        by contra:
+                            ? gaussian_norm(r) < d
+                            gaussian_norm(r) >= d
+                            2 * gaussian_norm(r) >= 2 * d
+                            2 * d <= 2 * gaussian_norm(r) <= d
+                            2 * d > d
+                            impossible 2 * d <= d
+                    $gaussian_norm_spec(r, gaussian_norm(r))
+                    by def:
+                        ? $gaussian_norm_spec(r, gaussian_norm(r))
+                    gaussian_norm(r) $in Z
+                    gaussian_norm(r) = re(r) ^ 2 + img(r) ^ 2 >= 0
+                    gaussian_norm(r) = 0 or gaussian_norm(r) > 0
+                    by cases:
+                        ? gaussian_norm(r) = 0
+                        case gaussian_norm(r) = 0:
+                            gaussian_norm(r) = 0
+                        case gaussian_norm(r) > 0:
+                            witness exist z M st {gaussian_norm(z) = gaussian_norm(r)} from r:
+                                gaussian_norm(r) = gaussian_norm(r)
+                            by def:
+                                ? $is_positive_norm_of_ideal_member(gaussian_norm(r))
+                            by thm set_builder_member(gaussian_norm(r), {n Z: $is_positive_norm_of_ideal_member(n)})
+                            gaussian_norm(r) $in {n Z: $is_positive_norm_of_ideal_member(n)}
+                            gaussian_norm(r) $in Norms
+                            d <= gaussian_norm(r)
+                            impossible gaussian_norm(r) < d
+                    by thm gaussian_norm_zero_coordinates(r)
+                    witness exist q1 gaussian_integers st {a = delta * q1} from q:
+                        a = delta * q + r = delta * q
+                by def:
+                    ? $is_generator_of_gaussian_ideal(M, delta)
+            witness exist d1 gaussian_integers st {$gaussian_ideal_generator_up_to_associates(M, d1)} from delta:
+                claim:
+                    ? forall g gaussian_integers:
+                        $is_generator_of_gaussian_ideal(M, g)
+                        =>:
+                            $gaussian_associate(delta, g)
+                    by def:
+                        ? $is_generator_of_gaussian_ideal(M, delta)
+                    by def:
+                        ? $is_generator_of_gaussian_ideal(M, g)
+                    obtain q1 from exist q1 gaussian_integers st {g = delta * q1}
+                    obtain q2 from exist q2 gaussian_integers st {delta = g * q2}
+                    witness exist q gaussian_integers st {g = delta * q} from q1:
+                        g = delta * q1
+                    by def:
+                        ? $gaussian_divides(delta, g)
+                    witness exist q gaussian_integers st {delta = g * q} from q2:
+                        delta = g * q2
+                    by def:
+                        ? $gaussian_divides(g, delta)
+                    by def:
+                        ? $gaussian_associate(delta, g)
+                by def:
+                    ? $gaussian_ideal_generator_up_to_associates(M, delta)
+            by def:
+                ? $theorem_XIII_1_conclusion(M)
+
+prop is_binary_gaussian_linear_combination(a, b, z gaussian_integers):
+    exist u, v gaussian_integers st {z = a * u + b * v}
+
+have fn binary_gaussian_span(a, b gaussian_integers) power_set(gaussian_integers) = {z gaussian_integers: $is_binary_gaussian_linear_combination(a, b, z)}
+
+prop gaussian_bezout_pair(a, b gaussian_integers):
+    $is_binary_gaussian_linear_combination(a, b, 1)
+
+thm gaussian_bezout_cancels_product:
+    ? forall p, a, b gaussian_integers:
+        $gaussian_bezout_pair(p, a)
+        $gaussian_divides(p, a * b)
+        =>:
+            $gaussian_divides(p, b)
+    by def:
+        ? $gaussian_bezout_pair(p, a)
+    by def:
+        ? $is_binary_gaussian_linear_combination(p, a, 1)
+    obtain u, v from exist u, v gaussian_integers st {1 = p * u + a * v}
+    by def:
+        ? $gaussian_divides(p, a * b)
+    obtain q from exist q gaussian_integers st {a * b = p * q}
+    by thm gaussian_integers_closed_under_multiplication(u, b)
+    by thm gaussian_integers_closed_under_multiplication(q, v)
+    by thm gaussian_integers_closed_under_addition(u * b, q * v)
+    witness exist t gaussian_integers st {b = p * t} from u * b + q * v:
+        b = 1 * b = (p * u + a * v) * b = p * (u * b) + (a * b) * v = p * (u * b) + (p * q) * v = p * (u * b + q * v)
+    by def:
+        ? $gaussian_divides(p, b)
+
+thm gaussian_prime_divides_or_has_bezout_pair:
+    ? forall p, a gaussian_integers:
+        $gaussian_prime(p)
+        =>:
+            $gaussian_divides(p, a) or $gaussian_bezout_pair(p, a)
+    claim:
+        ? $gaussian_ideal(binary_gaussian_span(p, a))
+        by thm gaussian_zero_is_gaussian_integer()
+        witness exist u, v gaussian_integers st {0 = p * u + a * v} from 0, 0:
+            0 = p * 0 + a * 0
+        by def:
+            ? $is_binary_gaussian_linear_combination(p, a, 0)
+        by thm set_builder_member(0, {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)})
+        0 $in {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+        binary_gaussian_span(p, a) = {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+        0 $in binary_gaussian_span(p, a)
+        claim:
+            ? forall x, y binary_gaussian_span(p, a):
+                x + y $in binary_gaussian_span(p, a)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, x)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, y)
+            obtain ux, vx from exist ux, vx gaussian_integers st {x = p * ux + a * vx}
+            obtain uy, vy from exist uy, vy gaussian_integers st {y = p * uy + a * vy}
+            by thm gaussian_integers_closed_under_addition(ux, uy)
+            by thm gaussian_integers_closed_under_addition(vx, vy)
+            witness exist u, v gaussian_integers st {x + y = p * u + a * v} from ux + uy, vx + vy:
+                x + y = (p * ux + a * vx) + (p * uy + a * vy) = p * (ux + uy) + a * (vx + vy)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, x + y)
+            by thm set_builder_member(x + y, {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)})
+            x + y $in {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+        claim:
+            ? forall x binary_gaussian_span(p, a), q gaussian_integers:
+                x * q $in binary_gaussian_span(p, a)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, x)
+            obtain u, v from exist u, v gaussian_integers st {x = p * u + a * v}
+            by thm gaussian_integers_closed_under_multiplication(u, q)
+            by thm gaussian_integers_closed_under_multiplication(v, q)
+            witness exist u1, v1 gaussian_integers st {x * q = p * u1 + a * v1} from u * q, v * q:
+                x * q = (p * u + a * v) * q = p * (u * q) + a * (v * q)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, x * q)
+            by thm set_builder_member(x * q, {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)})
+            x * q $in {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+        by def:
+            ? $gaussian_ideal(binary_gaussian_span(p, a))
+    by thm theorem_XIII_1_principal_gaussian_ideals(binary_gaussian_span(p, a))
+    by def:
+        ? $theorem_XIII_1_conclusion(binary_gaussian_span(p, a))
+    obtain d from exist d gaussian_integers st {$gaussian_ideal_generator_up_to_associates(binary_gaussian_span(p, a), d)}
+    by def:
+        ? $gaussian_ideal_generator_up_to_associates(binary_gaussian_span(p, a), d)
+    by def:
+        ? $is_generator_of_gaussian_ideal(binary_gaussian_span(p, a), d)
+    witness exist u, v gaussian_integers st {p = p * u + a * v} from 1, 0:
+        p = p * 1 + a * 0
+    by def:
+        ? $is_binary_gaussian_linear_combination(p, a, p)
+    by thm set_builder_member(p, {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)})
+    p $in {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+    binary_gaussian_span(p, a) = {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+    p $in binary_gaussian_span(p, a)
+    witness exist u, v gaussian_integers st {a = p * u + a * v} from 0, 1:
+        a = p * 0 + a * 1
+    by def:
+        ? $is_binary_gaussian_linear_combination(p, a, a)
+    by thm set_builder_member(a, {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)})
+    a $in {z gaussian_integers: $is_binary_gaussian_linear_combination(p, a, z)}
+    a $in binary_gaussian_span(p, a)
+    obtain qp from exist qp gaussian_integers st {p = d * qp}
+    obtain qa from exist qa gaussian_integers st {a = d * qa}
+    witness exist q gaussian_integers st {p = d * q} from qp:
+        p = d * qp
+    by def:
+        ? $gaussian_divides(d, p)
+    by def:
+        ? $gaussian_prime(p)
+    $gaussian_unit(d) or $gaussian_associate(d, p)
+    by cases:
+        ? $gaussian_divides(p, a) or $gaussian_bezout_pair(p, a)
+        case $gaussian_unit(d):
+            by def:
+                ? $gaussian_unit(d)
+            by def:
+                ? $gaussian_divides(d, 1)
+            obtain s from exist s gaussian_integers st {1 = d * s}
+            d $in binary_gaussian_span(p, a)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, d)
+            obtain u, v from exist u, v gaussian_integers st {d = p * u + a * v}
+            by thm gaussian_integers_closed_under_multiplication(u, s)
+            by thm gaussian_integers_closed_under_multiplication(v, s)
+            witness exist u1, v1 gaussian_integers st {1 = p * u1 + a * v1} from u * s, v * s:
+                1 = d * s = (p * u + a * v) * s = p * (u * s) + a * (v * s)
+            by def:
+                ? $is_binary_gaussian_linear_combination(p, a, 1)
+            by def:
+                ? $gaussian_bezout_pair(p, a)
+        case $gaussian_associate(d, p):
+            by def:
+                ? $gaussian_associate(d, p)
+            by def:
+                ? $gaussian_divides(p, d)
+            obtain s from exist s gaussian_integers st {d = p * s}
+            by thm gaussian_integers_closed_under_multiplication(s, qa)
+            witness exist q gaussian_integers st {a = p * q} from s * qa:
+                a = d * qa = (p * s) * qa = p * (s * qa)
+            by def:
+                ? $gaussian_divides(p, a)
+
+thm gaussian_prime_divides_product:
+    ? forall p, a, b gaussian_integers:
+        $gaussian_prime(p)
+        $gaussian_divides(p, a * b)
+        =>:
+            $gaussian_divides(p, a) or $gaussian_divides(p, b)
+    by thm gaussian_prime_divides_or_has_bezout_pair(p, a)
+    by cases:
+        ? $gaussian_divides(p, a) or $gaussian_divides(p, b)
+        case $gaussian_divides(p, a):
+            $gaussian_divides(p, a)
+        case $gaussian_bezout_pair(p, a):
+            by thm gaussian_bezout_cancels_product(p, a, b)
+            $gaussian_divides(p, b)
+
+prop gaussian_common_divisor(a, b, d gaussian_integers):
+    $gaussian_divides(d, a)
+    $gaussian_divides(d, b)
+
+prop gaussian_gcd(a, b, d gaussian_integers):
+    $gaussian_common_divisor(a, b, d)
+    forall g gaussian_integers:
+        $gaussian_common_divisor(a, b, g)
+        =>:
+            $gaussian_divides(g, d)
+
+prop gaussian_relatively_prime(a, b gaussian_integers):
+    forall d gaussian_integers:
+        $gaussian_common_divisor(a, b, d)
+        =>:
+            $gaussian_unit(d)
+
+# A factorization trace stores prime factors and all partial products.
+prop gaussian_prime_factorization_trace(z gaussian_integers, n N, factors fn(k N+) gaussian_integers, partial fn(j N) gaussian_integers):
+    $gaussian_unit(partial(0))
+    forall k N+:
+        k <= n
+        =>:
+            $gaussian_prime(factors(k))
+            partial(k) = partial(k - 1) * factors(k)
+    partial(n) = z
+
+prop gaussian_factor_permutation_map(n, m N, factors fn(k N+) gaussian_integers, other_factors fn(j N+) gaussian_integers, phi fn(k N+) N+):
+    forall k N+:
+        k <= n
+        =>:
+            phi(k) <= m
+            $gaussian_associate(factors(k), other_factors(phi(k)))
+    forall j N+:
+        j <= m
+        =>:
+            exist! k N+ st {k <= n, phi(k) = j}
+
+prop gaussian_prime_factorizations_equivalent_up_to_order(n, m N, factors fn(k N+) gaussian_integers, other_factors fn(j N+) gaussian_integers):
+    exist phi fn(k N+) N+ st {$gaussian_factor_permutation_map(n, m, factors, other_factors, phi)}
+
+prop theorem_XIII_2_factorization_conclusion(z gaussian_integers):
+    exist n N, factors fn(k N+) gaussian_integers, partial fn(j N) gaussian_integers st {$gaussian_prime_factorization_trace(z, n, factors, partial)}
+    forall n, m N, factors fn(k N+) gaussian_integers, other_factors fn(j N+) gaussian_integers, partial fn(s N) gaussian_integers, other_partial fn(t N) gaussian_integers:
+        $gaussian_prime_factorization_trace(z, n, factors, partial)
+        $gaussian_prime_factorization_trace(z, m, other_factors, other_partial)
+        =>:
+            $gaussian_prime_factorizations_equivalent_up_to_order(n, m, factors, other_factors)
+
+thm gaussian_prime_factorization_exists:
+    ? forall z gaussian_integers:
+        gaussian_norm(z) > 0
+        =>:
+            exist n N, factors fn(k N+) gaussian_integers, partial fn(j N) gaussian_integers st {$gaussian_prime_factorization_trace(z, n, factors, partial)}
+    # trust: prime-divisor descent and native-C trace construction remain.
+    trust exist n N, factors fn(k N+) gaussian_integers, partial fn(j N) gaussian_integers st {$gaussian_prime_factorization_trace(z, n, factors, partial)}
+
+# Theorem XIII.2. Nonzero Gaussian integers factor into primes, uniquely up to
+# associates and order.
+thm theorem_XIII_2_unique_factorization:
+    ? forall z gaussian_integers:
+        gaussian_norm(z) > 0
+        =>:
+            $theorem_XIII_2_factorization_conclusion(z)
+    by thm gaussian_prime_factorization_exists(z)
+    # trust: uniqueness still requires associate cancellation and permutation.
+    trust forall n, m N, factors fn(k N+) gaussian_integers, other_factors fn(j N+) gaussian_integers, partial fn(s N) gaussian_integers, other_partial fn(t N) gaussian_integers:
+        $gaussian_prime_factorization_trace(z, n, factors, partial)
+        $gaussian_prime_factorization_trace(z, m, other_factors, other_partial)
+        =>:
+            $gaussian_prime_factorizations_equivalent_up_to_order(n, m, factors, other_factors)
+    by def:
+        ? $theorem_XIII_2_factorization_conclusion(z)
+
+prop rational_prime_gaussian_split(p N+, q gaussian_integers):
+    $gaussian_prime(q)
+    gaussian_norm(q) = p
+    q * gaussian_conjugate(q) = p
+    not $gaussian_associate(q, gaussian_conjugate(q))
+    forall d gaussian_integers:
+        $gaussian_prime(d)
+        $gaussian_divides(d, p)
+        =>:
+            $gaussian_associate(d, q) or $gaussian_associate(d, gaussian_conjugate(q))
+
+prop rational_prime_has_gaussian_split(p N+):
+    exist q gaussian_integers st {$rational_prime_gaussian_split(p, q)}
+
+prop theorem_XIII_3_conclusion(p N+):
+    $gaussian_prime(p) or $rational_prime_has_gaussian_split(p)
+
+thm theorem_XIII_3_rational_prime_factorization:
+    ? forall p N+:
+        $section4::is_prime_Z(p)
+        p > 2
+        =>:
+            $theorem_XIII_3_conclusion(p)
+    by thm rational_integer_is_gaussian(p)
+    # trust: rational-prime splitting uses native-C unique factorization.
+    trust $theorem_XIII_3_conclusion(p)
+
+thm gaussian_two_decomposition:
+    ? forall:
+        gaussian_norm(1 + i) = 2
+        (1 + i) * (1 - i) = 2
+        (-i) * (1 + i) ^ 2 = 2
+    by thm gaussian_one_is_gaussian_integer()
+    by thm gaussian_i_is_gaussian_integer()
+    by thm gaussian_integers_closed_under_addition(1, i)
+    $gaussian_norm_spec(1 + i, gaussian_norm(1 + i))
+    by def:
+        ? $gaussian_norm_spec(1 + i, gaussian_norm(1 + i))
+    re(1 + i) = re(1) + re(i) = 1 + 0 = 1
+    img(1 + i) = img(1) + img(i) = 0 + 1 = 1
+    gaussian_norm(1 + i) = re(1 + i) ^ 2 + img(1 + i) ^ 2 = 1 ^ 2 + 1 ^ 2 = 2
+    i ^ 2 = -1
+    (1 + i) * (1 - i) = 1 - i + i - i ^ 2 = 2
+    (-i) * (1 + i) = -i - i ^ 2 = 1 - i
+    (-i) * (1 + i) ^ 2 = ((-i) * (1 + i)) * (1 + i) = (1 - i) * (1 + i) = (1 + i) * (1 - i) = 2
+
+prop theorem_XIII_4_conclusion(p N+):
+    forall:
+        $gaussian_prime(p)
+        =>:
+            p % 4 = 3
+    forall:
+        p % 4 = 3
+        =>:
+            $gaussian_prime(p)
+    forall q gaussian_integers:
+        $gaussian_prime(q)
+        gaussian_norm(q) = p
+        =>:
+            p % 4 = 1
+    forall:
+        p % 4 = 1
+        =>:
+            exist q gaussian_integers st {$gaussian_prime(q), gaussian_norm(q) = p}
+
+thm theorem_XIII_4_rational_prime_mod_four:
+    ? forall p N+:
+        $section4::is_prime_Z(p)
+        p > 2
+        =>:
+            $theorem_XIII_4_conclusion(p)
+    # trust: the mod-four split still depends on reciprocity infrastructure.
+    trust $theorem_XIII_4_conclusion(p)
+
+prop gaussian_prime_associate_of_rational_prime_three_mod_four(z gaussian_integers):
+    exist p N+ st {$section4::is_prime_Z(p), p % 4 = 3, $gaussian_associate(z, p)}
+
+prop gaussian_prime_classification(z gaussian_integers):
+    $gaussian_associate(z, 1 + i) or $gaussian_prime_associate_of_rational_prime_three_mod_four(z) or $section4::is_prime_Z(gaussian_norm(z)) and gaussian_norm(z) % 4 = 1
+
+thm corollary_XIII_1_gaussian_prime_classification:
+    ? forall z gaussian_integers:
+        $gaussian_prime(z)
+        =>:
+            $gaussian_prime_classification(z)
+    # trust: classification combines the remaining XIII.3 and XIII.4 debts.
+    trust $gaussian_prime_classification(z)
+
+prop sum_two_squares_representation(n Z):
+    exist x, y Z st {n = x ^ 2 + y ^ 2}
+
+thm integer_square_mod_four:
+    ? forall x Z:
+        x ^ 2 % 4 = 0 or x ^ 2 % 4 = 1
+    x % 4 >= 0
+    x % 4 < 4
+    x % 4 = 0 or x % 4 = 1 or x % 4 = 2 or x % 4 = 3
+    by cases:
+        ? x ^ 2 % 4 = 0 or x ^ 2 % 4 = 1
+        case x % 4 = 0:
+            x ^ 2 % 4 = (x % 4) ^ 2 % 4 = 0
+        case x % 4 = 1:
+            x ^ 2 % 4 = (x % 4) ^ 2 % 4 = 1
+        case x % 4 = 2:
+            x ^ 2 % 4 = (x % 4) ^ 2 % 4 = 0
+        case x % 4 = 3:
+            x ^ 2 % 4 = (x % 4) ^ 2 % 4 = 1
+
+thm sum_two_squares_prime_congruence_necessary:
+    ? forall p N+, x, y Z:
+        $section4::is_prime_Z(p)
+        p = x ^ 2 + y ^ 2
+        =>:
+            p = 2 or p % 4 = 1
+    claim:
+        ? forall:
+            p % 4 = 0 or p % 4 = 2
+            =>:
+                p = 2
+        by def:
+            ? $section4::is_prime_Z(p)
+        by cases:
+            ? $section1::divides_Z(2, p)
+            case p % 4 = 0:
+                witness exist k Z st {p = 2 * k} from 2 * section2::integer_quotient(p, 4):
+                    p = 4 * section2::integer_quotient(p, 4) + p % 4 = 2 * (2 * section2::integer_quotient(p, 4))
+                by def:
+                    ? $section1::divides_Z(2, p)
+            case p % 4 = 2:
+                witness exist k Z st {p = 2 * k} from 2 * section2::integer_quotient(p, 4) + 1:
+                    p = 4 * section2::integer_quotient(p, 4) + p % 4 = 2 * (2 * section2::integer_quotient(p, 4) + 1)
+                by def:
+                    ? $section1::divides_Z(2, p)
+        2 = 1 or 2 = p
+        by cases:
+            ? p = 2
+            case 2 = 1:
+                impossible 2 = 1
+            case 2 = p:
+                p = 2
+    by thm integer_square_mod_four(x)
+    by thm integer_square_mod_four(y)
+    by cases:
+        ? p = 2 or p % 4 = 1
+        case x ^ 2 % 4 = 0:
+            by cases:
+                ? p = 2 or p % 4 = 1
+                case y ^ 2 % 4 = 0:
+                    p % 4 = (x ^ 2 + y ^ 2) % 4 = (x ^ 2 % 4 + y ^ 2 % 4) % 4 = 0
+                    p = 2
+                case y ^ 2 % 4 = 1:
+                    p % 4 = (x ^ 2 + y ^ 2) % 4 = (x ^ 2 % 4 + y ^ 2 % 4) % 4 = 1
+        case x ^ 2 % 4 = 1:
+            by cases:
+                ? p = 2 or p % 4 = 1
+                case y ^ 2 % 4 = 0:
+                    p % 4 = (x ^ 2 + y ^ 2) % 4 = (x ^ 2 % 4 + y ^ 2 % 4) % 4 = 1
+                case y ^ 2 % 4 = 1:
+                    p % 4 = (x ^ 2 + y ^ 2) % 4 = (x ^ 2 % 4 + y ^ 2 % 4) % 4 = 2
+                    p = 2
+
+prop rational_prime_sum_two_squares_criterion(p N+):
+    $section4::is_prime_Z(p)
+    forall x, y Z:
+        p = x ^ 2 + y ^ 2
+        =>:
+            p = 2 or p % 4 = 1
+    forall:
+        p = 2 or p % 4 = 1
+        =>:
+            $sum_two_squares_representation(p)
+
+thm corollary_XIII_2_rational_prime_sum_two_squares:
+    ? forall p N+:
+        $section4::is_prime_Z(p)
+        =>:
+            $rational_prime_sum_two_squares_criterion(p)
+    claim:
+        ? forall x, y Z:
+            p = x ^ 2 + y ^ 2
+            =>:
+                p = 2 or p % 4 = 1
+        by thm sum_two_squares_prime_congruence_necessary(p, x, y)
+    claim:
+        ? forall:
+            p = 2 or p % 4 = 1
+            =>:
+                $sum_two_squares_representation(p)
+        by cases:
+            ? $sum_two_squares_representation(p)
+            case p = 2:
+                witness exist x, y Z st {p = x ^ 2 + y ^ 2} from 1, 1:
+                    p = 2 = 1 ^ 2 + 1 ^ 2
+                by def:
+                    ? $sum_two_squares_representation(p)
+            case p % 4 = 1:
+                by def:
+                    ? $section4::is_prime_Z(p)
+                by contra:
+                    ? p != 2
+                    p = 2
+                    p % 4 = 2 % 4 = 2
+                    impossible p % 4 = 1
+                p >= 2
+                p = 2 or p > 2
+                by cases:
+                    ? p > 2
+                    case p = 2:
+                        impossible p != 2
+                    case p > 2:
+                        p > 2
+                by thm theorem_XIII_4_rational_prime_mod_four(p)
+                by def:
+                    ? $theorem_XIII_4_conclusion(p)
+                obtain q from exist q gaussian_integers st {$gaussian_prime(q), gaussian_norm(q) = p}
+                by thm gaussian_integer_coordinates_are_integers(q)
+                $gaussian_norm_spec(q, gaussian_norm(q))
+                by def:
+                    ? $gaussian_norm_spec(q, gaussian_norm(q))
+                witness exist x, y Z st {p = x ^ 2 + y ^ 2} from re(q), img(q):
+                    p = gaussian_norm(q) = re(q) ^ 2 + img(q) ^ 2
+                by def:
+                    ? $sum_two_squares_representation(p)
+    by def:
+        ? $rational_prime_sum_two_squares_criterion(p)

@@ -1,0 +1,53 @@
+# About This Project
+#
+# Litex source:
+# Canonical module: scripts/number_theory_for_beginners/textbook
+#
+# This project is an ongoing Litex formalization inspired by Andre Weil and
+# Maxwell Rosenlicht's Number Theory for Beginners. It follows the
+# non-exercise mathematical development of the book through its thirteen
+# sections, from divisibility and prime factorization to congruences, groups,
+# polynomials, quadratic reciprocity, and Gaussian integers. It is an
+# independent translation project, not an official edition of or substitute
+# for the original book.
+#
+# Translation conventions
+#
+# Standalone items explicitly labelled Exercise or Exercises are omitted
+# without declarations or coverage placeholders. A named theorem, lemma, or
+# corollary remains in scope when the source merely leaves its proof, or one
+# step of it, as an exercise; that deferred argument is shown locally as
+# `trust`.
+#
+# This project follows the mathematical source order but is not a line-by-line
+# transcription. It uses Litex's builtin integers, rationals, complex numbers,
+# sets, functions, and arithmetic when these already express the intended
+# objects. In particular, a source construction may be retained as an
+# alternate route or explicit proof debt instead of becoming a compulsory
+# foundation for later results. Concise implicit arguments may be expanded,
+# while long counting, polynomial, finite-field, reciprocity, or factorization
+# proofs may be deferred to keep the main number-theoretic line readable.
+#
+# Coverage and verification are separate. Included declarations may be fully
+# checked or may contain a narrowly placed `trust`; trust records unfinished
+# mathematics or a verifier-facing gap and is not a checked proof. All thirteen
+# section files exist, but absent non-exercise results and remaining proof debt
+# are still incomplete work and are listed in the project ledger.
+#
+# Most declarations included here are accepted by the Litex verifier. The
+# remaining unchecked arguments are kept visible as explicit trust boundaries,
+# with no attempt to present them as completed proofs. Some concern steps that
+# concise textbook exposition leaves implicit; others expose substantial work
+# still needed in finite counting, polynomial Euclidean theory, finite fields,
+# quadratic reciprocity, and Gaussian factorization. We fill in omitted
+# reasoning where doing so clarifies the mathematical structure, while
+# occasionally retaining a marked boundary to respect the source's pace and
+# avoid overwhelming the main argument with supporting infrastructure.
+#
+# The later sections on residue classes, finite groups, polynomial arithmetic,
+# quadratic residues, and Gaussian integers are particularly rich examples of
+# how Litex connects concrete calculations with reusable abstract facts.
+#
+# We hope readers gain insight into elementary number theory and see both the
+# promise and the current limits of expressing a long mathematical narrative
+# as readable, checkable Litex code.
