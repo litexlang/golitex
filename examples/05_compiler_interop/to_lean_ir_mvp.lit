@@ -38,6 +38,17 @@ trust forall x R:
 
 $is_one(1)
 
+# A known-forall match may choose an Obj that is only rationally equal to the
+# spelling in the requested goal. The compiler must retain that exact Obj,
+# create a typed local `proof_arg`, name the direct forall instance, and only
+# then normalize that instance to the goal in the enclosing proof space.
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
+
 forall x R:
     x != 0
     x < 10
@@ -58,9 +69,11 @@ forall a, b, x R:
 # containing `EqualityRewrite`, a cited source-fact premise, and equality-proof
 # premises. The emitter then gives the introduced premises, replayed source,
 # equality evidence, and checked result consecutive coordinates in that proof
-# space. The same extensible rule node also represents definition reduction,
-# known-forall application, and normalization. Only explicit `trust` becomes
-# `axiom`.
+# space. Known-forall IR separately records typed Obj arguments, parameter and
+# domain requirements, its direct instantiated conclusion, and any outer
+# normalization needed to reach the target. The same extensible rule node also
+# represents definition reduction and normalization. Only explicit `trust`
+# becomes `axiom`.
 #
 # Boundary: transports without structured verifier evidence (currently, for
 # example, order-predicate transposition) become `OtherUnsupported` and stop

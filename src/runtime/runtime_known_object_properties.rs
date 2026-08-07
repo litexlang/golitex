@@ -2,6 +2,29 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 impl Runtime {
+    fn cloned_module_qualified_property_for_key<T: Clone>(
+        &self,
+        key: &str,
+        get: impl for<'a> Fn(&'a Environment, &str) -> Option<&'a T>,
+    ) -> Option<T> {
+        let (display_key, module_name, local_name) =
+            crate::obj::split_module_qualified_display_key(key)?;
+        let environments = if self.is_current_parse_module(&module_name) {
+            self.iter_environments_from_top().collect::<Vec<_>>()
+        } else {
+            self.imported_module_environments(&module_name)
+        };
+        let lookup_keys = [key, display_key.as_str(), local_name.as_str()];
+        for environment in environments {
+            for lookup_key in lookup_keys {
+                if let Some(value) = get(environment, lookup_key) {
+                    return Some(value.clone());
+                }
+            }
+        }
+        None
+    }
+
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
         (0..self.environment_count()).map(|index| {
             self.environment_by_top_index(index)
@@ -354,12 +377,9 @@ impl Runtime {
         if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(key) {
             return Some(info.clone());
         }
-
-        if let Some((module_name, local_name)) = split_module_qualified_key(key) {
-            return self.get_known_fn_info_for_module_qualified_name(module_name, local_name);
-        }
-
-        None
+        self.cloned_module_qualified_property_for_key(key, |environment, lookup_key| {
+            environment.known_objs_in_fn_sets.get(lookup_key)
+        })
     }
 
     fn get_known_fn_info_for_key_from_current_envs(&self, key: &str) -> Option<&KnownFnInfo> {
@@ -458,19 +478,17 @@ impl Runtime {
                 return Some(known_cart_obj.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(local_name) {
-                    return Some(known_cart_obj.clone());
-                }
-                if let Some((_, Some(known_cart_obj), _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_cart_obj.clone());
-                }
-            }
+        if let Some((known_cart_obj, _)) =
+            self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+                environment.known_objs_equal_to_cart.get(lookup_key)
+            })
+        {
+            return Some(known_cart_obj);
         }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_tuple.get(lookup_key)
+        })
+        .and_then(|(_, known_cart_obj, _)| known_cart_obj)
     }
 
     pub fn get_obj_equal_to_set_builder(&self, name: &str) -> Option<SetBuilder> {
@@ -479,27 +497,10 @@ impl Runtime {
                 return Some(set_builder.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if self.is_current_parse_module(module_name) {
-                for env in self.iter_environments_from_top() {
-                    if let Some((set_builder, _)) = env
-                        .known_objs_equal_to_set_builder
-                        .get(local_name)
-                        .or_else(|| env.known_objs_equal_to_set_builder.get(name))
-                    {
-                        return Some(set_builder.clone());
-                    }
-                }
-                return None;
-            }
-            for env in self.imported_module_environments(module_name) {
-                if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
-                {
-                    return Some(set_builder.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_set_builder.get(lookup_key)
+        })
+        .map(|(set_builder, _)| set_builder)
     }
 
     pub fn get_obj_equal_to_tuple(&self, name: &str) -> Option<Tuple> {
@@ -508,16 +509,10 @@ impl Runtime {
                 return Some(known_tuple_obj.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((Some(known_tuple_obj), _, _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_tuple_obj.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_tuple.get(lookup_key)
+        })
+        .and_then(|(known_tuple_obj, _, _)| known_tuple_obj)
     }
 
     pub fn get_obj_tuple_cart(&self, name: &str) -> Option<Cart> {
@@ -526,16 +521,10 @@ impl Runtime {
                 return Some(known_cart_obj.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, Some(known_cart_obj), _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_cart_obj.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_tuple.get(lookup_key)
+        })
+        .and_then(|(_, known_cart_obj, _)| known_cart_obj)
     }
 
     pub fn get_obj_equal_to_finite_seq_list(&self, name: &str) -> Option<FiniteSeqListObj> {
@@ -544,16 +533,12 @@ impl Runtime {
                 return Some(known_list.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_list, _, _)) =
-                    env.known_objs_equal_to_finite_seq_list.get(local_name)
-                {
-                    return Some(known_list.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment
+                .known_objs_equal_to_finite_seq_list
+                .get(lookup_key)
+        })
+        .map(|(known_list, _, _)| known_list)
     }
 
     pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, name: &str) -> Option<FiniteSeqSet> {
@@ -562,16 +547,12 @@ impl Runtime {
                 return member_of.clone();
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, member_of, _)) =
-                    env.known_objs_equal_to_finite_seq_list.get(local_name)
-                {
-                    return member_of.clone();
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment
+                .known_objs_equal_to_finite_seq_list
+                .get(lookup_key)
+        })
+        .and_then(|(_, member_of, _)| member_of)
     }
 
     pub fn get_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixListObj> {
@@ -580,16 +561,10 @@ impl Runtime {
                 return Some(known_matrix.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_matrix, _, _)) =
-                    env.known_objs_equal_to_matrix_list.get(local_name)
-                {
-                    return Some(known_matrix.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_matrix_list.get(lookup_key)
+        })
+        .map(|(known_matrix, _, _)| known_matrix)
     }
 
     pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixSet> {
@@ -598,15 +573,10 @@ impl Runtime {
                 return member_of.clone();
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(local_name)
-                {
-                    return member_of.clone();
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_matrix_list.get(lookup_key)
+        })
+        .and_then(|(_, member_of, _)| member_of)
     }
 
     pub fn get_matrix_set_for_obj(&self, obj: &Obj) -> Option<MatrixSet> {
@@ -616,14 +586,10 @@ impl Runtime {
                 return Some(matrix_set.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(&name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(local_name) {
-                    return Some(matrix_set.clone());
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(&name, |environment, lookup_key| {
+            environment.known_objs_in_matrix_sets.get(lookup_key)
+        })
+        .map(|(matrix_set, _)| matrix_set)
     }
 
     pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
@@ -632,14 +598,10 @@ impl Runtime {
                 return cart.1.clone();
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some(cart) = env.known_objs_equal_to_tuple.get(local_name) {
-                    return cart.1.clone();
-                }
-            }
-        }
-        None
+        self.cloned_module_qualified_property_for_key(name, |environment, lookup_key| {
+            environment.known_objs_equal_to_tuple.get(lookup_key)
+        })
+        .and_then(|(_, cart, _)| cart)
     }
 
     pub fn get_object_equal_to_normalized_decimal_number(&self, obj_str: &str) -> Option<Number> {
@@ -649,10 +611,14 @@ impl Runtime {
                 return Some(number.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
+        let display_key = strip_free_param_numeric_tags_in_display(obj_str);
+        if let Some((module_name, local_name)) = split_module_qualified_key(&display_key) {
             for env in self.imported_module_environments(module_name) {
-                if let Some(KnownObjValue::SimplifiedNumber(number)) =
-                    env.known_obj_values.get(local_name)
+                if let Some(KnownObjValue::SimplifiedNumber(number)) = env
+                    .known_obj_values
+                    .get(obj_str)
+                    .or_else(|| env.known_obj_values.get(&display_key))
+                    .or_else(|| env.known_obj_values.get(local_name))
                 {
                     return Some(number.clone());
                 }
@@ -670,9 +636,15 @@ impl Runtime {
                 };
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
+        let display_key = strip_free_param_numeric_tags_in_display(obj_str);
+        if let Some((module_name, local_name)) = split_module_qualified_key(&display_key) {
             for env in self.imported_module_environments(module_name) {
-                if let Some(known_value) = env.known_obj_values.get(local_name) {
+                if let Some(known_value) = env
+                    .known_obj_values
+                    .get(obj_str)
+                    .or_else(|| env.known_obj_values.get(&display_key))
+                    .or_else(|| env.known_obj_values.get(local_name))
+                {
                     return match known_value {
                         KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
                         KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),

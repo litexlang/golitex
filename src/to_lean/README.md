@@ -25,6 +25,38 @@ The environment cache deliberately stores only `FactId` plus the existing
 source location. Proof trees, origins, inferred consequences, local/global Lean
 names, and recursive dependencies live in statement results and To-Lean IR.
 
+## Environment and proof-scope correspondence
+
+A proof-relevant temporary Litex environment is a semantic scope boundary, not
+merely a verifier implementation detail. Whenever verification opens a child
+environment and the selected successful route depends on facts introduced or
+derived there, the returned `StmtResult` must preserve those facts and their
+derivations inside one recursively nested proof unit. It must not leak their
+temporary `FactId`s into the parent scope or flatten the result into a global
+citation that forgets how the local work was performed.
+
+Within the supported slice, To-Lean lowers that proof unit into a corresponding
+nested Lean proof scope, normally a `by` block containing local `intro`, `let`,
+`have`, or a theorem-like local lemma. The scope inherits exactly the parent
+evidence that was visible to the Litex child environment; facts created inside
+it remain local. If a supported local verification step itself opens another
+environment and packages several steps before producing a usable fact, its IR
+contains another nested proof unit and Lean emits another nested proof scope.
+Thus environment nesting determines proof encapsulation and dependency
+visibility, even though Litex environments and Lean syntax are not represented
+by identical data types.
+
+`ForallIntroduction` is the current concrete example: parameters and premises
+installed in its temporary environment survive in the returned proof IR, then
+become Lean binders and local `proof_fact` names. A nested known-forall
+application similarly becomes a local `have ... := by ...` with its own
+`proof_arg` and requirement proofs. The MVP does not yet serialize every
+runtime environment as a general-purpose IR node. Purely operational search
+environments whose branches were not selected need not be serialized; the
+invariant applies to every environment boundary on the successful proof route.
+If such a proof-relevant route has no supported nested representation,
+compilation must stop instead of flattening away the scope.
+
 ## Statement and proof IR
 
 The MVP constructs four statement forms:
@@ -54,10 +86,17 @@ proofs, then normalizes the cited proposition and target through the recorded
 equalities. A citation that changes its proposition without such structured
 evidence becomes `OtherUnsupported` rather than an unchecked `exact`.
 
-Known-forall evidence retains typed argument objects. Parameter-type checks are
-kept separately from actual domain premises: Lean's binder type checks the
-former, while the latter are passed as proof arguments. Statement memoization
-is a transparent proof wrapper and does not erase the underlying route.
+Known-forall evidence retains each parameter name, typed argument object,
+translated binder type, and recursively verified requirement. Parameter-type
+checks are kept separately from actual domain premises: Lean realizes the
+former as a typed local argument, while the latter remain proposition proofs.
+The runtime also instantiates the cited forall's selected conclusion with the
+recorded objects. Consequently, `KnownForallInstantiation` proves that direct
+instance rather than silently claiming the final goal. If the verifier matched
+objects that are rationally equal but print differently, a separate outer
+`Normalization` node records the move from the direct instance to the requested
+goal. Statement memoization is a transparent proof wrapper and does not erase
+the underlying route.
 For forall introduction, the corresponding temporary parameter-typing facts
 are likewise retained separately (with their IDs), even though the emitter
 realizes them through typed Lean binders rather than local proposition names.
@@ -109,13 +148,20 @@ The current lowering is intentionally small:
   `def` (or `opaque` when it has no body);
 - only an explicit Litex `trust` becomes Lean `axiom`;
 - stored proved facts become `theorem global_fact_<FactId>`;
-- known-forall application uses the cited `FactId` directly;
+- known-forall application first materializes every chosen object as a typed
+  `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement as a
+  `proof_fact`, and names the direct instantiated conclusion before using it;
 - definition evidence uses the named Lean definition;
 - each generated proof block lazily receives a `SpaceId`; introduced premises
   and intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>`;
+- `proof_arg` and `proof_fact` share one local index stream, so their coordinates
+  preserve the actual derivation order inside a proof space;
 - a nested proof block inherits visible outer facts; when it first introduces
   a named fact, it receives a fresh `SpaceId` and starts its `LocalIndex` at
   one;
+- when a direct forall instance needs checked rational normalization to become
+  the final goal, that application is emitted in a nested proof space and the
+  outer proof names both the direct instance and normalized result;
 - equality transport replays its source, equality edges, and result as
   consecutive `proof_fact` values, with the result checked by
   `simpa only [...] using ...`;
@@ -136,9 +182,9 @@ becoming an undefined Lean name.
 
 [`examples/01_proof_patterns/to_lean_ir_mvp.lit`](../../examples/01_proof_patterns/to_lean_ir_mvp.lit)
 covers the full first vertical slice: abstract proposition, concrete
-proposition, trusted forall, known-forall instantiation, definition proof,
-temporary-premise reuse, equality transport, forall introduction, and rational
-builtin proof.
+proposition, trusted forall, explicit known-forall arguments and requirements,
+direct-instance-to-goal normalization, definition proof, temporary-premise
+reuse, equality transport, forall introduction, and rational builtin proof.
 
 Rust and Litex gates:
 

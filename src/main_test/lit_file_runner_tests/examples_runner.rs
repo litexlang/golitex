@@ -10,6 +10,7 @@ use super::helper::{
     format_litex_failure_location, litex_snippets_from_markdown_files,
     print_known_forall_profile_summary, print_slowest_run_labels, run_with_large_stack,
     source_has_isolated_import, spawn_with_large_stack, REPOSITORY_EXAMPLES_SUBDIR,
+    SCRATCH_EXAMPLE_FILE,
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
@@ -543,11 +544,15 @@ fn collect_examples_phase1_groups(
     manifest_dir: &Path,
     include_manual_docs: bool,
 ) -> Vec<LitexRunGroup> {
-    let lit_file_paths = collect_lit_files_recursive_under_excluding(
+    let scratch_file_path = manifest_dir.join(SCRATCH_EXAMPLE_FILE);
+    let lit_file_paths: Vec<PathBuf> = collect_lit_files_recursive_under_excluding(
         manifest_dir,
         "examples",
         &[REPOSITORY_EXAMPLES_SUBDIR],
-    );
+    )
+    .into_iter()
+    .filter(|path| path != &scratch_file_path)
+    .collect();
 
     let manual_md_paths = if include_manual_docs {
         collect_manual_markdown_paths(manifest_dir)

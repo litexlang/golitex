@@ -6,28 +6,28 @@ use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
 use crate::to_lean::to_lean;
 
-use super::helper::{run_with_large_stack, source_has_isolated_import, SKETCH_EXAMPLES_SUBDIR};
+use super::helper::{run_with_large_stack, source_has_isolated_import};
 
-fn run_tmp_lit_file(file_name: &str) {
-    let tmp_lit_path = tmp_lit_path(file_name);
+fn run_example_lit_file(relative_path: &str) {
+    let lit_path = example_lit_path(relative_path);
 
-    let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
+    let lit_content = match fs::read_to_string(&lit_path) {
         Ok(content) => content,
-        Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
+        Err(read_error) => panic!("failed to read {:?}: {}", lit_path, read_error),
     };
-    if tmp_lit_content.trim().is_empty() {
-        println!("examples/{} is empty; skip run", file_name);
+    if lit_content.trim().is_empty() {
+        println!("examples/{} is empty; skip run", relative_path);
         return;
     }
 
-    let path_str = match tmp_lit_path.to_str() {
+    let path_str = match lit_path.to_str() {
         Some(path_string) => path_string,
-        None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
+        None => panic!("{:?} must be valid UTF-8", lit_path),
     };
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
-    let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
+    let normalized_source = remove_windows_carriage_return(lit_content.as_str());
     runtime.isolated = source_has_isolated_import(normalized_source.as_str());
 
     let start_time = Instant::now();
@@ -49,27 +49,27 @@ fn run_tmp_lit_file(file_name: &str) {
     assert!(
         run_succeeded,
         "examples/{} failed.\n\n>>> Litex error JSON:\n{}\n\n=== [{}] {:?} ({:.2} ms user file only) ===",
-        file_name, error_json, path_str, status_label, duration_ms
+        relative_path, error_json, path_str, status_label, duration_ms
     );
 }
 
-fn run_tmp_lit_file_to_lean(file_name: &str) {
-    run_tmp_lit_file(file_name);
+fn run_example_lit_file_to_lean(relative_path: &str) {
+    run_example_lit_file(relative_path);
 
-    let tmp_lit_path = tmp_lit_path(file_name);
-    let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
+    let lit_path = example_lit_path(relative_path);
+    let lit_content = match fs::read_to_string(&lit_path) {
         Ok(content) => content,
-        Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
+        Err(read_error) => panic!("failed to read {:?}: {}", lit_path, read_error),
     };
-    if tmp_lit_content.trim().is_empty() {
+    if lit_content.trim().is_empty() {
         return;
     }
 
-    let path_str = match tmp_lit_path.to_str() {
+    let path_str = match lit_path.to_str() {
         Some(path_string) => path_string,
-        None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
+        None => panic!("{:?} must be valid UTF-8", lit_path),
     };
-    let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
+    let normalized_source = remove_windows_carriage_return(lit_content.as_str());
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(path_str);
     runtime.isolated = source_has_isolated_import(normalized_source.as_str());
@@ -82,12 +82,12 @@ fn run_tmp_lit_file_to_lean(file_name: &str) {
                 display_runtime_error_json(&runtime, &error, false)
             )
         });
-    let updated_source = source_with_generated_lean(&tmp_lit_content, &generated_lean);
-    fs::write(&tmp_lit_path, updated_source).unwrap_or_else(|write_error| {
-        panic!("failed to write {:?}: {}", tmp_lit_path, write_error)
+    let updated_source = source_with_generated_lean(&lit_content, &generated_lean);
+    fs::write(&lit_path, updated_source).unwrap_or_else(|write_error| {
+        panic!("failed to write {:?}: {}", lit_path, write_error)
     });
 
-    println!("generated Lean appended to {:?}", tmp_lit_path);
+    println!("generated Lean appended to {:?}", lit_path);
 }
 
 #[test]
@@ -153,13 +153,29 @@ fn print_tmp_lit_in_all_output_languages() {
 
 #[test]
 fn run_tmp0() {
-    run_with_large_stack("run_tmp0_large_stack", || run_tmp_lit_file("tmp.lit"));
+    run_with_large_stack("run_tmp0_large_stack", || {
+        run_example_lit_file("tmp.lit")
+    });
 }
 
 #[test]
 fn run_tmp0_to_lean() {
     run_with_large_stack("run_tmp0_to_lean_large_stack", || {
-        run_tmp_lit_file_to_lean("tmp.lit")
+        run_example_lit_file_to_lean("tmp.lit")
+    });
+}
+
+#[test]
+fn run_empty_to_lean() {
+    run_with_large_stack("run_empty_to_lean_large_stack", || {
+        run_example_lit_file_to_lean("_internal/to_lean/empty.lit")
+    });
+}
+
+#[test]
+fn run_to_lean_showcase() {
+    run_with_large_stack("run_to_lean_showcase_large_stack", || {
+        run_example_lit_file_to_lean("_internal/to_lean/showcase.lit")
     });
 }
 
@@ -184,46 +200,31 @@ fn keeps_nontrailing_triple_quoted_blocks() {
 }
 
 #[test]
-fn run_tmp2() {
-    run_with_large_stack("run_tmp2_large_stack", || run_tmp_lit_file("tmp2.lit"));
+fn run_comparison_rules_draft() {
+    run_with_large_stack("run_comparison_rules_draft_large_stack", || {
+        run_example_lit_file("_internal/drafts/comparison_rules_draft.lit")
+    });
 }
 
 #[test]
-fn run_tmp3() {
-    run_with_large_stack("run_tmp3_large_stack", || run_tmp_lit_file("tmp3.lit"));
+fn run_statement_forms_draft() {
+    run_with_large_stack("run_statement_forms_draft_large_stack", || {
+        run_example_lit_file("_internal/drafts/statement_forms_draft.lit")
+    });
 }
 
 #[test]
-fn run_tmp4() {
-    run_with_large_stack("run_tmp4_large_stack", || run_tmp_lit_file("tmp4.lit"));
+fn run_output_trace_showcase() {
+    run_with_large_stack("run_output_trace_showcase_large_stack", || {
+        run_example_lit_file("_internal/drafts/output_trace_showcase.lit")
+    });
 }
 
-fn tmp_lit_path(file_name: &str) -> PathBuf {
+fn example_lit_path(relative_path: &str) -> PathBuf {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let candidate_paths = [
-        manifest_dir.join("examples").join(file_name),
-        manifest_dir.join(SKETCH_EXAMPLES_SUBDIR).join(file_name),
-    ];
-    candidate_paths
-        .iter()
-        .find(|path| path.is_file())
-        .cloned()
-        .unwrap_or_else(|| {
-            panic!(
-                "{} must exist in one of: {}",
-                file_name,
-                candidate_paths
-                    .iter()
-                    .map(|path| {
-                        path.strip_prefix(&manifest_dir)
-                            .unwrap_or(path)
-                            .display()
-                            .to_string()
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            )
-        })
+    let path = manifest_dir.join("examples").join(relative_path);
+    assert!(path.is_file(), "examples/{} must exist", relative_path);
+    path
 }
 
 fn source_with_generated_lean(source: &str, generated_lean: &str) -> String {

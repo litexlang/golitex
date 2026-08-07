@@ -188,7 +188,7 @@ impl Runtime {
                 }),
             },
             VerifiedByResult::KnownForallInstantiation(result) => {
-                self.known_forall_to_lean_ir(result, context)
+                self.known_forall_to_lean_ir(goal, result, context)
             }
             VerifiedByResult::VerifiedBys(result) => {
                 let mut steps = Vec::with_capacity(result.cite_what.len());
@@ -385,12 +385,18 @@ impl Runtime {
 
     fn known_forall_to_lean_ir(
         &self,
+        goal: &Fact,
         result: &KnownForallInstantiationResult,
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         let Stmt::Fact(source_fact) = result.cite_what.as_ref() else {
             return Ok(FactProofToLeanIR::Unsupported {
                 reason: "known-forall verification did not cite a fact".to_string(),
+            });
+        };
+        let Fact::ForallFact(source_forall) = source_fact else {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: "known-forall verification cited a non-forall fact".to_string(),
             });
         };
         let source_fact_id = match result.source_fact_id {
@@ -402,14 +408,34 @@ impl Runtime {
                 reason: format!("known forall `{}` has no stored FactId", source_fact),
             });
         };
+
+        let mut param_types = Vec::new();
+        for group in source_forall.params_def_with_type.groups.iter() {
+            let param_type = param_type_to_lean_ir(&group.param_type);
+            for _ in group.params.iter() {
+                param_types.push(param_type.clone());
+            }
+        }
+        if result.instantiation.len() != param_types.len() {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: format!(
+                    "known forall `{}` recorded {} arguments for {} parameter types",
+                    source_fact,
+                    result.instantiation.len(),
+                    param_types.len()
+                ),
+            });
+        }
         let arguments = result
             .instantiation
             .iter()
-            .map(|item| KnownForallArgumentToLeanIR {
+            .zip(param_types)
+            .map(|(item, param_type)| KnownForallArgumentToLeanIR {
                 param: item.param.clone(),
                 argument: item.arg_obj.clone(),
+                param_type,
             })
-            .collect();
+            .collect::<Vec<_>>();
         let mut parameter_requirements = Vec::new();
         let mut requirements = Vec::new();
         for requirement in result.requirements.iter() {
@@ -425,13 +451,80 @@ impl Runtime {
                 KnownForallRequirementKind::Domain => requirements.push(requirement_ir),
             }
         }
-        Ok(FactProofToLeanIR::RuleApplication {
+        if parameter_requirements.len() != arguments.len() {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: format!(
+                    "known forall `{}` recorded {} arguments but {} parameter requirements",
+                    source_fact,
+                    arguments.len(),
+                    parameter_requirements.len()
+                ),
+            });
+        }
+
+        let Some(source_conclusion) = source_forall.then_facts.first() else {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: format!("known forall `{}` has no conclusion", source_fact),
+            });
+        };
+        if source_forall.then_facts.len() != 1 {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: format!(
+                    "known forall `{}` has {} conclusions instead of one matched conclusion",
+                    source_fact,
+                    source_forall.then_facts.len()
+                ),
+            });
+        }
+        let argument_objects = arguments
+            .iter()
+            .map(|argument| argument.argument.clone())
+            .collect::<Vec<_>>();
+        let param_to_arg_map = source_forall
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(&argument_objects);
+        let instantiated_conclusion = self.inst_fact(
+            &source_conclusion.clone().to_fact(),
+            &param_to_arg_map,
+            ParamObjType::Forall,
+            None,
+        )?;
+        let application = FactProofToLeanIR::RuleApplication {
             rule: ProofRuleToLeanIR::KnownForallInstantiation {
                 source_fact_id,
                 arguments,
             },
             parameter_requirements,
             premises: requirements,
+        };
+        if instantiated_conclusion.to_string() == goal.to_string() {
+            return Ok(application);
+        }
+
+        let instantiated_fact = FactToLeanIR {
+            fact_id: None,
+            proposition: instantiated_conclusion.clone(),
+            proof: application,
+        };
+        if facts_align_by_rational_normalization(&instantiated_conclusion, goal) {
+            return Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::Normalization {
+                    kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                },
+                parameter_requirements: Vec::new(),
+                premises: vec![instantiated_fact],
+            });
+        }
+
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule: ProofRuleToLeanIR::OtherUnsupported {
+                name: format!(
+                    "known-forall instance `{}` does not structurally match goal `{}`",
+                    instantiated_conclusion, goal
+                ),
+            },
+            parameter_requirements: Vec::new(),
+            premises: vec![instantiated_fact],
         })
     }
 
@@ -519,7 +612,11 @@ impl Runtime {
             VerifiedBysEnum::ByKnownForall(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: self.known_forall_to_lean_ir(&result.result, context)?,
+                proof: self.known_forall_to_lean_ir(
+                    &result.verify_what,
+                    &result.result,
+                    context,
+                )?,
             }),
             VerifiedBysEnum::ByStatementMemo(goal, source) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(goal)?,
@@ -576,20 +673,39 @@ impl Runtime {
 }
 
 fn param_group_to_lean_ir(group: &ParamGroupWithParamType) -> ParamGroupToLeanIR {
-    let param_type = match &group.param_type {
-        ParamType::Set(_) => ParamTypeToLeanIR::LitexSet,
-        ParamType::NonemptySet(_) => ParamTypeToLeanIR::LitexNonemptySet,
-        ParamType::Obj(Obj::StandardSet(StandardSet::R)) => ParamTypeToLeanIR::Real,
-        other => ParamTypeToLeanIR::Unsupported(other.to_string()),
-    };
     ParamGroupToLeanIR {
         names: group
             .params
             .iter()
             .map(|binding| binding.name().to_string())
             .collect(),
-        param_type,
+        param_type: param_type_to_lean_ir(&group.param_type),
     }
+}
+
+fn param_type_to_lean_ir(param_type: &ParamType) -> ParamTypeToLeanIR {
+    match param_type {
+        ParamType::Set(_) => ParamTypeToLeanIR::LitexSet,
+        ParamType::NonemptySet(_) => ParamTypeToLeanIR::LitexNonemptySet,
+        ParamType::Obj(Obj::StandardSet(StandardSet::R)) => ParamTypeToLeanIR::Real,
+        other => ParamTypeToLeanIR::Unsupported(other.to_string()),
+    }
+}
+
+fn facts_align_by_rational_normalization(source: &Fact, goal: &Fact) -> bool {
+    let (Fact::AtomicFact(source), Fact::AtomicFact(goal)) = (source, goal) else {
+        return false;
+    };
+    if source.key() != goal.key() || source.is_true() != goal.is_true() {
+        return false;
+    }
+    let source_args = source.args_ref();
+    let goal_args = goal.args_ref();
+    source_args.len() == goal_args.len()
+        && source_args
+            .iter()
+            .zip(goal_args.iter())
+            .all(|(source, goal)| objs_equal_by_rational_expression_evaluation(source, goal))
 }
 
 fn to_lean_ir_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeError {
