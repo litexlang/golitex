@@ -2821,7 +2821,7 @@ impl fmt::Display for TupleDim {
 impl fmt::Display for Identifier {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.symbol.as_ref() {
-            Some(symbol) => write!(f, "{}", symbol.identity_spine(symbol.display_name())),
+            Some(symbol) => write!(f, "{}", symbol.identity_spine(&self.name)),
             None => write!(f, "{}", self.name),
         }
     }
@@ -3106,7 +3106,13 @@ impl fmt::Display for BigIntersect {
 impl fmt::Display for IdentifierWithMod {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self.symbol.as_ref() {
-            Some(symbol) => write!(f, "{}", symbol.identity_spine(symbol.display_name())),
+            Some(symbol) => write!(
+                f,
+                "{}{}{}",
+                self.mod_name,
+                MOD_SIGN,
+                symbol.identity_spine(&self.name)
+            ),
             None => write!(f, "{}{}{}", self.mod_name, MOD_SIGN, self.name),
         }
     }
@@ -3644,6 +3650,20 @@ impl Identifier {
 #[cfg(test)]
 mod tests {
     use crate::prelude::*;
+
+    #[test]
+    fn bound_identifier_display_keeps_identity_on_local_name() {
+        let symbol = SymbolRef::new(SymbolId::new(17), "a::b::c".to_string());
+        let local = Identifier::new_bound("c".to_string(), symbol.clone());
+        let qualified = IdentifierWithMod::new_bound("a::b".to_string(), "c".to_string(), symbol);
+
+        assert_eq!(local.to_string(), "#17#c");
+        assert_eq!(qualified.to_string(), "a::b::#17#c");
+        assert_eq!(
+            strip_free_param_numeric_tags_in_display(&qualified.to_string()),
+            "a::b::c"
+        );
+    }
 
     #[test]
     fn display_keeps_parentheses_on_composite_divisor() {
