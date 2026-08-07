@@ -16,8 +16,8 @@ emitter accepts only that IR.
 - To-Lean mode attaches `Some(StmtToLeanIR)` only after successful statement
   execution. Fact IR is assembled after storage, so its citations can carry
   stable IDs rather than matching later by display text.
-- Local proof assumptions are distinguished from trusted facts. When a local
-  assumption was stored in a temporary environment, its ID survives in the
+- Local proof premises are distinguished from trusted facts. When a local
+  premise was stored in a temporary environment, its ID survives in the
   returned proof IR and becomes a Lean name such as `h_f18`.
 
 The environment cache deliberately stores only `FactId` plus the existing
@@ -34,10 +34,24 @@ The MVP constructs four statement forms:
 - `Fact`
 
 A fact contains its proposition, optional stored `FactId`, and a recursive
-`FactProofToLeanIR`. Proof routes are classified as trusted, local assumption,
-known fact, known-forall instantiation, builtin rule/strategy, definition,
-user strategy, composite proof, forall introduction, inference, statement memo,
-or explicitly unsupported.
+`FactProofToLeanIR`. Direct citations are proof-tree leaves. Derived facts use
+one general `RuleApplication { rule, parameter_requirements, premises }` node,
+so a new transport method extends `ProofRuleToLeanIR` without changing the
+recursive proof-tree shape. The first rule vocabulary contains equality and
+iff rewrite, definition reduction, normalization, known-forall instantiation,
+modus ponens, conjunction/existential introduction, case split, and an explicit
+unsupported rule. Only equality rewrite, definition reduction, the supported
+normalization slice, and known-forall instantiation currently have Lean
+backends.
+
+Equality-class lookup retains more than the final equivalent object: it now
+returns an ordered path of original equality facts with an orientation for each
+edge. A successful atomic-fact transport becomes an `EqualityRewrite` rule;
+premise zero proves the source proposition and each following premise proves
+the corresponding equality edge. The emitter first reconstructs those known
+proofs, then normalizes the cited proposition and target through the recorded
+equalities. A citation that changes its proposition without such structured
+evidence becomes `OtherUnsupported` rather than an unchecked `exact`.
 
 Known-forall evidence retains typed argument objects. Parameter-type checks are
 kept separately from actual domain premises: Lean's binder type checks the
@@ -97,6 +111,8 @@ The current lowering is intentionally small:
 - known-forall application uses the cited `FactId` directly;
 - definition evidence uses the named Lean definition;
 - forall introduction creates local hypotheses named from temporary FactIds;
+- equality transport proves the cited source and every equality edge, then
+  closes the target with a checked `simpa only [...] using ...`;
 - verified rational-expression normalization is discharged with `norm_num`,
   `ring`, or `field_simp` followed by `ring`.
 
@@ -115,7 +131,8 @@ becoming an undefined Lean name.
 [`examples/01_proof_patterns/to_lean_ir_mvp.lit`](../../examples/01_proof_patterns/to_lean_ir_mvp.lit)
 covers the full first vertical slice: abstract proposition, concrete
 proposition, trusted forall, known-forall instantiation, definition proof,
-temporary-assumption reuse, forall introduction, and rational builtin proof.
+temporary-premise reuse, equality transport, forall introduction, and rational
+builtin proof.
 
 Rust and Litex gates:
 
@@ -130,6 +147,17 @@ Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
 LITEX_LEAN_PROJECT=/path/to/mathlib-project \
   cargo test --release generated_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
 ```
+
+For scratch work, this command first verifies `examples/tmp.lit`, generates its
+Lean translation, and appends the generated code to that file inside a
+triple-quoted Litex comment:
+
+```text
+cargo test --release run_tmp0_to_lean -- --nocapture
+```
+
+The source file is left unchanged when verification or Lean generation fails.
+Each successful run appends a new generated snapshot at the end of the file.
 
 Implementation lives in `src/to_lean_ir`,
 `src/runtime/runtime_to_lean_ir.rs`, and `src/to_lean`.

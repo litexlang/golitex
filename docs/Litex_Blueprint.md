@@ -6,7 +6,7 @@ Website: https://litexlang.com/doc/Litex_Blueprint
 
 ## Background
 
-Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning in a form close to ordinary mathematics while every conclusion is rigorously checked by a machine.
+Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning, enhance understanding and sparkle new ideas in a form close to ordinary mathematics while every conclusion is rigorously checked by a machine.
 
 To understand why this goal calls for a different language design, first consider the relationship between formal proof and the workflow of ordinary mathematical writing.
 
@@ -243,6 +243,56 @@ When doing mathematics, people often begin by recognizing a pattern: the current
 
 Litex therefore places verified facts in the current context and tries to match and substitute them. A known `forall` fact can be instantiated when its parameter conditions are satisfied, and a known equality can help match a larger expression. This is not “guessing a proof”: every successful step must still pass the rule and context checks. Litex retains named theorems and explicit `by thm` invocations for results that are large, expensive, or whose dependencies should remain visible to the reader.
 
+From a compiler perspective, every successful verification produces a proof route with recursive structure that can be recorded in full. The To-Lean compiler aims to translate that route into a Lean proof term and submit it to the Lean kernel for an independent check.
+
+<details>
+<summary><strong>Further reading: How the Litex-to-Lean compiler works</strong></summary>
+
+*This section expands on the implementation and its current correctness boundary. Skipping it does not affect the discussion that follows.*
+
+From a compiler perspective, the successful verification of a Litex fact is essentially a recursively expandable proof tree. Citation of known facts, introduction of `forall` parameters and premises, equality substitution, definition unfolding, computation, and builtin rules form concrete steps in that tree, and any one step may itself branch further. The To-Lean compiler is not intended to reread the source after verification and “guess” a collection of tactics. Instead, it records the verification route already found by the checker, lowers each supported node to a Lean proof term—sometimes expressed as several tactics—and submits the result to the Lean kernel for an independent check. For example, the following universally quantified Litex fact says that if `a != c` and `a = b`, then `b != c`:
+
+```litex
+forall a, b, c set:
+    a != c
+    a = b
+    =>:
+        b != c
+```
+
+For this equality-rewrite route supported by the current MVP, it generates the following Lean code (the concrete fact ID is assigned at runtime):
+
+```lean
+import Mathlib
+
+universe uLitex
+
+namespace tmp
+
+-- Litex's primitive notion of a set.
+abbrev LitexSet := Type uLitex
+
+-- Every generated proposition has this codomain.
+abbrev LitexFact := Prop
+
+-- Litex stored fact f19
+theorem litex_fact_19 : ∀ (a b c : LitexSet), a ≠ c → a = b → b ≠ c := by
+  intro a b c h_f10 h_f11
+  have h_transport : a ≠ c := h_f10
+  have h_rewrite_1 : a = b := h_f11
+  simpa only [h_rewrite_1] using h_transport
+
+end tmp
+```
+
+This Lean code expands the verification route found automatically by Litex, one layer at a time. `intro` introduces the three `forall` parameters and the two local premises. `h_transport` preserves the known fact `a ≠ c`, while `h_rewrite_1` preserves the equality `a = b` used for rewriting. Finally, `simpa only [h_rewrite_1] using h_transport` transports `a ≠ c` along that equality to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, the IDs of both local facts, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+
+For builtin rules, known-`forall` instantiation, computation, and deeper composite proofs, the proof IR should likewise retain the corresponding evidence and branches recursively. Litex provides rich automatic verification routes for common mathematical objects; once a successful route has been selected, each step has explicit support and should be recordable and replayable. The current To-Lean MVP covers only some of these routes. An unsupported rule stops compilation instead of degrading into an implicit `axiom`, a `sorry`, or something presented as proved. Therefore, “every Litex verification can be compiled to Lean and accepted by the Lean kernel” remains a correctness goal rather than a completed fact. Once coverage is sufficiently complete, the translation preserves semantics, and the compiler itself has been audited, this path can provide a strong independent correctness guarantee for Litex verification results.
+
+> **Current boundary:** The Litex-to-Lean compiler remains under design and implementation and has not yet been tested at scale. Discussion and collaboration are welcome.
+
+</details>
+
 In the `Group` example, the laws are stated in `<=>:` and the uniqueness
 argument is stated as `identity = G.mul(G.one, identity) = G.one`. The checker
 finds the relevant identity-law instances and equality direction, so the
@@ -421,6 +471,8 @@ For mathematical exploration, learning, and textbook-style exposition, this orde
 When Litex moves concrete proof operations into the checker, however, the pressure shifts to its own trusted boundary.
 
 > **Equally sharply: Litex's biggest first-principles problem is that its trusted kernel is too large. Litex moves hundreds of common proof patterns into builtin and inference rules, shifting work from the user's proof script into the trusted computing base. The proof work did not disappear; the system absorbed it. Litex code must be compilable to Lean and checked there if its correctness is to be guaranteed.**
+
+*I am working on the Litex to Lean compiler. I welcome serious discussions through https://github.com/litexlang/golitex or litexlang@outlook.com .*
 
 For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository keeps only a narrow experiment: it handles verified rational equalities over `R`, recursively constructs numerator and denominator expressions, and emits Lean checked by `ring`, or by `field_simp` followed by `ring`. It is not yet a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
 

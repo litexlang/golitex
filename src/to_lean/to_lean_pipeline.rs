@@ -88,7 +88,7 @@ struct LeanEmitter {
     emitted_fact_ids: HashSet<FactId>,
 }
 
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct LeanProofContext {
     local_fact_names: HashMap<FactId, String>,
     nonzero_names: Vec<String>,
@@ -197,46 +197,56 @@ impl LeanEmitter {
         context: &LeanProofContext,
     ) -> Result<String, RuntimeError> {
         match proof {
-            FactProofToLeanIR::KnownFact { source_fact_id } => {
+            FactProofToLeanIR::KnownFactCitation { source_fact_id } => {
                 let source = self.available_fact_name(*source_fact_id, proposition, context)?;
                 Ok(format!("by\n  exact {}", source))
             }
-            FactProofToLeanIR::KnownForall {
-                source_fact_id,
-                arguments,
-                parameter_requirements: _,
-                requirements,
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::KnownForallInstantiation {
+                        source_fact_id,
+                        arguments,
+                    },
+                premises,
+                ..
             } => {
                 let source = self.available_fact_name(*source_fact_id, proposition, context)?;
                 let mut terms = vec![source];
                 for argument in arguments {
                     terms.push(lean_obj(&argument.argument)?);
                 }
-                for requirement in requirements {
+                for requirement in premises {
                     terms.push(self.lean_proof_term(requirement, context)?);
                 }
                 Ok(format!("by\n  exact {}", terms.join(" ")))
             }
-            FactProofToLeanIR::Builtin {
-                kind: BuiltinProofKindToLeanIR::Rule,
-                rule: BuiltinRuleToLeanIR::RationalExpressionSimplification,
-                subgoals,
-            } if subgoals.is_empty() => lean_rational_builtin_proof(proposition, context),
-            FactProofToLeanIR::Builtin { kind, rule, .. } => Err(to_lean_error(
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::Normalization {
+                        kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                    },
+                premises,
+                ..
+            } if premises.is_empty() => lean_rational_builtin_proof(proposition, context),
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::DefinitionReduction { definition },
+                premises,
+                ..
+            } if premises.is_empty() => Ok(format!("by\n  simp [{}]", lean_name(definition))),
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                premises,
+                ..
+            } => self.lean_equality_rewrite(proposition, rewrite, premises, context),
+            FactProofToLeanIR::RuleApplication { rule, .. } => Err(to_lean_error(
                 &proposition.line_file(),
-                format!(
-                    "To-Lean has no checked backend for {:?} builtin proof {:?}",
-                    kind, rule
-                ),
+                format!("To-Lean has no checked backend for proof rule {:?}", rule),
             )),
-            FactProofToLeanIR::Definition { name } => {
-                Ok(format!("by\n  simp [{}]", lean_name(name)))
-            }
             FactProofToLeanIR::ForallIntroduction {
-                parameter_assumptions: _,
-                assumptions,
+                parameter_premises: _,
+                premises,
                 conclusions,
-            } => self.lean_forall_introduction(proposition, assumptions, conclusions),
+            } => self.lean_forall_introduction(proposition, premises, conclusions, context),
             FactProofToLeanIR::Memo { proof } => self.lean_proof(proposition, proof, context),
             FactProofToLeanIR::Composite { steps } if steps.len() == 1 => {
                 self.lean_proof(&steps[0].proposition, &steps[0].proof, context)
@@ -259,10 +269,6 @@ impl LeanEmitter {
                 &proposition.line_file(),
                 "trusted proof cannot be emitted as a theorem",
             )),
-            FactProofToLeanIR::Assumption => Err(to_lean_error(
-                &proposition.line_file(),
-                "a local assumption escaped its proof scope",
-            )),
             FactProofToLeanIR::Composite { .. } => Err(to_lean_error(
                 &proposition.line_file(),
                 "To-Lean does not yet lower multi-step composite evidence",
@@ -281,21 +287,24 @@ impl LeanEmitter {
             }
         }
         match &fact.proof {
-            FactProofToLeanIR::KnownFact { source_fact_id } => {
+            FactProofToLeanIR::KnownFactCitation { source_fact_id } => {
                 self.available_fact_name(*source_fact_id, &fact.proposition, context)
             }
-            FactProofToLeanIR::KnownForall {
-                source_fact_id,
-                arguments,
-                parameter_requirements: _,
-                requirements,
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::KnownForallInstantiation {
+                        source_fact_id,
+                        arguments,
+                    },
+                premises,
+                ..
             } => {
                 let mut terms =
                     vec![self.available_fact_name(*source_fact_id, &fact.proposition, context)?];
                 for argument in arguments {
                     terms.push(lean_obj(&argument.argument)?);
                 }
-                for requirement in requirements {
+                for requirement in premises {
                     terms.push(self.lean_proof_term(requirement, context)?);
                 }
                 Ok(format!("({})", terms.join(" ")))
@@ -331,11 +340,94 @@ impl LeanEmitter {
         ))
     }
 
+    fn lean_equality_rewrite(
+        &self,
+        proposition: &Fact,
+        rewrite: &EqualityRewriteToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != rewrite.steps.len() + 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "equality rewrite expected {} premises but received {}",
+                    rewrite.steps.len() + 1,
+                    premises.len()
+                ),
+            ));
+        }
+
+        let source = &premises[0];
+        let mut lines = vec!["by".to_string()];
+        lines.push(format!(
+            "  have h_transport : {} := {}",
+            lean_fact(&source.proposition)?,
+            self.lean_proof_term(source, context)?
+        ));
+        let mut rewrite_terms = Vec::with_capacity(rewrite.steps.len());
+        let mut seen_equalities = HashSet::new();
+        for (step, equality_premise) in rewrite.steps.iter().zip(premises[1..].iter()) {
+            let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &equality_premise.proposition
+            else {
+                return Err(to_lean_error(
+                    &equality_premise.proposition.line_file(),
+                    "an equality-rewrite premise is not an equality fact",
+                ));
+            };
+            let left_key = obj_equality_key(&equality.left);
+            let right_key = obj_equality_key(&equality.right);
+            let from_key = obj_equality_key(&step.from);
+            let to_key = obj_equality_key(&step.to);
+            let orientation_matches = match step.direction {
+                EqualityRewriteDirectionToLeanIR::Forward => {
+                    from_key == left_key && to_key == right_key
+                }
+                EqualityRewriteDirectionToLeanIR::Backward => {
+                    from_key == right_key && to_key == left_key
+                }
+            };
+            if !orientation_matches {
+                return Err(to_lean_error(
+                    &equality_premise.proposition.line_file(),
+                    format!(
+                        "equality rewrite step `{}` -> `{}` disagrees with premise `{}`",
+                        step.from, step.to, equality_premise.proposition
+                    ),
+                ));
+            }
+            if !seen_equalities.insert(equality_premise.proposition.to_string()) {
+                continue;
+            }
+            let local_name = format!("h_rewrite_{}", rewrite_terms.len() + 1);
+            lines.push(format!(
+                "  have {} : {} := {}",
+                local_name,
+                lean_fact(&equality_premise.proposition)?,
+                self.lean_proof_term(equality_premise, context)?
+            ));
+            // Normalize both the cited proposition and the target toward one
+            // deterministic representative. This also handles one equality
+            // being used in opposite directions at different occurrences.
+            rewrite_terms.push(if left_key <= right_key {
+                local_name
+            } else {
+                format!("← {}", local_name)
+            });
+        }
+        lines.push(format!(
+            "  simpa only [{}] using h_transport",
+            rewrite_terms.join(", ")
+        ));
+        Ok(lines.join("\n"))
+    }
+
     fn lean_forall_introduction(
         &self,
         proposition: &Fact,
-        assumptions: &[FactToLeanIR],
+        premises: &[LocalPremiseToLeanIR],
         conclusions: &[FactToLeanIR],
+        parent_context: &LeanProofContext,
     ) -> Result<String, RuntimeError> {
         let Fact::ForallFact(forall) = proposition else {
             return Err(to_lean_error(
@@ -350,22 +442,19 @@ impl LeanEmitter {
             ));
         }
 
-        let mut context = LeanProofContext::default();
+        let mut context = parent_context.clone();
         let mut intro_names = forall
             .params_def_with_type
             .groups
             .iter()
             .flat_map(|group| group.params.iter().map(|binding| lean_name(binding.name())))
             .collect::<Vec<_>>();
-        for (index, assumption) in assumptions.iter().enumerate() {
-            let local_name = assumption
-                .fact_id
-                .map(lean_local_fact_name)
-                .unwrap_or_else(|| format!("h_tmp_{}", index + 1));
-            if let Some(fact_id) = assumption.fact_id {
-                context.local_fact_names.insert(fact_id, local_name.clone());
-            }
-            if is_nonzero_fact(&assumption.proposition) {
+        for premise in premises.iter() {
+            let local_name = lean_local_fact_name(premise.fact_id);
+            context
+                .local_fact_names
+                .insert(premise.fact_id, local_name.clone());
+            if is_nonzero_fact(&premise.fact) {
                 context.nonzero_names.push(local_name.clone());
             }
             intro_names.push(local_name);
@@ -945,26 +1034,29 @@ forall a, b, x R:
             };
             assert!(matches!(
                 underlying_test_proof(&by_definition.fact.proof),
-                FactProofToLeanIR::Definition { name } if name == "is_one"
+                FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::DefinitionReduction { definition },
+                    ..
+                } if definition == "is_one"
             ));
 
             let StmtToLeanIR::Fact(local_requirement_forall) = &statement_irs[4] else {
                 panic!("fifth IR item should be a forall fact");
             };
             let FactProofToLeanIR::ForallIntroduction {
-                assumptions,
+                premises,
                 conclusions,
                 ..
             } = &local_requirement_forall.fact.proof
             else {
                 panic!("sixth fact should retain forall-introduction evidence");
             };
-            assert_eq!(assumptions.len(), 2);
-            let local_nonzero_id = assumptions[0].fact_id.expect("local nonzero FactId");
-            let FactProofToLeanIR::KnownForall {
-                source_fact_id,
+            assert_eq!(premises.len(), 2);
+            let local_nonzero_id = premises[0].fact_id;
+            let FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::KnownForallInstantiation { source_fact_id, .. },
                 parameter_requirements,
-                requirements,
+                premises: requirements,
                 ..
             } = underlying_test_proof(&conclusions[0].proof)
             else {
@@ -975,7 +1067,7 @@ forall a, b, x R:
             assert_eq!(requirements.len(), 1);
             assert!(matches!(
                 underlying_test_proof(&requirements[0].proof),
-                FactProofToLeanIR::KnownFact { source_fact_id }
+                FactProofToLeanIR::KnownFactCitation { source_fact_id }
                     if *source_fact_id == local_nonzero_id
             ));
 
@@ -983,28 +1075,26 @@ forall a, b, x R:
                 panic!("sixth IR item should be a fact");
             };
             let FactProofToLeanIR::ForallIntroduction {
-                parameter_assumptions,
-                assumptions,
+                parameter_premises,
+                premises,
                 conclusions,
             } = &forall.fact.proof
             else {
                 panic!("last fact should retain forall-introduction evidence");
             };
-            assert_eq!(parameter_assumptions.len(), 3);
-            assert!(parameter_assumptions
-                .iter()
-                .all(|assumption| assumption.fact_id.is_some()));
-            assert_eq!(assumptions.len(), 1);
-            assert!(assumptions[0].fact_id.is_some());
+            assert_eq!(parameter_premises.len(), 3);
+            assert_eq!(premises.len(), 1);
             let forall_id = forall.fact.fact_id.expect("stored forall must have an ID");
-            assert!(parameter_assumptions
+            assert!(parameter_premises
                 .iter()
-                .chain(assumptions.iter())
-                .all(|assumption| assumption.fact_id.expect("local fact ID") < forall_id));
+                .chain(premises.iter())
+                .all(|premise| premise.fact_id < forall_id));
             assert!(matches!(
                 underlying_test_proof(&conclusions[0].proof),
-                FactProofToLeanIR::Builtin {
-                    rule: BuiltinRuleToLeanIR::RationalExpressionSimplification,
+                FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::Normalization {
+                        kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                    },
                     ..
                 }
             ));
@@ -1025,22 +1115,182 @@ forall a, b, x R:
     }
 
     #[test]
-    fn temporary_forall_assumption_is_emitted_as_local_exact() {
-        run_with_large_stack(
-            "temporary_forall_assumption_is_emitted_as_local_exact",
-            || {
-                let output = to_lean_from_source(
-                    "forall x R:\n    x != 0\n    =>:\n        x != 0",
-                    "temporary-local-fact",
-                )
-                .unwrap();
+    fn temporary_forall_premise_is_emitted_as_local_exact() {
+        run_with_large_stack("temporary_forall_premise_is_emitted_as_local_exact", || {
+            let output = to_lean_from_source(
+                "forall x R:\n    x != 0\n    =>:\n        x != 0",
+                "temporary-local-fact",
+            )
+            .unwrap();
 
-                assert!(output.contains("intro x h_f"));
-                assert!(output.contains("exact h_f"));
+            assert!(output.contains("intro x h_f"));
+            assert!(output.contains("exact h_f"));
+            assert!(!output.contains("axiom"));
+            assert!(!output.contains("sorry"));
+        });
+    }
+
+    #[test]
+    fn local_atomic_fact_is_transported_by_recorded_equality_rule() {
+        run_with_large_stack(
+            "local_atomic_fact_is_transported_by_recorded_equality_rule",
+            || {
+                let source = r#"
+abstract_prop p(a)
+
+forall a, b set:
+    $p(a)
+    a = b
+    =>:
+        $p(b)
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("equality-transport-ir");
+                runtime.replace_to_lean_mode(true);
+                let tokenizer = Tokenizer::new();
+                let blocks = tokenizer
+                    .parse_blocks(source, runtime.current_file_path_rc())
+                    .unwrap();
+                let mut statement_irs = Vec::new();
+                for mut block in blocks {
+                    let statement = runtime.parse_stmt(&mut block).unwrap();
+                    let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                    statement_irs.push(result.to_lean_ir().unwrap().clone());
+                }
+
+                let StmtToLeanIR::Fact(forall) = &statement_irs[1] else {
+                    panic!("second IR item should be the forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction {
+                    premises: local_premises,
+                    conclusions,
+                    ..
+                } = &forall.fact.proof
+                else {
+                    panic!("forall should retain introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                    premises: rewrite_premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("conclusion should retain equality-rewrite evidence");
+                };
+                assert_eq!(rewrite.steps.len(), 1);
+                assert_eq!(rewrite_premises.len(), 2);
+                assert_eq!(
+                    rewrite.steps[0].direction,
+                    EqualityRewriteDirectionToLeanIR::Forward
+                );
+                assert!(rewrite_premises.iter().all(|premise| {
+                    premise.fact_id.is_some_and(|fact_id| {
+                        local_premises.iter().any(|local| local.fact_id == fact_id)
+                    })
+                }));
+
+                let output = to_lean_from_source(source, "equality-transport-output").unwrap();
+                assert!(output.contains("have h_transport : p a := h_f"));
+                assert!(output.contains("have h_rewrite_1 : a = b := h_f"));
+                assert!(output.contains("simpa only [h_rewrite_1] using h_transport"));
                 assert!(!output.contains("axiom"));
                 assert!(!output.contains("sorry"));
             },
         );
+    }
+
+    #[test]
+    fn equality_transport_normalizes_reverse_and_repeated_edges() {
+        run_with_large_stack(
+            "equality_transport_normalizes_reverse_and_repeated_edges",
+            || {
+                let source = r#"
+abstract_prop q(x)
+abstract_prop related(x, y)
+
+forall a, b, c set:
+    $q(c)
+    a = b
+    b = c
+    =>:
+        $q(a)
+
+forall a, b set:
+    $related(a, b)
+    a = b
+    =>:
+        $related(b, a)
+"#;
+                let output = to_lean_from_source(source, "multi-equality-transport").unwrap();
+
+                assert!(output.contains("have h_transport : q c := h_f"));
+                assert!(output.contains("simpa only [h_rewrite_1, h_rewrite_2] using h_transport"));
+                let related_proof = output
+                    .split("have h_transport : related a b")
+                    .nth(1)
+                    .expect("binary transport proof");
+                assert_eq!(
+                    related_proof
+                        .split("simpa only")
+                        .next()
+                        .unwrap()
+                        .matches("have h_rewrite_")
+                        .count(),
+                    1,
+                    "one equality used at two argument positions should be emitted once"
+                );
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn unstructured_fact_transport_is_an_explicit_unsupported_rule() {
+        run_with_large_stack(
+            "unstructured_fact_transport_is_an_explicit_unsupported_rule",
+            || {
+                let source = "forall a, b R:\n    a > b\n    =>:\n        b < a";
+                let error = to_lean_from_source(source, "unstructured-transport")
+                    .expect_err("an unrecorded transport must stop emission")
+                    .trace_message();
+
+                assert!(error.contains("OtherUnsupported"));
+                assert!(error.contains("without structured rewrite evidence"));
+            },
+        );
+    }
+
+    #[test]
+    fn direct_fact_citation_can_reference_a_forall_fact() {
+        run_with_large_stack("direct_fact_citation_can_reference_a_forall_fact", || {
+            let source = "forall x R:\n    x = x\n\nforall x R:\n    x = x";
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("forall-citation-route");
+            runtime.replace_to_lean_mode(true);
+            let tokenizer = Tokenizer::new();
+            let blocks = tokenizer
+                .parse_blocks(source, runtime.current_file_path_rc())
+                .unwrap();
+            let mut statement_irs = Vec::new();
+            for mut block in blocks {
+                let statement = runtime.parse_stmt(&mut block).unwrap();
+                let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                statement_irs.push(result.to_lean_ir().unwrap().clone());
+            }
+
+            let StmtToLeanIR::Fact(first) = &statement_irs[0] else {
+                panic!("first IR item should be a forall fact");
+            };
+            let first_id = first.fact.fact_id.expect("first forall must have an ID");
+            let StmtToLeanIR::Fact(second) = &statement_irs[1] else {
+                panic!("second IR item should be a cited forall fact");
+            };
+            assert!(matches!(
+                underlying_test_proof(&second.fact.proof),
+                FactProofToLeanIR::KnownFactCitation { source_fact_id }
+                    if *source_fact_id == first_id
+            ));
+        });
     }
 
     #[test]
@@ -1140,6 +1390,29 @@ $marked(1)
             let project = std::env::var("LITEX_LEAN_PROJECT")
                 .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
             let source = r#"
+abstract_prop transported(a)
+
+forall a, b set:
+    $transported(a)
+    a = b
+    =>:
+        $transported(b)
+
+abstract_prop related(x, y)
+
+forall a, b set:
+    $related(a, b)
+    a = b
+    =>:
+        $related(b, a)
+
+forall a, b, c set:
+    $transported(c)
+    a = b
+    b = c
+    =>:
+        $transported(a)
+
 abstract_prop marked(x)
 
 prop is_one(x R):
