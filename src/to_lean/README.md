@@ -18,7 +18,8 @@ emitter accepts only that IR.
   stable IDs rather than matching later by display text.
 - Local proof premises are distinguished from trusted facts. When a local
   premise was stored in a temporary environment, its ID survives in the
-  returned proof IR and becomes a Lean name such as `h_f18`.
+  returned proof IR. The emitter maps it to a proof-space coordinate such as
+  `proof_fact_2_3`; that coordinate is not the temporary Litex `FactId`.
 
 The environment cache deliberately stores only `FactId` plus the existing
 source location. Proof trees, origins, inferred consequences, local/global Lean
@@ -107,12 +108,17 @@ The current lowering is intentionally small:
 - a typed `prop` over the currently supported `R`/set parameter surface becomes
   `def` (or `opaque` when it has no body);
 - only an explicit Litex `trust` becomes Lean `axiom`;
-- stored proved facts become `theorem litex_fact_<id>`;
+- stored proved facts become `theorem global_fact_<FactId>`;
 - known-forall application uses the cited `FactId` directly;
 - definition evidence uses the named Lean definition;
-- forall introduction creates local hypotheses named from temporary FactIds;
-- equality transport proves the cited source and every equality edge, then
-  closes the target with a checked `simpa only [...] using ...`;
+- each generated proof block lazily receives a `SpaceId`; introduced premises
+  and intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>`;
+- a nested proof block inherits visible outer facts; when it first introduces
+  a named fact, it receives a fresh `SpaceId` and starts its `LocalIndex` at
+  one;
+- equality transport replays its source, equality edges, and result as
+  consecutive `proof_fact` values, with the result checked by
+  `simpa only [...] using ...`;
 - verified rational-expression normalization is discharged with `norm_num`,
   `ring`, or `field_simp` followed by `ring`.
 
@@ -157,7 +163,9 @@ cargo test --release run_tmp0_to_lean -- --nocapture
 ```
 
 The source file is left unchanged when verification or Lean generation fails.
-Each successful run appends a new generated snapshot at the end of the file.
+Before writing a successful snapshot, the command removes the last
+triple-quoted block when that block is at the end of the file. Triple-quoted
+blocks elsewhere in the source are preserved.
 
 Implementation lives in `src/to_lean_ir`,
 `src/runtime/runtime_to_lean_ir.rs`, and `src/to_lean`.

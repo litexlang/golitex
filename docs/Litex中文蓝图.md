@@ -268,16 +268,18 @@ abbrev LitexSet := Type uLitex
 abbrev LitexFact := Prop
 
 -- Litex stored fact f19
-theorem litex_fact_19 : ∀ (a b c : LitexSet), a ≠ c → a = b → b ≠ c := by
-  intro a b c h_f10 h_f11
-  have h_transport : a ≠ c := h_f10
-  have h_rewrite_1 : a = b := h_f11
-  simpa only [h_rewrite_1] using h_transport
+theorem global_fact_19 : ∀ (a b c : LitexSet), a ≠ c → a = b → b ≠ c := by
+  intro a b c proof_fact_1_1 proof_fact_1_2
+  have proof_fact_1_3 : a ≠ c := proof_fact_1_1
+  have proof_fact_1_4 : a = b := proof_fact_1_2
+  have proof_fact_1_5 : b ≠ c := by
+    simpa only [proof_fact_1_4] using proof_fact_1_3
+  exact proof_fact_1_5
 
 end tmp
 ```
 
-这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`intro` 引入三个 `forall` 参数以及两个局部前提；`h_transport` 保留待运输的已知事实 `a ≠ c`；`h_rewrite_1` 保留用于替换的等式 `a = b`；最后 `simpa only [h_rewrite_1] using h_transport` 沿该等式把 `a ≠ c` 改写成 `b ≠ c`。相应的 proof IR 记录了 `forall` introduction、两个局部事实的 ID、一次正向 equality rewrite，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
+这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`global_fact_19` 携带 env 中存储的 Litex `FactId`。在它的证明内，`intro` 引入三个 `forall` 参数以及证明空间 1 中的前两个事实；`proof_fact_1_3` 复读待运输的已知事实 `a ≠ c`；`proof_fact_1_4` 复读用于替换的等式 `a = b`；最后，`proof_fact_1_5` 由 `simpa only [proof_fact_1_4] using proof_fact_1_3` 检查，沿该等式把 `a ≠ c` 改写成 `b ≠ c`。如果再进入嵌套证明块，它会继承外层可见事实；当该块再引入有名事实时，它会获得新的空间号，并把自己的局部事实编号重新从 1 开始。相应的 proof IR 记录了 `forall` introduction、两个局部事实的 ID、一次正向 equality rewrite，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
 
 对于 builtin rule、已知 `forall` 的实例化、计算以及更深的组合证明，proof IR 也应当递归保留相应依据和分支。Litex 为常见数学对象提供了丰富的自动验证路径；一旦某条成功路径被选定，其中每一步都有明确依据，并且应当可以被记录和重放。当前 To-Lean MVP 只覆盖其中一部分路径；不受支持的规则会停止编译，而不会退化成隐式 `axiom`、`sorry`，或伪装成已经证明。因此，“每条 Litex 验证都能编译成 Lean 并由 Lean kernel 接受”目前是正确性工作的目标，而不是已经完成的事实；当这一覆盖充分完整、翻译保持语义且编译器本身经过审计时，它将为 Litex 的验证结果提供很强的独立正确性保证。
 

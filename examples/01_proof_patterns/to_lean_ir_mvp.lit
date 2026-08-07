@@ -13,7 +13,10 @@
 # FactId" and had no record that `a = b` transported the cited fact to the
 # target `$transported(b)`.
 #
-# Now (verified):
+# Now (verified): To-Lean emits stored facts as `global_fact_<FactId>`. Every
+# proof block that introduces facts gets a separate space, whose premises and
+# intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>` in
+# derivation order.
 abstract_prop transported(a)
 
 forall a, b set:
@@ -53,7 +56,9 @@ forall a, b, x R:
 # Current behavior: the verifier retains the ordered equality path and local
 # premise FactIds. To-Lean represents the conclusion as a `RuleApplication`
 # containing `EqualityRewrite`, a cited source-fact premise, and equality-proof
-# premises. The same extensible rule node also represents definition reduction,
+# premises. The emitter then gives the introduced premises, replayed source,
+# equality evidence, and checked result consecutive coordinates in that proof
+# space. The same extensible rule node also represents definition reduction,
 # known-forall application, and normalization. Only explicit `trust` becomes
 # `axiom`.
 #

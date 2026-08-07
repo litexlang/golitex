@@ -165,12 +165,22 @@ fn run_tmp0_to_lean() {
 
 #[test]
 fn wraps_generated_lean_at_end_of_tmp_source() {
-    let updated_source = source_with_generated_lean("1 + 1 = 2\n", "import Mathlib\n");
+    let source = "1 + 1 = 2\n\n\n\"\"\"\nold generated Lean\n\"\"\"\n";
+    let updated_source = source_with_generated_lean(source, "import Mathlib\n");
 
     assert_eq!(
         updated_source,
         "1 + 1 = 2\n\n\n\"\"\"\nimport Mathlib\n\"\"\"\n"
     );
+}
+
+#[test]
+fn keeps_nontrailing_triple_quoted_blocks() {
+    let source = "\"\"\"\nsource note\n\"\"\"\n\n1 + 1 = 2\n";
+    let updated_source = source_with_generated_lean(source, "import Mathlib\n");
+
+    assert!(updated_source.starts_with("\"\"\"\nsource note\n\"\"\"\n"));
+    assert!(updated_source.ends_with("\"\"\"\nimport Mathlib\n\"\"\"\n"));
 }
 
 #[test]
@@ -217,9 +227,39 @@ fn tmp_lit_path(file_name: &str) -> PathBuf {
 }
 
 fn source_with_generated_lean(source: &str, generated_lean: &str) -> String {
+    let source = source_without_trailing_triple_quoted_block(source);
     format!(
         "{}\n\n\n\"\"\"\n{}\n\"\"\"\n",
         source.trim_end(),
         generated_lean.trim_end()
     )
+}
+
+fn source_without_trailing_triple_quoted_block(source: &str) -> &str {
+    let trimmed_source = source.trim_end();
+    let Some(before_closing_delimiter) = trimmed_source.strip_suffix("\"\"\"") else {
+        return source;
+    };
+    let closing_delimiter_start = before_closing_delimiter.len();
+    if closing_delimiter_start > 0
+        && trimmed_source.as_bytes()[closing_delimiter_start - 1] != b'\n'
+    {
+        return source;
+    }
+
+    let mut search_end = before_closing_delimiter.len();
+    while let Some(opening_delimiter_start) = before_closing_delimiter[..search_end].rfind("\"\"\"")
+    {
+        let starts_line = opening_delimiter_start == 0
+            || before_closing_delimiter.as_bytes()[opening_delimiter_start - 1] == b'\n';
+        let after_opening_delimiter = &before_closing_delimiter[opening_delimiter_start + 3..];
+        let ends_line = after_opening_delimiter.starts_with('\n')
+            || after_opening_delimiter.starts_with("\r\n");
+        if starts_line && ends_line {
+            return &source[..opening_delimiter_start];
+        }
+        search_end = opening_delimiter_start;
+    }
+
+    source
 }
