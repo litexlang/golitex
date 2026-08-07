@@ -554,10 +554,13 @@ impl Runtime {
             vec![atomic_fact_in_known_forall_fact.clone().into()],
             known_forall.line_file.clone(),
         )?;
+        let source_fact: Fact = verified_by_known_forall_fact.clone().into();
+        let source_fact_id = self.known_fact_id_for_fact(&source_fact)?;
         let fact_verified = FactualStmtSuccess::new_with_verified_by_known_fact(
             given_atomic_fact.clone().into(),
             VerifiedByResult::known_forall_instantiation(
-                verified_by_known_forall_fact.clone().into(),
+                source_fact,
+                source_fact_id,
                 instantiation,
                 requirements,
             ),

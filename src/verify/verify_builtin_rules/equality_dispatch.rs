@@ -171,6 +171,14 @@ impl Runtime {
         )? {
             return Ok(done);
         }
+        if let Some(done) = self.try_verify_mod_nested_divisible_modulus_absorption(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
+            return Ok(done);
+        }
         if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
             left,
             right,

@@ -2682,7 +2682,7 @@ write a smaller intermediate fact that exposes a supported shape.
 | Set relations | Set shape, nonemptiness, finiteness, subset and proper subset patterns |
 | Functions | Application equations, pointwise equality, global function equality, mapping properties |
 | Finite aggregates | Sizes, extrema, indexed sums/products, finite-set sums/products, pointwise product distribution, and bijective reindexing |
-| Modular arithmetic | Concrete remainders and standard congruence-preserving operations |
+| Modular arithmetic | Concrete remainders, congruence-preserving operations, and nested-remainder absorption when the outer modulus divides the inner modulus |
 | Structured objects | Tuples, Cartesian products, sequences, matrices, structs, and templates |
 
 ```litex
@@ -2803,7 +2803,12 @@ forall m Z:
     =>:
         0 % m = 0
 
+forall a Z:
+    a % 2 = (a % 8) % 2
 ```
+
+The second fact uses `2 | 8`. In general, `(a % m) % d = a % d` is automatic
+only when `a` is an integer, `m` and `d` are positive integers, and `m % d = 0`.
 
 Domain obligations are never supplied by an algebra rule:
 

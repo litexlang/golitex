@@ -1,108 +1,108 @@
-# To-Lean Rational Experiment
+# To-Lean IR MVP
 
-This module deliberately keeps the existing public entrypoints while replacing
-the former broad emitter with one small experiment: verified equalities over
-`R` are lowered recursively to rational-expression pairs and discharged in Lean
-with `norm_num` for closed numeric facts, `ring` for polynomial facts, or
-`field_simp` followed by `ring` when a symbolic denominator remains.
+To-Lean no longer re-reads a verified source statement and guesses a tactic
+from its syntax. The verifier produces a backend-facing proof IR; the Lean
+emitter accepts only that IR.
 
-## Tracer: chained numeric division
+## Execution contract
 
-### Before
+`Runtime` has an explicit `to_lean_mode` flag.
 
-```litex
-# 1 / 2 / 3 / 4 = 1 / 24
-```
+- Every fact admitted by runtime storage to an environment's known-fact cache
+  receives a runtime-unique `FactId`, in ordinary execution as well as compiler
+  execution. Display, nested-binder, and alpha-normalized cache aliases for one
+  stored fact share the same ID.
+- Ordinary execution leaves `StmtResult::to_lean_ir()` as `None`.
+- To-Lean mode attaches `Some(StmtToLeanIR)` only after successful statement
+  execution. Fact IR is assembled after storage, so its citations can carry
+  stable IDs rather than matching later by display text.
+- Local proof assumptions are distinguished from trusted facts. When a local
+  assumption was stored in a temporary environment, its ID survives in the
+  returned proof IR and becomes a Lean name such as `h_f18`.
 
-The recursive lowering already accepted this shape, but it had no dedicated
-regression and selected a generic `field_simp` fallback whose unused branches
-produced Lean linter warnings for a closed numeric fact.
+The environment cache deliberately stores only `FactId` plus the existing
+source location. Proof trees, origins, inferred consequences, local/global Lean
+names, and recursive dependencies live in statement results and To-Lean IR.
 
-### Now
+## Statement and proof IR
 
-```litex
-1 / 2 / 3 / 4 = 1 / 24
-```
+The MVP constructs four statement forms:
 
-Litex parses `/` left-associatively, so the left side is
-`(((1 / 2) / 3) / 4)`. The recursive lowering walks that actual object tree and
-produces the structural pair:
+- `AbstractProp`
+- `Prop`
+- `Trust`
+- `Fact`
 
-```text
-numerator   = 1
-denominator = (2 * 3) * 4
-```
+A fact contains its proposition, optional stored `FactId`, and a recursive
+`FactProofToLeanIR`. Proof routes are classified as trusted, local assumption,
+known fact, known-forall instantiation, builtin rule/strategy, definition,
+user strategy, composite proof, forall introduction, inference, statement memo,
+or explicitly unsupported.
 
-The right side produces `(1, 24)`. The generated Lean `calc` compares the two
-fractions with `norm_num`; it compiles without `sorry` and without warnings.
+Known-forall evidence retains typed argument objects. Parameter-type checks are
+kept separately from actual domain premises: Lean's binder type checks the
+former, while the latter are passed as proof arguments. Statement memoization
+is a transparent proof wrapper and does not erase the underlying route.
+For forall introduction, the corresponding temporary parameter-typing facts
+are likewise retained separately (with their IDs), even though the emitter
+realizes them through typed Lean binders rather than local proposition names.
+Cached citations and known-forall requirements capture their source `FactId`
+while the source environment is alive, so a temporary premise can remain a
+local Lean proof argument after its Litex scope has been popped.
 
-### Boundary
+## Lean surface
 
-This tracer locks nested division, not Rust-side canonical reduction: the
-translator deliberately retains `(2 * 3) * 4` rather than printing `24` itself.
-
-### Evidence
-
-```text
-target/release/litex -compact -runner -e '1 / 2 / 3 / 4 = 1 / 24'
-cargo test --release chained_numeric_division_reaches_the_recursive_fraction_pipeline -- --nocapture
-```
-
-## Tracer: recursive rational equality
-
-### Before
-
-Before, the general-purpose emitter recursively translated many unrelated Litex
-statement and object forms and selected a broad tactic mixture. The source below
-did not expose or use its recursively constructed fraction pair:
-
-```litex
-# forall a, b, x R:
-#     x != 0
-#     =>:
-#         (a + b) / x = a / x + b / x
-```
-
-Former behavior: the generated proof jumped directly to
-`field_simp [*] <;> ring <;> nlinarith` as one generic tactic choice.
-
-### Now
-
-```litex
-forall a, b, x R:
-    x != 0
-    =>:
-        (a + b) / x = a / x + b / x
-```
-
-The same verified fact is now the central supported case. The recursive lowering
-records `(numerator, denominator)` for each side and uses both pairs in a
-three-link Lean `calc` from the original left expression to the original right
-expression. Each link is checked with:
+Every generated file begins with:
 
 ```lean
-by
-  solve
-    | field_simp [h1]
-    | field_simp [h1] <;> ring
+universe u
+abbrev LitexSet := Type u
+abbrev LitexFact := Prop
 ```
 
-### Boundary
+The current lowering is intentionally small:
 
-This is not a general Litex-to-Lean compiler. It accepts only closed direct
-equalities and universal equalities with `R` parameters, plus explicit `!=`
-premises when symbolic denominators need them. Transcendental functions,
-definitions, claims, theorem bodies,
-conjunctions, and proof provenance are intentionally outside the experiment.
-The existence of a Litex verification result is not yet translated into a Lean
-proof certificate.
+- `abstract_prop` becomes a polymorphic `opaque` proposition;
+- a typed `prop` over the currently supported `R`/set parameter surface becomes
+  `def` (or `opaque` when it has no body);
+- only an explicit Litex `trust` becomes Lean `axiom`;
+- stored proved facts become `theorem litex_fact_<id>`;
+- known-forall application uses the cited `FactId` directly;
+- definition evidence uses the named Lean definition;
+- forall introduction creates local hypotheses named from temporary FactIds;
+- verified rational-expression normalization is discharged with `norm_num`,
+  `ring`, or `field_simp` followed by `ring`.
 
-### Evidence
+Unsupported proof rules, propositions, objects, parameter types, composite
+proofs, and inference origins stop compilation with an error. There is no
+fallback to `axiom` or `sorry`.
+
+The MVP also requires every cited global `FactId` to have been emitted earlier
+in the same IR stream. Facts preloaded during ordinary execution still have
+stable IDs, but compiling them through an external Lean library mapping is a
+future backend feature; an unresolved preloaded ID is rejected instead of
+becoming an undefined Lean name.
+
+## Active tracer
+
+[`examples/01_proof_patterns/to_lean_ir_mvp.lit`](../../examples/01_proof_patterns/to_lean_ir_mvp.lit)
+covers the full first vertical slice: abstract proposition, concrete
+proposition, trusted forall, known-forall instantiation, definition proof,
+temporary-assumption reuse, forall introduction, and rational builtin proof.
+
+Rust and Litex gates:
 
 ```text
-target/release/litex -compact -runner -e '<the active tracer above>'
 cargo test --release to_lean:: -- --nocapture
+target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/to_lean_ir_mvp.lit
 ```
 
-Implementation: `src/to_lean/rational_expression.rs` and
-`src/to_lean/to_lean_pipeline.rs`.
+Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
+
+```text
+LITEX_LEAN_PROJECT=/path/to/mathlib-project \
+  cargo test --release generated_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
+```
+
+Implementation lives in `src/to_lean_ir`,
+`src/runtime/runtime_to_lean_ir.rs`, and `src/to_lean`.

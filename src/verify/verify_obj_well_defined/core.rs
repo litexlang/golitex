@@ -247,8 +247,7 @@ impl Runtime {
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            let intermediate_line_file = intermediate_atomic_fact.line_file();
-            let intermediate_fact_string = intermediate_atomic_fact.to_string();
+            let intermediate_fact: Fact = intermediate_atomic_fact.clone().into();
             self.top_level_env()
                 .store_atomic_fact(intermediate_atomic_fact)
                 .map_err(|store_fact_error| {
@@ -262,8 +261,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-            self.top_level_env()
-                .store_fact_to_cache_known_fact(intermediate_fact_string, intermediate_line_file)
+            self.store_fact_cache_keys_with_nested_obj_binders(&intermediate_fact)
                 .map_err(|store_fact_error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(

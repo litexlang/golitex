@@ -81,7 +81,7 @@ pub struct Environment {
     pub known_antisymmetric_props: HashMap<String, ()>,
 
     pub cache_well_defined_obj: HashMap<ObjString, ()>,
-    pub cache_known_fact: HashMap<FactString, LineFile>,
+    pub cache_known_fact: HashMap<FactString, CachedKnownFact>,
     pub cache_infer_rule_firing: HashMap<String, ()>,
     /// Successful atomic subgoals reusable only while the current statement executes.
     pub statement_verified_atomic_facts: HashMap<FactString, Rc<FactualStmtSuccess>>,
@@ -147,7 +147,7 @@ impl Environment {
         known_obj_values: HashMap<ObjString, KnownObjValue>,
         known_set_builder_objs: HashMap<ObjString, (SetBuilder, LineFile)>,
         cache_known_valid_obj: HashMap<ObjString, ()>,
-        cache_known_fact: HashMap<FactString, LineFile>,
+        cache_known_fact: HashMap<FactString, CachedKnownFact>,
     ) -> Self {
         Environment {
             symbols: SymbolTable::new(),
@@ -797,14 +797,32 @@ impl Environment {
         &mut self,
         fact_key: FactString,
         fact_line_file: LineFile,
+        fact_id: FactId,
     ) -> Result<(), RuntimeError> {
-        self.cache_known_fact.insert(fact_key, fact_line_file);
+        self.cache_known_fact.insert(
+            fact_key,
+            CachedKnownFact {
+                fact_id,
+                line_file: fact_line_file,
+            },
+        );
         Ok(())
     }
 
     pub fn store_infer_rule_firing(&mut self, firing_key: String) {
         self.cache_infer_rule_firing.insert(firing_key, ());
     }
+}
+
+/// The deliberately small payload kept by the fact cache.
+///
+/// Proof trees, origins, scopes, and Lean names belong to statement results
+/// and the To-Lean IR. The environment only needs a stable identity and the
+/// source location already used by diagnostics.
+#[derive(Clone, Debug)]
+pub struct CachedKnownFact {
+    pub fact_id: FactId,
+    pub line_file: LineFile,
 }
 
 pub fn atomic_fact_in_forall_arg_shape_key(

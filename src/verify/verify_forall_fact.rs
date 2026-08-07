@@ -132,6 +132,7 @@ impl Runtime {
             self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
                 then_fact.clone(),
             )?;
+            self.attach_known_fact_ids_to_stmt_result(&mut result)?;
 
             if let Some(non_factual_success) = result.non_factual_success() {
                 infer_result.new_infer_result_inside(non_factual_success.infers.clone());
@@ -171,15 +172,17 @@ impl Runtime {
             return Ok(cached_result);
         }
         let alpha_normalized_key = self.alpha_normalized_forall_cache_key(forall_fact)?;
-        let (alpha_cached, cite_fact_source) =
-            self.cache_known_facts_contains(&alpha_normalized_key);
-        if alpha_cached {
+        let alpha_cached = self.cached_known_fact(&alpha_normalized_key).cloned();
+        if let Some(cached_fact) = alpha_cached {
             let fact: Fact = forall_fact.clone().into();
-            self.top_level_env()
-                .store_fact_to_cache_known_fact(fact.to_string(), cite_fact_source.clone())?;
+            self.top_level_env().store_fact_to_cache_known_fact(
+                fact.to_string(),
+                cached_fact.line_file.clone(),
+                cached_fact.fact_id,
+            )?;
             return Ok(FactualStmtSuccess::new_with_verified_by_known_fact(
                 fact.clone(),
-                VerifiedByResult::cached_fact(fact, cite_fact_source),
+                VerifiedByResult::cached_fact(fact, cached_fact.line_file, cached_fact.fact_id),
                 Vec::new(),
             )
             .into());
@@ -201,8 +204,9 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            let assumption_infer_result =
+            let mut assumption_infer_result =
                 rt.forall_assume_params_and_dom_in_current_env(forall_fact, verify_state)?;
+            rt.attach_known_fact_ids_to_infer_result(&mut assumption_infer_result)?;
             let mut infer_result = InferResult::new();
             rt.forall_verify_then_facts_in_current_env(
                 forall_fact,

@@ -35,6 +35,12 @@ pub struct Runtime {
     pub module_manager: Box<ModuleManager>,
     pub execution_stack: Vec<ExecutionFrame>,
     pub run_mode: RunMode,
+    /// Only compiler entry points enable this. Ordinary verification never
+    /// pays the cost of constructing To-Lean IR.
+    pub(crate) to_lean_mode: bool,
+    /// Monotone runtime-wide allocator. Local environments may disappear, but
+    /// a fact ID is never reused during the run.
+    pub(crate) next_fact_id: u64,
     /// Parameters that the active recursive fact matcher may instantiate.
     /// Captured parameters of the same object kind must remain rigid.
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
@@ -78,6 +84,8 @@ impl Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
             run_mode: RunMode::File,
+            to_lean_mode: false,
+            next_fact_id: 1,
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
             active_well_defined_objects: HashSet::new(),
@@ -104,6 +112,24 @@ impl Runtime {
 }
 
 impl Runtime {
+    pub fn to_lean_mode(&self) -> bool {
+        self.to_lean_mode
+    }
+
+    pub fn replace_to_lean_mode(&mut self, enabled: bool) -> bool {
+        std::mem::replace(&mut self.to_lean_mode, enabled)
+    }
+
+    pub(crate) fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {
+        let value = self.next_fact_id;
+        self.next_fact_id = value.checked_add(1).ok_or_else(|| {
+            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                "fact ID space exhausted".to_string(),
+            )))
+        })?;
+        Ok(FactId::new(value))
+    }
+
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
         self.output_style = output_style;
         self.detail_output = output_style == OutputStyle::Detailed;

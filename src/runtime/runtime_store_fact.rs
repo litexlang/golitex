@@ -282,7 +282,6 @@ impl Runtime {
         }
         let line_file = fact.line_file();
         let fact_string: FactString = fact.to_string();
-        let nested_obj_binder_key = nested_obj_binder_normalized_fact_key(&fact);
         let alpha_normalized_forall_key = match &fact {
             Fact::ForallFact(forall_fact) => {
                 Some(self.alpha_normalized_forall_cache_key(forall_fact)?)
@@ -302,16 +301,11 @@ impl Runtime {
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
-        self.top_level_env()
-            .store_fact_to_cache_known_fact(fact_string.clone(), line_file.clone())?;
-        if nested_obj_binder_key != fact_string {
-            self.top_level_env()
-                .store_fact_to_cache_known_fact(nested_obj_binder_key, line_file.clone())?;
-        }
+        let fact_id = self.store_fact_cache_keys_with_nested_obj_binders(&fact_for_infer)?;
         if let Some(alpha_key) = alpha_normalized_forall_key {
             if alpha_key != fact_string {
                 self.top_level_env()
-                    .store_fact_to_cache_known_fact(alpha_key, line_file)?;
+                    .store_fact_to_cache_known_fact(alpha_key, line_file, fact_id)?;
             }
         }
 
@@ -498,17 +492,27 @@ impl Runtime {
     pub(crate) fn store_fact_cache_keys_with_nested_obj_binders(
         &mut self,
         fact: &Fact,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<FactId, RuntimeError> {
         let line_file = fact.line_file();
         let fact_string = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
-        self.top_level_env()
-            .store_fact_to_cache_known_fact(fact_string.clone(), line_file.clone())?;
+        let fact_id = self
+            .known_fact_id_for_fact(fact)?
+            .map(Ok)
+            .unwrap_or_else(|| self.allocate_fact_id())?;
+        self.top_level_env().store_fact_to_cache_known_fact(
+            fact_string.clone(),
+            line_file.clone(),
+            fact_id,
+        )?;
         if normalized_key != fact_string {
-            self.top_level_env()
-                .store_fact_to_cache_known_fact(normalized_key, line_file)?;
+            self.top_level_env().store_fact_to_cache_known_fact(
+                normalized_key,
+                line_file,
+                fact_id,
+            )?;
         }
-        Ok(())
+        Ok(fact_id)
     }
 
     /// Mathematical contract: store a fact without deriving consequences only

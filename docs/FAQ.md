@@ -280,6 +280,10 @@ write every bridge by hand: convert `x > y` to `y < x`, convert that to
 instead lets the user write the meaningful step while the verifier handles a
 bounded amount of common background reasoning.
 
+For example, Litex verifies `(a % 8) % 2 = a % 2` for `a Z` because the outer
+modulus `2` divides the inner modulus `8`. It does not generalize this to
+incompatible moduli such as `3` and `8`.
+
 That bound is structural rather than a node budget. A direct builtin rule is
 one layer deep: its premises may cite known non-`forall` atomic facts or use
 deterministic computation, but cannot run another builtin rule. Separate

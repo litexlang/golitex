@@ -37,9 +37,10 @@ pub use runtime_success::{
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
     ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
     FactualStmtSuccess, ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
-    KnownForallInstantiationResult, KnownForallRequirementResult, NonFactualStmtSuccess,
-    ObjectIntroductionItem, TheoremVerificationResult, VerifiedByBuiltinRuleResult,
-    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
+    KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
+    NonFactualStmtSuccess, ObjectIntroductionItem, TheoremVerificationResult,
+    VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum,
+    VerifiedBysResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

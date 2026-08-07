@@ -5,6 +5,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
+    pub to_lean_ir: Option<StmtToLeanIR>,
     pub infers: InferResult,
     /// Stored facts selected for ordinary statement output. Most statements keep
     /// their environment effects in the detailed execution trace only; value-
@@ -196,23 +197,45 @@ pub struct VerifiedByBuiltinRuleResult {
 pub struct VerifiedByFactResult {
     pub detail: Option<String>,
     pub cite_what: Box<Stmt>,
+    /// Captured while the cited fact's environment is still alive.
+    pub source_fact_id: Option<FactId>,
 }
 
-#[derive(Debug)]
 pub struct KnownForallInstantiationItem {
     pub param: String,
     pub arg: String,
+    /// Typed verifier output retained for compilers. `arg` remains the stable
+    /// user-facing rendering used by existing diagnostics and JSON.
+    pub arg_obj: Obj,
+}
+
+impl fmt::Debug for KnownForallInstantiationItem {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("KnownForallInstantiationItem")
+            .field("param", &self.param)
+            .field("arg", &self.arg)
+            .finish()
+    }
 }
 
 #[derive(Debug)]
 pub struct KnownForallRequirementResult {
     pub stmt: Fact,
     pub result: Box<StmtResult>,
+    pub kind: KnownForallRequirementKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum KnownForallRequirementKind {
+    ParameterType,
+    Domain,
 }
 
 #[derive(Debug)]
 pub struct KnownForallInstantiationResult {
     pub cite_what: Box<Stmt>,
+    /// Captured while the source forall's environment is still alive.
+    pub source_fact_id: Option<FactId>,
     pub instantiation: Vec<KnownForallInstantiationItem>,
     pub requirements: Vec<KnownForallRequirementResult>,
 }
@@ -245,6 +268,7 @@ pub struct FactVerifiedByFactInVerifiedBys {
     pub detail: Option<String>,
     pub verify_what: Fact,
     pub cite_what: Box<Stmt>,
+    pub source_fact_id: Option<FactId>,
 }
 
 #[derive(Debug)]
@@ -278,6 +302,10 @@ pub enum VerifiedByResult {
 #[derive(Debug)]
 pub struct FactualStmtSuccess {
     pub stmt: Fact,
+    /// Filled when this proved fact has actually been stored. Verification-only
+    /// subgoals legitimately keep `None`.
+    pub fact_id: Option<FactId>,
+    pub to_lean_ir: Option<StmtToLeanIR>,
     pub infers: InferResult,
     pub verified_by: VerifiedByResult,
     pub execution_trace: Option<StatementExecutionTrace>,
@@ -291,6 +319,8 @@ impl FactualStmtSuccess {
     ) -> Self {
         FactualStmtSuccess {
             stmt,
+            fact_id: None,
+            to_lean_ir: None,
             infers,
             verified_by,
             execution_trace: None,
@@ -346,6 +376,8 @@ impl FactualStmtSuccess {
         let verified_by = merge_verified_by_with_steps(stmt.clone(), verified_by, step_results);
         FactualStmtSuccess {
             stmt,
+            fact_id: None,
+            to_lean_ir: None,
             infers,
             verified_by,
             execution_trace: None,
@@ -416,16 +448,19 @@ impl VerifiedByResult {
         Self::Fact(VerifiedByFactResult {
             detail,
             cite_what: Box::new(cite_what),
+            source_fact_id: None,
         })
     }
 
     pub fn known_forall_instantiation(
         cite_what: Fact,
+        source_fact_id: Option<FactId>,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<KnownForallRequirementResult>,
     ) -> Self {
         Self::KnownForallInstantiation(KnownForallInstantiationResult::new(
             cite_what.into_stmt(),
+            source_fact_id,
             instantiation,
             requirements,
         ))
@@ -437,11 +472,12 @@ impl VerifiedByResult {
         Self::cited_fact(goal, cite_what, msg)
     }
 
-    pub fn cached_fact(fact: Fact, cite_fact_source: LineFile) -> Self {
+    pub fn cached_fact(fact: Fact, cite_fact_source: LineFile, source_fact_id: FactId) -> Self {
         let cite_what = fact.with_line_file(cite_fact_source);
         Self::Fact(VerifiedByFactResult {
             detail: None,
             cite_what: Box::new(cite_what.into_stmt()),
+            source_fact_id: Some(source_fact_id),
         })
     }
 
@@ -514,6 +550,7 @@ impl VerifiedBysEnum {
             detail,
             verify_what,
             cite_what: Box::new(cite_what),
+            source_fact_id: None,
         })
     }
 
@@ -541,7 +578,12 @@ impl VerifiedBysEnum {
                 vec![Self::builtin_strategy(r.msg, verify_what, r.subgoals)]
             }
             VerifiedByResult::Fact(r) => {
-                vec![Self::cited_stmt(verify_what, *r.cite_what, r.detail)]
+                vec![VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {
+                    detail: r.detail,
+                    verify_what,
+                    cite_what: r.cite_what,
+                    source_fact_id: r.source_fact_id,
+                })]
             }
             VerifiedByResult::KnownForallInstantiation(r) => {
                 vec![Self::known_forall_instantiation(verify_what, r)]
@@ -573,16 +615,21 @@ impl VerifiedBysEnum {
 }
 
 impl KnownForallInstantiationItem {
-    pub fn new(param: String, arg: String) -> Self {
-        KnownForallInstantiationItem { param, arg }
+    pub fn new(param: String, arg_obj: Obj) -> Self {
+        KnownForallInstantiationItem {
+            param,
+            arg: arg_obj.to_string(),
+            arg_obj,
+        }
     }
 }
 
 impl KnownForallRequirementResult {
-    pub fn new(stmt: Fact, result: StmtResult) -> Self {
+    pub fn new(stmt: Fact, result: StmtResult, kind: KnownForallRequirementKind) -> Self {
         KnownForallRequirementResult {
             stmt,
             result: Box::new(result),
+            kind,
         }
     }
 }
@@ -590,11 +637,13 @@ impl KnownForallRequirementResult {
 impl KnownForallInstantiationResult {
     pub fn new(
         cite_what: Stmt,
+        source_fact_id: Option<FactId>,
         instantiation: Vec<KnownForallInstantiationItem>,
         requirements: Vec<KnownForallRequirementResult>,
     ) -> Self {
         KnownForallInstantiationResult {
             cite_what: Box::new(cite_what),
+            source_fact_id,
             instantiation,
             requirements,
         }
@@ -653,6 +702,7 @@ impl NonFactualStmtSuccess {
     pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
         NonFactualStmtSuccess {
             stmt,
+            to_lean_ir: None,
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -671,6 +721,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
+            to_lean_ir: None,
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -689,6 +740,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
+            to_lean_ir: None,
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -707,6 +759,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
+            to_lean_ir: None,
             infers,
             reported_store_facts: vec![],
             inside_results,

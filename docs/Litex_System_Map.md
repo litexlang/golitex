@@ -204,6 +204,9 @@ builtin strategy   <-> user-defined strategy
 
 A builtin rule is the kernel-provided form of a universal fact application: it
 matches one target and asks for the fixed premises of that mathematical step.
+A representative arithmetic rule accepts `(a % m) % d = a % d` only after
+checking `a in Z`, `m,d in N+`, and the computational divisibility premise
+`m % d = 0`; an arbitrary pair of nested moduli is not absorbed.
 A builtin strategy is the kernel-provided form of a user strategy: it
 structurally transforms a target and may continue layer by layer while the
 strategy shape still applies. They differ from their user-defined counterparts

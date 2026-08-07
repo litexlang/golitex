@@ -1,0 +1,50 @@
+# Tracer: verifier-produced To-Lean IR with stable FactIds.
+#
+# Before (did not work):
+# To-Lean re-read each raw statement after execution and guessed a Lean tactic
+# from its syntax. Stored facts had no stable identity, so a later forall
+# instantiation could not say which checked fact it was applying.
+#
+# Now (verified):
+abstract_prop marked(x)
+
+prop is_one(x R):
+    x = 1
+
+trust forall x R:
+    x != 0
+    =>:
+        $marked(x)
+
+$is_one(1)
+
+forall x R:
+    x != 0
+    x < 10
+    =>:
+        $marked(x)
+
+forall x R:
+    x != 0
+    =>:
+        x != 0
+
+forall a, b, x R:
+    x != 0
+    =>:
+        (a + b) / x = a / x + b / x
+# Current behavior: facts admitted to the environment's known-fact cache
+# receive stable FactIds. In To-Lean mode, the statements above return IR for
+# an opaque proposition, a definition, an explicit trust boundary,
+# known-forall application, definition unfolding, a temporary domain fact used
+# as known-forall evidence, local-assumption reuse, forall introduction, and
+# rational-expression builtin evidence. The emitter accepts only this IR; only
+# explicit `trust` becomes `axiom`.
+#
+# Boundary: directly compiling `$marked(1)` would require lowering the nested
+# numeric proof `1 != 0`, which this MVP still rejects. Unsupported proof rules
+# and proposition/object forms never become `sorry` or implicit axioms.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/to_lean_ir_mvp.lit
+# Compiler evidence: cargo test --release to_lean:: -- --nocapture
+# Implementation: src/to_lean_ir, src/runtime/runtime_to_lean_ir.rs, src/to_lean

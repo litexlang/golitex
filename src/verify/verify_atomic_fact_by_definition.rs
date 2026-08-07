@@ -11,14 +11,17 @@ impl Runtime {
         match clause {
             Fact::ForallFact(forall_fact) => {
                 let key = self.alpha_normalized_forall_cache_key(forall_fact)?;
-                let (known, source) = self.cache_known_facts_contains(&key);
-                if !known {
+                let Some(cached_fact) = self.cached_known_fact(&key) else {
                     return Ok(None);
-                }
+                };
                 Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_known_fact(
                         clause.clone(),
-                        VerifiedByResult::cached_fact(clause.clone(), source),
+                        VerifiedByResult::cached_fact(
+                            clause.clone(),
+                            cached_fact.line_file.clone(),
+                            cached_fact.fact_id,
+                        ),
                         Vec::new(),
                     )
                     .into(),

@@ -59,6 +59,29 @@ impl From<FactUnknown> for StmtResult {
 }
 
 impl StmtResult {
+    pub fn with_to_lean_ir(mut self, to_lean_ir: StmtToLeanIR) -> Self {
+        if let Some(success) = self.non_factual_success_mut() {
+            success.to_lean_ir = Some(to_lean_ir);
+        } else if let Some(success) = self.factual_success_mut() {
+            success.to_lean_ir = Some(to_lean_ir);
+        }
+        self
+    }
+
+    pub fn to_lean_ir(&self) -> Option<&StmtToLeanIR> {
+        if let Some(success) = self.non_factual_success() {
+            success.to_lean_ir.as_ref()
+        } else if let Some(success) = self.factual_success() {
+            success.to_lean_ir.as_ref()
+        } else {
+            None
+        }
+    }
+
+    pub fn fact_id(&self) -> Option<FactId> {
+        self.factual_success().and_then(|success| success.fact_id)
+    }
+
     pub fn with_infers(mut self, infer_result: InferResult) -> Self {
         if let Some(x) = self.non_factual_success_mut() {
             x.infers.new_infer_result_inside(infer_result);

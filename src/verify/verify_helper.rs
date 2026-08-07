@@ -14,24 +14,24 @@ impl Runtime {
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
-        let (cache_ok, cite_fact_source) = self.cache_known_facts_contains(&key);
-        let (cache_ok, cite_fact_source) = if cache_ok || normalized_key == key {
-            (cache_ok, cite_fact_source)
+        let cached_fact = self.cached_known_fact(&key);
+        let cached_fact = if cached_fact.is_some() || normalized_key == key {
+            cached_fact
         } else {
-            self.cache_known_facts_contains(&normalized_key)
+            self.cached_known_fact(&normalized_key)
         };
-        if cache_ok {
-            Some(
-                (FactualStmtSuccess::new_with_verified_by_known_fact(
+        cached_fact.map(|cached_fact| {
+            FactualStmtSuccess::new_with_verified_by_known_fact(
+                fact.clone(),
+                VerifiedByResult::cached_fact(
                     fact.clone(),
-                    VerifiedByResult::cached_fact(fact.clone(), cite_fact_source),
-                    Vec::new(),
-                ))
-                .into(),
+                    cached_fact.line_file.clone(),
+                    cached_fact.fact_id,
+                ),
+                Vec::new(),
             )
-        } else {
-            None
-        }
+            .into()
+        })
     }
 
     /// If check_type_nonempty is true and param_type is Obj(set), verifies that the set is nonempty and stores the fact.
@@ -303,13 +303,14 @@ impl Runtime {
             requirements.push(KnownForallRequirementResult::new(
                 instantiated_dom_fact,
                 result,
+                KnownForallRequirementKind::Domain,
             ));
         }
 
         let instantiation = param_names
             .iter()
             .zip(args_for_params.iter())
-            .map(|(param, arg)| KnownForallInstantiationItem::new(param.clone(), arg.to_string()))
+            .map(|(param, arg)| KnownForallInstantiationItem::new(param.clone(), arg.clone()))
             .collect::<Vec<_>>();
 
         Ok(Some((instantiation, requirements)))
@@ -342,7 +343,11 @@ impl Runtime {
             if result.is_unknown() {
                 return Ok(false);
             }
-            requirements.push(KnownForallRequirementResult::new(requirement_fact, result));
+            requirements.push(KnownForallRequirementResult::new(
+                requirement_fact,
+                result,
+                KnownForallRequirementKind::ParameterType,
+            ));
         }
         Ok(true)
     }

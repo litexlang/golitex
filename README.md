@@ -225,12 +225,13 @@ and more modest: let users first write the mathematical facts they actually
 mean, then let the machine expose the verification, provenance, and boundaries
 clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
 
-Litex is also researching a compilation path to Lean. The current repository
-keeps only a narrow experiment: verified rational equalities over `R` are
-lowered recursively to numerator/denominator pairs and emitted with `ring`, or
-`field_simp` followed by `ring`. This is not yet a general compiler or proof
-certificate path; the group example above illustrates the intended language
-relationship, not current coverage. See the
+Litex is also researching a compilation path to Lean. The current MVP assigns
+stable IDs to stored facts and, only in explicit To-Lean mode, returns a
+recursive IR recording which fact, forall instantiation, definition, or builtin
+rule verified each step. The Lean emitter consumes that IR rather than
+re-running pattern matching over source statements. Its supported surface is
+still deliberately narrow, and unsupported routes fail instead of becoming
+`sorry` or implicit axioms. See the
 [compiler README](src/to_lean/README.md) for the supported subset and current
 boundary.
 

@@ -1,0 +1,15 @@
+# Tracer: compatible-modulus remainder absorption.
+#
+# Before (did not work):
+# forall p Z:
+#     p % 2 = (p % 8) % 2
+# Former behavior: the equality was unknown because only equal nested moduli absorbed.
+#
+# Now (verified): 2 divides 8, so reducing modulo 8 preserves parity.
+forall p Z:
+    p % 2 = (p % 8) % 2
+
+# Boundary: the analogous mod-3 statement is unsupported and false because 3 does not divide 8.
+# The executable negative boundary lives in the focused Rust regression.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/modulo_compatible_moduli.lit
+# Implementation: src/verify/verify_builtin_rules/equality_numeric/modulo.rs
