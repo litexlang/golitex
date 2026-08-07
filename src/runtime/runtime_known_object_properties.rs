@@ -406,11 +406,38 @@ impl Runtime {
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {
         for env in self.iter_environments_from_top() {
-            if let Some(line_file) = env.cache_known_fact.get(key) {
-                return (true, line_file.clone());
+            if let Some(cached_fact) = env.cache_known_fact.get(key) {
+                return (true, cached_fact.line_file.clone());
             }
         }
         (false, default_line_file())
+    }
+
+    pub fn cached_known_fact(&self, key: &str) -> Option<&CachedKnownFact> {
+        self.iter_environments_from_top()
+            .find_map(|env| env.cache_known_fact.get(key))
+    }
+
+    pub fn known_fact_id(&self, key: &str) -> Option<FactId> {
+        self.cached_known_fact(key).map(|cached| cached.fact_id)
+    }
+
+    pub fn known_fact_id_for_fact(&self, fact: &Fact) -> Result<Option<FactId>, RuntimeError> {
+        let display_key = fact.to_string();
+        if let Some(fact_id) = self.known_fact_id(&display_key) {
+            return Ok(Some(fact_id));
+        }
+        let nested_key = nested_obj_binder_normalized_fact_key(fact);
+        if let Some(fact_id) = self.known_fact_id(&nested_key) {
+            return Ok(Some(fact_id));
+        }
+        if let Fact::ForallFact(forall_fact) = fact {
+            let alpha_key = self.alpha_normalized_forall_cache_key(forall_fact)?;
+            if let Some(fact_id) = self.known_fact_id(&alpha_key) {
+                return Ok(Some(fact_id));
+            }
+        }
+        Ok(None)
     }
 
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {

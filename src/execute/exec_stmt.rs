@@ -20,7 +20,8 @@ impl Runtime {
         trusted: bool,
     ) -> Result<StmtResult, RuntimeError> {
         match result {
-            Ok(result) => {
+            Ok(mut result) => {
+                self.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
                 let trace = if in_trusted_prefix_run && !result.is_unknown() {
                     if self.current_statement_is_cli_trusted_prefix() {
@@ -33,7 +34,13 @@ impl Runtime {
                 } else {
                     StatementExecutionTrace::verified(result.is_unknown())
                 };
-                Ok(result.with_execution_trace(trace))
+                let result = result.with_execution_trace(trace);
+                if self.to_lean_mode && !result.is_unknown() {
+                    let to_lean_ir = self.build_stmt_to_lean_ir(&result)?;
+                    Ok(result.with_to_lean_ir(to_lean_ir))
+                } else {
+                    Ok(result)
+                }
             }
             Err(error) => {
                 let phase = execution_phase_for_error(&error);
@@ -41,6 +48,108 @@ impl Runtime {
                 Err(error.with_execution_trace(StatementExecutionTrace::failed(phase, message)))
             }
         }
+    }
+
+    pub(crate) fn attach_known_fact_ids_to_stmt_result(
+        &self,
+        result: &mut StmtResult,
+    ) -> Result<(), RuntimeError> {
+        if let Some(success) = result.factual_success_mut() {
+            if let Some(fact_id) = self.known_fact_id_for_fact(&success.stmt)? {
+                success.fact_id = Some(fact_id);
+            }
+            self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
+            self.attach_known_fact_ids_to_verified_by(&mut success.verified_by)?;
+        } else if let Some(success) = result.non_factual_success_mut() {
+            self.attach_known_fact_ids_to_infer_result(&mut success.infers)?;
+            for inside_result in success.inside_results.iter_mut() {
+                self.attach_known_fact_ids_to_stmt_result(inside_result)?;
+            }
+        }
+        Ok(())
+    }
+
+    pub(crate) fn attach_known_fact_ids_to_infer_result(
+        &self,
+        infer_result: &mut InferResult,
+    ) -> Result<(), RuntimeError> {
+        for output in infer_result.store_fact_outputs.iter_mut() {
+            if let Some(fact_id) =
+                self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?
+            {
+                output.fact_id = Some(fact_id);
+            }
+        }
+        Ok(())
+    }
+
+    fn attach_known_fact_ids_to_verified_by(
+        &self,
+        verified_by: &mut VerifiedByResult,
+    ) -> Result<(), RuntimeError> {
+        match verified_by {
+            VerifiedByResult::BuiltinRule(result) | VerifiedByResult::BuiltinStrategy(result) => {
+                for subgoal in result.subgoals.iter_mut() {
+                    self.attach_known_fact_ids_to_stmt_result(subgoal)?;
+                }
+            }
+            VerifiedByResult::Fact(result) => {
+                if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
+                    if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
+                        result.source_fact_id = Some(fact_id);
+                    }
+                }
+            }
+            VerifiedByResult::KnownForallInstantiation(result) => {
+                self.attach_known_fact_ids_to_known_forall(result)?;
+            }
+            VerifiedByResult::VerifiedBys(result) => {
+                for step in result.cite_what.iter_mut() {
+                    match step {
+                        VerifiedBysEnum::ByBuiltinRule(result)
+                        | VerifiedBysEnum::ByBuiltinStrategy(result) => {
+                            for subgoal in result.subgoals.iter_mut() {
+                                self.attach_known_fact_ids_to_stmt_result(subgoal)?;
+                            }
+                        }
+                        VerifiedBysEnum::ByFact(result) => {
+                            if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
+                                if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
+                                    result.source_fact_id = Some(fact_id);
+                                }
+                            }
+                        }
+                        VerifiedBysEnum::ByKnownForall(result) => {
+                            self.attach_known_fact_ids_to_known_forall(&mut result.result)?;
+                        }
+                        VerifiedBysEnum::ByStatementMemo(_, _) => {}
+                    }
+                }
+            }
+            VerifiedByResult::ForallProof(result) => {
+                self.attach_known_fact_ids_to_infer_result(&mut result.assumption_infers)?;
+                for proved in result.proves.iter_mut() {
+                    self.attach_known_fact_ids_to_stmt_result(proved.result.as_mut())?;
+                }
+            }
+            VerifiedByResult::StatementMemo(_) => {}
+        }
+        Ok(())
+    }
+
+    fn attach_known_fact_ids_to_known_forall(
+        &self,
+        result: &mut KnownForallInstantiationResult,
+    ) -> Result<(), RuntimeError> {
+        if let Stmt::Fact(source_fact) = result.cite_what.as_ref() {
+            if let Some(fact_id) = self.known_fact_id_for_fact(source_fact)? {
+                result.source_fact_id = Some(fact_id);
+            }
+        }
+        for requirement in result.requirements.iter_mut() {
+            self.attach_known_fact_ids_to_stmt_result(requirement.result.as_mut())?;
+        }
+        Ok(())
     }
 
     fn exec_stmt_verified(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {

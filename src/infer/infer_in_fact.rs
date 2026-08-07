@@ -420,14 +420,11 @@ impl Runtime {
                         in_fact.line_file.clone(),
                     );
                     let equal_atomic_fact: AtomicFact = equal_fact.clone().into();
-                    let equal_fact_key = equal_atomic_fact.to_string();
                     let mut infer_result = InferResult::new();
                     infer_result.push_atomic_fact(&equal_atomic_fact);
-                    self.top_level_env().store_atomic_fact(equal_atomic_fact)?;
-                    self.top_level_env().store_fact_to_cache_known_fact(
-                        equal_fact_key,
-                        in_fact.line_file.clone(),
-                    )?;
+                    self.top_level_env()
+                        .store_atomic_fact(equal_atomic_fact.clone())?;
+                    self.store_fact_cache_keys_with_nested_obj_binders(&equal_atomic_fact.into())?;
                     infer_result.new_infer_result_inside(self.infer_equal_fact(&equal_fact)?);
                     return Ok(infer_result);
                 }

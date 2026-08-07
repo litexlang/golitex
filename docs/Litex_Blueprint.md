@@ -334,9 +334,7 @@ bottom-up pattern illustrated by the calculation and inclusion examples.
 
 ## Conclusions
 
-To try Litex examples and inspect the generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com). For the Litex kernel, see the [golitex repository](https://github.com/litexlang/golitex).
-
-These entry points provide, respectively, a system overview, an interactive way to try Litex, and the implementation source. Returning to the main thread of this document, Litex should not promise to “omit proof.” Its intended promise is both stricter and more modest: let users first write the mathematical facts they actually mean, then let the machine expose the verification, provenance, and boundaries clearly.
+Litex should not promise to “omit proof.” Its intended promise is both stricter and more modest: let users first write the mathematical facts they actually mean, then let the machine expose the verification, provenance, and boundaries clearly.
 
 From that promise, the tension between the two approaches can be stated more sharply.
 
@@ -371,3 +369,11 @@ mathematics together.
 Because this direction is still a research project, the current repository should also be understood as open research in progress:
 
 > Litex develops its mission in public, so the repository intentionally exposes experiments and unfinished work as well as checked results. Public availability is not a completion claim; each claim should be read against its current tests, dated status, trust boundary, and known limitations.
+
+Related links
+
+1. To try Litex examples and inspect the generated output and knowledge graphs, visit [litexlang.com](https://litexlang.com).
+
+2. For the Litex kernel implementation, see the [golitex repository](https://github.com/litexlang/golitex).
+
+3. To read mathematics textbooks written in Litex, visit [Litex Mathematics Textbooks](https://litexlang.com/textbook).

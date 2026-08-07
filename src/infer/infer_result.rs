@@ -8,6 +8,9 @@ pub struct InferResult {
 
 #[derive(Clone, Debug)]
 pub struct StoreFactOutput {
+    /// Stable identity when this output corresponds to an environment-stored
+    /// fact. It remains available after a temporary proof environment is gone.
+    pub fact_id: Option<FactId>,
     pub itself_and_why_itself_is_stored: (Fact, String),
     pub inferred_facts: Vec<Fact>,
 }
@@ -298,6 +301,7 @@ impl StoreFactOutput {
             })
             .collect::<Vec<_>>();
         StoreFactOutput {
+            fact_id: None,
             itself_and_why_itself_is_stored: (fact, reason),
             inferred_facts,
         }

@@ -5,6 +5,7 @@
 //! `use crate::prelude::*;` so implementation files can focus on kernel logic
 //! instead of long import lists.
 
+pub use crate::common::fact_id::FactId;
 pub use crate::common::json_value::{render_json_value, JsonValue};
 pub use crate::common::name_types::{
     AbstractPropName, AlgoName, AndFactKey, AtomicFactKey, ExistFactKey, FactString,
@@ -14,7 +15,7 @@ pub use crate::common::name_types::{
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, Environment, KnownEquality, KnownFnInfo,
+    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality, KnownFnInfo,
     KnownForallFactParamsAndDom, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
@@ -293,7 +294,6 @@ pub use crate::result::ForallFactUnknown;
 pub use crate::result::ForallFactWithIffUnknown;
 pub use crate::result::ForallProofResult;
 pub use crate::result::ForallProvedFactResult;
-pub use crate::result::KnownForallInstantiationItem;
 pub use crate::result::KnownForallInstantiationResult;
 pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::NonFactualStmtSuccess;
@@ -314,6 +314,7 @@ pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
 pub use crate::result::WitnessStmtResult;
+pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
     run_runner_for_code_strict_with_language, run_runner_for_code_with_language,
@@ -417,6 +418,11 @@ pub use crate::stmt::WitnessStmt;
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
+};
+pub use crate::to_lean_ir::{
+    AbstractPropToLeanIR, BuiltinProofKindToLeanIR, BuiltinRuleToLeanIR, FactProofToLeanIR,
+    FactStmtToLeanIR, FactToLeanIR, KnownForallArgumentToLeanIR, ParamGroupToLeanIR,
+    ParamTypeToLeanIR, PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

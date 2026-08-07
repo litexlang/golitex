@@ -65,6 +65,104 @@ impl Runtime {
         Ok(None)
     }
 
+    /// If `d` divides `m`, reducing modulo `m` before modulo `d` changes nothing.
+    /// Example: `(a % 8) % 2 = a % 2` for `a in Z`.
+    pub(crate) fn try_verify_mod_nested_divisible_modulus_absorption(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (nested_side, simple_side) in [(left, right), (right, left)] {
+            let Obj::Mod(outer) = nested_side else {
+                continue;
+            };
+            let Obj::Mod(inner) = outer.left.as_ref() else {
+                continue;
+            };
+            let Obj::Mod(simple) = simple_side else {
+                continue;
+            };
+
+            let outer_modulus_matches = self.verify_objs_are_equal_in_equality_builtin(
+                outer.right.as_ref(),
+                simple.right.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !outer_modulus_matches.is_true() {
+                continue;
+            }
+            let dividend_matches = self.verify_objs_are_equal_in_equality_builtin(
+                inner.left.as_ref(),
+                simple.left.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !dividend_matches.is_true() {
+                continue;
+            }
+
+            let dividend_in_z: AtomicFact = InFact::new(
+                inner.left.as_ref().clone(),
+                StandardSet::Z.into(),
+                line_file.clone(),
+            )
+            .into();
+            let inner_modulus_in_n_pos: AtomicFact = InFact::new(
+                inner.right.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
+            let outer_modulus_in_n_pos: AtomicFact = InFact::new(
+                outer.right.as_ref().clone(),
+                StandardSet::NPos.into(),
+                line_file.clone(),
+            )
+            .into();
+            let modulus_divisibility: AtomicFact = EqualFact::new(
+                Mod::new(inner.right.as_ref().clone(), outer.right.as_ref().clone()).into(),
+                Number::new("0".to_string()).into(),
+                line_file.clone(),
+            )
+            .into();
+
+            let dividend_result =
+                self.verify_builtin_rule_premise(&dividend_in_z, builtin_state)?;
+            let inner_modulus_result =
+                self.verify_builtin_rule_premise(&inner_modulus_in_n_pos, builtin_state)?;
+            let outer_modulus_result =
+                self.verify_builtin_rule_premise(&outer_modulus_in_n_pos, builtin_state)?;
+            let divisibility_result =
+                self.verify_builtin_rule_premise(&modulus_divisibility, builtin_state)?;
+            if !dividend_result.is_true()
+                || !inner_modulus_result.is_true()
+                || !outer_modulus_result.is_true()
+                || !divisibility_result.is_true()
+            {
+                continue;
+            }
+
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                left,
+                right,
+                line_file,
+                "equality: nested mod absorbs an inner modulus divisible by the outer modulus",
+                vec![
+                    outer_modulus_matches,
+                    dividend_matches,
+                    dividend_result,
+                    inner_modulus_result,
+                    outer_modulus_result,
+                    divisibility_result,
+                ],
+            )));
+        }
+        Ok(None)
+    }
+
     // a % m = (b % m) % m reduces to a % m = b % m (same m); the inner equality must be known-only.
     pub(crate) fn try_verify_mod_peel_nested_same_modulus(
         &mut self,

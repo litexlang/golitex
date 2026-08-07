@@ -1,6 +1,41 @@
 use super::*;
 
 #[test]
+fn compatible_modulus_remainder_absorption_requires_divisibility() {
+    let positive_source = "forall p Z:\n    p % 2 = (p % 8) % 2\n\nforall p Z, m, d N+:\n    m % d = 0\n    =>:\n        p % d = (p % m) % d";
+    let mut positive_runtime = Runtime::new();
+    positive_runtime
+        .new_file_path_new_env_new_name_scope("compatible_modulus_remainder_absorption_positive");
+    let (positive_results, positive_error) =
+        run_source_code(positive_source, &mut positive_runtime);
+    let (positive_succeeded, positive_output) =
+        render_run_source_code_output(&positive_runtime, &positive_results, &positive_error, false);
+    assert!(
+        positive_succeeded,
+        "literal and symbolic nested remainders should absorb when the outer modulus divides the inner modulus:\n{positive_output}"
+    );
+    assert!(
+        positive_output.contains(
+            "equality: nested mod absorbs an inner modulus divisible by the outer modulus"
+        ),
+        "the result should expose compatible-modulus provenance:\n{positive_output}"
+    );
+
+    let negative_source = "forall p Z:\n    p % 3 = (p % 8) % 3";
+    let mut negative_runtime = Runtime::new();
+    negative_runtime
+        .new_file_path_new_env_new_name_scope("compatible_modulus_remainder_absorption_negative");
+    let (negative_results, negative_error) =
+        run_source_code(negative_source, &mut negative_runtime);
+    let (negative_succeeded, negative_output) =
+        render_run_source_code_output(&negative_runtime, &negative_results, &negative_error, false);
+    assert!(
+        !negative_succeeded,
+        "nested remainders must not absorb when the outer modulus does not divide the inner modulus:\n{negative_output}"
+    );
+}
+
+#[test]
 fn algebra_and_square_root_congruence_use_central_structural_equality() {
     run_with_large_stack(
         "algebra_and_square_root_congruence_use_central_structural_equality",

@@ -370,8 +370,8 @@ impl Environment {
         for (key, _) in cache_well_defined_obj {
             self.cache_well_defined_obj.insert(key, ());
         }
-        for (key, line_file) in cache_known_fact {
-            self.cache_known_fact.insert(key, line_file);
+        for (key, cached_fact) in cache_known_fact {
+            self.cache_known_fact.insert(key, cached_fact);
         }
         for (key, _) in cache_infer_rule_firing {
             self.cache_infer_rule_firing.insert(key, ());

@@ -14,6 +14,7 @@ mod runtime_statement_memo;
 mod runtime_store_arg_satisfy_param_type_when_not_defining_new_identifiers;
 mod runtime_store_fact;
 mod runtime_symbol;
+mod runtime_to_lean_ir;
 mod trusted_prefix;
 
 pub use execution_frame::{ExecutionFrame, ExecutionLayer, ExecutionMode};
