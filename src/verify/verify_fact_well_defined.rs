@@ -67,7 +67,7 @@ impl Runtime {
     /// Mathematical contract: a non-equality predicate application is
     /// meaningful only at its declared arity with well-defined arguments.
     /// Builtin partial predicates additionally require their mathematical
-    /// domains, such as real operands for order and `N+` for primality.
+    /// domains, such as real operands for order and `N` for primality.
     fn verify_non_equational_atomic_fact_well_defined(
         &mut self,
         atomic_fact: &AtomicFact,
@@ -135,19 +135,12 @@ impl Runtime {
 
         if name_string == PRIME {
             let arg = atomic_fact.args_ref()[0];
-            let in_n_pos: AtomicFact = InFact::new(
-                arg.clone(),
-                StandardSet::NPos.into(),
-                atomic_fact.line_file(),
-            )
-            .into();
-            if self
-                .verify_atomic_fact(&in_n_pos, verify_state)?
-                .is_unknown()
-            {
+            let in_n: AtomicFact =
+                InFact::new(arg.clone(), StandardSet::N.into(), atomic_fact.line_file()).into();
+            if self.verify_atomic_fact(&in_n, verify_state)?.is_unknown() {
                 return Err(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
-                        format!("{} requires its argument to belong to N+", atomic_fact),
+                        format!("{} requires its argument to belong to N", atomic_fact),
                         atomic_fact.line_file(),
                     ),
                 )

@@ -1,0 +1,28 @@
+# Tracer: native prime is defined on every natural number.
+#
+# Before (did not work):
+# forall n N:
+#     $prime(n)
+#     =>:
+#         2 <= n
+# Former behavior: `$prime(n)` required `n $in N+`, so the fact was not
+# well-defined for a binder whose carrier was all of `N`.
+#
+# Now (verified):
+not $prime(0)
+not $prime(1)
+$prime(2)
+
+thm natural_prime_is_at_least_two:
+    ? forall n N:
+        $prime(n)
+        =>:
+            2 <= n
+    by def $prime(n)
+# Current behavior: concrete primality is exact for supported natural literals,
+# and a symbolic `$prime(n)` is meaningful whenever `n $in N` is known.
+#
+# Boundary: `$prime(z)` remains ill-defined when `z` is known only to belong to
+# `Z` or `R`; an executable Rust regression checks both rejected carriers.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prime_on_natural.lit
+# Implementation: src/verify/verify_fact_well_defined.rs

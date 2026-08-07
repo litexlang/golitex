@@ -86,6 +86,7 @@ fn native_gcd_rejects_all_zero_and_missing_domain_evidence() {
 fn native_prime_computation_definition_and_boundary_are_exact() {
     assert_source_succeeds(
         r#"
+not $prime(0)
 $prime(2)
 $prime(97)
 not $prime(1)
@@ -105,7 +106,7 @@ claim:
             $prime(p)
     by def $prime(p)
 
-forall p N+:
+forall p N:
     $prime(p)
     =>:
         2 <= p
@@ -115,8 +116,18 @@ forall p N+:
 }
 
 #[test]
-fn native_prime_rejects_zero_and_does_not_guess_beyond_u64() {
-    assert_source_fails("$prime(0)", "native_prime_rejects_zero");
+fn native_prime_rejects_non_natural_carriers_and_does_not_guess_beyond_u64() {
+    assert_source_fails("$prime(0)", "native_prime_zero_is_false");
+    assert_source_fails("$prime(1)", "native_prime_one_is_false");
+    assert_source_fails(
+        "forall z Z:\n    $prime(z)\n    =>:\n        z = z",
+        "native_prime_rejects_arbitrary_integer",
+    );
+    assert_source_fails(
+        "forall x R:\n    not $prime(x)\n    =>:\n        x = x",
+        "native_prime_rejects_arbitrary_real",
+    );
+    assert_source_fails("$prime(-2)", "native_prime_rejects_negative_integer");
     assert_source_fails(
         "$prime(18446744073709551616)",
         "native_prime_does_not_guess_large_positive",

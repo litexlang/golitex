@@ -1,0 +1,28 @@
+# Tracer: distribute a real exponent over positive real factors.
+#
+# Before (did not work):
+# forall a, b R+, x R:
+#     (a * b)^x = a^x * b^x
+# Former behavior: verification failed even though every power was well-defined.
+#
+# Now (verified):
+forall a, b R+, x R:
+    (a * b)^x = a^x * b^x
+
+forall a, b R+, x R:
+    a^x * b^x = (a * b)^x
+
+forall a, b R+, x R:
+    b^x * a^x = (a * b)^x
+
+forall a, b, x R:
+    a > 0
+    b > 0
+    =>:
+        (a * b)^x = a^x * b^x
+
+# Current behavior: the product-power law works in either equality orientation,
+# including a commuted product of powered factors and positivity proved as hypotheses.
+#
+# Boundary: arbitrary, zero, and negative real factors are not accepted for real exponents.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/positive_real_product_power.lit

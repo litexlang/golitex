@@ -1,108 +1,30 @@
-forall n N+:
-    3^(2^(n + 1)) - 1 = 3^(2^n * 2) - 1  = (3^(2^n))^2 - 1
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
 
-"""
-• 已记录，当前没有修改内核。
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
 
-  完整建议在 todo/2026-8-7/litex-minif2f-kernel-rule-
-  recommendations.md。
-
-  我最建议按这个顺序实现：
-
-  1. P0：可控的嵌套等式规则组合
-
-     当前最常见的卡点。已知：
-
-     2^(n + 1) = 2^n * 2
-
-     但不能直接推出：
-
-     3^(2^(n + 1)) - 1 = (3^(2^n))^2 - 1
-
-     建议允许 equality verifier 穿过相同的外层构造，在一个不同的子表
-     达式上调用一次现有数学规则。必须有递归预算和进展检查，不能做无
-     限 rewrite saturation。
-
-    回答： › 1. forall n N+:
-      3^(2^(n + 1)) - 1 = 3^(2^n * 2) - 1  = (3^(2^n))^2 - 1 这不就
-  解决p1了吗，你多写一步不就得了
-  
-
-  2. P1：整数规则按需证明载体闭包
-
-     P008 目前必须手写：
-
-     p^2 $in Z
-     d^2 $in Z
-     c^2 $in Z
-
-     否则取模证明失败。内核其实已经知道整数的自然数次幂仍是整数，只
-     是 modulo 规则没有按需调用它。建议复用现有 membership
-     verifier，不要另写一套闭包逻辑。 
-     
-    回答：我不知道你在说什么
-
-  3. P2：正实数底数的实指数乘积幂
-
-     增加：
-
-     a, b R+
-     x R
-     =>:
-         (a * b)^x = a^x * b^x
-
-     这会直接处理 amc12a_2009_p6。负底数、零底数仍必须拒绝，不能顺手
-     把原生实数幂全函数化。
-
-     回答：可以添加相关内核内容
-
-  4. P3：有限和对减法、负号的线性规则
-
-     建议支持：
-
-     sum(s, e, fn(i){f(i) - g(i)})
-         = sum(s, e, f) - sum(s, e, g)
-
-     不过应先实现 P0 再复测，因为现有加法、常数项和标量乘法规则可能
-     只是缺乏组合能力。
-
-     回答：可以添加相关内核内容
-
-  5. P4：让 $prime 在整个 N 上有定义
-
-     当前 $prime 只接受 N+，导致大量 prime_N 包装。建议采用与
-     Nat.Prime 一致的全函数语义：
-
-     not $prime(0)
-     not $prime(1)
-     $prime(2)
-
-     仍拒绝没有自然数载体的任意整数或实数。这是公开语义变更，需要单
-     独决定。
-
-     我还在决定是不是要让 $prime 接受 所有的 N；如果你觉得应该接受，那就在整个 N 上有定义吧。
-
-  6. P5：有限 case coverage 的命题规范化
-
-     支持由互补条件、实数三歧性和有限合取自动证明 casewise function
-     覆盖完整，避免 P008 为零底数额外拆一个辅助函数。
-
-     这啥：我不知道
-
-  当前证明进度仍是：
-
-  - 已去掉：5 / 43
-  - 当前 trust：88
-  - 还需去掉：38
-
-  P009 的两轮证据、P010 的暂停点以及恢复条件也已写入 todo/2026-8-6/
-  litex-minif2f-next-43.md 和 scripts/litex-minif2f/proof_journals/
-  trust_cleanup_next_43_2026_08_06.json。最值得先做的是 P0；它在当前
-  样本里至少重复影响了 P003、P005、P006、P007、P008、P009。
-
-─ Worked for 7m 32s ────────────────────────────────────────────────
-
-  59 background terminals running · /ps to view · /stop to close
-
-
-
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)

@@ -649,6 +649,22 @@ Consequently, `finite_set_sum(3...1, fn(k Z) Z {0}) = 0` and the analogous
 empty product equal to `1` are well-defined, while range `sum(3,1,...)` and
 `product(3,1,...)` remain outside the nonempty range-aggregate contract.
 
+Closed-range sums distribute over pointwise subtraction when all three
+summands use the same endpoints and their declared scalar return sets embed in
+an additive carrier (`Z`, `Q`, `R`, or `C`). Unary negation is the existing
+scalar-multiplication rule with scalar `-1`:
+
+```litex
+have f fn(k Z) R
+have g fn(k Z) R
+
+sum(1, 3, fn(k Z) R {f(k) - g(k)}) = sum(1, 3, fn(k Z) R {f(k)}) - sum(1, 3, fn(k Z) R {g(k)})
+sum(1, 3, fn(k Z) R {-f(k)}) = -sum(1, 3, fn(k Z) R {f(k)})
+```
+
+This rule does not totalize natural subtraction: a function declared to return
+`N` must still prove that its pointwise difference belongs to `N`.
+
 The generic folds are not restricted to scalar arithmetic. For both forms,
 `op` must have an unconditional homogeneous signature `fn(x, y T) T`, `f`
 must be unary with return set `T`, and `seed` must belong to `T`; the result
@@ -1055,13 +1071,16 @@ An atomic fact applies one builtin relation or named predicate to objects.
 2 $in {1, 2, 3}
 not 4 $in {1, 2, 3}
 $prime(97)
+not $prime(0)
 not $prime(1)
 ```
 
-`$prime(p)` is a native predicate on `N+`. Concrete positive integer
-literals that fit in `u64` are decided exactly; larger literals are left to
-proof rather than guessed. `by def $prime(p)` exposes the symbolic
-trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`).
+`$prime(p)` is a native predicate on `N`. It is false at `0` and `1`;
+concrete natural literals that fit in `u64` are decided exactly, while larger
+literals are left to proof rather than guessed. `by def $prime(p)` exposes the
+symbolic trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`). An
+arbitrary integer or real argument is still rejected unless its membership in
+`N` is known.
 
 An object expression alone is not a fact:
 
@@ -2796,6 +2815,17 @@ finite aggregate expansions, and common congruence patterns. Complex bases
 support natural exponents and, when nonzero, integer exponents. Positivity,
 monotonicity, roots, logarithms, and even-power absolute-value rules remain
 restricted to real bases.
+
+For positive real factors, a real exponent distributes over multiplication in
+either equality direction:
+
+```litex
+forall a, b R+, x R:
+    (a * b)^x = a^x * b^x
+```
+
+The positivity condition is semantic, not cosmetic: this rule does not admit
+zero or negative factors with an arbitrary real exponent.
 
 ```litex
 forall m Z:

@@ -252,6 +252,114 @@ impl Runtime {
         Ok(None)
     }
 
+    /// Finite sums distribute over pointwise subtraction on the same integer range.
+    /// Example: `sum(m,n,fn(i Z) R {f(i)-g(i)}) = sum(m,n,f) - sum(m,n,g)`.
+    pub(crate) fn try_verify_sum_subtraction(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (difference_sum, minuend_sum, subtrahend_sum) = match (left, right) {
+            (Obj::Sum(sum), Obj::Sub(difference)) => {
+                let (Obj::Sum(minuend), Obj::Sum(subtrahend)) =
+                    (difference.left.as_ref(), difference.right.as_ref())
+                else {
+                    return Ok(None);
+                };
+                (sum, minuend, subtrahend)
+            }
+            (Obj::Sub(difference), Obj::Sum(sum)) => {
+                let (Obj::Sum(minuend), Obj::Sum(subtrahend)) =
+                    (difference.left.as_ref(), difference.right.as_ref())
+                else {
+                    return Ok(None);
+                };
+                (sum, minuend, subtrahend)
+            }
+            _ => return Ok(None),
+        };
+
+        for other_sum in [minuend_sum, subtrahend_sum] {
+            if !self
+                .verify_objs_are_equal_in_equality_builtin(
+                    difference_sum.start.as_ref(),
+                    other_sum.start.as_ref(),
+                    line_file.clone(),
+                    builtin_state,
+                )?
+                .is_true()
+                || !self
+                    .verify_objs_are_equal_in_equality_builtin(
+                        difference_sum.end.as_ref(),
+                        other_sum.end.as_ref(),
+                        line_file.clone(),
+                        builtin_state,
+                    )?
+                    .is_true()
+            {
+                return Ok(None);
+            }
+        }
+        if !self.sum_functions_share_standard_additive_carrier([
+            difference_sum.func.as_ref(),
+            minuend_sum.func.as_ref(),
+            subtrahend_sum.func.as_ref(),
+        ]) {
+            return Ok(None);
+        }
+
+        let x_name = self.generate_random_unused_name();
+        let (x_binding, x_obj) = self.fresh_bound_param(x_name, ParamObjType::Forall)?;
+        let Some(difference_at_x) =
+            self.instantiate_unary_anonymous_summand_at(difference_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(minuend_at_x) =
+            self.instantiate_unary_anonymous_summand_at(minuend_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+        let Some(subtrahend_at_x) =
+            self.instantiate_unary_anonymous_summand_at(subtrahend_sum.func.as_ref(), &x_obj)?
+        else {
+            return Ok(None);
+        };
+
+        let dom_lo: Fact = LessEqualFact::new(
+            (*difference_sum.start).clone(),
+            x_obj.clone(),
+            line_file.clone(),
+        )
+        .into();
+        let dom_hi: Fact =
+            LessEqualFact::new(x_obj, (*difference_sum.end).clone(), line_file.clone()).into();
+        let dom_facts = vec![dom_lo, dom_hi];
+
+        let expected: Obj = Sub::new(minuend_at_x, subtrahend_at_x).into();
+        let pointwise_fact: AtomicFact =
+            EqualFact::new(difference_at_x, expected, line_file.clone()).into();
+        let pointwise_result = self
+            .verify_integer_pointwise_atomic_fact_by_known_forall_or_builtin(
+                x_binding,
+                dom_facts,
+                &pointwise_fact,
+                builtin_state,
+            )?;
+        if !pointwise_result.is_true() {
+            return Ok(None);
+        }
+
+        Ok(Some(factual_equal_success_by_builtin_reason(
+            left,
+            right,
+            line_file,
+            "equality: finite sum subtraction over a common additive carrier",
+        )))
+    }
+
     pub(crate) fn instantiate_unary_anonymous_summand_at(
         &mut self,
         func: &Obj,
@@ -1149,5 +1257,32 @@ impl Runtime {
             }
         }
         Ok(None)
+    }
+
+    fn sum_functions_share_standard_additive_carrier(&self, functions: [&Obj; 3]) -> bool {
+        functions.into_iter().all(|function| {
+            let Some(body) = self.get_fn_range_function_body(function) else {
+                return false;
+            };
+            matches!(
+                body.ret_set.as_ref(),
+                Obj::StandardSet(
+                    StandardSet::NPos
+                        | StandardSet::N
+                        | StandardSet::Z
+                        | StandardSet::ZNeg
+                        | StandardSet::ZNz
+                        | StandardSet::Q
+                        | StandardSet::QPos
+                        | StandardSet::QNeg
+                        | StandardSet::QNz
+                        | StandardSet::R
+                        | StandardSet::RPos
+                        | StandardSet::RNeg
+                        | StandardSet::RNz
+                        | StandardSet::C
+                )
+            )
+        })
     }
 }

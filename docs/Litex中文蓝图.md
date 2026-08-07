@@ -16,7 +16,47 @@ Litex 是一门以对象和事实为中心的数学形式化语言。它试图�
 
 > **Lean tactic：定理先给出最终 Goal → 用户声明应当如何改写、分解或关闭它 → Infoview 显示还剩哪些 Goal → tactic 构造 proof term → kernel 检查该 term。**
 
-这种证明模式高度通用、抽象且可组合，是 Lean 强大表达能力的重要来源。它与日常数学书写的默认方向并不完全相同；人们更常按下面的顺序推进：
+以定义序列收敛，证明序列{s(n)}收敛到实数a能推出序列{c * s(n)}能收敛到实数c * a为例
+
+```lean
+import Mathlib
+
+def ConvergesTo (s : ℕ → ℝ) (a : ℝ) :=
+  ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
+
+theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _x : ℕ ↦ a) a := by
+  intro ε εpos
+  use 0
+  intro n nge
+  rw [sub_self, abs_zero]
+  apply εpos
+
+theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
+    (cs : ConvergesTo s a) :
+    ConvergesTo (fun n ↦ c * s n) (c * a) := by
+  by_cases h : c = 0
+  · convert convergesTo_const 0
+    · rw [h]
+      ring
+    rw [h]
+    ring
+  have acpos : 0 < |c| := abs_pos.mpr h
+  intro ε εpos
+  dsimp
+  have εcpos : 0 < ε / |c| := by
+    exact div_pos εpos acpos
+  rcases cs (ε / |c|) εcpos with ⟨Ns, hs⟩
+  use Ns
+  intro n ngt
+  calc
+    |c * s n - c * a| = |c| * |s n - a| := by
+      rw [← abs_mul, mul_sub]
+    _ < |c| * (ε / |c|) :=
+      mul_lt_mul_of_pos_left (hs n ngt) acpos
+    _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
+```
+
+这种证明模式高度通用、抽象且可组合，是 Lean 强大表达能力的重要来源。但它与日常数学书写的默认方向并不完全相同，涉及到大量的tactic关键词；人们更常按下面的顺序推进：
 
 1. 写下对象、定义和条件；
 2. 看到一个熟悉的模式；
@@ -27,17 +67,52 @@ Litex 把这种日常数学工作流变成它默认的运行逻辑。整个过�
 
 > **Litex：用户声明“什么应当成立” → checker 寻找证明依据 → output 解释该陈述为何以及如何通过验证 → 已验证事实扩展当前上下文 → proof 自下而上生长。**
 
+仍然以序列的例子为例，litex的代码对初学者而言，阅读起来更像日常的数学表达
+
+```litex
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+```
+
 在下面两个维度上，两种默认证明工作流的方向恰好相反。
 
-1. **Litex 证明自下而上；Lean tactic 证明自上而下。** 在 Litex 中，每条已验证事实都会扩展上下文，直到积累的事实足以支持结论。Lean tactic 证明通常从最终 Goal 出发，向后把它转化为更小的 Goal，直到能够由已知事实关闭。
+1. **Litex 证明自下而上；Lean tactic 证明自上而下。** 在 Litex 中，每条已验证事实都会扩展上下文，直到积累的事实足以支持结论。Lean tactic 证明通常从最终 Goal 出发，向后往前把它转化为新的 Goal，直到能够由已知事实关闭。
+
+   > 可以把写证明想象成搭乐高：一开始，我们拿到一批可用的积木，以及一个已经完工的成品；任务是证明这些积木确实能够搭出那个成品。Lean tactic 的默认做法像是从目标成品出发，一步步把目标拆了，拆到最后发现拆出来的乐高能和我们可用的积木匹配上，就算证明成功。Litex 的默认做法则像是直接拿起手上的积木一步步拼，直到形成一个和已经完成的成品一样的成品。其中的拼接过程没有那么严格，我们可以从任意角度以任意方式拼，只要形成最后的成品即可。
 
 2. **Litex 用户声明 *what*：“什么应当成立”；Lean tactic 用户声明 *how*：“应当怎样证明 Goal”。** Litex checker 寻找能与结果匹配的证明依据，并解释找到的验证路径。Lean tactic elaboration 按照用户的证明指令构造对应的 proof term，server 显示变化后的 Goal，kernel 检查该 term。
 
-这种差异也可以用一个更直观的比喻来概括：
+   > 一份完整的乐高说明书同时包含两类信息：第一，这一步应当怎样拼；第二，这一步完成后，整个半成品应当是什么状态。Lean tactic 源码主要记录第一类信息——下一步怎样操作 proof state（沿用上一维度的类比：记录的是这一步我们是怎么拆乐高的）；Litex 源码主要记录第二类信息——这一步推理后得到了什么数学事实（沿用上一维度的类比：记录的是这一步我们是怎么拼乐高的）。
 
-> 一份完整的乐高说明书同时包含两类信息：第一，这一步应当怎样拼；第二，这一步完成后，整个半成品应当是什么状态。Lean tactic 源码主要记录第一类信息——下一步怎样操作 proof state；Litex 源码主要记录第二类信息——这一步推理后得到了什么数学事实。
-
-这个比喻描述的是默认接口的重心，而不是绝对的能力边界。Lean 的机制提供了非常灵活、通用的 proof-programming 环境；Litex 则有意选择更窄的默认交互，让开始写证明更容易，也让源码更接近日常教科书的数学写法。Lean 也支持向前推理，Litex 也提供显式的 goal-directed 证明形式。后文的对照和五个设计目标，会继续展开这两种工作流的异同及各自的取舍。
+这两个比喻描述的是默认接口的重心，而不是绝对的能力边界。Lean 的机制提供了非常灵活、通用的 proof-programming 环境；Litex 则有意选择更窄的默认交互，让开始写证明更容易，也让源码更接近日常教科书的数学写法。Lean 也支持向前推理，Litex 也提供显式的 goal-directed 证明形式。后文的对照和五个设计目标，会继续展开这两种工作流的异同及各自的取舍。
 
 ## 一个完整的小对照：群的单位元唯一性
 

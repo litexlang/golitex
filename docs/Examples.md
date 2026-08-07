@@ -2006,15 +2006,17 @@ gcd(54, -24) + gcd(10, 15) = 11
 eval gcd(54, -24)
 
 $prime(97)
+not $prime(0)
 not $prime(1)
 ```
 
 `gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
 Concrete gcd expressions normalize inside ordinary facts, so `eval` is a
 presentation choice rather than a prerequisite. `$prime(p)` is a native
-predicate on `N+`; concrete literals in the `u64` range are decided
-exactly, while `by def $prime(p)` exposes the symbolic trial-divisor
-definition.
+predicate on `N`; it is false at `0` and `1`. Concrete natural literals in the
+`u64` range are decided exactly, while `by def $prime(p)` exposes the symbolic
+trial-divisor definition. Arguments known only to lie in `Z` or `R` remain
+outside the predicate's domain.
 
 For symbolic examples, see
 [`examples/01_proof_patterns/gcd_and_prime_builtin.lit`](../examples/01_proof_patterns/gcd_and_prime_builtin.lit).
@@ -2789,6 +2791,9 @@ forall a Z:
 forall a, b R, n N:
     (a * b)^n = a^n * b^n
 
+forall a, b R+, x R:
+    (a * b)^x = a^x * b^x
+
 forall a Z, n N:
     a^n $in Z
 
@@ -3008,6 +3013,12 @@ eval sum(1, 2, fn(x Z) Z {sum(2, 3, fn(y Z) Z {x + y})})
 
 ## Point-wise: sum f = sum g + sum h on the same range.
 sum(1, 3, fn(x Z) Z {x + x}) = sum(1, 3, fn(x Z) Z {x}) + sum(1, 3, fn(x Z) Z {x})
+
+## Point-wise subtraction and negation on the same range and scalar carrier.
+have range_f fn(f_index Z) R
+have range_g fn(g_index Z) R
+sum(1, 3, fn(x Z) R {range_f(x) - range_g(x)}) = sum(1, 3, fn(x Z) R {range_f(x)}) - sum(1, 3, fn(x Z) R {range_g(x)})
+sum(1, 3, fn(x Z) R {-range_f(x)}) = -sum(1, 3, fn(x Z) R {range_f(x)})
 
 ## Point-wise order on the same range gives order between finite sums.
 claim:

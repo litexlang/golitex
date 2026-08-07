@@ -138,6 +138,79 @@ sum(lower_bound, 3, fn(positive_left_index N+) Z {positive_f(positive_left_index
 }
 
 #[test]
+fn finite_sum_subtraction_and_negation_use_additive_group_rules() {
+    let source_code = r#"
+have f fn(f_index Z) R
+have g fn(g_index Z) R
+
+forall m, n Z:
+    m <= n
+    =>:
+        sum(m, n, fn(difference_index Z) R {f(difference_index) - g(difference_index)}) = sum(m, n, fn(minuend_index Z) R {f(minuend_index)}) - sum(m, n, fn(subtrahend_index Z) R {g(subtrahend_index)})
+
+forall m, n Z:
+    m <= n
+    =>:
+        sum(m, n, fn(negative_index Z) R {-f(negative_index)}) = -sum(m, n, fn(base_index Z) R {f(base_index)})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "finite_sum_subtraction_and_negation_use_additive_group_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "same-range finite-sum subtraction and negation should verify:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("equality: finite sum subtraction over a common additive carrier"),
+        "subtraction should expose its finite-sum builtin provenance:\n{run_output}"
+    );
+    assert!(
+        run_output.contains("equality: finite sum scalar multiplication"),
+        "negation should continue to use the existing scalar multiplication rule:\n{run_output}"
+    );
+}
+
+#[test]
+fn finite_sum_subtraction_preserves_range_and_domain_boundaries() {
+    let cases = [
+        (
+            "finite_sum_subtraction_requires_matching_ranges",
+            r#"
+have f fn(f_index Z) R
+have g fn(g_index Z) R
+sum(1, 3, fn(difference_index Z) R {f(difference_index) - g(difference_index)}) = sum(1, 2, fn(minuend_index Z) R {f(minuend_index)}) - sum(1, 3, fn(subtrahend_index Z) R {g(subtrahend_index)})
+"#,
+        ),
+        (
+            "finite_sum_subtraction_does_not_totalize_natural_subtraction",
+            r#"
+have f fn(f_index Z) N
+have g fn(g_index Z) N
+sum(1, 3, fn(difference_index Z) N {f(difference_index) - g(difference_index)}) = sum(1, 3, fn(minuend_index Z) N {f(minuend_index)}) - sum(1, 3, fn(subtrahend_index Z) N {g(subtrahend_index)})
+"#,
+        ),
+    ];
+
+    for (name, source_code) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(name);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+        assert!(
+            !run_succeeded,
+            "{name} must remain outside the finite-sum subtraction boundary:\n{run_output}"
+        );
+    }
+}
+
+#[test]
 fn finite_sum_shift_reindex_uses_a_range_guarded_forall() {
     let source_code = r#"
 have f fn(f_index Z) Z
@@ -2028,6 +2101,119 @@ forall m Z:
         );
         assert!(run_output.contains("equality: x^(1/n) = z from x = z^n, n in N+, and z >= 0"));
     });
+}
+
+#[test]
+fn positive_real_product_power_is_builtin() {
+    run_with_large_stack("positive_real_product_power_is_builtin", || {
+        let cases = [
+            (
+                "positive_real_product_power_forward",
+                r#"
+forall a, b R+, x R:
+    (a * b)^x = a^x * b^x
+"#,
+            ),
+            (
+                "positive_real_product_power_reverse",
+                r#"
+forall a, b R+, x R:
+    a^x * b^x = (a * b)^x
+"#,
+            ),
+            (
+                "positive_real_product_power_commuted_factors",
+                r#"
+forall a, b R+, x R:
+    b^x * a^x = (a * b)^x
+"#,
+            ),
+            (
+                "positive_real_product_power_from_hypotheses",
+                r#"
+forall a, b, x R:
+    a > 0
+    b > 0
+    =>:
+        (a * b)^x = a^x * b^x
+"#,
+            ),
+        ];
+
+        for (name, source_code) in cases {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(name);
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "{name} should be verified directly by the builtin:\n{run_output}"
+            );
+            assert!(
+                run_output.contains(
+                    "equality: (a*b)^x = a^x * b^x for real x over positive real factors"
+                ),
+                "{name} should report the positive-real-factor builtin provenance:\n{run_output}"
+            );
+        }
+    });
+}
+
+#[test]
+fn real_exponent_product_power_requires_positive_factors() {
+    run_with_large_stack(
+        "real_exponent_product_power_requires_positive_factors",
+        || {
+            let cases = [
+                (
+                    "real_exponent_product_power_unrestricted_reals",
+                    r#"
+forall a, b, x R:
+    (a * b)^x = a^x * b^x
+"#,
+                ),
+                (
+                    "real_exponent_product_power_nonzero_reals",
+                    r#"
+forall a, b R*, x R:
+    (a * b)^x = a^x * b^x
+"#,
+                ),
+                (
+                    "real_exponent_product_power_zero_factor",
+                    r#"
+forall a R+, x R:
+    (a * 0)^x = a^x * 0^x
+"#,
+                ),
+                (
+                    "real_exponent_product_power_negative_factors",
+                    r#"
+((-2) * (-3))^(1 / 2) = (-2)^(1 / 2) * (-3)^(1 / 2)
+"#,
+                ),
+            ];
+
+            for (name, source_code) in cases {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(name);
+                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+                let (run_succeeded, run_output) =
+                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+                assert!(
+                    !run_succeeded,
+                    "{name} must not widen the real-power domain:\n{run_output}"
+                );
+                assert!(
+                    run_output.contains("base and exponent do not satisfy the pow domain"),
+                    "{name} should fail at the existing real-power domain boundary:\n{run_output}"
+                );
+            }
+        },
+    );
 }
 
 #[test]
