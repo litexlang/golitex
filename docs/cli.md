@@ -472,7 +472,7 @@ litex -strict -runner -isolated -f examples/tmp.lit
 Generate a relation graph:
 
 ```bash
-litex -graph -f examples/01_proof_patterns/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
+litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
 ```
 
 Generate a fact-only verification chain:

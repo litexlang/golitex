@@ -1,0 +1,18 @@
+# Reusable coordinate and metric laws for the analytic Euclidean plane.
+
+thm distance_sq_coordinate_formula:
+    ? forall a, b cart(R, R):
+        zero::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    zero::vec(a, b) = (b[1] - a[1], b[2] - a[2])
+    zero::vec(a, b)[1] = b[1] - a[1]
+    zero::vec(a, b)[2] = b[2] - a[2]
+    zero::distance_sq(a, b) = zero::dot(zero::vec(a, b), zero::vec(a, b))
+    zero::dot(zero::vec(a, b), zero::vec(a, b)) = zero::vec(a, b)[1] * zero::vec(a, b)[1] + zero::vec(a, b)[2] * zero::vec(a, b)[2] = (b[1] - a[1])^2 + (b[2] - a[2])^2
+
+thm distance_sq_nonnegative:
+    ? forall a, b cart(R, R):
+        0 <= zero::distance_sq(a, b)
+    0 <= (b[1] - a[1])^2
+    0 <= (b[2] - a[2])^2
+    0 <= (b[1] - a[1])^2 + (b[2] - a[2])^2
+    zero::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2

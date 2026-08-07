@@ -1,0 +1,1559 @@
+# Number Theory for Beginners, Section VI.
+#
+# source: Weil and Rosenlicht, Number Theory for Beginners, Section VI.
+# problem: Formalize multiplication of congruence classes, rings, fields,
+# linear congruences, and Euler's phi function.
+# proof_idea: Keep residue classes as the set-valued objects from Section V.
+# Define class multiplication as a value, prove representative independence
+# from multiplicative congruence, and use the checked gcd/Bezout interfaces for
+# the solvability direction of the linear-congruence theorem.  Finite quotient
+# cardinality and the full ring/field package remain explicit source debt.
+# litex_code: This file runs Sections I-V first and then adds Section VI.
+
+"""
+If m>0, multiplication of congruence classes is defined by
+(x mod m)*(y mod m)=(xy mod m).  Property (E) makes this independent of the
+representatives.
+"""
+
+have fn residue_class_mul_mod(m N+, x, y Z) power_set(Z) = section5::residue_class_mod(m, x * y)
+
+thm residue_class_multiplication_well_defined:
+    ? forall m N+, x, y, x1, y1 Z:
+        section5::residue_class_mod(m, x) = section5::residue_class_mod(m, x1)
+        section5::residue_class_mod(m, y) = section5::residue_class_mod(m, y1)
+        =>:
+            residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, x1, y1)
+    by thm section5::representative_belongs_to_residue_class(m, x)
+    x $in section5::residue_class_mod(m, x1)
+    by thm section5::representative_belongs_to_residue_class(m, y)
+    y $in section5::residue_class_mod(m, y1)
+    by thm section5::theorem_V_residue_classes_disjoint(m, x, x1)
+    $section5::congruent_mod(m, x, x1)
+    by thm section5::theorem_V_residue_classes_disjoint(m, y, y1)
+    $section5::congruent_mod(m, y, y1)
+    by thm section5::congruent_mod_multiply(m, x, x1, y, y1)
+    $section5::congruent_mod(m, x * y, x1 * y1)
+    by thm section5::residue_class_eq_of_congruent(m, x * y, x1 * y1)
+    section5::residue_class_mod(m, x * y) = section5::residue_class_mod(m, x1 * y1)
+    residue_class_mul_mod(m, x, y) = section5::residue_class_mod(m, x * y)
+    residue_class_mul_mod(m, x1, y1) = section5::residue_class_mod(m, x1 * y1)
+
+"""
+Definition. A ring is a set with an additive group law and an associative,
+commutative multiplication distributing over addition.  A unitary ring also
+has a multiplicative unit.
+"""
+
+prop is_commutative_ring(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier):
+    $section5::is_abelian_group(carrier, add, zero)
+    forall x, y, z carrier:
+        mul(mul(x, y), z) = mul(x, mul(y, z))
+        mul(x, add(y, z)) = add(mul(x, y), mul(x, z))
+    forall x, y carrier:
+        mul(x, y) = mul(y, x)
+
+prop is_commutative_unitary_ring(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, one carrier):
+    $is_commutative_ring(carrier, add, mul, zero)
+    forall x carrier:
+        mul(one, x) = x
+
+# In every ring, distributivity makes x*0 an additive idempotent.  The unique
+# solvability law of the additive group then identifies it with 0.
+thm commutative_ring_multiplication_by_zero:
+    ? forall carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, x carrier:
+        $is_commutative_ring(carrier, add, mul, zero)
+        =>:
+            mul(x, zero) = zero
+    $section5::is_abelian_group(carrier, add, zero)
+    exist! z carrier st {add(mul(x, zero), z) = mul(x, zero)}
+    add(zero, zero) = zero
+    add(mul(x, zero), mul(x, zero)) = mul(x, add(zero, zero)) = mul(x, zero)
+    add(mul(x, zero), zero) = add(zero, mul(x, zero)) = mul(x, zero)
+
+# If y_neg is the additive inverse of y, distributivity shows that x*y_neg is
+# the additive inverse of x*y.  This is the source identity x*(-y)=-(x*y).
+thm commutative_ring_multiplication_of_additive_inverse:
+    ? forall carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, x, y, y_neg carrier:
+        $is_commutative_ring(carrier, add, mul, zero)
+        add(y, y_neg) = zero
+        =>:
+            add(mul(x, y), mul(x, y_neg)) = zero
+    by thm commutative_ring_multiplication_by_zero(carrier, add, mul, zero, x)
+    add(mul(x, y), mul(x, y_neg)) = mul(x, add(y, y_neg)) = mul(x, zero) = zero
+
+# A multiplicative unit is unique: two candidates multiply to each other in
+# both orders, so each candidate equals the same product.
+thm commutative_ring_unit_is_unique:
+    ? forall carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero, exp_e, j carrier:
+        $is_commutative_ring(carrier, add, mul, zero)
+        forall x carrier:
+            mul(exp_e, x) = x
+        forall x carrier:
+            mul(j, x) = x
+        =>:
+            exp_e = j
+    exp_e = mul(j, exp_e) = mul(exp_e, j) = j
+
+"""
+The ordinary integer and rational operations give unitary rings.  Their
+associativity, commutativity, distributivity, and unit laws are checked
+directly on the builtin carriers.
+"""
+
+sketch:
+    forall x, y, z Z:
+        (x * y) * z = x * (y * z)
+        x * y = y * x
+        x * (y + z) = x * y + x * z
+        1 * x = x
+    forall x, y, z Q:
+        (x * y) * z = x * (y * z)
+        x * y = y * x
+        x * (y + z) = x * y + x * z
+        1 * x = x
+
+prop is_residue_class_multiplication_operation(m N+, Classes finite_set, mul fn(A, B Classes) Classes):
+    forall A, B Classes:
+        exist x, y Z st {A = section5::residue_class_mod(m, x), B = section5::residue_class_mod(m, y), mul(A, B) = residue_class_mul_mod(m, x, y)}
+
+prop residue_classes_form_unitary_ring_mod(m N+):
+    exist Classes finite_set, add fn(A, B Classes) Classes, mul fn(A, B Classes) Classes, zero Classes, one Classes st {$section5::is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m, $section5::is_residue_class_addition_operation(m, Classes, add, zero), $is_residue_class_multiplication_operation(m, Classes, mul), one = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add, mul, zero, one)}
+
+# Theorem VI.1. The residue classes modulo m inherit the checked class
+# addition from Section V and representative-independent multiplication.
+# Integer associativity, commutativity, distributivity, and the unit law
+# descend through the two well-definedness theorems.
+thm theorem_VI_1_residue_classes_unitary_ring:
+    ? forall m N+:
+        $residue_classes_form_unitary_ring_mod(m)
+    by thm section5::theorem_V_1_residue_classes_additive_group(m)
+    obtain carrier_C from exist carrier_C finite_set st {$section5::is_set_of_all_residue_classes_mod(m, carrier_C), finite_set_size(carrier_C) = m}
+    $section5::is_set_of_all_residue_classes_mod(m, carrier_C)
+    $section5::is_residue_class_carrier_mod(m, carrier_C)
+    obtain class_map from exist class_map fn(r 0...(m - 1)) power_set(Z) st {class_map = fn(r 0...(m - 1)) power_set(Z) {section5::residue_class_mod(m, r)}, carrier_C = fn_range(class_map)}
+    carrier_C = fn_range(class_map)
+    finite_set_size(carrier_C) = m
+    obtain add, zero from exist add fn(A, B carrier_C) carrier_C, zero carrier_C st {$section5::is_residue_class_addition_operation(m, carrier_C, add, zero), $section5::is_abelian_group(carrier_C, add, zero)}
+    have fn representative by exist!:
+        ? forall A carrier_C:
+            exist! r Z st {0 <= r < m, section5::residue_class_mod(m, r) = A}
+        A $in carrier_C
+        by thm section5::residue_class_carrier_has_unique_standard_representative(m, carrier_C, A)
+    claim:
+        ? forall t Z:
+            section5::residue_class_mod(m, t) $in carrier_C
+        have r Z = t % m
+        0 <= t % m < m
+        0 <= r < m
+        r $in N
+        r <= m - 1
+        r $in 0...(m - 1)
+        class_map(r) $in fn_range(class_map)
+        section5::residue_class_mod(m, r) = class_map(r)
+        section5::residue_class_mod(m, r) $in fn_range(class_map)
+        section5::residue_class_mod(m, r) $in carrier_C
+        t = m * section2::integer_quotient(t, m) + t % m
+        r = t % m
+        t = m * section2::integer_quotient(t, m) + r
+        t - r = m * section2::integer_quotient(t, m)
+        witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
+        by def:
+            ? $section1::divides_Z(m, t - r)
+        by def:
+            ? $section5::congruent_mod(m, t, r)
+        by thm section5::residue_class_eq_of_congruent(m, t, r)
+        section5::residue_class_mod(m, r) = section5::residue_class_mod(m, t)
+    have fn mul(A, B carrier_C) carrier_C = section5::residue_class_mod(m, representative(A) * representative(B))
+    have one carrier_C = section5::residue_class_mod(m, 1)
+    claim:
+        ? $is_residue_class_multiplication_operation(m, carrier_C, mul)
+        claim:
+            ? forall A, B carrier_C:
+                exist x, y Z st {A = section5::residue_class_mod(m, x), B = section5::residue_class_mod(m, y), mul(A, B) = residue_class_mul_mod(m, x, y)}
+            have x Z = representative(A)
+            have y Z = representative(B)
+            section5::residue_class_mod(m, representative(A)) = A
+            section5::residue_class_mod(m, representative(B)) = B
+            section5::residue_class_mod(m, x) = section5::residue_class_mod(m, representative(A)) = A
+            section5::residue_class_mod(m, y) = section5::residue_class_mod(m, representative(B)) = B
+            A = section5::residue_class_mod(m, x)
+            B = section5::residue_class_mod(m, y)
+            representative(A) = x
+            representative(B) = y
+            mul(A, B) = section5::residue_class_mod(m, representative(A) * representative(B))
+            representative(A) * representative(B) = x * y
+            mul(A, B) = section5::residue_class_mod(m, x * y) = residue_class_mul_mod(m, x, y)
+            witness exist x0, y0 Z st {A = section5::residue_class_mod(m, x0), B = section5::residue_class_mod(m, y0), mul(A, B) = residue_class_mul_mod(m, x0, y0)} from x, y
+        by def:
+            ? $is_residue_class_multiplication_operation(m, carrier_C, mul)
+    claim:
+        ? $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
+        $section5::is_abelian_group(carrier_C, add, zero)
+        claim:
+            ? forall A, B, D carrier_C:
+                mul(mul(A, B), D) = mul(A, mul(B, D))
+                mul(A, B) = mul(B, A)
+                mul(A, add(B, D)) = add(mul(A, B), mul(A, D))
+            section5::residue_class_mod(m, representative(mul(A, B))) = mul(A, B) = section5::residue_class_mod(m, representative(A) * representative(B))
+            by thm residue_class_multiplication_well_defined(m, representative(mul(A, B)), representative(D), representative(A) * representative(B), representative(D))
+            residue_class_mul_mod(m, representative(mul(A, B)), representative(D)) = residue_class_mul_mod(m, representative(A) * representative(B), representative(D))
+            section5::residue_class_mod(m, representative(mul(A, B)) * representative(D)) = residue_class_mul_mod(m, representative(mul(A, B)), representative(D)) = residue_class_mul_mod(m, representative(A) * representative(B), representative(D)) = section5::residue_class_mod(m, (representative(A) * representative(B)) * representative(D))
+            section5::residue_class_mod(m, representative(mul(B, D))) = mul(B, D) = section5::residue_class_mod(m, representative(B) * representative(D))
+            by thm residue_class_multiplication_well_defined(m, representative(A), representative(mul(B, D)), representative(A), representative(B) * representative(D))
+            residue_class_mul_mod(m, representative(A), representative(mul(B, D))) = residue_class_mul_mod(m, representative(A), representative(B) * representative(D))
+            section5::residue_class_mod(m, representative(A) * representative(mul(B, D))) = residue_class_mul_mod(m, representative(A), representative(mul(B, D))) = residue_class_mul_mod(m, representative(A), representative(B) * representative(D)) = section5::residue_class_mod(m, representative(A) * (representative(B) * representative(D)))
+            (representative(A) * representative(B)) * representative(D) = representative(A) * (representative(B) * representative(D))
+            mul(mul(A, B), D) = section5::residue_class_mod(m, representative(mul(A, B)) * representative(D))
+            mul(A, mul(B, D)) = section5::residue_class_mod(m, representative(A) * representative(mul(B, D)))
+            mul(mul(A, B), D) = mul(A, mul(B, D))
+            representative(A) * representative(B) = representative(B) * representative(A)
+            mul(A, B) = section5::residue_class_mod(m, representative(A) * representative(B))
+            mul(B, A) = section5::residue_class_mod(m, representative(B) * representative(A))
+            mul(A, B) = mul(B, A)
+            obtain b, d from exist b, d Z st {B = section5::residue_class_mod(m, b), D = section5::residue_class_mod(m, d), add(B, D) = section5::residue_class_add_mod(m, b, d)}
+            by thm section5::residue_class_addition_formula(m, b, d)
+            section5::residue_class_mod(m, representative(add(B, D))) = add(B, D) = section5::residue_class_add_mod(m, b, d) = section5::residue_class_mod(m, b + d)
+            section5::residue_class_mod(m, representative(B)) = B = section5::residue_class_mod(m, b)
+            section5::residue_class_mod(m, representative(D)) = D = section5::residue_class_mod(m, d)
+            by thm residue_class_multiplication_well_defined(m, representative(A), representative(add(B, D)), representative(A), b + d)
+            residue_class_mul_mod(m, representative(A), representative(add(B, D))) = residue_class_mul_mod(m, representative(A), b + d)
+            mul(A, add(B, D)) = section5::residue_class_mod(m, representative(A) * representative(add(B, D))) = residue_class_mul_mod(m, representative(A), representative(add(B, D))) = residue_class_mul_mod(m, representative(A), b + d) = section5::residue_class_mod(m, representative(A) * (b + d))
+            representative(A) * (b + d) = representative(A) * b + representative(A) * d
+            obtain u, v from exist u, v Z st {mul(A, B) = section5::residue_class_mod(m, u), mul(A, D) = section5::residue_class_mod(m, v), add(mul(A, B), mul(A, D)) = section5::residue_class_add_mod(m, u, v)}
+            by thm residue_class_multiplication_well_defined(m, representative(A), representative(B), representative(A), b)
+            residue_class_mul_mod(m, representative(A), representative(B)) = residue_class_mul_mod(m, representative(A), b)
+            mul(A, B) = section5::residue_class_mod(m, representative(A) * representative(B)) = residue_class_mul_mod(m, representative(A), representative(B)) = residue_class_mul_mod(m, representative(A), b) = section5::residue_class_mod(m, representative(A) * b)
+            by thm residue_class_multiplication_well_defined(m, representative(A), representative(D), representative(A), d)
+            residue_class_mul_mod(m, representative(A), representative(D)) = residue_class_mul_mod(m, representative(A), d)
+            mul(A, D) = section5::residue_class_mod(m, representative(A) * representative(D)) = residue_class_mul_mod(m, representative(A), representative(D)) = residue_class_mul_mod(m, representative(A), d) = section5::residue_class_mod(m, representative(A) * d)
+            by thm section5::residue_class_addition_well_defined(m, u, v, representative(A) * b, representative(A) * d)
+            section5::residue_class_add_mod(m, u, v) = section5::residue_class_add_mod(m, representative(A) * b, representative(A) * d)
+            by thm section5::residue_class_addition_formula(m, representative(A) * b, representative(A) * d)
+            add(mul(A, B), mul(A, D)) = section5::residue_class_add_mod(m, u, v) = section5::residue_class_add_mod(m, representative(A) * b, representative(A) * d) = section5::residue_class_mod(m, representative(A) * b + representative(A) * d)
+            mul(A, add(B, D)) = add(mul(A, B), mul(A, D))
+        by def:
+            ? $is_commutative_ring(carrier_C, add, mul, zero)
+        claim:
+            ? forall A carrier_C:
+                mul(one, A) = A
+            obtain x, y from exist x, y Z st {one = section5::residue_class_mod(m, x), A = section5::residue_class_mod(m, y), mul(one, A) = residue_class_mul_mod(m, x, y)}
+            section5::residue_class_mod(m, x) = one = section5::residue_class_mod(m, 1)
+            section5::residue_class_mod(m, y) = A = section5::residue_class_mod(m, representative(A))
+            by thm residue_class_multiplication_well_defined(m, x, y, 1, representative(A))
+            residue_class_mul_mod(m, 1, representative(A)) = section5::residue_class_mod(m, 1 * representative(A))
+            1 * representative(A) = representative(A)
+            residue_class_mul_mod(m, 1, representative(A)) = section5::residue_class_mod(m, representative(A))
+            mul(one, A) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, 1, representative(A)) = section5::residue_class_mod(m, representative(A)) = A
+        by def:
+            ? $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
+    witness exist C0 finite_set, add0 fn(A, B C0) C0, mul0 fn(A, B C0) C0, zero0 C0, one0 C0 st {$section5::is_set_of_all_residue_classes_mod(m, C0), finite_set_size(C0) = m, $section5::is_residue_class_addition_operation(m, C0, add0, zero0), $is_residue_class_multiplication_operation(m, C0, mul0), one0 = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(C0, add0, mul0, zero0, one0)} from carrier_C, add, mul, zero, one
+    by def:
+        ? $residue_classes_form_unitary_ring_mod(m)
+
+"""
+A zero-divisor is a nonzero ring element that annihilates another nonzero
+element.  Modulo 6, the classes of 2 and 3 are nonzero but their product is
+the zero class.  In contrast, integer and rational multiplication have no
+zero-divisors.
+"""
+
+prop is_zero_divisor(carrier set, mul fn(x, y carrier) carrier, zero carrier, x carrier):
+    x != zero
+    exist y carrier st {y != zero, mul(x, y) = zero}
+
+thm residue_classes_two_and_three_mod_six_are_zero_divisors:
+    ? forall:
+        section5::residue_class_mod(6, 2) != section5::residue_class_mod(6, 0)
+        section5::residue_class_mod(6, 3) != section5::residue_class_mod(6, 0)
+        residue_class_mul_mod(6, 2, 3) = section5::residue_class_mod(6, 0)
+    claim:
+        ? section5::residue_class_mod(6, 2) != section5::residue_class_mod(6, 0)
+        by contra:
+            ? section5::residue_class_mod(6, 2) != section5::residue_class_mod(6, 0)
+            section5::residue_class_mod(6, 2) = section5::residue_class_mod(6, 0)
+            by thm section5::representative_belongs_to_residue_class(6, 2)
+            2 $in section5::residue_class_mod(6, 0)
+            by thm section5::theorem_V_residue_classes_disjoint(6, 2, 0)
+            $section5::congruent_mod(6, 2, 0)
+            by thm section5::congruent_mod_has_same_remainder(6, 2, 0)
+            2 % 6 = 0 % 6
+            2 % 6 = 2
+            0 % 6 = 0
+            2 = 2 % 6 = 0 % 6 = 0
+            impossible 2 = 0
+    claim:
+        ? section5::residue_class_mod(6, 3) != section5::residue_class_mod(6, 0)
+        by contra:
+            ? section5::residue_class_mod(6, 3) != section5::residue_class_mod(6, 0)
+            section5::residue_class_mod(6, 3) = section5::residue_class_mod(6, 0)
+            by thm section5::representative_belongs_to_residue_class(6, 3)
+            3 $in section5::residue_class_mod(6, 0)
+            by thm section5::theorem_V_residue_classes_disjoint(6, 3, 0)
+            $section5::congruent_mod(6, 3, 0)
+            by thm section5::congruent_mod_has_same_remainder(6, 3, 0)
+            3 % 6 = 0 % 6
+            3 % 6 = 3
+            0 % 6 = 0
+            3 = 3 % 6 = 0 % 6 = 0
+            impossible 3 = 0
+    2 * 3 = 6
+    residue_class_mul_mod(6, 2, 3) = section5::residue_class_mod(6, 2 * 3) = section5::residue_class_mod(6, 6)
+    witness exist k Z st {6 - 0 = 6 * k} from 1
+    by def:
+        ? $section1::divides_Z(6, 6 - 0)
+    by def:
+        ? $section5::congruent_mod(6, 6, 0)
+    by thm section5::residue_class_eq_of_congruent(6, 6, 0)
+    residue_class_mul_mod(6, 2, 3) = section5::residue_class_mod(6, 6) = section5::residue_class_mod(6, 0)
+
+sketch:
+    forall x, y Z:
+        x * y = 0
+        =>:
+            x = 0 or y = 0
+    forall x, y Q:
+        x * y = 0
+        =>:
+            x = 0 or y = 0
+
+"""
+If a is prime to m, every representative of its congruence class is prime to
+m.  The source proof is a mutual integer-linear change of the pair (a,m).
+"""
+
+prop residue_class_prime_to_mod(m N+, x Z):
+    $section3::relatively_prime_Z(x, m)
+
+thm residue_class_prime_to_mod_is_representative_independent:
+    ? forall m N+, x, x1 Z:
+        section5::residue_class_mod(m, x) = section5::residue_class_mod(m, x1)
+        $residue_class_prime_to_mod(m, x)
+        =>:
+            $residue_class_prime_to_mod(m, x1)
+    by thm section5::representative_belongs_to_residue_class(m, x)
+    x $in section5::residue_class_mod(m, x1)
+    by thm section5::theorem_V_residue_classes_disjoint(m, x, x1)
+    $section5::congruent_mod(m, x, x1)
+    $section1::divides_Z(m, x - x1)
+    by def:
+        ? $section1::divides_Z(m, x - x1)
+    obtain t from exist t Z st {x - x1 = m * t}
+    $section3::relatively_prime_Z(x, m)
+    section2::gcd_Z(x, m) = 1
+    $section2::is_gcd_Z(x, m, section2::gcd_Z(x, m))
+    $section2::is_gcd_Z(x, m, 1)
+    x1 = x - (x - x1) = x - m * t
+    x - m * t = 1 * x + (-t) * m
+    m = 0 * x + 1 * m
+    x = x1 + (x - x1) = x1 + m * t
+    x1 + m * t = 1 * x1 + t * m
+    m = 0 * x1 + 1 * m
+    by thm section2::is_gcd_Z_preserved_by_mutual_integer_linear_changes(x, m, x1, m, 1, 1, -t, 0, 1, 1, t, 0, 1)
+    $section2::is_gcd_Z(x, m, 1)
+    $section2::is_gcd_Z(x1, m, 1)
+    by def:
+        ? $section3::relatively_prime_Z(x1, m)
+    by def:
+        ? $residue_class_prime_to_mod(m, x1)
+
+# Relative primality is symmetric.  This short Bézout bridge is used by both
+# the class-product argument and the later multiplicative-group corollary.
+thm relatively_prime_Z_symmetric:
+    ? forall a, b Z:
+        $section3::relatively_prime_Z(a, b)
+        =>:
+            $section3::relatively_prime_Z(b, a)
+    by thm section3::theorem_III_1_relprime_implies_bezout_pair(a, b)
+    obtain x, y from exist x, y Z st {a * x + b * y = 1}
+    witness exist u, v Z st {b * u + a * v = 1} from y, x:
+        b * y + a * x = a * x + b * y = 1
+    by thm section3::theorem_III_1_bezout_implies_relprime_pair(b, a)
+
+# The product of two classes prime to m is again prime to m.  Corollary 1 of
+# Theorem III.2 applies after reversing both relatively-prime pairs.
+thm prime_to_residue_classes_closed_under_multiplication:
+    ? forall m N+, a, b Z:
+        $section3::relatively_prime_Z(a, m)
+        $section3::relatively_prime_Z(b, m)
+        =>:
+            $section3::relatively_prime_Z(a * b, m)
+    by thm relatively_prime_Z_symmetric(a, m)
+    by thm relatively_prime_Z_symmetric(b, m)
+    by thm section3::theorem_III_2_corollary_1(m, a, b)
+    by thm relatively_prime_Z_symmetric(m, a * b)
+
+# A class prime to m cannot be a zero-divisor: if a*b is the zero class, then
+# m divides a*b; Euclid's lemma cancels the factor a and makes b the zero class.
+thm prime_to_residue_class_cannot_annihilate_nonzero_class:
+    ? forall m N+, a, b Z:
+        $section3::relatively_prime_Z(a, m)
+        section5::residue_class_mod(m, a * b) = section5::residue_class_mod(m, 0)
+        =>:
+            section5::residue_class_mod(m, b) = section5::residue_class_mod(m, 0)
+    by thm section5::representative_belongs_to_residue_class(m, a * b)
+    a * b $in section5::residue_class_mod(m, 0)
+    by thm section5::theorem_V_residue_classes_disjoint(m, a * b, 0)
+    $section5::congruent_mod(m, a * b, 0)
+    $section1::divides_Z(m, a * b - 0)
+    by def:
+        ? $section1::divides_Z(m, a * b - 0)
+    obtain k from exist k Z st {a * b - 0 = m * k}
+    witness exist q Z st {a * b = m * q} from k:
+        a * b = a * b - 0 = m * k
+    by def:
+        ? $section1::divides_Z(m, a * b)
+    by thm relatively_prime_Z_symmetric(a, m)
+    by thm section3::theorem_III_2_euclid_lemma(m, a, b)
+    obtain q from exist q Z st {b = m * q}
+    witness exist h Z st {b - 0 = m * h} from q:
+        b - 0 = b = m * q
+    by def:
+        ? $section1::divides_Z(m, b - 0)
+    by def:
+        ? $section5::congruent_mod(m, b, 0)
+    by thm section5::residue_class_eq_of_congruent(m, b, 0)
+
+"""
+Theorem VI.2. The congruence a*x=b (mod m) is solvable exactly when the gcd of
+a and m divides b.  Once one solution is fixed, the remaining solution-class
+description is stated separately so the source's counting argument remains
+visible.
+"""
+
+prop solves_linear_congruence_mod(m N+, a, b, x Z):
+    exist k Z st {a * x - b = m * k}
+
+prop linear_congruence_solvable_mod(m N+, a, b Z):
+    exist x Z st {$solves_linear_congruence_mod(m, a, b, x)}
+
+thm theorem_VI_2_solvable_implies_gcd_divides:
+    ? forall m N+, a, b Z:
+        $linear_congruence_solvable_mod(m, a, b)
+        =>:
+            $section1::divides_Z(section2::gcd_Z(a, m), b)
+    obtain x from exist x Z st {$solves_linear_congruence_mod(m, a, b, x)}
+    $solves_linear_congruence_mod(m, a, b, x)
+    obtain k from exist k Z st {a * x - b = m * k}
+    by thm section2::gcd_Z_dvd_left(a, m)
+    by thm section2::gcd_Z_dvd_right(a, m)
+    by thm section1::divides_Z_linear_combination(section2::gcd_Z(a, m), a, m, x, -k)
+    $section1::divides_Z(section2::gcd_Z(a, m), x * a + -k * m)
+    a * x - m * k = a * x - (a * x - b) = b
+    x * a + -k * m = a * x - m * k = b
+
+thm theorem_VI_2_gcd_divides_implies_solvable:
+    ? forall m N+, a, b Z:
+        $section1::divides_Z(section2::gcd_Z(a, m), b)
+        =>:
+            $linear_congruence_solvable_mod(m, a, b)
+    obtain t from exist t Z st {b = section2::gcd_Z(a, m) * t}
+    by thm section2::gcd_Z_bezout(a, m)
+    obtain u, v from exist u, v Z st {section2::gcd_Z(a, m) = a * u + m * v}
+    witness exist k Z st {a * (u * t) - b = m * k} from -v * t:
+        a * (u * t) - b = a * u * t - (a * u + m * v) * t = m * (-v * t)
+    by def:
+        ? $solves_linear_congruence_mod(m, a, b, u * t)
+    witness exist x Z st {$solves_linear_congruence_mod(m, a, b, x)} from u * t:
+        $solves_linear_congruence_mod(m, a, b, u * t)
+    by def:
+        ? $linear_congruence_solvable_mod(m, a, b)
+
+thm gcd_Z_nonzero_for_positive_second:
+    ? forall a Z, m N+:
+        section2::gcd_Z(a, m) != 0
+    by thm section2::gcd_Z_dvd_right(a, m)
+    obtain q from exist q Z st {m = section2::gcd_Z(a, m) * q}
+    section2::gcd_Z(a, m) = 0 or section2::gcd_Z(a, m) > 0
+    by cases:
+        ? section2::gcd_Z(a, m) != 0
+        case section2::gcd_Z(a, m) = 0:
+            m = section2::gcd_Z(a, m) * q = 0 * q = 0
+            impossible m > 0
+        case section2::gcd_Z(a, m) > 0:
+            section2::gcd_Z(a, m) != 0
+
+prop linear_congruence_solution_family_mod(m N+, a, b, x Z):
+    $solves_linear_congruence_mod(m, a, b, x)
+    section2::gcd_Z(a, m) != 0
+    forall x1 Z:
+        $solves_linear_congruence_mod(m, a, b, x1)
+        =>:
+            exist u Z st {x1 = x + (m / section2::gcd_Z(a, m)) * u}
+
+prop is_linear_congruence_solution_class_mod(m N+, a, b Z, S power_set(Z)):
+    exist x Z st {$solves_linear_congruence_mod(m, a, b, x), S = section5::residue_class_mod(m, x)}
+
+have fn linear_congruence_solution_classes_mod(m N+, a, b Z) power_set(power_set(Z)) = {S power_set(Z): $is_linear_congruence_solution_class_mod(m, a, b, S)}
+
+thm linear_congruence_solution_class_is_member:
+    ? forall m N+, a, b Z, S power_set(Z):
+        $is_linear_congruence_solution_class_mod(m, a, b, S)
+        =>:
+            S $in linear_congruence_solution_classes_mod(m, a, b)
+    linear_congruence_solution_classes_mod(m, a, b) = {T power_set(Z): $is_linear_congruence_solution_class_mod(m, a, b, T)}
+    by thm set_builder_member(S, {T power_set(Z): $is_linear_congruence_solution_class_mod(m, a, b, T)})
+    S $in {T power_set(Z): $is_linear_congruence_solution_class_mod(m, a, b, T)}
+
+prop is_solvable_right_hand_side_class_mod(m N+, a Z, S power_set(Z)):
+    exist b Z st {$section1::divides_Z(section2::gcd_Z(a, m), b), S = section5::residue_class_mod(m, b)}
+
+have fn solvable_right_hand_side_classes_mod(m N+, a Z) power_set(power_set(Z)) = {S power_set(Z): $is_solvable_right_hand_side_class_mod(m, a, S)}
+
+thm solvable_right_hand_side_class_is_member:
+    ? forall m N+, a Z, S power_set(Z):
+        $is_solvable_right_hand_side_class_mod(m, a, S)
+        =>:
+            S $in solvable_right_hand_side_classes_mod(m, a)
+    solvable_right_hand_side_classes_mod(m, a) = {T power_set(Z): $is_solvable_right_hand_side_class_mod(m, a, T)}
+    by thm set_builder_member(S, {T power_set(Z): $is_solvable_right_hand_side_class_mod(m, a, T)})
+    S $in {T power_set(Z): $is_solvable_right_hand_side_class_mod(m, a, T)}
+
+thm theorem_VI_2_solution_family:
+    ? forall m N+, a, b, x Z:
+        $solves_linear_congruence_mod(m, a, b, x)
+        =>:
+            $linear_congruence_solution_family_mod(m, a, b, x)
+    by thm gcd_Z_nonzero_for_positive_second(a, m)
+    have d N+ = section2::gcd_Z(a, m)
+    by thm section2::gcd_Z_dvd_left(a, m)
+    obtain A from exist A Z st {a = section2::gcd_Z(a, m) * A}
+    a = section2::gcd_Z(a, m) * A = d * A
+    by thm section2::gcd_Z_dvd_right(a, m)
+    obtain M from exist M Z st {m = section2::gcd_Z(a, m) * M}
+    m = section2::gcd_Z(a, m) * M = d * M
+    a / d = d * A / d = A
+    m / d = d * M / d = M
+    m / section2::gcd_Z(a, m) = m / d = M
+    by thm section3::gcd_quotients_are_relatively_prime(a, m)
+    $section3::relatively_prime_Z(A, M)
+    by thm section3::theorem_III_1_relprime_implies_bezout_pair(A, M)
+    obtain u, v from exist u, v Z st {A * u + M * v = 1}
+    witness exist s, t Z st {M * s + A * t = 1} from v, u:
+        M * v + A * u = A * u + M * v = 1
+    by thm section3::theorem_III_1_bezout_implies_relprime_pair(M, A)
+    $section3::relatively_prime_Z(M, A)
+    claim:
+        ? forall x1 Z:
+            $solves_linear_congruence_mod(m, a, b, x1)
+            =>:
+                exist q Z st {x1 = x + (m / section2::gcd_Z(a, m)) * q}
+        obtain k from exist k Z st {a * x - b = m * k}
+        obtain k1 from exist k1 Z st {a * x1 - b = m * k1}
+        a * (x1 - x) = (a * x1 - b) - (a * x - b) = m * k1 - m * k = m * (k1 - k)
+        d * (A * (x1 - x)) = (d * A) * (x1 - x) = a * (x1 - x) = m * (k1 - k) = (d * M) * (k1 - k) = d * (M * (k1 - k))
+        A * (x1 - x) = d * (A * (x1 - x)) / d = d * (M * (k1 - k)) / d = M * (k1 - k)
+        witness exist h Z st {A * (x1 - x) = M * h} from k1 - k
+        by def:
+            ? $section1::divides_Z(M, A * (x1 - x))
+        by thm section3::theorem_III_2_euclid_lemma(M, A, x1 - x)
+        obtain q from exist q Z st {x1 - x = M * q}
+        x1 = x + (x1 - x) = x + M * q = x + (m / section2::gcd_Z(a, m)) * q
+        witness exist q0 Z st {x1 = x + (m / section2::gcd_Z(a, m)) * q0} from q
+    by def:
+        ? $linear_congruence_solution_family_mod(m, a, b, x)
+
+thm theorem_VI_2_exact_solution_class_count:
+    ? forall m N+, a, b, x Z:
+        $solves_linear_congruence_mod(m, a, b, x)
+        =>:
+            $is_finite_set(linear_congruence_solution_classes_mod(m, a, b))
+            finite_set_size(linear_congruence_solution_classes_mod(m, a, b)) = section2::gcd_Z(a, m)
+    by thm gcd_Z_nonzero_for_positive_second(a, m)
+    have d N+ = section2::gcd_Z(a, m)
+    by thm section2::gcd_Z_dvd_left(a, m)
+    obtain A from exist A Z st {a = section2::gcd_Z(a, m) * A}
+    a = section2::gcd_Z(a, m) * A = d * A
+    by thm section2::gcd_Z_dvd_right(a, m)
+    obtain M from exist M Z st {m = section2::gcd_Z(a, m) * M}
+    m = section2::gcd_Z(a, m) * M = d * M
+    claim:
+        ? M > 0
+        by contra:
+            ? M > 0
+            M <= 0
+            d * (-1 * M) >= 0
+            d * (-1 * M) = -1 * (d * M)
+            -1 * (d * M) >= 0
+            -1 * (-1 * (d * M)) <= 0
+            d * M = -1 * (-1 * (d * M)) <= 0
+            m = d * M <= 0
+            impossible m > 0
+    have M0 N+ = M
+    m / d = d * M / d = M
+    m / section2::gcd_Z(a, m) = m / d = M
+    by thm theorem_VI_2_solution_family(m, a, b, x)
+    have fn solution_class(u 0...(d - 1)) power_set(Z) = section5::residue_class_mod(m, x + M * u)
+    claim:
+        ? forall u1, u2 0...(d - 1):
+            solution_class(u1) = solution_class(u2)
+            =>:
+                u1 = u2
+        section5::residue_class_mod(m, x + M * u1) = solution_class(u1) = solution_class(u2) = section5::residue_class_mod(m, x + M * u2)
+        by thm section5::representative_belongs_to_residue_class(m, x + M * u1)
+        x + M * u1 $in section5::residue_class_mod(m, x + M * u2)
+        by thm section5::theorem_V_residue_classes_disjoint(m, x + M * u1, x + M * u2)
+        $section5::congruent_mod(m, x + M * u1, x + M * u2)
+        by thm section5::congruent_mod_reflexive(m, x)
+        by thm section5::congruent_mod_subtract(m, x + M * u1, x + M * u2, x, x)
+        (x + M * u1) - x = M * u1
+        (x + M * u2) - x = M * u2
+        $section5::congruent_mod(m, M * u1, M * u2)
+        m = d * M = M * d
+        by thm section5::congruent_mod_cancel_common_factor(m, M0, d, M * u1, M * u2, u1, u2)
+        $section5::congruent_mod(d, u1, u2)
+        by thm section5::congruent_mod_has_same_remainder(d, u1, u2)
+        u1 % d = u2 % d
+        0 <= u1 <= d - 1 < d
+        0 <= u2 <= d - 1 < d
+        claim:
+            ? $section2::euclidean_division_Z(u1, d, 0, u1)
+            d > 0
+            u1 = d * 0 + u1
+            0 <= u1 < d
+            by def:
+                ? $section2::euclidean_division_Z(u1, d, 0, u1)
+        claim:
+            ? $section2::euclidean_division_Z(u2, d, 0, u2)
+            d > 0
+            u2 = d * 0 + u2
+            0 <= u2 < d
+            by def:
+                ? $section2::euclidean_division_Z(u2, d, 0, u2)
+        by thm section2::euclidean_division_remainder_is_mod(u1, d, 0, u1)
+        by thm section2::euclidean_division_remainder_is_mod(u2, d, 0, u2)
+    by def:
+        ? $injective(0...(d - 1), power_set(Z), solution_class)
+    claim:
+        ? linear_congruence_solution_classes_mod(m, a, b) = fn_range(solution_class)
+        by extension:
+            ? linear_congruence_solution_classes_mod(m, a, b) = fn_range(solution_class)
+            claim:
+                ? forall S linear_congruence_solution_classes_mod(m, a, b):
+                    S $in fn_range(solution_class)
+                obtain y from exist y Z st {$solves_linear_congruence_mod(m, a, b, y), S = section5::residue_class_mod(m, y)}
+                obtain q from exist q Z st {y = x + (m / section2::gcd_Z(a, m)) * q}
+                y = x + (m / section2::gcd_Z(a, m)) * q = x + M * q
+                have r Z = q % d
+                0 <= q % d < d
+                0 <= r < d
+                r $in N
+                r <= d - 1
+                r $in 0...(d - 1)
+                q = d * section2::integer_quotient(q, d) + q % d
+                r = q % d
+                q - r = (d * section2::integer_quotient(q, d) + r) - r = d * section2::integer_quotient(q, d)
+                y - (x + M * r) = (x + M * q) - (x + M * r) = M * (q - r) = M * (d * section2::integer_quotient(q, d)) = (M * d) * section2::integer_quotient(q, d) = m * section2::integer_quotient(q, d)
+                witness exist k Z st {y - (x + M * r) = m * k} from section2::integer_quotient(q, d)
+                by def:
+                    ? $section1::divides_Z(m, y - (x + M * r))
+                by def:
+                    ? $section5::congruent_mod(m, y, x + M * r)
+                by thm section5::residue_class_eq_of_congruent(m, y, x + M * r)
+                S = section5::residue_class_mod(m, y) = section5::residue_class_mod(m, x + M * r) = solution_class(r)
+                solution_class(r) $in fn_range(solution_class)
+            forall S linear_congruence_solution_classes_mod(m, a, b):
+                S $in fn_range(solution_class)
+            claim:
+                ? forall S fn_range(solution_class):
+                    S $in linear_congruence_solution_classes_mod(m, a, b)
+                have by preimage u from S $in fn_range(solution_class)
+                u $in 0...(d - 1)
+                S = solution_class(u) = section5::residue_class_mod(m, x + M * u)
+                obtain k from exist k Z st {a * x - b = m * k}
+                a * M * u = (d * A) * M * u = (d * M) * A * u = m * A * u = m * (A * u)
+                a * (x + M * u) - b = (a * x - b) + a * M * u = m * k + m * (A * u) = m * (k + A * u)
+                witness exist h Z st {a * (x + M * u) - b = m * h} from k + A * u
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, x + M * u)
+                witness exist y Z st {$solves_linear_congruence_mod(m, a, b, y), S = section5::residue_class_mod(m, y)} from x + M * u
+                by def:
+                    ? $is_linear_congruence_solution_class_mod(m, a, b, S)
+                by thm linear_congruence_solution_class_is_member(m, a, b, S)
+            forall S fn_range(solution_class):
+                S $in linear_congruence_solution_classes_mod(m, a, b)
+    $is_finite_set(fn_range(solution_class))
+    $is_finite_set(linear_congruence_solution_classes_mod(m, a, b))
+    d >= 1
+    d - 1 >= 0
+    d - 1 $in N
+    finite_set_size(linear_congruence_solution_classes_mod(m, a, b)) = finite_set_size(fn_range(solution_class)) = finite_set_size(0...(d - 1)) = (d - 1) - 0 + 1 = d = section2::gcd_Z(a, m)
+
+thm theorem_VI_2_solvable_right_hand_side_count:
+    ? forall m N+, a Z:
+        $is_finite_set(solvable_right_hand_side_classes_mod(m, a))
+        finite_set_size(solvable_right_hand_side_classes_mod(m, a)) = m / section2::gcd_Z(a, m)
+    by thm gcd_Z_nonzero_for_positive_second(a, m)
+    have d N+ = section2::gcd_Z(a, m)
+    by thm section2::gcd_Z_dvd_right(a, m)
+    obtain M from exist M Z st {m = section2::gcd_Z(a, m) * M}
+    m = section2::gcd_Z(a, m) * M = d * M
+    claim:
+        ? M > 0
+        by contra:
+            ? M > 0
+            M <= 0
+            d * (-1 * M) >= 0
+            d * (-1 * M) = -1 * (d * M)
+            -1 * (d * M) >= 0
+            -1 * (-1 * (d * M)) <= 0
+            d * M = -1 * (-1 * (d * M)) <= 0
+            m = d * M <= 0
+            impossible m > 0
+    have M0 N+ = M
+    m / d = d * M / d = M
+    m / section2::gcd_Z(a, m) = m / d = M
+    have fn right_hand_side_class(z 0...(M0 - 1)) power_set(Z) = section5::residue_class_mod(m, d * z)
+    claim:
+        ? forall z1, z2 0...(M0 - 1):
+            right_hand_side_class(z1) = right_hand_side_class(z2)
+            =>:
+                z1 = z2
+        section5::residue_class_mod(m, d * z1) = right_hand_side_class(z1) = right_hand_side_class(z2) = section5::residue_class_mod(m, d * z2)
+        by thm section5::representative_belongs_to_residue_class(m, d * z1)
+        d * z1 $in section5::residue_class_mod(m, d * z2)
+        by thm section5::theorem_V_residue_classes_disjoint(m, d * z1, d * z2)
+        $section5::congruent_mod(m, d * z1, d * z2)
+        m = d * M0
+        by thm section5::congruent_mod_cancel_common_factor(m, d, M0, d * z1, d * z2, z1, z2)
+        $section5::congruent_mod(M0, z1, z2)
+        by thm section5::congruent_mod_has_same_remainder(M0, z1, z2)
+        z1 % M0 = z2 % M0
+        0 <= z1 <= M0 - 1 < M0
+        0 <= z2 <= M0 - 1 < M0
+        claim:
+            ? $section2::euclidean_division_Z(z1, M0, 0, z1)
+            M0 > 0
+            z1 = M0 * 0 + z1
+            0 <= z1 < M0
+            by def:
+                ? $section2::euclidean_division_Z(z1, M0, 0, z1)
+        claim:
+            ? $section2::euclidean_division_Z(z2, M0, 0, z2)
+            M0 > 0
+            z2 = M0 * 0 + z2
+            0 <= z2 < M0
+            by def:
+                ? $section2::euclidean_division_Z(z2, M0, 0, z2)
+        by thm section2::euclidean_division_remainder_is_mod(z1, M0, 0, z1)
+        by thm section2::euclidean_division_remainder_is_mod(z2, M0, 0, z2)
+    by def:
+        ? $injective(0...(M0 - 1), power_set(Z), right_hand_side_class)
+    claim:
+        ? solvable_right_hand_side_classes_mod(m, a) = fn_range(right_hand_side_class)
+        by extension:
+            ? solvable_right_hand_side_classes_mod(m, a) = fn_range(right_hand_side_class)
+            claim:
+                ? forall S solvable_right_hand_side_classes_mod(m, a):
+                    S $in fn_range(right_hand_side_class)
+                obtain b from exist b Z st {$section1::divides_Z(section2::gcd_Z(a, m), b), S = section5::residue_class_mod(m, b)}
+                obtain q from exist q Z st {b = section2::gcd_Z(a, m) * q}
+                b = section2::gcd_Z(a, m) * q = d * q
+                have r Z = q % M0
+                0 <= q % M0 < M0
+                0 <= r < M0
+                r $in N
+                r <= M0 - 1
+                r $in 0...(M0 - 1)
+                q = M0 * section2::integer_quotient(q, M0) + q % M0
+                r = q % M0
+                q - r = (M0 * section2::integer_quotient(q, M0) + r) - r = M0 * section2::integer_quotient(q, M0)
+                b - d * r = d * q - d * r = d * (q - r) = d * (M0 * section2::integer_quotient(q, M0)) = (d * M0) * section2::integer_quotient(q, M0) = m * section2::integer_quotient(q, M0)
+                witness exist k Z st {b - d * r = m * k} from section2::integer_quotient(q, M0)
+                by def:
+                    ? $section1::divides_Z(m, b - d * r)
+                by def:
+                    ? $section5::congruent_mod(m, b, d * r)
+                by thm section5::residue_class_eq_of_congruent(m, b, d * r)
+                S = section5::residue_class_mod(m, b) = section5::residue_class_mod(m, d * r) = right_hand_side_class(r)
+                right_hand_side_class(r) $in fn_range(right_hand_side_class)
+            forall S solvable_right_hand_side_classes_mod(m, a):
+                S $in fn_range(right_hand_side_class)
+            claim:
+                ? forall S fn_range(right_hand_side_class):
+                    S $in solvable_right_hand_side_classes_mod(m, a)
+                have by preimage z from S $in fn_range(right_hand_side_class)
+                S = right_hand_side_class(z) = section5::residue_class_mod(m, d * z)
+                witness exist q Z st {d * z = d * q} from z
+                by def:
+                    ? $section1::divides_Z(d, d * z)
+                witness exist b Z st {$section1::divides_Z(section2::gcd_Z(a, m), b), S = section5::residue_class_mod(m, b)} from d * z
+                by def:
+                    ? $is_solvable_right_hand_side_class_mod(m, a, S)
+                by thm solvable_right_hand_side_class_is_member(m, a, S)
+            forall S fn_range(right_hand_side_class):
+                S $in solvable_right_hand_side_classes_mod(m, a)
+    $is_finite_set(fn_range(right_hand_side_class))
+    $is_finite_set(solvable_right_hand_side_classes_mod(m, a))
+    M0 >= 1
+    M0 - 1 >= 0
+    M0 - 1 $in N
+    finite_set_size(solvable_right_hand_side_classes_mod(m, a)) = finite_set_size(fn_range(right_hand_side_class)) = finite_set_size(0...(M0 - 1)) = (M0 - 1) - 0 + 1 = M0 = m / section2::gcd_Z(a, m)
+
+"""
+The reduced representatives are the standard remainders from 0 through m-1
+that are prime to m.  They present the congruence classes used in the
+multiplicative-group corollary.
+"""
+
+prop coprime_remainder_mod(m N+, a Z):
+    0 <= a < m
+    $section3::relatively_prime_Z(a, m)
+
+have fn coprime_remainders_mod(m N+) power_set(Z) = {a Z: $coprime_remainder_mod(m, a)}
+
+# This explicit two-way interface exposes membership in the set-valued
+# definition across later chapter files.  Each direction is definitionally
+# immediate in its local module, but the named facts avoid relying on a
+# cross-file unfolding of `have fn` bodies.
+thm coprime_remainder_is_member_of_coprime_remainders_mod:
+    ? forall m N+, a Z:
+        $coprime_remainder_mod(m, a)
+        =>:
+            a $in coprime_remainders_mod(m)
+    coprime_remainders_mod(m) = {x Z: $coprime_remainder_mod(m, x)}
+    by thm set_builder_member(a, {x Z: $coprime_remainder_mod(m, x)})
+    a $in {x Z: $coprime_remainder_mod(m, x)}
+
+thm member_of_coprime_remainders_mod_is_coprime_remainder:
+    ? forall m N+, a Z:
+        a $in coprime_remainders_mod(m)
+        =>:
+            $coprime_remainder_mod(m, a)
+
+thm coprime_remainders_mod_is_finite:
+    ? forall m N+:
+        $is_finite_set(coprime_remainders_mod(m))
+    claim:
+        ? forall a coprime_remainders_mod(m):
+            a $in 0...(m - 1)
+        0 <= a < m
+        0 <= a <= m - 1
+    by def:
+        ? coprime_remainders_mod(m) $subset 0...(m - 1)
+    coprime_remainders_mod(m) = set_minus(0...(m - 1), set_minus(0...(m - 1), coprime_remainders_mod(m)))
+    $is_finite_set(0...(m - 1))
+    $is_finite_set(set_minus(0...(m - 1), set_minus(0...(m - 1), coprime_remainders_mod(m))))
+
+prop is_reduced_residue_class_carrier_mod(m N+, U finite_set):
+    exist unit_map fn(r coprime_remainders_mod(m)) power_set(Z) st {unit_map = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}, U = fn_range(unit_map)}
+
+prop is_reduced_residue_class_multiplication_operation(m N+, U finite_set, mul fn(A, B U) U, one U):
+    one = section5::residue_class_mod(m, 1)
+    forall A, B U:
+        exist a, b Z st {$section3::relatively_prime_Z(a, m), $section3::relatively_prime_Z(b, m), A = section5::residue_class_mod(m, a), B = section5::residue_class_mod(m, b), mul(A, B) = section5::residue_class_mod(m, a * b)}
+
+prop reduced_residue_classes_form_multiplicative_group_mod(m N+):
+    exist U finite_set, mul fn(A, B U) U, one U st {$is_reduced_residue_class_carrier_mod(m, U), $is_reduced_residue_class_multiplication_operation(m, U, mul, one), $section5::is_abelian_group(U, mul, one)}
+
+thm theorem_VI_2_reduced_residue_classes_form_group:
+    ? forall m N+:
+        $reduced_residue_classes_form_multiplicative_group_mod(m)
+    by thm theorem_VI_1_residue_classes_unitary_ring(m)
+    obtain carrier_C, addC, mulC, zeroC, oneC from exist carrier_C finite_set, addC fn(A, B carrier_C) carrier_C, mulC fn(A, B carrier_C) carrier_C, zeroC carrier_C, oneC carrier_C st {$section5::is_set_of_all_residue_classes_mod(m, carrier_C), finite_set_size(carrier_C) = m, $section5::is_residue_class_addition_operation(m, carrier_C, addC, zeroC), $is_residue_class_multiplication_operation(m, carrier_C, mulC), oneC = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(carrier_C, addC, mulC, zeroC, oneC)}
+    $is_commutative_ring(carrier_C, addC, mulC, zeroC)
+    $section5::is_residue_class_carrier_mod(m, carrier_C)
+    obtain class_map from exist class_map fn(r 0...(m - 1)) power_set(Z) st {class_map = fn(r 0...(m - 1)) power_set(Z) {section5::residue_class_mod(m, r)}, carrier_C = fn_range(class_map)}
+    have fn unit_map(r coprime_remainders_mod(m)) power_set(Z) = section5::residue_class_mod(m, r)
+    by thm coprime_remainders_mod_is_finite(m)
+    $is_finite_set(fn_range(unit_map))
+    have U finite_set = fn_range(unit_map)
+    claim:
+        ? $is_reduced_residue_class_carrier_mod(m, U)
+        unit_map = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}
+        witness exist f fn(r coprime_remainders_mod(m)) power_set(Z) st {f = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}, U = fn_range(f)} from unit_map
+        by def:
+            ? $is_reduced_residue_class_carrier_mod(m, U)
+    claim:
+        ? forall t Z:
+            $section3::relatively_prime_Z(t, m)
+            =>:
+                section5::residue_class_mod(m, t) $in U
+        have r Z = t % m
+        0 <= t % m < m
+        0 <= r < m
+        r $in Z
+        t = m * section2::integer_quotient(t, m) + t % m
+        r = t % m
+        t - r = (m * section2::integer_quotient(t, m) + r) - r = m * section2::integer_quotient(t, m)
+        witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
+        by def:
+            ? $section1::divides_Z(m, t - r)
+        by def:
+            ? $section5::congruent_mod(m, t, r)
+        by thm section5::residue_class_eq_of_congruent(m, t, r)
+        section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
+        by def:
+            ? $residue_class_prime_to_mod(m, t)
+        by thm residue_class_prime_to_mod_is_representative_independent(m, t, r)
+        $section3::relatively_prime_Z(r, m)
+        by def:
+            ? $coprime_remainder_mod(m, r)
+        by thm coprime_remainder_is_member_of_coprime_remainders_mod(m, r)
+        unit_map(r) $in fn_range(unit_map)
+        section5::residue_class_mod(m, r) = unit_map(r)
+    claim:
+        ? forall A U:
+            A $in carrier_C
+        have by preimage r from A $in fn_range(unit_map)
+        0 <= r < m
+        r $in N
+        r <= m - 1
+        r $in 0...(m - 1)
+        class_map(r) $in fn_range(class_map)
+        A = unit_map(r) = section5::residue_class_mod(m, r) = class_map(r)
+    claim:
+        ? forall A, B U:
+            mulC(A, B) $in U
+        have by preimage a from A $in fn_range(unit_map)
+        have by preimage b from B $in fn_range(unit_map)
+        $section3::relatively_prime_Z(a, m)
+        $section3::relatively_prime_Z(b, m)
+        by thm prime_to_residue_classes_closed_under_multiplication(m, a, b)
+        obtain x0, y0 from exist x0, y0 Z st {A = section5::residue_class_mod(m, x0), B = section5::residue_class_mod(m, y0), mulC(A, B) = residue_class_mul_mod(m, x0, y0)}
+        A = unit_map(a) = section5::residue_class_mod(m, a)
+        B = unit_map(b) = section5::residue_class_mod(m, b)
+        by thm residue_class_multiplication_well_defined(m, x0, y0, a, b)
+        residue_class_mul_mod(m, x0, y0) = residue_class_mul_mod(m, a, b)
+        mulC(A, B) = residue_class_mul_mod(m, x0, y0) = residue_class_mul_mod(m, a, b) = section5::residue_class_mod(m, a * b)
+        section5::residue_class_mod(m, a * b) $in U
+    have fn mul(A, B U) U = mulC(A, B)
+    claim:
+        ? $section3::relatively_prime_Z(1, m)
+        witness exist x, y Z st {1 * x + m * y = 1} from 1, 0:
+            1 * 1 + m * 0 = 1
+        by thm section3::theorem_III_1_bezout_implies_relprime_pair(1, m)
+    have one U = section5::residue_class_mod(m, 1)
+    claim:
+        ? $is_reduced_residue_class_multiplication_operation(m, U, mul, one)
+        one = section5::residue_class_mod(m, 1)
+        claim:
+            ? forall A, B U:
+                exist a, b Z st {$section3::relatively_prime_Z(a, m), $section3::relatively_prime_Z(b, m), A = section5::residue_class_mod(m, a), B = section5::residue_class_mod(m, b), mul(A, B) = section5::residue_class_mod(m, a * b)}
+            have by preimage a from A $in fn_range(unit_map)
+            have by preimage b from B $in fn_range(unit_map)
+            obtain x, y from exist x, y Z st {A = section5::residue_class_mod(m, x), B = section5::residue_class_mod(m, y), mulC(A, B) = residue_class_mul_mod(m, x, y)}
+            section5::residue_class_mod(m, x) = A = unit_map(a) = section5::residue_class_mod(m, a)
+            section5::residue_class_mod(m, y) = B = unit_map(b) = section5::residue_class_mod(m, b)
+            by thm residue_class_multiplication_well_defined(m, x, y, a, b)
+            residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, b)
+            mul(A, B) = mulC(A, B) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, b) = section5::residue_class_mod(m, a * b)
+            witness exist a0, b0 Z st {$section3::relatively_prime_Z(a0, m), $section3::relatively_prime_Z(b0, m), A = section5::residue_class_mod(m, a0), B = section5::residue_class_mod(m, b0), mul(A, B) = section5::residue_class_mod(m, a0 * b0)} from a, b
+        by def:
+            ? $is_reduced_residue_class_multiplication_operation(m, U, mul, one)
+    claim:
+        ? $section5::is_abelian_group(U, mul, one)
+        witness $is_nonempty_set(U) from one
+        claim:
+            ? forall A, B, D U:
+                mul(mul(A, B), D) = mul(A, mul(B, D))
+            A $in carrier_C
+            B $in carrier_C
+            D $in carrier_C
+            mulC(A, B) $in carrier_C
+            mulC(B, D) $in carrier_C
+            $is_commutative_ring(carrier_C, addC, mulC, zeroC)
+            mulC(mulC(A, B), D) = mulC(A, mulC(B, D))
+            mul(A, B) = mulC(A, B)
+            mul(B, D) = mulC(B, D)
+            mul(mul(A, B), D) = mulC(mul(A, B), D) = mulC(mulC(A, B), D)
+            mul(A, mul(B, D)) = mulC(A, mul(B, D)) = mulC(A, mulC(B, D))
+            mul(mul(A, B), D) = mulC(mulC(A, B), D) = mulC(A, mulC(B, D)) = mul(A, mul(B, D))
+        claim:
+            ? forall A, B U:
+                mul(A, B) = mul(B, A)
+            A $in carrier_C
+            B $in carrier_C
+            oneC $in carrier_C
+            $is_commutative_ring(carrier_C, addC, mulC, zeroC)
+            mulC(A, B) = mulC(B, A)
+            mul(A, B) = mulC(A, B)
+            mul(B, A) = mulC(B, A)
+            mul(A, B) = mulC(A, B) = mulC(B, A) = mul(B, A)
+        claim:
+            ? forall A, B U:
+                exist! Z0 U st {mul(A, Z0) = B}
+            have by preimage a from A $in fn_range(unit_map)
+            have by preimage b from B $in fn_range(unit_map)
+            $section3::relatively_prime_Z(a, m)
+            $section3::relatively_prime_Z(b, m)
+            section2::gcd_Z(a, m) = 1
+            witness exist b_factor Z st {b = section2::gcd_Z(a, m) * b_factor} from b:
+                b = 1 * b = section2::gcd_Z(a, m) * b
+            by def:
+                ? $section1::divides_Z(section2::gcd_Z(a, m), b)
+            by thm theorem_VI_2_gcd_divides_implies_solvable(m, a, b)
+            obtain z from exist z Z st {$solves_linear_congruence_mod(m, a, b, z)}
+            obtain k from exist k Z st {a * z - b = m * k}
+            a * z - m * k = a * z - (a * z - b) = b
+            z * a + m * (-k) = a * z - m * k = b
+            by thm section3::theorem_III_1_relprime_implies_bezout_pair(b, m)
+            obtain p, q from exist p, q Z st {b * p + m * q = 1}
+            witness exist u, v Z st {z * u + m * v = 1} from a * p, (-k) * p + q:
+                z * (a * p) + m * ((-k) * p + q) = (z * a + m * (-k)) * p + m * q = b * p + m * q = 1
+            by thm section3::theorem_III_1_bezout_implies_relprime_pair(z, m)
+            have Z0 U = section5::residue_class_mod(m, z)
+            obtain x, y from exist x, y Z st {A = section5::residue_class_mod(m, x), Z0 = section5::residue_class_mod(m, y), mulC(A, Z0) = residue_class_mul_mod(m, x, y)}
+            section5::residue_class_mod(m, x) = A = unit_map(a) = section5::residue_class_mod(m, a)
+            section5::residue_class_mod(m, y) = Z0 = section5::residue_class_mod(m, z)
+            by thm residue_class_multiplication_well_defined(m, x, y, a, z)
+            residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, z)
+            witness exist h Z st {a * z - b = m * h} from k
+            by def:
+                ? $section1::divides_Z(m, a * z - b)
+            by def:
+                ? $section5::congruent_mod(m, a * z, b)
+            by thm section5::residue_class_eq_of_congruent(m, a * z, b)
+            mulC(A, Z0) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, z) = section5::residue_class_mod(m, a * z)
+            mul(A, Z0) = mulC(A, Z0) = section5::residue_class_mod(m, a * z) = section5::residue_class_mod(m, b) = unit_map(b) = B
+            witness exist Z1 U st {mul(A, Z1) = B} from Z0
+            claim:
+                ? forall Z1, Z2 U:
+                    mul(A, Z1) = B
+                    mul(A, Z2) = B
+                    =>:
+                        Z1 = Z2
+                by thm theorem_VI_2_solution_family(m, a, b, z)
+                have by preimage z1 from Z1 $in fn_range(unit_map)
+                have by preimage z2 from Z2 $in fn_range(unit_map)
+                mul(A, Z1) = B
+                obtain x1, y1 from exist x1, y1 Z st {A = section5::residue_class_mod(m, x1), Z1 = section5::residue_class_mod(m, y1), mulC(A, Z1) = residue_class_mul_mod(m, x1, y1)}
+                section5::residue_class_mod(m, x1) = A = unit_map(a) = section5::residue_class_mod(m, a)
+                section5::residue_class_mod(m, y1) = Z1 = unit_map(z1) = section5::residue_class_mod(m, z1)
+                by thm residue_class_multiplication_well_defined(m, x1, y1, a, z1)
+                mulC(A, Z1) = residue_class_mul_mod(m, x1, y1) = residue_class_mul_mod(m, a, z1) = section5::residue_class_mod(m, a * z1)
+                mul(A, Z1) = mulC(A, Z1)
+                section5::residue_class_mod(m, a * z1) = mul(A, Z1) = B = section5::residue_class_mod(m, b)
+                by thm section5::representative_belongs_to_residue_class(m, a * z1)
+                a * z1 $in section5::residue_class_mod(m, b)
+                by thm section5::member_of_residue_class_is_congruent(m, b, a * z1)
+                by def:
+                    ? $section5::congruent_mod(m, a * z1, b)
+                $section1::divides_Z(m, a * z1 - b)
+                by def:
+                    ? $section1::divides_Z(m, a * z1 - b)
+                obtain k1 from exist k1 Z st {a * z1 - b = m * k1}
+                witness exist k0 Z st {a * z1 - b = m * k0} from k1
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, z1)
+                obtain q1 from exist q1 Z st {z1 = z + (m / section2::gcd_Z(a, m)) * q1}
+                obtain x2, y2 from exist x2, y2 Z st {A = section5::residue_class_mod(m, x2), Z2 = section5::residue_class_mod(m, y2), mulC(A, Z2) = residue_class_mul_mod(m, x2, y2)}
+                section5::residue_class_mod(m, x2) = A = unit_map(a) = section5::residue_class_mod(m, a)
+                section5::residue_class_mod(m, y2) = Z2 = unit_map(z2) = section5::residue_class_mod(m, z2)
+                by thm residue_class_multiplication_well_defined(m, x2, y2, a, z2)
+                mulC(A, Z2) = residue_class_mul_mod(m, x2, y2) = residue_class_mul_mod(m, a, z2) = section5::residue_class_mod(m, a * z2)
+                mul(A, Z2) = mulC(A, Z2)
+                section5::residue_class_mod(m, a * z2) = mul(A, Z2) = B = section5::residue_class_mod(m, b)
+                by thm section5::representative_belongs_to_residue_class(m, a * z2)
+                a * z2 $in section5::residue_class_mod(m, b)
+                by thm section5::member_of_residue_class_is_congruent(m, b, a * z2)
+                by def:
+                    ? $section5::congruent_mod(m, a * z2, b)
+                $section1::divides_Z(m, a * z2 - b)
+                by def:
+                    ? $section1::divides_Z(m, a * z2 - b)
+                obtain k2 from exist k2 Z st {a * z2 - b = m * k2}
+                witness exist k0 Z st {a * z2 - b = m * k0} from k2
+                by def:
+                    ? $solves_linear_congruence_mod(m, a, b, z2)
+                obtain q2 from exist q2 Z st {z2 = z + (m / section2::gcd_Z(a, m)) * q2}
+                section2::gcd_Z(a, m) = 1
+                m / section2::gcd_Z(a, m) = m / 1 = m
+                z1 = z + (m / section2::gcd_Z(a, m)) * q1 = z + m * q1
+                z2 = z + (m / section2::gcd_Z(a, m)) * q2 = z + m * q2
+                z1 - z2 = (z + m * q1) - (z + m * q2) = m * q1 - m * q2 = m * (q1 - q2)
+                witness exist congruence_factor Z st {z1 - z2 = m * congruence_factor} from q1 - q2
+                by def:
+                    ? $section1::divides_Z(m, z1 - z2)
+                by def:
+                    ? $section5::congruent_mod(m, z1, z2)
+                by thm section5::residue_class_eq_of_congruent(m, z1, z2)
+                Z1 = unit_map(z1) = section5::residue_class_mod(m, z1) = section5::residue_class_mod(m, z2) = unit_map(z2) = Z2
+            exist! Z1 U st {mul(A, Z1) = B}
+        claim:
+            ? forall A U:
+                mul(one, A) = A
+            one = section5::residue_class_mod(m, 1) = oneC
+            A $in carrier_C
+            mul(one, A) = mulC(oneC, A) = A
+        by def:
+            ? $section5::is_abelian_group(U, mul, one)
+    witness exist U0 finite_set, mul0 fn(A, B U0) U0, one0 U0 st {$is_reduced_residue_class_carrier_mod(m, U0), $is_reduced_residue_class_multiplication_operation(m, U0, mul0, one0), $section5::is_abelian_group(U0, mul0, one0)} from U, mul, one
+    by def:
+        ? $reduced_residue_classes_form_multiplicative_group_mod(m)
+
+"""
+Definition. Euler's function phi(m) is the number of congruence classes
+prime to m.  The standard reduced representatives give one element for each
+such class, so their finite cardinality uniquely determines the function.
+"""
+
+prop euler_phi_spec(m N+, n N):
+    $is_finite_set(coprime_remainders_mod(m))
+    finite_set_size(coprime_remainders_mod(m)) = n
+
+have fn euler_phi by exist!:
+    ? forall m N+:
+        exist! n N st {$euler_phi_spec(m, n)}
+    by thm coprime_remainders_mod_is_finite(m)
+    have n N = finite_set_size(coprime_remainders_mod(m))
+    witness exist n1 N st {$euler_phi_spec(m, n1)} from n:
+        $is_finite_set(coprime_remainders_mod(m))
+        finite_set_size(coprime_remainders_mod(m)) = n
+        by def:
+            ? $euler_phi_spec(m, n)
+    forall n1, n2 N:
+        $euler_phi_spec(m, n1)
+        $euler_phi_spec(m, n2)
+        =>:
+            n1 = finite_set_size(coprime_remainders_mod(m)) = n2
+    exist! n1 N st {$euler_phi_spec(m, n1)}
+
+# The reduced representatives map injectively to their residue classes.
+# Hence every carrier in the group corollary has exactly phi(m) elements.
+thm reduced_residue_class_carrier_has_euler_phi_elements:
+    ? forall m N+, U finite_set:
+        $is_reduced_residue_class_carrier_mod(m, U)
+        =>:
+            finite_set_size(U) = euler_phi(m)
+    obtain unit_map from exist unit_map fn(r coprime_remainders_mod(m)) power_set(Z) st {unit_map = fn(r coprime_remainders_mod(m)) power_set(Z) {section5::residue_class_mod(m, r)}, U = fn_range(unit_map)}
+    claim:
+        ? forall r1, r2 coprime_remainders_mod(m):
+            unit_map(r1) = unit_map(r2)
+            =>:
+                r1 = r2
+        section5::residue_class_mod(m, r1) = unit_map(r1) = unit_map(r2) = section5::residue_class_mod(m, r2)
+        by thm section5::representative_belongs_to_residue_class(m, r1)
+        r1 $in section5::residue_class_mod(m, r2)
+        by thm section5::theorem_V_residue_classes_disjoint(m, r1, r2)
+        $section5::congruent_mod(m, r1, r2)
+        by thm section5::congruent_mod_has_same_remainder(m, r1, r2)
+        r1 % m = r2 % m
+        0 <= r1 < m
+        0 <= r2 < m
+        claim:
+            ? $section2::euclidean_division_Z(r1, m, 0, r1)
+            m > 0
+            r1 = m * 0 + r1
+            0 <= r1 < m
+            by def:
+                ? $section2::euclidean_division_Z(r1, m, 0, r1)
+        claim:
+            ? $section2::euclidean_division_Z(r2, m, 0, r2)
+            m > 0
+            r2 = m * 0 + r2
+            0 <= r2 < m
+            by def:
+                ? $section2::euclidean_division_Z(r2, m, 0, r2)
+        by thm section2::euclidean_division_remainder_is_mod(r1, m, 0, r1)
+        by thm section2::euclidean_division_remainder_is_mod(r2, m, 0, r2)
+    by def:
+        ? $injective(coprime_remainders_mod(m), power_set(Z), unit_map)
+    by thm coprime_remainders_mod_is_finite(m)
+    $euler_phi_spec(m, euler_phi(m))
+    by def:
+        ? $euler_phi_spec(m, euler_phi(m))
+    finite_set_size(U) = finite_set_size(fn_range(unit_map)) = finite_set_size(coprime_remainders_mod(m)) = euler_phi(m)
+
+thm euler_phi_one_value:
+    ? forall m N+:
+        m = 1
+        =>:
+            euler_phi(m) = 1
+    claim:
+        ? coprime_remainders_mod(1) = {0}
+        by extension:
+            ? coprime_remainders_mod(1) = {0}
+            forall a coprime_remainders_mod(1):
+                0 <= a < 1
+                a = 0
+                a $in {0}
+            claim:
+                ? forall a {0}:
+                    a $in coprime_remainders_mod(1)
+                a = 0
+                0 <= a < 1
+                by thm section3::relatively_prime_Z_one(a)
+                by def:
+                    ? $coprime_remainder_mod(1, a)
+                by thm coprime_remainder_is_member_of_coprime_remainders_mod(1, a)
+            forall a {0}:
+                a $in coprime_remainders_mod(1)
+    by thm coprime_remainders_mod_is_finite(1)
+    $euler_phi_spec(1, euler_phi(1))
+    by def:
+        ? $euler_phi_spec(1, euler_phi(1))
+    finite_set_size(coprime_remainders_mod(1)) = euler_phi(1)
+    finite_set_size({0}) = 1
+    euler_phi(m) = euler_phi(1) = finite_set_size(coprime_remainders_mod(1)) = finite_set_size({0}) = 1
+
+"""
+Definition. A field is a unitary ring whose non-zero elements form a
+multiplicative group.  The residue-class ring modulo m is a field exactly when
+m is prime.
+"""
+
+prop is_field(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) carrier, zero carrier, one carrier):
+    $is_commutative_unitary_ring(carrier, add, mul, zero, one)
+    zero != one
+    forall x carrier:
+        x != zero
+        =>:
+            exist! y carrier st {mul(x, y) = one}
+
+prop residue_classes_form_field_mod(m N+):
+    exist Classes finite_set, add fn(A, B Classes) Classes, mul fn(A, B Classes) Classes, zero Classes, one Classes st {$section5::is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m, $section5::is_residue_class_addition_operation(m, Classes, add, zero), $is_residue_class_multiplication_operation(m, Classes, mul), one = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add, mul, zero, one), $is_field(Classes, add, mul, zero, one)}
+
+prop residue_field_iff_prime(m N+):
+    forall:
+        =>:
+            $residue_classes_form_field_mod(m)
+        <=>:
+            $section4::is_prime_Z(m)
+
+# Source handling: the finite quotient carrier/ring, solution-family count,
+# Euler counting, and field criterion all depend on the same finite quotient
+# construction. Keep every source-facing clause visible at this point.
+thm euler_phi_prime_value:
+    ? forall p N+:
+        $section4::is_prime_Z(p)
+        =>:
+            euler_phi(p) = p - 1
+    p $in N+
+    claim:
+        ? forall a coprime_remainders_mod(p):
+            a $in 1...(p - 1)
+        0 <= a < p
+        claim:
+            ? a > 0
+            by contra:
+                ? a > 0
+                a <= 0
+                a = 0
+                by thm section3::theorem_III_1_relprime_implies_bezout_pair(a, p)
+                obtain x, y from exist x, y Z st {a * x + p * y = 1}
+                witness exist q Z st {1 = p * q} from y:
+                    1 = a * x + p * y = 0 * x + p * y = p * y
+                by def:
+                    ? $section1::divides_Z(p, 1)
+                by thm section1::positive_divisor_of_one_is_one(p)
+                p = 1
+                impossible p > 1
+        1 <= a <= p - 1
+    claim:
+        ? forall a 1...(p - 1):
+            a $in coprime_remainders_mod(p)
+        a $in Z
+        1 <= a <= p - 1
+        0 < a
+        a <= p - 1 < p
+        a < p
+        by thm section4::prime_divides_or_is_relatively_prime(p, a)
+        by cases:
+            ? $section3::relatively_prime_Z(a, p)
+            case $section1::divides_Z(p, a):
+                obtain k from exist k Z st {a = p * k}
+                a = p * k
+                p > 0
+                a > 0
+                by contra:
+                    ? k > 0
+                    k <= 0
+                    p * (-1 * k) >= 0
+                    p * (-1 * k) = -1 * (p * k)
+                    -1 * (p * k) >= 0
+                    -1 * (-1 * (p * k)) <= 0
+                    p * k = -1 * (-1 * (p * k)) <= 0
+                    a = p * k <= 0
+                    impossible a > 0
+                k >= 1
+                p = p * 1 <= p * k = a
+                impossible a < p
+            case $section3::relatively_prime_Z(p, a):
+                by thm section3::theorem_III_1_relprime_implies_bezout_pair(p, a)
+                obtain x, y from exist x, y Z st {p * x + a * y = 1}
+                witness exist u, v Z st {a * u + p * v = 1} from y, x:
+                    a * y + p * x = p * x + a * y = 1
+                by thm section3::theorem_III_1_bezout_implies_relprime_pair(a, p)
+                $section3::relatively_prime_Z(a, p)
+        by def:
+            ? $coprime_remainder_mod(p, a)
+        by thm coprime_remainder_is_member_of_coprime_remainders_mod(p, a)
+    by extension:
+        ? coprime_remainders_mod(p) = 1...(p - 1)
+        forall a coprime_remainders_mod(p):
+            a $in 1...(p - 1)
+        forall a 1...(p - 1):
+            a $in coprime_remainders_mod(p)
+    by thm coprime_remainders_mod_is_finite(p)
+    $euler_phi_spec(p, euler_phi(p))
+    by def:
+        ? $euler_phi_spec(p, euler_phi(p))
+    finite_set_size(coprime_remainders_mod(p)) = euler_phi(p)
+    p > 1
+    p - 1 >= 1
+    p - 1 $in N
+    finite_set_size(1...(p - 1)) = (p - 1) - 1 + 1 = p - 1
+    euler_phi(p) = finite_set_size(coprime_remainders_mod(p)) = finite_set_size(1...(p - 1)) = p - 1
+
+thm theorem_VI_3_residue_field_iff_prime:
+    ? forall m N+:
+        $residue_field_iff_prime(m)
+    claim:
+        ? forall:
+            $section4::is_prime_Z(m)
+            =>:
+                $residue_classes_form_field_mod(m)
+        by thm theorem_VI_1_residue_classes_unitary_ring(m)
+        obtain carrier_C, add, mul, zero, one from exist carrier_C finite_set, add fn(A, B carrier_C) carrier_C, mul fn(A, B carrier_C) carrier_C, zero carrier_C, one carrier_C st {$section5::is_set_of_all_residue_classes_mod(m, carrier_C), finite_set_size(carrier_C) = m, $section5::is_residue_class_addition_operation(m, carrier_C, add, zero), $is_residue_class_multiplication_operation(m, carrier_C, mul), one = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)}
+        $section5::is_residue_class_carrier_mod(m, carrier_C)
+        obtain class_map from exist class_map fn(r 0...(m - 1)) power_set(Z) st {class_map = fn(r 0...(m - 1)) power_set(Z) {section5::residue_class_mod(m, r)}, carrier_C = fn_range(class_map)}
+        claim:
+            ? forall t Z:
+                section5::residue_class_mod(m, t) $in carrier_C
+            have r Z = t % m
+            0 <= t % m < m
+            0 <= r < m
+            r $in N
+            r <= m - 1
+            r $in 0...(m - 1)
+            class_map(r) $in fn_range(class_map)
+            section5::residue_class_mod(m, r) = class_map(r)
+            section5::residue_class_mod(m, r) $in carrier_C
+            t = m * section2::integer_quotient(t, m) + t % m
+            r = t % m
+            t = m * section2::integer_quotient(t, m) + r
+            t - r = m * section2::integer_quotient(t, m)
+            witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
+            by def:
+                ? $section1::divides_Z(m, t - r)
+            by def:
+                ? $section5::congruent_mod(m, t, r)
+            by thm section5::residue_class_eq_of_congruent(m, t, r)
+            section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
+        claim:
+            ? $is_field(carrier_C, add, mul, zero, one)
+            $is_commutative_unitary_ring(carrier_C, add, mul, zero, one)
+            zero = section5::residue_class_mod(m, 0)
+            one = section5::residue_class_mod(m, 1)
+            claim:
+                ? zero != one
+                by contra:
+                    ? zero != one
+                    zero = one
+                    section5::residue_class_mod(m, 0) = section5::residue_class_mod(m, 1)
+                    by thm section5::representative_belongs_to_residue_class(m, 0)
+                    0 $in section5::residue_class_mod(m, 1)
+                    by thm section5::member_of_residue_class_is_congruent(m, 1, 0)
+                    by def:
+                        ? $section5::congruent_mod(m, 0, 1)
+                    by def:
+                        ? $section1::divides_Z(m, 0 - 1)
+                    obtain k from exist k Z st {0 - 1 = m * k}
+                    witness exist q Z st {1 = m * q} from -k:
+                        1 = -(0 - 1) = -(m * k) = m * (-k)
+                    by def:
+                        ? $section1::divides_Z(m, 1)
+                    by thm section1::positive_divisor_of_one_is_one(m)
+                    m = 1
+                    impossible m > 1
+            claim:
+                ? forall A carrier_C:
+                    A != zero
+                    =>:
+                        exist! B carrier_C st {mul(A, B) = one}
+                obtain a, a0 from exist a, a0 Z st {A = section5::residue_class_mod(m, a), A = section5::residue_class_mod(m, a0), mul(A, A) = residue_class_mul_mod(m, a, a0)}
+                by thm section4::prime_divides_or_is_relatively_prime(m, a)
+                claim:
+                    ? $section3::relatively_prime_Z(a, m)
+                    by cases:
+                        ? $section3::relatively_prime_Z(a, m)
+                        case $section1::divides_Z(m, a):
+                            obtain q from exist q Z st {a = m * q}
+                            witness exist k Z st {a - 0 = m * k} from q:
+                                a - 0 = a = m * q
+                            by def:
+                                ? $section1::divides_Z(m, a - 0)
+                            by def:
+                                ? $section5::congruent_mod(m, a, 0)
+                            by thm section5::residue_class_eq_of_congruent(m, a, 0)
+                            A = section5::residue_class_mod(m, a) = section5::residue_class_mod(m, 0) = zero
+                            impossible A != zero
+                        case $section3::relatively_prime_Z(m, a):
+                            by thm section3::theorem_III_1_relprime_implies_bezout_pair(m, a)
+                            obtain x, y from exist x, y Z st {m * x + a * y = 1}
+                            witness exist u, v Z st {a * u + m * v = 1} from y, x:
+                                a * y + m * x = m * x + a * y = 1
+                            by thm section3::theorem_III_1_bezout_implies_relprime_pair(a, m)
+                            $section3::relatively_prime_Z(a, m)
+                by thm section3::theorem_III_1_relprime_implies_bezout_pair(a, m)
+                obtain u, v from exist u, v Z st {a * u + m * v = 1}
+                have B carrier_C = section5::residue_class_mod(m, u)
+                obtain x, y from exist x, y Z st {A = section5::residue_class_mod(m, x), B = section5::residue_class_mod(m, y), mul(A, B) = residue_class_mul_mod(m, x, y)}
+                by thm residue_class_multiplication_well_defined(m, x, y, a, u)
+                residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, u)
+                witness exist k Z st {a * u - 1 = m * k} from -v:
+                    a * u - 1 = a * u - (a * u + m * v) = m * (-v)
+                by def:
+                    ? $section1::divides_Z(m, a * u - 1)
+                by def:
+                    ? $section5::congruent_mod(m, a * u, 1)
+                by thm section5::residue_class_eq_of_congruent(m, a * u, 1)
+                mul(A, B) = residue_class_mul_mod(m, x, y) = residue_class_mul_mod(m, a, u) = section5::residue_class_mod(m, a * u) = section5::residue_class_mod(m, 1) = one
+                witness exist B0 carrier_C st {mul(A, B0) = one} from B
+                claim:
+                    ? forall B1, B2 carrier_C:
+                        mul(A, B1) = one
+                        mul(A, B2) = one
+                        =>:
+                            B1 = B2
+                    mul(B2, B1) = mul(B1, B2)
+                    B1 = mul(one, B1) = mul(mul(A, B2), B1) = mul(A, mul(B2, B1)) = mul(A, mul(B1, B2)) = mul(mul(A, B1), B2) = mul(one, B2) = B2
+                exist! B0 carrier_C st {mul(A, B0) = one}
+            by def:
+                ? $is_field(carrier_C, add, mul, zero, one)
+        witness exist Classes finite_set, add0 fn(A, B Classes) Classes, mul0 fn(A, B Classes) Classes, zero0 Classes, one0 Classes st {$section5::is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m, $section5::is_residue_class_addition_operation(m, Classes, add0, zero0), $is_residue_class_multiplication_operation(m, Classes, mul0), one0 = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add0, mul0, zero0, one0), $is_field(Classes, add0, mul0, zero0, one0)} from carrier_C, add, mul, zero, one
+        by def:
+            ? $residue_classes_form_field_mod(m)
+    claim:
+        ? forall:
+            $residue_classes_form_field_mod(m)
+            =>:
+                $section4::is_prime_Z(m)
+        obtain carrier_C, add, mul, zero, one from exist carrier_C finite_set, add fn(A, B carrier_C) carrier_C, mul fn(A, B carrier_C) carrier_C, zero carrier_C, one carrier_C st {$section5::is_set_of_all_residue_classes_mod(m, carrier_C), finite_set_size(carrier_C) = m, $section5::is_residue_class_addition_operation(m, carrier_C, add, zero), $is_residue_class_multiplication_operation(m, carrier_C, mul), one = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(carrier_C, add, mul, zero, one), $is_field(carrier_C, add, mul, zero, one)}
+        $section5::is_residue_class_carrier_mod(m, carrier_C)
+        obtain class_map from exist class_map fn(r 0...(m - 1)) power_set(Z) st {class_map = fn(r 0...(m - 1)) power_set(Z) {section5::residue_class_mod(m, r)}, carrier_C = fn_range(class_map)}
+        claim:
+            ? forall t Z:
+                section5::residue_class_mod(m, t) $in carrier_C
+            have r Z = t % m
+            0 <= t % m < m
+            0 <= r < m
+            r $in N
+            r <= m - 1
+            r $in 0...(m - 1)
+            class_map(r) $in fn_range(class_map)
+            section5::residue_class_mod(m, r) = class_map(r)
+            section5::residue_class_mod(m, r) $in carrier_C
+            t = m * section2::integer_quotient(t, m) + t % m
+            r = t % m
+            t = m * section2::integer_quotient(t, m) + r
+            t - r = m * section2::integer_quotient(t, m)
+            witness exist k Z st {t - r = m * k} from section2::integer_quotient(t, m)
+            by def:
+                ? $section1::divides_Z(m, t - r)
+            by def:
+                ? $section5::congruent_mod(m, t, r)
+            by thm section5::residue_class_eq_of_congruent(m, t, r)
+            section5::residue_class_mod(m, t) = section5::residue_class_mod(m, r)
+        claim:
+            ? m > 1
+            m >= 1
+            by contra:
+                ? m > 1
+                m <= 1
+                m = 1
+                zero = section5::residue_class_mod(m, 0)
+                one = section5::residue_class_mod(m, 1)
+                witness exist k Z st {0 - 1 = m * k} from -1:
+                    0 - 1 = -1 = 1 * (-1) = m * (-1)
+                by def:
+                    ? $section1::divides_Z(m, 0 - 1)
+                by def:
+                    ? $section5::congruent_mod(m, 0, 1)
+                by thm section5::residue_class_eq_of_congruent(m, 0, 1)
+                zero = section5::residue_class_mod(m, 0) = section5::residue_class_mod(m, 1) = one
+                impossible zero != one
+        claim:
+            ? forall d Z:
+                d > 0
+                $section1::divides_Z(d, m)
+                =>:
+                    d = 1 or d = m
+            have D carrier_C = section5::residue_class_mod(m, d)
+            D = zero or D != zero
+            by cases:
+                ? d = 1 or d = m
+                case D = zero:
+                    zero = section5::residue_class_mod(m, 0)
+                    section5::residue_class_mod(m, d) = section5::residue_class_mod(m, 0)
+                    by thm section5::representative_belongs_to_residue_class(m, d)
+                    d $in section5::residue_class_mod(m, 0)
+                    by thm section5::member_of_residue_class_is_congruent(m, 0, d)
+                    by def:
+                        ? $section5::congruent_mod(m, d, 0)
+                    by def:
+                        ? $section1::divides_Z(m, d - 0)
+                    obtain q from exist q Z st {d - 0 = m * q}
+                    witness exist q0 Z st {d = m * q0} from q:
+                        d = d - 0 = m * q
+                    obtain k from exist k Z st {m = d * k}
+                    claim:
+                        ? k > 0
+                        by contra:
+                            ? k > 0
+                            k <= 0
+                            d * (-1 * k) >= 0
+                            d * (-1 * k) = -1 * (d * k)
+                            -1 * (d * k) >= 0
+                            -1 * (-1 * (d * k)) <= 0
+                            d * k = -1 * (-1 * (d * k)) <= 0
+                            m = d * k <= 0
+                            impossible m > 0
+                    claim:
+                        ? q > 0
+                        by contra:
+                            ? q > 0
+                            q <= 0
+                            m * (-1 * q) >= 0
+                            m * (-1 * q) = -1 * (m * q)
+                            -1 * (m * q) >= 0
+                            -1 * (-1 * (m * q)) <= 0
+                            m * q = -1 * (-1 * (m * q)) <= 0
+                            d = m * q <= 0
+                            impossible d > 0
+                    k >= 1
+                    q >= 1
+                    d = d * 1 <= d * k = m
+                    m = m * 1 <= m * q = d
+                    d = m
+                case D != zero:
+                    obtain E from exist! E carrier_C st {mul(D, E) = one}
+                    obtain x, y from exist x, y Z st {D = section5::residue_class_mod(m, x), E = section5::residue_class_mod(m, y), mul(D, E) = residue_class_mul_mod(m, x, y)}
+                    D = section5::residue_class_mod(m, d) = section5::residue_class_mod(m, x)
+                    by thm section5::representative_belongs_to_residue_class(m, x)
+                    x $in section5::residue_class_mod(m, d)
+                    by thm section5::member_of_residue_class_is_congruent(m, d, x)
+                    by def:
+                        ? $section5::congruent_mod(m, x, d)
+                    by def:
+                        ? $section1::divides_Z(m, x - d)
+                    obtain k from exist k Z st {x - d = m * k}
+                    mul(D, E) = one = section5::residue_class_mod(m, 1)
+                    residue_class_mul_mod(m, x, y) = section5::residue_class_mod(m, x * y)
+                    section5::residue_class_mod(m, x * y) = section5::residue_class_mod(m, 1)
+                    by thm section5::representative_belongs_to_residue_class(m, x * y)
+                    x * y $in section5::residue_class_mod(m, 1)
+                    by thm section5::member_of_residue_class_is_congruent(m, 1, x * y)
+                    by def:
+                        ? $section5::congruent_mod(m, x * y, 1)
+                    by def:
+                        ? $section1::divides_Z(m, x * y - 1)
+                    obtain n from exist n Z st {x * y - 1 = m * n}
+                    x = (x - d) + d = m * k + d = d + m * k
+                    1 = x * y - (x * y - 1) = x * y - m * n = (d + m * k) * y - m * n = d * y + m * (k * y - n)
+                    witness exist h Z st {d = d * h} from 1:
+                        d = d * 1
+                    by def:
+                        ? $section1::divides_Z(d, d)
+                    obtain M from exist M Z st {m = d * M}
+                    1 = d * y + m * (k * y - n) = d * y + d * M * (k * y - n) = d * (y + M * (k * y - n))
+                    witness exist h Z st {1 = d * h} from y + M * (k * y - n)
+                    by def:
+                        ? $section1::divides_Z(d, 1)
+                    by thm section1::positive_divisor_of_one_is_one(d)
+                    d = 1
+        by def:
+            ? $section4::is_prime_Z(m)
+    by def:
+        ? $residue_field_iff_prime(m)

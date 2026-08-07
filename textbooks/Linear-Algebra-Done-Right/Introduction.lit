@@ -1,0 +1,51 @@
+# About This Project
+#
+# Litex source:
+# Canonical module: scripts/linear_algebra_done_right/textbook
+#
+# This project is an ongoing Litex formalization inspired by the fourth edition
+# of Sheldon Axler's Linear Algebra Done Right. The current draft has
+# source-ordered files for Chapters 1 through 9, from vector spaces and linear
+# maps through spectral theory, multilinear algebra, determinants, and tensor
+# products. It is an independent translation project, not an official edition
+# of or substitute for the book.
+#
+# Translation conventions
+#
+# Standalone items explicitly labelled Exercise or Exercises are omitted
+# without declarations or coverage placeholders. A named non-exercise result
+# is retained when the source leaves its proof, or one proof step, as an
+# exercise; the omitted argument is then marked locally as proof debt.
+#
+# This is not a line-by-line transcription. It preserves source-facing
+# definitions and results in source order while using Litex builtins and
+# established interfaces for familiar scalars, arithmetic, sets, functions,
+# and finite objects. Source constructions may be recorded as alternate proof
+# routes rather than rebuilt as dependencies. Routine suppressed reasoning may
+# be made explicit; a long finite, algebraic, spectral, or analytic argument
+# may instead be deferred when its infrastructure would overwhelm the main
+# exposition.
+#
+# Coverage and proof status are separate. An included declaration may be
+# checked, may rely on an explicit `axiom`, or may contain a narrowly localized
+# `trust`. Axiom and trust boundaries are assumptions or unfinished proof debt,
+# not verifier-checked proofs. The existence of all chapter files therefore
+# does not claim that every non-exercise source result or every proof is
+# complete.
+#
+# Most declarations included in this draft are accepted by the Litex verifier.
+# The remaining unchecked steps are kept visible as axiom or trust boundaries
+# rather than being presented as completed proofs. Some arise where textbook
+# prose suppresses routine background arguments; others concern finite-list
+# recursion, exchange and deletion arguments, or existence results that still
+# need better library support or further formalization. We make implicit steps
+# explicit when they help reveal the structure, but sometimes retain a marked
+# omission to respect the book's pace and keep the development focused.
+#
+# The constructions of complex scalars, vector spaces, coordinate spaces,
+# spans, bases, and dimension show how Litex represents algebraic structures as
+# concrete mathematical data with named laws and directly reusable facts.
+#
+# We hope readers gain both an introduction to the architecture of linear
+# algebra and an honest example of how a textbook chapter can be translated
+# into readable checked mathematics without concealing its unfinished edges.

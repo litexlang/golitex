@@ -1,0 +1,174 @@
+# To-Lean equality-path gallery.
+# Run: cargo test --release run_tmp2_to_lean -- --nocapture
+
+# 1. Clean chain: every equality is needed.
+abstract_prop t(x)
+
+forall a, b, c, f, g set:
+    a = b
+    b = c
+    c = g
+    f = g
+    $t(a)
+    =>:
+        $t(f)
+
+# 2. Zigzag: the first and last stored equalities are traversed backwards.
+abstract_prop zigzag(x)
+
+forall a, b, c, d set:
+    b = a
+    b = c
+    d = c
+    $zigzag(a)
+    =>:
+        $zigzag(d)
+
+# 3. Redundant shortcut, attached side branch, and disconnected component.
+# Only a = b, b = c, c = g, and f = g belong to the witness path.
+abstract_prop routed(x)
+
+forall a, b, c, f, g, h, u, v, w, z set:
+    a = b
+    b = c
+    a = c
+    c = g
+    f = g
+    h = b
+    h = u
+    u = v
+    w = z
+    $routed(a)
+    =>:
+        $routed(f)
+
+# 4. The direct edge is stored first. The later long route is unnecessary.
+forall a, b, c, d set:
+    a = d
+    a = b
+    b = c
+    c = d
+    $routed(a)
+    =>:
+        $routed(d)
+
+# 5. One equality is used at two predicate argument positions. Lean emits it
+# once in `simpa only`.
+abstract_prop swapped(x, y)
+
+forall a, b set:
+    a = b
+    $swapped(a, b)
+    =>:
+        $swapped(b, a)
+
+# 6. Two independent argument paths are both needed.
+abstract_prop paired(x, y)
+
+forall a, b, c, d set:
+    a = b
+    c = d
+    $paired(a, c)
+    =>:
+        $paired(b, d)
+
+# 7. Exact citation: no equality path and therefore no `simpa only` list.
+forall a set:
+    $t(a)
+    =>:
+        $t(a)
+
+
+"""
+import Mathlib
+
+universe uLitex
+
+namespace tmp2
+
+-- Litex's primitive notion of a set.
+abbrev LitexSet := Type uLitex
+
+-- Every generated proposition has this codomain.
+abbrev LitexFact := Prop
+
+opaque t {α_x_1 : Sort uLitex} : α_x_1 → LitexFact
+
+-- Litex stored fact f34
+theorem global_fact_34 : ∀ (a b c f g : LitexSet), a = b → b = c → c = g → f = g → t a → t f := by
+  intro a b c f g proof_fact_1_1 proof_fact_1_2 proof_fact_1_3 proof_fact_1_4 proof_fact_1_5
+  have proof_fact_1_6 : t a := proof_fact_1_5
+  have proof_fact_1_7 : a = b := proof_fact_1_1
+  have proof_fact_1_8 : b = c := proof_fact_1_2
+  have proof_fact_1_9 : c = g := proof_fact_1_3
+  have proof_fact_1_10 : f = g := proof_fact_1_4
+  have proof_fact_1_11 : t f := by
+    simpa only [proof_fact_1_7, proof_fact_1_8, proof_fact_1_9, proof_fact_1_10] using proof_fact_1_6
+  exact proof_fact_1_11
+
+opaque zigzag {α_x_1 : Sort uLitex} : α_x_1 → LitexFact
+
+-- Litex stored fact f62
+theorem global_fact_62 : ∀ (a b c d : LitexSet), b = a → b = c → d = c → zigzag a → zigzag d := by
+  intro a b c d proof_fact_2_1 proof_fact_2_2 proof_fact_2_3 proof_fact_2_4
+  have proof_fact_2_5 : zigzag a := proof_fact_2_4
+  have proof_fact_2_6 : b = a := proof_fact_2_1
+  have proof_fact_2_7 : b = c := proof_fact_2_2
+  have proof_fact_2_8 : d = c := proof_fact_2_3
+  have proof_fact_2_9 : zigzag d := by
+    simpa only [← proof_fact_2_6, proof_fact_2_7, proof_fact_2_8] using proof_fact_2_5
+  exact proof_fact_2_9
+
+opaque routed {α_x_1 : Sort uLitex} : α_x_1 → LitexFact
+
+-- Litex stored fact f126
+theorem global_fact_126 : ∀ (a b c f g h u v w z : LitexSet), a = b → b = c → a = c → c = g → f = g → h = b → h = u → u = v → w = z → routed a → routed f := by
+  intro a b c f g h u v w z proof_fact_3_1 proof_fact_3_2 proof_fact_3_3 proof_fact_3_4 proof_fact_3_5 proof_fact_3_6 proof_fact_3_7 proof_fact_3_8 proof_fact_3_9 proof_fact_3_10
+  have proof_fact_3_11 : routed a := proof_fact_3_10
+  have proof_fact_3_12 : a = b := proof_fact_3_1
+  have proof_fact_3_13 : b = c := proof_fact_3_2
+  have proof_fact_3_14 : c = g := proof_fact_3_4
+  have proof_fact_3_15 : f = g := proof_fact_3_5
+  have proof_fact_3_16 : routed f := by
+    simpa only [proof_fact_3_12, proof_fact_3_13, proof_fact_3_14, proof_fact_3_15] using proof_fact_3_11
+  exact proof_fact_3_16
+
+-- Litex stored fact f157
+theorem global_fact_157 : ∀ (a b c d : LitexSet), a = d → a = b → b = c → c = d → routed a → routed d := by
+  intro a b c d proof_fact_4_1 proof_fact_4_2 proof_fact_4_3 proof_fact_4_4 proof_fact_4_5
+  have proof_fact_4_6 : routed a := proof_fact_4_5
+  have proof_fact_4_7 : a = d := proof_fact_4_1
+  have proof_fact_4_8 : routed d := by
+    simpa only [proof_fact_4_7] using proof_fact_4_6
+  exact proof_fact_4_8
+
+opaque swapped {α_x_1 α_y_2 : Sort uLitex} : α_x_1 → α_y_2 → LitexFact
+
+-- Litex stored fact f173
+theorem global_fact_173 : ∀ (a b : LitexSet), a = b → swapped a b → swapped b a := by
+  intro a b proof_fact_5_1 proof_fact_5_2
+  have proof_fact_5_3 : swapped a b := proof_fact_5_2
+  have proof_fact_5_4 : a = b := proof_fact_5_1
+  have proof_fact_5_5 : swapped b a := by
+    simpa only [proof_fact_5_4] using proof_fact_5_3
+  exact proof_fact_5_5
+
+opaque paired {α_x_1 α_y_2 : Sort uLitex} : α_x_1 → α_y_2 → LitexFact
+
+-- Litex stored fact f198
+theorem global_fact_198 : ∀ (a b c d : LitexSet), a = b → c = d → paired a c → paired b d := by
+  intro a b c d proof_fact_6_1 proof_fact_6_2 proof_fact_6_3
+  have proof_fact_6_4 : paired a c := proof_fact_6_3
+  have proof_fact_6_5 : a = b := proof_fact_6_1
+  have proof_fact_6_6 : c = d := proof_fact_6_2
+  have proof_fact_6_7 : paired b d := by
+    simpa only [proof_fact_6_5, proof_fact_6_6] using proof_fact_6_4
+  exact proof_fact_6_7
+
+-- Litex stored fact f205
+theorem global_fact_205 : ∀ (a : LitexSet), t a → t a := by
+  intro a proof_fact_7_1
+  exact proof_fact_7_1
+
+end tmp2
+"""

@@ -1,0 +1,856 @@
+# Chapter 7. Lebesgue measure.
+
+template<n N+>:
+    have euclidean_space set = \chap6::row_vector_space<n>
+
+# Theorem 7.1.1. Lebesgue measure is represented by a measurable-set predicate
+# and a nonnegative value relation satisfying the standard measure laws.
+prop is_measure_system(n N+, measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R):
+    {} $in measurable_sets
+    forall E measurable_sets:
+        set_minus(\euclidean_space<n>, E) $in measurable_sets
+        measure(E) >= 0
+    forall E, F measurable_sets:
+        union(E, F) $in measurable_sets
+
+thm lebesgue_measure_exists:
+    ? forall n N+:
+        exist measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R st {$is_measure_system(n, measurable_sets, measure)}
+    trust exist measurable_sets power_set(power_set(\euclidean_space<n>)), measure fn(E measurable_sets) R st {$is_measure_system(n, measurable_sets, measure)}
+
+# Definition 7.2.1. An open box is determined coordinatewise by strict lower
+# and upper bounds.
+prop is_strictly_between_box_bounds(n N+, x, lower, upper \chap6::row_vector_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) < x(coordinate) < upper(coordinate)
+
+prop is_open_box(n N+, B power_set(\euclidean_space<n>), lower, upper \chap6::row_vector_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) < upper(coordinate)
+    forall x \euclidean_space<n>:
+        =>:
+            x $in B
+        <=>:
+            $is_strictly_between_box_bounds(n, x, lower, upper)
+
+prop is_between_closed_box_bounds(n N+, x, lower, upper \chap6::row_vector_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) <= x(coordinate) <= upper(coordinate)
+
+prop is_closed_box(n N+, B power_set(\euclidean_space<n>), lower, upper \chap6::row_vector_space<n>):
+    forall coordinate closed_range(1, n):
+        lower(coordinate) <= upper(coordinate)
+    forall x \euclidean_space<n>:
+        =>:
+            x $in B
+        <=>:
+            $is_between_closed_box_bounds(n, x, lower, upper)
+
+prop is_box_volume_product(n N+, lower, upper \chap6::row_vector_space<n>, partial fn(k N) R):
+    partial(0) = 1
+    forall k closed_range(1, n):
+        partial(k) = partial(k - 1) * (upper(k) - lower(k))
+
+prop has_box_volume(n N+, lower, upper \chap6::row_vector_space<n>, volume R):
+    exist partial fn(k N) R st {$is_box_volume_product(n, lower, upper, partial), volume = partial(n)}
+
+# Definition 7.2.3. A countable box cover contains the set in the union of its
+# displayed boxes.
+prop is_countable_open_box_cover(n N+, E power_set(\euclidean_space<n>), boxes fn(k N+) power_set(\euclidean_space<n>), lower, upper fn(k N+) \euclidean_space<n>):
+    forall k N+:
+        $is_open_box(n, boxes(k), lower(k), upper(k))
+    forall x E:
+        exist k N+ st {x $in boxes(k)}
+
+# Definition 7.2.4. Outer measure is the infimum of total volumes of countable
+# open-box covers, expressed by lower-bound and epsilon-approximation clauses.
+prop is_outer_measure_lower_bound(n N+, E power_set(\euclidean_space<n>), value R):
+    forall boxes fn(k N+) power_set(\euclidean_space<n>), lower, upper fn(k N+) \euclidean_space<n>, volumes fn(k N+) R, total R:
+        $is_countable_open_box_cover(n, E, boxes, lower, upper)
+        forall k N+:
+            $has_box_volume(n, lower(k), upper(k), volumes(k))
+        $chap3::has_real_series_sum(volumes, total)
+        =>:
+            value <= total
+
+prop is_outer_measure_epsilon_cover(n N+, E power_set(\euclidean_space<n>), value R, epsilon R+, boxes fn(k N+) power_set(\euclidean_space<n>), lower, upper fn(k N+) \euclidean_space<n>, volumes fn(k N+) R, total R):
+    $is_countable_open_box_cover(n, E, boxes, lower, upper)
+    forall k N+:
+        $has_box_volume(n, lower(k), upper(k), volumes(k))
+    $chap3::has_real_series_sum(volumes, total)
+    total < value + epsilon
+
+prop has_outer_measure_value(n N+, E power_set(\euclidean_space<n>), value R):
+    value >= 0
+    $is_outer_measure_lower_bound(n, E, value)
+    forall epsilon R+:
+        exist boxes fn(k N+) power_set(\euclidean_space<n>), lower fn(k N+) \euclidean_space<n>, upper fn(k N+) \euclidean_space<n>, volumes fn(k N+) R, total R st {$is_outer_measure_epsilon_cover(n, E, value, epsilon, boxes, lower, upper, volumes, total)}
+
+prop has_outer_measure_family_values(n N+, IndexSet set, family fn(index IndexSet) power_set(\euclidean_space<n>), values fn(index IndexSet) R):
+    forall p IndexSet:
+        $has_outer_measure_value(n, family(p), values(p))
+
+# Lemma 7.2.5. Outer measure is nonnegative, null on the empty set, monotone,
+# translation invariant, and countably subadditive.
+prop is_vector_translated_set(n N+, E, translated power_set(\euclidean_space<n>), shift \euclidean_space<n>):
+    forall y \euclidean_space<n>:
+        =>:
+            y $in translated
+        <=>:
+            exist x E st {y = \chap6::vector_add<n>(shift, x)}
+
+prop has_outer_measure_full_laws(n N+, measure_empty, measure_E, measure_F R, count N+, finite_values fn(j closed_range(1, count)) R, finite_union_measure R, countable_values fn(k N+) R, countable_union_measure, countable_total, translated_measure R):
+    measure_empty = 0
+    measure_E >= 0
+    measure_E <= measure_F
+    finite_union_measure <= sum(1, count, fn(j closed_range(1, count)) R {finite_values(j)})
+    countable_union_measure <= countable_total
+    translated_measure = measure_E
+
+thm outer_measure_laws:
+    ? forall n N+, E, F, translated power_set(\euclidean_space<n>), shift \euclidean_space<n>, measure_empty, measure_E, measure_F R, count N+, finite_family fn(j closed_range(1, count)) power_set(\euclidean_space<n>), finite_values fn(j closed_range(1, count)) R, finite_union_measure R, countable_family fn(k N+) power_set(\euclidean_space<n>), countable_values fn(k N+) R, countable_union_measure, countable_total, translated_measure R:
+        E $subset F
+        $has_outer_measure_value(n, E, measure_E)
+        $has_outer_measure_value(n, F, measure_F)
+        $has_outer_measure_value(n, {}, measure_empty)
+        $has_outer_measure_family_values(n, closed_range(1, count), finite_family, finite_values)
+        $has_outer_measure_value(n, \chap1::set_family_union<\euclidean_space<n>, closed_range(1, count), finite_family>, finite_union_measure)
+        $has_outer_measure_family_values(n, N+, countable_family, countable_values)
+        $has_outer_measure_value(n, \chap1::set_family_union<\euclidean_space<n>, N+, countable_family>, countable_union_measure)
+        $chap3::has_real_series_sum(countable_values, countable_total)
+        $is_vector_translated_set(n, E, translated, shift)
+        $has_outer_measure_value(n, translated, translated_measure)
+        =>:
+            $has_outer_measure_full_laws(n, measure_empty, measure_E, measure_F, count, finite_values, finite_union_measure, countable_values, countable_union_measure, countable_total, translated_measure)
+    trust $has_outer_measure_full_laws(n, measure_empty, measure_E, measure_F, count, finite_values, finite_union_measure, countable_values, countable_union_measure, countable_total, translated_measure)
+
+# Proposition 7.2.6. The outer measure of a closed box is its coordinate
+# volume.
+thm closed_box_outer_measure:
+    ? forall n N+, lower, upper \chap6::row_vector_space<n>, box power_set(\euclidean_space<n>), volume R:
+        $is_closed_box(n, box, lower, upper)
+        $has_box_volume(n, lower, upper, volume)
+        =>:
+            $has_outer_measure_value(n, box, volume)
+    trust $has_outer_measure_value(n, box, volume)
+
+# Corollary 7.2.7. Open boxes have the same volume formula.
+thm open_box_outer_measure:
+    ? forall n N+, B power_set(\euclidean_space<n>), lower, upper \chap6::row_vector_space<n>, volume R:
+        $is_open_box(n, B, lower, upper)
+        $has_box_volume(n, lower, upper, volume)
+        =>:
+            $has_outer_measure_value(n, B, volume)
+    trust $has_outer_measure_value(n, B, volume)
+
+# Examples 7.2.8--7.2.12. Concrete outer-measure computations on the line
+# and their dimension-dependent planar counterparts.
+prop has_infinite_outer_measure(n N+, E power_set(\euclidean_space<n>)):
+    forall bound R:
+        exist inner_set power_set(\euclidean_space<n>), value R st {inner_set $subset E, $has_outer_measure_value(n, inner_set, value), value > bound}
+
+have rational_line_points power_set(\chap6::row_vector_space<1>) = {point \chap6::row_vector_space<1>: point(1) $in Q}
+
+have irrational_line_points power_set(\euclidean_space<1>) = set_minus(\euclidean_space<1>, rational_line_points)
+
+have real_unit_interval power_set(\euclidean_space<1>) = {point \euclidean_space<1>: 0 <= point(1) <= 1}
+
+have irrational_unit_interval power_set(\euclidean_space<1>) = {point \euclidean_space<1>: point(1) >= 0 and point(1) <= 1 and not point(1) $in Q}
+
+have planar_unit_x_segment power_set(\chap6::row_vector_space<2>) = {point \chap6::row_vector_space<2>: point(1) >= 0 and point(1) <= 1 and point(2) = 0}
+
+have planar_x_axis power_set(\euclidean_space<2>) = {point \euclidean_space<2>: point(2) = 0}
+
+thm example_728_real_line_has_infinite_outer_measure:
+    ? forall anchor R:
+        $has_infinite_outer_measure(1, \euclidean_space<1>)
+    # proof_debt: use arbitrarily long open intervals and Corollary 7.2.7.
+    trust $has_infinite_outer_measure(1, \euclidean_space<1>)
+
+thm example_729_countable_sets_have_zero_outer_measure:
+    ? forall E power_set(\euclidean_space<1>), enumeration fn(k N+) E:
+        forall x E:
+            exist k N+ st {enumeration(k) = x}
+        =>:
+            $has_outer_measure_value(1, E, 0)
+    # proof_debt: singleton nullity and countable subadditivity are not yet composed.
+    trust $has_outer_measure_value(1, E, 0)
+
+thm example_729_rational_line_has_zero_outer_measure:
+    ? forall enumeration fn(k N+) rational_line_points:
+        forall x rational_line_points:
+            exist k N+ st {enumeration(k) = x}
+        =>:
+            $has_outer_measure_value(1, rational_line_points, 0)
+    # proof_debt: apply the countable-set result to an enumeration of the rational points.
+    trust $has_outer_measure_value(1, rational_line_points, 0)
+
+prop is_short_rational_cover(epsilon R+, boxes fn(k N+) power_set(\euclidean_space<1>), lower, upper fn(k N+) \euclidean_space<1>, volumes fn(k N+) R, total R):
+    $is_countable_open_box_cover(1, rational_line_points, boxes, lower, upper)
+    forall k N+:
+        $has_box_volume(1, lower(k), upper(k), volumes(k))
+    $chap3::has_real_series_sum(volumes, total)
+    total < epsilon
+
+thm remark_7210_rationals_have_short_interval_covers:
+    ? forall epsilon R+:
+        exist boxes fn(k N+) power_set(\euclidean_space<1>), lower fn(k N+) \euclidean_space<1>, upper fn(k N+) \euclidean_space<1>, volumes fn(k N+) R, total R st {$is_short_rational_cover(epsilon, boxes, lower, upper, volumes, total)}
+    # proof_debt: construct the standard enumeration-indexed epsilon/2^k cover.
+    trust exist boxes fn(k N+) power_set(\euclidean_space<1>), lower fn(k N+) \euclidean_space<1>, upper fn(k N+) \euclidean_space<1>, volumes fn(k N+) R, total R st {$is_short_rational_cover(epsilon, boxes, lower, upper, volumes, total)}
+
+thm example_7211_irrational_outer_measure:
+    ? forall anchor R:
+        $has_infinite_outer_measure(1, irrational_line_points)
+        $has_outer_measure_value(1, irrational_unit_interval, 1)
+    # proof_debt: remove the rational null set from the line and unit interval.
+    trust $has_infinite_outer_measure(1, irrational_line_points)
+    trust $has_outer_measure_value(1, irrational_unit_interval, 1)
+
+thm example_7212_outer_measure_depends_on_dimension:
+    ? forall anchor R:
+        $has_outer_measure_value(1, real_unit_interval, 1)
+        $has_outer_measure_value(2, planar_unit_x_segment, 0)
+        $has_outer_measure_value(2, planar_x_axis, 0)
+    # proof_debt: identify the interval as a closed box and cover planar
+    # segments and the axis by boxes of arbitrarily small total area.
+    trust $has_outer_measure_value(1, real_unit_interval, 1)
+    trust $has_outer_measure_value(2, planar_unit_x_segment, 0)
+    trust $has_outer_measure_value(2, planar_x_axis, 0)
+
+# Proposition 7.3.1. Outer measure is not countably additive on arbitrary sets.
+prop is_pairwise_disjoint_family(X, IndexSet set, family fn(index IndexSet) power_set(X)):
+    forall p, q IndexSet:
+        p != q
+        =>:
+            intersect(family(p), family(q)) = {}
+
+prop is_countable_outer_measure_additivity_counterexample(family fn(k N+) power_set(\euclidean_space<1>), values fn(k N+) R, union_measure, series_total R):
+    $is_pairwise_disjoint_family(\euclidean_space<1>, N+, family)
+    $has_outer_measure_family_values(1, N+, family, values)
+    $has_outer_measure_value(1, \chap1::set_family_union<\euclidean_space<1>, N+, family>, union_measure)
+    $chap3::has_real_series_sum(values, series_total)
+    union_measure != series_total
+
+thm outer_measure_not_countably_additive_on_all_sets:
+    ? forall anchor R:
+        exist family fn(k N+) power_set(\euclidean_space<1>), values fn(k N+) R, union_measure, series_total R st {$is_countable_outer_measure_additivity_counterexample(family, values, union_measure, series_total)}
+    # proof_debt: the Vitali-coset construction uses choice and is not yet formalized.
+    trust exist family fn(k N+) power_set(\euclidean_space<1>), values fn(k N+) R, union_measure, series_total R st {$is_countable_outer_measure_additivity_counterexample(family, values, union_measure, series_total)}
+
+# Proposition 7.3.3. Outer measure can fail finite additivity on arbitrary
+# disjoint sets.
+prop is_finite_outer_measure_additivity_counterexample(count N+, family fn(j closed_range(1, count)) power_set(\euclidean_space<1>), values fn(j closed_range(1, count)) R, union_measure R):
+    $is_pairwise_disjoint_family(\euclidean_space<1>, closed_range(1, count), family)
+    $has_outer_measure_family_values(1, closed_range(1, count), family, values)
+    $has_outer_measure_value(1, \chap1::set_family_union<\euclidean_space<1>, closed_range(1, count), family>, union_measure)
+    union_measure != sum(1, count, fn(j closed_range(1, count)) R {values(j)})
+
+thm outer_measure_not_finitely_additive_on_all_sets:
+    ? forall anchor R:
+        exist count N+, family fn(j closed_range(1, count)) power_set(\euclidean_space<1>), values fn(j closed_range(1, count)) R, union_measure R st {$is_finite_outer_measure_additivity_counterexample(count, family, values, union_measure)}
+    # proof_debt: the finite refinement of the Vitali construction is not yet formalized.
+    trust exist count N+, family fn(j closed_range(1, count)) power_set(\euclidean_space<1>), values fn(j closed_range(1, count)) R, union_measure R st {$is_finite_outer_measure_additivity_counterexample(count, family, values, union_measure)}
+
+# Definition 7.4.1. Caratheodory measurability requires every test set to split
+# its outer measure additively across E and its complement.
+prop is_lebesgue_measurable(n N+, E power_set(\euclidean_space<n>)):
+    forall A power_set(\euclidean_space<n>), total, inside, outside R:
+        $has_outer_measure_value(n, A, total)
+        $has_outer_measure_value(n, intersect(A, E), inside)
+        $has_outer_measure_value(n, set_minus(A, E), outside)
+        =>:
+            total = inside + outside
+
+# Lemma 7.4.2 and Remark 7.4.3. Lower and upper coordinate half-spaces
+# are measurable.
+prop is_coordinate_lower_half_space(n N+, H power_set(\chap6::row_vector_space<n>), coordinate closed_range(1, n), threshold R):
+    H = {x \chap6::row_vector_space<n>: x(coordinate) < threshold}
+
+prop is_coordinate_upper_half_space(n N+, H power_set(\chap6::row_vector_space<n>), coordinate closed_range(1, n), threshold R):
+    H = {x \chap6::row_vector_space<n>: x(coordinate) > threshold}
+
+prop has_coordinate_half_space_measurability(n N+, lower_half, upper_half power_set(\euclidean_space<n>)):
+    $is_lebesgue_measurable(n, lower_half)
+    $is_lebesgue_measurable(n, upper_half)
+
+thm coordinate_half_space_is_measurable:
+    ? forall n N+, lower_half, upper_half power_set(\chap6::row_vector_space<n>), coordinate closed_range(1, n), threshold R:
+        $is_coordinate_lower_half_space(n, lower_half, coordinate, threshold)
+        $is_coordinate_upper_half_space(n, upper_half, coordinate, threshold)
+        =>:
+            $has_coordinate_half_space_measurability(n, lower_half, upper_half)
+    # proof_debt: derive both directions by the Caratheodory separation estimate.
+    trust $has_coordinate_half_space_measurability(n, lower_half, upper_half)
+
+# Lemma 7.4.4. Measurable sets are closed under complement, translation,
+# finite unions and intersections; boxes and outer-null sets are measurable.
+prop has_measurable_set_full_laws(n N+, E, F, translated power_set(\euclidean_space<n>), measure_E, translated_measure R, count N+, finite_family fn(j closed_range(1, count)) power_set(\euclidean_space<n>), open_box, closed_box, null_set power_set(\euclidean_space<n>)):
+    $is_lebesgue_measurable(n, set_minus(\euclidean_space<n>, E))
+    $is_lebesgue_measurable(n, translated)
+    translated_measure = measure_E
+    $is_lebesgue_measurable(n, union(E, F))
+    $is_lebesgue_measurable(n, intersect(E, F))
+    $is_lebesgue_measurable(n, \chap1::set_family_union<\euclidean_space<n>, closed_range(1, count), finite_family>)
+    $is_lebesgue_measurable(n, \chap1::set_family_intersection<\euclidean_space<n>, closed_range(1, count), finite_family>)
+    $is_lebesgue_measurable(n, open_box)
+    $is_lebesgue_measurable(n, closed_box)
+    $is_lebesgue_measurable(n, null_set)
+
+thm measurable_set_laws:
+    ? forall n N+, E, F, translated power_set(\euclidean_space<n>), shift \euclidean_space<n>, measure_E, translated_measure R, count N+, finite_family fn(j closed_range(1, count)) power_set(\euclidean_space<n>), open_box, closed_box power_set(\euclidean_space<n>), open_lower, open_upper, closed_lower, closed_upper \chap6::row_vector_space<n>, null_set power_set(\euclidean_space<n>):
+        $is_lebesgue_measurable(n, E)
+        $is_lebesgue_measurable(n, F)
+        $is_vector_translated_set(n, E, translated, shift)
+        $has_outer_measure_value(n, E, measure_E)
+        $has_outer_measure_value(n, translated, translated_measure)
+        forall j closed_range(1, count):
+            $is_lebesgue_measurable(n, finite_family(j))
+        $is_open_box(n, open_box, open_lower, open_upper)
+        $is_closed_box(n, closed_box, closed_lower, closed_upper)
+        $has_outer_measure_value(n, null_set, 0)
+        =>:
+            $has_measurable_set_full_laws(n, E, F, translated, measure_E, translated_measure, count, finite_family, open_box, closed_box, null_set)
+    trust $has_measurable_set_full_laws(n, E, F, translated, measure_E, translated_measure, count, finite_family, open_box, closed_box, null_set)
+
+# Lemma 7.4.5. Outer measure is finitely additive over disjoint measurable
+# pieces, even after intersection with an arbitrary test set.
+thm measurable_sets_are_finitely_additive:
+    ? forall n N+, A, E, F power_set(\euclidean_space<n>), total, measure_E, f R:
+        intersect(E, F) = {}
+        $is_lebesgue_measurable(n, E)
+        $is_lebesgue_measurable(n, F)
+        $has_outer_measure_value(n, intersect(A, union(E, F)), total)
+        $has_outer_measure_value(n, intersect(A, E), measure_E)
+        $has_outer_measure_value(n, intersect(A, F), f)
+        =>:
+            total = measure_E + f
+    trust total = measure_E + f
+
+# Remark 7.4.6. Finite-additivity failure forces a nonmeasurable set.
+thm nonmeasurable_set_exists:
+    ? forall anchor R:
+        exist E power_set(\euclidean_space<1>) st {not $is_lebesgue_measurable(1, E)}
+    # proof_debt: combine Proposition 7.3.3 with finite additivity on measurable sets.
+    trust exist E power_set(\euclidean_space<1>) st {not $is_lebesgue_measurable(1, E)}
+
+# Corollary 7.4.7. The difference of nested measurable sets is measurable, and
+# its measure is the difference when the larger measure is finite.
+thm measurable_set_difference:
+    ? forall n N+, A, B power_set(\euclidean_space<n>):
+        A $subset B
+        $is_lebesgue_measurable(n, A)
+        $is_lebesgue_measurable(n, B)
+        =>:
+            $is_lebesgue_measurable(n, set_minus(B, A))
+    trust $is_lebesgue_measurable(n, set_minus(B, A))
+
+# Lemma 7.4.8. Lebesgue measure is countably additive on pairwise disjoint
+# measurable families.
+prop has_countable_measure_additivity_conclusion(n N+, family fn(k N+) power_set(\euclidean_space<n>), total R):
+    $is_lebesgue_measurable(n, \chap1::set_family_union<\euclidean_space<n>, N+, family>)
+    $has_outer_measure_value(n, \chap1::set_family_union<\euclidean_space<n>, N+, family>, total)
+
+thm lebesgue_measure_is_countably_additive:
+    ? forall n N+, family fn(k N+) power_set(\euclidean_space<n>), values fn(k N+) R, total R:
+        forall k N+:
+            $is_lebesgue_measurable(n, family(k))
+        $is_pairwise_disjoint_family(\euclidean_space<n>, N+, family)
+        $has_outer_measure_family_values(n, N+, family, values)
+        $chap3::has_real_series_sum(values, total)
+        =>:
+            $has_countable_measure_additivity_conclusion(n, family, total)
+    trust $has_countable_measure_additivity_conclusion(n, family, total)
+
+# Lemma 7.4.9. The measurable sets form a sigma algebra.
+prop has_measurable_sigma_closure(n N+, family fn(k N+) power_set(\euclidean_space<n>)):
+    $is_lebesgue_measurable(n, \chap1::set_family_union<\euclidean_space<n>, N+, family>)
+    $is_lebesgue_measurable(n, \chap1::set_family_intersection<\euclidean_space<n>, N+, family>)
+
+thm measurable_sets_form_sigma_algebra:
+    ? forall n N+, family fn(k N+) power_set(\euclidean_space<n>):
+        forall k N+:
+            $is_lebesgue_measurable(n, family(k))
+        =>:
+            $has_measurable_sigma_closure(n, family)
+    trust $has_measurable_sigma_closure(n, family)
+
+# Lemma 7.4.10. Every open subset of Euclidean space is a countable union of
+# open boxes.
+prop is_open_box_or_empty(n N+, B power_set(\euclidean_space<n>), lower, upper \euclidean_space<n>):
+    B = {} or $is_open_box(n, B, lower, upper)
+
+prop has_countable_open_box_decomposition(n N+, U power_set(\euclidean_space<n>), boxes fn(k N+) power_set(\euclidean_space<n>), lower, upper fn(k N+) \euclidean_space<n>):
+    forall k N+:
+        $is_open_box_or_empty(n, boxes(k), lower(k), upper(k))
+    U = \chap1::set_family_union<\euclidean_space<n>, N+, boxes>
+
+prop has_open_set_box_decomposition_result(n N+, U power_set(\euclidean_space<n>)):
+    exist boxes fn(k N+) power_set(\euclidean_space<n>), lower, upper fn(k N+) \euclidean_space<n> st {$has_countable_open_box_decomposition(n, U, boxes, lower, upper)}
+
+thm open_set_is_countable_union_of_boxes:
+    ? forall n N+, U power_set(\euclidean_space<n>):
+        $chap1::is_metric_open(\euclidean_space<n>, \chap6::euclidean_distance<n>, U)
+        =>:
+            $has_open_set_box_decomposition_result(n, U)
+    trust $has_open_set_box_decomposition_result(n, U)
+
+# Lemma 7.4.11. Every open and every closed Euclidean set is measurable.
+thm open_and_closed_sets_are_lebesgue_measurable:
+    ? forall n N+, E power_set(\euclidean_space<n>):
+        $chap1::is_metric_open(\euclidean_space<n>, \chap6::euclidean_distance<n>, E) or $chap1::is_metric_closed(\euclidean_space<n>, \chap6::euclidean_distance<n>, E)
+        =>:
+            $is_lebesgue_measurable(n, E)
+    trust $is_lebesgue_measurable(n, E)
+
+# Definition 7.5.1. A function is measurable when inverse images of open sets
+# are measurable.
+prop is_measurable_function(n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>):
+    $is_lebesgue_measurable(n, domain)
+    forall U power_set(\euclidean_space<m>):
+        $chap1::is_metric_open(\euclidean_space<m>, \chap6::euclidean_distance<m>, U)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) $in U})
+
+# Lemma 7.5.2. Continuous functions on measurable domains are measurable.
+thm continuous_function_is_measurable:
+    ? forall n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>:
+        $is_lebesgue_measurable(n, domain)
+        $chap2::is_metric_continuous(domain, \euclidean_space<m>, fn(x, y domain) R {\chap6::euclidean_distance<n>(x, y)}, \chap6::euclidean_distance<m>, f)
+        =>:
+            $is_measurable_function(n, m, domain, f)
+    trust $is_measurable_function(n, m, domain, f)
+
+# Lemma 7.5.3. It suffices to test inverse images of open boxes.
+prop has_measurable_open_box_preimages(n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>):
+    $is_lebesgue_measurable(n, domain)
+    forall B power_set(\euclidean_space<m>), lower, upper \euclidean_space<m>:
+        $is_open_box(m, B, lower, upper)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) $in B})
+
+prop has_measurability_open_box_equivalence(n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>):
+    not $is_measurable_function(n, m, domain, f) or $has_measurable_open_box_preimages(n, m, domain, f)
+    not $has_measurable_open_box_preimages(n, m, domain, f) or $is_measurable_function(n, m, domain, f)
+
+thm open_box_test_for_measurability:
+    ? forall n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>:
+        $has_measurability_open_box_equivalence(n, m, domain, f)
+    trust $has_measurability_open_box_equivalence(n, m, domain, f)
+
+# Corollary 7.5.4. A Euclidean-valued function is measurable exactly when
+# every supplied coordinate function is measurable.
+prop is_measurable_real_function(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    $is_lebesgue_measurable(n, domain)
+    forall U power_set(R):
+        $chap1::is_metric_open(R, chap1::real_distance, U)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) $in U})
+
+prop is_coordinate_function_family(n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \chap6::row_vector_space<m>, coordinates fn(j closed_range(1, m)) fn(x domain) R):
+    forall x domain:
+        f(x) = fn(j closed_range(1, m)) R {coordinates(j)(x)}
+
+prop has_all_measurable_coordinate_functions(n, m N+, domain power_set(\euclidean_space<n>), coordinates fn(j closed_range(1, m)) fn(x domain) R):
+    forall j closed_range(1, m):
+        $is_measurable_real_function(n, domain, coordinates(j))
+
+prop has_measurability_coordinate_equivalence(n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \chap6::row_vector_space<m>, coordinates fn(j closed_range(1, m)) fn(x domain) R):
+    not $is_measurable_function(n, m, domain, f) or $has_all_measurable_coordinate_functions(n, m, domain, coordinates)
+    not $has_all_measurable_coordinate_functions(n, m, domain, coordinates) or $is_measurable_function(n, m, domain, f)
+
+thm coordinate_test_for_measurability:
+    ? forall n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \chap6::row_vector_space<m>, coordinates fn(j closed_range(1, m)) fn(x domain) R:
+        $is_coordinate_function_family(n, m, domain, f, coordinates)
+        =>:
+            $has_measurability_coordinate_equivalence(n, m, domain, f, coordinates)
+    trust $has_measurability_coordinate_equivalence(n, m, domain, f, coordinates)
+
+# Checked projection from Definition 7.5.1: inverse images of supplied open
+# sets under a measurable function are measurable.
+thm measurable_preimage_of_open_set:
+    ? forall n, m N+, domain power_set(\euclidean_space<n>), f fn(x domain) \euclidean_space<m>, U power_set(\euclidean_space<m>):
+        $is_measurable_function(n, m, domain, f)
+        $chap1::is_metric_open(\euclidean_space<m>, \chap6::euclidean_distance<m>, U)
+        =>:
+            $is_lebesgue_measurable(n, {x domain: f(x) $in U})
+    by def:
+        ? $is_measurable_function(n, m, domain, f)
+
+# Lemma 7.5.5. A continuous function applied after a measurable function is
+# measurable.
+prop is_function_composition_on_open_range(n, m, p N+, domain power_set(\euclidean_space<n>), W power_set(\euclidean_space<m>), f fn(x domain) \euclidean_space<m>, g fn(y W) \euclidean_space<p>, composition fn(x domain) \euclidean_space<p>):
+    forall x domain:
+        f(x) $in W
+        composition(x) = g(f(x))
+
+thm continuous_after_measurable_is_measurable:
+    ? forall n, m, p N+, domain power_set(\euclidean_space<n>), W power_set(\euclidean_space<m>), f fn(x domain) \euclidean_space<m>, g fn(y W) \euclidean_space<p>, composition fn(x domain) \euclidean_space<p>:
+        $chap1::is_metric_open(\euclidean_space<m>, \chap6::euclidean_distance<m>, W)
+        $is_measurable_function(n, m, domain, f)
+        $chap2::is_metric_continuous(W, \euclidean_space<p>, fn(x, y W) R {\chap6::euclidean_distance<m>(x, y)}, \chap6::euclidean_distance<p>, g)
+        $is_function_composition_on_open_range(n, m, p, domain, W, f, g, composition)
+        =>:
+            $is_measurable_function(n, p, domain, composition)
+    trust $is_measurable_function(n, p, domain, composition)
+
+# Corollary 7.5.6. Absolute value, maximum with zero, and minimum with zero
+# preserve real-valued measurability.
+prop is_absolute_value_transform(domain set, f, absolute_value fn(x domain) R):
+    forall x domain:
+        absolute_value(x) = abs(f(x))
+
+prop is_max_with_zero_transform(domain set, f, positive_part fn(x domain) R):
+    forall x domain:
+        f(x) >= 0 or positive_part(x) = 0
+        f(x) < 0 or positive_part(x) = f(x)
+
+prop is_min_with_zero_transform(domain set, f, negative_part fn(x domain) R):
+    forall x domain:
+        f(x) >= 0 or negative_part(x) = f(x)
+        f(x) < 0 or negative_part(x) = 0
+
+prop has_measurable_zero_transforms(n N+, domain power_set(\euclidean_space<n>), absolute_value, positive_part, negative_part fn(x domain) R):
+    $is_measurable_real_function(n, domain, absolute_value)
+    $is_measurable_real_function(n, domain, positive_part)
+    $is_measurable_real_function(n, domain, negative_part)
+
+thm measurable_absolute_value_and_zero_extrema:
+    ? forall n N+, domain power_set(\euclidean_space<n>), f, absolute_value, positive_part, negative_part fn(x domain) R:
+        $is_measurable_real_function(n, domain, f)
+        $is_absolute_value_transform(domain, f, absolute_value)
+        $is_max_with_zero_transform(domain, f, positive_part)
+        $is_min_with_zero_transform(domain, f, negative_part)
+        =>:
+            $has_measurable_zero_transforms(n, domain, absolute_value, positive_part, negative_part)
+    trust $has_measurable_zero_transforms(n, domain, absolute_value, positive_part, negative_part)
+
+# Lemma 7.5.8 and Definition 7.5.9 use measurable superlevel sets as the
+# real/extended-real criterion.
+prop has_measurable_superlevel_sets(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    $is_lebesgue_measurable(n, domain)
+    forall threshold R:
+        $is_lebesgue_measurable(n, {x domain: f(x) > threshold})
+
+# Corollary 7.5.7. Sums, differences, products, maxima, minima, and quotients
+# with nonzero denominator of measurable real functions are measurable.
+prop is_pointwise_real_sum(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        h(x) = f(x) + g(x)
+
+prop is_pointwise_real_difference(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        h(x) = f(x) - g(x)
+
+prop is_pointwise_real_product(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        h(x) = f(x) * g(x)
+
+prop is_pointwise_real_maximum(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        f(x) >= g(x) or h(x) = g(x)
+        f(x) < g(x) or h(x) = f(x)
+
+prop is_pointwise_real_minimum(domain set, f, g, h fn(x domain) R):
+    forall x domain:
+        f(x) >= g(x) or h(x) = f(x)
+        f(x) < g(x) or h(x) = g(x)
+
+prop is_pointwise_real_quotient(domain set, numerator, denominator, quotient fn(x domain) R):
+    forall x domain:
+        denominator(x) != 0
+        quotient(x) = numerator(x) / denominator(x)
+
+prop has_measurable_real_function_algebra(n N+, domain power_set(\euclidean_space<n>), sum_function, difference_function, product_function, maximum_function, minimum_function, quotient_function fn(x domain) R):
+    $is_measurable_real_function(n, domain, sum_function)
+    $is_measurable_real_function(n, domain, difference_function)
+    $is_measurable_real_function(n, domain, product_function)
+    $is_measurable_real_function(n, domain, maximum_function)
+    $is_measurable_real_function(n, domain, minimum_function)
+    $is_measurable_real_function(n, domain, quotient_function)
+
+thm measurable_real_function_algebra:
+    ? forall n N+, domain power_set(\euclidean_space<n>), f, g, sum_function, difference_function, product_function, maximum_function, minimum_function, quotient_function fn(x domain) R:
+        $is_measurable_real_function(n, domain, f)
+        $is_measurable_real_function(n, domain, g)
+        $is_pointwise_real_sum(domain, f, g, sum_function)
+        $is_pointwise_real_difference(domain, f, g, difference_function)
+        $is_pointwise_real_product(domain, f, g, product_function)
+        $is_pointwise_real_maximum(domain, f, g, maximum_function)
+        $is_pointwise_real_minimum(domain, f, g, minimum_function)
+        $is_pointwise_real_quotient(domain, f, g, quotient_function)
+        =>:
+            $has_measurable_real_function_algebra(n, domain, sum_function, difference_function, product_function, maximum_function, minimum_function, quotient_function)
+    # proof_debt: use measurable preimages under the six continuous real
+    # operations.
+    trust $has_measurable_real_function_algebra(n, domain, sum_function, difference_function, product_function, maximum_function, minimum_function, quotient_function)
+
+# Exercise 7.5.5. A function equal almost everywhere to a measurable function
+# is measurable after modifying it on a null measurable set.
+prop is_equal_outside_set(domain set, f, g fn(x domain) R, exceptional set):
+    forall x domain:
+        not x $in exceptional
+        =>:
+            f(x) = g(x)
+
+prop is_equal_outside_null_set(n N+, domain power_set(\euclidean_space<n>), f, g fn(x domain) R):
+    exist exceptional power_set(\euclidean_space<n>) st {$has_outer_measure_value(n, exceptional, 0), $is_equal_outside_set(domain, f, g, exceptional)}
+
+thm null_modification_preserves_measurability:
+    ? forall n N+, domain power_set(\euclidean_space<n>), f, g fn(x domain) R:
+        $has_measurable_superlevel_sets(n, domain, g)
+        $is_equal_outside_null_set(n, domain, f, g)
+        =>:
+            $has_measurable_superlevel_sets(n, domain, f)
+    trust $has_measurable_superlevel_sets(n, domain, f)
+
+# Lemma 7.5.8. A real-valued function is measurable exactly when every strict
+# superlevel set is measurable.
+prop has_measurability_superlevel_equivalence(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    not $is_measurable_real_function(n, domain, f) or $has_measurable_superlevel_sets(n, domain, f)
+    not $has_measurable_superlevel_sets(n, domain, f) or $is_measurable_real_function(n, domain, f)
+
+thm superlevel_test_for_real_measurability:
+    ? forall n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R:
+        $is_lebesgue_measurable(n, domain)
+        =>:
+            $has_measurability_superlevel_equivalence(n, domain, f)
+    trust $has_measurability_superlevel_equivalence(n, domain, f)
+
+# Definition 7.5.9. The tagged values `(-1,0)`, `(0,r)`, and `(1,0)` represent
+# negative infinity, a finite real r, and positive infinity respectively.
+have extended_real set = union({(-1, 0)}, union(cart({0}, R), {(1, 0)}))
+
+prop is_finite_extended_real_above_threshold(value extended_real, threshold R):
+    exist finite_value R st {value = (0, finite_value), finite_value > threshold}
+
+prop is_extended_real_above_threshold(value extended_real, threshold R):
+    value = (1, 0) or $is_finite_extended_real_above_threshold(value, threshold)
+
+prop is_extended_real_measurable(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) extended_real):
+    $is_lebesgue_measurable(n, domain)
+    forall threshold R:
+        $is_lebesgue_measurable(n, {x domain: $is_extended_real_above_threshold(f(x), threshold)})
+
+# Definition 7.5.9 compatibility. A finite real function and its tagged
+# extended-real embedding have the same strict superlevel sets.
+prop is_finite_real_extended_embedding(domain set, f fn(x domain) R, embedded fn(x domain) extended_real):
+    forall x domain:
+        embedded(x) = (0, f(x))
+
+prop has_finite_extended_measurability_compatibility(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R, embedded fn(x domain) extended_real):
+    not $is_measurable_real_function(n, domain, f) or $is_extended_real_measurable(n, domain, embedded)
+    not $is_extended_real_measurable(n, domain, embedded) or $is_measurable_real_function(n, domain, f)
+
+thm finite_real_measurability_is_extended_real_measurability:
+    ? forall n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R, embedded fn(x domain) extended_real:
+        $is_finite_real_extended_embedding(domain, f, embedded)
+        =>:
+            $has_finite_extended_measurability_compatibility(n, domain, f, embedded)
+    # proof_debt: identify the equal strict superlevel preimages in both definitions.
+    trust $has_finite_extended_measurability_compatibility(n, domain, f, embedded)
+
+prop has_finite_extended_real_order(left, right extended_real):
+    exist left_value, right_value R st {left = (0, left_value), right = (0, right_value), left_value <= right_value}
+
+prop is_extended_real_le(left, right extended_real):
+    left = (-1, 0) or right = (1, 0) or $has_finite_extended_real_order(left, right)
+
+prop is_extended_real_sequence_upper_bound(sequence fn(k N+) extended_real, value extended_real):
+    forall k N+:
+        $is_extended_real_le(sequence(k), value)
+
+prop is_extended_real_sequence_lower_bound(sequence fn(k N+) extended_real, value extended_real):
+    forall k N+:
+        $is_extended_real_le(value, sequence(k))
+
+prop is_extended_real_sequence_supremum(sequence fn(k N+) extended_real, value extended_real):
+    $is_extended_real_sequence_upper_bound(sequence, value)
+    forall upper extended_real:
+        not $is_extended_real_sequence_upper_bound(sequence, upper) or $is_extended_real_le(value, upper)
+
+prop is_extended_real_sequence_infimum(sequence fn(k N+) extended_real, value extended_real):
+    $is_extended_real_sequence_lower_bound(sequence, value)
+    forall lower extended_real:
+        not $is_extended_real_sequence_lower_bound(sequence, lower) or $is_extended_real_le(lower, value)
+
+prop is_extended_real_tail_upper_bound(sequence fn(k N+) extended_real, start N+, value extended_real):
+    forall k N+:
+        k >= start
+        =>:
+            $is_extended_real_le(sequence(k), value)
+
+prop is_extended_real_tail_lower_bound(sequence fn(k N+) extended_real, start N+, value extended_real):
+    forall k N+:
+        k >= start
+        =>:
+            $is_extended_real_le(value, sequence(k))
+
+prop is_extended_real_tail_supremum(sequence fn(k N+) extended_real, start N+, value extended_real):
+    $is_extended_real_tail_upper_bound(sequence, start, value)
+    forall upper extended_real:
+        not $is_extended_real_tail_upper_bound(sequence, start, upper) or $is_extended_real_le(value, upper)
+
+prop is_extended_real_tail_infimum(sequence fn(k N+) extended_real, start N+, value extended_real):
+    $is_extended_real_tail_lower_bound(sequence, start, value)
+    forall lower extended_real:
+        not $is_extended_real_tail_lower_bound(sequence, start, lower) or $is_extended_real_le(lower, value)
+
+prop is_extended_real_sequence_limsup_witness(sequence, tail_suprema fn(k N+) extended_real, value extended_real):
+    forall start N+:
+        $is_extended_real_tail_supremum(sequence, start, tail_suprema(start))
+    $is_extended_real_sequence_infimum(tail_suprema, value)
+
+prop is_extended_real_sequence_liminf_witness(sequence, tail_infima fn(k N+) extended_real, value extended_real):
+    forall start N+:
+        $is_extended_real_tail_infimum(sequence, start, tail_infima(start))
+    $is_extended_real_sequence_supremum(tail_infima, value)
+
+prop is_extended_real_sequence_limsup(sequence fn(k N+) extended_real, value extended_real):
+    exist tail_suprema fn(start N+) extended_real st {$is_extended_real_sequence_limsup_witness(sequence, tail_suprema, value)}
+
+prop is_extended_real_sequence_liminf(sequence fn(k N+) extended_real, value extended_real):
+    exist tail_infima fn(start N+) extended_real st {$is_extended_real_sequence_liminf_witness(sequence, tail_infima, value)}
+
+prop is_pointwise_extended_real_supremum(domain set, family fn(k N+) fn(x domain) extended_real, pointwise_supremum fn(x domain) extended_real):
+    forall x domain:
+        $is_extended_real_sequence_supremum(fn(k N+) extended_real {family(k)(x)}, pointwise_supremum(x))
+
+prop is_pointwise_extended_real_infimum(domain set, family fn(k N+) fn(x domain) extended_real, pointwise_infimum fn(x domain) extended_real):
+    forall x domain:
+        $is_extended_real_sequence_infimum(fn(k N+) extended_real {family(k)(x)}, pointwise_infimum(x))
+
+prop is_pointwise_extended_real_limsup(domain set, family fn(k N+) fn(x domain) extended_real, pointwise_limsup fn(x domain) extended_real):
+    forall x domain:
+        $is_extended_real_sequence_limsup(fn(k N+) extended_real {family(k)(x)}, pointwise_limsup(x))
+
+prop is_pointwise_extended_real_liminf(domain set, family fn(k N+) fn(x domain) extended_real, pointwise_liminf fn(x domain) extended_real):
+    forall x domain:
+        $is_extended_real_sequence_liminf(fn(k N+) extended_real {family(k)(x)}, pointwise_liminf(x))
+
+prop is_pointwise_extended_real_limit(domain set, family fn(k N+) fn(x domain) extended_real, pointwise_limit fn(x domain) extended_real):
+    forall x domain:
+        $is_extended_real_sequence_limsup(fn(k N+) extended_real {family(k)(x)}, pointwise_limit(x))
+        $is_extended_real_sequence_liminf(fn(k N+) extended_real {family(k)(x)}, pointwise_limit(x))
+
+prop has_measurable_extended_sequence_order_limits(n N+, domain power_set(\euclidean_space<n>), family fn(k N+) fn(x domain) extended_real, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit fn(x domain) extended_real):
+    $is_extended_real_measurable(n, domain, pointwise_supremum)
+    $is_extended_real_measurable(n, domain, pointwise_infimum)
+    $is_extended_real_measurable(n, domain, pointwise_limsup)
+    $is_extended_real_measurable(n, domain, pointwise_liminf)
+    not $is_pointwise_extended_real_limit(domain, family, pointwise_limit) or $is_extended_real_measurable(n, domain, pointwise_limit)
+
+thm extended_real_limits_of_measurable_functions_are_measurable:
+    ? forall n N+, domain power_set(\euclidean_space<n>), family fn(k N+) fn(x domain) extended_real, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit fn(x domain) extended_real:
+        forall k N+:
+            $is_extended_real_measurable(n, domain, family(k))
+        $is_pointwise_extended_real_supremum(domain, family, pointwise_supremum)
+        $is_pointwise_extended_real_infimum(domain, family, pointwise_infimum)
+        $is_pointwise_extended_real_limsup(domain, family, pointwise_limsup)
+        $is_pointwise_extended_real_liminf(domain, family, pointwise_liminf)
+        =>:
+            $has_measurable_extended_sequence_order_limits(n, domain, family, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit)
+    # proof_debt: express the extended-real superlevel sets of the four order
+    # limits as countable unions and intersections of measurable superlevel sets.
+    trust $has_measurable_extended_sequence_order_limits(n, domain, family, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit)
+
+# The current Chapter 8 integration layer remains finite-real-valued. This
+# relation keeps that restriction explicit rather than calling R-valued maps
+# extended-real functions.
+prop is_finite_real_superlevel_measurable(n N+, domain power_set(\euclidean_space<n>), f fn(x domain) R):
+    $has_measurable_superlevel_sets(n, domain, f)
+
+prop is_real_sequence_upper_bound(sequence fn(k N+) R, value R):
+    forall k N+:
+        sequence(k) <= value
+
+prop is_real_sequence_lower_bound(sequence fn(k N+) R, value R):
+    forall k N+:
+        value <= sequence(k)
+
+prop is_real_sequence_supremum(sequence fn(k N+) R, value R):
+    $is_real_sequence_upper_bound(sequence, value)
+    forall upper R:
+        not $is_real_sequence_upper_bound(sequence, upper) or value <= upper
+
+prop is_real_sequence_infimum(sequence fn(k N+) R, value R):
+    $is_real_sequence_lower_bound(sequence, value)
+    forall lower R:
+        not $is_real_sequence_lower_bound(sequence, lower) or lower <= value
+
+prop is_real_tail_upper_bound(sequence fn(k N+) R, start N+, value R):
+    forall k N+:
+        k >= start
+        =>:
+            sequence(k) <= value
+
+prop is_real_tail_lower_bound(sequence fn(k N+) R, start N+, value R):
+    forall k N+:
+        k >= start
+        =>:
+            value <= sequence(k)
+
+prop is_real_tail_supremum(sequence fn(k N+) R, start N+, value R):
+    $is_real_tail_upper_bound(sequence, start, value)
+    forall upper R:
+        not $is_real_tail_upper_bound(sequence, start, upper) or value <= upper
+
+prop is_real_tail_infimum(sequence fn(k N+) R, start N+, value R):
+    $is_real_tail_lower_bound(sequence, start, value)
+    forall lower R:
+        not $is_real_tail_lower_bound(sequence, start, lower) or lower <= value
+
+prop is_real_sequence_limsup_witness(sequence, tail_suprema fn(k N+) R, value R):
+    forall start N+:
+        $is_real_tail_supremum(sequence, start, tail_suprema(start))
+    $is_real_sequence_infimum(tail_suprema, value)
+
+prop is_real_sequence_liminf_witness(sequence, tail_infima fn(k N+) R, value R):
+    forall start N+:
+        $is_real_tail_infimum(sequence, start, tail_infima(start))
+    $is_real_sequence_supremum(tail_infima, value)
+
+prop is_real_sequence_limsup(sequence fn(k N+) R, value R):
+    exist tail_suprema fn(start N+) R st {$is_real_sequence_limsup_witness(sequence, tail_suprema, value)}
+
+prop is_real_sequence_liminf(sequence fn(k N+) R, value R):
+    exist tail_infima fn(start N+) R st {$is_real_sequence_liminf_witness(sequence, tail_infima, value)}
+
+prop is_pointwise_real_supremum(domain set, family fn(k N+) fn(x domain) R, pointwise_supremum fn(x domain) R):
+    forall x domain:
+        $is_real_sequence_supremum(fn(k N+) R {family(k)(x)}, pointwise_supremum(x))
+
+prop is_pointwise_real_infimum(domain set, family fn(k N+) fn(x domain) R, pointwise_infimum fn(x domain) R):
+    forall x domain:
+        $is_real_sequence_infimum(fn(k N+) R {family(k)(x)}, pointwise_infimum(x))
+
+prop is_pointwise_real_limsup(domain set, family fn(k N+) fn(x domain) R, pointwise_limsup fn(x domain) R):
+    forall x domain:
+        $is_real_sequence_limsup(fn(k N+) R {family(k)(x)}, pointwise_limsup(x))
+
+prop is_pointwise_real_liminf(domain set, family fn(k N+) fn(x domain) R, pointwise_liminf fn(x domain) R):
+    forall x domain:
+        $is_real_sequence_liminf(fn(k N+) R {family(k)(x)}, pointwise_liminf(x))
+
+prop has_measurable_sequence_order_limits(n N+, domain power_set(\euclidean_space<n>), family fn(k N+) fn(x domain) R, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit fn(x domain) R):
+    $is_finite_real_superlevel_measurable(n, domain, pointwise_supremum)
+    $is_finite_real_superlevel_measurable(n, domain, pointwise_infimum)
+    $is_finite_real_superlevel_measurable(n, domain, pointwise_limsup)
+    $is_finite_real_superlevel_measurable(n, domain, pointwise_liminf)
+    not $chap3::is_pointwise_convergent_to(domain, R, chap1::real_distance, family, pointwise_limit) or $is_finite_real_superlevel_measurable(n, domain, pointwise_limit)
+
+# Finite-real-valued companion to Lemma 7.5.10, retained for the Chapter 8
+# integration layer.
+thm finite_real_limits_of_measurable_functions_are_measurable:
+    ? forall n N+, domain power_set(\euclidean_space<n>), family fn(k N+) fn(x domain) R, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit fn(x domain) R:
+        $is_lebesgue_measurable(n, domain)
+        forall k N+:
+            $is_finite_real_superlevel_measurable(n, domain, family(k))
+        $is_pointwise_real_supremum(domain, family, pointwise_supremum)
+        $is_pointwise_real_infimum(domain, family, pointwise_infimum)
+        $is_pointwise_real_limsup(domain, family, pointwise_limsup)
+        $is_pointwise_real_liminf(domain, family, pointwise_liminf)
+        =>:
+            $has_measurable_sequence_order_limits(n, domain, family, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit)
+    # proof_debt: express the relevant superlevel sets as countable unions and
+    # intersections; the pointwise-limit clause then follows from limsup/liminf.
+    trust $has_measurable_sequence_order_limits(n, domain, family, pointwise_supremum, pointwise_infimum, pointwise_limsup, pointwise_liminf, pointwise_limit)

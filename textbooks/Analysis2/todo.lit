@@ -1,0 +1,141 @@
+# Analysis II proof-debt ledger.
+#
+# This file is comment-only and is not exported by litex.config.
+#
+# Chapter 1 currently has 26 explicit trust statements. The ordered project
+# runner succeeds, so these are mathematics-completeness boundaries rather
+# than runner failures.
+#
+# 1.1.18: prove the four finite-dimensional l1/l2/linf/coordinate convergence
+# directions. Also replace the trusted unique-maximum construction used for
+# linf_distance after the recursive-template kernel problem is fixed.
+# After 1.1.20: expose the selected metric-limit notation once dependent
+# unique selection propagates its certificate through template instantiation.
+# 1.2.10: construct a sequence by choosing a point from each 1/n ball; the
+# other three equivalence directions are checkable.
+# 1.2.15: prove the remaining open-ball, family, interior-openness, and
+# closure-closedness properties. The closed-ball and singleton-closed
+# directions, both complement directions, plus the maximal-open-subset and
+# smallest-closed-superset inclusions, are checked.
+# 1.3.4: formalize the source's relative-open union construction and the
+# source-deferred closed-set half.
+# 1.4.5: construct a convergent subsequence by choosing a point in each 1/n
+# ball; the converse is checked. 1.4.12 retains the completeness and
+# closed-subspace proof debt; Lemma 1.4.9 is checked.
+# 1.5.5-1.5.10: prove the remaining compactness consequences, the reverse
+# finite-dimensional Heine--Borel direction, the open-cover theorem, nested
+# compact intersection, and finite-union/finite-set compactness. The forward
+# Heine--Borel direction and compact-subset closedness are checked derivations
+# from Corollary 1.5.6 and therefore retain its indirect trust boundary.
+#
+# Chapter 2, Section 2.1 — Theorem 2.1.4
+# The three continuity characterizations are stated through four reusable
+# directions. The forward epsilon--delta sequence-limit proof is checked.
+# The shrinking-ball countersequence and open-neighborhood directions remain.
+#
+# Chapter 2, Section 2.1 — Theorem 2.1.5
+# The sequential characterization is established from Theorem 2.1.4. The
+# remaining gap is proving the four directions relating continuity to open
+# and closed inverse images.
+#
+# Chapter 2, Section 2.2 — Lemmas 2.2.1 and 2.2.2
+# The paired function and all seven arithmetic maps are concrete. The missing
+# mathematics is the coordinatewise convergence proof for pairing and the
+# real limit-law proofs of continuity for the arithmetic maps.
+#
+# Chapter 2, Section 2.2 — Corollary 2.2.3
+# All global arithmetic-combination conclusions are established from their
+# pointwise forms. The remaining gaps are the seven pointwise composition
+# identifications, including the restricted-codomain argument for division.
+#
+# Chapter 2, Section 2.3 — Theorem 2.3.1 and Proposition 2.3.2
+# Prove compactness of continuous images and then the boundedness and attained
+# extrema of continuous real functions on compact spaces.
+#
+# Chapter 2, Section 2.3 — Theorem 2.3.5
+# Uniform continuity is proved to imply continuity. The remaining direction
+# is the finite-open-cover and finite-minimum argument on a compact domain.
+#
+# Chapter 2, Section 2.4 — Theorems 2.4.5-2.4.7
+# Supply the supremum proof characterizing connected real subsets, the
+# pullback-of-separation proof for continuous images, and the resulting
+# intermediate value argument.
+#
+# Chapter 2, Section 2.5
+# All eight named topological definitions are concrete and checked. The
+# source-deferred exercises proving induced-topology laws and equivalence with
+# the metric notions are excluded by the inventory policy and add no trust.
+#
+# Chapter 3
+# 3.1.5: prove the sequential, neighborhood, and extension equivalences. The
+# value-at-domain-point consequence is checked directly.
+# 3.3.1-3.3.6: formalize the epsilon/3 uniform-limit arguments and boundedness.
+# Corollary 3.3.2 is checked from the pointwise theorem.
+# 3.4.2-3.4.5: expose a reusable supremum selector, prove the metric
+# convergence equivalence, and complete the bounded-continuous-space proof.
+# 3.5.7: prove the M-test through uniform Cauchy completeness.
+# 3.6.1-3.7.3: connect concrete Analysis I integral and derivative APIs and
+# prove the interchange theorems and their series corollaries.
+# 3.8.3-3.8.19: discharge the support, convolution, zero-extension, and
+# polynomial approximation proof chain.
+#
+# Chapter 4
+# 4.1.3-4.1.6: connect an extended-real limsup/radius interface and prove
+# convergence, uniform convergence, and termwise calculus.
+# 4.2.4-4.2.12: connect the Analysis I derivative API and prove the derivative
+# tower, Taylor coefficient formula, analyticity of derivatives, and
+# uniqueness of coefficients.
+# 4.3.1-4.4.1: prove Abel's endpoint theorem, summation by parts, and the
+# Cauchy-product/convolution theorem.
+# 4.5.1-4.5.6: prove existence and uniqueness of the exponential/logarithm
+# selections and their analytic, derivative, order, product, inverse, integral,
+# and series laws. Replace the cross-book real-power graph when a canonical
+# Analysis I dependency exists.
+# 4.6.4-4.6.15: prove the coordinate algebra, conjugation, norm, inverse,
+# metric, coordinate-limit, limit-law, and complex-exponential results.
+# Addition and multiplication commutativity are checked. The remaining basic
+# coordinate laws expose nested struct-valued function unfolding rather than
+# a need for new abstract mathematical interfaces.
+# 4.7.1-4.7.5: connect the real restrictions of complex sine and cosine, prove
+# the identities and derivatives, establish the least positive sine zero, and
+# prove periodicity and the two zero-set characterizations.
+#
+# Chapter 5
+# 5.1.5-5.5.4: supply the analytic proofs for periodic-function closure,
+# Hermitian and L2 laws, character orthogonality, coefficient recovery,
+# periodic convolution, Fejer approximation, Fourier convergence, absolute
+# convergence, and Plancherel. The periodic, character, trigonometric
+# polynomial, inner-product, convolution, and convergence relations themselves
+# are concrete. Fourier coefficient coordinates, their symmetric partial-sum
+# family, the absolute-summability hypothesis, and the Plancherel energy
+# sequence are now tied together explicitly; their analytic proofs remain
+# trusted.
+#
+# Chapter 6
+# 6.1.13-6.8.1: prove matrix representation, uniqueness and calculus laws for
+# total derivatives, continuous-partial and Clairaut theorems, contraction
+# mapping, the quantitative invertible-linear-map estimate, and the inverse
+# and implicit function theorems. Finite coordinate spaces, linearity,
+# matrices, derivatives, contractions, fixed points, and the hypotheses and
+# conclusions of the small-identity-perturbation lemma are concrete. Replace
+# the remaining analytic proof debts in the local neighborhood, inverse-law,
+# inverse-derivative, implicit graph, and implicit-derivative interfaces.
+#
+# Chapter 7
+# 7.1.1-7.5.10: construct Lebesgue measure from the displayed outer-measure
+# relation and prove the outer-measure, Caratheodory measurability,
+# countable-additivity, Borel, and measurable-function theorems. Open boxes,
+# covers, outer-measure values, measurable sets, and measurable functions are
+# concrete. The finite and countable nonadditivity counterexamples now state
+# their disjoint families, member values, union values, and failed equalities;
+# formalize their choice-based constructions and add an extended-nonnegative
+# value carrier for the cases involving positive infinity.
+#
+# Chapter 8
+# 8.1.3-8.5.1: prove simple-function algebra and presentation independence,
+# the nonnegative integral laws, monotone convergence, Fatou, almost-everywhere
+# invariance, signed-integral laws, dominated convergence, Riemann
+# compatibility, and Fubini. Simple, nonnegative, signed, upper, and lower
+# integral relations are concrete. Tonelli, dominated convergence, and the
+# upper/lower common-value criterion now have complete source-facing
+# hypotheses and conclusions; only their proof steps remain trusted.

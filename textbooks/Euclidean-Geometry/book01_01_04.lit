@@ -1,0 +1,271 @@
+# Euclid, Elements, Book I, Propositions 1--4.
+
+# Select the counterclockwise equilateral apex on the directed base a--b.
+have fn equilateral_vertex(a, b cart(R, R)) cart(R, R) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
+
+thm equilateral_rotation_norm:
+    ? forall x, y R:
+        (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = x^2 + y^2
+    (x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2 = x^2 - 2 * x * sqrt(3) * y + sqrt(3)^2 * y^2 + y^2 + 2 * y * sqrt(3) * x + sqrt(3)^2 * x^2 = 4 * x^2 + 4 * y^2
+    (x / 2 - sqrt(3) * y / 2)^2 + (y / 2 + sqrt(3) * x / 2)^2 = ((x - sqrt(3) * y)^2 + (y + sqrt(3) * x)^2) / 4 = (4 * x^2 + 4 * y^2) / 4 = x^2 + y^2
+
+thm equilateral_vertex_distance_lemma:
+    ? forall a, b cart(R, R):
+        zero::distance_sq(a, equilateral_vertex(a, b)) = zero::distance_sq(a, b)
+        zero::distance_sq(b, equilateral_vertex(a, b)) = zero::distance_sq(a, b)
+    equilateral_vertex(a, b) = ((a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2, (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)
+    equilateral_vertex(a, b)[1] = (a[1] + b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] = (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
+    equilateral_vertex(a, b)[1] - a[1] = (b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] - a[2] = (b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
+    by thm laws::distance_sq_coordinate_formula(a, equilateral_vertex(a, b))
+    by thm laws::distance_sq_coordinate_formula(a, b)
+    by thm equilateral_rotation_norm(b[1] - a[1], b[2] - a[2])
+    zero::distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2 = ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = zero::distance_sq(a, b)
+    equilateral_vertex(a, b)[1] - b[1] = (a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
+    equilateral_vertex(a, b)[2] - b[2] = -((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)
+    by thm laws::distance_sq_coordinate_formula(b, equilateral_vertex(a, b))
+    by thm equilateral_rotation_norm(a[1] - b[1], b[2] - a[2])
+    zero::distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2 = ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = zero::distance_sq(a, b)
+
+# Euclid I.1: construct an equilateral triangle on a finite straight line.
+thm euclid_book1_proposition_1:
+    ? forall a, b cart(R, R):
+        a != b
+        =>:
+            exist c cart(R, R) st {$zero::is_equilateral_triangle(a, b, c)}
+    zero::distance_sq(a, equilateral_vertex(a, b)) = zero::distance_sq(a, b)
+    zero::distance_sq(b, equilateral_vertex(a, b)) = zero::distance_sq(a, b)
+    $zero::are_segments_congruent(a, b, a, equilateral_vertex(a, b))
+    $zero::are_segments_congruent(a, b, b, equilateral_vertex(a, b))
+    $zero::is_equilateral_triangle(a, b, equilateral_vertex(a, b))
+    witness exist c cart(R, R) st {$zero::is_equilateral_triangle(a, b, c)} from equilateral_vertex(a, b)
+
+# Proposition I.2 has an especially simple analytic witness: translate the
+# source segment so that its first endpoint becomes the chosen point.
+have fn copied_endpoint(a, b, c cart(R, R)) cart(R, R) = (a[1] + c[1] - b[1], a[2] + c[2] - b[2])
+
+forall a, b, c cart(R, R):
+    copied_endpoint(a, b, c) = (a[1] + c[1] - b[1], a[2] + c[2] - b[2])
+    copied_endpoint(a, b, c)[1] = a[1] + c[1] - b[1]
+    copied_endpoint(a, b, c)[2] = a[2] + c[2] - b[2]
+    zero::vec(a, copied_endpoint(a, b, c)) = (copied_endpoint(a, b, c)[1] - a[1], copied_endpoint(a, b, c)[2] - a[2]) = (c[1] - b[1], c[2] - b[2]) = zero::vec(b, c)
+
+# Euclid I.2: place at a given point a segment equal to a given segment.
+thm euclid_book1_proposition_2:
+    ? forall a, b, c cart(R, R):
+        exist d cart(R, R) st {$zero::are_segments_congruent(a, d, b, c)}
+    zero::vec(a, copied_endpoint(a, b, c)) = zero::vec(b, c)
+    zero::dot(zero::vec(a, copied_endpoint(a, b, c)), zero::vec(a, copied_endpoint(a, b, c))) = zero::dot(zero::vec(b, c), zero::vec(b, c))
+    zero::distance_sq(a, copied_endpoint(a, b, c)) = zero::dot(zero::vec(a, copied_endpoint(a, b, c)), zero::vec(a, copied_endpoint(a, b, c))) = zero::dot(zero::vec(b, c), zero::vec(b, c)) = zero::distance_sq(b, c)
+    $zero::are_segments_congruent(a, copied_endpoint(a, b, c), b, c)
+    witness exist d cart(R, R) st {$zero::are_segments_congruent(a, d, b, c)} from copied_endpoint(a, b, c)
+
+# Closed-segment membership is the affine form of betweenness used here.
+prop is_on_closed_segment(p, a, b cart(R, R)):
+    exist t R st {0 <= t, t <= 1, p = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))}
+
+# Keep a source-local forwarding theorem so constrained constructions can use
+# nonnegativity during their well-definedness phase.
+thm distance_sq_nonnegative:
+    ? forall a, b cart(R, R):
+        0 <= zero::distance_sq(a, b)
+    by thm laws::distance_sq_nonnegative(a, b)
+
+thm sqrt_ratio_unit_interval:
+    ? forall x, y R:
+        0 <= x
+        0 < y
+        x <= y
+        =>:
+            0 <= sqrt(x / y)
+            sqrt(x / y) <= 1
+            sqrt(x / y)^2 = x / y
+    y != 0
+    0 <= x / y
+    x / y <= y / y = 1
+    0 <= sqrt(x / y)
+    sqrt(x / y) <= sqrt(1) = 1
+    sqrt(x / y)^2 = x / y
+
+thm affine_distance_sq:
+    ? forall a, b cart(R, R), t R:
+        zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = t^2 * zero::distance_sq(a, b)
+    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])) $in cart(R, R)
+    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] = a[1] + t * (b[1] - a[1])
+    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] = a[2] + t * (b[2] - a[2])
+    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] - a[1] = t * (b[1] - a[1])
+    (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] - a[2] = t * (b[2] - a[2])
+    by thm laws::distance_sq_coordinate_formula(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2])))
+    by thm laws::distance_sq_coordinate_formula(a, b)
+    zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = ((a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[1] - a[1])^2 + ((a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))[2] - a[2])^2 = (t * (b[1] - a[1]))^2 + (t * (b[2] - a[2]))^2 = t^2 * ((b[1] - a[1])^2 + (b[2] - a[2])^2) = t^2 * zero::distance_sq(a, b)
+
+# The affine parameter is the ratio of the requested length to the base length.
+have fn cut_point(a, b, c, d cart(R, R): zero::distance_sq(a, b) > 0, 0 <= zero::distance_sq(c, d), zero::distance_sq(c, d) <= zero::distance_sq(a, b)) cart(R, R) = (a[1] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[1] - a[1]), a[2] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[2] - a[2]))
+
+thm cut_point_lemma:
+    ? forall a, b, c, d cart(R, R):
+        zero::distance_sq(a, b) > 0
+        zero::distance_sq(c, d) <= zero::distance_sq(a, b)
+        =>:
+            $is_on_closed_segment(cut_point(a, b, c, d), a, b)
+            $zero::are_segments_congruent(a, cut_point(a, b, c, d), c, d)
+    by thm distance_sq_nonnegative(c, d)
+    by thm sqrt_ratio_unit_interval(zero::distance_sq(c, d), zero::distance_sq(a, b))
+    have t R = sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b))
+    0 <= t
+    t <= 1
+    t^2 = zero::distance_sq(c, d) / zero::distance_sq(a, b)
+    cut_point(a, b, c, d) = (a[1] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[1] - a[1]), a[2] + sqrt(zero::distance_sq(c, d) / zero::distance_sq(a, b)) * (b[2] - a[2])) = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+    witness exist s R st {0 <= s, s <= 1, cut_point(a, b, c, d) = (a[1] + s * (b[1] - a[1]), a[2] + s * (b[2] - a[2]))} from t:
+        0 <= t
+        t <= 1
+        cut_point(a, b, c, d) = (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))
+    $is_on_closed_segment(cut_point(a, b, c, d), a, b)
+    by def:
+        ? $is_on_closed_segment(cut_point(a, b, c, d), a, b)
+    zero::distance_sq(a, b) != 0
+    zero::distance_sq(a, cut_point(a, b, c, d)) = zero::distance_sq(a, (a[1] + t * (b[1] - a[1]), a[2] + t * (b[2] - a[2]))) = t^2 * zero::distance_sq(a, b) = (zero::distance_sq(c, d) / zero::distance_sq(a, b)) * zero::distance_sq(a, b) = zero::distance_sq(c, d)
+    $zero::are_segments_congruent(a, cut_point(a, b, c, d), c, d)
+    by def:
+        ? $zero::are_segments_congruent(a, cut_point(a, b, c, d), c, d)
+
+# Euclid I.3: cut off from the longer segment a segment equal to the shorter.
+thm euclid_book1_proposition_3:
+    ? forall a, b, c, d cart(R, R):
+        zero::distance_sq(a, b) > 0
+        zero::distance_sq(c, d) <= zero::distance_sq(a, b)
+        =>:
+            exist p cart(R, R) st {$is_on_closed_segment(p, a, b), $zero::are_segments_congruent(a, p, c, d)}
+    $is_on_closed_segment(cut_point(a, b, c, d), a, b)
+    $zero::are_segments_congruent(a, cut_point(a, b, c, d), c, d)
+    witness exist p cart(R, R) st {$is_on_closed_segment(p, a, b), $zero::are_segments_congruent(a, p, c, d)} from cut_point(a, b, c, d)
+
+thm dot_det_norm_identity:
+    ? forall x, y cart(R, R):
+        zero::dot(x, y)^2 + zero::det(x, y)^2 = zero::dot(x, x) * zero::dot(y, y)
+    zero::dot(x, y) = x[1] * y[1] + x[2] * y[2]
+    zero::det(x, y) = x[1] * y[2] - x[2] * y[1]
+    zero::dot(x, x) = x[1]^2 + x[2]^2
+    zero::dot(y, y) = y[1]^2 + y[2]^2
+    zero::dot(x, y)^2 + zero::det(x, y)^2 = (x[1] * y[1] + x[2] * y[2])^2 + (x[1] * y[2] - x[2] * y[1])^2 = (x[1]^2 + x[2]^2) * (y[1]^2 + y[2]^2) = zero::dot(x, x) * zero::dot(y, y)
+
+thm distance_sq_symmetric:
+    ? forall a, b cart(R, R):
+        zero::distance_sq(a, b) = zero::distance_sq(b, a)
+    by thm laws::distance_sq_coordinate_formula(a, b)
+    by thm laws::distance_sq_coordinate_formula(b, a)
+    zero::distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2 = (a[1] - b[1])^2 + (a[2] - b[2])^2 = zero::distance_sq(b, a)
+
+thm distance_sq_positive_of_ne:
+    ? forall a, b cart(R, R):
+        a != b
+        =>:
+            0 < zero::distance_sq(a, b)
+    by contra:
+        ? 0 < zero::distance_sq(a, b)
+        zero::distance_sq(a, b) <= 0
+        by thm distance_sq_nonnegative(a, b)
+        zero::distance_sq(a, b) = 0
+        by thm laws::distance_sq_coordinate_formula(a, b)
+        (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        0 <= (b[1] - a[1])^2
+        0 <= (b[2] - a[2])^2
+        (b[1] - a[1])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        (b[2] - a[2])^2 <= (b[1] - a[1])^2 + (b[2] - a[2])^2 = 0
+        (b[1] - a[1])^2 = 0
+        (b[2] - a[2])^2 = 0
+        b[1] - a[1] = 0
+        b[2] - a[2] = 0
+        a[1] = b[1]
+        a[2] = b[2]
+        a = (a[1], a[2])
+        b = (b[1], b[2])
+        a = b
+        impossible a != b
+
+thm distance_sq_law_of_cosines:
+    ? forall p, q, r cart(R, R):
+        zero::distance_sq(p, r) = zero::distance_sq(p, q) + zero::distance_sq(q, r) - 2 * zero::dot(zero::vec(q, p), zero::vec(q, r))
+    by thm laws::distance_sq_coordinate_formula(p, r)
+    by thm laws::distance_sq_coordinate_formula(p, q)
+    by thm laws::distance_sq_coordinate_formula(q, r)
+    zero::vec(q, p) = (p[1] - q[1], p[2] - q[2])
+    zero::vec(q, r) = (r[1] - q[1], r[2] - q[2])
+    zero::vec(q, p)[1] = p[1] - q[1]
+    zero::vec(q, p)[2] = p[2] - q[2]
+    zero::vec(q, r)[1] = r[1] - q[1]
+    zero::vec(q, r)[2] = r[2] - q[2]
+    zero::dot(zero::vec(q, p), zero::vec(q, r)) = (p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])
+    zero::distance_sq(p, r) = (r[1] - p[1])^2 + (r[2] - p[2])^2 = (q[1] - p[1])^2 + (q[2] - p[2])^2 + (r[1] - q[1])^2 + (r[2] - q[2])^2 - 2 * ((p[1] - q[1]) * (r[1] - q[1]) + (p[2] - q[2]) * (r[2] - q[2])) = ((q[1] - p[1])^2 + (q[2] - p[2])^2) + ((r[1] - q[1])^2 + (r[2] - q[2])^2) - 2 * zero::dot(zero::vec(q, p), zero::vec(q, r)) = zero::distance_sq(p, q) + zero::distance_sq(q, r) - 2 * zero::dot(zero::vec(q, p), zero::vec(q, r))
+
+thm positive_scale_from_equal_sum_of_squares:
+    ? forall alpha, beta, gamma, delta, k R:
+        0 < k
+        alpha = k * gamma
+        beta = k * delta
+        alpha^2 + beta^2 = gamma^2 + delta^2
+        0 < gamma^2 + delta^2
+        =>:
+            k = 1
+    gamma^2 + delta^2 != 0
+    alpha^2 + beta^2 = (k * gamma)^2 + (k * delta)^2 = k^2 * (gamma^2 + delta^2)
+    k^2 * (gamma^2 + delta^2) = gamma^2 + delta^2
+    k^2 = (k^2 * (gamma^2 + delta^2)) / (gamma^2 + delta^2) = (gamma^2 + delta^2) / (gamma^2 + delta^2) = 1
+    k^2 = 1^2
+
+thm sas_third_side_lemma:
+    ? forall p, q, r, u, v, w cart(R, R):
+        $zero::are_segments_congruent(p, q, u, v)
+        $zero::are_segments_congruent(q, r, v, w)
+        $zero::are_angles_congruent(p, q, r, u, v, w)
+        =>:
+            $zero::are_segments_congruent(r, p, w, u)
+    by def:
+        ? $zero::are_segments_congruent(p, q, u, v)
+    by def:
+        ? $zero::are_segments_congruent(q, r, v, w)
+    by def:
+        ? $zero::are_angles_congruent(p, q, r, u, v, w)
+    obtain k from exist k R+ st {zero::dot(zero::vec(q, p), zero::vec(q, r)) = k * zero::dot(zero::vec(v, u), zero::vec(v, w)), abs(zero::det(zero::vec(q, p), zero::vec(q, r))) = k * abs(zero::det(zero::vec(v, u), zero::vec(v, w)))}
+    0 < k
+    by thm dot_det_norm_identity(zero::vec(q, p), zero::vec(q, r))
+    by thm dot_det_norm_identity(zero::vec(v, u), zero::vec(v, w))
+    abs(zero::det(zero::vec(q, p), zero::vec(q, r)))^2 = zero::det(zero::vec(q, p), zero::vec(q, r))^2
+    abs(zero::det(zero::vec(v, u), zero::vec(v, w)))^2 = zero::det(zero::vec(v, u), zero::vec(v, w))^2
+    zero::distance_sq(q, p) = zero::dot(zero::vec(q, p), zero::vec(q, p))
+    zero::distance_sq(q, r) = zero::dot(zero::vec(q, r), zero::vec(q, r))
+    zero::distance_sq(v, u) = zero::dot(zero::vec(v, u), zero::vec(v, u))
+    zero::distance_sq(v, w) = zero::dot(zero::vec(v, w), zero::vec(v, w))
+    zero::dot(zero::vec(q, p), zero::vec(q, r))^2 + abs(zero::det(zero::vec(q, p), zero::vec(q, r)))^2 = zero::dot(zero::vec(q, p), zero::vec(q, r))^2 + zero::det(zero::vec(q, p), zero::vec(q, r))^2 = zero::dot(zero::vec(q, p), zero::vec(q, p)) * zero::dot(zero::vec(q, r), zero::vec(q, r)) = zero::distance_sq(q, p) * zero::distance_sq(q, r)
+    zero::dot(zero::vec(v, u), zero::vec(v, w))^2 + abs(zero::det(zero::vec(v, u), zero::vec(v, w)))^2 = zero::dot(zero::vec(v, u), zero::vec(v, w))^2 + zero::det(zero::vec(v, u), zero::vec(v, w))^2 = zero::dot(zero::vec(v, u), zero::vec(v, u)) * zero::dot(zero::vec(v, w), zero::vec(v, w)) = zero::distance_sq(v, u) * zero::distance_sq(v, w)
+    by thm distance_sq_symmetric(q, p)
+    by thm distance_sq_symmetric(u, v)
+    zero::distance_sq(q, p) = zero::distance_sq(p, q) = zero::distance_sq(u, v) = zero::distance_sq(v, u)
+    zero::distance_sq(q, r) = zero::distance_sq(v, w)
+    zero::distance_sq(q, p) * zero::distance_sq(q, r) = zero::distance_sq(v, u) * zero::distance_sq(v, w)
+    zero::dot(zero::vec(q, p), zero::vec(q, r))^2 + abs(zero::det(zero::vec(q, p), zero::vec(q, r)))^2 = zero::dot(zero::vec(v, u), zero::vec(v, w))^2 + abs(zero::det(zero::vec(v, u), zero::vec(v, w)))^2
+    by thm distance_sq_positive_of_ne(v, u)
+    by thm distance_sq_positive_of_ne(v, w)
+    0 < zero::distance_sq(v, u) * zero::distance_sq(v, w)
+    0 < zero::dot(zero::vec(v, u), zero::vec(v, w))^2 + abs(zero::det(zero::vec(v, u), zero::vec(v, w)))^2
+    by thm positive_scale_from_equal_sum_of_squares(zero::dot(zero::vec(q, p), zero::vec(q, r)), abs(zero::det(zero::vec(q, p), zero::vec(q, r))), zero::dot(zero::vec(v, u), zero::vec(v, w)), abs(zero::det(zero::vec(v, u), zero::vec(v, w))), k)
+    k = 1
+    zero::dot(zero::vec(q, p), zero::vec(q, r)) = k * zero::dot(zero::vec(v, u), zero::vec(v, w)) = 1 * zero::dot(zero::vec(v, u), zero::vec(v, w)) = zero::dot(zero::vec(v, u), zero::vec(v, w))
+    by thm distance_sq_law_of_cosines(p, q, r)
+    by thm distance_sq_law_of_cosines(u, v, w)
+    by thm distance_sq_symmetric(r, p)
+    by thm distance_sq_symmetric(w, u)
+    $zero::are_segments_congruent(r, p, w, u)
+    by def:
+        ? $zero::are_segments_congruent(r, p, w, u)
+
+# Euclid I.4: side-angle-side congruence.
+thm euclid_book1_proposition_4:
+    ? forall p, q, r, u, v, w cart(R, R):
+        $zero::are_segments_congruent(p, q, u, v)
+        $zero::are_segments_congruent(q, r, v, w)
+        $zero::are_angles_congruent(p, q, r, u, v, w)
+        =>:
+            $zero::are_triangles_congruent(p, q, r, u, v, w)
+    $zero::are_segments_congruent(r, p, w, u)

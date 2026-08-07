@@ -1,0 +1,686 @@
+
+# Chapter 5 — Logic
+
+# > _Logic is the hygiene the mathematician practices to keep his ideas healthy and strong._
+# >
+# > _– Hermann Weyl_
+
+# Chapters 2 and 4 introduced the grammar of logical symbols such as `and`,
+# `or`, `forall`, and `=>` in concrete mathematical proofs. This chapter looks at
+# the logical patterns themselves: when two statement forms can always be
+# converted into each other, and how negation can be pushed inward.
+
+# For the main difference from Lean-style quantification over propositions, see
+# the summary in [5.4](#54-litex-statements-and-ideas-in-this-chapter).
+
+# 5.1 Logical Equivalence
+
+# 5.1.1
+
+# We use a concrete running example: a natural number is even or odd. The
+# claims below isolate the logical moves; they do not need a separate proof of
+# the parity dichotomy in order to use it as a premise.
+
+prop is_even(n N):
+    n % 2 = 0
+
+prop is_odd(n N):
+    n % 2 = 1
+
+# If `n` is even or odd, and it is not odd, then it is even.
+
+claim:
+    ? forall n N:
+        $is_even(n) or $is_odd(n)
+        not $is_odd(n)
+        =>:
+            $is_even(n)
+    by cases:
+        ? $is_even(n)
+        case $is_even(n)
+        case $is_odd(n):
+            impossible not $is_odd(n)
+
+# The same proof shape works for any alternatives. Here the alternatives carry
+# an ordinary mathematical meaning, so every branch can be read concretely.
+
+# Being even implies being even or not odd.
+
+forall n N:
+    $is_even(n)
+    =>:
+        $is_even(n) or not $is_odd(n)
+
+# 5.1.2/5.1.3
+
+# Truth tables are a paper-and-pencil way to check a propositional pattern.
+# Assign truth values to the basic propositions first, then evaluate the compound
+# formula from the inside out.
+
+# For example, in the row where both `P` and `Q` are false, the following are the
+# true facts available from that row.
+
+forall n N:
+    not $is_even(n)
+    not $is_odd(n)
+    =>:
+        not $is_even(n)
+        not $is_odd(n)
+        not $is_even(n) or not $is_odd(n) # this is true because the left branch holds
+
+# 5.1.4
+
+# Two formulas are logically equivalent when each one implies the other. In
+# Litex, we usually write the two directions explicitly.
+
+# Here is the equivalence between `P or P` and `P`. The direction from `P` to
+# `P or P` is immediate. The other direction is a case split, but both cases are
+# the same.
+
+forall n N:
+    $is_even(n)
+    =>:
+        $is_even(n) or $is_even(n)
+
+claim:
+    ? forall n N:
+        $is_even(n) or $is_even(n)
+        =>:
+            $is_even(n)
+    by cases:
+        ? $is_even(n)
+        case $is_even(n)
+        case $is_even(n)
+
+# 5.1.5
+
+# Now we prove the distributive law: `P and (Q or R)` is logically equivalent to
+# `(P and Q) or (P and R)`.
+
+# Litex does not treat a compound proposition like `P and (Q or R)` as an object
+# that can be passed around. So, when we want to talk schematically, we name the
+# compound pieces with small `prop` definitions. This keeps the proof readable
+# while still showing the logical work.
+
+# The first direction splits on `Q or R`. The reverse direction splits on whether
+# we have `P and Q` or `P and R`.
+
+prop is_even_and_odd(n N):
+    $is_even(n)
+    $is_odd(n)
+
+sketch:
+    prop is_multiple_of_three(n N):
+        n % 3 = 0
+
+    prop is_odd_or_multiple_of_three(n N):
+        $is_odd(n) or $is_multiple_of_three(n)
+
+    prop is_even_and_multiple_of_three(n N):
+        $is_even(n)
+        $is_multiple_of_three(n)
+
+    claim:
+        ? forall n N:
+            $is_even(n)
+            $is_odd_or_multiple_of_three(n)
+            =>:
+                $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+        by cases:
+            ? $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+            case $is_odd(n):
+                by def:
+                    ? $is_even_and_odd(n)
+            case $is_multiple_of_three(n):
+                by def:
+                    ? $is_even_and_multiple_of_three(n)
+
+    claim:
+        ? forall n N:
+            $is_even_and_odd(n) or $is_even_and_multiple_of_three(n)
+            =>:
+                $is_even(n)
+                $is_odd_or_multiple_of_three(n)
+        by cases:
+            ? $is_even(n)
+            case $is_even_and_odd(n):
+                $is_even(n)
+            case $is_even_and_multiple_of_three(n):
+                $is_even(n)
+        by cases:
+            ? $is_odd_or_multiple_of_three(n)
+            case $is_even_and_odd(n):
+                $is_odd(n)
+                by def:
+                    ? $is_odd_or_multiple_of_three(n)
+            case $is_even_and_multiple_of_three(n):
+                $is_multiple_of_three(n)
+                by def:
+                    ? $is_odd_or_multiple_of_three(n)
+
+# 5.1.6
+
+# The remaining quantifier examples use the concrete equation whose
+# impossibility will be proved in Section 5.3.5.
+
+prop is_square_two(n N):
+    n^2 = 2
+
+# The same idea works for predicates. If `P(x)` holds for every integer `x`, and
+# `Q(x)` holds for every integer `x`, then for any particular integer `a`, both
+# `P(a)` and `Q(a)` hold.
+
+sketch:
+    prop square_is_nonnegative(x Z):
+        x^2 >= 0
+
+    prop successor_is_greater(x Z):
+        x + 1 > x
+
+    claim:
+        ? forall a Z:
+            forall x Z:
+                $square_is_nonnegative(x)
+            forall x Z:
+                $successor_is_greater(x)
+            =>:
+                $square_is_nonnegative(a) and $successor_is_greater(a)
+        $square_is_nonnegative(a)
+        $successor_is_greater(a)
+
+# Next, suppose there is one integer `x` that works for every integer `y`. Then,
+# for each chosen `y`, there exists an `x` that works for that `y`: use the same
+# witness.
+
+# There is a small Litex-specific point here. A `forall` fact cannot appear after
+# the `=>:` as the conclusion of another `forall` fact. So instead of writing the
+# goal as one nested statement, we move the later universal variable `y` to the
+# top level.
+
+sketch:
+    prop is_at_most_square(x, y Z):
+        x <= y^2
+
+    prop is_at_most_every_square(x Z):
+        forall y Z:
+            $is_at_most_square(x, y)
+
+    claim:
+        ? forall y Z:
+            exist x Z st {$is_at_most_every_square(x)}
+            =>:
+                exist x Z st {$is_at_most_square(x, y)}
+        obtain x0 from exist x Z st {$is_at_most_every_square(x)}
+        witness exist x Z st {$is_at_most_square(x, y)} from x0
+
+# Finally, here is the common equivalence between "there is no `x` satisfying
+# `P(x)`" and "every `x` fails to satisfy `P(x)`." We again name the existential
+# statement with a small `prop`, because `not exist ...` is harder to use directly
+# inside every proof shape.
+
+sketch:
+    prop some_square_two():
+        exist n N st {$is_square_two(n)}
+
+    claim:
+        ? forall a N:
+            not $some_square_two()
+            =>:
+                not $is_square_two(a)
+        by contra:
+            ? not $is_square_two(a)
+            witness exist n N st {$is_square_two(n)} from a
+            by def:
+                ? $some_square_two()
+            impossible $some_square_two()
+
+    claim:
+        ? forall:
+            forall n N:
+                not $is_square_two(n)
+            =>:
+                not $some_square_two()
+        by contra:
+            ? not $some_square_two()
+            obtain n0 from exist n N st {$is_square_two(n)}
+            not $is_square_two(n0)
+            impossible $is_square_two(n0)
+
+# 5.2 The Law Of The Excluded Middle
+
+# This section uses one new Litex statement: `by for`. It proves a `forall`
+# statement over a finite range by checking each value in that range. The range
+# `range(a, b)` means the integers from `a` up to but not including `b`.
+# The range `closed_range(a, b)` includes both endpoints, and can also be written
+# as `a...b`.
+
+# The check is literal finite enumeration. For example, `forall i1 range(2, 17)`
+# is proved by substituting `i1 = 2`, then `i1 = 3`, and so on up to `i1 = 16`, and
+# checking the conclusion each time.
+
+# Here is the basic shape:
+
+# ```text
+# by for:
+#     prove:
+#         forall n range(a, b):
+#             goal_about(n)
+
+# by for:
+#     prove:
+#         forall n a...b:
+#             goal_about(n)
+# ```
+
+# As a useful example, define primality by saying directly that there are no
+# divisors between `2` and `x - 1`.
+
+prop Prime(x N+):
+    2 <= x
+    forall y range(2, x):
+        x % y != 0
+
+# For a concrete number, `by for` proves the bounded universal condition, and
+# then `by def` explicitly introduces the corresponding `Prime` fact.
+
+by for:
+    ? forall n range(2, 17):
+        17 % n != 0
+
+by def:
+    ? $Prime(17)
+
+# Now we can use this finite-checking pattern inside the logic problem.
+
+# 5.2.1 to 5.2.4
+
+# The original example studies numbers `k` such that `k^(k^n) + 1` is always
+# prime. In this Litex version, `k` is positive, and primality is the `Prime`
+# predicate above.
+
+sketch:
+    prop superpowered(k N+):
+        forall n N+:
+            $Prime(k ^ (k ^ n) + 1)
+
+    by for:
+        ? forall n range(2, 2):
+            2 % n != 0
+
+    by def:
+        ? $Prime(2)
+
+    forall n N+:
+        1^n = 1
+        1^(1^n) + 1 = 1^1 + 1 = 2
+        $Prime(1^(1^n) + 1)
+
+    by def:
+        ? $superpowered(1)
+
+    by contra:
+        ? not $superpowered(2)
+        $Prime(2^(2^5) + 1)
+        (2^(2^5) + 1) % 641 = 0
+        impossible (2^(2^5) + 1) % 641 = 0
+
+    claim:
+        ? exist k N+ st {$superpowered(k) and not $superpowered(k + 1)}
+        witness exist k N+ st {$superpowered(k) and not $superpowered(k + 1)} from 1:
+            $superpowered(1)
+            not $superpowered(1 + 1)
+            $superpowered(1) and not $superpowered(1 + 1)
+
+# The first `by for` block proves `2` is prime. The identity `1^n = 1` is builtin,
+# so the body for `$superpowered(1)` follows by reducing `1^(1^n) + 1` to `2`,
+# and `by def` introduces the named fact. The proof of
+# `not $superpowered(2)` uses Euler's factor `641`: if `2` were superpowered, then
+# `2^(2^5) + 1` would be prime, but it is divisible by `641`. The final claim
+# packages these two facts into an existential statement.
+
+# 5.2.5
+
+# Classically, `not not P` implies `P`. The proof splits into the two cases
+# `P` and `not P`. In the first case the goal is immediate. In the second case,
+# `not P` contradicts the assumption `not not P`.
+
+# Litex's current checker normalizes this double-negation pattern aggressively,
+# but the written proof still displays the intended excluded-middle structure.
+
+claim:
+    ? forall n N:
+        not not $is_even(n)
+        =>:
+            $is_even(n)
+    $is_even(n) or not $is_even(n)
+    by cases:
+        ? $is_even(n)
+        case $is_even(n):
+            $is_even(n)
+        case not $is_even(n):
+            impossible not $is_even(n)
+
+# 5.3 Normal Forms For Negation
+
+# The goal of this section is to push `not` inward until it is attached only to
+# atomic facts.
+
+# The basic rules are:
+
+# ```text
+# not not P          becomes  P
+# not (P or Q)      becomes  (not P) and (not Q)
+# not (P and Q)     becomes  (not P) or (not Q)
+# not (P => Q)      becomes  P and (not Q)
+# not exist x, P x  becomes  forall x, not P x
+# not forall x, P x becomes  exist x, not P x
+# not (a < b)       becomes  a >= b
+# not (a <= b)      becomes  a > b
+# ```
+
+# Litex does not have a separate `push_neg` tactic. Write the pushed form
+# directly, and give compound propositions small `prop` names when that keeps the
+# statement readable.
+
+# 5.3.1
+
+# First, here is De Morgan's law for `or`: “not even or odd” is equivalent to
+# “not even and not odd.” Naming the disjunction keeps the negation easy to
+# write and reuse.
+
+sketch:
+    prop is_even_or_odd(n N):
+        $is_even(n) or $is_odd(n)
+
+    claim:
+        ? forall n N:
+            not $is_even_or_odd(n)
+            =>:
+                not $is_even(n)
+                not $is_odd(n)
+        by contra:
+            ? not $is_even(n)
+            $is_even(n)
+            by def:
+                ? $is_even_or_odd(n)
+            impossible $is_even_or_odd(n)
+        by contra:
+            ? not $is_odd(n)
+            $is_odd(n)
+            by def:
+                ? $is_even_or_odd(n)
+            impossible $is_even_or_odd(n)
+
+    claim:
+        ? forall n N:
+            not $is_even(n)
+            not $is_odd(n)
+            =>:
+                not $is_even_or_odd(n)
+        by contra:
+            ? not $is_even_or_odd(n)
+            $is_even_or_odd(n)
+            by cases:
+                ? $is_even(n)
+                case $is_even(n):
+                    $is_even(n)
+                case $is_odd(n):
+                    impossible $is_odd(n)
+            impossible $is_even(n)
+
+# Next, `not (P and Q)` is equivalent to `not P or not Q`. One direction is
+# constructive: if either `not P` or `not Q` is known, then `P and Q` is
+# impossible. The other direction uses excluded middle: split on whether `P` is
+# true.
+
+claim:
+    ? forall n N:
+        not $is_even(n) or not $is_odd(n)
+        =>:
+            not $is_even_and_odd(n)
+    by cases:
+        ? not $is_even_and_odd(n)
+        case not $is_even(n):
+            by contra:
+                ? not $is_even_and_odd(n)
+                impossible $is_even(n)
+        case not $is_odd(n):
+            by contra:
+                ? not $is_even_and_odd(n)
+                impossible $is_odd(n)
+
+claim:
+    ? forall n N:
+        not $is_even_and_odd(n)
+        =>:
+            not $is_even(n) or not $is_odd(n)
+    $is_even(n) or not $is_even(n)
+    by cases:
+        ? not $is_even(n) or not $is_odd(n)
+        case not $is_even(n):
+            not $is_even(n) or not $is_odd(n)
+        case $is_even(n):
+            by contra:
+                ? not $is_odd(n)
+                by def:
+                    ? $is_even_and_odd(n)
+                impossible $is_even_and_odd(n)
+            not $is_even(n) or not $is_odd(n)
+
+# Finally, here is the existential rule from Section 5.1 again, now using the
+# concrete assertion that a natural-number square equals `2`.
+
+sketch:
+    prop some_square_two_again():
+        exist n N st {$is_square_two(n)}
+
+    claim:
+        ? forall a N:
+            not $some_square_two_again()
+            =>:
+                not $is_square_two(a)
+        by contra:
+            ? not $is_square_two(a)
+            witness exist n N st {$is_square_two(n)} from a
+            by def:
+                ? $some_square_two_again()
+            impossible $some_square_two_again()
+
+    claim:
+        ? forall:
+            forall n N:
+                not $is_square_two(n)
+            =>:
+                not $some_square_two_again()
+        by contra:
+            ? not $some_square_two_again()
+            obtain n0 from exist n N st {$is_square_two(n)}
+            not $is_square_two(n0)
+            impossible $is_square_two(n0)
+
+# 5.3.2
+
+# Now push the negation through a more structured statement:
+
+# ```text
+# not (forall m Z, m != 2 => exist n Z, n^2 = m)
+# ```
+
+# The negation says that there is a counterexample `m`: it is not equal to `2`,
+# and no integer square is equal to it. In normal form:
+
+# ```text
+# exist m Z such that m != 2 and forall n Z, n^2 != m
+# ```
+
+# In Litex, it is clearer to name the pieces.
+
+sketch:
+    prop every_non_two_is_square():
+        forall m Z:
+            m != 2
+            =>:
+                exist n Z st {n^2 = m}
+
+    prop no_square_for(m Z):
+        forall n Z:
+            n^2 != m
+
+    prop counterexample_to_every_non_two_is_square():
+        exist m Z st {m != 2, $no_square_for(m)}
+
+# 5.3.3
+
+# Here is another push-negation example:
+
+# ```text
+# not (forall n N, exist m N with n^2 < m and m < (n + 1)^2)
+# ```
+
+# After pushing the negation inward, this becomes:
+
+# ```text
+# exist n N such that forall m N, n^2 >= m or m >= (n + 1)^2
+# ```
+
+# The strict inequalities turn around because `not (a < b)` is the same as
+# `a >= b`.
+
+sketch:
+    prop gap_property(n N, m N):
+        n^2 < m
+        m < (n + 1)^2
+
+    prop every_n_has_gap_point():
+        forall n N:
+            exist m N st {$gap_property(n, m)}
+
+    prop no_gap_point_for(n N):
+        forall m N:
+            n^2 >= m or m >= (n + 1)^2
+
+    prop counterexample_to_every_gap():
+        exist n N st {$no_gap_point_for(n)}
+
+# 5.3.4
+
+# A `push_neg` command in a tactic-based system repeatedly applies the rules at
+# the top of this section. In Litex, the normal workflow is to write the pushed
+# form yourself.
+
+# For example:
+
+# ```text
+# not exist a Z such that P(a) or forall b Z, not Q(a, b)
+# ```
+
+# pushes to:
+
+# ```text
+# forall a Z, not P(a) and exist b Z such that Q(a, b)
+# ```
+
+# Naming the compound subformulas keeps the statement readable.
+
+sketch:
+    prop is_additive_inverse_pair(a N, b Z):
+        a + b = 0
+
+    prop has_no_additive_inverse(a N):
+        forall b Z:
+            not $is_additive_inverse_pair(a, b)
+
+    prop is_square_two_or_has_no_inverse(a N):
+        $is_square_two(a) or $has_no_additive_inverse(a)
+
+    prop square_two_or_no_inverse_exists():
+        exist a N st {$is_square_two_or_has_no_inverse(a)}
+
+    prop every_number_is_not_square_two_and_has_inverse():
+        forall a N:
+            not $is_square_two(a)
+            exist b Z st {$is_additive_inverse_pair(a, b)}
+
+# 5.3.5
+
+# As an application, there is no natural number whose square is `2`. First prove
+# the pointwise statement `forall n N, n^2 != 2`; then use it to rule out an
+# existential witness.
+
+sketch:
+    prop square_two_exists():
+        exist n N st {$is_square_two(n)}
+
+    claim:
+        ? forall n N:
+            not $is_square_two(n)
+        n <= 1 or n >= 1 + 1
+        by cases:
+            ? not $is_square_two(n)
+            case n <= 1:
+                n^2 <= 1^2 = 1 < 2
+                by contra:
+                    ? not $is_square_two(n)
+                    n^2 = 2
+                    impossible n^2 < 2
+            case n >= 1 + 1:
+                n^2 >= 2^2 = 4 > 2
+                by contra:
+                    ? not $is_square_two(n)
+                    n^2 = 2
+                    impossible n^2 > 2
+
+    claim:
+        ? not $square_two_exists()
+        by contra:
+            ? not $square_two_exists()
+            obtain w from exist n N st {$is_square_two(n)}
+            not $is_square_two(w)
+            impossible $is_square_two(w)
+
+# 5.4 Summary: Litex statements and ideas in this chapter
+
+# This chapter separates logical patterns from the particular mathematical facts
+# that instantiate them.
+
+# 1. Litex does not quantify over `Prop`.
+
+#    Lean can quantify over abstract propositions:
+
+#    ```text
+#    forall P Prop, Q Prop:
+#        P
+#        =>:
+#            P or Q
+#    ```
+
+#    Litex does not have this form. A proposition is not an object that can be
+#    passed as a parameter to `forall`, `exist`, or `prop`, so we do not write
+#    `forall P Prop:` or `exist P Prop:` in Litex.
+
+#    This is intentional. Basic propositional reasoning is built into Litex's
+#    fact checker. If Litex already knows a fact `A`, then `A or B` can be
+#    verified directly because the left branch holds; there is no need to prove or
+#    cite a separate theorem saying "from `A`, infer `A or B`." Similarly, `and`,
+#    `or`, case splits, and contradictions are handled as ordinary fact shapes.
+
+#    This chapter therefore presents propositional patterns through ordinary
+#    mathematical predicates: `is_even(n)`, `is_odd(n)`, and
+#    `is_square_two(n)`. The proofs are instances of general logical moves, but
+#    every proposition has a concrete reading and later uses in the chapter.
+
+# 2. Basic propositional moves are built in. If `A` is known, then `A or B` can be
+#    checked directly; if both a fact and its reverse are known, `impossible`
+#    closes the branch.
+
+# 3. Logical equivalence is usually written as two directions. For compound
+#    statements, naming subformulas with `prop` often makes the proof clearer than
+#    trying to write one large formula everywhere.
+
+# 4. `by for` proves a `forall` statement over a finite range by checking all
+#    values. This is useful for bounded arithmetic tasks such as checking a
+#    concrete number is prime.
+
+# 5. Negation normal form is a writing discipline: push `not` inward by hand, and
+#    use `by contra`, `by cases`, `witness`, and `have by exist` to justify the
+#    transformed statement.

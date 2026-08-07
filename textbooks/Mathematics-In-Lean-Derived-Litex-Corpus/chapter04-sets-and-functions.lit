@@ -1,0 +1,1075 @@
+# Chapter 4 — Sets and Functions
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/deferred status.
+
+# This chapter keeps the mathematical interfaces from Mathematics in Lean and
+# omits repeated Lean tactic demonstrations. Sets use Litex's builtin carriers
+# and set builders; functions keep their domains and codomains explicit.
+
+# ---------------------------------------------------------------------------
+# Section 4.1 — Sets
+# ---------------------------------------------------------------------------
+
+# Source definition `evens`. A natural number belongs to this set exactly when
+# Chapter 1's existential parity relation supplies a factor of two.
+have evens power_set(N) = {n N: $chap1::even(n)}
+
+# Source definition `odds`. The source presents this as the complement of the
+# even naturals, so the definition retains that logical form.
+have odds power_set(N) = {n N: not $chap1::even(n)}
+
+# Litex's native prime predicate uses the same trial-division characterization
+# as this chapter's source-facing definition.
+
+# Source definition `primes`. Primality already forces positivity, so the
+# carrier is N+.
+have primes power_set(N+) = {p N+: $prime(p)}
+
+# ---------------------------------------------------------------------------
+# Section 4.2 — Functions
+# ---------------------------------------------------------------------------
+
+# Injectivity, surjectivity, and bijectivity use Litex's native
+# `$injective`, `$surjective`, and `$bijective` predicates.
+
+# This relation records that a particular target has at least one preimage. It
+# is the condition used by the source's total chosen inverse.
+prop has_preimage(S, T set, f fn(x S) T, y T):
+    exist x S st {f(x) = y}
+
+# A total inverse inverts target values which have a preimage and returns the
+# displayed default outside the range.
+prop is_total_inverse(S nonempty_set, T set, default S, f fn(x S) T, inverse fn(y T) S):
+    forall y T:
+        $has_preimage(S, T, f, y)
+        =>:
+            f(inverse(y)) = y
+    forall y T:
+        not $has_preimage(S, T, f, y)
+        =>:
+            inverse(y) = default
+
+# For each target, include its preimages; when there are none, include the
+# default. This single set-builder is the choice-with-default fiber.
+prop is_default_inverse_fiber_member(S nonempty_set, T set, default S, f fn(x S) T, y T, x S):
+    not $has_preimage(S, T, f, y)
+    x = default
+
+prop inverse_fiber_member(S nonempty_set, T set, default S, f fn(x S) T, y T, x S):
+    f(x) = y or $is_default_inverse_fiber_member(S, T, default, f, y, x)
+
+template<S nonempty_set, T set, default S, f fn(x S) T>:
+    have fn inverse_fiber(y T) power_set(S) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+
+prop is_inverse_fiber(S nonempty_set, T set, default S, f fn(x S) T, A power_set(S)):
+    exist y T st {A = \inverse_fiber<S, T, default, f>(y)}
+
+template<S nonempty_set, T set, default S, f fn(x S) T>:
+    have inverse_fiber_family power_set(power_set(S)) = {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
+
+thm inverse_fiber_nonempty:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T, y T:
+        $is_nonempty_set(\inverse_fiber<S, T, default, f>(y))
+    by cases:
+        ? $is_nonempty_set(\inverse_fiber<S, T, default, f>(y))
+        case $has_preimage(S, T, f, y):
+            obtain x from exist x S st {f(x) = y}
+            f(x) = y or $is_default_inverse_fiber_member(S, T, default, f, y, x)
+            by def:
+                ? $inverse_fiber_member(S, T, default, f, y, x)
+            by thm set_builder_member(x, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
+            x $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
+            \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
+            x $in \inverse_fiber<S, T, default, f>(y)
+            witness $is_nonempty_set(\inverse_fiber<S, T, default, f>(y)) from x
+        case not $has_preimage(S, T, f, y):
+            default = default
+            by def:
+                ? $is_default_inverse_fiber_member(S, T, default, f, y, default)
+            f(default) = y or $is_default_inverse_fiber_member(S, T, default, f, y, default)
+            by def:
+                ? $inverse_fiber_member(S, T, default, f, y, default)
+            by thm set_builder_member(default, {z S: $inverse_fiber_member(S, T, default, f, y, z)})
+            default $in {z S: $inverse_fiber_member(S, T, default, f, y, z)}
+            \inverse_fiber<S, T, default, f>(y) = {z S: $inverse_fiber_member(S, T, default, f, y, z)}
+            default $in \inverse_fiber<S, T, default, f>(y)
+            witness $is_nonempty_set(\inverse_fiber<S, T, default, f>(y)) from default
+
+# Apply choice to the family of nonempty choice-with-default fibers and compose
+# the resulting selector with y |-> inverse_fiber(y).
+thm total_inverse_exists:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)}
+    claim:
+        ? forall A \inverse_fiber_family<S, T, default, f>:
+            $is_nonempty_set(A)
+        A $in {B power_set(S): $is_inverse_fiber(S, T, default, f, B)}
+        by def:
+            ? $is_inverse_fiber(S, T, default, f, A)
+        obtain y from exist y T st {A = \inverse_fiber<S, T, default, f>(y)}
+        by thm inverse_fiber_nonempty(S, T, default, f, y)
+        $is_nonempty_set(\inverse_fiber<S, T, default, f>(y))
+    by axiom_of_choice: set \inverse_fiber_family<S, T, default, f>:
+        forall A \inverse_fiber_family<S, T, default, f>:
+            $is_nonempty_set(A)
+    obtain chooser from exist c fn(A \inverse_fiber_family<S, T, default, f>) big_union(\inverse_fiber_family<S, T, default, f>) st {forall A \inverse_fiber_family<S, T, default, f> => {c(A) $in A}}
+    thm chooser_mem:
+        ? forall A \inverse_fiber_family<S, T, default, f>:
+            chooser(A) $in A
+    claim:
+        ? forall y T:
+            \inverse_fiber<S, T, default, f>(y) $in \inverse_fiber_family<S, T, default, f>
+        witness exist z T st {\inverse_fiber<S, T, default, f>(y) = \inverse_fiber<S, T, default, f>(z)} from y
+        by def:
+            ? $is_inverse_fiber(S, T, default, f, \inverse_fiber<S, T, default, f>(y))
+        by thm set_builder_member(\inverse_fiber<S, T, default, f>(y), {A power_set(S): $is_inverse_fiber(S, T, default, f, A)})
+        \inverse_fiber<S, T, default, f>(y) $in {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
+        \inverse_fiber_family<S, T, default, f> = {A power_set(S): $is_inverse_fiber(S, T, default, f, A)}
+    claim:
+        ? forall y T:
+            chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
+        by thm chooser_mem(\inverse_fiber<S, T, default, f>(y))
+    claim:
+        ? forall y T:
+            chooser(\inverse_fiber<S, T, default, f>(y)) $in S
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
+        \inverse_fiber<S, T, default, f>(y) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+    claim:
+        ? forall y T:
+            $has_preimage(S, T, f, y)
+            =>:
+                f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
+        \inverse_fiber<S, T, default, f>(y) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+        by def:
+            ? $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+        by cases:
+            ? f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
+            case f(chooser(\inverse_fiber<S, T, default, f>(y))) = y:
+                f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
+            case $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y))):
+                by def:
+                    ? $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+                impossible $has_preimage(S, T, f, y)
+    claim:
+        ? forall y T:
+            not $has_preimage(S, T, f, y)
+            =>:
+                chooser(\inverse_fiber<S, T, default, f>(y)) = default
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in \inverse_fiber<S, T, default, f>(y)
+        \inverse_fiber<S, T, default, f>(y) = {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+        chooser(\inverse_fiber<S, T, default, f>(y)) $in {x S: $inverse_fiber_member(S, T, default, f, y, x)}
+        by def:
+            ? $inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+        by cases:
+            ? chooser(\inverse_fiber<S, T, default, f>(y)) = default
+            case f(chooser(\inverse_fiber<S, T, default, f>(y))) = y:
+                witness exist x S st {f(x) = y} from chooser(\inverse_fiber<S, T, default, f>(y))
+                by def:
+                    ? $has_preimage(S, T, f, y)
+                impossible not $has_preimage(S, T, f, y)
+            case $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y))):
+                by def:
+                    ? $is_default_inverse_fiber_member(S, T, default, f, y, chooser(\inverse_fiber<S, T, default, f>(y)))
+                chooser(\inverse_fiber<S, T, default, f>(y)) = default
+    have fn chosen_inverse(y T) S = chooser(\inverse_fiber<S, T, default, f>(y))
+    claim:
+        ? $is_total_inverse(S, T, default, f, chosen_inverse)
+        claim:
+            ? forall y T:
+                $has_preimage(S, T, f, y)
+                =>:
+                    f(chosen_inverse(y)) = y
+            chosen_inverse(y) = chooser(\inverse_fiber<S, T, default, f>(y))
+            f(chosen_inverse(y)) = f(chooser(\inverse_fiber<S, T, default, f>(y))) = y
+        claim:
+            ? forall y T:
+                not $has_preimage(S, T, f, y)
+                =>:
+                    chosen_inverse(y) = default
+            chosen_inverse(y) = chooser(\inverse_fiber<S, T, default, f>(y)) = default
+        by def:
+            ? $is_total_inverse(S, T, default, f, chosen_inverse)
+    witness exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)} from chosen_inverse
+
+# Package existence as a constraint so the selected inverse can be used as a
+# stable callable object in later source theorems.
+prop has_total_inverse(S nonempty_set, T set, default S, f fn(x S) T):
+    exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)}
+
+thm total_inverse_available:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        $has_total_inverse(S, T, default, f)
+    by thm total_inverse_exists(S, T, default, f)
+    by def:
+        ? $has_total_inverse(S, T, default, f)
+
+template<S nonempty_set, T set, default S, f fn(x S) T: $has_total_inverse(S, T, default, f)>:
+    obtain inverse from exist inverse fn(y T) S st {$is_total_inverse(S, T, default, f, inverse)}
+
+thm total_inverse_spec:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T, g fn(y T) S, y T:
+        $is_total_inverse(S, T, default, f, g)
+        $has_preimage(S, T, f, y)
+        =>:
+            f(g(y)) = y
+
+thm total_inverse_default:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T, g fn(y T) S, y T:
+        $is_total_inverse(S, T, default, f, g)
+        not $has_preimage(S, T, f, y)
+        =>:
+            g(y) = default
+
+thm inverse_spec:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T, y T:
+        $has_preimage(S, T, f, y)
+        =>:
+            f(\inverse<S, T, default, f>(y)) = y
+    by thm total_inverse_available(S, T, default, f)
+    $has_total_inverse(S, T, default, f)
+    $is_total_inverse(S, T, default, f, \inverse<S, T, default, f>)
+    by thm total_inverse_spec(S, T, default, f, \inverse<S, T, default, f>, y)
+
+thm inverse_eq_default_of_no_preimage:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T, y T:
+        not $has_preimage(S, T, f, y)
+        =>:
+            \inverse<S, T, default, f>(y) = default
+    by thm total_inverse_available(S, T, default, f)
+    $has_total_inverse(S, T, default, f)
+    $is_total_inverse(S, T, default, f, \inverse<S, T, default, f>)
+    by thm total_inverse_default(S, T, default, f, \inverse<S, T, default, f>, y)
+
+prop is_left_inverse(S, T set, f fn(x S) T, g fn(y T) S):
+    forall x S:
+        g(f(x)) = x
+
+prop is_right_inverse(S, T set, f fn(x S) T, g fn(y T) S):
+    forall y T:
+        f(g(y)) = y
+
+thm inverse_left_of_injective:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        $injective(S, T, f)
+        =>:
+            $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
+    by thm total_inverse_available(S, T, default, f)
+    claim:
+        ? forall x S:
+            \inverse<S, T, default, f>(f(x)) = x
+        witness exist z S st {f(z) = f(x)} from x
+        by def:
+            ? $has_preimage(S, T, f, f(x))
+        by thm inverse_spec(S, T, default, f, f(x))
+        f(\inverse<S, T, default, f>(f(x))) = f(x)
+    by def:
+        ? $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
+
+thm injective_of_left_inverse:
+    ? forall S, T set, f fn(x S) T, g fn(y T) S:
+        $is_left_inverse(S, T, f, g)
+        =>:
+            $injective(S, T, f)
+    claim:
+        ? forall x1, x2 S:
+            f(x1) = f(x2)
+            =>:
+                x1 = x2
+        g(f(x1)) = g(f(x2))
+        g(f(x1)) = x1
+        g(f(x2)) = x2
+    by def:
+        ? $injective(S, T, f)
+
+thm inverse_right_of_surjective:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        $surjective(S, T, f)
+        =>:
+            $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
+    by thm total_inverse_available(S, T, default, f)
+    claim:
+        ? forall y T:
+            f(\inverse<S, T, default, f>(y)) = y
+        obtain x from exist z S st {y = f(z)}
+        witness exist z S st {f(z) = y} from x
+        by def:
+            ? $has_preimage(S, T, f, y)
+        by thm inverse_spec(S, T, default, f, y)
+    by def:
+        ? $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
+
+thm surjective_of_right_inverse:
+    ? forall S, T set, f fn(x S) T, g fn(y T) S:
+        $is_right_inverse(S, T, f, g)
+        =>:
+            $surjective(S, T, f)
+    claim:
+        ? forall y T:
+            exist x S st {y = f(x)}
+        witness exist x S st {y = f(x)} from g(y)
+    by def:
+        ? $surjective(S, T, f)
+
+thm injective_iff_inverse_left_forward:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        $injective(S, T, f)
+        =>:
+            $is_left_inverse(S, T, f, \inverse<S, T, default, f>)
+    by thm inverse_left_of_injective(S, T, default, f)
+
+thm surjective_iff_inverse_right_forward:
+    ? forall S nonempty_set, T set, default S, f fn(x S) T:
+        $surjective(S, T, f)
+        =>:
+            $is_right_inverse(S, T, f, \inverse<S, T, default, f>)
+    by thm inverse_right_of_surjective(S, T, default, f)
+
+# Restricted images are used throughout the source and in the
+# Schröder-Bernstein construction. Litex natively expresses this as the range
+# of the function whose domain has been restricted to A.
+template<S, T set, f fn(x S) T, A power_set(S)>:
+    have set_image power_set(T) = fn_range(fn(x A) T {f(x)})
+
+template<S, T set, f fn(x S) T>:
+    have fn set_preimage(B power_set(T)) power_set(S) = {x S: f(x) $in B}
+
+# Binary intersection, union, and difference use Litex's native `intersect`,
+# `union`, and `set_minus` objects. The source-facing theorems below remain
+# explicit because they describe image/preimage mathematics rather than rebuild
+# the language's set interface.
+
+prop image_preimage_adjunction(S, T set, f fn(x S) T, A power_set(S), B power_set(T)):
+    not \set_image<S, T, f, A> $subset B or A $subset \set_preimage<S, T, f>(B)
+    not A $subset \set_preimage<S, T, f>(B) or \set_image<S, T, f, A> $subset B
+
+prop injective_on(S, T set, f fn(x S) T, A power_set(S)):
+    forall x1, x2 A:
+        f(x1) = f(x2)
+        =>:
+            x1 = x2
+
+prop _member_of_indexed_union(I, X set, A fn(index I) power_set(X), x X):
+    exist index I st {x $in A(index)}
+
+prop _member_of_indexed_intersection(I, X set, A fn(index I) power_set(X), x X):
+    forall index I:
+        x $in A(index)
+
+template<I, X set>:
+    have fn indexed_union(A fn(index I) power_set(X)) power_set(X) = {x X: $_member_of_indexed_union(I, X, A, x)}
+
+template<I, X set>:
+    have fn indexed_intersection(A fn(index I) power_set(X)) power_set(X) = {x X: $_member_of_indexed_intersection(I, X, A, x)}
+
+template<I, S, T set, f fn(x S) T, A fn(index I) power_set(S)>:
+    have fn indexed_images(index I) power_set(T) = \set_image<S, T, f, A(index)>
+
+# MIL low-prerequisite item: preimages preserve binary intersections.
+thm set_preimage_intersection:
+    ? forall S, T set, f fn(x S) T, U, V power_set(T):
+        \set_preimage<S, T, f>(intersect(U, V)) = intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+    claim:
+        ? \set_preimage<S, T, f>(intersect(U, V)) $subset intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+        claim:
+            ? forall x \set_preimage<S, T, f>(intersect(U, V)):
+                x $in intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+            \set_preimage<S, T, f>(intersect(U, V)) = {z S: f(z) $in intersect(U, V)}
+            x $in {z S: f(z) $in intersect(U, V)}
+            f(x) $in intersect(U, V)
+            f(x) $in U
+            f(x) $in V
+            by thm set_builder_member(x, {z S: f(z) $in U})
+            by thm set_builder_member(x, {z S: f(z) $in V})
+            \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+            \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+            x $in \set_preimage<S, T, f>(U)
+            x $in \set_preimage<S, T, f>(V)
+        by def:
+            ? \set_preimage<S, T, f>(intersect(U, V)) $subset intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+    claim:
+        ? intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(intersect(U, V))
+        claim:
+            ? forall x intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)):
+                x $in \set_preimage<S, T, f>(intersect(U, V))
+            x $in \set_preimage<S, T, f>(U)
+            x $in \set_preimage<S, T, f>(V)
+            \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+            \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+            x $in {z S: f(z) $in U}
+            x $in {z S: f(z) $in V}
+            f(x) $in U
+            f(x) $in V
+            f(x) $in intersect(U, V)
+            by thm set_builder_member(x, {z S: f(z) $in intersect(U, V)})
+            \set_preimage<S, T, f>(intersect(U, V)) = {z S: f(z) $in intersect(U, V)}
+        by def:
+            ? intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(intersect(U, V))
+    by extension:
+        ? \set_preimage<S, T, f>(intersect(U, V)) = intersect(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+
+# Images preserve binary unions.
+thm set_image_union:
+    ? forall S, T set, f fn(x S) T, A, B power_set(S):
+        \set_image<S, T, f, union(A, B)> = union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+    union(A, B) $subset S
+    claim:
+        ? \set_image<S, T, f, union(A, B)> $subset union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+        claim:
+            ? forall x \set_image<S, T, f, union(A, B)>:
+                x $in union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+            \set_image<S, T, f, union(A, B)> = fn_range(fn(z union(A, B)) T {f(z)})
+            x $in fn_range(fn(z union(A, B)) T {f(z)})
+            have by preimage pre from x $in fn_range(fn(z union(A, B)) T {f(z)})
+            fn(z union(A, B)) T {f(z)}(pre) = f(pre)
+            f(pre) = x
+            pre $in A or pre $in B
+            by cases:
+                ? x $in union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+                case pre $in A:
+                    fn(z A) T {f(z)}(pre) = f(pre) = x
+                    fn(z A) T {f(z)}(pre) $in fn_range(fn(z A) T {f(z)})
+                    x $in fn_range(fn(z A) T {f(z)})
+                    \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+                    x $in \set_image<S, T, f, A>
+                    x $in union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+                case pre $in B:
+                    fn(z B) T {f(z)}(pre) = f(pre) = x
+                    fn(z B) T {f(z)}(pre) $in fn_range(fn(z B) T {f(z)})
+                    x $in fn_range(fn(z B) T {f(z)})
+                    \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+                    x $in \set_image<S, T, f, B>
+                    x $in union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+        by def:
+            ? \set_image<S, T, f, union(A, B)> $subset union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+    claim:
+        ? union(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, union(A, B)>
+        claim:
+            ? forall x union(\set_image<S, T, f, A>, \set_image<S, T, f, B>):
+                x $in \set_image<S, T, f, union(A, B)>
+            x $in \set_image<S, T, f, A> or x $in \set_image<S, T, f, B>
+            by cases:
+                ? x $in \set_image<S, T, f, union(A, B)>
+                case x $in \set_image<S, T, f, A>:
+                    \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+                    x $in fn_range(fn(z A) T {f(z)})
+                    have by preimage pre from x $in fn_range(fn(z A) T {f(z)})
+                    fn(z A) T {f(z)}(pre) = f(pre)
+                    f(pre) = x
+                    pre $in union(A, B)
+                    fn(z union(A, B)) T {f(z)}(pre) = f(pre) = x
+                    fn(z union(A, B)) T {f(z)}(pre) $in fn_range(fn(z union(A, B)) T {f(z)})
+                    x $in fn_range(fn(z union(A, B)) T {f(z)})
+                    \set_image<S, T, f, union(A, B)> = fn_range(fn(z union(A, B)) T {f(z)})
+                    x $in \set_image<S, T, f, union(A, B)>
+                case x $in \set_image<S, T, f, B>:
+                    \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+                    x $in fn_range(fn(z B) T {f(z)})
+                    have by preimage pre from x $in fn_range(fn(z B) T {f(z)})
+                    fn(z B) T {f(z)}(pre) = f(pre)
+                    f(pre) = x
+                    pre $in union(A, B)
+                    fn(z union(A, B)) T {f(z)}(pre) = f(pre) = x
+                    fn(z union(A, B)) T {f(z)}(pre) $in fn_range(fn(z union(A, B)) T {f(z)})
+                    x $in fn_range(fn(z union(A, B)) T {f(z)})
+                    \set_image<S, T, f, union(A, B)> = fn_range(fn(z union(A, B)) T {f(z)})
+                    x $in \set_image<S, T, f, union(A, B)>
+        by def:
+            ? union(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, union(A, B)>
+    by extension:
+        ? \set_image<S, T, f, union(A, B)> = union(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+
+# Every set lies in the preimage of its image.
+thm subset_preimage_image:
+    ? forall S, T set, f fn(x S) T, A power_set(S):
+        A $subset \set_preimage<S, T, f>(\set_image<S, T, f, A>)
+    claim:
+        ? forall x A:
+            x $in \set_preimage<S, T, f>(\set_image<S, T, f, A>)
+        fn(z A) T {f(z)}(x) = f(x)
+        fn(z A) T {f(z)}(x) $in fn_range(fn(z A) T {f(z)})
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        f(x) $in \set_image<S, T, f, A>
+        \set_preimage<S, T, f>(\set_image<S, T, f, A>) = {z S: f(z) $in \set_image<S, T, f, A>}
+        by thm set_builder_member(x, {z S: f(z) $in \set_image<S, T, f, A>})
+        x $in \set_preimage<S, T, f>(\set_image<S, T, f, A>)
+    by def:
+        ? A $subset \set_preimage<S, T, f>(\set_image<S, T, f, A>)
+
+# Image/preimage inclusion is the standard set-map adjunction.
+thm image_subset_iff_subset_preimage:
+    ? forall S, T set, f fn(x S) T, A power_set(S), B power_set(T):
+        $image_preimage_adjunction(S, T, f, A, B)
+    trust $image_preimage_adjunction(S, T, f, A, B)
+
+# An injective map recovers a set after image then preimage.
+thm preimage_image_subset_of_injective:
+    ? forall S, T set, f fn(x S) T, A power_set(S):
+        $injective(S, T, f)
+        =>:
+            \set_preimage<S, T, f>(\set_image<S, T, f, A>) $subset A
+    claim:
+        ? forall x \set_preimage<S, T, f>(\set_image<S, T, f, A>):
+            x $in A
+        \set_preimage<S, T, f>(\set_image<S, T, f, A>) = {z S: f(z) $in \set_image<S, T, f, A>}
+        x $in {z S: f(z) $in \set_image<S, T, f, A>}
+        f(x) $in \set_image<S, T, f, A>
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        f(x) $in fn_range(fn(z A) T {f(z)})
+        have by preimage pre from f(x) $in fn_range(fn(z A) T {f(z)})
+        fn(z A) T {f(z)}(pre) = f(pre)
+        f(pre) = f(x)
+        f(x) = f(pre)
+        x = pre
+        x $in A
+    by def:
+        ? \set_preimage<S, T, f>(\set_image<S, T, f, A>) $subset A
+
+# The image of a preimage is always contained in the target set.
+thm image_preimage_subset:
+    ? forall S, T set, f fn(x S) T, B power_set(T):
+        \set_image<S, T, f, \set_preimage<S, T, f>(B)> $subset B
+    claim:
+        ? forall x \set_image<S, T, f, \set_preimage<S, T, f>(B)>:
+            x $in B
+        \set_image<S, T, f, \set_preimage<S, T, f>(B)> = fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        x $in fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        have by preimage pre from x $in fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        fn(z \set_preimage<S, T, f>(B)) T {f(z)}(pre) = f(pre)
+        f(pre) = x
+        \set_preimage<S, T, f>(B) = {z S: f(z) $in B}
+        pre $in {z S: f(z) $in B}
+        f(pre) $in B
+        x $in B
+    by def:
+        ? \set_image<S, T, f, \set_preimage<S, T, f>(B)> $subset B
+
+# Surjectivity gives the reverse image-of-preimage inclusion.
+thm subset_image_preimage_of_surjective:
+    ? forall S, T set, f fn(x S) T, B power_set(T):
+        $surjective(S, T, f)
+        =>:
+            B $subset \set_image<S, T, f, \set_preimage<S, T, f>(B)>
+    claim:
+        ? forall y B:
+            y $in \set_image<S, T, f, \set_preimage<S, T, f>(B)>
+        obtain pre from exist x S st {y = f(x)}
+        y = f(pre)
+        f(pre) = y
+        f(pre) $in B
+        by thm set_builder_member(pre, {z S: f(z) $in B})
+        \set_preimage<S, T, f>(B) = {z S: f(z) $in B}
+        pre $in \set_preimage<S, T, f>(B)
+        fn(z \set_preimage<S, T, f>(B)) T {f(z)}(pre) = f(pre) = y
+        fn(z \set_preimage<S, T, f>(B)) T {f(z)}(pre) $in fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        y $in fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        \set_image<S, T, f, \set_preimage<S, T, f>(B)> = fn_range(fn(z \set_preimage<S, T, f>(B)) T {f(z)})
+        y $in \set_image<S, T, f, \set_preimage<S, T, f>(B)>
+    by def:
+        ? B $subset \set_image<S, T, f, \set_preimage<S, T, f>(B)>
+
+# Images are monotone.
+thm set_image_mono:
+    ? forall S, T set, f fn(x S) T, A, B power_set(S):
+        A $subset B
+        =>:
+            \set_image<S, T, f, A> $subset \set_image<S, T, f, B>
+    claim:
+        ? forall x \set_image<S, T, f, A>:
+            x $in \set_image<S, T, f, B>
+        \set_image<S, T, f, A> = fn_range(fn(z A) T {f(z)})
+        x $in fn_range(fn(z A) T {f(z)})
+        have by preimage pre from x $in fn_range(fn(z A) T {f(z)})
+        fn(z A) T {f(z)}(pre) = f(pre)
+        f(pre) = x
+        pre $in B
+        fn(z B) T {f(z)}(pre) = f(pre) = x
+        fn(z B) T {f(z)}(pre) $in fn_range(fn(z B) T {f(z)})
+        x $in fn_range(fn(z B) T {f(z)})
+        \set_image<S, T, f, B> = fn_range(fn(z B) T {f(z)})
+        x $in \set_image<S, T, f, B>
+    by def:
+        ? \set_image<S, T, f, A> $subset \set_image<S, T, f, B>
+
+# Preimages are monotone.
+thm set_preimage_mono:
+    ? forall S, T set, f fn(x S) T, U, V power_set(T):
+        U $subset V
+        =>:
+            \set_preimage<S, T, f>(U) $subset \set_preimage<S, T, f>(V)
+    claim:
+        ? forall x \set_preimage<S, T, f>(U):
+            x $in \set_preimage<S, T, f>(V)
+        \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+        x $in {z S: f(z) $in U}
+        f(x) $in U
+        f(x) $in V
+        by thm set_builder_member(x, {z S: f(z) $in V})
+        \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+        x $in \set_preimage<S, T, f>(V)
+    by def:
+        ? \set_preimage<S, T, f>(U) $subset \set_preimage<S, T, f>(V)
+
+# Preimages preserve binary unions.
+thm set_preimage_union:
+    ? forall S, T set, f fn(x S) T, U, V power_set(T):
+        \set_preimage<S, T, f>(union(U, V)) = union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+    claim:
+        ? \set_preimage<S, T, f>(union(U, V)) $subset union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+        claim:
+            ? forall x \set_preimage<S, T, f>(union(U, V)):
+                x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+            \set_preimage<S, T, f>(union(U, V)) = {z S: f(z) $in union(U, V)}
+            x $in {z S: f(z) $in union(U, V)}
+            f(x) $in union(U, V)
+            f(x) $in U or f(x) $in V
+            by cases:
+                ? x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+                case f(x) $in U:
+                    by thm set_builder_member(x, {z S: f(z) $in U})
+                    \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+                    x $in \set_preimage<S, T, f>(U)
+                    x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+                case f(x) $in V:
+                    by thm set_builder_member(x, {z S: f(z) $in V})
+                    \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+                    x $in \set_preimage<S, T, f>(V)
+                    x $in union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+        by def:
+            ? \set_preimage<S, T, f>(union(U, V)) $subset union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+    claim:
+        ? union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(union(U, V))
+        claim:
+            ? forall x union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)):
+                x $in \set_preimage<S, T, f>(union(U, V))
+            x $in \set_preimage<S, T, f>(U) or x $in \set_preimage<S, T, f>(V)
+            by cases:
+                ? x $in \set_preimage<S, T, f>(union(U, V))
+                case x $in \set_preimage<S, T, f>(U):
+                    \set_preimage<S, T, f>(U) = {z S: f(z) $in U}
+                    x $in {z S: f(z) $in U}
+                    f(x) $in U
+                    f(x) $in union(U, V)
+                    by thm set_builder_member(x, {z S: f(z) $in union(U, V)})
+                    \set_preimage<S, T, f>(union(U, V)) = {z S: f(z) $in union(U, V)}
+                    x $in \set_preimage<S, T, f>(union(U, V))
+                case x $in \set_preimage<S, T, f>(V):
+                    \set_preimage<S, T, f>(V) = {z S: f(z) $in V}
+                    x $in {z S: f(z) $in V}
+                    f(x) $in V
+                    f(x) $in union(U, V)
+                    by thm set_builder_member(x, {z S: f(z) $in union(U, V)})
+                    \set_preimage<S, T, f>(union(U, V)) = {z S: f(z) $in union(U, V)}
+                    x $in \set_preimage<S, T, f>(union(U, V))
+        by def:
+            ? union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(union(U, V))
+    by extension:
+        ? \set_preimage<S, T, f>(union(U, V)) = union(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V))
+
+# Images of intersections lie in the intersection of the images.
+thm image_intersection_subset:
+    ? forall S, T set, f fn(x S) T, A, B power_set(S):
+        \set_image<S, T, f, intersect(A, B)> $subset intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+    trust \set_image<S, T, f, intersect(A, B)> $subset intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>)
+
+# Injectivity gives the reverse intersection inclusion.
+thm intersection_images_subset_image_intersection:
+    ? forall S, T set, f fn(x S) T, A, B power_set(S):
+        $injective(S, T, f)
+        =>:
+            intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, intersect(A, B)>
+    trust intersect(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, intersect(A, B)>
+
+# Removing the image of B can only leave images of points outside B.
+thm image_difference_subset:
+    ? forall S, T set, f fn(x S) T, A, B power_set(S):
+        set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, set_minus(A, B)>
+    trust set_minus(\set_image<S, T, f, A>, \set_image<S, T, f, B>) $subset \set_image<S, T, f, set_minus(A, B)>
+
+# Preimages preserve set difference.
+thm preimage_difference_subset:
+    ? forall S, T set, f fn(x S) T, U, V power_set(T):
+        set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(set_minus(U, V))
+    trust set_minus(\set_preimage<S, T, f>(U), \set_preimage<S, T, f>(V)) $subset \set_preimage<S, T, f>(set_minus(U, V))
+
+# Intersecting an image with a target set can be pulled back to the source.
+thm image_intersection_target:
+    ? forall S, T set, f fn(x S) T, A power_set(S), V power_set(T):
+        intersect(\set_image<S, T, f, A>, V) = \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+    trust intersect(\set_image<S, T, f, A>, V) = \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(V))>
+
+thm image_source_intersection_preimage_subset:
+    ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
+        \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> $subset intersect(\set_image<S, T, f, A>, U)
+    trust \set_image<S, T, f, intersect(A, \set_preimage<S, T, f>(U))> $subset intersect(\set_image<S, T, f, A>, U)
+
+thm source_intersection_preimage_subset:
+    ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
+        intersect(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
+    trust intersect(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(intersect(\set_image<S, T, f, A>, U))
+
+thm source_union_preimage_subset:
+    ? forall S, T set, f fn(x S) T, A power_set(S), U power_set(T):
+        union(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+    trust union(A, \set_preimage<S, T, f>(U)) $subset \set_preimage<S, T, f>(union(\set_image<S, T, f, A>, U))
+
+# Images commute with arbitrary indexed unions.
+thm image_indexed_union:
+    ? forall I, S, T set, f fn(x S) T, A fn(index I) power_set(S):
+        \set_image<S, T, f, \indexed_union<I, S>(A)> = \indexed_union<I, T>(\indexed_images<I, S, T, f, A>)
+    trust \set_image<S, T, f, \indexed_union<I, S>(A)> = \indexed_union<I, T>(\indexed_images<I, S, T, f, A>)
+
+# Images of arbitrary intersections lie in every component image.
+thm image_indexed_intersection_subset:
+    ? forall I, S, T set, f fn(x S) T, A fn(index I) power_set(S):
+        \set_image<S, T, f, \indexed_intersection<I, S>(A)> $subset \indexed_intersection<I, T>(\indexed_images<I, S, T, f, A>)
+    trust \set_image<S, T, f, \indexed_intersection<I, S>(A)> $subset \indexed_intersection<I, T>(\indexed_images<I, S, T, f, A>)
+
+# For a nonempty index carrier, injectivity gives the reverse intersection
+# inclusion.
+thm indexed_intersection_images_subset:
+    ? forall I nonempty_set, S, T set, f fn(x S) T, A fn(index I) power_set(S):
+        $injective(S, T, f)
+        =>:
+            \indexed_intersection<I, T>(\indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, \indexed_intersection<I, S>(A)>
+    trust \indexed_intersection<I, T>(\indexed_images<I, S, T, f, A>) $subset \set_image<S, T, f, \indexed_intersection<I, S>(A)>
+
+# Preimages commute with arbitrary indexed unions and intersections.
+thm preimage_indexed_union:
+    ? forall I, S, T set, f fn(x S) T, B fn(index I) power_set(T):
+        \set_preimage<S, T, f>(\indexed_union<I, T>(B)) = \indexed_union<I, S>(fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    trust \set_preimage<S, T, f>(\indexed_union<I, T>(B)) = \indexed_union<I, S>(fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+
+thm preimage_indexed_intersection:
+    ? forall I, S, T set, f fn(x S) T, B fn(index I) power_set(T):
+        \set_preimage<S, T, f>(\indexed_intersection<I, T>(B)) = \indexed_intersection<I, S>(fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+    trust \set_preimage<S, T, f>(\indexed_intersection<I, T>(B)) = \indexed_intersection<I, S>(fn(index I) power_set(S) {\set_preimage<S, T, f>(B(index))})
+
+# The source's `InjOn` display is exactly this definition.
+thm injective_on_characterization:
+    ? forall S, T set, f fn(x S) T, A power_set(S):
+        $injective_on(S, T, f, A)
+        =>:
+            $injective_on(S, T, f, A)
+
+# The elementary real-function examples use narrow domain carriers rather than
+# repeating positivity/nonnegativity premises at every application.
+have nonnegative_reals power_set(R) = {x R: x >= 0}
+trust have real_log fn(x R+) R
+trust have real_exp fn(x R) R+
+trust have real_sqrt fn(x nonnegative_reals) nonnegative_reals
+
+thm real_log_injective:
+    ? forall marker {0}:
+        $injective(R+, R, real_log)
+    trust $injective(R+, R, real_log)
+
+thm real_exp_surjective_to_positive_reals:
+    ? forall marker {0}:
+        $surjective(R, R+, real_exp)
+    trust $surjective(R, R+, real_exp)
+
+thm real_sqrt_injective:
+    ? forall marker {0}:
+        $injective(nonnegative_reals, nonnegative_reals, real_sqrt)
+    trust $injective(nonnegative_reals, nonnegative_reals, real_sqrt)
+
+thm square_injective_on_nonnegative_reals:
+    ? forall marker {0}:
+        $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {x^2})
+    trust $injective(nonnegative_reals, nonnegative_reals, fn(x nonnegative_reals) nonnegative_reals {x^2})
+
+thm real_sqrt_surjective:
+    ? forall marker {0}:
+        $surjective(nonnegative_reals, nonnegative_reals, real_sqrt)
+    trust $surjective(nonnegative_reals, nonnegative_reals, real_sqrt)
+
+thm square_surjective_to_nonnegative_reals:
+    ? forall marker {0}:
+        $surjective(R, nonnegative_reals, fn(x R) nonnegative_reals {x^2})
+    trust $surjective(R, nonnegative_reals, fn(x R) nonnegative_reals {x^2})
+
+# Source theorem `Cantor`. No function from a set onto its power set can be
+# surjective. The proof forms the diagonal set of inputs which do not belong to
+# their own images, asks surjectivity for its preimage, and obtains the usual
+# membership contradiction.
+thm cantor:
+    ? forall S set, f fn(x S) power_set(S):
+        not $surjective(S, power_set(S), f)
+    by contra:
+        ? not $surjective(S, power_set(S), f)
+        have diagonal_set power_set(S) = {x S: not x $in f(x)}
+        obtain a from exist a S st {diagonal_set = f(a)}
+
+        claim:
+            ? a $in diagonal_set
+            by contra:
+                ? a $in diagonal_set
+                not a $in diagonal_set
+                not a $in f(a)
+                by thm set_builder_member(a, {x S: not x $in f(x)})
+                a $in {x S: not x $in f(x)}
+                impossible not a $in diagonal_set
+
+        impossible not a $in f(a)
+
+# ---------------------------------------------------------------------------
+# Section 4.3 — The Schröder–Bernstein construction
+# ---------------------------------------------------------------------------
+
+# The source recursively starts with the points outside the range of g, then
+# alternates the restricted images of f and g.
+template<S set, T nonempty_set, f fn(x S) T, g fn(y T) S>:
+    have fn sb_aux(n N) power_set(S) by induc n from 0:
+        case n = 0: set_minus(S, \set_image<T, S, g, T>)
+        case n > 0: \set_image<T, S, g, \set_image<S, T, f, sb_aux(n - 1)>>
+
+thm sb_aux_zero:
+    ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S:
+        \sb_aux<S, T, f, g>(0) = set_minus(S, \set_image<T, S, g, T>)
+
+thm sb_aux_successor:
+    ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S, n N:
+        \sb_aux<S, T, f, g>(n + 1) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
+    # Proof debt (kernel_problem): the native recursive equation is exposed at
+    # `(n + 1) - 1`, but congruence through the two selected set_image template
+    # applications does not yet replay the arithmetic equality to `n`.
+    trust \sb_aux<S, T, f, g>(n + 1) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
+
+thm sb_next_mem:
+    ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S, n N, x S:
+        x $in \sb_aux<S, T, f, g>(n)
+        =>:
+            g(f(x)) $in \sb_aux<S, T, f, g>(n + 1)
+    fn(z \sb_aux<S, T, f, g>(n)) T {f(z)}(x) = f(x)
+    fn(z \sb_aux<S, T, f, g>(n)) T {f(z)}(x) $in fn_range(fn(z \sb_aux<S, T, f, g>(n)) T {f(z)})
+    \set_image<S, T, f, \sb_aux<S, T, f, g>(n)> = fn_range(fn(z \sb_aux<S, T, f, g>(n)) T {f(z)})
+    f(x) $in \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>
+    fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)}(f(x)) = g(f(x))
+    fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)}(f(x)) $in fn_range(fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)})
+    \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>> = fn_range(fn(y \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>) S {g(y)})
+    g(f(x)) $in \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n)>>
+    by thm sb_aux_successor(S, T, f, g, n)
+
+# The countable union of the recursive layers is represented extensionally by
+# membership in some natural-number layer.
+prop sb_set_member(S set, T nonempty_set, f fn(x S) T, g fn(y T) S, x S):
+    exist n N st {x $in \sb_aux<S, T, f, g>(n)}
+
+template<S set, T nonempty_set, f fn(x S) T, g fn(y T) S>:
+    have sb_set power_set(S) = {x S: $sb_set_member(S, T, f, g, x)}
+
+# On sb_set use f; elsewhere use the total selected inverse of g.
+template<S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S>:
+    have fn sb_fun(x S) T by cases:
+        case x $in \sb_set<S, T, f, g>: f(x)
+        case not x $in \sb_set<S, T, f, g>: \inverse<T, S, default, g>(x)
+
+thm sb_fun_on_set:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S, x S:
+        x $in \sb_set<S, T, f, g>
+        =>:
+            \sb_fun<S, T, default, f, g>(x) = f(x)
+
+thm sb_fun_off_set:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S, x S:
+        not x $in \sb_set<S, T, f, g>
+        =>:
+            \sb_fun<S, T, default, f, g>(x) = \inverse<T, S, default, g>(x)
+
+thm sb_right_inv:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(input T) S, x S:
+        not x $in \sb_set<S, T, f, g>
+        =>:
+            g(\inverse<T, S, default, g>(x)) = x
+    by thm total_inverse_available(T, S, default, g)
+    by cases:
+        ? g(\inverse<T, S, default, g>(x)) = x
+        case $has_preimage(T, S, g, x):
+            by thm inverse_spec(T, S, default, g, x)
+        case not $has_preimage(T, S, g, x):
+            claim:
+                ? not x $in \set_image<T, S, g, T>
+                by contra:
+                    ? not x $in \set_image<T, S, g, T>
+                    \set_image<T, S, g, T> = fn_range(fn(q T) S {g(q)})
+                    x $in fn_range(fn(q T) S {g(q)})
+                    have by preimage q from x $in fn_range(fn(q T) S {g(q)})
+                    fn(z T) S {g(z)}(q) = g(q)
+                    witness exist z T st {g(z) = x} from q
+                    by def:
+                        ? $has_preimage(T, S, g, x)
+                    impossible not $has_preimage(T, S, g, x)
+            x $in set_minus(S, \set_image<T, S, g, T>)
+            by thm sb_aux_zero(S, T, f, g)
+            \sb_aux<S, T, f, g>(0) = set_minus(S, \set_image<T, S, g, T>)
+            x $in \sb_aux<S, T, f, g>(0)
+            witness exist n N st {x $in \sb_aux<S, T, f, g>(n)} from 0
+            by def:
+                ? $sb_set_member(S, T, f, g, x)
+            by thm set_builder_member(x, {z S: $sb_set_member(S, T, f, g, z)})
+            x $in {z S: $sb_set_member(S, T, f, g, z)}
+            \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
+            x $in \sb_set<S, T, f, g>
+            impossible not x $in \sb_set<S, T, f, g>
+
+thm sb_set_closed:
+    ? forall S set, T nonempty_set, f fn(x S) T, g fn(y T) S, x S:
+        x $in \sb_set<S, T, f, g>
+        =>:
+            g(f(x)) $in \sb_set<S, T, f, g>
+    \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
+    x $in {z S: $sb_set_member(S, T, f, g, z)}
+    by def:
+        ? $sb_set_member(S, T, f, g, x)
+    obtain n from exist n N st {x $in \sb_aux<S, T, f, g>(n)}
+    by thm sb_next_mem(S, T, f, g, n, x)
+    witness exist k N st {g(f(x)) $in \sb_aux<S, T, f, g>(k)} from n + 1
+    by def:
+        ? $sb_set_member(S, T, f, g, g(f(x)))
+    by thm set_builder_member(g(f(x)), {z S: $sb_set_member(S, T, f, g, z)})
+    g(f(x)) $in {z S: $sb_set_member(S, T, f, g, z)}
+    \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
+
+thm sb_injective:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S:
+        $injective(S, T, f)
+        =>:
+            $injective(S, T, \sb_fun<S, T, default, f, g>)
+    by thm total_inverse_available(T, S, default, g)
+    claim:
+        ? forall x1, x2 S:
+            \sb_fun<S, T, default, f, g>(x1) = \sb_fun<S, T, default, f, g>(x2)
+            =>:
+                x1 = x2
+        by cases:
+            ? x1 = x2
+            case x1 $in \sb_set<S, T, f, g>:
+                by cases:
+                    ? x1 = x2
+                    case x2 $in \sb_set<S, T, f, g>:
+                        by thm sb_fun_on_set(S, T, default, f, g, x1)
+                        by thm sb_fun_on_set(S, T, default, f, g, x2)
+                        f(x1) = f(x2)
+                        x1 = x2
+                    case not x2 $in \sb_set<S, T, f, g>:
+                        by thm sb_fun_on_set(S, T, default, f, g, x1)
+                        by thm sb_fun_off_set(S, T, default, f, g, x2)
+                        f(x1) = \inverse<T, S, default, g>(x2)
+                        by thm sb_right_inv(S, T, default, f, g, x2)
+                        g(f(x1)) = g(\inverse<T, S, default, g>(x2)) = x2
+                        by thm sb_set_closed(S, T, f, g, x1)
+                        x2 $in \sb_set<S, T, f, g>
+                        impossible not x2 $in \sb_set<S, T, f, g>
+            case not x1 $in \sb_set<S, T, f, g>:
+                by cases:
+                    ? x1 = x2
+                    case x2 $in \sb_set<S, T, f, g>:
+                        by thm sb_fun_off_set(S, T, default, f, g, x1)
+                        by thm sb_fun_on_set(S, T, default, f, g, x2)
+                        \inverse<T, S, default, g>(x1) = f(x2)
+                        by thm sb_right_inv(S, T, default, f, g, x1)
+                        x1 = g(\inverse<T, S, default, g>(x1)) = g(f(x2))
+                        by thm sb_set_closed(S, T, f, g, x2)
+                        x1 $in \sb_set<S, T, f, g>
+                        impossible not x1 $in \sb_set<S, T, f, g>
+                    case not x2 $in \sb_set<S, T, f, g>:
+                        by thm sb_fun_off_set(S, T, default, f, g, x1)
+                        by thm sb_fun_off_set(S, T, default, f, g, x2)
+                        \inverse<T, S, default, g>(x1) = \inverse<T, S, default, g>(x2)
+                        g(\inverse<T, S, default, g>(x1)) = g(\inverse<T, S, default, g>(x2))
+                        by thm sb_right_inv(S, T, default, f, g, x1)
+                        by thm sb_right_inv(S, T, default, f, g, x2)
+                        x1 = g(\inverse<T, S, default, g>(x1)) = g(\inverse<T, S, default, g>(x2)) = x2
+    by def:
+        ? $injective(S, T, \sb_fun<S, T, default, f, g>)
+
+# If g is injective, every y in T has an sb_fun preimage. When g(y) lies in
+# sb_set, its positive recursive layer supplies an earlier x with f(x)=y.
+# Otherwise g(y) itself is a preimage through the inverse branch.
+thm sb_surjective:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S:
+        $injective(T, S, g)
+        =>:
+            $surjective(S, T, \sb_fun<S, T, default, f, g>)
+    by thm total_inverse_available(T, S, default, g)
+    claim:
+        ? forall y T:
+            g(y) $in \sb_set<S, T, f, g>
+            =>:
+                exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
+        \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
+        g(y) $in {z S: $sb_set_member(S, T, f, g, z)}
+        by def:
+            ? $sb_set_member(S, T, f, g, g(y))
+        obtain n from exist n N st {g(y) $in \sb_aux<S, T, f, g>(n)}
+        by cases:
+            ? exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
+            case n = 0:
+                by thm sb_aux_zero(S, T, f, g)
+                g(y) $in set_minus(S, \set_image<T, S, g, T>)
+                not g(y) $in \set_image<T, S, g, T>
+                fn(q T) S {g(q)}(y) = g(y)
+                fn(q T) S {g(q)}(y) $in fn_range(fn(q T) S {g(q)})
+                \set_image<T, S, g, T> = fn_range(fn(q T) S {g(q)})
+                g(y) $in \set_image<T, S, g, T>
+                impossible not g(y) $in \set_image<T, S, g, T>
+            case n > 0:
+                n = (n - 1) + 1
+                n - 1 >= 0
+                n - 1 $in N
+                by thm sb_aux_successor(S, T, f, g, n - 1)
+                \sb_aux<S, T, f, g>(n) = \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>>
+                g(y) $in \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>>
+                \set_image<T, S, g, \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>> = fn_range(fn(z \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>) S {g(z)})
+                g(y) $in fn_range(fn(z \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>) S {g(z)})
+                have by preimage mid from g(y) $in fn_range(fn(z \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>) S {g(z)})
+                fn(z \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)>) S {g(z)}(mid) = g(mid)
+                g(y) = g(mid)
+                y = mid
+                \set_image<S, T, f, \sb_aux<S, T, f, g>(n - 1)> = fn_range(fn(z \sb_aux<S, T, f, g>(n - 1)) T {f(z)})
+                mid $in fn_range(fn(z \sb_aux<S, T, f, g>(n - 1)) T {f(z)})
+                have by preimage pre from mid $in fn_range(fn(z \sb_aux<S, T, f, g>(n - 1)) T {f(z)})
+                fn(z \sb_aux<S, T, f, g>(n - 1)) T {f(z)}(pre) = f(pre)
+                mid = f(pre)
+                witness exist k N st {pre $in \sb_aux<S, T, f, g>(k)} from n - 1
+                by def:
+                    ? $sb_set_member(S, T, f, g, pre)
+                by thm set_builder_member(pre, {z S: $sb_set_member(S, T, f, g, z)})
+                pre $in {z S: $sb_set_member(S, T, f, g, z)}
+                \sb_set<S, T, f, g> = {z S: $sb_set_member(S, T, f, g, z)}
+                pre $in \sb_set<S, T, f, g>
+                witness exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y} from pre
+    claim:
+        ? forall y T:
+            exist x S st {y = \sb_fun<S, T, default, f, g>(x)}
+        by cases:
+            ? exist x S st {y = \sb_fun<S, T, default, f, g>(x)}
+            case g(y) $in \sb_set<S, T, f, g>:
+                obtain pre from exist x S st {x $in \sb_set<S, T, f, g>, f(x) = y}
+                by thm sb_fun_on_set(S, T, default, f, g, pre)
+                witness exist x S st {y = \sb_fun<S, T, default, f, g>(x)} from pre
+            case not g(y) $in \sb_set<S, T, f, g>:
+                by thm inverse_left_of_injective(T, S, default, g)
+                \inverse<T, S, default, g>(g(y)) = y
+                by thm sb_fun_off_set(S, T, default, f, g, g(y))
+                \sb_fun<S, T, default, f, g>(g(y)) = \inverse<T, S, default, g>(g(y)) = y
+                witness exist x S st {y = \sb_fun<S, T, default, f, g>(x)} from g(y)
+    by def:
+        ? $surjective(S, T, \sb_fun<S, T, default, f, g>)
+
+# The source theorem. The constructed piecewise function is injective by the
+# f branch argument and surjective by the g branch argument.
+thm schroeder_bernstein:
+    ? forall S set, T nonempty_set, default T, f fn(x S) T, g fn(y T) S:
+        $injective(S, T, f)
+        $injective(T, S, g)
+        =>:
+            exist h fn(x S) T st {$bijective(S, T, h)}
+    by thm sb_injective(S, T, default, f, g)
+    by thm sb_surjective(S, T, default, f, g)
+    by def:
+        ? $bijective(S, T, \sb_fun<S, T, default, f, g>)
+    witness exist h fn(x S) T st {$bijective(S, T, h)} from \sb_fun<S, T, default, f, g>

@@ -165,7 +165,7 @@ impl Runtime {
                     goal_fact_id,
                     source_fact,
                     result.source_fact_id,
-                    result.equality_rewrites.as_deref(),
+                    result.equality_transport.as_ref(),
                     context,
                 ),
                 Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
@@ -271,7 +271,7 @@ impl Runtime {
         goal_fact_id: Option<FactId>,
         source_fact: &Fact,
         recorded_source_fact_id: Option<FactId>,
-        equality_rewrites: Option<&[KnownEqualityProofStep]>,
+        equality_transport: Option<&EqualityTransportEvidence>,
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         let source_fact_id = match recorded_source_fact_id {
@@ -284,7 +284,7 @@ impl Runtime {
             });
         };
 
-        let Some(equality_rewrites) = equality_rewrites else {
+        let Some(equality_transport) = equality_transport else {
             if source_fact.to_string() == goal.to_string() {
                 return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
             }
@@ -303,24 +303,25 @@ impl Runtime {
                 }],
             });
         };
-        if equality_rewrites.is_empty() {
+        if equality_transport.steps.is_empty() {
             return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
         }
 
-        let mut premises = Vec::with_capacity(equality_rewrites.len() + 1);
+        let mut premises = Vec::with_capacity(equality_transport.steps.len() + 1);
         premises.push(FactToLeanIR {
             fact_id: Some(source_fact_id),
             proposition: source_fact.clone(),
             proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
         });
-        let mut steps = Vec::with_capacity(equality_rewrites.len());
-        for rewrite in equality_rewrites.iter() {
+        let mut steps = Vec::with_capacity(equality_transport.steps.len());
+        for rewrite in equality_transport.steps.iter() {
             let equality_fact: Fact = AtomicFact::EqualFact(rewrite.equality.clone()).into();
-            let Some(equality_fact_id) =
-                self.citation_fact_id(&equality_fact, &equality_fact, None, context)?
-            else {
+            let Some(equality_fact_id) = rewrite.equality_fact_id else {
                 return Ok(FactProofToLeanIR::Unsupported {
-                    reason: format!("equality rewrite `{}` has no stored FactId", equality_fact),
+                    reason: format!(
+                        "equality transport `{}` -> `{}` through `{}` has no compiler proof provenance",
+                        rewrite.from, rewrite.to, equality_fact
+                    ),
                 });
             };
             let left_key = obj_equality_key(&rewrite.equality.left);
@@ -587,7 +588,7 @@ impl Runtime {
                         step_fact_id(&result.verify_what)?,
                         source,
                         result.source_fact_id,
-                        result.equality_rewrites.as_deref(),
+                        result.equality_transport.as_ref(),
                         context,
                     )?,
                     Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {

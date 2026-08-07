@@ -193,6 +193,49 @@ pub struct VerifiedByBuiltinRuleResult {
     pub subgoals: Vec<StmtResult>,
 }
 
+#[derive(Clone, Debug)]
+pub struct EqualityTransportEvidence {
+    pub steps: Vec<EqualityTransportStep>,
+}
+
+impl EqualityTransportEvidence {
+    pub fn new(steps: Vec<EqualityTransportStep>) -> Self {
+        Self { steps }
+    }
+}
+
+#[derive(Clone)]
+pub struct EqualityTransportStep {
+    pub from: Obj,
+    pub to: Obj,
+    pub equality: EqualFact,
+    /// `None` means verification used an equality whose compiler proof
+    /// provenance is not represented yet.
+    pub equality_fact_id: Option<FactId>,
+}
+
+impl EqualityTransportStep {
+    pub fn new(from: Obj, to: Obj, equality: EqualFact, equality_fact_id: Option<FactId>) -> Self {
+        Self {
+            from,
+            to,
+            equality,
+            equality_fact_id,
+        }
+    }
+}
+
+impl fmt::Debug for EqualityTransportStep {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("EqualityTransportStep")
+            .field("from", &self.from.to_string())
+            .field("to", &self.to.to_string())
+            .field("equality", &self.equality.to_string())
+            .field("equality_fact_id", &self.equality_fact_id)
+            .finish()
+    }
+}
+
 #[derive(Debug)]
 pub struct VerifiedByFactResult {
     pub detail: Option<String>,
@@ -202,7 +245,7 @@ pub struct VerifiedByFactResult {
     /// `Some` means the verifier reached the goal by rewriting the cited fact
     /// along these checked equality edges. `None` means no structured
     /// transport evidence was recorded for this citation route.
-    pub equality_rewrites: Option<Vec<KnownEqualityProofStep>>,
+    pub equality_transport: Option<EqualityTransportEvidence>,
 }
 
 pub struct KnownForallInstantiationItem {
@@ -273,7 +316,7 @@ pub struct FactVerifiedByFactInVerifiedBys {
     pub verify_what: Fact,
     pub cite_what: Box<Stmt>,
     pub source_fact_id: Option<FactId>,
-    pub equality_rewrites: Option<Vec<KnownEqualityProofStep>>,
+    pub equality_transport: Option<EqualityTransportEvidence>,
 }
 
 #[derive(Debug)]
@@ -454,21 +497,22 @@ impl VerifiedByResult {
             detail,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
-            equality_rewrites: None,
+            equality_transport: None,
         })
     }
 
-    pub fn cited_fact_with_equality_rewrites(
+    pub fn cited_fact_with_provenance(
         _goal: Fact,
         cite_what: Fact,
-        equality_rewrites: Vec<KnownEqualityProofStep>,
+        source_fact_id: Option<FactId>,
+        equality_transport: Option<EqualityTransportEvidence>,
         detail: Option<String>,
     ) -> Self {
         Self::Fact(VerifiedByFactResult {
             detail,
             cite_what: Box::new(cite_what.into_stmt()),
-            source_fact_id: None,
-            equality_rewrites: Some(equality_rewrites),
+            source_fact_id,
+            equality_transport,
         })
     }
 
@@ -498,7 +542,7 @@ impl VerifiedByResult {
             detail: None,
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id: Some(source_fact_id),
-            equality_rewrites: None,
+            equality_transport: None,
         })
     }
 
@@ -572,7 +616,7 @@ impl VerifiedBysEnum {
             verify_what,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
-            equality_rewrites: None,
+            equality_transport: None,
         })
     }
 
@@ -605,7 +649,7 @@ impl VerifiedBysEnum {
                     verify_what,
                     cite_what: r.cite_what,
                     source_fact_id: r.source_fact_id,
-                    equality_rewrites: r.equality_rewrites,
+                    equality_transport: r.equality_transport,
                 })]
             }
             VerifiedByResult::KnownForallInstantiation(r) => {

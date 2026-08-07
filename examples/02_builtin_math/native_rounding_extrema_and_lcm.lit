@@ -78,7 +78,7 @@ forall x R, n Z:
     ceil(x + n) = ceil(x) + n
 # Current behavior: rounding preserves weak order and extrema expose lattice laws.
 # Boundary: strict input order does not imply strict floor or ceiling order.
-# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/native_rounding_extrema_and_lcm.lit
+# Evidence: target/release/litex -compact -isolated -f examples/02_builtin_math/native_rounding_extrema_and_lcm.lit
 # Implementation: src/verify/verify_builtin_rules/native_integer_extrema.rs
 
 forall a, b Z:

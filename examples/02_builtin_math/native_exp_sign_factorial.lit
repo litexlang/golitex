@@ -75,7 +75,7 @@ forall a, b R+:
         a = b
 # Current behavior: native exp and ln preserve and reflect strict/weak order and equality.
 # Boundary: a weak argument order does not prove a strict result order.
-# Evidence: target/release/litex -compact -isolated -f examples/01_proof_patterns/native_exp_sign_factorial.lit
+# Evidence: target/release/litex -compact -isolated -f examples/02_builtin_math/native_exp_sign_factorial.lit
 # Implementation: src/verify/verify_builtin_rules/native_exp_sign_factorial.rs
 
 forall a, b R:

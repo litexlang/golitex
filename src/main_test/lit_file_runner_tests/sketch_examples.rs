@@ -83,9 +83,8 @@ fn run_example_lit_file_to_lean(relative_path: &str) {
             )
         });
     let updated_source = source_with_generated_lean(&lit_content, &generated_lean);
-    fs::write(&lit_path, updated_source).unwrap_or_else(|write_error| {
-        panic!("failed to write {:?}: {}", lit_path, write_error)
-    });
+    fs::write(&lit_path, updated_source)
+        .unwrap_or_else(|write_error| panic!("failed to write {:?}: {}", lit_path, write_error));
 
     println!("generated Lean appended to {:?}", lit_path);
 }
@@ -153,16 +152,31 @@ fn print_tmp_lit_in_all_output_languages() {
 
 #[test]
 fn run_tmp0() {
-    run_with_large_stack("run_tmp0_large_stack", || {
-        run_example_lit_file("tmp.lit")
-    });
+    run_with_large_stack("run_tmp0_large_stack", || run_example_lit_file("tmp.lit"));
+}
+
+fn run_tmp_to_lean(index: usize) {
+    let relative_path = if index == 0 {
+        "tmp.lit".to_string()
+    } else {
+        format!("tmp{}.lit", index)
+    };
+    run_example_lit_file_to_lean(&relative_path);
 }
 
 #[test]
 fn run_tmp0_to_lean() {
-    run_with_large_stack("run_tmp0_to_lean_large_stack", || {
-        run_example_lit_file_to_lean("tmp.lit")
-    });
+    run_with_large_stack("run_tmp0_to_lean_large_stack", || run_tmp_to_lean(0));
+}
+
+#[test]
+fn run_tmp1_to_lean() {
+    run_with_large_stack("run_tmp1_to_lean_large_stack", || run_tmp_to_lean(1));
+}
+
+#[test]
+fn run_tmp2_to_lean() {
+    run_with_large_stack("run_tmp2_to_lean_large_stack", || run_tmp_to_lean(2));
 }
 
 #[test]

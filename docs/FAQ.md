@@ -669,7 +669,7 @@ For example:
   that wants to explain its construction may still define a transparently
   named source function such as `gcd_by_finite_divisors`, prove its
   specification, and bridge it to native `gcd`; see
-  [`gcd_from_finite_divisors.lit`](../examples/01_proof_patterns/gcd_from_finite_divisors.lit).
+  [`gcd_from_finite_divisors.lit`](../examples/04_case_studies/gcd_from_finite_divisors.lit).
 - The bound `|S union T| <= |S| + |T|` can require a cardinality interface:
   a decomposition into disjoint pieces, or an injection/bijection argument
   that makes overlap visible.

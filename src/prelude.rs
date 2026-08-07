@@ -282,6 +282,8 @@ pub use crate::result::CommandStmtResult;
 pub use crate::result::DefInterfaceStmtResult;
 pub use crate::result::DefObjStmtResult;
 pub use crate::result::DefPredicateStmtResult;
+pub use crate::result::EqualityTransportEvidence;
+pub use crate::result::EqualityTransportStep;
 pub use crate::result::ExecutionPhaseTrace;
 pub use crate::result::ExistFactUnknown;
 pub use crate::result::FactResult;

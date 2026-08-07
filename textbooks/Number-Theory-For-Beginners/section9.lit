@@ -1,0 +1,146 @@
+# Section IX: polynomials over a field.
+
+# A polynomial over K is a coefficient function on N whose nonzero support is
+# contained in a finite set.
+prop supports_polynomial(K set, zero K, p fn(n N) K, support finite_set):
+    forall n N:
+        p(n) != zero
+        =>:
+            n $in support
+
+prop polynomial_has_finite_support(K set, zero K, p fn(n N) K):
+    exist support finite_set st {$supports_polynomial(K, zero, p, support)}
+
+template<K set, zero K>:
+    have polynomial_ring power_set(fn(n N) K) = {p fn(n N) K: $polynomial_has_finite_support(K, zero, p)}
+
+prop polynomial_sum(K set, zero K, add fn(x, y K) K, p, q, result_poly \polynomial_ring<K, zero>):
+    forall n N:
+        result_poly(n) = add(p(n), q(n))
+
+# The trace at degree n is the finite convolution
+# p(0)q(n)+p(1)q(n-1)+...+p(n)q(0).
+prop polynomial_convolution_trace(K set, add, mul fn(x, y K) K, p, q fn(n N) K, degree N, partial_sums fn(idx_i N) K):
+    partial_sums(0) = mul(p(0), q(degree))
+    forall idx_i N+:
+        idx_i <= degree
+        =>:
+            partial_sums(idx_i) = add(partial_sums(idx_i - 1), mul(p(idx_i), q(degree - idx_i)))
+
+prop polynomial_product(K set, zero K, add, mul fn(x, y K) K, p, q, result_poly \polynomial_ring<K, zero>):
+    forall degree N:
+        exist partial_sums fn(idx_i N) K st {$polynomial_convolution_trace(K, add, mul, p, q, degree, partial_sums), result_poly(degree) = partial_sums(degree)}
+
+prop is_zero_polynomial(K set, zero K, p \polynomial_ring<K, zero>):
+    forall n N:
+        p(n) = zero
+
+prop has_polynomial_degree(K set, zero K, p \polynomial_ring<K, zero>, degree N):
+    p(degree) != zero
+    forall n N:
+        n > degree
+        =>:
+            p(n) = zero
+
+prop has_lower_polynomial_degree(K set, zero K, divisor, r \polynomial_ring<K, zero>):
+    exist divisor_degree, remainder_degree N st {$has_polynomial_degree(K, zero, divisor, divisor_degree), $has_polynomial_degree(K, zero, r, remainder_degree), remainder_degree < divisor_degree}
+
+prop is_polynomial_remainder(K set, zero K, divisor, r \polynomial_ring<K, zero>):
+    $is_zero_polynomial(K, zero, r) or $has_lower_polynomial_degree(K, zero, divisor, r)
+
+# The division relation now exposes its actual polynomial objects and
+# operations. The theorem below retains only the mathematical existence proof
+# as debt.
+prop polynomial_division_statement(K set, zero, one K, add, mul fn(x, y K) K, f, g, q, r \polynomial_ring<K, zero>):
+    $section6::is_field(K, add, mul, zero, one)
+    not $is_zero_polynomial(K, zero, g)
+    exist gq \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, g, q, gq), $polynomial_sum(K, zero, add, gq, r, f)}
+    $is_polynomial_remainder(K, zero, g, r)
+
+prop polynomial_multiple(K set, zero K, add, mul fn(x, y K) K, factor, value \polynomial_ring<K, zero>):
+    exist multiplier \polynomial_ring<K, zero> st {$polynomial_product(K, zero, add, mul, factor, multiplier, value)}
+
+prop polynomial_gcd_statement(K set, zero K, add, mul fn(x, y K) K, f, g, d \polynomial_ring<K, zero>):
+    $polynomial_multiple(K, zero, add, mul, d, f)
+    $polynomial_multiple(K, zero, add, mul, d, g)
+    forall common_divisor \polynomial_ring<K, zero>:
+        $polynomial_multiple(K, zero, add, mul, common_divisor, f)
+        $polynomial_multiple(K, zero, add, mul, common_divisor, g)
+        =>:
+            $polynomial_multiple(K, zero, add, mul, common_divisor, d)
+
+# An ideal family is nonempty and closed under polynomial addition and
+# multiplication by an arbitrary polynomial.
+prop polynomial_ideal_family(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>)):
+    $is_nonempty_set(family)
+    forall f, g family:
+        exist sum_poly family st {$polynomial_sum(K, zero, add, f, g, sum_poly)}
+    forall f family, h \polynomial_ring<K, zero>:
+        exist product_poly family st {$polynomial_product(K, zero, add, mul, h, f, product_poly)}
+
+prop polynomial_multiple_ideal(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>), generator \polynomial_ring<K, zero>):
+    generator $in family
+    forall f family:
+        $polynomial_multiple(K, zero, add, mul, generator, f)
+
+prop polynomial_gcd_generator_claim(K set, zero K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>)):
+    exist generator \polynomial_ring<K, zero> st {$polynomial_multiple_ideal(K, zero, add, mul, family, generator)}
+
+prop polynomial_division_claim(K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>):
+    exist! q, r \polynomial_ring<K, zero> st {$polynomial_division_statement(K, zero, one, add, mul, f, g, q, r)}
+
+# Evaluation at x is represented by the finite power and partial-sum traces
+# 1,x,...,x^n and a_0,a_0+a_1*x,...,A(x).  This keeps the source definition
+# over its arbitrary ground field rather than incorrectly specializing it to Z.
+prop polynomial_evaluation_trace(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, x K, n N, powers, values fn(idx_i N) K):
+    powers(0) = one
+    values(0) = p(0)
+    forall idx_i N+:
+        idx_i <= n
+        =>:
+            powers(idx_i) = mul(powers(idx_i - 1), x)
+            values(idx_i) = add(values(idx_i - 1), mul(p(idx_i), powers(idx_i)))
+
+prop polynomial_evaluates_to(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, x K, n N, value K):
+    exist powers, values fn(idx_i N) K st {$polynomial_evaluation_trace(K, zero, one, add, mul, p, x, n, powers, values), value = values(n)}
+
+prop polynomial_root(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N, x K):
+    $polynomial_evaluates_to(K, zero, one, add, mul, p, x, n, zero)
+
+template<K set, zero, one K, add, mul fn(u, v K) K>:
+    have fn polynomial_root_set(p \polynomial_ring<K, zero>, n N) power_set(K) = {x K: $polynomial_root(K, zero, one, add, mul, p, n, x)}
+
+prop polynomial_root_bound(K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N, roots power_set(K)):
+    roots = \polynomial_root_set<K, zero, one, add, mul>(p, n)
+    $is_finite_set(roots)
+    finite_set_size(roots) <= n
+
+# Theorem IX.1. Every ideal in a polynomial ring over a field is principal.
+thm theorem_IX_polynomial_gcd_generator:
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, family power_set(\polynomial_ring<K, zero>):
+        $section6::is_field(K, add, mul, zero, one)
+        $polynomial_ideal_family(K, zero, add, mul, family)
+        =>:
+            $polynomial_gcd_generator_claim(K, zero, add, mul, family)
+    # trust: degree descent and polynomial ideal generation are not yet proved.
+    trust $polynomial_gcd_generator_claim(K, zero, add, mul, family)
+
+# Lemma. Division by a nonzero polynomial has a unique quotient and remainder.
+thm lemma_IX_polynomial_division:
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, f, g \polynomial_ring<K, zero>:
+        $section6::is_field(K, add, mul, zero, one)
+        not $is_zero_polynomial(K, zero, g)
+        =>:
+            $polynomial_division_claim(K, zero, one, add, mul, f, g)
+    # trust: polynomial division by degree descent is not yet implemented.
+    trust $polynomial_division_claim(K, zero, one, add, mul, f, g)
+
+# Theorem IX.2. A nonzero polynomial has at most as many roots as its degree.
+thm theorem_IX_root_bound:
+    ? forall K set, zero, one K, add, mul fn(x, y K) K, p \polynomial_ring<K, zero>, n N:
+        $section6::is_field(K, add, mul, zero, one)
+        $has_polynomial_degree(K, zero, p, n)
+        =>:
+            $polynomial_root_bound(K, zero, one, add, mul, p, n, \polynomial_root_set<K, zero, one, add, mul>(p, n))
+    # trust: the factor theorem and finite root-count induction are not yet proved.
+    trust $polynomial_root_bound(K, zero, one, add, mul, p, n, \polynomial_root_set<K, zero, one, add, mul>(p, n))

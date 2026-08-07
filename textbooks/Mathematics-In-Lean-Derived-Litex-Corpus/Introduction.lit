@@ -1,0 +1,55 @@
+# About This Corpus
+#
+# Litex source:
+# Canonical module: scripts/mathematics_in_litex/textbook
+#
+# This ongoing corpus draws selected mathematical interfaces and results from
+# Mathematics in Lean and rewrites them as independent Litex pressure tests. It
+# is not a port of the book's Lean pedagogy, a replacement for the official
+# interactive text, or a claim to reproduce Lean or Mathlib's capabilities.
+# Readers who want to learn Lean should use the original book and its upstream
+# materials.
+#
+# Corpus conventions
+#
+# Unlike the ordinary textbook translations in this repository, this
+# pressure-test corpus keeps selected source exercises and admitted
+# declarations in scope. Their inclusion is deliberate: an exercise can test
+# a useful mathematical interface, and a source admission must not be silently
+# counted as a checked Litex proof. Repeated tactic demonstrations may share
+# one mathematical Litex counterpart rather than being transcribed one for
+# one.
+#
+# The corpus translates mathematical meaning, not Lean syntax, tactics, or
+# source lines. It prefers natural Litex statements and uses builtin or
+# established Litex interfaces where they already express the mathematics.
+# Mature Mathlib infrastructure may therefore become an explicit background
+# boundary, a localized proof obligation, or missing coverage rather than a
+# simulated line-by-line port.
+#
+# Coverage and verification are reported separately. An included declaration
+# may be checked or may contain the narrowest practical `trust`; a trusted step
+# is accepted proof debt, not verifier evidence. Material not yet represented
+# remains incomplete coverage even when its source chapter has a corresponding
+# Litex file. Only trust-free fragments are candidates for checked
+# cross-system conformance examples.
+#
+# The corpus covers only a selected part of the source. Most Litex declarations
+# that are actually included are accepted by the Litex verifier, while every
+# known unchecked step remains visible as an explicit trust boundary. Missing
+# source correspondences are recorded as incomplete coverage, not silently
+# counted as translated material. Where the source relies on elaboration,
+# tactics, or broad library infrastructure, this project seeks a natural
+# mathematical Litex formulation rather than a line-by-line transcription.
+#
+# The chapters on algebraic structures, linear algebra, topology,
+# differentiation, and measure theory offer especially useful comparisons.
+# They show the contrast between a mature tactic- and library-rich formal
+# environment and Litex's smaller interface, in which users primarily state
+# definitions and facts and let the verifier reuse the current context. The
+# comparison is intended to expose design tradeoffs, not to rank the systems.
+#
+# We hope readers learn from the mathematics, see how the same concepts can be
+# organized through a different formal interface, and use both successful
+# translations and explicit blockers to understand Litex's present strengths
+# and limitations.

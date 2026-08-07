@@ -114,7 +114,7 @@ contract: positivity, divisibility of both arguments, and maximality among
 positive common divisors.
 
 The separate teaching example
-[`gcd_from_finite_divisors.lit`](../../examples/01_proof_patterns/gcd_from_finite_divisors.lit)
+[`gcd_from_finite_divisors.lit`](../../examples/04_case_studies/gcd_from_finite_divisors.lit)
 shows that the set of positive common divisors is finite and nonempty, selects
 its greatest member with `finite_set_max`, and proves the result equal to native
 `gcd`. Keeping that construction outside the module preserves its explanatory

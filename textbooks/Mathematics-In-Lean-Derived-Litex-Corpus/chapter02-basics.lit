@@ -1,0 +1,514 @@
+# Chapter 2 — Basics, setting-first default
+#
+# Named universal settings are the theorem-facing interface: operations remain
+# the direct subjects inside each theorem. This presentation states and proves
+# its own laws independently of alternative structure-oriented modules.
+
+# Settings elaborate only theorem headers. Their laws are written directly
+# because a setting is the ambient mathematical context, not a value that is
+# later projected.
+
+# 2.2 Proving identities in algebraic structures
+
+setting AdditiveCommutativeGroupSetting:
+    A nonempty_set
+    add fn(x, y A) A
+    zero A
+    neg fn(x A) A
+    forall u, v, w A:
+        add(add(u, v), w) = add(u, add(v, w))
+    forall u A:
+        add(zero, u) = u
+        add(neg(u), u) = zero
+    forall u, v A:
+        add(u, v) = add(v, u)
+
+setting GroupSetting:
+    A nonempty_set
+    mul fn(x, y A) A
+    one A
+    inv fn(x A) A
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u A:
+        mul(one, u) = u
+        mul(inv(u), u) = one
+
+setting RingSetting:
+    A nonempty_set
+    add fn(x, y A) A
+    zero A
+    neg fn(x A) A
+    mul fn(x, y A) A
+    one A
+    forall u, v, w A:
+        add(add(u, v), w) = add(u, add(v, w))
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+        mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+    forall u A:
+        add(zero, u) = u
+        add(neg(u), u) = zero
+        mul(one, u) = u
+        mul(u, one) = u
+    forall u, v A:
+        add(u, v) = add(v, u)
+
+# The setting expands at compile time while add, neg, and zero remain directly
+# visible in the theorem and proof.
+thm add_neg_cancel:
+    ? forall [AdditiveCommutativeGroupSetting], a A:
+        add(a, neg(a)) = zero
+    add(a, neg(a)) = add(neg(a), a) = zero
+
+thm add_zero:
+    ? forall [AdditiveCommutativeGroupSetting], a A:
+        add(a, zero) = a
+    add(a, zero) = add(zero, a) = a
+
+thm add_left_cancel_in_additive_commutative_group:
+    ? forall [AdditiveCommutativeGroupSetting], a, b, c A:
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    add(neg(a), a) = zero
+    b = add(zero, b) = add(add(neg(a), a), b) = add(neg(a), add(a, b)) = add(neg(a), add(a, c)) = add(add(neg(a), a), c) = add(zero, c) = c
+
+thm self_sub:
+    ? forall [AdditiveCommutativeGroupSetting], a A:
+        add(a, neg(a)) = zero
+    by thm add_neg_cancel(A, add, zero, neg, a)
+
+thm one_add_one_eq_two:
+    ? forall [RingSetting]:
+        add(one, one) = add(one, one)
+
+thm two_mul:
+    ? forall [RingSetting], a A:
+        mul(add(one, one), a) = add(a, a)
+    mul(one, a) = a
+    mul(add(one, one), a) = add(mul(one, a), mul(one, a)) = add(a, a)
+
+# Tracer for the representation comparison:
+#   struct-first: ring.mul(a, ring.zero) = ring.zero
+#   setting-first: mul(a, zero) = zero
+thm mul_zero:
+    ? forall [RingSetting], a A:
+        mul(a, zero) = zero
+    add(zero, zero) = zero
+    by thm add_zero(A, add, zero, neg, mul(a, zero))
+    add(mul(a, zero), mul(a, zero)) = mul(a, add(zero, zero)) = mul(a, zero) = add(mul(a, zero), zero)
+    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(a, zero), mul(a, zero), zero)
+
+thm zero_mul:
+    ? forall [RingSetting], a A:
+        mul(zero, a) = zero
+    add(zero, zero) = zero
+    by thm add_zero(A, add, zero, neg, mul(zero, a))
+    add(mul(zero, a), mul(zero, a)) = mul(add(zero, zero), a) = mul(zero, a) = add(mul(zero, a), zero)
+    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, mul(zero, a), mul(zero, a), zero)
+
+thm neg_add_cancel_left:
+    ? forall [AdditiveCommutativeGroupSetting], a, b A:
+        add(neg(a), add(a, b)) = b
+    add(neg(a), a) = zero
+    add(neg(a), add(a, b)) = add(add(neg(a), a), b) = add(zero, b) = b
+
+thm add_neg_cancel_right:
+    ? forall [AdditiveCommutativeGroupSetting], a, b A:
+        add(add(a, b), neg(b)) = a
+    by thm add_neg_cancel(A, add, zero, neg, b)
+    by thm add_zero(A, add, zero, neg, a)
+    add(add(a, b), neg(b)) = add(a, add(b, neg(b))) = add(a, zero) = a
+
+thm add_left_cancel:
+    ? forall [AdditiveCommutativeGroupSetting], a, b, c A:
+        add(a, b) = add(a, c)
+        =>:
+            b = c
+    by thm add_left_cancel_in_additive_commutative_group(A, add, zero, neg, a, b, c)
+
+thm add_right_cancel:
+    ? forall [AdditiveCommutativeGroupSetting], a, b, c A:
+        add(a, b) = add(c, b)
+        =>:
+            a = c
+    add(b, a) = add(a, b) = add(c, b) = add(b, c)
+    by thm add_left_cancel(A, add, zero, neg, b, a, c)
+
+thm add_reorder_four:
+    ? forall [AdditiveCommutativeGroupSetting], a, b, c, d A:
+        add(add(a, b), add(c, d)) = add(add(a, c), add(b, d))
+    add(b, add(c, d)) = add(add(b, c), d)
+    add(b, c) = add(c, b)
+    add(add(b, c), d) = add(add(c, b), d) = add(c, add(b, d))
+    add(add(a, b), add(c, d)) = add(a, add(b, add(c, d))) = add(a, add(add(b, c), d)) = add(a, add(add(c, b), d)) = add(a, add(c, add(b, d))) = add(add(a, c), add(b, d))
+
+thm eq_neg_of_add_eq_zero:
+    ? forall [AdditiveCommutativeGroupSetting], a, b A:
+        add(a, b) = zero
+        =>:
+            b = neg(a)
+    by thm add_neg_cancel(A, add, zero, neg, a)
+    by thm add_left_cancel(A, add, zero, neg, a, b, neg(a))
+
+thm neg_eq_of_add_eq_zero:
+    ? forall [AdditiveCommutativeGroupSetting], a, b A:
+        add(a, b) = zero
+        =>:
+            neg(a) = b
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, a, b)
+
+thm neg_zero:
+    ? forall [AdditiveCommutativeGroupSetting]:
+        neg(zero) = zero
+    by thm neg_eq_of_add_eq_zero(A, add, zero, neg, zero, zero)
+
+thm neg_neg:
+    ? forall [AdditiveCommutativeGroupSetting], a A:
+        neg(neg(a)) = a
+    by thm neg_eq_of_add_eq_zero(A, add, zero, neg, neg(a), a)
+
+thm mul_neg_right:
+    ? forall [RingSetting], a, b A:
+        mul(a, neg(b)) = neg(mul(a, b))
+    by thm mul_zero(A, add, zero, neg, mul, one, a)
+    by thm add_neg_cancel(A, add, zero, neg, b)
+    add(mul(a, b), mul(a, neg(b))) = mul(a, add(b, neg(b))) = mul(a, zero) = zero
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(a, neg(b)))
+
+thm neg_mul_left:
+    ? forall [RingSetting], a, b A:
+        mul(neg(a), b) = neg(mul(a, b))
+    by thm zero_mul(A, add, zero, neg, mul, one, b)
+    by thm add_neg_cancel(A, add, zero, neg, a)
+    add(mul(a, b), mul(neg(a), b)) = mul(add(a, neg(a)), b) = mul(zero, b) = zero
+    by thm eq_neg_of_add_eq_zero(A, add, zero, neg, mul(a, b), mul(neg(a), b))
+
+thm neg_mul_neg:
+    ? forall [RingSetting], a, b A:
+        mul(neg(a), neg(b)) = mul(a, b)
+    by thm neg_mul_left(A, add, zero, neg, mul, one, a, neg(b))
+    by thm mul_neg_right(A, add, zero, neg, mul, one, a, b)
+    by thm neg_neg(A, add, zero, neg, mul(a, b))
+
+setting CommutativeMultiplicationSetting:
+    A set
+    mul fn(x, y A) A
+    forall u, v, w A:
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+    forall u, v A:
+        mul(u, v) = mul(v, u)
+
+thm commutative_mul_reorder_four:
+    ? forall [CommutativeMultiplicationSetting], a, b, c, d A:
+        mul(mul(a, b), mul(c, d)) = mul(mul(a, c), mul(b, d))
+    mul(b, mul(c, d)) = mul(mul(b, c), d)
+    mul(b, c) = mul(c, b)
+    mul(mul(b, c), d) = mul(mul(c, b), d) = mul(c, mul(b, d))
+    mul(mul(a, b), mul(c, d)) = mul(a, mul(b, mul(c, d))) = mul(a, mul(mul(b, c), d)) = mul(a, mul(mul(c, b), d)) = mul(a, mul(c, mul(b, d))) = mul(mul(a, c), mul(b, d))
+
+thm _group_left_cancel:
+    ? forall [GroupSetting], a, b, c A:
+        mul(a, b) = mul(a, c)
+        =>:
+            b = c
+    mul(inv(a), a) = one
+    b = mul(one, b) = mul(mul(inv(a), a), b) = mul(inv(a), mul(a, b)) = mul(inv(a), mul(a, c)) = mul(mul(inv(a), a), c) = mul(one, c) = c
+
+thm _group_mul_one:
+    ? forall [GroupSetting], a A:
+        mul(a, one) = a
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, one)) = mul(mul(inv(a), a), one) = mul(one, one) = one = mul(inv(a), a)
+    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, one), a)
+
+thm mul_inv_cancel:
+    ? forall [GroupSetting], a A:
+        mul(a, inv(a)) = one
+    mul(inv(a), a) = one
+    by thm _group_mul_one(A, mul, one, inv, inv(a))
+    mul(inv(a), mul(a, inv(a))) = mul(mul(inv(a), a), inv(a)) = mul(one, inv(a)) = inv(a) = mul(inv(a), one)
+    by thm _group_left_cancel(A, mul, one, inv, inv(a), mul(a, inv(a)), one)
+
+thm mul_one:
+    ? forall [GroupSetting], a A:
+        mul(a, one) = a
+    by thm _group_mul_one(A, mul, one, inv, a)
+
+thm mul_inv_rev:
+    ? forall [GroupSetting], a, b A:
+        inv(mul(a, b)) = mul(inv(b), inv(a))
+    mul(inv(a), a) = one
+    mul(inv(a), mul(a, b)) = mul(mul(inv(a), a), b) = mul(one, b) = b
+    mul(mul(inv(b), inv(a)), mul(a, b)) = mul(inv(b), mul(inv(a), mul(a, b))) = mul(inv(b), b) = one
+    by thm mul_inv_cancel(A, mul, one, inv, mul(a, b))
+    by thm _group_mul_one(A, mul, one, inv, mul(inv(b), inv(a)))
+    mul(inv(b), inv(a)) = mul(mul(inv(b), inv(a)), one) = mul(mul(inv(b), inv(a)), mul(mul(a, b), inv(mul(a, b)))) = mul(mul(mul(inv(b), inv(a)), mul(a, b)), inv(mul(a, b))) = mul(one, inv(mul(a, b))) = inv(mul(a, b))
+
+# 2.5 Proving facts about algebraic structures
+
+setting PartialOrderSetting:
+    A set
+    le_rel power_set(cart(A, A))
+    forall u A:
+        (u, u) $in le_rel
+    forall u, v, w A:
+        (u, v) $in le_rel
+        (v, w) $in le_rel
+        =>:
+            (u, w) $in le_rel
+    forall u, v A:
+        (u, v) $in le_rel
+        (v, u) $in le_rel
+        =>:
+            u = v
+
+# Strict comparison is represented directly through the setting relation here,
+# so this presentation does not need a separate structure-view equivalence.
+
+setting LatticeSetting:
+    A nonempty_set
+    le_rel power_set(cart(A, A))
+    meet fn(x, y A) A
+    join fn(x, y A) A
+    forall u A:
+        (u, u) $in le_rel
+    forall u, v, w A:
+        (u, v) $in le_rel
+        (v, w) $in le_rel
+        =>:
+            (u, w) $in le_rel
+    forall u, v A:
+        (u, v) $in le_rel
+        (v, u) $in le_rel
+        =>:
+            u = v
+    forall u, v A:
+        (meet(u, v), u) $in le_rel
+        (meet(u, v), v) $in le_rel
+        (u, join(u, v)) $in le_rel
+        (v, join(u, v)) $in le_rel
+    forall u, v, w A:
+        (w, u) $in le_rel
+        (w, v) $in le_rel
+        =>:
+            (w, meet(u, v)) $in le_rel
+    forall u, v, w A:
+        (u, w) $in le_rel
+        (v, w) $in le_rel
+        =>:
+            (join(u, v), w) $in le_rel
+
+thm lattice_le_trans:
+    ? forall [LatticeSetting], x, y, z A:
+        (x, y) $in le_rel
+        (y, z) $in le_rel
+        =>:
+            (x, z) $in le_rel
+
+thm lattice_meet_comm:
+    ? forall [LatticeSetting], x, y A:
+        meet(x, y) = meet(y, x)
+    (meet(x, y), y) $in le_rel
+    (meet(x, y), x) $in le_rel
+    (meet(x, y), meet(y, x)) $in le_rel
+    (meet(y, x), x) $in le_rel
+    (meet(y, x), y) $in le_rel
+    (meet(y, x), meet(x, y)) $in le_rel
+
+thm lattice_meet_assoc:
+    ? forall [LatticeSetting], x, y, z A:
+        meet(meet(x, y), z) = meet(x, meet(y, z))
+    by thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), x)
+    by thm lattice_le_trans(A, le_rel, meet, join, meet(meet(x, y), z), meet(x, y), y)
+    (meet(meet(x, y), z), z) $in le_rel
+    (meet(meet(x, y), z), meet(y, z)) $in le_rel
+    (meet(meet(x, y), z), meet(x, meet(y, z))) $in le_rel
+    (meet(x, meet(y, z)), x) $in le_rel
+    by thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), y)
+    by thm lattice_le_trans(A, le_rel, meet, join, meet(x, meet(y, z)), meet(y, z), z)
+    (meet(x, meet(y, z)), meet(x, y)) $in le_rel
+    (meet(x, meet(y, z)), meet(meet(x, y), z)) $in le_rel
+
+thm lattice_join_comm:
+    ? forall [LatticeSetting], x, y A:
+        join(x, y) = join(y, x)
+    (y, join(x, y)) $in le_rel
+    (x, join(x, y)) $in le_rel
+    (join(y, x), join(x, y)) $in le_rel
+    (x, join(y, x)) $in le_rel
+    (y, join(y, x)) $in le_rel
+    (join(x, y), join(y, x)) $in le_rel
+
+thm lattice_join_assoc:
+    ? forall [LatticeSetting], x, y, z A:
+        join(join(x, y), z) = join(x, join(y, z))
+    by thm lattice_le_trans(A, le_rel, meet, join, x, join(x, y), join(join(x, y), z))
+    by thm lattice_le_trans(A, le_rel, meet, join, y, join(x, y), join(join(x, y), z))
+    (z, join(join(x, y), z)) $in le_rel
+    (join(y, z), join(join(x, y), z)) $in le_rel
+    (join(x, join(y, z)), join(join(x, y), z)) $in le_rel
+    (x, join(x, join(y, z))) $in le_rel
+    by thm lattice_le_trans(A, le_rel, meet, join, y, join(y, z), join(x, join(y, z)))
+    by thm lattice_le_trans(A, le_rel, meet, join, z, join(y, z), join(x, join(y, z)))
+    (join(x, y), join(x, join(y, z))) $in le_rel
+    (join(join(x, y), z), join(x, join(y, z))) $in le_rel
+
+thm lattice_meet_join_absorb:
+    ? forall [LatticeSetting], x, y A:
+        meet(x, join(x, y)) = x
+    (meet(x, join(x, y)), x) $in le_rel
+    (x, x) $in le_rel
+    (x, join(x, y)) $in le_rel
+    (x, meet(x, join(x, y))) $in le_rel
+
+thm lattice_join_meet_absorb:
+    ? forall [LatticeSetting], x, y A:
+        join(x, meet(x, y)) = x
+    (x, join(x, meet(x, y))) $in le_rel
+    (x, x) $in le_rel
+    (meet(x, y), x) $in le_rel
+    (join(x, meet(x, y)), x) $in le_rel
+
+thm lattice_join_meet_distributive_of_meet_join_distributive:
+    ? forall [LatticeSetting], a, b, c A:
+        forall x, y, z A:
+            meet(x, join(y, z)) = join(meet(x, y), meet(x, z))
+        =>:
+            join(a, meet(b, c)) = meet(join(a, b), join(a, c))
+    by thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), a)
+    by thm lattice_meet_join_absorb(A, le_rel, meet, join, a, b)
+    by thm lattice_meet_comm(A, le_rel, meet, join, join(a, b), c)
+    by thm lattice_meet_comm(A, le_rel, meet, join, c, a)
+    by thm lattice_meet_comm(A, le_rel, meet, join, c, b)
+    meet(join(a, b), c) = meet(c, join(a, b)) = join(meet(c, a), meet(c, b)) = join(meet(a, c), meet(c, b)) = join(meet(a, c), meet(b, c))
+    by thm lattice_join_assoc(A, le_rel, meet, join, a, meet(a, c), meet(b, c))
+    by thm lattice_join_meet_absorb(A, le_rel, meet, join, a, c)
+    meet(join(a, b), join(a, c)) = join(meet(join(a, b), a), meet(join(a, b), c)) = join(a, meet(join(a, b), c)) = join(a, join(meet(a, c), meet(b, c))) = join(join(a, meet(a, c)), meet(b, c)) = join(a, meet(b, c))
+
+thm lattice_meet_join_distributive_of_join_meet_distributive:
+    ? forall [LatticeSetting], a, b, c A:
+        forall x, y, z A:
+            join(x, meet(y, z)) = meet(join(x, y), join(x, z))
+        =>:
+            meet(a, join(b, c)) = join(meet(a, b), meet(a, c))
+    by thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), a)
+    by thm lattice_join_meet_absorb(A, le_rel, meet, join, a, b)
+    by thm lattice_join_comm(A, le_rel, meet, join, meet(a, b), c)
+    by thm lattice_join_comm(A, le_rel, meet, join, c, a)
+    by thm lattice_join_comm(A, le_rel, meet, join, c, b)
+    join(meet(a, b), c) = join(c, meet(a, b)) = meet(join(c, a), join(c, b)) = meet(join(a, c), join(c, b)) = meet(join(a, c), join(b, c))
+    by thm lattice_meet_assoc(A, le_rel, meet, join, a, join(a, c), join(b, c))
+    by thm lattice_meet_join_absorb(A, le_rel, meet, join, a, c)
+    join(meet(a, b), meet(a, c)) = meet(join(meet(a, b), a), join(meet(a, b), c)) = meet(a, join(meet(a, b), c)) = meet(a, meet(join(a, c), join(b, c))) = meet(meet(a, join(a, c)), join(b, c)) = meet(a, join(b, c))
+
+# OrderedRingSetting deliberately flattens both component structures. This is
+# the strongest version of the setting-first choice: the theorem talks only
+# about the operations, relation, and their ambient laws.
+setting OrderedRingSetting:
+    A nonempty_set
+    add fn(x, y A) A
+    zero A
+    neg fn(x A) A
+    mul fn(x, y A) A
+    one A
+    le_rel power_set(cart(A, A))
+    forall u, v, w A:
+        add(add(u, v), w) = add(u, add(v, w))
+        mul(mul(u, v), w) = mul(u, mul(v, w))
+        mul(u, add(v, w)) = add(mul(u, v), mul(u, w))
+        mul(add(u, v), w) = add(mul(u, w), mul(v, w))
+    forall u A:
+        add(zero, u) = u
+        add(neg(u), u) = zero
+        mul(one, u) = u
+        mul(u, one) = u
+        (u, u) $in le_rel
+    forall u, v A:
+        add(u, v) = add(v, u)
+    forall u, v, w A:
+        (u, v) $in le_rel
+        (v, w) $in le_rel
+        =>:
+            (u, w) $in le_rel
+    forall u, v A:
+        (u, v) $in le_rel
+        (v, u) $in le_rel
+        =>:
+            u = v
+    forall u, v, w A:
+        (u, v) $in le_rel
+        =>:
+            (add(w, u), add(w, v)) $in le_rel
+    forall u, v A:
+        (zero, u) $in le_rel
+        (zero, v) $in le_rel
+        =>:
+            (zero, mul(u, v)) $in le_rel
+
+thm ring_sub_nonnegative_of_le:
+    ? forall [OrderedRingSetting], a, b A:
+        (a, b) $in le_rel
+        =>:
+            (zero, add(b, neg(a))) $in le_rel
+    (add(neg(a), a), add(neg(a), b)) $in le_rel
+    add(neg(a), a) = zero
+    add(neg(a), b) = add(b, neg(a))
+
+thm ring_le_of_sub_nonnegative:
+    ? forall [OrderedRingSetting], a, b A:
+        (zero, add(b, neg(a))) $in le_rel
+        =>:
+            (a, b) $in le_rel
+    (add(a, zero), add(a, add(b, neg(a)))) $in le_rel
+    by thm add_zero(A, add, zero, neg, a)
+    by thm add_neg_cancel(A, add, zero, neg, a)
+    by thm add_zero(A, add, zero, neg, b)
+    add(a, b) = add(b, a)
+    add(add(a, b), neg(a)) = add(add(b, a), neg(a))
+    add(a, add(b, neg(a))) = add(add(a, b), neg(a)) = add(add(b, a), neg(a)) = add(b, add(a, neg(a))) = add(b, zero) = b
+
+thm ring_mul_le_mul_right_of_nonnegative:
+    ? forall [OrderedRingSetting], a, b, c A:
+        (a, b) $in le_rel
+        (zero, c) $in le_rel
+        =>:
+            (mul(a, c), mul(b, c)) $in le_rel
+    by thm ring_sub_nonnegative_of_le(A, add, zero, neg, mul, one, le_rel, a, b)
+    (zero, mul(add(b, neg(a)), c)) $in le_rel
+    by thm neg_mul_left(A, add, zero, neg, mul, one, a, c)
+    mul(add(b, neg(a)), c) = add(mul(b, c), mul(neg(a), c)) = add(mul(b, c), neg(mul(a, c)))
+    by thm ring_le_of_sub_nonnegative(A, add, zero, neg, mul, one, le_rel, mul(a, c), mul(b, c))
+
+setting MetricSpaceSetting:
+    X set
+    dist fn(x, y X) R
+    forall u, v X:
+        dist(u, v) >= 0
+    forall u, v X:
+        dist(u, v) = 0
+        =>:
+            u = v
+    forall u, v X:
+        u = v
+        =>:
+            dist(u, v) = 0
+    forall u, v X:
+        dist(u, v) = dist(v, u)
+    forall u, v, w X:
+        dist(u, w) <= dist(u, v) + dist(v, w)
+
+thm metric_distance_nonnegative:
+    ? forall [MetricSpaceSetting], x, y X:
+        dist(x, y) >= 0
+
+thm metric_eq_of_distance_zero:
+    ? forall [MetricSpaceSetting], x, y X:
+        dist(x, y) = 0
+        =>:
+            x = y
+
+thm metric_distance_self_zero:
+    ? forall [MetricSpaceSetting], x X:
+        dist(x, x) = 0

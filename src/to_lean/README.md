@@ -86,6 +86,17 @@ proofs, then normalizes the cited proposition and target through the recorded
 equalities. A citation that changes its proposition without such structured
 evidence becomes `OtherUnsupported` rather than an unchecked `exact`.
 
+The equality store remains a compact proof forest rather than an all-pairs
+closure or a shortest-path table. Redundant equalities, side branches, and
+disconnected classes therefore do not become dependencies merely because they
+were visible during verification. While the successful verifier scope is still
+alive, it freezes the chosen oriented edges together with the source and edge
+`FactId`s into `EqualityTransportEvidence`. To-Lean lowering consumes that
+certificate directly; it does not search expired environments or identify an
+edge again from printed text. An equality obtained only through a verifier
+backend whose derivation is not represented in compiler IR is rejected at this
+boundary instead of being emitted without proof provenance.
+
 Known-forall evidence retains each parameter name, typed argument object,
 translated binder type, and recursively verified requirement. Parameter-type
 checks are kept separately from actual domain premises: Lean realizes the
@@ -180,7 +191,7 @@ becoming an undefined Lean name.
 
 ## Active tracer
 
-[`examples/01_proof_patterns/to_lean_ir_mvp.lit`](../../examples/01_proof_patterns/to_lean_ir_mvp.lit)
+[`examples/05_compiler_interop/to_lean_ir_mvp.lit`](../../examples/05_compiler_interop/to_lean_ir_mvp.lit)
 covers the full first vertical slice: abstract proposition, concrete
 proposition, trusted forall, explicit known-forall arguments and requirements,
 direct-instance-to-goal normalization, definition proof, temporary-premise
@@ -190,7 +201,7 @@ Rust and Litex gates:
 
 ```text
 cargo test --release to_lean:: -- --nocapture
-target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/to_lean_ir_mvp.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
 ```
 
 Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
@@ -200,12 +211,16 @@ LITEX_LEAN_PROJECT=/path/to/mathlib-project \
   cargo test --release generated_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
 ```
 
-For scratch work, this command first verifies `examples/tmp.lit`, generates its
-Lean translation, and appends the generated code to that file inside a
-triple-quoted Litex comment:
+For scratch work, these commands first verify `examples/tmp.lit`,
+`examples/tmp1.lit`, or `examples/tmp2.lit`, generate the corresponding Lean
+translation, and append it to that file inside a triple-quoted Litex comment.
+`tmp2.lit` is also the equality-path gallery, including clean, reversed,
+redundant, branched, disconnected, repeated-argument, and independent paths.
 
 ```text
 cargo test --release run_tmp0_to_lean -- --nocapture
+cargo test --release run_tmp1_to_lean -- --nocapture
+cargo test --release run_tmp2_to_lean -- --nocapture
 ```
 
 The source file is left unchanged when verification or Lean generation fails.

@@ -1,0 +1,62 @@
+# Analytic model of the Euclidean plane over R.
+
+have points set = cart(R, R)
+
+# Coordinate-consuming definitions use the exact Cartesian carrier because it
+# exposes projection metadata that the public alias `points` currently loses.
+have fn vec(A, B cart(R, R)) cart(R, R) = (B[1] - A[1], B[2] - A[2])
+
+have fn dot(u, v cart(R, R)) R = u[1] * v[1] + u[2] * v[2]
+
+have fn det(u, v cart(R, R)) R = u[1] * v[2] - u[2] * v[1]
+
+have fn distance_sq(A, B cart(R, R)) R = dot(vec(A, B), vec(A, B))
+
+prop is_collinear(p, q, r cart(R, R)):
+    det(vec(p, q), vec(p, r)) = 0
+
+have fn line(a, b, c R: a != 0 or b != 0) power_set(cart(R, R)) = {p cart(R, R): a * p[1] + b * p[2] + c = 0}
+
+prop is_line(L power_set(cart(R, R))):
+    exist a, b, c R st {a != 0 or b != 0, L = line(a, b, c)}
+
+have lines set = {L power_set(cart(R, R)): $is_line(L)}
+
+prop are_segments_congruent(a, b, c, d cart(R, R)):
+    distance_sq(a, b) = distance_sq(c, d)
+
+have fn circle(o cart(R, R), r R+) power_set(cart(R, R)) = {p cart(R, R): distance_sq(o, p) = r^2}
+
+prop is_equilateral_triangle(a, b, c cart(R, R)):
+    a != b
+    $are_segments_congruent(a, b, a, c)
+    $are_segments_congruent(a, b, b, c)
+
+# Undirected angles are compared through positively proportional
+# (dot product, absolute determinant) invariants.
+prop are_angles_congruent(p, q, r, u, v, w cart(R, R)):
+    p != q
+    r != q
+    u != v
+    w != v
+    exist k R+ st {dot(vec(q, p), vec(q, r)) = k * dot(vec(v, u), vec(v, w)), abs(det(vec(q, p), vec(q, r))) = k * abs(det(vec(v, u), vec(v, w)))}
+
+prop are_triangles_congruent(p, q, r, u, v, w cart(R, R)):
+    $are_segments_congruent(p, q, u, v)
+    $are_segments_congruent(q, r, v, w)
+    $are_segments_congruent(r, p, w, u)
+
+# Checked use probes: carrier transport, 3-4-5 distance, and line incidence.
+(0, 0) $in cart(R, R)
+(0, 0) $in points
+
+(3, 4) $in cart(R, R)
+vec((0, 0), (3, 4)) = (3, 4)
+dot((3, 4), (3, 4)) = 25
+distance_sq((0, 0), (3, 4)) = dot(vec((0, 0), (3, 4)), vec((0, 0), (3, 4)))
+distance_sq((0, 0), (3, 4)) = 25
+
+(2, 2) $in cart(R, R)
+1 != 0
+1 * 2 + (-1) * 2 + 0 = 0
+(2, 2) $in line(1, -1, 0)

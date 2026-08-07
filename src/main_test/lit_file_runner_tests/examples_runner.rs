@@ -60,7 +60,7 @@ fn print_run_examples_timing_summary(
     );
     if examples_ran {
         println!(
-            "  phase 1 (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual.md ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
+            "  phase 1 (selected examples/**/*.lit + docs/Manual.md ```litex```): sum of runs: {:.2} ms  |  wall: {:.2} ms",
             examples_sum_ms, examples_phase_wall_ms
         );
     }
@@ -559,9 +559,6 @@ fn collect_examples_phase1_groups(
     } else {
         Vec::new()
     };
-    let dataset_gallery_md_dir = manifest_dir.join("examples").join("07_dataset_gallery");
-    let dataset_gallery_md_paths = collect_markdown_files_under_dir_sorted(&dataset_gallery_md_dir);
-
     let mut phase1_groups: Vec<LitexRunGroup> = Vec::new();
     for lit_file_path in lit_file_paths.iter() {
         let lit_file_path_str = match lit_file_path.to_str() {
@@ -595,7 +592,6 @@ fn collect_examples_phase1_groups(
         });
     }
     push_markdown_run_groups(&mut phase1_groups, manifest_dir, &manual_md_paths);
-    push_markdown_run_groups(&mut phase1_groups, manifest_dir, &dataset_gallery_md_paths);
     phase1_groups
 }
 
@@ -760,9 +756,9 @@ fn print_docs_timing_summary(
 
 fn examples_phase_label(include_manual_docs: bool) -> &'static str {
     if include_manual_docs {
-        "phase 1 (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex``` + docs/Manual.md ```litex```)"
+        "phase 1 (selected examples/**/*.lit + docs/Manual.md ```litex```)"
     } else {
-        "examples dataset (selected examples/**/*.lit + examples/07_dataset_gallery/**/*.md ```litex```)"
+        "examples dataset (selected examples/**/*.lit)"
     }
 }
 

@@ -1,0 +1,79 @@
+# Shared number-theory interfaces for The Mechanics of Litex Proof.
+#
+# `gcd(a, b)` and `$prime(p)` are native Litex vocabulary. Their transparent
+# finite-divisor and trial-division constructions remain available from
+# `std/basics`; this file keeps the textbook-facing theorem names used in
+# Chapter 7.
+
+prop divides(a Z, b Z):
+    exist k Z st {b = a * k}
+
+thm gcd_positive:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            gcd(a, b) $in N+
+    by thm basics::gcd_positive(a, b)
+
+thm gcd_divides_left:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), a)
+    by thm basics::gcd_divides_left(a, b)
+    obtain k from exist k Z st {a = gcd(a, b) * k}
+    witness exist t Z st {a = gcd(a, b) * t} from k
+    by def:
+        ? $divides(gcd(a, b), a)
+
+thm gcd_divides_right:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            $divides(gcd(a, b), b)
+    by thm basics::gcd_divides_right(a, b)
+    obtain k from exist k Z st {b = gcd(a, b) * k}
+    witness exist t Z st {b = gcd(a, b) * t} from k
+    by def:
+        ? $divides(gcd(a, b), b)
+
+thm common_divisor_le_gcd:
+    ? forall a, b Z, d N+:
+        a != 0 or b != 0
+        $divides(d, a)
+        $divides(d, b)
+        =>:
+            d <= gcd(a, b)
+    by def:
+        ? $basics::divides(d, a)
+    by def:
+        ? $basics::divides(d, b)
+    by thm basics::common_divisor_le_gcd(a, b, d)
+
+thm gcd_euclidean_base:
+    ? forall a Z:
+        a != 0
+        =>:
+            gcd(a, 0) = abs(a)
+    by thm basics::gcd_euclidean_base(a)
+
+thm gcd_euclidean_step:
+    ? forall a, b Z:
+        b != 0
+        =>:
+            gcd(a, b) = gcd(b, a % abs(b))
+    by thm basics::gcd_euclidean_step(a, b)
+
+thm bezout_identity:
+    ? forall a, b Z:
+        a != 0 or b != 0
+        =>:
+            exist x Z, y Z st {gcd(a, b) = x * a + y * b}
+    by thm basics::bezout_identity(a, b)
+
+thm gcd_of_prime_is_one_or_prime:
+    ? forall a Z, p N+:
+        $prime(p)
+        =>:
+            gcd(a, p) = 1 or gcd(a, p) = p
+    by thm basics::gcd_of_prime_is_one_or_prime(a, p)

@@ -1,0 +1,155 @@
+# Chapter 2. Sums.
+# The chapter develops finite summation, transformations of sums, finite
+# calculus, and the source's definition of absolutely convergent infinite sums.
+
+# Equations (2.1)--(2.5). Builtin sum uses a nonempty closed interval, so this
+# wrapper makes the source's empty-sum convention explicit.
+have fn finite_integer_sum(first, last Z, term fn(term_index_21 Z) Z) Z by cases:
+    case first <= last: sum(first, last, term)
+    case first > last: 0
+
+have fn iverson_le(left, right Z) N by cases:
+    case left <= right: 1
+    case left > right: 0
+
+finite_integer_sum(3, 2, fn(empty_index Z) Z {empty_index}) = 0
+finite_integer_sum(1, 1, fn(one_index Z) Z {one_index}) = sum(1, 1, fn(one_index Z) Z {one_index}) = fn(one_index Z) Z {one_index}(1) = 1
+fn(two_index Z) Z {two_index}(1) = 1
+fn(two_index Z) Z {two_index}(2) = 2
+finite_integer_sum(1, 2, fn(two_index Z) Z {two_index}) = sum(1, 2, fn(two_index Z) Z {two_index}) = sum(1, 1, fn(two_index Z) Z {two_index}) + fn(two_index Z) Z {two_index}(2) = 1 + 2 = 3
+iverson_le(3, 5) = 1
+iverson_le(5, 3) = 0
+
+thm finite_integer_sum_shift:
+    ? forall first, last Z, term fn(term_index_shift Z) Z:
+        first <= last
+        =>:
+            finite_integer_sum(first, last, term) = finite_integer_sum(first - 1, last - 1, fn(shifted_index Z) Z {term(shifted_index + 1)})
+    trust:
+        finite_integer_sum(first, last, term) = finite_integer_sum(first - 1, last - 1, fn(shifted_index Z) Z {term(shifted_index + 1)})
+
+# Equation (2.6). The generic singleton rule for builtin sum is not currently
+# exposed, so the source recurrence is the executable definition; equivalence
+# with the builtin finite fold is the exact specification boundary.
+# The direct natural-predecessor builtin rule makes the recursive call
+# well-defined in the positive-N branch.
+have fn prefix_sum_Z(n N, term fn(prefix_term_index N) Z) Z by induc n from 0:
+    case n = 0: term(0)
+    case n > 0: prefix_sum_Z(n - 1, term) + term(n)
+
+trust forall n N, term fn(prefix_sum_equiv_index N) Z:
+    prefix_sum_Z(n, term) = sum(0, n, term)
+
+prefix_sum_Z(0, fn(identity_index_26 N) Z {identity_index_26}) = fn(identity_index_26 N) Z {identity_index_26}(0) = 0
+prefix_sum_Z(1, fn(identity_index_26 N) Z {identity_index_26}) = prefix_sum_Z(0, fn(identity_index_26 N) Z {identity_index_26}) + fn(identity_index_26 N) Z {identity_index_26}(1) = 0 + 1 = 1
+prefix_sum_Z(2, fn(identity_index_26 N) Z {identity_index_26}) = prefix_sum_Z(1, fn(identity_index_26 N) Z {identity_index_26}) + fn(identity_index_26 N) Z {identity_index_26}(2) = 1 + 2 = 3
+prefix_sum_Z(3, fn(identity_index_26 N) Z {identity_index_26}) = prefix_sum_Z(2, fn(identity_index_26 N) Z {identity_index_26}) + fn(identity_index_26 N) Z {identity_index_26}(3) = 3 + 3 = 6
+
+# Equations (2.7)--(2.8). The triangular coefficient is defined recursively
+# so its N carrier is constructive; the quotient form n(n+1)/2 needs a
+# separate divisibility argument that the current verifier does not infer.
+have fn affine_prefix_recurrence(alpha, beta, gamma Z, n N) Z by induc n from 0:
+    case n = 0: alpha
+    case n > 0: affine_prefix_recurrence(alpha, beta, gamma, n - 1) + beta + gamma * n
+
+have fn triangular_coefficient(n N) N by induc n from 0:
+    case n = 0: 0
+    case n > 0: triangular_coefficient(n - 1) + n
+
+thm affine_prefix_closed_form:
+    ? forall alpha, beta, gamma Z, n N:
+        affine_prefix_recurrence(alpha, beta, gamma, n) = alpha + beta * n + gamma * triangular_coefficient(n)
+    trust:
+        affine_prefix_recurrence(alpha, beta, gamma, n) = alpha + beta * n + gamma * triangular_coefficient(n)
+
+claim:
+    ? forall alpha, beta, gamma Z:
+        affine_prefix_recurrence(alpha, beta, gamma, 0) = alpha
+        affine_prefix_recurrence(alpha, beta, gamma, 1) = alpha + beta + gamma
+        affine_prefix_recurrence(alpha, beta, gamma, 2) = alpha + 2 * beta + 3 * gamma
+    affine_prefix_recurrence(alpha, beta, gamma, 0) = alpha
+    affine_prefix_recurrence(alpha, beta, gamma, 1) = affine_prefix_recurrence(alpha, beta, gamma, 0) + beta + gamma * 1 = alpha + beta + gamma
+    affine_prefix_recurrence(alpha, beta, gamma, 2) = affine_prefix_recurrence(alpha, beta, gamma, 1) + beta + gamma * 2 = alpha + beta + gamma + beta + gamma * 2 = alpha + 2 * beta + 3 * gamma
+
+# Equations (2.9)--(2.11). The recurrence and summation-factor conditions are
+# relations on arbitrary real sequences. The general finite-product formula
+# keeps its nonzero denominator visible; Hanoi's factor is also executable.
+prop is_first_order_linear_recurrence_29(a, b, c, T fn(recurrence_index_29 N) R):
+    forall n N+:
+        a(n) * T(n) = b(n) * T(n - 1) + c(n)
+
+prop is_summation_factor_29(a, b, s fn(factor_index_29 N) R):
+    forall n N+:
+        s(n) * b(n) = s(n - 1) * a(n - 1)
+
+have fn scaled_recurrence_value_210(n N, s, a, T fn(scaled_index_210 N) R) R = s(n) * a(n) * T(n)
+
+thm summation_factor_step_210:
+    ? forall a, b, c, T, s fn(step_index_210 N) R, n N+:
+        $is_first_order_linear_recurrence_29(a, b, c, T)
+        $is_summation_factor_29(a, b, s)
+        =>:
+            scaled_recurrence_value_210(n, s, a, T) = scaled_recurrence_value_210(n - 1, s, a, T) + s(n) * c(n)
+    trust:
+        scaled_recurrence_value_210(n, s, a, T) = scaled_recurrence_value_210(n - 1, s, a, T) + s(n) * c(n)
+
+thm summation_factor_solution_210:
+    ? forall a, b, c, T, s fn(solution_index_210 N) R, n N+:
+        $is_first_order_linear_recurrence_29(a, b, c, T)
+        $is_summation_factor_29(a, b, s)
+        s(n) != 0
+        a(n) != 0
+        =>:
+            T(n) = (s(1) * b(1) * T(0) + sum(1, n, fn(k N+) R {s(k) * c(k)})) / (s(n) * a(n))
+    trust:
+        T(n) = (s(1) * b(1) * T(0) + sum(1, n, fn(k N+) R {s(k) * c(k)})) / (s(n) * a(n))
+
+have fn finite_coefficient_product_211(first, last N, term fn(product_index_211 N) R) R by cases:
+    case first <= last: product(first, last, term)
+    case first > last: 1
+
+thm summation_factor_product_formula_211:
+    ? forall a, b, s fn(product_formula_index_211 N) R, n N+:
+        $is_summation_factor_29(a, b, s)
+        finite_coefficient_product_211(2, n, b) != 0
+        =>:
+            s(n) = s(1) * finite_coefficient_product_211(1, n - 1, a) / finite_coefficient_product_211(2, n, b)
+    trust:
+        s(n) = s(1) * finite_coefficient_product_211(1, n - 1, a) / finite_coefficient_product_211(2, n, b)
+
+have fn hanoi_summation_factor_211(n N+) R by induc n from 1:
+    case n = 1: 1 / 2
+    case n > 1: hanoi_summation_factor_211(n - 1) / 2
+
+hanoi_summation_factor_211(1) = 1 / 2
+hanoi_summation_factor_211(2) = hanoi_summation_factor_211(1) / 2 = 1 / 4
+hanoi_summation_factor_211(3) = hanoi_summation_factor_211(2) / 2 = 1 / 8
+
+# Equations (2.12)--(2.14). Harmonic numbers are executable. The quicksort
+# average uses the source closed form, while both source recurrences remain
+# visible as exact guarded specifications.
+have fn harmonic_number_213(n N) R by induc n from 0:
+    case n = 0: 0
+    case n > 0: harmonic_number_213(n - 1) + 1 / n
+
+have fn quicksort_average_comparisons_214(n N) R = 2 * (n + 1) * harmonic_number_213(n) - 2 * n
+
+thm quicksort_average_recurrence_212:
+    ? forall n N+:
+        quicksort_average_comparisons_214(n) = n + 1 + 2 * sum(0, n - 1, fn(k N) R {quicksort_average_comparisons_214(k)}) / n
+    trust:
+        quicksort_average_comparisons_214(n) = n + 1 + 2 * sum(0, n - 1, fn(k N) R {quicksort_average_comparisons_214(k)}) / n
+
+thm quicksort_reduced_recurrence_212:
+    ? forall n N+:
+        n * quicksort_average_comparisons_214(n) = (n + 1) * quicksort_average_comparisons_214(n - 1) + 2 * n
+    trust:
+        n * quicksort_average_comparisons_214(n) = (n + 1) * quicksort_average_comparisons_214(n - 1) + 2 * n
+
+harmonic_number_213(0) = 0
+harmonic_number_213(1) = harmonic_number_213(0) + 1 / 1 = 1
+harmonic_number_213(2) = harmonic_number_213(1) + 1 / 2 = 3 / 2
+
+quicksort_average_comparisons_214(0) = 2 * (0 + 1) * harmonic_number_213(0) - 2 * 0 = 0
+quicksort_average_comparisons_214(1) = 2 * (1 + 1) * harmonic_number_213(1) - 2 * 1 = 2
+quicksort_average_comparisons_214(2) = 2 * (2 + 1) * harmonic_number_213(2) - 2 * 2 = 5

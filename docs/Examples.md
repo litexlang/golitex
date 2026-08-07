@@ -13,9 +13,13 @@ These examples are a learning path from small checked facts to small mathematica
 
 ## What Is Internal?
 
-`examples/_internal/` contains regression tests, scratch files, fixtures, and implementation-oriented checks. It is useful for developers, but it is not the right entry point for a new reader.
+[`examples/README.md`](../examples/README.md) maps the runnable files to this
+reading path. `examples/_internal/` contains named regressions, fixtures,
+drafts, compiler work, and proof journals; it is useful for developers, but it
+is not the right entry point for a new reader.
 
-`examples/tmp.lit` is a local scratch file used by short verifier experiments.
+`examples/tmp.lit` is the one local scratch entrypoint used by short verifier
+experiments. It is deliberately excluded from the main examples harness.
 
 ---
 
@@ -1992,7 +1996,7 @@ forall x R:
 ```
 
 For a complete checked sample, see
-[`examples/01_proof_patterns/trigonometric_builtin_rules.lit`](../examples/01_proof_patterns/trigonometric_builtin_rules.lit).
+[`examples/02_builtin_math/trigonometric_builtin_rules.lit`](../examples/02_builtin_math/trigonometric_builtin_rules.lit).
 
 ### 2.3. Native Gcd And Prime
 
@@ -2019,7 +2023,7 @@ trial-divisor definition. Arguments known only to lie in `Z` or `R` remain
 outside the predicate's domain.
 
 For symbolic examples, see
-[`examples/01_proof_patterns/gcd_and_prime_builtin.lit`](../examples/01_proof_patterns/gcd_and_prime_builtin.lit).
+[`examples/02_builtin_math/gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit).
 
 ### 3. Common Builtin Rules
 

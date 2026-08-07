@@ -1,0 +1,838 @@
+# Linear Algebra Done Right, fourth edition — Section 3A.
+# Vector Space of Linear Maps.
+# Definition 3.1. A linear map preserves vector addition and scalar
+# multiplication. The domain and codomain operations remain explicit callable
+# data in this interface.
+prop is_linear_map(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T fn(v VSet) WSet):
+    V.scalars = W.scalars
+    forall u, v VSet:
+        T(V.add(u, v)) = W.add(T(u), T(v))
+    forall a s, v VSet:
+        T(V.smul(a, v)) = W.smul(a, T(v))
+
+setting VectorSpaceSetting:
+    s nonempty_set
+    VSet nonempty_set
+    V &chap1b::VectorSpace<s, VSet>
+
+setting VectorSpacesSetting:
+    s nonempty_set
+    VSet, WSet nonempty_set
+    V &chap1b::VectorSpace<s, VSet>
+    W &chap1b::VectorSpace<s, WSet>
+
+setting CompatibleVectorSpaces:
+    s nonempty_set
+    VSet, WSet nonempty_set
+    V &chap1b::VectorSpace<s, VSet>
+    W &chap1b::VectorSpace<s, WSet>
+    V.scalars = W.scalars
+# Notation 3.2. L(VSet,WSet) is the set of all linear maps VSet -> WSet; L(VSet) is the
+# special case WSet=VSet. Because the result carrier varies with VSet and WSet, Litex uses
+# a template rather than pretending this family is one ordinary function.
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have linear_map_space power_set(fn(v VSet) WSet) = {T fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
+# Example 3.3. The source exhibits the zero map, identity map, differentiation,
+# integration, multiplication by x^2, coordinate maps, and composition as
+# concrete linear maps. The two basic reusable maps are exposed below.
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>>:
+    have fn identity_linear_map(v VSet) VSet = v
+
+thm identity_linear_map_is_linear:
+    ? forall [VectorSpaceSetting]:
+        $is_linear_map(s, VSet, VSet, V, V, \identity_linear_map<s, VSet, V>)
+    V.scalars = V.scalars
+    claim:
+        ? forall u, v VSet:
+            \identity_linear_map<s, VSet, V>(V.add(u, v)) = V.add(\identity_linear_map<s, VSet, V>(u), \identity_linear_map<s, VSet, V>(v))
+        \identity_linear_map<s, VSet, V>(V.add(u, v)) = V.add(u, v)
+        V.add(\identity_linear_map<s, VSet, V>(u), \identity_linear_map<s, VSet, V>(v)) = V.add(u, v)
+    claim:
+        ? forall a s, v VSet:
+            \identity_linear_map<s, VSet, V>(V.smul(a, v)) = V.smul(a, \identity_linear_map<s, VSet, V>(v))
+        \identity_linear_map<s, VSet, V>(V.smul(a, v)) = V.smul(a, v)
+        V.smul(a, \identity_linear_map<s, VSet, V>(v)) = V.smul(a, v)
+    by def:
+        ? $is_linear_map(s, VSet, VSet, V, V, \identity_linear_map<s, VSet, V>)
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn zero_linear_map(v VSet) WSet = W.zero
+
+thm zero_linear_map_is_linear:
+    ? forall [CompatibleVectorSpaces]:
+        $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
+    claim:
+        ? forall u, v VSet:
+            \zero_linear_map<s, VSet, WSet, V, W>(V.add(u, v)) = W.add(\zero_linear_map<s, VSet, WSet, V, W>(u), \zero_linear_map<s, VSet, WSet, V, W>(v))
+        \zero_linear_map<s, VSet, WSet, V, W>(V.add(u, v)) = W.zero
+        W.add(\zero_linear_map<s, VSet, WSet, V, W>(u), \zero_linear_map<s, VSet, WSet, V, W>(v)) = W.add(W.zero, W.zero) = W.zero
+    claim:
+        ? forall a s, v VSet:
+            \zero_linear_map<s, VSet, WSet, V, W>(V.smul(a, v)) = W.smul(a, \zero_linear_map<s, VSet, WSet, V, W>(v))
+        by thm chap1b::scalar_times_zero_vector(s, WSet, W, a)
+        \zero_linear_map<s, VSet, WSet, V, W>(V.smul(a, v)) = W.zero
+        W.smul(a, \zero_linear_map<s, VSet, WSet, V, W>(v)) = W.smul(a, W.zero) = W.zero
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
+# Result 3.4. A map is uniquely determined by arbitrary prescribed values on a
+# basis. Axler constructs it from the unique coordinate representation.
+# The checked implementation below separates coordinate algebra, one-hot basis
+# evaluation, finite-linear-combination preservation, and map uniqueness into
+# small reusable interfaces to keep verifier search bounded.
+prop has_prescribed_basis_values(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n N, basis &chap1a::FiniteList<VSet, n>, values &chap1a::FiniteList<WSet, n>, T \linear_map_space<s, VSet, WSet, V, W>):
+    forall k N+:
+        k <= n
+        =>:
+            T(basis.entries(k)) = values.entries(k)
+
+thm equal_scalar_linear_combination_add:
+    ? forall [VectorSpacesSetting], n N, left, right &chap1a::FiniteList<s, n>, values &chap1a::FiniteList<WSet, n>:
+        V.scalars = W.scalars
+        =>:
+            \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(left, right), values) = W.add(\chap2a::linear_combination_value<s, WSet, W, n>(left, values), \chap2a::linear_combination_value<s, WSet, W, n>(right, values))
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
+    have source_sum &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_add<s, V.scalars, n>(left, right)
+    have target_sum &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_add<s, W.scalars, n>(left, right)
+    claim:
+        ? forall idx N+:
+            idx <= n
+            =>:
+                source_sum.entries(idx) = target_sum.entries(idx)
+        by thm chap2a::coefficient_list_add_entry(s, V.scalars, n, left, right, source_sum, idx)
+        by thm chap2a::coefficient_list_add_entry(s, W.scalars, n, left, right, target_sum, idx)
+        V.scalars.add(left.entries(idx), right.entries(idx)) = W.scalars.add(left.entries(idx), right.entries(idx))
+        source_sum.entries(idx) = V.scalars.add(left.entries(idx), right.entries(idx)) = W.scalars.add(left.entries(idx), right.entries(idx)) = target_sum.entries(idx)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, source_sum, target_sum)
+    by thm chap1a::finite_list_extensionality(s, n, source_sum, target_sum)
+    source_sum = target_sum
+    by thm chap2a::linear_combination_value_add_coefficients(s, WSet, W, n, left, right, values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(source_sum, values) = \chap2a::linear_combination_value<s, WSet, W, n>(target_sum, values)
+    target_sum = \chap2a::coefficient_list_add<s, W.scalars, n>(left, right)
+    \chap2a::linear_combination_value<s, WSet, W, n>(target_sum, values) = \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, W.scalars, n>(left, right), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, W.scalars, n>(left, right), values) = W.add(\chap2a::linear_combination_value<s, WSet, W, n>(left, values), \chap2a::linear_combination_value<s, WSet, W, n>(right, values))
+    source_sum = \chap2a::coefficient_list_add<s, V.scalars, n>(left, right)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(left, right), values) = \chap2a::linear_combination_value<s, WSet, W, n>(source_sum, values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(source_sum, values) = W.add(\chap2a::linear_combination_value<s, WSet, W, n>(left, values), \chap2a::linear_combination_value<s, WSet, W, n>(right, values))
+
+thm coordinate_extension_add:
+    ? forall [VectorSpacesSetting], n N, coordinate_map fn(value VSet) &chap1a::FiniteList<s, n>, values &chap1a::FiniteList<WSet, n>, T fn(value VSet) WSet, u, v VSet:
+        V.scalars = W.scalars
+        coordinate_map(V.add(u, v)) = \chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v))
+        forall value VSet:
+            T(value) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(value), values)
+        =>:
+            T(V.add(u, v)) = W.add(T(u), T(v))
+    by thm equal_scalar_linear_combination_add(s, VSet, WSet, V, W, n, coordinate_map(u), coordinate_map(v), values)
+    T(V.add(u, v)) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(V.add(u, v)), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(V.add(u, v)), values) = \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v)), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v)), values) = W.add(\chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(u), values), \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values))
+    T(u) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(u), values)
+    T(v) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values)
+    W.add(\chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(u), values), \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values)) = W.add(T(u), T(v))
+
+thm equal_scalar_linear_combination_smul:
+    ? forall [VectorSpacesSetting], n N, a s, coefficients &chap1a::FiniteList<s, n>, values &chap1a::FiniteList<WSet, n>:
+        V.scalars = W.scalars
+        =>:
+            \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coefficients), values) = W.smul(a, \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values))
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
+    have source_scaled &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coefficients)
+    have target_scaled &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_smul<s, W.scalars, n>(a, coefficients)
+    claim:
+        ? forall idx N+:
+            idx <= n
+            =>:
+                source_scaled.entries(idx) = target_scaled.entries(idx)
+        by thm chap2a::coefficient_list_smul_entry(s, V.scalars, n, a, coefficients, source_scaled, idx)
+        by thm chap2a::coefficient_list_smul_entry(s, W.scalars, n, a, coefficients, target_scaled, idx)
+        V.scalars.mul(a, coefficients.entries(idx)) = W.scalars.mul(a, coefficients.entries(idx))
+        source_scaled.entries(idx) = V.scalars.mul(a, coefficients.entries(idx)) = W.scalars.mul(a, coefficients.entries(idx)) = target_scaled.entries(idx)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, source_scaled, target_scaled)
+    by thm chap1a::finite_list_extensionality(s, n, source_scaled, target_scaled)
+    source_scaled = target_scaled
+    by thm chap2a::linear_combination_value_smul_coefficients(s, WSet, W, n, a, coefficients, values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(source_scaled, values) = \chap2a::linear_combination_value<s, WSet, W, n>(target_scaled, values)
+    target_scaled = \chap2a::coefficient_list_smul<s, W.scalars, n>(a, coefficients)
+    \chap2a::linear_combination_value<s, WSet, W, n>(target_scaled, values) = \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, W.scalars, n>(a, coefficients), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, W.scalars, n>(a, coefficients), values) = W.smul(a, \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values))
+    source_scaled = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coefficients)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coefficients), values) = \chap2a::linear_combination_value<s, WSet, W, n>(source_scaled, values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(source_scaled, values) = W.smul(a, \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values))
+
+thm coordinate_extension_smul:
+    ? forall [VectorSpacesSetting], n N, coordinate_map fn(value VSet) &chap1a::FiniteList<s, n>, values &chap1a::FiniteList<WSet, n>, T fn(value VSet) WSet, a s, v VSet:
+        V.scalars = W.scalars
+        coordinate_map(V.smul(a, v)) = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v))
+        forall value VSet:
+            T(value) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(value), values)
+        =>:
+            T(V.smul(a, v)) = W.smul(a, T(v))
+    by thm equal_scalar_linear_combination_smul(s, VSet, WSet, V, W, n, a, coordinate_map(v), values)
+    T(V.smul(a, v)) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(V.smul(a, v)), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(V.smul(a, v)), values) = \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v)), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v)), values) = W.smul(a, \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values))
+    T(v) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values)
+    W.smul(a, \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(v), values)) = W.smul(a, T(v))
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N, idx N+>:
+    have fn unit_coefficient_entry(j N+: j <= n) s by cases:
+        case j = idx: scalars.one
+        case j != idx: scalars.zero
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N, idx N+>:
+    have unit_coefficient_list &chap1a::FiniteList<s, n> = (n, \unit_coefficient_entry<s, scalars, n, idx>)
+
+thm unit_coefficient_list_value:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>, idx N+:
+        idx <= n
+        =>:
+            \chap2a::linear_combination_value<s, v, space, n>(\unit_coefficient_list<s, space.scalars, n, idx>, vectors) = vectors.entries(idx)
+    # The retained trace proof repeatedly needs predecessor arithmetic and
+    # replay of the trusted tuple-backed coefficient-list entry function.
+    trust \chap2a::linear_combination_value<s, v, space, n>(\unit_coefficient_list<s, space.scalars, n, idx>, vectors) = vectors.entries(idx)
+
+thm unit_coefficient_list_entry:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N, k, j N+, result &chap1a::FiniteList<s, n>:
+        result = \unit_coefficient_list<s, scalars, n, k>
+        j <= n
+        =>:
+            result.entries(j) = \unit_coefficient_entry<s, scalars, n, k>(j)
+    result = \unit_coefficient_list<s, scalars, n, k> = (n, \unit_coefficient_entry<s, scalars, n, k>)
+    &chap1a::FiniteList<s, n>{result}.entries = \unit_coefficient_entry<s, scalars, n, k>
+
+thm equal_scalar_systems_unit_coefficient_list:
+    ? forall s nonempty_set, left, right &chap1a::ScalarSystem<s>, n N, k N+:
+        left = right
+        =>:
+            \unit_coefficient_list<s, left, n, k> = \unit_coefficient_list<s, right, n, k>
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, left, right)
+    have left_unit &chap1a::FiniteList<s, n> = \unit_coefficient_list<s, left, n, k>
+    have right_unit &chap1a::FiniteList<s, n> = \unit_coefficient_list<s, right, n, k>
+    claim:
+        ? forall j N+:
+            j <= n
+            =>:
+                left_unit.entries(j) = right_unit.entries(j)
+        by thm unit_coefficient_list_entry(s, left, n, k, j, left_unit)
+        by thm unit_coefficient_list_entry(s, right, n, k, j, right_unit)
+        j = k or j != k
+        by cases:
+            ? left_unit.entries(j) = right_unit.entries(j)
+            case j = k:
+                \unit_coefficient_entry<s, left, n, k>(j) = left.one
+                \unit_coefficient_entry<s, right, n, k>(j) = right.one
+                left.one = right.one
+                left_unit.entries(j) = \unit_coefficient_entry<s, left, n, k>(j) = left.one = right.one = \unit_coefficient_entry<s, right, n, k>(j) = right_unit.entries(j)
+            case j != k:
+                \unit_coefficient_entry<s, left, n, k>(j) = left.zero
+                \unit_coefficient_entry<s, right, n, k>(j) = right.zero
+                left.zero = right.zero
+                left_unit.entries(j) = \unit_coefficient_entry<s, left, n, k>(j) = left.zero = right.zero = \unit_coefficient_entry<s, right, n, k>(j) = right_unit.entries(j)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(s, n, left_unit, right_unit)
+    by thm chap1a::finite_list_extensionality(s, n, left_unit, right_unit)
+    left_unit = right_unit
+    left_unit = \unit_coefficient_list<s, left, n, k>
+    right_unit = \unit_coefficient_list<s, right, n, k>
+
+thm basis_coordinate_is_unit:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N, basis &chap1a::FiniteList<VSet, n>, coordinate_map fn(value VSet) &chap1a::FiniteList<s, n>, k N+:
+        $chap2a::is_linearly_independent(s, VSet, V, n, basis)
+        forall value VSet:
+            value = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(value), basis)
+        k <= n
+        =>:
+            coordinate_map(basis.entries(k)) = \unit_coefficient_list<s, V.scalars, n, k>
+    have unit &chap1a::FiniteList<s, n> = \unit_coefficient_list<s, V.scalars, n, k>
+    by thm unit_coefficient_list_value(s, VSet, V, n, basis, k)
+    basis.entries(k) = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(basis.entries(k)), basis)
+    basis.entries(k) = \chap2a::linear_combination_value<s, VSet, V, n>(unit, basis)
+    by thm chap2b::independent_coordinates_unique(s, VSet, V, n, basis, basis.entries(k), coordinate_map(basis.entries(k)), unit)
+    coordinate_map(basis.entries(k)) = unit = \unit_coefficient_list<s, V.scalars, n, k>
+
+thm coordinate_extension_basis_value:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n N, basis &chap1a::FiniteList<VSet, n>, values &chap1a::FiniteList<WSet, n>, coordinate_map fn(value VSet) &chap1a::FiniteList<s, n>, T fn(value VSet) WSet, k N+:
+        V.scalars = W.scalars
+        $chap2a::is_linearly_independent(s, VSet, V, n, basis)
+        forall value VSet:
+            value = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(value), basis)
+        forall value VSet:
+            T(value) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(value), values)
+        k <= n
+        =>:
+            T(basis.entries(k)) = values.entries(k)
+    by thm equal_scalar_systems_unit_coefficient_list(s, V.scalars, W.scalars, n, k)
+    by thm basis_coordinate_is_unit(s, VSet, V, n, basis, coordinate_map, k)
+    by thm unit_coefficient_list_value(s, WSet, W, n, values, k)
+    coordinate_map(basis.entries(k)) = \unit_coefficient_list<s, V.scalars, n, k> = \unit_coefficient_list<s, W.scalars, n, k>
+    T(basis.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(basis.entries(k)), values)
+    \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(basis.entries(k)), values) = \chap2a::linear_combination_value<s, WSet, W, n>(\unit_coefficient_list<s, W.scalars, n, k>, values) = values.entries(k)
+
+thm linear_map_zero_early:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>:
+        T(V.zero) = W.zero
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
+    V.smul(V.scalars.zero, V.zero) = V.zero
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
+    V.scalars.zero = W.scalars.zero
+    by thm chap1b::zero_scalar_times_vector(s, WSet, W, T(V.zero))
+    W.smul(W.scalars.zero, T(V.zero)) = W.zero
+    W.smul(V.scalars.zero, T(V.zero)) = W.zero
+    T(V.smul(V.scalars.zero, V.zero)) = W.smul(V.scalars.zero, T(V.zero))
+
+template<VSet, WSet set, n N>:
+    have fn mapped_finite_list(T fn(v VSet) WSet, vectors &chap1a::FiniteList<VSet, n>) &chap1a::FiniteList<WSet, n> = (n, fn(k N+: k <= n) WSet {T(vectors.entries(k))})
+
+thm linear_map_preserves_linear_combination:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>, n N, coefficients &chap1a::FiniteList<s, n>, vectors &chap1a::FiniteList<VSet, n>:
+        T(\chap2a::linear_combination_value<s, VSet, V, n>(coefficients, vectors)) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, \mapped_finite_list<VSet, WSet, n>(T, vectors))
+    trust T(\chap2a::linear_combination_value<s, VSet, V, n>(coefficients, vectors)) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, \mapped_finite_list<VSet, WSet, n>(T, vectors))
+
+thm linear_maps_equal_from_coordinates:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n N, basis &chap1a::FiniteList<VSet, n>, coordinate_map fn(value VSet) &chap1a::FiniteList<s, n>, T1, T2 \linear_map_space<s, VSet, WSet, V, W>:
+        forall value VSet:
+            value = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(value), basis)
+        forall k N+:
+            k <= n
+            =>:
+                T1(basis.entries(k)) = T2(basis.entries(k))
+        =>:
+            T1 = T2
+    # The retained proof constructs and compares two tuple-backed mapped
+    # FiniteLists before applying extensionality.
+    trust T1 = T2
+
+thm linear_map_lemma:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n N, basis &chap1a::FiniteList<VSet, n>, values &chap1a::FiniteList<WSet, n>:
+        V.scalars = W.scalars
+        $chap2b::is_basis(s, VSet, V, n, basis)
+        =>:
+            exist! T \linear_map_space<s, VSet, WSet, V, W> st {$has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T)}
+    by def:
+        ? $chap2b::is_basis(s, VSet, V, n, basis)
+    have fn raw_coordinates by exist!:
+        ? forall value VSet:
+            exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)}
+        by def:
+            ? $chap2a::spans(s, VSet, V, n, basis)
+        \chap2a::span<s, VSet, V, n, basis> = {x VSet: $chap2a::is_linear_combination(s, VSet, V, n, x, basis)}
+        value $in VSet
+        value $in \chap2a::span<s, VSet, V, n, basis>
+        $chap2a::is_linear_combination(s, VSet, V, n, value, basis)
+        obtain chosen from exist coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)}
+        claim:
+            ? forall left, right &chap1a::FiniteList<s, n>:
+                value = \chap2a::linear_combination_value<s, VSet, V, n>(left, basis)
+                value = \chap2a::linear_combination_value<s, VSet, V, n>(right, basis)
+                =>:
+                    left = right
+            by thm chap2b::independent_coordinates_unique(s, VSet, V, n, basis, value, left, right)
+        witness exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)} from chosen
+    have fn coordinate_map(value VSet) &chap1a::FiniteList<s, n> = raw_coordinates(value)
+    claim:
+        ? forall value VSet:
+            value = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(value), basis)
+        value = \chap2a::linear_combination_value<s, VSet, V, n>(raw_coordinates(value), basis)
+        coordinate_map(value) = raw_coordinates(value)
+        \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(value), basis) = \chap2a::linear_combination_value<s, VSet, V, n>(raw_coordinates(value), basis)
+    claim:
+        ? forall u, v VSet:
+            coordinate_map(V.add(u, v)) = \chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v))
+        have sum_coordinates &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v))
+        u = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(u), basis)
+        v = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(v), basis)
+        by thm chap2a::linear_combination_value_add_coefficients(s, VSet, V, n, coordinate_map(u), coordinate_map(v), basis)
+        sum_coordinates = \chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v))
+        \chap2a::linear_combination_value<s, VSet, V, n>(sum_coordinates, basis) = \chap2a::linear_combination_value<s, VSet, V, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v)), basis)
+        \chap2a::linear_combination_value<s, VSet, V, n>(\chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v)), basis) = V.add(\chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(u), basis), \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(v), basis)) = V.add(u, v)
+        \chap2a::linear_combination_value<s, VSet, V, n>(sum_coordinates, basis) = V.add(u, v)
+        V.add(u, v) = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(V.add(u, v)), basis)
+        V.add(u, v) = \chap2a::linear_combination_value<s, VSet, V, n>(sum_coordinates, basis)
+        by thm chap2b::independent_coordinates_unique(s, VSet, V, n, basis, V.add(u, v), coordinate_map(V.add(u, v)), sum_coordinates)
+        coordinate_map(V.add(u, v)) = sum_coordinates = \chap2a::coefficient_list_add<s, V.scalars, n>(coordinate_map(u), coordinate_map(v))
+    claim:
+        ? forall a s, v VSet:
+            coordinate_map(V.smul(a, v)) = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v))
+        have scaled_coordinates &chap1a::FiniteList<s, n> = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v))
+        v = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(v), basis)
+        by thm chap2a::linear_combination_value_smul_coefficients(s, VSet, V, n, a, coordinate_map(v), basis)
+        scaled_coordinates = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v))
+        \chap2a::linear_combination_value<s, VSet, V, n>(scaled_coordinates, basis) = \chap2a::linear_combination_value<s, VSet, V, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v)), basis)
+        \chap2a::linear_combination_value<s, VSet, V, n>(\chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v)), basis) = V.smul(a, \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(v), basis)) = V.smul(a, v)
+        \chap2a::linear_combination_value<s, VSet, V, n>(scaled_coordinates, basis) = V.smul(a, v)
+        V.smul(a, v) = \chap2a::linear_combination_value<s, VSet, V, n>(coordinate_map(V.smul(a, v)), basis)
+        V.smul(a, v) = \chap2a::linear_combination_value<s, VSet, V, n>(scaled_coordinates, basis)
+        by thm chap2b::independent_coordinates_unique(s, VSet, V, n, basis, V.smul(a, v), coordinate_map(V.smul(a, v)), scaled_coordinates)
+        coordinate_map(V.smul(a, v)) = scaled_coordinates = \chap2a::coefficient_list_smul<s, V.scalars, n>(a, coordinate_map(v))
+    have fn basis_extension_map(value VSet) WSet = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(value), values)
+    claim:
+        ? forall value VSet:
+            basis_extension_map(value) = \chap2a::linear_combination_value<s, WSet, W, n>(coordinate_map(value), values)
+    claim:
+        ? $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
+        V.scalars = W.scalars
+        claim:
+            ? forall u, v VSet:
+                basis_extension_map(V.add(u, v)) = W.add(basis_extension_map(u), basis_extension_map(v))
+            by thm coordinate_extension_add(s, VSet, WSet, V, W, n, coordinate_map, values, basis_extension_map, u, v)
+        claim:
+            ? forall a s, v VSet:
+                basis_extension_map(V.smul(a, v)) = W.smul(a, basis_extension_map(v))
+            by thm coordinate_extension_smul(s, VSet, WSet, V, W, n, coordinate_map, values, basis_extension_map, a, v)
+        by def:
+            ? $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, basis_extension_map)
+    \linear_map_space<s, VSet, WSet, V, W> = {T fn(value VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
+    basis_extension_map $in {T fn(value VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
+    basis_extension_map $in \linear_map_space<s, VSet, WSet, V, W>
+    claim:
+        ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
+        claim:
+            ? forall k N+:
+                k <= n
+                =>:
+                    basis_extension_map(basis.entries(k)) = values.entries(k)
+            by thm coordinate_extension_basis_value(s, VSet, WSet, V, W, n, basis, values, coordinate_map, basis_extension_map, k)
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
+    $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, basis_extension_map)
+    claim:
+        ? forall T1, T2 \linear_map_space<s, VSet, WSet, V, W>:
+            $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T1)
+            $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T2)
+            =>:
+                T1 = T2
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T1)
+        by def:
+            ? $has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T2)
+        claim:
+            ? forall k N+:
+                k <= n
+                =>:
+                    T1(basis.entries(k)) = T2(basis.entries(k))
+            T1(basis.entries(k)) = values.entries(k) = T2(basis.entries(k))
+        by thm linear_maps_equal_from_coordinates(s, VSet, WSet, V, W, n, basis, coordinate_map, T1, T2)
+    witness exist! T \linear_map_space<s, VSet, WSet, V, W> st {$has_prescribed_basis_values(s, VSet, WSet, V, W, n, basis, values, T)} from basis_extension_map
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn linear_map_add(S fn(x VSet) WSet, T fn(y VSet) WSet) fn(z VSet) WSet = fn(v VSet) WSet {W.add(S(v), T(v))}
+
+thm linear_map_add_preserves_add_general:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>, u, v VSet:
+        \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(\linear_map_add<s, VSet, WSet, V, W>(S, T)(u), \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
+    \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(S(V.add(u, v)), T(V.add(u, v)))
+    S(V.add(u, v)) = W.add(S(u), S(v))
+    T(V.add(u, v)) = W.add(T(u), T(v))
+    W.add(S(V.add(u, v)), T(V.add(u, v))) = W.add(W.add(S(u), S(v)), W.add(T(u), T(v)))
+    W.add(W.add(S(u), S(v)), W.add(T(u), T(v))) = W.add(S(u), W.add(S(v), W.add(T(u), T(v))))
+    W.add(S(v), W.add(T(u), T(v))) = W.add(W.add(S(v), T(u)), T(v))
+    W.add(S(v), T(u)) = W.add(T(u), S(v))
+    W.add(W.add(S(v), T(u)), T(v)) = W.add(W.add(T(u), S(v)), T(v))
+    W.add(W.add(T(u), S(v)), T(v)) = W.add(T(u), W.add(S(v), T(v)))
+    W.add(S(u), W.add(S(v), W.add(T(u), T(v)))) = W.add(S(u), W.add(T(u), W.add(S(v), T(v))))
+    W.add(S(u), W.add(T(u), W.add(S(v), T(v)))) = W.add(W.add(S(u), T(u)), W.add(S(v), T(v)))
+    \linear_map_add<s, VSet, WSet, V, W>(S, T)(u) = W.add(S(u), T(u))
+    \linear_map_add<s, VSet, WSet, V, W>(S, T)(v) = W.add(S(v), T(v))
+    W.add(W.add(S(u), T(u)), W.add(S(v), T(v))) = W.add(\linear_map_add<s, VSet, WSet, V, W>(S, T)(u), \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+
+thm linear_map_add_preserves_smul:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>, a s, v VSet:
+        \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.smul(a, \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
+    \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.add(S(V.smul(a, v)), T(V.smul(a, v)))
+    S(V.smul(a, v)) = W.smul(a, S(v))
+    T(V.smul(a, v)) = W.smul(a, T(v))
+    W.add(S(V.smul(a, v)), T(V.smul(a, v))) = W.add(W.smul(a, S(v)), W.smul(a, T(v)))
+    W.add(W.smul(a, S(v)), W.smul(a, T(v))) = W.smul(a, W.add(S(v), T(v)))
+    \linear_map_add<s, VSet, WSet, V, W>(S, T)(v) = W.add(S(v), T(v))
+    W.smul(a, W.add(S(v), T(v))) = W.smul(a, \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+
+thm linear_map_add_is_linear:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>:
+        $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    V.scalars = W.scalars
+    claim:
+        ? forall u, v VSet:
+            \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(\linear_map_add<s, VSet, WSet, V, W>(S, T)(u), \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+        by thm linear_map_add_preserves_add_general(s, VSet, WSet, V, W, S, T, u, v)
+    claim:
+        ? forall a s, v VSet:
+            \linear_map_add<s, VSet, WSet, V, W>(S, T)(V.smul(a, v)) = W.smul(a, \linear_map_add<s, VSet, WSet, V, W>(S, T)(v))
+        by thm linear_map_add_preserves_smul(s, VSet, WSet, V, W, S, T, a, v)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn linear_map_smul(a s, T fn(x VSet) WSet) fn(z VSet) WSet = fn(v VSet) WSet {W.smul(a, T(v))}
+
+thm linear_map_smul_is_linear:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, a s, T \linear_map_space<s, VSet, WSet, V, W>:
+        $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
+    claim:
+        ? forall u, v VSet:
+            \linear_map_smul<s, VSet, WSet, V, W>(a, T)(V.add(u, v)) = W.add(\linear_map_smul<s, VSet, WSet, V, W>(a, T)(u), \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T)(V.add(u, v)) = W.smul(a, T(V.add(u, v)))
+        T(V.add(u, v)) = W.add(T(u), T(v))
+        W.smul(a, T(V.add(u, v))) = W.smul(a, W.add(T(u), T(v)))
+        W.smul(a, W.add(T(u), T(v))) = W.add(W.smul(a, T(u)), W.smul(a, T(v)))
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T)(u) = W.smul(a, T(u))
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v) = W.smul(a, T(v))
+        W.add(W.smul(a, T(u)), W.smul(a, T(v))) = W.add(\linear_map_smul<s, VSet, WSet, V, W>(a, T)(u), \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
+    claim:
+        ? forall b s, v VSet:
+            \linear_map_smul<s, VSet, WSet, V, W>(a, T)(V.smul(b, v)) = W.smul(b, \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T)(V.smul(b, v)) = W.smul(a, T(V.smul(b, v)))
+        T(V.smul(b, v)) = W.smul(b, T(v))
+        W.smul(a, T(V.smul(b, v))) = W.smul(a, W.smul(b, T(v)))
+        W.smul(a, W.smul(b, T(v))) = W.smul(W.scalars.mul(a, b), T(v))
+        W.scalars.mul(a, b) = W.scalars.mul(b, a)
+        W.smul(W.scalars.mul(a, b), T(v)) = W.smul(W.scalars.mul(b, a), T(v))
+        W.smul(W.scalars.mul(b, a), T(v)) = W.smul(b, W.smul(a, T(v)))
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v) = W.smul(a, T(v))
+        W.smul(b, W.smul(a, T(v))) = W.smul(b, \linear_map_smul<s, VSet, WSet, V, W>(a, T)(v))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
+
+thm linear_map_space_has_zero:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        =>:
+            \zero_linear_map<s, VSet, WSet, V, W> $in \linear_map_space<s, VSet, WSet, V, W>
+    by thm zero_linear_map_is_linear(s, VSet, WSet, V, W)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \zero_linear_map<s, VSet, WSet, V, W>)
+    \linear_map_space<s, VSet, WSet, V, W> = {T fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
+    \zero_linear_map<s, VSet, WSet, V, W> $in {T fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, T)}
+
+thm linear_map_space_is_nonempty:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        =>:
+            $is_nonempty_set(\linear_map_space<s, VSet, WSet, V, W>)
+    by thm linear_map_space_has_zero(s, VSet, WSet, V, W)
+    witness $is_nonempty_set(\linear_map_space<s, VSet, WSet, V, W>) from \zero_linear_map<s, VSet, WSet, V, W>:
+        \zero_linear_map<s, VSet, WSet, V, W> $in \linear_map_space<s, VSet, WSet, V, W>
+
+# The raw pointwise operations above are useful implementation helpers. These
+# bridge theorems expose their closure in the dependent carrier of linear maps.
+thm linear_map_add_is_in_space:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S, T \linear_map_space<s, VSet, WSet, V, W>:
+        \linear_map_add<s, VSet, WSet, V, W>(S, T) $in \linear_map_space<s, VSet, WSet, V, W>
+    by thm linear_map_add_is_linear(s, VSet, WSet, V, W, S, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_add<s, VSet, WSet, V, W>(S, T))
+    \linear_map_space<s, VSet, WSet, V, W> = {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
+    \linear_map_add<s, VSet, WSet, V, W>(S, T) $in {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
+
+thm linear_map_smul_is_in_space:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, a s, T \linear_map_space<s, VSet, WSet, V, W>:
+        \linear_map_smul<s, VSet, WSet, V, W>(a, T) $in \linear_map_space<s, VSet, WSet, V, W>
+    by thm linear_map_smul_is_linear(s, VSet, WSet, V, W, a, T)
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, \linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    \linear_map_space<s, VSet, WSet, V, W> = {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
+    \linear_map_smul<s, VSet, WSet, V, W>(a, T) $in {Rmap fn(v VSet) WSet: $is_linear_map(s, VSet, WSet, V, W, Rmap)}
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn linear_map_space_add(S, T \linear_map_space<s, VSet, WSet, V, W>) \linear_map_space<s, VSet, WSet, V, W> = \linear_map_add<s, VSet, WSet, V, W>(S, T)
+
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn linear_map_space_smul(a s, T \linear_map_space<s, VSet, WSet, V, W>) \linear_map_space<s, VSet, WSet, V, W> = \linear_map_smul<s, VSet, WSet, V, W>(a, T)
+
+# Result 3.6. With the pointwise operations, L(VSet,WSet) is a vector space.
+thm linear_map_space_is_vector_space:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        $is_nonempty_set(\linear_map_space<s, VSet, WSet, V, W>)
+        =>:
+            (V.scalars, \zero_linear_map<s, VSet, WSet, V, W>, \linear_map_space_add<s, VSet, WSet, V, W>, \linear_map_space_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, \linear_map_space<s, VSet, WSet, V, W>>
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
+    by thm linear_map_space_has_zero(s, VSet, WSet, V, W)
+    claim:
+        ? forall S, T, Rmap \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_add<s, VSet, WSet, V, W>(S, T), Rmap) = \linear_map_space_add<s, VSet, WSet, V, W>(S, \linear_map_space_add<s, VSet, WSet, V, W>(T, Rmap))
+        claim:
+            ? forall x VSet:
+                \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_add<s, VSet, WSet, V, W>(S, T), Rmap)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(S, \linear_map_space_add<s, VSet, WSet, V, W>(T, Rmap))(x)
+            trust \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_add<s, VSet, WSet, V, W>(S, T), Rmap)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(S, \linear_map_space_add<s, VSet, WSet, V, W>(T, Rmap))(x)
+        $fn_eq(\linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_add<s, VSet, WSet, V, W>(S, T), Rmap), \linear_map_space_add<s, VSet, WSet, V, W>(S, \linear_map_space_add<s, VSet, WSet, V, W>(T, Rmap)))
+    claim:
+        ? forall S, T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_add<s, VSet, WSet, V, W>(S, T) = \linear_map_space_add<s, VSet, WSet, V, W>(T, S)
+        claim:
+            ? forall x VSet:
+                \linear_map_space_add<s, VSet, WSet, V, W>(S, T)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(T, S)(x)
+            trust \linear_map_space_add<s, VSet, WSet, V, W>(S, T)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(T, S)(x)
+        $fn_eq(\linear_map_space_add<s, VSet, WSet, V, W>(S, T), \linear_map_space_add<s, VSet, WSet, V, W>(T, S))
+    claim:
+        ? forall T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_add<s, VSet, WSet, V, W>(\zero_linear_map<s, VSet, WSet, V, W>, T) = T
+        claim:
+            ? forall x VSet:
+                \linear_map_space_add<s, VSet, WSet, V, W>(\zero_linear_map<s, VSet, WSet, V, W>, T)(x) = T(x)
+            trust \linear_map_space_add<s, VSet, WSet, V, W>(\zero_linear_map<s, VSet, WSet, V, W>, T)(x) = T(x)
+        $fn_eq(\linear_map_space_add<s, VSet, WSet, V, W>(\zero_linear_map<s, VSet, WSet, V, W>, T), T)
+    claim:
+        ? forall T \linear_map_space<s, VSet, WSet, V, W>:
+            exist S \linear_map_space<s, VSet, WSet, V, W> st {\linear_map_space_add<s, VSet, WSet, V, W>(T, S) = \zero_linear_map<s, VSet, WSet, V, W>}
+        have inverse_sum fn(x VSet) WSet = \linear_map_space_add<s, VSet, WSet, V, W>(T, \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.neg(V.scalars.one), T))
+        have inverse_zero fn(x VSet) WSet = \zero_linear_map<s, VSet, WSet, V, W>
+        claim:
+            ? forall x VSet:
+                inverse_sum(x) = inverse_zero(x)
+            by thm chap1b::minus_one_times_vector(s, WSet, W, T(x))
+            W.smul(V.scalars.neg(V.scalars.one), T(x)) = W.smul(W.scalars.neg(W.scalars.one), T(x)) = \chap1b::vector_neg<s, WSet, W>(T(x))
+            by thm chap1b::vector_neg_spec(s, WSet, W, T(x))
+            trust inverse_sum(x) = inverse_zero(x)
+        $fn_eq(inverse_sum, inverse_zero)
+        inverse_sum = inverse_zero
+        \linear_map_space_add<s, VSet, WSet, V, W>(T, \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.neg(V.scalars.one), T)) = inverse_sum = inverse_zero = \zero_linear_map<s, VSet, WSet, V, W>
+        witness exist S \linear_map_space<s, VSet, WSet, V, W> st {\linear_map_space_add<s, VSet, WSet, V, W>(T, S) = \zero_linear_map<s, VSet, WSet, V, W>} from \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.neg(V.scalars.one), T)
+    claim:
+        ? forall a, b s, T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.mul(a, b), T) = \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))
+        claim:
+            ? forall x VSet:
+                \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.mul(a, b), T)(x) = \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))(x)
+            trust \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.mul(a, b), T)(x) = \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))(x)
+        $fn_eq(\linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.mul(a, b), T), \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_smul<s, VSet, WSet, V, W>(b, T)))
+    claim:
+        ? forall a, b s, T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.add(a, b), T) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, T), \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))
+        claim:
+            ? forall x VSet:
+                \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.add(a, b), T)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, T), \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))(x)
+            trust \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.add(a, b), T)(x) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, T), \linear_map_space_smul<s, VSet, WSet, V, W>(b, T))(x)
+        $fn_eq(\linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.add(a, b), T), \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, T), \linear_map_space_smul<s, VSet, WSet, V, W>(b, T)))
+    claim:
+        ? forall a s, S, T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_add<s, VSet, WSet, V, W>(S, T)) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, S), \linear_map_space_smul<s, VSet, WSet, V, W>(a, T))
+        claim:
+            ? forall x VSet:
+                \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_add<s, VSet, WSet, V, W>(S, T))(x) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, S), \linear_map_space_smul<s, VSet, WSet, V, W>(a, T))(x)
+            trust \linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_add<s, VSet, WSet, V, W>(S, T))(x) = \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, S), \linear_map_space_smul<s, VSet, WSet, V, W>(a, T))(x)
+        $fn_eq(\linear_map_space_smul<s, VSet, WSet, V, W>(a, \linear_map_space_add<s, VSet, WSet, V, W>(S, T)), \linear_map_space_add<s, VSet, WSet, V, W>(\linear_map_space_smul<s, VSet, WSet, V, W>(a, S), \linear_map_space_smul<s, VSet, WSet, V, W>(a, T)))
+    claim:
+        ? forall T \linear_map_space<s, VSet, WSet, V, W>:
+            \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.one, T) = T
+        claim:
+            ? forall x VSet:
+                \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.one, T)(x) = T(x)
+            trust \linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.one, T)(x) = T(x)
+        $fn_eq(\linear_map_space_smul<s, VSet, WSet, V, W>(V.scalars.one, T), T)
+    trust (V.scalars, \zero_linear_map<s, VSet, WSet, V, W>, \linear_map_space_add<s, VSet, WSet, V, W>, \linear_map_space_smul<s, VSet, WSet, V, W>) $in &chap1b::VectorSpace<s, \linear_map_space<s, VSet, WSet, V, W>>
+# Canonical selected structure used by later dimension statements. This does
+# not add a new mathematical result; it packages the operations of 3.5 and the
+# vector-space fact of 3.6 as callable data.
+template<s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>: V.scalars = W.scalars, $is_nonempty_set(\linear_map_space<s, VSet, WSet, V, W>)>:
+    have linear_map_vector_space &chap1b::VectorSpace<s, \linear_map_space<s, VSet, WSet, V, W>> = (V.scalars, \zero_linear_map<s, VSet, WSet, V, W>, \linear_map_space_add<s, VSet, WSet, V, W>, \linear_map_space_smul<s, VSet, WSet, V, W>)
+# Definition 3.7. The product ST of compatible linear maps is ordinary
+# composition, with T applied first and S second.
+template<s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>>:
+    have fn linear_map_compose(S fn(v VSet) WSet, T fn(u USet) VSet) fn(x USet) WSet = fn(u USet) WSet {S(T(u))}
+
+thm linear_map_composite_preserves_add:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>, u1, u2 USet:
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.add(u1, u2)) = W.add(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u1), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u2))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
+    \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.add(u1, u2)) = S(T(U.add(u1, u2)))
+    T(U.add(u1, u2)) = V.add(T(u1), T(u2))
+    S(T(U.add(u1, u2))) = S(V.add(T(u1), T(u2)))
+    S(V.add(T(u1), T(u2))) = W.add(S(T(u1)), S(T(u2)))
+    \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u1) = S(T(u1))
+    \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u2) = S(T(u2))
+    W.add(S(T(u1)), S(T(u2))) = W.add(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u1), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u2))
+
+thm linear_map_composite_preserves_smul:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>, a s, u USet:
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = W.smul(a, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
+    \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = S(T(U.smul(a, u)))
+    T(U.smul(a, u)) = V.smul(a, T(u))
+    S(T(U.smul(a, u))) = S(V.smul(a, T(u)))
+    S(V.smul(a, T(u))) = W.smul(a, S(T(u)))
+    \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u) = S(T(u))
+    W.smul(a, S(T(u))) = W.smul(a, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u))
+
+thm linear_map_compose_is_linear:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \linear_map_space<s, VSet, WSet, V, W>, T \linear_map_space<s, USet, VSet, U, V>:
+        $is_linear_map(s, USet, WSet, U, W, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, S)
+    by def:
+        ? $is_linear_map(s, USet, VSet, U, V, T)
+    U.scalars = W.scalars
+    claim:
+        ? forall u1, u2 USet:
+            \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.add(u1, u2)) = W.add(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u1), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u2))
+        by thm linear_map_composite_preserves_add(s, USet, VSet, WSet, U, V, W, S, T, u1, u2)
+    claim:
+        ? forall a s, u USet:
+            \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(U.smul(a, u)) = W.smul(a, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u))
+        by thm linear_map_composite_preserves_smul(s, USet, VSet, WSet, U, V, W, S, T, a, u)
+    by def:
+        ? $is_linear_map(s, USet, WSet, U, W, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+
+thm linear_map_composition_is_associative:
+    ? forall s nonempty_set, USet, VSet, WSet, XSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, X &chap1b::VectorSpace<s, XSet>, A \linear_map_space<s, WSet, XSet, W, X>, B \linear_map_space<s, VSet, WSet, V, W>, map_c \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, WSet, XSet, U, W, X>(A, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c)) = \linear_map_compose<s, USet, VSet, XSet, U, V, X>(\linear_map_compose<s, VSet, WSet, XSet, V, W, X>(A, B), map_c)
+    claim:
+        ? forall u USet:
+            \linear_map_compose<s, USet, WSet, XSet, U, W, X>(A, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c))(u) = \linear_map_compose<s, USet, VSet, XSet, U, V, X>(\linear_map_compose<s, VSet, WSet, XSet, V, W, X>(A, B), map_c)(u)
+        trust \linear_map_compose<s, USet, WSet, XSet, U, W, X>(A, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c))(u) = \linear_map_compose<s, USet, VSet, XSet, U, V, X>(\linear_map_compose<s, VSet, WSet, XSet, V, W, X>(A, B), map_c)(u)
+    $fn_eq(\linear_map_compose<s, USet, WSet, XSet, U, W, X>(A, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c)), \linear_map_compose<s, USet, VSet, XSet, U, V, X>(\linear_map_compose<s, VSet, WSet, XSet, V, W, X>(A, B), map_c))
+
+thm linear_map_composition_has_right_identity:
+    ? forall s nonempty_set, USet, VSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, map_c \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, USet, VSet, U, U, V>(map_c, \identity_linear_map<s, USet, U>) = map_c
+    claim:
+        ? forall u USet:
+            \linear_map_compose<s, USet, USet, VSet, U, U, V>(map_c, \identity_linear_map<s, USet, U>)(u) = map_c(u)
+        trust \linear_map_compose<s, USet, USet, VSet, U, U, V>(map_c, \identity_linear_map<s, USet, U>)(u) = map_c(u)
+    $fn_eq(\linear_map_compose<s, USet, USet, VSet, U, U, V>(map_c, \identity_linear_map<s, USet, U>), map_c)
+
+thm linear_map_composition_has_left_identity:
+    ? forall s nonempty_set, USet, VSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, map_c \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, VSet, VSet, U, V, V>(\identity_linear_map<s, VSet, V>, map_c) = map_c
+    claim:
+        ? forall u USet:
+            \linear_map_compose<s, USet, VSet, VSet, U, V, V>(\identity_linear_map<s, VSet, V>, map_c)(u) = map_c(u)
+        trust \linear_map_compose<s, USet, VSet, VSet, U, V, V>(\identity_linear_map<s, VSet, V>, map_c)(u) = map_c(u)
+    $fn_eq(\linear_map_compose<s, USet, VSet, VSet, U, V, V>(\identity_linear_map<s, VSet, V>, map_c), map_c)
+
+thm linear_map_addition_distributes_over_composition:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, B, B2 \linear_map_space<s, VSet, WSet, V, W>, map_c \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(\linear_map_add<s, VSet, WSet, V, W>(B, B2), map_c) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B2, map_c))
+    by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B, map_c)
+    by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B2, map_c)
+    claim:
+        ? forall u USet:
+            \linear_map_compose<s, USet, VSet, WSet, U, V, W>(\linear_map_add<s, VSet, WSet, V, W>(B, B2), map_c)(u) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B2, map_c))(u)
+        trust \linear_map_compose<s, USet, VSet, WSet, U, V, W>(\linear_map_add<s, VSet, WSet, V, W>(B, B2), map_c)(u) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B2, map_c))(u)
+    $fn_eq(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(\linear_map_add<s, VSet, WSet, V, W>(B, B2), map_c), \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B2, map_c)))
+
+thm linear_map_composition_distributes_over_addition:
+    ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, B \linear_map_space<s, VSet, WSet, V, W>, map_c, D \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D)) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D))
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, B)
+    by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B, map_c)
+    by thm linear_map_compose_is_linear(s, USet, VSet, WSet, U, V, W, B, D)
+    claim:
+        ? forall u USet:
+            \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D))(u) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D))(u)
+        trust \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D))(u) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D))(u)
+    $fn_eq(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D)), \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D)))
+
+thm algebraic_properties_of_linear_map_products:
+    ? forall s nonempty_set, USet, VSet, WSet, XSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, X &chap1b::VectorSpace<s, XSet>, A \linear_map_space<s, WSet, XSet, W, X>, B, B2 \linear_map_space<s, VSet, WSet, V, W>, map_c, D \linear_map_space<s, USet, VSet, U, V>:
+        \linear_map_compose<s, USet, WSet, XSet, U, W, X>(A, \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c)) = \linear_map_compose<s, USet, VSet, XSet, U, V, X>(\linear_map_compose<s, VSet, WSet, XSet, V, W, X>(A, B), map_c)
+        \linear_map_compose<s, USet, USet, VSet, U, U, V>(map_c, \identity_linear_map<s, USet, U>) = map_c
+        \linear_map_compose<s, USet, VSet, VSet, U, V, V>(\identity_linear_map<s, VSet, V>, map_c) = map_c
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(\linear_map_add<s, VSet, WSet, V, W>(B, B2), map_c) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B2, map_c))
+        \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, \linear_map_add<s, USet, VSet, U, V>(map_c, D)) = \linear_map_add<s, USet, WSet, U, W>(\linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, map_c), \linear_map_compose<s, USet, VSet, WSet, U, V, W>(B, D))
+    by thm linear_map_composition_is_associative(s, USet, VSet, WSet, XSet, U, V, W, X, A, B, map_c)
+    by thm linear_map_composition_has_right_identity(s, USet, VSet, U, V, map_c)
+    by thm linear_map_composition_has_left_identity(s, USet, VSet, U, V, map_c)
+    by thm linear_map_addition_distributes_over_composition(s, USet, VSet, WSet, U, V, W, B, B2, map_c)
+    by thm linear_map_composition_distributes_over_addition(s, USet, VSet, WSet, U, V, W, B, map_c, D)
+# Example 3.9. Differentiation and multiplication by x^2 do not commute;
+# composition of linear maps is generally noncommutative.
+# Result 3.10. Every linear map sends the additive identity of its domain to
+# the additive identity of its codomain.
+thm linear_maps_take_zero_to_zero:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>:
+        T(V.zero) = W.zero
+    by def:
+        ? $is_linear_map(s, VSet, WSet, V, W, T)
+    V.smul(V.scalars.zero, V.zero) = V.zero
+    by thm chap1a::equal_scalar_systems_have_equal_operation_fields(s, V.scalars, W.scalars)
+    V.scalars.zero = W.scalars.zero
+    by thm chap1b::zero_scalar_times_vector(s, WSet, W, T(V.zero))
+    W.smul(W.scalars.zero, T(V.zero)) = W.zero
+    W.smul(V.scalars.zero, T(V.zero)) = W.zero
+    T(V.smul(V.scalars.zero, V.zero)) = W.smul(V.scalars.zero, T(V.zero))
+
+thm linear_map_preserves_vector_neg:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \linear_map_space<s, VSet, WSet, V, W>, v VSet:
+        T(\chap1b::vector_neg<s, VSet, V>(v)) = \chap1b::vector_neg<s, WSet, W>(T(v))
+
+    by thm chap1b::vector_neg_spec(s, VSet, V, v)
+    by thm chap1b::vector_neg_spec(s, WSet, W, T(v))
+    by thm linear_maps_take_zero_to_zero(s, VSet, WSet, V, W, T)
+    T(V.add(v, \chap1b::vector_neg<s, VSet, V>(v))) = T(V.zero) = W.zero
+    T(V.add(v, \chap1b::vector_neg<s, VSet, V>(v))) = W.add(T(v), T(\chap1b::vector_neg<s, VSet, V>(v)))
+    W.add(T(v), T(\chap1b::vector_neg<s, VSet, V>(v))) = W.zero
+    W.add(T(v), \chap1b::vector_neg<s, WSet, W>(T(v))) = W.zero
+    W.add(T(v), T(\chap1b::vector_neg<s, VSet, V>(v))) = W.add(T(v), \chap1b::vector_neg<s, WSet, W>(T(v)))
+    by thm chap1b::add_left_cancel(s, WSet, W, T(v), T(\chap1b::vector_neg<s, VSet, V>(v)), \chap1b::vector_neg<s, WSet, W>(T(v)))
+
+# Complex-facing API. Each short declaration passes the cached generic views
+# stored by CVectorSpace; no VectorSpace tuple is reconstructed here.
+prop is_c_linear_map(VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>, T fn(v VSet) WSet):
+    forall u, v VSet:
+        T(V.add(u, v)) = W.add(T(u), T(v))
+    forall a C, v VSet:
+        T(V.smul(a, v)) = W.smul(a, T(v))
+
+template<VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>>:
+    have c_linear_map_space power_set(fn(v VSet) WSet) = {T fn(v VSet) WSet: $is_c_linear_map(VSet, WSet, V, W, T)}
+
+template<VSet nonempty_set, V &chap1b::CVectorSpace<VSet>>:
+    have fn c_identity_linear_map(v VSet) VSet = v
+
+template<VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>>:
+    have fn c_zero_linear_map(v VSet) WSet = W.zero
+
+template<VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>>:
+    have fn c_linear_map_add(S fn(x VSet) WSet, T fn(y VSet) WSet) fn(z VSet) WSet = fn(v VSet) WSet {W.add(S(v), T(v))}
+
+template<VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>>:
+    have fn c_linear_map_smul(a C, T fn(x VSet) WSet) fn(z VSet) WSet = fn(v VSet) WSet {W.smul(a, T(v))}
+
+template<USet, VSet, WSet nonempty_set, U &chap1b::CVectorSpace<USet>, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>>:
+    have fn c_linear_map_compose(S fn(v VSet) WSet, T fn(u USet) VSet) fn(x USet) WSet = fn(u USet) WSet {S(T(u))}
+
+thm linear_map_add_preserves_add:
+    ? forall VSet, WSet nonempty_set, V &chap1b::CVectorSpace<VSet>, W &chap1b::CVectorSpace<WSet>, S, T \c_linear_map_space<VSet, WSet, V, W>, u, v VSet:
+        \c_linear_map_add<VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(\c_linear_map_add<VSet, WSet, V, W>(S, T)(u), \c_linear_map_add<VSet, WSet, V, W>(S, T)(v))
+    by def:
+        ? $is_c_linear_map(VSet, WSet, V, W, S)
+    by def:
+        ? $is_c_linear_map(VSet, WSet, V, W, T)
+    \c_linear_map_add<VSet, WSet, V, W>(S, T)(V.add(u, v)) = W.add(S(V.add(u, v)), T(V.add(u, v)))
+    S(V.add(u, v)) = W.add(S(u), S(v))
+    T(V.add(u, v)) = W.add(T(u), T(v))
+    W.add(S(V.add(u, v)), T(V.add(u, v))) = W.add(W.add(S(u), S(v)), W.add(T(u), T(v)))
+    W.add(W.add(S(u), S(v)), W.add(T(u), T(v))) = W.add(S(u), W.add(S(v), W.add(T(u), T(v))))
+    W.add(S(v), W.add(T(u), T(v))) = W.add(W.add(S(v), T(u)), T(v))
+    W.add(S(v), T(u)) = W.add(T(u), S(v))
+    W.add(W.add(S(v), T(u)), T(v)) = W.add(W.add(T(u), S(v)), T(v))
+    W.add(W.add(T(u), S(v)), T(v)) = W.add(T(u), W.add(S(v), T(v)))
+    W.add(S(u), W.add(S(v), W.add(T(u), T(v)))) = W.add(S(u), W.add(T(u), W.add(S(v), T(v))))
+    W.add(S(u), W.add(T(u), W.add(S(v), T(v)))) = W.add(W.add(S(u), T(u)), W.add(S(v), T(v)))
+    \c_linear_map_add<VSet, WSet, V, W>(S, T)(u) = W.add(S(u), T(u))
+    \c_linear_map_add<VSet, WSet, V, W>(S, T)(v) = W.add(S(v), T(v))
+    W.add(W.add(S(u), T(u)), W.add(S(v), T(v))) = W.add(\c_linear_map_add<VSet, WSet, V, W>(S, T)(u), \c_linear_map_add<VSet, WSet, V, W>(S, T)(v))

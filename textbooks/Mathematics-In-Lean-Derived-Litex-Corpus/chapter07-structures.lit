@@ -1,0 +1,608 @@
+# Chapter 7 — Structures
+# Independent MIL-derived Litex pressure-test corpus; see README for scope,
+# attribution, and checked/deferred status.
+
+# This chapter keeps records and their operations callable. Constructor syntax,
+# projection syntax, typeclass syntax, and repeated proof styles are collapsed
+# when they present the same mathematical object. Non-core alternate examples
+# and presentation variants are not part of this source-facing slice.
+
+# 7.1 Defining Structures
+
+struct Point:
+    x R
+    y R
+    z R
+
+# Source definitions myPoint1--myPoint4 are four constructor spellings for the
+# same object, so one representative is retained.
+-1 $in R
+by thm struct_member((2, -1, 4), &Point)
+have point_example &Point = (2, -1, 4)
+
+# Source definitions Point.add and Point.add' collapse to one callable map.
+thm point_add_closed:
+    ? forall a, b &Point:
+        (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z) $in &Point
+    by thm struct_member((&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z), &Point)
+
+have fn point_add(a, b &Point) &Point = (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z)
+
+thm point_add_comm:
+    ? forall a, b &Point:
+        point_add(a, b) = point_add(b, a)
+    point_add(a, b) = (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z)
+    point_add(b, a) = (&Point{b}.x + &Point{a}.x, &Point{b}.y + &Point{a}.y, &Point{b}.z + &Point{a}.z)
+    point_add(a, b) = (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z) = (&Point{b}.x + &Point{a}.x, &Point{b}.y + &Point{a}.y, &Point{b}.z + &Point{a}.z) = point_add(b, a)
+
+# Source theorem Point.add_x. The explicit result parameter is a projection
+# bridge for a function-produced record; the mathematical coordinate equation
+# is unchanged.
+thm point_add_x:
+    ? forall a, b, result &Point:
+        result = point_add(a, b)
+        =>:
+            &Point{result}.x = &Point{a}.x + &Point{b}.x
+    point_add(a, b) = (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z)
+    result = point_add(a, b) = (&Point{a}.x + &Point{b}.x, &Point{a}.y + &Point{b}.y, &Point{a}.z + &Point{b}.z)
+    &Point{result}.x = result[1] = &Point{a}.x + &Point{b}.x
+
+# A structure with proof fields becomes a record-shaped subset whose defining
+# conditions are projected automatically.
+struct StandardTwoSimplex:
+    x R
+    y R
+    z R
+    <=>:
+        x >= 0
+        y >= 0
+        z >= 0
+        x + y + z = 1
+
+thm simplex_swap_xy_closed:
+    ? forall a &StandardTwoSimplex:
+        (&StandardTwoSimplex{a}.y, &StandardTwoSimplex{a}.x, &StandardTwoSimplex{a}.z) $in &StandardTwoSimplex
+    &StandardTwoSimplex{a}.y >= 0
+    &StandardTwoSimplex{a}.x >= 0
+    &StandardTwoSimplex{a}.z >= 0
+    &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.z = &StandardTwoSimplex{a}.x + &StandardTwoSimplex{a}.y + &StandardTwoSimplex{a}.z = 1
+    by thm struct_member((&StandardTwoSimplex{a}.y, &StandardTwoSimplex{a}.x, &StandardTwoSimplex{a}.z), &StandardTwoSimplex)
+
+have fn simplex_swap_xy(a &StandardTwoSimplex) &StandardTwoSimplex = (&StandardTwoSimplex{a}.y, &StandardTwoSimplex{a}.x, &StandardTwoSimplex{a}.z)
+
+# Closure is proved before defining the typed midpoint, making the constructor
+# obligation explicit and trust-free.
+thm standard_two_simplex_midpoint_closed:
+    ? forall a, b &StandardTwoSimplex:
+        ((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2) $in &StandardTwoSimplex
+    a.x + b.x >= 0
+    a.y + b.y >= 0
+    a.z + b.z >= 0
+    2 > 0
+    (a.x + b.x) / 2 >= 0
+    (a.y + b.y) / 2 >= 0
+    (a.z + b.z) / 2 >= 0
+    (a.x + b.x) / 2 + (a.y + b.y) / 2 + (a.z + b.z) / 2 = ((a.x + a.y + a.z) + (b.x + b.y + b.z)) / 2 = (1 + 1) / 2 = 1
+    by thm struct_member(((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2), &StandardTwoSimplex)
+
+have fn standard_two_simplex_midpoint(a, b &StandardTwoSimplex) &StandardTwoSimplex = ((&StandardTwoSimplex{a}.x + &StandardTwoSimplex{b}.x) / 2, (&StandardTwoSimplex{a}.y + &StandardTwoSimplex{b}.y) / 2, (&StandardTwoSimplex{a}.z + &StandardTwoSimplex{b}.z) / 2)
+
+# Source structure StandardSimplex(n). It has one data field V and proof fields;
+# the faithful Litex object is the subset of coordinate functions satisfying
+# the two laws, not a nullary prop pretending to be a record.
+prop is_standard_simplex_point(n N, v fn(idx range(0, n)) R):
+    forall idx range(0, n):
+        v(idx) >= 0
+    finite_set_sum(range(0, n), v) = 1
+
+template<n N>:
+    have standard_simplex set = {v fn(idx range(0, n)) R: $is_standard_simplex_point(n, v)}
+
+# Source definition StandardSimplex.midpoint. The construction averages each
+# coordinate. The proof first preserves coordinatewise nonnegativity, then uses
+# finite-sum linearity and the two unit-sum laws to recover total sum one.
+thm standard_simplex_midpoint_closed:
+    ? forall n N, a, b \standard_simplex<n>:
+        $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
+    forall idx range(0, n):
+        a(idx) >= 0
+        b(idx) >= 0
+        a(idx) + b(idx) >= 0
+        2 > 0
+        (a(idx) + b(idx)) / 2 >= 0
+    by thm finite_set_sum_substitution(finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}), finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}))
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)})
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)})
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a)
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)}) = (1 / 2) * finite_set_sum(range(0, n), b)
+    finite_set_sum(range(0, n), a) = 1
+    finite_set_sum(range(0, n), b) = 1
+    finite_set_sum(range(0, n), fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx) + (1 / 2) * b(idx)}) = finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * a(idx)}) + finite_set_sum(range(0, n), fn(idx range(0, n)) R {(1 / 2) * b(idx)}) = (1 / 2) * finite_set_sum(range(0, n), a) + (1 / 2) * finite_set_sum(range(0, n), b) = (1 / 2) * 1 + (1 / 2) * 1 = 1
+    by def:
+        ? $is_standard_simplex_point(n, fn(idx range(0, n)) R {(a(idx) + b(idx)) / 2})
+
+# The midpoint remains a callable function-valued construction. Its checked
+# codomain law is the preceding source-facing closure theorem.
+template<n N>:
+    have fn standard_simplex_midpoint(a, b \standard_simplex<n>) fn(idx range(0, n)) R = fn(j range(0, n)) R {(a(j) + b(j)) / 2}
+
+# Source structure IsLinear has no independent data field beyond the candidate
+# f, so it is correctly modeled as a property of that callable function.
+prop is_linear_real(f fn(x R) R):
+    forall x, y R:
+        f(x + y) = f(x) + f(y)
+    forall x, c R:
+        f(c * x) = c * f(x)
+
+# The later Point', Point'', IsLinear', PReal, and subtype simplex definitions
+# are alternative encodings of Point, is_linear_real, R+, and the two
+# simplex carriers above; they do not create new mathematical objects here.
+
+# 7.2 Algebraic Structures
+
+# Equiv is a genuine two-function record. It is usable even for empty carriers,
+# so its carrier parameters are sets rather than nonempty sets.
+struct Equiv<s, t set>:
+    forward fn(x s) t
+    inverse fn(y t) s
+    <=>:
+        forall x s:
+            inverse(forward(x)) = x
+        forall y t:
+            forward(inverse(y)) = y
+
+thm equiv_refl_closed:
+    ? forall s set:
+        (fn(x s) s {x}, fn(y s) s {y}) $in &Equiv<s, s>
+    by thm fn_set_member(fn(x s) s {x}, fn(x s) s)
+    by thm fn_set_member(fn(y s) s {y}, fn(y s) s)
+    by thm cart_member_from_coordinates((fn(x s) s {x}, fn(y s) s {y}), cart(fn(x s) s, fn(y s) s))
+    claim:
+        ? forall x s:
+            (fn(y s) s {y})((fn(q s) s {q})(x)) = x
+    claim:
+        ? forall y s:
+            (fn(x s) s {x})((fn(q s) s {q})(y)) = y
+    by thm struct_member((fn(x s) s {x}, fn(y s) s {y}), &Equiv<s, s>)
+
+template<s set>:
+    have equiv_refl &Equiv<s, s> = (fn(x s) s {x}, fn(y s) s {y})
+
+thm equiv_symm_closed:
+    ? forall s, t set, endpoint &Equiv<s, t>:
+        (&Equiv<s, t>{endpoint}.inverse, &Equiv<s, t>{endpoint}.forward) $in &Equiv<t, s>
+    &Equiv<s, t>{endpoint}.inverse $in fn(y t) s
+    &Equiv<s, t>{endpoint}.forward $in fn(x s) t
+    by thm cart_member_from_coordinates((&Equiv<s, t>{endpoint}.inverse, &Equiv<s, t>{endpoint}.forward), cart(fn(y t) s, fn(x s) t))
+    claim:
+        ? forall y t:
+            &Equiv<s, t>{endpoint}.forward(&Equiv<s, t>{endpoint}.inverse(y)) = y
+    claim:
+        ? forall x s:
+            &Equiv<s, t>{endpoint}.inverse(&Equiv<s, t>{endpoint}.forward(x)) = x
+    by thm struct_member((&Equiv<s, t>{endpoint}.inverse, &Equiv<s, t>{endpoint}.forward), &Equiv<t, s>)
+
+template<s, t set>:
+    have fn equiv_symm(endpoint &Equiv<s, t>) &Equiv<t, s> = (&Equiv<s, t>{endpoint}.inverse, &Equiv<s, t>{endpoint}.forward)
+
+# Composition is an actual equivalence record. Its two inverse laws follow by
+# substituting the component inverse laws; the record-membership conclusion is
+# checked directly.
+thm equiv_trans_closed:
+    ? forall s, t, u set, e1 &Equiv<s, t>, e2 &Equiv<t, u>:
+        (fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))}) $in &Equiv<s, u>
+    by thm fn_set_member(fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(x s) u)
+    by thm fn_set_member(fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))}, fn(z u) s)
+    by thm cart_member_from_coordinates((fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))}), cart(fn(x s) u, fn(z u) s))
+    thm function_substitution:
+        ? forall A, B set, f fn(x A) B, x, y A:
+            x = y
+            =>:
+                f(x) = f(y)
+    claim:
+        ? forall x s:
+            (fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))})((fn(q s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(q))})(x)) = x
+        by thm function_substitution(t, s, &Equiv<s, t>{e1}.inverse, &Equiv<t, u>{e2}.inverse(&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))), &Equiv<s, t>{e1}.forward(x))
+        (fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))})((fn(q s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(q))})(x)) = &Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x)))) = &Equiv<s, t>{e1}.inverse(&Equiv<s, t>{e1}.forward(x)) = x
+    claim:
+        ? forall z u:
+            (fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))})((fn(q u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(q))})(z)) = z
+        by thm function_substitution(t, u, &Equiv<t, u>{e2}.forward, &Equiv<s, t>{e1}.forward(&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))), &Equiv<t, u>{e2}.inverse(z))
+        (fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))})((fn(q u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(q))})(z)) = &Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z)))) = &Equiv<t, u>{e2}.forward(&Equiv<t, u>{e2}.inverse(z)) = z
+    by thm struct_member((fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))}), &Equiv<s, u>)
+
+template<s, t, u set>:
+    have fn equiv_trans(e1 &Equiv<s, t>, e2 &Equiv<t, u>) &Equiv<s, u> = (fn(x s) u {&Equiv<t, u>{e2}.forward(&Equiv<s, t>{e1}.forward(x))}, fn(z u) s {&Equiv<s, t>{e1}.inverse(&Equiv<t, u>{e2}.inverse(z))})
+
+thm equiv_space_nonempty:
+    ? forall s set:
+        $is_nonempty_set(&Equiv<s, s>)
+    witness $is_nonempty_set(&Equiv<s, s>) from (fn(x s) s {x}, fn(x s) s {x}):
+        by thm equiv_refl_closed(s)
+        (fn(x s) s {x}, fn(x s) s {x}) $in &Equiv<s, s>
+
+# Source definition permGroup. These three callable fields are the source's
+# `Equiv.trans g f`, identity equivalence, and inverse equivalence.
+template<s set>:
+    have permutation_one &Equiv<s, s> = \equiv_refl<s>
+
+template<s set>:
+    have fn permutation_mul(f, g &Equiv<s, s>) &Equiv<s, s> = \equiv_trans<s, s, s>(g, f)
+
+template<s set>:
+    have fn permutation_inv(f &Equiv<s, s>) &Equiv<s, s> = \equiv_symm<s, s>(f)
+
+# The equivalence carrier is nonempty even when s is empty, because it contains
+# the identity equivalence. Naming it as nonempty_set makes it usable by Group.
+template<s set>:
+    have permutation_carrier nonempty_set = &Equiv<s, s>
+
+# Proof debt: the verifier unfolds the group interface but cannot establish
+# equality of the composed function records. The debt is localized to the
+# exact record-membership fact used by the callable source object.
+thm permutation_group_closed:
+    ? forall s set:
+        (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &MILAlternative::chap2_struct::Group<\permutation_carrier<s>>
+    trust (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>) $in &MILAlternative::chap2_struct::Group<\permutation_carrier<s>>
+
+template<s set>:
+    have permutation_group &MILAlternative::chap2_struct::Group<\permutation_carrier<s>> = (\permutation_mul<s>, \permutation_one<s>, \permutation_inv<s>)
+
+# Source definition mySquare, kept as a callable construction. Group2 is only a
+# typeclass presentation of the same Group interface and is collapsed here.
+template<s nonempty_set, group &MILAlternative::chap2_struct::Group<s>>:
+    have fn group_square(x s) s = &MILAlternative::chap2_struct::Group<s>{group}.mul(x, x)
+
+# The source's bundled Grp record stores a type universe as a field. Litex uses
+# the explicit carrier parameter s instead; no false prop wrapper is introduced.
+
+# 7.3 Building the Gaussian Integers
+
+struct GaussInt:
+    real Z
+    im Z
+
+by thm struct_member((0, 0), &GaussInt)
+have gauss_zero &GaussInt = (0, 0)
+by thm struct_member((1, 0), &GaussInt)
+have gauss_one &GaussInt = (1, 0)
+
+thm gauss_add_closed:
+    ? forall x, y &GaussInt:
+        (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im) $in &GaussInt
+    by thm struct_member((&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im), &GaussInt)
+
+have fn gauss_add(x, y &GaussInt) &GaussInt = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+
+thm gauss_neg_closed:
+    ? forall x &GaussInt:
+        (-&GaussInt{x}.real, -&GaussInt{x}.im) $in &GaussInt
+    by thm struct_member((-&GaussInt{x}.real, -&GaussInt{x}.im), &GaussInt)
+
+have fn gauss_neg(x &GaussInt) &GaussInt = (-&GaussInt{x}.real, -&GaussInt{x}.im)
+
+thm gauss_mul_closed:
+    ? forall x, y &GaussInt:
+        (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real) $in &GaussInt
+    by thm struct_member((&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real), &GaussInt)
+
+have fn gauss_mul(x, y &GaussInt) &GaussInt = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+
+# The source's zero_def through mul_im lemmas are projection-level consequences
+# of these definitions. Representative facts are kept; duplicate simp lemmas
+# are collapsed into the callable definitions above.
+thm gauss_add_def:
+    ? forall x, y &GaussInt:
+        gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+
+thm gauss_mul_def:
+    ? forall x, y &GaussInt:
+        gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+
+thm gauss_add_re:
+    ? forall x, y &GaussInt:
+        &GaussInt{gauss_add(x, y)}.real = &GaussInt{x}.real + &GaussInt{y}.real
+    gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+    &GaussInt{gauss_add(x, y)}.real = gauss_add(x, y)[1] = &GaussInt{x}.real + &GaussInt{y}.real
+
+thm gauss_add_im:
+    ? forall x, y &GaussInt:
+        &GaussInt{gauss_add(x, y)}.im = &GaussInt{x}.im + &GaussInt{y}.im
+    gauss_add(x, y) = (&GaussInt{x}.real + &GaussInt{y}.real, &GaussInt{x}.im + &GaussInt{y}.im)
+    &GaussInt{gauss_add(x, y)}.im = gauss_add(x, y)[2] = &GaussInt{x}.im + &GaussInt{y}.im
+
+thm gauss_mul_re:
+    ? forall x, y &GaussInt:
+        &GaussInt{gauss_mul(x, y)}.real = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.real = gauss_mul(x, y)[1] = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
+
+thm gauss_mul_im:
+    ? forall x, y &GaussInt:
+        &GaussInt{gauss_mul(x, y)}.im = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+
+prop is_commutative_ring(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s):
+    $MILAlternative::chap2_struct::ring_laws(s, add, zero, neg, mul, one)
+    forall x, y s:
+        mul(x, y) = mul(y, x)
+
+struct CommutativeRing<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    one s
+    <=>:
+        $is_commutative_ring(s, add, zero, neg, mul, one)
+
+# Source instance `instCommRing`. The five Gaussian operations form the
+# intended callable commutative-ring object. Its coordinatewise ring-law proof
+# remains explicit proof debt rather than being replaced by a proposition-only
+# placeholder.
+trust $is_commutative_ring(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+gauss_add $in fn(x, y &GaussInt) &GaussInt
+gauss_zero $in &GaussInt
+gauss_neg $in fn(x &GaussInt) &GaussInt
+gauss_mul $in fn(x, y &GaussInt) &GaussInt
+gauss_one $in &GaussInt
+by thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt))
+by thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one), &CommutativeRing<&GaussInt>)
+have gaussian_integer_commutative_ring &CommutativeRing<&GaussInt> = (gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one)
+
+have fn gauss_sub(x, y &GaussInt) &GaussInt = gauss_add(x, gauss_neg(y))
+
+# Source instance Nontrivial GaussInt, recorded as a fact rather than a prop.
+gauss_zero = (0, 0)
+gauss_one = (1, 0)
+gauss_zero != gauss_one
+
+# Lean's total Euclidean integer quotient/remainder are made explicit so the
+# centered division definitions below remain callable even at divisor zero.
+# The positive denominator is total. For nonzero inputs it reduces to the
+# source denominator abs(b); at zero it selects 1, which is only used to make
+# the surrounding case-defined functions well-defined before branch replay.
+thm positive_abs_denominator_closed:
+    ? forall b Z:
+        chap6::nat_max(abs(b), 1) $in N+
+    by cases:
+        ? chap6::nat_max(abs(b), 1) $in N+
+        case abs(b) >= 1:
+            chap6::nat_max(abs(b), 1) = abs(b)
+            chap6::nat_max(abs(b), 1) >= 1
+            chap6::nat_max(abs(b), 1) $in N+
+        case abs(b) < 1:
+            chap6::nat_max(abs(b), 1) = 1
+            chap6::nat_max(abs(b), 1) >= 1
+            chap6::nat_max(abs(b), 1) $in N+
+
+have fn positive_abs_denominator(b Z) N+ = chap6::nat_max(abs(b), 1)
+
+thm positive_abs_denominator_of_ne_zero:
+    ? forall b Z:
+        b != 0
+        =>:
+            positive_abs_denominator(b) = abs(b)
+    abs(b) > 0
+    abs(b) $in N+
+    abs(b) >= 1
+    chap6::nat_max(abs(b), 1) = abs(b)
+    positive_abs_denominator(b) = chap6::nat_max(abs(b), 1) = abs(b)
+
+thm positive_abs_denominator_nonzero:
+    ? forall b Z:
+        positive_abs_denominator(b) != 0
+    positive_abs_denominator(b) $in N+
+    positive_abs_denominator(b) > 0
+
+have fn int_ediv(a, b Z) Z by cases:
+    case b > 0: chap5::integer_quotient(a, positive_abs_denominator(b))
+    case b < 0: -chap5::integer_quotient(a, positive_abs_denominator(b))
+    case b = 0: 0
+
+have fn int_emod(a, b Z) Z by cases:
+    case b != 0: a % positive_abs_denominator(b)
+    case b = 0: a
+
+have fn int_centered_div(a, b Z) Z = int_ediv(a + int_ediv(b, 2), b)
+
+have fn int_centered_mod(a, b Z) Z = int_emod(a + int_ediv(b, 2), b) - int_ediv(b, 2)
+
+# Proof debt: the current integer quotient library does not expose the signed
+# decomposition and centered-bound interfaces used by this construction.
+thm int_centered_div_add_mod:
+    ? forall a, b Z:
+        b * int_centered_div(a, b) + int_centered_mod(a, b) = a
+    trust b * int_centered_div(a, b) + int_centered_mod(a, b) = a
+
+thm int_centered_mod_abs_le:
+    ? forall a Z, b Z:
+        b > 0
+        =>:
+            abs(int_centered_mod(a, b)) <= b / 2
+    trust abs(int_centered_mod(a, b)) <= b / 2
+
+have fn gauss_norm(x &GaussInt) Z = &GaussInt{x}.real^2 + &GaussInt{x}.im^2
+
+thm gauss_norm_nonneg:
+    ? forall x &GaussInt:
+        gauss_norm(x) >= 0
+    gauss_norm(x) = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 >= 0
+
+# The source states two iff theorems. Litex theorem targets do not admit a
+# universal `<=>` conclusion, so each source iff is recorded as its two direct
+# implication facts rather than as a proposition wrapper.
+thm gauss_norm_eq_zero_forward:
+    ? forall x &GaussInt:
+        gauss_norm(x) = 0
+        =>:
+            x = gauss_zero
+    &GaussInt{x}.real^2 >= 0
+    &GaussInt{x}.im^2 >= 0
+    &GaussInt{x}.real^2 <= &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
+    &GaussInt{x}.im^2 <= &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x) = 0
+    &GaussInt{x}.real^2 = 0
+    &GaussInt{x}.im^2 = 0
+    &GaussInt{x}.real = 0
+    &GaussInt{x}.im = 0
+    by thm tuple_equal_from_coordinates(x, (x[1], x[2]))
+    x = (x[1], x[2]) = (&GaussInt{x}.real, &GaussInt{x}.im) = (0, 0) = gauss_zero
+
+thm gauss_norm_eq_zero_reverse:
+    ? forall x &GaussInt:
+        x = gauss_zero
+        =>:
+            gauss_norm(x) = 0
+    x = gauss_zero = (0, 0)
+    gauss_norm(x) = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = 0^2 + 0^2 = 0
+
+thm gauss_norm_pos_forward:
+    ? forall x &GaussInt:
+        gauss_norm(x) > 0
+        =>:
+            x != gauss_zero
+    by contra:
+        ? x != gauss_zero
+        x = gauss_zero
+        gauss_norm(x) = 0
+        impossible gauss_norm(x) > 0
+
+thm gauss_norm_pos_reverse:
+    ? forall x &GaussInt:
+        x != gauss_zero
+        =>:
+            gauss_norm(x) > 0
+    gauss_norm(x) >= 0
+    by contra:
+        ? gauss_norm(x) > 0
+        gauss_norm(x) <= 0
+        gauss_norm(x) = 0
+        by thm gauss_norm_eq_zero_forward(x)
+        impossible x != gauss_zero
+
+thm gauss_norm_mul:
+    ? forall x, y &GaussInt:
+        gauss_norm(gauss_mul(x, y)) = gauss_norm(x) * gauss_norm(y)
+    gauss_mul(x, y) $in &GaussInt
+    &GaussInt{gauss_mul(x, y)}.real $in Z
+    &GaussInt{gauss_mul(x, y)}.im $in Z
+    gauss_mul(x, y) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im, &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)
+    &GaussInt{gauss_mul(x, y)}.real = gauss_mul(x, y)[1] = &GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im
+    &GaussInt{gauss_mul(x, y)}.im = gauss_mul(x, y)[2] = &GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+    gauss_norm(gauss_mul(x, y)) = &GaussInt{gauss_mul(x, y)}.real^2 + &GaussInt{gauss_mul(x, y)}.im^2
+    &GaussInt{gauss_mul(x, y)}.real^2 + &GaussInt{gauss_mul(x, y)}.im^2 = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im)^2 + (&GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)^2
+    gauss_norm(gauss_mul(x, y)) = (&GaussInt{x}.real * &GaussInt{y}.real - &GaussInt{x}.im * &GaussInt{y}.im)^2 + (&GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real)^2 = (&GaussInt{x}.real^2 + &GaussInt{x}.im^2) * (&GaussInt{y}.real^2 + &GaussInt{y}.im^2) = gauss_norm(x) * gauss_norm(y)
+
+thm gauss_conj_closed:
+    ? forall x &GaussInt:
+        (&GaussInt{x}.real, -&GaussInt{x}.im) $in &GaussInt
+    by thm struct_member((&GaussInt{x}.real, -&GaussInt{x}.im), &GaussInt)
+
+have fn gauss_conj(x &GaussInt) &GaussInt = (&GaussInt{x}.real, -&GaussInt{x}.im)
+
+thm gauss_norm_conj:
+    ? forall x &GaussInt:
+        gauss_norm(gauss_conj(x)) = gauss_norm(x)
+    gauss_conj(x) $in &GaussInt
+    &GaussInt{gauss_conj(x)}.real $in Z
+    &GaussInt{gauss_conj(x)}.im $in Z
+    gauss_conj(x) = (&GaussInt{x}.real, -&GaussInt{x}.im)
+    &GaussInt{gauss_conj(x)}.real = gauss_conj(x)[1] = &GaussInt{x}.real
+    &GaussInt{gauss_conj(x)}.im = gauss_conj(x)[2] = -&GaussInt{x}.im
+    gauss_norm(gauss_conj(x)) = &GaussInt{gauss_conj(x)}.real^2 + &GaussInt{gauss_conj(x)}.im^2
+    &GaussInt{gauss_conj(x)}.real^2 + &GaussInt{gauss_conj(x)}.im^2 = &GaussInt{x}.real^2 + (-&GaussInt{x}.im)^2
+    gauss_norm(gauss_conj(x)) = &GaussInt{x}.real^2 + (-&GaussInt{x}.im)^2 = &GaussInt{x}.real^2 + &GaussInt{x}.im^2 = gauss_norm(x)
+
+# These coordinate formulas are the real and imaginary parts of x * conj(y).
+# Naming them avoids hiding the division construction behind an opaque record.
+have fn gauss_mul_conj_re(x, y &GaussInt) Z = &GaussInt{x}.real * &GaussInt{y}.real + &GaussInt{x}.im * &GaussInt{y}.im
+
+have fn gauss_mul_conj_im(x, y &GaussInt) Z = -&GaussInt{x}.real * &GaussInt{y}.im + &GaussInt{x}.im * &GaussInt{y}.real
+
+thm gauss_div_closed:
+    ? forall x, y &GaussInt:
+        (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))) $in &GaussInt
+    by thm struct_member((int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y))), &GaussInt)
+
+have fn gauss_div(x, y &GaussInt) &GaussInt = (int_centered_div(gauss_mul_conj_re(x, y), gauss_norm(y)), int_centered_div(gauss_mul_conj_im(x, y), gauss_norm(y)))
+
+have fn gauss_mod(x, y &GaussInt) &GaussInt = gauss_sub(x, gauss_mul(y, gauss_div(x, y)))
+
+# Proof debt: expanding gauss_mod reduces this to the additive ring laws already
+# represented by the trusted Gaussian commutative-ring interface above.
+thm gauss_div_add_mod:
+    ? forall x, y &GaussInt:
+        gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
+    trust gauss_add(gauss_mul(y, gauss_div(x, y)), gauss_mod(x, y)) = x
+
+thm gauss_norm_is_natural:
+    ? forall x &GaussInt:
+        gauss_norm(x) $in N
+    gauss_norm(x) >= 0
+
+have fn gauss_rank(x &GaussInt) N = gauss_norm(x)
+
+# Proof debt: this is the geometric centered-remainder estimate. It needs the
+# centered integer bound above plus the coordinate norm calculation.
+thm gauss_norm_mod_lt:
+    ? forall x, y &GaussInt:
+        y != gauss_zero
+        =>:
+            gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
+    trust gauss_rank(gauss_mod(x, y)) < gauss_rank(y)
+
+thm gauss_mul_left_not_rank_lt:
+    ? forall x, y &GaussInt:
+        y != gauss_zero
+        =>:
+            gauss_rank(gauss_mul(x, y)) >= gauss_rank(x)
+    gauss_rank(gauss_mul(x, y)) = gauss_norm(gauss_mul(x, y)) = gauss_norm(x) * gauss_norm(y)
+    gauss_norm(y) > 0
+    gauss_norm(y) >= 1
+    gauss_norm(x) >= 0
+    gauss_norm(y) - 1 >= 0
+    gauss_norm(x) * (gauss_norm(y) - 1) >= 0
+    gauss_norm(x) * gauss_norm(y) - gauss_norm(x) = gauss_norm(x) * (gauss_norm(y) - 1) >= 0
+    gauss_norm(x) * gauss_norm(y) >= gauss_norm(x)
+    gauss_rank(gauss_mul(x, y)) >= gauss_norm(x) = gauss_rank(x)
+
+prop is_euclidean_domain(s nonempty_set, add fn(x, y s) s, zero s, neg fn(x s) s, mul fn(x, y s) s, one s, quotient fn(x, y s) s, remainder fn(x, y s) s, rank fn(x s) N):
+    $is_commutative_ring(s, add, zero, neg, mul, one)
+    forall x, y s:
+        add(mul(y, quotient(x, y)), remainder(x, y)) = x
+    forall x, y s:
+        y != zero
+        =>:
+            rank(remainder(x, y)) < rank(y)
+            rank(mul(x, y)) >= rank(x)
+
+struct EuclideanDomain<s nonempty_set>:
+    add fn(x, y s) s
+    zero s
+    neg fn(x s) s
+    mul fn(x, y s) s
+    one s
+    quotient fn(x, y s) s
+    remainder fn(x, y s) s
+    rank fn(x s) N
+    <=>:
+        $is_euclidean_domain(s, add, zero, neg, mul, one, quotient, remainder, rank)
+
+# The callable source instance is retained. Its exact law package depends only
+# on the explicitly marked proof debts above.
+trust $is_euclidean_domain(&GaussInt, gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
+gauss_add $in fn(x, y &GaussInt) &GaussInt
+gauss_zero $in &GaussInt
+gauss_neg $in fn(x &GaussInt) &GaussInt
+gauss_mul $in fn(x, y &GaussInt) &GaussInt
+gauss_one $in &GaussInt
+gauss_div $in fn(x, y &GaussInt) &GaussInt
+gauss_mod $in fn(x, y &GaussInt) &GaussInt
+gauss_rank $in fn(x &GaussInt) N
+by thm cart_member_from_coordinates((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), cart(fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x, y &GaussInt) &GaussInt, fn(x &GaussInt) N))
+by thm struct_member((gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank), &EuclideanDomain<&GaussInt>)
+have gaussian_integer_euclidean_domain &EuclideanDomain<&GaussInt> = (gauss_add, gauss_zero, gauss_neg, gauss_mul, gauss_one, gauss_div, gauss_mod, gauss_rank)
+
+# The final irreducible_iff_prime line is an unnamed API demonstration rather
+# than a new source definition or theorem, so it is outside this core slice.

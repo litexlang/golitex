@@ -138,7 +138,7 @@ The same run can also generate a relation graph from a repository-owned
 example:
 
 ```bash
-litex -graph -f examples/01_proof_patterns/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
+litex -graph -f examples/04_case_studies/gcd_from_finite_divisors.lit tmp/graphs/gcd_graph.json
 ```
 
 The larger diagram below was generated from Analysis I Chapter 6 in its
