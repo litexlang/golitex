@@ -1,0 +1,33 @@
+# Tracer: finite integer-range sums distribute over subtraction and negation.
+#
+# Before (did not work):
+# have f fn(f_index Z) R
+# have g fn(g_index Z) R
+# forall m, n Z:
+#     m <= n
+#     =>:
+#         sum(m, n, fn(difference_index Z) R {f(difference_index) - g(difference_index)}) = sum(m, n, fn(minuend_index Z) R {f(minuend_index)}) - sum(m, n, fn(subtrahend_index Z) R {g(subtrahend_index)})
+# Former behavior: the final equality was an unknown atomic fact.
+#
+# Now (verified):
+have f fn(f_index Z) R
+have g fn(g_index Z) R
+
+forall m, n Z:
+    m <= n
+    =>:
+        sum(m, n, fn(difference_index Z) R {f(difference_index) - g(difference_index)}) = sum(m, n, fn(minuend_index Z) R {f(minuend_index)}) - sum(m, n, fn(subtrahend_index Z) R {g(subtrahend_index)})
+
+forall m, n Z:
+    m <= n
+    =>:
+        sum(m, n, fn(negative_index Z) R {-f(negative_index)}) = -sum(m, n, fn(base_index Z) R {f(base_index)})
+
+# Current behavior: subtraction uses the new same-range additive-carrier rule;
+# negation remains the existing scalar-multiplication case with scalar -1.
+#
+# Boundary: every sum must use the same integer range, and each pointwise term
+# must already be verified in one common additive carrier among Z, Q, R, and C.
+# Natural-valued subtraction is not totalized by this rule. Executable negative
+# regressions live in runtime_regression_tests/numeric_and_set_rules.rs.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/sum_subtraction_negation_builtin_rules.lit

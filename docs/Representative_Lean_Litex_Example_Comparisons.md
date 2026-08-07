@@ -24,9 +24,9 @@ forms. The Lean proofs below are intentionally explicit enough to expose the
 comparison, not claims about the shortest Lean proof.
 
 Every Litex code block on this page is self-contained and checked by the
-repository documentation test. The Lean blocks are checked in the local
-*Mathematics in Lean* environment. Syntax and automation in either project may
-continue to evolve.
+repository documentation test. The Lean blocks use Mathlib directly and do not
+depend on the *Mathematics in Lean* book package. Syntax and automation in
+either project may continue to evolve.
 
 For the larger design argument, see the [Litex
 Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
@@ -180,8 +180,7 @@ in the nonzero case it applies convergence at `epsilon / |c|` and uses the
 absolute-value product law.
 
 ```lean
-import MIL.Common
-import Mathlib.Data.Real.Basic
+import Mathlib
 
 def ConvergesTo (s : ℕ → ℝ) (a : ℝ) :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε

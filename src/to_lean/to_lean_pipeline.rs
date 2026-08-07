@@ -1,16 +1,30 @@
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 
 use super::rational_expression::{lean_name, LeanRationalExpression};
 
 pub fn to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
+    let namespace = lean_namespace_for_runtime(runtime);
+    to_lean_with_namespace(source_code, runtime, namespace)
+}
+
+fn to_lean_with_namespace(
+    source_code: &str,
+    runtime: &mut Runtime,
+    namespace: Option<String>,
+) -> Result<String, RuntimeError> {
     let previous_mode = runtime.replace_to_lean_mode(true);
-    let result = to_lean_in_mode(source_code, runtime);
+    let result = to_lean_in_mode(source_code, runtime, namespace.as_deref());
     runtime.replace_to_lean_mode(previous_mode);
     result
 }
 
-fn to_lean_in_mode(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
+fn to_lean_in_mode(
+    source_code: &str,
+    runtime: &mut Runtime,
+    namespace: Option<&str>,
+) -> Result<String, RuntimeError> {
     let tokenizer = Tokenizer::new();
     let current_file_path = runtime.current_file_path_rc();
     let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
@@ -41,20 +55,27 @@ fn to_lean_in_mode(source_code: &str, runtime: &mut Runtime) -> Result<String, R
         ));
     }
 
-    emit_lean_from_ir(&ir)
+    emit_lean_from_ir_with_namespace(&ir, namespace)
 }
 
 pub fn to_lean_from_source(source_code: &str, entry_label: &str) -> Result<String, RuntimeError> {
     let normalized = source_code.replace('\r', "");
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(entry_label);
-    to_lean(&normalized, &mut runtime)
+    to_lean_with_namespace(&normalized, &mut runtime, None)
 }
 
 /// Pure backend boundary: this function has no Runtime and cannot inspect raw
 /// Litex statements or re-run proof search.
 pub fn emit_lean_from_ir(ir: &[StmtToLeanIR]) -> Result<String, RuntimeError> {
-    let mut emitter = LeanEmitter::new();
+    emit_lean_from_ir_with_namespace(ir, None)
+}
+
+fn emit_lean_from_ir_with_namespace(
+    ir: &[StmtToLeanIR],
+    namespace: Option<&str>,
+) -> Result<String, RuntimeError> {
+    let mut emitter = LeanEmitter::new(namespace.map(str::to_string));
     for statement in ir {
         emitter.emit_statement(statement)?;
     }
@@ -62,6 +83,7 @@ pub fn emit_lean_from_ir(ir: &[StmtToLeanIR]) -> Result<String, RuntimeError> {
 }
 
 struct LeanEmitter {
+    namespace: Option<String>,
     declarations: Vec<String>,
     emitted_fact_ids: HashSet<FactId>,
 }
@@ -73,18 +95,26 @@ struct LeanProofContext {
 }
 
 impl LeanEmitter {
-    fn new() -> Self {
+    fn new(namespace: Option<String>) -> Self {
         LeanEmitter {
+            namespace,
             declarations: Vec::new(),
             emitted_fact_ids: HashSet::new(),
         }
     }
 
     fn finish(self) -> String {
-        format!(
-            "import Mathlib\n\nnamespace LitexGenerated\n\nuniverse u\n\n-- Litex's primitive notion of a set.\nabbrev LitexSet := Type u\n\n-- Every generated proposition has this codomain.\nabbrev LitexFact := Prop\n\n{}\n\nend LitexGenerated",
+        let body = format!(
+            "-- Litex's primitive notion of a set.\nabbrev LitexSet := Type uLitex\n\n-- Every generated proposition has this codomain.\nabbrev LitexFact := Prop\n\n{}",
             self.declarations.join("\n\n")
-        )
+        );
+        match self.namespace {
+            Some(namespace) => format!(
+                "import Mathlib\n\nuniverse uLitex\n\nnamespace {}\n\n{}\n\nend {}\n",
+                namespace, body, namespace
+            ),
+            None => format!("import Mathlib\n\nuniverse uLitex\n\n{}\n", body),
+        }
     }
 
     fn emit_statement(&mut self, statement: &StmtToLeanIR) -> Result<(), RuntimeError> {
@@ -359,7 +389,7 @@ fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
         .map(|(index, param)| format!("α_{}_{}", lean_name(param), index + 1))
         .collect::<Vec<_>>();
     format!(
-        "opaque {} {{{} : Sort u}} : {} → LitexFact",
+        "opaque {} {{{} : Sort uLitex}} : {} → LitexFact",
         name,
         type_names.join(" "),
         type_names.join(" → ")
@@ -639,6 +669,43 @@ fn parenthesize_if_many(body: &str, count: usize) -> String {
     }
 }
 
+fn lean_namespace_for_runtime(runtime: &Runtime) -> Option<String> {
+    runtime
+        .current_parse_namespace()
+        .and_then(lean_namespace)
+        .or_else(|| {
+            let source_path = runtime.current_file_path_rc();
+            lean_namespace_from_lit_path(source_path.as_ref())
+        })
+}
+
+fn lean_namespace_from_lit_path(source_path: &str) -> Option<String> {
+    let path = Path::new(source_path);
+    path.extension()
+        .and_then(|extension| extension.to_str())
+        .filter(|extension| *extension == "lit")
+        .and_then(|_| path.file_stem())
+        .and_then(|stem| stem.to_str())
+        .map(lean_namespace_segment)
+}
+
+fn lean_namespace(name: &str) -> Option<String> {
+    let segments = name
+        .split(MOD_SIGN)
+        .filter(|segment| !segment.is_empty())
+        .map(lean_namespace_segment)
+        .collect::<Vec<_>>();
+    (!segments.is_empty()).then(|| segments.join("."))
+}
+
+fn lean_namespace_segment(segment: &str) -> String {
+    let mut name = lean_name(segment);
+    if name.chars().all(|character| character == '_') {
+        name.insert_str(0, "litex");
+    }
+    name
+}
+
 fn to_lean_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeError {
     UnknownRuntimeError(RuntimeErrorStruct::new(
         None,
@@ -712,6 +779,52 @@ mod tests {
     }
 
     #[test]
+    fn source_identity_selects_the_lean_namespace() {
+        run_with_large_stack("source_identity_selects_the_lean_namespace", || {
+            let mut standalone_runtime = Runtime::new();
+            standalone_runtime
+                .new_file_path_new_env_new_name_scope("/virtual/chapter01-introduction.lit");
+            let standalone = to_lean("abstract_prop marked(x)", &mut standalone_runtime).unwrap();
+            assert!(standalone.contains("\nnamespace chapter01_introduction\n\n"));
+            assert!(standalone.ends_with("\nend chapter01_introduction\n"));
+
+            let mut registered_runtime = Runtime::new();
+            let module_id = registered_runtime
+                .new_repository_path_new_env_new_name_scope(
+                    "/virtual/project".to_string(),
+                    "/virtual/project/litex.config".to_string(),
+                )
+                .unwrap();
+            let file_id = registered_runtime
+                .current_module_mut()
+                .create_exported_file(
+                    "/virtual/project/chapter02.lit".to_string(),
+                    "A::chap2".to_string(),
+                );
+            registered_runtime.push_file_execution_frame(
+                module_id,
+                file_id,
+                "/virtual/project/chapter02.lit",
+            );
+            let registered = to_lean(
+                "prop is_one(x R):\n    x = 1\n\n$is_one(1)",
+                &mut registered_runtime,
+            )
+            .unwrap();
+            assert!(registered.contains("\nnamespace A.chap2\n\n"));
+            assert!(registered.ends_with("\nend A.chap2\n"));
+            assert!(!registered.contains("namespace chapter02"));
+            assert!(registered.contains("def is_one (x : ℝ) : LitexFact :="));
+            assert!(registered.contains("simp [is_one]"));
+
+            let anonymous =
+                to_lean_from_source("abstract_prop marked(x)", "/virtual/diagnostic-only.lit")
+                    .unwrap();
+            assert!(!anonymous.contains("\nnamespace "));
+        });
+    }
+
+    #[test]
     fn to_lean_mode_records_recursive_ir_and_emits_only_trust_as_axiom() {
         run_with_large_stack(
             "to_lean_mode_records_recursive_ir_and_emits_only_trust_as_axiom",
@@ -745,15 +858,24 @@ forall x R:
     =>:
         x != 0
 "#;
-                let output = to_lean_from_source(source, "to-lean-ir-mvp").unwrap();
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("to-lean-ir-mvp.lit");
+                let output = to_lean(source, &mut runtime).unwrap();
 
-                assert!(output.contains("abbrev LitexSet := Type u"));
+                assert!(output.starts_with(
+                    "import Mathlib\n\nuniverse uLitex\n\nnamespace to_lean_ir_mvp\n\n"
+                ));
+                assert!(output.contains("abbrev LitexSet := Type uLitex"));
                 assert!(output.contains("abbrev LitexFact := Prop"));
                 assert!(
                     output.find("abbrev LitexSet").unwrap()
                         < output.find("abbrev LitexFact").unwrap()
                 );
-                assert!(output.contains("opaque marked"));
+                assert!(output.contains("opaque marked {α_x_1 : Sort uLitex} : α_x_1 → LitexFact"));
+                assert!(!output.contains("namespace LitexGenerated"));
+                assert!(!output.contains("end LitexGenerated"));
+                assert!(!output.lines().any(|line| line == "universe u"));
+                assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
                 assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
                 assert_eq!(output.matches("\naxiom litex_fact_").count(), 1);
                 assert!(output.contains("exact litex_fact_"));
@@ -1046,7 +1168,9 @@ forall x R:
     =>:
         x != 0
 "#;
-            let generated = to_lean_from_source(source, "lean-kernel-mvp").unwrap();
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("lean-kernel-mvp.lit");
+            let generated = to_lean(source, &mut runtime).unwrap();
             let nonce = SystemTime::now()
                 .duration_since(UNIX_EPOCH)
                 .unwrap()

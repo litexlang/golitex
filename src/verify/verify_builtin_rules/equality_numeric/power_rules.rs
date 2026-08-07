@@ -175,7 +175,7 @@ impl Runtime {
         )
     }
 
-    fn obj_is_verified_positive_real_base_for_power_of_power(
+    fn obj_is_verified_positive_real_base_for_power_builtin(
         &mut self,
         obj: &Obj,
         line_file: LineFile,
@@ -434,7 +434,7 @@ impl Runtime {
 
         // Real-exponent power-of-power law requires a positive real base.
         // Example: `forall a R+, m, n R: (a^m)^n = a^(m*n)`.
-        let base_is_positive_real = self.obj_is_verified_positive_real_base_for_power_of_power(
+        let base_is_positive_real = self.obj_is_verified_positive_real_base_for_power_builtin(
             combined_power.base.as_ref(),
             line_file.clone(),
             builtin_state,
@@ -636,6 +636,32 @@ impl Runtime {
             builtin_state,
         )?;
         if !exponent_in_n_pos {
+            // Product power law for real exponents over positive real factors:
+            // `(a*b)^x = a^x*b^x`. Example: `forall a,b R+, x R: (a*b)^x = a^x*b^x`.
+            let exponent_is_real = self.obj_is_verified_in_standard_set_for_power_builtin(
+                combined_power.exponent.as_ref(),
+                StandardSet::R,
+                line_file.clone(),
+                builtin_state,
+            )?;
+            let real_exponent_over_positive_real_bases = if exponent_is_real {
+                let left_base_is_positive_real = self
+                    .obj_is_verified_positive_real_base_for_power_builtin(
+                        combined_base.left.as_ref(),
+                        line_file.clone(),
+                        builtin_state,
+                    )?;
+                let right_base_is_positive_real = self
+                    .obj_is_verified_positive_real_base_for_power_builtin(
+                        combined_base.right.as_ref(),
+                        line_file.clone(),
+                        builtin_state,
+                    )?;
+                left_base_is_positive_real && right_base_is_positive_real
+            } else {
+                false
+            };
+
             let exponent_in_n = self.obj_is_verified_in_standard_set_for_power_builtin(
                 combined_power.exponent.as_ref(),
                 StandardSet::N,
@@ -687,7 +713,10 @@ impl Runtime {
                 }
             };
 
-            if !natural_exponent_over_complex_bases && !integer_exponent_over_nonzero_bases {
+            if !real_exponent_over_positive_real_bases
+                && !natural_exponent_over_complex_bases
+                && !integer_exponent_over_nonzero_bases
+            {
                 return Ok(false);
             }
         }
@@ -763,7 +792,7 @@ impl Runtime {
                 left,
                 right,
                 line_file,
-                "equality: (a*b)^n = a^n * b^n for n in N over complex bases, n in N+, or n in Z with nonzero bases",
+                "equality: (a*b)^x = a^x * b^x for real x over positive real factors, n in N over complex bases, n in N+, or n in Z with nonzero bases",
             )));
         }
         Ok(None)

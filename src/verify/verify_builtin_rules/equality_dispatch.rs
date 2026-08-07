@@ -764,6 +764,12 @@ impl Runtime {
             return Ok(done);
         }
 
+        if let Some(done) =
+            self.try_verify_sum_subtraction(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
+
         if let Some(done) = self.try_verify_sum_merge_adjacent_ranges(
             left,
             right,

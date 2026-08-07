@@ -52,13 +52,40 @@ local Lean proof argument after its Litex scope has been popped.
 
 ## Lean surface
 
-Every generated file begins with:
+For a standalone file such as `chapter01-introduction.lit`, the generated Lean
+surface begins with:
 
 ```lean
-universe u
-abbrev LitexSet := Type u
+import Mathlib
+
+universe uLitex
+
+namespace chapter01_introduction
+
+abbrev LitexSet := Type uLitex
 abbrev LitexFact := Prop
+
+-- generated declarations
+
+end chapter01_introduction
 ```
+
+`uLitex` is a Lean universe-level variable used only by the generated
+representation; Litex itself does not expose a universe concept. The emitter
+never uses a fixed synthetic namespace such as `LitexGenerated`. A registered
+file or module uses its canonical Litex name, with `::` mapped to Lean's `.`, so
+`A::chap2` becomes `A.chap2`. A standalone runtime whose source path ends in
+`.lit` falls back to the sanitized file stem. The canonical name takes
+precedence over that fallback.
+
+`to_lean_from_source` remains anonymous and emits declarations at the file
+root, even when its diagnostic label looks like a `.lit` path. The pure
+`emit_lean_from_ir` boundary is likewise anonymous because IR intentionally
+contains no source context. Callers compiling an actual file should use
+`to_lean` with that file's Runtime context.
+
+This namespace selection scopes one emitted source. It does not add repository
+traversal, Lean imports, or cross-file `FactId` lowering to the current MVP.
 
 The current lowering is intentionally small:
 
