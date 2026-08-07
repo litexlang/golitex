@@ -86,12 +86,28 @@ struct LeanEmitter {
     namespace: Option<String>,
     declarations: Vec<String>,
     emitted_fact_ids: HashSet<FactId>,
+    next_local_space_id: usize,
 }
 
 #[derive(Clone, Default)]
 struct LeanProofContext {
-    local_fact_names: HashMap<FactId, String>,
+    // Litex FactIds remain the lookup keys; emitted local names use independent
+    // proof-space coordinates.
+    proof_fact_names: HashMap<FactId, String>,
     nonzero_names: Vec<String>,
+    local_space_id: Option<usize>,
+    next_proof_fact_index: usize,
+}
+
+impl LeanProofContext {
+    fn new_proof_space(&self) -> Self {
+        LeanProofContext {
+            proof_fact_names: self.proof_fact_names.clone(),
+            nonzero_names: self.nonzero_names.clone(),
+            local_space_id: None,
+            next_proof_fact_index: 0,
+        }
+    }
 }
 
 impl LeanEmitter {
@@ -100,6 +116,7 @@ impl LeanEmitter {
             namespace,
             declarations: Vec::new(),
             emitted_fact_ids: HashSet::new(),
+            next_local_space_id: 1,
         }
     }
 
@@ -160,7 +177,7 @@ impl LeanEmitter {
         self.declarations.push(format!(
             "-- Litex trust boundary: {}\naxiom {} : {}",
             fact_id,
-            lean_fact_name(fact_id),
+            lean_global_fact_name(fact_id),
             lean_fact(&fact.proposition)?
         ));
         Ok(())
@@ -183,7 +200,7 @@ impl LeanEmitter {
         self.declarations.push(format!(
             "-- Litex stored fact {}\ntheorem {} : {} := {}",
             fact_id,
-            lean_fact_name(fact_id),
+            lean_global_fact_name(fact_id),
             lean_fact(&fact.proposition)?,
             proof
         ));
@@ -191,10 +208,20 @@ impl LeanEmitter {
     }
 
     fn lean_proof(
-        &self,
+        &mut self,
         proposition: &Fact,
         proof: &FactProofToLeanIR,
-        context: &LeanProofContext,
+        parent_context: &LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let mut context = parent_context.new_proof_space();
+        self.lean_proof_in_current_space(proposition, proof, &mut context)
+    }
+
+    fn lean_proof_in_current_space(
+        &mut self,
+        proposition: &Fact,
+        proof: &FactProofToLeanIR,
+        context: &mut LeanProofContext,
     ) -> Result<String, RuntimeError> {
         match proof {
             FactProofToLeanIR::KnownFactCitation { source_fact_id } => {
@@ -247,9 +274,11 @@ impl LeanEmitter {
                 premises,
                 conclusions,
             } => self.lean_forall_introduction(proposition, premises, conclusions, context),
-            FactProofToLeanIR::Memo { proof } => self.lean_proof(proposition, proof, context),
+            FactProofToLeanIR::Memo { proof } => {
+                self.lean_proof_in_current_space(proposition, proof, context)
+            }
             FactProofToLeanIR::Composite { steps } if steps.len() == 1 => {
-                self.lean_proof(&steps[0].proposition, &steps[0].proof, context)
+                self.lean_proof_in_current_space(&steps[0].proposition, &steps[0].proof, context)
             }
             FactProofToLeanIR::UserStrategy { name } => Err(to_lean_error(
                 &proposition.line_file(),
@@ -282,7 +311,7 @@ impl LeanEmitter {
         context: &LeanProofContext,
     ) -> Result<String, RuntimeError> {
         if let Some(fact_id) = fact.fact_id {
-            if let Some(local) = context.local_fact_names.get(&fact_id) {
+            if let Some(local) = context.proof_fact_names.get(&fact_id) {
                 return Ok(local.clone());
             }
         }
@@ -325,11 +354,11 @@ impl LeanEmitter {
         proposition: &Fact,
         context: &LeanProofContext,
     ) -> Result<String, RuntimeError> {
-        if let Some(local_name) = context.local_fact_names.get(&fact_id) {
+        if let Some(local_name) = context.proof_fact_names.get(&fact_id) {
             return Ok(local_name.clone());
         }
         if self.emitted_fact_ids.contains(&fact_id) {
-            return Ok(lean_fact_name(fact_id));
+            return Ok(lean_global_fact_name(fact_id));
         }
         Err(to_lean_error(
             &proposition.line_file(),
@@ -341,11 +370,11 @@ impl LeanEmitter {
     }
 
     fn lean_equality_rewrite(
-        &self,
+        &mut self,
         proposition: &Fact,
         rewrite: &EqualityRewriteToLeanIR,
         premises: &[FactToLeanIR],
-        context: &LeanProofContext,
+        context: &mut LeanProofContext,
     ) -> Result<String, RuntimeError> {
         if premises.len() != rewrite.steps.len() + 1 {
             return Err(to_lean_error(
@@ -360,8 +389,10 @@ impl LeanEmitter {
 
         let source = &premises[0];
         let mut lines = vec!["by".to_string()];
+        let source_name = self.next_proof_fact_name(context);
         lines.push(format!(
-            "  have h_transport : {} := {}",
+            "  have {} : {} := {}",
+            source_name,
             lean_fact(&source.proposition)?,
             self.lean_proof_term(source, context)?
         ));
@@ -399,7 +430,7 @@ impl LeanEmitter {
             if !seen_equalities.insert(equality_premise.proposition.to_string()) {
                 continue;
             }
-            let local_name = format!("h_rewrite_{}", rewrite_terms.len() + 1);
+            let local_name = self.next_proof_fact_name(context);
             lines.push(format!(
                 "  have {} : {} := {}",
                 local_name,
@@ -415,19 +446,27 @@ impl LeanEmitter {
                 format!("← {}", local_name)
             });
         }
+        let result_name = self.next_proof_fact_name(context);
         lines.push(format!(
-            "  simpa only [{}] using h_transport",
-            rewrite_terms.join(", ")
+            "  have {} : {} := by",
+            result_name,
+            lean_fact(proposition)?
         ));
+        lines.push(format!(
+            "    simpa only [{}] using {}",
+            rewrite_terms.join(", "),
+            source_name
+        ));
+        lines.push(format!("  exact {}", result_name));
         Ok(lines.join("\n"))
     }
 
     fn lean_forall_introduction(
-        &self,
+        &mut self,
         proposition: &Fact,
         premises: &[LocalPremiseToLeanIR],
         conclusions: &[FactToLeanIR],
-        parent_context: &LeanProofContext,
+        context: &mut LeanProofContext,
     ) -> Result<String, RuntimeError> {
         let Fact::ForallFact(forall) = proposition else {
             return Err(to_lean_error(
@@ -442,7 +481,6 @@ impl LeanEmitter {
             ));
         }
 
-        let mut context = parent_context.clone();
         let mut intro_names = forall
             .params_def_with_type
             .groups
@@ -450,9 +488,9 @@ impl LeanEmitter {
             .flat_map(|group| group.params.iter().map(|binding| lean_name(binding.name())))
             .collect::<Vec<_>>();
         for premise in premises.iter() {
-            let local_name = lean_local_fact_name(premise.fact_id);
+            let local_name = self.next_proof_fact_name(context);
             context
-                .local_fact_names
+                .proof_fact_names
                 .insert(premise.fact_id, local_name.clone());
             if is_nonzero_fact(&premise.fact) {
                 context.nonzero_names.push(local_name.clone());
@@ -460,9 +498,24 @@ impl LeanEmitter {
             intro_names.push(local_name);
         }
         let conclusion = &conclusions[0];
-        let inner = self.lean_proof(&conclusion.proposition, &conclusion.proof, &context)?;
+        let inner =
+            self.lean_proof_in_current_space(&conclusion.proposition, &conclusion.proof, context)?;
         let inner = inner.strip_prefix("by\n").unwrap_or(inner.as_str());
         Ok(format!("by\n  intro {}\n{}", intro_names.join(" "), inner))
+    }
+
+    fn next_proof_fact_name(&mut self, context: &mut LeanProofContext) -> String {
+        let local_space_id = match context.local_space_id {
+            Some(local_space_id) => local_space_id,
+            None => {
+                let local_space_id = self.next_local_space_id;
+                self.next_local_space_id += 1;
+                context.local_space_id = Some(local_space_id);
+                local_space_id
+            }
+        };
+        context.next_proof_fact_index += 1;
+        lean_proof_fact_name(local_space_id, context.next_proof_fact_index)
     }
 }
 
@@ -728,12 +781,12 @@ fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
     })
 }
 
-fn lean_fact_name(fact_id: FactId) -> String {
-    format!("litex_fact_{}", fact_id.value())
+fn lean_global_fact_name(fact_id: FactId) -> String {
+    format!("global_fact_{}", fact_id.value())
 }
 
-fn lean_local_fact_name(fact_id: FactId) -> String {
-    format!("h_f{}", fact_id.value())
+fn lean_proof_fact_name(local_space_id: usize, proof_fact_index: usize) -> String {
+    format!("proof_fact_{}_{}", local_space_id, proof_fact_index)
 }
 
 fn is_nonzero_fact(fact: &Fact) -> bool {
@@ -966,13 +1019,13 @@ forall x R:
                 assert!(!output.lines().any(|line| line == "universe u"));
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
                 assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
-                assert_eq!(output.matches("\naxiom litex_fact_").count(), 1);
-                assert!(output.contains("exact litex_fact_"));
+                assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
+                assert!(output.contains("exact global_fact_"));
                 assert!(output.contains(" (1 : ℝ)"));
                 assert!(output.contains("simp [is_one]"));
-                assert!(output.contains(" x h_f"));
-                assert!(output.contains("intro a b x h_f"));
-                assert!(output.contains("field_simp [h_f"));
+                assert!(output.contains(" x proof_fact_"));
+                assert!(output.contains("intro a b x proof_fact_"));
+                assert!(output.contains("field_simp [proof_fact_"));
                 assert!(!output.contains("sorry"));
             },
         );
@@ -1106,7 +1159,7 @@ forall a, b, x R:
         run_with_large_stack("closed_rational_builtin_is_emitted_from_ir", || {
             let output = to_lean_from_source("1 / 2 / 3 / 4 = 1 / 24", "closed-ir").unwrap();
 
-            assert!(output.contains("theorem litex_fact_1"));
+            assert!(output.contains("theorem global_fact_1"));
             assert!(output
                 .contains("-- left recursive fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))"));
             assert!(output.contains("norm_num"));
@@ -1123,11 +1176,61 @@ forall a, b, x R:
             )
             .unwrap();
 
-            assert!(output.contains("intro x h_f"));
-            assert!(output.contains("exact h_f"));
+            assert!(output.contains("intro x proof_fact_1_1"));
+            assert!(output.contains("exact proof_fact_1_1"));
             assert!(!output.contains("axiom"));
             assert!(!output.contains("sorry"));
         });
+    }
+
+    #[test]
+    fn generated_proof_fact_coordinates_distinguish_proof_spaces() {
+        run_with_large_stack(
+            "generated_proof_fact_coordinates_distinguish_proof_spaces",
+            || {
+                let source = r#"
+abstract_prop p(x)
+abstract_prop q(x)
+
+forall x R:
+    $p(x)
+    =>:
+        $p(x)
+
+forall y R:
+    $q(y)
+    =>:
+        $q(y)
+"#;
+                let output = to_lean_from_source(source, "local-proof-spaces").unwrap();
+
+                assert_eq!(output.matches("\ntheorem global_fact_").count(), 2);
+                assert!(output.contains("intro x proof_fact_1_1"));
+                assert!(output.contains("exact proof_fact_1_1"));
+                assert!(output.contains("intro y proof_fact_2_1"));
+                assert!(output.contains("exact proof_fact_2_1"));
+            },
+        );
+    }
+
+    #[test]
+    fn nested_proof_space_inherits_outer_facts_and_resets_its_proof_fact_index() {
+        let mut emitter = LeanEmitter::new(None);
+        let root = LeanProofContext::default();
+        let mut outer = root.new_proof_space();
+        assert_eq!(emitter.next_proof_fact_name(&mut outer), "proof_fact_1_1");
+        assert_eq!(emitter.next_proof_fact_name(&mut outer), "proof_fact_1_2");
+
+        outer
+            .proof_fact_names
+            .insert(FactId::new(42), "proof_fact_1_2".to_string());
+        let mut nested = outer.new_proof_space();
+        assert_eq!(
+            nested.proof_fact_names.get(&FactId::new(42)),
+            Some(&"proof_fact_1_2".to_string())
+        );
+        assert_eq!(emitter.next_proof_fact_name(&mut nested), "proof_fact_2_1");
+        assert_eq!(emitter.next_proof_fact_name(&mut outer), "proof_fact_1_3");
     }
 
     #[test]
@@ -1190,9 +1293,13 @@ forall a, b set:
                 }));
 
                 let output = to_lean_from_source(source, "equality-transport-output").unwrap();
-                assert!(output.contains("have h_transport : p a := h_f"));
-                assert!(output.contains("have h_rewrite_1 : a = b := h_f"));
-                assert!(output.contains("simpa only [h_rewrite_1] using h_transport"));
+                assert!(output
+                    .contains("intro a b proof_fact_1_1 proof_fact_1_2\n  have proof_fact_1_3"));
+                assert!(output.contains("have proof_fact_1_3 : p a := proof_fact_1_1"));
+                assert!(output.contains("have proof_fact_1_4 : a = b := proof_fact_1_2"));
+                assert!(output.contains("have proof_fact_1_5 : p b := by"));
+                assert!(output.contains("simpa only [proof_fact_1_4] using proof_fact_1_3"));
+                assert!(output.contains("exact proof_fact_1_5"));
                 assert!(!output.contains("axiom"));
                 assert!(!output.contains("sorry"));
             },
@@ -1223,10 +1330,12 @@ forall a, b set:
 "#;
                 let output = to_lean_from_source(source, "multi-equality-transport").unwrap();
 
-                assert!(output.contains("have h_transport : q c := h_f"));
-                assert!(output.contains("simpa only [h_rewrite_1, h_rewrite_2] using h_transport"));
+                assert!(output.contains("have proof_fact_1_4 : q c := proof_fact_1_1"));
+                assert!(output.contains("have proof_fact_1_7 : q a := by"));
+                assert!(output
+                    .contains("simpa only [proof_fact_1_5, proof_fact_1_6] using proof_fact_1_4"));
                 let related_proof = output
-                    .split("have h_transport : related a b")
+                    .split("have proof_fact_2_3 : related a b")
                     .nth(1)
                     .expect("binary transport proof");
                 assert_eq!(
@@ -1234,7 +1343,7 @@ forall a, b set:
                         .split("simpa only")
                         .next()
                         .unwrap()
-                        .matches("have h_rewrite_")
+                        .matches("have proof_fact_2_4")
                         .count(),
                     1,
                     "one equality used at two argument positions should be emitted once"
@@ -1314,10 +1423,10 @@ forall x R:
 "#;
                 let output = to_lean_from_source(source, "temporary-domain-evidence").unwrap();
 
-                assert!(output.contains("intro x h_f"));
-                assert!(output.contains("exact litex_fact_"));
-                assert!(output.contains(" x h_f"));
-                assert_eq!(output.matches("\naxiom litex_fact_").count(), 1);
+                assert!(output.contains("intro x proof_fact_1_1"));
+                assert!(output.contains("exact global_fact_"));
+                assert!(output.contains(" x proof_fact_1_1"));
+                assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
                 assert!(!output.contains("sorry"));
             },
         );
