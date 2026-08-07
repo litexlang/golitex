@@ -6,7 +6,7 @@ Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
 
 ## 背景
 
-Litex 是一门以对象和事实为中心的数学形式化语言。它试图降低形式化证明的学习、书写和审阅门槛，让人和 AI 能用接近日常数学的方式表达推理，同时由机器严格检查每条结论。
+Litex 是一门以对象和事实为中心的数学形式化语言。它试图降低形式化证明的学习、书写和阅读门槛，让人和 AI 能用接近日常数学的方式表达推理、促进理解、激发新灵感，同时由机器严格检查每条结论。
 
 要理解这个目标为何需要不同的语言设计，可以先看形式化证明与日常数学常见工作流之间的关系。
 
@@ -229,17 +229,61 @@ example {α : Type*} {s t u : Set α} (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
 
 简化地说，Lean 的 tactic 源码偏向写 *how*，server output 补出 *what remains*；Litex 源码偏向写 *what*，checker output 补出 *why/how*。这是两种默认交互的重心差异，不是排他性的能力划分：Lean 也能显式写中间结果，Litex 也能组织带 Goal 的证明。
 
-不过，只有 checker 确实能够识别这些常见模式，这种分工才有实际意义。
+不过，只有 checker 确实能够识别这些常见模式，这种分工才有实际意义。人做数学时经常先认出模式：当前式子和之前的式子相同，或只差一次代入、一次展开、一次实例化。很少有人主要靠记住每一个辅助定理的内部名字来推理。
 
 Litex 目前把数百条这类小而具体的数学模式放在 builtin verification rules 中，覆盖数、等式、序、集合、函数、元组和成员关系等常见情形。它们不是一个不可见的“大自动化按钮”：每条规则都应当有可读的数学含义、实现、测试和可检查的输出理由。具体规则目录会随版本演进，因此这里不把“规则数量”当作稳定的宣传指标。
 
-“每条 builtin rule 都能有相应的 Lean 定理或代码说明”是很好的审计目标，但不能只因规则看起来直观就把它当作已经完成的形式化保证。可信边界、规则实现、回归测试和独立交叉检查都需要持续公开。
+除此之外，Litex 会把已经验证的事实放进当前上下文，并尝试匹配和替换。已知的 `forall` 事实在参数条件满足时可以被实例化；已知等式也可以帮助较大的表达式匹配。这不是“猜测证明”：每次成功仍要经过规则和上下文检查。对于真正大型、昂贵或需要读者明确看见依赖的结果，Litex 仍保留具名 theorem 和显式 `by thm` 调用。
 
-这些规则为何应当围绕“模式”组织，可以从日常推理的习惯来理解。
+从编译视角看，每次成功验证都会形成一条带有递归结构、可以被完整记录的证明路径；To-Lean 编译器的目标，是把这条路径翻译成 Lean proof term，再交给 Lean kernel 独立检查。
 
-人做数学时经常先认出模式：当前式子和之前的式子相同，或只差一次代入、一次展开、一次实例化。很少有人主要靠记住每一个辅助定理的内部名字来推理。
+<details>
+<summary><strong>延伸阅读：Litex 到 Lean 的编译器如何工作</strong></summary>
 
-因此，Litex 会把已经验证的事实放进当前上下文，并尝试匹配和替换。已知的 `forall` 事实在参数条件满足时可以被实例化；已知等式也可以帮助较大的表达式匹配。这不是“猜测证明”：每次成功仍要经过规则和上下文检查。对于真正大型、昂贵或需要读者明确看见依赖的结果，Litex 仍保留具名 theorem 和显式 `by thm` 调用。
+*本节进一步解释实现机制与当前正确性边界；跳过它不影响后续正文。*
+
+从编译视角看，一条 Litex 事实的成功验证，本质上是一棵可以递归展开的证明树：引用已有事实、引入 `forall` 参数与前提、等式替换、定义展开、计算和 builtin rule 都是树上具体的验证步骤，一个步骤也可能继续分成多个分支。To-Lean 编译器的目标不是在验证结束后重新阅读源码并“猜”一组 tactic，而是记录 checker 已经找到的验证路径，再把其中每个受支持的节点降为 Lean proof term——必要时表现为若干条 tactic——交给 Lean kernel 独立检查。例如，下面这条 Litex 全称事实说：如果 `a != c` 且 `a = b`，那么 `b != c`：
+
+```litex
+forall a, b, c set:
+    a != c
+    a = b
+    =>:
+        b != c
+```
+
+在当前 MVP 已支持的等式改写路径中，它会生成下面的 Lean 代码（具体的 fact ID 由运行时决定）：
+
+```lean
+import Mathlib
+
+universe uLitex
+
+namespace tmp
+
+-- Litex's primitive notion of a set.
+abbrev LitexSet := Type uLitex
+
+-- Every generated proposition has this codomain.
+abbrev LitexFact := Prop
+
+-- Litex stored fact f19
+theorem litex_fact_19 : ∀ (a b c : LitexSet), a ≠ c → a = b → b ≠ c := by
+  intro a b c h_f10 h_f11
+  have h_transport : a ≠ c := h_f10
+  have h_rewrite_1 : a = b := h_f11
+  simpa only [h_rewrite_1] using h_transport
+
+end tmp
+```
+
+这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`intro` 引入三个 `forall` 参数以及两个局部前提；`h_transport` 保留待运输的已知事实 `a ≠ c`；`h_rewrite_1` 保留用于替换的等式 `a = b`；最后 `simpa only [h_rewrite_1] using h_transport` 沿该等式把 `a ≠ c` 改写成 `b ≠ c`。相应的 proof IR 记录了 `forall` introduction、两个局部事实的 ID、一次正向 equality rewrite，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
+
+对于 builtin rule、已知 `forall` 的实例化、计算以及更深的组合证明，proof IR 也应当递归保留相应依据和分支。Litex 为常见数学对象提供了丰富的自动验证路径；一旦某条成功路径被选定，其中每一步都有明确依据，并且应当可以被记录和重放。当前 To-Lean MVP 只覆盖其中一部分路径；不受支持的规则会停止编译，而不会退化成隐式 `axiom`、`sorry`，或伪装成已经证明。因此，“每条 Litex 验证都能编译成 Lean 并由 Lean kernel 接受”目前是正确性工作的目标，而不是已经完成的事实；当这一覆盖充分完整、翻译保持语义且编译器本身经过审计时，它将为 Litex 的验证结果提供很强的独立正确性保证。
+
+> **当前边界：** Litex 到 Lean 的编译器仍在设计和实现中，尚未经过大规模测试。经过若干内核迭代后，上述的示例代码可能编译成的Lean代码也会有变化。欢迎交流。
+
+</details>
 
 在 `Group` 例子中，运算规律直接写在 `<=>:` 里，唯一性证明则直接写成 `identity = G.mul(G.one, identity) = G.one`。
 checker 寻找相应的单位律实例和等式方向，因此源码负责声明“什么成立”，验证路径负责说明“为什么成立”。
@@ -405,7 +449,7 @@ Litex 的承诺不应是“省略证明”，而是更严格也更朴素的一�
 
 > **同样尖锐地说：Litex 的第一性原理上最大的问题，是它的可信内核太大。Litex 把数百个常见证明模式放进 builtin 和 infer rules，把工作从用户的 proof script 移进了可信计算基。证明工作并没有消失，只是被系统吸收了。Litex 代码需要能被编译成 Lean 代码，才能确保其正确性。**
 
-正因如此，Litex 需要逐步积累到 Lean 的编译经验。当前仓库只保留了一个很窄的实验接口：它处理 `R` 上已经验证的有理式等式，递归构造分子与分母，再生成由 `ring` 或 `field_simp` 后接 `ring` 检查的 Lean 代码。它还不是覆盖一般 Litex 语句或 builtin rule 的编译器。长期目标仍是：先由 Litex 检查源码，再生成等价的 Lean 陈述和证明，最后由 Lean 独立检查生成结果。
+*Litex正在构建并完善它的编译到Lean的编译器，欢迎通过github或邮件litexlang@outlook.com联系我进行深入交流。*
 
 上面的编译目标回应的是可信性问题；回到用户界面，全文反复比较的核心区别仍然是：**Litex 用户声明 *what*：“什么应当成立”；Lean tactic 用户声明 *how*：“应当怎样证明 Goal”。** Litex checker 寻找能与结果匹配的证明依据，并解释找到的验证路径。Lean tactic elaboration 按照用户的证明指令构造对应的 proof term，server 显示变化后的 Goal，kernel 检查该 term。
 

@@ -15,8 +15,8 @@ pub use crate::common::name_types::{
 pub use crate::common::output_language::OutputLanguage;
 pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
-    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality, KnownFnInfo,
-    KnownForallFactParamsAndDom, KnownObjValue,
+    AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality,
+    KnownEqualityProofStep, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -420,9 +420,11 @@ pub use crate::symbol::{
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
 pub use crate::to_lean_ir::{
-    AbstractPropToLeanIR, BuiltinProofKindToLeanIR, BuiltinRuleToLeanIR, FactProofToLeanIR,
-    FactStmtToLeanIR, FactToLeanIR, KnownForallArgumentToLeanIR, ParamGroupToLeanIR,
-    ParamTypeToLeanIR, PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
+    AbstractPropToLeanIR, EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR,
+    EqualityRewriteToLeanIR, FactProofToLeanIR, FactStmtToLeanIR, FactToLeanIR,
+    IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LocalPremiseToLeanIR,
+    NormalizationKindToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR, ProofRuleToLeanIR,
+    PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

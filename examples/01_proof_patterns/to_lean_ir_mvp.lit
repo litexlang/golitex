@@ -1,11 +1,28 @@
-# Tracer: verifier-produced To-Lean IR with stable FactIds.
+# Tracer: verifier-produced proof-rule IR preserves equality transport.
 #
 # Before (did not work):
-# To-Lean re-read each raw statement after execution and guessed a Lean tactic
-# from its syntax. Stored facts had no stable identity, so a later forall
-# instantiation could not say which checked fact it was applying.
+# abstract_prop transported(a)
+# forall a, b set:
+#     $transported(a)
+#     a = b
+#     =>:
+#         $transported(b)
+#
+# Former behavior: Litex verified the forall, but flattened the conclusion to
+# a citation of `$transported(a)`. To-Lean then failed with "has no stored
+# FactId" and had no record that `a = b` transported the cited fact to the
+# target `$transported(b)`.
 #
 # Now (verified):
+abstract_prop transported(a)
+
+forall a, b set:
+    $transported(a)
+    a = b
+    =>:
+        $transported(b)
+
+# Broader first-slice coverage:
 abstract_prop marked(x)
 
 prop is_one(x R):
@@ -33,18 +50,20 @@ forall a, b, x R:
     x != 0
     =>:
         (a + b) / x = a / x + b / x
-# Current behavior: facts admitted to the environment's known-fact cache
-# receive stable FactIds. In To-Lean mode, the statements above return IR for
-# an opaque proposition, a definition, an explicit trust boundary,
-# known-forall application, definition unfolding, a temporary domain fact used
-# as known-forall evidence, local-assumption reuse, forall introduction, and
-# rational-expression builtin evidence. The emitter accepts only this IR; only
-# explicit `trust` becomes `axiom`.
+# Current behavior: the verifier retains the ordered equality path and local
+# premise FactIds. To-Lean represents the conclusion as a `RuleApplication`
+# containing `EqualityRewrite`, a cited source-fact premise, and equality-proof
+# premises. The same extensible rule node also represents definition reduction,
+# known-forall application, and normalization. Only explicit `trust` becomes
+# `axiom`.
 #
-# Boundary: directly compiling `$marked(1)` would require lowering the nested
-# numeric proof `1 != 0`, which this MVP still rejects. Unsupported proof rules
-# and proposition/object forms never become `sorry` or implicit axioms.
+# Boundary: transports without structured verifier evidence (currently, for
+# example, order-predicate transposition) become `OtherUnsupported` and stop
+# compilation. Directly compiling `$marked(1)` also still requires a nested
+# numeric proof backend. Neither boundary becomes `sorry` or an implicit axiom.
 #
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/to_lean_ir_mvp.lit
 # Compiler evidence: cargo test --release to_lean:: -- --nocapture
-# Implementation: src/to_lean_ir, src/runtime/runtime_to_lean_ir.rs, src/to_lean
+# Implementation: src/environment/known_equality.rs,
+# src/verify/verify_known_atomic_facts.rs, src/result/runtime_success.rs,
+# src/to_lean_ir, src/runtime/runtime_to_lean_ir.rs, src/to_lean

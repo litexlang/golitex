@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet, VecDeque};
 
 type EqualityNodeId = usize;
 
@@ -14,6 +14,27 @@ struct EqualityNode {
     parent: EqualityNodeId,
     size: usize,
     members: Vec<Obj>,
+}
+
+/// One checked edge in a path through the stored equality graph.
+///
+/// `equality` is the original fact that justified the edge. `from` and `to`
+/// record the orientation in which a compiler must use that fact.
+#[derive(Clone)]
+pub struct KnownEqualityProofStep {
+    pub from: Obj,
+    pub to: Obj,
+    pub equality: EqualFact,
+}
+
+impl std::fmt::Debug for KnownEqualityProofStep {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("KnownEqualityProofStep")
+            .field("from", &self.from.to_string())
+            .field("to", &self.to.to_string())
+            .field("equality", &self.equality.to_string())
+            .finish()
+    }
 }
 
 /// Equality classes indexed by alpha-normalized object keys.
@@ -81,6 +102,65 @@ impl KnownEquality {
                 self.nodes[root_id].members.as_slice(),
             )
         })
+    }
+
+    /// Returns an ordered proof path from `from` to `to` when the equality
+    /// store contains one. This exposes the checked direct edges rather than
+    /// merely reporting that both objects share a union-find class.
+    pub fn proof_path(&self, from: &Obj, to: &Obj) -> Option<Vec<KnownEqualityProofStep>> {
+        let from_key = obj_equality_key(from);
+        let to_key = obj_equality_key(to);
+        if from_key == to_key {
+            return Some(Vec::new());
+        }
+
+        let mut queue = VecDeque::from([from_key.clone()]);
+        let mut visited = HashSet::from([from_key.clone()]);
+        let mut parents: HashMap<ObjString, (ObjString, EqualFact)> = HashMap::new();
+
+        while let Some(current) = queue.pop_front() {
+            let entry = self.entries.get(&current)?;
+            for (neighbor, proof) in entry.direct_proof_map.iter() {
+                let AtomicFact::EqualFact(equality) = proof else {
+                    continue;
+                };
+                if !visited.insert(neighbor.clone()) {
+                    continue;
+                }
+                parents.insert(neighbor.clone(), (current.clone(), equality.clone()));
+                if neighbor == &to_key {
+                    return Self::reconstruct_proof_path(&from_key, &to_key, parents);
+                }
+                queue.push_back(neighbor.clone());
+            }
+        }
+
+        None
+    }
+
+    fn reconstruct_proof_path(
+        from_key: &str,
+        to_key: &str,
+        parents: HashMap<ObjString, (ObjString, EqualFact)>,
+    ) -> Option<Vec<KnownEqualityProofStep>> {
+        let mut current = to_key.to_string();
+        let mut reversed = Vec::new();
+        while current != from_key {
+            let (parent, equality) = parents.get(&current)?.clone();
+            let left_key = obj_equality_key(&equality.left);
+            let right_key = obj_equality_key(&equality.right);
+            let (from, to) = if left_key == parent && right_key == current {
+                (equality.left.clone(), equality.right.clone())
+            } else if right_key == parent && left_key == current {
+                (equality.right.clone(), equality.left.clone())
+            } else {
+                return None;
+            };
+            reversed.push(KnownEqualityProofStep { from, to, equality });
+            current = parent;
+        }
+        reversed.reverse();
+        Some(reversed)
     }
 
     pub fn store(&mut self, equality: &EqualFact) {
@@ -260,5 +340,30 @@ mod tests {
             .map(|(proofs, _)| proofs.len())
             .sum::<usize>();
         assert_eq!(proof_count_after, proof_count_before);
+    }
+
+    #[test]
+    fn equality_proof_path_preserves_edge_order_and_orientation() {
+        let mut known = KnownEquality::new();
+        known.store(&equality("x0", "x1"));
+        known.store(&equality("x1", "x2"));
+
+        let forward = known
+            .proof_path(&named_obj("x0"), &named_obj("x2"))
+            .expect("forward path");
+        assert_eq!(forward.len(), 2);
+        assert_eq!(forward[0].from.to_string(), "x0");
+        assert_eq!(forward[0].to.to_string(), "x1");
+        assert_eq!(forward[1].from.to_string(), "x1");
+        assert_eq!(forward[1].to.to_string(), "x2");
+
+        let backward = known
+            .proof_path(&named_obj("x2"), &named_obj("x0"))
+            .expect("backward path");
+        assert_eq!(backward.len(), 2);
+        assert_eq!(backward[0].from.to_string(), "x2");
+        assert_eq!(backward[0].to.to_string(), "x1");
+        assert_eq!(backward[1].from.to_string(), "x1");
+        assert_eq!(backward[1].to.to_string(), "x0");
     }
 }

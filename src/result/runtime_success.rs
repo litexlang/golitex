@@ -199,6 +199,10 @@ pub struct VerifiedByFactResult {
     pub cite_what: Box<Stmt>,
     /// Captured while the cited fact's environment is still alive.
     pub source_fact_id: Option<FactId>,
+    /// `Some` means the verifier reached the goal by rewriting the cited fact
+    /// along these checked equality edges. `None` means no structured
+    /// transport evidence was recorded for this citation route.
+    pub equality_rewrites: Option<Vec<KnownEqualityProofStep>>,
 }
 
 pub struct KnownForallInstantiationItem {
@@ -269,6 +273,7 @@ pub struct FactVerifiedByFactInVerifiedBys {
     pub verify_what: Fact,
     pub cite_what: Box<Stmt>,
     pub source_fact_id: Option<FactId>,
+    pub equality_rewrites: Option<Vec<KnownEqualityProofStep>>,
 }
 
 #[derive(Debug)]
@@ -449,6 +454,21 @@ impl VerifiedByResult {
             detail,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
+            equality_rewrites: None,
+        })
+    }
+
+    pub fn cited_fact_with_equality_rewrites(
+        _goal: Fact,
+        cite_what: Fact,
+        equality_rewrites: Vec<KnownEqualityProofStep>,
+        detail: Option<String>,
+    ) -> Self {
+        Self::Fact(VerifiedByFactResult {
+            detail,
+            cite_what: Box::new(cite_what.into_stmt()),
+            source_fact_id: None,
+            equality_rewrites: Some(equality_rewrites),
         })
     }
 
@@ -478,6 +498,7 @@ impl VerifiedByResult {
             detail: None,
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id: Some(source_fact_id),
+            equality_rewrites: None,
         })
     }
 
@@ -551,6 +572,7 @@ impl VerifiedBysEnum {
             verify_what,
             cite_what: Box::new(cite_what),
             source_fact_id: None,
+            equality_rewrites: None,
         })
     }
 
@@ -583,6 +605,7 @@ impl VerifiedBysEnum {
                     verify_what,
                     cite_what: r.cite_what,
                     source_fact_id: r.source_fact_id,
+                    equality_rewrites: r.equality_rewrites,
                 })]
             }
             VerifiedByResult::KnownForallInstantiation(r) => {

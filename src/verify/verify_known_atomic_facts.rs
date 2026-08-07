@@ -32,14 +32,24 @@ impl Runtime {
             self.all_objs_equal_to_arg_for_known_atomic_fact(args[0], &module_names);
 
         for environment in self.iter_environments_from_top() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
+            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
+                environment,
+                atomic_fact,
+                &all_objs_equal_to_arg,
+                &module_names,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg)?;
+                let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
+                    environment,
+                    atomic_fact,
+                    &all_objs_equal_to_arg,
+                    &module_names,
+                )?;
                 if result.is_true() {
                     return Ok(result);
                 }
@@ -78,14 +88,26 @@ impl Runtime {
             self.all_objs_equal_to_arg_for_known_atomic_fact(args[1], &module_names);
 
         for environment in self.iter_environments_from_top() {
-            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(
+                environment,
+                atomic_fact,
+                &all_objs_equal_to_arg0,
+                &all_objs_equal_to_arg1,
+                &module_names,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(environment, atomic_fact, &all_objs_equal_to_arg0, &all_objs_equal_to_arg1)?;
+                let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params_with_facts_in_environment(
+                    environment,
+                    atomic_fact,
+                    &all_objs_equal_to_arg0,
+                    &all_objs_equal_to_arg1,
+                    &module_names,
+                )?;
                 if result.is_true() {
                     return Ok(result);
                 }
@@ -132,10 +154,11 @@ impl Runtime {
         }
 
         for environment in self.iter_environments_from_top() {
-            let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
                 environment,
                 atomic_fact,
                 &all_objs_equal_to_each_arg,
+                &module_names,
             )?;
             if result.is_true() {
                 return Ok(result);
@@ -143,10 +166,11 @@ impl Runtime {
         }
         for module_name in module_names.iter() {
             for environment in self.imported_module_environments(module_name) {
-                let result = Self::verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+                let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
                     environment,
                     atomic_fact,
                     &all_objs_equal_to_each_arg,
+                    &module_names,
                 )?;
                 if result.is_true() {
                     return Ok(result);
@@ -240,6 +264,78 @@ impl Runtime {
                 &environments,
                 module_given.as_str(),
             ));
+        }
+    }
+
+    fn equality_rewrites_for_known_atomic_fact(
+        &self,
+        known_fact: &AtomicFact,
+        goal: &AtomicFact,
+        module_names: &[String],
+    ) -> Option<Vec<KnownEqualityProofStep>> {
+        if known_fact.key() != goal.key() || known_fact.is_true() != goal.is_true() {
+            return None;
+        }
+        let known_args = known_fact.args_ref();
+        let goal_args = goal.args_ref();
+        if known_args.len() != goal_args.len() {
+            return None;
+        }
+        if known_args
+            .iter()
+            .zip(goal_args.iter())
+            .all(|(known, goal)| obj_equality_key(known) == obj_equality_key(goal))
+        {
+            return Some(Vec::new());
+        }
+
+        // Equality lookup already combines nested runtime environments. Build
+        // the corresponding proof graph from those same checked direct edges
+        // so the successful lookup retains an actual transport path.
+        let mut equalities = KnownEquality::new();
+        for environment in self.iter_environments_from_top() {
+            Self::extend_equality_proof_graph(&mut equalities, environment);
+        }
+        for module_name in module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                Self::extend_equality_proof_graph(&mut equalities, environment);
+            }
+        }
+
+        let mut rewrites = Vec::new();
+        for (known_arg, goal_arg) in known_args.iter().zip(goal_args.iter()) {
+            rewrites.extend(equalities.proof_path(known_arg, goal_arg)?);
+        }
+        Some(rewrites)
+    }
+
+    fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &Environment) {
+        for (direct_proofs, _) in environment.known_equality.values() {
+            for proof in direct_proofs.values() {
+                if let AtomicFact::EqualFact(equality) = proof {
+                    equalities.store(equality);
+                }
+            }
+        }
+    }
+
+    fn cited_known_atomic_fact(
+        &self,
+        goal: &AtomicFact,
+        known_fact: &AtomicFact,
+        module_names: &[String],
+        detail: Option<String>,
+    ) -> VerifiedByResult {
+        match self.equality_rewrites_for_known_atomic_fact(known_fact, goal, module_names) {
+            Some(rewrites) => VerifiedByResult::cited_fact_with_equality_rewrites(
+                goal.clone().into(),
+                known_fact.clone().into(),
+                rewrites,
+                detail,
+            ),
+            None => {
+                VerifiedByResult::cited_fact(goal.clone().into(), known_fact.clone().into(), detail)
+            }
         }
     }
 
@@ -363,9 +459,11 @@ impl Runtime {
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
+        &self,
         environment: &Environment,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg: &Vec<String>,
+        module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .known_atomic_facts_with_1_arg
@@ -375,9 +473,10 @@ impl Runtime {
                 if let Some(known_atomic_fact) = known_facts_map.get(obj) {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
-                            atomic_fact.clone().into(),
-                            known_atomic_fact.clone().into(),
+                        self.cited_known_atomic_fact(
+                            atomic_fact,
+                            known_atomic_fact,
+                            module_names,
                             None,
                         ),
                         Vec::new(),
@@ -396,6 +495,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         all_objs_equal_to_arg0: &Vec<String>,
         all_objs_equal_to_arg1: &Vec<String>,
+        module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts_map) = environment
             .known_atomic_facts_with_2_args
@@ -408,9 +508,10 @@ impl Runtime {
                     {
                         return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                             atomic_fact.clone().into(),
-                            VerifiedByResult::cited_fact(
-                                atomic_fact.clone().into(),
-                                known_atomic_fact.clone().into(),
+                            self.cited_known_atomic_fact(
+                                atomic_fact,
+                                known_atomic_fact,
+                                module_names,
                                 None,
                             ),
                             Vec::new(),
@@ -437,9 +538,10 @@ impl Runtime {
                 if args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
-                            atomic_fact.clone().into(),
-                            known_atomic_fact.clone().into(),
+                        self.cited_known_atomic_fact(
+                            atomic_fact,
+                            known_atomic_fact,
+                            module_names,
                             Some("corresponding arguments are known equal".to_string()),
                         ),
                         Vec::new(),
@@ -508,9 +610,11 @@ impl Runtime {
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params_with_facts_in_environment(
+        &self,
         environment: &Environment,
         atomic_fact: &AtomicFact,
         all_objs_equal_to_each_arg: &Vec<Vec<String>>,
+        module_names: &[String],
     ) -> Result<StmtResult, RuntimeError> {
         if let Some(known_facts) = environment
             .known_atomic_facts_with_0_or_more_than_2_args
@@ -556,11 +660,7 @@ impl Runtime {
                 if all_args_match {
                     return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                         atomic_fact.clone().into(),
-                        VerifiedByResult::cited_fact(
-                            atomic_fact.clone().into(),
-                            known_fact.clone().into(),
-                            None,
-                        ),
+                        self.cited_known_atomic_fact(atomic_fact, known_fact, module_names, None),
                         Vec::new(),
                     ))
                     .into());

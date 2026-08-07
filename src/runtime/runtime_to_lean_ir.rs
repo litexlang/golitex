@@ -1,5 +1,25 @@
 use crate::prelude::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
+
+#[derive(Clone, Default)]
+struct ToLeanIrContext {
+    local_fact_ids: HashMap<String, FactId>,
+}
+
+impl ToLeanIrContext {
+    fn with_infer_result(&self, infer_result: &InferResult) -> Self {
+        let mut nested = self.clone();
+        for output in infer_result.store_fact_outputs.iter() {
+            if let Some(fact_id) = output.fact_id {
+                nested.local_fact_ids.insert(
+                    output.itself_and_why_itself_is_stored.0.to_string(),
+                    fact_id,
+                );
+            }
+        }
+        nested
+    }
+}
 
 impl Runtime {
     pub(crate) fn build_stmt_to_lean_ir(
@@ -73,6 +93,14 @@ impl Runtime {
         &self,
         success: &FactualStmtSuccess,
     ) -> Result<FactToLeanIR, RuntimeError> {
+        self.fact_to_lean_ir_from_success_with_context(success, &ToLeanIrContext::default())
+    }
+
+    fn fact_to_lean_ir_from_success_with_context(
+        &self,
+        success: &FactualStmtSuccess,
+        context: &ToLeanIrContext,
+    ) -> Result<FactToLeanIR, RuntimeError> {
         Ok(FactToLeanIR {
             fact_id: success.fact_id,
             proposition: success.stmt.clone(),
@@ -80,6 +108,7 @@ impl Runtime {
                 &success.stmt,
                 success.fact_id,
                 &success.verified_by,
+                context,
             )?,
         })
     }
@@ -87,7 +116,8 @@ impl Runtime {
     fn fact_to_lean_ir_from_result(
         &self,
         result: &StmtResult,
-        context: &str,
+        result_context: &str,
+        context: &ToLeanIrContext,
     ) -> Result<FactToLeanIR, RuntimeError> {
         let Some(success) = result.factual_success() else {
             return Ok(FactToLeanIR {
@@ -104,11 +134,11 @@ impl Runtime {
                         .into()
                     }),
                 proof: FactProofToLeanIR::Unsupported {
-                    reason: format!("{} did not return a factual success", context),
+                    reason: format!("{} did not return a factual success", result_context),
                 },
             });
         };
-        self.fact_to_lean_ir_from_success(success)
+        self.fact_to_lean_ir_from_success_with_context(success, context)
     }
 
     fn verified_by_to_lean_ir(
@@ -116,37 +146,35 @@ impl Runtime {
         goal: &Fact,
         goal_fact_id: Option<FactId>,
         verified_by: &VerifiedByResult,
+        context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => Ok(FactProofToLeanIR::Builtin {
-                kind: BuiltinProofKindToLeanIR::Rule,
-                rule: BuiltinRuleToLeanIR::from_verified_label(&result.msg, goal),
-                subgoals: self.subgoals_to_lean_ir(&result.subgoals)?,
+            VerifiedByResult::BuiltinRule(result) => Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::from_verified_builtin_label(&result.msg, goal),
+                parameter_requirements: Vec::new(),
+                premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
             }),
-            VerifiedByResult::BuiltinStrategy(result) => Ok(FactProofToLeanIR::Builtin {
-                kind: BuiltinProofKindToLeanIR::Strategy,
-                rule: BuiltinRuleToLeanIR::from_verified_label(&result.msg, goal),
-                subgoals: self.subgoals_to_lean_ir(&result.subgoals)?,
+            VerifiedByResult::BuiltinStrategy(result) => Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::from_verified_builtin_label(&result.msg, goal),
+                parameter_requirements: Vec::new(),
+                premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
             }),
             VerifiedByResult::Fact(result) => match result.cite_what.as_ref() {
-                Stmt::Fact(source_fact) => {
-                    let source_fact_id = match result.source_fact_id {
-                        Some(fact_id) => Some(fact_id),
-                        None => self.citation_fact_id(source_fact, goal, goal_fact_id)?,
-                    };
-                    match source_fact_id {
-                        Some(source_fact_id) => Ok(FactProofToLeanIR::KnownFact { source_fact_id }),
-                        None => Ok(FactProofToLeanIR::Unsupported {
-                            reason: format!(
-                                "verified citation `{}` has no stored FactId",
-                                source_fact
-                            ),
-                        }),
-                    }
-                }
+                Stmt::Fact(source_fact) => self.fact_citation_to_lean_ir(
+                    goal,
+                    goal_fact_id,
+                    source_fact,
+                    result.source_fact_id,
+                    result.equality_rewrites.as_deref(),
+                    context,
+                ),
                 Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
-                    Ok(FactProofToLeanIR::Definition {
-                        name: definition.name.clone(),
+                    Ok(FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::DefinitionReduction {
+                            definition: definition.name.clone(),
+                        },
+                        parameter_requirements: Vec::new(),
+                        premises: Vec::new(),
                     })
                 }
                 Stmt::DefStrategyStmt(strategy) => Ok(FactProofToLeanIR::UserStrategy {
@@ -160,56 +188,69 @@ impl Runtime {
                 }),
             },
             VerifiedByResult::KnownForallInstantiation(result) => {
-                self.known_forall_to_lean_ir(result)
+                self.known_forall_to_lean_ir(result, context)
             }
             VerifiedByResult::VerifiedBys(result) => {
                 let mut steps = Vec::with_capacity(result.cite_what.len());
                 for step in result.cite_what.iter() {
-                    steps.push(self.verified_bys_step_to_lean_ir(step, goal, goal_fact_id)?);
+                    steps.push(self.verified_bys_step_to_lean_ir(
+                        step,
+                        goal,
+                        goal_fact_id,
+                        context,
+                    )?);
                 }
                 Ok(FactProofToLeanIR::Composite { steps })
             }
             VerifiedByResult::ForallProof(result) => {
                 let parameter_reason = InferReason::ParameterDefinition.store_reason();
-                let parameter_assumptions = result
+                let parameter_premises = result
                     .assumption_infers
                     .store_fact_outputs
                     .iter()
                     .filter(|output| output.itself_and_why_itself_is_stored.1 == parameter_reason)
-                    .map(|output| FactToLeanIR {
-                        fact_id: output.fact_id,
-                        proposition: output.itself_and_why_itself_is_stored.0.clone(),
-                        proof: FactProofToLeanIR::Assumption,
+                    .map(|output| {
+                        let fact = output.itself_and_why_itself_is_stored.0.clone();
+                        let fact_id = output.fact_id.ok_or_else(|| {
+                            to_lean_ir_error(
+                                &fact.line_file(),
+                                "a forall parameter premise reached To-Lean without a FactId",
+                            )
+                        })?;
+                        Ok(LocalPremiseToLeanIR::new(fact_id, fact))
                     })
-                    .collect();
-                let mut assumptions = Vec::with_capacity(result.forall_fact.dom_facts.len());
+                    .collect::<Result<Vec<_>, RuntimeError>>()?;
+                let mut premises = Vec::with_capacity(result.forall_fact.dom_facts.len());
                 for dom_fact in result.forall_fact.dom_facts.iter() {
-                    let proposition = dom_fact.clone();
+                    let fact = dom_fact.clone();
                     let fact_id = result
                         .assumption_infers
                         .store_fact_outputs
                         .iter()
                         .find(|output| {
-                            output.itself_and_why_itself_is_stored.0.to_string()
-                                == proposition.to_string()
+                            output.itself_and_why_itself_is_stored.0.to_string() == fact.to_string()
                         })
-                        .and_then(|output| output.fact_id);
-                    assumptions.push(FactToLeanIR {
-                        fact_id,
-                        proposition,
-                        proof: FactProofToLeanIR::Assumption,
-                    });
+                        .and_then(|output| output.fact_id)
+                        .ok_or_else(|| {
+                            to_lean_ir_error(
+                                &fact.line_file(),
+                                "a forall domain premise reached To-Lean without a FactId",
+                            )
+                        })?;
+                    premises.push(LocalPremiseToLeanIR::new(fact_id, fact));
                 }
+                let conclusion_context = context.with_infer_result(&result.assumption_infers);
                 let mut conclusions = Vec::with_capacity(result.proves.len());
                 for proved in result.proves.iter() {
                     conclusions.push(self.fact_to_lean_ir_from_result(
                         proved.result.as_ref(),
                         "forall conclusion",
+                        &conclusion_context,
                     )?);
                 }
                 Ok(FactProofToLeanIR::ForallIntroduction {
-                    parameter_assumptions,
-                    assumptions,
+                    parameter_premises,
+                    premises,
                     conclusions,
                 })
             }
@@ -218,9 +259,105 @@ impl Runtime {
                     goal,
                     source.fact_id.or(goal_fact_id),
                     &source.verified_by,
+                    context,
                 )?),
             }),
         }
+    }
+
+    fn fact_citation_to_lean_ir(
+        &self,
+        goal: &Fact,
+        goal_fact_id: Option<FactId>,
+        source_fact: &Fact,
+        recorded_source_fact_id: Option<FactId>,
+        equality_rewrites: Option<&[KnownEqualityProofStep]>,
+        context: &ToLeanIrContext,
+    ) -> Result<FactProofToLeanIR, RuntimeError> {
+        let source_fact_id = match recorded_source_fact_id {
+            Some(fact_id) => Some(fact_id),
+            None => self.citation_fact_id(source_fact, goal, goal_fact_id, context)?,
+        };
+        let Some(source_fact_id) = source_fact_id else {
+            return Ok(FactProofToLeanIR::Unsupported {
+                reason: format!("verified citation `{}` has no stored FactId", source_fact),
+            });
+        };
+
+        let Some(equality_rewrites) = equality_rewrites else {
+            if source_fact.to_string() == goal.to_string() {
+                return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
+            }
+            return Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::OtherUnsupported {
+                    name: format!(
+                        "citation `{}` changed goal `{}` without structured rewrite evidence",
+                        source_fact, goal
+                    ),
+                },
+                parameter_requirements: Vec::new(),
+                premises: vec![FactToLeanIR {
+                    fact_id: Some(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
+                }],
+            });
+        };
+        if equality_rewrites.is_empty() {
+            return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
+        }
+
+        let mut premises = Vec::with_capacity(equality_rewrites.len() + 1);
+        premises.push(FactToLeanIR {
+            fact_id: Some(source_fact_id),
+            proposition: source_fact.clone(),
+            proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
+        });
+        let mut steps = Vec::with_capacity(equality_rewrites.len());
+        for rewrite in equality_rewrites.iter() {
+            let equality_fact: Fact = AtomicFact::EqualFact(rewrite.equality.clone()).into();
+            let Some(equality_fact_id) =
+                self.citation_fact_id(&equality_fact, &equality_fact, None, context)?
+            else {
+                return Ok(FactProofToLeanIR::Unsupported {
+                    reason: format!("equality rewrite `{}` has no stored FactId", equality_fact),
+                });
+            };
+            let left_key = obj_equality_key(&rewrite.equality.left);
+            let right_key = obj_equality_key(&rewrite.equality.right);
+            let from_key = obj_equality_key(&rewrite.from);
+            let to_key = obj_equality_key(&rewrite.to);
+            let direction = if from_key == left_key && to_key == right_key {
+                EqualityRewriteDirectionToLeanIR::Forward
+            } else if from_key == right_key && to_key == left_key {
+                EqualityRewriteDirectionToLeanIR::Backward
+            } else {
+                return Ok(FactProofToLeanIR::Unsupported {
+                    reason: format!(
+                        "equality rewrite edge `{}` -> `{}` is not oriented by `{}`",
+                        rewrite.from, rewrite.to, equality_fact
+                    ),
+                });
+            };
+            premises.push(FactToLeanIR {
+                fact_id: Some(equality_fact_id),
+                proposition: equality_fact,
+                proof: FactProofToLeanIR::KnownFactCitation {
+                    source_fact_id: equality_fact_id,
+                },
+            });
+            steps.push(EqualityRewriteStepToLeanIR {
+                from: rewrite.from.clone(),
+                to: rewrite.to.clone(),
+                direction,
+            });
+        }
+
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule: ProofRuleToLeanIR::EqualityRewrite(EqualityRewriteToLeanIR { steps }),
+            parameter_requirements: Vec::new(),
+            premises,
+        })
     }
 
     fn citation_fact_id(
@@ -228,14 +365,18 @@ impl Runtime {
         cited_fact: &Fact,
         goal: &Fact,
         goal_fact_id: Option<FactId>,
+        context: &ToLeanIrContext,
     ) -> Result<Option<FactId>, RuntimeError> {
+        if let Some(fact_id) = context.local_fact_ids.get(&cited_fact.to_string()) {
+            return Ok(Some(*fact_id));
+        }
         if let Some(fact_id) = self.known_fact_id_for_fact(cited_fact)? {
             return Ok(Some(fact_id));
         }
-        // A forall conclusion can cite one of its temporary assumptions. The
+        // A forall conclusion can cite one of its temporary premises. The
         // local environment has already been popped when statement IR is
         // assembled, but verification stored the identical conclusion under
-        // the assumption's ID and retained that ID on the result.
+        // the premise's ID and retained that ID on the result.
         if cited_fact.to_string() == goal.to_string() {
             return Ok(goal_fact_id);
         }
@@ -245,6 +386,7 @@ impl Runtime {
     fn known_forall_to_lean_ir(
         &self,
         result: &KnownForallInstantiationResult,
+        context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         let Stmt::Fact(source_fact) = result.cite_what.as_ref() else {
             return Ok(FactProofToLeanIR::Unsupported {
@@ -253,7 +395,7 @@ impl Runtime {
         };
         let source_fact_id = match result.source_fact_id {
             Some(fact_id) => Some(fact_id),
-            None => self.known_fact_id_for_fact(source_fact)?,
+            None => self.citation_fact_id(source_fact, source_fact, None, context)?,
         };
         let Some(source_fact_id) = source_fact_id else {
             return Ok(FactProofToLeanIR::Unsupported {
@@ -274,6 +416,7 @@ impl Runtime {
             let requirement_ir = self.fact_to_lean_ir_from_result(
                 requirement.result.as_ref(),
                 "known-forall requirement",
+                context,
             )?;
             match requirement.kind {
                 KnownForallRequirementKind::ParameterType => {
@@ -282,21 +425,24 @@ impl Runtime {
                 KnownForallRequirementKind::Domain => requirements.push(requirement_ir),
             }
         }
-        Ok(FactProofToLeanIR::KnownForall {
-            source_fact_id,
-            arguments,
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule: ProofRuleToLeanIR::KnownForallInstantiation {
+                source_fact_id,
+                arguments,
+            },
             parameter_requirements,
-            requirements,
+            premises: requirements,
         })
     }
 
     fn subgoals_to_lean_ir(
         &self,
         subgoals: &[StmtResult],
+        context: &ToLeanIrContext,
     ) -> Result<Vec<FactToLeanIR>, RuntimeError> {
         subgoals
             .iter()
-            .map(|result| self.fact_to_lean_ir_from_result(result, "builtin subgoal"))
+            .map(|result| self.fact_to_lean_ir_from_result(result, "builtin subgoal", context))
             .collect()
     }
 
@@ -305,9 +451,11 @@ impl Runtime {
         step: &VerifiedBysEnum,
         enclosing_goal: &Fact,
         enclosing_goal_fact_id: Option<FactId>,
+        context: &ToLeanIrContext,
     ) -> Result<FactToLeanIR, RuntimeError> {
         let step_fact_id = |fact: &Fact| -> Result<Option<FactId>, RuntimeError> {
-            let known = self.known_fact_id_for_fact(fact)?;
+            let known =
+                self.citation_fact_id(fact, enclosing_goal, enclosing_goal_fact_id, context)?;
             if known.is_some() || fact.to_string() != enclosing_goal.to_string() {
                 Ok(known)
             } else {
@@ -318,47 +466,44 @@ impl Runtime {
             VerifiedBysEnum::ByBuiltinRule(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: FactProofToLeanIR::Builtin {
-                    kind: BuiltinProofKindToLeanIR::Rule,
-                    rule: BuiltinRuleToLeanIR::from_verified_label(
+                proof: FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::from_verified_builtin_label(
                         &result.msg,
                         &result.verify_what,
                     ),
-                    subgoals: self.subgoals_to_lean_ir(&result.subgoals)?,
+                    parameter_requirements: Vec::new(),
+                    premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
                 },
             }),
             VerifiedBysEnum::ByBuiltinStrategy(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: FactProofToLeanIR::Builtin {
-                    kind: BuiltinProofKindToLeanIR::Strategy,
-                    rule: BuiltinRuleToLeanIR::from_verified_label(
+                proof: FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::from_verified_builtin_label(
                         &result.msg,
                         &result.verify_what,
                     ),
-                    subgoals: self.subgoals_to_lean_ir(&result.subgoals)?,
+                    parameter_requirements: Vec::new(),
+                    premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
                 },
             }),
             VerifiedBysEnum::ByFact(result) => {
                 let proof = match result.cite_what.as_ref() {
-                    Stmt::Fact(source) => {
-                        let source_fact_id = match result.source_fact_id {
-                            Some(fact_id) => Some(fact_id),
-                            None => self.citation_fact_id(
-                                source,
-                                &result.verify_what,
-                                step_fact_id(&result.verify_what)?,
-                            )?,
-                        };
-                        source_fact_id
-                            .map(|source_fact_id| FactProofToLeanIR::KnownFact { source_fact_id })
-                            .unwrap_or_else(|| FactProofToLeanIR::Unsupported {
-                                reason: format!("cited fact `{}` has no stored FactId", source),
-                            })
-                    }
+                    Stmt::Fact(source) => self.fact_citation_to_lean_ir(
+                        &result.verify_what,
+                        step_fact_id(&result.verify_what)?,
+                        source,
+                        result.source_fact_id,
+                        result.equality_rewrites.as_deref(),
+                        context,
+                    )?,
                     Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
-                        FactProofToLeanIR::Definition {
-                            name: definition.name.clone(),
+                        FactProofToLeanIR::RuleApplication {
+                            rule: ProofRuleToLeanIR::DefinitionReduction {
+                                definition: definition.name.clone(),
+                            },
+                            parameter_requirements: Vec::new(),
+                            premises: Vec::new(),
                         }
                     }
                     cited => FactProofToLeanIR::Unsupported {
@@ -374,7 +519,7 @@ impl Runtime {
             VerifiedBysEnum::ByKnownForall(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: self.known_forall_to_lean_ir(&result.result)?,
+                proof: self.known_forall_to_lean_ir(&result.result, context)?,
             }),
             VerifiedBysEnum::ByStatementMemo(goal, source) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(goal)?,
@@ -384,6 +529,7 @@ impl Runtime {
                         goal,
                         source.fact_id.or(step_fact_id(goal)?),
                         &source.verified_by,
+                        context,
                     )?),
                 },
             }),

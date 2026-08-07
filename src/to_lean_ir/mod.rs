@@ -70,27 +70,32 @@ pub struct FactToLeanIR {
 }
 
 #[derive(Clone, Debug)]
+pub struct LocalPremiseToLeanIR {
+    pub fact_id: FactId,
+    pub fact: Fact,
+}
+
+impl LocalPremiseToLeanIR {
+    pub fn new(fact_id: FactId, fact: Fact) -> Self {
+        LocalPremiseToLeanIR { fact_id, fact }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum FactProofToLeanIR {
     Trusted,
-    /// A temporary hypothesis introduced inside a proof. It is rendered as a
-    /// local Lean binder, never as an axiom.
-    Assumption,
-    KnownFact {
+    KnownFactCitation {
         source_fact_id: FactId,
     },
-    KnownForall {
-        source_fact_id: FactId,
-        arguments: Vec<KnownForallArgumentToLeanIR>,
+    /// A goal derived by applying one explicit proof rule to recursively
+    /// checked premise nodes. This is the extensible compiler-facing proof
+    /// shape; adding a transport rule does not require another tree variant.
+    RuleApplication {
+        rule: ProofRuleToLeanIR,
+        /// Verifier-side typing checks retained as evidence. Lean usually
+        /// discharges these through elaboration rather than proof arguments.
         parameter_requirements: Vec<FactToLeanIR>,
-        requirements: Vec<FactToLeanIR>,
-    },
-    Builtin {
-        kind: BuiltinProofKindToLeanIR,
-        rule: BuiltinRuleToLeanIR,
-        subgoals: Vec<FactToLeanIR>,
-    },
-    Definition {
-        name: String,
+        premises: Vec<FactToLeanIR>,
     },
     UserStrategy {
         name: String,
@@ -101,8 +106,8 @@ pub enum FactProofToLeanIR {
     ForallIntroduction {
         /// Temporary parameter-typing facts. Lean's typed binders discharge
         /// these, but the IR retains their Litex identities and provenance.
-        parameter_assumptions: Vec<FactToLeanIR>,
-        assumptions: Vec<FactToLeanIR>,
+        parameter_premises: Vec<LocalPremiseToLeanIR>,
+        premises: Vec<LocalPremiseToLeanIR>,
         conclusions: Vec<FactToLeanIR>,
     },
     Inference {
@@ -117,16 +122,118 @@ pub enum FactProofToLeanIR {
     },
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum BuiltinProofKindToLeanIR {
-    Rule,
-    Strategy,
+#[derive(Clone)]
+pub enum ProofRuleToLeanIR {
+    EqualityRewrite(EqualityRewriteToLeanIR),
+    IffRewrite {
+        direction: IffDirectionToLeanIR,
+    },
+    DefinitionReduction {
+        definition: String,
+    },
+    Normalization {
+        kind: NormalizationKindToLeanIR,
+    },
+    KnownForallInstantiation {
+        source_fact_id: FactId,
+        arguments: Vec<KnownForallArgumentToLeanIR>,
+    },
+    ModusPonens,
+    AndIntroduction,
+    ExistIntroduction {
+        witnesses: Vec<Obj>,
+    },
+    CaseSplit,
+    OtherUnsupported {
+        name: String,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum BuiltinRuleToLeanIR {
+pub enum NormalizationKindToLeanIR {
     RationalExpressionSimplification,
-    Other(String),
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum IffDirectionToLeanIR {
+    Forward,
+    Backward,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EqualityRewriteDirectionToLeanIR {
+    Forward,
+    Backward,
+}
+
+/// Equality rewrite metadata. In its enclosing `RuleApplication`, premise 0
+/// is the fact being transported and premise `n + 1` proves `steps[n]`.
+#[derive(Clone, Debug)]
+pub struct EqualityRewriteToLeanIR {
+    pub steps: Vec<EqualityRewriteStepToLeanIR>,
+}
+
+#[derive(Clone)]
+pub struct EqualityRewriteStepToLeanIR {
+    pub from: Obj,
+    pub to: Obj,
+    pub direction: EqualityRewriteDirectionToLeanIR,
+}
+
+impl fmt::Debug for EqualityRewriteStepToLeanIR {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EqualityRewriteStepToLeanIR")
+            .field("from", &self.from.to_string())
+            .field("to", &self.to.to_string())
+            .field("direction", &self.direction)
+            .finish()
+    }
+}
+
+impl fmt::Debug for ProofRuleToLeanIR {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ProofRuleToLeanIR::EqualityRewrite(rewrite) => {
+                f.debug_tuple("EqualityRewrite").field(rewrite).finish()
+            }
+            ProofRuleToLeanIR::IffRewrite { direction } => f
+                .debug_struct("IffRewrite")
+                .field("direction", direction)
+                .finish(),
+            ProofRuleToLeanIR::DefinitionReduction { definition } => f
+                .debug_struct("DefinitionReduction")
+                .field("definition", definition)
+                .finish(),
+            ProofRuleToLeanIR::Normalization { kind } => {
+                f.debug_struct("Normalization").field("kind", kind).finish()
+            }
+            ProofRuleToLeanIR::KnownForallInstantiation {
+                source_fact_id,
+                arguments,
+            } => f
+                .debug_struct("KnownForallInstantiation")
+                .field("source_fact_id", source_fact_id)
+                .field("arguments", arguments)
+                .finish(),
+            ProofRuleToLeanIR::ModusPonens => f.write_str("ModusPonens"),
+            ProofRuleToLeanIR::AndIntroduction => f.write_str("AndIntroduction"),
+            ProofRuleToLeanIR::ExistIntroduction { witnesses } => f
+                .debug_struct("ExistIntroduction")
+                .field(
+                    "witnesses",
+                    &witnesses
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                )
+                .finish(),
+            ProofRuleToLeanIR::CaseSplit => f.write_str("CaseSplit"),
+            ProofRuleToLeanIR::OtherUnsupported { name } => f
+                .debug_struct("OtherUnsupported")
+                .field("name", name)
+                .finish(),
+        }
+    }
 }
 
 #[derive(Clone)]
@@ -144,11 +251,13 @@ impl fmt::Debug for KnownForallArgumentToLeanIR {
     }
 }
 
-impl BuiltinRuleToLeanIR {
-    pub fn from_verified_label(label: &str, goal: &Fact) -> Self {
+impl ProofRuleToLeanIR {
+    pub fn from_verified_builtin_label(label: &str, goal: &Fact) -> Self {
         match label {
             "calculation and rational expression simplification" => {
-                BuiltinRuleToLeanIR::RationalExpressionSimplification
+                ProofRuleToLeanIR::Normalization {
+                    kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                }
             }
             "bounded symbolic normalization"
                 if matches!(
@@ -160,9 +269,13 @@ impl BuiltinRuleToLeanIR {
                         )
                 ) =>
             {
-                BuiltinRuleToLeanIR::RationalExpressionSimplification
+                ProofRuleToLeanIR::Normalization {
+                    kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                }
             }
-            other => BuiltinRuleToLeanIR::Other(other.to_string()),
+            other => ProofRuleToLeanIR::OtherUnsupported {
+                name: other.to_string(),
+            },
         }
     }
 }
