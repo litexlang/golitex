@@ -102,7 +102,7 @@ thm converges_to_mul_const:
             $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
 ```
 
-在下面两个维度上，两种默认证明工作流的方向恰好相反。
+在下面两个维度上，两种默认证明工作流的方向恰好相反。某种意义上，Litex是相反的Lean。
 
 1. **Litex 证明自下而上；Lean tactic 证明自上而下。** 在 Litex 中，每条已验证事实都会扩展上下文，直到积累的事实足以支持结论。Lean tactic 证明通常从最终 Goal 出发，向后往前把它转化为新的 Goal，直到能够由已知事实关闭。
 
