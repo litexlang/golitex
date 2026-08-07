@@ -23,6 +23,7 @@ pub use free_param_obj::{
     DefHeaderFreeParamObj, DefStructFieldFreeParamObj, ExistFreeParamObj, FnSetFreeParamObj,
     ForallFreeParamObj, ParamObjType, SetBuilderFreeParamObj, TupleIndexFreeParamObj,
 };
+pub(crate) use helper::split_module_qualified_display_key;
 pub use obj::{
     fn_obj_to_string, Abs, Add, BigIntersect, BigUnion, Cart, CartDim, Ceil, ClosedRange,
     ComplexAbs, Cos, Cot, Div, EulerNumber, Exp, Factorial, FiniteSeqListObj, FiniteSeqSet,

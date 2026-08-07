@@ -1,0 +1,217 @@
+# Current To-Lean showcase. Every active statement below first verifies in
+# Litex, then translates to Lean. Only an explicit `trust` becomes a Lean axiom.
+
+# 1. Abstract propositions, a trusted universal fact, and concrete application.
+abstract_prop p(a, b)
+
+trust forall a, b R:
+    $p(a, b)
+
+$p(1, 2)
+
+# 2. Equality transport through unary and binary propositions.
+abstract_prop transported(a)
+
+forall a, b set:
+    $transported(a)
+    a = b
+    =>:
+        $transported(b)
+
+abstract_prop related(a, b)
+
+forall a, b set:
+    $related(a, b)
+    a = b
+    =>:
+        $related(b, a)
+
+# 3. Multi-step equality transport, including reverse traversal.
+forall a, b, c set:
+    $transported(c)
+    a = b
+    b = c
+    =>:
+        $transported(a)
+
+# 4. A concrete typed proposition and proof by its definition.
+prop is_one(x R):
+    x = 1
+
+$is_one(1)
+
+# 5. A known forall can consume a premise from the current proof scope.
+abstract_prop marked(x)
+
+trust forall x R:
+    x != 0
+    =>:
+        $marked(x)
+
+forall x R:
+    x != 0
+    x < 10
+    =>:
+        $marked(x)
+
+# 6. A local premise can be cited directly.
+forall x R:
+    x != 0
+    =>:
+        x != 0
+
+# 7. Rational-expression normalization with an explicit denominator premise.
+forall a, b, x R:
+    x != 0
+    =>:
+        (a + b) / x = a / x + b / x
+
+# 8. Closed rational arithmetic.
+1 / 2 / 3 / 4 = 1 / 24
+
+# 9. Known-forall application followed by checked arithmetic normalization.
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
+
+# Current compiler boundaries: structs such as Group, Q/Z/N typed binders,
+# non-rational builtins, and unsupported proof rules stop translation instead
+# of silently becoming `axiom` or `sorry`.
+
+
+"""
+import Mathlib
+
+universe uLitex
+
+namespace tmp2
+
+-- Litex's primitive notion of a set.
+abbrev LitexSet := Type uLitex
+
+-- Every generated proposition has this codomain.
+abbrev LitexFact := Prop
+
+opaque p {α_a_1 α_b_2 : Sort uLitex} : α_a_1 → α_b_2 → LitexFact
+
+-- Litex trust boundary: f4
+axiom global_fact_4 : ∀ (a b : ℝ), p a b
+
+-- Litex stored fact f5
+theorem global_fact_5 : p (1 : ℝ) (2 : ℝ) := by
+  -- Litex parameter requirement for `a`: (1 : ℝ) : ℝ
+  let proof_arg_1_1 : ℝ := (1 : ℝ)
+  -- Litex parameter requirement for `b`: (2 : ℝ) : ℝ
+  let proof_arg_1_2 : ℝ := (2 : ℝ)
+  have proof_fact_1_3 : p (1 : ℝ) (2 : ℝ) := global_fact_4 proof_arg_1_1 proof_arg_1_2
+  exact proof_fact_1_3
+
+opaque transported {α_a_1 : Sort uLitex} : α_a_1 → LitexFact
+
+-- Litex stored fact f21
+theorem global_fact_21 : ∀ (a b : LitexSet), transported a → a = b → transported b := by
+  intro a b proof_fact_2_1 proof_fact_2_2
+  have proof_fact_2_3 : transported a := proof_fact_2_1
+  have proof_fact_2_4 : a = b := proof_fact_2_2
+  have proof_fact_2_5 : transported b := by
+    simpa only [proof_fact_2_4] using proof_fact_2_3
+  exact proof_fact_2_5
+
+opaque related {α_a_1 α_b_2 : Sort uLitex} : α_a_1 → α_b_2 → LitexFact
+
+-- Litex stored fact f37
+theorem global_fact_37 : ∀ (a b : LitexSet), related a b → a = b → related b a := by
+  intro a b proof_fact_3_1 proof_fact_3_2
+  have proof_fact_3_3 : related a b := proof_fact_3_1
+  have proof_fact_3_4 : a = b := proof_fact_3_2
+  have proof_fact_3_5 : related b a := by
+    simpa only [proof_fact_3_4] using proof_fact_3_3
+  exact proof_fact_3_5
+
+-- Litex stored fact f59
+theorem global_fact_59 : ∀ (a b c : LitexSet), transported c → a = b → b = c → transported a := by
+  intro a b c proof_fact_4_1 proof_fact_4_2 proof_fact_4_3
+  have proof_fact_4_4 : transported c := proof_fact_4_1
+  have proof_fact_4_5 : b = c := proof_fact_4_3
+  have proof_fact_4_6 : a = b := proof_fact_4_2
+  have proof_fact_4_7 : transported a := by
+    simpa only [proof_fact_4_5, ← proof_fact_4_6] using proof_fact_4_4
+  exact proof_fact_4_7
+
+def is_one (x : ℝ) : LitexFact := x = (1 : ℝ)
+
+-- Litex stored fact f62
+theorem global_fact_62 : is_one (1 : ℝ) := by
+  simp [is_one]
+
+opaque marked {α_x_1 : Sort uLitex} : α_x_1 → LitexFact
+
+-- Litex trust boundary: f68
+axiom global_fact_68 : ∀ (x : ℝ), x ≠ (0 : ℝ) → marked x
+
+-- Litex stored fact f81
+theorem global_fact_81 : ∀ (x : ℝ), x ≠ (0 : ℝ) → x < (10 : ℝ) → marked x := by
+  intro x proof_fact_5_1 proof_fact_5_2
+  -- Litex parameter requirement for `x`: x : ℝ
+  let proof_arg_5_3 : ℝ := x
+  have proof_fact_5_4 : x ≠ (0 : ℝ) := proof_fact_5_1
+  have proof_fact_5_5 : marked x := global_fact_68 proof_arg_5_3 proof_fact_5_4
+  exact proof_fact_5_5
+
+-- Litex stored fact f88
+theorem global_fact_88 : ∀ (x : ℝ), x ≠ (0 : ℝ) → x ≠ (0 : ℝ) := by
+  intro x proof_fact_6_1
+  exact proof_fact_6_1
+
+-- Litex stored fact f104
+theorem global_fact_104 : ∀ (a b x : ℝ), x ≠ (0 : ℝ) → ((a + b) / x) = ((a / x) + (b / x)) := by
+  intro a b x proof_fact_7_1
+  -- left recursive fraction: (a + b) / x
+  -- right recursive fraction: ((a * x) + (b * x)) / (x * x)
+  calc
+    ((a + b) / x) = ((a + b) / x) := by
+      solve
+        | field_simp [proof_fact_7_1]
+        | field_simp [proof_fact_7_1] <;> ring
+    _ = (((a * x) + (b * x)) / (x * x)) := by
+      solve
+        | field_simp [proof_fact_7_1]
+        | field_simp [proof_fact_7_1] <;> ring
+    _ = ((a / x) + (b / x)) := by
+      solve
+        | field_simp [proof_fact_7_1]
+        | field_simp [proof_fact_7_1] <;> ring
+
+-- Litex stored fact f105
+theorem global_fact_105 : ((((1 : ℝ) / (2 : ℝ)) / (3 : ℝ)) / (4 : ℝ)) = ((1 : ℝ) / (24 : ℝ)) := by
+  -- left recursive fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))
+  -- right recursive fraction: (1 : ℝ) / (24 : ℝ)
+  calc
+    ((((1 : ℝ) / (2 : ℝ)) / (3 : ℝ)) / (4 : ℝ)) = ((1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))) := by
+      norm_num
+    _ = ((1 : ℝ) / (24 : ℝ)) := by
+      norm_num
+    _ = ((1 : ℝ) / (24 : ℝ)) := by
+      norm_num
+
+opaque marked2 {α_x_1 α_y_2 : Sort uLitex} : α_x_1 → α_y_2 → LitexFact
+
+-- Litex trust boundary: f108
+axiom global_fact_108 : ∀ (x : ℝ), marked2 x (x + (1 : ℝ))
+
+-- Litex stored fact f109
+theorem global_fact_109 : marked2 (1 : ℝ) (2 : ℝ) := by
+  have proof_fact_8_1 : marked2 ((2 : ℝ) - (1 : ℝ)) (((2 : ℝ) - (1 : ℝ)) + (1 : ℝ)) := by
+    -- Litex parameter requirement for `x`: ((2 : ℝ) - (1 : ℝ)) : ℝ
+    let proof_arg_9_1 : ℝ := ((2 : ℝ) - (1 : ℝ))
+    have proof_fact_9_2 : marked2 ((2 : ℝ) - (1 : ℝ)) (((2 : ℝ) - (1 : ℝ)) + (1 : ℝ)) := global_fact_108 proof_arg_9_1
+    exact proof_fact_9_2
+  have proof_fact_8_2 : marked2 (1 : ℝ) (2 : ℝ) := by
+    convert proof_fact_8_1 using 1 <;> norm_num
+  exact proof_fact_8_2
+
+end tmp2
+"""

@@ -240,6 +240,9 @@ impl fmt::Debug for ProofRuleToLeanIR {
 pub struct KnownForallArgumentToLeanIR {
     pub param: String,
     pub argument: Obj,
+    /// Lean realizes Litex's parameter-membership requirement by checking that
+    /// this argument inhabits the translated binder type.
+    pub param_type: ParamTypeToLeanIR,
 }
 
 impl fmt::Debug for KnownForallArgumentToLeanIR {
@@ -247,6 +250,7 @@ impl fmt::Debug for KnownForallArgumentToLeanIR {
         f.debug_struct("KnownForallArgumentToLeanIR")
             .field("param", &self.param)
             .field("argument", &self.argument.to_string())
+            .field("param_type", &self.param_type)
             .finish()
     }
 }

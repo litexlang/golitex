@@ -96,7 +96,7 @@ struct LeanProofContext {
     proof_fact_names: HashMap<FactId, String>,
     nonzero_names: Vec<String>,
     local_space_id: Option<usize>,
-    next_proof_fact_index: usize,
+    next_local_index: usize,
 }
 
 impl LeanProofContext {
@@ -105,7 +105,7 @@ impl LeanProofContext {
             proof_fact_names: self.proof_fact_names.clone(),
             nonzero_names: self.nonzero_names.clone(),
             local_space_id: None,
-            next_proof_fact_index: 0,
+            next_local_index: 0,
         }
     }
 }
@@ -234,19 +234,16 @@ impl LeanEmitter {
                         source_fact_id,
                         arguments,
                     },
+                parameter_requirements,
                 premises,
-                ..
-            } => {
-                let source = self.available_fact_name(*source_fact_id, proposition, context)?;
-                let mut terms = vec![source];
-                for argument in arguments {
-                    terms.push(lean_obj(&argument.argument)?);
-                }
-                for requirement in premises {
-                    terms.push(self.lean_proof_term(requirement, context)?);
-                }
-                Ok(format!("by\n  exact {}", terms.join(" ")))
-            }
+            } => self.lean_known_forall_instantiation(
+                proposition,
+                *source_fact_id,
+                arguments,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             FactProofToLeanIR::RuleApplication {
                 rule:
                     ProofRuleToLeanIR::Normalization {
@@ -255,6 +252,16 @@ impl LeanEmitter {
                 premises,
                 ..
             } if premises.is_empty() => lean_rational_builtin_proof(proposition, context),
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::Normalization {
+                        kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                    },
+                premises,
+                ..
+            } if premises.len() == 1 => {
+                self.lean_normalization_from_premise(proposition, &premises[0], context)
+            }
             FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::DefinitionReduction { definition },
                 premises,
@@ -305,47 +312,131 @@ impl LeanEmitter {
         }
     }
 
-    fn lean_proof_term(
-        &self,
+    fn lean_named_local_fact(
+        &mut self,
         fact: &FactToLeanIR,
-        context: &LeanProofContext,
-    ) -> Result<String, RuntimeError> {
+        context: &mut LeanProofContext,
+    ) -> Result<(String, Vec<String>), RuntimeError> {
+        let local_name = self.next_proof_fact_name(context);
         if let Some(fact_id) = fact.fact_id {
             if let Some(local) = context.proof_fact_names.get(&fact_id) {
-                return Ok(local.clone());
+                return Ok((
+                    local_name.clone(),
+                    vec![format!(
+                        "  have {} : {} := {}",
+                        local_name,
+                        lean_fact(&fact.proposition)?,
+                        local
+                    )],
+                ));
             }
         }
-        match &fact.proof {
-            FactProofToLeanIR::KnownFactCitation { source_fact_id } => {
-                self.available_fact_name(*source_fact_id, &fact.proposition, context)
-            }
-            FactProofToLeanIR::RuleApplication {
-                rule:
-                    ProofRuleToLeanIR::KnownForallInstantiation {
-                        source_fact_id,
-                        arguments,
-                    },
-                premises,
-                ..
-            } => {
-                let mut terms =
-                    vec![self.available_fact_name(*source_fact_id, &fact.proposition, context)?];
-                for argument in arguments {
-                    terms.push(lean_obj(&argument.argument)?);
-                }
-                for requirement in premises {
-                    terms.push(self.lean_proof_term(requirement, context)?);
-                }
-                Ok(format!("({})", terms.join(" ")))
-            }
-            _ => Err(to_lean_error(
-                &fact.proposition.line_file(),
+        if let FactProofToLeanIR::KnownFactCitation { source_fact_id } = &fact.proof {
+            let source = self.available_fact_name(*source_fact_id, &fact.proposition, context)?;
+            return Ok((
+                local_name.clone(),
+                vec![format!(
+                    "  have {} : {} := {}",
+                    local_name,
+                    lean_fact(&fact.proposition)?,
+                    source
+                )],
+            ));
+        }
+
+        let proof = self.lean_proof(&fact.proposition, &fact.proof, context)?;
+        Ok((
+            local_name.clone(),
+            vec![format!(
+                "  have {} : {} := {}",
+                local_name,
+                lean_fact(&fact.proposition)?,
+                proof.replace('\n', "\n  ")
+            )],
+        ))
+    }
+
+    fn lean_known_forall_instantiation(
+        &mut self,
+        proposition: &Fact,
+        source_fact_id: FactId,
+        arguments: &[KnownForallArgumentToLeanIR],
+        parameter_requirements: &[FactToLeanIR],
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if arguments.len() != parameter_requirements.len() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
                 format!(
-                    "nested proof {:?} for FactId {:?} does not yet have a Lean term backend",
-                    fact.proof, fact.fact_id
+                    "known-forall application received {} arguments but {} parameter requirements",
+                    arguments.len(),
+                    parameter_requirements.len()
                 ),
-            )),
+            ));
         }
+
+        let source = self.available_fact_name(source_fact_id, proposition, context)?;
+        let mut lines = vec!["by".to_string()];
+        let mut argument_names = Vec::with_capacity(arguments.len());
+        for (argument, _requirement) in arguments.iter().zip(parameter_requirements.iter()) {
+            let local_name = self.next_proof_arg_name(context);
+            let lean_argument = lean_obj(&argument.argument)?;
+            let lean_param_type = lean_ir_param_type(&argument.param_type)?;
+            lines.push(format!(
+                "  -- Litex parameter requirement for `{}`: {} : {}",
+                argument.param, lean_argument, lean_param_type
+            ));
+            lines.push(format!(
+                "  let {} : {} := {}",
+                local_name, lean_param_type, lean_argument
+            ));
+            argument_names.push(local_name);
+        }
+
+        let mut premise_names = Vec::with_capacity(premises.len());
+        for premise in premises {
+            let (local_name, local_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(local_lines);
+            premise_names.push(local_name);
+        }
+
+        let result_name = self.next_proof_fact_name(context);
+        let mut terms = vec![source];
+        terms.extend(argument_names);
+        terms.extend(premise_names);
+        lines.push(format!(
+            "  have {} : {} := {}",
+            result_name,
+            lean_fact(proposition)?,
+            terms.join(" ")
+        ));
+        lines.push(format!("  exact {}", result_name));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_normalization_from_premise(
+        &mut self,
+        proposition: &Fact,
+        premise: &FactToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let mut lines = vec!["by".to_string()];
+        let (source_name, source_lines) = self.lean_named_local_fact(premise, context)?;
+        lines.extend(source_lines);
+        let result_name = self.next_proof_fact_name(context);
+        lines.push(format!(
+            "  have {} : {} := by",
+            result_name,
+            lean_fact(proposition)?
+        ));
+        lines.push(format!(
+            "    convert {} using 1 <;> {}",
+            source_name,
+            rational_fact_normalization_tactic(&premise.proposition, proposition, context)?
+        ));
+        lines.push(format!("  exact {}", result_name));
+        Ok(lines.join("\n"))
     }
 
     fn available_fact_name(
@@ -389,13 +480,8 @@ impl LeanEmitter {
 
         let source = &premises[0];
         let mut lines = vec!["by".to_string()];
-        let source_name = self.next_proof_fact_name(context);
-        lines.push(format!(
-            "  have {} : {} := {}",
-            source_name,
-            lean_fact(&source.proposition)?,
-            self.lean_proof_term(source, context)?
-        ));
+        let (source_name, source_lines) = self.lean_named_local_fact(source, context)?;
+        lines.extend(source_lines);
         let mut rewrite_terms = Vec::with_capacity(rewrite.steps.len());
         let mut seen_equalities = HashSet::new();
         for (step, equality_premise) in rewrite.steps.iter().zip(premises[1..].iter()) {
@@ -430,13 +516,9 @@ impl LeanEmitter {
             if !seen_equalities.insert(equality_premise.proposition.to_string()) {
                 continue;
             }
-            let local_name = self.next_proof_fact_name(context);
-            lines.push(format!(
-                "  have {} : {} := {}",
-                local_name,
-                lean_fact(&equality_premise.proposition)?,
-                self.lean_proof_term(equality_premise, context)?
-            ));
+            let (local_name, local_lines) =
+                self.lean_named_local_fact(equality_premise, context)?;
+            lines.extend(local_lines);
             // Normalize both the cited proposition and the target toward one
             // deterministic representative. This also handles one equality
             // being used in opposite directions at different occurrences.
@@ -505,6 +587,16 @@ impl LeanEmitter {
     }
 
     fn next_proof_fact_name(&mut self, context: &mut LeanProofContext) -> String {
+        let (local_space_id, local_index) = self.next_local_coordinate(context);
+        lean_proof_fact_name(local_space_id, local_index)
+    }
+
+    fn next_proof_arg_name(&mut self, context: &mut LeanProofContext) -> String {
+        let (local_space_id, local_index) = self.next_local_coordinate(context);
+        lean_proof_arg_name(local_space_id, local_index)
+    }
+
+    fn next_local_coordinate(&mut self, context: &mut LeanProofContext) -> (usize, usize) {
         let local_space_id = match context.local_space_id {
             Some(local_space_id) => local_space_id,
             None => {
@@ -514,8 +606,8 @@ impl LeanEmitter {
                 local_space_id
             }
         };
-        context.next_proof_fact_index += 1;
-        lean_proof_fact_name(local_space_id, context.next_proof_fact_index)
+        context.next_local_index += 1;
+        (local_space_id, context.next_local_index)
     }
 }
 
@@ -772,6 +864,74 @@ fn rational_tactic(
     )
 }
 
+fn rational_fact_normalization_tactic(
+    source: &Fact,
+    goal: &Fact,
+    context: &LeanProofContext,
+) -> Result<String, RuntimeError> {
+    let (Fact::AtomicFact(source), Fact::AtomicFact(goal)) = (source, goal) else {
+        return Err(to_lean_error(
+            &goal.line_file(),
+            "fact normalization currently requires atomic source and target facts",
+        ));
+    };
+    if source.key() != goal.key() || source.is_true() != goal.is_true() {
+        return Err(to_lean_error(
+            &goal.line_file(),
+            "fact normalization source and target have different proposition shapes",
+        ));
+    }
+
+    let source_args = source.args_ref();
+    let goal_args = goal.args_ref();
+    if source_args.len() != goal_args.len() {
+        return Err(to_lean_error(
+            &goal.line_file(),
+            "fact normalization source and target have different arities",
+        ));
+    }
+
+    let mut changed = false;
+    let mut all_closed = true;
+    let mut has_denominator = false;
+    for (source_arg, goal_arg) in source_args.iter().zip(goal_args.iter()) {
+        if obj_equality_key(source_arg) == obj_equality_key(goal_arg) {
+            continue;
+        }
+        if !objs_equal_by_rational_expression_evaluation(source_arg, goal_arg) {
+            return Err(to_lean_error(
+                &goal.line_file(),
+                format!(
+                    "fact normalization argument `{}` is not rationally equal to `{}`",
+                    source_arg, goal_arg
+                ),
+            ));
+        }
+        changed = true;
+        all_closed &=
+            closed_rational_expression(source_arg) && closed_rational_expression(goal_arg);
+        has_denominator |= LeanRationalExpression::from_obj(source_arg)?.has_denominator()
+            || LeanRationalExpression::from_obj(goal_arg)?.has_denominator();
+    }
+
+    if !changed {
+        return Ok("rfl".to_string());
+    }
+    if all_closed {
+        return Ok("norm_num".to_string());
+    }
+    if !has_denominator {
+        return Ok("ring".to_string());
+    }
+    if context.nonzero_names.is_empty() {
+        return Ok("field_simp <;> ring".to_string());
+    }
+    Ok(format!(
+        "field_simp [{}] <;> ring",
+        context.nonzero_names.join(", ")
+    ))
+}
+
 fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
     fact.fact_id.ok_or_else(|| {
         to_lean_error(
@@ -787,6 +947,10 @@ fn lean_global_fact_name(fact_id: FactId) -> String {
 
 fn lean_proof_fact_name(local_space_id: usize, proof_fact_index: usize) -> String {
     format!("proof_fact_{}_{}", local_space_id, proof_fact_index)
+}
+
+fn lean_proof_arg_name(local_space_id: usize, local_index: usize) -> String {
+    format!("proof_arg_{}_{}", local_space_id, local_index)
 }
 
 fn is_nonzero_fact(fact: &Fact) -> bool {
@@ -1020,10 +1184,10 @@ forall x R:
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
                 assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
                 assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
-                assert!(output.contains("exact global_fact_"));
+                assert!(output.contains(":= global_fact_"));
                 assert!(output.contains(" (1 : ℝ)"));
                 assert!(output.contains("simp [is_one]"));
-                assert!(output.contains(" x proof_fact_"));
+                assert!(output.contains("let proof_arg_"));
                 assert!(output.contains("intro a b x proof_fact_"));
                 assert!(output.contains("field_simp [proof_fact_"));
                 assert!(!output.contains("sorry"));
@@ -1423,10 +1587,104 @@ forall x R:
 "#;
                 let output = to_lean_from_source(source, "temporary-domain-evidence").unwrap();
 
-                assert!(output.contains("intro x proof_fact_1_1"));
-                assert!(output.contains("exact global_fact_"));
-                assert!(output.contains(" x proof_fact_1_1"));
+                assert!(output.contains("intro x proof_fact_1_1"), "{output}");
+                assert!(
+                    output.contains("-- Litex parameter requirement for `x`: x : ℝ"),
+                    "{output}"
+                );
+                assert!(output.contains("let proof_arg_1_3 : ℝ := x"), "{output}");
+                assert!(
+                    output.contains("have proof_fact_1_4 : x ≠ (0 : ℝ) := proof_fact_1_1"),
+                    "{output}"
+                );
+                assert!(output.contains(":= global_fact_"), "{output}");
+                assert!(output.contains(" proof_arg_1_3 proof_fact_1_4"), "{output}");
                 assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn known_forall_use_materializes_arguments_application_and_goal_normalization() {
+        run_with_large_stack(
+            "known_forall_use_materializes_arguments_application_and_goal_normalization",
+            || {
+                let source = r#"
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("known-forall-materialization");
+                runtime.replace_to_lean_mode(true);
+                let tokenizer = Tokenizer::new();
+                let blocks = tokenizer
+                    .parse_blocks(source, runtime.current_file_path_rc())
+                    .unwrap();
+                let mut statement_irs = Vec::new();
+                for mut block in blocks {
+                    let statement = runtime.parse_stmt(&mut block).unwrap();
+                    let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                    statement_irs.push(result.to_lean_ir().unwrap().clone());
+                }
+
+                let StmtToLeanIR::Fact(target) = &statement_irs[2] else {
+                    panic!("third IR item should be the proved marked2 fact");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::Normalization {
+                            kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                        },
+                    premises,
+                    ..
+                } = underlying_test_proof(&target.fact.proof)
+                else {
+                    panic!("the final goal should retain normalization from a direct instance");
+                };
+                assert_eq!(premises.len(), 1);
+                let direct_instance = &premises[0];
+                assert_ne!(
+                    direct_instance.proposition.to_string(),
+                    target.fact.proposition.to_string()
+                );
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::KnownForallInstantiation { arguments, .. },
+                    parameter_requirements,
+                    premises: domain_requirements,
+                } = underlying_test_proof(&direct_instance.proof)
+                else {
+                    panic!("the normalization premise should be the direct forall instance");
+                };
+                assert_eq!(arguments.len(), 1);
+                assert_eq!(arguments[0].param, "x");
+                assert!(matches!(arguments[0].param_type, ParamTypeToLeanIR::Real));
+                assert_eq!(parameter_requirements.len(), 1);
+                assert!(domain_requirements.is_empty());
+
+                let output = emit_lean_from_ir(&statement_irs).unwrap();
+                assert!(
+                    output.contains(
+                        "-- Litex parameter requirement for `x`: ((2 : ℝ) - (1 : ℝ)) : ℝ"
+                    ),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("let proof_arg_2_1 : ℝ := ((2 : ℝ) - (1 : ℝ))"),
+                    "{output}"
+                );
+                assert!(output.contains("have proof_fact_2_2 : marked2"), "{output}");
+                assert!(output.contains(":= global_fact_"), "{output}");
+                assert!(output.contains(" proof_arg_2_1"), "{output}");
+                assert!(
+                    output.contains("convert proof_fact_1_1 using 1 <;> norm_num"),
+                    "{output}"
+                );
+                assert!(output.contains("exact proof_fact_1_2"), "{output}");
                 assert!(!output.contains("sorry"));
             },
         );
@@ -1487,7 +1745,7 @@ $marked(1)
                 .expect_err("numeric nonzero requirement has no Lean backend yet")
                 .trace_message();
 
-            assert!(error.contains("does not yet have a Lean term backend"));
+            assert!(error.contains("no checked backend"));
             assert!(error.contains("not_equal_numeric"));
         });
     }
@@ -1549,6 +1807,13 @@ forall x R:
     x != 0
     =>:
         x != 0
+
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("lean-kernel-mvp.lit");
