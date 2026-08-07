@@ -16,7 +16,47 @@ Mainstream formal languages such as Lean have achieved enormous success, providi
 
 > **Lean tactics: the theorem states the final Goal → the user states how to rewrite, decompose, or close it → Infoview shows which Goals remain → tactics construct the proof term → the kernel checks the term.**
 
-This proof mode is highly general, abstract, and compositional, and it is an important source of Lean's expressive power. Its default direction is not quite the same as ordinary mathematical writing, which more often proceeds as follows:
+As an example, consider proving directly from the definition of convergence that if a sequence `{s(n)}` converges to a real number `a`, then `{c * s(n)}` converges to the real number `c * a`:
+
+```lean
+import Mathlib
+
+def ConvergesTo (s : ℕ → ℝ) (a : ℝ) :=
+  ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
+
+theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _x : ℕ ↦ a) a := by
+  intro ε εpos
+  use 0
+  intro n nge
+  rw [sub_self, abs_zero]
+  apply εpos
+
+theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ)
+    (cs : ConvergesTo s a) :
+    ConvergesTo (fun n ↦ c * s n) (c * a) := by
+  by_cases h : c = 0
+  · convert convergesTo_const 0
+    · rw [h]
+      ring
+    rw [h]
+    ring
+  have acpos : 0 < |c| := abs_pos.mpr h
+  intro ε εpos
+  dsimp
+  have εcpos : 0 < ε / |c| := by
+    exact div_pos εpos acpos
+  rcases cs (ε / |c|) εcpos with ⟨Ns, hs⟩
+  use Ns
+  intro n ngt
+  calc
+    |c * s n - c * a| = |c| * |s n - a| := by
+      rw [← abs_mul, mul_sub]
+    _ < |c| * (ε / |c|) :=
+      mul_lt_mul_of_pos_left (hs n ngt) acpos
+    _ = ε := mul_div_cancel₀ _ (ne_of_lt acpos).symm
+```
+
+This proof mode is highly general, abstract, and compositional, and it is an important source of Lean's expressive power. But its default direction is not quite the same as ordinary mathematical writing, and beginners must also become familiar with a substantial vocabulary of tactic keywords. Ordinary mathematical writing more often proceeds as follows:
 
 1. Write down the objects, definitions, and conditions.
 2. Recognize a familiar pattern.
@@ -27,16 +67,52 @@ Litex turns this everyday workflow into its default execution model. The whole p
 
 > **Litex: the user states what should hold → the checker searches for proof support → the output explains why and how the statement was verified → the verified fact enlarges the context → the proof grows bottom-up.**
 
-Along these two axes, the default interactions point in opposite directions.
+Returning to the sequence example, the Litex code reads more like ordinary mathematical writing to a beginner:
 
-1. **Litex grows bottom-up; Lean tactic proofs work top-down.** In Litex, each verified fact extends the context until the accumulated facts support a conclusion. Lean tactic proofs normally begin with the final Goal and work backward, transforming it into smaller Goals until they can be closed by known facts.
+```litex
+prop is_eventually_close(s fn(n N) R, a R, epsilon R+, N0 N):
+    forall n N:
+        n >= N0
+        =>:
+            abs(s(n) - a) < epsilon
+
+prop converges_to(s fn(n N) R, a R):
+    forall epsilon R+:
+        exist N0 N st {$is_eventually_close(s, a, epsilon, N0)}
+
+thm converges_to_mul_const:
+    ? forall s fn(n N) R, a, c R:
+        $converges_to(s, a)
+        =>:
+            $converges_to(fn(n N) R {c * s(n)}, c * a)
+    claim:
+        ? forall epsilon R+:
+            exist N0 N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)}
+        abs(c) + 1 > 0
+        epsilon / (abs(c) + 1) $in R+
+        obtain N0 from exist K N st {$is_eventually_close(s, a, epsilon / (abs(c) + 1), K)}
+        witness exist K N st {$is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, K)} from N0:
+            forall n N:
+                n >= N0
+                =>:
+                    abs(s(n) - a) < epsilon / (abs(c) + 1)
+                    abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
+                    abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
+                    abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
+            $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+```
+
+Along these two axes, the default interactions point in opposite directions. In many ways, Litex is the opposite version of Lean.
+
+1. **Litex grows bottom-up; Lean tactic proofs work top-down.** In Litex, each verified fact extends the context until the accumulated facts support a conclusion. Lean tactic proofs normally begin with the final Goal and work backward, transforming it into new Goals until they can be closed by known facts.
+
+   > Think of writing a proof as building with LEGO. At the outset, we are given a set of available bricks and a completed reference model; the task is to prove that those bricks really can build that model. Lean tactics, by default, are like starting from the target model and taking it apart step by step. The proof succeeds when the pieces obtained at the end match the bricks available to us. Litex, by default, is like picking up the available bricks and assembling them one step at a time until they form a model identical to the completed one. The assembly process is not rigidly prescribed: we may build from any angle and in any order, as long as we eventually produce the target model.
+
 2. **Litex users state *what* should hold; Lean tactic users state *how* the Goal should be proved.** The Litex checker searches for matching proof support and explains the route it found. Lean tactic elaboration follows the user's proof instructions to construct the corresponding proof term, the server shows the resulting Goals, and the kernel checks the term.
 
-The same difference can be summarized with a more concrete analogy:
+   > A complete LEGO instruction manual contains two kinds of information: first, how to perform the next step; and second, what the entire partially assembled model should look like after that step. Lean tactic source primarily records the first kind—how to manipulate the proof state next (continuing the previous analogy, it records how we take the model apart at this step). Litex source primarily records the second—what mathematical fact has been established by that step of reasoning (in the same analogy, it records what we have assembled at this step).
 
-> A complete LEGO instruction manual contains two kinds of information: first, how to perform the next step; and second, what the entire partially assembled model should look like after that step. Lean tactic source primarily records the first kind—how to manipulate the proof state next. Litex source primarily records the second—what mathematical fact has been established by that step of reasoning.
-
-This analogy describes the center of gravity of the default interfaces, not an absolute capability boundary. Lean's mechanism provides a highly flexible and general proof-programming environment. Litex deliberately chooses a narrower default interaction so that beginning a proof can be easier and the source can remain closer to ordinary textbook mathematics. Lean also supports forward reasoning, and Litex also provides explicitly goal-directed proof forms. The comparison and five design goals below develop the similarities, differences, and tradeoffs between these two workflows.
+These two analogies describe the center of gravity of the default interfaces, not an absolute capability boundary. Lean's mechanism provides a highly flexible and general proof-programming environment. Litex deliberately chooses a narrower default interaction so that beginning a proof can be easier and the source can remain closer to ordinary textbook mathematics. Lean also supports forward reasoning, and Litex also provides explicitly goal-directed proof forms. The comparison and five design goals below develop the similarities, differences, and tradeoffs between these two workflows.
 
 ## A Small but Complete Comparison: Uniqueness of the Identity in a Group
 
