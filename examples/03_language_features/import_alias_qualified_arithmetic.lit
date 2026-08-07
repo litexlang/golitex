@@ -1,0 +1,16 @@
+# Tracer: qualified numeric values from multiple exports of an imported module
+#
+# Before (did not work):
+# import "../_internal/fixtures/geometry_foundation" as gf
+# gf::main::a + gf::main::a = gf::main2::b
+# Former behavior: import and name resolution succeeded, but arithmetic verification was unknown.
+#
+# Now (verified):
+import "../_internal/fixtures/geometry_foundation" as gf
+
+gf::main::a + gf::main::a = gf::main2::b
+# Current behavior: qualified imported values participate in arithmetic reduction.
+#
+# Boundary: gf::main::missing remains undefined and is rejected by the focused Rust regression.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/import_alias_qualified_arithmetic.lit
+# Implementation: src/obj/obj.rs
