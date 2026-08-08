@@ -172,7 +172,7 @@ impl Runtime {
         // Most membership goals target a carrier parameter or a native set
         // constructor and cannot possibly unfold to a set builder. Avoid a
         // definition lookup for those overwhelmingly common cases.
-        let indexed_set_builder = self.get_obj_equal_to_set_builder(&fact.set.to_string());
+        let indexed_set_builder = self.get_obj_equal_to_set_builder(&fact.set);
         if !matches!(
             &fact.set,
             Obj::SetBuilder(_) | Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_)

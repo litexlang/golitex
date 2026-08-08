@@ -156,7 +156,7 @@ impl Runtime {
             // application as well as the hidden materialized identifier.
             self.store_instantiated_template_choice_property(choice_stmt, template_obj)?;
         }
-        if let Some(set_builder) = self.get_obj_equal_to_set_builder(&instance_name) {
+        if let Some(set_builder) = self.get_obj_equal_to_set_builder(&instance_identifier) {
             // Keep the template surface object connected to a materialized
             // set-builder value. Example: after `template<T>: have selected =
             // {x T: P(x)}`, membership in `\selected<T>` can expose `P(x)`.

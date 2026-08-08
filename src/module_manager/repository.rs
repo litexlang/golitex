@@ -1860,8 +1860,14 @@ main = "./main.lit"
 main2 = "./main2.lit"
 "#,
             );
-            write_file(&module_root.join("main.lit"), "have a R = 1\n");
-            write_file(&module_root.join("main2.lit"), "have b R = 2\n");
+            write_file(
+                &module_root.join("main.lit"),
+                "have a R = 1\nhave pair cart(R, R) = (3, 4)\nhave ProductSet set = cart(R, R)\n",
+            );
+            write_file(
+                &module_root.join("main2.lit"),
+                "have b R = 2\nhave pair cart(R, R) = (8, 9)\n",
+            );
             write_file(&file_path, "have seed R = 1\n");
 
             let mut runtime = Runtime::new();
@@ -1871,7 +1877,7 @@ main2 = "./main2.lit"
 
             let module_path = path_string_for_test(&module_root);
             let source = format!(
-                "import \"{}\" as gf\ngf::main::a + gf::main::a = gf::main2::b\n",
+                "import \"{}\" as gf\ngf::main::a + gf::main::a = gf::main2::b\ngf::main::pair[1] = 3\ngf::main2::pair[1] = 8\ncart_dim(gf::main::ProductSet) = 2\n",
                 module_path
             );
             let (stmt_results, runtime_error) = run_source_code(source.as_str(), &mut runtime);
@@ -1909,6 +1915,8 @@ main = "./main.lit"
 have fn inc(x R) R = x + 1
 have positives power_set(R) = {x R: x > 0}
 have mat matrix(R, 2, 2) = [[1, 2], [3, 4]]
+have pair cart(R, R) = (3, 4)
+have ProductSet set = cart(R, R)
 "#,
             );
             write_file(&file_path, "have seed R = 1\n");
@@ -1927,11 +1935,76 @@ have mat matrix(R, 2, 2) = [[1, 2], [3, 4]]
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, true);
             assert!(ok, "{output}");
 
+            let imported_environment = runtime
+                .imported_module_environments("lib::main")
+                .into_iter()
+                .next()
+                .expect("imported main environment should exist");
+            let pair_symbol = imported_environment
+                .symbols
+                .get("pair")
+                .map(|definition| definition.binding().as_ref())
+                .expect("imported pair binding should exist");
+            let pair_symbol_id = pair_symbol.id().value();
+            let local_pair: Obj =
+                Identifier::new_bound("pair".to_string(), pair_symbol.clone()).into();
+            let qualified_pair: Obj = IdentifierWithMod::new_bound(
+                "lib::main".to_string(),
+                "pair".to_string(),
+                pair_symbol,
+            )
+            .into();
+            let canonical_pair_key = qualified_pair.to_string();
+            assert_eq!(
+                canonical_pair_key,
+                format!("lib::main::#{}#pair", pair_symbol_id),
+                "the symbol identity must follow its canonical module owner"
+            );
+            let local_dim: Obj = TupleDim::new(local_pair).into();
+            let qualified_dim: Obj = TupleDim::new(qualified_pair).into();
+            assert_eq!(local_dim.to_string(), qualified_dim.to_string());
+            assert_eq!(
+                strip_free_param_numeric_tags_in_display(&qualified_dim.to_string()),
+                "tuple_dim(lib::main::pair)",
+                "the canonical compound key must retain its module owner"
+            );
+            assert!(
+                imported_environment
+                    .known_equality
+                    .get(&qualified_dim.to_string())
+                    .is_some(),
+                "the module environment must store the fully canonical tuple_dim key"
+            );
+            assert!(
+                imported_environment
+                    .known_objs_equal_to_tuple
+                    .contains_key(&canonical_pair_key),
+                "the module environment must store the fully canonical pair key"
+            );
+            assert!(
+                !imported_environment
+                    .known_objs_equal_to_tuple
+                    .contains_key("pair"),
+                "module lookup must not rely on a stripped local cache alias"
+            );
+            assert_eq!(
+                runtime
+                    .resolve_obj_to_number(&qualified_dim)
+                    .map(|number| number.to_string()),
+                Some("2".to_string()),
+                "qualified tuple dimension should use the module's canonical cache key"
+            );
+
             let probes = [
                 ("finite sequence lookup", "lib::main::entries(2) = 6"),
                 ("function unfolding", "lib::main::inc(2) = 3"),
                 ("set-builder membership", "1 $in lib::main::positives"),
                 ("matrix lookup", "lib::main::mat(1, 2) = 2"),
+                ("tuple projection", "lib::main::pair[1] = 3"),
+                (
+                    "cart dimension lookup",
+                    "cart_dim(lib::main::ProductSet) = 2",
+                ),
             ];
             let mut failures = Vec::new();
             for (case_name, source) in probes {

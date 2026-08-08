@@ -256,19 +256,17 @@ impl Runtime {
         if let Some(number) = self.resolve_obj_to_number_resolved(obj) {
             return Some(number);
         }
-        let obj_key = obj.to_string();
-        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
+        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(obj) {
             return Some(number);
         }
-        let all_equal_obj_strings = self.get_all_objs_equal_to_given(&obj_key);
-        for equal_obj_string in all_equal_obj_strings {
-            if let Some(number) =
-                self.get_object_equal_to_normalized_decimal_number(&equal_obj_string)
-            {
+        for equal_obj in self.get_all_obj_representatives_equal_to_given(obj) {
+            if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&equal_obj) {
                 return Some(number);
             }
             if let Some(number) = self
-                .try_parse_number_literal_obj_string_for_not_equal_builtin_rule(&equal_obj_string)
+                .try_parse_number_literal_obj_string_for_not_equal_builtin_rule(
+                    &equal_obj.to_string(),
+                )
             {
                 return Some(number);
             }

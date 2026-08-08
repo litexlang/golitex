@@ -760,11 +760,8 @@ impl Runtime {
                 self.matrix_pow_under_eval(base, exp_u, eval_stmt)
             }
             other => {
-                let lookup_key = match &other {
-                    Obj::Atom(AtomObj::Identifier(id)) => id.name.clone(),
-                    _ => other.to_string(),
-                };
-                let Some(ml) = self.get_obj_equal_to_matrix_list(&lookup_key) else {
+                let lookup_key = other.to_string();
+                let Some(ml) = self.get_obj_equal_to_matrix_list(&other) else {
                     return Err(short_exec_error(
                         eval_stmt.clone().into(),
                         format!("eval: `{}` is not a matrix list", lookup_key),

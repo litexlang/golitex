@@ -1,16 +1,24 @@
-# Tracer: qualified numeric values from multiple exports of an imported module
+# Tracer: canonical qualified values inside imported composite expressions
 #
 # Before (did not work):
 # import "../_internal/fixtures/geometry_foundation" as gf
 # gf::main::a + gf::main::a = gf::main2::b
-# Former behavior: import and name resolution succeeded, but arithmetic verification was unknown.
+# gf::main::pair[1] = 3
+# Former behavior: arithmetic needed a Display workaround, while tuple projection then failed at
+# `1 <= tuple_dim(gf::main::pair)` because lookup reparsed a rendered composite key.
 #
 # Now (verified):
 import "../_internal/fixtures/geometry_foundation" as gf
 
 gf::main::a + gf::main::a = gf::main2::b
-# Current behavior: qualified imported values participate in arithmetic reduction.
+gf::main::pair[1] = 3
+gf::main2::pair[1] = 8
+cart_dim(gf::main::ProductSet) = 2
+# Current behavior: local and qualified references share one canonical symbol key, and structured
+# module routing makes direct arithmetic plus composite tuple/cart-dimension lookup available;
+# equal surface names from different exports remain distinct.
 #
 # Boundary: gf::main::missing remains undefined and is rejected by the focused Rust regression.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/import_alias_qualified_arithmetic.lit
-# Implementation: src/obj/obj.rs
+# Implementation: src/symbol/symbol.rs, src/obj/obj.rs, and
+# src/runtime/runtime_known_object_properties.rs

@@ -1556,7 +1556,7 @@ impl Runtime {
             }
 
             let known_tuple_arity = self
-                .get_obj_equal_to_tuple(&obj.to_string())
+                .get_obj_equal_to_tuple(&obj)
                 .map(|tuple| tuple.args.len())
                 .or_else(|| {
                     let symbol = match &obj {
@@ -1566,10 +1566,7 @@ impl Runtime {
                     self.default_tuple_view_for_symbol(symbol)
                         .map(|cart| cart.args.len())
                 })
-                .or_else(|| {
-                    self.get_obj_tuple_cart(&obj.to_string())
-                        .map(|cart| cart.args.len())
-                });
+                .or_else(|| self.get_obj_tuple_cart(&obj).map(|cart| cart.args.len()));
             if let Some(arity) = known_tuple_arity {
                 return Ok((1..=arity)
                     .map(|index| {

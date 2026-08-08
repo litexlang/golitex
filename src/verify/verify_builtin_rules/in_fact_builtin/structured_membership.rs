@@ -514,7 +514,7 @@ impl Runtime {
         let Obj::ObjAtIndex(obj_at_index) = &in_fact.element else {
             return Ok((StmtUnknown::new()).into());
         };
-        let Some(cart) = self.get_object_equal_to_cart(&obj_at_index.obj.to_string()) else {
+        let Some(cart) = self.get_object_equal_to_cart(obj_at_index.obj.as_ref()) else {
             return Ok((StmtUnknown::new()).into());
         };
         let Some(index_number) = self.resolve_obj_to_number(&obj_at_index.index) else {

@@ -198,9 +198,7 @@ impl Runtime {
         let reduced = match self.unfold_known_fn_application_once(application_side, verify_state)? {
             Some(reduced) => reduced,
             None => {
-                let Some(set_builder) =
-                    self.get_obj_equal_to_set_builder(&application_side.to_string())
-                else {
+                let Some(set_builder) = self.get_obj_equal_to_set_builder(application_side) else {
                     return Ok(None);
                 };
                 set_builder.into()
@@ -277,13 +275,12 @@ impl Runtime {
             if environments.is_empty() {
                 continue;
             }
-            let left_keys =
-                equality_lookup_keys_for_module_env(left, left_string, module_name.as_str());
-            let right_keys =
-                equality_lookup_keys_for_module_env(right, right_string, module_name.as_str());
             pairs.push((
-                known_equality_class_across_environments(&environments, &left_keys),
-                known_equality_class_across_environments(&environments, &right_keys),
+                known_equality_class_across_environments(&environments, &[left_string.to_string()]),
+                known_equality_class_across_environments(
+                    &environments,
+                    &[right_string.to_string()],
+                ),
             ));
         }
         pairs
@@ -516,24 +513,6 @@ impl Runtime {
 
         Ok((StmtUnknown::new()).into())
     }
-}
-
-fn equality_lookup_keys_for_module_env(
-    obj: &Obj,
-    default_key: &str,
-    module_name: &str,
-) -> Vec<String> {
-    let mut keys = vec![default_key.to_string()];
-    if let Obj::Atom(AtomObj::IdentifierWithMod(identifier)) = obj {
-        if identifier.mod_name == module_name {
-            keys.push(identifier.name.clone());
-        }
-    }
-    let local_key = default_key.replace(&format!("{}{}", module_name, MOD_SIGN), "");
-    if local_key != default_key {
-        keys.push(local_key);
-    }
-    keys
 }
 
 fn known_equality_class_across_environments(
