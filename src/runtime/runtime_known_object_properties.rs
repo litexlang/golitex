@@ -99,11 +99,11 @@ impl Runtime {
 
     /// User `have fn f … = …`: [`FnSetBody`] and defining RHS when both are stored in
     /// [`crate::environment::KnownFnInfo`] (inner scopes override outer).
-    pub fn get_known_fn_body_and_equal_to_for_key(
+    pub fn get_known_fn_body_and_equal_to_for_obj(
         &self,
-        key: &str,
+        obj: &Obj,
     ) -> Option<(FnSetBody, Obj, LineFile)> {
-        if let Some(info) = self.get_known_fn_info_for_key(key) {
+        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
             if let (Some((body, _lf_body)), Some((eq, eq_line))) =
                 (info.fn_set.clone(), info.equal_to.clone())
             {
@@ -201,20 +201,14 @@ impl Runtime {
                 return Ok(None);
             }
         }
-        let keys = match fn_obj.head.as_ref() {
-            FnObjHead::Identifier(i) => vec![i.to_string(), i.name.clone()],
-            FnObjHead::IdentifierWithMod(i) => vec![
-                i.to_string(),
-                format!("{}{}{}", i.mod_name, MOD_SIGN, i.name),
-            ],
-            FnObjHead::InstantiatedTemplateObj(i) => vec![i.to_string()],
+        let function_name_obj: Obj = match fn_obj.head.as_ref() {
+            FnObjHead::Identifier(_)
+            | FnObjHead::IdentifierWithMod(_)
+            | FnObjHead::InstantiatedTemplateObj(_) => (*fn_obj.head).clone().into(),
             _ => return Ok(None),
         };
-        let direct_definition = keys
-            .iter()
-            .find_map(|key| self.get_known_fn_body_and_equal_to_for_key(key));
+        let direct_definition = self.get_known_fn_body_and_equal_to_for_obj(&function_name_obj);
         let known_definition = direct_definition.or_else(|| {
-            let function_name_obj: Obj = (*fn_obj.head).clone().into();
             self.get_all_obj_representatives_equal_to_given(&function_name_obj)
                 .into_iter()
                 .find_map(|representative| {
@@ -350,18 +344,6 @@ impl Runtime {
         info.fn_set.map(|(body, _)| body)
     }
 
-    fn get_known_fn_info_for_key(&self, key: &str) -> Option<KnownFnInfo> {
-        if let Some(info) = self.get_known_fn_info_for_key_from_current_envs(key) {
-            return Some(info.clone());
-        }
-
-        if let Some((module_name, local_name)) = split_module_qualified_key(key) {
-            return self.get_known_fn_info_for_module_qualified_name(module_name, local_name);
-        }
-
-        None
-    }
-
     fn get_known_fn_info_for_key_from_current_envs(&self, key: &str) -> Option<&KnownFnInfo> {
         for env in self.iter_environments_from_top() {
             if let Some(info) = env.known_objs_in_fn_sets.get(key) {
@@ -449,235 +431,127 @@ impl Runtime {
         self.top_level_env().store_infer_rule_firing(key);
     }
 
-    pub fn get_object_equal_to_cart(&self, name: &str) -> Option<Cart> {
-        for env in self.iter_environments_from_top() {
-            if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(name) {
+    pub fn get_object_equal_to_cart(&self, obj: &Obj) -> Option<Cart> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(&key) {
                 return Some(known_cart_obj.clone());
             }
-            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(name) {
+            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(&key) {
                 return Some(known_cart_obj.clone());
-            }
-        }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_cart_obj, _)) = env.known_objs_equal_to_cart.get(local_name) {
-                    return Some(known_cart_obj.clone());
-                }
-                if let Some((_, Some(known_cart_obj), _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_cart_obj.clone());
-                }
             }
         }
         None
     }
 
-    pub fn get_obj_equal_to_set_builder(&self, name: &str) -> Option<SetBuilder> {
-        for env in self.iter_environments_from_top() {
-            if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(name) {
+    pub fn get_obj_equal_to_set_builder(&self, obj: &Obj) -> Option<SetBuilder> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(&key) {
                 return Some(set_builder.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            if self.is_current_parse_module(module_name) {
-                for env in self.iter_environments_from_top() {
-                    if let Some((set_builder, _)) = env
-                        .known_objs_equal_to_set_builder
-                        .get(local_name)
-                        .or_else(|| env.known_objs_equal_to_set_builder.get(name))
-                    {
-                        return Some(set_builder.clone());
-                    }
-                }
-                return None;
-            }
-            for env in self.imported_module_environments(module_name) {
-                if let Some((set_builder, _)) = env.known_objs_equal_to_set_builder.get(local_name)
-                {
-                    return Some(set_builder.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_obj_equal_to_tuple(&self, name: &str) -> Option<Tuple> {
-        for env in self.iter_environments_from_top() {
-            if let Some((Some(known_tuple_obj), _, _)) = env.known_objs_equal_to_tuple.get(name) {
+    pub fn get_obj_equal_to_tuple(&self, obj: &Obj) -> Option<Tuple> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((Some(known_tuple_obj), _, _)) = env.known_objs_equal_to_tuple.get(&key) {
                 return Some(known_tuple_obj.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((Some(known_tuple_obj), _, _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_tuple_obj.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_obj_tuple_cart(&self, name: &str) -> Option<Cart> {
-        for env in self.iter_environments_from_top() {
-            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(name) {
+    pub fn get_obj_tuple_cart(&self, obj: &Obj) -> Option<Cart> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((_, Some(known_cart_obj), _)) = env.known_objs_equal_to_tuple.get(&key) {
                 return Some(known_cart_obj.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, Some(known_cart_obj), _)) =
-                    env.known_objs_equal_to_tuple.get(local_name)
-                {
-                    return Some(known_cart_obj.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_obj_equal_to_finite_seq_list(&self, name: &str) -> Option<FiniteSeqListObj> {
-        for env in self.iter_environments_from_top() {
-            if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
+    pub fn get_obj_equal_to_finite_seq_list(&self, obj: &Obj) -> Option<FiniteSeqListObj> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((known_list, _, _)) = env.known_objs_equal_to_finite_seq_list.get(&key) {
                 return Some(known_list.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_list, _, _)) =
-                    env.known_objs_equal_to_finite_seq_list.get(local_name)
-                {
-                    return Some(known_list.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, name: &str) -> Option<FiniteSeqSet> {
-        for env in self.iter_environments_from_top() {
-            if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(name) {
+    pub fn get_finite_seq_set_for_obj_equal_to_seq_list(&self, obj: &Obj) -> Option<FiniteSeqSet> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((_, member_of, _)) = env.known_objs_equal_to_finite_seq_list.get(&key) {
                 return member_of.clone();
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, member_of, _)) =
-                    env.known_objs_equal_to_finite_seq_list.get(local_name)
-                {
-                    return member_of.clone();
-                }
-            }
-        }
         None
     }
 
-    pub fn get_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixListObj> {
-        for env in self.iter_environments_from_top() {
-            if let Some((known_matrix, _, _)) = env.known_objs_equal_to_matrix_list.get(name) {
+    pub fn get_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixListObj> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((known_matrix, _, _)) = env.known_objs_equal_to_matrix_list.get(&key) {
                 return Some(known_matrix.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((known_matrix, _, _)) =
-                    env.known_objs_equal_to_matrix_list.get(local_name)
-                {
-                    return Some(known_matrix.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, name: &str) -> Option<MatrixSet> {
-        for env in self.iter_environments_from_top() {
-            if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(name) {
+    pub fn get_matrix_set_for_obj_equal_to_matrix_list(&self, obj: &Obj) -> Option<MatrixSet> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(&key) {
                 return member_of.clone();
-            }
-        }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((_, member_of, _)) = env.known_objs_equal_to_matrix_list.get(local_name)
-                {
-                    return member_of.clone();
-                }
             }
         }
         None
     }
 
     pub fn get_matrix_set_for_obj(&self, obj: &Obj) -> Option<MatrixSet> {
-        let name = obj.to_string();
-        for env in self.iter_environments_from_top() {
-            if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(&name) {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(&key) {
                 return Some(matrix_set.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(&name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some((matrix_set, _)) = env.known_objs_in_matrix_sets.get(local_name) {
-                    return Some(matrix_set.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_object_equal_to_tuple(&self, name: &str) -> Option<Cart> {
-        for env in self.iter_environments_from_top() {
-            if let Some(cart) = env.known_objs_equal_to_tuple.get(name) {
+    pub fn get_object_equal_to_tuple(&self, obj: &Obj) -> Option<Cart> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some(cart) = env.known_objs_equal_to_tuple.get(&key) {
                 return cart.1.clone();
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(name) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some(cart) = env.known_objs_equal_to_tuple.get(local_name) {
-                    return cart.1.clone();
-                }
-            }
-        }
         None
     }
 
-    pub fn get_object_equal_to_normalized_decimal_number(&self, obj_str: &str) -> Option<Number> {
-        for env in self.iter_environments_from_top() {
-            if let Some(KnownObjValue::SimplifiedNumber(number)) = env.known_obj_values.get(obj_str)
-            {
+    pub fn get_object_equal_to_normalized_decimal_number(&self, obj: &Obj) -> Option<Number> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some(KnownObjValue::SimplifiedNumber(number)) = env.known_obj_values.get(&key) {
                 return Some(number.clone());
             }
         }
-        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some(KnownObjValue::SimplifiedNumber(number)) =
-                    env.known_obj_values.get(local_name)
-                {
-                    return Some(number.clone());
-                }
-            }
-        }
         None
     }
 
-    pub fn get_known_obj_value_as_obj(&self, obj_str: &str) -> Option<Obj> {
-        for env in self.iter_environments_from_top() {
-            if let Some(known_value) = env.known_obj_values.get(obj_str) {
+    pub fn get_known_obj_value_as_obj(&self, obj: &Obj) -> Option<Obj> {
+        let key = obj.to_string();
+        for env in self.object_lookup_environments(obj) {
+            if let Some(known_value) = env.known_obj_values.get(&key) {
                 return match known_value {
                     KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
                     KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
                 };
-            }
-        }
-        if let Some((module_name, local_name)) = split_module_qualified_key(obj_str) {
-            for env in self.imported_module_environments(module_name) {
-                if let Some(known_value) = env.known_obj_values.get(local_name) {
-                    return match known_value {
-                        KnownObjValue::SimplifiedNumber(number) => Some(number.clone().into()),
-                        KnownObjValue::SimplifiedFraction(div) => Some(div.clone().into()),
-                    };
-                }
             }
         }
         None
@@ -698,16 +572,12 @@ impl Runtime {
             std::slice::from_ref(&given_key),
         );
 
-        if let Some((module_name, local_name)) = split_module_qualified_key(&given_key) {
-            let lookup_environments = if self.is_current_parse_module(module_name) {
-                environments
-            } else {
-                self.imported_module_environments(module_name)
-            };
+        for module_name in self.obj_referenced_module_names(given) {
+            let lookup_environments = self.imported_module_environments(&module_name);
             Self::extend_obj_representatives_equal_to_given_in_environments(
                 &mut result,
                 &lookup_environments,
-                &[given_key.clone(), local_name.to_string()],
+                std::slice::from_ref(&given_key),
             );
         }
 
@@ -795,6 +665,14 @@ impl Runtime {
         } else {
             vec![]
         }
+    }
+
+    fn object_lookup_environments(&self, obj: &Obj) -> Vec<&Environment> {
+        let mut environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        for module_name in self.obj_referenced_module_names(obj) {
+            environments.extend(self.imported_module_environments(&module_name));
+        }
+        environments
     }
 
     pub fn imported_module_environments(&self, module_name: &str) -> Vec<&Environment> {
@@ -965,11 +843,6 @@ fn module_qualified_obj_name(obj: &Obj) -> Option<(&str, &str)> {
         return Some((identifier.mod_name.as_str(), identifier.name.as_str()));
     }
     None
-}
-
-fn split_module_qualified_key(key: &str) -> Option<(&str, &str)> {
-    key.rsplit_once(MOD_SIGN)
-        .filter(|(module_name, local_name)| !module_name.is_empty() && !local_name.is_empty())
 }
 
 fn collect_module_name_from_atomic_name(name: &AtomicName, module_names: &mut Vec<String>) {

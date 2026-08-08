@@ -16,18 +16,14 @@ impl Runtime {
                 )?,
                 Some(Obj::SetBuilder(_))
             )
-            || self
-                .get_obj_equal_to_set_builder(&left_set.to_string())
-                .is_some();
+            || self.get_obj_equal_to_set_builder(&left_set).is_some();
         let mut left_has_set_builder_representative = false;
         for representative in self
             .get_all_obj_representatives_equal_to_given(&left_set)
             .into_iter()
         {
             if matches!(&representative, Obj::SetBuilder(_))
-                || self
-                    .get_obj_equal_to_set_builder(&representative.to_string())
-                    .is_some()
+                || self.get_obj_equal_to_set_builder(&representative).is_some()
                 || matches!(
                     self.unfold_known_fn_application_once(
                         &representative,

@@ -1,3 +1,6 @@
 import "./_internal/fixtures/geometry_foundation" as gf
 
 gf::main::a + gf::main::a = gf::main2::b
+gf::main::pair[1] = 3
+gf::main2::pair[1] = 8
+cart_dim(gf::main::ProductSet) = 2

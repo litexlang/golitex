@@ -1,1 +1,2 @@
 have b R = 2
+have pair cart(R, R) = (8, 9)

@@ -227,6 +227,21 @@ impl SymbolRef {
         format!("#{}#{}", self.id.value(), display_name)
     }
 
+    /// Keep the canonical owner readable while tagging only the terminal symbol name.
+    pub(crate) fn canonical_identity_spine(&self, local_display_name: &str) -> String {
+        let local_identity = self.identity_spine(local_display_name);
+        if self.display_name == local_display_name {
+            return local_identity;
+        }
+        let Some(owner) = self.display_name.strip_suffix(local_display_name) else {
+            return self.identity_spine(&self.display_name);
+        };
+        if !owner.ends_with(MOD_SIGN) {
+            return self.identity_spine(&self.display_name);
+        }
+        format!("{}{}", owner, local_identity)
+    }
+
     pub(crate) fn with_display_name(self, display_name: String) -> Self {
         SymbolRef::new(self.id, display_name)
     }

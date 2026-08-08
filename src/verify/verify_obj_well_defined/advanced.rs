@@ -182,10 +182,9 @@ impl Runtime {
         let Obj::FnObj(fn_obj) = obj else {
             return Ok(());
         };
-        let obj_key = obj.to_string();
         // Projected return facts re-enter this helper through index well-definedness.
         // Existing Cartesian metadata means an outer call is already populating them.
-        if self.get_object_equal_to_tuple(&obj_key).is_some() {
+        if self.get_object_equal_to_tuple(obj).is_some() {
             return Ok(());
         }
         let Some(ret_set) = self.fn_obj_return_set_after_application(fn_obj)? else {
@@ -198,6 +197,7 @@ impl Runtime {
             return Ok(());
         }
 
+        let obj_key = obj.to_string();
         self.store_tuple_obj_and_cart(&obj_key, None, Some(cart.clone()), line_file.clone());
 
         let is_tuple_fact: AtomicFact = IsTupleFact::new(obj.clone(), line_file.clone()).into();
@@ -327,7 +327,7 @@ impl Runtime {
             // space. Values returned in that carrier remain callable.
             // Example: `selected(i) $in {f fn(j I) V: P(f)}` permits
             // `selected(i)(j)`.
-            if let Some(set_builder) = self.get_obj_equal_to_set_builder(&candidate.to_string()) {
+            if let Some(set_builder) = self.get_obj_equal_to_set_builder(&candidate) {
                 candidates.push(set_builder.into());
             }
             candidates.extend(self.get_all_obj_representatives_equal_to_given(&candidate));

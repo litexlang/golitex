@@ -324,11 +324,7 @@ impl Runtime {
         let is_known_symbolic_cart = self
             .verify_known_non_forall_atomic_fact(&is_cart_fact)?
             .is_true();
-        if !is_known_symbolic_cart
-            && self
-                .get_object_equal_to_cart(&in_fact.set.to_string())
-                .is_none()
-        {
+        if !is_known_symbolic_cart && self.get_object_equal_to_cart(&in_fact.set).is_none() {
             return Ok(InferResult::new());
         }
 
@@ -1017,7 +1013,7 @@ impl Runtime {
                     return self
                         .infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder);
                 }
-                if let Some(set_builder) = self.get_obj_equal_to_set_builder(&set_obj.to_string()) {
+                if let Some(set_builder) = self.get_obj_equal_to_set_builder(set_obj) {
                     self.infer_membership_in_set_builder_from_in_fact(in_fact, &set_builder)
                 } else {
                     Ok(InferResult::new())

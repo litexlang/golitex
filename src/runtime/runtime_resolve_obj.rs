@@ -23,8 +23,7 @@ impl Runtime {
         if let Some(number) = obj.evaluate_to_normalized_decimal_number() {
             return Some(number);
         }
-        let obj_key = obj.to_string();
-        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(&obj_key) {
+        if let Some(number) = self.get_object_equal_to_normalized_decimal_number(obj) {
             return Some(number);
         }
         None
@@ -44,7 +43,7 @@ impl Runtime {
         if let Some(n) = self.resolve_obj_to_number(&result) {
             return n.into();
         }
-        if let Some(known_value) = self.get_known_obj_value_as_obj(&result.to_string()) {
+        if let Some(known_value) = self.get_known_obj_value_as_obj(&result) {
             return known_value;
         }
         result
@@ -54,7 +53,7 @@ impl Runtime {
         if let Some(number) = self.resolve_obj_to_number(obj) {
             return number.into();
         }
-        if let Some(known_value) = self.get_known_obj_value_as_obj(&obj.to_string()) {
+        if let Some(known_value) = self.get_known_obj_value_as_obj(obj) {
             return known_value;
         }
         match obj {
@@ -289,8 +288,8 @@ impl Runtime {
                             }
                         }
                     }
-                    let head_key = fn_obj.head.to_string();
-                    if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_key) {
+                    let head_obj: Obj = (*fn_obj.head).clone().into();
+                    if let Some(list) = self.get_obj_equal_to_finite_seq_list(&head_obj) {
                         let arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
                         if let Some(ix) = self.resolve_obj_to_number(&arg) {
                             if let Ok(one_based) = ix.normalized_value.parse::<usize>() {
@@ -303,8 +302,8 @@ impl Runtime {
                 }
                 if fn_obj.body.len() == 2 && fn_obj.body[0].len() == 1 && fn_obj.body[1].len() == 1
                 {
-                    let head_key = fn_obj.head.to_string();
-                    if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_key) {
+                    let head_obj: Obj = (*fn_obj.head).clone().into();
+                    if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_obj) {
                         let r_arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
                         let c_arg = self.resolve_obj(fn_obj.body[1][0].as_ref());
                         if let (Some(rn), Some(cn)) = (
@@ -327,8 +326,8 @@ impl Runtime {
                     }
                 }
                 if fn_obj.body.len() == 1 && fn_obj.body[0].len() == 2 {
-                    let head_key = fn_obj.head.to_string();
-                    if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_key) {
+                    let head_obj: Obj = (*fn_obj.head).clone().into();
+                    if let Some(mat) = self.get_obj_equal_to_matrix_list(&head_obj) {
                         let r_arg = self.resolve_obj(fn_obj.body[0][0].as_ref());
                         let c_arg = self.resolve_obj(fn_obj.body[0][1].as_ref());
                         if let (Some(rn), Some(cn)) = (
@@ -463,7 +462,7 @@ impl Runtime {
                     obj.clone()
                 }
                 _ => {
-                    let known_cart_obj = self.get_object_equal_to_cart(&proj.set.to_string());
+                    let known_cart_obj = self.get_object_equal_to_cart(proj.set.as_ref());
                     if let Some(known_cart_obj) = known_cart_obj {
                         let projection_index_number = self.resolve_obj_to_number(&proj.dim);
                         if let Some(projection_index_number) = projection_index_number {
@@ -510,8 +509,7 @@ impl Runtime {
                     obj.clone()
                 }
                 _ => {
-                    let known_tuple_obj =
-                        self.get_obj_equal_to_tuple(&obj_at_index.obj.to_string());
+                    let known_tuple_obj = self.get_obj_equal_to_tuple(obj_at_index.obj.as_ref());
                     if let Some(known_tuple_obj) = known_tuple_obj {
                         let tuple_index_number = self.resolve_obj_to_number(&obj_at_index.index);
                         if let Some(tuple_index_number) = tuple_index_number {
@@ -528,7 +526,7 @@ impl Runtime {
                         }
                     }
                     if let Some(known_list) =
-                        self.get_obj_equal_to_finite_seq_list(&obj_at_index.obj.to_string())
+                        self.get_obj_equal_to_finite_seq_list(obj_at_index.obj.as_ref())
                     {
                         let ix = self.resolve_obj_to_number(&obj_at_index.index);
                         if let Some(ix) = ix {

@@ -342,11 +342,11 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         let left_set_builder = match &equal_fact.left {
             Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-            _ => self.get_obj_equal_to_set_builder(&equal_fact.left.to_string()),
+            _ => self.get_obj_equal_to_set_builder(&equal_fact.left),
         };
         let right_set_builder = match &equal_fact.right {
             Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-            _ => self.get_obj_equal_to_set_builder(&equal_fact.right.to_string()),
+            _ => self.get_obj_equal_to_set_builder(&equal_fact.right),
         };
 
         // Equality propagates a known set-builder representative across equal named sets.

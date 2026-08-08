@@ -44,7 +44,7 @@ impl Runtime {
                     &final_state,
                 )? {
                     Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-                    _ => self.get_obj_equal_to_set_builder(&membership.set.to_string()),
+                    _ => self.get_obj_equal_to_set_builder(&membership.set),
                 },
             };
             let Some(unfolded) = unfolded else {
@@ -129,7 +129,7 @@ impl Runtime {
             )?;
             let instantiated_builder = match unfolded {
                 Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-                _ => self.get_obj_equal_to_set_builder(&instantiated_membership.set.to_string()),
+                _ => self.get_obj_equal_to_set_builder(&instantiated_membership.set),
             };
             let Some(instantiated_builder) = instantiated_builder else {
                 continue;
@@ -306,7 +306,7 @@ impl Runtime {
                     &final_state,
                 )? {
                     Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-                    _ => self.get_obj_equal_to_set_builder(&membership.set.to_string()),
+                    _ => self.get_obj_equal_to_set_builder(&membership.set),
                 },
             };
             let Some(set_builder) = set_builder else {
@@ -1079,7 +1079,7 @@ impl Runtime {
         }
         let set_builder = match self.unfold_known_fn_application_once(&in_fact.set, verify_state)? {
             Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-            _ => self.get_obj_equal_to_set_builder(&in_fact.set.to_string()),
+            _ => self.get_obj_equal_to_set_builder(&in_fact.set),
         };
         let Some(set_builder) = set_builder else {
             return Ok(None);

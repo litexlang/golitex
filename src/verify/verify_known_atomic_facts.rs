@@ -256,13 +256,9 @@ impl Runtime {
             if !result.iter().any(|item| item == given) {
                 result.push(given.to_string());
             }
-            let module_given = known_atomic_lookup_key_for_module_env(given, module_name.as_str());
-            if module_given != given && !result.iter().any(|item| item == &module_given) {
-                result.push(module_given.clone());
-            }
             result.extend(Self::get_all_objs_equal_to_given_in_environments(
                 &environments,
-                module_given.as_str(),
+                given,
             ));
         }
     }
@@ -801,17 +797,6 @@ impl Runtime {
         }
 
         Ok(None)
-    }
-}
-
-fn known_atomic_lookup_key_for_module_env(given: &str, module_name: &str) -> String {
-    match given.rsplit_once(MOD_SIGN) {
-        Some((given_module, local_name))
-            if given_module == module_name && !local_name.is_empty() =>
-        {
-            local_name.to_string()
-        }
-        _ => given.to_string(),
     }
 }
 
