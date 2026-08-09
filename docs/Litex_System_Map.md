@@ -354,12 +354,13 @@ domain may be empty.
 
 Pattern matching is therefore shared by builtin routes, known-fact reuse, and
 universal instantiation. A named `thm` also stores its universal fact, while
-`by thm` provides an explicit theorem-instantiation route. The preview form
-`by thm name(args) => atomic_fact` performs that same instantiation in a child
-environment, verifies the requested atomic fact there, discards the child, and
-commits only the requested fact to the parent. The requested fact must be
-well-defined before the child is opened, so temporary theorem conclusions
-cannot be the sole support for its object or callable shape.
+`by thm` provides an explicit theorem-instantiation route. The preview forms
+`by thm name(args) => atomic_fact` and `by thm name(args):` followed by one
+`? atomic_fact` perform that same instantiation in a child environment, verify
+the requested atomic fact there, discard the child, and commit only the
+requested fact to the parent. The requested fact must be well-defined before
+the child is opened, so temporary theorem conclusions cannot be the sole
+support for its object or callable shape.
 
 For a two-branch atomic disjunction, the verifier may use classical
 implication packaging: to establish `not A or B`, temporarily assume `A` and
@@ -422,11 +423,16 @@ Each route below generates or checks subgoals. Those subgoals return to the
 same fact and atomic verification loops; a proof route is not a second,
 unrelated verifier.
 
+In every `by ...:` goal-block route, the ordinary user proof list may be empty;
+the route still has to close its goals with its normal final verifier. Case arms
+and induction branch headers remain structural inputs. `by contra` alone must
+retain an explicit final `impossible` statement.
+
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | `by def fact` | No persistent child scope. | The single target must be a concrete positive prop or supported positive builtin definition. The older goal-block spelling remains parser-compatible. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
 | `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. | Verify theorem domains or explicit builtin requirements with the full verifier. | Store conclusions and infer only after all checks succeed. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
-| `by thm name(args) => atomic_fact` (preview) | The ordinary theorem application and its inferred consequences live in a disposable child scope. | The selected atomic fact must be well-defined in the parent; theorem lookup, arguments, domains, and builtin shapes use the legacy checks. | Apply the theorem in the child, then use the full atomic verifier on the selected fact. | Discard the child and transactionally store only the selected fact as the parent seed; ordinary inference from that seed remains enabled. | Detailed output separates `temporary_then_facts`, `target_check`, and `parent_stored_facts`; strict/trusted execution follows the existing theorem and file trust boundaries. |
+| `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The ordinary theorem application and its inferred consequences live in a disposable child scope. | The selected atomic fact must be well-defined in the parent; theorem lookup, arguments, domains, and builtin shapes use the legacy checks. The goal-block spelling accepts no proof body. | Apply the theorem in the child, then use the full atomic verifier on the selected fact. | Discard the child and transactionally store only the selected fact as the parent seed; ordinary inference from that seed remains enabled. | Detailed output separates `temporary_then_facts`, `target_check`, and `parent_stored_facts`; strict/trusted execution follows the existing theorem and file trust boundaries. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. `case fact` denotes a zero-statement proof branch; branches with statements use `case fact:`. | Prove the cases are exhaustive, then prove every target in every branch, including after zero proof steps in a bodyless branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |
 | `by induc` / `by strong_induc` | Separate base and step scopes with ordinary or strong induction hypotheses. | Parameter, starting point, target, and induction shape must be valid. | Verify base and step obligations. | Store the resulting universal fact and infer. | Checked induction. |

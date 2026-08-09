@@ -5,12 +5,12 @@ impl Runtime {
     /// Mathematical contract: outside an explicitly trusted source boundary,
     /// a fact is stored and used for inference only after central
     /// well-definedness succeeds.
-    pub fn verify_well_defined_and_store_and_infer(
+    pub fn store_with_well_defined_verification_and_infer(
         &mut self,
         fact: Fact,
         verify_state: &UseContextVerifyState,
     ) -> Result<InferResult, RuntimeError> {
-        self.verify_well_defined_and_store_and_infer_with_reason(
+        self.store_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
             InferReason::VerifiedStatement,
@@ -19,14 +19,14 @@ impl Runtime {
 
     /// Mathematical contract: adding a provenance reason does not change the
     /// fact's well-definedness obligations or inferred mathematics.
-    pub fn verify_well_defined_and_store_and_infer_with_reason(
+    pub fn store_with_well_defined_verification_and_infer_with_reason(
         &mut self,
         fact: Fact,
         verify_state: &UseContextVerifyState,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.store_reason();
-        self.verify_well_defined_and_store_and_infer_with_reason_text(
+        self.store_with_well_defined_verification_and_infer_with_reason_text(
             fact,
             verify_state,
             reason_text,
@@ -36,7 +36,7 @@ impl Runtime {
     /// Mathematical contract implementation: cached facts reuse their prior
     /// check, ordinary sources are centrally checked, and only the repository's
     /// explicit trusted-file boundary may bypass this gate.
-    fn verify_well_defined_and_store_and_infer_with_reason_text(
+    fn store_with_well_defined_verification_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
         verify_state: &UseContextVerifyState,
@@ -46,7 +46,7 @@ impl Runtime {
             return self.infer(&fact);
         }
         if self.current_execution_is_trusted_file() {
-            return self.store_and_infer_fact_without_well_defined_verified_with_reason_text(
+            return self.store_without_well_defined_verification_and_infer_with_reason_text(
                 fact,
                 reason_text,
             );
@@ -61,16 +61,16 @@ impl Runtime {
             ))
             .into());
         }
-        self.store_and_infer_fact_without_well_defined_verified_with_reason_text(fact, reason_text)
+        self.store_without_well_defined_verification_and_infer_with_reason_text(fact, reason_text)
     }
 
     /// Mathematical contract: enforce the same fact contract using the
     /// verifier state appropriate to quantified versus non-quantified facts.
-    pub fn verify_well_defined_and_store_and_infer_with_default_verify_state(
+    pub fn store_with_well_defined_verification_and_infer_with_default_verify_state(
         &mut self,
         fact: Fact,
     ) -> Result<InferResult, RuntimeError> {
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
             fact,
             InferReason::VerifiedStatement,
         )
@@ -78,7 +78,7 @@ impl Runtime {
 
     /// Mathematical contract: provenance does not alter the default-state
     /// well-definedness check selected for the fact's quantifier form.
-    pub fn verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+    pub fn store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
         &mut self,
         fact: Fact,
         reason: InferReason,
@@ -88,7 +88,32 @@ impl Runtime {
             Fact::ForallFactWithIff(_) => UseContextVerifyState::new(0, false),
             _ => UseContextVerifyState::new_with_final_round(false),
         };
-        self.verify_well_defined_and_store_and_infer_with_reason(fact, &verify_state, reason)
+        self.store_with_well_defined_verification_and_infer_with_reason(fact, &verify_state, reason)
+    }
+
+    /// Mathematical contract: store a fact whose complete well-definedness
+    /// contract was already established by the current statement preflight.
+    pub fn store_without_well_defined_verification_and_infer(
+        &mut self,
+        fact: Fact,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_without_well_defined_verification_and_infer_with_reason(
+            fact,
+            InferReason::VerifiedStatement,
+        )
+    }
+
+    /// Mathematical contract: provenance does not weaken the caller's
+    /// obligation to establish well-definedness before using this store path.
+    pub fn store_without_well_defined_verification_and_infer_with_reason(
+        &mut self,
+        fact: Fact,
+        reason: InferReason,
+    ) -> Result<InferResult, RuntimeError> {
+        self.store_without_well_defined_verification_and_infer_with_reason_text(
+            fact,
+            reason.store_reason(),
+        )
     }
 
     pub fn store_trusted_fact_and_infer_with_reason(
@@ -96,11 +121,10 @@ impl Runtime {
         fact: Fact,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
-        let reason_text = reason.store_reason();
-        self.store_and_infer_fact_without_well_defined_verified_with_reason_text(fact, reason_text)
+        self.store_without_well_defined_verification_and_infer_with_reason(fact, reason)
     }
 
-    fn store_and_infer_fact_without_well_defined_verified_with_reason_text(
+    fn store_without_well_defined_verification_and_infer_with_reason_text(
         &mut self,
         fact: Fact,
         reason_text: String,

@@ -47,7 +47,9 @@ impl Runtime {
             regularity_axiom_exist_fact(self, stmt.set.clone(), stmt.line_file.clone())?;
         let regularity_fact_string = regularity_fact.to_string();
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(regularity_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                regularity_fact,
+            )
             .map_err(|store_error| {
                 short_exec_error(
                     stmt.clone().into(),

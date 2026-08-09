@@ -77,7 +77,7 @@ impl Runtime {
             axiom_of_choice_exist_fact(self, stmt.family.clone(), stmt.line_file.clone())?;
         let choice_fact_string = choice_fact.to_string();
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(choice_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(choice_fact)
             .map_err(|store_error| {
                 short_exec_error(
                     stmt.clone().into(),

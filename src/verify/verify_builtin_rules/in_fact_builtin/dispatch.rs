@@ -387,7 +387,7 @@ impl Runtime {
             }
             (Obj::Abs(abs), Obj::StandardSet(StandardSet::NPos)) => {
                 let mut evidence = None;
-                for source_carrier in [StandardSet::NPos, StandardSet::ZNeg, StandardSet::ZNz] {
+                for source_carrier in [StandardSet::NPos, StandardSet::ZNeg, StandardSet::ZStar] {
                     let source_membership: AtomicFact = InFact::new(
                         abs.arg.as_ref().clone(),
                         source_carrier.into(),

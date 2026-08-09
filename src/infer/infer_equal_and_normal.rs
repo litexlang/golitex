@@ -20,19 +20,21 @@ impl Runtime {
         infer_step_description: &str,
     ) -> Result<(), RuntimeError> {
         infer_result.new_fact(&inferred_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(inferred_fact)
-            .map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    format!(
-                        "failed to store inferred {} while inferring `{}`",
-                        infer_step_description, equal_fact
-                    ),
-                    equal_fact.line_file.clone(),
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            inferred_fact,
+        )
+        .map_err(|previous_error| {
+            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                None,
+                format!(
+                    "failed to store inferred {} while inferring `{}`",
+                    infer_step_description, equal_fact
+                ),
+                equal_fact.line_file.clone(),
+                Some(previous_error),
+                vec![],
+            )))
+        })?;
         Ok(())
     }
 
@@ -531,7 +533,7 @@ impl Runtime {
                     &fact,
                 );
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                         fact,
                         reason.clone(),
                     )?,
@@ -609,7 +611,7 @@ impl Runtime {
             // `Inner(x) := x >= 0`, so `Outer(x)` infers `x >= 0`.
             // The active-fact guard and firing cache stop cyclic definitions.
             let store_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                     fact_to_store,
                     by_definition_reason.clone(),
                 );

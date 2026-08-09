@@ -391,11 +391,13 @@ experiment rather than being assigned a library semantics silently.
 
 ### Complex scalars (beta preview)
 
-`C` is the largest builtin scalar set. The standard inclusion chain is
-`N` through `Z`, `Q`, and `R` into `C`. Arithmetic does not erase narrower
-information: an operation whose operands are known integers or reals keeps the
-existing narrow result whenever that rule applies, and falls back to `C` only
-when a complex carrier is needed.
+`C` is the largest builtin scalar set, and `C*` is its nonzero subset
+`C \ {0}`. The standard inclusion chain is `N` through `Z`, `Q`, and `R` into
+`C`; on the nonzero branch, `R* $subset C*` and `C* $subset C`. Membership in
+`C*` therefore supplies both complex membership and disequality from zero.
+Arithmetic does not erase narrower information: an operation whose operands
+are known integers or reals keeps the existing narrow result whenever that
+rule applies, and falls back to `C` only when a complex carrier is needed.
 
 The native imaginary unit and coordinate interface are symbolic builtin
 objects:
@@ -406,6 +408,12 @@ i * i = -1
 i^2 = -1
 i^4 = 1
 i^(-1) = -i
+i $in C*
+not 0 $in C*
+
+have w C*
+w $in C
+w != 0
 
 re(3) = 3
 img(3) = 0
@@ -478,7 +486,7 @@ by def {x R: 0 <= x} $subset R
 | `N`, `Z`, `Q`, `R`, `C` | Standard number sets |
 | `N+`, `Z+`, `Q+`, `R+` | Strictly positive standard subsets; `Z+` is the same set as `N+` |
 | `Z-`, `Q-`, `R-` | Strictly negative standard subsets |
-| `Z*`, `Q*`, `R*` | Nonzero standard subsets |
+| `Z*`, `Q*`, `R*`, `C*` | Nonzero standard subsets |
 | `{a, b, ...}` | Displayed finite set |
 | `{x S: facts}` | Set comprehension over `S` |
 | `union(A, B)`, `intersect(A, B)` | Binary union and intersection |
@@ -498,10 +506,14 @@ have z Z-
 z $in Z-
 have x R*
 x $in R*
+have w C*
+w $in C
+w != 0
 ```
 
 The signs are strict: `+` means greater than zero, `-` means less than zero,
-and `*` means nonzero.
+and `*` means nonzero. `N*` is not a standard spelling; use `N+` for nonzero
+naturals.
 
 Set-builder conditions are facts, not arbitrary statements:
 
@@ -1771,7 +1783,8 @@ by thm positive_is_nonzero(1)
 ```
 
 The preview selection form keeps the ordinary theorem application explicit but
-commits only one requested atomic consequence:
+commits only one requested atomic consequence. It accepts either the inline
+arrow or the uniform bodyless goal-block spelling:
 
 ```litex
 thm expose_zero_sides:
@@ -1782,18 +1795,23 @@ thm expose_zero_sides:
     0 + x = x
 
 by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
+
+by thm expose_zero_sides(2):
+    ? 2 + 0 = 0 + 2
 ```
 
-For `by thm name(args) => fact`, `fact` must already be well-defined in the
-parent context. Litex then applies the theorem with the existing `by thm`
-semantics in a temporary child environment, so all instantiated conclusions
-and their ordinary inferred consequences are available while the full atomic
-verifier checks `fact`. The child is discarded afterward. On success, only
-`fact` is committed as the parent seed and ordinary inference runs from that
-seed; on failure, the parent environment is unchanged. The target may be a
-positive or negative atomic fact and need not be a direct theorem conclusion,
-but compound, quantified, existential, disjunctive, conjunctive, and chain
-targets are not accepted.
+For `by thm name(args) => fact`, or its `:` plus one `? fact` equivalent,
+`fact` must already be well-defined in the parent context. Litex then applies
+the theorem with the existing `by thm` semantics in a temporary child
+environment, so all instantiated conclusions and their ordinary inferred
+consequences are available while the full atomic verifier checks `fact`. The
+child is discarded afterward. On success, only `fact` is committed as the
+parent seed and ordinary inference runs from that seed; on failure, the parent
+environment is unchanged. The target may be a positive or negative atomic fact
+and need not be a direct theorem conclusion, but compound, quantified,
+existential, disjunctive, conjunctive, and chain targets are not accepted. The
+goal-block form is intentionally bodyless: it accepts no proof statements after
+the single atomic goal.
 
 Detailed output uses `"mode": "select_atomic_fact"`, reports the scoped
 conclusions as `temporary_then_facts`, records `target_check`, and separates
@@ -2062,6 +2080,15 @@ explanation; this index does not repeat its examples.
 The proof process answers one question: why may the current statement be added
 to the verified context? The checker follows a small set of routes and reports
 the route that succeeded or the point that failed.
+
+For a proof route written as `by ...:` followed by one or more `?` goals, the
+ordinary proof-statement list may be empty. In that case Litex installs the
+route's generated assumptions, runs zero user proof statements, and immediately
+performs the same final goal checks. This is not an admission: an unclosed goal
+still fails. Structural declarations remain required where the method needs
+them, such as `case` arms and the base/step headers of finite-set induction.
+`by contra` is the sole exception to the empty-tail rule: its last statement
+must always be an explicit `impossible fact`.
 
 ### The core loop
 
@@ -2401,6 +2428,16 @@ measure.
 
 `by induc S` also supports structural induction on finite sets. The restricted
 form `by induc S in A` proves the result only for finite subsets of `A`.
+Its empty-set and insertion headers remain necessary, but either branch may be
+bodyless when the generated assumptions already close the target. Omit the
+colon on an empty branch:
+
+```litex
+by induc P:
+    ? P = P
+    ? from P = {}
+    ? induc x, S
+```
 
 ### Bounded iteration and extensionality
 
@@ -3108,7 +3145,7 @@ are checker code, not source-level theorems silently imported from a library.
 Preview features are public enough to test, but their syntax or semantics may
 change:
 
-- native complex scalars `C`, `i`, `re`, `img`, and `C_abs`;
+- native complex scalars `C`, `C*`, `i`, `re`, `img`, and `C_abs`;
 - native positive real constants `e` and `pi`;
 - native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
 - native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
@@ -3117,7 +3154,8 @@ change:
 - proper subset and proper superset relations;
 - injective, surjective, and bijective mapping predicates;
 - explicit `by def`;
-- selected atomic consequences with `by thm name(args) => fact`;
+- selected atomic consequences with `by thm name(args) => fact` or its
+  bodyless `:` plus `? fact` goal-block spelling;
 - untyped object definitions with `let x = value`;
 - modules, manifests, flattening, and localized output;
 - one-step membership verification through a known subset or superset;

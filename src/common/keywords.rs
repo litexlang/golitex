@@ -77,9 +77,10 @@ pub const COMPACT_R_POS: &str = "R+";
 pub const COMPACT_Z_NEG: &str = "Z-";
 pub const COMPACT_Q_NEG: &str = "Q-";
 pub const COMPACT_R_NEG: &str = "R-";
-pub const COMPACT_Z_NZ: &str = "Z*";
-pub const COMPACT_Q_NZ: &str = "Q*";
-pub const COMPACT_R_NZ: &str = "R*";
+pub const COMPACT_Z_STAR: &str = "Z*";
+pub const COMPACT_Q_STAR: &str = "Q*";
+pub const COMPACT_R_STAR: &str = "R*";
+pub const COMPACT_C_STAR: &str = "C*";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
@@ -220,9 +221,10 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         COMPACT_Z_NEG,
         COMPACT_Q_NEG,
         COMPACT_R_NEG,
-        COMPACT_Z_NZ,
-        COMPACT_Q_NZ,
-        COMPACT_R_NZ,
+        COMPACT_Z_STAR,
+        COMPACT_Q_STAR,
+        COMPACT_R_STAR,
+        COMPACT_C_STAR,
         ADD,
         SUB,
         MUL,
@@ -491,9 +493,10 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == COMPACT_Z_NEG
         || atom_name == COMPACT_Q_NEG
         || atom_name == COMPACT_R_NEG
-        || atom_name == COMPACT_Z_NZ
-        || atom_name == COMPACT_Q_NZ
-        || atom_name == COMPACT_R_NZ
+        || atom_name == COMPACT_Z_STAR
+        || atom_name == COMPACT_Q_STAR
+        || atom_name == COMPACT_R_STAR
+        || atom_name == COMPACT_C_STAR
         || atom_name == N
         || atom_name == Q
         || atom_name == Z

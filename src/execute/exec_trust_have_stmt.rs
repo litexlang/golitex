@@ -58,7 +58,7 @@ impl Runtime {
             let fact_infer_result = if self.current_execution_is_trusted_file() {
                 self.store_trusted_fact_and_infer_with_reason(fact.clone(), InferReason::TrustHave)
             } else {
-                self.verify_fact_well_defined_and_store_and_infer_with_reason(
+                self.store_fact_with_well_defined_verification_and_infer_with_reason(
                     fact.clone(),
                     &UseContextVerifyState::new(0, false),
                     InferReason::TrustHave,

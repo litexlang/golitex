@@ -3,10 +3,35 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use super::rational_expression::{lean_name, LeanRationalExpression};
+use super::{
+    ToLeanCompilationReport, ToLeanCompilationStatus, ToLeanUnsupported, ToLeanUnsupportedPhase,
+};
+
+enum ToLeanStatementOutcome {
+    Ir(StmtToLeanIR),
+    Unsupported(String),
+}
+
+struct ToLeanStatementInput {
+    statement_index: usize,
+    statement: String,
+    line_file: LineFile,
+    outcome: ToLeanStatementOutcome,
+}
 
 pub fn to_lean(source_code: &str, runtime: &mut Runtime) -> Result<String, RuntimeError> {
     let namespace = lean_namespace_for_runtime(runtime);
     to_lean_with_namespace(source_code, runtime, namespace)
+}
+
+/// Compiles every supported statement and returns an explicit completeness
+/// status. Parsing, execution, and verification errors remain hard failures.
+pub fn to_lean_with_report(
+    source_code: &str,
+    runtime: &mut Runtime,
+) -> Result<ToLeanCompilationReport, RuntimeError> {
+    let namespace = lean_namespace_for_runtime(runtime);
+    to_lean_with_report_and_namespace(source_code, runtime, namespace)
 }
 
 fn to_lean_with_namespace(
@@ -65,10 +90,139 @@ pub fn to_lean_from_source(source_code: &str, entry_label: &str) -> Result<Strin
     to_lean_with_namespace(&normalized, &mut runtime, None)
 }
 
+pub fn to_lean_from_source_with_report(
+    source_code: &str,
+    entry_label: &str,
+) -> Result<ToLeanCompilationReport, RuntimeError> {
+    let normalized = source_code.replace('\r', "");
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(entry_label);
+    to_lean_with_report_and_namespace(&normalized, &mut runtime, None)
+}
+
 /// Pure backend boundary: this function has no Runtime and cannot inspect raw
 /// Litex statements or re-run proof search.
 pub fn emit_lean_from_ir(ir: &[StmtToLeanIR]) -> Result<String, RuntimeError> {
     emit_lean_from_ir_with_namespace(ir, None)
+}
+
+/// Pure partial backend boundary. Every rejected IR statement is represented
+/// in the returned report and as a Lean comment; no axiom or sorry is added.
+pub fn emit_lean_from_ir_with_report(ir: &[StmtToLeanIR]) -> ToLeanCompilationReport {
+    let statements = ir
+        .iter()
+        .enumerate()
+        .map(|(index, statement)| ToLeanStatementInput {
+            statement_index: index + 1,
+            statement: statement_ir_display(statement),
+            line_file: statement_ir_line_file(statement),
+            outcome: ToLeanStatementOutcome::Ir(statement.clone()),
+        })
+        .collect::<Vec<_>>();
+    emit_lean_report(statements, None)
+}
+
+fn to_lean_with_report_and_namespace(
+    source_code: &str,
+    runtime: &mut Runtime,
+    namespace: Option<String>,
+) -> Result<ToLeanCompilationReport, RuntimeError> {
+    // Eager To-Lean mode turns IR construction failures into execution errors.
+    // Report mode owns that boundary so it can retain the verified statement,
+    // record the unsupported IR, and continue with later statements.
+    let previous_mode = runtime.replace_to_lean_mode(false);
+    let result = to_lean_report_in_mode(source_code, runtime, namespace.as_deref());
+    runtime.replace_to_lean_mode(previous_mode);
+    result
+}
+
+fn to_lean_report_in_mode(
+    source_code: &str,
+    runtime: &mut Runtime,
+    namespace: Option<&str>,
+) -> Result<ToLeanCompilationReport, RuntimeError> {
+    let tokenizer = Tokenizer::new();
+    let current_file_path = runtime.current_file_path_rc();
+    let blocks = tokenizer.parse_blocks(source_code, current_file_path)?;
+    let mut statements = Vec::with_capacity(blocks.len());
+
+    for (index, mut block) in blocks.into_iter().enumerate() {
+        let statement = runtime.parse_stmt(&mut block)?;
+        let result = run_stmt_at_global_env(&statement, runtime)?;
+        if result.is_unknown() {
+            return Err(to_lean_error(
+                &statement.line_file(),
+                "To-Lean received an unverified Litex statement",
+            ));
+        }
+        let outcome = match runtime.build_stmt_to_lean_ir(&result) {
+            Ok(ir) => ToLeanStatementOutcome::Ir(ir),
+            Err(error) => ToLeanStatementOutcome::Unsupported(error.trace_message()),
+        };
+        statements.push(ToLeanStatementInput {
+            statement_index: index + 1,
+            statement: statement.to_string(),
+            line_file: statement.line_file(),
+            outcome,
+        });
+    }
+
+    if statements.is_empty() {
+        return Err(to_lean_error(
+            &default_line_file(),
+            "To-Lean requires at least one supported statement",
+        ));
+    }
+
+    Ok(emit_lean_report(statements, namespace))
+}
+
+fn emit_lean_report(
+    statements: Vec<ToLeanStatementInput>,
+    namespace: Option<&str>,
+) -> ToLeanCompilationReport {
+    let mut emitter = LeanEmitter::new(namespace.map(str::to_string));
+    let mut unsupported = Vec::new();
+
+    for statement in statements {
+        let diagnostic = match statement.outcome {
+            ToLeanStatementOutcome::Unsupported(reason) => Some(ToLeanUnsupported::new(
+                statement.statement_index,
+                statement.statement,
+                &statement.line_file,
+                ToLeanUnsupportedPhase::IrConstruction,
+                reason,
+            )),
+            ToLeanStatementOutcome::Ir(ir) => {
+                let checkpoint = emitter.clone();
+                match emitter.emit_statement(&ir) {
+                    Ok(()) => None,
+                    Err(error) => {
+                        emitter = checkpoint;
+                        Some(ToLeanUnsupported::new(
+                            statement.statement_index,
+                            statement.statement,
+                            &statement.line_file,
+                            ToLeanUnsupportedPhase::LeanEmission,
+                            error.trace_message(),
+                        ))
+                    }
+                }
+            }
+        };
+        if let Some(diagnostic) = diagnostic {
+            emitter.emit_unsupported(&diagnostic);
+            unsupported.push(diagnostic);
+        }
+    }
+
+    let status = if unsupported.is_empty() {
+        ToLeanCompilationStatus::Complete
+    } else {
+        ToLeanCompilationStatus::Incomplete
+    };
+    let lean_code = emitter.finish_with_report(status, unsupported.len());
+    ToLeanCompilationReport::new(lean_code, unsupported)
 }
 
 fn emit_lean_from_ir_with_namespace(
@@ -82,6 +236,7 @@ fn emit_lean_from_ir_with_namespace(
     Ok(emitter.finish())
 }
 
+#[derive(Clone)]
 struct LeanEmitter {
     namespace: Option<String>,
     declarations: Vec<String>,
@@ -121,9 +276,31 @@ impl LeanEmitter {
     }
 
     fn finish(self) -> String {
+        self.finish_with_status_comment(None)
+    }
+
+    fn finish_with_report(
+        self,
+        status: ToLeanCompilationStatus,
+        unsupported_count: usize,
+    ) -> String {
+        let status_comment = match status {
+            ToLeanCompilationStatus::Complete => "-- To-Lean status: complete".to_string(),
+            ToLeanCompilationStatus::Incomplete => format!(
+                "-- To-Lean status: incomplete\n-- Omitted statements: {}",
+                unsupported_count
+            ),
+        };
+        self.finish_with_status_comment(Some(status_comment))
+    }
+
+    fn finish_with_status_comment(self, status_comment: Option<String>) -> String {
+        let status_comment = status_comment
+            .map(|comment| format!("{}\n\n", comment))
+            .unwrap_or_default();
         let body = format!(
-            "-- Litex's primitive notion of a set.\nabbrev LitexSet := Type uLitex\n\n-- Every generated proposition has this codomain.\nabbrev LitexFact := Prop\n\n{}",
-            self.declarations.join("\n\n")
+            "{}-- Litex's primitive notion of a set.\nabbrev LitexSet := Type uLitex\n\n-- Every generated proposition has this codomain.\nabbrev LitexFact := Prop\n\n{}",
+            status_comment, self.declarations.join("\n\n")
         );
         match self.namespace {
             Some(namespace) => format!(
@@ -132,6 +309,18 @@ impl LeanEmitter {
             ),
             None => format!("import Mathlib\n\nuniverse uLitex\n\n{}\n", body),
         }
+    }
+
+    fn emit_unsupported(&mut self, diagnostic: &ToLeanUnsupported) {
+        self.declarations.push(format!(
+            "-- To-Lean omitted statement {} during {} at {}:{}.\n-- Statement: {}\n-- Reason: {}",
+            diagnostic.statement_index,
+            diagnostic.phase.label(),
+            lean_comment_text(&diagnostic.source_path),
+            diagnostic.line,
+            lean_comment_text(&diagnostic.statement),
+            lean_comment_text(&diagnostic.reason),
+        ));
     }
 
     fn emit_statement(&mut self, statement: &StmtToLeanIR) -> Result<(), RuntimeError> {
@@ -228,6 +417,17 @@ impl LeanEmitter {
                 let source = self.available_fact_name(*source_fact_id, proposition, context)?;
                 Ok(format!("by\n  exact {}", source))
             }
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::Builtin(rule),
+                parameter_requirements,
+                premises,
+            } => self.lean_builtin_rule_application(
+                proposition,
+                rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             FactProofToLeanIR::RuleApplication {
                 rule:
                     ProofRuleToLeanIR::KnownForallInstantiation {
@@ -354,6 +554,223 @@ impl LeanEmitter {
                 proof.replace('\n', "\n  ")
             )],
         ))
+    }
+
+    fn lean_builtin_rule_application(
+        &mut self,
+        proposition: &Fact,
+        rule: &BuiltinRuleToLeanIR,
+        parameter_requirements: &[FactToLeanIR],
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        match rule {
+            BuiltinRuleToLeanIR::DivNotEqualZero(evidence) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "div-nonzero builtin evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_div_not_equal_zero_builtin(proposition, evidence, premises, context)
+            }
+            BuiltinRuleToLeanIR::Arithmetic(rule) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "arithmetic builtin evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_arithmetic_builtin_rule(proposition, *rule, premises, context)
+            }
+        }
+    }
+
+    fn lean_arithmetic_builtin_rule(
+        &mut self,
+        proposition: &Fact,
+        rule: ArithmeticBuiltinRuleToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let (target_class, premise_classes) = arithmetic_builtin_contract(rule);
+        if lean_fact_class(proposition) != Some(target_class) {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "arithmetic builtin {:?} has the wrong target fact family",
+                    rule
+                ),
+            ));
+        }
+        if premises.len() != premise_classes.len() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "arithmetic builtin {:?} expected {} premises but received {}",
+                    rule,
+                    premise_classes.len(),
+                    premises.len()
+                ),
+            ));
+        }
+        for (index, (premise, expected)) in premises.iter().zip(premise_classes.iter()).enumerate()
+        {
+            let actual = lean_fact_class(&premise.proposition);
+            if actual != Some(*expected) {
+                return Err(to_lean_error(
+                    &premise.proposition.line_file(),
+                    format!(
+                        "arithmetic builtin {:?} premise {} expected {:?}, but `{}` has {:?}",
+                        rule,
+                        index + 1,
+                        expected,
+                        premise.proposition,
+                        actual
+                    ),
+                ));
+            }
+        }
+
+        let mut lines = vec!["by".to_string()];
+        let mut premise_names = Vec::with_capacity(premises.len());
+        for premise in premises {
+            let (local_name, local_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(local_lines);
+            premise_names.push(local_name);
+        }
+        let proof = match rule {
+            ArithmeticBuiltinRuleToLeanIR::MulNonnegative => {
+                format!("mul_nonneg {} {}", premise_names[0], premise_names[1])
+            }
+            ArithmeticBuiltinRuleToLeanIR::MulPositive => {
+                format!("mul_pos {} {}", premise_names[0], premise_names[1])
+            }
+            ArithmeticBuiltinRuleToLeanIR::DivNonnegative => format!(
+                "div_nonneg {} (le_of_lt {})",
+                premise_names[0], premise_names[1]
+            ),
+            ArithmeticBuiltinRuleToLeanIR::DivPositive => {
+                format!("div_pos {} {}", premise_names[0], premise_names[1])
+            }
+            _ => format!("by\n    linarith only [{}]", premise_names.join(", ")),
+        };
+        let result_name = self.next_proof_fact_name(context);
+        lines.push(format!(
+            "  have {} : {} := {}",
+            result_name,
+            lean_fact(proposition)?,
+            proof.replace('\n', "\n  ")
+        ));
+        lines.push(format!("  exact {}", result_name));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_div_not_equal_zero_builtin(
+        &mut self,
+        proposition: &Fact,
+        evidence: &DivNotEqualZeroToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != 2 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "div-nonzero builtin evidence expected 2 premises but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+
+        let Fact::AtomicFact(AtomicFact::NotEqualFact(target)) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "div-nonzero builtin evidence was attached to a non-inequality",
+            ));
+        };
+        let (quotient, zero) = match evidence.orientation {
+            NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft => {
+                let Obj::Div(quotient) = &target.left else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "div-nonzero evidence expected a quotient on the left",
+                    ));
+                };
+                (quotient, &target.right)
+            }
+            NonzeroExpressionOrientationToLeanIR::ExpressionOnRight => {
+                let Obj::Div(quotient) = &target.right else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "div-nonzero evidence expected a quotient on the right",
+                    ));
+                };
+                (quotient, &target.left)
+            }
+        };
+        if !matches!(zero, Obj::Number(number) if number.normalized_value == "0") {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "div-nonzero evidence requires a literal zero target",
+            ));
+        }
+        if obj_equality_key(quotient.left.as_ref()) != obj_equality_key(&evidence.numerator)
+            || obj_equality_key(quotient.right.as_ref()) != obj_equality_key(&evidence.denominator)
+        {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "div-nonzero evidence bindings disagree with the target quotient",
+            ));
+        }
+
+        let expected_operands = [&evidence.numerator, &evidence.denominator];
+        for (index, premise) in premises.iter().enumerate() {
+            let Fact::AtomicFact(AtomicFact::NotEqualFact(nonzero)) = &premise.proposition else {
+                return Err(to_lean_error(
+                    &premise.proposition.line_file(),
+                    format!("div-nonzero premise {} is not an inequality", index + 1),
+                ));
+            };
+            if obj_equality_key(&nonzero.left) != obj_equality_key(expected_operands[index])
+                || !matches!(
+                    &nonzero.right,
+                    Obj::Number(number) if number.normalized_value == "0"
+                )
+            {
+                return Err(to_lean_error(
+                    &premise.proposition.line_file(),
+                    format!(
+                        "div-nonzero premise {} disagrees with its recorded binding",
+                        index + 1
+                    ),
+                ));
+            }
+        }
+
+        let mut lines = vec!["by".to_string()];
+        let mut premise_names = Vec::with_capacity(premises.len());
+        for premise in premises {
+            let (local_name, local_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(local_lines);
+            premise_names.push(local_name);
+        }
+        let forward_proof = format!("div_ne_zero {} {}", premise_names[0], premise_names[1]);
+        let proof = match evidence.orientation {
+            NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft => forward_proof,
+            NonzeroExpressionOrientationToLeanIR::ExpressionOnRight => {
+                format!("Ne.symm ({})", forward_proof)
+            }
+        };
+        let result_name = self.next_proof_fact_name(context);
+        lines.push(format!(
+            "  have {} : {} := {}",
+            result_name,
+            lean_fact(proposition)?,
+            proof
+        ));
+        lines.push(format!("  exact {}", result_name));
+        Ok(lines.join("\n"))
     }
 
     fn lean_known_forall_instantiation(
@@ -608,6 +1025,54 @@ impl LeanEmitter {
         };
         context.next_local_index += 1;
         (local_space_id, context.next_local_index)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum LeanFactClass {
+    Equality,
+    WeakOrder,
+    StrictOrder,
+}
+
+fn arithmetic_builtin_contract(
+    rule: ArithmeticBuiltinRuleToLeanIR,
+) -> (LeanFactClass, &'static [LeanFactClass]) {
+    use ArithmeticBuiltinRuleToLeanIR::*;
+    use LeanFactClass::*;
+
+    match rule {
+        LessEqualFromStrictOrder | GreaterEqualFromStrictOrder => (WeakOrder, &[StrictOrder]),
+        SubNonnegativeFromLessEqual | AddCommonLeftLessEqual => (WeakOrder, &[WeakOrder]),
+        SubPositiveFromLess | AddCommonLeftLess => (StrictOrder, &[StrictOrder]),
+        AddNonnegative | MulNonnegative | AddComponentwiseLessEqual => {
+            (WeakOrder, &[WeakOrder, WeakOrder])
+        }
+        DivNonnegative => (WeakOrder, &[WeakOrder, StrictOrder]),
+        AddPositive | MulPositive | DivPositive | AddComponentwiseLess => {
+            (StrictOrder, &[StrictOrder, StrictOrder])
+        }
+        AddPositiveLeftStrict | AddComponentwiseLessLessEqual => {
+            (StrictOrder, &[StrictOrder, WeakOrder])
+        }
+        AddPositiveRightStrict | AddComponentwiseLessEqualLess => {
+            (StrictOrder, &[WeakOrder, StrictOrder])
+        }
+        SubRightNonnegativeLessEqual => (WeakOrder, &[WeakOrder, WeakOrder]),
+        AddRightNonnegativeLessEqual => (WeakOrder, &[WeakOrder]),
+    }
+}
+
+fn lean_fact_class(fact: &Fact) -> Option<LeanFactClass> {
+    match fact {
+        Fact::AtomicFact(AtomicFact::EqualFact(_)) => Some(LeanFactClass::Equality),
+        Fact::AtomicFact(AtomicFact::LessEqualFact(_) | AtomicFact::GreaterEqualFact(_)) => {
+            Some(LeanFactClass::WeakOrder)
+        }
+        Fact::AtomicFact(AtomicFact::LessFact(_) | AtomicFact::GreaterFact(_)) => {
+            Some(LeanFactClass::StrictOrder)
+        }
+        _ => None,
     }
 }
 
@@ -1023,6 +1488,40 @@ fn to_lean_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeErr
     .into()
 }
 
+fn statement_ir_display(statement: &StmtToLeanIR) -> String {
+    match statement {
+        StmtToLeanIR::AbstractProp(ir) => format!("abstract_prop {}", ir.name),
+        StmtToLeanIR::Prop(ir) => format!("prop {}", ir.name),
+        StmtToLeanIR::Trust(ir) => match ir.facts.first() {
+            Some(fact) if ir.facts.len() == 1 => format!("trust {}", fact.proposition),
+            Some(_) => format!("trust <{} facts>", ir.facts.len()),
+            None => "trust <empty>".to_string(),
+        },
+        StmtToLeanIR::Fact(ir) => ir.fact.proposition.to_string(),
+    }
+}
+
+fn statement_ir_line_file(statement: &StmtToLeanIR) -> LineFile {
+    match statement {
+        StmtToLeanIR::AbstractProp(_) => default_line_file(),
+        StmtToLeanIR::Prop(ir) => ir
+            .iff_facts
+            .first()
+            .map(Fact::line_file)
+            .unwrap_or_else(default_line_file),
+        StmtToLeanIR::Trust(ir) => ir
+            .facts
+            .first()
+            .map(|fact| fact.proposition.line_file())
+            .unwrap_or_else(default_line_file),
+        StmtToLeanIR::Fact(ir) => ir.fact.proposition.line_file(),
+    }
+}
+
+fn lean_comment_text(text: &str) -> String {
+    text.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
 fn closed_rational_expression(obj: &Obj) -> bool {
     match obj {
         Obj::Number(_) => true,
@@ -1158,6 +1657,12 @@ forall a, b, x R:
     x != 0
     =>:
         (a + b) / x = a / x + b / x
+
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
 
 forall x R:
     x != 0
@@ -1316,6 +1821,251 @@ forall a, b, x R:
                 }
             ));
         });
+    }
+
+    #[test]
+    fn to_lean_builtin_rule_ir_preserves_recursive_evidence() {
+        run_with_large_stack(
+            "to_lean_builtin_rule_ir_preserves_recursive_evidence",
+            || {
+                let source = r#"
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+"#;
+                let statement_irs = test_to_lean_ir(source, "builtin-rule-ir-shape");
+                let StmtToLeanIR::Fact(forall) = &statement_irs[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction {
+                    premises,
+                    conclusions,
+                    ..
+                } = &forall.fact.proof
+                else {
+                    panic!("tracer should retain its temporary forall environment");
+                };
+                assert_eq!(premises.len(), 2);
+                assert_eq!(conclusions.len(), 1);
+
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::DivNotEqualZero(evidence)),
+                    parameter_requirements,
+                    premises: rule_premises,
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("forall conclusion should retain typed div-nonzero evidence");
+                };
+                assert!(parameter_requirements.is_empty());
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(target)) =
+                    &conclusions[0].proposition
+                else {
+                    panic!("tracer conclusion should remain a non-equality fact");
+                };
+                let Obj::Div(quotient) = &target.left else {
+                    panic!("tracer conclusion should retain its quotient");
+                };
+                assert_eq!(
+                    obj_equality_key(&evidence.numerator),
+                    obj_equality_key(quotient.left.as_ref())
+                );
+                assert_eq!(
+                    obj_equality_key(&evidence.denominator),
+                    obj_equality_key(quotient.right.as_ref())
+                );
+                assert_eq!(
+                    evidence.orientation,
+                    NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft
+                );
+                assert_eq!(rule_premises.len(), 2);
+                for (rule_premise, local_premise) in rule_premises.iter().zip(premises.iter()) {
+                    assert!(matches!(
+                        underlying_test_proof(&rule_premise.proof),
+                        FactProofToLeanIR::KnownFactCitation { source_fact_id }
+                            if *source_fact_id == local_premise.fact_id
+                    ));
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rule_ir_emits_checked_lemma_application() {
+        run_with_large_stack(
+            "to_lean_builtin_rule_ir_emits_checked_lemma_application",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_builtin_rule_ir.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(&path.to_string_lossy());
+                let output = to_lean(&source, &mut runtime).unwrap();
+
+                assert!(output.contains("namespace to_lean_builtin_rule_ir"));
+                assert!(output.contains("div_ne_zero proof_fact_"));
+                assert!(output.contains("have proof_fact_"));
+                assert!(!output.contains("OtherUnsupported"));
+                assert!(!output.contains("axiom"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rule_ir_preserves_reverse_orientation() {
+        run_with_large_stack(
+            "to_lean_builtin_rule_ir_preserves_reverse_orientation",
+            || {
+                let source = r#"
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        0 != a / b
+"#;
+                let output = to_lean_from_source(source, "builtin-rule-reverse").unwrap();
+                assert!(output.contains("Ne.symm (div_ne_zero proof_fact_"));
+                assert!(!output.contains("axiom"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rule_ir_rejects_malformed_certificate() {
+        run_with_large_stack(
+            "to_lean_builtin_rule_ir_rejects_malformed_certificate",
+            || {
+                let source = r#"
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+"#;
+                let mut statement_irs = test_to_lean_ir(source, "builtin-rule-invalid-ir");
+                let StmtToLeanIR::Fact(forall) = &mut statement_irs[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("tracer should retain forall-introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication { premises, .. } =
+                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("tracer conclusion should be a rule application");
+                };
+                premises.pop();
+
+                let error = emit_lean_from_ir(&statement_irs)
+                    .expect_err("malformed builtin certificate must stop emission")
+                    .trace_message();
+                assert!(error.contains("expected 2 premises but received 1"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rule_ir_rejects_resolved_zero_without_equality_evidence() {
+        run_with_large_stack(
+            "to_lean_builtin_rule_ir_rejects_resolved_zero_without_equality_evidence",
+            || {
+                let source = r#"
+forall a, b, z R:
+    z = 0
+    a != 0
+    b != 0
+    =>:
+        a / b != z
+"#;
+                let error = to_lean_from_source(source, "builtin-rule-resolved-zero")
+                    .expect_err("a resolved zero alias lacks compiler equality evidence")
+                    .trace_message();
+                assert!(error.contains("no checked backend"));
+                assert!(error.contains("div_not_equal_zero_from_numerator_nonzero"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rules_20_preserve_distinct_typed_rules_and_compile() {
+        run_with_large_stack(
+            "to_lean_builtin_rules_20_preserve_distinct_typed_rules_and_compile",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_builtin_rules_20.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let statement_irs = test_to_lean_ir(&source, "builtin-rules-20-ir");
+                let mut rule_names = Vec::new();
+                for statement in statement_irs.iter() {
+                    let StmtToLeanIR::Fact(forall) = statement else {
+                        panic!("each tracer statement should be a stored forall fact");
+                    };
+                    let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                        &forall.fact.proof
+                    else {
+                        panic!("each tracer statement should retain forall evidence");
+                    };
+                    let FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(rule)),
+                        ..
+                    } = underlying_test_proof(&conclusions[0].proof)
+                    else {
+                        panic!("each tracer conclusion should retain typed arithmetic evidence");
+                    };
+                    rule_names.push(format!("{:?}", rule));
+                }
+                rule_names.sort();
+                rule_names.dedup();
+                assert_eq!(rule_names.len(), 20, "{rule_names:#?}");
+
+                let output = emit_lean_from_ir(&statement_irs).unwrap();
+                assert_eq!(output.matches("theorem global_fact_").count(), 20);
+                assert_eq!(output.matches("linarith only").count(), 16);
+                assert!(output.contains("mul_nonneg proof_fact_"));
+                assert!(output.contains("mul_pos proof_fact_"));
+                assert!(output.contains("div_nonneg proof_fact_"));
+                assert!(output.contains("div_pos proof_fact_"));
+                assert!(!output.contains("axiom"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_builtin_rules_20_reject_malformed_premise_arity() {
+        run_with_large_stack(
+            "to_lean_builtin_rules_20_reject_malformed_premise_arity",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_builtin_rules_20.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let mut statement_irs = test_to_lean_ir(&source, "builtin-rules-20-malformed");
+                let StmtToLeanIR::Fact(forall) = &mut statement_irs[0] else {
+                    panic!("first tracer statement should be a stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("first tracer statement should retain forall evidence");
+                };
+                let FactProofToLeanIR::RuleApplication { premises, .. } =
+                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("first tracer conclusion should be a rule application");
+                };
+                premises.clear();
+
+                let error = emit_lean_from_ir(&statement_irs)
+                    .expect_err("malformed arithmetic evidence must stop strict emission")
+                    .trace_message();
+                assert!(error.contains("expected 1 premises but received 0"));
+            },
+        );
     }
 
     #[test]
@@ -1867,6 +2617,69 @@ $marked2(1, 2)
     }
 
     #[test]
+    fn to_lean_partial_report_keeps_supported_statements_and_marks_incomplete() {
+        run_with_large_stack(
+            "to_lean_partial_report_keeps_supported_statements_and_marks_incomplete",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_partial_report.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(&path.to_string_lossy());
+                let report = to_lean_with_report(&source, &mut runtime).unwrap();
+
+                assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                assert!(!report.is_complete());
+                assert_eq!(report.unsupported.len(), 1);
+                assert_eq!(report.unsupported[0].statement_index, 2);
+                assert_eq!(
+                    report.unsupported[0].phase,
+                    ToLeanUnsupportedPhase::LeanEmission
+                );
+                assert!(report.unsupported[0].statement.contains("sin"));
+                assert!(report.lean_code.contains("-- To-Lean status: incomplete"));
+                assert!(report
+                    .lean_code
+                    .contains("-- To-Lean omitted statement 2 during Lean emission"));
+                assert_eq!(report.lean_code.matches("theorem global_fact_").count(), 2);
+                assert!(!report.lean_code.contains("axiom"));
+                assert!(!report.lean_code.contains("sorry"));
+                assert!(!runtime.to_lean_mode());
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_partial_report_rolls_back_a_partly_emitted_statement() {
+        run_with_large_stack(
+            "to_lean_partial_report_rolls_back_a_partly_emitted_statement",
+            || {
+                let mut source_ir = test_to_lean_ir("trust 1 = 1\n\n2 = 2", "partial-rollback");
+                let StmtToLeanIR::Trust(mut trusted) = source_ir.remove(0) else {
+                    panic!("first test statement should produce trust IR");
+                };
+                let StmtToLeanIR::Fact(proved) = source_ir.remove(0) else {
+                    panic!("second test statement should produce fact IR");
+                };
+                trusted.facts.push(proved.fact);
+                let report = emit_lean_from_ir_with_report(&[StmtToLeanIR::Trust(trusted)]);
+
+                assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                assert_eq!(report.unsupported.len(), 1);
+                assert_eq!(
+                    report.unsupported[0].phase,
+                    ToLeanUnsupportedPhase::LeanEmission
+                );
+                assert!(report.unsupported[0]
+                    .reason
+                    .contains("only an explicit Litex `trust` statement may emit a Lean axiom"));
+                assert!(!report.lean_code.contains("axiom global_fact_"));
+                assert!(report.lean_code.contains("-- To-Lean omitted statement 1"));
+            },
+        );
+    }
+
+    #[test]
     fn unsupported_nested_requirement_builtin_is_rejected() {
         run_with_large_stack("unsupported_nested_requirement_builtin_is_rejected", || {
             let source = r#"
@@ -1890,10 +2703,82 @@ $marked(1)
 
     #[test]
     #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_partial_to_lean_report_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_partial_to_lean_report_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_partial_report.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope(&path.to_string_lossy());
+                let report = to_lean_with_report(&source, &mut runtime).unwrap();
+                assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_partial");
+                fs::write(&lean_file, &report.lean_code).unwrap();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(&project)
+                    .output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "partial generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    report.lean_code,
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_builtin_rules_20_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_to_lean_builtin_rules_20_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_builtin_rules_20.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let generated = to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_builtin_rules_20");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "20-rule generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
     fn generated_to_lean_mvp_compiles_with_lean() {
         run_with_large_stack("generated_to_lean_mvp_compiles_with_lean", || {
             let project = std::env::var("LITEX_LEAN_PROJECT")
                 .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
             let source = r#"
 abstract_prop transported(a)
 
@@ -1941,6 +2826,12 @@ forall a, b, x R:
     =>:
         (a + b) / x = a / x + b / x
 
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+
 forall x R:
     x != 0
     =>:
@@ -1956,23 +2847,15 @@ $marked2(1, 2)
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("lean-kernel-mvp.lit");
             let generated = to_lean(source, &mut runtime).unwrap();
-            let nonce = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_nanos();
-            let lean_file = std::env::temp_dir().join(format!(
-                "litex_to_lean_mvp_{}_{}.lean",
-                std::process::id(),
-                nonce
-            ));
+            let lean_file = private_tmp_lean_file("litex_to_lean_mvp");
             fs::write(&lean_file, &generated).unwrap();
-            let output = Command::new("lake")
+            let output = Command::new(lake)
                 .args(["env", "lean"])
                 .arg(&lean_file)
                 .current_dir(project)
-                .output()
-                .unwrap();
+                .output();
             let _ = fs::remove_file(&lean_file);
+            let output = output.unwrap();
             assert!(
                 output.status.success(),
                 "generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
@@ -1981,6 +2864,19 @@ $marked2(1, 2)
                 generated
             );
         });
+    }
+
+    fn private_tmp_lean_file(stem: &str) -> std::path::PathBuf {
+        let nonce = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::path::Path::new("/private/tmp").join(format!(
+            "{}_{}_{}.lean",
+            stem,
+            std::process::id(),
+            nonce
+        ))
     }
 
     fn run_with_large_stack(test_name: &str, action: impl FnOnce() + Send + 'static) {
@@ -1993,11 +2889,37 @@ $marked2(1, 2)
             .unwrap();
     }
 
+    fn test_to_lean_ir(source: &str, entry_label: &str) -> Vec<StmtToLeanIR> {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(entry_label);
+        runtime.replace_to_lean_mode(true);
+        let tokenizer = Tokenizer::new();
+        let blocks = tokenizer
+            .parse_blocks(source, runtime.current_file_path_rc())
+            .unwrap();
+        let mut statement_irs = Vec::new();
+        for mut block in blocks {
+            let statement = runtime.parse_stmt(&mut block).unwrap();
+            let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+            statement_irs.push(result.to_lean_ir().unwrap().clone());
+        }
+        statement_irs
+    }
+
     fn underlying_test_proof(mut proof: &FactProofToLeanIR) -> &FactProofToLeanIR {
         while let FactProofToLeanIR::Memo { proof: source } = proof {
             proof = source.as_ref();
         }
         proof
+    }
+
+    fn underlying_test_proof_mut(mut proof: &mut FactProofToLeanIR) -> &mut FactProofToLeanIR {
+        loop {
+            match proof {
+                FactProofToLeanIR::Memo { proof: source } => proof = source.as_mut(),
+                _ => return proof,
+            }
+        }
     }
 
     fn underlying_test_verified_by(mut verified_by: &VerifiedByResult) -> &VerifiedByResult {

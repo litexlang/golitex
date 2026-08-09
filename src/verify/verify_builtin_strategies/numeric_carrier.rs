@@ -127,16 +127,20 @@ impl Runtime {
                 StandardSet::R,
                 LessFact::new(element.clone(), zero, lf.clone()).into(),
             ),
-            StandardSet::QNz => (
+            StandardSet::QStar => (
                 StandardSet::Q,
                 NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
             ),
-            StandardSet::ZNz => (
+            StandardSet::ZStar => (
                 StandardSet::Z,
                 NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
             ),
-            StandardSet::RNz => (
+            StandardSet::RStar => (
                 StandardSet::R,
+                NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
+            ),
+            StandardSet::CStar => (
+                StandardSet::C,
                 NotEqualFact::new(element.clone(), zero, lf.clone()).into(),
             ),
             _ => return None,

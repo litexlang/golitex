@@ -305,16 +305,18 @@ impl Runtime {
             LessFact::new(Number::new("0".to_string()).into(), x, line_file.clone()).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
-            .map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
-                    line_file,
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            fact_to_store,
+        )
+        .map_err(|previous_error| {
+            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "infer numeric order sign: failed to store inferred (0 < x) bound".to_string(),
+                line_file,
+                Some(previous_error),
+                vec![],
+            )))
+        })?;
         Ok(infer_result)
     }
 
@@ -327,16 +329,18 @@ impl Runtime {
             LessEqualFact::new(x, Number::new("0".to_string()).into(), line_file.clone()).into();
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fact_to_store);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)
-            .map_err(|previous_error| {
-                RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
-                    None,
-                    "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
-                    line_file,
-                    Some(previous_error),
-                    vec![],
-                )))
-            })?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+            fact_to_store,
+        )
+        .map_err(|previous_error| {
+            RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
+                None,
+                "infer numeric order sign: failed to store inferred <= 0 bound".to_string(),
+                line_file,
+                Some(previous_error),
+                vec![],
+            )))
+        })?;
         Ok(infer_result)
     }
 }

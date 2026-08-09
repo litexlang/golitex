@@ -315,9 +315,10 @@ impl Tokenizer {
                 | COMPACT_Z_NEG
                 | COMPACT_Q_NEG
                 | COMPACT_R_NEG
-                | COMPACT_Z_NZ
-                | COMPACT_Q_NZ
-                | COMPACT_R_NZ
+                | COMPACT_Z_STAR
+                | COMPACT_Q_STAR
+                | COMPACT_R_STAR
+                | COMPACT_C_STAR
         ) {
             return true;
         }
@@ -399,19 +400,26 @@ mod tests {
     }
 
     #[test]
-    fn compact_numeric_set_suffixes_require_adjacency() {
+    fn compact_numeric_set_spellings_require_adjacency() {
         let tokenizer = Tokenizer::new();
         assert_eq!(
             tokenizer
-                .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R- Z* Q* R*", test_line_file())
+                .tokenize_line("set+ N+ Z+ Q+ R+ Z- Q- R- Z* Q* R* C*", test_line_file())
                 .unwrap(),
-            vec!["set", "+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-", "Z*", "Q*", "R*"]
+            vec!["set", "+", "N+", "Z+", "Q+", "R+", "Z-", "Q-", "R-", "Z*", "Q*", "R*", "C*"]
         );
         assert_eq!(
             tokenizer
                 .tokenize_line("set + N + Z - R *", test_line_file())
                 .unwrap(),
             vec!["set", "+", "N", "+", "Z", "-", "R", "*"]
+        );
+        // `C*` is a standard set, while adjacent multiplication and `N*` stay split.
+        assert_eq!(
+            tokenizer
+                .tokenize_line("C* C*x N*", test_line_file())
+                .unwrap(),
+            vec!["C*", "C", "*", "x", "N", "*"]
         );
         assert_eq!(
             tokenizer

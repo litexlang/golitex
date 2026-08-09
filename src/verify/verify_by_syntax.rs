@@ -334,16 +334,20 @@ impl Runtime {
                 Obj::StandardSet(StandardSet::RNeg) => true,
                 _ => false,
             },
-            Obj::StandardSet(StandardSet::QNz) => match right {
-                Obj::StandardSet(StandardSet::QNz) => true,
+            Obj::StandardSet(StandardSet::QStar) => match right {
+                Obj::StandardSet(StandardSet::QStar) => true,
                 _ => false,
             },
-            Obj::StandardSet(StandardSet::ZNz) => match right {
-                Obj::StandardSet(StandardSet::ZNz) => true,
+            Obj::StandardSet(StandardSet::ZStar) => match right {
+                Obj::StandardSet(StandardSet::ZStar) => true,
                 _ => false,
             },
-            Obj::StandardSet(StandardSet::RNz) => match right {
-                Obj::StandardSet(StandardSet::RNz) => true,
+            Obj::StandardSet(StandardSet::RStar) => match right {
+                Obj::StandardSet(StandardSet::RStar) => true,
+                _ => false,
+            },
+            Obj::StandardSet(StandardSet::CStar) => match right {
+                Obj::StandardSet(StandardSet::CStar) => true,
                 _ => false,
             },
             Obj::StructObj(a) => match right {

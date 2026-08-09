@@ -38,7 +38,7 @@ impl Runtime {
             let mut inside_results: Vec<StmtResult> = Vec::new();
 
             let negated_to_prove_fact = logical_negation_for_by_contra(&to_prove_fact)?;
-            rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
                 negated_to_prove_fact,
             )
             .map_err(|store_fact_error| {
@@ -138,7 +138,7 @@ impl Runtime {
                 InferReason::VerifiedStatement,
             );
         }
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(to_prove_fact)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(to_prove_fact)
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),

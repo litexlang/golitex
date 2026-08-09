@@ -52,7 +52,7 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_fact_well_defined_and_store_and_infer(
+                    self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
                         &UseContextVerifyState::new(2, false),
                     )?;
@@ -64,7 +64,7 @@ impl Runtime {
                         default_line_file(),
                     )
                     .into();
-                    self.verify_fact_well_defined_and_store_and_infer(
+                    self.store_fact_with_well_defined_verification_and_infer(
                         ret_nonempty,
                         &UseContextVerifyState::new(2, false),
                     )?;
@@ -446,15 +446,15 @@ impl Runtime {
                     StandardSet::NPos,
                     StandardSet::N,
                     StandardSet::ZNeg,
-                    StandardSet::ZNz,
+                    StandardSet::ZStar,
                     StandardSet::Z,
                     StandardSet::Q,
                     StandardSet::QPos,
                     StandardSet::QNeg,
-                    StandardSet::QNz,
+                    StandardSet::QStar,
                     StandardSet::RPos,
                     StandardSet::RNeg,
-                    StandardSet::RNz,
+                    StandardSet::RStar,
                 ] {
                     let subset: AtomicFact =
                         SubsetFact::new(source_set.clone(), carrier.into(), line_file.clone())

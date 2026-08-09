@@ -131,7 +131,7 @@ fn standard_set_obj_matches(obj: &Obj, expected_set: StandardSet) -> bool {
             | (Obj::StandardSet(StandardSet::Z), StandardSet::Z)
             | (Obj::StandardSet(StandardSet::N), StandardSet::N)
             | (Obj::StandardSet(StandardSet::RPos), StandardSet::RPos)
-            | (Obj::StandardSet(StandardSet::RNz), StandardSet::RNz)
+            | (Obj::StandardSet(StandardSet::RStar), StandardSet::RStar)
             | (Obj::StandardSet(StandardSet::NPos), StandardSet::NPos)
     )
 }
@@ -201,7 +201,7 @@ fn fn_set_has_real_power_domain_condition(fn_set: &FnSet) -> bool {
     and_chain_is_param_in_set(positive_base, base, StandardSet::RPos)
         && atomic_is_param_equal_to_zero(zero_base, base)
         && atomic_is_param_in_set(positive_exponent, exponent, StandardSet::RPos)
-        && atomic_is_param_in_set(nonzero_base, base, StandardSet::RNz)
+        && atomic_is_param_in_set(nonzero_base, base, StandardSet::RStar)
         && atomic_is_param_in_set(integer_exponent, exponent, StandardSet::Z)
         && and_chain_is_param_in_set(natural_exponent, exponent, StandardSet::N)
 }

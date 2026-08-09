@@ -14,9 +14,10 @@ pub enum StandardSet {
     QNeg,
     ZNeg,
     RNeg,
-    QNz,
-    ZNz,
-    RNz,
+    QStar,
+    ZStar,
+    RStar,
+    CStar,
 }
 
 impl fmt::Display for StandardSet {
@@ -33,9 +34,10 @@ impl fmt::Display for StandardSet {
             StandardSet::QNeg => write!(f, "{}", COMPACT_Q_NEG),
             StandardSet::ZNeg => write!(f, "{}", COMPACT_Z_NEG),
             StandardSet::RNeg => write!(f, "{}", COMPACT_R_NEG),
-            StandardSet::QNz => write!(f, "{}", COMPACT_Q_NZ),
-            StandardSet::ZNz => write!(f, "{}", COMPACT_Z_NZ),
-            StandardSet::RNz => write!(f, "{}", COMPACT_R_NZ),
+            StandardSet::QStar => write!(f, "{}", COMPACT_Q_STAR),
+            StandardSet::ZStar => write!(f, "{}", COMPACT_Z_STAR),
+            StandardSet::RStar => write!(f, "{}", COMPACT_R_STAR),
+            StandardSet::CStar => write!(f, "{}", COMPACT_C_STAR),
         }
     }
 }

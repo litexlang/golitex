@@ -339,9 +339,12 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
             if strict_result.is_true() {
                 return Ok(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         less_equal_fact.clone().into(),
                         "less_equal_fact_from_known_strict_order".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::LessEqualFromStrictOrder,
+                        ),
                         vec![strict_result],
                     ),
                 ));
@@ -383,9 +386,12 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&strict_atomic)?;
             if strict_result.is_true() {
                 return Ok(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         greater_equal_fact.clone().into(),
                         "greater_equal_fact_from_known_strict_order".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::GreaterEqualFromStrictOrder,
+                        ),
                         vec![strict_result],
                     ),
                 ));
@@ -2257,9 +2263,12 @@ impl Runtime {
                 let result = self.verify_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 <= u - v from v <= u".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::SubNonnegativeFromLessEqual,
+                            ),
                             vec![result],
                         ),
                     )))
@@ -2280,9 +2289,12 @@ impl Runtime {
                 let result = self.verify_builtin_rule_premise(&derived, builtin_state)?;
                 if result.is_true() {
                     Ok(Some(StmtResult::from(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "0 < u - v from v < u".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::SubPositiveFromLess,
+                            ),
                             vec![result],
                         ),
                     )))
@@ -2338,9 +2350,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a + b from known atomic facts 0 <= a and 0 <= b".to_string(),
+                BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddNonnegative),
                 vec![left_verify_result, right_verify_result],
             ),
         )))
@@ -2386,9 +2399,10 @@ impl Runtime {
             )?;
             if right_strict.is_true() {
                 return Ok(Some(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "0 < a + b from 0 < a and 0 < b".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositive),
                         vec![left_strict, right_strict],
                     ),
                 )));
@@ -2421,9 +2435,10 @@ impl Runtime {
                 return Ok(None);
             }
             Ok(Some(StmtResult::from(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 < a and 0 <= b)".to_string(),
+                    BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositiveLeftStrict),
                     vec![left_result, right_result],
                 ),
             )))
@@ -2454,9 +2469,10 @@ impl Runtime {
                 return Ok(None);
             }
             Ok(Some(StmtResult::from(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "0 < a + b from (0 <= a and 0 < b)".to_string(),
+                    BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::AddPositiveRightStrict),
                     vec![left_result, right_result],
                 ),
             )))
@@ -2822,9 +2838,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a * b from 0 <= a and 0 <= b".to_string(),
+                BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::MulNonnegative),
                 vec![left_verify_result, right_verify_result],
             ),
         )))
@@ -2874,9 +2891,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a * b from 0 < a and 0 < b".to_string(),
+                BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::MulPositive),
                 vec![left_verify_result, right_verify_result],
             ),
         )))
@@ -2926,9 +2944,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 <= a / b from 0 <= a and 0 < b".to_string(),
+                BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::DivNonnegative),
                 vec![numer_result, denom_result],
             ),
         )))
@@ -2978,9 +2997,10 @@ impl Runtime {
         }
 
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "0 < a / b from 0 < a and 0 < b".to_string(),
+                BuiltinRuleEvidence::Arithmetic(ArithmeticBuiltinRule::DivPositive),
                 vec![numer_result, denom_result],
             ),
         )))

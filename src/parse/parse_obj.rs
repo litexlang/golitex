@@ -2389,9 +2389,10 @@ fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
         COMPACT_Q_NEG => Some(StandardSet::QNeg.into()),
         COMPACT_Z_NEG => Some(StandardSet::ZNeg.into()),
         COMPACT_R_NEG => Some(StandardSet::RNeg.into()),
-        COMPACT_Q_NZ => Some(StandardSet::QNz.into()),
-        COMPACT_Z_NZ => Some(StandardSet::ZNz.into()),
-        COMPACT_R_NZ => Some(StandardSet::RNz.into()),
+        COMPACT_Q_STAR => Some(StandardSet::QStar.into()),
+        COMPACT_Z_STAR => Some(StandardSet::ZStar.into()),
+        COMPACT_R_STAR => Some(StandardSet::RStar.into()),
+        COMPACT_C_STAR => Some(StandardSet::CStar.into()),
         _ => None,
     }
 }

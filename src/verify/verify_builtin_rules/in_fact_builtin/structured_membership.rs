@@ -234,21 +234,21 @@ impl Runtime {
             Obj::StandardSet(StandardSet::NPos) => Some(vec![]),
             Obj::StandardSet(StandardSet::N) => Some(vec![StandardSet::NPos.into()]),
             Obj::StandardSet(StandardSet::ZNeg) => Some(vec![]),
-            Obj::StandardSet(StandardSet::ZNz) => {
+            Obj::StandardSet(StandardSet::ZStar) => {
                 Some(vec![StandardSet::NPos.into(), StandardSet::ZNeg.into()])
             }
             Obj::StandardSet(StandardSet::Z) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::N.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
             ]),
             Obj::StandardSet(StandardSet::QPos) => Some(vec![StandardSet::NPos.into()]),
             Obj::StandardSet(StandardSet::QNeg) => Some(vec![StandardSet::ZNeg.into()]),
-            Obj::StandardSet(StandardSet::QNz) => Some(vec![
+            Obj::StandardSet(StandardSet::QStar) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
                 StandardSet::QPos.into(),
                 StandardSet::QNeg.into(),
             ]),
@@ -256,11 +256,11 @@ impl Runtime {
                 StandardSet::NPos.into(),
                 StandardSet::N.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
                 StandardSet::Z.into(),
                 StandardSet::QPos.into(),
                 StandardSet::QNeg.into(),
-                StandardSet::QNz.into(),
+                StandardSet::QStar.into(),
             ]),
             Obj::StandardSet(StandardSet::RPos) => {
                 Some(vec![StandardSet::NPos.into(), StandardSet::QPos.into()])
@@ -268,13 +268,13 @@ impl Runtime {
             Obj::StandardSet(StandardSet::RNeg) => {
                 Some(vec![StandardSet::ZNeg.into(), StandardSet::QNeg.into()])
             }
-            Obj::StandardSet(StandardSet::RNz) => Some(vec![
+            Obj::StandardSet(StandardSet::RStar) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
                 StandardSet::QPos.into(),
                 StandardSet::QNeg.into(),
-                StandardSet::QNz.into(),
+                StandardSet::QStar.into(),
                 StandardSet::RPos.into(),
                 StandardSet::RNeg.into(),
             ]),
@@ -282,30 +282,42 @@ impl Runtime {
                 StandardSet::NPos.into(),
                 StandardSet::N.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
                 StandardSet::Z.into(),
                 StandardSet::QPos.into(),
                 StandardSet::QNeg.into(),
-                StandardSet::QNz.into(),
+                StandardSet::QStar.into(),
                 StandardSet::Q.into(),
                 StandardSet::RPos.into(),
                 StandardSet::RNeg.into(),
-                StandardSet::RNz.into(),
+                StandardSet::RStar.into(),
+            ]),
+            Obj::StandardSet(StandardSet::CStar) => Some(vec![
+                StandardSet::NPos.into(),
+                StandardSet::ZNeg.into(),
+                StandardSet::ZStar.into(),
+                StandardSet::QPos.into(),
+                StandardSet::QNeg.into(),
+                StandardSet::QStar.into(),
+                StandardSet::RPos.into(),
+                StandardSet::RNeg.into(),
+                StandardSet::RStar.into(),
             ]),
             Obj::StandardSet(StandardSet::C) => Some(vec![
                 StandardSet::NPos.into(),
                 StandardSet::N.into(),
                 StandardSet::ZNeg.into(),
-                StandardSet::ZNz.into(),
+                StandardSet::ZStar.into(),
                 StandardSet::Z.into(),
                 StandardSet::QPos.into(),
                 StandardSet::QNeg.into(),
-                StandardSet::QNz.into(),
+                StandardSet::QStar.into(),
                 StandardSet::Q.into(),
                 StandardSet::RPos.into(),
                 StandardSet::RNeg.into(),
-                StandardSet::RNz.into(),
+                StandardSet::RStar.into(),
                 StandardSet::R.into(),
+                StandardSet::CStar.into(),
             ]),
             _ => None,
         }
@@ -670,7 +682,7 @@ impl Runtime {
         not_in_fact: &NotInFact,
     ) -> Option<StmtResult> {
         let (numerator, denominator) = self.resolved_numeric_div_operands(&not_in_fact.element)?;
-        if !number_is_in_z(&numerator) || !number_is_in_z_nz(&denominator) {
+        if !number_is_in_z(&numerator) || !number_is_in_z_star(&denominator) {
             return None;
         }
 

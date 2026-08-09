@@ -153,9 +153,10 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNeg) => self.verify_q_neg_well_defined(),
             Obj::StandardSet(StandardSet::ZNeg) => self.verify_z_neg_well_defined(),
             Obj::StandardSet(StandardSet::RNeg) => self.verify_r_neg_well_defined(),
-            Obj::StandardSet(StandardSet::QNz) => self.verify_q_nz_well_defined(),
-            Obj::StandardSet(StandardSet::ZNz) => self.verify_z_nz_well_defined(),
-            Obj::StandardSet(StandardSet::RNz) => self.verify_r_nz_well_defined(),
+            Obj::StandardSet(StandardSet::QStar) => self.verify_q_star_well_defined(),
+            Obj::StandardSet(StandardSet::ZStar) => self.verify_z_star_well_defined(),
+            Obj::StandardSet(StandardSet::RStar) => self.verify_r_star_well_defined(),
+            Obj::StandardSet(StandardSet::CStar) => self.verify_c_star_well_defined(),
             Obj::StructObj(struct_obj) => {
                 self.verify_struct_obj_well_defined(struct_obj, verify_state)
             }

@@ -29,7 +29,7 @@ impl Runtime {
         )?;
 
         for dom_fact in def_template_stmt.template_arg_dom.iter() {
-            self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+            self.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                 dom_fact,
                 &verify_state,
             )?;

@@ -149,16 +149,20 @@ impl Runtime {
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         match verified_by {
-            VerifiedByResult::BuiltinRule(result) => Ok(FactProofToLeanIR::RuleApplication {
-                rule: ProofRuleToLeanIR::from_verified_builtin_label(&result.msg, goal),
-                parameter_requirements: Vec::new(),
-                premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
-            }),
-            VerifiedByResult::BuiltinStrategy(result) => Ok(FactProofToLeanIR::RuleApplication {
-                rule: ProofRuleToLeanIR::from_verified_builtin_label(&result.msg, goal),
-                parameter_requirements: Vec::new(),
-                premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
-            }),
+            VerifiedByResult::BuiltinRule(result) => self.builtin_rule_application_to_lean_ir(
+                goal,
+                &result.msg,
+                result.evidence.as_ref(),
+                &result.subgoals,
+                context,
+            ),
+            VerifiedByResult::BuiltinStrategy(result) => self.builtin_rule_application_to_lean_ir(
+                goal,
+                &result.msg,
+                result.evidence.as_ref(),
+                &result.subgoals,
+                context,
+            ),
             VerifiedByResult::Fact(result) => match result.cite_what.as_ref() {
                 Stmt::Fact(source_fact) => self.fact_citation_to_lean_ir(
                     goal,
@@ -529,6 +533,25 @@ impl Runtime {
         })
     }
 
+    fn builtin_rule_application_to_lean_ir(
+        &self,
+        goal: &Fact,
+        label: &str,
+        evidence: Option<&BuiltinRuleEvidence>,
+        subgoals: &[StmtResult],
+        context: &ToLeanIrContext,
+    ) -> Result<FactProofToLeanIR, RuntimeError> {
+        let rule = match evidence {
+            Some(evidence) => ProofRuleToLeanIR::Builtin(evidence.into()),
+            None => ProofRuleToLeanIR::from_verified_builtin_label(label, goal),
+        };
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule,
+            parameter_requirements: Vec::new(),
+            premises: self.subgoals_to_lean_ir(subgoals, context)?,
+        })
+    }
+
     fn subgoals_to_lean_ir(
         &self,
         subgoals: &[StmtResult],
@@ -560,26 +583,24 @@ impl Runtime {
             VerifiedBysEnum::ByBuiltinRule(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: FactProofToLeanIR::RuleApplication {
-                    rule: ProofRuleToLeanIR::from_verified_builtin_label(
-                        &result.msg,
-                        &result.verify_what,
-                    ),
-                    parameter_requirements: Vec::new(),
-                    premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
-                },
+                proof: self.builtin_rule_application_to_lean_ir(
+                    &result.verify_what,
+                    &result.msg,
+                    result.evidence.as_ref(),
+                    &result.subgoals,
+                    context,
+                )?,
             }),
             VerifiedBysEnum::ByBuiltinStrategy(result) => Ok(FactToLeanIR {
                 fact_id: step_fact_id(&result.verify_what)?,
                 proposition: result.verify_what.clone(),
-                proof: FactProofToLeanIR::RuleApplication {
-                    rule: ProofRuleToLeanIR::from_verified_builtin_label(
-                        &result.msg,
-                        &result.verify_what,
-                    ),
-                    parameter_requirements: Vec::new(),
-                    premises: self.subgoals_to_lean_ir(&result.subgoals, context)?,
-                },
+                proof: self.builtin_rule_application_to_lean_ir(
+                    &result.verify_what,
+                    &result.msg,
+                    result.evidence.as_ref(),
+                    &result.subgoals,
+                    context,
+                )?,
             }),
             VerifiedBysEnum::ByFact(result) => {
                 let proof = match result.cite_what.as_ref() {

@@ -817,9 +817,9 @@ fn is_numeric_set_obj(obj: &Obj) -> bool {
                 | StandardSet::QNeg
                 | StandardSet::ZNeg
                 | StandardSet::RNeg
-                | StandardSet::QNz
-                | StandardSet::ZNz
-                | StandardSet::RNz
+                | StandardSet::QStar
+                | StandardSet::ZStar
+                | StandardSet::RStar
         )
     )
 }

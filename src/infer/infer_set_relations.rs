@@ -65,7 +65,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             inferred_forall_fact,
         )
         .map_err(|previous_error| {
@@ -110,7 +110,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&inferred_forall_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             inferred_forall_fact,
         )
         .map_err(|previous_error| {

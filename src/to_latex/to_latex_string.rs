@@ -2085,16 +2085,17 @@ impl StandardSet {
             StandardSet::NPos => r"\mathbb{N}_{>0}".to_string(),
             StandardSet::Z => r"\mathbb{Z}".to_string(),
             StandardSet::ZNeg => r"\mathbb{Z}_{<0}".to_string(),
-            StandardSet::ZNz => r"\mathbb{Z}\setminus\{0\}".to_string(),
+            StandardSet::ZStar => r"\mathbb{Z}\setminus\{0\}".to_string(),
             StandardSet::Q => r"\mathbb{Q}".to_string(),
             StandardSet::QPos => r"\mathbb{Q}_{>0}".to_string(),
             StandardSet::QNeg => r"\mathbb{Q}_{<0}".to_string(),
-            StandardSet::QNz => r"\mathbb{Q}\setminus\{0\}".to_string(),
+            StandardSet::QStar => r"\mathbb{Q}\setminus\{0\}".to_string(),
             StandardSet::R => r"\mathbb{R}".to_string(),
             StandardSet::C => r"\mathbb{C}".to_string(),
             StandardSet::RPos => r"\mathbb{R}_{>0}".to_string(),
             StandardSet::RNeg => r"\mathbb{R}_{<0}".to_string(),
-            StandardSet::RNz => r"\mathbb{R}\setminus\{0\}".to_string(),
+            StandardSet::RStar => r"\mathbb{R}\setminus\{0\}".to_string(),
+            StandardSet::CStar => r"\mathbb{C}\setminus\{0\}".to_string(),
         }
     }
 }

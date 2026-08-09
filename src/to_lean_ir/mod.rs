@@ -10,6 +10,13 @@ use crate::obj::Obj;
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use std::fmt;
 
+mod builtin_rule;
+
+pub use builtin_rule::{
+    ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR, DivNotEqualZeroToLeanIR,
+    NonzeroExpressionOrientationToLeanIR,
+};
+
 #[derive(Clone, Debug)]
 pub enum StmtToLeanIR {
     AbstractProp(AbstractPropToLeanIR),
@@ -124,6 +131,7 @@ pub enum FactProofToLeanIR {
 
 #[derive(Clone)]
 pub enum ProofRuleToLeanIR {
+    Builtin(BuiltinRuleToLeanIR),
     EqualityRewrite(EqualityRewriteToLeanIR),
     IffRewrite {
         direction: IffDirectionToLeanIR,
@@ -193,6 +201,7 @@ impl fmt::Debug for EqualityRewriteStepToLeanIR {
 impl fmt::Debug for ProofRuleToLeanIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            ProofRuleToLeanIR::Builtin(rule) => f.debug_tuple("Builtin").field(rule).finish(),
             ProofRuleToLeanIR::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }

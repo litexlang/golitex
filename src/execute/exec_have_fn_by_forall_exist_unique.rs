@@ -94,7 +94,7 @@ impl Runtime {
             })?;
 
             for dom_fact in stmt.forall.dom_facts.iter() {
-                rt.verify_well_defined_and_store_and_infer(
+                rt.store_with_well_defined_verification_and_infer(
                     dom_fact.clone(),
                     &UseContextVerifyState::new(0, false),
                 )?;
@@ -201,7 +201,7 @@ impl Runtime {
             .inst_have_fn_forall_fact_for_store(property_forall)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let property_infer = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 property_fact.clone(),
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;

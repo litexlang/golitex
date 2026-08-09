@@ -48,7 +48,7 @@ impl Runtime {
         .into();
 
         let mut infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                 function_in_function_set_fact,
                 InferReason::FunctionDefinition,
             )
@@ -113,7 +113,7 @@ impl Runtime {
             let forall_as_fact: Fact = forall_fact.into();
 
             let forall_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                     forall_as_fact,
                     InferReason::FunctionDefinition,
                 )
@@ -340,7 +340,9 @@ impl Runtime {
         )?;
 
         let _ = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(case_fact_as_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                case_fact_as_fact,
+            )
             .map_err(|store_fact_error| {
                 short_exec_error(
                     have_fn_equal_case_by_case_stmt.clone().into(),
@@ -447,7 +449,7 @@ impl Runtime {
                 vec![equation.into()],
                 stmt.line_file.clone(),
             )?;
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state_and_reason(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                 forall.into(),
                 InferReason::FunctionDefinition,
             )

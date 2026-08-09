@@ -375,9 +375,7 @@ Two quotients a//b and c//d are equal iff ad = cb.
 # Definition 4.2.1 has two mathematical parts: every rational is represented
 # by an integer numerator and a nonzero integer denominator, and two
 # representatives are equal exactly when their cross-products agree.
-# Litex carrier suffixes record the same restrictions: `_nz` means nonzero,
-# while `_pos` and `_neg` mean strictly positive and strictly negative.  Thus
-# `Z*` below is the set of nonzero integers.
+# Litex writes the nonzero integer carrier as `Z*`.
 
 thm rational_equality_gives_cross_products:
     ? forall a Z, b Z*, c Z, d Z*:

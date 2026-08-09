@@ -25,6 +25,33 @@ The environment cache deliberately stores only `FactId` plus the existing
 source location. Proof trees, origins, inferred consequences, local/global Lean
 names, and recursive dependencies live in statement results and To-Lean IR.
 
+### Complete and incomplete return values
+
+`to_lean_with_report` is the partial-compilation entrypoint. It returns a
+`ToLeanCompilationReport` whose `status` is either `Complete` or `Incomplete`,
+whose `lean_code` is always the checked subset that the backend could emit, and
+whose `unsupported` list identifies every omitted statement by source index,
+rendered statement, path, line, compiler phase, and reason.
+
+Parsing errors, runtime errors, and unverified Litex statements still return
+`Err`: those inputs never established a verified source program. Once a
+statement has verified, lack of compiler IR or lack of a checked Lean backend
+becomes an `Incomplete` diagnostic instead. Report mode continues through later
+statements so independent supported declarations are not lost.
+
+Lean emission is transactional per source statement. The emitter checkpoints
+its declarations, global `FactId` set, and local-name allocator before lowering
+one statement. If any nested proof or inferred fact is unsupported, that whole
+statement is rolled back and replaced by a Lean line comment containing the
+same diagnostic. It never leaves half of a multi-fact statement behind and
+never substitutes `axiom` or `sorry`. The generated source starts with a
+machine-readable reader cue such as `-- To-Lean status: incomplete`.
+
+The existing `to_lean`, `to_lean_from_source`, and `emit_lean_from_ir` entrypoints
+remain strict and fail closed. Their report counterparts are
+`to_lean_with_report`, `to_lean_from_source_with_report`, and
+`emit_lean_from_ir_with_report`.
+
 ## Environment and proof-scope correspondence
 
 A proof-relevant temporary Litex environment is a semantic scope boundary, not
@@ -74,8 +101,59 @@ recursive proof-tree shape. The first rule vocabulary contains equality and
 iff rewrite, definition reduction, normalization, known-forall instantiation,
 modus ponens, conjunction/existential introduction, case split, and an explicit
 unsupported rule. Only equality rewrite, definition reduction, the supported
-normalization slice, and known-forall instantiation currently have Lean
-backends.
+normalization slice, known-forall instantiation, and the structured quotient-
+nonzero and 20 arithmetic/order builtin rules currently have Lean backends.
+
+### Structured builtin-rule return path
+
+The source-derived coverage ledger is
+[`builtin_rule_inventory.md`](builtin_rule_inventory.md). Its generator follows
+label arguments through forwarding helpers rather than counting only raw
+constructors: 460 direct success-constructor calls currently expand to 656
+label-bearing rule/strategy sites, including 560 distinct static labels. Each
+row records its Rust source, family, checked Lean mapping, and delivery status;
+evaluation/computation-like sites are explicitly outside the current 20-rule
+tranche. Twenty-three source sites currently have a checked mapping: the prior
+three plus the 20 typed arithmetic/order sites.
+
+A diagnostic rule label is not a proof certificate. A compiler-supported
+builtin therefore freezes its successful matcher bindings in
+`BuiltinRuleEvidence` before the verifier stack unwinds. The enclosing
+`VerifiedByBuiltinRuleResult` keeps that evidence beside the exact recursively
+checked `StmtResult` subgoals. If the successful result is later merged into a
+`VerifiedBys` sequence, both the evidence and subgoals move together.
+
+Runtime lowering converts the semantic evidence to `BuiltinRuleToLeanIR` and
+recursively converts every subgoal to `FactToLeanIR`. The result uses the same
+general node as other derived proofs:
+
+```text
+RuleApplication {
+    rule: Builtin(<typed rule application>),
+    parameter_requirements: [...],
+    premises: [<recursive child proof IR>, ...],
+}
+```
+
+Lean emission works back up that tree. It first materializes each child proof
+inside the current proof scope, validates that the target and premise
+propositions agree with the frozen bindings, and only then applies the Lean
+lemma for the parent rule. Thus neither the runtime-to-IR layer nor the emitter
+repeats Litex proof search.
+
+This serialization does not widen verifier automation. The existing
+`UseBuiltinRuleVerifyState` one-rule recursion budget still controls which
+proof tree Litex may select; the compiler only preserves and checks that
+already-selected tree.
+
+The first vertical slice is quotient nonzero. For literal-zero targets, the
+verifier records the numerator, denominator, and whether the quotient occurred
+on the left or right of `!=`. The two subgoals retain the proofs of numerator
+and denominator nonzeroness. Lean emits `div_ne_zero hNumerator hDenominator`,
+using `Ne.symm` for the reversed target. A resolved identifier that merely
+denotes zero still verifies in Litex, but it has no compiler evidence for that
+resolution yet; it deliberately remains `OtherUnsupported` rather than
+silently treating the identifier as literal zero.
 
 Equality-class lookup retains more than the final equivalent object: it now
 returns an ordered path of original equality facts with an orientation for each
@@ -176,12 +254,19 @@ The current lowering is intentionally small:
 - equality transport replays its source, equality edges, and result as
   consecutive `proof_fact` values, with the result checked by
   `simpa only [...] using ...`;
+- quotient-nonzero builtin evidence replays its two recursively checked
+  nonzero premises and applies `div_ne_zero`, with the recorded target
+  orientation deciding whether `Ne.symm` is required;
+- arithmetic/order builtin evidence checks the target and ordered premise fact
+  families, recursively materializes those premise proofs, and applies one of
+  `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
 - verified rational-expression normalization is discharged with `norm_num`,
   `ring`, or `field_simp` followed by `ring`.
 
 Unsupported proof rules, propositions, objects, parameter types, composite
-proofs, and inference origins stop compilation with an error. There is no
-fallback to `axiom` or `sorry`.
+proofs, and inference origins stop strict compilation with an error. Report
+mode instead marks the result `Incomplete`, rolls back and comments the omitted
+statement, and continues. Neither mode falls back to `axiom` or `sorry`.
 
 The MVP also requires every cited global `FactId` to have been emitted earlier
 in the same IR stream. Facts preloaded during ordinary execution still have
@@ -197,18 +282,43 @@ proposition, trusted forall, explicit known-forall arguments and requirements,
 direct-instance-to-goal normalization, definition proof, temporary-premise
 reuse, equality transport, forall introduction, and rational builtin proof.
 
+[`examples/05_compiler_interop/to_lean_builtin_rule_ir.lit`](../../examples/05_compiler_interop/to_lean_builtin_rule_ir.lit)
+is the builtin-rule tracer. It follows one quotient-nonzero proof from matched
+Litex arguments, through recursively returned subgoal results and typed proof
+IR, to a checked `div_ne_zero` Lean term. Focused Rust regressions also cover
+the reversed target, malformed IR, and the unresolved-zero-alias boundary.
+
+[`examples/05_compiler_interop/to_lean_builtin_rules_20.lit`](../../examples/05_compiler_interop/to_lean_builtin_rules_20.lit)
+is the representative 20-rule tracer. It covers strict-to-weak order,
+subtraction signs, addition signs and monotonicity, multiplication signs, and
+division signs. A focused regression requires 20 distinct typed rule IDs,
+rejects malformed premise arity, and sends the complete generated module
+through the real Lean kernel.
+
+[`examples/05_compiler_interop/to_lean_partial_report.lit`](../../examples/05_compiler_interop/to_lean_partial_report.lit)
+is the completeness tracer. Its supported rational equalities surround one
+verified but unsupported trigonometric rule. Report mode returns
+`Incomplete`, identifies statement 2, emits statements 1 and 3, and produces
+Lean accepted by the real kernel; strict mode still rejects the same unsupported
+rule.
+
 Rust and Litex gates:
 
 ```text
 cargo test --release to_lean:: -- --nocapture
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
 ```
 
 Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
 
 ```text
 LITEX_LEAN_PROJECT=/path/to/mathlib-project \
+LITEX_LAKE=/optional/absolute/path/to/lake \
   cargo test --release generated_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
+LITEX_LEAN_PROJECT=/path/to/mathlib-project \
+LITEX_LAKE=/optional/absolute/path/to/lake \
+  cargo test --release generated_to_lean_builtin_rules_20_compiles_with_lean -- --ignored --nocapture
 ```
 
 For scratch work, these commands first verify `examples/tmp.lit`,

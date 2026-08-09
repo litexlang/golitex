@@ -28,7 +28,7 @@ impl Runtime {
 
         for dom_fact in forall_fact.dom_facts.iter() {
             let mut dom_infer_result = self
-                .verify_well_defined_and_store_and_infer(dom_fact.clone(), verify_state)
+                .store_with_well_defined_verification_and_infer(dom_fact.clone(), verify_state)
                 .map_err(|e| {
                     let message = "failed to assume dom fact in forall".to_string();
                     RuntimeError::from(VerifyRuntimeError(RuntimeErrorStruct::new(

@@ -33,7 +33,7 @@ impl Runtime {
             param_sets.iter().any(|list_set| list_set.list.is_empty());
         if enumerate_cartesian_product_is_empty {
             let infer_result_from_stored_forall_fact = self
-                .verify_well_defined_and_store_and_infer_with_default_verify_state(
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
                     corresponding_forall_fact.clone(),
                 )
                 .map_err(|store_fact_error| {
@@ -97,7 +97,7 @@ impl Runtime {
         }
 
         let infer_result_from_stored_forall_fact = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact.clone(),
             )
             .map_err(|store_fact_error| {
@@ -246,7 +246,7 @@ impl Runtime {
         for dom_fact in stmt.forall_fact.dom_facts.iter() {
             let verify_dom_result = self.verify_fact_full(dom_fact, &verify_state)?;
             if verify_dom_result.is_true() {
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     dom_fact.clone(),
                 )?;
                 inside_results.push(verify_dom_result);

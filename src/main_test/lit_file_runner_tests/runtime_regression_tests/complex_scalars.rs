@@ -1,9 +1,19 @@
 use super::*;
 
 #[test]
-fn native_complex_ast_keywords_do_not_use_builtin_symbol_ids() {
+fn native_complex_names_and_complex_star_ids_are_stable() {
     let last_existing = builtin_symbol_ref(BIJECTIVE).expect("existing builtin ID should remain");
     assert_eq!(last_existing.id().value(), (1_u64 << 62) + 47);
+
+    assert!(is_key_symbol_or_keyword(COMPACT_C_STAR));
+    assert!(is_builtin_identifier_name(COMPACT_C_STAR));
+    assert_eq!(
+        builtin_symbol_ref(COMPACT_C_STAR)
+            .expect("C* should have a builtin symbol ID")
+            .id()
+            .value(),
+        (1_u64 << 62) + 59
+    );
 
     for name in [C, I, RE, IMG, C_ABS] {
         assert!(is_keyword(name), "{name} should remain hard reserved");
@@ -14,6 +24,44 @@ fn native_complex_ast_keywords_do_not_use_builtin_symbol_ids() {
         assert!(
             builtin_symbol_ref(name).is_none(),
             "{name} should not allocate a builtin SymbolId"
+        );
+    }
+}
+
+#[test]
+fn complex_star_is_the_nonzero_complex_carrier() {
+    let accepted = r#"
+have z C*
+z $in C
+z != 0
+i $in C*
+1 $in C*
+not 0 $in C*
+R* $subset C*
+C* $subset C
+
+forall a, b C*:
+    a * b $in C*
+"#;
+    let (run_succeeded, run_output) =
+        run_complex_source(accepted, "complex_star_is_the_nonzero_complex_carrier");
+    assert!(
+        run_succeeded,
+        "C* should carry complex membership and nonzeroness:\n{run_output}"
+    );
+
+    for (label, rejected) in [
+        ("zero_is_not_in_complex_star", "0 $in C*"),
+        ("all_complexes_are_not_nonzero", "C $subset C*"),
+        (
+            "complex_star_is_not_additively_closed",
+            "forall a, b C*:\n    a + b $in C*",
+        ),
+    ] {
+        let (negative_succeeded, negative_output) = run_complex_source(rejected, label);
+        assert!(
+            !negative_succeeded,
+            "invalid C* boundary `{rejected}` must fail:\n{negative_output}"
         );
     }
 }
@@ -440,12 +488,13 @@ c + i1 + real + imag + C_value + image + C_abs_value = 28
 #[test]
 fn complex_latex_uses_native_notation() {
     let output = to_latex_from_source(
-        "forall z C:\n    re(z) + img(z) * i = C_abs(z)",
+        "forall z C*:\n    re(z) + img(z) * i = C_abs(z)",
         "complex_latex_uses_native_notation",
     )
     .expect("native complex syntax should convert to LaTeX");
 
     assert!(output.contains(r"\mathbb{C}"));
+    assert!(output.contains(r"\mathbb{C}\setminus\{0\}"));
     assert!(output.contains(r"\operatorname{re}"));
     assert!(output.contains(r"\operatorname{img}"));
     assert!(output.contains(r"\mathrm{i}"));
@@ -463,6 +512,17 @@ fn complex_python_and_evaluator_paths_fail_explicitly() {
     assert!(
         python_error.contains("does not support native complex"),
         "{python_error}"
+    );
+
+    let complex_star_python_error = to_python_from_source(
+        "have fn f(z C*) C* = z",
+        "complex_star_python_extractor_is_unsupported",
+    )
+    .expect_err("Python extraction must reject C* definitions")
+    .trace_message();
+    assert!(
+        complex_star_python_error.contains("does not support native complex"),
+        "{complex_star_python_error}"
     );
 
     let (run_succeeded, run_output) =

@@ -169,7 +169,7 @@ impl Runtime {
         }
         self.obj_is_verified_in_standard_set_for_power_builtin(
             div.right.as_ref(),
-            StandardSet::RNz,
+            StandardSet::RStar,
             line_file,
             builtin_state,
         )

@@ -263,7 +263,7 @@ impl Runtime {
         .into();
 
         let mut infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 surface_membership_fact.into(),
             )
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;

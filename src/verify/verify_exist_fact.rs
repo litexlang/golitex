@@ -96,7 +96,7 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
         ParamType::Obj(Obj::StandardSet(StandardSet::Z))
     ) || !matches!(
         denominator_type,
-        ParamType::Obj(Obj::StandardSet(StandardSet::ZNz))
+        ParamType::Obj(Obj::StandardSet(StandardSet::ZStar))
     ) {
         return None;
     }

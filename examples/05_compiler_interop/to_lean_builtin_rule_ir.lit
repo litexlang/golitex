@@ -1,0 +1,32 @@
+# Tracer: structured builtin-rule evidence reaches a checked Lean proof.
+#
+# Before (Litex verified, but To-Lean rejected the proof route):
+# forall a, b R:
+#     a != 0
+#     b != 0
+#     =>:
+#         a / b != 0
+# Former behavior: the verifier returned the diagnostic label
+# `div_not_equal_zero_from_numerator_nonzero`, but no typed rule bindings.
+# To-Lean therefore stopped at `OtherUnsupported` instead of guessing a proof.
+#
+# Now (verified and compiled from recursive proof IR):
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+# Current behavior: the verifier freezes `a`, `b`, and the target orientation
+# in `BuiltinRuleEvidence`. Its two checked subgoals recursively become proof-IR
+# premises. The Lean emitter reconstructs those premise proofs before applying
+# Mathlib's `div_ne_zero`; it does not search the Litex source again.
+#
+# Boundary: resolved aliases of zero and builtin rules without complete typed
+# evidence still become `OtherUnsupported`. Malformed rule evidence is rejected
+# by focused Rust regressions and never becomes `axiom` or `sorry`.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rule_ir.lit
+# Compiler evidence: cargo test --release to_lean_builtin_rule_ir -- --nocapture
+# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/result/builtin_rule_evidence.rs, src/to_lean_ir/builtin_rule.rs,
+# src/runtime/runtime_to_lean_ir.rs, src/to_lean/to_lean_pipeline.rs

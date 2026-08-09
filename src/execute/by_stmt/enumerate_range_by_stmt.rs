@@ -78,7 +78,7 @@ impl Runtime {
         };
         let generated_fact_string = generated_fact.to_string();
         let infer_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 generated_fact.clone(),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;

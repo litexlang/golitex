@@ -97,6 +97,46 @@ pub enum KnownObjValue {
 }
 
 impl Environment {
+    /// Remove declarations and proof-control state from a temporary
+    /// well-definedness environment while retaining only directly checked
+    /// atomic consequences and reusable verification caches.
+    pub fn retain_only_well_definedness_certificate_data(&mut self) {
+        self.symbols = SymbolTable::new();
+        self.defined_identifiers.clear();
+        self.defined_def_props.clear();
+        self.defined_abstract_props.clear();
+        self.defined_algorithms.clear();
+        self.defined_structs.clear();
+        self.defined_templates.clear();
+        self.defined_settings.clear();
+        self.defined_thm_stmts.clear();
+        self.defined_strategy_stmts.clear();
+        self.known_equality = KnownEquality::new();
+        self.known_exist_facts.clear();
+        self.known_or_facts.clear();
+        self.known_atomic_facts_in_forall_facts.clear();
+        self.known_atomic_facts_in_forall_facts_by_arg_shape.clear();
+        self.known_exist_facts_in_forall_facts.clear();
+        self.known_and_facts_in_forall_facts.clear();
+        self.known_or_facts_in_forall_facts.clear();
+        self.known_objs_equal_to_tuple.clear();
+        self.known_objs_equal_to_cart.clear();
+        self.known_objs_equal_to_finite_seq_list.clear();
+        self.known_objs_equal_to_matrix_list.clear();
+        self.known_objs_in_matrix_sets.clear();
+        self.known_obj_values.clear();
+        self.known_objs_equal_to_set_builder.clear();
+        self.known_objs_in_fn_sets.clear();
+        self.known_transitive_props.clear();
+        self.known_symmetric_props.clear();
+        self.known_reflexive_props.clear();
+        self.known_antisymmetric_props.clear();
+        self.statement_verified_atomic_facts.clear();
+        self.cache_infer_rule_firing.clear();
+        self.used_strategy_stmts.clear();
+        self.stopped_strategy_stmts.clear();
+    }
+
     pub fn new(
         objs: HashMap<IdentifierName, ParamObjType>,
         def_props: HashMap<PropName, DefPropStmt>,

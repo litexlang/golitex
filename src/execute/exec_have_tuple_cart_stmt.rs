@@ -237,7 +237,7 @@ impl Runtime {
         reason: &'static str,
     ) -> Result<InferResult, RuntimeError> {
         let mut infer_result =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact)?;
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)?;
         infer_result.relabel_all_added_facts_with_store_reason(reason);
         Ok(infer_result)
     }

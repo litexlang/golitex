@@ -190,6 +190,9 @@ pub struct ObjectIntroductionItem {
 #[derive(Debug)]
 pub struct VerifiedByBuiltinRuleResult {
     pub msg: String,
+    /// Structured verifier-side bindings retained for compiler backends.
+    /// `None` means this rule still has only its diagnostic label.
+    pub evidence: Option<BuiltinRuleEvidence>,
     pub subgoals: Vec<StmtResult>,
 }
 
@@ -307,6 +310,7 @@ pub struct ForallProvedFactResult {
 pub struct FactVerifiedByBuiltinRuleInVerifiedBys {
     pub msg: String,
     pub verify_what: Fact,
+    pub evidence: Option<BuiltinRuleEvidence>,
     pub subgoals: Vec<StmtResult>,
 }
 
@@ -396,6 +400,7 @@ impl FactualStmtSuccess {
     ) -> Self {
         let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
             msg: strategy_label,
+            evidence: None,
             subgoals: step_results,
         });
         Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
@@ -413,6 +418,37 @@ impl FactualStmtSuccess {
             step_results,
         );
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
+    }
+
+    pub fn new_with_verified_by_builtin_rule_evidence_and_steps(
+        stmt: Fact,
+        infers: InferResult,
+        builtin_rule_label: String,
+        evidence: BuiltinRuleEvidence,
+        step_results: Vec<StmtResult>,
+    ) -> Self {
+        let verified_by = VerifiedByResult::builtin_rule_with_evidence(
+            builtin_rule_label,
+            stmt.clone(),
+            evidence,
+            step_results,
+        );
+        Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
+    }
+
+    pub fn new_with_verified_by_builtin_rule_evidence_recording_stmt(
+        stmt: Fact,
+        builtin_rule_label: String,
+        evidence: BuiltinRuleEvidence,
+        step_results: Vec<StmtResult>,
+    ) -> Self {
+        Self::new_with_verified_by_builtin_rule_evidence_and_steps(
+            stmt,
+            InferResult::new(),
+            builtin_rule_label,
+            evidence,
+            step_results,
+        )
     }
 
     pub fn new_with_verified_by_known_fact_and_infer(
@@ -484,6 +520,20 @@ impl VerifiedByResult {
     ) -> Self {
         Self::BuiltinRule(VerifiedByBuiltinRuleResult {
             msg: msg.into(),
+            evidence: None,
+            subgoals,
+        })
+    }
+
+    pub fn builtin_rule_with_evidence(
+        msg: impl Into<String>,
+        _goal: Fact,
+        evidence: BuiltinRuleEvidence,
+        subgoals: Vec<StmtResult>,
+    ) -> Self {
+        Self::BuiltinRule(VerifiedByBuiltinRuleResult {
+            msg: msg.into(),
+            evidence: Some(evidence),
             subgoals,
         })
     }
@@ -591,17 +641,37 @@ impl VerifiedByResult {
 
 impl VerifiedBysEnum {
     pub fn builtin_rule(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
+        Self::builtin_rule_with_evidence(msg, verify_what, None, subgoals)
+    }
+
+    fn builtin_rule_with_evidence(
+        msg: String,
+        verify_what: Fact,
+        evidence: Option<BuiltinRuleEvidence>,
+        subgoals: Vec<StmtResult>,
+    ) -> Self {
         VerifiedBysEnum::ByBuiltinRule(FactVerifiedByBuiltinRuleInVerifiedBys {
             msg,
             verify_what,
+            evidence,
             subgoals,
         })
     }
 
     pub fn builtin_strategy(msg: String, verify_what: Fact, subgoals: Vec<StmtResult>) -> Self {
+        Self::builtin_strategy_with_evidence(msg, verify_what, None, subgoals)
+    }
+
+    fn builtin_strategy_with_evidence(
+        msg: String,
+        verify_what: Fact,
+        evidence: Option<BuiltinRuleEvidence>,
+        subgoals: Vec<StmtResult>,
+    ) -> Self {
         VerifiedBysEnum::ByBuiltinStrategy(FactVerifiedByBuiltinRuleInVerifiedBys {
             msg,
             verify_what,
+            evidence,
             subgoals,
         })
     }
@@ -638,10 +708,20 @@ impl VerifiedBysEnum {
     fn from_verified_by_result(verify_what: Fact, verified_by: VerifiedByResult) -> Vec<Self> {
         match verified_by {
             VerifiedByResult::BuiltinRule(r) => {
-                vec![Self::builtin_rule(r.msg, verify_what, r.subgoals)]
+                vec![Self::builtin_rule_with_evidence(
+                    r.msg,
+                    verify_what,
+                    r.evidence,
+                    r.subgoals,
+                )]
             }
             VerifiedByResult::BuiltinStrategy(r) => {
-                vec![Self::builtin_strategy(r.msg, verify_what, r.subgoals)]
+                vec![Self::builtin_strategy_with_evidence(
+                    r.msg,
+                    verify_what,
+                    r.evidence,
+                    r.subgoals,
+                )]
             }
             VerifiedByResult::Fact(r) => {
                 vec![VerifiedBysEnum::ByFact(FactVerifiedByFactInVerifiedBys {

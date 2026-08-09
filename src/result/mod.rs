@@ -1,3 +1,4 @@
+mod builtin_rule_evidence;
 mod by_stmt_result;
 mod command_stmt_result;
 mod def_interface_stmt_result;
@@ -13,6 +14,10 @@ mod runtime_unknown;
 mod unsafe_stmt_result;
 mod witness_stmt_result;
 
+pub use builtin_rule_evidence::{
+    ArithmeticBuiltinRule, BuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
+    NonzeroExpressionOrientation,
+};
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;
 pub use def_interface_stmt_result::DefInterfaceStmtResult;

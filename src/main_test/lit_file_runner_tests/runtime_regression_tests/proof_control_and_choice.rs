@@ -541,6 +541,77 @@ by cases:
 }
 
 #[test]
+fn bodyless_by_goal_blocks_still_close_targets_and_contra_requires_impossible() {
+    run_with_large_stack("bodyless_by_goal_blocks", || {
+        let selected_theorem_source = r#"
+thm bodyless_zero_sides:
+    ? forall x R:
+        x + 0 = x
+        0 + x = x
+
+    x + 0 = x
+    0 + x = x
+
+by thm bodyless_zero_sides(2):
+    ? 2 + 0 = 0 + 2
+
+by induc n from 0:
+    ? n = n
+
+by strong_induc m from 0:
+    ? m = m
+"#;
+
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("bodyless_by_thm_goal_closed");
+        let (results, error) = run_source_code(selected_theorem_source, &mut runtime);
+        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        assert!(
+            succeeded,
+            "a bodyless by-thm goal should use the selected-fact verifier:\n{output}"
+        );
+        assert!(
+            output.contains("by thm bodyless_zero_sides(2) => 2 + 0 = 0 + 2"),
+            "bodyless by-thm output should retain the selected atomic target:\n{output}"
+        );
+        assert!(
+            output.contains("by induc n from 0:\\n    ? n = n\"")
+                && output.contains("by strong_induc m from 0:\\n    ? m = m\""),
+            "bodyless induction output should not add a blank proof line:\n{output}"
+        );
+
+        let negative_cases = [
+            (
+                "by extension:\n    ? {1} = {2}",
+                "by extension: failed to prove",
+            ),
+            (
+                "by contra:\n    ? 1 = 1",
+                "by contra: expects a `? <fact>` goal block and impossible ... tail",
+            ),
+        ];
+
+        for (index, (source, expected)) in negative_cases.iter().enumerate() {
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(&format!(
+                "bodyless_by_goal_negative_{index}"
+            ));
+            let (results, error) = run_source_code(source, &mut runtime);
+            let (succeeded, output) =
+                render_run_source_code_output(&runtime, &results, &error, false);
+            assert!(
+                !succeeded,
+                "an empty proof must not admit an unclosed target: {source}"
+            );
+            assert!(
+                output.contains(expected),
+                "missing bodyless-goal boundary diagnostic for {source:?}:\n{output}"
+            );
+        }
+    });
+}
+
+#[test]
 fn prove_is_available_as_an_identifier() {
     run_with_large_stack("prove_is_available_as_an_identifier", || {
         let source_code = r#"

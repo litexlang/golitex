@@ -40,7 +40,7 @@ object-introduction family of `have` statements listed below.
 | Object form | Mathematical meaning | Typical well-definedness notes |
 |---|---|---|
 | Numeric literals and arithmetic expressions | Exact natural, integer, rational, or real number objects, with arithmetic interpreted in the usual numeric structure. | Operands must be numeric enough for the operation; division and remainder require nonzero divisors where relevant. |
-| `N`, `Z`, `Q`, `R` and suffix subsets | Built-in number sets: naturals, integers, rationals, reals, and common subsets such as positive or nonzero values. | Membership facts such as `x $in R+` infer the corresponding ambient numeric membership. |
+| `N`, `Z`, `Q`, `R`, `C` and compact subsets | Built-in natural, integer, rational, real, and complex sets, with common positive, negative, or nonzero subsets. `C*` means the nonzero complex carrier. | Membership facts infer their ambient carrier and restriction; for example, `x $in C*` supplies `x $in C` and `x != 0`. |
 | Displayed finite sets `{a, b, c}` | A finite set containing the displayed elements. | Elements must be well-defined; finite-set facts and `finite_set_size` facts are inferred for displayed finite sets. |
 | Set builders `{x S: P(x)}` | The subset of `S` whose elements satisfy the predicate in the builder. | The base set and predicate body must be well-defined under the bound variable assumptions. |
 | `union(A, B)`, `intersect(A, B)`, `set_minus(A, B)`, `set_diff(A, B)` | Ordinary binary union, intersection, relative complement, and symmetric difference. | Arguments must be well-defined sets when set facts about the result are used. |
@@ -135,11 +135,16 @@ conclusion is rejected rather than stored with changed empty-domain semantics.
 
 ## By Statements
 
+For every `by ...:` goal-block route, ordinary proof statements after the `?`
+goals are optional; an empty list still runs the route's final verifier and
+cannot admit an unproved target. Required structural arms remain, and
+`by contra` uniquely requires a final explicit `impossible fact`.
+
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `by def fact` | A concrete positive prop call, or a supported positive builtin definition: subset/superset, proper subset/superset, injective/surjective/bijective, `fn_eq_in`, or `fn_eq`. | Explicitly runs the selected mathematical definition with the full verifier. Ordinary round-0 atomic verification may also try this direction before known `forall` facts and user strategies. | Stores the target and runs inference only after every requirement succeeds. |
 | `by thm name(args)` | A user theorem must exist and accept the arguments. Reserved bare builtin theorem names instead validate their fixed target-object shape and arity. | Verifies user-theorem domains or the builtin handler's full-verifier requirements. One-layer builtin rules and structural builtin strategies are not unrestricted full-verifier entries. | Stores conclusions and runs inference only after every requirement succeeds; a failed builtin call stores nothing. |
-| `by thm name(args) => atomic_fact` (preview) | The selected atomic fact must be well-defined in the parent context; the theorem call has the same checks as the legacy form. No indented body or compound target is accepted. | Applies the theorem in a temporary child scope, then checks the selected fact with the full atomic verifier there. The fact may be derived rather than a direct conclusion. | Discards the theorem's temporary conclusions, commits only the selected fact as the parent seed, then runs ordinary inference. Any failure commits nothing. |
+| `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The selected atomic fact must be well-defined in the parent context; the theorem call has the same checks as the legacy form. The goal-block spelling is bodyless, and neither spelling accepts a compound target. | Applies the theorem in a temporary child scope, then checks the selected fact with the full atomic verifier there. The fact may be derived rather than a direct conclusion. | Discards the theorem's temporary conclusions, commits only the selected fact as the parent seed, then runs ordinary inference. Any failure commits nothing. |
 | `by cases` | Then-facts must be well-defined; case/prove shape restrictions must hold. A zero-statement proof arm is written `case fact` without `:`. | Verifies cases cover all situations; each case, including a bodyless case, must prove every then-fact. | Stores the then-facts. |
 | `by contra` | Target fact must be well-defined. | Assumes the negated target, runs the proof, and verifies both contradiction sides. | Stores the original target fact. |
 | `by induc` | Induction source, parameter, and goal shapes must be valid. | Verifies base case and induction step. | Stores the generated concluding `forall` fact. |

@@ -282,6 +282,7 @@ pub use crate::result::CommandStmtResult;
 pub use crate::result::DefInterfaceStmtResult;
 pub use crate::result::DefObjStmtResult;
 pub use crate::result::DefPredicateStmtResult;
+pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
 pub use crate::result::ExecutionPhaseTrace;
@@ -299,6 +300,7 @@ pub use crate::result::ForallProvedFactResult;
 pub use crate::result::KnownForallInstantiationResult;
 pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::NonFactualStmtSuccess;
+pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::NotForallUnknown;
 pub use crate::result::ObjectIntroductionItem;
 pub use crate::result::OrFactUnknown;
@@ -316,6 +318,7 @@ pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
 pub use crate::result::WitnessStmtResult;
+pub use crate::result::{ArithmeticBuiltinRule, BuiltinRuleEvidence};
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
@@ -422,11 +425,12 @@ pub use crate::symbol::{
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
 pub use crate::to_lean_ir::{
-    AbstractPropToLeanIR, EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR,
+    AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR,
+    DivNotEqualZeroToLeanIR, EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR,
     EqualityRewriteToLeanIR, FactProofToLeanIR, FactStmtToLeanIR, FactToLeanIR,
     IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LocalPremiseToLeanIR,
-    NormalizationKindToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR, ProofRuleToLeanIR,
-    PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
+    NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR, ParamGroupToLeanIR,
+    ParamTypeToLeanIR, ProofRuleToLeanIR, PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;
@@ -485,16 +489,17 @@ pub use crate::common::keywords::CLEAR;
 pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;
+pub use crate::common::keywords::COMPACT_C_STAR;
 pub use crate::common::keywords::COMPACT_N_POS;
 pub use crate::common::keywords::COMPACT_Q_NEG;
-pub use crate::common::keywords::COMPACT_Q_NZ;
 pub use crate::common::keywords::COMPACT_Q_POS;
+pub use crate::common::keywords::COMPACT_Q_STAR;
 pub use crate::common::keywords::COMPACT_R_NEG;
-pub use crate::common::keywords::COMPACT_R_NZ;
 pub use crate::common::keywords::COMPACT_R_POS;
+pub use crate::common::keywords::COMPACT_R_STAR;
 pub use crate::common::keywords::COMPACT_Z_NEG;
-pub use crate::common::keywords::COMPACT_Z_NZ;
 pub use crate::common::keywords::COMPACT_Z_POS;
+pub use crate::common::keywords::COMPACT_Z_STAR;
 pub use crate::common::keywords::CONTRA;
 pub use crate::common::keywords::COS;
 pub use crate::common::keywords::COT;

@@ -58,7 +58,7 @@ impl Runtime {
             success.by_verification = Some(by_verification.into());
         }
         let infer_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 corresponding_forall_fact,
             )?;
 
@@ -212,7 +212,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(dom_ge)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(dom_ge)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -225,7 +225,7 @@ impl Runtime {
 
         for fact in stmt.to_prove.iter() {
             let ih = self.strong_induc_ih_forall_fact(stmt, fact)?;
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(ih)
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(ih)
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -346,7 +346,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(dom_ge)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(dom_ge)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -365,7 +365,7 @@ impl Runtime {
             let inst = self
                 .inst_exist_or_and_chain_atomic_fact(fact, &induc_map, ParamObjType::Induc, None)?
                 .to_fact();
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(inst)
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(inst)
                 .map_err(|e| {
                     short_exec_error(
                         stmt.clone().into(),
@@ -774,7 +774,7 @@ impl Runtime {
         let param_obj = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let base_eq: Fact =
             EqualFact::new(param_obj, stmt.induc_from.clone(), stmt.line_file.clone()).into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_eq)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(base_eq)
             .map_err(|e| {
                 short_exec_error(
                     stmt.clone().into(),

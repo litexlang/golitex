@@ -1432,15 +1432,15 @@ impl Runtime {
                 StandardSet::NPos,
                 StandardSet::N,
                 StandardSet::ZNeg,
-                StandardSet::ZNz,
+                StandardSet::ZStar,
                 StandardSet::Z,
                 StandardSet::Q,
                 StandardSet::QPos,
                 StandardSet::QNeg,
-                StandardSet::QNz,
+                StandardSet::QStar,
                 StandardSet::RPos,
                 StandardSet::RNeg,
-                StandardSet::RNz,
+                StandardSet::RStar,
             ] {
                 let subset: AtomicFact = SubsetFact::new(
                     source_set.clone(),

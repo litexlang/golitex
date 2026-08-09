@@ -1087,9 +1087,10 @@ impl Runtime {
             Obj::StandardSet(StandardSet::QNeg) => self.match_arg_when_left_is_q_neg(given_arg),
             Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_when_left_is_z_neg(given_arg),
             Obj::StandardSet(StandardSet::RNeg) => self.match_arg_when_left_is_r_neg(given_arg),
-            Obj::StandardSet(StandardSet::QNz) => self.match_arg_when_left_is_q_nz(given_arg),
-            Obj::StandardSet(StandardSet::ZNz) => self.match_arg_when_left_is_z_nz(given_arg),
-            Obj::StandardSet(StandardSet::RNz) => self.match_arg_when_left_is_r_nz(given_arg),
+            Obj::StandardSet(StandardSet::QStar) => self.match_arg_when_left_is_q_star(given_arg),
+            Obj::StandardSet(StandardSet::ZStar) => self.match_arg_when_left_is_z_star(given_arg),
+            Obj::StandardSet(StandardSet::RStar) => self.match_arg_when_left_is_r_star(given_arg),
+            Obj::StandardSet(StandardSet::CStar) => self.match_arg_when_left_is_c_star(given_arg),
             Obj::StructObj(known) => match given_arg {
                 Obj::StructObj(given) => {
                     if known.name.to_string() != given.name.to_string() {
@@ -2650,9 +2651,9 @@ impl Runtime {
             | (StandardSet::NPos, StandardSet::R)
             | (StandardSet::NPos, StandardSet::QPos)
             | (StandardSet::NPos, StandardSet::RPos)
-            | (StandardSet::NPos, StandardSet::ZNz)
-            | (StandardSet::NPos, StandardSet::QNz)
-            | (StandardSet::NPos, StandardSet::RNz)
+            | (StandardSet::NPos, StandardSet::ZStar)
+            | (StandardSet::NPos, StandardSet::QStar)
+            | (StandardSet::NPos, StandardSet::RStar)
             | (StandardSet::N, StandardSet::N)
             | (StandardSet::N, StandardSet::Z)
             | (StandardSet::N, StandardSet::Q)
@@ -2663,15 +2664,15 @@ impl Runtime {
             | (StandardSet::ZNeg, StandardSet::R)
             | (StandardSet::ZNeg, StandardSet::QNeg)
             | (StandardSet::ZNeg, StandardSet::RNeg)
-            | (StandardSet::ZNeg, StandardSet::ZNz)
-            | (StandardSet::ZNeg, StandardSet::QNz)
-            | (StandardSet::ZNeg, StandardSet::RNz)
-            | (StandardSet::ZNz, StandardSet::ZNz)
-            | (StandardSet::ZNz, StandardSet::Z)
-            | (StandardSet::ZNz, StandardSet::Q)
-            | (StandardSet::ZNz, StandardSet::R)
-            | (StandardSet::ZNz, StandardSet::QNz)
-            | (StandardSet::ZNz, StandardSet::RNz)
+            | (StandardSet::ZNeg, StandardSet::ZStar)
+            | (StandardSet::ZNeg, StandardSet::QStar)
+            | (StandardSet::ZNeg, StandardSet::RStar)
+            | (StandardSet::ZStar, StandardSet::ZStar)
+            | (StandardSet::ZStar, StandardSet::Z)
+            | (StandardSet::ZStar, StandardSet::Q)
+            | (StandardSet::ZStar, StandardSet::R)
+            | (StandardSet::ZStar, StandardSet::QStar)
+            | (StandardSet::ZStar, StandardSet::RStar)
             | (StandardSet::Z, StandardSet::Z)
             | (StandardSet::Z, StandardSet::Q)
             | (StandardSet::Z, StandardSet::R)
@@ -2679,28 +2680,38 @@ impl Runtime {
             | (StandardSet::QPos, StandardSet::Q)
             | (StandardSet::QPos, StandardSet::R)
             | (StandardSet::QPos, StandardSet::RPos)
-            | (StandardSet::QPos, StandardSet::QNz)
-            | (StandardSet::QPos, StandardSet::RNz)
+            | (StandardSet::QPos, StandardSet::QStar)
+            | (StandardSet::QPos, StandardSet::RStar)
             | (StandardSet::QNeg, StandardSet::QNeg)
             | (StandardSet::QNeg, StandardSet::Q)
             | (StandardSet::QNeg, StandardSet::R)
             | (StandardSet::QNeg, StandardSet::RNeg)
-            | (StandardSet::QNeg, StandardSet::QNz)
-            | (StandardSet::QNeg, StandardSet::RNz)
-            | (StandardSet::QNz, StandardSet::QNz)
-            | (StandardSet::QNz, StandardSet::Q)
-            | (StandardSet::QNz, StandardSet::R)
-            | (StandardSet::QNz, StandardSet::RNz)
+            | (StandardSet::QNeg, StandardSet::QStar)
+            | (StandardSet::QNeg, StandardSet::RStar)
+            | (StandardSet::QStar, StandardSet::QStar)
+            | (StandardSet::QStar, StandardSet::Q)
+            | (StandardSet::QStar, StandardSet::R)
+            | (StandardSet::QStar, StandardSet::RStar)
             | (StandardSet::Q, StandardSet::Q)
             | (StandardSet::Q, StandardSet::R)
             | (StandardSet::RPos, StandardSet::RPos)
             | (StandardSet::RPos, StandardSet::R)
-            | (StandardSet::RPos, StandardSet::RNz)
+            | (StandardSet::RPos, StandardSet::RStar)
             | (StandardSet::RNeg, StandardSet::RNeg)
             | (StandardSet::RNeg, StandardSet::R)
-            | (StandardSet::RNeg, StandardSet::RNz)
-            | (StandardSet::RNz, StandardSet::RNz)
-            | (StandardSet::RNz, StandardSet::R)
+            | (StandardSet::RNeg, StandardSet::RStar)
+            | (StandardSet::RStar, StandardSet::RStar)
+            | (StandardSet::RStar, StandardSet::R)
+            | (StandardSet::NPos, StandardSet::CStar)
+            | (StandardSet::ZNeg, StandardSet::CStar)
+            | (StandardSet::ZStar, StandardSet::CStar)
+            | (StandardSet::QPos, StandardSet::CStar)
+            | (StandardSet::QNeg, StandardSet::CStar)
+            | (StandardSet::QStar, StandardSet::CStar)
+            | (StandardSet::RPos, StandardSet::CStar)
+            | (StandardSet::RNeg, StandardSet::CStar)
+            | (StandardSet::RStar, StandardSet::CStar)
+            | (StandardSet::CStar, StandardSet::CStar)
             | (StandardSet::R, StandardSet::R) => true,
             _ => false,
         }
@@ -2736,10 +2747,10 @@ impl Runtime {
             Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::QStar)
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::N)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
@@ -2753,7 +2764,7 @@ impl Runtime {
         match given_arg {
             Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::N)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
@@ -2768,14 +2779,14 @@ impl Runtime {
             Obj::StandardSet(StandardSet::R)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::RNeg)
-            | Obj::StandardSet(StandardSet::RNz)
+            | Obj::StandardSet(StandardSet::RStar)
             | Obj::StandardSet(StandardSet::Q)
             | Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::QStar)
             | Obj::StandardSet(StandardSet::Z)
             | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::N)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
@@ -3292,47 +3303,61 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_q_nz(
+    fn match_arg_when_left_is_q_star(
         &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::QNz)
+            Obj::StandardSet(StandardSet::QStar)
             | Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_z_nz(
+    fn match_arg_when_left_is_z_star(
         &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::ZNz)
+            Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
             _ => Ok(None),
         }
     }
 
-    fn match_arg_when_left_is_r_nz(
+    fn match_arg_when_left_is_r_star(
         &mut self,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
-            Obj::StandardSet(StandardSet::RNz)
+            Obj::StandardSet(StandardSet::RStar)
             | Obj::StandardSet(StandardSet::RPos)
             | Obj::StandardSet(StandardSet::RNeg)
-            | Obj::StandardSet(StandardSet::QNz)
+            | Obj::StandardSet(StandardSet::QStar)
             | Obj::StandardSet(StandardSet::QPos)
             | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZNz)
+            | Obj::StandardSet(StandardSet::ZStar)
             | Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
+            _ => Ok(None),
+        }
+    }
+
+    fn match_arg_when_left_is_c_star(
+        &mut self,
+        given_arg: &Obj,
+    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
+        match given_arg {
+            Obj::StandardSet(standard_set)
+                if Self::standard_set_is_subset_eq(standard_set, &StandardSet::CStar) =>
+            {
+                self.match_arg_same_type(given_arg)
+            }
             _ => Ok(None),
         }
     }

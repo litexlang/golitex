@@ -88,10 +88,11 @@ impl fmt::Display for ByInducStmt {
             );
         }
 
+        let proof = vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1);
         if self.strong {
             write!(
                 f,
-                "{} {} {} {} {}{}\n{}\n{}",
+                "{} {} {} {} {}{}\n{}",
                 BY,
                 STRONG_INDUC,
                 self.param,
@@ -99,12 +100,11 @@ impl fmt::Display for ByInducStmt {
                 self.induc_from,
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
-                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1),
-            )
+            )?;
         } else {
             write!(
                 f,
-                "{} {} {} {} {}{}\n{}\n{}",
+                "{} {} {} {} {}{}\n{}",
                 BY,
                 INDUC,
                 self.param,
@@ -112,8 +112,11 @@ impl fmt::Display for ByInducStmt {
                 self.induc_from,
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
-                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1),
-            )
+            )?;
         }
+        if !self.proof.is_empty() {
+            write!(f, "\n{}", proof)?;
+        }
+        Ok(())
     }
 }
