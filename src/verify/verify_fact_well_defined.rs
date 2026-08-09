@@ -382,7 +382,7 @@ impl Runtime {
                     checking_rt
                         .verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
                 });
-                let (_, mut checked_side_effects) = checked.map_err(|exec_stmt_error| {
+                let (_, checked_side_effects) = checked.map_err(|exec_stmt_error| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                         None,
                         String::new(),
@@ -392,8 +392,12 @@ impl Runtime {
                     )))
                 })?;
 
-                checked_side_effects.retain_only_well_definedness_certificate_data();
-                certificate.merge_committed_child(checked_side_effects.clone())?;
+                // Keep the complete checked child alive for the rest of this
+                // preflight. Only the certificate exported to the later proof
+                // scope may discard local definitions and assumptions.
+                let mut certificate_side_effects = checked_side_effects.clone();
+                certificate_side_effects.retain_only_well_definedness_certificate_data();
+                certificate.merge_committed_child(certificate_side_effects)?;
                 rt.top_level_env()
                     .merge_committed_child(checked_side_effects)?;
 

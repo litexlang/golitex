@@ -609,12 +609,16 @@ impl Runtime {
             // A positive user prop recursively exposes positive user props in
             // its definition. Example: `Outer(x) := Inner(x)` and
             // `Inner(x) := x >= 0`, so `Outer(x)` infers `x >= 0`.
+            // A positive prop exposes its parameter-type facts as part of its
+            // meaning. The call above stores their instantiated forms before
+            // these clauses. Since the clauses were checked under the matching
+            // formal parameter facts when the prop was declared, typed,
+            // capture-avoiding substitution preserves well-definedness.
             // The active-fact guard and firing cache stop cyclic definitions.
-            let store_result = self
-                .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
-                    fact_to_store,
-                    by_definition_reason.clone(),
-                );
+            let store_result = self.store_without_well_defined_verification_and_infer_with_reason(
+                fact_to_store,
+                by_definition_reason.clone(),
+            );
             store_result.map_err(|previous_error| {
                 RuntimeError::from(InferRuntimeError(RuntimeErrorStruct::new(
                     None,
