@@ -66,6 +66,9 @@ pub enum ArithmeticBuiltinRuleToLeanIR {
 pub enum BuiltinRuleToLeanIR {
     DivNotEqualZero(DivNotEqualZeroToLeanIR),
     Arithmetic(ArithmeticBuiltinRuleToLeanIR),
+    /// Positive-real membership entails strict positivity.
+    /// Example: `a $in R+` proves `0 < a`.
+    PositiveRealMembership,
 }
 
 impl From<&BuiltinRuleEvidence> for BuiltinRuleToLeanIR {
@@ -155,6 +158,7 @@ impl fmt::Debug for BuiltinRuleToLeanIR {
             BuiltinRuleToLeanIR::Arithmetic(rule) => {
                 f.debug_tuple("Arithmetic").field(rule).finish()
             }
+            BuiltinRuleToLeanIR::PositiveRealMembership => f.write_str("PositiveRealMembership"),
         }
     }
 }

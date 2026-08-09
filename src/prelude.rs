@@ -287,6 +287,7 @@ pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
 pub use crate::result::ExecutionPhaseTrace;
 pub use crate::result::ExistFactUnknown;
+pub use crate::result::ExistentialEliminationVerificationResult;
 pub use crate::result::FactResult;
 pub use crate::result::FactStmtResult;
 pub use crate::result::FactUnknown;
@@ -302,6 +303,7 @@ pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::NotForallUnknown;
+pub use crate::result::ObjectChoiceVerificationResult;
 pub use crate::result::ObjectIntroductionItem;
 pub use crate::result::OrFactUnknown;
 pub use crate::result::ProofBlockStmtResult;
@@ -317,6 +319,7 @@ pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
+pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessStmtResult;
 pub use crate::result::{ArithmeticBuiltinRule, BuiltinRuleEvidence};
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
@@ -426,12 +429,16 @@ pub use crate::symbol::{
 };
 pub use crate::to_lean_ir::{
     AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinObjOperatorToLeanIR,
-    BuiltinRuleToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, DivNotEqualZeroToLeanIR,
+    BuiltinRuleToLeanIR, CaseBranchExitToLeanIR, CaseBranchToLeanIR, CollectionObjToLeanIR,
+    ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
     EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
-    FactProofToLeanIR, FactStmtToLeanIR, FactToLeanIR, IffDirectionToLeanIR,
-    KnownForallArgumentToLeanIR, LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR,
-    NormalizationKindToLeanIR, ObjToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR,
-    ProofRuleToLeanIR, PropToLeanIR, StandardSetToLeanIR, StmtToLeanIR, TrustToLeanIR,
+    ExistentialProjectionRoleToLeanIR, ExistentialWitnessToLeanIR, FactProofToLeanIR,
+    FactStmtToLeanIR, FactToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
+    HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LocalPremiseToLeanIR,
+    NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR, ObjToLeanIR,
+    ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR,
+    ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR, StandardSetToLeanIR, StmtToLeanIR,
+    TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

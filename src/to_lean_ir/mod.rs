@@ -26,6 +26,10 @@ pub use obj::{
 pub enum StmtToLeanIR {
     AbstractProp(AbstractPropToLeanIR),
     Prop(PropToLeanIR),
+    HaveObjChoice(HaveObjChoiceToLeanIR),
+    HaveObjEqual(HaveObjEqualToLeanIR),
+    HaveExistentialWitness(HaveExistentialWitnessToLeanIR),
+    Proof(ProofStmtToLeanIR),
     Trust(TrustToLeanIR),
     Fact(FactStmtToLeanIR),
 }
@@ -41,6 +45,67 @@ pub struct PropToLeanIR {
     pub name: String,
     pub params: Vec<ParamGroupToLeanIR>,
     pub iff_facts: Vec<Fact>,
+}
+
+#[derive(Clone, Debug)]
+pub struct HaveObjEqualToLeanIR {
+    pub definitions: Vec<ObjectDefinitionToLeanIR>,
+    pub facts: Vec<FactToLeanIR>,
+}
+
+#[derive(Clone, Debug)]
+pub struct HaveObjChoiceToLeanIR {
+    pub choices: Vec<ObjectChoiceToLeanIR>,
+}
+
+#[derive(Clone, Debug)]
+pub struct HaveExistentialWitnessToLeanIR {
+    /// Checked proof of the exact positive existential being eliminated.
+    pub source: FactToLeanIR,
+    /// Fresh names introduced in existential-parameter order.
+    pub witnesses: Vec<ExistentialWitnessToLeanIR>,
+    /// Exact type and direct-body facts exported to the Litex environment.
+    pub projections: Vec<FactToLeanIR>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ExistentialWitnessToLeanIR {
+    pub symbol_id: crate::symbol::SymbolId,
+    pub name: String,
+    /// Instantiated type after substituting any earlier witnesses.
+    pub param_type: ParamTypeToLeanIR,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExistentialProjectionRoleToLeanIR {
+    ParameterType { witness_index: usize },
+    BodyFact { body_index: usize },
+}
+
+#[derive(Clone, Debug)]
+pub struct ObjectChoiceToLeanIR {
+    pub symbol_id: crate::symbol::SymbolId,
+    pub name: String,
+    pub carrier: ObjToLeanIR,
+    /// Checked proof of `litexIsNonemptySet carrier`; this proposition is the
+    /// target ABI's existential witness package.
+    pub nonempty_proof: FactToLeanIR,
+    /// Exact environment-stored `name ∈ carrier` fact and its stable identity.
+    pub membership: FactToLeanIR,
+}
+
+#[derive(Clone, Debug)]
+pub struct ObjectDefinitionToLeanIR {
+    pub symbol_id: crate::symbol::SymbolId,
+    pub name: String,
+    pub param_type: ParamTypeToLeanIR,
+    pub value: ObjToLeanIR,
+}
+
+#[derive(Clone, Debug)]
+pub struct ProofStmtToLeanIR {
+    pub facts: Vec<FactToLeanIR>,
+    pub inferred_facts: Vec<FactToLeanIR>,
 }
 
 #[derive(Clone, Debug)]
@@ -99,6 +164,13 @@ pub enum FactProofToLeanIR {
     KnownFactCitation {
         source_fact_id: FactId,
     },
+    /// Citation of a positive existential whose binders were alpha-renamed by
+    /// parsing or witness extraction.  Runtime lowering admits this node only
+    /// after the verifier's canonical existential comparison succeeds.
+    ExistentialAlphaRenameCitation {
+        source_fact_id: FactId,
+        source_proposition: Fact,
+    },
     /// A goal derived by applying one explicit proof rule to recursively
     /// checked premise nodes. This is the extensible compiler-facing proof
     /// shape; adding a transport rule does not require another tree variant.
@@ -120,7 +192,42 @@ pub enum FactProofToLeanIR {
         /// these, but the IR retains their Litex identities and provenance.
         parameter_premises: Vec<LocalPremiseToLeanIR>,
         premises: Vec<LocalPremiseToLeanIR>,
+        /// Typed consequences derived while installing parameters and domain
+        /// premises. These must be reconstructed inside the same proof scope.
+        inferred_premises: Vec<FactToLeanIR>,
         conclusions: Vec<FactToLeanIR>,
+    },
+    /// A fact released by `have x T = value`. The declaration itself is a
+    /// sibling statement-IR node. Membership/type facts replay the verifier's
+    /// check for `value`; the defining equality reduces by reflexivity.
+    ObjectDefinition {
+        definition: String,
+        value: ObjToLeanIR,
+        value_check: Option<Box<FactToLeanIR>>,
+    },
+    /// Membership released by a sibling `ObjectChoiceToLeanIR`. The sibling
+    /// carries the nonemptiness proof used by both `Exists.choose` and
+    /// `Exists.choose_spec` during emission.
+    ObjectChoice {
+        definition: String,
+        carrier: ObjToLeanIR,
+    },
+    /// A type or body fact projected by a sibling existential-elimination
+    /// statement.  The copied expected proposition makes malformed IR fail
+    /// before a projection term is emitted.
+    ExistentialElimination {
+        source_proposition: Fact,
+        role: ExistentialProjectionRoleToLeanIR,
+        expected_proposition: Fact,
+    },
+    CaseSplit {
+        coverage: Box<FactToLeanIR>,
+        branches: Vec<CaseBranchToLeanIR>,
+    },
+    ByContradiction {
+        reverse_assumption: LocalPremiseToLeanIR,
+        steps: Vec<StmtToLeanIR>,
+        contradiction: ContradictionToLeanIR,
     },
     Inference {
         source_fact_id: Option<FactId>,
@@ -134,11 +241,31 @@ pub enum FactProofToLeanIR {
     },
 }
 
+#[derive(Clone, Debug)]
+pub struct CaseBranchToLeanIR {
+    pub assumption: LocalPremiseToLeanIR,
+    pub steps: Vec<StmtToLeanIR>,
+    pub exit: CaseBranchExitToLeanIR,
+}
+
+#[derive(Clone, Debug)]
+pub enum CaseBranchExitToLeanIR {
+    Conclusion(FactToLeanIR),
+    Contradiction(ContradictionToLeanIR),
+}
+
+#[derive(Clone, Debug)]
+pub struct ContradictionToLeanIR {
+    pub fact: Box<FactToLeanIR>,
+    pub negated_fact: Box<FactToLeanIR>,
+}
+
 #[derive(Clone)]
 pub enum ProofRuleToLeanIR {
     Builtin(BuiltinRuleToLeanIR),
     ObjectReflexivity,
     ClosedRealMembership,
+    RealSetNonempty,
     EqualityRewrite(EqualityRewriteToLeanIR),
     IffRewrite {
         direction: IffDirectionToLeanIR,
@@ -157,7 +284,16 @@ pub enum ProofRuleToLeanIR {
     AndIntroduction,
     ExistIntroduction {
         witnesses: Vec<Obj>,
+        /// User proof statements executed in the temporary witness scope.
+        /// Body verification may cite their retained FactIds.
+        steps: Vec<StmtToLeanIR>,
+        /// Exact propositions associated with the two generic premise lists.
+        /// Keeping these copies in the rule metadata makes malformed evidence
+        /// fail before Lean source is emitted.
+        expected_parameter_requirements: Vec<Fact>,
+        expected_body_facts: Vec<Fact>,
     },
+    ClassicalExcludedMiddle,
     CaseSplit,
     OtherUnsupported {
         name: String,
@@ -211,6 +347,7 @@ impl fmt::Debug for ProofRuleToLeanIR {
             ProofRuleToLeanIR::Builtin(rule) => f.debug_tuple("Builtin").field(rule).finish(),
             ProofRuleToLeanIR::ObjectReflexivity => f.write_str("ObjectReflexivity"),
             ProofRuleToLeanIR::ClosedRealMembership => f.write_str("ClosedRealMembership"),
+            ProofRuleToLeanIR::RealSetNonempty => f.write_str("RealSetNonempty"),
             ProofRuleToLeanIR::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }
@@ -235,7 +372,12 @@ impl fmt::Debug for ProofRuleToLeanIR {
                 .finish(),
             ProofRuleToLeanIR::ModusPonens => f.write_str("ModusPonens"),
             ProofRuleToLeanIR::AndIntroduction => f.write_str("AndIntroduction"),
-            ProofRuleToLeanIR::ExistIntroduction { witnesses } => f
+            ProofRuleToLeanIR::ExistIntroduction {
+                witnesses,
+                steps,
+                expected_parameter_requirements,
+                expected_body_facts,
+            } => f
                 .debug_struct("ExistIntroduction")
                 .field(
                     "witnesses",
@@ -244,7 +386,23 @@ impl fmt::Debug for ProofRuleToLeanIR {
                         .map(ToString::to_string)
                         .collect::<Vec<_>>(),
                 )
+                .field("steps", steps)
+                .field(
+                    "expected_parameter_requirements",
+                    &expected_parameter_requirements
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                )
+                .field(
+                    "expected_body_facts",
+                    &expected_body_facts
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                )
                 .finish(),
+            ProofRuleToLeanIR::ClassicalExcludedMiddle => f.write_str("ClassicalExcludedMiddle"),
             ProofRuleToLeanIR::CaseSplit => f.write_str("CaseSplit"),
             ProofRuleToLeanIR::OtherUnsupported { name } => f
                 .debug_struct("OtherUnsupported")
@@ -305,6 +463,12 @@ impl ProofRuleToLeanIR {
                     kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
                 }
             }
+            "or: complementary atomic facts" if is_binary_complementary_or(goal) => {
+                ProofRuleToLeanIR::ClassicalExcludedMiddle
+            }
+            "standard_nonempty_set" if is_real_set_nonempty(goal) => {
+                ProofRuleToLeanIR::RealSetNonempty
+            }
             _ if is_closed_real_membership(goal) => ProofRuleToLeanIR::ClosedRealMembership,
             other => ProofRuleToLeanIR::OtherUnsupported {
                 name: other.to_string(),
@@ -313,7 +477,34 @@ impl ProofRuleToLeanIR {
     }
 }
 
-fn is_closed_real_membership(goal: &Fact) -> bool {
+fn is_real_set_nonempty(goal: &Fact) -> bool {
+    matches!(
+        goal,
+        Fact::AtomicFact(crate::fact::AtomicFact::IsNonemptySetFact(fact))
+            if matches!(fact.set, Obj::StandardSet(crate::obj::StandardSet::R))
+    )
+}
+
+fn is_binary_complementary_or(goal: &Fact) -> bool {
+    let Fact::OrFact(or_fact) = goal else {
+        return false;
+    };
+    if or_fact.facts.len() != 2 {
+        return false;
+    }
+    let (
+        crate::fact::AndChainAtomicFact::AtomicFact(first),
+        crate::fact::AndChainAtomicFact::AtomicFact(second),
+    ) = (&or_fact.facts[0], &or_fact.facts[1])
+    else {
+        return false;
+    };
+    first
+        .logical_negation()
+        .is_ok_and(|negated| negated.to_string() == second.to_string())
+}
+
+pub(crate) fn is_closed_real_membership(goal: &Fact) -> bool {
     matches!(
         goal,
         Fact::AtomicFact(crate::fact::AtomicFact::InFact(membership))

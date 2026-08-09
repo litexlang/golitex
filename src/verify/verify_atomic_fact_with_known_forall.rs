@@ -986,12 +986,19 @@ impl Runtime {
             Obj::AnonymousFn(ref left) => {
                 self.match_arg_when_left_is_anonymous_fn_with_params(left, given_arg)
             }
-            Obj::StandardSet(StandardSet::NPos) => self.match_arg_when_left_is_n_pos_obj(given_arg),
-            Obj::StandardSet(StandardSet::N) => self.match_arg_when_left_is_n_obj(given_arg),
-            Obj::StandardSet(StandardSet::Q) => self.match_arg_when_left_is_q_obj(given_arg),
-            Obj::StandardSet(StandardSet::Z) => self.match_arg_when_left_is_z_obj(given_arg),
-            Obj::StandardSet(StandardSet::R) => self.match_arg_when_left_is_r_obj(given_arg),
-            Obj::StandardSet(StandardSet::C) => self.match_arg_when_left_is_c_obj(given_arg),
+            // Standard-set inclusion is semantic, not structural equality.
+            // Generic arguments are invariant: `P(N)` cannot prove `P(N+)`.
+            // Membership-target widening/narrowing belongs exclusively to
+            // `match_in_fact_standard_set_target`, where its direction and
+            // premises are checked explicitly.
+            Obj::StandardSet(known_set) => match given_arg {
+                Obj::StandardSet(given_set)
+                    if std::mem::discriminant(known_set) == std::mem::discriminant(given_set) =>
+                {
+                    Ok(Some(HashMap::new()))
+                }
+                _ => Ok(None),
+            },
             Obj::Cart(ref left) => self.match_arg_when_left_is_cart(&left.args, given_arg),
             Obj::CartDim(ref left) => {
                 self.match_arg_when_left_is_cart_dim(left.set.as_ref(), given_arg)
@@ -1082,15 +1089,6 @@ impl Runtime {
                 left.index.as_ref(),
                 given_arg,
             ),
-            Obj::StandardSet(StandardSet::QPos) => self.match_arg_when_left_is_q_pos(given_arg),
-            Obj::StandardSet(StandardSet::RPos) => self.match_arg_when_left_is_r_pos(given_arg),
-            Obj::StandardSet(StandardSet::QNeg) => self.match_arg_when_left_is_q_neg(given_arg),
-            Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_when_left_is_z_neg(given_arg),
-            Obj::StandardSet(StandardSet::RNeg) => self.match_arg_when_left_is_r_neg(given_arg),
-            Obj::StandardSet(StandardSet::QStar) => self.match_arg_when_left_is_q_star(given_arg),
-            Obj::StandardSet(StandardSet::ZStar) => self.match_arg_when_left_is_z_star(given_arg),
-            Obj::StandardSet(StandardSet::RStar) => self.match_arg_when_left_is_r_star(given_arg),
-            Obj::StandardSet(StandardSet::CStar) => self.match_arg_when_left_is_c_star(given_arg),
             Obj::StructObj(known) => match given_arg {
                 Obj::StructObj(given) => {
                     if known.name.to_string() != given.name.to_string() {
@@ -1492,6 +1490,13 @@ impl Runtime {
                             );
                         }
                     } else if let Obj::Number(left_right_number) = left_right {
+                        // Solving `x * c = target` by `x = target / c`
+                        // requires `c != 0`. Without this guard, the true
+                        // forall fact `P(x * 0)` could match an arbitrary
+                        // target `P(y)` through the ill-defined term `y / 0`.
+                        if left_right_number.normalized_value == "0" {
+                            return Ok(None);
+                        }
                         let new_given =
                             Div::new(given_arg.clone(), left_right_number.clone().into());
                         return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
@@ -1518,6 +1523,13 @@ impl Runtime {
             }
             _ => {
                 if let Obj::Number(left_right_number) = left_right {
+                    // Inverting a division is valid only for a nonzero fixed
+                    // denominator. A verified source expression is already
+                    // well-defined, but keep this algebraic precondition local
+                    // to the matcher as defense in depth.
+                    if left_right_number.normalized_value == "0" {
+                        return Ok(None);
+                    }
                     let new_given = Mul::new(left_right_number.clone().into(), given_arg.clone());
                     return self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
                         left_left,
@@ -2717,96 +2729,6 @@ impl Runtime {
         }
     }
 
-    fn match_arg_when_left_is_n_pos_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_n_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::N) | Obj::StandardSet(StandardSet::NPos) => {
-                self.match_arg_same_type(given_arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_q_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::Q)
-            | Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::QStar)
-            | Obj::StandardSet(StandardSet::Z)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::N)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_z_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::Z)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::N)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_r_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::R)
-            | Obj::StandardSet(StandardSet::RPos)
-            | Obj::StandardSet(StandardSet::RNeg)
-            | Obj::StandardSet(StandardSet::RStar)
-            | Obj::StandardSet(StandardSet::Q)
-            | Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::QStar)
-            | Obj::StandardSet(StandardSet::Z)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::N)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_c_obj(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(standard_set)
-                if Self::standard_set_is_subset_eq(standard_set, &StandardSet::C) =>
-            {
-                self.match_arg_same_type(given_arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
     fn match_arg_when_left_is_cart(
         &mut self,
         left_args: &[Box<Obj>],
@@ -3243,132 +3165,6 @@ impl Runtime {
             ),
             _ => Ok(None),
         }
-    }
-
-    fn match_arg_when_left_is_q_pos(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::QPos) | Obj::StandardSet(StandardSet::NPos) => {
-                self.match_arg_same_type(given_arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_r_pos(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::RPos)
-            | Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_q_neg(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::QNeg) | Obj::StandardSet(StandardSet::ZNeg) => {
-                self.match_arg_same_type(given_arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_z_neg(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_r_neg(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::RNeg)
-            | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZNeg) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_q_star(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::QStar)
-            | Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_z_star(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_r_star(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(StandardSet::RStar)
-            | Obj::StandardSet(StandardSet::RPos)
-            | Obj::StandardSet(StandardSet::RNeg)
-            | Obj::StandardSet(StandardSet::QStar)
-            | Obj::StandardSet(StandardSet::QPos)
-            | Obj::StandardSet(StandardSet::QNeg)
-            | Obj::StandardSet(StandardSet::ZStar)
-            | Obj::StandardSet(StandardSet::ZNeg)
-            | Obj::StandardSet(StandardSet::NPos) => self.match_arg_same_type(given_arg),
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_c_star(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::StandardSet(standard_set)
-                if Self::standard_set_is_subset_eq(standard_set, &StandardSet::CStar) =>
-            {
-                self.match_arg_same_type(given_arg)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_same_type(
-        &mut self,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        let mut map = HashMap::new();
-        map.insert(given_arg.to_string(), given_arg.clone());
-        Ok(Some(map))
     }
 }
 

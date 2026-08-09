@@ -13,6 +13,9 @@ pub struct StoreFactOutput {
     pub fact_id: Option<FactId>,
     pub itself_and_why_itself_is_stored: (Fact, String),
     pub inferred_facts: Vec<Fact>,
+    /// Stable identities assigned to `inferred_facts` in the same order.
+    /// Temporary proof scopes populate these before their environment closes.
+    pub inferred_fact_ids: Vec<Option<FactId>>,
 }
 
 #[derive(Clone, Debug)]
@@ -300,10 +303,12 @@ impl StoreFactOutput {
                 inferred_text != fact_text && seen.insert(inferred_text)
             })
             .collect::<Vec<_>>();
+        let inferred_fact_ids = vec![None; inferred_facts.len()];
         StoreFactOutput {
             fact_id: None,
             itself_and_why_itself_is_stored: (fact, reason),
             inferred_facts,
+            inferred_fact_ids,
         }
     }
 }

@@ -7,10 +7,13 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let witness_stmt = stmt.clone().into();
         self.exec_witness_exist_fact_stmt_verify_well_definedness(stmt)?;
-        let inside_results = self.exec_witness_exist_fact_stmt_verify_process(stmt)?;
+        let (inside_results, verification) =
+            self.exec_witness_exist_fact_stmt_verify_process(stmt)?;
         let infer_result = self.exec_witness_exist_fact_stmt_affect_environment(stmt)?;
 
-        Ok((NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results)).into())
+        let mut success = NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results);
+        success.witness_exist_verification = Some(verification);
+        Ok(success.into())
     }
 
     /// Mathematical contract: an existential witness supplies exactly one
@@ -87,10 +90,48 @@ impl Runtime {
     fn exec_witness_exist_fact_stmt_verify_process(
         &mut self,
         stmt: &WitnessExistFact,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<(Vec<StmtResult>, WitnessExistVerificationResult), RuntimeError> {
         self.run_in_local_env(|rt| {
             let witness_stmt: Stmt = stmt.clone().into();
             let mut inside_results: Vec<StmtResult> = Vec::new();
+
+            // Capture concrete witness-type evidence before existential
+            // parameters and their temporary equalities enter scope.  This
+            // prevents the retained proof from depending on local binder
+            // facts that disappear when this verification environment pops.
+            let instantiated_types = rt.inst_param_def_with_type_one_by_one(
+                stmt.exist_fact_in_witness.params_def_with_type(),
+                &stmt.equal_tos,
+                ParamObjType::Exist,
+            )?;
+            let flat_types = stmt
+                .exist_fact_in_witness
+                .params_def_with_type()
+                .flat_instantiated_types_for_args(&instantiated_types);
+            let mut retained_parameter_checks = Vec::with_capacity(stmt.equal_tos.len());
+            for (witness, param_type) in stmt.equal_tos.iter().zip(flat_types.iter()) {
+                if matches!(param_type, ParamType::Set(_)) {
+                    retained_parameter_checks.push(None);
+                    continue;
+                }
+                let result = rt.verify_obj_satisfies_param_type(
+                    witness.clone(),
+                    param_type,
+                    &UseContextVerifyState::new(0, false),
+                )?;
+                if result.is_unknown() {
+                    return Err(short_exec_error(
+                        witness_stmt.clone(),
+                        format!(
+                            "witness exist fact: target-side parameter requirement for `{}` is not verified",
+                            witness
+                        ),
+                        None,
+                        vec![],
+                    ));
+                }
+                retained_parameter_checks.push(Some(result));
+            }
 
             rt.define_params_with_type(
                 stmt.exist_fact_in_witness.params_def_with_type(),
@@ -144,6 +185,12 @@ impl Runtime {
                 }
             }
 
+            let proof_step_count = inside_results.len();
+            let parameter_checks = retained_parameter_checks
+                .into_iter()
+                .map(|result| result.map(Box::new))
+                .collect();
+
             let param_to_obj_map = stmt
                 .exist_fact_in_witness
                 .params_def_with_type()
@@ -156,6 +203,7 @@ impl Runtime {
             )?;
 
             let verify_state_for_proof_check = UseContextVerifyState::new(0, false);
+            let mut body_check_indices = Vec::with_capacity(instantiated_exist_fact.facts().len());
             for internal_fact_template in instantiated_exist_fact.facts().iter() {
                 let internal_fact = internal_fact_template.clone().to_fact();
                 let verification_result = rt
@@ -174,9 +222,11 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
+                body_check_indices.push(inside_results.len());
                 inside_results.push(verification_result);
             }
 
+            let mut uniqueness_check_index = None;
             if stmt.exist_fact_in_witness.is_exist_unique() {
                 let uniqueness_forall = rt
                     .build_exist_unique_uniqueness_forall_fact(&stmt.exist_fact_in_witness)
@@ -205,10 +255,19 @@ impl Runtime {
                             std::mem::take(&mut inside_results),
                         )
                     })?;
+                uniqueness_check_index = Some(inside_results.len());
                 inside_results.push(uniqueness_result);
             }
 
-            Ok(inside_results)
+            Ok((
+                inside_results,
+                WitnessExistVerificationResult::new(
+                    proof_step_count,
+                    parameter_checks,
+                    body_check_indices,
+                    uniqueness_check_index,
+                ),
+            ))
         })
     }
 

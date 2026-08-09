@@ -1,0 +1,52 @@
+# To-Lean existential-introduction and witness-extraction acceptance tracer.
+#
+# A checked source existential is introduced without trust, then opened both by
+# explicit `obtain` syntax and by the body-style `have x T:` shorthand.
+witness exist source R st {source = 1, source = source} from 1:
+    1 = 1
+    1 = 1
+
+obtain selected from exist source R st {source = 1, source = source}
+selected $in R
+selected = 1
+selected = selected
+
+have shorthand R:
+    shorthand = 1
+    shorthand = shorthand
+shorthand $in R
+shorthand = 1
+shorthand = shorthand
+
+# The same source can be opened inside a proof scope.  Its witness name and
+# projected facts must stay local to the generated Lean proof.
+by contra:
+    ? 2 = 2
+    obtain local_selected from exist source R st {source = 1, source = source}
+    local_selected $in R
+    local_selected = 1
+    local_selected = local_selected
+    impossible 2 != 2
+
+# Multiple witnesses lower to nested `Exists.choose` packages in declaration
+# order; each membership and body fact remains an independently named FactId.
+witness exist left, right R st {left = 1, right = 2} from 1, 2:
+    1 = 1
+    2 = 2
+
+obtain chosen_left, chosen_right from exist left, right R st {left = 1, right = 2}
+chosen_left $in R
+chosen_right $in R
+chosen_left = 1
+chosen_right = 2
+
+# Remaining boundaries for the first extraction tranche: `exist!`,
+# `not exist`, and function preimages require separate contracts.
+#
+# Focused release gates:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_exist_have.lit
+# cargo test --release to_lean_exist_have -- --nocapture
+# LITEX_LEAN=/absolute/path/to/lean cargo test --release generated_to_lean_exist_have_compiles_with_lean_core -- --ignored --nocapture
+# Implementation: src/result/runtime_success.rs, src/execute/exec_witness_stmt.rs,
+# src/execute/exec_have_exist_obj_stmt.rs, src/to_lean_ir,
+# src/runtime/runtime_to_lean_ir.rs, and src/to_lean/to_lean_pipeline.rs

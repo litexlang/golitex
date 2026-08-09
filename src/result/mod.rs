@@ -41,11 +41,12 @@ pub use runtime_success::{
     ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
     ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
-    EqualityTransportEvidence, EqualityTransportStep, FactualStmtSuccess, ForallProofResult,
-    ForallProvedFactResult, KnownForallInstantiationItem, KnownForallInstantiationResult,
-    KnownForallRequirementKind, KnownForallRequirementResult, NonFactualStmtSuccess,
-    ObjectIntroductionItem, TheoremVerificationResult, VerifiedByBuiltinRuleResult,
-    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
+    EqualityTransportEvidence, EqualityTransportStep, ExistentialEliminationVerificationResult,
+    FactualStmtSuccess, ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
+    KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
+    NonFactualStmtSuccess, ObjectChoiceVerificationResult, ObjectIntroductionItem,
+    TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
+    VerifiedBysEnum, VerifiedBysResult, WitnessExistVerificationResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

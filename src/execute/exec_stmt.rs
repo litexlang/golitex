@@ -65,6 +65,11 @@ impl Runtime {
             for inside_result in success.inside_results.iter_mut() {
                 self.attach_known_fact_ids_to_stmt_result(inside_result)?;
             }
+            if let Some(verification) = success.witness_exist_verification.as_mut() {
+                for check in verification.parameter_checks.iter_mut().flatten() {
+                    self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+                }
+            }
         }
         Ok(())
     }
@@ -78,6 +83,29 @@ impl Runtime {
                 self.known_fact_id_for_fact(&output.itself_and_why_itself_is_stored.0)?
             {
                 output.fact_id = Some(fact_id);
+            }
+            if !self.to_lean_mode {
+                continue;
+            }
+            if output.inferred_fact_ids.len() != output.inferred_facts.len() {
+                return Err(RuntimeError::from(UnknownRuntimeError(
+                    RuntimeErrorStruct::new(
+                        None,
+                        "inferred fact identity list does not match inferred facts".to_string(),
+                        output.itself_and_why_itself_is_stored.0.line_file(),
+                        None,
+                        vec![],
+                    ),
+                )));
+            }
+            for (fact, fact_id) in output
+                .inferred_facts
+                .iter()
+                .zip(output.inferred_fact_ids.iter_mut())
+            {
+                if let Some(known_fact_id) = self.known_fact_id_for_fact(fact)? {
+                    *fact_id = Some(known_fact_id);
+                }
             }
         }
         Ok(())

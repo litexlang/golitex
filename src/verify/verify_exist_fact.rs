@@ -1361,7 +1361,7 @@ impl Runtime {
         keys
     }
 
-    fn exist_fact_normalized_body_string(
+    pub(crate) fn exist_fact_normalized_body_string(
         runtime: &Runtime,
         exist_fact: &ExistFactEnum,
     ) -> Result<String, RuntimeError> {

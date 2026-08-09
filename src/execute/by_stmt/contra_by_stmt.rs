@@ -34,70 +34,86 @@ impl Runtime {
         stmt: &ByContraStmt,
     ) -> Result<StmtResult, RuntimeError> {
         let to_prove_fact = stmt.to_prove.clone();
-        let (exec_proof_inside_results, last_error) = self.run_in_local_env(|rt| {
-            let mut inside_results: Vec<StmtResult> = Vec::new();
+        let (exec_proof_inside_results, last_error, reverse_assumption_fact_id) = self
+            .run_in_local_env(|rt| {
+                let mut inside_results: Vec<StmtResult> = Vec::new();
 
-            let negated_to_prove_fact = logical_negation_for_by_contra(&to_prove_fact)?;
-            rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                negated_to_prove_fact,
-            )
-            .map_err(|store_fact_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!(
-                        "by contra: failed to store logical negation of `{}`",
-                        to_prove_fact
-                    ),
-                    Some(store_fact_error),
-                    vec![],
+                let negated_to_prove_fact = logical_negation_for_by_contra(&to_prove_fact)?;
+                rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    negated_to_prove_fact.clone(),
                 )
-            })?;
+                .map_err(|store_fact_error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!(
+                            "by contra: failed to store logical negation of `{}`",
+                            to_prove_fact
+                        ),
+                        Some(store_fact_error),
+                        vec![],
+                    )
+                })?;
+                let reverse_assumption_fact_id = rt
+                    .known_fact_id_for_fact(&negated_to_prove_fact)?
+                    .ok_or_else(|| {
+                        short_exec_error(
+                            stmt.clone().into(),
+                            format!(
+                                "by contra: reverse assumption `{}` has no FactId",
+                                negated_to_prove_fact
+                            ),
+                            None,
+                            vec![],
+                        )
+                    })?;
 
-            let mut last_error: Option<RuntimeError> = None;
-            for proof_stmt in stmt.proof.iter() {
-                let exec_stmt_result = rt.exec_stmt(proof_stmt);
-                match exec_stmt_result {
-                    Ok(result) => inside_results.push(result),
-                    Err(statement_error) => {
-                        last_error = Some(statement_error);
-                        break;
+                let mut last_error: Option<RuntimeError> = None;
+                for proof_stmt in stmt.proof.iter() {
+                    let exec_stmt_result = rt.exec_stmt(proof_stmt);
+                    match exec_stmt_result {
+                        Ok(result) => inside_results.push(result),
+                        Err(statement_error) => {
+                            last_error = Some(statement_error);
+                            break;
+                        }
                     }
                 }
-            }
 
-            if last_error.is_some() {
-                return Ok((inside_results, last_error));
-            }
+                if last_error.is_some() {
+                    return Ok((inside_results, last_error, reverse_assumption_fact_id));
+                }
 
-            let verify_impossible_fact_result = rt
-                .verify_atomic_fact(&stmt.impossible_fact, &UseContextVerifyState::new(0, false))?;
-            if verify_impossible_fact_result.is_unknown() {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    impossible_proof_error_message(&stmt.impossible_fact, None),
-                    None,
-                    inside_results,
-                ));
-            }
+                let verify_impossible_fact_result = rt.verify_atomic_fact(
+                    &stmt.impossible_fact,
+                    &UseContextVerifyState::new(0, false),
+                )?;
+                if verify_impossible_fact_result.is_unknown() {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        impossible_proof_error_message(&stmt.impossible_fact, None),
+                        None,
+                        inside_results,
+                    ));
+                }
 
-            let negated_impossible_fact = stmt.impossible_fact.logical_negation()?;
-            let verify_negated_impossible_fact_result = rt.verify_atomic_fact(
-                &negated_impossible_fact,
-                &UseContextVerifyState::new(0, false),
-            )?;
-            if verify_negated_impossible_fact_result.is_unknown() {
-                return Err(short_exec_error(
-                    stmt.clone().into(),
-                    impossible_proof_error_message(&stmt.impossible_fact, None),
-                    None,
-                    vec![],
-                ));
-            }
-            inside_results.push(verify_impossible_fact_result);
-            inside_results.push(verify_negated_impossible_fact_result);
+                let negated_impossible_fact = stmt.impossible_fact.logical_negation()?;
+                let verify_negated_impossible_fact_result = rt.verify_atomic_fact(
+                    &negated_impossible_fact,
+                    &UseContextVerifyState::new(0, false),
+                )?;
+                if verify_negated_impossible_fact_result.is_unknown() {
+                    return Err(short_exec_error(
+                        stmt.clone().into(),
+                        impossible_proof_error_message(&stmt.impossible_fact, None),
+                        None,
+                        vec![],
+                    ));
+                }
+                inside_results.push(verify_impossible_fact_result);
+                inside_results.push(verify_negated_impossible_fact_result);
 
-            Ok((inside_results, last_error))
-        })?;
+                Ok((inside_results, last_error, reverse_assumption_fact_id))
+            })?;
 
         if let Some(last_error) = last_error {
             return Err(short_exec_error(
@@ -112,6 +128,7 @@ impl Runtime {
         let by_verification = ByContraVerificationResult::new(
             stmt.to_prove.clone(),
             negated_assumption,
+            reverse_assumption_fact_id,
             stmt.proof.len(),
             stmt.impossible_fact.clone(),
         )

@@ -1289,6 +1289,21 @@ impl Runtime {
                     if !candidate_result.is_true() {
                         continue;
                     }
+                    // Strict order implies weak order at the same bound.
+                    // Example: from `0 < c`, prove `0 <= c`.
+                    if target_bound == known_bound && known_strict {
+                        return Ok(Some(StmtResult::from(
+                            FactualStmtSuccess::
+                                new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                                    atomic_fact.clone().into(),
+                                    "less_equal_fact_from_known_strict_order".to_string(),
+                                    BuiltinRuleEvidence::Arithmetic(
+                                        ArithmeticBuiltinRule::LessEqualFromStrictOrder,
+                                    ),
+                                    vec![candidate_result],
+                                ),
+                        )));
+                    }
                     if target_bound <= known_bound {
                         return Ok(Some(StmtResult::from(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

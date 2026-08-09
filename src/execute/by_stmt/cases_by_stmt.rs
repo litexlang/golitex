@@ -98,10 +98,12 @@ impl Runtime {
         let mut inside_results =
             vec![self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?];
         let mut case_result_counts = Vec::new();
+        let mut case_fact_ids = Vec::new();
 
         for case_index in 0..stmt.cases.len() {
-            let mut case_results =
+            let (case_fact_id, mut case_results) =
                 self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            case_fact_ids.push(case_fact_id);
             case_result_counts.push(case_results.len());
             inside_results.append(&mut case_results);
         }
@@ -113,6 +115,7 @@ impl Runtime {
             .collect::<Vec<_>>();
         let by_verification = ByCasesVerificationResult::new(
             stmt.cases.clone(),
+            case_fact_ids,
             stmt.then_facts.clone(),
             proof_step_counts,
             case_result_counts,
@@ -227,8 +230,9 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
+    ) -> Result<(FactId, Vec<StmtResult>), RuntimeError> {
         let case_fact = &stmt.cases[case_index];
+        let case_fact_as_fact: Fact = case_fact.clone().into();
         let case_label = case_fact.to_string();
         let mut inside_results: Vec<StmtResult> = Vec::new();
         let vs = UseContextVerifyState::new(0, false);
@@ -260,6 +264,16 @@ impl Runtime {
                     vec![],
                 )
             })?;
+            let case_fact_id = self
+                .known_fact_id_for_fact(&case_fact_as_fact)?
+                .ok_or_else(|| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!("by cases: case assumption `{}` has no FactId", case_fact),
+                        None,
+                        vec![],
+                    )
+                })?;
 
             for proof_stmt in stmt.proofs[case_index].iter() {
                 let exec_stmt_result = self.exec_stmt(proof_stmt);
@@ -315,7 +329,7 @@ impl Runtime {
                 inside_results.push(exec_fact_result);
             }
 
-            return Ok(inside_results);
+            return Ok((case_fact_id, inside_results));
         }
 
         self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
@@ -324,6 +338,16 @@ impl Runtime {
                     stmt.clone().into(),
                     format!("by cases: failed to assume case `{}`", case_fact),
                     Some(store_fact_error),
+                    vec![],
+                )
+            })?;
+        let case_fact_id = self
+            .known_fact_id_for_fact(&case_fact_as_fact)?
+            .ok_or_else(|| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    format!("by cases: case assumption `{}` has no FactId", case_fact),
+                    None,
                     vec![],
                 )
             })?;
@@ -420,10 +444,10 @@ impl Runtime {
                 .into(),
             );
 
-            return Ok(inside_results);
+            return Ok((case_fact_id, inside_results));
         }
 
         self.exec_by_cases_stmt_prove_then_facts_under_case(stmt, case_index, &mut inside_results)?;
-        Ok(inside_results)
+        Ok((case_fact_id, inside_results))
     }
 }

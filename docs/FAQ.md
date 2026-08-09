@@ -599,10 +599,11 @@ normalizer.
 `cos(x) != 0`, while `cot(x)` requires `sin(x) != 0`; an undefined expression
 fails well-definedness before equality checking. The preview remains symbolic:
 `eval` and Python extraction reject native trigonometric expressions explicitly.
-The current To-Lean experiment accepts only rational equalities, so
-trigonometric expressions are outside its declared subset as well. The preview
-also does not yet include inverse or complex trigonometry, analytic definitions,
-or every common special-angle value.
+The current To-Lean compiler has no checked trigonometric proof backend, so
+trigonometric expressions remain outside its declared subset even though some
+nontrigonometric declarations and scoped proof commands are now supported. The
+preview also does not yet include inverse or complex trigonometry, analytic
+definitions, or every common special-angle value.
 
 ## Does the native `C` scalar system turn every number into a complex value?
 
@@ -625,8 +626,9 @@ with a nonnegative real result.
 The native complex layer is symbolic in this release. Verification supports
 the builtin imaginary unit, coordinates, modulus interface, legal integer
 powers, and finite aggregation, but `eval` and Python extraction do not acquire
-a complex runtime representation. The current To-Lean experiment is limited to
-rational equalities over `R` and therefore does not accept complex expressions.
+a complex runtime representation. The current To-Lean compiler still has no
+checked complex-number proof view or complex-operation backend and therefore
+does not accept complex expressions.
 Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as ordinary
 identifiers must migrate; see
 [Complex Scalar Migration](Complex_Scalar_Migration.md).
@@ -992,6 +994,23 @@ ordinary numeric calculation, and then stores the new fact. This is the core
 reader experience: write the next useful fact, let the checker explain why it
 follows, then continue from the stronger context.
 
+The partial To-Lean compiler preserves the distinction between that explicit
+value and bare `have x R`. The latter is genuine witness selection: its runtime
+result links the checked nonemptiness proof to the stored `x $in R` fact, and
+Lean receives `Exists.choose`/`choose_spec` from that same certificate. It is
+not compiled as an unconstrained opaque value. Selection from meta-level
+`set`, `nonempty_set`, or `finite_set` parameter types remains outside the
+current checked subset until it has a separate inhabited-type contract.
+
+Positive existential introduction and extraction are also in the checked
+subset. A verified `witness exist` becomes a Lean `Exists` proof, while
+`obtain` and body-style `have x T: ...` use ordered `Exists.choose` and the
+matching `choose_spec` projections. Alpha-renamed existential binders are
+accepted only through the verifier's canonical equivalence check. Distinct
+Litex names that sanitize to one Lean binder name are rejected with a rename
+diagnostic, preventing accidental capture. `exist!`, `not exist`, and preimage
+extraction still have separate explicit boundaries.
+
 ## Why does Litex distinguish `true`, `unknown`, and `error`?
 
 The three statuses separate three different situations that are easy to
@@ -1169,6 +1188,12 @@ witness properties are available in the context.
 The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current
 argument.
+
+In the current checked To-Lean slice, that distinction is preserved directly:
+the existential remains a theorem, the named witness is selected from that
+same theorem, and each exposed type or body fact is a projection of its
+`choose_spec`. The compiler does not replace `obtain` with an unconstrained
+constant.
 
 ## How do function ranges and preimages work?
 
