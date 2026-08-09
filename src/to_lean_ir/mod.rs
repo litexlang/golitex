@@ -11,10 +11,15 @@ use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use std::fmt;
 
 mod builtin_rule;
+mod obj;
 
 pub use builtin_rule::{
     ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR, DivNotEqualZeroToLeanIR,
     NonzeroExpressionOrientationToLeanIR,
+};
+pub use obj::{
+    BuiltinObjOperatorToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, ObjToLeanIR,
+    StandardSetToLeanIR,
 };
 
 #[derive(Clone, Debug)]
@@ -46,12 +51,12 @@ pub struct ParamGroupToLeanIR {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParamTypeToLeanIR {
-    Real,
-    Rational,
-    Integer,
-    Natural,
+    /// A binder ranging over the one object carrier with no extra premise.
     LitexSet,
+    /// A binder over `LitexSet` plus an explicit membership proposition.
+    MemberOf(ObjToLeanIR),
     LitexNonemptySet,
+    LitexFiniteSet,
     Unsupported(String),
 }
 
@@ -132,6 +137,8 @@ pub enum FactProofToLeanIR {
 #[derive(Clone)]
 pub enum ProofRuleToLeanIR {
     Builtin(BuiltinRuleToLeanIR),
+    ObjectReflexivity,
+    ClosedRealMembership,
     EqualityRewrite(EqualityRewriteToLeanIR),
     IffRewrite {
         direction: IffDirectionToLeanIR,
@@ -202,6 +209,8 @@ impl fmt::Debug for ProofRuleToLeanIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ProofRuleToLeanIR::Builtin(rule) => f.debug_tuple("Builtin").field(rule).finish(),
+            ProofRuleToLeanIR::ObjectReflexivity => f.write_str("ObjectReflexivity"),
+            ProofRuleToLeanIR::ClosedRealMembership => f.write_str("ClosedRealMembership"),
             ProofRuleToLeanIR::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }
@@ -249,8 +258,8 @@ impl fmt::Debug for ProofRuleToLeanIR {
 pub struct KnownForallArgumentToLeanIR {
     pub param: String,
     pub argument: Obj,
-    /// Lean realizes Litex's parameter-membership requirement by checking that
-    /// this argument inhabits the translated binder type.
+    /// Every supported variant has Lean binder type `LitexSet`; this value
+    /// records any separate membership or set-property requirement.
     pub param_type: ParamTypeToLeanIR,
 }
 
@@ -267,6 +276,16 @@ impl fmt::Debug for KnownForallArgumentToLeanIR {
 impl ProofRuleToLeanIR {
     pub fn from_verified_builtin_label(label: &str, goal: &Fact) -> Self {
         match label {
+            "they are the same" | "known-only equality: they are the same"
+                if matches!(
+                    goal,
+                    Fact::AtomicFact(crate::fact::AtomicFact::EqualFact(equality))
+                        if crate::obj::obj_equality_key(&equality.left)
+                            == crate::obj::obj_equality_key(&equality.right)
+                ) =>
+            {
+                ProofRuleToLeanIR::ObjectReflexivity
+            }
             "calculation and rational expression simplification" => {
                 ProofRuleToLeanIR::Normalization {
                     kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
@@ -286,9 +305,42 @@ impl ProofRuleToLeanIR {
                     kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
                 }
             }
+            _ if is_closed_real_membership(goal) => ProofRuleToLeanIR::ClosedRealMembership,
             other => ProofRuleToLeanIR::OtherUnsupported {
                 name: other.to_string(),
             },
         }
+    }
+}
+
+fn is_closed_real_membership(goal: &Fact) -> bool {
+    matches!(
+        goal,
+        Fact::AtomicFact(crate::fact::AtomicFact::InFact(membership))
+            if matches!(membership.set, Obj::StandardSet(crate::obj::StandardSet::R))
+                && is_closed_rational_obj(&membership.element)
+    )
+}
+
+fn is_closed_rational_obj(obj: &Obj) -> bool {
+    match obj {
+        Obj::Number(_) => true,
+        Obj::Add(value) => {
+            is_closed_rational_obj(value.left.as_ref())
+                && is_closed_rational_obj(value.right.as_ref())
+        }
+        Obj::Sub(value) => {
+            is_closed_rational_obj(value.left.as_ref())
+                && is_closed_rational_obj(value.right.as_ref())
+        }
+        Obj::Mul(value) => {
+            is_closed_rational_obj(value.left.as_ref())
+                && is_closed_rational_obj(value.right.as_ref())
+        }
+        Obj::Div(value) => {
+            is_closed_rational_obj(value.left.as_ref())
+                && is_closed_rational_obj(value.right.as_ref())
+        }
+        _ => false,
     }
 }

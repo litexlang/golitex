@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use super::rational_expression::{lean_name, LeanRationalExpression};
+use super::set_prelude::LITEX_SET_PRELUDE;
 use super::{
     ToLeanCompilationReport, ToLeanCompilationStatus, ToLeanUnsupported, ToLeanUnsupportedPhase,
 };
@@ -250,6 +251,7 @@ struct LeanProofContext {
     // proof-space coordinates.
     proof_fact_names: HashMap<FactId, String>,
     nonzero_names: Vec<String>,
+    real_memberships: Vec<(Obj, String)>,
     local_space_id: Option<usize>,
     next_local_index: usize,
 }
@@ -259,6 +261,7 @@ impl LeanProofContext {
         LeanProofContext {
             proof_fact_names: self.proof_fact_names.clone(),
             nonzero_names: self.nonzero_names.clone(),
+            real_memberships: self.real_memberships.clone(),
             local_space_id: None,
             next_local_index: 0,
         }
@@ -299,15 +302,17 @@ impl LeanEmitter {
             .map(|comment| format!("{}\n\n", comment))
             .unwrap_or_default();
         let body = format!(
-            "{}-- Litex's primitive notion of a set.\nabbrev LitexSet := Type uLitex\n\n-- Every generated proposition has this codomain.\nabbrev LitexFact := Prop\n\n{}",
-            status_comment, self.declarations.join("\n\n")
+            "{}{}\n\n{}",
+            status_comment,
+            LITEX_SET_PRELUDE,
+            self.declarations.join("\n\n")
         );
         match self.namespace {
             Some(namespace) => format!(
-                "import Mathlib\n\nuniverse uLitex\n\nnamespace {}\n\n{}\n\nend {}\n",
+                "import Mathlib\n\nnamespace {}\n\n{}\n\nend {}\n",
                 namespace, body, namespace
             ),
-            None => format!("import Mathlib\n\nuniverse uLitex\n\n{}\n", body),
+            None => format!("import Mathlib\n\n{}\n", body),
         }
     }
 
@@ -429,6 +434,33 @@ impl LeanEmitter {
                 context,
             ),
             FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ObjectReflexivity,
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "object-reflexivity evidence was attached to a non-equality",
+                    ));
+                };
+                if obj_equality_key(&equality.left) != obj_equality_key(&equality.right) {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "object-reflexivity evidence has different left and right objects",
+                    ));
+                }
+                Ok("by\n  rfl".to_string())
+            }
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ClosedRealMembership,
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => Ok(format!(
+                "by\n  norm_num [litexMem, litexR, {}]",
+                LITEX_REAL_VIEW_SIMP
+            )),
+            FactProofToLeanIR::RuleApplication {
                 rule:
                     ProofRuleToLeanIR::KnownForallInstantiation {
                         source_fact_id,
@@ -477,10 +509,16 @@ impl LeanEmitter {
                 format!("To-Lean has no checked backend for proof rule {:?}", rule),
             )),
             FactProofToLeanIR::ForallIntroduction {
-                parameter_premises: _,
+                parameter_premises,
                 premises,
                 conclusions,
-            } => self.lean_forall_introduction(proposition, premises, conclusions, context),
+            } => self.lean_forall_introduction(
+                proposition,
+                parameter_premises,
+                premises,
+                conclusions,
+                context,
+            ),
             FactProofToLeanIR::Memo { proof } => {
                 self.lean_proof_in_current_space(proposition, proof, context)
             }
@@ -639,6 +677,8 @@ impl LeanEmitter {
             lines.extend(local_lines);
             premise_names.push(local_name);
         }
+        let (view_lines, real_equalities) = lean_real_view_lines(context);
+        lines.extend(view_lines);
         let proof = match rule {
             ArithmeticBuiltinRuleToLeanIR::MulNonnegative => {
                 format!("mul_nonneg {} {}", premise_names[0], premise_names[1])
@@ -653,15 +693,33 @@ impl LeanEmitter {
             ArithmeticBuiltinRuleToLeanIR::DivPositive => {
                 format!("div_pos {} {}", premise_names[0], premise_names[1])
             }
-            _ => format!("by\n    linarith only [{}]", premise_names.join(", ")),
+            _ => format!("linarith only [{}]", premise_names.join(", ")),
         };
         let result_name = self.next_proof_fact_name(context);
         lines.push(format!(
-            "  have {} : {} := {}",
+            "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?,
-            proof.replace('\n', "\n  ")
+            lean_fact(proposition)?
         ));
+        let mut rewrite_targets = premise_names.clone();
+        rewrite_targets.push("⊢".to_string());
+        if !real_equalities.is_empty() {
+            lines.push(format!(
+                "    rw [{}] at {}",
+                real_equalities.join(", "),
+                rewrite_targets.join(" ")
+            ));
+        }
+        lines.push(format!(
+            "    simp only [{}] at {}",
+            LITEX_REAL_VIEW_SIMP,
+            rewrite_targets.join(" ")
+        ));
+        if proof.starts_with("linarith") {
+            lines.push(format!("    {}", proof));
+        } else {
+            lines.push(format!("    exact {}", proof));
+        }
         lines.push(format!("  exact {}", result_name));
         Ok(lines.join("\n"))
     }
@@ -755,6 +813,8 @@ impl LeanEmitter {
             lines.extend(local_lines);
             premise_names.push(local_name);
         }
+        let (view_lines, real_equalities) = lean_real_view_lines(context);
+        lines.extend(view_lines);
         let forward_proof = format!("div_ne_zero {} {}", premise_names[0], premise_names[1]);
         let proof = match evidence.orientation {
             NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft => forward_proof,
@@ -764,11 +824,25 @@ impl LeanEmitter {
         };
         let result_name = self.next_proof_fact_name(context);
         lines.push(format!(
-            "  have {} : {} := {}",
+            "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?,
-            proof
+            lean_fact(proposition)?
         ));
+        let mut rewrite_targets = premise_names.clone();
+        rewrite_targets.push("⊢".to_string());
+        if !real_equalities.is_empty() {
+            lines.push(format!(
+                "    rw [{}] at {}",
+                real_equalities.join(", "),
+                rewrite_targets.join(" ")
+            ));
+        }
+        lines.push(format!(
+            "    simp only [{}] at {}",
+            LITEX_REAL_VIEW_SIMP,
+            rewrite_targets.join(" ")
+        ));
+        lines.push(format!("    exact {}", proof));
         lines.push(format!("  exact {}", result_name));
         Ok(lines.join("\n"))
     }
@@ -796,7 +870,8 @@ impl LeanEmitter {
         let source = self.available_fact_name(source_fact_id, proposition, context)?;
         let mut lines = vec!["by".to_string()];
         let mut argument_names = Vec::with_capacity(arguments.len());
-        for (argument, _requirement) in arguments.iter().zip(parameter_requirements.iter()) {
+        let mut parameter_requirement_names = Vec::new();
+        for (argument, requirement) in arguments.iter().zip(parameter_requirements.iter()) {
             let local_name = self.next_proof_arg_name(context);
             let lean_argument = lean_obj(&argument.argument)?;
             let lean_param_type = lean_ir_param_type(&argument.param_type)?;
@@ -809,6 +884,12 @@ impl LeanEmitter {
                 local_name, lean_param_type, lean_argument
             ));
             argument_names.push(local_name);
+            if !matches!(argument.param_type, ParamTypeToLeanIR::LitexSet) {
+                let (requirement_name, requirement_lines) =
+                    self.lean_named_local_fact(requirement, context)?;
+                lines.extend(requirement_lines);
+                parameter_requirement_names.push(requirement_name);
+            }
         }
 
         let mut premise_names = Vec::with_capacity(premises.len());
@@ -821,6 +902,7 @@ impl LeanEmitter {
         let result_name = self.next_proof_fact_name(context);
         let mut terms = vec![source];
         terms.extend(argument_names);
+        terms.extend(parameter_requirement_names);
         terms.extend(premise_names);
         lines.push(format!(
             "  have {} : {} := {}",
@@ -841,12 +923,25 @@ impl LeanEmitter {
         let mut lines = vec!["by".to_string()];
         let (source_name, source_lines) = self.lean_named_local_fact(premise, context)?;
         lines.extend(source_lines);
+        let (view_lines, real_equalities) = lean_real_view_lines(context);
+        lines.extend(view_lines);
         let result_name = self.next_proof_fact_name(context);
         lines.push(format!(
             "  have {} : {} := by",
             result_name,
             lean_fact(proposition)?
         ));
+        if !real_equalities.is_empty() {
+            lines.push(format!(
+                "    rw [{}] at {} ⊢",
+                real_equalities.join(", "),
+                source_name
+            ));
+            lines.push(format!(
+                "    simp only [{}] at {} ⊢",
+                LITEX_REAL_VIEW_SIMP, source_name
+            ));
+        }
         lines.push(format!(
             "    convert {} using 1 <;> {}",
             source_name,
@@ -963,6 +1058,7 @@ impl LeanEmitter {
     fn lean_forall_introduction(
         &mut self,
         proposition: &Fact,
+        parameter_premises: &[LocalPremiseToLeanIR],
         premises: &[LocalPremiseToLeanIR],
         conclusions: &[FactToLeanIR],
         context: &mut LeanProofContext,
@@ -986,6 +1082,30 @@ impl LeanEmitter {
             .iter()
             .flat_map(|group| group.params.iter().map(|binding| lean_name(binding.name())))
             .collect::<Vec<_>>();
+        for premise in parameter_premises.iter() {
+            if matches!(premise.fact, Fact::AtomicFact(AtomicFact::IsSetFact(_))) {
+                context
+                    .proof_fact_names
+                    .insert(premise.fact_id, "(by trivial)".to_string());
+                continue;
+            }
+            let local_name = self.next_proof_fact_name(context);
+            context
+                .proof_fact_names
+                .insert(premise.fact_id, local_name.clone());
+            if let Some(object) = real_membership_object(&premise.fact) {
+                if !context
+                    .real_memberships
+                    .iter()
+                    .any(|(known, _)| obj_equality_key(known) == obj_equality_key(object))
+                {
+                    context
+                        .real_memberships
+                        .push((object.clone(), local_name.clone()));
+                }
+            }
+            intro_names.push(local_name);
+        }
         for premise in premises.iter() {
             let local_name = self.next_proof_fact_name(context);
             context
@@ -1081,17 +1201,10 @@ fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
     if ir.params.is_empty() {
         return format!("opaque {} : LitexFact", name);
     }
-    let type_names = ir
-        .params
-        .iter()
-        .enumerate()
-        .map(|(index, param)| format!("α_{}_{}", lean_name(param), index + 1))
-        .collect::<Vec<_>>();
     format!(
-        "opaque {} {{{} : Sort uLitex}} : {} → LitexFact",
+        "opaque {} : {}LitexFact",
         name,
-        type_names.join(" "),
-        type_names.join(" → ")
+        "LitexSet → ".repeat(ir.params.len())
     )
 }
 
@@ -1140,13 +1253,11 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
 
 fn lean_ir_param_type(param_type: &ParamTypeToLeanIR) -> Result<&'static str, RuntimeError> {
     match param_type {
-        ParamTypeToLeanIR::Real => Ok("ℝ"),
-        ParamTypeToLeanIR::LitexSet => Ok("LitexSet"),
-        ParamTypeToLeanIR::Rational
-        | ParamTypeToLeanIR::Integer
-        | ParamTypeToLeanIR::Natural
+        ParamTypeToLeanIR::LitexSet
+        | ParamTypeToLeanIR::MemberOf(_)
         | ParamTypeToLeanIR::LitexNonemptySet
-        | ParamTypeToLeanIR::Unsupported(_) => Err(to_lean_error(
+        | ParamTypeToLeanIR::LitexFiniteSet => Ok("LitexSet"),
+        ParamTypeToLeanIR::Unsupported(_) => Err(to_lean_error(
             &default_line_file(),
             format!("To-Lean does not support parameter type {:?}", param_type),
         )),
@@ -1197,6 +1308,40 @@ fn lean_atomic_fact(fact: &AtomicFact) -> Result<String, RuntimeError> {
         AtomicFact::LessEqualFact(fact) => lean_binary_fact(&fact.left, "≤", &fact.right),
         AtomicFact::GreaterFact(fact) => lean_binary_fact(&fact.left, ">", &fact.right),
         AtomicFact::GreaterEqualFact(fact) => lean_binary_fact(&fact.left, "≥", &fact.right),
+        AtomicFact::IsSetFact(fact) => Ok(format!("litexIsSet {}", lean_obj(&fact.set)?)),
+        AtomicFact::IsNonemptySetFact(fact) => {
+            Ok(format!("litexIsNonemptySet {}", lean_obj(&fact.set)?))
+        }
+        AtomicFact::IsFiniteSetFact(fact) => {
+            Ok(format!("litexIsFiniteSet {}", lean_obj(&fact.set)?))
+        }
+        AtomicFact::InFact(fact) => Ok(format!(
+            "{} ∈ {}",
+            lean_obj(&fact.element)?,
+            lean_obj(&fact.set)?
+        )),
+        AtomicFact::SubsetFact(fact) => Ok(format!(
+            "litexSubset {} {}",
+            lean_obj(&fact.left)?,
+            lean_obj(&fact.right)?
+        )),
+        AtomicFact::NotIsSetFact(fact) => Ok(format!("¬ litexIsSet {}", lean_obj(&fact.set)?)),
+        AtomicFact::NotIsNonemptySetFact(fact) => {
+            Ok(format!("¬ litexIsNonemptySet {}", lean_obj(&fact.set)?))
+        }
+        AtomicFact::NotIsFiniteSetFact(fact) => {
+            Ok(format!("¬ litexIsFiniteSet {}", lean_obj(&fact.set)?))
+        }
+        AtomicFact::NotInFact(fact) => Ok(format!(
+            "{} ∉ {}",
+            lean_obj(&fact.element)?,
+            lean_obj(&fact.set)?
+        )),
+        AtomicFact::NotSubsetFact(fact) => Ok(format!(
+            "¬ litexSubset {} {}",
+            lean_obj(&fact.left)?,
+            lean_obj(&fact.right)?
+        )),
         other => Err(to_lean_error(
             &other.line_file(),
             format!("To-Lean does not support atomic proposition `{}`", other),
@@ -1228,6 +1373,7 @@ fn lean_binary_fact(left: &Obj, operator: &str, right: &Obj) -> Result<String, R
 
 fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
     let mut binders = Vec::new();
+    let mut parameter_requirements = Vec::new();
     for group in forall.params_def_with_type.groups.iter() {
         let names = group
             .params
@@ -1240,6 +1386,21 @@ fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
             names,
             lean_param_type(&group.param_type)?
         ));
+        for binding in group.params.iter() {
+            let name = lean_name(binding.name());
+            match &group.param_type {
+                ParamType::Set(_) => {}
+                ParamType::NonemptySet(_) => {
+                    parameter_requirements.push(format!("litexIsNonemptySet {}", name));
+                }
+                ParamType::FiniteSet(_) => {
+                    parameter_requirements.push(format!("litexIsFiniteSet {}", name));
+                }
+                ParamType::Obj(set) => {
+                    parameter_requirements.push(format!("{} ∈ {}", name, lean_obj(set)?));
+                }
+            }
+        }
     }
     let conclusions = forall
         .then_facts
@@ -1247,34 +1408,175 @@ fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
         .map(|fact| lean_fact(&fact.clone().to_fact()))
         .collect::<Result<Vec<_>, RuntimeError>>()?;
     let mut body = parenthesized_join(conclusions, " ∧ ");
-    for premise in forall.dom_facts.iter().rev() {
-        body = format!("{} → {}", lean_fact(premise)?, body);
+    let mut requirements = parameter_requirements;
+    requirements.extend(
+        forall
+            .dom_facts
+            .iter()
+            .map(lean_fact)
+            .collect::<Result<Vec<_>, RuntimeError>>()?,
+    );
+    for premise in requirements.iter().rev() {
+        body = format!("{} → {}", premise, body);
     }
     Ok(format!("∀ {}, {}", binders.join(" "), body))
 }
 
 fn lean_param_type(param_type: &ParamType) -> Result<&'static str, RuntimeError> {
     match param_type {
-        ParamType::Obj(Obj::StandardSet(StandardSet::R)) => Ok("ℝ"),
-        ParamType::Set(_) => Ok("LitexSet"),
-        other => Err(to_lean_error(
-            &default_line_file(),
-            format!(
-                "To-Lean does not support quantified parameter type `{}`",
-                other
-            ),
-        )),
+        ParamType::Set(_)
+        | ParamType::NonemptySet(_)
+        | ParamType::FiniteSet(_)
+        | ParamType::Obj(_) => Ok("LitexSet"),
     }
 }
 
 fn lean_obj(obj: &Obj) -> Result<String, RuntimeError> {
+    let ir =
+        ObjToLeanIR::lower(obj).map_err(|message| to_lean_error(&default_line_file(), message))?;
+    lean_obj_ir(&ir)
+}
+
+fn lean_obj_ir(obj: &ObjToLeanIR) -> Result<String, RuntimeError> {
     match obj {
-        Obj::StandardSet(StandardSet::R) => Ok("ℝ".to_string()),
-        Obj::StandardSet(StandardSet::Q) => Ok("ℚ".to_string()),
-        Obj::StandardSet(StandardSet::Z) => Ok("ℤ".to_string()),
-        Obj::StandardSet(StandardSet::N) => Ok("ℕ".to_string()),
-        _ => LeanRationalExpression::from_obj(obj).map(|expression| expression.expression),
+        ObjToLeanIR::Symbol { name, .. } => Ok(lean_name(name)),
+        ObjToLeanIR::Number { normalized_value } => {
+            if normalized_value
+                .chars()
+                .all(|character| character.is_ascii_digit() || character == '.')
+            {
+                Ok(normalized_value.clone())
+            } else {
+                Ok(format!("litexNumber {:?}", normalized_value))
+            }
+        }
+        ObjToLeanIR::Constant(constant) => Ok(match constant {
+            ConstantObjToLeanIR::ImaginaryUnit => "litexI",
+            ConstantObjToLeanIR::EulerNumber => "litexE",
+            ConstantObjToLeanIR::Pi => "litexPi",
+        }
+        .to_string()),
+        ObjToLeanIR::StandardSet(set) => Ok(match set {
+            StandardSetToLeanIR::PositiveNatural => "litexNPos",
+            StandardSetToLeanIR::Natural => "litexN",
+            StandardSetToLeanIR::Rational => "litexQ",
+            StandardSetToLeanIR::Integer => "litexZ",
+            StandardSetToLeanIR::Real => "litexR",
+            StandardSetToLeanIR::Complex => "litexC",
+            StandardSetToLeanIR::PositiveRational => "litexQPos",
+            StandardSetToLeanIR::PositiveReal => "litexRPos",
+            StandardSetToLeanIR::NegativeRational => "litexQNeg",
+            StandardSetToLeanIR::NegativeInteger => "litexZNeg",
+            StandardSetToLeanIR::NegativeReal => "litexRNeg",
+            StandardSetToLeanIR::NonzeroRational => "litexQStar",
+            StandardSetToLeanIR::NonzeroInteger => "litexZStar",
+            StandardSetToLeanIR::NonzeroReal => "litexRStar",
+            StandardSetToLeanIR::NonzeroComplex => "litexCStar",
+        }
+        .to_string()),
+        ObjToLeanIR::BuiltinApp {
+            operator,
+            arguments,
+        } => lean_builtin_obj_application(*operator, arguments),
+        ObjToLeanIR::Collection {
+            constructor: CollectionObjToLeanIR::ListSet,
+            items,
+        } => Ok(format!(
+            "litexListSet [{}]",
+            items
+                .iter()
+                .map(lean_obj_ir)
+                .collect::<Result<Vec<_>, RuntimeError>>()?
+                .join(", ")
+        )),
     }
+}
+
+fn lean_builtin_obj_application(
+    operator: BuiltinObjOperatorToLeanIR,
+    arguments: &[ObjToLeanIR],
+) -> Result<String, RuntimeError> {
+    let rendered = arguments
+        .iter()
+        .map(lean_obj_ir)
+        .collect::<Result<Vec<_>, RuntimeError>>()?;
+    let expected_arity = match operator {
+        BuiltinObjOperatorToLeanIR::Floor
+        | BuiltinObjOperatorToLeanIR::Ceil
+        | BuiltinObjOperatorToLeanIR::Exp
+        | BuiltinObjOperatorToLeanIR::Ln
+        | BuiltinObjOperatorToLeanIR::Sign
+        | BuiltinObjOperatorToLeanIR::Factorial
+        | BuiltinObjOperatorToLeanIR::Abs
+        | BuiltinObjOperatorToLeanIR::Sin
+        | BuiltinObjOperatorToLeanIR::Cos
+        | BuiltinObjOperatorToLeanIR::Tan
+        | BuiltinObjOperatorToLeanIR::Cot
+        | BuiltinObjOperatorToLeanIR::RealPart
+        | BuiltinObjOperatorToLeanIR::ImaginaryPart
+        | BuiltinObjOperatorToLeanIR::ComplexAbs
+        | BuiltinObjOperatorToLeanIR::Sqrt
+        | BuiltinObjOperatorToLeanIR::BigUnion
+        | BuiltinObjOperatorToLeanIR::BigIntersect
+        | BuiltinObjOperatorToLeanIR::PowerSet => 1,
+        _ => 2,
+    };
+    if rendered.len() != expected_arity {
+        return Err(to_lean_error(
+            &default_line_file(),
+            format!(
+                "To-Lean Obj IR operator {:?} expects {} arguments but received {}",
+                operator,
+                expected_arity,
+                rendered.len()
+            ),
+        ));
+    }
+
+    let result = match operator {
+        BuiltinObjOperatorToLeanIR::Add => format!("({} + {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Sub => format!("({} - {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Mul => format!("({} * {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Div => format!("({} / {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Pow => format!("({} ^ {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Mod => named_binary("litexMod", &rendered),
+        BuiltinObjOperatorToLeanIR::Gcd => named_binary("litexGcd", &rendered),
+        BuiltinObjOperatorToLeanIR::Lcm => named_binary("litexLcm", &rendered),
+        BuiltinObjOperatorToLeanIR::Floor => named_unary("litexFloor", &rendered),
+        BuiltinObjOperatorToLeanIR::Ceil => named_unary("litexCeil", &rendered),
+        BuiltinObjOperatorToLeanIR::Min => named_binary("litexMin", &rendered),
+        BuiltinObjOperatorToLeanIR::Max => named_binary("litexMax", &rendered),
+        BuiltinObjOperatorToLeanIR::Exp => named_unary("litexExp", &rendered),
+        BuiltinObjOperatorToLeanIR::Ln => named_unary("litexLn", &rendered),
+        BuiltinObjOperatorToLeanIR::Sign => named_unary("litexSign", &rendered),
+        BuiltinObjOperatorToLeanIR::Factorial => named_unary("litexFactorial", &rendered),
+        BuiltinObjOperatorToLeanIR::Abs => named_unary("litexAbs", &rendered),
+        BuiltinObjOperatorToLeanIR::Sin => named_unary("litexSin", &rendered),
+        BuiltinObjOperatorToLeanIR::Cos => named_unary("litexCos", &rendered),
+        BuiltinObjOperatorToLeanIR::Tan => named_unary("litexTan", &rendered),
+        BuiltinObjOperatorToLeanIR::Cot => named_unary("litexCot", &rendered),
+        BuiltinObjOperatorToLeanIR::RealPart => named_unary("litexRealPart", &rendered),
+        BuiltinObjOperatorToLeanIR::ImaginaryPart => named_unary("litexImaginaryPart", &rendered),
+        BuiltinObjOperatorToLeanIR::ComplexAbs => named_unary("litexComplexAbs", &rendered),
+        BuiltinObjOperatorToLeanIR::Sqrt => named_unary("litexSqrt", &rendered),
+        BuiltinObjOperatorToLeanIR::Log => named_binary("litexLog", &rendered),
+        BuiltinObjOperatorToLeanIR::Union => named_binary("litexUnion", &rendered),
+        BuiltinObjOperatorToLeanIR::Intersect => named_binary("litexIntersect", &rendered),
+        BuiltinObjOperatorToLeanIR::SetMinus => named_binary("litexSetMinus", &rendered),
+        BuiltinObjOperatorToLeanIR::SetDiff => named_binary("litexSetDiff", &rendered),
+        BuiltinObjOperatorToLeanIR::BigUnion => named_unary("litexBigUnion", &rendered),
+        BuiltinObjOperatorToLeanIR::BigIntersect => named_unary("litexBigIntersect", &rendered),
+        BuiltinObjOperatorToLeanIR::PowerSet => named_unary("litexPowerSet", &rendered),
+    };
+    Ok(result)
+}
+
+fn named_unary(name: &str, arguments: &[String]) -> String {
+    format!("{} {}", name, arguments[0])
+}
+
+fn named_binary(name: &str, arguments: &[String]) -> String {
+    format!("{} {} {}", name, arguments[0], arguments[1])
 }
 
 fn lean_rational_builtin_proof(
@@ -1292,18 +1594,32 @@ fn lean_rational_builtin_proof(
     let closed_numeric =
         closed_rational_expression(&equality.left) && closed_rational_expression(&equality.right);
     let tactic = rational_tactic(&left, &right, closed_numeric, &context.nonzero_names);
-    Ok(format!(
-        "by\n  -- left recursive fraction: {}\n  -- right recursive fraction: {}\n  calc\n    {} = {} := by\n      {}\n    _ = {} := by\n      {}\n    _ = {} := by\n      {}",
-        left.fraction(),
-        right.fraction(),
-        left.expression,
-        left.fraction_expression(),
-        tactic,
-        right.fraction_expression(),
-        tactic,
-        right.expression,
-        tactic
-    ))
+    let mut lines = vec![
+        "by".to_string(),
+        format!("  -- native proof view, left fraction: {}", left.fraction()),
+        format!(
+            "  -- native proof view, right fraction: {}",
+            right.fraction()
+        ),
+    ];
+    let (view_lines, real_equalities) = lean_real_view_lines(context);
+    lines.extend(view_lines);
+    let mut rewrite_targets = context.nonzero_names.clone();
+    rewrite_targets.push("⊢".to_string());
+    if !real_equalities.is_empty() {
+        lines.push(format!(
+            "  rw [{}] at {}",
+            real_equalities.join(", "),
+            rewrite_targets.join(" ")
+        ));
+    }
+    lines.push(format!(
+        "  simp only [{}] at {}",
+        LITEX_REAL_VIEW_SIMP,
+        rewrite_targets.join(" ")
+    ));
+    lines.push(format!("  {}", tactic.replace('\n', "\n  ")));
+    Ok(lines.join("\n"))
 }
 
 fn rational_tactic(
@@ -1383,7 +1699,7 @@ fn rational_fact_normalization_tactic(
         return Ok("rfl".to_string());
     }
     if all_closed {
-        return Ok("norm_num".to_string());
+        return Ok(format!("norm_num [{}]", LITEX_REAL_VIEW_SIMP));
     }
     if !has_denominator {
         return Ok("ring".to_string());
@@ -1421,6 +1737,30 @@ fn lean_proof_arg_name(local_space_id: usize, local_index: usize) -> String {
 fn is_nonzero_fact(fact: &Fact) -> bool {
     matches!(fact, Fact::AtomicFact(AtomicFact::NotEqualFact(_)))
 }
+
+fn real_membership_object(fact: &Fact) -> Option<&Obj> {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = fact else {
+        return None;
+    };
+    matches!(membership.set, Obj::StandardSet(StandardSet::R)).then_some(&membership.element)
+}
+
+fn lean_real_view_lines(context: &LeanProofContext) -> (Vec<String>, Vec<String>) {
+    let mut lines = Vec::with_capacity(context.real_memberships.len());
+    let mut equalities = Vec::with_capacity(context.real_memberships.len());
+    for (index, (_, membership_name)) in context.real_memberships.iter().enumerate() {
+        let witness = format!("litex_real_value_{}", index + 1);
+        let equality = format!("litex_real_eq_{}", index + 1);
+        lines.push(format!(
+            "  obtain ⟨{}, {}⟩ := litexMemRealElim {}",
+            witness, equality, membership_name
+        ));
+        equalities.push(equality);
+    }
+    (lines, equalities)
+}
+
+const LITEX_REAL_VIEW_SIMP: &str = "litexOfNatInstance, litexOfNat, litexAdd, litexSub, litexMul, litexDiv, litexNeg, litexLT, litexLE, LitexSet.realValue.injEq";
 
 fn parenthesized_join(items: Vec<String>, separator: &str) -> String {
     if items.len() == 1 {
@@ -1619,7 +1959,7 @@ mod tests {
             assert!(registered.contains("\nnamespace A.chap2\n\n"));
             assert!(registered.ends_with("\nend A.chap2\n"));
             assert!(!registered.contains("namespace chapter02"));
-            assert!(registered.contains("def is_one (x : ℝ) : LitexFact :="));
+            assert!(registered.contains("def is_one (x : LitexSet) : LitexFact :="));
             assert!(registered.contains("simp [is_one]"));
 
             let anonymous =
@@ -1673,24 +2013,22 @@ forall x R:
                 runtime.new_file_path_new_env_new_name_scope("to-lean-ir-mvp.lit");
                 let output = to_lean(source, &mut runtime).unwrap();
 
-                assert!(output.starts_with(
-                    "import Mathlib\n\nuniverse uLitex\n\nnamespace to_lean_ir_mvp\n\n"
-                ));
-                assert!(output.contains("abbrev LitexSet := Type uLitex"));
+                assert!(output.starts_with("import Mathlib\n\nnamespace to_lean_ir_mvp\n\n"));
+                assert!(output.contains("inductive LitexSet where"));
                 assert!(output.contains("abbrev LitexFact := Prop"));
                 assert!(
-                    output.find("abbrev LitexSet").unwrap()
+                    output.find("inductive LitexSet").unwrap()
                         < output.find("abbrev LitexFact").unwrap()
                 );
-                assert!(output.contains("opaque marked {α_x_1 : Sort uLitex} : α_x_1 → LitexFact"));
+                assert!(output.contains("opaque marked : LitexSet → LitexFact"));
                 assert!(!output.contains("namespace LitexGenerated"));
                 assert!(!output.contains("end LitexGenerated"));
                 assert!(!output.lines().any(|line| line == "universe u"));
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
-                assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
+                assert!(output.contains("def is_one (x : LitexSet) : LitexFact :="));
                 assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
                 assert!(output.contains(":= global_fact_"));
-                assert!(output.contains(" (1 : ℝ)"));
+                assert!(output.contains("is_one 1"));
                 assert!(output.contains("simp [is_one]"));
                 assert!(output.contains("let proof_arg_"));
                 assert!(output.contains("intro a b x proof_fact_"));
@@ -2074,8 +2412,9 @@ forall a, b, z R:
             let output = to_lean_from_source("1 / 2 / 3 / 4 = 1 / 24", "closed-ir").unwrap();
 
             assert!(output.contains("theorem global_fact_1"));
-            assert!(output
-                .contains("-- left recursive fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))"));
+            assert!(output.contains(
+                "-- native proof view, left fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))"
+            ));
             assert!(output.contains("norm_num"));
             assert!(!output.contains("sorry"));
         });
@@ -2090,8 +2429,8 @@ forall a, b, z R:
             )
             .unwrap();
 
-            assert!(output.contains("intro x proof_fact_1_1"));
-            assert!(output.contains("exact proof_fact_1_1"));
+            assert!(output.contains("intro x proof_fact_1_1 proof_fact_1_2"));
+            assert!(output.contains("exact proof_fact_1_2"));
             assert!(!output.contains("axiom"));
             assert!(!output.contains("sorry"));
         });
@@ -2119,10 +2458,10 @@ forall y R:
                 let output = to_lean_from_source(source, "local-proof-spaces").unwrap();
 
                 assert_eq!(output.matches("\ntheorem global_fact_").count(), 2);
-                assert!(output.contains("intro x proof_fact_1_1"));
-                assert!(output.contains("exact proof_fact_1_1"));
-                assert!(output.contains("intro y proof_fact_2_1"));
-                assert!(output.contains("exact proof_fact_2_1"));
+                assert!(output.contains("intro x proof_fact_1_1 proof_fact_1_2"));
+                assert!(output.contains("exact proof_fact_1_2"));
+                assert!(output.contains("intro y proof_fact_2_1 proof_fact_2_2"));
+                assert!(output.contains("exact proof_fact_2_2"));
             },
         );
     }
@@ -2475,18 +2814,31 @@ forall x R:
 "#;
                 let output = to_lean_from_source(source, "temporary-domain-evidence").unwrap();
 
-                assert!(output.contains("intro x proof_fact_1_1"), "{output}");
                 assert!(
-                    output.contains("-- Litex parameter requirement for `x`: x : ℝ"),
+                    output.contains("intro x proof_fact_1_1 proof_fact_1_2 proof_fact_1_3"),
                     "{output}"
                 );
-                assert!(output.contains("let proof_arg_1_3 : ℝ := x"), "{output}");
                 assert!(
-                    output.contains("have proof_fact_1_4 : x ≠ (0 : ℝ) := proof_fact_1_1"),
+                    output.contains("-- Litex parameter requirement for `x`: x : LitexSet"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("let proof_arg_1_4 : LitexSet := x"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("have proof_fact_1_5 : x ∈ litexR := proof_fact_1_1"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("have proof_fact_1_6 : x ≠ 0 := proof_fact_1_2"),
                     "{output}"
                 );
                 assert!(output.contains(":= global_fact_"), "{output}");
-                assert!(output.contains(" proof_arg_1_3 proof_fact_1_4"), "{output}");
+                assert!(
+                    output.contains(" proof_arg_1_4 proof_fact_1_5 proof_fact_1_6"),
+                    "{output}"
+                );
                 assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
                 assert!(!output.contains("sorry"));
             },
@@ -2550,26 +2902,33 @@ $marked2(1, 2)
                 };
                 assert_eq!(arguments.len(), 1);
                 assert_eq!(arguments[0].param, "x");
-                assert!(matches!(arguments[0].param_type, ParamTypeToLeanIR::Real));
+                assert!(matches!(
+                    arguments[0].param_type,
+                    ParamTypeToLeanIR::MemberOf(ObjToLeanIR::StandardSet(
+                        StandardSetToLeanIR::Real
+                    ))
+                ));
                 assert_eq!(parameter_requirements.len(), 1);
                 assert!(domain_requirements.is_empty());
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
                 assert!(
-                    output.contains(
-                        "-- Litex parameter requirement for `x`: ((2 : ℝ) - (1 : ℝ)) : ℝ"
-                    ),
+                    output.contains("-- Litex parameter requirement for `x`: (2 - 1) : LitexSet"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("let proof_arg_2_1 : ℝ := ((2 : ℝ) - (1 : ℝ))"),
+                    output.contains("let proof_arg_2_1 : LitexSet := (2 - 1)"),
                     "{output}"
                 );
-                assert!(output.contains("have proof_fact_2_2 : marked2"), "{output}");
+                assert!(
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ litexR := by"),
+                    "{output}"
+                );
+                assert!(output.contains("have proof_fact_2_3 : marked2"), "{output}");
                 assert!(output.contains(":= global_fact_"), "{output}");
                 assert!(output.contains(" proof_arg_2_1"), "{output}");
                 assert!(
-                    output.contains("convert proof_fact_1_1 using 1 <;> norm_num"),
+                    output.contains("convert proof_fact_1_1 using 1 <;> norm_num ["),
                     "{output}"
                 );
                 assert!(output.contains("exact proof_fact_1_2"), "{output}");
@@ -2598,6 +2957,53 @@ $marked2(1, 2)
                     .trace_message();
                 assert!(error.contains("before that fact has a Lean declaration"));
                 assert!(!runtime.to_lean_mode());
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_set_obj_abi_uses_one_carrier_and_structural_set_operations() {
+        run_with_large_stack(
+            "to_lean_set_obj_abi_uses_one_carrier_and_structural_set_operations",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_set_obj_abi.lit");
+                let source = fs::read_to_string(path).unwrap();
+                let output = to_lean_from_source(&source, "set-obj-abi").unwrap();
+
+                assert!(output.contains("inductive LitexSet where"));
+                assert!(output.contains("def litexUnion := litexBinary \"union\""));
+                assert!(output.contains("litexUnion A B = litexUnion A B"));
+                assert!(output.contains("litexIntersect A B = litexIntersect A B"));
+                assert!(output.contains("litexSetMinus A B = litexSetMinus A B"));
+                assert_eq!(output.matches("intro A B\n  rfl").count(), 3);
+                assert!(!output.contains("LitexObj"));
+                assert!(!output.contains("Type uLitex"));
+                assert!(!output.contains("(A B : ℝ)"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_set_builder_fails_during_obj_ir_construction() {
+        run_with_large_stack(
+            "to_lean_set_builder_fails_during_obj_ir_construction",
+            || {
+                let source = "{x R: x = x} = {x R: x = x}";
+                let report =
+                    to_lean_from_source_with_report(source, "set-builder-boundary").unwrap();
+
+                assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                assert_eq!(report.unsupported.len(), 1);
+                assert_eq!(
+                    report.unsupported[0].phase,
+                    ToLeanUnsupportedPhase::IrConstruction
+                );
+                assert!(report.unsupported[0].reason.contains("SetBuilder"));
+                assert!(!report.lean_code.contains("theorem global_fact_"));
+                assert!(!report.lean_code.contains("axiom global_fact_"));
+                assert!(!report.lean_code.contains("sorry"));
             },
         );
     }
@@ -2697,8 +3103,40 @@ $marked(1)
                 .trace_message();
 
             assert!(error.contains("no checked backend"));
-            assert!(error.contains("not_equal_numeric"));
+            assert!(!error.contains("sorry"));
         });
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
+    fn generated_to_lean_set_obj_abi_compiles_with_lean_core() {
+        run_with_large_stack(
+            "generated_to_lean_set_obj_abi_compiles_with_lean_core",
+            || {
+                let lean =
+                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_set_obj_abi.lit");
+                let source = fs::read_to_string(path).unwrap();
+                let generated = to_lean_from_source(&source, "set-obj-abi-kernel").unwrap();
+                let generated = generated
+                    .replacen("import Mathlib", "import Init", 1)
+                    .replace("ℝ", "Rat");
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_set_obj_abi");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lean).arg(&lean_file).output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "set-Obj generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
     }
 
     #[test]

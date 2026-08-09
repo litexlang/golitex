@@ -1,0 +1,164 @@
+/// Lean declarations shared by every generated source.
+///
+/// `LitexSet` is the sole carrier of Litex object values. Standard sets,
+/// numerals, scalar operations, and set operations are values or operations on
+/// that carrier; facts remain propositions.
+pub(super) const LITEX_SET_PRELUDE: &str = r#"noncomputable section
+
+inductive LitexStandardSet where
+  | nPos | natural | rational | integer | real | complex
+  | qPos | rPos | qNeg | zNeg | rNeg | qStar | zStar | rStar | cStar
+
+-- Every Litex object is a set-value in this one carrier. Native values occur
+-- only as payloads behind checked proof views; the canonical object remains a
+-- `LitexSet` in every generated declaration.
+inductive LitexSet where
+  | realValue (value : ℝ)
+  | standard (kind : LitexStandardSet)
+  | primitive (tag : String)
+  | application (operator : String) (arguments : List LitexSet)
+deriving Nonempty
+
+abbrev LitexFact := Prop
+
+def litexNumber (value : String) : LitexSet := .primitive ("number:" ++ value)
+def litexOfNat (value : Nat) : LitexSet := .realValue value
+def litexOfScientific (mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) : LitexSet :=
+  .realValue (OfScientific.ofScientific mantissa exponentSign decimalExponent)
+
+instance litexOfNatInstance (n : Nat) : OfNat LitexSet n where
+  ofNat := litexOfNat n
+
+instance litexOfScientificInstance : OfScientific LitexSet where
+  ofScientific := litexOfScientific
+
+def litexAdd : LitexSet → LitexSet → LitexSet
+  | .realValue left, .realValue right => .realValue (left + right)
+  | left, right => .application "add" [left, right]
+
+def litexSub : LitexSet → LitexSet → LitexSet
+  | .realValue left, .realValue right => .realValue (left - right)
+  | left, right => .application "sub" [left, right]
+
+def litexMul : LitexSet → LitexSet → LitexSet
+  | .realValue left, .realValue right => .realValue (left * right)
+  | left, right => .application "mul" [left, right]
+
+def litexDiv : LitexSet → LitexSet → LitexSet
+  | .realValue left, .realValue right => .realValue (left / right)
+  | left, right => .application "div" [left, right]
+
+def litexPow (base exponent : LitexSet) : LitexSet := .application "pow" [base, exponent]
+
+def litexNeg : LitexSet → LitexSet
+  | .realValue value => .realValue (-value)
+  | value => .application "neg" [value]
+
+def litexLT : LitexSet → LitexSet → Prop
+  | .realValue left, .realValue right => left < right
+  | _, _ => False
+
+def litexLE : LitexSet → LitexSet → Prop
+  | .realValue left, .realValue right => left ≤ right
+  | _, _ => False
+
+opaque litexPrimitiveMem : LitexSet → LitexSet → Prop
+opaque litexNaturalValue : ℝ → Prop
+opaque litexIntegerValue : ℝ → Prop
+opaque litexRationalValue : ℝ → Prop
+
+def litexMem : LitexSet → LitexSet → Prop
+  | .realValue _, .standard .real => True
+  | .realValue _, .standard .complex => True
+  | .realValue value, .standard .rational => litexRationalValue value
+  | .realValue value, .standard .integer => litexIntegerValue value
+  | .realValue value, .standard .natural => litexNaturalValue value
+  | _, .standard .real => False
+  | _, .standard .rational => False
+  | _, .standard .integer => False
+  | _, .standard .natural => False
+  | element, set => litexPrimitiveMem element set
+
+def litexIsSet (_ : LitexSet) : Prop := True
+opaque litexIsNonemptySet : LitexSet → Prop
+opaque litexIsFiniteSet : LitexSet → Prop
+opaque litexSubset : LitexSet → LitexSet → Prop
+
+instance : Add LitexSet where add := litexAdd
+instance : Sub LitexSet where sub := litexSub
+instance : Mul LitexSet where mul := litexMul
+instance : Div LitexSet where div := litexDiv
+instance : HPow LitexSet LitexSet LitexSet where hPow := litexPow
+instance : Neg LitexSet where neg := litexNeg
+instance : LT LitexSet where lt := litexLT
+instance : LE LitexSet where le := litexLE
+instance litexMembershipInstance : Membership LitexSet LitexSet where
+  mem := fun set element => litexMem element set
+
+theorem litexMembershipIff (element set : LitexSet) :
+    element ∈ set ↔ litexMem element set := by
+  rfl
+
+def litexNPos : LitexSet := .standard .nPos
+def litexN : LitexSet := .standard .natural
+def litexQ : LitexSet := .standard .rational
+def litexZ : LitexSet := .standard .integer
+def litexR : LitexSet := .standard .real
+def litexC : LitexSet := .standard .complex
+def litexQPos : LitexSet := .standard .qPos
+def litexRPos : LitexSet := .standard .rPos
+def litexQNeg : LitexSet := .standard .qNeg
+def litexZNeg : LitexSet := .standard .zNeg
+def litexRNeg : LitexSet := .standard .rNeg
+def litexQStar : LitexSet := .standard .qStar
+def litexZStar : LitexSet := .standard .zStar
+def litexRStar : LitexSet := .standard .rStar
+def litexCStar : LitexSet := .standard .cStar
+
+theorem litexMemRealElim {value : LitexSet} (membership : value ∈ litexR) :
+    ∃ realValue : ℝ, value = .realValue realValue := by
+  rw [litexMembershipIff] at membership
+  cases value with
+  | realValue value => exact ⟨value, rfl⟩
+  | standard kind => simp [litexR, litexMem] at membership
+  | primitive tag => simp [litexR, litexMem] at membership
+  | application operator arguments => simp [litexR, litexMem] at membership
+
+def litexI : LitexSet := .primitive "i"
+def litexE : LitexSet := .primitive "e"
+def litexPi : LitexSet := .primitive "pi"
+
+def litexUnary (name : String) (value : LitexSet) : LitexSet := .application name [value]
+def litexBinary (name : String) (left right : LitexSet) : LitexSet :=
+  .application name [left, right]
+
+def litexMod := litexBinary "mod"
+def litexGcd := litexBinary "gcd"
+def litexLcm := litexBinary "lcm"
+def litexFloor := litexUnary "floor"
+def litexCeil := litexUnary "ceil"
+def litexMin := litexBinary "min"
+def litexMax := litexBinary "max"
+def litexExp := litexUnary "exp"
+def litexLn := litexUnary "ln"
+def litexSign := litexUnary "sign"
+def litexFactorial := litexUnary "factorial"
+def litexAbs := litexUnary "abs"
+def litexSin := litexUnary "sin"
+def litexCos := litexUnary "cos"
+def litexTan := litexUnary "tan"
+def litexCot := litexUnary "cot"
+def litexRealPart := litexUnary "realPart"
+def litexImaginaryPart := litexUnary "imaginaryPart"
+def litexComplexAbs := litexUnary "complexAbs"
+def litexSqrt := litexUnary "sqrt"
+def litexLog := litexBinary "log"
+
+def litexUnion := litexBinary "union"
+def litexIntersect := litexBinary "intersect"
+def litexSetMinus := litexBinary "setMinus"
+def litexSetDiff := litexBinary "setDiff"
+def litexBigUnion := litexUnary "bigUnion"
+def litexBigIntersect := litexUnary "bigIntersect"
+def litexPowerSet := litexUnary "powerSet"
+def litexListSet (items : List LitexSet) : LitexSet := .application "listSet" items"#;

@@ -2,6 +2,7 @@
 
 mod compilation_report;
 mod rational_expression;
+mod set_prelude;
 mod to_lean_pipeline;
 
 pub use compilation_report::{

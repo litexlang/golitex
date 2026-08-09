@@ -176,9 +176,9 @@ adds more proof-rule backends. Litex has one `Obj` syntax. `N`, `Z`, `Q`, `R`,
 and `C` are standard-set objects, and a declaration such as `z Z` contributes
 the fact `z $in Z`; it does not change `z` into a different kind of object.
 
-The current `LeanRationalExpression` implementation assigns real annotations
-to numbers as an MVP implementation detail. It is not the permanent object
-ABI.
+The former real-only emitter assigned native real annotations while proving
+some arithmetic facts. That representation is not the object ABI: native
+numeric values now occur only behind a checked proof view.
 
 ### Uniform object rendering
 
@@ -207,16 +207,14 @@ changing the object that those facts mention.
 
 ### Object universe and membership
 
-The Lean target needs one representation type for a Litex object and one type
-for Litex sets. Their exact implementation remains a backend design choice,
-but their interface is fixed at this level:
+The Lean target has one carrier because every Litex object is a set. `LitexObj`
+is not a second semantic type; if that historical name appears in Rust, it is
+only an alias for the same carrier. The fixed target interface is:
 
 ```text
-LitexObj
-LitexSet
-
+LitexSet : Type
 litexN, litexZ, litexQ, litexR, litexC : LitexSet
-membership : LitexObj -> LitexSet -> Prop
+membership : LitexSet -> LitexSet -> Prop
 ```
 
 Thus the semantic shape of the tracer is:
@@ -227,16 +225,25 @@ forall z Z:
 
 ->
 
-forall z LitexObj:
+forall z LitexSet:
     z $in litexZ
     =>:
         z / 2 $in litexQ
 ```
 
-The target binder's single `LitexObj` annotation is global compiler
-scaffolding; it is not a temporary claim that `z` is a Lean integer, rational,
-or real. Every occurrence in the translated object remains the bare symbol
-`z`.
+The target binder's single `LitexSet` annotation is global compiler scaffolding;
+it is not a temporary claim that `z` is a Lean integer, rational, or real.
+Every occurrence in the translated object remains the bare symbol `z`.
+
+`LitexSet : Type` is the meta-level carrier of set-values. It is not a Litex
+universal-set object, and the target must not define it recursively as
+`Set LitexSet`. Facts remain `Prop`. Function objects are `LitexSet` graph
+objects too; a later application primitive may expose a local native function
+view for proofs, but a native Lean function is not their canonical value.
+
+A source binder `A set` therefore becomes only `(A : LitexSet)`. A source
+binder `z Z` becomes `(z : LitexSet)` followed by the proposition
+`z ∈ litexZ`. The membership is proof data, not a different binder type.
 
 Standard-set inclusion is likewise preserved as mathematics about objects:
 
@@ -251,7 +258,7 @@ predicates. They are not Lean subtypes attached to each symbol.
 
 A `Number` node lowers to its normalized spelling and nothing else. For
 example, the object in `1 $in R` is emitted as `1`, and the containing
-membership proposition supplies the `LitexObj` expectation:
+membership proposition supplies the `LitexSet` expectation:
 
 ```text
 1 $in litexR
@@ -259,9 +266,10 @@ membership proposition supplies the `LitexObj` expectation:
 
 It is not emitted as `(1 : ℝ)`. Likewise, `q + 1` keeps the bare literal `1`.
 Closed equality and order facts must use monomorphic Litex fact interfaces, or
-another enclosing `LitexObj` expectation, so Lean never needs to default an
-otherwise unconstrained numeral to `Nat`. That constraint belongs to fact
-lowering, not to `Obj` lowering.
+another enclosing `LitexSet` expectation, so Lean never needs to default an
+otherwise unconstrained numeral to `Nat`. That constraint belongs to the
+monomorphic `LitexSet` operations and fact lowering, not to local carrier
+inference in `Obj` lowering.
 
 This separation is important because a Litex numeral may have many true
 memberships. Prematurely assigning `1` to `Z`, `Q`, or `R` would manufacture
@@ -270,7 +278,7 @@ operator, such as integer division.
 
 ### Operators stay attached to the object universe
 
-Each Litex operator has one target operation on `LitexObj`. The verifier's
+Each Litex operator has one target operation on `LitexSet`. The verifier's
 well-definedness and membership evidence controls where that operation may be
 used and what standard set contains its result; the object emitter does not
 select a different operator implementation from an inferred carrier.
@@ -282,7 +290,7 @@ Consequently:
 - `n - 1` remains `n - 1`; proving it belongs to `N` still requires the
   Litex lower-bound evidence. It must not acquire Lean `Nat.sub` semantics.
 - `%`, powers, rounding, real order, and complex operations keep one canonical
-  object term. Their domain-specific meaning belongs to the `LitexObj`
+  object term. Their domain-specific meaning belongs to the `LitexSet`
   operation laws and proof evidence.
 
 A backend may introduce a native Mathlib value as a local proof witness—for
@@ -292,27 +300,26 @@ canonical `z` in the theorem statement nor change the rendering of `z / 2`.
 
 ### IR boundary
 
-The first implementation tranche should introduce shapes equivalent to:
+The implemented context-free object IR has the following shape:
 
 ```text
 ObjToLeanIR =
     Symbol { symbol_id, name }
   | Number { normalized_value }
-  | Add | Sub | Mul | Div | Mod | Pow | ...
+  | BuiltinApp { operator, ordered_args }
   | StandardSet { identity }
-
-ObjFactToLeanIR =
-    Equality { left: ObjToLeanIR, right: ObjToLeanIR }
-  | Order { relation, left: ObjToLeanIR, right: ObjToLeanIR }
-  | Membership { element: ObjToLeanIR, set: ObjToLeanIR }
+  | Collection { constructor, ordered_items }
 
 ProofViewToLeanIR = optional native witness and its membership/equality proof
 ```
 
 Supported Lean emission consumes `ObjToLeanIR` for every displayed object.
-`ObjFactToLeanIR` supplies the monomorphic fact context needed by the target
-elaborator. `ProofViewToLeanIR` may help a checked proof backend, but it is not
-an alternative object representation.
+The current fact IR still retains the verified source `Fact` for proof
+provenance and diagnostics, but IR construction recursively validates every
+contained object and target fact operators are monomorphic over `LitexSet`.
+A dedicated structural object-fact IR remains a later cleanup; its absence
+must not reopen contextual object typing. `ProofViewToLeanIR` may help a
+checked proof backend, but it is not an alternative object representation.
 
 The existing raw `Obj` and `Fact` values may remain attached for diagnostics.
 An unsupported object constructor, set representation, or operation law must
@@ -323,22 +330,38 @@ fallback that assigns the object to `ℝ` or another native carrier.
 
 ```text
 structural ObjToLeanIR
-  -> one LitexObj / LitexSet target prelude
+  -> one LitexSet target prelude
   -> standard-set values and membership facts
   -> monomorphic equality and order fact interfaces
-  -> LitexObj arithmetic and domain laws
+  -> LitexSet arithmetic and domain laws
   -> optional native proof views
   -> normalization and builtin-rule lowering over the uniform Obj terms
   -> additional Obj families
 ```
 
-The concrete representation of `LitexObj`—for example, an abstract model with
-laws or a model backed by a sufficiently broad Mathlib domain—must be tested
-against real order, complex arithmetic, modulo, powers, and rounding before it
-is selected. That backend choice may affect proof construction, but it may not
-change the uniform object ABI above.
+The selected first representation is one concrete inductive `LitexSet`
+carrier. Standard sets and unsupported atoms are carrier values; applications
+preserve an operator tag and ordered `LitexSet` arguments. A numeral elaborates
+through the carrier's `OfNat` instance, so generated source still spells it as
+bare `1`. The current real arithmetic backend stores an `ℝ` payload in the
+`realValue` constructor and may expose that payload only through a checked
+proof view justified by `x ∈ litexR`. Real order, complex arithmetic, modulo,
+powers, and rounding still need individual law and proof-view coverage; none
+may change the uniform object ABI above.
 
-The persistent source tracer is
+The first context-free structural tranche contains symbols, numerals, standard
+sets, scalar operator nodes already used by the compiler, and the simple set
+constructors `union`, `intersect`, `set_minus`, `set_diff`, `big_union`,
+`big_intersect`, `power_set`, and list sets. Constructor identity, source
+argument order, and list order are preserved. `SetBuilder` is the nearest
+rejected boundary because it owns a binder, local facts, and scope; it must fail
+during IR construction until a binder-aware IR exists.
+
+The numeric source tracer is
 [`to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit).
 It fixes the unchanged spelling of `z / 2`, natural and integer closure facts,
-mixed `Z`/`Q` membership, and the guarded natural-predecessor boundary.
+mixed `Z`/`Q` membership, and the guarded natural-predecessor boundary. The
+implemented structural set-object tracer is
+[`to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit);
+it covers `union`, `intersect`, and `set_minus`, plus the binder-aware
+`SetBuilder` rejection boundary.
