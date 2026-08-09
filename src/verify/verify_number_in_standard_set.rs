@@ -96,7 +96,7 @@ pub fn number_is_in_z_neg(number: &Number) -> bool {
 }
 
 // --- Z* (non-zero integers) ---
-pub fn number_is_in_z_nz(number: &Number) -> bool {
+pub fn number_is_in_z_star(number: &Number) -> bool {
     number_is_in_z(number) && number_is_nonzero(number)
 }
 
@@ -118,11 +118,15 @@ pub fn number_is_in_r_neg(number: &Number) -> bool {
     number_is_negative(number)
 }
 
-// --- Q*, R* (non-zero) ---
-pub fn number_is_in_q_nz(number: &Number) -> bool {
+// --- Q*, R*, C* (non-zero) ---
+pub fn number_is_in_q_star(number: &Number) -> bool {
     number_is_nonzero(number)
 }
 
-pub fn number_is_in_r_nz(number: &Number) -> bool {
+pub fn number_is_in_r_star(number: &Number) -> bool {
+    number_is_nonzero(number)
+}
+
+pub fn number_is_in_c_star(number: &Number) -> bool {
     number_is_nonzero(number)
 }

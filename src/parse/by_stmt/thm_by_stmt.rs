@@ -10,15 +10,15 @@ impl Runtime {
             self.parse_module_qualified_reference_name(tb)?
         };
         let args = self.parse_braced_objs(tb)?;
-        if !tb.body.is_empty() {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by thm does not accept an indented body".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
         let selected_fact = if tb.current_token_is_equal_to(RIGHT_ARROW) {
+            if !tb.body.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by thm: `=>` does not accept an indented body".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
             tb.skip_token(RIGHT_ARROW)?;
             if tb.exceed_end_of_head() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -38,7 +38,27 @@ impl Runtime {
                 )));
             }
             Some(fact)
+        } else if tb.current_token_is_equal_to(COLON) {
+            tb.skip_token(COLON)?;
+            if !tb.exceed_end_of_head() || tb.body.len() != 1 {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by thm: expects exactly one `? <atomic fact>` goal block and no proof body"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
+            Some(self.parse_goal_atomic_fact_block(&mut tb.body[0], "by thm")?)
         } else {
+            if !tb.body.is_empty() {
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by thm does not accept an indented body".to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
+            }
             None
         };
         if !tb.exceed_end_of_head() {
@@ -86,6 +106,17 @@ mod tests {
             .as_ref()
             .is_some_and(|fact| !fact.is_true()));
         assert_eq!(selected.to_string(), "by thm T(a) => not $P(a)");
+
+        let goal_block =
+            parse_one("by thm T(a):\n    ? not $P(a)").expect("parse bodyless by thm goal");
+        let Stmt::By(ByStmt::ByThmStmt(goal_block)) = goal_block else {
+            panic!("expected by thm statement")
+        };
+        assert!(goal_block
+            .selected_fact
+            .as_ref()
+            .is_some_and(|fact| !fact.is_true()));
+        assert_eq!(goal_block.to_string(), "by thm T(a) => not $P(a)");
     }
 
     #[test]
@@ -98,7 +129,11 @@ mod tests {
             ),
             (
                 "by thm T(a):\n    do_nothing",
-                "by thm does not accept an indented body",
+                "by thm: expects a `? <fact>` goal block",
+            ),
+            (
+                "by thm T(a):\n    ? $P(a)\n    do_nothing",
+                "by thm: expects exactly one `? <atomic fact>` goal block and no proof body",
             ),
         ];
         for (source, expected) in cases {

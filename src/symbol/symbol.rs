@@ -133,9 +133,9 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         COMPACT_Q_NEG => 13,
         COMPACT_Z_NEG => 14,
         COMPACT_R_NEG => 15,
-        COMPACT_Q_NZ => 16,
-        COMPACT_Z_NZ => 17,
-        COMPACT_R_NZ => 18,
+        COMPACT_Q_STAR => 16,
+        COMPACT_Z_STAR => 17,
+        COMPACT_R_STAR => 18,
         COMPACT_N_POS | COMPACT_Z_POS => 19,
         N => 20,
         Q => 21,
@@ -176,6 +176,7 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         LN => 56,
         SIGN => 57,
         FACTORIAL => 58,
+        COMPACT_C_STAR => 59,
         _ => return None,
     };
     Some(SymbolRef::new(

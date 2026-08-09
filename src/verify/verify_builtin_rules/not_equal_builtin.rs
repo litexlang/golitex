@@ -917,14 +917,14 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let line_file = not_equal_fact.line_file.clone();
-        let div = match (&not_equal_fact.left, &not_equal_fact.right) {
+        let (div, orientation, matched_zero) = match (&not_equal_fact.left, &not_equal_fact.right) {
             (Obj::Div(div), right)
                 if self.obj_represents_zero_for_not_equal_builtin_rules(right) =>
             {
-                div
+                (div, NonzeroExpressionOrientation::ExpressionOnLeft, right)
             }
             (left, Obj::Div(div)) if self.obj_represents_zero_for_not_equal_builtin_rules(left) => {
-                div
+                (div, NonzeroExpressionOrientation::ExpressionOnRight, left)
             }
             _ => return Ok(None),
         };
@@ -951,15 +951,35 @@ impl Runtime {
             return Ok(None);
         }
 
-        Ok(Some(
+        let step_results = vec![numerator_result, denominator_result];
+        let success = if matches!(
+            matched_zero,
+            Obj::Number(number) if number.normalized_value == "0"
+        ) {
+            let evidence =
+                BuiltinRuleEvidence::DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence::new(
+                    div.left.as_ref().clone(),
+                    div.right.as_ref().clone(),
+                    orientation,
+                ));
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
+                not_equal_fact.clone().into(),
+                InferResult::new(),
+                "div_not_equal_zero_from_numerator_nonzero".to_string(),
+                evidence,
+                step_results,
+            )
+        } else {
+            // Resolved aliases of zero still verify in Litex, but this rule
+            // cannot yet return the equality evidence a compiler would need.
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 not_equal_fact.clone().into(),
                 InferResult::new(),
                 "div_not_equal_zero_from_numerator_nonzero".to_string(),
-                vec![numerator_result, denominator_result],
+                step_results,
             )
-            .into(),
-        ))
+        };
+        Ok(Some(success.into()))
     }
 
     // A nonzero product of real factors has no zero factor.

@@ -1,0 +1,53 @@
+# Tracer: reuse theorem and claim goal well-definedness
+#
+# Before (verified but repeated internally):
+# thm prechecked_theorem_goals:
+#     ? forall x R:
+#         x = x
+#         x + 0 = x
+# Former behavior: the complete forall was checked before the proof, each then
+# clause checked its well-definedness again during final proof verification,
+# and storing the theorem checked the complete forall once more.
+#
+# Now (verified): the surface theorem and claim remain unchanged. Their
+# preflight establishes complete goal well-definedness once, final goal proof
+# reuses that result, and the verified fact is stored without another check.
+
+thm prechecked_theorem_goals:
+    ? forall x R:
+        x = x
+        x + 0 = x
+
+claim:
+    ? forall x R:
+        x = x
+        x + 0 = x
+
+# Function-application well-definedness can derive a safe return-carrier fact.
+# The preflight certificate replays that fact for definition folding, but never
+# replays the conclusion itself.
+struct PrecheckedCylindricalPoint:
+    r R
+    theta R
+    z R
+
+have fn prechecked_locus(c R) power_set(&PrecheckedCylindricalPoint) = {p &PrecheckedCylindricalPoint: p[3] = c}
+
+prop prechecked_horizontal_plane(S power_set(&PrecheckedCylindricalPoint)):
+    exist a &PrecheckedCylindricalPoint st {S = prechecked_locus(a[3])}
+
+claim:
+    ? forall c R:
+        $prechecked_horizontal_plane(prechecked_locus(c))
+    have a &PrecheckedCylindricalPoint = (0, 0, c)
+    a[3] = c
+    witness exist p &PrecheckedCylindricalPoint st {prechecked_locus(c) = prechecked_locus(p[3])} from a:
+        prechecked_locus(c) = prechecked_locus(a[3])
+
+# Boundary: proof-local facts still cannot repair an ill-defined theorem or
+# claim header. The executable negative regression keeps `f(0)` rejected when
+# the header binds only `f set`, even if the proof later trusts a function type.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prechecked_goal_well_definedness.lit
+# Negative regression: proof_local_facts_cannot_repair_an_ill_defined_theorem_or_claim_goal
+# Soundness regression: prechecked_goal_certificate_never_stores_the_goal_itself
+# Implementation: src/execute/exec_def_thm_stmt.rs and src/execute/exec_claim_stmt.rs

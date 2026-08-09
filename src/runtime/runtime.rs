@@ -622,6 +622,22 @@ impl Runtime {
         result
     }
 
+    /// Runs a closure in an isolated child environment and returns that child
+    /// on success instead of committing or discarding it.
+    pub fn run_in_local_env_and_take<T, E, F>(&mut self, f: F) -> Result<(T, Environment), E>
+    where
+        F: FnOnce(&mut Self) -> Result<T, E>,
+    {
+        self.push_env();
+        let result = f(self);
+        let child = self
+            .execution_stack
+            .last_mut()
+            .and_then(|frame| frame.local_environment_stack.pop())
+            .expect("local environment should exist after push_env");
+        result.map(|value| (value, *child))
+    }
+
     /// Runs a closure in a temporary child environment. On success, commits the child environment
     /// into the parent with environment merge semantics; on failure, discards it. The closure must
     /// not mutate module discovery or loading state.
@@ -1029,6 +1045,17 @@ impl Runtime {
         self.top_level_env()
             .cache_well_defined_obj
             .insert(obj.to_string(), ());
+    }
+
+    /// Replays only the sound side effects produced while checking a theorem
+    /// or claim conclusion for well-definedness. The certificate excludes the
+    /// conclusion itself and every temporary assumption used by the preflight.
+    pub fn install_prechecked_well_definedness_certificate(
+        &mut self,
+        certificate: &Environment,
+    ) -> Result<(), RuntimeError> {
+        self.top_level_env()
+            .merge_committed_child(certificate.clone())
     }
 }
 

@@ -60,19 +60,57 @@ impl fmt::Display for ByFiniteSetInducStmt {
         }
         write!(
             f,
-            ":\n{}\n{} {} {} {} {}:\n{}\n{} {} {}, {}:\n{}",
+            ":\n{}",
             vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
-            add_four_spaces_at_beginning(QUESTION_GOAL.to_string(), 1),
-            FROM,
-            self.param,
-            EQUAL,
-            "{}",
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.base_proof, 2),
-            add_four_spaces_at_beginning(QUESTION_GOAL.to_string(), 1),
-            INDUC,
-            self.element_param,
-            self.smaller_set_param,
-            vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.step_proof, 2),
-        )
+        )?;
+
+        let base_colon = if self.base_proof.is_empty() {
+            ""
+        } else {
+            COLON
+        };
+        write!(
+            f,
+            "\n{}",
+            add_four_spaces_at_beginning(
+                format!(
+                    "{} {} {} {} {}{}",
+                    QUESTION_GOAL, FROM, self.param, EQUAL, "{}", base_colon
+                ),
+                1,
+            ),
+        )?;
+        if !self.base_proof.is_empty() {
+            write!(
+                f,
+                "\n{}",
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.base_proof, 2),
+            )?;
+        }
+
+        let step_colon = if self.step_proof.is_empty() {
+            ""
+        } else {
+            COLON
+        };
+        write!(
+            f,
+            "\n{}",
+            add_four_spaces_at_beginning(
+                format!(
+                    "{} {} {}, {}{}",
+                    QUESTION_GOAL, INDUC, self.element_param, self.smaller_set_param, step_colon
+                ),
+                1,
+            ),
+        )?;
+        if !self.step_proof.is_empty() {
+            write!(
+                f,
+                "\n{}",
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.step_proof, 2),
+            )?;
+        }
+        Ok(())
     }
 }

@@ -97,9 +97,46 @@ $finite_set_induction_carrier_test(A)
 }
 
 #[test]
-fn finite_set_induction_rejects_an_unproved_insertion_case() {
+fn finite_set_induction_accepts_bodyless_closed_branches() {
     run_with_large_stack(
-        "finite_set_induction_rejects_an_unproved_insertion_case",
+        "finite_set_induction_accepts_bodyless_closed_branches",
+        || {
+            let source_code = r#"
+by induc P:
+    ? P = P
+    ? from P = {}
+    ? induc x, S
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite_set_induction_bodyless_closed_branches",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "bodyless finite-set induction branches should run their final checks:\n{}",
+                run_output
+            );
+            assert!(
+                run_output.contains("? from P = {}\\n")
+                    && run_output.contains("? induc x, S")
+                    && !run_output.contains("? from P = {}:")
+                    && !run_output.contains("? induc x, S:"),
+                "bodyless finite-set induction branch headers should omit `:`:\n{}",
+                run_output
+            );
+        },
+    );
+}
+
+#[test]
+fn finite_set_induction_rejects_an_unproved_bodyless_insertion_case() {
+    run_with_large_stack(
+        "finite_set_induction_rejects_an_unproved_bodyless_insertion_case",
         || {
             let source_code = r#"
 abstract_prop finite_set_induction_test(P)
@@ -107,14 +144,12 @@ trust $finite_set_induction_test({})
 
 by induc P:
     ? $finite_set_induction_test(P)
-    ? from P = {}:
-        $finite_set_induction_test({})
-    ? induc x, S:
-        $finite_set_induction_test(S)
+    ? from P = {}
+    ? induc x, S
 "#;
 
             let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope("finite_set_induction_negative");
+            runtime.new_file_path_new_env_new_name_scope("finite_set_induction_bodyless_negative");
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
                 render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);

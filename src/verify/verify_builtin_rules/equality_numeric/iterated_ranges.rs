@@ -1271,15 +1271,15 @@ impl Runtime {
                         | StandardSet::N
                         | StandardSet::Z
                         | StandardSet::ZNeg
-                        | StandardSet::ZNz
+                        | StandardSet::ZStar
                         | StandardSet::Q
                         | StandardSet::QPos
                         | StandardSet::QNeg
-                        | StandardSet::QNz
+                        | StandardSet::QStar
                         | StandardSet::R
                         | StandardSet::RPos
                         | StandardSet::RNeg
-                        | StandardSet::RNz
+                        | StandardSet::RStar
                         | StandardSet::C
                 )
             )

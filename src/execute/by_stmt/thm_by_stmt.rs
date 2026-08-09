@@ -128,7 +128,7 @@ impl Runtime {
                 })?;
             stored_then_facts.push(instantiated_then.to_string());
             infer_result.new_infer_result_inside(
-                self.verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer_with_reason(
+                self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
                     &instantiated_then,
                     &verify_state,
                     InferReason::TheoremInstantiation,

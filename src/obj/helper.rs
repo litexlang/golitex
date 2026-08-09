@@ -47,7 +47,7 @@ impl Obj {
             | Obj::ImaginaryPart(_)
             | Obj::ComplexAbs(_) => true,
             Obj::Atom(_) | Obj::Number(_) | Obj::EulerNumber(_) | Obj::Pi(_) => false,
-            Obj::StandardSet(set) => matches!(set, StandardSet::C),
+            Obj::StandardSet(set) => matches!(set, StandardSet::C | StandardSet::CStar),
             Obj::FnObj(fn_obj) => {
                 let native_head = match fn_obj.head.as_ref() {
                     FnObjHead::AnonymousFnLiteral(function) => {

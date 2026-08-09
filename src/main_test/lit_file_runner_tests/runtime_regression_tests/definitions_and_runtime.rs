@@ -1514,6 +1514,197 @@ strategy bad_strategy:
 }
 
 #[test]
+fn theorem_and_claim_reuse_prechecked_goal_well_definedness() {
+    let source_code = r#"
+thm prechecked_theorem_goals:
+    ? forall x R:
+        x = x
+        x + 0 = x
+
+claim:
+    ? forall x R:
+        x = x
+        x + 0 = x
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "theorem_and_claim_reuse_prechecked_goal_well_definedness",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "prechecked theorem and claim goals should still verify:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn prechecked_goal_well_definedness_replays_safe_function_application_facts() {
+    let cases = [
+        (
+            "theorem",
+            r#"
+struct PrecheckedCylindricalPoint:
+    r R
+    theta R
+    z R
+
+have fn prechecked_locus(c R) power_set(&PrecheckedCylindricalPoint) = {p &PrecheckedCylindricalPoint: p[3] = c}
+
+prop prechecked_horizontal_plane(S power_set(&PrecheckedCylindricalPoint)):
+    exist a &PrecheckedCylindricalPoint st {S = prechecked_locus(a[3])}
+
+thm prechecked_definition_goal:
+    ? forall c R:
+        $prechecked_horizontal_plane(prechecked_locus(c))
+    have a &PrecheckedCylindricalPoint = (0, 0, c)
+    a[3] = c
+    witness exist p &PrecheckedCylindricalPoint st {prechecked_locus(c) = prechecked_locus(p[3])} from a:
+        prechecked_locus(c) = prechecked_locus(a[3])
+"#,
+        ),
+        (
+            "claim",
+            r#"
+struct PrecheckedCylindricalPoint:
+    r R
+    theta R
+    z R
+
+have fn prechecked_locus(c R) power_set(&PrecheckedCylindricalPoint) = {p &PrecheckedCylindricalPoint: p[3] = c}
+
+prop prechecked_horizontal_plane(S power_set(&PrecheckedCylindricalPoint)):
+    exist a &PrecheckedCylindricalPoint st {S = prechecked_locus(a[3])}
+
+claim:
+    ? forall c R:
+        $prechecked_horizontal_plane(prechecked_locus(c))
+    have a &PrecheckedCylindricalPoint = (0, 0, c)
+    a[3] = c
+    witness exist p &PrecheckedCylindricalPoint st {prechecked_locus(c) = prechecked_locus(p[3])} from a:
+        prechecked_locus(c) = prechecked_locus(a[3])
+"#,
+        ),
+    ];
+
+    for (label, source_code) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(label);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            run_succeeded,
+            "{} should reuse safe function-application facts from its preflight:\n{}",
+            label, run_output
+        );
+    }
+}
+
+#[test]
+fn prechecked_goal_certificate_never_stores_the_goal_itself() {
+    let cases = [
+        (
+            "theorem",
+            r#"
+abstract_prop prechecked_unproved(x)
+
+thm prechecked_goal_is_not_a_proof:
+    ? forall x set:
+        $prechecked_unproved(x)
+"#,
+        ),
+        (
+            "claim",
+            r#"
+abstract_prop prechecked_unproved(x)
+
+claim:
+    ? forall x set:
+        $prechecked_unproved(x)
+"#,
+        ),
+    ];
+
+    for (label, source_code) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(label);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "{} preflight certificate must not prove its own goal:\n{}",
+            label, run_output
+        );
+        assert!(
+            run_output.contains("cannot prove then-clause"),
+            "{} should fail at proof verification after successful preflight:\n{}",
+            label,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn proof_local_facts_cannot_repair_an_ill_defined_theorem_or_claim_goal() {
+    let cases = [
+        (
+            "theorem",
+            r#"
+thm proof_local_typing_does_not_repair_the_header:
+    ? forall f set:
+        f(0) = f(0)
+    trust f $in fn(n N) R
+"#,
+            "thm: forall fact is not well defined",
+        ),
+        (
+            "claim",
+            r#"
+claim:
+    ? forall f set:
+        f(0) = f(0)
+    trust f $in fn(n N) R
+"#,
+            "claim: fact is not well defined",
+        ),
+    ];
+
+    for (label, source_code, expected_error) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(label);
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(
+            !run_succeeded,
+            "proof-local facts must not repair an ill-defined {} goal:\n{}",
+            label, run_output
+        );
+        assert!(
+            run_output.contains(expected_error),
+            "{} should fail during its well-definedness preflight:\n{}",
+            label,
+            run_output
+        );
+        assert!(
+            run_output.contains("function `f` not defined"),
+            "{} should preserve the ill-defined function diagnostic:\n{}",
+            label,
+            run_output
+        );
+    }
+}
+
+#[test]
 fn run_isolated_file_from_path() {
     run_with_large_stack(
         "run_isolated_file_from_path_large_stack",

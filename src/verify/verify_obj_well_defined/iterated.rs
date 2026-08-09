@@ -645,7 +645,7 @@ impl Runtime {
                 rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
             }
             for domain_fact in body.dom_facts.iter() {
-                rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                rt.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                     domain_fact,
                     verify_state,
                 )?;
@@ -1015,9 +1015,10 @@ impl Runtime {
             Obj::StandardSet(StandardSet::ZNeg)
             | Obj::StandardSet(StandardSet::QNeg)
             | Obj::StandardSet(StandardSet::RNeg) => vec![(end, StandardSet::ZNeg)],
-            Obj::StandardSet(StandardSet::ZNz)
-            | Obj::StandardSet(StandardSet::QNz)
-            | Obj::StandardSet(StandardSet::RNz) => {
+            Obj::StandardSet(StandardSet::ZStar)
+            | Obj::StandardSet(StandardSet::QStar)
+            | Obj::StandardSet(StandardSet::RStar)
+            | Obj::StandardSet(StandardSet::CStar) => {
                 vec![(start, StandardSet::NPos), (end, StandardSet::ZNeg)]
             }
             _ => Vec::new(),

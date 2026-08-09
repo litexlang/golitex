@@ -42,17 +42,18 @@ mod verify_or_fact_with_known_forall;
 pub(crate) mod verify_proper_set_relations_builtin;
 mod verify_well_defined_in_local_env;
 
+pub use verify_number_in_standard_set::number_is_in_c_star;
 pub use verify_number_in_standard_set::number_is_in_n;
 pub use verify_number_in_standard_set::number_is_in_n_pos;
 pub use verify_number_in_standard_set::number_is_in_q_neg;
-pub use verify_number_in_standard_set::number_is_in_q_nz;
 pub use verify_number_in_standard_set::number_is_in_q_pos;
+pub use verify_number_in_standard_set::number_is_in_q_star;
 pub use verify_number_in_standard_set::number_is_in_r_neg;
-pub use verify_number_in_standard_set::number_is_in_r_nz;
 pub use verify_number_in_standard_set::number_is_in_r_pos;
+pub use verify_number_in_standard_set::number_is_in_r_star;
 pub use verify_number_in_standard_set::number_is_in_z;
 pub use verify_number_in_standard_set::number_is_in_z_neg;
-pub use verify_number_in_standard_set::number_is_in_z_nz;
+pub use verify_number_in_standard_set::number_is_in_z_star;
 
 pub use builtin_rule_verify_state::UseBuiltinRuleVerifyState;
 pub use use_context_verify_state::UseContextVerifyState;

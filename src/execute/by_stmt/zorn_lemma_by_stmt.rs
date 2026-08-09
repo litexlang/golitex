@@ -106,7 +106,7 @@ impl Runtime {
         )?;
         let maximal_fact_string = maximal_fact.to_string();
         let infer_result = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(maximal_fact)
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(maximal_fact)
             .map_err(|store_error| {
                 short_exec_error(
                     stmt.clone().into(),

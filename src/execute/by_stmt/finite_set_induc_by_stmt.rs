@@ -38,9 +38,10 @@ impl Runtime {
         if let Some(success) = result.non_factual_success_mut() {
             success.by_verification = Some(verification.into());
         }
-        let infer_result = self.verify_well_defined_and_store_and_infer_with_default_verify_state(
-            corresponding_forall_fact,
-        )?;
+        let infer_result = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                corresponding_forall_fact,
+            )?;
         Ok(result.with_infers(infer_result))
     }
 
@@ -160,7 +161,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_eq)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(base_eq)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -176,15 +177,17 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(base_subset)
-                .map_err(|error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        "finite-set induc: failed to assume the base carrier subset".to_string(),
-                        Some(error),
-                        vec![],
-                    )
-                })?;
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                base_subset,
+            )
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "finite-set induc: failed to assume the base carrier subset".to_string(),
+                    Some(error),
+                    vec![],
+                )
+            })?;
         }
         Ok(())
     }
@@ -220,7 +223,7 @@ impl Runtime {
             obj_for_bound_param_in_scope(&stmt.smaller_set_param_binding, ParamObjType::Induc);
         let fresh_fact: Fact =
             NotInFact::new(element, smaller_set.clone(), stmt.line_file.clone()).into();
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fresh_fact)
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(fresh_fact)
             .map_err(|error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -237,20 +240,22 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(smaller_subset)
-                .map_err(|error| {
-                    short_exec_error(
-                        stmt.clone().into(),
-                        "finite-set induc: failed to assume the smaller carrier subset".to_string(),
-                        Some(error),
-                        vec![],
-                    )
-                })?;
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                smaller_subset,
+            )
+            .map_err(|error| {
+                short_exec_error(
+                    stmt.clone().into(),
+                    "finite-set induc: failed to assume the smaller carrier subset".to_string(),
+                    Some(error),
+                    vec![],
+                )
+            })?;
         }
 
         for fact in stmt.to_prove.iter() {
             let ih = self.finite_set_induc_goal_fact_at_obj(stmt, fact, smaller_set.clone())?;
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(ih)
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(ih)
                 .map_err(|error| {
                     short_exec_error(
                         stmt.clone().into(),

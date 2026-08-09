@@ -30,7 +30,7 @@ impl Runtime {
             })?;
 
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
-                rt.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                rt.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     dom_fact.clone(),
                 )?;
             }
@@ -100,9 +100,9 @@ impl Runtime {
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?;
 
         let infer_result_after_store = self
-            .verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::ForallFact(
-                stmt.forall_fact.clone(),
-            ))?;
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                Fact::ForallFact(stmt.forall_fact.clone()),
+            )?;
 
         self.activate_strategy(stmt, &stmt.name, stmt.clone().into())?;
 

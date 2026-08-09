@@ -1663,9 +1663,12 @@ impl Runtime {
                 let result = self.verify_order_subgoal(subgoal, builtin_state)?;
                 if result.is_true() {
                     return Ok(Some(StmtResult::from(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "u + a <= u + b from a <= b".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::AddCommonLeftLessEqual,
+                            ),
                             vec![result],
                         ),
                     )));
@@ -1685,9 +1688,12 @@ impl Runtime {
                 self.verify_order_subgoal(nonnegative_subtractor, builtin_state)?;
             if order_result.is_true() && nonnegative_result.is_true() {
                 return Ok(Some(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a - c <= b from a <= b and 0 <= c".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::SubRightNonnegativeLessEqual,
+                        ),
                         vec![order_result, nonnegative_result],
                     ),
                 )));
@@ -1724,9 +1730,12 @@ impl Runtime {
                 let r0 = self.verify_order_subgoal(g0, builtin_state)?;
                 if r0.is_true() {
                     return Ok(Some(StmtResult::from(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "a <= a + b from 0 <= b".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::AddRightNonnegativeLessEqual,
+                            ),
                             vec![r0],
                         ),
                     )));
@@ -1959,9 +1968,12 @@ impl Runtime {
                 return Ok(None);
             }
             return Ok(Some(StmtResult::from(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     atomic_fact.clone().into(),
                     "a + c <= b + d from a <= b and c <= d".to_string(),
+                    BuiltinRuleEvidence::Arithmetic(
+                        ArithmeticBuiltinRule::AddComponentwiseLessEqual,
+                    ),
                     vec![r1, r2],
                 ),
             )));
@@ -2230,9 +2242,12 @@ impl Runtime {
                 let result = self.verify_order_subgoal(subgoal, builtin_state)?;
                 if result.is_true() {
                     return Ok(Some(StmtResult::from(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             atomic_fact.clone().into(),
                             "u + a < u + b from a < b".to_string(),
+                            BuiltinRuleEvidence::Arithmetic(
+                                ArithmeticBuiltinRule::AddCommonLeftLess,
+                            ),
                             vec![result],
                         ),
                     )));
@@ -2629,9 +2644,12 @@ impl Runtime {
             let r2 = self.verify_order_subgoal(g2s, builtin_state)?;
             if r1.is_true() && r2.is_true() {
                 return Ok(Some(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a < b and c < d".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::AddComponentwiseLess,
+                        ),
                         vec![r1, r2],
                     ),
                 )));
@@ -2652,9 +2670,12 @@ impl Runtime {
             let r4 = self.verify_builtin_rule_premise(&g2m, builtin_state)?;
             if r3.is_true() && r4.is_true() {
                 return Ok(Some(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a < b and c <= d".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::AddComponentwiseLessLessEqual,
+                        ),
                         vec![r3, r4],
                     ),
                 )));
@@ -2675,9 +2696,12 @@ impl Runtime {
             let r6 = self.verify_order_subgoal(g2w, builtin_state)?;
             if r5.is_true() && r6.is_true() {
                 return Ok(Some(StmtResult::from(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         atomic_fact.clone().into(),
                         "a + c < b + d from a <= b and c < d".to_string(),
+                        BuiltinRuleEvidence::Arithmetic(
+                            ArithmeticBuiltinRule::AddComponentwiseLessEqualLess,
+                        ),
                         vec![r5, r6],
                     ),
                 )));

@@ -186,14 +186,14 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_infer_result_inside(
-            self.verify_well_defined_and_store_and_infer(
+            self.store_with_well_defined_verification_and_infer(
                 preimage_in_source,
                 &UseContextVerifyState::new(0, false),
             )
             .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?,
         );
         infer_result.new_infer_result_inside(
-            self.verify_well_defined_and_store_and_infer(
+            self.store_with_well_defined_verification_and_infer(
                 relation_fact,
                 &UseContextVerifyState::new(0, false),
             )
@@ -259,7 +259,7 @@ impl Runtime {
             )
             .into();
             infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer(
+                self.store_with_well_defined_verification_and_infer(
                     fact,
                     &UseContextVerifyState::new(0, false),
                 )
@@ -290,7 +290,7 @@ impl Runtime {
                 .map_err(|e| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), e))?
                 .to_fact();
             infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer(
+                self.store_with_well_defined_verification_and_infer(
                     instantiated_dom_fact,
                     &UseContextVerifyState::new(0, false),
                 )
@@ -323,7 +323,7 @@ impl Runtime {
             stmt.line_file.clone(),
         )
         .into();
-        self.verify_well_defined_and_store_and_infer(
+        self.store_with_well_defined_verification_and_infer(
             equality_fact,
             &UseContextVerifyState::new(0, false),
         )

@@ -1,6 +1,29 @@
+[book]
 Analysis
+95%
+"Almost done, needs clean up. some concepts can be expressed in a better way, some verification process can be reduced"
+
+[book]
 Concrete-Mathematics
+15%
+"Just start formalizing"
+
+[book]
 Linear-Algebra-Done-Right
+50%
+"Basic framework done, some concepts need extra thinkings, might require big refactoring"
+
+[book]
 Mathematics-In-Lean-Derived-Litex-Corpus
+90%
+"Core explanation is done. There are many ways to improve litex code quality there"
+
+[book]
 Number-Theory-For-Beginners
+60%
+"Basic framework done, some concepts need extra thinkings, might require big refactoring"
+
+[book]
 The-Mechanics-of-Litex-Proof
+99%
+"Can work as a mature textbook. welcome feedback"

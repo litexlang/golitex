@@ -167,8 +167,10 @@ impl Runtime {
                 default_line_file(),
             )
             .into();
-            if let Err(e) =
-                rt.verify_well_defined_and_store_and_infer_with_default_verify_state(param_in_set)
+            if let Err(e) = rt
+                .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    param_in_set,
+                )
             {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -184,22 +186,22 @@ impl Runtime {
             for fact in x.facts.iter() {
                 let result = match fact {
                     ExistBodyFact::AtomicFact(f) => rt
-                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                             &OrAndChainAtomicFact::AtomicFact(f.clone()),
                             verify_state,
                         ),
                     ExistBodyFact::AndFact(f) => rt
-                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                             &OrAndChainAtomicFact::AndFact(f.clone()),
                             verify_state,
                         ),
                     ExistBodyFact::ChainFact(f) => rt
-                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                             &OrAndChainAtomicFact::ChainFact(f.clone()),
                             verify_state,
                         ),
                     ExistBodyFact::OrFact(f) => rt
-                        .verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                             &OrAndChainAtomicFact::OrFact(f.clone()),
                             verify_state,
                         ),
@@ -257,10 +259,12 @@ impl Runtime {
         }
 
         for fact in x.body.dom_facts.iter() {
-            if let Err(e) = self.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
-                fact,
-                verify_state,
-            ) {
+            if let Err(e) = self
+                .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+                    fact,
+                    verify_state,
+                )
+            {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!(
@@ -324,7 +328,7 @@ impl Runtime {
             }
 
             for fact in x.body.dom_facts.iter() {
-                if let Err(e) = rt.verify_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                if let Err(e) = rt.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                     fact,
                     verify_state,
                 ) {

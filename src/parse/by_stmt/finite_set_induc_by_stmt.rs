@@ -142,7 +142,7 @@ impl Runtime {
             if Self::is_finite_set_induc_step_proof_block(block) {
                 if step.is_some() {
                     return Err(Self::finite_set_induc_parse_error(
-                        "finite-set induc: duplicated `? induc x, S:` block".to_string(),
+                        "finite-set induc: duplicated `? induc x, S` block".to_string(),
                         block.line_file.clone(),
                     ));
                 }
@@ -173,7 +173,7 @@ impl Runtime {
             }
 
             return Err(Self::finite_set_induc_parse_error(
-                "finite-set induc: proof must use both `? from P = {}:` and `? induc x, S:` blocks"
+                "finite-set induc: proof must use both `? from P = {}` and `? induc x, S` blocks"
                     .to_string(),
                 block.line_file.clone(),
             ));
@@ -181,7 +181,7 @@ impl Runtime {
 
         let base_proof = base_proof.ok_or_else(|| {
             Self::finite_set_induc_parse_error(
-                "finite-set induc: missing `? from P = {}:` block".to_string(),
+                "finite-set induc: missing `? from P = {}` block".to_string(),
                 tb.line_file.clone(),
             )
         })?;
@@ -193,7 +193,7 @@ impl Runtime {
             step_proof,
         ) = step.ok_or_else(|| {
             Self::finite_set_induc_parse_error(
-                "finite-set induc: missing `? induc x, S:` block".to_string(),
+                "finite-set induc: missing `? induc x, S` block".to_string(),
                 tb.line_file.clone(),
             )
         })?;
@@ -214,8 +214,18 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         block.skip_token(QUESTION_GOAL)?;
         block.skip_token(FROM)?;
-        let header_fact =
-            self.parse_header_fact_before_trailing_colon(block, "finite-set induc ? from", "", "")?;
+        let header_fact = if block.body.is_empty() {
+            let fact = self.parse_fact(block)?;
+            if !block.exceed_end_of_head() {
+                return Err(Self::finite_set_induc_parse_error(
+                    "finite-set induc: unfinished `? from` fact".to_string(),
+                    block.line_file.clone(),
+                ));
+            }
+            fact
+        } else {
+            self.parse_header_fact_before_trailing_colon(block, "finite-set induc ? from", "", "")?
+        };
         let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = header_fact else {
             return Err(Self::finite_set_induc_parse_error(
                 "finite-set induc: `? from` expects an equality fact".to_string(),
@@ -251,10 +261,12 @@ impl Runtime {
         let element_param = block.advance()?;
         block.skip_token(COMMA)?;
         let smaller_set_param = block.advance()?;
-        block.skip_token(COLON)?;
-        if !block.exceed_end_of_head() {
+        let has_proof_colon =
+            self.parse_optional_trailing_proof_colon(block, "finite-set induc ? induc")?;
+        if has_proof_colon != !block.body.is_empty() {
             return Err(Self::finite_set_induc_parse_error(
-                "finite-set induc: expected `? induc x, S:`".to_string(),
+                "finite-set induc: use `? induc x, S` for an empty branch or `? induc x, S:` before proof statements"
+                    .to_string(),
                 block.line_file.clone(),
             ));
         }

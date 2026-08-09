@@ -1547,9 +1547,9 @@ builder_like(X) = X
 }
 
 #[test]
-fn compact_numeric_set_suffixes_use_existing_set_semantics() {
+fn compact_numeric_set_spellings_use_existing_set_semantics() {
     run_with_large_stack(
-        "compact_numeric_set_suffixes_use_existing_set_semantics",
+        "compact_numeric_set_spellings_use_existing_set_semantics",
         || {
             let source_code = r#"
 have n N+
@@ -1566,12 +1566,16 @@ have qn Q-
 qn $in Q-
 have rn R-
 rn $in R-
-have znz Z*
-znz $in Z*
-have qnz Q*
-qnz $in Q*
-have rnz R*
-rnz $in R*
+have z_star Z*
+z_star $in Z*
+have q_star Q*
+q_star $in Q*
+have r_star R*
+r_star $in R*
+have c_star C*
+c_star $in C*
+c_star $in C
+c_star != 0
 
 forall x R+:
     x $in R+
@@ -1589,11 +1593,16 @@ fn(x Z-) R- = fn(x Z-) R-
 1 $in Z*
 1 $in Q*
 1 $in R*
+1 $in C*
+i $in C*
+not 0 $in C*
+R* $subset C*
+C* $subset C
 "#;
 
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
-                "compact_numeric_set_suffixes_use_existing_set_semantics",
+                "compact_numeric_set_spellings_use_existing_set_semantics",
             );
             let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
             let (run_succeeded, run_output) =
@@ -1601,12 +1610,13 @@ fn(x Z-) R- = fn(x Z-) R-
 
             assert!(
                 run_succeeded,
-                "compact numeric-set suffixes should reuse existing semantics:\n{}",
+                "compact numeric-set spellings should reuse existing semantics:\n{}",
                 run_output
             );
             assert!(run_output.contains("have n N+"), "{run_output}");
             assert!(run_output.contains("have zp N+"), "{run_output}");
             assert!(run_output.contains("have qn Q-"), "{run_output}");
+            assert!(run_output.contains("have c_star C*"), "{run_output}");
         },
     );
 }
@@ -1615,6 +1625,7 @@ fn(x Z-) R- = fn(x Z-) R-
 fn unsupported_compact_standard_set_suffixes_still_fail() {
     for (name, source_code) in [
         ("compact_n_negative", "have n N-"),
+        ("compact_n_star", "have n N*"),
         ("compact_nonempty_set", "have S set+"),
         ("compact_set_negative", "have S set-"),
         ("spaced_compact_n_positive", "have n N +"),

@@ -2,8 +2,9 @@ use crate::prelude::*;
 
 impl Runtime {
     pub fn exec_def_thm_stmt(&mut self, stmt: &DefThmStmt) -> Result<StmtResult, RuntimeError> {
-        self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
-        let body_exec_result = self.exec_def_thm_stmt_verify_process(stmt)?;
+        let prechecked_well_definedness = self.exec_def_thm_stmt_verify_well_definedness(stmt)?;
+        let body_exec_result =
+            self.exec_def_thm_stmt_verify_process(stmt, &prechecked_well_definedness)?;
         let infer_result_after_store = self.exec_def_thm_stmt_affect_environment(stmt)?;
 
         Ok(body_exec_result.with_infers(infer_result_after_store))
@@ -15,7 +16,7 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_well_definedness(
         &mut self,
         stmt: &DefThmStmt,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<Environment, RuntimeError> {
         if stmt.is_axiom() && self.strict_mode_applies_to_current_module() {
             return Err(short_exec_error(
                 stmt.clone().into(),
@@ -26,8 +27,8 @@ impl Runtime {
         }
 
         let keyword = stmt.keyword();
-        self.verify_fact_well_defined(
-            &Fact::ForallFact(stmt.forall_fact.clone()),
+        self.verify_forall_fact_well_defined_and_collect_certificate(
+            &stmt.forall_fact,
             &UseContextVerifyState::new(0, false),
         )
         .map_err(|e| {
@@ -43,6 +44,7 @@ impl Runtime {
     fn exec_def_thm_stmt_verify_process(
         &mut self,
         stmt: &DefThmStmt,
+        prechecked_well_definedness: &Environment,
     ) -> Result<StmtResult, RuntimeError> {
         if stmt.is_axiom() {
             return Ok(
@@ -64,7 +66,7 @@ impl Runtime {
                 })?;
 
             for dom_fact in stmt.forall_fact.dom_facts.iter() {
-                let mut dom_infers = rt.verify_well_defined_and_store_and_infer(
+                let mut dom_infers = rt.store_with_well_defined_verification_and_infer(
                     dom_fact.clone(),
                     &UseContextVerifyState::new(0, false),
                 )?;
@@ -97,12 +99,12 @@ impl Runtime {
                 inside_results.push(result);
             }
 
+            rt.install_prechecked_well_definedness_certificate(prechecked_well_definedness)?;
             let then_count = stmt.forall_fact.then_facts.len();
+            let then_verify_state = UseContextVerifyState::new(0, true);
             for (then_index, then_fact) in stmt.forall_fact.then_facts.iter().enumerate() {
-                let mut result = rt.verify_exist_or_and_chain_atomic_fact(
-                    then_fact,
-                    &UseContextVerifyState::new(0, false),
-                )?;
+                let mut result =
+                    rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;
                 if result.is_unknown() {
                     let then_goal = then_fact.clone().to_fact();
                     result = result.wrap_unknown_for_fact(then_goal.clone());
@@ -159,9 +161,8 @@ impl Runtime {
             );
         }
 
-        self.verify_well_defined_and_store_and_infer_with_reason(
+        self.store_without_well_defined_verification_and_infer_with_reason(
             Fact::ForallFact(stmt.forall_fact.clone()),
-            &UseContextVerifyState::new(0, false),
             InferReason::Other(stmt.store_reason().to_string()),
         )
     }

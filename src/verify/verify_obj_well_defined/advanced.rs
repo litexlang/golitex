@@ -362,17 +362,22 @@ impl Runtime {
     }
 
     /// Mathematical contract: the primitive standard set `Q\\{0}` is total.
-    pub(in crate::verify) fn verify_q_nz_well_defined(&self) -> Result<(), RuntimeError> {
+    pub(in crate::verify) fn verify_q_star_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
     /// Mathematical contract: the primitive standard set `Z\\{0}` is total.
-    pub(in crate::verify) fn verify_z_nz_well_defined(&self) -> Result<(), RuntimeError> {
+    pub(in crate::verify) fn verify_z_star_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 
     /// Mathematical contract: the primitive standard set `R\\{0}` is total.
-    pub(in crate::verify) fn verify_r_nz_well_defined(&self) -> Result<(), RuntimeError> {
+    pub(in crate::verify) fn verify_r_star_well_defined(&self) -> Result<(), RuntimeError> {
+        Ok(())
+    }
+
+    /// Mathematical contract: the primitive standard set `C\{0}` is total.
+    pub(in crate::verify) fn verify_c_star_well_defined(&self) -> Result<(), RuntimeError> {
         Ok(())
     }
 }

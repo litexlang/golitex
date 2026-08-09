@@ -1,0 +1,135 @@
+# Tracer: twenty structured arithmetic/order builtin rules for To-Lean
+#
+# Before (Litex verified, To-Lean rejected the label-only rule):
+# forall a, b R:
+#     0 <= a
+#     0 <= b
+#     =>:
+#         0 <= a * b
+# Former behavior: the verifier returned only the diagnostic label
+# "0 <= a * b from 0 <= a and 0 <= b", so no checked Lean backend ran.
+#
+# Now (verified and compiled):
+# The active multiplication theorem below returns a typed rule ID plus its two
+# recursive premise proofs; Lean validates the certificate and checks it with
+# `nlinarith only [...]`. The surrounding statements exercise all 20 rule IDs.
+#
+# Boundary: evaluation-only rules and every label not enumerated in the typed
+# evidence enum remain unsupported and produce an Incomplete report.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
+# Focused compiler gate: cargo test --release to_lean_builtin_rules_20 -- --nocapture
+# Implementation: src/result/builtin_rule_evidence.rs, src/to_lean_ir/builtin_rule.rs,
+# src/runtime/runtime_to_lean_ir.rs, and src/to_lean/to_lean_pipeline.rs
+
+forall a, b R:
+    a < b
+    =>:
+        a <= b
+
+forall a, b R:
+    a > b
+    =>:
+        a >= b
+
+forall u, v R:
+    v <= u
+    =>:
+        0 <= u - v
+
+forall u, v R:
+    v < u
+    =>:
+        0 < u - v
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a + b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 < a
+    0 <= b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a * b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a * b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 <= a / b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a / b
+
+forall u, a, b R:
+    a <= b
+    =>:
+        u + a <= u + b
+
+forall a, b, c, d R:
+    a <= b
+    c <= d
+    =>:
+        a + c <= b + d
+
+forall u, a, b R:
+    a < b
+    =>:
+        u + a < u + b
+
+forall a, b, c, d R:
+    a < b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a <= b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c R:
+    a <= b
+    0 <= c
+    =>:
+        a - c <= b
+
+forall a, b R:
+    0 <= b
+    =>:
+        a <= a + b

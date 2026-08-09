@@ -2902,7 +2902,7 @@ forall a, b, c, d R:
 ### 18. Standard Number Sets
 
 - Category: `obj`
-- Purpose: Shows membership and subset facts for N, Z, Q, and R.
+- Purpose: Shows membership and subset facts for N, Z, Q, R, and C.
 
 #### Signed Standard Sets
 
@@ -2928,8 +2928,9 @@ have rn R-
 rn $in R-
 ```
 
-The suffix must be adjacent: `N +` is not a compact type. Nonzero sets continue
-to use `Z*`, `Q*`, and `R*`.
+The suffix must be adjacent: `N +` is not a compact type. Nonzero sets use
+`Z*`, `Q*`, `R*`, and `C*`. `N*` is unsupported because `N+` is the canonical
+nonzero-natural carrier.
 
 ```litex
 have u, v R, c Z
@@ -2943,6 +2944,10 @@ c $in Z
 1 $in Z
 1 $in Q
 1 $in R
+i $in C*
+not 0 $in C*
+R* $subset C*
+C* $subset C
 
 1 $in Q+
 1 $in R+
@@ -3224,23 +3229,28 @@ objects.  Litex uses exact arithmetic for integer and rational calculations.
 
 #### 2. Standard Number Sets
 
-Mathematical meaning: `N`, `Z`, `Q`, and `R` are the built-in natural, integer,
-rational, and real number sets.  Suffixes such as `_pos`, `_neg`, and `_nz`
-name common subsets like positive or nonzero numbers.
+Mathematical meaning: `N`, `Z`, `Q`, `R`, and `C` are the built-in natural,
+integer, rational, real, and complex number sets. Compact spellings such as
+`N+`, `R-`, `Q*`, and `C*` name common subsets such as positive, negative, and
+nonzero numbers.
 
 ```litex
 0 $in N
 0 $in Z
 0 $in Q
 0 $in R
+0 $in C
 1 $in N+
 1 $in R+
 -1 $in Z-
 1 $in Z*
+i $in C*
 1 / 6 $in Q
 6 / 3 $in Z
 not 1 / 6 $in Z
 not 0 $in Q*
+not 0 $in C*
+C* $subset C
 ```
 
 #### 3. Finite Sets And Set Builders

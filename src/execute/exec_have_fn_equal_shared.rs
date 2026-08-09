@@ -271,7 +271,7 @@ fn case_condition_implies_not_other(
     other: &AndChainAtomicFact,
 ) -> Result<bool, RuntimeError> {
     runtime.run_in_local_env(|rt| {
-        rt.verify_well_defined_and_store_and_infer_with_default_verify_state(Fact::from(
+        rt.store_with_well_defined_verification_and_infer_with_default_verify_state(Fact::from(
             assumed.clone(),
         ))?;
 

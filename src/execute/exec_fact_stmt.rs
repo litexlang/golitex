@@ -27,8 +27,10 @@ impl Runtime {
         result: &StmtResult,
     ) -> Result<InferResult, RuntimeError> {
         let verification_store_facts = result.infer_result();
-        let mut infer_result =
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact.clone())?;
+        let mut infer_result = self
+            .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                fact.clone(),
+            )?;
         if verification_store_facts.contains_added_fact(fact) {
             infer_result.remove_first_verified_statement_for_fact(fact);
         }

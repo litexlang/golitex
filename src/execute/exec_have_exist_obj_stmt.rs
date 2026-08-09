@@ -204,7 +204,7 @@ impl Runtime {
                 })?
                 .to_fact();
             let fact_infer_result = self
-                .verify_well_defined_and_store_and_infer_with_reason(
+                .store_with_well_defined_verification_and_infer_with_reason(
                     instantiated_fact,
                     &body_fact_verify_state,
                     InferReason::ExistElimination,

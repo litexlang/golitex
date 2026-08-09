@@ -46,7 +46,7 @@ impl Runtime {
                     InferReason::UnsafeAssumption,
                 )
             } else {
-                self.verify_fact_well_defined_and_store_and_infer_with_reason(
+                self.store_fact_with_well_defined_verification_and_infer_with_reason(
                     fact.clone(),
                     &UseContextVerifyState::new(0, false),
                     InferReason::UnsafeAssumption,

@@ -355,6 +355,65 @@ impl Runtime {
         })
     }
 
+    /// Check a universal fact once and retain only sound side effects produced
+    /// by conclusion well-definedness (for example, the return-carrier fact of
+    /// a checked function application). Domain assumptions and conclusions are
+    /// kept in the temporary preflight scope and never enter the certificate.
+    pub fn verify_forall_fact_well_defined_and_collect_certificate(
+        &mut self,
+        forall_fact: &ForallFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Environment, RuntimeError> {
+        let bindings = forall_fact.params_def_with_type.collect_param_bindings();
+        let rename_map =
+            self.visible_binding_conflict_rename_map(&bindings, ParamObjType::Forall)?;
+        if !rename_map.is_empty() {
+            let renamed = self.alpha_rename_forall_fact(forall_fact, &rename_map)?;
+            return self
+                .verify_forall_fact_well_defined_and_collect_certificate(&renamed, verify_state);
+        }
+
+        self.run_in_local_env(|rt| {
+            rt.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
+
+            let mut certificate = Environment::new_empty_env();
+            for fact in forall_fact.then_facts.iter() {
+                let checked = rt.run_in_local_env_and_take(|checking_rt| {
+                    checking_rt
+                        .verify_exist_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+                });
+                let (_, mut checked_side_effects) = checked.map_err(|exec_stmt_error| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        String::new(),
+                        fact.line_file(),
+                        Some(exec_stmt_error),
+                        vec![],
+                    )))
+                })?;
+
+                checked_side_effects.retain_only_well_definedness_certificate_data();
+                certificate.merge_committed_child(checked_side_effects.clone())?;
+                rt.top_level_env()
+                    .merge_committed_child(checked_side_effects)?;
+
+                rt.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    fact.clone(),
+                )
+                .map_err(|exec_stmt_error| {
+                    RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        String::new(),
+                        fact.line_file(),
+                        Some(exec_stmt_error),
+                        vec![],
+                    )))
+                })?;
+            }
+            Ok(certificate)
+        })
+    }
+
     /// Mathematical contract: the domain portion of a universal fact is
     /// well-defined when its dependent binder types and premises are
     /// meaningful in source order.
@@ -393,8 +452,10 @@ impl Runtime {
         }
 
         for dom_fact in forall_fact.dom_facts.iter() {
-            let store_result =
-                self.verify_fact_well_defined_and_store_and_infer(dom_fact.clone(), verify_state);
+            let store_result = self.store_fact_with_well_defined_verification_and_infer(
+                dom_fact.clone(),
+                verify_state,
+            );
             if let Err(exec_stmt_error) = store_result {
                 return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
                     None,
@@ -419,7 +480,7 @@ impl Runtime {
         self.verify_forall_fact_params_and_dom_well_defined_inner(forall_fact, verify_state)?;
         for fact in forall_fact.then_facts.iter() {
             if let Err(exec_stmt_error) = self
-                .verify_exist_or_and_chain_atomic_fact_well_defined_and_store_and_infer(
+                .store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
                     fact,
                     verify_state,
                 )

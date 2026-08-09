@@ -406,11 +406,13 @@ an explicit reserved builtin theorem call such as
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
 When only one atomic consequence should escape, use the preview form
-`by thm name(args) => atomic_fact`. Litex applies the ordinary theorem in a
-temporary child context, checks the selected fact there, and then discards all
-other theorem conclusions. Only the selected fact is committed to the parent;
-its normal inferred consequences may still be stored. The selected fact must
-already be well-defined in the parent, and a compound target is rejected.
+`by thm name(args) => atomic_fact`, or the equivalent bodyless goal block
+`by thm name(args):` followed by one `? atomic_fact`. Litex applies the ordinary
+theorem in a temporary child context, checks the selected fact there, and then
+discards all other theorem conclusions. Only the selected fact is committed to
+the parent; its normal inferred consequences may still be stored. The selected
+fact must already be well-defined in the parent, and a compound target or proof
+body is rejected.
 Mathematical definitions similarly use explicit `by def A $subset B` and
 `by def $injective(A, B, f)` statements. New code should use this inline
 spelling; the older `by def:` plus one `? fact` goal remains accepted for
@@ -609,6 +611,11 @@ the standard sets satisfy `N ⊆ Z ⊆ Q ⊆ R ⊆ C`. The verifier still preser
 the narrow conclusion it can establish. Integer arithmetic remains integer
 arithmetic, and real arithmetic remains real arithmetic; an expression falls
 back to `C` only when no narrower supported carrier applies.
+
+`C*` denotes the nonzero complex carrier `C \ {0}`. Thus `R* $subset C*`,
+`C* $subset C`, and a declaration such as `have z C*` supplies both `z $in C`
+and `z != 0`. The reverse inclusion `C $subset C*` is false, and `0 $in C*`
+is rejected.
 
 This is also why complex equality does not add a complex order. The relations
 `<`, `<=`, `>`, and `>=`, sign reasoning, real intervals, `abs`, `sqrt`, and

@@ -243,7 +243,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&element_in_param_set_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
             element_in_param_set_fact,
         )?;
 
@@ -270,7 +270,9 @@ impl Runtime {
             let fact_to_store = instantiated_fact_in_set_builder.to_fact();
 
             infer_result.new_fact(&fact_to_store);
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(fact_to_store)?;
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                fact_to_store,
+            )?;
         }
 
         self.store_infer_rule_firing(firing_key);
@@ -291,7 +293,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&fn_set_fact);
-        self.verify_well_defined_and_store_and_infer_with_default_verify_state(fn_set_fact)?;
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(fn_set_fact)?;
 
         if let Some(pointwise_fact) = general_cart_member_pointwise_fact(
             self,
@@ -300,7 +302,9 @@ impl Runtime {
             &in_fact.line_file,
         )? {
             infer_result.new_fact(&pointwise_fact);
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(pointwise_fact)?;
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                pointwise_fact,
+            )?;
         }
 
         Ok(infer_result)
@@ -371,7 +375,7 @@ impl Runtime {
         .into();
         infer_result.new_fact(&coordinate_forall_fact);
         infer_result.new_infer_result_inside(
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                 coordinate_forall_fact,
             )?,
         );
@@ -440,7 +444,9 @@ impl Runtime {
                 let or_fact = OrFact::new(or_case_facts, in_fact.line_file.clone()).into();
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&or_fact);
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(or_fact)?;
+                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    or_fact,
+                )?;
                 Ok(infer_result)
             }
             // Set comprehension: membership in parameter domain plus instantiated filter facts.
@@ -481,7 +487,7 @@ impl Runtime {
                     IsTupleFact::new(in_fact.element.clone(), in_fact.line_file.clone()).into();
 
                 infer_result.new_fact(&is_cart_fact);
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     is_cart_fact,
                 )?;
 
@@ -496,7 +502,7 @@ impl Runtime {
                 .into();
 
                 infer_result.new_fact(&tuple_dim_fact);
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                     tuple_dim_fact,
                 )?;
 
@@ -526,7 +532,7 @@ impl Runtime {
                             .into();
                     infer_result.new_fact(&projected_in_factor);
                     infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                             projected_in_factor,
                         )?,
                     );
@@ -584,10 +590,11 @@ impl Runtime {
                 )?;
                 Ok(infer_result)
             }
-            // Nonzero: `x $in R*` (etc.) => `x != 0`.
-            Obj::StandardSet(StandardSet::QNz)
-            | Obj::StandardSet(StandardSet::ZNz)
-            | Obj::StandardSet(StandardSet::RNz) => {
+            // Nonzero: `x $in R*` or `x $in C*` (etc.) => `x != 0`.
+            Obj::StandardSet(StandardSet::QStar)
+            | Obj::StandardSet(StandardSet::ZStar)
+            | Obj::StandardSet(StandardSet::RStar)
+            | Obj::StandardSet(StandardSet::CStar) => {
                 let zero_obj: Obj = Number::new("0".to_string()).into();
                 let inferred_atomic_fact =
                     NotEqualFact::new(in_fact.element.clone(), zero_obj, in_fact.line_file.clone())
@@ -664,7 +671,7 @@ impl Runtime {
                     .into();
                     infer_result.new_fact(&carrier_membership);
                     infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                             carrier_membership,
                         )?,
                     );
@@ -677,7 +684,7 @@ impl Runtime {
                     .into();
                     infer_result.new_fact(&cart_membership);
                     infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                             cart_membership,
                         )?,
                     );
@@ -738,7 +745,7 @@ impl Runtime {
                     .into();
                     infer_result.new_fact(&field_in_type);
                     infer_result.new_infer_result_inside(
-                        self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                        self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                             field_in_type,
                         )?,
                     );
@@ -760,7 +767,7 @@ impl Runtime {
                         .into();
                         infer_result.new_fact(&projected_field_in_type);
                         infer_result.new_infer_result_inside(
-                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                                 projected_field_in_type,
                             )?,
                         );
@@ -817,7 +824,7 @@ impl Runtime {
                         )?;
                         infer_result.new_fact(&projected_fact);
                         infer_result.new_infer_result_inside(
-                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                                 projected_fact,
                             )?,
                         );
@@ -906,7 +913,7 @@ impl Runtime {
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&union_membership_cases);
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         union_membership_cases,
                     )?,
                 );
@@ -931,13 +938,13 @@ impl Runtime {
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&element_in_left);
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         element_in_left,
                     )?,
                 );
                 infer_result.new_fact(&element_in_right);
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         element_in_right,
                     )?,
                 );
@@ -954,13 +961,13 @@ impl Runtime {
                 let mut infer_result = InferResult::new();
                 infer_result.new_fact(&element_in_left);
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         element_in_left,
                     )?,
                 );
                 infer_result.new_fact(&element_not_in_right);
                 infer_result.new_infer_result_inside(
-                    self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                         element_not_in_right,
                     )?,
                 );
@@ -976,7 +983,7 @@ impl Runtime {
                         .into();
                         infer_result.new_fact(&element_not_equal);
                         infer_result.new_infer_result_inside(
-                            self.verify_well_defined_and_store_and_infer_with_default_verify_state(
+                            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
                                 element_not_equal,
                             )?,
                         );
@@ -1046,7 +1053,9 @@ impl Runtime {
         {
             infer_result.new_fact(&exist_fact);
             infer_result.new_infer_result_inside(
-                self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+                self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                    exist_fact,
+                )?,
             );
         }
         Ok(infer_result)
@@ -1154,7 +1163,9 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&exist_fact);
         infer_result.new_infer_result_inside(
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                exist_fact,
+            )?,
         );
         Ok(infer_result)
     }
@@ -1186,7 +1197,9 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         infer_result.new_fact(&exist_fact);
         infer_result.new_infer_result_inside(
-            self.verify_well_defined_and_store_and_infer_with_default_verify_state(exist_fact)?,
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
+                exist_fact,
+            )?,
         );
         Ok(infer_result)
     }

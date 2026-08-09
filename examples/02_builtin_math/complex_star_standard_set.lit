@@ -1,0 +1,28 @@
+# Tracer: C* is the nonzero complex standard set.
+#
+# Before (did not work):
+# have z C*
+# z $in C
+# z != 0
+# Former behavior: line 1 failed to parse with `Unexpected end of tokens`.
+#
+# Now (verified):
+have z C*
+z $in C
+z != 0
+i $in C*
+1 $in C*
+not 0 $in C*
+R* $subset C*
+C* $subset C
+
+forall a, b C*:
+    a * b $in C*
+
+# Current behavior: C* supplies complex membership and nonzeroness, and is
+# closed under multiplication through the existing complex and nonzero rules.
+#
+# Boundary: `0 $in C*`, `C $subset C*`, and unconditional additive closure
+# remain rejected by executable Rust regressions; `N*` remains unsupported
+# because `N+` is the canonical nonzero natural carrier.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/complex_star_standard_set.lit
