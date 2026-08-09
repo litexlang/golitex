@@ -72,6 +72,27 @@ Inventory:
 Persistent tracer:
 [`examples/05_compiler_interop/to_lean_builtin_rules_20.lit`](../../examples/05_compiler_interop/to_lean_builtin_rules_20.lit)
 
+## Numeric object ABI
+
+- [x] Freeze one uniform output spelling for every Litex `Obj`.
+- [x] Keep symbols and normalized numerals bare; forbid per-object carrier
+  inference and inserted numeric casts.
+- [x] Keep `N`, `Z`, `Q`, `R`, and `C` as standard-set objects and parameter
+  memberships rather than native Lean binder types.
+- [x] Separate canonical object terms from optional native proof views.
+- [x] Record natural, integer, rational, mixed-carrier, and rejected-boundary
+  cases in a persistent Litex tracer.
+- [ ] Select and implement the concrete `LitexObj` / `LitexSet` target model.
+- [ ] Add structural `ObjToLeanIR` and monomorphic object-fact IR.
+- [ ] Replace the real-only emitter without changing canonical object spelling.
+- [ ] Promote the source tracer to an actual generated-Lean kernel gate.
+
+Specification:
+[`math_collections.md#numeric-object-abi`](math_collections.md#numeric-object-abi)
+
+Tracer:
+[`examples/05_compiler_interop/to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit)
+
 ## Required final gates
 
 - [x] Focused To-Lean release tests.

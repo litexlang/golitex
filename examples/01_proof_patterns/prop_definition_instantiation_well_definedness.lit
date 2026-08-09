@@ -1,0 +1,33 @@
+# Tracer: reuse prop-definition well-definedness after typed instantiation
+#
+# Before (verified but repeated internally):
+# prop traced_nonnegative(x R):
+#     x >= 0
+# prop traced_wrapped_nonnegative(x R):
+#     $traced_nonnegative(x)
+# 2 >= 0
+# $traced_wrapped_nonnegative(2)
+# Former behavior: storing the final fact checked the instantiated definition
+# clauses from scratch even though each clause was checked at declaration and
+# the concrete argument had already been checked against R.
+#
+# Now (verified): the same surface program first materializes the instantiated
+# parameter facts and then stores the definition instances without repeating
+# their complete WD.
+
+prop traced_nonnegative(x R):
+    x >= 0
+
+prop traced_wrapped_nonnegative(x R):
+    $traced_nonnegative(x)
+
+2 >= 0
+$traced_wrapped_nonnegative(2)
+$traced_nonnegative(2)
+
+# Boundary: ordinary proof still cannot establish `$natural_only(-1)` for
+# `natural_only(n N)`. An explicit `trust` may assume that false proposition,
+# just as it could before this internal optimization.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prop_definition_instantiation_well_definedness.lit
+# Negative regression: ordinary_prop_proof_still_requires_parameter_constraints
+# Implementation: src/infer/infer_equal_and_normal.rs

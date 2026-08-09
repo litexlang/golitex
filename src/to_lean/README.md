@@ -302,6 +302,13 @@ verified but unsupported trigonometric rule. Report mode returns
 Lean accepted by the real kernel; strict mode still rejects the same unsupported
 rule.
 
+[`examples/05_compiler_interop/to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit)
+is the numeric-object semantic tracer. It currently fixes the source-side
+membership facts, uniform object spellings, and rejected natural-subtraction
+boundary that a later Obj IR must preserve. The intended but unimplemented
+interface remains in `math_collections.md`; it is not claimed as current
+compiler behavior here.
+
 Rust and Litex gates:
 
 ```text

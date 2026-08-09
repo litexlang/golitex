@@ -44,10 +44,30 @@ claim:
     witness exist p &PrecheckedCylindricalPoint st {prechecked_locus(c) = prechecked_locus(p[3])} from a:
         prechecked_locus(c) = prechecked_locus(a[3])
 
+# A template instantiated while checking one conclusion remains available in
+# the temporary preflight environment until every definition clause has been
+# checked. Only the certificate exported afterward drops that local definition.
+prop prechecked_metric_signature(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+
+template<X set, dist fn(x, y X) R, Y power_set(X)>:
+    have fn prechecked_restricted_distance(x, y Y) R = dist(x, y)
+
+thm prechecked_template_lifetime:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X):
+        $prechecked_metric_signature(X, dist)
+        =>:
+            $prechecked_metric_signature(Y, \prechecked_restricted_distance<X, dist, Y>)
+    # The mathematical inheritance is deliberately assumed here; this tracer
+    # checks that its statement remains well-defined throughout preflight.
+    trust $prechecked_metric_signature(Y, \prechecked_restricted_distance<X, dist, Y>)
+
 # Boundary: proof-local facts still cannot repair an ill-defined theorem or
 # claim header. The executable negative regression keeps `f(0)` rejected when
 # the header binds only `f set`, even if the proof later trusts a function type.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prechecked_goal_well_definedness.lit
 # Negative regression: proof_local_facts_cannot_repair_an_ill_defined_theorem_or_claim_goal
 # Soundness regression: prechecked_goal_certificate_never_stores_the_goal_itself
-# Implementation: src/execute/exec_def_thm_stmt.rs and src/execute/exec_claim_stmt.rs
+# Lifecycle regression: prechecked_goal_keeps_template_instantiations_alive_during_preflight
+# Implementation: src/verify/verify_fact_well_defined.rs, src/execute/exec_def_thm_stmt.rs, and src/execute/exec_claim_stmt.rs

@@ -1,6 +1,27 @@
 use super::*;
 
 #[test]
+fn ordinary_prop_proof_still_requires_parameter_constraints() {
+    let source_code = r#"
+prop natural_only(n N):
+    n = n
+
+$natural_only(-1)
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("inferred_prop_definition_argument_types");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "an ordinary proof cannot establish a prop whose parameter constraint is false:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn ordinary_atomic_verification_uses_a_concrete_prop_definition() {
     run_with_large_stack("automatic_prop_definition", || {
         let source_code = r#"
@@ -1604,6 +1625,36 @@ claim:
             label, run_output
         );
     }
+}
+
+#[test]
+fn prechecked_goal_keeps_template_instantiations_alive_during_preflight() {
+    let source_code = r#"
+prop preflight_metric(X set, dist fn(x, y X) R):
+    forall x, y X:
+        dist(x, y) >= 0
+
+template<X set, dist fn(x, y X) R, Y power_set(X)>:
+    have fn preflight_restricted_distance(x, y Y) R = dist(x, y)
+
+thm preflight_template_lifetime:
+    ? forall X set, dist fn(x, y X) R, Y power_set(X):
+        $preflight_metric(X, dist)
+        =>:
+            $preflight_metric(Y, \preflight_restricted_distance<X, dist, Y>)
+    trust $preflight_metric(Y, \preflight_restricted_distance<X, dist, Y>)
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("preflight_template_lifetime");
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "template definitions created by one checked goal must remain available for the complete preflight:\n{}",
+        run_output
+    );
 }
 
 #[test]
