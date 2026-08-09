@@ -82,16 +82,29 @@ Persistent tracer:
 - [x] Separate canonical object terms from optional native proof views.
 - [x] Record natural, integer, rational, mixed-carrier, and rejected-boundary
   cases in a persistent Litex tracer.
-- [ ] Select and implement the concrete `LitexObj` / `LitexSet` target model.
-- [ ] Add structural `ObjToLeanIR` and monomorphic object-fact IR.
-- [ ] Replace the real-only emitter without changing canonical object spelling.
-- [ ] Promote the source tracer to an actual generated-Lean kernel gate.
+- [x] Implement one concrete `LitexSet` target carrier; there is no separate
+  semantic `LitexObj` type.
+- [x] Add structural, context-free `ObjToLeanIR` with stable `SymbolId`s,
+  normalized numerals, standard-set identity, and ordered applications.
+- [x] Replace the real-only canonical emitter for the supported object tranche;
+  native reals now occur only as checked proof-view payloads.
+- [x] Lower `union`, `intersect`, `set_minus`, `set_diff`, big set operators,
+  power sets, and list sets through the same object IR.
+- [x] Reject binder-owning `SetBuilder` during IR construction instead of
+  guessing a carrier or emitting a fallback.
+- [x] Promote the structural set-object tracer to a generated-Lean core kernel
+  gate.
+- [ ] Replace the remaining raw `Fact` payload with a dedicated monomorphic
+  structural object-fact IR.
 
 Specification:
 [`math_collections.md#numeric-object-abi`](math_collections.md#numeric-object-abi)
 
 Tracer:
 [`examples/05_compiler_interop/to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit)
+
+Structural set-object tracer:
+[`examples/05_compiler_interop/to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit)
 
 ## Required final gates
 

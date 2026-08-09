@@ -425,12 +425,13 @@ pub use crate::symbol::{
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
 pub use crate::to_lean_ir::{
-    AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR,
-    DivNotEqualZeroToLeanIR, EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR,
-    EqualityRewriteToLeanIR, FactProofToLeanIR, FactStmtToLeanIR, FactToLeanIR,
-    IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LocalPremiseToLeanIR,
-    NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR, ParamGroupToLeanIR,
-    ParamTypeToLeanIR, ProofRuleToLeanIR, PropToLeanIR, StmtToLeanIR, TrustToLeanIR,
+    AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinObjOperatorToLeanIR,
+    BuiltinRuleToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, DivNotEqualZeroToLeanIR,
+    EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
+    FactProofToLeanIR, FactStmtToLeanIR, FactToLeanIR, IffDirectionToLeanIR,
+    KnownForallArgumentToLeanIR, LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR,
+    NormalizationKindToLeanIR, ObjToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR,
+    ProofRuleToLeanIR, PropToLeanIR, StandardSetToLeanIR, StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

@@ -84,13 +84,6 @@ impl LeanRationalExpression {
         format!("{} / {}", self.numerator, self.denominator)
     }
 
-    pub fn fraction_expression(&self) -> String {
-        if !self.has_denominator() {
-            return self.numerator.clone();
-        }
-        format!("({} / {})", self.numerator, self.denominator)
-    }
-
     fn atom(expression: String) -> Self {
         Self::new(expression.clone(), expression, LEAN_ONE.to_string())
     }

@@ -175,20 +175,22 @@ edge again from printed text. An equality obtained only through a verifier
 backend whose derivation is not represented in compiler IR is rejected at this
 boundary instead of being emitted without proof provenance.
 
-Known-forall evidence retains each parameter name, typed argument object,
-translated binder type, and recursively verified requirement. Parameter-type
-checks are kept separately from actual domain premises: Lean realizes the
-former as a typed local argument, while the latter remain proposition proofs.
-The runtime also instantiates the cited forall's selected conclusion with the
-recorded objects. Consequently, `KnownForallInstantiation` proves that direct
-instance rather than silently claiming the final goal. If the verifier matched
-objects that are rationally equal but print differently, a separate outer
-`Normalization` node records the move from the direct instance to the requested
-goal. Statement memoization is a transparent proof wrapper and does not erase
-the underlying route.
-For forall introduction, the corresponding temporary parameter-typing facts
-are likewise retained separately (with their IDs), even though the emitter
-realizes them through typed Lean binders rather than local proposition names.
+Known-forall evidence retains each parameter name, structural argument object,
+parameter constraint, and recursively verified requirement. Every generated
+argument has the one type `LitexSet`. A constraint such as `z Z` is replayed as
+the separate proposition `z ∈ litexZ`; it never changes the binder or the
+argument into a native integer, rational, or real. The runtime also
+instantiates the cited forall's selected conclusion with the recorded objects.
+Consequently, `KnownForallInstantiation` proves that direct instance rather
+than silently claiming the final goal. If the verifier matched objects that
+are rationally equal but print differently, a separate outer `Normalization`
+node records the move from the direct instance to the requested goal.
+Statement memoization is a transparent proof wrapper and does not erase the
+underlying route.
+
+For forall introduction, temporary parameter facts are likewise retained with
+their IDs. A `set` parameter needs no extra proposition because every object is
+a `LitexSet`; numeric and other domain constraints become named local proofs.
 Cached citations and known-forall requirements capture their source `FactId`
 while the source environment is alive, so a temporary premise can remain a
 local Lean proof argument after its Litex scope has been popped.
@@ -201,11 +203,19 @@ surface begins with:
 ```lean
 import Mathlib
 
-universe uLitex
-
 namespace chapter01_introduction
 
-abbrev LitexSet := Type uLitex
+noncomputable section
+
+inductive LitexStandardSet where
+  | natural | rational | integer | real | complex
+
+inductive LitexSet where
+  | realValue (value : ℝ)
+  | standard (kind : LitexStandardSet)
+  | primitive (tag : String)
+  | application (operator : String) (arguments : List LitexSet)
+
 abbrev LitexFact := Prop
 
 -- generated declarations
@@ -213,13 +223,18 @@ abbrev LitexFact := Prop
 end chapter01_introduction
 ```
 
-`uLitex` is a Lean universe-level variable used only by the generated
-representation; Litex itself does not expose a universe concept. The emitter
-never uses a fixed synthetic namespace such as `LitexGenerated`. A registered
-file or module uses its canonical Litex name, with `::` mapped to Lean's `.`, so
-`A::chap2` becomes `A.chap2`. A standalone runtime whose source path ends in
-`.lit` falls back to the sanitized file stem. The canonical name takes
-precedence over that fallback.
+`LitexSet` is the one meta-level carrier of Litex set-values; it is not itself
+a Litex universal-set object. Symbols, numerals, standard sets, arithmetic
+applications, and set constructors all elaborate to this carrier. The
+`realValue` payload is an internal proof view used by the current Mathlib
+arithmetic backend. It does not cause generated statements to print `(z : ℝ)`
+or `(1 : ℝ)`.
+
+The emitter never uses a fixed synthetic namespace such as `LitexGenerated`.
+A registered file or module uses its canonical Litex name, with `::` mapped to
+Lean's `.`, so `A::chap2` becomes `A.chap2`. A standalone runtime whose source
+path ends in `.lit` falls back to the sanitized file stem. The canonical name
+takes precedence over that fallback.
 
 `to_lean_from_source` remains anonymous and emits declarations at the file
 root, even when its diagnostic label looks like a `.lit` path. The pure
@@ -232,14 +247,17 @@ traversal, Lean imports, or cross-file `FactId` lowering to the current MVP.
 
 The current lowering is intentionally small:
 
-- `abstract_prop` becomes a polymorphic `opaque` proposition;
-- a typed `prop` over the currently supported `R`/set parameter surface becomes
-  `def` (or `opaque` when it has no body);
+- `abstract_prop` becomes a monomorphic `opaque` proposition over zero or more
+  `LitexSet` arguments;
+- a typed `prop` over the currently supported parameter surface becomes `def`
+  (or `opaque` when it has no body), with object parameters uniformly typed as
+  `LitexSet` and nontrivial parameter constraints kept as propositions;
 - only an explicit Litex `trust` becomes Lean `axiom`;
 - stored proved facts become `theorem global_fact_<FactId>`;
-- known-forall application first materializes every chosen object as a typed
-  `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement as a
-  `proof_fact`, and names the direct instantiated conclusion before using it;
+- known-forall application first materializes every chosen object as a
+  `LitexSet` `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement
+  as a `proof_fact`, and names the direct instantiated conclusion before using
+  it;
 - definition evidence uses the named Lean definition;
 - each generated proof block lazily receives a `SpaceId`; introduced premises
   and intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>`;
@@ -260,8 +278,14 @@ The current lowering is intentionally small:
 - arithmetic/order builtin evidence checks the target and ordered premise fact
   families, recursively materializes those premise proofs, and applies one of
   `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
-- verified rational-expression normalization is discharged with `norm_num`,
-  `ring`, or `field_simp` followed by `ring`.
+- verified rational-expression normalization obtains native real witnesses
+  only from recorded `x ∈ litexR` proofs, then discharges the proof view with
+  `norm_num`, `ring`, or `field_simp` followed by `ring`;
+- context-free object lowering preserves symbols, bare normalized numerals,
+  standard sets, scalar applications, and the simple set constructors
+  `union`, `intersect`, `set_minus`, `set_diff`, `big_union`, `big_intersect`,
+  `power_set`, and list sets;
+- binder-owning `SetBuilder` remains an explicit IR-construction boundary.
 
 Unsupported proof rules, propositions, objects, parameter types, composite
 proofs, and inference origins stop strict compilation with an error. Report
@@ -303,11 +327,14 @@ Lean accepted by the real kernel; strict mode still rejects the same unsupported
 rule.
 
 [`examples/05_compiler_interop/to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit)
-is the numeric-object semantic tracer. It currently fixes the source-side
-membership facts, uniform object spellings, and rejected natural-subtraction
-boundary that a later Obj IR must preserve. The intended but unimplemented
-interface remains in `math_collections.md`; it is not claimed as current
-compiler behavior here.
+is the numeric-object semantic tracer. It fixes source-side membership facts,
+uniform object spellings, and the guarded natural-subtraction boundary.
+
+[`examples/05_compiler_interop/to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit)
+is the implemented structural object tracer. It sends `union`, `intersect`,
+and `set_minus` through `ObjToLeanIR` and the one-carrier prelude, while a
+focused negative regression requires `SetBuilder` to fail during IR
+construction.
 
 Rust and Litex gates:
 
@@ -315,6 +342,7 @@ Rust and Litex gates:
 cargo test --release to_lean:: -- --nocapture
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_set_obj_abi.lit
 ```
 
 Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
@@ -326,6 +354,8 @@ LITEX_LAKE=/optional/absolute/path/to/lake \
 LITEX_LEAN_PROJECT=/path/to/mathlib-project \
 LITEX_LAKE=/optional/absolute/path/to/lake \
   cargo test --release generated_to_lean_builtin_rules_20_compiles_with_lean -- --ignored --nocapture
+LITEX_LEAN=/absolute/path/to/lean \
+  cargo test --release generated_to_lean_set_obj_abi_compiles_with_lean_core -- --ignored --nocapture
 ```
 
 For scratch work, these commands first verify `examples/tmp.lit`,

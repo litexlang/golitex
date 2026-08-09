@@ -27,6 +27,7 @@ impl Runtime {
         result: &StmtResult,
     ) -> Result<StmtToLeanIR, RuntimeError> {
         if let Some(success) = result.factual_success() {
+            ensure_fact_objects_lower_to_lean_ir(&success.stmt)?;
             let fact = self.fact_to_lean_ir_from_success(success)?;
             let excluded = HashSet::from([success.stmt.to_string()]);
             return Ok(StmtToLeanIR::Fact(FactStmtToLeanIR {
@@ -49,6 +50,9 @@ impl Runtime {
                 }))
             }
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(stmt)) => {
+                for fact in stmt.iff_facts.iter() {
+                    ensure_fact_objects_lower_to_lean_ir(fact)?;
+                }
                 Ok(StmtToLeanIR::Prop(PropToLeanIR {
                     name: stmt.name.clone(),
                     params: stmt
@@ -56,7 +60,7 @@ impl Runtime {
                         .groups
                         .iter()
                         .map(param_group_to_lean_ir)
-                        .collect(),
+                        .collect::<Result<Vec<_>, RuntimeError>>()?,
                     iff_facts: stmt.iff_facts.clone(),
                 }))
             }
@@ -68,6 +72,7 @@ impl Runtime {
                     .collect::<HashSet<_>>();
                 let mut facts = Vec::with_capacity(stmt.facts.len());
                 for fact in stmt.facts.iter() {
+                    ensure_fact_objects_lower_to_lean_ir(fact)?;
                     facts.push(FactToLeanIR {
                         fact_id: self.known_fact_id_for_fact(fact)?,
                         proposition: fact.clone(),
@@ -416,7 +421,7 @@ impl Runtime {
 
         let mut param_types = Vec::new();
         for group in source_forall.params_def_with_type.groups.iter() {
-            let param_type = param_type_to_lean_ir(&group.param_type);
+            let param_type = param_type_to_lean_ir(&group.param_type)?;
             for _ in group.params.iter() {
                 param_types.push(param_type.clone());
             }
@@ -694,23 +699,27 @@ impl Runtime {
     }
 }
 
-fn param_group_to_lean_ir(group: &ParamGroupWithParamType) -> ParamGroupToLeanIR {
-    ParamGroupToLeanIR {
+fn param_group_to_lean_ir(
+    group: &ParamGroupWithParamType,
+) -> Result<ParamGroupToLeanIR, RuntimeError> {
+    Ok(ParamGroupToLeanIR {
         names: group
             .params
             .iter()
             .map(|binding| binding.name().to_string())
             .collect(),
-        param_type: param_type_to_lean_ir(&group.param_type),
-    }
+        param_type: param_type_to_lean_ir(&group.param_type)?,
+    })
 }
 
-fn param_type_to_lean_ir(param_type: &ParamType) -> ParamTypeToLeanIR {
+fn param_type_to_lean_ir(param_type: &ParamType) -> Result<ParamTypeToLeanIR, RuntimeError> {
     match param_type {
-        ParamType::Set(_) => ParamTypeToLeanIR::LitexSet,
-        ParamType::NonemptySet(_) => ParamTypeToLeanIR::LitexNonemptySet,
-        ParamType::Obj(Obj::StandardSet(StandardSet::R)) => ParamTypeToLeanIR::Real,
-        other => ParamTypeToLeanIR::Unsupported(other.to_string()),
+        ParamType::Set(_) => Ok(ParamTypeToLeanIR::LitexSet),
+        ParamType::NonemptySet(_) => Ok(ParamTypeToLeanIR::LitexNonemptySet),
+        ParamType::FiniteSet(_) => Ok(ParamTypeToLeanIR::LitexFiniteSet),
+        ParamType::Obj(obj) => ObjToLeanIR::lower(obj)
+            .map(ParamTypeToLeanIR::MemberOf)
+            .map_err(|message| to_lean_ir_error(&default_line_file(), message)),
     }
 }
 
@@ -728,6 +737,63 @@ fn facts_align_by_rational_normalization(source: &Fact, goal: &Fact) -> bool {
             .iter()
             .zip(goal_args.iter())
             .all(|(source, goal)| objs_equal_by_rational_expression_evaluation(source, goal))
+}
+
+fn ensure_fact_objects_lower_to_lean_ir(fact: &Fact) -> Result<(), RuntimeError> {
+    let mut objects = Vec::new();
+    collect_fact_objects_for_to_lean(fact, &mut objects);
+    for object in objects {
+        ObjToLeanIR::lower(object)
+            .map_err(|message| to_lean_ir_error(&fact.line_file(), message))?;
+    }
+    Ok(())
+}
+
+fn collect_fact_objects_for_to_lean<'a>(fact: &'a Fact, objects: &mut Vec<&'a Obj>) {
+    match fact {
+        Fact::AtomicFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ExistFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::OrFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::AndFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ChainFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ForallFact(fact) => collect_forall_objects_for_to_lean(fact, objects),
+        Fact::ForallFactWithIff(fact) => {
+            collect_forall_objects_for_to_lean(&fact.forall_fact, objects);
+            for iff_fact in fact.iff_facts.iter() {
+                collect_forall_conclusion_objects_for_to_lean(iff_fact, objects);
+            }
+        }
+        Fact::NotForall(fact) => collect_forall_objects_for_to_lean(&fact.forall_fact, objects),
+    }
+}
+
+fn collect_forall_objects_for_to_lean<'a>(fact: &'a ForallFact, objects: &mut Vec<&'a Obj>) {
+    for group in fact.params_def_with_type.groups.iter() {
+        if let ParamType::Obj(set) = &group.param_type {
+            objects.push(set);
+        }
+    }
+    for premise in fact.dom_facts.iter() {
+        collect_fact_objects_for_to_lean(premise, objects);
+    }
+    for conclusion in fact.then_facts.iter() {
+        collect_forall_conclusion_objects_for_to_lean(conclusion, objects);
+    }
+}
+
+fn collect_forall_conclusion_objects_for_to_lean<'a>(
+    fact: &'a ExistOrAndChainAtomicFact,
+    objects: &mut Vec<&'a Obj>,
+) {
+    match fact {
+        ExistOrAndChainAtomicFact::AtomicFact(fact) => {
+            objects.extend(fact.get_args_from_fact_ref())
+        }
+        ExistOrAndChainAtomicFact::AndFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::ChainFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::OrFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::ExistFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+    }
 }
 
 fn to_lean_ir_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeError {
