@@ -230,8 +230,13 @@ stable IDs to stored facts and, only in explicit To-Lean mode, returns a
 recursive IR recording which fact, forall instantiation, definition, or builtin
 rule verified each step. The Lean emitter consumes that IR rather than
 re-running pattern matching over source statements. Its supported surface is
-still deliberately narrow, and unsupported routes fail instead of becoming
-`sorry` or implicit axioms. See the
+still deliberately narrow; the current scoped-statement slice includes
+explicit-value `have`, checked bare selection such as `have x R`, binary
+`by cases`, atomic `by contra`, trust-free positive `witness exist`, and
+existential extraction through `obtain` or body-style `have x T: ...`. Bare
+selection and existential extraction are compiled from their exact checked
+packages with `Exists.choose`/`choose_spec`, never an invented opaque constant.
+Unsupported routes fail instead of becoming `sorry` or implicit axioms. See the
 [compiler README](src/to_lean/README.md) for the supported subset and current
 boundary.
 

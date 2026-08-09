@@ -89,9 +89,17 @@ Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. The current To-Lean code is a
-narrow rational-equality experiment, not a general compiler, so reliability
-claims must remain grounded in inspectable rules, tests, verifier output, and
-explicit trust reporting.
+deliberately partial compiler, not a general compiler. Its checked subset now
+includes selected declarations, recursive proof certificates, explicit-value
+`have`, checked real-carrier selection such as `have x R`, binary `by cases`,
+atomic `by contra`, positive `witness exist`, and positive existential
+extraction through `obtain` or body-style `have`, alongside a limited set of
+object and builtin-rule backends. Selection and extraction consume retained
+existential certificates and emit `Exists.choose` plus `choose_spec`; they do
+not invent opaque values. `exist!`, `not exist`, and preimage extraction remain
+outside this slice. Unsupported statements remain explicit instead of becoming
+`sorry` or implicit axioms, so reliability claims must stay grounded in
+inspectable rules, tests, verifier output, and trust reporting.
 
 ---
 
@@ -191,7 +199,7 @@ forall x R, n Z:
 The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
 minimum, maximum, and least-common-multiple notation. Python extraction uses
 `math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`. These objects are
-outside the current To-Lean rational-equality experiment.
+outside the current checked To-Lean subset.
 
 The second native-function batch adds `exp`, `ln`, `sign`, and `factorial`.
 Their exact special values and finite integer calculations normalize directly:
@@ -255,7 +263,7 @@ exposes the successor recurrence, preserves weak order (and strict order away
 from the `0! = 1!` boundary), and makes every earlier factorial divide a later
 one. All four names are hard-reserved. Python extraction uses `math.exp`,
 `math.log`, a conditional sign expression, and `math.factorial`. These objects
-are outside the current To-Lean rational-equality experiment.
+are outside the current checked To-Lean subset.
 
 The parser does not make an invalid expression meaningful:
 
@@ -301,8 +309,7 @@ approximations:
 | LaTeX | `\mathrm{e}` | `\pi` |
 | Python extractor | `math.e` | `math.pi` |
 
-The current To-Lean rational-equality experiment does not lower these symbolic
-constants.
+The current checked To-Lean subset does not lower these symbolic constants.
 
 The symbolic evaluator likewise does not assign decimal runtime values to
 these constants.
@@ -386,8 +393,8 @@ The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
 `fn(x R) R {sin(x)}`. LaTeX emits standard trigonometric notation. The
 evaluator and current Python extractor report native trigonometric expressions
-as unsupported. They are also outside the current To-Lean rational-equality
-experiment rather than being assigned a library semantics silently.
+as unsupported. They are also outside the current checked To-Lean subset rather
+than being assigned a library semantics silently.
 
 ### Complex scalars (beta preview)
 
@@ -2247,6 +2254,15 @@ w $in R
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
 ```
+
+The checked To-Lean subset currently lowers positive `witness exist` and
+positive extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
+existential citations, introduces file-scope or proof-local witness names with
+ordered `Exists.choose`, and exports only the exact parameter and direct-body
+facts justified by `choose_spec`. Unique/non-existence and preimage forms still
+report an explicit compiler boundary.
+If two distinct Litex identifiers would sanitize to the same Lean binder name,
+the compiler asks for a rename rather than emitting a captured quantifier.
 
 The witness must satisfy the displayed body:
 

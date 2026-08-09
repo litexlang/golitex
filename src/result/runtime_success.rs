@@ -15,6 +15,16 @@ pub struct NonFactualStmtSuccess {
     pub execution_trace: Option<StatementExecutionTrace>,
     pub theorem_verification: Option<TheoremVerificationResult>,
     pub claim_verification: Option<ClaimVerificationResult>,
+    /// Exact verifier-to-environment mapping for bare `have x T` selection.
+    /// The proof results stay in `inside_results`; this record identifies which
+    /// one certifies each selected object's stored type fact.
+    pub object_choice_verification: Option<ObjectChoiceVerificationResult>,
+    /// Checked witness, parameter, and body-result layout for
+    /// `witness exist ... from ...`.
+    pub witness_exist_verification: Option<WitnessExistVerificationResult>,
+    /// Exact source-to-environment projection contract for `obtain ... from
+    /// exist ...` and body-style `have x T: ...`.
+    pub existential_elimination_verification: Option<ExistentialEliminationVerificationResult>,
     pub by_verification: Option<ByVerificationResult>,
 }
 
@@ -59,6 +69,10 @@ pub enum ByVerificationResult {
 
 pub struct ByCasesVerificationResult {
     pub cases: Vec<AndChainAtomicFact>,
+    /// Stable IDs of the temporary case assumptions, captured before each
+    /// branch environment is popped. Compiler backends use these IDs to bind
+    /// citations inside the corresponding proof scope.
+    pub case_fact_ids: Vec<FactId>,
     pub then_facts: Vec<Fact>,
     pub proof_step_counts: Vec<usize>,
     pub case_result_counts: Vec<usize>,
@@ -68,6 +82,9 @@ pub struct ByCasesVerificationResult {
 pub struct ByContraVerificationResult {
     pub to_prove: Fact,
     pub reverse_assumption: Fact,
+    /// Stable ID of the temporary reverse assumption while the contradiction
+    /// proof environment was alive.
+    pub reverse_assumption_fact_id: FactId,
     pub proof_step_count: usize,
     pub impossible_fact: AtomicFact,
 }
@@ -185,6 +202,87 @@ pub struct ByDefinitionVerificationResult {
 pub struct ObjectIntroductionItem {
     pub name: String,
     pub facts: Vec<Fact>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ObjectChoiceVerificationResult {
+    /// One exact stored type fact for every selected object, in declaration
+    /// order. For an object carrier this is the selected membership fact.
+    pub selected_type_facts: Vec<Fact>,
+    /// Index into `NonFactualStmtSuccess::inside_results` for the checked
+    /// nonemptiness producer. Meta-level parameter types currently have no
+    /// such producer and retain `None` as an explicit backend boundary.
+    pub nonempty_check_indices: Vec<Option<usize>>,
+}
+
+impl ObjectChoiceVerificationResult {
+    pub fn new(selected_type_facts: Vec<Fact>, nonempty_check_indices: Vec<Option<usize>>) -> Self {
+        ObjectChoiceVerificationResult {
+            selected_type_facts,
+            nonempty_check_indices,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct WitnessExistVerificationResult {
+    /// Number of user proof statements at the front of `inside_results`.
+    pub proof_step_count: usize,
+    /// One factual type-check result for every witness value that contributes
+    /// a target-side existential requirement.  Plain `set` binders need no
+    /// separate target proposition because every value already has type
+    /// `LitexSet`.
+    pub parameter_checks: Vec<Option<Box<StmtResult>>>,
+    /// One factual result for every direct existential body fact.
+    pub body_check_indices: Vec<usize>,
+    /// The final result for the uniqueness obligation, when the source form
+    /// is `exist!`.
+    pub uniqueness_check_index: Option<usize>,
+}
+
+impl WitnessExistVerificationResult {
+    pub fn new(
+        proof_step_count: usize,
+        parameter_checks: Vec<Option<Box<StmtResult>>>,
+        body_check_indices: Vec<usize>,
+        uniqueness_check_index: Option<usize>,
+    ) -> Self {
+        Self {
+            proof_step_count,
+            parameter_checks,
+            body_check_indices,
+            uniqueness_check_index,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ExistentialEliminationVerificationResult {
+    /// Index of the checked source existential in `inside_results`.
+    pub source_result_index: usize,
+    /// Exact instantiated type fact stored for every introduced witness.
+    pub witness_type_facts: Vec<Fact>,
+    /// Exact instantiated direct body facts stored by elimination.
+    pub instantiated_body_facts: Vec<Fact>,
+    /// `exist!` additionally stores a generated uniqueness theorem.  The
+    /// current compiler tranche rejects that extra projection explicitly.
+    pub includes_uniqueness: bool,
+}
+
+impl ExistentialEliminationVerificationResult {
+    pub fn new(
+        source_result_index: usize,
+        witness_type_facts: Vec<Fact>,
+        instantiated_body_facts: Vec<Fact>,
+        includes_uniqueness: bool,
+    ) -> Self {
+        Self {
+            source_result_index,
+            witness_type_facts,
+            instantiated_body_facts,
+            includes_uniqueness,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -401,6 +499,20 @@ impl FactualStmtSuccess {
         let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
             msg: strategy_label,
             evidence: None,
+            subgoals: step_results,
+        });
+        Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
+    }
+
+    pub fn new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+        stmt: Fact,
+        strategy_label: String,
+        evidence: BuiltinRuleEvidence,
+        step_results: Vec<StmtResult>,
+    ) -> Self {
+        let verified_by = VerifiedByResult::BuiltinStrategy(VerifiedByBuiltinRuleResult {
+            msg: strategy_label,
+            evidence: Some(evidence),
             subgoals: step_results,
         });
         Self::new_with_verified_by_builtin_rules(stmt, InferResult::new(), verified_by)
@@ -856,6 +968,9 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
+            object_choice_verification: None,
+            witness_exist_verification: None,
+            existential_elimination_verification: None,
             by_verification: None,
         }
     }
@@ -875,6 +990,9 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: Some(theorem_verification),
             claim_verification: None,
+            object_choice_verification: None,
+            witness_exist_verification: None,
+            existential_elimination_verification: None,
             by_verification: None,
         }
     }
@@ -894,6 +1012,9 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: Some(claim_verification),
+            object_choice_verification: None,
+            witness_exist_verification: None,
+            existential_elimination_verification: None,
             by_verification: None,
         }
     }
@@ -913,6 +1034,9 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
+            object_choice_verification: None,
+            witness_exist_verification: None,
+            existential_elimination_verification: None,
             by_verification: Some(by_verification),
         }
     }
@@ -981,6 +1105,7 @@ impl From<ClaimFactVerificationResult> for ClaimVerificationResult {
 impl ByCasesVerificationResult {
     pub fn new(
         cases: Vec<AndChainAtomicFact>,
+        case_fact_ids: Vec<FactId>,
         then_facts: Vec<Fact>,
         proof_step_counts: Vec<usize>,
         case_result_counts: Vec<usize>,
@@ -988,6 +1113,7 @@ impl ByCasesVerificationResult {
     ) -> Self {
         ByCasesVerificationResult {
             cases,
+            case_fact_ids,
             then_facts,
             proof_step_counts,
             case_result_counts,
@@ -1000,12 +1126,14 @@ impl ByContraVerificationResult {
     pub fn new(
         to_prove: Fact,
         reverse_assumption: Fact,
+        reverse_assumption_fact_id: FactId,
         proof_step_count: usize,
         impossible_fact: AtomicFact,
     ) -> Self {
         ByContraVerificationResult {
             to_prove,
             reverse_assumption,
+            reverse_assumption_fact_id,
             proof_step_count,
             impossible_fact,
         }
@@ -1404,6 +1532,7 @@ impl fmt::Debug for ByCasesVerificationResult {
             .collect::<Vec<_>>();
         f.debug_struct("ByCasesVerificationResult")
             .field("cases", &cases)
+            .field("case_fact_ids", &self.case_fact_ids)
             .field("then_facts", &then_facts)
             .field("proof_step_counts", &self.proof_step_counts)
             .field("case_result_counts", &self.case_result_counts)
@@ -1417,6 +1546,10 @@ impl fmt::Debug for ByContraVerificationResult {
         f.debug_struct("ByContraVerificationResult")
             .field("to_prove", &self.to_prove.to_string())
             .field("reverse_assumption", &self.reverse_assumption.to_string())
+            .field(
+                "reverse_assumption_fact_id",
+                &self.reverse_assumption_fact_id,
+            )
             .field("proof_step_count", &self.proof_step_count)
             .field("impossible_fact", &self.impossible_fact.to_string())
             .finish()

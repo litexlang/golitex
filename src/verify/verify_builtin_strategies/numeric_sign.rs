@@ -28,14 +28,23 @@ impl Runtime {
             }
         }
         if let Some(children) = self.verify_structural_order_strategy(&normalized)? {
-            return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+            let strategy_label =
+                "numeric-order strategy: structurally smaller order goals".to_string();
+            let success = match additive_strategy_rule_evidence(&normalized, &children) {
+                Some(evidence) => FactualStmtSuccess::
+                    new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                        atomic_fact.clone().into(),
+                        strategy_label,
+                        evidence,
+                        children,
+                    ),
+                None => FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
                     atomic_fact.clone().into(),
-                    "numeric-order strategy: structurally smaller order goals".to_string(),
+                    strategy_label,
                     children,
-                )
-                .into(),
-            );
+                ),
+            };
+            return Ok(success.into());
         }
         match normalized {
             AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => {
@@ -754,4 +763,70 @@ impl Runtime {
         }
         Ok(None)
     }
+}
+
+// A strategy is search orchestration, while each successful additive layer is
+// justified by the same mathematical rule as its direct builtin counterpart.
+// Example: `0 < (a + b) + (c + d)` records strict-plus-weak at the root and
+// nonnegative addition for the recursively decomposed right child.
+fn additive_strategy_rule_evidence(
+    target: &AtomicFact,
+    children: &[StmtResult],
+) -> Option<BuiltinRuleEvidence> {
+    if children.len() != 2 {
+        return None;
+    }
+
+    match target {
+        AtomicFact::LessEqualFact(fact) if fact.left.to_string() == "0" => {
+            let Obj::Add(add) = &fact.right else {
+                return None;
+            };
+            if additive_strategy_child_matches(&children[0], add.left.as_ref(), true)
+                && additive_strategy_child_matches(&children[1], add.right.as_ref(), true)
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::AddNonnegative,
+                ))
+            } else {
+                None
+            }
+        }
+        AtomicFact::LessFact(fact) if fact.left.to_string() == "0" => {
+            let Obj::Add(add) = &fact.right else {
+                return None;
+            };
+            if additive_strategy_child_matches(&children[0], add.left.as_ref(), false)
+                && additive_strategy_child_matches(&children[1], add.right.as_ref(), true)
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::AddPositiveLeftStrict,
+                ))
+            } else if additive_strategy_child_matches(&children[0], add.left.as_ref(), true)
+                && additive_strategy_child_matches(&children[1], add.right.as_ref(), false)
+            {
+                Some(BuiltinRuleEvidence::Arithmetic(
+                    ArithmeticBuiltinRule::AddPositiveRightStrict,
+                ))
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+fn additive_strategy_child_matches(result: &StmtResult, operand: &Obj, weak: bool) -> bool {
+    let Some(success) = result.factual_success() else {
+        return false;
+    };
+    let Fact::AtomicFact(child) = &success.stmt else {
+        return false;
+    };
+    let (left, right) = match child {
+        AtomicFact::LessEqualFact(fact) if weak => (&fact.left, &fact.right),
+        AtomicFact::LessFact(fact) if !weak => (&fact.left, &fact.right),
+        _ => return false,
+    };
+    left.to_string() == "0" && obj_equality_key(right) == obj_equality_key(operand)
 }

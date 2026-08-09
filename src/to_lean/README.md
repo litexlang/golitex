@@ -73,25 +73,32 @@ Thus environment nesting determines proof encapsulation and dependency
 visibility, even though Litex environments and Lean syntax are not represented
 by identical data types.
 
-`ForallIntroduction` is the current concrete example: parameters and premises
-installed in its temporary environment survive in the returned proof IR, then
-become Lean binders and local `proof_fact` names. A nested known-forall
-application similarly becomes a local `have ... := by ...` with its own
-`proof_arg` and requirement proofs. The MVP does not yet serialize every
-runtime environment as a general-purpose IR node. Purely operational search
-environments whose branches were not selected need not be serialized; the
-invariant applies to every environment boundary on the successful proof route.
-If such a proof-relevant route has no supported nested representation,
-compilation must stop instead of flattening away the scope.
+`ForallIntroduction` is one concrete example: parameters and premises installed
+in its temporary environment survive in the returned proof IR, then become
+Lean binders and local `proof_fact` names. A nested known-forall application
+similarly becomes a local `have ... := by ...` with its own `proof_arg` and
+requirement proofs. `CaseSplit` and `ByContradiction` now provide two more
+concrete examples: branch assumptions and the reverse assumption retain their
+temporary `FactId`s and are installed only in the corresponding Lean proof
+scope. The MVP does not yet serialize every runtime environment as a
+general-purpose IR node. Purely operational search environments whose branches
+were not selected need not be serialized; the invariant applies to every
+environment boundary on the successful proof route. If such a proof-relevant
+route has no supported nested representation, compilation must stop instead of
+flattening away the scope.
 
 ## Statement and proof IR
 
-The MVP constructs four statement forms:
+The MVP currently constructs eight statement forms:
 
 - `AbstractProp`
 - `Prop`
 - `Trust`
 - `Fact`
+- `HaveObjChoice`
+- `HaveObjEqual`
+- `HaveExistentialWitness`
+- `Proof`
 
 A fact contains its proposition, optional stored `FactId`, and a recursive
 `FactProofToLeanIR`. Direct citations are proof-tree leaves. Derived facts use
@@ -103,18 +110,111 @@ modus ponens, conjunction/existential introduction, case split, and an explicit
 unsupported rule. Only equality rewrite, definition reduction, the supported
 normalization slice, known-forall instantiation, and the structured quotient-
 nonzero and 20 arithmetic/order builtin rules currently have Lean backends.
+Positive existential introduction is also checked from its retained witness,
+parameter requirements, local proof steps, and direct body proofs.
+
+### Object definitions, existential witnesses, checked choice, and scoped proof commands
+
+The first statement-effect tranche supports explicit object definitions and
+two proof commands without treating source syntax as a Lean tactic script.
+
+For `have x R = 2`, runtime lowering validates the exact stored membership and
+defining-equality facts, preserves their `FactId`s, and produces one
+`ObjectDefinitionToLeanIR` plus its proof facts. At file scope Lean receives a
+`def x : LitexSet := 2`; inside a proof it receives a scoped `let`. The defining
+equality is checked by `rfl`. The membership proof first checks the right-hand
+side and then transports it through the named definition with `simpa only
+[x]`. No new axiom supplies either fact.
+
+For bare `have selected R`, runtime returns an explicit mapping from the
+checked `$is_nonempty_set(R)` result to the exact stored
+`selected $in R` fact. `HaveObjChoice` freezes that proof, the selected
+`SymbolId`, the carrier, and the membership `FactId`. In the target ABI,
+`litexIsNonemptySet s` is definitionally `∃ x, litexMem x s`, so file-scope
+selection becomes a `noncomputable def` built with `Exists.choose`, and its
+membership theorem is `Exists.choose_spec` from the same named certificate.
+Inside a proof, the certificate, selected value, and membership remain local
+`have`/`let` bindings. The currently checked builtin source is the real
+carrier; a previously emitted nonemptiness fact may also serve as the exact
+certificate when its proof route has a backend. No opaque constant or generated
+axiom supplies the value.
+
+For `witness exist u R st {...} from e`, execution retains the concrete
+witness-type checks before temporary existential binders enter scope, together
+with the user proof steps and one checked result per direct body fact. The
+compiler emits a theorem whose proposition is a nested Lean `Exists` package
+and constructs it from exactly those proofs. Closed numeric propositions are
+ascribed to `LitexSet` when needed, so a local proof of `1 = 1` cannot silently
+default to `Nat` while the existential expects the one-carrier object type.
+
+`obtain w from exist ...` and body-style `have w R: ...` then lower through
+`HaveExistentialWitness`. The node contains the checked source existential,
+fresh witness `SymbolId`s and instantiated parameter types, and every exact
+stored type/body projection with its `FactId`. File-scope witnesses are
+`noncomputable def`s built by ordered, possibly nested `Exists.choose`; proof-
+local witnesses are `let`s. Type and body facts come only from the matching
+`Exists.choose_spec` projections. Citations of the same existential under
+fresh binder IDs use an explicit alpha-renaming citation node admitted only
+after the verifier's canonical existential comparison succeeds. No trust,
+opaque declaration, compiler-created axiom, or `sorry` supplies a witness.
+Before rendering an `exist` or `forall`, the emitter also compares binder and
+occurrence `SymbolId`s after Lean-name sanitization. If distinct Litex names
+would collapse to one Lean identifier and capture each other, compilation
+fails with a rename diagnostic instead of changing the proposition.
+
+`by cases` is represented as a checked coverage fact plus ordered branches:
+
+```text
+CaseSplit {
+    coverage,
+    branches: [{ assumption: LocalPremise, steps, exit }, ...],
+}
+```
+
+The emitter proves coverage before opening any branch, uses `rcases` to bind
+one recorded assumption per branch, and gives every branch a child proof scope.
+An exit is either the requested conclusion or a structured pair of a fact and
+its negation; the latter produces `False` and is eliminated to the branch goal.
+The current coverage backend recognizes only a binary disjunction of logical
+complements and checks it with classical excluded middle.
+
+`by contra` is represented by the exact reverse assumption, its local steps,
+and the final contradiction pair. For the current atomic-goal slice Lean opens
+`Classical.byContradiction`, registers the reverse assumption by its retained
+`FactId`, emits the nested statements, and derives `False` from the recorded
+fact and negation. Negative atomic goals are handled by deriving the positive
+reverse assumption inside the same classical scope.
+
+The nearest boundaries remain explicit. Bare selection from meta-level
+`set`, `nonempty_set`, or `finite_set` parameter types needs a separate
+inhabited-type contract, and object carriers whose nonemptiness proof or object
+IR has no backend remain incomplete. Existential extraction currently accepts
+positive `exist`; `exist!`, `not exist`, preimage, function, piecewise,
+recursive, tuple, sequence, and matrix forms remain separate boundaries. Other
+`by` families need typed scope and exit contracts rather than reuse of the
+case/contradiction nodes. Binder-owning goals and unsupported local statement
+kinds also make the whole source statement incomplete transactionally.
+
+The next implementation order is: theorem/definition proof wrappers;
+function-object and evaluation evidence; function-range preimage extraction;
+then induction, finite enumeration, extension, and the remaining specialized
+`by` commands. Replacement preimages need their analogous relation-witness
+package. This order keeps object creation, temporary premises, and proof exits
+explicit before adding larger proof families.
 
 ### Structured builtin-rule return path
 
 The source-derived coverage ledger is
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md). Its generator follows
 label arguments through forwarding helpers rather than counting only raw
-constructors: 460 direct success-constructor calls currently expand to 656
-label-bearing rule/strategy sites, including 560 distinct static labels. Each
+constructors: 462 direct success-constructor calls currently expand to 658
+label-bearing rule/strategy sites, including 559 distinct static labels. Each
 row records its Rust source, family, checked Lean mapping, and delivery status;
 evaluation/computation-like sites are explicitly outside the current 20-rule
-tranche. Twenty-three source sites currently have a checked mapping: the prior
-three plus the 20 typed arithmetic/order sites.
+tranche. Twenty-six source sites currently have a checked mapping: the prior
+three, the real-carrier nonemptiness shape, the 20 typed arithmetic/order
+sites, the additional precise strict-to-weak call site, and the typed recursive
+additive-strategy site.
 
 A diagnostic rule label is not a proof certificate. A compiler-supported
 builtin therefore freezes its successful matcher bindings in
@@ -134,6 +234,15 @@ RuleApplication {
     premises: [<recursive child proof IR>, ...],
 }
 ```
+
+`BuiltinStrategy` remains the diagnostic identity of the search route. When a
+successful structural decomposition exactly matches a supported arithmetic
+contract, however, it now carries the same typed `BuiltinRuleEvidence` as a
+direct rule. The current narrow bridge recognizes only exact additive
+strict/weak premise shapes (`AddNonnegative`, `AddPositiveLeftStrict`, and
+`AddPositiveRightStrict`). Any other strategy keeps its label and children but
+has no compiler certificate, so strict compilation rejects it as
+`OtherUnsupported` instead of inferring a tactic from the label.
 
 Lean emission works back up that tree. It first materializes each child proof
 inside the current proof scope, validates that the target and premise
@@ -195,6 +304,14 @@ Cached citations and known-forall requirements capture their source `FactId`
 while the source environment is alive, so a temporary premise can remain a
 local Lean proof argument after its Litex scope has been popped.
 
+Typed consequences inferred in that same temporary environment are stored in
+`ForallIntroduction.inferred_premises` with their original `FactId`s before the
+scope closes. The first checked instance is `a ∈ R+ -> 0 < a`:
+`PositiveRealMembership` cites the binder membership, validates the exact
+object on both sides, and applies `litexMemRPosPositive`. The target prelude
+therefore gives `R+` membership its intended positive-real semantics and also
+derives the real-carrier proof view needed by arithmetic lowering.
+
 ## Lean surface
 
 For a standalone file such as `chapter01-introduction.lit`, the generated Lean
@@ -254,6 +371,12 @@ The current lowering is intentionally small:
   `LitexSet` and nontrivial parameter constraints kept as propositions;
 - only an explicit Litex `trust` becomes Lean `axiom`;
 - stored proved facts become `theorem global_fact_<FactId>`;
+- explicit-value `have x T = e` becomes a checked `def` at file scope or a
+  checked `let` inside a proof, followed by its stored type and equality facts;
+- `by cases` proves its coverage, opens one scoped branch per recorded local
+  premise, and checks either a conclusion or contradiction exit in each;
+- atomic `by contra` uses the retained reverse premise and contradiction inside
+  one `Classical.byContradiction` scope;
 - known-forall application first materializes every chosen object as a
   `LitexSet` `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement
   as a `proof_fact`, and names the direct instantiated conclusion before using
@@ -319,6 +442,15 @@ division signs. A focused regression requires 20 distinct typed rule IDs,
 rejects malformed premise arity, and sends the complete generated module
 through the real Lean kernel.
 
+[`examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit`](../../examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit)
+is the recursive-strategy tracer. It preserves the exact nested derivation for
+`(a + b) + (c + d) > 0`: typed strict addition at the root, direct positive
+addition on the left, typed nonnegative addition on the right, and checked
+strict-to-weak leaves citing the four `R+` consequences. The file records the
+old label-only behavior, the active result, the non-additive unsupported
+boundary, and the focused commands. A malformed root rule ID is rejected, and
+the complete generated theorem passes a real Mathlib/Lean kernel gate.
+
 [`examples/05_compiler_interop/to_lean_partial_report.lit`](../../examples/05_compiler_interop/to_lean_partial_report.lit)
 is the completeness tracer. Its supported rational equalities surround one
 verified but unsupported trigonometric rule. Report mode returns
@@ -336,13 +468,38 @@ and `set_minus` through `ObjToLeanIR` and the one-carrier prelude, while a
 focused negative regression requires `SetBuilder` to fail during IR
 construction.
 
+[`examples/05_compiler_interop/to_lean_statement_scopes.lit`](../../examples/05_compiler_interop/to_lean_statement_scopes.lit)
+is the statement-scope tracer. It covers explicit-value `have`, local proof
+steps in both branches and contradiction scope, case coverage, branch-local
+assumptions, and reverse-assumption lifetime. Focused negative regressions keep
+unsupported local statements explicit, and the generated scope proof is checked
+by a Lean core kernel gate.
+
+[`examples/05_compiler_interop/to_lean_choice_have.lit`](../../examples/05_compiler_interop/to_lean_choice_have.lit)
+is the typed-choice tracer. It covers top-level and proof-local `have x R`,
+later membership citation, the exact existential source certificate, and the
+remaining meta-level parameter-type boundary. Focused malformed-IR regressions
+remove or mismatch that evidence, and the generated choice declarations pass a
+Lean core kernel gate.
+
+[`examples/05_compiler_interop/to_lean_exist_have.lit`](../../examples/05_compiler_interop/to_lean_exist_have.lit)
+is the existential tracer. It covers trust-free existential introduction,
+explicit `obtain`, body-style `have`, proof-local extraction, alpha-renamed
+citations, and ordered multi-witness packages. Malformed introduction and
+projection evidence is rejected, and the complete generated file passes a Lean
+core kernel gate.
+
 Rust and Litex gates:
 
 ```text
 cargo test --release to_lean:: -- --nocapture
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_set_obj_abi.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_statement_scopes.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_choice_have.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_exist_have.lit
 ```
 
 Actual Lean-kernel gate (requires an already-fetched Mathlib Lake project):
@@ -354,8 +511,17 @@ LITEX_LAKE=/optional/absolute/path/to/lake \
 LITEX_LEAN_PROJECT=/path/to/mathlib-project \
 LITEX_LAKE=/optional/absolute/path/to/lake \
   cargo test --release generated_to_lean_builtin_rules_20_compiles_with_lean -- --ignored --nocapture
+LITEX_LEAN_PROJECT=/path/to/mathlib-project \
+LITEX_LAKE=/optional/absolute/path/to/lake \
+  cargo test --release generated_to_lean_recursive_strategy_ir_compiles_with_lean -- --ignored --nocapture
 LITEX_LEAN=/absolute/path/to/lean \
   cargo test --release generated_to_lean_set_obj_abi_compiles_with_lean_core -- --ignored --nocapture
+LITEX_LEAN=/absolute/path/to/lean \
+  cargo test --release generated_to_lean_statement_scopes_compile_with_lean_core -- --ignored --nocapture
+LITEX_LEAN=/absolute/path/to/lean \
+  cargo test --release generated_to_lean_choice_have_compiles_with_lean_core -- --ignored --nocapture
+LITEX_LEAN=/absolute/path/to/lean \
+  cargo test --release generated_to_lean_exist_have_compiles_with_lean_core -- --ignored --nocapture
 ```
 
 For scratch work, these commands first verify `examples/tmp.lit`,

@@ -16,6 +16,15 @@ impl ToLeanIrContext {
                     fact_id,
                 );
             }
+            for (fact, fact_id) in output
+                .inferred_facts
+                .iter()
+                .zip(output.inferred_fact_ids.iter())
+            {
+                if let Some(fact_id) = fact_id {
+                    nested.local_fact_ids.insert(fact.to_string(), *fact_id);
+                }
+            }
         }
         nested
     }
@@ -64,6 +73,37 @@ impl Runtime {
                     iff_facts: stmt.iff_facts.clone(),
                 }))
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(stmt)) => {
+                self.have_obj_equal_stmt_to_lean_ir(stmt, success)
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
+                self.have_obj_choice_stmt_to_lean_ir(stmt, success)
+            }
+            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(stmt)) => self
+                .have_existential_witness_to_lean_ir(
+                    &stmt.equal_to_bindings,
+                    &stmt.exist_fact_in_have_obj_st,
+                    &stmt.line_file,
+                    success,
+                ),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
+                let body = ExistFactBody::new(
+                    stmt.param_def.clone(),
+                    stmt.facts.clone(),
+                    stmt.line_file.clone(),
+                )?;
+                self.have_existential_witness_to_lean_ir(
+                    &stmt.param_def.collect_param_bindings(),
+                    &ExistFactEnum::ExistFact(body),
+                    &stmt.line_file,
+                    success,
+                )
+            }
+            Stmt::Witness(WitnessStmt::WitnessExistFact(stmt)) => {
+                self.witness_exist_stmt_to_lean_ir(stmt, success)
+            }
+            Stmt::By(ByStmt::ByCasesStmt(stmt)) => self.by_cases_stmt_to_lean_ir(stmt, success),
+            Stmt::By(ByStmt::ByContraStmt(stmt)) => self.by_contra_stmt_to_lean_ir(stmt, success),
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(stmt)) => {
                 let excluded = stmt
                     .facts
@@ -92,6 +132,916 @@ impl Runtime {
                 ),
             )),
         }
+    }
+
+    fn witness_exist_stmt_to_lean_ir(
+        &self,
+        stmt: &WitnessExistFact,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Some(verification) = success.witness_exist_verification.as_ref() else {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "existential witness has no structured introduction verification result",
+            ));
+        };
+        if !stmt.exist_fact_in_witness.is_plain_exist() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "the current To-Lean witness tranche supports positive `exist`, not `exist!` or `not exist`",
+            ));
+        }
+        let param_defs = stmt.exist_fact_in_witness.params_def_with_type();
+        let parameter_count = param_defs.number_of_params();
+        if parameter_count == 0
+            || parameter_count != stmt.equal_tos.len()
+            || parameter_count != verification.parameter_checks.len()
+            || stmt.exist_fact_in_witness.facts().len() != verification.body_check_indices.len()
+            || verification.proof_step_count != stmt.proof.len()
+            || verification.uniqueness_check_index.is_some()
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "existential witness evidence has inconsistent parameter, proof-step, body, or uniqueness mappings",
+            ));
+        }
+        if success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .any(|output| !output.inferred_facts.is_empty())
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "existential witness inferred consequences are not represented by this To-Lean tranche",
+            ));
+        }
+
+        let existential: Fact = stmt.exist_fact_in_witness.clone().into();
+        ensure_fact_objects_lower_to_lean_ir(&existential)?;
+        if success.infers.store_fact_outputs.len() != 1
+            || success.infers.store_fact_outputs[0]
+                .itself_and_why_itself_is_stored
+                .0
+                .to_string()
+                != existential.to_string()
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "existential witness stored facts do not match its introduced existential",
+            ));
+        }
+
+        let proof_steps = success
+            .inside_results
+            .get(..verification.proof_step_count)
+            .ok_or_else(|| {
+                to_lean_ir_error(
+                    &stmt.line_file,
+                    "existential witness proof-step range points outside retained results",
+                )
+            })?
+            .iter()
+            .map(|result| self.nested_stmt_to_lean_ir(result))
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+            param_defs,
+            &stmt.equal_tos,
+            ParamObjType::Exist,
+        )?;
+        let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
+        let mut parameter_requirements = Vec::new();
+        let mut used_result_indices = (0..verification.proof_step_count).collect::<HashSet<_>>();
+        for (index, ((witness, param_type), check_result)) in stmt
+            .equal_tos
+            .iter()
+            .zip(flat_types.iter())
+            .zip(verification.parameter_checks.iter())
+            .enumerate()
+        {
+            ObjToLeanIR::lower(witness)
+                .map_err(|message| to_lean_ir_error(&stmt.line_file, message))?;
+            if matches!(param_type, ParamType::Set(_)) {
+                if check_result.is_some() {
+                    return Err(to_lean_ir_error(
+                        &stmt.line_file,
+                        format!(
+                            "existential witness parameter {} retained an unnecessary `set` requirement",
+                            index + 1
+                        ),
+                    ));
+                }
+                continue;
+            }
+            let Some(check_result) = check_result else {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "existential witness parameter {} is missing its checked type requirement",
+                        index + 1
+                    ),
+                ));
+            };
+            let expected =
+                object_type_fact_for_to_lean(witness.clone(), param_type, stmt.line_file.clone());
+            let mut requirement = self.fact_to_lean_ir_from_result(
+                check_result.as_ref(),
+                "existential witness parameter requirement",
+                &ToLeanIrContext::default(),
+            )?;
+            if requirement.proposition.to_string() != expected.to_string() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "existential witness type check `{}` does not match expected `{}`",
+                        requirement.proposition, expected
+                    ),
+                ));
+            }
+            requirement.fact_id = None;
+            parameter_requirements.push(requirement);
+        }
+
+        let param_to_obj_map =
+            param_defs.param_defs_and_args_to_param_to_arg_map(stmt.equal_tos.as_slice());
+        let mut body_premises = Vec::with_capacity(stmt.exist_fact_in_witness.facts().len());
+        for (body_index, (body, result_index)) in stmt
+            .exist_fact_in_witness
+            .facts()
+            .iter()
+            .zip(verification.body_check_indices.iter())
+            .enumerate()
+        {
+            if !used_result_indices.insert(*result_index) {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    "existential witness reuses a retained result for multiple evidence roles",
+                ));
+            }
+            let expected = self
+                .inst_exist_body_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
+                .to_fact();
+            let mut premise = self.fact_to_lean_ir_from_result(
+                success.inside_results.get(*result_index).ok_or_else(|| {
+                    to_lean_ir_error(
+                        &stmt.line_file,
+                        "existential witness body-check index points outside retained results",
+                    )
+                })?,
+                "existential witness body requirement",
+                &ToLeanIrContext::default(),
+            )?;
+            if premise.proposition.to_string() != expected.to_string() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "existential witness body check {} `{}` does not match expected `{}`",
+                        body_index + 1,
+                        premise.proposition,
+                        expected
+                    ),
+                ));
+            }
+            premise.fact_id = None;
+            body_premises.push(premise);
+        }
+        if used_result_indices.len() != success.inside_results.len() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "existential witness retained results are not exhausted by its structured evidence mapping",
+            ));
+        }
+
+        let expected_parameter_requirements = parameter_requirements
+            .iter()
+            .map(|requirement| requirement.proposition.clone())
+            .collect();
+        let expected_body_facts = body_premises
+            .iter()
+            .map(|premise| premise.proposition.clone())
+            .collect();
+
+        Ok(StmtToLeanIR::Proof(ProofStmtToLeanIR {
+            facts: vec![FactToLeanIR {
+                fact_id: Some(stored_fact_id_from_infer_result(
+                    &success.infers,
+                    &existential,
+                    "existential witness fact",
+                )?),
+                proposition: existential,
+                proof: FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::ExistIntroduction {
+                        witnesses: stmt.equal_tos.clone(),
+                        steps: proof_steps,
+                        expected_parameter_requirements,
+                        expected_body_facts,
+                    },
+                    parameter_requirements,
+                    premises: body_premises,
+                },
+            }],
+            inferred_facts: Vec::new(),
+        }))
+    }
+
+    fn have_existential_witness_to_lean_ir(
+        &self,
+        bindings: &[SymbolBinding],
+        exist_fact: &ExistFactEnum,
+        line_file: &LineFile,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Some(verification) = success.existential_elimination_verification.as_ref() else {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination has no structured source-to-projection verification result",
+            ));
+        };
+        if !exist_fact.is_plain_exist() || verification.includes_uniqueness {
+            return Err(to_lean_ir_error(
+                line_file,
+                "the current To-Lean elimination tranche supports positive `exist`, not `exist!` or `not exist`",
+            ));
+        }
+        if bindings.is_empty()
+            || bindings.len() != exist_fact.params_def_with_type().number_of_params()
+            || bindings.len() != verification.witness_type_facts.len()
+            || exist_fact.facts().len() != verification.instantiated_body_facts.len()
+        {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination evidence has inconsistent witness, type-fact, or body-fact mappings",
+            ));
+        }
+        if success.inside_results.len() != 1 || verification.source_result_index != 0 {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination must retain exactly one source proof at index zero",
+            ));
+        }
+        if success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .any(|output| !output.inferred_facts.is_empty())
+        {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination inferred consequences are not represented by this To-Lean tranche",
+            ));
+        }
+
+        let source_proposition: Fact = exist_fact.clone().into();
+        ensure_fact_objects_lower_to_lean_ir(&source_proposition)?;
+        let mut source = self.fact_to_lean_ir_from_result(
+            &success.inside_results[verification.source_result_index],
+            "existential elimination source proof",
+            &ToLeanIrContext::default(),
+        )?;
+        if source.proposition.to_string() != source_proposition.to_string() {
+            return Err(to_lean_ir_error(
+                line_file,
+                format!(
+                    "existential elimination source `{}` does not certify `{}`",
+                    source.proposition, source_proposition
+                ),
+            ));
+        }
+        source.fact_id = None;
+
+        let witness_objs = bindings
+            .iter()
+            .map(|binding| {
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+            })
+            .collect::<Vec<Obj>>();
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+            exist_fact.params_def_with_type(),
+            &witness_objs,
+            ParamObjType::Exist,
+        )?;
+        let flat_types = exist_fact
+            .params_def_with_type()
+            .flat_instantiated_types_for_args(&instantiated_types);
+        let mut witnesses = Vec::with_capacity(bindings.len());
+        let mut projections = Vec::with_capacity(
+            verification.witness_type_facts.len() + verification.instantiated_body_facts.len(),
+        );
+        let mut expected_fact_keys = HashSet::new();
+        for (witness_index, ((binding, param_type), expected)) in bindings
+            .iter()
+            .zip(flat_types.iter())
+            .zip(verification.witness_type_facts.iter())
+            .enumerate()
+        {
+            let calculated = object_type_fact_for_to_lean(
+                witness_objs[witness_index].clone(),
+                param_type,
+                line_file.clone(),
+            );
+            if calculated.to_string() != expected.to_string() {
+                return Err(to_lean_ir_error(
+                    line_file,
+                    format!(
+                        "existential elimination stored type fact `{}` does not match expected `{}`",
+                        expected, calculated
+                    ),
+                ));
+            }
+            ensure_fact_objects_lower_to_lean_ir(expected)?;
+            let fact_id = stored_fact_id_from_infer_result(
+                &success.infers,
+                expected,
+                "existential elimination witness type fact",
+            )?;
+            if !expected_fact_keys.insert(expected.to_string()) {
+                return Err(to_lean_ir_error(
+                    line_file,
+                    "existential elimination emitted duplicate projection facts",
+                ));
+            }
+            witnesses.push(ExistentialWitnessToLeanIR {
+                symbol_id: binding.id(),
+                name: binding.name().to_string(),
+                param_type: param_type_to_lean_ir(param_type)?,
+            });
+            projections.push(FactToLeanIR {
+                fact_id: Some(fact_id),
+                proposition: expected.clone(),
+                proof: FactProofToLeanIR::ExistentialElimination {
+                    source_proposition: source_proposition.clone(),
+                    role: ExistentialProjectionRoleToLeanIR::ParameterType { witness_index },
+                    expected_proposition: expected.clone(),
+                },
+            });
+        }
+
+        let param_to_obj_map = exist_fact
+            .params_def_with_type()
+            .param_defs_and_args_to_param_to_arg_map(&witness_objs);
+        for (body_index, (body, expected)) in exist_fact
+            .facts()
+            .iter()
+            .zip(verification.instantiated_body_facts.iter())
+            .enumerate()
+        {
+            let calculated = self
+                .inst_exist_body_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
+                .to_fact();
+            if calculated.to_string() != expected.to_string() {
+                return Err(to_lean_ir_error(
+                    line_file,
+                    format!(
+                        "existential elimination stored body fact `{}` does not match expected `{}`",
+                        expected, calculated
+                    ),
+                ));
+            }
+            ensure_fact_objects_lower_to_lean_ir(expected)?;
+            let fact_id = stored_fact_id_from_infer_result(
+                &success.infers,
+                expected,
+                "existential elimination body fact",
+            )?;
+            if !expected_fact_keys.insert(expected.to_string()) {
+                return Err(to_lean_ir_error(
+                    line_file,
+                    "existential elimination emitted duplicate projection facts",
+                ));
+            }
+            projections.push(FactToLeanIR {
+                fact_id: Some(fact_id),
+                proposition: expected.clone(),
+                proof: FactProofToLeanIR::ExistentialElimination {
+                    source_proposition: source_proposition.clone(),
+                    role: ExistentialProjectionRoleToLeanIR::BodyFact { body_index },
+                    expected_proposition: expected.clone(),
+                },
+            });
+        }
+
+        if success.infers.store_fact_outputs.len() != expected_fact_keys.len()
+            || success.infers.store_fact_outputs.iter().any(|output| {
+                !expected_fact_keys.contains(&output.itself_and_why_itself_is_stored.0.to_string())
+            })
+        {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination stored facts do not match its type-and-body projection contract",
+            ));
+        }
+
+        Ok(StmtToLeanIR::HaveExistentialWitness(
+            HaveExistentialWitnessToLeanIR {
+                source,
+                witnesses,
+                projections,
+            },
+        ))
+    }
+
+    fn have_obj_choice_stmt_to_lean_ir(
+        &self,
+        stmt: &HaveObjInNonemptySetOrParamTypeStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Some(verification) = success.object_choice_verification.as_ref() else {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "object choice has no structured nonemptiness-to-membership verification result",
+            ));
+        };
+        let bindings_with_types = stmt.param_def.collect_param_bindings_with_types();
+        if bindings_with_types.len() != verification.selected_type_facts.len()
+            || bindings_with_types.len() != verification.nonempty_check_indices.len()
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "object choice evidence has inconsistent binding, type-fact, or nonemptiness mappings",
+            ));
+        }
+        if success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .any(|output| !output.inferred_facts.is_empty())
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "object choice inferred consequences are not represented by this To-Lean tranche",
+            ));
+        }
+
+        let mut expected_fact_keys = HashSet::new();
+        let mut choices = Vec::with_capacity(bindings_with_types.len());
+        for (index, (binding, param_type)) in bindings_with_types.iter().enumerate() {
+            let ParamType::Obj(carrier) = param_type else {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "object choice from meta-level parameter type `{}` has no checked inhabited-type backend",
+                        param_type
+                    ),
+                ));
+            };
+            let Some(check_index) = verification.nonempty_check_indices[index] else {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    "object-carrier choice did not retain a nonemptiness proof index",
+                ));
+            };
+            let Some(check_result) = success.inside_results.get(check_index) else {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    "object-carrier choice points outside its retained nonemptiness proofs",
+                ));
+            };
+            let expected_nonempty: Fact =
+                IsNonemptySetFact::new(carrier.clone(), stmt.line_file.clone()).into();
+            let mut nonempty_proof = self.fact_to_lean_ir_from_result(
+                check_result,
+                "object-choice nonemptiness proof",
+                &ToLeanIrContext::default(),
+            )?;
+            if nonempty_proof.proposition.to_string() != expected_nonempty.to_string() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "object-choice proof `{}` does not certify selected carrier `{}`",
+                        nonempty_proof.proposition, carrier
+                    ),
+                ));
+            }
+            nonempty_proof.fact_id = None;
+
+            let definition_name = binding.name().to_string();
+            let defined_obj: Obj =
+                Identifier::new_bound(definition_name.clone(), binding.as_ref()).into();
+            let expected_membership =
+                object_type_fact_for_to_lean(defined_obj, param_type, stmt.line_file.clone());
+            let selected_type_fact = &verification.selected_type_facts[index];
+            if selected_type_fact.to_string() != expected_membership.to_string() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "object-choice stored type fact `{}` does not match expected membership `{}`",
+                        selected_type_fact, expected_membership
+                    ),
+                ));
+            }
+            let membership_fact_id = stored_fact_id_from_infer_result(
+                &success.infers,
+                selected_type_fact,
+                "object-choice membership fact",
+            )?;
+            expected_fact_keys.insert(selected_type_fact.to_string());
+            let carrier_ir = ObjToLeanIR::lower(carrier)
+                .map_err(|message| to_lean_ir_error(&stmt.line_file, message))?;
+            choices.push(ObjectChoiceToLeanIR {
+                symbol_id: binding.id(),
+                name: definition_name.clone(),
+                carrier: carrier_ir.clone(),
+                nonempty_proof,
+                membership: FactToLeanIR {
+                    fact_id: Some(membership_fact_id),
+                    proposition: selected_type_fact.clone(),
+                    proof: FactProofToLeanIR::ObjectChoice {
+                        definition: definition_name,
+                        carrier: carrier_ir,
+                    },
+                },
+            });
+        }
+
+        if success.infers.store_fact_outputs.len() != expected_fact_keys.len()
+            || success.infers.store_fact_outputs.iter().any(|output| {
+                !expected_fact_keys.contains(&output.itself_and_why_itself_is_stored.0.to_string())
+            })
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "object-choice stored facts do not match its selected membership contract",
+            ));
+        }
+
+        Ok(StmtToLeanIR::HaveObjChoice(HaveObjChoiceToLeanIR {
+            choices,
+        }))
+    }
+
+    fn have_obj_equal_stmt_to_lean_ir(
+        &self,
+        stmt: &HaveObjEqualStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let bindings_with_types = stmt.param_def.collect_param_bindings_with_types();
+        if bindings_with_types.len() != stmt.objs_equal_to.len()
+            || bindings_with_types.len() != success.inside_results.len()
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "have-object equality evidence has inconsistent binding, value, or type-check counts",
+            ));
+        }
+
+        if success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .any(|output| !output.inferred_facts.is_empty())
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "have-object equality inferred consequences are not represented by this To-Lean tranche",
+            ));
+        }
+
+        let mut definitions = Vec::with_capacity(bindings_with_types.len());
+        let mut facts = Vec::with_capacity(bindings_with_types.len() * 2);
+        let mut expected_fact_keys = HashSet::new();
+
+        for (index, ((binding, param_type), value)) in bindings_with_types
+            .iter()
+            .zip(stmt.objs_equal_to.iter())
+            .enumerate()
+        {
+            let definition_name = binding.name().to_string();
+            let defined_obj: Obj =
+                Identifier::new_bound(definition_name.clone(), binding.as_ref()).into();
+            let value_type_fact =
+                object_type_fact_for_to_lean(value.clone(), param_type, stmt.line_file.clone());
+            let stored_type_fact = object_type_fact_for_to_lean(
+                defined_obj.clone(),
+                param_type,
+                stmt.line_file.clone(),
+            );
+            let stored_equality: Fact =
+                EqualFact::new(defined_obj, value.clone(), stmt.line_file.clone()).into();
+
+            let mut value_check = self.fact_to_lean_ir_from_result(
+                &success.inside_results[index],
+                "have-object value type check",
+                &ToLeanIrContext::default(),
+            )?;
+            if value_check.proposition.to_string() != value_type_fact.to_string() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    format!(
+                        "have-object value check `{}` does not match expected `{}`",
+                        value_check.proposition, value_type_fact
+                    ),
+                ));
+            }
+            value_check.fact_id = None;
+
+            let stored_type_fact_id = stored_fact_id_from_infer_result(
+                &success.infers,
+                &stored_type_fact,
+                "have-object type fact",
+            )?;
+            let stored_equality_fact_id = stored_fact_id_from_infer_result(
+                &success.infers,
+                &stored_equality,
+                "have-object defining equality",
+            )?;
+            expected_fact_keys.insert(stored_type_fact.to_string());
+            expected_fact_keys.insert(stored_equality.to_string());
+
+            let value_ir = ObjToLeanIR::lower(value)
+                .map_err(|message| to_lean_ir_error(&stmt.line_file, message))?;
+            definitions.push(ObjectDefinitionToLeanIR {
+                symbol_id: binding.id(),
+                name: definition_name.clone(),
+                param_type: param_type_to_lean_ir(param_type)?,
+                value: value_ir.clone(),
+            });
+            facts.push(FactToLeanIR {
+                fact_id: Some(stored_type_fact_id),
+                proposition: stored_type_fact,
+                proof: FactProofToLeanIR::ObjectDefinition {
+                    definition: definition_name.clone(),
+                    value: value_ir.clone(),
+                    value_check: Some(Box::new(value_check)),
+                },
+            });
+            facts.push(FactToLeanIR {
+                fact_id: Some(stored_equality_fact_id),
+                proposition: stored_equality,
+                proof: FactProofToLeanIR::ObjectDefinition {
+                    definition: definition_name,
+                    value: value_ir,
+                    value_check: None,
+                },
+            });
+        }
+
+        if success.infers.store_fact_outputs.len() != expected_fact_keys.len()
+            || success.infers.store_fact_outputs.iter().any(|output| {
+                !expected_fact_keys.contains(&output.itself_and_why_itself_is_stored.0.to_string())
+            })
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "have-object equality stored facts do not match its type and defining-equality contract",
+            ));
+        }
+
+        Ok(StmtToLeanIR::HaveObjEqual(HaveObjEqualToLeanIR {
+            definitions,
+            facts,
+        }))
+    }
+
+    fn by_cases_stmt_to_lean_ir(
+        &self,
+        stmt: &ByCasesStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Some(ByVerificationResult::Cases(verification)) = success.by_verification.as_ref()
+        else {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-cases statement has no structured verification result",
+            ));
+        };
+        if verification.cases.len() != verification.case_fact_ids.len()
+            || verification.cases.len() != verification.case_result_counts.len()
+            || verification.cases.len() != verification.proof_step_counts.len()
+            || verification.cases.len() != verification.impossible_facts.len()
+        {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-cases verification has inconsistent branch metadata",
+            ));
+        }
+        let Some(coverage_result) = success.inside_results.first() else {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-cases verification did not retain its coverage proof",
+            ));
+        };
+        let mut coverage = self.fact_to_lean_ir_from_result(
+            coverage_result,
+            "by-cases coverage",
+            &ToLeanIrContext::default(),
+        )?;
+        coverage.fact_id = None;
+        let expected_coverage: Fact =
+            OrFact::new(verification.cases.clone(), stmt.line_file.clone()).into();
+        if coverage.proposition.to_string() != expected_coverage.to_string() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                format!(
+                    "by-cases coverage `{}` does not match cases `{}`",
+                    coverage.proposition, expected_coverage
+                ),
+            ));
+        }
+
+        let mut case_slices = Vec::with_capacity(verification.cases.len());
+        let mut cursor: usize = 1;
+        for count in verification.case_result_counts.iter().copied() {
+            let end = cursor.checked_add(count).ok_or_else(|| {
+                to_lean_ir_error(&stmt.line_file, "by-cases result count overflow")
+            })?;
+            if end > success.inside_results.len() {
+                return Err(to_lean_ir_error(
+                    &stmt.line_file,
+                    "by-cases branch result count exceeds retained results",
+                ));
+            }
+            case_slices.push(&success.inside_results[cursor..end]);
+            cursor = end;
+        }
+        if cursor != success.inside_results.len() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-cases retained results are not fully assigned to branches",
+            ));
+        }
+
+        let explicit_keys = verification
+            .then_facts
+            .iter()
+            .map(ToString::to_string)
+            .collect::<HashSet<_>>();
+        let mut facts = Vec::with_capacity(verification.then_facts.len());
+        for (goal_index, goal) in verification.then_facts.iter().enumerate() {
+            ensure_fact_objects_lower_to_lean_ir(goal)?;
+            let mut branches = Vec::with_capacity(verification.cases.len());
+            for case_index in 0..verification.cases.len() {
+                let case_fact: Fact = verification.cases[case_index].clone().into();
+                let case_context = ToLeanIrContext {
+                    local_fact_ids: HashMap::from([(
+                        case_fact.to_string(),
+                        verification.case_fact_ids[case_index],
+                    )]),
+                };
+                let case_results = case_slices[case_index];
+                let proof_step_count = verification.proof_step_counts[case_index];
+                if proof_step_count > case_results.len() {
+                    return Err(to_lean_ir_error(
+                        &stmt.line_file,
+                        "by-cases proof-step count exceeds retained branch results",
+                    ));
+                }
+                let steps = case_results[..proof_step_count]
+                    .iter()
+                    .map(|result| self.nested_stmt_to_lean_ir(result))
+                    .collect::<Result<Vec<_>, RuntimeError>>()?;
+                let remaining = &case_results[proof_step_count..];
+                let exit = if verification.impossible_facts[case_index].is_some() {
+                    if remaining.len() != 1 {
+                        return Err(to_lean_ir_error(
+                            &stmt.line_file,
+                            "an impossible by-cases branch must retain one contradiction result",
+                        ));
+                    }
+                    CaseBranchExitToLeanIR::Contradiction(
+                        self.wrapped_contradiction_to_lean_ir(
+                            &remaining[0],
+                            verification.impossible_facts[case_index]
+                                .as_ref()
+                                .expect("checked above"),
+                            &case_context,
+                        )?,
+                    )
+                } else {
+                    if remaining.len() != verification.then_facts.len() {
+                        return Err(to_lean_ir_error(
+                            &stmt.line_file,
+                            "a by-cases branch does not retain one result per goal",
+                        ));
+                    }
+                    let mut conclusion = self.fact_to_lean_ir_from_result(
+                        &remaining[goal_index],
+                        "by-cases branch conclusion",
+                        &case_context,
+                    )?;
+                    if conclusion.proposition.to_string() != goal.to_string() {
+                        return Err(to_lean_ir_error(
+                            &stmt.line_file,
+                            "by-cases branch conclusion does not match its exported goal",
+                        ));
+                    }
+                    conclusion.fact_id = None;
+                    CaseBranchExitToLeanIR::Conclusion(conclusion)
+                };
+                branches.push(CaseBranchToLeanIR {
+                    assumption: LocalPremiseToLeanIR::new(
+                        verification.case_fact_ids[case_index],
+                        case_fact,
+                    ),
+                    steps,
+                    exit,
+                });
+            }
+
+            facts.push(FactToLeanIR {
+                fact_id: Some(stored_fact_id_from_infer_result(
+                    &success.infers,
+                    goal,
+                    "by-cases exported goal",
+                )?),
+                proposition: goal.clone(),
+                proof: FactProofToLeanIR::CaseSplit {
+                    coverage: Box::new(coverage.clone()),
+                    branches,
+                },
+            });
+        }
+
+        Ok(StmtToLeanIR::Proof(ProofStmtToLeanIR {
+            facts,
+            inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &explicit_keys)?,
+        }))
+    }
+
+    fn by_contra_stmt_to_lean_ir(
+        &self,
+        stmt: &ByContraStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Some(ByVerificationResult::Contra(verification)) = success.by_verification.as_ref()
+        else {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-contra statement has no structured verification result",
+            ));
+        };
+        if verification.to_prove.to_string() != stmt.to_prove.to_string() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-contra verification target does not match the statement target",
+            ));
+        }
+        if verification.proof_step_count + 2 != success.inside_results.len() {
+            return Err(to_lean_ir_error(
+                &stmt.line_file,
+                "by-contra must retain its proof steps and two contradiction checks",
+            ));
+        }
+        let reverse_context = ToLeanIrContext {
+            local_fact_ids: HashMap::from([(
+                verification.reverse_assumption.to_string(),
+                verification.reverse_assumption_fact_id,
+            )]),
+        };
+        let steps = success.inside_results[..verification.proof_step_count]
+            .iter()
+            .map(|result| self.nested_stmt_to_lean_ir(result))
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        let contradiction = contradiction_results_to_lean_ir(
+            self,
+            &success.inside_results[verification.proof_step_count..],
+            &verification.impossible_fact,
+            &reverse_context,
+        )?;
+        let explicit_keys = HashSet::from([stmt.to_prove.to_string()]);
+        let fact = FactToLeanIR {
+            fact_id: Some(stored_fact_id_from_infer_result(
+                &success.infers,
+                &stmt.to_prove,
+                "by-contra exported goal",
+            )?),
+            proposition: stmt.to_prove.clone(),
+            proof: FactProofToLeanIR::ByContradiction {
+                reverse_assumption: LocalPremiseToLeanIR::new(
+                    verification.reverse_assumption_fact_id,
+                    verification.reverse_assumption.clone(),
+                ),
+                steps,
+                contradiction,
+            },
+        };
+
+        Ok(StmtToLeanIR::Proof(ProofStmtToLeanIR {
+            facts: vec![fact],
+            inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &explicit_keys)?,
+        }))
+    }
+
+    fn nested_stmt_to_lean_ir(&self, result: &StmtResult) -> Result<StmtToLeanIR, RuntimeError> {
+        match result.to_lean_ir() {
+            Some(ir) => Ok(ir.clone()),
+            None => self.build_stmt_to_lean_ir(result),
+        }
+    }
+
+    fn wrapped_contradiction_to_lean_ir(
+        &self,
+        result: &StmtResult,
+        impossible_fact: &AtomicFact,
+        context: &ToLeanIrContext,
+    ) -> Result<ContradictionToLeanIR, RuntimeError> {
+        let Some(success) = result.non_factual_success() else {
+            return Err(to_lean_ir_error(
+                &result.line_file(),
+                "impossible branch did not retain a proof-scope result",
+            ));
+        };
+        contradiction_results_to_lean_ir(self, &success.inside_results, impossible_fact, context)
     }
 
     fn fact_to_lean_ir_from_success(
@@ -248,6 +1198,8 @@ impl Runtime {
                         })?;
                     premises.push(LocalPremiseToLeanIR::new(fact_id, fact));
                 }
+                let inferred_premises =
+                    self.supported_inferred_premises_to_lean_ir(&result.assumption_infers)?;
                 let conclusion_context = context.with_infer_result(&result.assumption_infers);
                 let mut conclusions = Vec::with_capacity(result.proves.len());
                 for proved in result.proves.iter() {
@@ -260,6 +1212,7 @@ impl Runtime {
                 Ok(FactProofToLeanIR::ForallIntroduction {
                     parameter_premises,
                     premises,
+                    inferred_premises,
                     conclusions,
                 })
             }
@@ -296,6 +1249,28 @@ impl Runtime {
         let Some(equality_transport) = equality_transport else {
             if source_fact.to_string() == goal.to_string() {
                 return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
+            }
+            if let (Fact::ExistFact(source_exist), Fact::ExistFact(goal_exist)) =
+                (source_fact, goal)
+            {
+                if source_exist.is_plain_exist()
+                    && goal_exist.is_plain_exist()
+                    && source_exist.can_be_used_to_verify_goal(goal_exist)
+                    && Runtime::exist_fact_normalized_body_string(self, source_exist)?
+                        == Runtime::exist_fact_normalized_body_string(self, goal_exist)?
+                {
+                    return Ok(FactProofToLeanIR::ExistentialAlphaRenameCitation {
+                        source_fact_id,
+                        source_proposition: source_fact.clone(),
+                    });
+                }
+            }
+            if crate::to_lean_ir::is_closed_real_membership(goal) {
+                return Ok(FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::ClosedRealMembership,
+                    parameter_requirements: Vec::new(),
+                    premises: Vec::new(),
+                });
             }
             return Ok(FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::OtherUnsupported {
@@ -681,22 +1656,198 @@ impl Runtime {
                     },
                 });
             }
-            for fact in output.inferred_facts.iter() {
+            if output.inferred_fact_ids.len() != output.inferred_facts.len() {
+                return Err(to_lean_ir_error(
+                    &source_fact.line_file(),
+                    "inferred fact identity list does not match inferred facts",
+                ));
+            }
+            for (fact, recorded_fact_id) in output
+                .inferred_facts
+                .iter()
+                .zip(output.inferred_fact_ids.iter())
+            {
                 if !seen.insert(fact.to_string()) {
                     continue;
                 }
                 inferred.push(FactToLeanIR {
-                    fact_id: self.known_fact_id_for_fact(fact)?,
+                    fact_id: (*recorded_fact_id).or(self.known_fact_id_for_fact(fact)?),
                     proposition: fact.clone(),
-                    proof: FactProofToLeanIR::Inference {
-                        source_fact_id: source_id,
-                        reason: output.itself_and_why_itself_is_stored.1.clone(),
-                    },
+                    proof: inferred_fact_proof_to_lean_ir(
+                        source_fact,
+                        source_id,
+                        fact,
+                        &output.itself_and_why_itself_is_stored.1,
+                    ),
                 });
             }
         }
         Ok(inferred)
     }
+
+    fn supported_inferred_premises_to_lean_ir(
+        &self,
+        infer_result: &InferResult,
+    ) -> Result<Vec<FactToLeanIR>, RuntimeError> {
+        let mut seen = HashSet::new();
+        let mut inferred = Vec::new();
+        for output in infer_result.store_fact_outputs.iter() {
+            if output.inferred_fact_ids.len() != output.inferred_facts.len() {
+                return Err(to_lean_ir_error(
+                    &output.itself_and_why_itself_is_stored.0.line_file(),
+                    "inferred fact identity list does not match inferred facts",
+                ));
+            }
+            let source_fact = &output.itself_and_why_itself_is_stored.0;
+            let Some(source_fact_id) = output.fact_id else {
+                continue;
+            };
+            for (fact, fact_id) in output
+                .inferred_facts
+                .iter()
+                .zip(output.inferred_fact_ids.iter())
+            {
+                if !seen.insert(fact.to_string()) {
+                    continue;
+                }
+                let proof = inferred_fact_proof_to_lean_ir(
+                    source_fact,
+                    Some(source_fact_id),
+                    fact,
+                    &output.itself_and_why_itself_is_stored.1,
+                );
+                if matches!(proof, FactProofToLeanIR::Inference { .. }) {
+                    continue;
+                }
+                let fact_id = (*fact_id).ok_or_else(|| {
+                    to_lean_ir_error(
+                        &fact.line_file(),
+                        "a supported forall inference reached To-Lean without a FactId",
+                    )
+                })?;
+                inferred.push(FactToLeanIR {
+                    fact_id: Some(fact_id),
+                    proposition: fact.clone(),
+                    proof,
+                });
+            }
+        }
+        Ok(inferred)
+    }
+}
+
+fn inferred_fact_proof_to_lean_ir(
+    source_fact: &Fact,
+    source_fact_id: Option<FactId>,
+    inferred_fact: &Fact,
+    reason: &str,
+) -> FactProofToLeanIR {
+    if positive_real_membership_infers_strict_positivity(source_fact, inferred_fact) {
+        if let Some(source_fact_id) = source_fact_id {
+            return FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::PositiveRealMembership),
+                parameter_requirements: Vec::new(),
+                premises: vec![FactToLeanIR {
+                    fact_id: Some(source_fact_id),
+                    proposition: source_fact.clone(),
+                    proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
+                }],
+            };
+        }
+    }
+    FactProofToLeanIR::Inference {
+        source_fact_id,
+        reason: reason.to_string(),
+    }
+}
+
+fn positive_real_membership_infers_strict_positivity(
+    source_fact: &Fact,
+    inferred_fact: &Fact,
+) -> bool {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = source_fact else {
+        return false;
+    };
+    if !matches!(membership.set, Obj::StandardSet(StandardSet::RPos)) {
+        return false;
+    }
+    let Fact::AtomicFact(order) = inferred_fact else {
+        return false;
+    };
+    match order {
+        AtomicFact::LessFact(fact) => {
+            fact.left.to_string() == "0"
+                && obj_equality_key(&fact.right) == obj_equality_key(&membership.element)
+        }
+        AtomicFact::GreaterFact(fact) => {
+            fact.right.to_string() == "0"
+                && obj_equality_key(&fact.left) == obj_equality_key(&membership.element)
+        }
+        _ => false,
+    }
+}
+
+fn object_type_fact_for_to_lean(obj: Obj, param_type: &ParamType, line_file: LineFile) -> Fact {
+    match param_type {
+        ParamType::Set(_) => IsSetFact::new(obj, line_file).into(),
+        ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, line_file).into(),
+        ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, line_file).into(),
+        ParamType::Obj(set) => InFact::new(obj, set.clone(), line_file).into(),
+    }
+}
+
+fn stored_fact_id_from_infer_result(
+    infer_result: &InferResult,
+    expected: &Fact,
+    context: &str,
+) -> Result<FactId, RuntimeError> {
+    infer_result
+        .store_fact_outputs
+        .iter()
+        .find(|output| output.itself_and_why_itself_is_stored.0.to_string() == expected.to_string())
+        .and_then(|output| output.fact_id)
+        .ok_or_else(|| {
+            to_lean_ir_error(
+                &expected.line_file(),
+                format!(
+                    "{} `{}` reached To-Lean without a FactId",
+                    context, expected
+                ),
+            )
+        })
+}
+
+fn contradiction_results_to_lean_ir(
+    runtime: &Runtime,
+    results: &[StmtResult],
+    impossible_fact: &AtomicFact,
+    context: &ToLeanIrContext,
+) -> Result<ContradictionToLeanIR, RuntimeError> {
+    if results.len() != 2 {
+        return Err(to_lean_ir_error(
+            &impossible_fact.line_file(),
+            "a contradiction must retain exactly the named fact and its logical negation",
+        ));
+    }
+    let expected_fact: Fact = impossible_fact.clone().into();
+    let expected_negation: Fact = impossible_fact.logical_negation()?.into();
+    let mut fact = runtime.fact_to_lean_ir_from_result(&results[0], "impossible fact", context)?;
+    let mut negated_fact =
+        runtime.fact_to_lean_ir_from_result(&results[1], "negated impossible fact", context)?;
+    if fact.proposition.to_string() != expected_fact.to_string()
+        || negated_fact.proposition.to_string() != expected_negation.to_string()
+    {
+        return Err(to_lean_ir_error(
+            &impossible_fact.line_file(),
+            "retained contradiction checks do not match the named impossible fact",
+        ));
+    }
+    fact.fact_id = None;
+    negated_fact.fact_id = None;
+    Ok(ContradictionToLeanIR {
+        fact: Box::new(fact),
+        negated_fact: Box::new(negated_fact),
+    })
 }
 
 fn param_group_to_lean_ir(

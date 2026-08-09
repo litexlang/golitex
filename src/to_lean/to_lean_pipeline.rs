@@ -338,6 +338,30 @@ impl LeanEmitter {
                 self.declarations.push(lean_prop(ir)?);
                 Ok(())
             }
+            StmtToLeanIR::HaveObjChoice(ir) => self.emit_object_choices(ir),
+            StmtToLeanIR::HaveExistentialWitness(ir) => self.emit_existential_witnesses(ir),
+            StmtToLeanIR::HaveObjEqual(ir) => {
+                for definition in ir.definitions.iter() {
+                    self.declarations.push(format!(
+                        "def {} : LitexSet := {}",
+                        lean_name(&definition.name),
+                        lean_obj_ir(&definition.value)?
+                    ));
+                }
+                for fact in ir.facts.iter() {
+                    self.emit_proved_fact(fact)?;
+                }
+                Ok(())
+            }
+            StmtToLeanIR::Proof(ir) => {
+                for fact in ir.facts.iter() {
+                    self.emit_proved_fact(fact)?;
+                }
+                for fact in ir.inferred_facts.iter() {
+                    self.emit_proved_fact(fact)?;
+                }
+                Ok(())
+            }
             StmtToLeanIR::Trust(ir) => {
                 for fact in ir.facts.iter() {
                     self.emit_trusted_fact(fact)?;
@@ -355,6 +379,103 @@ impl LeanEmitter {
                 Ok(())
             }
         }
+    }
+
+    fn emit_existential_witnesses(
+        &mut self,
+        ir: &HaveExistentialWitnessToLeanIR,
+    ) -> Result<(), RuntimeError> {
+        let layout = validate_existential_elimination(ir)?;
+        let first_witness = ir.witnesses.first().ok_or_else(|| {
+            to_lean_error(
+                &ir.source.proposition.line_file(),
+                "existential elimination IR must contain at least one witness",
+            )
+        })?;
+        let source_name = lean_exist_source_name(first_witness.symbol_id);
+        let source_proof = self.lean_proof(
+            &ir.source.proposition,
+            &ir.source.proof,
+            &LeanProofContext::default(),
+        )?;
+        self.declarations.push(format!(
+            "-- Litex checked existential source for `{}`\ntheorem {} : {} := {}",
+            lean_comment_text(&first_witness.name),
+            source_name,
+            lean_fact(&ir.source.proposition)?,
+            source_proof
+        ));
+
+        for (witness, value_term) in ir.witnesses.iter().zip(layout.witness_terms.iter()) {
+            self.declarations.push(format!(
+                "noncomputable def {} : LitexSet := {}",
+                lean_name(&witness.name),
+                value_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name)
+            ));
+        }
+        for (projection, proof_term) in ir.projections.iter().zip(layout.proof_terms.iter()) {
+            let fact_id = required_fact_id(projection)?;
+            if !self.emitted_fact_ids.insert(fact_id) {
+                return Err(to_lean_error(
+                    &projection.proposition.line_file(),
+                    "existential projection FactId was emitted before its witness definition",
+                ));
+            }
+            let proof_term = proof_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name);
+            self.declarations.push(format!(
+                "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact {}",
+                fact_id,
+                lean_global_fact_name(fact_id),
+                lean_fact(&projection.proposition)?,
+                proof_term
+            ));
+        }
+        Ok(())
+    }
+
+    fn emit_object_choices(&mut self, ir: &HaveObjChoiceToLeanIR) -> Result<(), RuntimeError> {
+        if ir.choices.is_empty() {
+            return Err(to_lean_error(
+                &default_line_file(),
+                "object-choice IR must contain at least one selected object",
+            ));
+        }
+        for choice in ir.choices.iter() {
+            let membership_fact_id = validate_object_choice(choice)?;
+            if self.emitted_fact_ids.contains(&membership_fact_id) {
+                return Err(to_lean_error(
+                    &choice.membership.proposition.line_file(),
+                    "object-choice membership FactId was emitted before its definition",
+                ));
+            }
+            let source_name = lean_choice_source_name(choice.symbol_id);
+            let source_proof = self.lean_proof(
+                &choice.nonempty_proof.proposition,
+                &choice.nonempty_proof.proof,
+                &LeanProofContext::default(),
+            )?;
+            self.declarations.push(format!(
+                "-- Litex checked choice source for `{}`\ntheorem {} : {} := {}",
+                lean_comment_text(&choice.name),
+                source_name,
+                lean_fact(&choice.nonempty_proof.proposition)?,
+                source_proof
+            ));
+            self.declarations.push(format!(
+                "noncomputable def {} : LitexSet := Exists.choose {}",
+                lean_name(&choice.name),
+                source_name
+            ));
+            self.emitted_fact_ids.insert(membership_fact_id);
+            self.declarations.push(format!(
+                "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact Exists.choose_spec {}",
+                membership_fact_id,
+                lean_global_fact_name(membership_fact_id),
+                lean_fact(&choice.membership.proposition)?,
+                source_name
+            ));
+        }
+        Ok(())
     }
 
     fn emit_trusted_fact(&mut self, fact: &FactToLeanIR) -> Result<(), RuntimeError> {
@@ -422,6 +543,14 @@ impl LeanEmitter {
                 let source = self.available_fact_name(*source_fact_id, proposition, context)?;
                 Ok(format!("by\n  exact {}", source))
             }
+            FactProofToLeanIR::ExistentialAlphaRenameCitation {
+                source_fact_id,
+                source_proposition,
+            } => {
+                validate_existential_alpha_rename(source_proposition, proposition)?;
+                let source = self.available_fact_name(*source_fact_id, proposition, context)?;
+                Ok(format!("by\n  exact {}", source))
+            }
             FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::Builtin(rule),
                 parameter_requirements,
@@ -456,10 +585,23 @@ impl LeanEmitter {
                 rule: ProofRuleToLeanIR::ClosedRealMembership,
                 parameter_requirements,
                 premises,
-            } if parameter_requirements.is_empty() && premises.is_empty() => Ok(format!(
-                "by\n  norm_num [litexMem, litexR, {}]",
-                LITEX_REAL_VIEW_SIMP
-            )),
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                Ok("by\n  change True\n  trivial".to_string())
+            }
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::RealSetNonempty,
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                lean_real_set_nonempty(proposition)
+            }
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ClassicalExcludedMiddle,
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                lean_classical_excluded_middle(proposition)
+            }
             FactProofToLeanIR::RuleApplication {
                 rule:
                     ProofRuleToLeanIR::KnownForallInstantiation {
@@ -504,6 +646,26 @@ impl LeanEmitter {
                 premises,
                 ..
             } => self.lean_equality_rewrite(proposition, rewrite, premises, context),
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::ExistIntroduction {
+                        witnesses,
+                        steps,
+                        expected_parameter_requirements,
+                        expected_body_facts,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_exist_introduction(
+                proposition,
+                witnesses,
+                steps,
+                expected_parameter_requirements,
+                expected_body_facts,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             FactProofToLeanIR::RuleApplication { rule, .. } => Err(to_lean_error(
                 &proposition.line_file(),
                 format!("To-Lean has no checked backend for proof rule {:?}", rule),
@@ -511,12 +673,47 @@ impl LeanEmitter {
             FactProofToLeanIR::ForallIntroduction {
                 parameter_premises,
                 premises,
+                inferred_premises,
                 conclusions,
             } => self.lean_forall_introduction(
                 proposition,
                 parameter_premises,
                 premises,
+                inferred_premises,
                 conclusions,
+                context,
+            ),
+            FactProofToLeanIR::ObjectDefinition {
+                definition,
+                value,
+                value_check,
+            } => self.lean_object_definition_fact(
+                proposition,
+                definition,
+                value,
+                value_check.as_deref(),
+                context,
+            ),
+            FactProofToLeanIR::ObjectChoice { .. } => Err(to_lean_error(
+                &proposition.line_file(),
+                "object-choice membership must be emitted with its defining choice statement",
+            )),
+            FactProofToLeanIR::ExistentialElimination { .. } => Err(to_lean_error(
+                &proposition.line_file(),
+                "existential projections must be emitted with their defining elimination statement",
+            )),
+            FactProofToLeanIR::CaseSplit { coverage, branches } => {
+                self.lean_case_split(proposition, coverage, branches, context)
+            }
+            FactProofToLeanIR::ByContradiction {
+                reverse_assumption,
+                steps,
+                contradiction,
+            } => self.lean_by_contradiction(
+                proposition,
+                reverse_assumption,
+                steps,
+                contradiction,
                 context,
             ),
             FactProofToLeanIR::Memo { proof } => {
@@ -583,15 +780,473 @@ impl LeanEmitter {
         }
 
         let proof = self.lean_proof(&fact.proposition, &fact.proof, context)?;
-        Ok((
-            local_name.clone(),
-            vec![format!(
-                "  have {} : {} := {}",
+        let mut proof_lines = proof.lines();
+        let first = proof_lines.next().ok_or_else(|| {
+            to_lean_error(
+                &fact.proposition.line_file(),
+                "a local fact emitted an empty Lean proof",
+            )
+        })?;
+        let mut lines = vec![format!(
+            "  have {} : {} := {}",
+            local_name,
+            lean_fact(&fact.proposition)?,
+            first
+        )];
+        // Formerly the proof was one String containing embedded newlines. A
+        // surrounding case bullet could then indent only its first line,
+        // leaking nested proof lines out of the branch. Preserve logical lines
+        // separately so every enclosing scope can add its own indentation.
+        lines.extend(proof_lines.map(|line| format!("  {}", line)));
+        Ok((local_name, lines))
+    }
+
+    fn lean_object_definition_fact(
+        &mut self,
+        proposition: &Fact,
+        definition: &str,
+        value: &ObjToLeanIR,
+        value_check: Option<&FactToLeanIR>,
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let definition = lean_name(definition);
+        if let Some(value_check) = value_check {
+            let (value_check_name, mut lines) = self.lean_named_local_fact(value_check, context)?;
+            lines.insert(0, "by".to_string());
+            lines.push(format!(
+                "  simpa only [{}] using {}",
+                definition, value_check_name
+            ));
+            return Ok(lines.join("\n"));
+        }
+
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "a defining object equality must be an equality fact",
+            ));
+        };
+        if lean_obj(&equality.left)? != definition
+            || lean_obj(&equality.right)? != lean_obj_ir(value)?
+        {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "a defining object equality does not match its declaration IR",
+            ));
+        }
+        Ok("by\n  rfl".to_string())
+    }
+
+    fn lean_case_split(
+        &mut self,
+        proposition: &Fact,
+        coverage: &FactToLeanIR,
+        branches: &[CaseBranchToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let Fact::OrFact(coverage_fact) = &coverage.proposition else {
+            return Err(to_lean_error(
+                &coverage.proposition.line_file(),
+                "case-split coverage must be a disjunction",
+            ));
+        };
+        if coverage_fact.facts.len() != branches.len() || branches.len() < 2 {
+            return Err(to_lean_error(
+                &coverage.proposition.line_file(),
+                "case-split branch count does not match its coverage disjunction",
+            ));
+        }
+
+        let (coverage_name, coverage_lines) = self.lean_named_local_fact(coverage, context)?;
+        let mut branch_names = Vec::with_capacity(branches.len());
+        let mut branch_bodies = Vec::with_capacity(branches.len());
+        for (index, branch) in branches.iter().enumerate() {
+            let expected_case: Fact = coverage_fact.facts[index].clone().into();
+            if branch.assumption.fact.to_string() != expected_case.to_string() {
+                return Err(to_lean_error(
+                    &branch.assumption.fact.line_file(),
+                    "case-split assumption does not match its coverage branch",
+                ));
+            }
+            let mut branch_context = context.new_proof_space();
+            let assumption_name = self.next_proof_fact_name(&mut branch_context);
+            register_local_fact(
+                branch.assumption.fact_id,
+                &branch.assumption.fact,
+                &assumption_name,
+                &mut branch_context,
+            );
+            branch_names.push(assumption_name);
+
+            let mut body = Vec::new();
+            for step in branch.steps.iter() {
+                body.extend(self.lean_local_statement(step, &mut branch_context)?);
+            }
+            match &branch.exit {
+                CaseBranchExitToLeanIR::Conclusion(conclusion) => {
+                    if conclusion.proposition.to_string() != proposition.to_string() {
+                        return Err(to_lean_error(
+                            &conclusion.proposition.line_file(),
+                            "case-split conclusion does not match the parent goal",
+                        ));
+                    }
+                    let proof = self.lean_proof_in_current_space(
+                        &conclusion.proposition,
+                        &conclusion.proof,
+                        &mut branch_context,
+                    )?;
+                    let Some(proof_body) = proof.strip_prefix("by\n") else {
+                        return Err(to_lean_error(
+                            &conclusion.proposition.line_file(),
+                            "case-split conclusion did not emit a Lean proof block",
+                        ));
+                    };
+                    body.extend(proof_body.lines().map(str::to_string));
+                }
+                CaseBranchExitToLeanIR::Contradiction(contradiction) => {
+                    body.extend(self.lean_contradiction_lines(contradiction, &mut branch_context)?);
+                }
+            }
+            branch_bodies.push(body);
+        }
+
+        let mut lines = vec!["by".to_string()];
+        lines.extend(coverage_lines);
+        lines.push(format!(
+            "  rcases {} with {}",
+            coverage_name,
+            branch_names.join(" | ")
+        ));
+        for body in branch_bodies {
+            push_lean_bullet(&mut lines, &body)?;
+        }
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_by_contradiction(
+        &mut self,
+        proposition: &Fact,
+        reverse_assumption: &LocalPremiseToLeanIR,
+        steps: &[StmtToLeanIR],
+        contradiction: &ContradictionToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let Fact::AtomicFact(target) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "this To-Lean tranche lowers `by contra` only for atomic goals",
+            ));
+        };
+        let expected_reverse = target.logical_negation()?;
+        if reverse_assumption.fact.to_string() != Fact::from(expected_reverse).to_string() {
+            return Err(to_lean_error(
+                &reverse_assumption.fact.line_file(),
+                "by-contra reverse assumption is not the logical negation of its goal",
+            ));
+        }
+        let _ = lean_fact(proposition)?;
+        let reverse_fact_text = lean_fact(&reverse_assumption.fact)?;
+
+        let mut lines = vec![
+            "by".to_string(),
+            "  classical".to_string(),
+            "  apply Classical.byContradiction".to_string(),
+        ];
+        let introduced_name = self.next_proof_fact_name(context);
+        lines.push(format!("  intro {}", introduced_name));
+        let reverse_name = if target.is_true() {
+            introduced_name
+        } else {
+            let reverse_name = self.next_proof_fact_name(context);
+            lines.push(format!(
+                "  have {} : {} := Classical.byContradiction {}",
+                reverse_name, reverse_fact_text, introduced_name
+            ));
+            reverse_name
+        };
+        register_local_fact(
+            reverse_assumption.fact_id,
+            &reverse_assumption.fact,
+            &reverse_name,
+            context,
+        );
+        for step in steps.iter() {
+            lines.extend(self.lean_local_statement(step, context)?);
+        }
+        lines.extend(self.lean_contradiction_lines(contradiction, context)?);
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_local_statement(
+        &mut self,
+        statement: &StmtToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<Vec<String>, RuntimeError> {
+        let mut lines = Vec::new();
+        match statement {
+            StmtToLeanIR::Fact(ir) => {
+                lines.extend(self.lean_local_fact(&ir.fact, context)?);
+                for fact in ir.inferred_facts.iter() {
+                    lines.extend(self.lean_local_fact(fact, context)?);
+                }
+            }
+            StmtToLeanIR::Proof(ir) => {
+                for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+                    lines.extend(self.lean_local_fact(fact, context)?);
+                }
+            }
+            StmtToLeanIR::HaveObjChoice(ir) => {
+                lines.extend(self.lean_local_object_choices(ir, context)?);
+            }
+            StmtToLeanIR::HaveExistentialWitness(ir) => {
+                lines.extend(self.lean_local_existential_witnesses(ir, context)?);
+            }
+            StmtToLeanIR::HaveObjEqual(ir) => {
+                for definition in ir.definitions.iter() {
+                    lines.push(format!(
+                        "  let {} : LitexSet := {}",
+                        lean_name(&definition.name),
+                        lean_obj_ir(&definition.value)?
+                    ));
+                }
+                for fact in ir.facts.iter() {
+                    lines.extend(self.lean_local_fact(fact, context)?);
+                }
+            }
+            other => {
+                return Err(to_lean_error(
+                    &statement_ir_line_file(other),
+                    format!(
+                        "To-Lean does not support local statement `{}` inside a proof scope",
+                        statement_ir_display(other)
+                    ),
+                ));
+            }
+        }
+        Ok(lines)
+    }
+
+    fn lean_local_existential_witnesses(
+        &mut self,
+        ir: &HaveExistentialWitnessToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<Vec<String>, RuntimeError> {
+        let layout = validate_existential_elimination(ir)?;
+        let (source_name, mut lines) = self.lean_named_local_fact(&ir.source, context)?;
+        for (witness, value_term) in ir.witnesses.iter().zip(layout.witness_terms.iter()) {
+            lines.push(format!(
+                "  let {} : LitexSet := {}",
+                lean_name(&witness.name),
+                value_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name)
+            ));
+        }
+        for (projection, proof_term) in ir.projections.iter().zip(layout.proof_terms.iter()) {
+            let fact_id = required_fact_id(projection)?;
+            let local_name = self.next_proof_fact_name(context);
+            lines.push(format!(
+                "  have {} : {} := by",
                 local_name,
-                lean_fact(&fact.proposition)?,
-                proof.replace('\n', "\n  ")
-            )],
-        ))
+                lean_fact(&projection.proposition)?
+            ));
+            lines.push(format!(
+                "    exact {}",
+                proof_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name)
+            ));
+            register_local_fact(fact_id, &projection.proposition, &local_name, context);
+        }
+        Ok(lines)
+    }
+
+    fn lean_local_object_choices(
+        &mut self,
+        ir: &HaveObjChoiceToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<Vec<String>, RuntimeError> {
+        if ir.choices.is_empty() {
+            return Err(to_lean_error(
+                &default_line_file(),
+                "local object-choice IR must contain at least one selected object",
+            ));
+        }
+        let mut lines = Vec::new();
+        for choice in ir.choices.iter() {
+            let membership_fact_id = validate_object_choice(choice)?;
+            let (source_name, source_lines) =
+                self.lean_named_local_fact(&choice.nonempty_proof, context)?;
+            lines.extend(source_lines);
+            lines.push(format!(
+                "  let {} : LitexSet := Exists.choose {}",
+                lean_name(&choice.name),
+                source_name
+            ));
+            let membership_name = self.next_proof_fact_name(context);
+            lines.push(format!(
+                "  have {} : {} := by",
+                membership_name,
+                lean_fact(&choice.membership.proposition)?
+            ));
+            lines.push(format!("    exact Exists.choose_spec {}", source_name));
+            register_local_fact(
+                membership_fact_id,
+                &choice.membership.proposition,
+                &membership_name,
+                context,
+            );
+        }
+        Ok(lines)
+    }
+
+    fn lean_local_fact(
+        &mut self,
+        fact: &FactToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<Vec<String>, RuntimeError> {
+        let (name, lines) = self.lean_named_local_fact(fact, context)?;
+        if let Some(fact_id) = fact.fact_id {
+            register_local_fact(fact_id, &fact.proposition, &name, context);
+        }
+        Ok(lines)
+    }
+
+    fn lean_contradiction_lines(
+        &mut self,
+        contradiction: &ContradictionToLeanIR,
+        context: &mut LeanProofContext,
+    ) -> Result<Vec<String>, RuntimeError> {
+        let (fact_name, mut lines) = self.lean_named_local_fact(&contradiction.fact, context)?;
+        let (negated_name, negated_lines) =
+            self.lean_named_local_fact(&contradiction.negated_fact, context)?;
+        lines.extend(negated_lines);
+
+        let (Fact::AtomicFact(fact), Fact::AtomicFact(negated_fact)) = (
+            &contradiction.fact.proposition,
+            &contradiction.negated_fact.proposition,
+        ) else {
+            return Err(to_lean_error(
+                &contradiction.fact.proposition.line_file(),
+                "a contradiction exit currently requires complementary atomic facts",
+            ));
+        };
+        let facts_are_complements = fact
+            .logical_negation()
+            .is_ok_and(|negation| negation.to_string() == negated_fact.to_string());
+        if !facts_are_complements {
+            return Err(to_lean_error(
+                &contradiction.fact.proposition.line_file(),
+                "contradiction facts are not logical complements",
+            ));
+        }
+        let (positive_name, negative_name) = if fact.is_true() {
+            (&fact_name, &negated_name)
+        } else {
+            (&negated_name, &fact_name)
+        };
+        lines.push(format!(
+            "  exact False.elim ({} {})",
+            negative_name, positive_name
+        ));
+        Ok(lines)
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn lean_exist_introduction(
+        &mut self,
+        proposition: &Fact,
+        witnesses: &[Obj],
+        steps: &[StmtToLeanIR],
+        expected_parameter_requirements: &[Fact],
+        expected_body_facts: &[Fact],
+        parameter_requirements: &[FactToLeanIR],
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let Fact::ExistFact(ExistFactEnum::ExistFact(body)) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "existential-introduction evidence requires a positive `exist` target",
+            ));
+        };
+        let param_types = flattened_exist_param_types(body);
+        if witnesses.is_empty() || witnesses.len() != param_types.len() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "existential-introduction witness count does not match its target binders",
+            ));
+        }
+        let required_param_count = param_types
+            .iter()
+            .filter(|param_type| !matches!(param_type, ParamType::Set(_)))
+            .count();
+        if parameter_requirements.len() != required_param_count
+            || expected_parameter_requirements.len() != required_param_count
+            || premises.len() != body.facts.len()
+            || expected_body_facts.len() != body.facts.len()
+        {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "existential-introduction requirement or body-premise count is inconsistent",
+            ));
+        }
+        for (actual, expected) in parameter_requirements
+            .iter()
+            .zip(expected_parameter_requirements.iter())
+        {
+            if actual.fact_id.is_some() || actual.proposition.to_string() != expected.to_string() {
+                return Err(to_lean_error(
+                    &proposition.line_file(),
+                    "existential-introduction parameter evidence disagrees with its retained proposition",
+                ));
+            }
+        }
+        for (actual, expected) in premises.iter().zip(expected_body_facts.iter()) {
+            if actual.fact_id.is_some() || actual.proposition.to_string() != expected.to_string() {
+                return Err(to_lean_error(
+                    &proposition.line_file(),
+                    "existential-introduction body evidence disagrees with its retained proposition",
+                ));
+            }
+        }
+
+        let mut lines = vec!["by".to_string()];
+        for step in steps {
+            lines.extend(self.lean_local_statement(step, context)?);
+        }
+        let mut requirement_names = Vec::with_capacity(parameter_requirements.len());
+        for requirement in parameter_requirements {
+            let (name, requirement_lines) = self.lean_named_local_fact(requirement, context)?;
+            lines.extend(requirement_lines);
+            requirement_names.push(name);
+        }
+        let mut body_names = Vec::with_capacity(premises.len());
+        for premise in premises {
+            let (name, premise_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(premise_lines);
+            body_names.push(name);
+        }
+
+        let mut constructor_parts = Vec::new();
+        let mut requirement_index = 0;
+        for (witness, param_type) in witnesses.iter().zip(param_types.iter()) {
+            ObjToLeanIR::lower(witness)
+                .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+            constructor_parts.push(lean_obj(witness)?);
+            if !matches!(param_type, ParamType::Set(_)) {
+                validate_exist_introduction_requirement(
+                    witness,
+                    param_type,
+                    &parameter_requirements[requirement_index].proposition,
+                )?;
+                constructor_parts.push(requirement_names[requirement_index].clone());
+                requirement_index += 1;
+            }
+        }
+        if body_names.is_empty() {
+            constructor_parts.push("True.intro".to_string());
+        } else {
+            constructor_parts.extend(body_names);
+        }
+        lines.push(format!("  exact ⟨{}⟩", constructor_parts.join(", ")));
+        Ok(lines.join("\n"))
     }
 
     fn lean_builtin_rule_application(
@@ -621,7 +1276,66 @@ impl LeanEmitter {
                 }
                 self.lean_arithmetic_builtin_rule(proposition, *rule, premises, context)
             }
+            BuiltinRuleToLeanIR::PositiveRealMembership => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "positive-real membership evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_positive_real_membership(proposition, premises, context)
+            }
         }
+    }
+
+    fn lean_positive_real_membership(
+        &mut self,
+        proposition: &Fact,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "positive-real membership evidence expected 1 premise but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+        let positive_object = match proposition {
+            Fact::AtomicFact(AtomicFact::LessFact(fact)) if fact.left.to_string() == "0" => {
+                &fact.right
+            }
+            Fact::AtomicFact(AtomicFact::GreaterFact(fact)) if fact.right.to_string() == "0" => {
+                &fact.left
+            }
+            _ => {
+                return Err(to_lean_error(
+                    &proposition.line_file(),
+                    "positive-real membership evidence requires a strict positivity target",
+                ));
+            }
+        };
+        let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premises[0].proposition else {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "positive-real membership evidence requires an `R+` membership premise",
+            ));
+        };
+        if !matches!(membership.set, Obj::StandardSet(StandardSet::RPos))
+            || obj_equality_key(&membership.element) != obj_equality_key(positive_object)
+        {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "positive-real membership evidence premise does not match its target object",
+            ));
+        }
+
+        let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+        lines.insert(0, "by".to_string());
+        lines.push(format!("  exact litexMemRPosPositive {}", premise_name));
+        Ok(lines.join("\n"))
     }
 
     fn lean_arithmetic_builtin_rule(
@@ -703,16 +1417,9 @@ impl LeanEmitter {
         ));
         let mut rewrite_targets = premise_names.clone();
         rewrite_targets.push("⊢".to_string());
-        if !real_equalities.is_empty() {
-            lines.push(format!(
-                "    rw [{}] at {}",
-                real_equalities.join(", "),
-                rewrite_targets.join(" ")
-            ));
-        }
         lines.push(format!(
             "    simp only [{}] at {}",
-            LITEX_REAL_VIEW_SIMP,
+            litex_real_view_simp(&real_equalities),
             rewrite_targets.join(" ")
         ));
         if proof.starts_with("linarith") {
@@ -830,16 +1537,9 @@ impl LeanEmitter {
         ));
         let mut rewrite_targets = premise_names.clone();
         rewrite_targets.push("⊢".to_string());
-        if !real_equalities.is_empty() {
-            lines.push(format!(
-                "    rw [{}] at {}",
-                real_equalities.join(", "),
-                rewrite_targets.join(" ")
-            ));
-        }
         lines.push(format!(
             "    simp only [{}] at {}",
-            LITEX_REAL_VIEW_SIMP,
+            litex_real_view_simp(&real_equalities),
             rewrite_targets.join(" ")
         ));
         lines.push(format!("    exact {}", proof));
@@ -931,17 +1631,11 @@ impl LeanEmitter {
             result_name,
             lean_fact(proposition)?
         ));
-        if !real_equalities.is_empty() {
-            lines.push(format!(
-                "    rw [{}] at {} ⊢",
-                real_equalities.join(", "),
-                source_name
-            ));
-            lines.push(format!(
-                "    simp only [{}] at {} ⊢",
-                LITEX_REAL_VIEW_SIMP, source_name
-            ));
-        }
+        lines.push(format!(
+            "    simp only [{}] at {} ⊢",
+            litex_real_view_simp(&real_equalities),
+            source_name
+        ));
         lines.push(format!(
             "    convert {} using 1 <;> {}",
             source_name,
@@ -1060,6 +1754,7 @@ impl LeanEmitter {
         proposition: &Fact,
         parameter_premises: &[LocalPremiseToLeanIR],
         premises: &[LocalPremiseToLeanIR],
+        inferred_premises: &[FactToLeanIR],
         conclusions: &[FactToLeanIR],
         context: &mut LeanProofContext,
     ) -> Result<String, RuntimeError> {
@@ -1093,15 +1788,15 @@ impl LeanEmitter {
             context
                 .proof_fact_names
                 .insert(premise.fact_id, local_name.clone());
-            if let Some(object) = real_membership_object(&premise.fact) {
+            if let Some((object, membership_proof)) =
+                real_membership_proof(&premise.fact, &local_name)
+            {
                 if !context
                     .real_memberships
                     .iter()
-                    .any(|(known, _)| obj_equality_key(known) == obj_equality_key(object))
+                    .any(|(known, _)| obj_equality_key(known) == obj_equality_key(&object))
                 {
-                    context
-                        .real_memberships
-                        .push((object.clone(), local_name.clone()));
+                    context.real_memberships.push((object, membership_proof));
                 }
             }
             intro_names.push(local_name);
@@ -1116,11 +1811,24 @@ impl LeanEmitter {
             }
             intro_names.push(local_name);
         }
+        let mut inferred_lines = Vec::new();
+        for inferred in inferred_premises {
+            let fact_id = required_fact_id(inferred)?;
+            let (local_name, local_lines) = self.lean_named_local_fact(inferred, context)?;
+            inferred_lines.extend(local_lines);
+            register_local_fact(fact_id, &inferred.proposition, &local_name, context);
+        }
         let conclusion = &conclusions[0];
         let inner =
             self.lean_proof_in_current_space(&conclusion.proposition, &conclusion.proof, context)?;
         let inner = inner.strip_prefix("by\n").unwrap_or(inner.as_str());
-        Ok(format!("by\n  intro {}\n{}", intro_names.join(" "), inner))
+        let mut lines = vec![
+            "by".to_string(),
+            format!("  intro {}", intro_names.join(" ")),
+        ];
+        lines.extend(inferred_lines);
+        lines.push(inner.to_string());
+        Ok(lines.join("\n"))
     }
 
     fn next_proof_fact_name(&mut self, context: &mut LeanProofContext) -> String {
@@ -1284,6 +1992,7 @@ fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
             " ∨ ",
         )),
         Fact::ForallFact(forall) => lean_forall_fact(forall),
+        Fact::ExistFact(exist) => lean_exist_fact(exist),
         other => Err(to_lean_error(
             &other.line_file(),
             format!(
@@ -1292,6 +2001,105 @@ fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
             ),
         )),
     }
+}
+
+fn lean_exist_fact(exist: &ExistFactEnum) -> Result<String, RuntimeError> {
+    let ExistFactEnum::ExistFact(body) = exist else {
+        return Err(to_lean_error(
+            &exist.line_file(),
+            "To-Lean proposition backend currently supports positive `exist`, not `exist!` or `not exist`",
+        ));
+    };
+    ensure_lean_binders_are_capture_free(
+        body.params_def_with_type.groups.iter(),
+        body.get_args_from_fact_ref(),
+        &body.line_file,
+        "existential",
+    )?;
+    let body_parts = body
+        .facts
+        .iter()
+        .map(lean_exist_body_fact)
+        .collect::<Result<Vec<_>, RuntimeError>>()?;
+    let mut tail = lean_right_associated_conjunction(&body_parts);
+    for group in body.params_def_with_type.groups.iter().rev() {
+        for binding in group.params.iter().rev() {
+            let name = lean_name(binding.name());
+            if let Some(requirement) = lean_exist_param_requirement(&name, &group.param_type)? {
+                tail = format!("{} ∧ {}", requirement, tail);
+            }
+            tail = format!("∃ {} : LitexSet, {}", name, tail);
+        }
+    }
+    Ok(tail)
+}
+
+fn lean_exist_body_fact(fact: &ExistBodyFact) -> Result<String, RuntimeError> {
+    lean_fact(&fact.from_ref_to_cloned_fact())
+}
+
+fn lean_exist_param_requirement(
+    name: &str,
+    param_type: &ParamType,
+) -> Result<Option<String>, RuntimeError> {
+    match param_type {
+        ParamType::Set(_) => Ok(None),
+        ParamType::NonemptySet(_) => Ok(Some(format!("litexIsNonemptySet {}", name))),
+        ParamType::FiniteSet(_) => Ok(Some(format!("litexIsFiniteSet {}", name))),
+        ParamType::Obj(carrier) => Ok(Some(format!("{} ∈ {}", name, lean_obj(carrier)?))),
+    }
+}
+
+fn lean_right_associated_conjunction(parts: &[String]) -> String {
+    match parts {
+        [] => "True".to_string(),
+        [only] => only.clone(),
+        [first, rest @ ..] => format!("({}) ∧ {}", first, lean_right_associated_conjunction(rest)),
+    }
+}
+
+fn lean_classical_excluded_middle(proposition: &Fact) -> Result<String, RuntimeError> {
+    let Fact::OrFact(or_fact) = proposition else {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "classical excluded-middle evidence requires a disjunction",
+        ));
+    };
+    if or_fact.facts.len() != 2 {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "classical excluded-middle evidence requires exactly two branches",
+        ));
+    }
+    let (AndChainAtomicFact::AtomicFact(first), AndChainAtomicFact::AtomicFact(second)) =
+        (&or_fact.facts[0], &or_fact.facts[1])
+    else {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "classical excluded-middle branches must be atomic",
+        ));
+    };
+    let branches_are_complements = first
+        .logical_negation()
+        .is_ok_and(|negation| negation.to_string() == second.to_string());
+    if !branches_are_complements {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "classical excluded-middle branches are not logical complements",
+        ));
+    }
+    let first_text = lean_fact(&Fact::from(first.clone()))?;
+    let second_text = lean_fact(&Fact::from(second.clone()))?;
+    if first.is_true() {
+        return Ok(format!(
+            "by\n  classical\n  exact Classical.em ({})",
+            first_text
+        ));
+    }
+    Ok(format!(
+        "by\n  classical\n  by_cases proof_case : {}\n  · exact Or.inr proof_case\n  · exact Or.inl proof_case",
+        second_text
+    ))
 }
 
 fn lean_atomic_fact(fact: &AtomicFact) -> Result<String, RuntimeError> {
@@ -1363,15 +2171,24 @@ fn lean_prop_application(name: &str, args: &[Obj], negated: bool) -> Result<Stri
 }
 
 fn lean_binary_fact(left: &Obj, operator: &str, right: &Obj) -> Result<String, RuntimeError> {
-    Ok(format!(
-        "{} {} {}",
-        lean_obj(left)?,
-        operator,
-        lean_obj(right)?
-    ))
+    let left_text = lean_obj(left)?;
+    let left_text = if closed_rational_expression(left) {
+        format!("({} : LitexSet)", left_text)
+    } else {
+        left_text
+    };
+    Ok(format!("{} {} {}", left_text, operator, lean_obj(right)?))
 }
 
 fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
+    let mut objects = Vec::new();
+    collect_forall_objects_for_lean_name_check(forall, &mut objects);
+    ensure_lean_binders_are_capture_free(
+        forall.params_def_with_type.groups.iter(),
+        objects,
+        &forall.line_file,
+        "universal",
+    )?;
     let mut binders = Vec::new();
     let mut parameter_requirements = Vec::new();
     for group in forall.params_def_with_type.groups.iter() {
@@ -1420,6 +2237,176 @@ fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
         body = format!("{} → {}", premise, body);
     }
     Ok(format!("∀ {}, {}", binders.join(" "), body))
+}
+
+fn ensure_lean_binders_are_capture_free<'a>(
+    groups: impl Iterator<Item = &'a ParamGroupWithParamType>,
+    objects: Vec<&Obj>,
+    line_file: &LineFile,
+    context: &str,
+) -> Result<(), RuntimeError> {
+    let mut binders_by_id: HashMap<SymbolId, (String, String)> = HashMap::new();
+    let mut binders_by_lean_name: HashMap<String, (SymbolId, String)> = HashMap::new();
+    for group in groups {
+        for binding in group.params.iter() {
+            let emitted_name = lean_name(binding.name());
+            if let Some((other_id, other_name)) = binders_by_lean_name.get(&emitted_name) {
+                if *other_id != binding.id() {
+                    return Err(lean_binder_name_collision_error(
+                        line_file,
+                        context,
+                        other_name,
+                        binding.name(),
+                        &emitted_name,
+                    ));
+                }
+            }
+            binders_by_id.insert(
+                binding.id(),
+                (emitted_name.clone(), binding.name().to_string()),
+            );
+            binders_by_lean_name.insert(emitted_name, (binding.id(), binding.name().to_string()));
+        }
+    }
+
+    for object in objects {
+        let object_ir =
+            ObjToLeanIR::lower(object).map_err(|message| to_lean_error(line_file, message))?;
+        ensure_obj_uses_capture_free_lean_names(
+            &object_ir,
+            &binders_by_id,
+            &binders_by_lean_name,
+            line_file,
+            context,
+        )?;
+    }
+    Ok(())
+}
+
+fn ensure_obj_uses_capture_free_lean_names(
+    object: &ObjToLeanIR,
+    binders_by_id: &HashMap<SymbolId, (String, String)>,
+    binders_by_lean_name: &HashMap<String, (SymbolId, String)>,
+    line_file: &LineFile,
+    context: &str,
+) -> Result<(), RuntimeError> {
+    match object {
+        ObjToLeanIR::Symbol { symbol_id, name } => {
+            let emitted_name = lean_name(name);
+            if let Some((binder_name, source_name)) = binders_by_id.get(symbol_id) {
+                if emitted_name != *binder_name {
+                    return Err(to_lean_error(
+                        line_file,
+                        format!(
+                            "To-Lean cannot safely emit the {context} binder `{source_name}` because one occurrence is named `{name}` after SymbolId resolution; preserve one binder spelling before compilation"
+                        ),
+                    ));
+                }
+            }
+            if let Some((binder_id, binder_source_name)) = binders_by_lean_name.get(&emitted_name) {
+                if symbol_id != binder_id {
+                    return Err(lean_binder_name_collision_error(
+                        line_file,
+                        context,
+                        binder_source_name,
+                        name,
+                        &emitted_name,
+                    ));
+                }
+            }
+        }
+        ObjToLeanIR::BuiltinApp { arguments, .. } => {
+            for argument in arguments {
+                ensure_obj_uses_capture_free_lean_names(
+                    argument,
+                    binders_by_id,
+                    binders_by_lean_name,
+                    line_file,
+                    context,
+                )?;
+            }
+        }
+        ObjToLeanIR::Collection { items, .. } => {
+            for item in items {
+                ensure_obj_uses_capture_free_lean_names(
+                    item,
+                    binders_by_id,
+                    binders_by_lean_name,
+                    line_file,
+                    context,
+                )?;
+            }
+        }
+        ObjToLeanIR::Number { .. } | ObjToLeanIR::Constant(_) | ObjToLeanIR::StandardSet(_) => {}
+    }
+    Ok(())
+}
+
+fn lean_binder_name_collision_error(
+    line_file: &LineFile,
+    context: &str,
+    binder_name: &str,
+    conflicting_name: &str,
+    emitted_name: &str,
+) -> RuntimeError {
+    to_lean_error(
+        line_file,
+        format!(
+            "To-Lean cannot safely emit the {context} binder `{binder_name}` because Litex name `{conflicting_name}` also becomes Lean identifier `{emitted_name}`; rename one identifier"
+        ),
+    )
+}
+
+fn collect_forall_objects_for_lean_name_check<'a>(
+    forall: &'a ForallFact,
+    objects: &mut Vec<&'a Obj>,
+) {
+    for group in forall.params_def_with_type.groups.iter() {
+        if let ParamType::Obj(carrier) = &group.param_type {
+            objects.push(carrier);
+        }
+    }
+    for premise in forall.dom_facts.iter() {
+        collect_fact_objects_for_lean_name_check(premise, objects);
+    }
+    for conclusion in forall.then_facts.iter() {
+        collect_forall_conclusion_objects_for_lean_name_check(conclusion, objects);
+    }
+}
+
+fn collect_fact_objects_for_lean_name_check<'a>(fact: &'a Fact, objects: &mut Vec<&'a Obj>) {
+    match fact {
+        Fact::AtomicFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ExistFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::OrFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::AndFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ChainFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        Fact::ForallFact(fact) => collect_forall_objects_for_lean_name_check(fact, objects),
+        Fact::ForallFactWithIff(fact) => {
+            collect_forall_objects_for_lean_name_check(&fact.forall_fact, objects);
+            for iff_fact in fact.iff_facts.iter() {
+                collect_forall_conclusion_objects_for_lean_name_check(iff_fact, objects);
+            }
+        }
+        Fact::NotForall(fact) => {
+            collect_forall_objects_for_lean_name_check(&fact.forall_fact, objects)
+        }
+    }
+}
+
+fn collect_forall_conclusion_objects_for_lean_name_check<'a>(
+    fact: &'a ExistOrAndChainAtomicFact,
+    objects: &mut Vec<&'a Obj>,
+) {
+    match fact {
+        ExistOrAndChainAtomicFact::AtomicFact(fact) => {
+            objects.extend(fact.get_args_from_fact_ref())
+        }
+        ExistOrAndChainAtomicFact::AndFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::ChainFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::OrFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+        ExistOrAndChainAtomicFact::ExistFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
+    }
 }
 
 fn lean_param_type(param_type: &ParamType) -> Result<&'static str, RuntimeError> {
@@ -1606,16 +2593,9 @@ fn lean_rational_builtin_proof(
     lines.extend(view_lines);
     let mut rewrite_targets = context.nonzero_names.clone();
     rewrite_targets.push("⊢".to_string());
-    if !real_equalities.is_empty() {
-        lines.push(format!(
-            "  rw [{}] at {}",
-            real_equalities.join(", "),
-            rewrite_targets.join(" ")
-        ));
-    }
     lines.push(format!(
         "  simp only [{}] at {}",
-        LITEX_REAL_VIEW_SIMP,
+        litex_real_view_simp(&real_equalities),
         rewrite_targets.join(" ")
     ));
     lines.push(format!("  {}", tactic.replace('\n', "\n  ")));
@@ -1639,10 +2619,7 @@ fn rational_tactic(
     } else {
         format!("field_simp [{}]", nonzero_names.join(", "))
     };
-    format!(
-        "solve\n        | {}\n        | {} <;> ring",
-        field_simp, field_simp
-    )
+    format!("{} <;> ring", field_simp)
 }
 
 fn rational_fact_normalization_tactic(
@@ -1713,6 +2690,393 @@ fn rational_fact_normalization_tactic(
     ))
 }
 
+fn lean_real_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError> {
+    let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)) = proposition else {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "real-set nonemptiness evidence was attached to a different fact family",
+        ));
+    };
+    if !matches!(fact.set, Obj::StandardSet(StandardSet::R)) {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "real-set nonemptiness evidence was attached to a non-real carrier",
+        ));
+    }
+    Ok("by\n  change ∃ element : LitexSet, element ∈ litexR\n  refine ⟨0, ?_⟩\n  change True\n  trivial".to_string())
+}
+
+fn validate_object_choice(choice: &ObjectChoiceToLeanIR) -> Result<FactId, RuntimeError> {
+    if choice.nonempty_proof.fact_id.is_some() {
+        return Err(to_lean_error(
+            &choice.nonempty_proof.proposition.line_file(),
+            "object-choice nonemptiness proof must be a verification-only node",
+        ));
+    }
+    let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(nonempty)) =
+        &choice.nonempty_proof.proposition
+    else {
+        return Err(to_lean_error(
+            &choice.nonempty_proof.proposition.line_file(),
+            "object-choice source is not a nonempty-set fact",
+        ));
+    };
+    let nonempty_carrier = ObjToLeanIR::lower(&nonempty.set).map_err(|message| {
+        to_lean_error(&choice.nonempty_proof.proposition.line_file(), message)
+    })?;
+    if nonempty_carrier != choice.carrier {
+        return Err(to_lean_error(
+            &choice.nonempty_proof.proposition.line_file(),
+            "object-choice nonemptiness proof does not match its selected carrier",
+        ));
+    }
+
+    let FactProofToLeanIR::ObjectChoice {
+        definition,
+        carrier,
+    } = &choice.membership.proof
+    else {
+        return Err(to_lean_error(
+            &choice.membership.proposition.line_file(),
+            "object-choice membership has no choice-introduction evidence",
+        ));
+    };
+    if definition != &choice.name || carrier != &choice.carrier {
+        return Err(to_lean_error(
+            &choice.membership.proposition.line_file(),
+            "object-choice membership evidence does not match its definition",
+        ));
+    }
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = &choice.membership.proposition else {
+        return Err(to_lean_error(
+            &choice.membership.proposition.line_file(),
+            "object-choice stored fact is not a membership fact",
+        ));
+    };
+    let membership_carrier = ObjToLeanIR::lower(&membership.set)
+        .map_err(|message| to_lean_error(&choice.membership.proposition.line_file(), message))?;
+    if membership_carrier != choice.carrier {
+        return Err(to_lean_error(
+            &choice.membership.proposition.line_file(),
+            "object-choice membership uses a different carrier",
+        ));
+    }
+    let selected = ObjToLeanIR::lower(&membership.element)
+        .map_err(|message| to_lean_error(&choice.membership.proposition.line_file(), message))?;
+    if !matches!(
+        selected,
+        ObjToLeanIR::Symbol { symbol_id, .. } if symbol_id == choice.symbol_id
+    ) {
+        return Err(to_lean_error(
+            &choice.membership.proposition.line_file(),
+            "object-choice membership uses a different selected symbol",
+        ));
+    }
+    required_fact_id(&choice.membership)
+}
+
+const EXIST_SOURCE_PLACEHOLDER: &str = "__litex_checked_exist_source__";
+
+struct ExistentialEliminationLayout {
+    witness_terms: Vec<String>,
+    proof_terms: Vec<String>,
+}
+
+fn validate_existential_elimination(
+    ir: &HaveExistentialWitnessToLeanIR,
+) -> Result<ExistentialEliminationLayout, RuntimeError> {
+    if ir.source.fact_id.is_some() {
+        return Err(to_lean_error(
+            &ir.source.proposition.line_file(),
+            "existential-elimination source must be a verification-only node",
+        ));
+    }
+    let Fact::ExistFact(ExistFactEnum::ExistFact(body)) = &ir.source.proposition else {
+        return Err(to_lean_error(
+            &ir.source.proposition.line_file(),
+            "existential-elimination source is not a positive `exist` fact",
+        ));
+    };
+    lean_fact(&ir.source.proposition)?;
+    let param_types = flattened_exist_param_types(&body);
+    if ir.witnesses.is_empty()
+        || ir.witnesses.len() != param_types.len()
+        || ir.projections.len() != ir.witnesses.len() + body.facts.len()
+    {
+        return Err(to_lean_error(
+            &ir.source.proposition.line_file(),
+            "existential-elimination witness or projection count does not match its source",
+        ));
+    }
+
+    let mut symbol_ids = HashSet::new();
+    for (witness, source_type) in ir.witnesses.iter().zip(param_types.iter()) {
+        if !symbol_ids.insert(witness.symbol_id) {
+            return Err(to_lean_error(
+                &ir.source.proposition.line_file(),
+                "existential-elimination witness symbols must be distinct",
+            ));
+        }
+        let family_matches = matches!(
+            (source_type, &witness.param_type),
+            (ParamType::Set(_), ParamTypeToLeanIR::LitexSet)
+                | (
+                    ParamType::NonemptySet(_),
+                    ParamTypeToLeanIR::LitexNonemptySet
+                )
+                | (ParamType::FiniteSet(_), ParamTypeToLeanIR::LitexFiniteSet)
+                | (ParamType::Obj(_), ParamTypeToLeanIR::MemberOf(_))
+        );
+        if !family_matches {
+            return Err(to_lean_error(
+                &ir.source.proposition.line_file(),
+                "existential-elimination witness type family does not match its source binder",
+            ));
+        }
+    }
+
+    let mut fact_ids = HashSet::new();
+    for (index, projection) in ir.projections.iter().enumerate() {
+        let fact_id = required_fact_id(projection)?;
+        if !fact_ids.insert(fact_id) {
+            return Err(to_lean_error(
+                &projection.proposition.line_file(),
+                "existential-elimination projection FactIds must be distinct",
+            ));
+        }
+        let FactProofToLeanIR::ExistentialElimination {
+            source_proposition,
+            role,
+            expected_proposition,
+        } = &projection.proof
+        else {
+            return Err(to_lean_error(
+                &projection.proposition.line_file(),
+                "existential projection has no elimination evidence",
+            ));
+        };
+        if source_proposition.to_string() != ir.source.proposition.to_string() {
+            return Err(to_lean_error(
+                &projection.proposition.line_file(),
+                "existential projection cites a different source proposition",
+            ));
+        }
+        if expected_proposition.to_string() != projection.proposition.to_string() {
+            return Err(to_lean_error(
+                &projection.proposition.line_file(),
+                "existential projection disagrees with its retained expected proposition",
+            ));
+        }
+        if index < ir.witnesses.len() {
+            let expected_role = ExistentialProjectionRoleToLeanIR::ParameterType {
+                witness_index: index,
+            };
+            if *role != expected_role {
+                return Err(to_lean_error(
+                    &projection.proposition.line_file(),
+                    "existential type projections are not in witness order",
+                ));
+            }
+            validate_existential_type_projection(&ir.witnesses[index], &projection.proposition)?;
+        } else {
+            let body_index = index - ir.witnesses.len();
+            let expected_role = ExistentialProjectionRoleToLeanIR::BodyFact { body_index };
+            if *role != expected_role {
+                return Err(to_lean_error(
+                    &projection.proposition.line_file(),
+                    "existential body projections are not in source-body order",
+                ));
+            }
+        }
+        lean_fact(&projection.proposition)?;
+    }
+
+    let mut tail = EXIST_SOURCE_PLACEHOLDER.to_string();
+    let mut witness_terms = Vec::with_capacity(ir.witnesses.len());
+    let mut type_terms = Vec::with_capacity(ir.witnesses.len());
+    for param_type in param_types.iter() {
+        witness_terms.push(format!("Exists.choose ({})", tail));
+        let spec = format!("Exists.choose_spec ({})", tail);
+        if matches!(param_type, ParamType::Set(_)) {
+            type_terms.push("(by change True; trivial)".to_string());
+            tail = spec;
+        } else {
+            type_terms.push(format!("({}).1", spec));
+            tail = format!("({}).2", spec);
+        }
+    }
+    let mut proof_terms = type_terms;
+    for body_index in 0..body.facts.len() {
+        proof_terms.push(lean_and_projection(&tail, body_index, body.facts.len()));
+    }
+    Ok(ExistentialEliminationLayout {
+        witness_terms,
+        proof_terms,
+    })
+}
+
+fn validate_existential_alpha_rename(source: &Fact, target: &Fact) -> Result<(), RuntimeError> {
+    let (
+        Fact::ExistFact(ExistFactEnum::ExistFact(source_body)),
+        Fact::ExistFact(ExistFactEnum::ExistFact(target_body)),
+    ) = (source, target)
+    else {
+        return Err(to_lean_error(
+            &target.line_file(),
+            "existential alpha-renaming evidence requires two positive `exist` facts",
+        ));
+    };
+    let source_types = flattened_exist_param_types(source_body);
+    let target_types = flattened_exist_param_types(target_body);
+    let same_type_families = source_types.len() == target_types.len()
+        && source_types
+            .iter()
+            .zip(target_types.iter())
+            .all(|(source_type, target_type)| {
+                matches!(
+                    (source_type, target_type),
+                    (ParamType::Set(_), ParamType::Set(_))
+                        | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                        | (ParamType::FiniteSet(_), ParamType::FiniteSet(_))
+                        | (ParamType::Obj(_), ParamType::Obj(_))
+                )
+            });
+    let same_body_families = source_body.facts.len() == target_body.facts.len()
+        && source_body.facts.iter().zip(target_body.facts.iter()).all(
+            |(source_fact, target_fact)| {
+                matches!(
+                    (source_fact, target_fact),
+                    (ExistBodyFact::AtomicFact(_), ExistBodyFact::AtomicFact(_))
+                        | (ExistBodyFact::AndFact(_), ExistBodyFact::AndFact(_))
+                        | (ExistBodyFact::ChainFact(_), ExistBodyFact::ChainFact(_))
+                        | (ExistBodyFact::OrFact(_), ExistBodyFact::OrFact(_))
+                        | (
+                            ExistBodyFact::InlineForall(_),
+                            ExistBodyFact::InlineForall(_)
+                        )
+                )
+            },
+        );
+    if !same_type_families || !same_body_families {
+        return Err(to_lean_error(
+            &target.line_file(),
+            "existential alpha-renaming evidence changes binder or body shape",
+        ));
+    }
+    let canonicalizer = Runtime::new();
+    let source_exist = ExistFactEnum::ExistFact(source_body.clone());
+    let target_exist = ExistFactEnum::ExistFact(target_body.clone());
+    if !source_exist.can_be_used_to_verify_goal(&target_exist)
+        || Runtime::exist_fact_normalized_body_string(&canonicalizer, &source_exist)?
+            != Runtime::exist_fact_normalized_body_string(&canonicalizer, &target_exist)?
+    {
+        return Err(to_lean_error(
+            &target.line_file(),
+            "existential alpha-renaming evidence changes the canonical proposition",
+        ));
+    }
+    lean_fact(source)?;
+    lean_fact(target)?;
+    Ok(())
+}
+
+fn flattened_exist_param_types(body: &ExistFactBody) -> Vec<ParamType> {
+    body.params_def_with_type
+        .groups
+        .iter()
+        .flat_map(|group| {
+            group
+                .params
+                .iter()
+                .map(|_| group.param_type.clone())
+                .collect::<Vec<_>>()
+        })
+        .collect()
+}
+
+fn lean_and_projection(root: &str, index: usize, count: usize) -> String {
+    if count <= 1 {
+        return root.to_string();
+    }
+    let mut projection = format!("({})", root);
+    for _ in 0..index {
+        projection.push_str(".2");
+    }
+    if index + 1 < count {
+        projection.push_str(".1");
+    }
+    projection
+}
+
+fn validate_existential_type_projection(
+    witness: &ExistentialWitnessToLeanIR,
+    proposition: &Fact,
+) -> Result<(), RuntimeError> {
+    let selected_matches = |obj: &Obj| {
+        matches!(
+            ObjToLeanIR::lower(obj),
+            Ok(ObjToLeanIR::Symbol { symbol_id, .. }) if symbol_id == witness.symbol_id
+        )
+    };
+    let valid = match (&witness.param_type, proposition) {
+        (ParamTypeToLeanIR::LitexSet, Fact::AtomicFact(AtomicFact::IsSetFact(fact))) => {
+            selected_matches(&fact.set)
+        }
+        (
+            ParamTypeToLeanIR::LitexNonemptySet,
+            Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)),
+        ) => selected_matches(&fact.set),
+        (
+            ParamTypeToLeanIR::LitexFiniteSet,
+            Fact::AtomicFact(AtomicFact::IsFiniteSetFact(fact)),
+        ) => selected_matches(&fact.set),
+        (ParamTypeToLeanIR::MemberOf(carrier), Fact::AtomicFact(AtomicFact::InFact(fact))) => {
+            selected_matches(&fact.element)
+                && ObjToLeanIR::lower(&fact.set).is_ok_and(|actual| actual == carrier.clone())
+        }
+        _ => false,
+    };
+    if valid {
+        Ok(())
+    } else {
+        Err(to_lean_error(
+            &proposition.line_file(),
+            "existential type projection does not match its selected witness and instantiated type",
+        ))
+    }
+}
+
+fn validate_exist_introduction_requirement(
+    witness: &Obj,
+    param_type: &ParamType,
+    proposition: &Fact,
+) -> Result<(), RuntimeError> {
+    let witness_ir = ObjToLeanIR::lower(witness)
+        .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+    let object_matches =
+        |obj: &Obj| ObjToLeanIR::lower(obj).is_ok_and(|candidate| candidate == witness_ir);
+    let valid = match (param_type, proposition) {
+        (ParamType::Obj(_), Fact::AtomicFact(AtomicFact::InFact(fact))) => {
+            object_matches(&fact.element)
+        }
+        (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact))) => {
+            object_matches(&fact.set)
+        }
+        (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(fact))) => {
+            object_matches(&fact.set)
+        }
+        _ => false,
+    };
+    if valid {
+        Ok(())
+    } else {
+        Err(to_lean_error(
+            &proposition.line_file(),
+            "existential-introduction parameter proof has the wrong fact family or witness",
+        ))
+    }
+}
+
 fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
     fact.fact_id.ok_or_else(|| {
         to_lean_error(
@@ -1724,6 +3088,14 @@ fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
 
 fn lean_global_fact_name(fact_id: FactId) -> String {
     format!("global_fact_{}", fact_id.value())
+}
+
+fn lean_choice_source_name(symbol_id: SymbolId) -> String {
+    format!("litex_choice_source_{}", symbol_id.value())
+}
+
+fn lean_exist_source_name(symbol_id: SymbolId) -> String {
+    format!("litex_exist_source_{}", symbol_id.value())
 }
 
 fn lean_proof_fact_name(local_space_id: usize, proof_fact_index: usize) -> String {
@@ -1738,11 +3110,18 @@ fn is_nonzero_fact(fact: &Fact) -> bool {
     matches!(fact, Fact::AtomicFact(AtomicFact::NotEqualFact(_)))
 }
 
-fn real_membership_object(fact: &Fact) -> Option<&Obj> {
+fn real_membership_proof(fact: &Fact, name: &str) -> Option<(Obj, String)> {
     let Fact::AtomicFact(AtomicFact::InFact(membership)) = fact else {
         return None;
     };
-    matches!(membership.set, Obj::StandardSet(StandardSet::R)).then_some(&membership.element)
+    match membership.set {
+        Obj::StandardSet(StandardSet::R) => Some((membership.element.clone(), name.to_string())),
+        Obj::StandardSet(StandardSet::RPos) => Some((
+            membership.element.clone(),
+            format!("(litexMemRPosReal {})", name),
+        )),
+        _ => None,
+    }
 }
 
 fn lean_real_view_lines(context: &LeanProofContext) -> (Vec<String>, Vec<String>) {
@@ -1760,7 +3139,50 @@ fn lean_real_view_lines(context: &LeanProofContext) -> (Vec<String>, Vec<String>
     (lines, equalities)
 }
 
-const LITEX_REAL_VIEW_SIMP: &str = "litexOfNatInstance, litexOfNat, litexAdd, litexSub, litexMul, litexDiv, litexNeg, litexLT, litexLE, LitexSet.realValue.injEq";
+fn register_local_fact(fact_id: FactId, fact: &Fact, name: &str, context: &mut LeanProofContext) {
+    context.proof_fact_names.insert(fact_id, name.to_string());
+    if is_nonzero_fact(fact) && !context.nonzero_names.iter().any(|known| known == name) {
+        context.nonzero_names.push(name.to_string());
+    }
+    if let Some((object, membership_proof)) = real_membership_proof(fact, name) {
+        if !context
+            .real_memberships
+            .iter()
+            .any(|(known, _)| obj_equality_key(known) == obj_equality_key(&object))
+        {
+            context.real_memberships.push((object, membership_proof));
+        }
+    }
+}
+
+fn push_lean_bullet(lines: &mut Vec<String>, body: &[String]) -> Result<(), RuntimeError> {
+    let Some((first, rest)) = body.split_first() else {
+        return Err(to_lean_error(
+            &default_line_file(),
+            "case-split branch emitted an empty Lean proof",
+        ));
+    };
+    lines.push(format!(
+        "  · {}",
+        first.strip_prefix("  ").unwrap_or(first.as_str())
+    ));
+    for line in rest {
+        lines.push(format!(
+            "    {}",
+            line.strip_prefix("  ").unwrap_or(line.as_str())
+        ));
+    }
+    Ok(())
+}
+
+fn litex_real_view_simp(real_equalities: &[String]) -> String {
+    if real_equalities.is_empty() {
+        return LITEX_REAL_VIEW_SIMP.to_string();
+    }
+    format!("{}, {}", real_equalities.join(", "), LITEX_REAL_VIEW_SIMP)
+}
+
+const LITEX_REAL_VIEW_SIMP: &str = "litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff";
 
 fn parenthesized_join(items: Vec<String>, separator: &str) -> String {
     if items.len() == 1 {
@@ -1832,6 +3254,36 @@ fn statement_ir_display(statement: &StmtToLeanIR) -> String {
     match statement {
         StmtToLeanIR::AbstractProp(ir) => format!("abstract_prop {}", ir.name),
         StmtToLeanIR::Prop(ir) => format!("prop {}", ir.name),
+        StmtToLeanIR::HaveObjChoice(ir) => format!(
+            "have {} <by checked choice>",
+            ir.choices
+                .iter()
+                .map(|choice| choice.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+        StmtToLeanIR::HaveObjEqual(ir) => format!(
+            "have {} = <value>",
+            ir.definitions
+                .iter()
+                .map(|definition| definition.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ),
+        StmtToLeanIR::HaveExistentialWitness(ir) => format!(
+            "obtain {} from {}",
+            ir.witnesses
+                .iter()
+                .map(|witness| witness.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", "),
+            ir.source.proposition
+        ),
+        StmtToLeanIR::Proof(ir) => match ir.facts.first() {
+            Some(fact) if ir.facts.len() == 1 => fact.proposition.to_string(),
+            Some(_) => format!("proof <{} facts>", ir.facts.len()),
+            None => "proof <empty>".to_string(),
+        },
         StmtToLeanIR::Trust(ir) => match ir.facts.first() {
             Some(fact) if ir.facts.len() == 1 => format!("trust {}", fact.proposition),
             Some(_) => format!("trust <{} facts>", ir.facts.len()),
@@ -1848,6 +3300,22 @@ fn statement_ir_line_file(statement: &StmtToLeanIR) -> LineFile {
             .iff_facts
             .first()
             .map(Fact::line_file)
+            .unwrap_or_else(default_line_file),
+        StmtToLeanIR::HaveObjChoice(ir) => ir
+            .choices
+            .first()
+            .map(|choice| choice.membership.proposition.line_file())
+            .unwrap_or_else(default_line_file),
+        StmtToLeanIR::HaveObjEqual(ir) => ir
+            .facts
+            .first()
+            .map(|fact| fact.proposition.line_file())
+            .unwrap_or_else(default_line_file),
+        StmtToLeanIR::HaveExistentialWitness(ir) => ir.source.proposition.line_file(),
+        StmtToLeanIR::Proof(ir) => ir
+            .facts
+            .first()
+            .map(|fact| fact.proposition.line_file())
             .unwrap_or_else(default_line_file),
         StmtToLeanIR::Trust(ir) => ir
             .facts
@@ -2039,6 +3507,458 @@ forall x R:
     }
 
     #[test]
+    fn to_lean_statement_scopes_lower_have_cases_and_contra() {
+        run_with_large_stack(
+            "to_lean_statement_scopes_lower_have_cases_and_contra",
+            || {
+                let source = r#"
+have x R = 2
+
+by cases:
+    ? x = x
+    case x = 2:
+        have y R = 3
+        y = 3
+    case x != 2:
+        impossible x != 2
+
+by contra:
+    ? 2 = 2
+    2 = 2
+    impossible 2 != 2
+"#;
+                let statement_irs = test_to_lean_ir(source, "statement-scopes-ir.lit");
+                assert!(matches!(statement_irs[0], StmtToLeanIR::HaveObjEqual(_)));
+                let StmtToLeanIR::Proof(by_cases) = &statement_irs[1] else {
+                    panic!("second statement should be proof IR");
+                };
+                assert!(matches!(
+                    by_cases.facts[0].proof,
+                    FactProofToLeanIR::CaseSplit { .. }
+                ));
+                let StmtToLeanIR::Proof(by_contra) = &statement_irs[2] else {
+                    panic!("third statement should be proof IR");
+                };
+                assert!(matches!(
+                    by_contra.facts[0].proof,
+                    FactProofToLeanIR::ByContradiction { .. }
+                ));
+
+                let output = to_lean_from_source(source, "statement-scopes-output").unwrap();
+                assert!(output.contains("def x : LitexSet := 2"), "{output}");
+                assert!(output.contains("let y : LitexSet := 3"), "{output}");
+                assert!(output.contains("simpa only [x] using"), "{output}");
+                assert!(output.contains("Classical.em (x = 2)"), "{output}");
+                assert!(output.contains("rcases"), "{output}");
+                assert!(
+                    output.contains("apply Classical.byContradiction"),
+                    "{output}"
+                );
+                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_statement_scopes_reject_malformed_local_premises() {
+        run_with_large_stack(
+            "to_lean_statement_scopes_reject_malformed_local_premises",
+            || {
+                let source = r#"
+have x R = 2
+
+by cases:
+    ? x = x
+    case x = 2
+    case x != 2:
+        impossible x != 2
+
+by contra:
+    ? 2 = 2
+    impossible 2 != 2
+"#;
+                let mut malformed_cases = test_to_lean_ir(source, "malformed-case-assumption.lit");
+                let StmtToLeanIR::Proof(by_cases) = &mut malformed_cases[1] else {
+                    panic!("second statement should be proof IR");
+                };
+                let FactProofToLeanIR::CaseSplit { branches, .. } = &mut by_cases.facts[0].proof
+                else {
+                    panic!("second statement should contain case-split evidence");
+                };
+                branches[0].assumption.fact = branches[1].assumption.fact.clone();
+                let error = emit_lean_from_ir(&malformed_cases)
+                    .expect_err("a branch premise that disagrees with coverage must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains("case-split assumption does not match its coverage branch"),
+                    "{error}"
+                );
+
+                let mut malformed_contra =
+                    test_to_lean_ir(source, "malformed-contra-assumption.lit");
+                let StmtToLeanIR::Proof(by_contra) = &mut malformed_contra[2] else {
+                    panic!("third statement should be proof IR");
+                };
+                let target = by_contra.facts[0].proposition.clone();
+                let FactProofToLeanIR::ByContradiction {
+                    reverse_assumption, ..
+                } = &mut by_contra.facts[0].proof
+                else {
+                    panic!("third statement should contain contradiction evidence");
+                };
+                reverse_assumption.fact = target;
+                let error = emit_lean_from_ir(&malformed_contra)
+                    .expect_err("a reverse premise that is not the goal negation must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains("reverse assumption is not the logical negation"),
+                    "{error}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_choice_have_uses_checked_nonempty_certificate() {
+        run_with_large_stack(
+            "to_lean_choice_have_uses_checked_nonempty_certificate",
+            || {
+                let source =
+                    include_str!("../../examples/05_compiler_interop/to_lean_choice_have.lit");
+                let statement_irs = test_to_lean_ir(source, "choice-have-ir.lit");
+                let StmtToLeanIR::HaveObjChoice(top_level_choice) = &statement_irs[0] else {
+                    panic!("first statement should be object-choice IR");
+                };
+                assert_eq!(top_level_choice.choices.len(), 1);
+                assert!(matches!(
+                    underlying_test_proof(&top_level_choice.choices[0].nonempty_proof.proof),
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::RealSetNonempty,
+                        ..
+                    }
+                ));
+                assert!(matches!(
+                    top_level_choice.choices[0].membership.proof,
+                    FactProofToLeanIR::ObjectChoice { .. }
+                ));
+
+                let StmtToLeanIR::Proof(by_contra) = &statement_irs[2] else {
+                    panic!("third statement should be proof IR");
+                };
+                let FactProofToLeanIR::ByContradiction { steps, .. } = &by_contra.facts[0].proof
+                else {
+                    panic!("third statement should retain contradiction evidence");
+                };
+                assert!(matches!(steps[0], StmtToLeanIR::HaveObjChoice(_)));
+
+                let output = to_lean_from_source(source, "choice-have-output").unwrap();
+                assert!(
+                    output.contains("def litexIsNonemptySet (set : LitexSet) : Prop := ∃ element, litexMem element set"),
+                    "{output}"
+                );
+                assert!(output.contains("theorem litex_choice_source_"), "{output}");
+                assert!(
+                    output.contains("noncomputable def selected : LitexSet := Exists.choose litex_choice_source_"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("let local_choice : LitexSet := Exists.choose proof_fact_"),
+                    "{output}"
+                );
+                assert!(output.contains("Exists.choose_spec"), "{output}");
+                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_choice_have_rejects_missing_or_mismatched_evidence() {
+        run_with_large_stack(
+            "to_lean_choice_have_rejects_missing_or_mismatched_evidence",
+            || {
+                let source = "have selected R";
+                let mut missing = test_to_lean_ir(source, "choice-have-missing-proof.lit");
+                let StmtToLeanIR::HaveObjChoice(choice) = &mut missing[0] else {
+                    panic!("statement should be object-choice IR");
+                };
+                choice.choices[0].nonempty_proof.proof = FactProofToLeanIR::Unsupported {
+                    reason: "missing checked nonemptiness backend".to_string(),
+                };
+                let error = emit_lean_from_ir(&missing)
+                    .expect_err("choice without a checked nonemptiness backend must fail")
+                    .trace_message();
+                assert!(
+                    error.contains("missing checked nonemptiness backend"),
+                    "{error}"
+                );
+
+                let mut mismatched = test_to_lean_ir(source, "choice-have-wrong-source.lit");
+                let StmtToLeanIR::HaveObjChoice(choice) = &mut mismatched[0] else {
+                    panic!("statement should be object-choice IR");
+                };
+                choice.choices[0].nonempty_proof.proposition =
+                    choice.choices[0].membership.proposition.clone();
+                let error = emit_lean_from_ir(&mismatched)
+                    .expect_err("choice source from another fact family must fail")
+                    .trace_message();
+                assert!(
+                    error.contains("object-choice source is not a nonempty-set fact"),
+                    "{error}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_exist_have_uses_checked_introduction_and_projections() {
+        run_with_large_stack(
+            "to_lean_exist_have_uses_checked_introduction_and_projections",
+            || {
+                let source =
+                    include_str!("../../examples/05_compiler_interop/to_lean_exist_have.lit");
+                let statement_irs = test_to_lean_ir(source, "exist-have-ir.lit");
+                let StmtToLeanIR::Proof(introduction) = &statement_irs[0] else {
+                    panic!("first statement should be existential-introduction proof IR");
+                };
+                assert!(matches!(
+                    introduction.facts[0].proof,
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::ExistIntroduction { .. },
+                        ..
+                    }
+                ));
+                let StmtToLeanIR::HaveExistentialWitness(obtain) = &statement_irs[1] else {
+                    panic!("second statement should be existential-elimination IR");
+                };
+                assert_eq!(obtain.witnesses.len(), 1);
+                assert_eq!(obtain.projections.len(), 3);
+                assert!(matches!(
+                    obtain.projections[0].proof,
+                    FactProofToLeanIR::ExistentialElimination {
+                        role: ExistentialProjectionRoleToLeanIR::ParameterType { witness_index: 0 },
+                        ..
+                    }
+                ));
+                assert!(matches!(
+                    obtain.projections[2].proof,
+                    FactProofToLeanIR::ExistentialElimination {
+                        role: ExistentialProjectionRoleToLeanIR::BodyFact { body_index: 1 },
+                        ..
+                    }
+                ));
+                assert!(matches!(
+                    statement_irs[5],
+                    StmtToLeanIR::HaveExistentialWitness(_)
+                ));
+                let StmtToLeanIR::Proof(by_contra) = &statement_irs[9] else {
+                    panic!("last statement should be contradiction proof IR");
+                };
+                let FactProofToLeanIR::ByContradiction { steps, .. } = &by_contra.facts[0].proof
+                else {
+                    panic!("last statement should retain contradiction evidence");
+                };
+                assert!(matches!(steps[0], StmtToLeanIR::HaveExistentialWitness(_)));
+
+                let output = to_lean_from_source(source, "exist-have-output").unwrap();
+                assert!(output.contains("∃ source : LitexSet"), "{output}");
+                assert!(output.contains("theorem litex_exist_source_"), "{output}");
+                assert!(
+                    output.contains("noncomputable def selected : LitexSet := Exists.choose"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("noncomputable def shorthand : LitexSet := Exists.choose"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("let local_selected : LitexSet := Exists.choose"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("noncomputable def chosen_left : LitexSet := Exists.choose"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("noncomputable def chosen_right : LitexSet := Exists.choose ("),
+                    "{output}"
+                );
+                assert!(output.contains("Exists.choose_spec"), "{output}");
+                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_exist_have_rejects_malformed_evidence() {
+        run_with_large_stack("to_lean_exist_have_rejects_malformed_evidence", || {
+            let source = include_str!("../../examples/05_compiler_interop/to_lean_exist_have.lit");
+            let mut malformed_projection = test_to_lean_ir(source, "exist-wrong-projection.lit");
+            let StmtToLeanIR::HaveExistentialWitness(obtain) = &mut malformed_projection[1] else {
+                panic!("second statement should be existential-elimination IR");
+            };
+            let FactProofToLeanIR::ExistentialElimination {
+                expected_proposition,
+                ..
+            } = &mut obtain.projections[0].proof
+            else {
+                panic!("first projection should contain elimination evidence");
+            };
+            *expected_proposition = obtain.source.proposition.clone();
+            let error = emit_lean_from_ir(&malformed_projection)
+                .expect_err("a mismatched existential projection must be rejected")
+                .trace_message();
+            assert!(
+                error.contains("disagrees with its retained expected proposition"),
+                "{error}"
+            );
+
+            let mut malformed_introduction =
+                test_to_lean_ir(source, "exist-wrong-introduction.lit");
+            let StmtToLeanIR::Proof(introduction) = &mut malformed_introduction[0] else {
+                panic!("first statement should be proof IR");
+            };
+            let wrong_body = introduction.facts[0].proposition.clone();
+            let FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::ExistIntroduction {
+                        expected_body_facts,
+                        ..
+                    },
+                ..
+            } = &mut introduction.facts[0].proof
+            else {
+                panic!("first proof should contain existential-introduction evidence");
+            };
+            expected_body_facts[0] = wrong_body;
+            let error = emit_lean_from_ir(&malformed_introduction)
+                .expect_err("mismatched existential-introduction evidence must be rejected")
+                .trace_message();
+            assert!(
+                error.contains("body evidence disagrees with its retained proposition"),
+                "{error}"
+            );
+
+            let mut malformed_alpha = test_to_lean_ir(source, "exist-wrong-alpha-source.lit");
+            let StmtToLeanIR::HaveExistentialWitness(obtain) = &mut malformed_alpha[1] else {
+                panic!("second statement should be existential-elimination IR");
+            };
+            let wrong_source = obtain.projections[0].proposition.clone();
+            let FactProofToLeanIR::ExistentialAlphaRenameCitation {
+                source_proposition, ..
+            } = underlying_test_proof_mut(&mut obtain.source.proof)
+            else {
+                panic!("source proof should retain alpha-renaming evidence");
+            };
+            *source_proposition = wrong_source;
+            let error = emit_lean_from_ir(&malformed_alpha)
+                .expect_err("a non-existential alpha source must be rejected")
+                .trace_message();
+            assert!(
+                error.contains("requires two positive `exist` facts"),
+                "{error}"
+            );
+        });
+    }
+
+    #[test]
+    fn to_lean_exist_have_rejects_sanitized_binder_capture() {
+        run_with_large_stack(
+            "to_lean_exist_have_rejects_sanitized_binder_capture",
+            || {
+                let source = r#"
+prop captured(xα set):
+    exist xβ xα st {xβ = xβ}
+"#;
+                let error = to_lean_from_source(source, "exist-name-capture.lit")
+                    .expect_err("distinct SymbolIds with one Lean spelling must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains("cannot safely emit the existential binder"),
+                    "{error}"
+                );
+                assert!(
+                    error.contains("also becomes Lean identifier `x_`"),
+                    "{error}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_statement_scope_boundaries_remain_explicit() {
+        run_with_large_stack("to_lean_statement_scope_boundaries_remain_explicit", || {
+            let selection = to_lean_from_source_with_report(
+                "have arbitrary_nonempty_set nonempty_set",
+                "unsupported-meta-selection-have",
+            )
+            .unwrap();
+            assert_eq!(selection.status, ToLeanCompilationStatus::Incomplete);
+            assert_eq!(selection.unsupported.len(), 1);
+            assert!(selection.unsupported[0]
+                .reason
+                .contains("meta-level parameter type `nonempty_set`"));
+
+            let unsupported_value_check = to_lean_from_source_with_report(
+                "have carrier set = R",
+                "unsupported-have-value-check",
+            )
+            .unwrap();
+            assert_eq!(
+                unsupported_value_check.status,
+                ToLeanCompilationStatus::Incomplete
+            );
+            assert_eq!(unsupported_value_check.unsupported.len(), 1);
+            assert!(unsupported_value_check.unsupported[0]
+                .reason
+                .contains("Every object is a set"));
+            assert!(!unsupported_value_check.lean_code.contains("def carrier"));
+            assert!(!unsupported_value_check.lean_code.contains("sorry"));
+
+            let proof_step = to_lean_from_source_with_report(
+                r#"
+by cases:
+    ? 1 = 1
+    case 1 = 1:
+        do_nothing
+    case 1 != 1:
+        impossible 1 = 1
+"#,
+                "unsupported-case-step",
+            )
+            .unwrap();
+            assert_eq!(proof_step.status, ToLeanCompilationStatus::Incomplete);
+            assert_eq!(proof_step.unsupported.len(), 1);
+            assert!(proof_step.unsupported[0].reason.contains("DoNothingStmt"));
+            assert!(!proof_step.lean_code.contains("sorry"));
+            assert!(!proof_step.lean_code.contains("axiom global_fact_"));
+
+            let preimage = to_lean_from_source_with_report(
+                r#"
+have fn square(x R) R = x^2
+square(2) $in fn_range(square)
+have by preimage root from square(2) $in fn_range(square)
+"#,
+                "unsupported-function-preimage",
+            )
+            .unwrap();
+            assert_eq!(preimage.status, ToLeanCompilationStatus::Incomplete);
+            assert!(preimage
+                .unsupported
+                .iter()
+                .any(|item| item.reason.contains("HaveFnEqualStmt")));
+            assert!(preimage
+                .unsupported
+                .iter()
+                .any(|item| item.reason.contains("HaveByPreimageStmt")));
+            assert!(!preimage.lean_code.contains("sorry"));
+            assert!(!preimage.lean_code.contains("axiom global_fact_"));
+        });
+    }
+
+    #[test]
     fn to_lean_ir_preserves_fact_ids_and_verified_routes() {
         run_with_large_stack("to_lean_ir_preserves_fact_ids_and_verified_routes", || {
             let source = r#"
@@ -2137,6 +4057,7 @@ forall a, b, x R:
             let FactProofToLeanIR::ForallIntroduction {
                 parameter_premises,
                 premises,
+                inferred_premises,
                 conclusions,
             } = &forall.fact.proof
             else {
@@ -2144,6 +4065,7 @@ forall a, b, x R:
             };
             assert_eq!(parameter_premises.len(), 3);
             assert_eq!(premises.len(), 1);
+            assert!(inferred_premises.is_empty());
             let forall_id = forall.fact.fact_id.expect("stored forall must have an ID");
             assert!(parameter_premises
                 .iter()
@@ -2402,6 +4324,152 @@ forall a, b, z R:
                     .expect_err("malformed arithmetic evidence must stop strict emission")
                     .trace_message();
                 assert!(error.contains("expected 1 premises but received 0"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_recursive_strategy_ir_preserves_typed_tree_and_compiles() {
+        run_with_large_stack(
+            "to_lean_recursive_strategy_ir_preserves_typed_tree_and_compiles",
+            || {
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let statement_irs = test_to_lean_ir(&source, "recursive-strategy-ir");
+                let StmtToLeanIR::Fact(forall) = &statement_irs[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction {
+                    inferred_premises,
+                    conclusions,
+                    ..
+                } = &forall.fact.proof
+                else {
+                    panic!("tracer should retain forall-introduction evidence");
+                };
+                assert_eq!(inferred_premises.len(), 4);
+                assert!(inferred_premises.iter().all(|premise| matches!(
+                    &premise.proof,
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::Builtin(
+                            BuiltinRuleToLeanIR::PositiveRealMembership
+                        ),
+                        ..
+                    }
+                )));
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
+                            ArithmeticBuiltinRuleToLeanIR::AddPositiveLeftStrict,
+                        )),
+                    premises: outer_premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("outer strategy should lower to typed strict-addition evidence");
+                };
+                assert_eq!(outer_premises.len(), 2);
+
+                assert!(matches!(
+                    underlying_test_proof(&outer_premises[0].proof),
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
+                            ArithmeticBuiltinRuleToLeanIR::AddPositive
+                        )),
+                        premises,
+                        ..
+                    } if premises.len() == 2
+                ));
+
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
+                            ArithmeticBuiltinRuleToLeanIR::AddNonnegative,
+                        )),
+                    premises: weak_premises,
+                    ..
+                } = underlying_test_proof(&outer_premises[1].proof)
+                else {
+                    panic!("right strategy should lower to typed nonnegative-addition evidence");
+                };
+                assert_eq!(weak_premises.len(), 2);
+                for premise in weak_premises {
+                    assert!(matches!(
+                        underlying_test_proof(&premise.proof),
+                        FactProofToLeanIR::RuleApplication {
+                            rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
+                                ArithmeticBuiltinRuleToLeanIR::LessEqualFromStrictOrder
+                            )),
+                            premises,
+                            ..
+                        } if premises.len() == 1
+                            && matches!(
+                                underlying_test_proof(&premises[0].proof),
+                                FactProofToLeanIR::KnownFactCitation { .. }
+                            )
+                    ));
+                }
+
+                let output = emit_lean_from_ir(&statement_irs).unwrap();
+                assert!(output.contains("linarith only"), "{output}");
+                assert!(!output.contains("OtherUnsupported"), "{output}");
+                assert!(!output.contains("axiom"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_recursive_strategy_ir_rejects_malformed_certificate() {
+        run_with_large_stack(
+            "to_lean_recursive_strategy_ir_rejects_malformed_certificate",
+            || {
+                let source = include_str!(
+                    "../../examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit"
+                );
+                let mut statement_irs = test_to_lean_ir(source, "recursive-strategy-malformed");
+                let StmtToLeanIR::Fact(forall) = &mut statement_irs[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("tracer should retain forall-introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication { rule, .. } =
+                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("outer strategy should be a rule application");
+                };
+                *rule = ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
+                    ArithmeticBuiltinRuleToLeanIR::AddPositiveRightStrict,
+                ));
+
+                let error = emit_lean_from_ir(&statement_irs)
+                    .expect_err("a strategy certificate with the wrong premise order must fail")
+                    .trace_message();
+                assert!(error.contains("premise 1 expected WeakOrder"), "{error}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_non_additive_structural_strategy_remains_explicitly_unsupported() {
+        run_with_large_stack(
+            "to_lean_non_additive_structural_strategy_remains_explicitly_unsupported",
+            || {
+                let source = r#"
+forall x, y R:
+    x^2 < y^2
+    =>:
+        abs(x) < abs(y)
+"#;
+                let error = to_lean_from_source(source, "unsupported-structural-strategy")
+                    .expect_err("a label-only structural strategy must remain unsupported")
+                    .trace_message();
+                assert!(error.contains("numeric-order strategy"), "{error}");
+                assert!(error.contains("no checked backend"), "{error}");
             },
         );
     }
@@ -2938,6 +5006,33 @@ $marked2(1, 2)
     }
 
     #[test]
+    fn changed_closed_real_membership_citation_uses_checked_closed_rule() {
+        run_with_large_stack(
+            "changed_closed_real_membership_citation_uses_checked_closed_rule",
+            || {
+                let source = r#"
+trust 1 $in R
+
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
+"#;
+                let output = to_lean_from_source(source, "closed-membership-citation").unwrap();
+
+                assert!(
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ litexR := by"),
+                    "{output}"
+                );
+                assert!(output.contains("change True"), "{output}");
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
     fn preloaded_fact_id_without_ir_declaration_is_rejected() {
         run_with_large_stack(
             "preloaded_fact_id_without_ir_declaration_is_rejected",
@@ -3140,6 +5235,102 @@ $marked(1)
     }
 
     #[test]
+    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
+    fn generated_to_lean_statement_scopes_compile_with_lean_core() {
+        run_with_large_stack(
+            "generated_to_lean_statement_scopes_compile_with_lean_core",
+            || {
+                let lean =
+                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_statement_scopes.lit");
+                let source = fs::read_to_string(path).unwrap();
+                let generated = to_lean_from_source(&source, "statement-scopes-kernel").unwrap();
+                let generated = generated
+                    .replacen("import Mathlib", "import Init", 1)
+                    .replace("ℝ", "Rat");
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_statement_scopes");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lean).arg(&lean_file).output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "statement-scope generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
+    fn generated_to_lean_choice_have_compiles_with_lean_core() {
+        run_with_large_stack(
+            "generated_to_lean_choice_have_compiles_with_lean_core",
+            || {
+                let lean =
+                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_choice_have.lit");
+                let source = fs::read_to_string(path).unwrap();
+                let generated = to_lean_from_source(&source, "choice-have-kernel").unwrap();
+                let generated = generated
+                    .replacen("import Mathlib", "import Init", 1)
+                    .replace("ℝ", "Rat");
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_choice_have");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lean).arg(&lean_file).output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "choice-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
+    fn generated_to_lean_exist_have_compiles_with_lean_core() {
+        run_with_large_stack(
+            "generated_to_lean_exist_have_compiles_with_lean_core",
+            || {
+                let lean =
+                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_exist_have.lit");
+                let source = fs::read_to_string(path).unwrap();
+                let generated = to_lean_from_source(&source, "exist-have-kernel").unwrap();
+                let generated = generated
+                    .replacen("import Mathlib", "import Init", 1)
+                    .replace("ℝ", "Rat");
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_exist_have");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lean).arg(&lean_file).output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "exist-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
+    }
+
+    #[test]
     #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
     fn generated_partial_to_lean_report_compiles_with_lean() {
         run_with_large_stack(
@@ -3171,6 +5362,40 @@ $marked(1)
                     String::from_utf8_lossy(&output.stdout),
                     String::from_utf8_lossy(&output.stderr),
                     report.lean_code,
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_recursive_strategy_ir_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_to_lean_recursive_strategy_ir_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let generated = to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_recursive_strategy_ir");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "recursive-strategy generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
                 );
             },
         );

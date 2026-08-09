@@ -1,0 +1,28 @@
+# To-Lean typed-choice acceptance tracer.
+#
+# Before this compiler tranche, these verified Litex lines were rejected by
+# To-Lean as `HaveObjInNonemptySetOrParamTypeStmt`:
+# have selected R
+# selected $in R
+#
+# Now: a checked nonemptiness proof selects the value, and the stored
+# membership fact is exported without an opaque declaration or generated axiom.
+have selected R
+selected $in R
+
+# The same certificate must remain valid in a nested proof scope, where Lean
+# uses a local `let` plus the selected witness's membership proof.
+by contra:
+    ? selected = selected
+    have local_choice R
+    local_choice $in R
+    impossible selected != selected
+
+# Remaining boundary: bare selection from Litex's meta-level parameter types
+# needs a separate inhabited-type contract; it must not reuse set-membership
+# choice evidence.
+# have arbitrary_nonempty_set nonempty_set
+
+# Focused release gates:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_choice_have.lit
+# cargo test --release to_lean_choice_have -- --nocapture

@@ -324,6 +324,18 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
         requirements: &mut Vec<KnownForallRequirementResult>,
     ) -> Result<bool, RuntimeError> {
+        // A matcher may synthesize a forall argument while solving an
+        // arithmetic pattern, so verify every resulting argument before
+        // checking its parameter carrier and domain requirements.
+        for arg in args_for_params.iter() {
+            if self
+                .verify_obj_well_defined_and_store_cache(arg, verify_state)
+                .is_err()
+            {
+                return Ok(false);
+            }
+        }
+
         let instantiated_types = self
             .inst_param_def_with_type_one_by_one(
                 &known_forall.params_def,

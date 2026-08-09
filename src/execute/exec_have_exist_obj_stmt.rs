@@ -93,10 +93,19 @@ impl Runtime {
             stmt.clone(),
             equal_to_bindings,
             exist_fact_in_have_obj_stmt,
+            line_file.clone(),
+        )?;
+        let elimination_verification = self.existential_elimination_verification_result(
+            &stmt,
+            equal_to_bindings,
+            exist_fact_in_have_obj_stmt,
+            &inside_results,
             line_file,
         )?;
 
-        Ok((NonFactualStmtSuccess::new(stmt, infer_result, inside_results)).into())
+        let mut success = NonFactualStmtSuccess::new(stmt, infer_result, inside_results);
+        success.existential_elimination_verification = Some(elimination_verification);
+        Ok(success.into())
     }
 
     /// Mathematical contract: existential elimination introduces exactly one
@@ -230,5 +239,72 @@ impl Runtime {
         }
 
         Ok(infer_result)
+    }
+
+    fn existential_elimination_verification_result(
+        &self,
+        stmt: &Stmt,
+        equal_to_bindings: &[SymbolBinding],
+        exist_fact: &ExistFactEnum,
+        inside_results: &[StmtResult],
+        line_file: LineFile,
+    ) -> Result<ExistentialEliminationVerificationResult, RuntimeError> {
+        if inside_results.len() != 1 {
+            return Err(exec_stmt_error_with_stmt_and_cause(
+                stmt.clone(),
+                RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                    "existential elimination did not retain exactly one source proof".to_string(),
+                ))),
+            ));
+        }
+
+        let witnesses = equal_to_bindings
+            .iter()
+            .map(|binding| {
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()
+            })
+            .collect::<Vec<Obj>>();
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+            exist_fact.params_def_with_type(),
+            &witnesses,
+            ParamObjType::Exist,
+        )?;
+        let flat_types = exist_fact
+            .params_def_with_type()
+            .flat_instantiated_types_for_args(&instantiated_types);
+        let witness_type_facts = witnesses
+            .iter()
+            .cloned()
+            .zip(flat_types.iter())
+            .map(|(witness, param_type)| match param_type {
+                ParamType::Set(_) => IsSetFact::new(witness, line_file.clone()).into(),
+                ParamType::NonemptySet(_) => {
+                    IsNonemptySetFact::new(witness, line_file.clone()).into()
+                }
+                ParamType::FiniteSet(_) => IsFiniteSetFact::new(witness, line_file.clone()).into(),
+                ParamType::Obj(carrier) => {
+                    InFact::new(witness, carrier.clone(), line_file.clone()).into()
+                }
+            })
+            .collect::<Vec<Fact>>();
+
+        let param_to_obj_map = exist_fact
+            .params_def_with_type()
+            .param_defs_and_args_to_param_to_arg_map(&witnesses);
+        let instantiated_body_facts = exist_fact
+            .facts()
+            .iter()
+            .map(|fact| {
+                self.inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
+                    .map(ExistBodyFact::to_fact)
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+
+        Ok(ExistentialEliminationVerificationResult::new(
+            0,
+            witness_type_facts,
+            instantiated_body_facts,
+            exist_fact.is_exist_unique(),
+        ))
     }
 }

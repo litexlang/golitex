@@ -1563,6 +1563,26 @@ have a, b, c, d R+
         panic!("the root should be verified by a builtin strategy: {root:?}");
     };
     assert_eq!(root_rule.subgoals.len(), 2);
+    assert!(matches!(
+        root_rule.evidence.as_ref(),
+        Some(BuiltinRuleEvidence::Arithmetic(
+            ArithmeticBuiltinRule::AddPositiveLeftStrict
+        ))
+    ));
+
+    let right_branch = root_rule.subgoals[1]
+        .factual_success()
+        .expect("the right recursive branch should remain factual");
+    let VerifiedByResult::BuiltinStrategy(right_rule) = right_branch.underlying_verified_by()
+    else {
+        panic!("the right recursive branch should remain a strategy: {right_branch:?}");
+    };
+    assert!(matches!(
+        right_rule.evidence.as_ref(),
+        Some(BuiltinRuleEvidence::Arithmetic(
+            ArithmeticBuiltinRule::AddNonnegative
+        ))
+    ));
 
     for branch in &root_rule.subgoals {
         let branch = branch

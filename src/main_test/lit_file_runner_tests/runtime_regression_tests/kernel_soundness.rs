@@ -839,6 +839,112 @@ template<T set>:
     );
 }
 
+#[test]
+fn known_forall_matching_does_not_treat_standard_set_inclusion_as_object_equality() {
+    let invalid_cases = [
+        ("natural_to_positive_natural", "N", "N+"),
+        ("rational_to_integer", "Q", "Z"),
+        ("real_to_rational", "R", "Q"),
+        ("complex_to_real", "C", "R"),
+        ("nonzero_real_to_nonzero_rational", "R*", "Q*"),
+        (
+            "nested_power_set_natural_to_positive_natural",
+            "power_set(N)",
+            "power_set(N+)",
+        ),
+        (
+            "nested_cart_natural_to_positive_natural",
+            "cart(N, R)",
+            "cart(N+, R)",
+        ),
+    ];
+
+    for (label, known_obj, target_obj) in invalid_cases {
+        let source_code = format!(
+            r#"
+prop first_set_is(s, x set):
+    s = {known_obj}
+
+forall x set:
+    $first_set_is({known_obj}, x)
+
+$first_set_is({target_obj}, R)
+"#
+        );
+        let (run_succeeded, run_output) = run_kernel_soundness_source(&source_code, label);
+        assert!(
+            !run_succeeded,
+            "a known forall with argument {known_obj} must not match the distinct object {target_obj}:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn known_forall_arithmetic_matching_never_inverts_a_zero_factor() {
+    let invalid_cases = [
+        ("right_integer_zero", "x * 0"),
+        ("left_integer_zero", "0 * x"),
+        ("right_decimal_zero", "x * 0.0"),
+    ];
+
+    for (label, zero_product) in invalid_cases {
+        let source_code = format!(
+            r#"
+prop first_value_is_zero(value, token set):
+    value = 0
+
+forall x R, token set:
+    $first_value_is_zero({zero_product}, token)
+
+$first_value_is_zero(1, R)
+"#
+        );
+        let (run_succeeded, run_output) = run_kernel_soundness_source(&source_code, label);
+        assert!(
+            !run_succeeded,
+            "the zero product {zero_product} must not match the distinct target 1:\n{run_output}"
+        );
+    }
+}
+
+#[test]
+fn known_forall_arithmetic_matching_respects_instantiated_parameter_carriers() {
+    let invalid_cases = [
+        (
+            "half_is_not_an_integer_parameter",
+            r#"
+prop even_value(value Z, token set):
+    value % 2 = 0
+
+forall x Z, token set:
+    $even_value(2 * x, token)
+
+$even_value(1, R)
+"#,
+        ),
+        (
+            "negative_is_not_a_positive_natural_parameter",
+            r#"
+prop positive_value(value R, token set):
+    value > 0
+
+forall x N+, token set:
+    $positive_value(2 * x, token)
+
+$positive_value(-2, R)
+"#,
+        ),
+    ];
+
+    for (label, source_code) in invalid_cases {
+        let (run_succeeded, run_output) = run_kernel_soundness_source(source_code, label);
+        assert!(
+            !run_succeeded,
+            "an arithmetic matcher must reject an inferred argument outside the forall parameter carrier:\n{run_output}"
+        );
+    }
+}
+
 fn run_kernel_soundness_source(source_code: &str, label: &str) -> (bool, String) {
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(label);

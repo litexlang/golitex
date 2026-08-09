@@ -70,30 +70,78 @@ opaque litexRationalValue : ℝ → Prop
 def litexMem : LitexSet → LitexSet → Prop
   | .realValue _, .standard .real => True
   | .realValue _, .standard .complex => True
+  | .realValue value, .standard .rPos => 0 < value
   | .realValue value, .standard .rational => litexRationalValue value
   | .realValue value, .standard .integer => litexIntegerValue value
   | .realValue value, .standard .natural => litexNaturalValue value
   | _, .standard .real => False
+  | _, .standard .rPos => False
   | _, .standard .rational => False
   | _, .standard .integer => False
   | _, .standard .natural => False
   | element, set => litexPrimitiveMem element set
 
 def litexIsSet (_ : LitexSet) : Prop := True
-opaque litexIsNonemptySet : LitexSet → Prop
+-- A nonempty-set proof is also the witness package consumed by bare Litex
+-- `have x S`. Keeping this bridge definitional prevents the compiler from
+-- inventing an unchecked choice constant.
+def litexIsNonemptySet (set : LitexSet) : Prop := ∃ element, litexMem element set
 opaque litexIsFiniteSet : LitexSet → Prop
 opaque litexSubset : LitexSet → LitexSet → Prop
 
-instance : Add LitexSet where add := litexAdd
-instance : Sub LitexSet where sub := litexSub
-instance : Mul LitexSet where mul := litexMul
-instance : Div LitexSet where div := litexDiv
-instance : HPow LitexSet LitexSet LitexSet where hPow := litexPow
-instance : Neg LitexSet where neg := litexNeg
-instance : LT LitexSet where lt := litexLT
-instance : LE LitexSet where le := litexLE
+instance litexAddInstance : Add LitexSet where add := litexAdd
+instance litexSubInstance : Sub LitexSet where sub := litexSub
+instance litexMulInstance : Mul LitexSet where mul := litexMul
+instance litexDivInstance : Div LitexSet where div := litexDiv
+instance litexPowInstance : HPow LitexSet LitexSet LitexSet where hPow := litexPow
+instance litexNegInstance : Neg LitexSet where neg := litexNeg
+instance litexLTInstance : LT LitexSet where lt := litexLT
+instance litexLEInstance : LE LitexSet where le := litexLE
 instance litexMembershipInstance : Membership LitexSet LitexSet where
   mem := fun set element => litexMem element set
+
+theorem litexOfNatEq (value : Nat) :
+    (OfNat.ofNat value : LitexSet) = litexOfNat value := by
+  rfl
+
+theorem litexOfScientificEq (mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) :
+    (OfScientific.ofScientific mantissa exponentSign decimalExponent : LitexSet) =
+      litexOfScientific mantissa exponentSign decimalExponent := by
+  rfl
+
+theorem litexAddEq (left right : LitexSet) : left + right = litexAdd left right := by
+  rfl
+
+theorem litexSubEq (left right : LitexSet) : left - right = litexSub left right := by
+  rfl
+
+theorem litexMulEq (left right : LitexSet) : left * right = litexMul left right := by
+  rfl
+
+theorem litexDivEq (left right : LitexSet) : left / right = litexDiv left right := by
+  rfl
+
+theorem litexPowEq (base exponent : LitexSet) : base ^ exponent = litexPow base exponent := by
+  rfl
+
+theorem litexNegEq (value : LitexSet) : -value = litexNeg value := by
+  rfl
+
+theorem litexLTIff (left right : LitexSet) : left < right ↔ litexLT left right := by
+  rfl
+
+theorem litexLEIff (left right : LitexSet) : left ≤ right ↔ litexLE left right := by
+  rfl
+
+theorem litexRealValueEqIff (left right : ℝ) :
+    LitexSet.realValue left = LitexSet.realValue right ↔ left = right := by
+  constructor
+  · intro equality
+    cases equality
+    rfl
+  · intro equality
+    cases equality
+    rfl
 
 theorem litexMembershipIff (element set : LitexSet) :
     element ∈ set ↔ litexMem element set := by
@@ -123,6 +171,23 @@ theorem litexMemRealElim {value : LitexSet} (membership : value ∈ litexR) :
   | standard kind => simp [litexR, litexMem] at membership
   | primitive tag => simp [litexR, litexMem] at membership
   | application operator arguments => simp [litexR, litexMem] at membership
+
+theorem litexMemRPosReal {value : LitexSet} (membership : value ∈ litexRPos) :
+    value ∈ litexR := by
+  rw [litexMembershipIff] at membership ⊢
+  cases value <;> simp [litexRPos, litexR, litexMem] at membership ⊢
+
+theorem litexMemRPosPositive {value : LitexSet} (membership : value ∈ litexRPos) :
+    (0 : LitexSet) < value := by
+  rw [litexMembershipIff] at membership
+  cases value with
+  | realValue value =>
+      have positive : 0 < value := by
+        simpa [litexRPos, litexMem] using membership
+      simpa [litexLTIff, litexOfNatEq, litexOfNat, litexLT] using positive
+  | standard kind => simp [litexRPos, litexMem] at membership
+  | primitive tag => simp [litexRPos, litexMem] at membership
+  | application operator arguments => simp [litexRPos, litexMem] at membership
 
 def litexI : LitexSet := .primitive "i"
 def litexE : LitexSet := .primitive "e"
@@ -161,4 +226,6 @@ def litexSetDiff := litexBinary "setDiff"
 def litexBigUnion := litexUnary "bigUnion"
 def litexBigIntersect := litexUnary "bigIntersect"
 def litexPowerSet := litexUnary "powerSet"
-def litexListSet (items : List LitexSet) : LitexSet := .application "listSet" items"#;
+def litexListSet (items : List LitexSet) : LitexSet := .application "listSet" items
+
+end"#;

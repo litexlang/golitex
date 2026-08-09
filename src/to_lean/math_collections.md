@@ -32,6 +32,201 @@ source statement exists to omit. A later statement that depends on an omitted
 declaration is attempted normally and receives its own explicit unsupported
 diagnostic if that dependency cannot be materialized.
 
+## Statement effects and proof scopes
+
+A source statement can change more than the fact cache. It may create a named
+object, open a temporary assumption scope, run nested statements, and export
+one or more facts only after the scope closes. Compiling these forms therefore
+requires a statement-effect IR beside the recursive proof IR; flattening every
+successful result to a global theorem loses both declaration order and premise
+lifetime.
+
+The current mapping is:
+
+| Litex form | Required semantic evidence | Lean shape |
+| --- | --- | --- |
+| `have x T = e` | symbol identity, canonical value, checked `e T`, stored type/equality `FactId`s | top-level `def`, or local `let`, then checked facts |
+| `have x S` | symbol identity, checked nonemptiness producer, exact stored membership `FactId` | top-level `noncomputable def`, or local `let`, via `Exists.choose`; membership via `choose_spec` |
+| `witness exist ... from ...` | concrete witnesses, pre-binder type proofs, scoped proof steps, checked direct body facts | nested `Exists` introduction from the retained proof nodes |
+| `obtain ... from exist ...` / `have x T: ...` | alpha-checked source existential, fresh symbol identities, instantiated type/body facts and `FactId`s | ordered nested `Exists.choose`; exact `choose_spec` projections |
+| `by cases` | coverage proof, ordered local premise IDs, nested steps, conclusion/contradiction exits | coverage `have`; `rcases`; scoped branches |
+| `by contra` | target, logical reverse premise ID, nested steps, final fact/negation pair | scoped `Classical.byContradiction` |
+
+An explicit-value `have` is a definition, not existential choice. Its initial
+IR is:
+
+```text
+HaveObjEqual {
+    definitions: [{ symbol_id, name, param_type, value }],
+    facts: [value-in-type, defining-equality],
+}
+```
+
+The backend validates those facts against the declaration contract. It checks
+the value's type before unfolding the new name, proves the corresponding named
+membership with `simpa only [name]`, and proves the defining equality by
+reflexivity. Top-level declarations use `def`; the same node nested in a proof
+uses `let`, so its symbol cannot escape the proof scope.
+
+The nearby syntax `have x S` has different semantics. It selects an element
+from a known nonempty carrier. Runtime therefore returns, in declaration order,
+the exact stored type fact for every new object and the index of the retained
+nonemptiness proof that produced it. The supported compiler IR freezes that
+contract as:
+
+```text
+HaveObjChoice {
+    choices: [{
+        symbol_id,
+        name,
+        carrier,
+        nonempty_proof,
+        membership: FactProof { fact_id, ObjectChoice },
+    }],
+}
+```
+
+The target definition
+`litexIsNonemptySet S := ∃ x, litexMem x S` makes the verification fact itself
+the choice package. At file scope the emitter names that checked theorem,
+defines `x` with `Exists.choose`, and proves the stored membership with
+`Exists.choose_spec` from the same theorem. In a proof scope those three values
+remain local. The emitter independently validates the proof's carrier, the
+selected `SymbolId`, the membership carrier, and the stored `FactId`; missing or
+mismatched fields reject the whole statement transactionally.
+
+Positive existential introduction and elimination use a wider package than
+bare selection. The introduction proof rule retains:
+
+```text
+ExistIntroduction {
+    witnesses,
+    steps,
+    expected_parameter_requirements,
+    expected_body_facts,
+}
+```
+
+Concrete witness-type checks are captured before the verifier installs its
+temporary existential parameters and equalities. Otherwise a valid-looking
+proof of `e $in T` could cite binder-local facts that disappear when that
+environment is popped. Plain `set` parameters need no target proposition
+because every target value already has type `LitexSet`; object,
+`nonempty_set`, and `finite_set` parameters retain their separate requirements.
+The emitter replays the local steps, names the retained proofs, and builds the
+nested existential package with its concrete witnesses. Closed numeric binary
+facts receive a `LitexSet` ascription when inference would otherwise default to
+a native Lean numeric type.
+
+Elimination freezes the result as:
+
+```text
+HaveExistentialWitness {
+    source: FactProof,
+    witnesses: [{ symbol_id, name, instantiated_param_type }],
+    projections: [
+        { fact_id, ParameterType { witness_index }, expected_fact },
+        { fact_id, BodyFact { body_index }, expected_fact },
+    ],
+}
+```
+
+The source must be a checked positive existential. Litex stores existential
+facts modulo alpha-renaming, so a citation with fresh binder `SymbolId`s is not
+ordinary display-string equality: runtime lowering emits an explicit
+alpha-renaming citation only after the verifier's canonical existential body
+comparison succeeds. At file scope the emitter names the source proof and
+defines witnesses with ordered, nested `Exists.choose`; inside a proof the same
+objects are local `let`s. Every stored parameter/body fact is proved by the
+corresponding `Exists.choose_spec` path. The emitter checks source, role order,
+selected symbol, instantiated type family, expected proposition, and distinct
+`FactId`s before emitting any part of the statement.
+
+Quantifier rendering retains one further identity guard. Binder declarations
+and every object occurrence are compared by `SymbolId` and by their sanitized
+Lean spellings. A binder occurrence with a mismatched spelling, or two
+different symbols that would both print as the same Lean identifier, is an
+explicit incomplete boundary; the backend never emits a captured formula.
+
+The implemented builtin nonemptiness backend currently covers the real carrier.
+A stored nonemptiness theorem can also be cited when its own proof route is
+supported. Meta-level parameter types (`set`, `nonempty_set`, `finite_set`) and
+object carriers whose proof/object lowering is unavailable remain explicit
+boundaries. This form does not reuse `HaveObjEqual` with an invented value,
+emit an unconstrained `opaque`, or introduce a silent axiom. Positive
+`witness exist`, `obtain`, and body-style existential `have` now use the
+separate package above. `exist!`, `not exist`, preimage selection, and
+uniqueness-based function construction still need distinct evidence contracts.
+
+Function definitions are also not native Lean function declarations at the
+canonical object boundary. A Litex function is a `LitexSet` graph object.
+`have fn ... = ...`, case-by-case definitions, recursive definitions, and
+unique-existence definitions need a function-object declaration plus typed
+application/evaluation laws. A backend may use a native function only as a
+local proof view justified by that evidence; it may not replace the canonical
+object in emitted statements.
+
+Case analysis has the following proof contract:
+
+```text
+CaseSplit {
+    coverage: FactProof,
+    branches: [
+        {
+            assumption: LocalPremise { fact_id, fact },
+            steps: [StmtToLeanIR],
+            exit: Conclusion(FactProof)
+                | Contradiction { fact, negated_fact },
+        },
+    ],
+}
+```
+
+Coverage is proved outside the branches. Each branch then receives a fresh
+proof-space name for exactly its retained temporary `FactId`; nested statements
+may cite that ID but sibling and parent scopes may not. A contradiction exit
+first checks both propositions are logical complements, materializes their
+proofs in the branch, derives `False`, and eliminates it to the requested goal.
+The implemented coverage slice is binary complementary atomic facts, lowered
+through classical excluded middle. General finite covers need a typed coverage
+certificate rather than a broader tactic call.
+
+Contradiction has a similar but single-scope contract:
+
+```text
+ByContradiction {
+    reverse_assumption: LocalPremise { fact_id, fact },
+    steps: [StmtToLeanIR],
+    contradiction: { fact, negated_fact },
+}
+```
+
+The source verifier's logical reversal is retained before its temporary
+environment is popped. The Lean emitter validates that reversal against the
+target, introduces it only under `Classical.byContradiction`, emits the local
+steps, and checks the final complementary pair. The first implementation is
+intentionally atomic; quantified or binder-owning targets need their own
+introduction IR rather than being reconstructed from display syntax.
+
+The dependency order for wider statement coverage is:
+
+```text
+explicit-value have [implemented]
+  -> selection have [implemented for checked object carriers]
+  -> positive existential introduction/elimination [implemented]
+  -> theorem and definition proof wrappers
+  -> function-object declaration plus evaluation evidence
+  -> function-range preimage have
+  -> induction and finite enumeration scopes
+  -> extension and specialized relation/choice proof commands
+```
+
+Each new family must preserve its successful temporary premises, nested
+statement results, exported facts, and exit condition before a Lean backend is
+added. A verified family missing any of those pieces remains an explicit
+incomplete statement; it never falls back to `sorry` or a compiler-created
+axiom.
+
 ## Recursive builtin-rule application
 
 A successful builtin rule is a proof-tree node, not just a message saying that
@@ -100,6 +295,41 @@ the four nonlinear sign rules use `mul_nonneg`, `mul_pos`, `div_nonneg` (with
 search out of the certificate boundary: a malformed rule ID, target family,
 premise family, or arity fails compilation instead of widening automation.
 
+A builtin strategy may now use the same certificate path without pretending
+that its diagnostic label is a theorem. The result retains both identities:
+
+```text
+BuiltinStrategy {
+    strategy_label: diagnostic search provenance,
+    evidence: Some(BuiltinRuleEvidence),
+    steps: recursive child proofs,
+}
+  -> RuleApplication {
+       rule: Builtin(BuiltinRuleToLeanIR),
+       premises: recursive FactToLeanIR children,
+     }
+```
+
+The evidence is attached only after an exact structural check of target,
+operand order, strictness, and every child proposition. For the persistent
+tracer this gives the following certificate tree:
+
+```text
+0 < (a + b) + (c + d)              AddPositiveLeftStrict
+├── 0 < a + b                      AddPositive
+│   ├── 0 < a                      cited R+ consequence
+│   └── 0 < b                      cited R+ consequence
+└── 0 <= c + d                     AddNonnegative
+    ├── 0 <= c                     LessEqualFromStrictOrder <- 0 < c
+    └── 0 <= d                     LessEqualFromStrictOrder <- 0 < d
+```
+
+Each parent is emitted only after its children. Mutating the root to
+`AddPositiveRightStrict`, for example, fails the strict/weak premise contract
+before Lean source is accepted. A non-additive structural route such as
+`x^2 < y^2 -> abs(x) < abs(y)` remains deliberately label-only and therefore
+explicitly unsupported by the compiler.
+
 ## Known-forall instantiation
 
 A successful use of a known forall retains four distinct pieces of evidence:
@@ -129,6 +359,30 @@ check the conversion with `norm_num`, `ring`, or `field_simp` plus `ring`.
 The nearest boundary is a direct instance and goal that need some other form of
 transport, or a recursively verified domain requirement whose proof rule has no
 Lean backend. Both remain explicit unsupported nodes and stop compilation.
+
+## Forall-introduction inferred premises
+
+Parameter membership facts and their immediate verifier inferences share one
+temporary Litex environment. `ForallIntroduction` therefore owns two ordered
+collections: the explicit binder premises and the supported inferred premises.
+Each inferred fact records its `FactId` while that environment is still alive;
+lowering must never try to rediscover the ID after the scope has been popped.
+
+The first supported inference certificate is:
+
+```text
+a ∈ R+
+  -> PositiveRealMembership { element: a }
+  -> 0 < a
+```
+
+Its recursive premise is the exact binder-membership citation. Lean first
+interprets `R+` membership semantically as positive real membership, then
+checks `litexMemRPosPositive`. The companion `litexMemRPosReal` lemma supplies
+the native-real proof view used by arithmetic emission without changing the
+canonical `LitexSet` object. An unsupported inferred consequence is not
+silently emitted; if a selected proof depends on it, the enclosing statement
+remains incomplete.
 
 ## Recursive fraction pair
 

@@ -19,6 +19,7 @@ INITIAL_SINKS = {
     "new_with_verified_by_builtin_rule_evidence_and_steps": [(2, "rule")],
     "new_with_verified_by_builtin_rule_evidence_recording_stmt": [(1, "rule")],
     "new_with_verified_by_builtin_strategy_recording_stmt": [(1, "strategy")],
+    "new_with_verified_by_builtin_strategy_evidence_recording_stmt": [(1, "strategy")],
 }
 
 ARITHMETIC_LEAN_MAPPINGS = {
@@ -365,11 +366,18 @@ def lean_mapping(entry) -> tuple[str, str]:
         mapping = ARITHMETIC_LEAN_MAPPINGS.get(text)
         if mapping is not None:
             return mapping, "implemented"
+    if (
+        entry["sink"]
+        == "new_with_verified_by_builtin_strategy_evidence_recording_stmt"
+    ):
+        return "recursive typed arithmetic evidence (`linarith only`)", "implemented"
     if text in (
         "bounded symbolic normalization",
         "calculation and rational expression simplification",
     ):
         return "`norm_num` / `ring` / `field_simp; ring`", "implemented"
+    if text == "standard_nonempty_set":
+        return "existential witness `0` (`R` shape)", "implemented"
     if is_evaluation(entry):
         return "none", "not_this_round"
     return "none", "pending"
