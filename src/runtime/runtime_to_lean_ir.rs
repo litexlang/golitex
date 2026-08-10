@@ -1253,10 +1253,18 @@ impl Runtime {
         // to this closed goal. The checked target rule is dependency-free and
         // more precise than replaying an incidental citation route.
         if source_fact.to_string() != goal.to_string()
-            && crate::to_lean_ir::is_closed_real_membership(goal)
+            && (crate::to_lean_ir::is_closed_real_membership(goal)
+                || crate::to_lean_ir::closed_compact_numeric_set_fact_carrier(goal).is_some())
         {
             return Ok(FactProofToLeanIR::RuleApplication {
-                rule: ProofRuleToLeanIR::ClosedRealMembership,
+                rule: if crate::to_lean_ir::is_closed_real_membership(goal) {
+                    ProofRuleToLeanIR::ClosedRealMembership
+                } else {
+                    ProofRuleToLeanIR::ClosedNumericReflection {
+                        carrier: crate::to_lean_ir::closed_compact_numeric_set_fact_carrier(goal)
+                            .unwrap(),
+                    }
+                },
                 parameter_requirements: Vec::new(),
                 premises: Vec::new(),
             });
@@ -1767,14 +1775,30 @@ impl Runtime {
             let source_id = output.fact_id.or(self.known_fact_id_for_fact(source_fact)?);
             let source_key = source_fact.to_string();
             if seen.insert(source_key) {
-                inferred.push(FactToLeanIR {
-                    fact_id: source_id,
-                    proposition: source_fact.clone(),
-                    proof: FactProofToLeanIR::Inference {
+                let proof = if let Some(carrier) =
+                    crate::to_lean_ir::closed_compact_numeric_set_fact_carrier(source_fact)
+                {
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::ClosedNumericReflection { carrier },
+                        parameter_requirements: Vec::new(),
+                        premises: Vec::new(),
+                    }
+                } else {
+                    FactProofToLeanIR::Inference {
                         source_fact_id: None,
                         reason: output.itself_and_why_itself_is_stored.1.clone(),
-                    },
-                });
+                    }
+                };
+                // Internal inferences are emitted only when this backend has a
+                // checked proof adapter. A later citation still fails closed
+                // because no Lean declaration is registered for an omitted fact.
+                if !matches!(proof, FactProofToLeanIR::Inference { .. }) {
+                    inferred.push(FactToLeanIR {
+                        fact_id: source_id,
+                        proposition: source_fact.clone(),
+                        proof,
+                    });
+                }
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
                 return Err(to_lean_ir_error(
@@ -1790,15 +1814,19 @@ impl Runtime {
                 if !seen.insert(fact.to_string()) {
                     continue;
                 }
+                let proof = inferred_fact_proof_to_lean_ir(
+                    source_fact,
+                    source_id,
+                    fact,
+                    &output.itself_and_why_itself_is_stored.1,
+                );
+                if matches!(proof, FactProofToLeanIR::Inference { .. }) {
+                    continue;
+                }
                 inferred.push(FactToLeanIR {
                     fact_id: (*recorded_fact_id).or(self.known_fact_id_for_fact(fact)?),
                     proposition: fact.clone(),
-                    proof: inferred_fact_proof_to_lean_ir(
-                        source_fact,
-                        source_id,
-                        fact,
-                        &output.itself_and_why_itself_is_stored.1,
-                    ),
+                    proof,
                 });
             }
         }
@@ -1872,6 +1900,17 @@ fn inferred_fact_proof_to_lean_ir(
                     proposition: source_fact.clone(),
                     proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
                 }],
+            };
+        }
+    }
+    if crate::to_lean_ir::is_closed_numeric_relation(inferred_fact) {
+        if let Some(carrier) =
+            crate::to_lean_ir::closed_compact_numeric_set_fact_carrier(source_fact)
+        {
+            return FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ClosedNumericReflection { carrier },
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
             };
         }
     }

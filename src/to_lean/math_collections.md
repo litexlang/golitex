@@ -275,6 +275,49 @@ literal, and that the two recursive premises have the expected propositions.
 This validation makes malformed IR a compilation error rather than an invalid
 theorem or an implicit trust boundary.
 
+Not-equality symmetry is the minimal one-premise companion interface:
+
+```text
+NotEqualSymmetry
+premises = [a != b]
+target = b != a
+```
+
+The verifier selects it only after the reversed non-equality is checked as a
+builtin premise. The backend then requires the target operands to be the exact
+structural reverse of that premise before emitting `Ne.symm`. With no known
+orientation, the Litex rule stays unknown; with a malformed or unrelated
+premise, To-Lean fails closed.
+
+Set-relation duality is the corresponding one-premise transform:
+
+```text
+SetRelationDuality(SupersetFromSubset)
+premises = [A $subset B]
+target = B $superset A
+```
+
+Both propositions have the native Lean meaning `A ⊆ B`, but the certificate
+still retains the checked source premise. The backend validates polarity,
+orientation, and both reversed operands before emitting `exact h`. The other
+three variants cover subset from superset and both negated orientations. A
+zero-child duality diagnostic is deliberately not upgraded to this evidence.
+
+Closed prime computation is a separate reflection mechanism rather than a
+local schema:
+
+```text
+PrimeU64Reflection
+target = $prime(53) | not $prime(54)
+premises = []
+```
+
+The proposition fixes its argument occurrence to `ℕ` and becomes
+`Nat.Prime 53` or `¬ Nat.Prime 54`; `norm_num` supplies the checked Lean proof.
+The emitter rechecks that the source target has exactly one literal `u64`.
+Symbolic prime definitions and their inferred trial-division facts remain
+outside this reflection slice.
+
 The nearest rejected form is `a / b != z` when Litex resolved `z` to zero from
 its environment. The verifier can prove it, but the current builtin evidence
 does not carry the equality path from `z` to `0`. Supporting that target should
@@ -599,7 +642,8 @@ forall A, B set:
 
 ->
 
-∀ {α : Type u} (A B : Set α), ...
+∀ {α : Type LitexUniverse} [LitexObject α],
+  ∀ (A : Set α), ∀ (B : Set α), ...
 ```
 
 The first tranche shares one implicit carrier among connected generic-set
@@ -608,6 +652,20 @@ the set. Native `A ∪ B`, `A ∩ B`, and `A \ B` are supported when their carri
 unify. Heterogeneous or otherwise underconstrained set expressions fail closed
 until the IR can retain a sound carrier constraint; they do not fall back to a
 universal wrapper.
+
+Set-relation propositions also stay native:
+
+```text
+A $superset B              -> B ⊆ A
+A $proper_subset B         -> (A ⊆ B) ∧ A ≠ B
+not A $proper_subset B     -> ¬ (A ⊆ B) ∨ A = B
+```
+
+Proper superset reverses only the containment. The disjunctive negative form
+matches Litex's builtin definition directly instead of relying on a classical
+rewrite of a negated conjunction. This tranche renders all four proper
+relations; the explicit `by def` proof statement that constructs one remains a
+separate statement/proof-ABI boundary.
 
 ### Numerals obtain constraints from facts, not annotations
 

@@ -1,0 +1,31 @@
+# Tracer: not-equality symmetry is a builtin rule with checked Lean evidence.
+#
+# Before (Litex verified, but To-Lean rejected the proof route):
+# forall a set, b set:
+#     $is_set(a)
+#     $is_set(b)
+#     a != b
+#     =>:
+#         b != a
+# Former behavior: Litex cited `a != b` as if it were already the differently
+# oriented goal `b != a`; To-Lean rejected that changed citation because it had
+# no structured symmetry evidence.
+#
+# Now (verified and compiled from builtin proof evidence):
+forall a set, b set:
+    $is_set(a)
+    $is_set(b)
+    a != b
+    =>:
+        b != a
+# Current behavior: the verifier records not-equality symmetry with the checked
+# premise `a != b`; To-Lean emits one shared `{α}` carrier and `Ne.symm` for
+# `b != a`.
+#
+# Boundary: without either orientation of a non-equality fact, the rule remains
+# unknown; the executable negative boundary lives in not_equal_builtin.rs.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/not_equal_symmetry.lit
+# Compiler evidence: cargo test --release not_equal_symmetry -- --nocapture
+# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_not_equal_symmetry_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/to_lean/type_context.rs, src/to_lean/set_prelude.rs,
+# src/to_lean/to_lean_pipeline.rs, and src/verify/verify_builtin_rules/not_equal_builtin.rs

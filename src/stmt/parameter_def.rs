@@ -785,13 +785,6 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
-        Obj::SetDiff(x) => collect_cited_param_indices_from_two_objs(
-            &x.left,
-            &x.right,
-            previous_param_indices,
-            shadowed_names,
-            out,
-        ),
         Obj::BigUnion(x) => collect_cited_param_indices_from_obj(
             &x.left,
             previous_param_indices,

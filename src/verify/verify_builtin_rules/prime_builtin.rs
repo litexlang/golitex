@@ -20,9 +20,10 @@ impl Runtime {
         if is_prime_u64(value) != fact_is_positive {
             return StmtUnknown::new().into();
         }
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
             atomic_fact.clone().into(),
             "deterministic primality computation for u64".to_string(),
+            BuiltinRuleEvidence::PrimeU64Reflection,
             Vec::new(),
         )
         .into()

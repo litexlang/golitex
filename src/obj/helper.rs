@@ -151,10 +151,6 @@ impl Obj {
                 binary.left.contains_native_complex_syntax()
                     || binary.right.contains_native_complex_syntax()
             }
-            Obj::SetDiff(binary) => {
-                binary.left.contains_native_complex_syntax()
-                    || binary.right.contains_native_complex_syntax()
-            }
             Obj::BigUnion(union) => union.left.contains_native_complex_syntax(),
             Obj::BigIntersect(intersect) => intersect.left.contains_native_complex_syntax(),
             Obj::PowerSet(power_set) => power_set.set.contains_native_complex_syntax(),
@@ -420,10 +416,6 @@ impl Obj {
                     || binary.right.contains_native_transcendental_syntax()
             }
             Obj::SetMinus(binary) => {
-                binary.left.contains_native_transcendental_syntax()
-                    || binary.right.contains_native_transcendental_syntax()
-            }
-            Obj::SetDiff(binary) => {
                 binary.left.contains_native_transcendental_syntax()
                     || binary.right.contains_native_transcendental_syntax()
             }

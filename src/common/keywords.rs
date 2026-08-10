@@ -58,7 +58,6 @@ pub const UNFOLD: &str = "unfold";
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
 pub const SET_MINUS: &str = "set_minus";
-pub const SET_DIFF: &str = "set_diff";
 pub const BIG_UNION: &str = "big_union";
 pub const BIG_INTERSECT: &str = "big_intersect";
 pub const POWER_SET: &str = "power_set";
@@ -263,7 +262,6 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         UNION,
         INTERSECT,
         SET_MINUS,
-        SET_DIFF,
         BIG_UNION,
         BIG_INTERSECT,
         POWER_SET,

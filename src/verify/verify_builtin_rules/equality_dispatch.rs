@@ -83,6 +83,14 @@ impl Runtime {
         {
             return Ok(result);
         }
+        // Absolute-value identities retain their direct premise certificates.
+        // Check them before the broad exp/ln injectivity route can repackage
+        // the same equality through an unrelated intermediate equality.
+        if let Some(done) =
+            self.try_verify_abs_equalities(left, right, line_file.clone(), builtin_state)?
+        {
+            return Ok(done);
+        }
         if let Some(result) = self.try_verify_native_exp_ln_identity(left, right, line_file.clone())
         {
             return Ok(result);
@@ -260,12 +268,6 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) =
-            self.try_verify_abs_equalities(left, right, line_file.clone(), builtin_state)?
-        {
-            return Ok(done);
-        }
-
         if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
             left,
             right,
@@ -403,15 +405,6 @@ impl Runtime {
         }
 
         if let Some(done) = self.try_verify_finite_set_size_partition_equality(
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
-            return Ok(done);
-        }
-
-        if let Some(done) = self.try_verify_finite_set_size_set_diff_equality(
             left,
             right,
             line_file.clone(),
@@ -1144,6 +1137,7 @@ impl Runtime {
                 right,
                 line_file,
                 "union_commutative",
+                Some(SetBuiltinRule::UnionCommutative),
             ));
         }
 
@@ -1156,6 +1150,7 @@ impl Runtime {
                 right,
                 line_file,
                 "union_associative",
+                Some(SetBuiltinRule::UnionAssociative),
             ));
         }
 
@@ -1167,6 +1162,7 @@ impl Runtime {
                 right,
                 line_file,
                 "union_idempotent",
+                Some(SetBuiltinRule::UnionIdempotent),
             ));
         }
 
@@ -1180,6 +1176,7 @@ impl Runtime {
                 right,
                 line_file,
                 "union_empty_identity",
+                Some(SetBuiltinRule::UnionEmptyIdentity),
             ));
         }
 
@@ -1200,6 +1197,7 @@ impl Runtime {
                 right,
                 line_file,
                 "intersect_commutative",
+                Some(SetBuiltinRule::IntersectCommutative),
             ));
         }
 
@@ -1213,6 +1211,7 @@ impl Runtime {
                 right,
                 line_file,
                 "intersect_associative",
+                Some(SetBuiltinRule::IntersectAssociative),
             ));
         }
 
@@ -1226,6 +1225,7 @@ impl Runtime {
                 right,
                 line_file,
                 "intersect_union_distributive",
+                None,
             ));
         }
 
@@ -1239,19 +1239,6 @@ impl Runtime {
         line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        // A symmetric difference is the union of its two asymmetric differences.
-        // Example: `set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))`.
-        if Self::set_diff_as_union_of_asymmetric_differences_shape(left, right)
-            || Self::set_diff_as_union_of_asymmetric_differences_shape(right, left)
-        {
-            return Ok(Some(Self::set_equality_success(
-                left,
-                right,
-                line_file,
-                "set_diff_as_union_of_asymmetric_differences",
-            )));
-        }
-
         // Set-minus distributes over union by De Morgan's law, accepted in either direction.
         // Example: `set_minus(A, union(B, C)) = intersect(set_minus(A, B), set_minus(A, C))`.
         if Self::set_minus_union_de_morgan_shape(left, right)
@@ -1262,6 +1249,7 @@ impl Runtime {
                 right,
                 line_file,
                 "set_minus_union_de_morgan",
+                None,
             )));
         }
 
@@ -1275,6 +1263,7 @@ impl Runtime {
                 right,
                 line_file,
                 "set_minus_intersect_de_morgan",
+                None,
             )));
         }
 
@@ -1317,6 +1306,7 @@ impl Runtime {
                 right,
                 line_file,
                 "cart_finite_set_size_product",
+                None,
             ));
         }
 
@@ -1422,40 +1412,6 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "finite_set_size_partition_by_intersection_and_difference".to_string(),
-                step_results,
-            )
-            .into(),
-        ))
-    }
-
-    // The symmetric difference is the sum of the two disjoint directed differences.
-    // Example: `finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))`.
-    fn try_verify_finite_set_size_set_diff_equality(
-        &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
-        builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some((first_set, second_set)) = Self::finite_set_size_set_diff_shape(left, right)
-            .or_else(|| Self::finite_set_size_set_diff_shape(right, left))
-        else {
-            return Ok(None);
-        };
-        let Some(step_results) = self.verify_two_sets_are_finite(
-            first_set,
-            second_set,
-            line_file.clone(),
-            builtin_state,
-        )?
-        else {
-            return Ok(None);
-        };
-
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
-                "finite_set_size_symmetric_difference".to_string(),
                 step_results,
             )
             .into(),
@@ -1596,12 +1552,22 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
         reason: &str,
+        evidence: Option<SetBuiltinRule>,
     ) -> StmtResult {
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            EqualFact::new(left.clone(), right.clone(), line_file).into(),
-            reason.to_string(),
-            Vec::new(),
-        )
+        let fact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+        match evidence {
+            Some(rule) => FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                fact,
+                reason.to_string(),
+                BuiltinRuleEvidence::Set(rule),
+                Vec::new(),
+            ),
+            None => FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                fact,
+                reason.to_string(),
+                Vec::new(),
+            ),
+        }
         .into()
     }
 
@@ -1706,25 +1672,6 @@ impl Runtime {
             right_left_set_minus,
             right_right_set_minus,
         )
-    }
-
-    fn set_diff_as_union_of_asymmetric_differences_shape(left: &Obj, right: &Obj) -> bool {
-        let Obj::SetDiff(set_diff) = left else {
-            return false;
-        };
-        let Obj::Union(union) = right else {
-            return false;
-        };
-        let Obj::SetMinus(left_set_minus) = union.left.as_ref() else {
-            return false;
-        };
-        let Obj::SetMinus(right_set_minus) = union.right.as_ref() else {
-            return false;
-        };
-        verify_equality_by_they_are_the_same(&set_diff.left, &left_set_minus.left)
-            && verify_equality_by_they_are_the_same(&set_diff.right, &left_set_minus.right)
-            && verify_equality_by_they_are_the_same(&set_diff.right, &right_set_minus.left)
-            && verify_equality_by_they_are_the_same(&set_diff.left, &right_set_minus.right)
     }
 
     fn set_minus_intersect_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
@@ -1917,46 +1864,6 @@ impl Runtime {
             Some((
                 main_size.set.as_ref().clone(),
                 intersection.left.as_ref().clone(),
-            ))
-        } else {
-            None
-        }
-    }
-
-    fn finite_set_size_set_diff_shape(
-        finite_set_size_side: &Obj,
-        directed_differences_side: &Obj,
-    ) -> Option<(Obj, Obj)> {
-        let Obj::FiniteSetSize(set_diff_size) = finite_set_size_side else {
-            return None;
-        };
-        let Obj::SetDiff(set_diff) = set_diff_size.set.as_ref() else {
-            return None;
-        };
-        let Obj::Add(sum) = directed_differences_side else {
-            return None;
-        };
-        let Obj::FiniteSetSize(first_difference_size) = sum.left.as_ref() else {
-            return None;
-        };
-        let Obj::SetMinus(first_difference) = first_difference_size.set.as_ref() else {
-            return None;
-        };
-        let Obj::FiniteSetSize(second_difference_size) = sum.right.as_ref() else {
-            return None;
-        };
-        let Obj::SetMinus(second_difference) = second_difference_size.set.as_ref() else {
-            return None;
-        };
-
-        if verify_equality_by_they_are_the_same(&set_diff.left, &first_difference.left)
-            && verify_equality_by_they_are_the_same(&set_diff.right, &first_difference.right)
-            && verify_equality_by_they_are_the_same(&set_diff.right, &second_difference.left)
-            && verify_equality_by_they_are_the_same(&set_diff.left, &second_difference.right)
-        {
-            Some((
-                set_diff.left.as_ref().clone(),
-                set_diff.right.as_ref().clone(),
             ))
         } else {
             None

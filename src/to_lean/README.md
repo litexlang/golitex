@@ -109,7 +109,8 @@ iff rewrite, definition reduction, normalization, known-forall instantiation,
 modus ponens, conjunction/existential introduction, case split, and an explicit
 unsupported rule. Only equality rewrite, definition reduction, the supported
 normalization slice, known-forall instantiation, and the structured quotient-
-nonzero and 20 arithmetic/order builtin rules currently have Lean backends.
+nonzero, not-equality symmetry, subset/superset duality, closed-u64 prime
+reflection, and 20 arithmetic/order builtin rules currently have Lean backends.
 Positive existential introduction is also checked from its retained witness,
 parameter requirements, local proof steps, and direct body proofs.
 
@@ -207,14 +208,13 @@ explicit before adding larger proof families.
 The source-derived coverage ledger is
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md). Its generator follows
 label arguments through forwarding helpers rather than counting only raw
-constructors: 462 direct success-constructor calls currently expand to 658
-label-bearing rule/strategy sites, including 559 distinct static labels. Each
+constructors: 463 direct success-constructor calls currently expand to 659
+label-bearing rule/strategy sites, including 560 distinct static labels. Each
 row records its Rust source, family, checked Lean mapping, and delivery status;
-evaluation/computation-like sites are explicitly outside the current 20-rule
-tranche. Twenty-six source sites currently have a checked mapping: the prior
-three, the real-carrier nonemptiness shape, the 20 typed arithmetic/order
-sites, the additional precise strict-to-weak call site, and the typed recursive
-additive-strategy site.
+evaluation/computation-like sites are classified separately from the current
+20-rule tranche. Thirty-two source sites currently have a checked mapping: the
+previous 27, closed-u64 prime reflection, and four premise-bearing
+subset/superset-duality orientations.
 
 A diagnostic rule label is not a proof certificate. A compiler-supported
 builtin therefore freezes its successful matcher bindings in
@@ -263,6 +263,25 @@ using `Ne.symm` for the reversed target. A resolved identifier that merely
 denotes zero still verifies in Litex, but it has no compiler evidence for that
 resolution yet; it deliberately remains `OtherUnsupported` rather than
 silently treating the identifier as literal zero.
+
+Not-equality symmetry is the one-premise slice. The verifier records the
+`NotEqualSymmetry` identity and returns the exact reversed non-equality as its
+checked child. The emitter requires that child to be structurally opposite to
+the target before applying `Ne.symm`; a changed citation or malformed child is
+rejected instead of being guessed from the diagnostic label.
+
+Subset/superset duality uses the same one-premise discipline. For example,
+`A $subset B` proves `B $superset A`, and both propositions render as native
+`A ⊆ B`. The verifier now retains the exact checked subset result instead of
+returning a zero-child diagnostic. The emitter checks the polarity, direction,
+and reversed operands before reusing that child. Reflexive and standard-set
+duality routes that still return no child remain outside this MVP.
+
+Closed `$prime(n)` and `not $prime(n)` computation carries a distinct
+`PrimeU64Reflection` identity. The proposition lowers to `Nat.Prime n` or its
+negation, the target is revalidated as one literal `u64`, and Lean checks the
+result with `norm_num`. This is proof-producing reflection, not a default type
+assigned to bare numerals and not an ordinary local-rule schema.
 
 Equality-class lookup retains more than the final equivalent object: it now
 returns an ordered path of original equality facts with an orientation for each
@@ -352,11 +371,11 @@ namespace chapter01_introduction
 
 noncomputable section
 
-universe u
+universe LitexUniverse
 
 abbrev LitexFact := Prop
 
-class LitexObject (α : Type u) : Prop where
+class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
 instance : LitexObject ℕ := ⟨True.intro⟩
@@ -364,7 +383,7 @@ instance : LitexObject ℤ := ⟨True.intro⟩
 instance : LitexObject ℚ := ⟨True.intro⟩
 instance : LitexObject ℝ := ⟨True.intro⟩
 instance : LitexObject ℂ := ⟨True.intro⟩
-instance {α : Type u} [LitexObject α] : LitexObject (Set α) :=
+instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) :=
   ⟨True.intro⟩
 
 -- generated declarations
@@ -378,15 +397,36 @@ The marker records the source invariant that supported values are Litex
 objects; it is not a universal value wrapper. Standard domains use Mathlib's
 native carriers and are rendered inline as `Set.univ`. A numeral remains bare,
 as in `2 ∈ (Set.univ : Set ℝ)` or the unconstrained reflexivity `2 = 2`.
+Compact standard subsets lower to native predicate sets on the same carriers:
+`R+` becomes `{r : ℝ | 0 < r}`, `R-` becomes `{r : ℝ | r < 0}`, and
+`R*` becomes `{r : ℝ | r ≠ 0}`. The corresponding natural, integer,
+rational, and complex variants follow the same rule; `Z+` is Litex's alias of
+`N+`, while the unordered `C+` spelling remains invalid.
+Closed numeric membership and nonmembership facts over these compact sets use
+a fact-level carrier recorded by the verifier-to-IR bridge and emit a checked
+`norm_num` proof. This carrier expectation applies to the whole judgment; it
+does not annotate the source numeral or turn `trust` into type inference.
 `trust` never fills in a missing numeric carrier, so an otherwise
 underconstrained division judgment fails closed. When a fixed integer
 expression is judged to belong to `Q`, the emitter gives the whole expression a rational expectation,
 as in `(z / 2 : ℚ)`, so Lean inserts its canonical coercion without changing
 the structural `ObjToLeanIR` spelling.
 
+Builtin propositions keep their native logical shape. `A $superset B` is
+`B ⊆ A`; positive proper subset is `(A ⊆ B) ∧ A ≠ B`; its Litex negation is
+rendered by the verifier definition `¬ (A ⊆ B) ∨ A = B`. Proper superset
+reverses only the containment. The four negated comparisons become native
+negations of `<`, `≤`, `>`, and `≥`. `$prime(n)` alone fixes the
+argument judgment to `ℕ` and becomes `Nat.Prime n`; it does not give an
+intrinsic type to the numeral or symbol outside that occurrence.
+
 The anonymous `noncomputable section` encloses both the shared prelude and all
 generated declarations. In particular, polymorphic theorems remain in scope of
-`universe u`; the anonymous section closes before the optional named namespace.
+`universe LitexUniverse`; the anonymous section closes before the optional
+named namespace. Synthetic generic carriers use Unicode `α` for the first
+carrier and `α1`, `α2`, and so on when independent carriers remain in scope.
+Homogeneous equality, not-equality, and set relations merge connected generic
+carriers before binders are emitted.
 
 The emitter never uses a fixed synthetic namespace such as `LitexGenerated`.
 A registered file or module uses its canonical Litex name, with `::` mapped to
@@ -411,7 +451,8 @@ The current lowering is intentionally small:
   (or `opaque` when it has no body), with standard-domain parameters using
   native Mathlib carriers and generic sets using `Set α`;
 - only an explicit Litex `trust` becomes Lean `axiom`;
-- stored proved facts become `theorem global_fact_<FactId>`;
+- stored proved facts become `theorem fact<FactId>`; for example, source fact
+  `f4` becomes `fact4`;
 - explicit-value `have x T = e` becomes a checked `def` at file scope or a
   checked `let` inside a proof, followed by its stored type and equality facts;
 - `by cases` proves its coverage, opens one scoped branch per recorded local
@@ -439,6 +480,12 @@ The current lowering is intentionally small:
 - quotient-nonzero builtin evidence replays its two recursively checked
   nonzero premises and applies `div_ne_zero`, with the recorded target
   orientation deciding whether `Ne.symm` is required;
+- not-equality-symmetry evidence replays one exactly reversed non-equality
+  premise and applies `Ne.symm` only after checking both orientations;
+- subset/superset-duality evidence replays one exactly reversed containment
+  premise and emits the same native `⊆` proposition;
+- closed-u64 prime evidence emits native `Nat.Prime` and is checked by
+  `norm_num` without emitting the inferred trial-division internals;
 - arithmetic/order builtin evidence checks the target and ordered premise fact
   families, recursively materializes those premise proofs, and applies one of
   `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
@@ -447,7 +494,7 @@ The current lowering is intentionally small:
   by `ring`;
 - context-free object lowering preserves symbols, bare normalized numerals,
   standard sets, scalar applications, and the simple set constructors
-  `union`, `intersect`, `set_minus`, `set_diff`, `big_union`, `big_intersect`,
+  `union`, `intersect`, `set_minus`, `big_union`, `big_intersect`,
   `power_set`, and list sets;
 - binder-owning `SetBuilder` remains an explicit IR-construction boundary.
 
@@ -461,6 +508,26 @@ in the same IR stream. Facts preloaded during ordinary execution still have
 stable IDs, but compiling them through an external Lean library mapping is a
 future backend feature; an unresolved preloaded ID is rejected instead of
 becoming an undefined Lean name.
+
+## Example authoring ledger
+
+Small self-contained compiler examples live together in
+[`examples/09_to_lean/litex_to_lean_examples.md`](../../examples/09_to_lean/litex_to_lean_examples.md).
+Each lowercase snake-case H2 section contains one self-contained `litex` fence
+followed by its complete generated `lean` fence. The harness discovers every
+pair automatically, verifies the Litex source, regenerates Lean, and rejects a
+stale adjacent snapshot. Strict compilation is the default; an intentional
+report-mode section carries `<!-- to-lean: partial -->` before its Litex fence.
+
+Do not add another `.lit` for an ordinary mapping or proof-certificate example.
+Standalone files remain appropriate for module/import order, CLI and path
+behavior, or a durable runnable tracer whose acceptance contract requires real
+file semantics.
+
+```text
+cargo test --release to_lean_examples_markdown_emits_checked_source -- --nocapture
+cargo test --release refresh_to_lean_examples_markdown_snapshots -- --ignored --nocapture
+```
 
 ## Active tracer
 
@@ -482,6 +549,11 @@ is the builtin-rule tracer. It follows one quotient-nonzero proof from matched
 Litex arguments, through recursively returned subgoal results and typed proof
 IR, to a checked `div_ne_zero` Lean term. Focused Rust regressions also cover
 the reversed target, malformed IR, and the unresolved-zero-alias boundary.
+
+[`examples/01_proof_patterns/not_equal_symmetry.lit`](../../examples/01_proof_patterns/not_equal_symmetry.lit)
+is the not-equality-symmetry tracer. It preserves the formerly rejected
+To-Lean route, keeps `a != b` as the builtin child for `b != a`, and checks the
+generated `Ne.symm` proof without adding an axiom or `sorry`.
 
 [`examples/05_compiler_interop/to_lean_builtin_rules_20.lit`](../../examples/05_compiler_interop/to_lean_builtin_rules_20.lit)
 is the representative 20-rule tracer. It covers strict-to-weak order,
@@ -576,6 +648,10 @@ LITEX_LEAN=/absolute/path/to/lean \
 For scratch work, these commands first verify `examples/tmp.lit`,
 `examples/tmp1.lit`, or `examples/tmp2.lit`, generate the corresponding Lean
 translation, and append it to that file inside a triple-quoted Litex comment.
+Each successful command also replaces
+`/Users/shenjiachen/主要文件夹/GeekGems/2026/mathematics_in_lean/tmp.lean`
+with the generated Lean source, so the destination never retains content from
+the previous run. Set `LITEX_TMP_LEAN_PATH` to use a different destination.
 `tmp2.lit` is also the equality-path gallery, including clean, reversed,
 redundant, branched, disconnected, repeated-argument, and independent paths.
 

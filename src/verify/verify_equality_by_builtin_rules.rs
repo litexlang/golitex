@@ -39,7 +39,6 @@ pub(crate) fn obj_expr_mentions_bare_id(obj: &Obj, id: &str) -> bool {
             obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
         }
         Obj::SetMinus(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
-        Obj::SetDiff(b) => obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id),
         Obj::MatrixAdd(b) => {
             obj_expr_mentions_bare_id_on_two(b.left.as_ref(), b.right.as_ref(), id)
         }

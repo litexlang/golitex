@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_to_lean/litex_to_lean_examples.md#builtin_predicates",
+  "initial_session_command": "target/release/litex -compact -session -before examples/09_to_lean/choice.lit",
+  "target_migration_note": "During implementation the To-Lean example repository was consolidated from registered .lit files into the executable Markdown ledger. The accepted blocks were materialized in the builtin_predicates section and are now checked by the Markdown harness.",
+  "proof_spine": [
+    "Check positive and negative closed prime facts by deterministic u64 reflection",
+    "Retain the one checked premise in all four positive and negative subset/superset duality directions",
+    "Render proper relations by their exact Litex containment/equality definitions",
+    "Render all four negated comparisons as native Lean negations"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "accepted_litex": "$prime(53)",
+      "result": "accepted",
+      "reusable_lesson": "The verifier records deterministic primality computation for a literal u64."
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "accepted_litex": "not $prime(54)",
+      "result": "accepted"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "accepted_litex": "forall A, B set:\n    A $subset B\n    =>:\n        B $superset A",
+      "result": "accepted",
+      "reusable_lesson": "Subset/superset duality is a one-child proof transform; the child must not be discarded by compiler provenance."
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "attempted_litex": "forall A, B set:\n    A $subset B\n    A != B\n    =>:\n        A $proper_subset B",
+      "result": "rejected",
+      "verifier_evidence": "The plain forall conclusion remained unknown; Litex currently requires an explicit by-def proof statement for this direction."
+    },
+    {
+      "id": "B005",
+      "source_order": 4,
+      "accepted_litex": "claim:\n    ? forall A, B set:\n        A $subset B\n        A != B\n        =>:\n            A $proper_subset B\n    by def A $proper_subset B",
+      "result": "accepted_not_materialized",
+      "reusable_lesson": "The definition proof is valid Litex, but claim compilation is outside this MVP and remains the stated boundary."
+    },
+    {
+      "id": "B006",
+      "source_order": 4,
+      "accepted_litex": "forall A, B set:\n    A $proper_subset B\n    =>:\n        A $proper_subset B",
+      "result": "accepted"
+    },
+    {
+      "id": "B007",
+      "source_order": 5,
+      "accepted_litex": "forall A, B set:\n    not A $proper_subset B\n    =>:\n        not A $proper_subset B",
+      "result": "accepted"
+    },
+    {
+      "id": "B008",
+      "source_order": 6,
+      "accepted_litex": "forall A, B set:\n    A $proper_superset B\n    =>:\n        A $proper_superset B",
+      "result": "accepted"
+    },
+    {
+      "id": "B009",
+      "source_order": 7,
+      "accepted_litex": "forall A, B set:\n    not A $proper_superset B\n    =>:\n        not A $proper_superset B",
+      "result": "accepted"
+    },
+    {
+      "id": "B010",
+      "source_order": 8,
+      "accepted_litex": "forall a, b R:\n    not a < b\n    not a <= b\n    not a > b\n    not a >= b\n    =>:\n        not a < b\n        not a <= b\n        not a > b\n        not a >= b",
+      "result": "accepted_then_split",
+      "materialization_note": "Split into four one-conclusion forall facts because the strict To-Lean forall MVP retains one conclusion per theorem."
+    },
+    {
+      "id": "B011",
+      "source_order": 12,
+      "accepted_litex": "forall A, B set:\n    not A $subset B\n    =>:\n        not B $superset A",
+      "result": "accepted"
+    },
+    {
+      "id": "B012",
+      "source_order": 13,
+      "accepted_litex": "forall A, B set:\n    A $superset B\n    =>:\n        B $subset A",
+      "result": "accepted_and_materialized"
+    },
+    {
+      "id": "B013",
+      "source_order": 14,
+      "accepted_litex": "forall A, B set:\n    not A $superset B\n    =>:\n        not B $subset A",
+      "result": "accepted_and_materialized"
+    }
+  ],
+  "materialization": {
+    "section": "builtin_predicates",
+    "focused_test": "cargo test --release builtin_predicates_use_native_props_and_selected_checked_rules -- --nocapture",
+    "ledger_test": "cargo test --release to_lean_examples_markdown_emits_checked_source -- --nocapture",
+    "mathlib_test": "cargo test --release generated_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture",
+    "verification_result": "All strict Markdown sections regenerated; all 15 Markdown sections compiled with the real Mathlib kernel, including builtin_predicates."
+  }
+}

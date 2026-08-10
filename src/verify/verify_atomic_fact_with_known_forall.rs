@@ -972,9 +972,6 @@ impl Runtime {
             Obj::SetMinus(ref a) => {
                 self.match_arg_when_left_is_set_minus(&a.left, &a.right, given_arg)
             }
-            Obj::SetDiff(ref a) => {
-                self.match_arg_when_left_is_set_diff(&a.left, &a.right, given_arg)
-            }
             Obj::BigUnion(ref a) => self.match_arg_when_left_is_big_union(&a.left, given_arg),
             Obj::BigIntersect(ref a) => {
                 self.match_arg_when_left_is_big_intersect(&a.left, given_arg)
@@ -1646,20 +1643,6 @@ impl Runtime {
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
         match given_arg {
             Obj::SetMinus(ref g) => {
-                self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
-            }
-            _ => Ok(None),
-        }
-    }
-
-    fn match_arg_when_left_is_set_diff(
-        &mut self,
-        left_left: &Obj,
-        left_right: &Obj,
-        given_arg: &Obj,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        match given_arg {
-            Obj::SetDiff(ref g) => {
                 self.match_arg_binary_then_merge(left_left, left_right, &g.left, &g.right)
             }
             _ => Ok(None),

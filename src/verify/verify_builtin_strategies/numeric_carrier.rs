@@ -420,16 +420,6 @@ impl Runtime {
                     results.append(&mut child_results);
                 }
             }
-            Obj::SetDiff(x) => {
-                for child in [x.left.as_ref(), x.right.as_ref()] {
-                    let Some(mut child_results) =
-                        self.verify_set_elements_in_numeric_carrier_strategy(child, target, lf)?
-                    else {
-                        return Ok(None);
-                    };
-                    results.append(&mut child_results);
-                }
-            }
             Obj::Intersect(x) => {
                 let Some(mut child_results) = self
                     .verify_set_elements_in_numeric_carrier_strategy(x.left.as_ref(), target, lf)?

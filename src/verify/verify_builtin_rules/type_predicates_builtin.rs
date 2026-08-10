@@ -616,39 +616,6 @@ impl Runtime {
                     .into(),
                 )
             }
-            // Symmetric difference is finite when both operands are finite.
-            // Example: from `$is_finite_set(A)` and `$is_finite_set(B)`, prove
-            // `$is_finite_set(set_diff(A, B))`.
-            Obj::SetDiff(set_diff) => {
-                let left_finite: AtomicFact = IsFiniteSetFact::new(
-                    set_diff.left.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
-                let right_finite: AtomicFact = IsFiniteSetFact::new(
-                    set_diff.right.as_ref().clone(),
-                    is_finite_set_fact.line_file.clone(),
-                )
-                .into();
-                let left_result = self.verify_builtin_rule_premise(&left_finite, builtin_state)?;
-                if !left_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-                let right_result =
-                    self.verify_builtin_rule_premise(&right_finite, builtin_state)?;
-                if !right_result.is_true() {
-                    return Ok((StmtUnknown::new()).into());
-                }
-
-                Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        is_finite_set_fact.clone().into(),
-                        "set_diff_is_finite_set_when_both_sides_are_finite_set".to_string(),
-                        vec![left_result, right_result],
-                    ))
-                    .into(),
-                )
-            }
             // Power set of a finite set is finite.
             // Example: from `$is_finite_set(S)`, prove `$is_finite_set(power_set(S))`.
             Obj::PowerSet(power_set) => {

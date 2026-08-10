@@ -81,17 +81,6 @@ impl Runtime {
                 child_results.push(result);
                 "finite-set strategy: subset of a finite left operand"
             }
-            Obj::SetDiff(set_diff) => {
-                for set in [set_diff.left.as_ref(), set_diff.right.as_ref()] {
-                    let child = IsFiniteSetFact::new(set.clone(), fact.line_file.clone());
-                    let result = self.verify_is_finite_set_strategy_child(&child)?;
-                    if !result.is_true() {
-                        return Ok(StmtUnknown::new().into());
-                    }
-                    child_results.push(result);
-                }
-                "finite-set strategy: symmetric difference of finite sets"
-            }
             Obj::Cart(cart) => {
                 for set in &cart.args {
                     let child = IsFiniteSetFact::new(set.as_ref().clone(), fact.line_file.clone());

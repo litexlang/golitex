@@ -18,6 +18,8 @@ pipeline and delivery checkpoints.
   `axiom` or `sorry`.
 - [x] The partial tracer passes Litex, focused Rust, rollback, and real Lean
   kernel gates.
+- [x] Small self-contained compiler examples use one paired-fence Markdown
+  ledger whose Litex inputs and generated Lean snapshots are checked together.
 
 Tracer:
 [`examples/05_compiler_interop/to_lean_partial_report.lit`](../../examples/05_compiler_interop/to_lean_partial_report.lit)
@@ -103,13 +105,13 @@ Existential tracer:
 - [x] Mark evaluation/computation-like rules as `not_this_round`.
 
 Current source audit: 462 direct success-constructor calls expand through
-forwarding helpers to 658 label-bearing sites (631 rules and 27 strategies),
-including 559 distinct static labels and 75 dynamic label expressions. There
-are 46 evaluation/computation-like sites marked `not_this_round`.
-The checked mapping count is now 26 sites: the prior normalization and
-quotient-nonzero sites, the real-carrier nonemptiness shape used by checked
-choice, the 20-rule tranche below, a second precise strict-to-weak call site,
-and the typed recursive additive-strategy site.
+forwarding helpers to 657 label-bearing sites (630 rules and 27 strategies),
+including 558 distinct static labels and 74 dynamic label expressions. There
+are 46 evaluation/computation-like sites, of which 43 remain
+`not_this_round` after the checked normalization and prime-reflection slices.
+The checked mapping count is now 46 sites: the previous 32, six native set
+equalities, four native set-membership routes, and four absolute-value routes.
+The existing standard numeric-set nonemptiness route now covers `N/Z/Q/R/C`.
 
 Inventory:
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md)
@@ -117,6 +119,21 @@ Inventory:
 ## Structured builtin implementations
 
 - [x] Quotient nonzero (`div_ne_zero`, including reversed orientation).
+- [x] Not-equality symmetry (`Ne.symm` from one checked reversed premise).
+- [x] Subset/superset duality with one retained reversed containment premise
+  in all four positive/negative orientations.
+- [x] Closed positive and negative `$prime` facts as native `Nat.Prime`
+  propositions checked by `norm_num` reflection.
+- [x] Native proposition lowering for superset, proper subset/superset, and all
+  four negated comparisons.
+- [x] Native `Set` equality lowering for union/intersection commutativity and
+  associativity, union idempotence, and union-empty identity.
+- [x] Native `Set` membership introduction for union, intersection, and
+  set-minus, including checked premise-arity rejection.
+- [x] Native absolute-value identities for nonnegative/nonpositive inputs and
+  multiplicative products, plus strict positivity from a nonzero premise.
+- [x] Expand the standard nonempty-set witness route from `R` to `N`, `Z`,
+  `Q`, `R`, and `C` while retaining native Mathlib carriers.
 - [x] Select 20 representative non-evaluation builtin rules from the audited
   inventory.
 - [x] Implement typed verifier evidence, compiler IR, checked Lean lowering,
@@ -125,6 +142,10 @@ Inventory:
   nodes while retaining the strategy label as diagnostic provenance.
 - [x] Retain forall-scope inferred `R+` positivity facts with stable IDs and
   lower them through the checked `PositiveRealMembership` rule.
+- [x] Lower closed membership and nonmembership facts over `N+`/`Z+`, `Q+`,
+  `R+`, `Z-`, `Q-`, `R-`, `Z*`, `Q*`, `R*`, and `C*` through carrier-bearing
+  checked numeric reflection (`norm_num`), without assigning an intrinsic
+  carrier to bare numerals.
 - [x] Reject mismatched recursive-strategy evidence and keep non-additive
   label-only strategies explicitly unsupported.
 - [x] Check the recursive-strategy tracer through Litex, focused release tests,
@@ -187,8 +208,6 @@ Recursive-strategy tracer:
   dedicated native contracts rather than relying on incidental elaboration.
 - [ ] Replace the remaining raw `Fact` payload with a dedicated typed
   structural object-fact IR.
-- [x] Re-run the focused To-Lean, persistent tracer, Mathlib-kernel,
-  `run_examples`, and `run_all` release gates after the migration.
 
 Specification:
 [`math_collections.md#numeric-object-abi`](math_collections.md#numeric-object-abi)

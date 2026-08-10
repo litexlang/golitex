@@ -1,85 +1,92 @@
-# Litex-to-Lean Runnable Repository
+# Litex-to-Lean Example Ledger
 
-This configured example repository is a reader-facing inventory of the
-currently checked Litex-to-Lean slice. Every `.lit` file verifies in Litex.
-All files except `carrier_boundaries.lit` and `partial_boundary.lit` also
-compile independently through the strict To-Lean pipeline without `sorry` or
-compiler-invented axioms.
+[`litex_to_lean_examples.md`](litex_to_lean_examples.md) is the default
+reader-facing and machine-checked home for small, self-contained To-Lean
+examples. Adding a compiler example means appending one H2 section with one
+`litex` input fence and its complete generated `lean` fence. It does not mean
+creating another `.lit` file.
 
-Explicit Litex `trust` appears only in `propositions_and_trust.lit`; those
-statements deliberately become visible Lean axioms. All other strict examples
-produce definitions and theorems without a trust boundary.
+The harness verifies every Litex block in isolation, runs strict To-Lean or
+explicit partial report mode, and compares the adjacent Lean fence byte for
+byte with current compiler output. Explicit Litex `trust` appears only in the
+`propositions_and_trust` section; those statements deliberately become
+visible Lean axioms.
 
-## Examples
+Standalone `.lit` files remain appropriate for module imports, registered
+project order, CLI/file-path behavior, or durable acceptance artifacts whose
+meaning depends on a real file. None of the current ledger examples needs
+those semantics.
 
-| File | Demonstrates |
+## Ledger format
+
+Use a lowercase snake-case H2 identifier. Strict compilation is the default:
+
+````markdown
+## example_name
+
+```litex
+<self-contained Litex source>
+```
+
+```lean
+<complete generated Lean source>
+```
+````
+
+For an intentionally incomplete report-mode example, put
+`<!-- to-lean: partial -->` between the heading and Litex fence. Do not use
+that marker to hide a strict compiler regression.
+
+## Current examples
+
+| Section | Demonstrates |
 | --- | --- |
-| `native_carriers.lit` | Primary tracer: bare equality and `2 $in R` on native `ℝ` |
-| `bounded_facts.lit` | Bounded `forall`, retained membership premises, rational normalization |
-| `propositions_and_trust.lit` | `abstract_prop`, defined `prop`, known-forall use, explicit trust provenance |
-| `object_definitions.lit` | A checked real `have x R = value` definition and its generated facts |
-| `equality_transport.lit` | Unary/binary predicate transport and resolved arithmetic arguments |
-| `builtin_arithmetic.lit` | Twenty typed arithmetic and order builtin rules |
-| `recursive_arithmetic.lit` | A recursively structured positive-addition proof tree |
-| `native_sets.lit` | Polymorphic `Set α`, union, intersection, and set difference |
-| `choice.lit` | Checked choice from a nonempty native carrier, globally and locally |
-| `existentials.lit` | Existential introduction, extraction, projections, and multiple witnesses |
-| `proof_scopes.lit` | Object definitions, `by cases`, and `by contra` proof scopes |
-| `carrier_boundaries.lit` | Litex-verified carrier facts whose proof routes are not all in the strict backend |
-| `partial_boundary.lit` | Honest partial compilation around one unsupported trigonometric proof |
+| `native_carriers` | Primary tracer: bare equality and `2 $in R` on native `ℝ` |
+| `bounded_facts` | Bounded `forall`, retained membership premises, rational normalization |
+| `propositions_and_trust` | Proposition interfaces, known-forall use, explicit trust provenance |
+| `object_definitions` | A checked real `have x R = value` definition and generated facts |
+| `equality_transport` | Unary/binary predicate transport and resolved arithmetic arguments |
+| `builtin_arithmetic` | Twenty typed arithmetic and order builtin rules |
+| `recursive_arithmetic` | A recursively structured positive-addition proof tree |
+| `native_sets` | Polymorphic `Set α`, union, intersection, and set difference |
+| `standard_numeric_subsets` | Native predicates for positive, negative, and nonzero numeric subsets |
+| `builtin_predicates` | Native prime, superset, proper-relation, and negated-comparison propositions with two checked MVP proof routes |
+| `choice` | Checked choice from a nonempty native carrier, globally and locally |
+| `existentials` | Existential introduction, extraction, projections, and multiple witnesses |
+| `proof_scopes` | Object definitions, `by cases`, and `by contra` proof scopes |
+| `carrier_boundaries` | Partial report for carrier facts without complete strict backends |
+| `partial_boundary` | Partial report around one unsupported trigonometric proof |
 
-Each strict source file is self-contained for To-Lean compilation. The
-configured module also runs all files in the export order above.
+## Verification
 
-Every `.lit` file ends with its corresponding generated Lean source inside a
-triple-quoted Litex comment. Strict files contain the complete strict output;
-the two boundary files contain exactly the Lean retained by report mode.
-
-## Run The Repository
-
-Build the release binary once:
+Check every pair and fail on a stale Lean fence:
 
 ```text
-cargo build --release
+cargo test --release to_lean_examples_markdown_emits_checked_source -- --nocapture
 ```
 
-Verify the complete Litex repository:
+Refresh all Lean fences after an intentional compiler-output change:
 
 ```text
-target/release/litex -compact -runner -r examples/09_to_lean
+cargo test --release refresh_to_lean_examples_markdown_snapshots -- --ignored --nocapture
 ```
 
-Generate checked Lean for every strict file and validate the partial report:
+Run the general examples harness, which also executes every Litex fence in
+this ledger:
 
 ```text
-cargo test --release to_lean_examples_repository_emits_checked_source -- --nocapture
+cargo test --release run_examples -- --nocapture
 ```
-
-Refresh all trailing Lean snapshots after an intentional compiler change:
-
-```text
-cargo test --release refresh_to_lean_examples_repository_snapshots -- --ignored --nocapture
-```
-
-The ordinary checked-source test above also compares every snapshot byte for
-byte with current compiler output, so stale comments fail the test.
 
 Compile every generated result against an existing Mathlib Lake project:
 
 ```text
 LITEX_LEAN_PROJECT=/path/to/mathlib4 \
 LITEX_LAKE=/path/to/lake \
-cargo test --release generated_to_lean_examples_repository_compiles_with_mathlib -- --ignored --nocapture
+cargo test --release generated_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture
 ```
 
-The ignored test invokes `lake env lean` on all 13 generated results. Set
-`LITEX_LAKE` only when `lake` is not available on `PATH`.
-
-The strict pipeline is fail-closed. Unsupported proof routes do not silently
-become `sorry`, opaque declarations, or axioms. Both boundary files use the
-report API instead: it emits independently checked statements, identifies
-unsupported statements, and marks the result incomplete.
-
-The commented real-division definition in `object_definitions.lit` records a
-separate real-kernel boundary: the emitted declaration must become
-`noncomputable` before that source line belongs in the strict runnable set.
+The strict pipeline remains fail-closed. Unsupported proof routes never
+silently become `sorry`, opaque declarations, or compiler-invented axioms.
+The two partial sections emit only independently checked statements and mark
+their reports `Incomplete`.

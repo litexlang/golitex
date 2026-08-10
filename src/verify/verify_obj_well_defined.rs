@@ -90,7 +90,6 @@ impl Runtime {
             Obj::Union(x) => self.verify_union_well_defined(x, verify_state),
             Obj::Intersect(x) => self.verify_intersect_well_defined(x, verify_state),
             Obj::SetMinus(x) => self.verify_set_minus_well_defined(x, verify_state),
-            Obj::SetDiff(x) => self.verify_set_diff_well_defined(x, verify_state),
             Obj::BigUnion(x) => self.verify_big_union_well_defined(x, verify_state),
             Obj::BigIntersect(x) => self.verify_big_intersect_well_defined(x, verify_state),
             Obj::ListSet(x) => self.verify_list_set_well_defined(x, verify_state),

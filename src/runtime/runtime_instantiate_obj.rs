@@ -161,7 +161,6 @@ impl Runtime {
             Obj::Union(inner) => self.inst_union(inner, param_to_arg_map, param_obj_type),
             Obj::Intersect(inner) => self.inst_intersect(inner, param_to_arg_map, param_obj_type),
             Obj::SetMinus(inner) => self.inst_set_minus(inner, param_to_arg_map, param_obj_type),
-            Obj::SetDiff(inner) => self.inst_set_diff(inner, param_to_arg_map, param_obj_type),
             Obj::BigUnion(inner) => self.inst_big_union(inner, param_to_arg_map, param_obj_type),
             Obj::BigIntersect(inner) => {
                 self.inst_big_intersect(inner, param_to_arg_map, param_obj_type)
@@ -680,19 +679,6 @@ impl Runtime {
         Ok(SetMinus::new(
             self.inst_obj(&set_minus.left, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&set_minus.right, param_to_arg_map, param_obj_type)?,
-        )
-        .into())
-    }
-
-    pub fn inst_set_diff(
-        &self,
-        set_diff: &SetDiff,
-        param_to_arg_map: &HashMap<String, Obj>,
-        param_obj_type: ParamObjType,
-    ) -> Result<Obj, RuntimeError> {
-        Ok(SetDiff::new(
-            self.inst_obj(&set_diff.left, param_to_arg_map, param_obj_type)?,
-            self.inst_obj(&set_diff.right, param_to_arg_map, param_obj_type)?,
         )
         .into())
     }

@@ -102,8 +102,22 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
         result: StmtResult,
     ) -> Result<StmtResult, RuntimeError> {
-        let Some(transposed_fact) = atomic_fact.transposed_binary_order_equivalent() else {
-            return Ok(result);
+        let transposed_fact = match atomic_fact {
+            // Direct known not-equality symmetry is owned by the builtin rule.
+            // Keep this full-verifier fallback so a reversed known `forall`
+            // conclusion remains available after the bounded builtin attempt.
+            AtomicFact::NotEqualFact(fact) => NotEqualFact::new(
+                fact.right.clone(),
+                fact.left.clone(),
+                fact.line_file.clone(),
+            )
+            .into(),
+            _ => {
+                let Some(transposed) = atomic_fact.transposed_binary_order_equivalent() else {
+                    return Ok(result);
+                };
+                transposed
+            }
         };
         let transposed_result =
             self.verify_non_equational_atomic_fact(&transposed_fact, verify_state, false)?;

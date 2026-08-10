@@ -158,10 +158,6 @@ impl Runtime {
                 Obj::SetMinus(b) => a.to_string() == b.to_string(),
                 _ => false,
             },
-            Obj::SetDiff(a) => match right {
-                Obj::SetDiff(b) => a.to_string() == b.to_string(),
-                _ => false,
-            },
             Obj::BigUnion(a) => match right {
                 Obj::BigUnion(b) => a.to_string() == b.to_string(),
                 _ => false,

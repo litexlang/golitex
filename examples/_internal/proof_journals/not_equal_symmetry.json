@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "target": "examples/01_proof_patterns/not_equal_symmetry.lit",
+  "session_command": "target/release/litex -compact -session -before examples/tmp.lit (startup rejected because examples has no litex.config); isolated runner used per the standalone-example test matrix",
+  "proof_spine": [
+    "Assume the exact non-equality a != b",
+    "Apply symmetry once to obtain b != a",
+    "Retain the reversed premise as structured compiler evidence"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Prove the reversed non-equality from one local premise",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "forall a, b R:\n    a != b\n    =>:\n        b != a",
+          "result": "partially passed",
+          "verifier_evidence": "the isolated release runner returned top-level ok: true, but To-Lean failed with `citation a != b changed goal b != a without structured rewrite evidence`",
+          "diagnosis": "The verifier used a transposed known-fact citation instead of an owned not-equality builtin rule.",
+          "next_change": "Route direct symmetry through the NotEqual builtin dispatcher and retain its reversed premise."
+        }
+      ],
+      "accepted_litex": "forall a, b R:\n    a != b\n    =>:\n        b != a",
+      "reusable_lesson": "A symmetric mathematical relation still needs explicit proof provenance when the backend proposition orientation changes.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/not_equal_symmetry.lit; cargo test --release not_equal_symmetry -- --nocapture; LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_not_equal_symmetry_compiles_with_lean -- --ignored --nocapture",
+    "file_gate_result": "all focused gates passed; the runner returned top-level ok: true, both ordinary Rust regressions passed, and generated Lean compiled against real Mathlib"
+  }
+}

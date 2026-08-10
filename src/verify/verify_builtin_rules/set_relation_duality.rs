@@ -273,10 +273,13 @@ impl Runtime {
             .verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_superset_fact)?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
-                    Vec::new(),
+                    BuiltinRuleEvidence::SetRelationDuality(
+                        SetRelationDualityBuiltinRule::SubsetFromSuperset,
+                    ),
+                    vec![verify_result],
                 ))
                 .into(),
             )
@@ -332,10 +335,13 @@ impl Runtime {
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&converted_subset_fact)?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
-                    Vec::new(),
+                    BuiltinRuleEvidence::SetRelationDuality(
+                        SetRelationDualityBuiltinRule::SupersetFromSubset,
+                    ),
+                    vec![verify_result],
                 ))
                 .into(),
             )
@@ -361,10 +367,13 @@ impl Runtime {
         )?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_subset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
-                    Vec::new(),
+                    BuiltinRuleEvidence::SetRelationDuality(
+                        SetRelationDualityBuiltinRule::NotSubsetFromNotSuperset,
+                    ),
+                    vec![verify_result],
                 ))
                 .into(),
             )
@@ -390,10 +399,13 @@ impl Runtime {
         )?;
         if verify_result.is_true() {
             Ok(
-                (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     not_superset_fact.clone().into(),
                     "subset_superset_duality".to_string(),
-                    Vec::new(),
+                    BuiltinRuleEvidence::SetRelationDuality(
+                        SetRelationDualityBuiltinRule::NotSupersetFromNotSubset,
+                    ),
+                    vec![verify_result],
                 ))
                 .into(),
             )

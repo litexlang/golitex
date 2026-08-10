@@ -698,10 +698,6 @@ impl Runtime {
             ]),
             Obj::Intersect(intersect) => Some(vec![intersect.left.as_ref().clone()]),
             Obj::SetMinus(set_minus) => Some(vec![set_minus.left.as_ref().clone()]),
-            Obj::SetDiff(set_diff) => Some(vec![
-                set_diff.left.as_ref().clone(),
-                set_diff.right.as_ref().clone(),
-            ]),
             _ => None,
         }
     }

@@ -1118,9 +1118,6 @@ impl AtomicFact {
                 )
                 .into(),
             ),
-            AtomicFact::NotEqualFact(f) => {
-                Some(NotEqualFact::new(f.right.clone(), f.left.clone(), f.line_file.clone()).into())
-            }
             _ => None,
         }
     }

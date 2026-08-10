@@ -69,3 +69,6 @@ example_cleanup_plan.md
 todo/
 
 scripts
+
+# Independent local planning repository.
+/plan/

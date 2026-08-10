@@ -62,10 +62,51 @@ pub enum ArithmeticBuiltinRuleToLeanIR {
     AddComponentwiseLessEqualLess,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SetRelationDualityBuiltinRuleToLeanIR {
+    SubsetFromSuperset,
+    SupersetFromSubset,
+    NotSubsetFromNotSuperset,
+    NotSupersetFromNotSubset,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SetBuiltinRuleToLeanIR {
+    UnionCommutative,
+    UnionAssociative,
+    UnionIdempotent,
+    UnionEmptyIdentity,
+    IntersectCommutative,
+    IntersectAssociative,
+    UnionMembershipLeft,
+    UnionMembershipRight,
+    IntersectMembershipBoth,
+    IntersectNonMembershipLeft,
+    IntersectNonMembershipRight,
+    SetMinusMembership,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AbsoluteValueBuiltinRuleToLeanIR {
+    NonnegativeIdentity,
+    NonpositiveNegation,
+    Product,
+    PositiveFromNonzero,
+}
+
 #[derive(Clone)]
 pub enum BuiltinRuleToLeanIR {
     DivNotEqualZero(DivNotEqualZeroToLeanIR),
     Arithmetic(ArithmeticBuiltinRuleToLeanIR),
+    /// Not-equality is symmetric. Example: `a != b` proves `b != a`.
+    NotEqualSymmetry,
+    /// Subset and superset are the same containment with reversed arguments.
+    /// Example: `A $subset B` proves `B $superset A`.
+    SetRelationDuality(SetRelationDualityBuiltinRuleToLeanIR),
+    Set(SetBuiltinRuleToLeanIR),
+    AbsoluteValue(AbsoluteValueBuiltinRuleToLeanIR),
+    /// Closed `$prime(n)` and `not $prime(n)` facts checked by u64 reflection.
+    PrimeU64Reflection,
     /// Positive-real membership entails strict positivity.
     /// Example: `a $in R+` proves `0 < a`.
     PositiveRealMembership,
@@ -145,6 +186,44 @@ impl From<&BuiltinRuleEvidence> for BuiltinRuleToLeanIR {
                     ArithmeticBuiltinRuleToLeanIR::AddComponentwiseLessEqualLess
                 }
             }),
+            BuiltinRuleEvidence::NotEqualSymmetry => BuiltinRuleToLeanIR::NotEqualSymmetry,
+            BuiltinRuleEvidence::SetRelationDuality(rule) => {
+                BuiltinRuleToLeanIR::SetRelationDuality(match rule {
+                    SetRelationDualityBuiltinRule::SubsetFromSuperset => {
+                        SetRelationDualityBuiltinRuleToLeanIR::SubsetFromSuperset
+                    }
+                    SetRelationDualityBuiltinRule::SupersetFromSubset => {
+                        SetRelationDualityBuiltinRuleToLeanIR::SupersetFromSubset
+                    }
+                    SetRelationDualityBuiltinRule::NotSubsetFromNotSuperset => {
+                        SetRelationDualityBuiltinRuleToLeanIR::NotSubsetFromNotSuperset
+                    }
+                    SetRelationDualityBuiltinRule::NotSupersetFromNotSubset => {
+                        SetRelationDualityBuiltinRuleToLeanIR::NotSupersetFromNotSubset
+                    }
+                })
+            }
+            BuiltinRuleEvidence::Set(rule) => BuiltinRuleToLeanIR::Set(match rule {
+                SetBuiltinRule::UnionCommutative => SetBuiltinRuleToLeanIR::UnionCommutative,
+                SetBuiltinRule::UnionAssociative => SetBuiltinRuleToLeanIR::UnionAssociative,
+                SetBuiltinRule::UnionIdempotent => SetBuiltinRuleToLeanIR::UnionIdempotent,
+                SetBuiltinRule::UnionEmptyIdentity => SetBuiltinRuleToLeanIR::UnionEmptyIdentity,
+                SetBuiltinRule::IntersectCommutative => SetBuiltinRuleToLeanIR::IntersectCommutative,
+                SetBuiltinRule::IntersectAssociative => SetBuiltinRuleToLeanIR::IntersectAssociative,
+                SetBuiltinRule::UnionMembershipLeft => SetBuiltinRuleToLeanIR::UnionMembershipLeft,
+                SetBuiltinRule::UnionMembershipRight => SetBuiltinRuleToLeanIR::UnionMembershipRight,
+                SetBuiltinRule::IntersectMembershipBoth => SetBuiltinRuleToLeanIR::IntersectMembershipBoth,
+                SetBuiltinRule::IntersectNonMembershipLeft => SetBuiltinRuleToLeanIR::IntersectNonMembershipLeft,
+                SetBuiltinRule::IntersectNonMembershipRight => SetBuiltinRuleToLeanIR::IntersectNonMembershipRight,
+                SetBuiltinRule::SetMinusMembership => SetBuiltinRuleToLeanIR::SetMinusMembership,
+            }),
+            BuiltinRuleEvidence::AbsoluteValue(rule) => BuiltinRuleToLeanIR::AbsoluteValue(match rule {
+                AbsoluteValueBuiltinRule::NonnegativeIdentity => AbsoluteValueBuiltinRuleToLeanIR::NonnegativeIdentity,
+                AbsoluteValueBuiltinRule::NonpositiveNegation => AbsoluteValueBuiltinRuleToLeanIR::NonpositiveNegation,
+                AbsoluteValueBuiltinRule::Product => AbsoluteValueBuiltinRuleToLeanIR::Product,
+                AbsoluteValueBuiltinRule::PositiveFromNonzero => AbsoluteValueBuiltinRuleToLeanIR::PositiveFromNonzero,
+            }),
+            BuiltinRuleEvidence::PrimeU64Reflection => BuiltinRuleToLeanIR::PrimeU64Reflection,
         }
     }
 }
@@ -158,6 +237,15 @@ impl fmt::Debug for BuiltinRuleToLeanIR {
             BuiltinRuleToLeanIR::Arithmetic(rule) => {
                 f.debug_tuple("Arithmetic").field(rule).finish()
             }
+            BuiltinRuleToLeanIR::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),
+            BuiltinRuleToLeanIR::SetRelationDuality(rule) => {
+                f.debug_tuple("SetRelationDuality").field(rule).finish()
+            }
+            BuiltinRuleToLeanIR::Set(rule) => f.debug_tuple("Set").field(rule).finish(),
+            BuiltinRuleToLeanIR::AbsoluteValue(rule) => {
+                f.debug_tuple("AbsoluteValue").field(rule).finish()
+            }
+            BuiltinRuleToLeanIR::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
             BuiltinRuleToLeanIR::PositiveRealMembership => f.write_str("PositiveRealMembership"),
         }
     }

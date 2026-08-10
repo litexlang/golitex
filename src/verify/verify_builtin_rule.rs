@@ -9,16 +9,51 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result = self
-            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
-                goal,
-            )?;
-        if leaf_result.is_true() {
-            return Ok(leaf_result);
+        // Prefer a named builtin certificate over replay-safe structural
+        // equality when both establish the same equality.  Structural replay
+        // is intentionally a leaf fallback, whereas a builtin keeps the
+        // premise-bearing proof route available to To-Lean.
+        let builtin_state = UseBuiltinRuleVerifyState::new();
+        if matches!(goal, AtomicFact::EqualFact(_)) {
+            let builtin_result = self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
+            if builtin_result.is_true() {
+                return Ok(builtin_result);
+            }
+            let leaf_result = self
+                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+            if leaf_result.is_true() {
+                return Ok(leaf_result);
+            }
+        } else {
+            let leaf_result = self
+                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+            if leaf_result.is_true() {
+                return Ok(leaf_result);
+            }
+            let builtin_result = self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
+            if builtin_result.is_true() {
+                return Ok(builtin_result);
+            }
         }
 
-        let builtin_state = UseBuiltinRuleVerifyState::new();
-        self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)
+        let AtomicFact::EqualFact(equal_fact) = goal else {
+            return Ok(StmtUnknown::new().into());
+        };
+        if !self.objs_are_congruent_by_replay_safe_equality_routes(
+            &equal_fact.left,
+            &equal_fact.right,
+            equal_fact.line_file.clone(),
+        )? {
+            return Ok(StmtUnknown::new().into());
+        }
+        let result: StmtResult =
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                equal_fact.clone().into(),
+                "replay-safe structural equality".to_string(),
+                Vec::new(),
+            )
+            .into();
+        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
     }
 
     pub(crate) fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(

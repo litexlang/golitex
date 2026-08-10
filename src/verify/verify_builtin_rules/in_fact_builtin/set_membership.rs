@@ -373,9 +373,14 @@ impl Runtime {
             let member_result = self.verify_builtin_rule_premise(&member_fact, builtin_state)?;
             if member_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!("union membership: member of the {side_name} side"),
+                        BuiltinRuleEvidence::Set(if side_name == "left" {
+                            SetBuiltinRule::UnionMembershipLeft
+                        } else {
+                            SetBuiltinRule::UnionMembershipRight
+                        }),
                         vec![member_result],
                     )
                     .into(),
@@ -419,9 +424,10 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "intersection membership: member of both sides".to_string(),
+                BuiltinRuleEvidence::Set(SetBuiltinRule::IntersectMembershipBoth),
                 vec![left_member_result, right_member_result],
             )
             .into(),
@@ -450,9 +456,14 @@ impl Runtime {
                 self.verify_builtin_rule_premise(&non_member_fact, builtin_state)?;
             if non_member_result.is_true() {
                 return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         not_in_fact.clone().into(),
                         format!("intersection non-membership: non-member of the {side_name} side"),
+                        BuiltinRuleEvidence::Set(if side_name == "left" {
+                            SetBuiltinRule::IntersectNonMembershipLeft
+                        } else {
+                            SetBuiltinRule::IntersectNonMembershipRight
+                        }),
                         vec![non_member_result],
                     )
                     .into(),
@@ -496,10 +507,11 @@ impl Runtime {
         }
 
         Ok(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 in_fact.clone().into(),
                 "set-minus membership: member of left side and non-member of right side"
                     .to_string(),
+                BuiltinRuleEvidence::Set(SetBuiltinRule::SetMinusMembership),
                 vec![left_member_result, right_non_member_result],
             )
             .into(),
@@ -1330,13 +1342,6 @@ impl Runtime {
             ),
             Obj::SetMinus(set_minus) => self.verify_finite_set_extremum_source_in_standard_set(
                 &set_minus.left,
-                standard_set,
-                line_file,
-                builtin_state,
-            ),
-            Obj::SetDiff(set_diff) => self.verify_two_finite_set_parts_in_standard_set(
-                &set_diff.left,
-                &set_diff.right,
                 standard_set,
                 line_file,
                 builtin_state,

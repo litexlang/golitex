@@ -810,36 +810,6 @@ impl Runtime {
             })?;
             return Ok(SetMinus::new(left, right).into());
         }
-        if tok == SET_DIFF {
-            tb.skip()?;
-            let args = self.parse_braced_objs(tb)?;
-            if args.len() != 2 {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "set_diff expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let mut it = args.into_iter();
-            let left = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "set_diff expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            let right = it.next().ok_or_else(|| {
-                RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "set_diff expects 2 arguments".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                ))
-            })?;
-            return Ok(SetDiff::new(left, right).into());
-        }
         if tok == BIG_INTERSECT {
             tb.skip()?;
             let args = self.parse_braced_objs(tb)?;
@@ -2891,6 +2861,14 @@ mod matrix_operator_parse_tests {
 
         assert_eq!(ObjKind::BigUnion as u8, 18);
         assert_eq!(ObjKind::BigIntersect as u8, 19);
+    }
+
+    #[test]
+    fn removed_set_diff_name_is_reclaimed_by_generic_function_parser() {
+        let obj = parse_obj_line("set_diff(A, B)")
+            .expect("removed set_diff spelling should remain syntactically available");
+        assert_eq!(obj.kind(), ObjKind::FnObj);
+        assert_eq!(obj.to_string(), "set_diff(A, B)");
     }
 
     #[test]

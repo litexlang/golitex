@@ -45,6 +45,21 @@ ARITHMETIC_LEAN_MAPPINGS = {
     "a + c < b + d from a <= b and c < d": "`linarith only`",
 }
 
+SET_AND_ABSOLUTE_VALUE_LEAN_MAPPINGS = {
+    "union_commutative": "`ext x; simp [or_comm]`",
+    "union_associative": "`ext x; simp [or_assoc]`",
+    "union_idempotent": "`ext x; simp`",
+    "union_empty_identity": "`ext x; simp`",
+    "intersect_commutative": "`ext x; simp [and_comm]`",
+    "intersect_associative": "`ext x; simp [and_assoc]`",
+    "intersection membership: member of both sides": "`Set.mem_inter_iff` + pair",
+    "set-minus membership: member of left side and non-member of right side": "`Set.mem_diff` + pair",
+    "abs: abs(x) = x from 0 <= x": "`abs_of_nonneg`",
+    "abs: abs(x) = -x from x <= 0": "`abs_of_nonpos`",
+    "abs: abs(x * y) = abs(x) * abs(y)": "`abs_mul`",
+    "abs: 0 < abs(x) from x != 0": "`abs_pos.mpr`",
+}
+
 EVALUATION_MARKERS = (
     "calculation",
     "computation",
@@ -357,12 +372,26 @@ def is_evaluation(entry) -> bool:
 
 def lean_mapping(entry) -> tuple[str, str]:
     text = entry["label"] or entry["expression"]
+    direct_mapping = SET_AND_ABSOLUTE_VALUE_LEAN_MAPPINGS.get(text)
+    if direct_mapping is not None:
+        return direct_mapping, "implemented"
+    if entry["path"].endswith("in_fact_builtin/set_membership.rs"):
+        if "union membership: member of the" in text:
+            return "`Set.mem_union` + `Or.inl`/`Or.inr`", "implemented"
+        if "intersection non-membership: non-member of the" in text:
+            return "`Set.mem_inter_iff` + contradiction", "implemented"
     if (
         entry["sink"] == "new_with_verified_by_builtin_rule_evidence_and_steps"
         and text == "div_not_equal_zero_from_numerator_nonzero"
     ):
         return "`div_ne_zero` / `Ne.symm`", "implemented"
     if entry["sink"] == "new_with_verified_by_builtin_rule_evidence_recording_stmt":
+        if text == "not-equality symmetry":
+            return "`Ne.symm`", "implemented"
+        if text == "subset_superset_duality":
+            return "native subset proposition (one reversed checked premise)", "implemented"
+        if text == "deterministic primality computation for u64":
+            return "`Nat.Prime` / `norm_num`", "implemented"
         mapping = ARITHMETIC_LEAN_MAPPINGS.get(text)
         if mapping is not None:
             return mapping, "implemented"
@@ -377,7 +406,7 @@ def lean_mapping(entry) -> tuple[str, str]:
     ):
         return "`norm_num` / `ring` / `field_simp; ring`", "implemented"
     if text == "standard_nonempty_set":
-        return "existential witness `0` (`R` shape)", "implemented"
+        return "existential witness `0` over `N/Z/Q/R/C`", "implemented"
     if is_evaluation(entry):
         return "none", "not_this_round"
     return "none", "pending"
@@ -422,7 +451,11 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         "",
         "A Lean mapping is recorded only when the current backend actually emits and the",
         "Lean kernel checks that tactic or lemma. `none` means no checked mapping exists",
-        "yet, not that Lean lacks the mathematics.",
+        "yet for that individual local rule schema, not that Lean lacks the mathematics.",
+        "Closed numeric membership results may instead use the backend's generic,",
+        "carrier-bearing `norm_num` reflection path. The closed-u64 `$prime` route is",
+        "listed as implemented because it now carries explicit structured reflection",
+        "evidence; other evaluation sites remain `not_this_round`.",
         "",
         "Regenerate or audit drift with:",
         "",

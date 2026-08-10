@@ -81,9 +81,12 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "abs: abs(x) = x from 0 <= x".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(
+                    AbsoluteValueBuiltinRule::NonnegativeIdentity,
+                ),
                 vec![nonnegative_result],
             )
             .into(),
@@ -126,9 +129,12 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "abs: abs(x) = -x from x <= 0".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(
+                    AbsoluteValueBuiltinRule::NonpositiveNegation,
+                ),
                 vec![nonpositive_result],
             )
             .into(),
@@ -158,12 +164,15 @@ impl Runtime {
         if !matches_abs_product(left, right) && !matches_abs_product(right, left) {
             return Ok(None);
         }
-        Ok(Some(factual_equal_success_by_builtin_reason(
-            left,
-            right,
-            line_file,
-            "abs: abs(x * y) = abs(x) * abs(y)",
-        )))
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "abs: abs(x * y) = abs(x) * abs(y)".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::Product),
+                Vec::new(),
+            )
+            .into(),
+        ))
     }
 
     // Even powers ignore sign, so `x^2 = abs(x)^2`.

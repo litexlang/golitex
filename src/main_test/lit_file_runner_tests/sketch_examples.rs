@@ -53,7 +53,7 @@ fn run_example_lit_file(relative_path: &str) {
     );
 }
 
-fn run_example_lit_file_to_lean(relative_path: &str) {
+fn run_example_lit_file_to_lean(relative_path: &str) -> Option<String> {
     run_example_lit_file(relative_path);
 
     let lit_path = example_lit_path(relative_path);
@@ -62,7 +62,7 @@ fn run_example_lit_file_to_lean(relative_path: &str) {
         Err(read_error) => panic!("failed to read {:?}: {}", lit_path, read_error),
     };
     if lit_content.trim().is_empty() {
-        return;
+        return None;
     }
 
     let path_str = match lit_path.to_str() {
@@ -87,6 +87,7 @@ fn run_example_lit_file_to_lean(relative_path: &str) {
         .unwrap_or_else(|write_error| panic!("failed to write {:?}: {}", lit_path, write_error));
 
     println!("generated Lean appended to {:?}", lit_path);
+    Some(generated_lean)
 }
 
 #[test]
@@ -161,7 +162,24 @@ fn run_tmp_to_lean(index: usize) {
     } else {
         format!("tmp{}.lit", index)
     };
-    run_example_lit_file_to_lean(&relative_path);
+    let Some(generated_lean) = run_example_lit_file_to_lean(&relative_path) else {
+        return;
+    };
+    let output_path = std::env::var_os("LITEX_TMP_LEAN_PATH")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| {
+            PathBuf::from(
+                "/Users/shenjiachen/主要文件夹/GeekGems/2026/mathematics_in_lean/tmp.lean",
+            )
+        });
+    fs::write(&output_path, generated_lean.as_bytes()).unwrap_or_else(|write_error| {
+        panic!(
+            "failed to replace generated Lean output {:?}: {}",
+            output_path, write_error
+        )
+    });
+
+    println!("generated Lean replaced {:?}", output_path);
 }
 
 #[test]
@@ -182,14 +200,14 @@ fn run_tmp2_to_lean() {
 #[test]
 fn run_empty_to_lean() {
     run_with_large_stack("run_empty_to_lean_large_stack", || {
-        run_example_lit_file_to_lean("_internal/to_lean/empty.lit")
+        run_example_lit_file_to_lean("_internal/to_lean/empty.lit");
     });
 }
 
 #[test]
 fn run_to_lean_showcase() {
     run_with_large_stack("run_to_lean_showcase_large_stack", || {
-        run_example_lit_file_to_lean("_internal/to_lean/showcase.lit")
+        run_example_lit_file_to_lean("_internal/to_lean/showcase.lit");
     });
 }
 

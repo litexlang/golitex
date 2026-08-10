@@ -1,8 +1,9 @@
 # Mathematical Collections
 
-This module is an executable map of the current Litex-to-Lean interface rather
-than a new mathematical theory. Its central collection is the set of source
-judgments whose verifier evidence has a checked native Mathlib interpretation.
+The consolidated example ledger is an executable map of the current
+Litex-to-Lean interface rather than a new mathematical theory. Its central
+collection is the set of source judgments whose verifier evidence has a
+checked native Mathlib interpretation.
 
 ## Native numeric carriers
 
@@ -25,6 +26,22 @@ The intended Lean shapes are `2 ∈ (Set.univ : Set ℝ)` and
 closed ambiguous division admitted only by `trust`; proof provenance must not
 select its carrier.
 
+Compact numeric subsets keep the same native carrier and compile to predicate
+sets rather than new target types:
+
+```litex
+forall r R+:
+    r $in R+
+```
+
+Here `R+` becomes `{r : ℝ | 0 < r}`. The same checked interface covers
+`N+`/`Z+` (positive naturals), `Q+`, `Z-`/`Q-`/`R-`, and
+`Z*`/`Q*`/`R*`/`C*`. Membership remains an ordinary proposition in every
+case. Litex has no ordered `C+` standard set, so the compiler does not invent
+one. Closed numeric facts such as `2 $in R+`, `0 - 1 $in Z-`, and
+`not 0 $in C*` are discharged by checked numeric reflection in Lean rather
+than by a generated axiom.
+
 ## Facts and proof evidence
 
 Facts remain propositions rather than objects. Bounded universal facts retain
@@ -38,13 +55,26 @@ instantiation, equality transport, rational normalization, typed builtin
 rules, recursive additive evidence, checked choice, existential introduction
 and elimination, case splitting, and contradiction scopes.
 
-`carrier_boundaries.lit` keeps source facts that Litex verifies but whose
-current proof route is not fully represented by the strict backend. This
-includes several numeric membership-closure facts and `have` value checks over
-`N`, `Z`, `Q`, and `C`. Their native target carriers are settled; their missing
-proof backends are reported rather than replaced.
+The [`builtin_predicates`](litex_to_lean_examples.md#builtin_predicates)
+section fixes the first native builtin-proposition tranche. Closed prime facts
+become `Nat.Prime` and use checked `norm_num` reflection. Superset reverses the
+arguments of native `⊆`; its duality proof retains the exact subset premise.
+Proper subset/superset become containment plus inequality, while their negative
+forms use Litex's direct `not containment OR equality` definition. Negated
+comparisons remain logical negations of native order relations.
 
-The strict object-definition example uses a real numeral. A real division
+This section intentionally separates proposition coverage from proof-route
+coverage. It does not claim compilation of explicit proper-relation `by def`
+proof statements, function predicates, or cartesian/tuple predicates.
+
+The [`carrier_boundaries`](litex_to_lean_examples.md#carrier_boundaries)
+section keeps source facts that Litex verifies but whose current proof route is
+not fully represented by the strict backend. This includes several numeric
+membership-closure facts and `have` value checks over `N`, `Z`, `Q`, and `C`.
+Their native target carriers are settled; their missing proof backends are
+reported rather than replaced.
+
+The strict `object_definitions` example uses a real numeral. A real division
 definition is left as a commented boundary because Mathlib requires that
 generated declaration to be `noncomputable`; accepting the Litex source alone
 is not counted as successful backend coverage.
@@ -63,8 +93,8 @@ equality.
 
 ## Honest incomplete output
 
-The two boundary files record the distinction between source verification and
-backend coverage. In particular, report-mode To-Lean omits the currently
+The two partial sections record the distinction between source verification
+and backend coverage. In particular, report-mode To-Lean omits the currently
 unsupported `sin(0) = 0`, emits both surrounding rational facts, and reports
 `Incomplete`. These boundaries are intentional and have no proof, existence,
 uniqueness, or hidden-trust workaround.

@@ -6,6 +6,7 @@ Try the examples in browser: https://litexlang.com/doc/Setup
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/Setup.md
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
 ## Run Litex online
 

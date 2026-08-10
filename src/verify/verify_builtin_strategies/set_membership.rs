@@ -53,19 +53,6 @@ impl Runtime {
                 InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
                 NotInFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone()).into(),
             ]],
-            Obj::SetDiff(set) => vec![
-                vec![
-                    InFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone()).into(),
-                    NotInFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
-                        .into(),
-                ],
-                vec![
-                    InFact::new(fact.element.clone(), set.right.as_ref().clone(), lf.clone())
-                        .into(),
-                    NotInFact::new(fact.element.clone(), set.left.as_ref().clone(), lf.clone())
-                        .into(),
-                ],
-            ],
             Obj::PowerSet(set) => vec![vec![SubsetFact::new(
                 fact.element.clone(),
                 set.set.as_ref().clone(),
@@ -282,10 +269,6 @@ impl Runtime {
                     .collect(),
             ),
             Obj::Union(set) => alternatives.push(vec![
-                SubsetFact::new(set.left.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
-                SubsetFact::new(set.right.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
-            ]),
-            Obj::SetDiff(set) => alternatives.push(vec![
                 SubsetFact::new(set.left.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
                 SubsetFact::new(set.right.as_ref().clone(), fact.right.clone(), lf.clone()).into(),
             ]),

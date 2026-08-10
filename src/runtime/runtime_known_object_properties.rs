@@ -884,7 +884,6 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::Union(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Intersect(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::SetMinus(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
-        Obj::SetDiff(x) => collect_module_names_from_two(&x.left, &x.right, module_names),
         Obj::Range(x) => collect_module_names_from_two(&x.start, &x.end, module_names),
         Obj::ClosedRange(x) => collect_module_names_from_two(&x.start, &x.end, module_names),
         Obj::IntervalObj(x) => collect_module_names_from_two(x.start(), x.end(), module_names),

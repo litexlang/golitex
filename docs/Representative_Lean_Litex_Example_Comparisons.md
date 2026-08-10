@@ -8,6 +8,8 @@ https://litexlang.com/doc/Representative_Lean_Litex_Example_Comparisons
 Markdown source:
 https://github.com/litexlang/golitex/blob/main/docs/Representative_Lean_Litex_Example_Comparisons.md
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
 This page presents a small set of representative examples rather than a
 complete language comparison. Lean and Litex both make mathematics
 machine-checkable, but expose different default interfaces:

@@ -3095,7 +3095,6 @@ intersect(A, B) $subset B
 A $subset union(A, B)
 B $subset union(A, B)
 set_minus(A, B) $subset A
-set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
 
 trust B $subset A
 B = set_minus(A, set_minus(A, B))
@@ -3127,7 +3126,6 @@ forall F finite_set, c set:
         "intersection subset operand",
         "operand subset union",
         "set minus subset left operand",
-        "set diff as union of asymmetric differences",
         "set minus recovers subset from relative complement",
     ] {
         assert!(

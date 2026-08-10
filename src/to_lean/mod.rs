@@ -3,6 +3,7 @@
 mod compilation_report;
 #[cfg(test)]
 mod examples_repository_tests;
+mod helper;
 mod rational_expression;
 mod set_prelude;
 mod to_lean_pipeline;

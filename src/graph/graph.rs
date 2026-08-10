@@ -1140,7 +1140,6 @@ impl DepCollector {
             Obj::Union(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Intersect(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::SetMinus(x) => self.collect_two_objs(&x.left, &x.right),
-            Obj::SetDiff(x) => self.collect_two_objs(&x.left, &x.right),
             Obj::Range(x) => self.collect_two_objs(&x.start, &x.end),
             Obj::ClosedRange(x) => self.collect_two_objs(&x.start, &x.end),
             Obj::IntervalObj(x) => self.collect_two_objs(x.start(), x.end()),

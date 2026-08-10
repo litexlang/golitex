@@ -64,10 +64,47 @@ pub enum ArithmeticBuiltinRule {
     AddComponentwiseLessEqualLess,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SetRelationDualityBuiltinRule {
+    SubsetFromSuperset,
+    SupersetFromSubset,
+    NotSubsetFromNotSuperset,
+    NotSupersetFromNotSubset,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SetBuiltinRule {
+    UnionCommutative,
+    UnionAssociative,
+    UnionIdempotent,
+    UnionEmptyIdentity,
+    IntersectCommutative,
+    IntersectAssociative,
+    UnionMembershipLeft,
+    UnionMembershipRight,
+    IntersectMembershipBoth,
+    IntersectNonMembershipLeft,
+    IntersectNonMembershipRight,
+    SetMinusMembership,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum AbsoluteValueBuiltinRule {
+    NonnegativeIdentity,
+    NonpositiveNegation,
+    Product,
+    PositiveFromNonzero,
+}
+
 #[derive(Clone)]
 pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
+    NotEqualSymmetry,
+    SetRelationDuality(SetRelationDualityBuiltinRule),
+    Set(SetBuiltinRule),
+    AbsoluteValue(AbsoluteValueBuiltinRule),
+    PrimeU64Reflection,
 }
 
 impl fmt::Debug for BuiltinRuleEvidence {
@@ -79,6 +116,15 @@ impl fmt::Debug for BuiltinRuleEvidence {
             BuiltinRuleEvidence::Arithmetic(rule) => {
                 f.debug_tuple("Arithmetic").field(rule).finish()
             }
+            BuiltinRuleEvidence::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),
+            BuiltinRuleEvidence::SetRelationDuality(rule) => {
+                f.debug_tuple("SetRelationDuality").field(rule).finish()
+            }
+            BuiltinRuleEvidence::Set(rule) => f.debug_tuple("Set").field(rule).finish(),
+            BuiltinRuleEvidence::AbsoluteValue(rule) => {
+                f.debug_tuple("AbsoluteValue").field(rule).finish()
+            }
+            BuiltinRuleEvidence::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
         }
     }
 }

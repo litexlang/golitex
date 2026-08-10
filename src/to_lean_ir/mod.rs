@@ -15,8 +15,9 @@ mod carrier;
 mod obj;
 
 pub use builtin_rule::{
-    ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR, DivNotEqualZeroToLeanIR,
-    NonzeroExpressionOrientationToLeanIR,
+    AbsoluteValueBuiltinRuleToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR,
+    DivNotEqualZeroToLeanIR, NonzeroExpressionOrientationToLeanIR, SetBuiltinRuleToLeanIR,
+    SetRelationDualityBuiltinRuleToLeanIR,
 };
 pub use carrier::LeanCarrierToLeanIR;
 pub use obj::{
@@ -277,7 +278,11 @@ pub enum ProofRuleToLeanIR {
     Builtin(BuiltinRuleToLeanIR),
     ObjectReflexivity,
     ClosedRealMembership,
+    ClosedNumericReflection {
+        carrier: LeanCarrierToLeanIR,
+    },
     RealSetNonempty,
+    StandardSetNonempty,
     EqualityRewrite(EqualityRewriteToLeanIR),
     IffRewrite {
         direction: IffDirectionToLeanIR,
@@ -359,7 +364,12 @@ impl fmt::Debug for ProofRuleToLeanIR {
             ProofRuleToLeanIR::Builtin(rule) => f.debug_tuple("Builtin").field(rule).finish(),
             ProofRuleToLeanIR::ObjectReflexivity => f.write_str("ObjectReflexivity"),
             ProofRuleToLeanIR::ClosedRealMembership => f.write_str("ClosedRealMembership"),
+            ProofRuleToLeanIR::ClosedNumericReflection { carrier } => f
+                .debug_struct("ClosedNumericReflection")
+                .field("carrier", carrier)
+                .finish(),
             ProofRuleToLeanIR::RealSetNonempty => f.write_str("RealSetNonempty"),
+            ProofRuleToLeanIR::StandardSetNonempty => f.write_str("StandardSetNonempty"),
             ProofRuleToLeanIR::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }
@@ -445,6 +455,9 @@ impl fmt::Debug for KnownForallArgumentToLeanIR {
 
 impl ProofRuleToLeanIR {
     pub fn from_verified_builtin_label(label: &str, goal: &Fact) -> Self {
+        if let Some(carrier) = closed_compact_numeric_set_fact_carrier(goal) {
+            return ProofRuleToLeanIR::ClosedNumericReflection { carrier };
+        }
         match label {
             "they are the same" | "known-only equality: they are the same"
                 if matches!(
@@ -481,6 +494,9 @@ impl ProofRuleToLeanIR {
             "standard_nonempty_set" if is_real_set_nonempty(goal) => {
                 ProofRuleToLeanIR::RealSetNonempty
             }
+            "standard_nonempty_set" if is_supported_standard_set_nonempty(goal) => {
+                ProofRuleToLeanIR::StandardSetNonempty
+            }
             _ if is_closed_real_membership(goal) => ProofRuleToLeanIR::ClosedRealMembership,
             other => ProofRuleToLeanIR::OtherUnsupported {
                 name: other.to_string(),
@@ -494,6 +510,32 @@ fn is_real_set_nonempty(goal: &Fact) -> bool {
         goal,
         Fact::AtomicFact(crate::fact::AtomicFact::IsNonemptySetFact(fact))
             if matches!(fact.set, Obj::StandardSet(crate::obj::StandardSet::R))
+    )
+}
+
+fn is_supported_standard_set_nonempty(goal: &Fact) -> bool {
+    matches!(
+        goal,
+        Fact::AtomicFact(crate::fact::AtomicFact::IsNonemptySetFact(fact))
+            if matches!(
+                fact.set,
+                Obj::StandardSet(
+                    crate::obj::StandardSet::N
+                        | crate::obj::StandardSet::Z
+                        | crate::obj::StandardSet::Q
+                        | crate::obj::StandardSet::C
+                        | crate::obj::StandardSet::NPos
+                        | crate::obj::StandardSet::QPos
+                        | crate::obj::StandardSet::RPos
+                        | crate::obj::StandardSet::QNeg
+                        | crate::obj::StandardSet::ZNeg
+                        | crate::obj::StandardSet::RNeg
+                        | crate::obj::StandardSet::QStar
+                        | crate::obj::StandardSet::ZStar
+                        | crate::obj::StandardSet::RStar
+                        | crate::obj::StandardSet::CStar
+                )
+            )
     )
 }
 
@@ -523,6 +565,78 @@ pub(crate) fn is_closed_real_membership(goal: &Fact) -> bool {
             if matches!(membership.set, Obj::StandardSet(crate::obj::StandardSet::R))
                 && is_closed_rational_obj(&membership.element)
     )
+}
+
+pub(crate) fn closed_compact_numeric_set_fact_carrier(goal: &Fact) -> Option<LeanCarrierToLeanIR> {
+    let Fact::AtomicFact(atomic) = goal else {
+        return None;
+    };
+    let (element, set) = match atomic {
+        crate::fact::AtomicFact::InFact(fact) => (&fact.element, &fact.set),
+        crate::fact::AtomicFact::NotInFact(fact) => (&fact.element, &fact.set),
+        _ => return None,
+    };
+    if !is_closed_rational_obj(element) {
+        return None;
+    }
+    let Obj::StandardSet(standard) = set else {
+        return None;
+    };
+    if !matches!(
+        standard,
+        crate::obj::StandardSet::NPos
+            | crate::obj::StandardSet::QPos
+            | crate::obj::StandardSet::RPos
+            | crate::obj::StandardSet::ZNeg
+            | crate::obj::StandardSet::QNeg
+            | crate::obj::StandardSet::RNeg
+            | crate::obj::StandardSet::ZStar
+            | crate::obj::StandardSet::QStar
+            | crate::obj::StandardSet::RStar
+            | crate::obj::StandardSet::CStar
+    ) {
+        return None;
+    }
+    Some(StandardSetToLeanIR::from(standard).element_carrier())
+}
+
+pub(crate) fn is_closed_numeric_relation(goal: &Fact) -> bool {
+    let Fact::AtomicFact(atomic) = goal else {
+        return false;
+    };
+    match atomic {
+        crate::fact::AtomicFact::EqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::NotEqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::LessFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::GreaterFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::LessEqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::GreaterEqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::NotLessFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::NotGreaterFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::NotLessEqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        crate::fact::AtomicFact::NotGreaterEqualFact(fact) => {
+            is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        _ => false,
+    }
 }
 
 fn is_closed_rational_obj(obj: &Obj) -> bool {

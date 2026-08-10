@@ -1,5 +1,7 @@
 # Litex System Map
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
 Litex is easiest to understand as a sequence of checked context updates. Each
 statement reads the context produced by earlier statements and performs its own
 checks. If its target succeeds, it commits the binding, definition, or fact
@@ -221,6 +223,10 @@ children; each layer may try one fresh direct rule before repeating only that
 strategy. Neither route enters the full verifier, known `forall` matching,
 definitions, or user strategies, and the child result tree is returned to the
 root.
+
+For example, the `not-equality symmetry` rule proves `b != a` from the exact
+known child `a != b`. It records that reversed child in the proof tree and
+returns unknown when no such non-equality fact is available.
 
 Finite-endpoint nonemptiness first has a direct fast path for already-known or
 computational order. Otherwise `closed_range(a, b)` and the closed real
