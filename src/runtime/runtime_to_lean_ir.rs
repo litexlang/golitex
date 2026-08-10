@@ -464,7 +464,7 @@ impl Runtime {
             witnesses.push(ExistentialWitnessToLeanIR {
                 symbol_id: binding.id(),
                 name: binding.name().to_string(),
-                param_type: param_type_to_lean_ir(param_type)?,
+                param_type: param_type_to_lean_ir(param_type, binding.id())?,
             });
             projections.push(FactToLeanIR {
                 fact_id: Some(fact_id),
@@ -753,7 +753,7 @@ impl Runtime {
             definitions.push(ObjectDefinitionToLeanIR {
                 symbol_id: binding.id(),
                 name: definition_name.clone(),
-                param_type: param_type_to_lean_ir(param_type)?,
+                param_type: param_type_to_lean_ir(param_type, binding.id())?,
                 value: value_ir.clone(),
             });
             facts.push(FactToLeanIR {
@@ -1125,6 +1125,7 @@ impl Runtime {
                     source_fact,
                     result.source_fact_id,
                     result.equality_transport.as_ref(),
+                    result.fact_transformation.as_ref(),
                     context,
                 ),
                 Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
@@ -1234,6 +1235,7 @@ impl Runtime {
         source_fact: &Fact,
         recorded_source_fact_id: Option<FactId>,
         equality_transport: Option<&EqualityTransportEvidence>,
+        fact_transformation: Option<&FactTransformationEvidence>,
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
         let source_fact_id = match recorded_source_fact_id {
@@ -1246,7 +1248,21 @@ impl Runtime {
             });
         };
 
-        let Some(equality_transport) = equality_transport else {
+        // Preserve the existing closed-membership certificate even when the
+        // verifier also records how a differently spelled citation resolved
+        // to this closed goal. The checked target rule is dependency-free and
+        // more precise than replaying an incidental citation route.
+        if source_fact.to_string() != goal.to_string()
+            && crate::to_lean_ir::is_closed_real_membership(goal)
+        {
+            return Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ClosedRealMembership,
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+
+        if equality_transport.is_none() && fact_transformation.is_none() {
             if source_fact.to_string() == goal.to_string() {
                 return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
             }
@@ -1265,13 +1281,6 @@ impl Runtime {
                     });
                 }
             }
-            if crate::to_lean_ir::is_closed_real_membership(goal) {
-                return Ok(FactProofToLeanIR::RuleApplication {
-                    rule: ProofRuleToLeanIR::ClosedRealMembership,
-                    parameter_requirements: Vec::new(),
-                    premises: Vec::new(),
-                });
-            }
             return Ok(FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::OtherUnsupported {
                     name: format!(
@@ -1286,27 +1295,124 @@ impl Runtime {
                     proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
                 }],
             });
-        };
-        if equality_transport.steps.is_empty() {
-            return Ok(FactProofToLeanIR::KnownFactCitation { source_fact_id });
         }
 
-        let mut premises = Vec::with_capacity(equality_transport.steps.len() + 1);
-        premises.push(FactToLeanIR {
+        let mut current = FactToLeanIR {
             fact_id: Some(source_fact_id),
             proposition: source_fact.clone(),
             proof: FactProofToLeanIR::KnownFactCitation { source_fact_id },
-        });
+        };
+        let citation_target = fact_transformation
+            .map(|transformation| &transformation.source)
+            .unwrap_or(goal);
+        if let Some(equality_transport) = equality_transport {
+            current =
+                self.equality_rewrite_fact_to_lean_ir(citation_target, current, equality_transport);
+        } else if current.proposition.to_string() != citation_target.to_string() {
+            return Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::OtherUnsupported {
+                    name: format!(
+                        "citation `{}` does not prove transformation source `{}`",
+                        source_fact, citation_target
+                    ),
+                },
+                parameter_requirements: Vec::new(),
+                premises: vec![current],
+            });
+        }
+
+        if let Some(transformation) = fact_transformation {
+            for step in transformation.steps.iter() {
+                current = match &step.rule {
+                    FactTransformationRule::RationalNormalization => {
+                        if !facts_align_by_rational_normalization(
+                            &current.proposition,
+                            &step.result,
+                        ) {
+                            return Ok(FactProofToLeanIR::RuleApplication {
+                                rule: ProofRuleToLeanIR::OtherUnsupported {
+                                    name: format!(
+                                        "normalization source `{}` does not align with result `{}`",
+                                        current.proposition, step.result
+                                    ),
+                                },
+                                parameter_requirements: Vec::new(),
+                                premises: vec![current],
+                            });
+                        }
+                        FactToLeanIR {
+                            fact_id: None,
+                            proposition: step.result.clone(),
+                            proof: FactProofToLeanIR::RuleApplication {
+                                rule: ProofRuleToLeanIR::Normalization {
+                                    kind:
+                                        NormalizationKindToLeanIR::RationalExpressionSimplification,
+                                },
+                                parameter_requirements: Vec::new(),
+                                premises: vec![current],
+                            },
+                        }
+                    }
+                    FactTransformationRule::EqualityRewrite(evidence) => {
+                        self.equality_rewrite_fact_to_lean_ir(&step.result, current, evidence)
+                    }
+                };
+            }
+        }
+
+        if current.proposition.to_string() != goal.to_string() {
+            return Ok(FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::OtherUnsupported {
+                    name: format!(
+                        "fact transformations ended at `{}` instead of goal `{}`",
+                        current.proposition, goal
+                    ),
+                },
+                parameter_requirements: Vec::new(),
+                premises: vec![current],
+            });
+        }
+        Ok(current.proof)
+    }
+
+    fn equality_rewrite_fact_to_lean_ir(
+        &self,
+        result: &Fact,
+        source: FactToLeanIR,
+        equality_transport: &EqualityTransportEvidence,
+    ) -> FactToLeanIR {
+        if equality_transport.steps.is_empty() {
+            if source.proposition.to_string() == result.to_string() {
+                return source;
+            }
+            return FactToLeanIR {
+                fact_id: None,
+                proposition: result.clone(),
+                proof: FactProofToLeanIR::Unsupported {
+                    reason: format!(
+                        "empty equality transport changed `{}` to `{}`",
+                        source.proposition, result
+                    ),
+                },
+            };
+        }
+
+        let mut premises = Vec::with_capacity(equality_transport.steps.len() + 1);
+        premises.push(source);
         let mut steps = Vec::with_capacity(equality_transport.steps.len());
         for rewrite in equality_transport.steps.iter() {
             let equality_fact: Fact = AtomicFact::EqualFact(rewrite.equality.clone()).into();
             let Some(equality_fact_id) = rewrite.equality_fact_id else {
-                return Ok(FactProofToLeanIR::Unsupported {
-                    reason: format!(
-                        "equality transport `{}` -> `{}` through `{}` has no compiler proof provenance",
-                        rewrite.from, rewrite.to, equality_fact
-                    ),
-                });
+                return FactToLeanIR {
+                    fact_id: None,
+                    proposition: result.clone(),
+                    proof: FactProofToLeanIR::Unsupported {
+                        reason: format!(
+                            "equality transport `{}` -> `{}` through `{}` has no compiler proof provenance",
+                            rewrite.from, rewrite.to, equality_fact
+                        ),
+                    },
+                };
             };
             let left_key = obj_equality_key(&rewrite.equality.left);
             let right_key = obj_equality_key(&rewrite.equality.right);
@@ -1317,12 +1423,16 @@ impl Runtime {
             } else if from_key == right_key && to_key == left_key {
                 EqualityRewriteDirectionToLeanIR::Backward
             } else {
-                return Ok(FactProofToLeanIR::Unsupported {
-                    reason: format!(
-                        "equality rewrite edge `{}` -> `{}` is not oriented by `{}`",
-                        rewrite.from, rewrite.to, equality_fact
-                    ),
-                });
+                return FactToLeanIR {
+                    fact_id: None,
+                    proposition: result.clone(),
+                    proof: FactProofToLeanIR::Unsupported {
+                        reason: format!(
+                            "equality rewrite edge `{}` -> `{}` is not oriented by `{}`",
+                            rewrite.from, rewrite.to, equality_fact
+                        ),
+                    },
+                };
             };
             premises.push(FactToLeanIR {
                 fact_id: Some(equality_fact_id),
@@ -1338,11 +1448,15 @@ impl Runtime {
             });
         }
 
-        Ok(FactProofToLeanIR::RuleApplication {
-            rule: ProofRuleToLeanIR::EqualityRewrite(EqualityRewriteToLeanIR { steps }),
-            parameter_requirements: Vec::new(),
-            premises,
-        })
+        FactToLeanIR {
+            fact_id: None,
+            proposition: result.clone(),
+            proof: FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::EqualityRewrite(EqualityRewriteToLeanIR { steps }),
+                parameter_requirements: Vec::new(),
+                premises,
+            },
+        }
     }
 
     fn citation_fact_id(
@@ -1396,7 +1510,12 @@ impl Runtime {
 
         let mut param_types = Vec::new();
         for group in source_forall.params_def_with_type.groups.iter() {
-            let param_type = param_type_to_lean_ir(&group.param_type)?;
+            let Some(anchor) = group.params.first().map(|binding| binding.id()) else {
+                return Ok(FactProofToLeanIR::Unsupported {
+                    reason: "known forall contains an empty parameter group".to_string(),
+                });
+            };
+            let param_type = param_type_to_lean_ir(&group.param_type, anchor)?;
             for _ in group.params.iter() {
                 param_types.push(param_type.clone());
             }
@@ -1590,6 +1709,7 @@ impl Runtime {
                         source,
                         result.source_fact_id,
                         result.equality_transport.as_ref(),
+                        result.fact_transformation.as_ref(),
                         context,
                     )?,
                     Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
@@ -1853,24 +1973,49 @@ fn contradiction_results_to_lean_ir(
 fn param_group_to_lean_ir(
     group: &ParamGroupWithParamType,
 ) -> Result<ParamGroupToLeanIR, RuntimeError> {
+    let Some(anchor) = group.params.first().map(|binding| binding.id()) else {
+        return Err(to_lean_ir_error(
+            &default_line_file(),
+            "To-Lean cannot lower an empty parameter group",
+        ));
+    };
     Ok(ParamGroupToLeanIR {
+        symbol_ids: group.params.iter().map(|binding| binding.id()).collect(),
         names: group
             .params
             .iter()
             .map(|binding| binding.name().to_string())
             .collect(),
-        param_type: param_type_to_lean_ir(&group.param_type)?,
+        param_type: param_type_to_lean_ir(&group.param_type, anchor)?,
     })
 }
 
-fn param_type_to_lean_ir(param_type: &ParamType) -> Result<ParamTypeToLeanIR, RuntimeError> {
+fn param_type_to_lean_ir(
+    param_type: &ParamType,
+    generic_anchor: SymbolId,
+) -> Result<ParamTypeToLeanIR, RuntimeError> {
+    let generic_element_carrier = || LeanCarrierToLeanIR::Generic {
+        anchor: generic_anchor,
+    };
     match param_type {
-        ParamType::Set(_) => Ok(ParamTypeToLeanIR::LitexSet),
-        ParamType::NonemptySet(_) => Ok(ParamTypeToLeanIR::LitexNonemptySet),
-        ParamType::FiniteSet(_) => Ok(ParamTypeToLeanIR::LitexFiniteSet),
-        ParamType::Obj(obj) => ObjToLeanIR::lower(obj)
-            .map(ParamTypeToLeanIR::MemberOf)
-            .map_err(|message| to_lean_ir_error(&default_line_file(), message)),
+        ParamType::Set(_) => Ok(ParamTypeToLeanIR::Set {
+            element_carrier: generic_element_carrier(),
+        }),
+        ParamType::NonemptySet(_) => Ok(ParamTypeToLeanIR::NonemptySet {
+            element_carrier: generic_element_carrier(),
+        }),
+        ParamType::FiniteSet(_) => Ok(ParamTypeToLeanIR::FiniteSet {
+            element_carrier: generic_element_carrier(),
+        }),
+        ParamType::Obj(obj) => {
+            let set = ObjToLeanIR::lower(obj)
+                .map_err(|message| to_lean_ir_error(&default_line_file(), message))?;
+            let element_carrier = LeanCarrierToLeanIR::for_membership_set(&set);
+            Ok(ParamTypeToLeanIR::MemberOf {
+                set,
+                element_carrier,
+            })
+        }
     }
 }
 
@@ -1887,7 +2032,23 @@ fn facts_align_by_rational_normalization(source: &Fact, goal: &Fact) -> bool {
         && source_args
             .iter()
             .zip(goal_args.iter())
-            .all(|(source, goal)| objs_equal_by_rational_expression_evaluation(source, goal))
+            .all(|(source, goal)| objs_align_by_nested_rational_normalization(source, goal))
+}
+
+fn objs_align_by_nested_rational_normalization(source: &Obj, goal: &Obj) -> bool {
+    if objs_equal_by_rational_expression_evaluation(source, goal) {
+        return true;
+    }
+    let result: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+        source,
+        goal,
+        &mut |source_arg, goal_arg| {
+            Ok(objs_align_by_nested_rational_normalization(
+                source_arg, goal_arg,
+            ))
+        },
+    );
+    result.unwrap_or(false)
 }
 
 fn ensure_fact_objects_lower_to_lean_ir(fact: &Fact) -> Result<(), RuntimeError> {

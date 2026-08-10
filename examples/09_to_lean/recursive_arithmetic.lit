@@ -1,0 +1,75 @@
+# The proof tree recursively decomposes the nested sum. Typed additive evidence
+# is emitted bottom-up instead of reconstructing a tactic from a text label.
+
+forall a, b, c, d R+:
+    (a + b) + (c + d) > 0
+
+
+"""
+import Mathlib
+
+noncomputable section
+
+universe u
+
+abbrev LitexFact := Prop
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+-- Litex stored fact f34
+theorem global_fact_34 : ∀ a ∈ {r : ℝ | 0 < r}, ∀ b ∈ {r : ℝ | 0 < r}, ∀ c ∈ {r : ℝ | 0 < r}, ∀ d ∈ {r : ℝ | 0 < r}, ((a + b) + (c + d)) > 0 := by
+  intro a proof_fact_1_1 b proof_fact_1_2 c proof_fact_1_3 d proof_fact_1_4
+  have proof_fact_1_5 : (0 : ℝ) < a := by
+    have proof_fact_2_1 : a ∈ {r : ℝ | 0 < r} := proof_fact_1_1
+    simpa using proof_fact_2_1
+  have proof_fact_1_6 : (0 : ℝ) < b := by
+    have proof_fact_3_1 : b ∈ {r : ℝ | 0 < r} := proof_fact_1_2
+    simpa using proof_fact_3_1
+  have proof_fact_1_7 : (0 : ℝ) < c := by
+    have proof_fact_4_1 : c ∈ {r : ℝ | 0 < r} := proof_fact_1_3
+    simpa using proof_fact_4_1
+  have proof_fact_1_8 : (0 : ℝ) < d := by
+    have proof_fact_5_1 : d ∈ {r : ℝ | 0 < r} := proof_fact_1_4
+    simpa using proof_fact_5_1
+  have proof_fact_1_9 : (0 : ℝ) < (a + b) := by
+    have proof_fact_6_1 : (0 : ℝ) < a := by
+      exact proof_fact_1_5
+    have proof_fact_6_2 : (0 : ℝ) < b := by
+      exact proof_fact_1_6
+    have proof_fact_6_3 : (0 : ℝ) < (a + b) := by
+      linarith only [proof_fact_6_1, proof_fact_6_2]
+    exact proof_fact_6_3
+  have proof_fact_1_10 : (0 : ℝ) ≤ (c + d) := by
+    have proof_fact_7_1 : (0 : ℝ) ≤ c := by
+      have proof_fact_8_1 : (0 : ℝ) < c := by
+        exact proof_fact_1_7
+      have proof_fact_8_2 : (0 : ℝ) ≤ c := by
+        linarith only [proof_fact_8_1]
+      exact proof_fact_8_2
+    have proof_fact_7_2 : (0 : ℝ) ≤ d := by
+      have proof_fact_9_1 : (0 : ℝ) < d := by
+        exact proof_fact_1_8
+      have proof_fact_9_2 : (0 : ℝ) ≤ d := by
+        linarith only [proof_fact_9_1]
+      exact proof_fact_9_2
+    have proof_fact_7_3 : (0 : ℝ) ≤ (c + d) := by
+      linarith only [proof_fact_7_1, proof_fact_7_2]
+    exact proof_fact_7_3
+  have proof_fact_1_11 : ((a + b) + (c + d)) > 0 := by
+    linarith only [proof_fact_1_9, proof_fact_1_10]
+  exact proof_fact_1_11
+
+end
+"""

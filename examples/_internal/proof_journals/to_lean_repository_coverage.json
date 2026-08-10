@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_to_lean",
+  "session_command": "one target-local target/release/litex -compact -session -before <file> process per changed registered file",
+  "proof_spine": [
+    "Keep strict examples limited to proof routes with checked Lean backends",
+    "Split multi-conclusion universal facts into one-conclusion facts",
+    "Move verified-but-unsupported carrier routes to an explicit partial-report file"
+  ],
+  "blocks": [
+    {
+      "id": "C001",
+      "source_order": 1,
+      "intent": "Keep the native carrier tracer strict",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "multi-conclusion numeric membership examples",
+          "result": "failed",
+          "verifier_evidence": "strict To-Lean reported three `requires one conclusion in a forall proof` omissions and one unsupported N+ subtraction rule",
+          "diagnosis": "The Litex facts verify, but the current strict backend does not cover these proof shapes.",
+          "next_change": "Keep bare equality and closed real membership here; move the remaining facts to carrier_boundaries.lit."
+        }
+      ],
+      "accepted_litex": "2 = 2\n2 $in R",
+      "reusable_lesson": "Separate verified source coverage from checked backend coverage.",
+      "status": "materialized"
+    },
+    {
+      "id": "C002",
+      "source_order": 2,
+      "intent": "Demonstrate bounded native binders with one conclusion each",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "three bounded facts with two conclusions each",
+          "result": "failed",
+          "verifier_evidence": "strict To-Lean reported `requires one conclusion in a forall proof` for all three",
+          "diagnosis": "The binder ABI is supported; only the multi-conclusion statement envelope is outside the current tranche.",
+          "next_change": "Retain one reflexive conclusion per bounded fact."
+        }
+      ],
+      "accepted_litex": "forall x R:\n    x = x\n\nforall z Z:\n    z = z\n\nforall q Q:\n    q = q\n\nforall x R:\n    x != 0\n    =>:\n        x != 0\n\nforall a, b, x R:\n    x != 0\n    =>:\n        (a + b) / x = a / x + b / x\n\nforall a, b R:\n    a != 0\n    b != 0\n    =>:\n        a / b != 0",
+      "reusable_lesson": "Use one conclusion per strict To-Lean forall example.",
+      "status": "materialized"
+    },
+    {
+      "id": "C003",
+      "source_order": 3,
+      "intent": "Show membership-directed cross-carrier output without pretending the proof is checked",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "the proposition examples plus trusted `forall x R: x $in R` and `forall z Z: z / 2 $in Q`",
+          "result": "passed",
+          "verifier_evidence": "project session block C003 returned ok: true",
+          "diagnosis": "The membership judgments determine their carriers; trust marks only proof provenance.",
+          "next_change": "Materialize both trusted carrier examples with explicit comments."
+        }
+      ],
+      "accepted_litex": "abstract_prop demo_marked(x)\n\ntrust forall x R:\n    $demo_marked(x)\n\n$demo_marked(3)\n\nprop demo_is_one(x R):\n    x = 1\n\n$demo_is_one(1)\n\nabstract_prop demo_successor_pair(x, y)\n\ntrust forall x R:\n    $demo_successor_pair(x, x + 1)\n\n$demo_successor_pair(1, 2)\n\ntrust forall x R:\n    x $in R\n\ntrust forall z Z:\n    z / 2 $in Q",
+      "reusable_lesson": "Explicit trust may expose the target proposition but must not select its carrier.",
+      "status": "materialized"
+    },
+    {
+      "id": "C004",
+      "source_order": 4,
+      "intent": "Keep only checked real object definitions in the strict file",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "object definitions over N, Z, Q, R, and C",
+          "result": "failed",
+          "verifier_evidence": "strict To-Lean accepted the R definition but reported missing inferred-consequence or number-membership backends for N, Z, Q, and C",
+          "diagnosis": "Native target carriers exist, but the have-object value-check proof tranche is not complete across all five domains.",
+          "next_change": "Keep checked R definitions strict and move the others to carrier_boundaries.lit."
+        },
+        {
+          "candidate": "have demo_real_half R = 1 / 2",
+          "result": "failed",
+          "verifier_evidence": "real Mathlib compilation reported lean.dependsOnNoncomputable for Real.instDivInvMonoid",
+          "diagnosis": "The strict source API accepted the statement, but the emitted plain def is not a compilable real-division declaration.",
+          "next_change": "Keep this line commented until the emitter generates a noncomputable declaration."
+        }
+      ],
+      "accepted_litex": "have demo_real_two R = 2",
+      "reusable_lesson": "A source accepted by strict lowering is not runnable coverage until real Mathlib compilation also succeeds.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["C001", "C002", "C003", "C004"],
+    "file_gate_command": "target/release/litex -compact -runner -r examples/09_to_lean; cargo test --release to_lean_examples_repository_emits_checked_source -- --nocapture; LITEX_LEAN_PROJECT=<mathlib> LITEX_LAKE=<lake> cargo test --release generated_to_lean_examples_repository_compiles_with_mathlib -- --ignored --nocapture",
+    "file_gate_result": "all passed; every generated strict or retained partial Lean source compiled with real Mathlib"
+  }
+}

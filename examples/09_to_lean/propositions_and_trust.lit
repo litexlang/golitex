@@ -1,0 +1,106 @@
+# Abstract propositions are polymorphic over their object arguments. Only the
+# explicit trusted interfaces below become Lean axioms.
+
+abstract_prop demo_marked(x)
+
+trust forall x R:
+    $demo_marked(x)
+
+$demo_marked(3)
+
+prop demo_is_one(x R):
+    x = 1
+
+$demo_is_one(1)
+
+abstract_prop demo_successor_pair(x, y)
+
+trust forall x R:
+    $demo_successor_pair(x, x + 1)
+
+$demo_successor_pair(1, 2)
+
+# These two propositions expose the native bounded-binder and cross-carrier
+# output contracts. Membership supplies the carrier; `trust` supplies only the
+# proof boundary.
+trust forall x R:
+    x $in R
+
+trust forall z Z:
+    z / 2 $in Q
+
+# `trust 1 / 2 = 1 / 2` remains rejected by strict To-Lean because no judgment
+# selects the division carrier.
+
+
+"""
+import Mathlib
+
+noncomputable section
+
+universe u
+
+abbrev LitexFact := Prop
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+opaque demo_marked {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact
+
+-- Litex trust boundary: f3
+axiom global_fact_3 : ∀ x ∈ (Set.univ : Set ℝ), demo_marked x
+
+-- Litex stored fact f4
+theorem global_fact_4 : demo_marked (3 : ℝ) := by
+  -- Litex parameter requirement for `x`: 3 : ℝ
+  let proof_arg_1_1 : ℝ := 3
+  have proof_fact_1_2 : 3 ∈ (Set.univ : Set ℝ) := by
+    change True
+    trivial
+  have proof_fact_1_3 : demo_marked (3 : ℝ) := global_fact_3 proof_arg_1_1 proof_fact_1_2
+  exact proof_fact_1_3
+
+def demo_is_one (x : ℝ) : LitexFact := x = 1
+
+-- Litex stored fact f7
+theorem global_fact_7 : demo_is_one 1 := by
+  simp [demo_is_one]
+
+opaque demo_successor_pair {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
+
+-- Litex trust boundary: f12
+axiom global_fact_12 : ∀ x ∈ (Set.univ : Set ℝ), demo_successor_pair x (x + 1)
+
+-- Litex stored fact f13
+theorem global_fact_13 : demo_successor_pair (1 : ℝ) (2 : ℝ) := by
+  have proof_fact_2_1 : demo_successor_pair (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := by
+    -- Litex parameter requirement for `x`: (2 - 1) : ℝ
+    let proof_arg_3_1 : ℝ := (2 - 1)
+    have proof_fact_3_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by
+      change True
+      trivial
+    have proof_fact_3_3 : demo_successor_pair (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := global_fact_12 proof_arg_3_1 proof_fact_3_2
+    exact proof_fact_3_3
+  have proof_fact_2_2 : demo_successor_pair (1 : ℝ) (2 : ℝ) := by
+    convert proof_fact_2_1 using 1 <;> norm_num
+  exact proof_fact_2_2
+
+-- Litex trust boundary: f15
+axiom global_fact_15 : ∀ x ∈ (Set.univ : Set ℝ), x ∈ (Set.univ : Set ℝ)
+
+-- Litex trust boundary: f18
+axiom global_fact_18 : ∀ z ∈ (Set.univ : Set ℤ), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)
+
+end
+"""

@@ -1,10 +1,11 @@
 use crate::prelude::*;
 
-/// A context-free compiler representation of one Litex object.
+/// A structural compiler representation of one Litex object.
 ///
-/// Every variant denotes a value of the single target carrier `LitexSet`.
-/// Carrier inference, coercions, and proof-only native views do not belong in
-/// this tree.
+/// The tree preserves source object syntax and symbol identity. Its native Lean
+/// carrier is supplied separately by `LeanCarrierToLeanIR` constraints, so the
+/// same numeral or arithmetic tree can elaborate in `ℕ`, `ℤ`, `ℚ`, `ℝ`, or
+/// `ℂ` without attaching a guessed type to the object itself.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ObjToLeanIR {
     Symbol {

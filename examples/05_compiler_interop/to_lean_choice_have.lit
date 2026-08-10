@@ -26,3 +26,4 @@ by contra:
 # Focused release gates:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_choice_have.lit
 # cargo test --release to_lean_choice_have -- --nocapture
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release generated_to_lean_choice_have_compiles_with_lean -- --ignored --nocapture

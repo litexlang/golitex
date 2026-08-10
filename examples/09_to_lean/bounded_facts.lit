@@ -1,0 +1,92 @@
+# Domain binders become native bounded quantifiers. Their membership facts
+# remain propositions available inside the generated Lean proof.
+
+forall x R:
+    x = x
+
+forall z Z:
+    z = z
+
+forall q Q:
+    q = q
+
+forall x R:
+    x != 0
+    =>:
+        x != 0
+
+forall a, b, x R:
+    x != 0
+    =>:
+        (a + b) / x = a / x + b / x
+
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+
+
+"""
+import Mathlib
+
+noncomputable section
+
+universe u
+
+abbrev LitexFact := Prop
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+-- Litex stored fact f7
+theorem global_fact_7 : ∀ x ∈ (Set.univ : Set ℝ), x = x := by
+  intro x proof_fact_1_1
+  rfl
+
+-- Litex stored fact f14
+theorem global_fact_14 : ∀ z ∈ (Set.univ : Set ℤ), z = z := by
+  intro z proof_fact_2_1
+  rfl
+
+-- Litex stored fact f21
+theorem global_fact_21 : ∀ q ∈ (Set.univ : Set ℚ), q = q := by
+  intro q proof_fact_3_1
+  rfl
+
+-- Litex stored fact f28
+theorem global_fact_28 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x ≠ 0 := by
+  intro x proof_fact_4_1 proof_fact_4_2
+  exact proof_fact_4_2
+
+-- Litex stored fact f44
+theorem global_fact_44 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → ((a + b) / x) = ((a / x) + (b / x)) := by
+  intro a proof_fact_5_1 b proof_fact_5_2 x proof_fact_5_3 proof_fact_5_4
+  -- native proof view, left fraction: (a + b) / x
+  -- native proof view, right fraction: ((a * x) + (b * x)) / (x * x)
+  field_simp [proof_fact_5_4] <;> ring
+
+-- Litex stored fact f60
+theorem global_fact_60 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a ≠ 0 → b ≠ 0 → (a / b) ≠ 0 := by
+  intro a proof_fact_6_1 b proof_fact_6_2 proof_fact_6_3 proof_fact_6_4
+  have proof_fact_6_5 : a ≠ 0 := by
+    exact proof_fact_6_3
+  have proof_fact_6_6 : b ≠ 0 := by
+    exact proof_fact_6_4
+  have proof_fact_6_7 : (a / b) ≠ 0 := by
+    exact div_ne_zero proof_fact_6_5 proof_fact_6_6
+  exact proof_fact_6_7
+
+end
+"""

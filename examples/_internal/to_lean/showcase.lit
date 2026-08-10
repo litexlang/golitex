@@ -89,267 +89,62 @@ namespace showcase
 
 noncomputable section
 
-inductive LitexStandardSet where
-  | nPos | natural | rational | integer | real | complex
-  | qPos | rPos | qNeg | zNeg | rNeg | qStar | zStar | rStar | cStar
-
--- Every Litex object is a set-value in this one carrier. Native values occur
--- only as payloads behind checked proof views; the canonical object remains a
--- `LitexSet` in every generated declaration.
-inductive LitexSet where
-  | realValue (value : ℝ)
-  | standard (kind : LitexStandardSet)
-  | primitive (tag : String)
-  | application (operator : String) (arguments : List LitexSet)
-deriving Nonempty
+universe u
 
 abbrev LitexFact := Prop
 
-def litexNumber (value : String) : LitexSet := .primitive ("number:" ++ value)
-def litexOfNat (value : Nat) : LitexSet := .realValue value
-def litexOfScientific (mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) : LitexSet :=
-  .realValue (OfScientific.ofScientific mantissa exponentSign decimalExponent)
+class LitexObject (α : Type u) : Prop where
+  valid : True
 
-instance litexOfNatInstance (n : Nat) : OfNat LitexSet n where
-  ofNat := litexOfNat n
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
 
-instance litexOfScientificInstance : OfScientific LitexSet where
-  ofScientific := litexOfScientific
-
-def litexAdd : LitexSet → LitexSet → LitexSet
-  | .realValue left, .realValue right => .realValue (left + right)
-  | left, right => .application "add" [left, right]
-
-def litexSub : LitexSet → LitexSet → LitexSet
-  | .realValue left, .realValue right => .realValue (left - right)
-  | left, right => .application "sub" [left, right]
-
-def litexMul : LitexSet → LitexSet → LitexSet
-  | .realValue left, .realValue right => .realValue (left * right)
-  | left, right => .application "mul" [left, right]
-
-def litexDiv : LitexSet → LitexSet → LitexSet
-  | .realValue left, .realValue right => .realValue (left / right)
-  | left, right => .application "div" [left, right]
-
-def litexPow (base exponent : LitexSet) : LitexSet := .application "pow" [base, exponent]
-
-def litexNeg : LitexSet → LitexSet
-  | .realValue value => .realValue (-value)
-  | value => .application "neg" [value]
-
-def litexLT : LitexSet → LitexSet → Prop
-  | .realValue left, .realValue right => left < right
-  | _, _ => False
-
-def litexLE : LitexSet → LitexSet → Prop
-  | .realValue left, .realValue right => left ≤ right
-  | _, _ => False
-
-opaque litexPrimitiveMem : LitexSet → LitexSet → Prop
-opaque litexNaturalValue : ℝ → Prop
-opaque litexIntegerValue : ℝ → Prop
-opaque litexRationalValue : ℝ → Prop
-
-def litexMem : LitexSet → LitexSet → Prop
-  | .realValue _, .standard .real => True
-  | .realValue _, .standard .complex => True
-  | .realValue value, .standard .rPos => 0 < value
-  | .realValue value, .standard .rational => litexRationalValue value
-  | .realValue value, .standard .integer => litexIntegerValue value
-  | .realValue value, .standard .natural => litexNaturalValue value
-  | _, .standard .real => False
-  | _, .standard .rPos => False
-  | _, .standard .rational => False
-  | _, .standard .integer => False
-  | _, .standard .natural => False
-  | element, set => litexPrimitiveMem element set
-
-def litexIsSet (_ : LitexSet) : Prop := True
--- A nonempty-set proof is also the witness package consumed by bare Litex
--- `have x S`. Keeping this bridge definitional prevents the compiler from
--- inventing an unchecked choice constant.
-def litexIsNonemptySet (set : LitexSet) : Prop := ∃ element, litexMem element set
-opaque litexIsFiniteSet : LitexSet → Prop
-opaque litexSubset : LitexSet → LitexSet → Prop
-
-instance litexAddInstance : Add LitexSet where add := litexAdd
-instance litexSubInstance : Sub LitexSet where sub := litexSub
-instance litexMulInstance : Mul LitexSet where mul := litexMul
-instance litexDivInstance : Div LitexSet where div := litexDiv
-instance litexPowInstance : HPow LitexSet LitexSet LitexSet where hPow := litexPow
-instance litexNegInstance : Neg LitexSet where neg := litexNeg
-instance litexLTInstance : LT LitexSet where lt := litexLT
-instance litexLEInstance : LE LitexSet where le := litexLE
-instance litexMembershipInstance : Membership LitexSet LitexSet where
-  mem := fun set element => litexMem element set
-
-theorem litexOfNatEq (value : Nat) :
-    (OfNat.ofNat value : LitexSet) = litexOfNat value := by
-  rfl
-
-theorem litexOfScientificEq (mantissa : Nat) (exponentSign : Bool) (decimalExponent : Nat) :
-    (OfScientific.ofScientific mantissa exponentSign decimalExponent : LitexSet) =
-      litexOfScientific mantissa exponentSign decimalExponent := by
-  rfl
-
-theorem litexAddEq (left right : LitexSet) : left + right = litexAdd left right := by
-  rfl
-
-theorem litexSubEq (left right : LitexSet) : left - right = litexSub left right := by
-  rfl
-
-theorem litexMulEq (left right : LitexSet) : left * right = litexMul left right := by
-  rfl
-
-theorem litexDivEq (left right : LitexSet) : left / right = litexDiv left right := by
-  rfl
-
-theorem litexPowEq (base exponent : LitexSet) : base ^ exponent = litexPow base exponent := by
-  rfl
-
-theorem litexNegEq (value : LitexSet) : -value = litexNeg value := by
-  rfl
-
-theorem litexLTIff (left right : LitexSet) : left < right ↔ litexLT left right := by
-  rfl
-
-theorem litexLEIff (left right : LitexSet) : left ≤ right ↔ litexLE left right := by
-  rfl
-
-theorem litexRealValueEqIff (left right : ℝ) :
-    LitexSet.realValue left = LitexSet.realValue right ↔ left = right := by
-  constructor
-  · intro equality
-    cases equality
-    rfl
-  · intro equality
-    cases equality
-    rfl
-
-theorem litexMembershipIff (element set : LitexSet) :
-    element ∈ set ↔ litexMem element set := by
-  rfl
-
-def litexNPos : LitexSet := .standard .nPos
-def litexN : LitexSet := .standard .natural
-def litexQ : LitexSet := .standard .rational
-def litexZ : LitexSet := .standard .integer
-def litexR : LitexSet := .standard .real
-def litexC : LitexSet := .standard .complex
-def litexQPos : LitexSet := .standard .qPos
-def litexRPos : LitexSet := .standard .rPos
-def litexQNeg : LitexSet := .standard .qNeg
-def litexZNeg : LitexSet := .standard .zNeg
-def litexRNeg : LitexSet := .standard .rNeg
-def litexQStar : LitexSet := .standard .qStar
-def litexZStar : LitexSet := .standard .zStar
-def litexRStar : LitexSet := .standard .rStar
-def litexCStar : LitexSet := .standard .cStar
-
-theorem litexMemRealElim {value : LitexSet} (membership : value ∈ litexR) :
-    ∃ realValue : ℝ, value = .realValue realValue := by
-  rw [litexMembershipIff] at membership
-  cases value with
-  | realValue value => exact ⟨value, rfl⟩
-  | standard kind => simp [litexR, litexMem] at membership
-  | primitive tag => simp [litexR, litexMem] at membership
-  | application operator arguments => simp [litexR, litexMem] at membership
-
-theorem litexMemRPosReal {value : LitexSet} (membership : value ∈ litexRPos) :
-    value ∈ litexR := by
-  rw [litexMembershipIff] at membership ⊢
-  cases value <;> simp [litexRPos, litexR, litexMem] at membership ⊢
-
-theorem litexMemRPosPositive {value : LitexSet} (membership : value ∈ litexRPos) :
-    (0 : LitexSet) < value := by
-  rw [litexMembershipIff] at membership
-  cases value with
-  | realValue value =>
-      have positive : 0 < value := by
-        simpa [litexRPos, litexMem] using membership
-      simpa [litexLTIff, litexOfNatEq, litexOfNat, litexLT] using positive
-  | standard kind => simp [litexRPos, litexMem] at membership
-  | primitive tag => simp [litexRPos, litexMem] at membership
-  | application operator arguments => simp [litexRPos, litexMem] at membership
-
-def litexI : LitexSet := .primitive "i"
-def litexE : LitexSet := .primitive "e"
-def litexPi : LitexSet := .primitive "pi"
-
-def litexUnary (name : String) (value : LitexSet) : LitexSet := .application name [value]
-def litexBinary (name : String) (left right : LitexSet) : LitexSet :=
-  .application name [left, right]
-
-def litexMod := litexBinary "mod"
-def litexGcd := litexBinary "gcd"
-def litexLcm := litexBinary "lcm"
-def litexFloor := litexUnary "floor"
-def litexCeil := litexUnary "ceil"
-def litexMin := litexBinary "min"
-def litexMax := litexBinary "max"
-def litexExp := litexUnary "exp"
-def litexLn := litexUnary "ln"
-def litexSign := litexUnary "sign"
-def litexFactorial := litexUnary "factorial"
-def litexAbs := litexUnary "abs"
-def litexSin := litexUnary "sin"
-def litexCos := litexUnary "cos"
-def litexTan := litexUnary "tan"
-def litexCot := litexUnary "cot"
-def litexRealPart := litexUnary "realPart"
-def litexImaginaryPart := litexUnary "imaginaryPart"
-def litexComplexAbs := litexUnary "complexAbs"
-def litexSqrt := litexUnary "sqrt"
-def litexLog := litexBinary "log"
-
-def litexUnion := litexBinary "union"
-def litexIntersect := litexBinary "intersect"
-def litexSetMinus := litexBinary "setMinus"
-def litexSetDiff := litexBinary "setDiff"
-def litexBigUnion := litexUnary "bigUnion"
-def litexBigIntersect := litexUnary "bigIntersect"
-def litexPowerSet := litexUnary "powerSet"
-def litexListSet (items : List LitexSet) : LitexSet := .application "listSet" items
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
 end
 
-opaque p : LitexSet → LitexSet → LitexFact
+opaque p {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
 
 -- Litex trust boundary: f4
-axiom global_fact_4 : ∀ (a b : LitexSet), a ∈ litexR → b ∈ litexR → p a b
+axiom global_fact_4 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), p a b
 
 -- Litex stored fact f5
-theorem global_fact_5 : p 1 2 := by
-  -- Litex parameter requirement for `a`: 1 : LitexSet
-  let proof_arg_1_1 : LitexSet := 1
-  have proof_fact_1_2 : 1 ∈ litexR := by
+theorem global_fact_5 : p (1 : ℝ) (2 : ℝ) := by
+  -- Litex parameter requirement for `a`: 1 : ℝ
+  let proof_arg_1_1 : ℝ := 1
+  have proof_fact_1_2 : 1 ∈ (Set.univ : Set ℝ) := by
     change True
     trivial
-  -- Litex parameter requirement for `b`: 2 : LitexSet
-  let proof_arg_1_3 : LitexSet := 2
-  have proof_fact_1_4 : 2 ∈ litexR := by
+  -- Litex parameter requirement for `b`: 2 : ℝ
+  let proof_arg_1_3 : ℝ := 2
+  have proof_fact_1_4 : 2 ∈ (Set.univ : Set ℝ) := by
     change True
     trivial
-  have proof_fact_1_5 : p 1 2 := global_fact_4 proof_arg_1_1 proof_arg_1_3 proof_fact_1_2 proof_fact_1_4
+  have proof_fact_1_5 : p (1 : ℝ) (2 : ℝ) := global_fact_4 proof_arg_1_1 proof_arg_1_3 proof_fact_1_2 proof_fact_1_4
   exact proof_fact_1_5
 
-opaque transported : LitexSet → LitexFact
+opaque transported {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact
 
 -- Litex stored fact f21
-theorem global_fact_21 : ∀ (a b : LitexSet), transported a → a = b → transported b := by
-  intro a b proof_fact_2_1 proof_fact_2_2
+theorem global_fact_21 : ∀ {litex_carrier_4 : Type u} [LitexObject litex_carrier_4], ∀ (a : Set litex_carrier_4), ∀ (b : Set litex_carrier_4), transported a → a = b → transported b := by
+  intro _ _ a b proof_fact_2_1 proof_fact_2_2
   have proof_fact_2_3 : transported a := proof_fact_2_1
   have proof_fact_2_4 : a = b := proof_fact_2_2
   have proof_fact_2_5 : transported b := by
     simpa only [proof_fact_2_4] using proof_fact_2_3
   exact proof_fact_2_5
 
-opaque related : LitexSet → LitexSet → LitexFact
+opaque related {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
 
 -- Litex stored fact f37
-theorem global_fact_37 : ∀ (a b : LitexSet), related a b → a = b → related b a := by
-  intro a b proof_fact_3_1 proof_fact_3_2
+theorem global_fact_37 : ∀ {litex_carrier_7 : Type u} [LitexObject litex_carrier_7], ∀ (a : Set litex_carrier_7), ∀ (b : Set litex_carrier_7), related a b → a = b → related b a := by
+  intro _ _ a b proof_fact_3_1 proof_fact_3_2
   have proof_fact_3_3 : related a b := proof_fact_3_1
   have proof_fact_3_4 : a = b := proof_fact_3_2
   have proof_fact_3_5 : related b a := by
@@ -357,8 +152,8 @@ theorem global_fact_37 : ∀ (a b : LitexSet), related a b → a = b → related
   exact proof_fact_3_5
 
 -- Litex stored fact f59
-theorem global_fact_59 : ∀ (a b c : LitexSet), transported c → a = b → b = c → transported a := by
-  intro a b c proof_fact_4_1 proof_fact_4_2 proof_fact_4_3
+theorem global_fact_59 : ∀ {litex_carrier_9 : Type u} [LitexObject litex_carrier_9], ∀ (a : Set litex_carrier_9), ∀ (b : Set litex_carrier_9), ∀ (c : Set litex_carrier_9), transported c → a = b → b = c → transported a := by
+  intro _ _ a b c proof_fact_4_1 proof_fact_4_2 proof_fact_4_3
   have proof_fact_4_4 : transported c := proof_fact_4_1
   have proof_fact_4_5 : b = c := proof_fact_4_3
   have proof_fact_4_6 : a = b := proof_fact_4_2
@@ -366,68 +161,62 @@ theorem global_fact_59 : ∀ (a b c : LitexSet), transported c → a = b → b =
     simpa only [proof_fact_4_5, ← proof_fact_4_6] using proof_fact_4_4
   exact proof_fact_4_7
 
-def is_one (x : LitexSet) : LitexFact := x = 1
+def is_one (x : ℝ) : LitexFact := x = 1
 
 -- Litex stored fact f62
 theorem global_fact_62 : is_one 1 := by
   simp [is_one]
 
-opaque marked : LitexSet → LitexFact
+opaque marked {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact
 
 -- Litex trust boundary: f68
-axiom global_fact_68 : ∀ (x : LitexSet), x ∈ litexR → x ≠ 0 → marked x
+axiom global_fact_68 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → marked x
 
 -- Litex stored fact f81
-theorem global_fact_81 : ∀ (x : LitexSet), x ∈ litexR → x ≠ 0 → x < 10 → marked x := by
+theorem global_fact_81 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x < 10 → marked x := by
   intro x proof_fact_5_1 proof_fact_5_2 proof_fact_5_3
-  -- Litex parameter requirement for `x`: x : LitexSet
-  let proof_arg_5_4 : LitexSet := x
-  have proof_fact_5_5 : x ∈ litexR := proof_fact_5_1
+  -- Litex parameter requirement for `x`: x : ℝ
+  let proof_arg_5_4 : ℝ := x
+  have proof_fact_5_5 : x ∈ (Set.univ : Set ℝ) := proof_fact_5_1
   have proof_fact_5_6 : x ≠ 0 := proof_fact_5_2
   have proof_fact_5_7 : marked x := global_fact_68 proof_arg_5_4 proof_fact_5_5 proof_fact_5_6
   exact proof_fact_5_7
 
 -- Litex stored fact f88
-theorem global_fact_88 : ∀ (x : LitexSet), x ∈ litexR → x ≠ 0 → x ≠ 0 := by
+theorem global_fact_88 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x ≠ 0 := by
   intro x proof_fact_6_1 proof_fact_6_2
   exact proof_fact_6_2
 
 -- Litex stored fact f104
-theorem global_fact_104 : ∀ (a b x : LitexSet), a ∈ litexR → b ∈ litexR → x ∈ litexR → x ≠ 0 → ((a + b) / x) = ((a / x) + (b / x)) := by
-  intro a b x proof_fact_7_1 proof_fact_7_2 proof_fact_7_3 proof_fact_7_4
+theorem global_fact_104 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → ((a + b) / x) = ((a / x) + (b / x)) := by
+  intro a proof_fact_7_1 b proof_fact_7_2 x proof_fact_7_3 proof_fact_7_4
   -- native proof view, left fraction: (a + b) / x
   -- native proof view, right fraction: ((a * x) + (b * x)) / (x * x)
-  obtain ⟨litex_real_value_1, litex_real_eq_1⟩ := litexMemRealElim proof_fact_7_1
-  obtain ⟨litex_real_value_2, litex_real_eq_2⟩ := litexMemRealElim proof_fact_7_2
-  obtain ⟨litex_real_value_3, litex_real_eq_3⟩ := litexMemRealElim proof_fact_7_3
-  simp only [litex_real_eq_1, litex_real_eq_2, litex_real_eq_3, litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff] at proof_fact_7_4 ⊢
   field_simp [proof_fact_7_4] <;> ring
 
 -- Litex stored fact f105
-theorem global_fact_105 : ((((1 / 2) / 3) / 4) : LitexSet) = (1 / 24) := by
+theorem global_fact_105 : (((1 / 2) / 3) / 4 : ℚ) = (1 / 24) := by
   -- native proof view, left fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))
   -- native proof view, right fraction: (1 : ℝ) / (24 : ℝ)
-  simp only [litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff] at ⊢
   norm_num
 
-opaque marked2 : LitexSet → LitexSet → LitexFact
+opaque marked2 {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
 
 -- Litex trust boundary: f108
-axiom global_fact_108 : ∀ (x : LitexSet), x ∈ litexR → marked2 x (x + 1)
+axiom global_fact_108 : ∀ x ∈ (Set.univ : Set ℝ), marked2 x (x + 1)
 
 -- Litex stored fact f109
-theorem global_fact_109 : marked2 1 2 := by
-  have proof_fact_8_1 : marked2 (2 - 1) ((2 - 1) + 1) := by
-    -- Litex parameter requirement for `x`: (2 - 1) : LitexSet
-    let proof_arg_9_1 : LitexSet := (2 - 1)
-    have proof_fact_9_2 : (2 - 1) ∈ litexR := by
+theorem global_fact_109 : marked2 (1 : ℝ) (2 : ℝ) := by
+  have proof_fact_8_1 : marked2 (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := by
+    -- Litex parameter requirement for `x`: (2 - 1) : ℝ
+    let proof_arg_9_1 : ℝ := (2 - 1)
+    have proof_fact_9_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by
       change True
       trivial
-    have proof_fact_9_3 : marked2 (2 - 1) ((2 - 1) + 1) := global_fact_108 proof_arg_9_1 proof_fact_9_2
+    have proof_fact_9_3 : marked2 (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := global_fact_108 proof_arg_9_1 proof_fact_9_2
     exact proof_fact_9_3
-  have proof_fact_8_2 : marked2 1 2 := by
-    simp only [litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff] at proof_fact_8_1 ⊢
-    convert proof_fact_8_1 using 1 <;> norm_num [litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff]
+  have proof_fact_8_2 : marked2 (1 : ℝ) (2 : ℝ) := by
+    convert proof_fact_8_1 using 1 <;> norm_num
   exact proof_fact_8_2
 
 end showcase

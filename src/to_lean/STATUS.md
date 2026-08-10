@@ -1,6 +1,6 @@
 # To-Lean Implementation Status
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 This file is the implementation ledger for the current To-Lean work. The
 inventory is authoritative for rule-by-rule coverage; this page tracks the
@@ -21,6 +21,27 @@ pipeline and delivery checkpoints.
 
 Tracer:
 [`examples/05_compiler_interop/to_lean_partial_report.lit`](../../examples/05_compiler_interop/to_lean_partial_report.lit)
+
+## Resolved atomic facts
+
+- [x] Retain goal-to-source resolution as an ordered source-to-goal
+  transformation package.
+- [x] Separate recursive rational normalization from equality rewrite and keep
+  every used equality's stored `FactId`.
+- [x] Replay the supported arithmetic route as nested proof IR and checked Lean
+  without rerunning `resolve_obj`.
+- [x] Descend through nested object shapes, including function arguments, while
+  keeping unsupported general function objects as an explicit Obj IR boundary.
+- [x] Replay a stored equality between compound subobjects at any depth covered
+  by the central structural matcher, without flattening it into resolution.
+- [x] Add a persistent arithmetic tracer plus focused supported and boundary
+  regressions.
+
+Specification:
+[`math_collections.md#resolved-atomic-fact-transformations`](math_collections.md#resolved-atomic-fact-transformations)
+
+Tracer:
+[`examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit`](../../examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit)
 
 ## Statement effects and proof scopes
 
@@ -44,9 +65,9 @@ Tracer:
   parameter-type selection plus unsupported local statements as explicit
   incomplete boundaries with no `sorry` or compiler-created axiom.
 - [x] Check the persistent statement-scope tracer with Litex, focused release
-  tests, and the Lean core kernel.
+  tests, and the real Mathlib/Lean kernel.
 - [x] Check the persistent typed-choice tracer with Litex, focused positive and
-  malformed-evidence tests, and the Lean core kernel.
+  malformed-evidence tests, and the real Mathlib/Lean kernel.
 - [x] Retain concrete witness-type proofs outside temporary existential-binder
   scope, plus user proof steps and exact direct-body proof indices, for
   trust-free `witness exist` introduction.
@@ -55,8 +76,8 @@ Tracer:
   `Exists.choose`, and exact type/body `choose_spec` projections at file and
   proof scope.
 - [x] Check single- and multi-witness extraction with focused positive,
-  malformed-evidence, sanitized-binder-capture, direct Litex, and Lean-core
-  gates.
+  malformed-evidence, sanitized-binder-capture, direct Litex, and real
+  Mathlib/Lean gates.
 - [ ] Add `exist!`/`not exist` proposition contracts and preimage selection.
 - [ ] Add function-object declaration and evaluation evidence before compiling
   function, case-by-case, recursive, tuple, sequence, or matrix `have` forms.
@@ -140,28 +161,34 @@ Recursive-strategy tracer:
 
 ## Numeric object ABI
 
-- [x] Freeze one uniform output spelling for every Litex `Obj`.
-- [x] Keep symbols and normalized numerals bare; forbid per-object carrier
-  inference and inserted numeric casts.
-- [x] Keep `N`, `Z`, `Q`, `R`, and `C` as standard-set objects and parameter
-  memberships rather than native Lean binder types.
-- [x] Separate canonical object terms from optional native proof views.
-- [x] Record natural, integer, rational, mixed-carrier, and rejected-boundary
-  cases in a persistent Litex tracer.
-- [x] Implement one concrete `LitexSet` target carrier; there is no separate
-  semantic `LitexObj` type.
-- [x] Add structural, context-free `ObjToLeanIR` with stable `SymbolId`s,
-  normalized numerals, standard-set identity, and ordered applications.
-- [x] Replace the real-only canonical emitter for the supported object tranche;
-  native reals now occur only as checked proof-view payloads.
-- [x] Lower `union`, `intersect`, `set_minus`, `set_diff`, big set operators,
-  power sets, and list sets through the same object IR.
+- [x] Keep structural `ObjToLeanIR` identity separate from checked target
+  carrier constraints.
+- [x] Map `N`, `Z`, `Q`, `R`, and `C` to `Set.univ` over Mathlib's
+  `ℕ`, `ℤ`, `ℚ`, `ℝ`, and `ℂ`.
+- [x] Emit standard-domain parameters as bounded quantifiers so membership
+  remains an ordinary named proposition.
+- [x] Keep numerals and symbols bare in structural object output.
+- [x] Insert a whole-expression target expectation only for a justified
+  canonical numeric coercion; the retained `ℤ -> ℚ` tracer passes the real
+  Mathlib/Lean kernel.
+- [x] Replace private equality/arithmetic wrappers with native `=`, `+`, `-`,
+  `*`, and `/` in the migrated object/fact surface.
+- [x] Replace the monomorphic target prelude with a polymorphic `LitexObject`
+  marker that does not admit facts as source objects.
+- [x] Lower generic set binders through an implicit element carrier and native
+  `Set α`; map `union`, `intersect`, and `set_minus` to `∪`, `∩`, and `\`.
 - [x] Reject binder-owning `SetBuilder` during IR construction instead of
   guessing a carrier or emitting a fallback.
-- [x] Promote the structural set-object tracer to a generated-Lean core kernel
-  gate.
-- [ ] Replace the remaining raw `Fact` payload with a dedicated monomorphic
+- [x] Propagate checked carrier constraints through known-forall,
+  normalization, equality-rewrite, existential, and forall-introduction proof
+  trees; the resolved-atomic regression prevents an intermediate `ℕ` default
+  from crossing an `ℝ` goal.
+- [ ] Give refined-domain prop parameters and unsupported scalar operators
+  dedicated native contracts rather than relying on incidental elaboration.
+- [ ] Replace the remaining raw `Fact` payload with a dedicated typed
   structural object-fact IR.
+- [x] Re-run the focused To-Lean, persistent tracer, Mathlib-kernel,
+  `run_examples`, and `run_all` release gates after the migration.
 
 Specification:
 [`math_collections.md#numeric-object-abi`](math_collections.md#numeric-object-abi)
@@ -171,6 +198,9 @@ Tracer:
 
 Structural set-object tracer:
 [`examples/05_compiler_interop/to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit)
+
+Remaining native-carrier ledger:
+[`todo/2026-8-10/to-lean-native-carrier.md`](../../todo/2026-8-10/to-lean-native-carrier.md)
 
 ## Required final gates
 

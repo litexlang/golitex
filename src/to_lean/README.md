@@ -121,7 +121,7 @@ two proof commands without treating source syntax as a Lean tactic script.
 For `have x R = 2`, runtime lowering validates the exact stored membership and
 defining-equality facts, preserves their `FactId`s, and produces one
 `ObjectDefinitionToLeanIR` plus its proof facts. At file scope Lean receives a
-`def x : LitexSet := 2`; inside a proof it receives a scoped `let`. The defining
+`def x : ℝ := 2`; inside a proof it receives a scoped `let`. The defining
 equality is checked by `rfl`. The membership proof first checks the right-hand
 side and then transports it through the named definition with `simpa only
 [x]`. No new axiom supplies either fact.
@@ -130,7 +130,7 @@ For bare `have selected R`, runtime returns an explicit mapping from the
 checked `$is_nonempty_set(R)` result to the exact stored
 `selected $in R` fact. `HaveObjChoice` freezes that proof, the selected
 `SymbolId`, the carrier, and the membership `FactId`. In the target ABI,
-`litexIsNonemptySet s` is definitionally `∃ x, litexMem x s`, so file-scope
+`litexIsNonemptySet s` is definitionally `Set.Nonempty s`, so file-scope
 selection becomes a `noncomputable def` built with `Exists.choose`, and its
 membership theorem is `Exists.choose_spec` from the same named certificate.
 Inside a proof, the certificate, selected value, and membership remain local
@@ -144,8 +144,8 @@ witness-type checks before temporary existential binders enter scope, together
 with the user proof steps and one checked result per direct body fact. The
 compiler emits a theorem whose proposition is a nested Lean `Exists` package
 and constructs it from exactly those proofs. Closed numeric propositions are
-ascribed to `LitexSet` when needed, so a local proof of `1 = 1` cannot silently
-default to `Nat` while the existential expects the one-carrier object type.
+given one fact-level native carrier when needed, so division cannot silently
+default to `Nat` while the existential expects a rational or real witness.
 
 `obtain w from exist ...` and body-style `have w R: ...` then lower through
 `HaveExistentialWitness`. The node contains the checked source existential,
@@ -284,11 +284,39 @@ edge again from printed text. An equality obtained only through a verifier
 backend whose derivation is not represented in compiler IR is rejected at this
 boundary instead of being emitted without proof provenance.
 
+Atomic-fact resolution can combine that equality transport with computation.
+The verifier searches from the requested proposition toward a stored fact, but
+freezes the successful route in the opposite, proof-construction direction as
+`FactTransformationEvidence { source, steps }`. Each step names its resulting
+proposition and is currently either `RationalNormalization` or an
+`EqualityRewrite` carrying the oriented equality edges and their stored
+`FactId`s. This lets To-Lean reconstruct the cited source, replay a nested
+normalization node, and finally rewrite to the exact goal. It never treats
+`resolve_obj` itself as a Lean proof rule.
+
+Resolution traverses the full object structure and substitutes named symbols
+by `SymbolId`, so an equality for `a` can change an occurrence below both an
+arithmetic node and a function application. For example, the retained route
+for `$p(f(a + b), c)` is `$p(f(14), c)`, then `$p(f(13 + 1), c)`, then the
+requested fact. The fast structural known-fact lookup records the same package
+instead of bypassing the slower resolved-fact retry. General Litex function
+objects still have no checked target object ABI; their recursive transformation
+is retained and unit-tested, but To-Lean stops at that separate object boundary.
+
+Equality transport itself is also recursive rather than limited to atomic
+symbols. At every supported object node it first looks for a checked equality
+path between the complete subobjects; if none exists, it descends through the
+central same-shape matcher. Thus a stored `a + b = 14` replays
+`$p(f(14), c) -> $p(f(a + b), c)` with the same oriented edge and `FactId`, at
+any nesting depth covered by that matcher. This is equality congruence only:
+normalization, definition reduction, and future computational transports keep
+their own proof rules.
+
 Known-forall evidence retains each parameter name, structural argument object,
-parameter constraint, and recursively verified requirement. Every generated
-argument has the one type `LitexSet`. A constraint such as `z Z` is replayed as
-the separate proposition `z ∈ litexZ`; it never changes the binder or the
-argument into a native integer, rational, or real. The runtime also
+parameter constraint, native target carrier, and recursively verified
+requirement. A constraint such as `z Z` is emitted as the bounded binder
+`z ∈ (Set.univ : Set ℤ)`: Lean elaborates `z` at type `ℤ`, while the membership
+remains a separate proposition and proof argument. The runtime also
 instantiates the cited forall's selected conclusion with the recorded objects.
 Consequently, `KnownForallInstantiation` proves that direct instance rather
 than silently claiming the final goal. If the verifier matched objects that
@@ -298,8 +326,9 @@ Statement memoization is a transparent proof wrapper and does not erase the
 underlying route.
 
 For forall introduction, temporary parameter facts are likewise retained with
-their IDs. A `set` parameter needs no extra proposition because every object is
-a `LitexSet`; numeric and other domain constraints become named local proofs.
+their IDs. A generic `set` parameter becomes `Set α` under an implicit carrier
+and needs no extra proposition; numeric and other domain memberships become
+named local proofs.
 Cached citations and known-forall requirements capture their source `FactId`
 while the source environment is alive, so a temporary premise can remain a
 local Lean proof argument after its Litex scope has been popped.
@@ -308,9 +337,8 @@ Typed consequences inferred in that same temporary environment are stored in
 `ForallIntroduction.inferred_premises` with their original `FactId`s before the
 scope closes. The first checked instance is `a ∈ R+ -> 0 < a`:
 `PositiveRealMembership` cites the binder membership, validates the exact
-object on both sides, and applies `litexMemRPosPositive`. The target prelude
-therefore gives `R+` membership its intended positive-real semantics and also
-derives the real-carrier proof view needed by arithmetic lowering.
+object on both sides, and uses the definitional membership predicate of
+`{r : ℝ | 0 < r}`. No private real-value projection is required.
 
 ## Lean surface
 
@@ -324,28 +352,41 @@ namespace chapter01_introduction
 
 noncomputable section
 
-inductive LitexStandardSet where
-  | natural | rational | integer | real | complex
-
-inductive LitexSet where
-  | realValue (value : ℝ)
-  | standard (kind : LitexStandardSet)
-  | primitive (tag : String)
-  | application (operator : String) (arguments : List LitexSet)
+universe u
 
 abbrev LitexFact := Prop
 
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) :=
+  ⟨True.intro⟩
+
 -- generated declarations
+
+end
 
 end chapter01_introduction
 ```
 
-`LitexSet` is the one meta-level carrier of Litex set-values; it is not itself
-a Litex universal-set object. Symbols, numerals, standard sets, arithmetic
-applications, and set constructors all elaborate to this carrier. The
-`realValue` payload is an internal proof view used by the current Mathlib
-arithmetic backend. It does not cause generated statements to print `(z : ℝ)`
-or `(1 : ℝ)`.
+The marker records the source invariant that supported values are Litex
+objects; it is not a universal value wrapper. Standard domains use Mathlib's
+native carriers and are rendered inline as `Set.univ`. A numeral remains bare,
+as in `2 ∈ (Set.univ : Set ℝ)` or the unconstrained reflexivity `2 = 2`.
+`trust` never fills in a missing numeric carrier, so an otherwise
+underconstrained division judgment fails closed. When a fixed integer
+expression is judged to belong to `Q`, the emitter gives the whole expression a rational expectation,
+as in `(z / 2 : ℚ)`, so Lean inserts its canonical coercion without changing
+the structural `ObjToLeanIR` spelling.
+
+The anonymous `noncomputable section` encloses both the shared prelude and all
+generated declarations. In particular, polymorphic theorems remain in scope of
+`universe u`; the anonymous section closes before the optional named namespace.
 
 The emitter never uses a fixed synthetic namespace such as `LitexGenerated`.
 A registered file or module uses its canonical Litex name, with `::` mapped to
@@ -364,11 +405,11 @@ traversal, Lean imports, or cross-file `FactId` lowering to the current MVP.
 
 The current lowering is intentionally small:
 
-- `abstract_prop` becomes a monomorphic `opaque` proposition over zero or more
-  `LitexSet` arguments;
+- `abstract_prop` becomes a carrier-polymorphic `opaque` proposition over zero
+  or more arguments with `LitexObject` constraints;
 - a typed `prop` over the currently supported parameter surface becomes `def`
-  (or `opaque` when it has no body), with object parameters uniformly typed as
-  `LitexSet` and nontrivial parameter constraints kept as propositions;
+  (or `opaque` when it has no body), with standard-domain parameters using
+  native Mathlib carriers and generic sets using `Set α`;
 - only an explicit Litex `trust` becomes Lean `axiom`;
 - stored proved facts become `theorem global_fact_<FactId>`;
 - explicit-value `have x T = e` becomes a checked `def` at file scope or a
@@ -377,8 +418,8 @@ The current lowering is intentionally small:
   premise, and checks either a conclusion or contradiction exit in each;
 - atomic `by contra` uses the retained reverse premise and contradiction inside
   one `Classical.byContradiction` scope;
-- known-forall application first materializes every chosen object as a
-  `LitexSet` `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement
+- known-forall application first materializes every chosen object at its
+  retained native carrier as a `proof_arg_<SpaceId>_<LocalIndex>`, replays every domain requirement
   as a `proof_fact`, and names the direct instantiated conclusion before using
   it;
 - definition evidence uses the named Lean definition;
@@ -401,9 +442,9 @@ The current lowering is intentionally small:
 - arithmetic/order builtin evidence checks the target and ordered premise fact
   families, recursively materializes those premise proofs, and applies one of
   `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
-- verified rational-expression normalization obtains native real witnesses
-  only from recorded `x ∈ litexR` proofs, then discharges the proof view with
-  `norm_num`, `ring`, or `field_simp` followed by `ring`;
+- verified rational-expression normalization operates directly on native
+  terms and discharges them with `norm_num`, `ring`, or `field_simp` followed
+  by `ring`;
 - context-free object lowering preserves symbols, bare normalized numerals,
   standard sets, scalar applications, and the simple set constructors
   `union`, `intersect`, `set_minus`, `set_diff`, `big_union`, `big_intersect`,
@@ -428,6 +469,13 @@ covers the full first vertical slice: abstract proposition, concrete
 proposition, trusted forall, explicit known-forall arguments and requirements,
 direct-instance-to-goal normalization, definition proof, temporary-premise
 reuse, equality transport, forall introduction, and rational builtin proof.
+
+[`examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit`](../../examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit)
+is the recursive-resolution tracer. It records the verifier's goal-to-source
+search as a source-to-goal `Normalization` followed by `EqualityRewrite`, with
+both equality `FactId`s preserved. A focused nested-function regression proves
+that the object walk descends through application arguments while retaining the
+current explicit function-object ABI boundary.
 
 [`examples/05_compiler_interop/to_lean_builtin_rule_ir.lit`](../../examples/05_compiler_interop/to_lean_builtin_rule_ir.lit)
 is the builtin-rule tracer. It follows one quotient-nonzero proof from matched
@@ -464,7 +512,7 @@ uniform object spellings, and the guarded natural-subtraction boundary.
 
 [`examples/05_compiler_interop/to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit)
 is the implemented structural object tracer. It sends `union`, `intersect`,
-and `set_minus` through `ObjToLeanIR` and the one-carrier prelude, while a
+and `set_minus` through `ObjToLeanIR` to native `Set α` operations, while a
 focused negative regression requires `SetBuilder` to fail during IR
 construction.
 
@@ -473,27 +521,28 @@ is the statement-scope tracer. It covers explicit-value `have`, local proof
 steps in both branches and contradiction scope, case coverage, branch-local
 assumptions, and reverse-assumption lifetime. Focused negative regressions keep
 unsupported local statements explicit, and the generated scope proof is checked
-by a Lean core kernel gate.
+by a real Mathlib/Lean kernel gate.
 
 [`examples/05_compiler_interop/to_lean_choice_have.lit`](../../examples/05_compiler_interop/to_lean_choice_have.lit)
 is the typed-choice tracer. It covers top-level and proof-local `have x R`,
 later membership citation, the exact existential source certificate, and the
 remaining meta-level parameter-type boundary. Focused malformed-IR regressions
 remove or mismatch that evidence, and the generated choice declarations pass a
-Lean core kernel gate.
+real Mathlib/Lean kernel gate.
 
 [`examples/05_compiler_interop/to_lean_exist_have.lit`](../../examples/05_compiler_interop/to_lean_exist_have.lit)
 is the existential tracer. It covers trust-free existential introduction,
 explicit `obtain`, body-style `have`, proof-local extraction, alpha-renamed
 citations, and ordered multi-witness packages. Malformed introduction and
-projection evidence is rejected, and the complete generated file passes a Lean
-core kernel gate.
+projection evidence is rejected, and the complete generated file passes a real
+Mathlib/Lean kernel gate.
 
 Rust and Litex gates:
 
 ```text
 cargo test --release to_lean:: -- --nocapture
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_ir_mvp.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_set_obj_abi.lit

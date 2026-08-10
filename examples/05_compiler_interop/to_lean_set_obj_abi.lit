@@ -1,4 +1,4 @@
-# Tracer: one LitexSet carrier and context-free simple set objects.
+# Tracer: native `Set α` carriers and context-free simple set objects.
 #
 # Before:
 # union(A, B) could verify in Litex, but To-Lean had no structural Obj IR for
@@ -6,9 +6,10 @@
 # parameter a Lean type rather than a value in Litex's one object universe.
 #
 # Now:
-# A and B are bare symbols of the one `LitexSet` carrier. Each constructor below
-# preserves its identity and source argument order and returns another
-# `LitexSet`; reflexive equality is replayed by checked `rfl` evidence.
+# A and B share one implicit element carrier `α` and become native `Set α`
+# values. Each constructor preserves source argument order and maps to the
+# corresponding Mathlib operation; reflexive equality is replayed by checked
+# `rfl` evidence.
 forall A, B set:
     union(A, B) = union(A, B)
 
@@ -27,7 +28,8 @@ forall A, B set:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_set_obj_abi.lit
 # Focused compiler gate:
 # cargo test --release to_lean_set_obj_abi -- --nocapture
-# Generated-Lean core kernel gate:
-# LITEX_LEAN=/absolute/path/to/lean cargo test --release generated_to_lean_set_obj_abi_compiles_with_lean_core -- --ignored --nocapture
+# Generated Mathlib/Lean kernel gate:
+# LITEX_LEAN_PROJECT=/path/to/mathlib cargo test --release generated_to_lean_set_obj_abi_compiles_with_lean -- --ignored --nocapture
 # Implementation: src/to_lean_ir/obj.rs, src/runtime/runtime_to_lean_ir.rs,
-# src/to_lean/set_prelude.rs, and src/to_lean/to_lean_pipeline.rs
+# src/to_lean/type_context.rs, src/to_lean/set_prelude.rs, and
+# src/to_lean/to_lean_pipeline.rs

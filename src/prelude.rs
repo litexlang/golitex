@@ -290,6 +290,9 @@ pub use crate::result::ExistFactUnknown;
 pub use crate::result::ExistentialEliminationVerificationResult;
 pub use crate::result::FactResult;
 pub use crate::result::FactStmtResult;
+pub use crate::result::FactTransformationEvidence;
+pub use crate::result::FactTransformationRule;
+pub use crate::result::FactTransformationStep;
 pub use crate::result::FactUnknown;
 pub use crate::result::FactUnknownParam;
 pub use crate::result::FactUnknownPart;
@@ -434,11 +437,11 @@ pub use crate::to_lean_ir::{
     EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
     ExistentialProjectionRoleToLeanIR, ExistentialWitnessToLeanIR, FactProofToLeanIR,
     FactStmtToLeanIR, FactToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
-    HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LocalPremiseToLeanIR,
-    NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR, ObjToLeanIR,
-    ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR, ParamTypeToLeanIR,
-    ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR, StandardSetToLeanIR, StmtToLeanIR,
-    TrustToLeanIR,
+    HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LeanCarrierToLeanIR,
+    LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR,
+    ObjToLeanIR, ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR,
+    ParamTypeToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR, StandardSetToLeanIR,
+    StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

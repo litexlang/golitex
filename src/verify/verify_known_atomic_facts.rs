@@ -1,4 +1,19 @@
 use crate::prelude::*;
+use std::collections::{HashMap, HashSet};
+
+struct ResolvedAtomicFactLookup {
+    fact: AtomicFact,
+    fact_transformation: Option<FactTransformationEvidence>,
+}
+
+impl ResolvedAtomicFactLookup {
+    fn new(fact: AtomicFact, fact_transformation: Option<FactTransformationEvidence>) -> Self {
+        Self {
+            fact,
+            fact_transformation,
+        }
+    }
+}
 
 impl Runtime {
     pub fn verify_non_equational_atomic_fact_with_known_atomic_facts(
@@ -64,13 +79,15 @@ impl Runtime {
             return Ok(result);
         }
 
-        let arg = args[0].clone();
-        let arg_resolved = self.resolve_obj(&arg);
-        if arg_resolved.to_string() != arg.to_string() {
-            let rewritten =
-                Self::atomic_fact_with_resolved_unary_operand(atomic_fact, arg_resolved);
-            return self
-                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(&rewritten);
+        if let Some(resolved) = self.resolved_atomic_fact_for_lookup_with_evidence(atomic_fact)? {
+            let result = self.verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param(
+                &resolved.fact,
+            )?;
+            return Ok(self.retarget_resolved_known_atomic_fact_result(
+                atomic_fact,
+                result,
+                resolved.fact_transformation,
+            ));
         }
 
         Ok((StmtUnknown::new()).into())
@@ -122,20 +139,16 @@ impl Runtime {
             return Ok(result);
         }
 
-        let left = args[0].clone();
-        let right = args[1].clone();
-        let left_resolved = self.resolve_obj(&left);
-        let right_resolved = self.resolve_obj(&right);
-        if left_resolved.to_string() != left.to_string()
-            || right_resolved.to_string() != right.to_string()
-        {
-            let rewritten = Self::atomic_fact_with_resolved_binary_operands(
+        if let Some(resolved) = self.resolved_atomic_fact_for_lookup_with_evidence(atomic_fact)? {
+            let result = self
+                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(
+                    &resolved.fact,
+                )?;
+            return Ok(self.retarget_resolved_known_atomic_fact_result(
                 atomic_fact,
-                left_resolved,
-                right_resolved,
-            );
-            return self
-                .verify_atomic_fact_not_equality_with_known_atomic_fact_with_2_params(&rewritten);
+                result,
+                resolved.fact_transformation,
+            ));
         }
 
         Ok((StmtUnknown::new()).into())
@@ -186,21 +199,16 @@ impl Runtime {
             return Ok(result);
         }
 
-        let mut new_args: Vec<Obj> = Vec::with_capacity(args.len());
-        let mut any_changed = false;
-        for a in args.iter() {
-            let r = self.resolve_obj(a);
-            if r.to_string() != a.to_string() {
-                any_changed = true;
-            }
-            new_args.push(r);
-        }
-        if any_changed {
-            let rewritten = Self::atomic_fact_with_resolved_predicate_args(atomic_fact, new_args);
-            return self
+        if let Some(resolved) = self.resolved_atomic_fact_for_lookup_with_evidence(atomic_fact)? {
+            let result = self
                 .verify_atomic_fact_not_equality_with_known_atomic_fact_with_0_or_more_than_2_params(
-                    &rewritten,
-                );
+                    &resolved.fact,
+                )?;
+            return Ok(self.retarget_resolved_known_atomic_fact_result(
+                atomic_fact,
+                result,
+                resolved.fact_transformation,
+            ));
         }
 
         Ok((StmtUnknown::new()).into())
@@ -288,19 +296,43 @@ impl Runtime {
         // Equality lookup already combines nested runtime environments. Build
         // the corresponding proof graph from those same checked direct edges
         // so the successful lookup retains an actual transport path.
-        let mut equalities = KnownEquality::new();
-        for environment in self.iter_environments_from_top() {
-            Self::extend_equality_proof_graph(&mut equalities, environment);
-        }
-        for module_name in module_names.iter() {
-            for environment in self.imported_module_environments(module_name) {
-                Self::extend_equality_proof_graph(&mut equalities, environment);
-            }
-        }
+        let equalities = self.known_equality_proof_graph(module_names);
 
         let mut steps = Vec::new();
         for (known_arg, goal_arg) in known_args.iter().zip(goal_args.iter()) {
-            let path = equalities.proof_path(known_arg, goal_arg)?;
+            if !self.collect_nested_equality_transport_steps(
+                known_arg,
+                goal_arg,
+                &equalities,
+                module_names,
+                &mut steps,
+            ) {
+                return None;
+            }
+        }
+        Some(EqualityTransportEvidence::new(steps))
+    }
+
+    /// Retain a replayable congruence proof from `source` to `goal`.
+    ///
+    /// A direct equality edge may relate the complete objects, such as
+    /// `a + b = 14`. Otherwise, matching outer constructors are traversed and
+    /// the same rule is applied recursively to their corresponding children.
+    /// This makes equality transport independent of the depth or particular
+    /// supported object constructor at which a stored equality is used.
+    fn collect_nested_equality_transport_steps(
+        &self,
+        source: &Obj,
+        goal: &Obj,
+        equalities: &KnownEquality,
+        module_names: &[String],
+        steps: &mut Vec<EqualityTransportStep>,
+    ) -> bool {
+        if obj_equality_key(source) == obj_equality_key(goal) {
+            return true;
+        }
+
+        if let Some(path) = equalities.proof_path(source, goal) {
             for proof_step in path {
                 let equality_fact: Fact = AtomicFact::EqualFact(proof_step.equality.clone()).into();
                 let equality_fact_id =
@@ -312,14 +344,42 @@ impl Runtime {
                     equality_fact_id,
                 ));
             }
+            return true;
         }
-        Some(EqualityTransportEvidence::new(steps))
+
+        let result: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+            source,
+            goal,
+            &mut |source_arg, goal_arg| {
+                Ok(self.collect_nested_equality_transport_steps(
+                    source_arg,
+                    goal_arg,
+                    equalities,
+                    module_names,
+                    steps,
+                ))
+            },
+        );
+        result.unwrap_or(false)
     }
 
     fn extend_equality_proof_graph(equalities: &mut KnownEquality, environment: &Environment) {
         for equality in environment.known_equality.direct_equalities().iter() {
             equalities.store(equality);
         }
+    }
+
+    fn known_equality_proof_graph(&self, module_names: &[String]) -> KnownEquality {
+        let mut equalities = KnownEquality::new();
+        for environment in self.iter_environments_from_top() {
+            Self::extend_equality_proof_graph(&mut equalities, environment);
+        }
+        for module_name in module_names.iter() {
+            for environment in self.imported_module_environments(module_name) {
+                Self::extend_equality_proof_graph(&mut equalities, environment);
+            }
+        }
+        equalities
     }
 
     fn fact_id_for_transport_fact(&self, fact: &Fact, module_names: &[String]) -> Option<FactId> {
@@ -359,11 +419,29 @@ impl Runtime {
         let source_fact_id = self.fact_id_for_transport_fact(&source_fact, module_names);
         let equality_transport =
             self.equality_transport_for_known_atomic_fact(known_fact, goal, module_names);
+        // The fast structural lookup can descend through an object such as
+        // `f(a + b)` before the slower resolved-fact retry runs. Preserve the
+        // same source-to-goal replay evidence on that route too, provided its
+        // resolved source is exactly the known fact we are citing.
+        let fact_transformation = equality_transport
+            .is_none()
+            .then(|| {
+                self.resolved_atomic_fact_for_lookup_with_evidence(goal)
+                    .ok()
+                    .flatten()
+                    .filter(|resolved| {
+                        nested_obj_binder_normalized_fact_key(&Fact::from(resolved.fact.clone()))
+                            == nested_obj_binder_normalized_fact_key(&source_fact)
+                    })
+                    .and_then(|resolved| resolved.fact_transformation)
+            })
+            .flatten();
         VerifiedByResult::cited_fact_with_provenance(
             goal.clone().into(),
             source_fact,
             source_fact_id,
             equality_transport,
+            fact_transformation,
             detail,
         )
     }
@@ -446,6 +524,183 @@ impl Runtime {
         }
     }
 
+    fn atomic_fact_with_replaced_args(
+        atomic_fact: &AtomicFact,
+        args: Vec<Obj>,
+    ) -> Option<AtomicFact> {
+        match args.as_slice() {
+            [arg] => Some(Self::atomic_fact_with_resolved_unary_operand(
+                atomic_fact,
+                arg.clone(),
+            )),
+            [left, right] => Some(Self::atomic_fact_with_resolved_binary_operands(
+                atomic_fact,
+                left.clone(),
+                right.clone(),
+            )),
+            _ if matches!(
+                atomic_fact,
+                AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+            ) =>
+            {
+                Some(Self::atomic_fact_with_resolved_predicate_args(
+                    atomic_fact,
+                    args,
+                ))
+            }
+            _ => None,
+        }
+    }
+
+    fn resolved_atomic_fact_for_lookup_with_evidence(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<Option<ResolvedAtomicFactLookup>, RuntimeError> {
+        let module_names = self.atomic_fact_referenced_module_names(atomic_fact);
+        let equalities = self.known_equality_proof_graph(&module_names);
+        let mut substitutions = HashMap::new();
+        let mut substituted_symbols = HashSet::new();
+        let mut source_to_goal_equality_steps = Vec::new();
+
+        for equality in equalities.direct_equalities().iter() {
+            for candidate in [&equality.left, &equality.right] {
+                let Obj::Atom(atom) = candidate else {
+                    continue;
+                };
+                let Some(symbol) = atom.symbol_ref() else {
+                    continue;
+                };
+                let symbol_key = symbol.substitution_key();
+                if substituted_symbols.contains(&symbol_key) {
+                    continue;
+                }
+                let resolved = self.resolve_obj(candidate);
+                if obj_equality_key(candidate) == obj_equality_key(&resolved) {
+                    continue;
+                }
+
+                let trial_substitution = HashMap::from([(symbol_key.clone(), resolved.clone())]);
+                let mut changes_goal = false;
+                for argument in atomic_fact.args_ref().iter() {
+                    let replaced =
+                        self.inst_obj(argument, &trial_substitution, ParamObjType::Forall)?;
+                    if obj_equality_key(argument) != obj_equality_key(&replaced) {
+                        changes_goal = true;
+                        break;
+                    }
+                }
+                if !changes_goal {
+                    continue;
+                }
+
+                let Some(path) = equalities.proof_path(candidate, &resolved) else {
+                    continue;
+                };
+                substitutions.insert(symbol_key.clone(), resolved);
+                substituted_symbols.insert(symbol_key);
+                for proof_step in path.into_iter().rev() {
+                    let equality_fact: Fact =
+                        AtomicFact::EqualFact(proof_step.equality.clone()).into();
+                    source_to_goal_equality_steps.push(EqualityTransportStep::new(
+                        proof_step.to,
+                        proof_step.from,
+                        proof_step.equality,
+                        self.fact_id_for_transport_fact(&equality_fact, &module_names),
+                    ));
+                }
+            }
+        }
+
+        let equality_rewritten_args = atomic_fact
+            .args_ref()
+            .iter()
+            .map(|argument| self.inst_obj(argument, &substitutions, ParamObjType::Forall))
+            .collect::<Result<Vec<_>, _>>()?;
+        let Some(equality_rewritten_fact) =
+            Self::atomic_fact_with_replaced_args(atomic_fact, equality_rewritten_args)
+        else {
+            return Ok(None);
+        };
+        let resolved_args = equality_rewritten_fact
+            .args_ref()
+            .iter()
+            .map(|argument| self.resolve_obj(argument))
+            .collect::<Vec<_>>();
+        let Some(resolved_fact) =
+            Self::atomic_fact_with_replaced_args(&equality_rewritten_fact, resolved_args)
+        else {
+            return Ok(None);
+        };
+        if resolved_fact.to_string() == atomic_fact.to_string() {
+            return Ok(None);
+        }
+
+        let mut transformations = Vec::new();
+        let mut transformations_are_replayable = true;
+        if resolved_fact.to_string() != equality_rewritten_fact.to_string() {
+            if atomic_facts_align_by_nested_rational_normalization(
+                &resolved_fact,
+                &equality_rewritten_fact,
+            ) {
+                transformations.push(FactTransformationStep::new(
+                    equality_rewritten_fact.clone().into(),
+                    FactTransformationRule::RationalNormalization,
+                ));
+            } else {
+                transformations_are_replayable = false;
+            }
+        }
+        if equality_rewritten_fact.to_string() != atomic_fact.to_string() {
+            if source_to_goal_equality_steps.is_empty() {
+                transformations_are_replayable = false;
+            } else {
+                transformations.push(FactTransformationStep::new(
+                    atomic_fact.clone().into(),
+                    FactTransformationRule::EqualityRewrite(EqualityTransportEvidence::new(
+                        source_to_goal_equality_steps,
+                    )),
+                ));
+            }
+        }
+
+        let fact_transformation = transformations_are_replayable.then(|| {
+            FactTransformationEvidence::new(resolved_fact.clone().into(), transformations)
+        });
+        Ok(Some(ResolvedAtomicFactLookup::new(
+            resolved_fact,
+            fact_transformation,
+        )))
+    }
+
+    fn retarget_resolved_known_atomic_fact_result(
+        &self,
+        goal: &AtomicFact,
+        result: StmtResult,
+        fact_transformation: Option<FactTransformationEvidence>,
+    ) -> StmtResult {
+        let Some(fact_transformation) = fact_transformation else {
+            return result;
+        };
+        let Some(success) = result.factual_success() else {
+            return result;
+        };
+        let VerifiedByResult::Fact(citation) = success.underlying_verified_by() else {
+            return result;
+        };
+
+        let mut citation = citation.clone();
+        if citation.fact_transformation.is_some() {
+            return result;
+        }
+        citation.fact_transformation = Some(fact_transformation);
+        FactualStmtSuccess::new_with_verified_by_known_fact(
+            goal.clone().into(),
+            VerifiedByResult::Fact(citation),
+            Vec::new(),
+        )
+        .into()
+    }
+
     pub(crate) fn resolved_atomic_fact_for_lookup(
         &self,
         atomic_fact: &AtomicFact,
@@ -463,28 +718,7 @@ impl Runtime {
             return None;
         }
 
-        match resolved_args.as_slice() {
-            [arg] => Some(Self::atomic_fact_with_resolved_unary_operand(
-                atomic_fact,
-                arg.clone(),
-            )),
-            [left, right] => Some(Self::atomic_fact_with_resolved_binary_operands(
-                atomic_fact,
-                left.clone(),
-                right.clone(),
-            )),
-            _ if matches!(
-                atomic_fact,
-                AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
-            ) =>
-            {
-                Some(Self::atomic_fact_with_resolved_predicate_args(
-                    atomic_fact,
-                    resolved_args,
-                ))
-            }
-            _ => None,
-        }
+        Self::atomic_fact_with_replaced_args(atomic_fact, resolved_args)
     }
 
     fn verify_atomic_fact_not_equality_with_known_atomic_fact_with_1_param_with_facts_in_environment(
@@ -798,6 +1032,38 @@ impl Runtime {
 
         Ok(None)
     }
+}
+
+fn atomic_facts_align_by_nested_rational_normalization(
+    source: &AtomicFact,
+    goal: &AtomicFact,
+) -> bool {
+    if source.key() != goal.key() || source.is_true() != goal.is_true() {
+        return false;
+    }
+    let source_args = source.args_ref();
+    let goal_args = goal.args_ref();
+    source_args.len() == goal_args.len()
+        && source_args
+            .iter()
+            .zip(goal_args.iter())
+            .all(|(source, goal)| objs_align_by_nested_rational_normalization(source, goal))
+}
+
+fn objs_align_by_nested_rational_normalization(source: &Obj, goal: &Obj) -> bool {
+    if objs_equal_by_rational_expression_evaluation(source, goal) {
+        return true;
+    }
+    let result: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
+        source,
+        goal,
+        &mut |source_arg, goal_arg| {
+            Ok(objs_align_by_nested_rational_normalization(
+                source_arg, goal_arg,
+            ))
+        },
+    );
+    result.unwrap_or(false)
 }
 
 fn dedup_strings(values: &mut Vec<String>) {

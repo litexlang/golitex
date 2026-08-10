@@ -34,6 +34,7 @@ LITEX_CURSOR_LOCAL.md
 
 # Local / secrets
 .dist
+/private/
 
 examples/testings/.order
 tools/

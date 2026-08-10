@@ -19,6 +19,8 @@ file for a particular kind of behavior.
    compiler acceptance examples and current boundaries.
 6. [`08_module_repository/`](08_module_repository/) is a configured module
    project that demonstrates ordered exports and submodules.
+7. [`09_to_lean/`](09_to_lean/) is a configured, reader-facing repository of
+   source files that exercise the current checked Litex-to-Lean slice.
 
 The numbering is a reading order, not a requirement that every number exist.
 Public `.lit` files should have descriptive names and remain independently

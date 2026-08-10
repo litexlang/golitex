@@ -46,7 +46,7 @@ chosen_right = 2
 # Focused release gates:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_exist_have.lit
 # cargo test --release to_lean_exist_have -- --nocapture
-# LITEX_LEAN=/absolute/path/to/lean cargo test --release generated_to_lean_exist_have_compiles_with_lean_core -- --ignored --nocapture
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release generated_to_lean_exist_have_compiles_with_lean -- --ignored --nocapture
 # Implementation: src/result/runtime_success.rs, src/execute/exec_witness_stmt.rs,
 # src/execute/exec_have_exist_obj_stmt.rs, src/to_lean_ir,
 # src/runtime/runtime_to_lean_ir.rs, and src/to_lean/to_lean_pipeline.rs
