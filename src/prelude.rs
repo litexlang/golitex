@@ -208,7 +208,6 @@ pub use crate::obj::Replacement;
 pub use crate::obj::SeqSet;
 pub use crate::obj::SetBuilder;
 pub use crate::obj::SetBuilderFreeParamObj;
-pub use crate::obj::SetDiff;
 pub use crate::obj::SetMinus;
 pub use crate::obj::Sign;
 pub use crate::obj::Sin;
@@ -324,7 +323,10 @@ pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
 pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessStmtResult;
-pub use crate::result::{ArithmeticBuiltinRule, BuiltinRuleEvidence};
+pub use crate::result::{
+    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence, SetBuiltinRule,
+    SetRelationDualityBuiltinRule,
+};
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
@@ -431,7 +433,8 @@ pub use crate::symbol::{
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
 pub use crate::to_lean_ir::{
-    AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinObjOperatorToLeanIR,
+    AbsoluteValueBuiltinRuleToLeanIR, AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR,
+    BuiltinObjOperatorToLeanIR,
     BuiltinRuleToLeanIR, CaseBranchExitToLeanIR, CaseBranchToLeanIR, CollectionObjToLeanIR,
     ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
     EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
@@ -440,7 +443,8 @@ pub use crate::to_lean_ir::{
     HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LeanCarrierToLeanIR,
     LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR,
     ObjToLeanIR, ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR,
-    ParamTypeToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR, StandardSetToLeanIR,
+    ParamTypeToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR,
+    SetBuiltinRuleToLeanIR, SetRelationDualityBuiltinRuleToLeanIR, StandardSetToLeanIR,
     StmtToLeanIR, TrustToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
@@ -620,7 +624,6 @@ pub use crate::common::keywords::RIGHT_CURLY_BRACE;
 pub use crate::common::keywords::SEQ;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SETTING;
-pub use crate::common::keywords::SET_DIFF;
 pub use crate::common::keywords::SET_MINUS;
 pub use crate::common::keywords::SIGN;
 pub use crate::common::keywords::SIN;

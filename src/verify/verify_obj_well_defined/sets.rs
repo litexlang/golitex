@@ -37,18 +37,6 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract: symmetric set difference is meaningful when
-    /// both operand expressions are well-defined set-theoretic objects.
-    pub(in crate::verify) fn verify_set_diff_well_defined(
-        &mut self,
-        x: &SetDiff,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
-        Ok(())
-    }
-
     /// Mathematical contract: big union is meaningful when its family
     /// expression is well-defined.
     pub(in crate::verify) fn verify_big_union_well_defined(
@@ -679,18 +667,6 @@ impl Runtime {
                 operator_name,
                 verify_state,
             ),
-            Obj::SetDiff(set_diff) => {
-                self.verify_set_elements_are_known_reals(
-                    &set_diff.left,
-                    operator_name,
-                    verify_state,
-                )?;
-                self.verify_set_elements_are_known_reals(
-                    &set_diff.right,
-                    operator_name,
-                    verify_state,
-                )
-            }
             Obj::SetBuilder(set_builder) => self.verify_set_elements_are_known_reals(
                 &set_builder.param_set,
                 operator_name,

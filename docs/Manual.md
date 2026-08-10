@@ -14,13 +14,7 @@ conditions, facts, statements, the proof process, builtin verification, and
 builtin inference. The [Syntax Reference](#syntax-reference) is an index into
 those sections, not a second tutorial.
 
-> **Beta notice:** Litex is still experimental. Syntax, diagnostics, builtin
-> rules, and preview features may change. Development is public by default, so
-> repository contents may include drafts and incomplete work; visibility alone
-> is not a completion claim. Use versioned documentation, current tests, and
-> explicit `trust` reporting and known limitations to determine what is
-> supported. Do
-> not use it for mission-critical proof work.
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
 ### The core reading model
 
@@ -497,7 +491,7 @@ by def {x R: 0 <= x} $subset R
 | `{a, b, ...}` | Displayed finite set |
 | `{x S: facts}` | Set comprehension over `S` |
 | `union(A, B)`, `intersect(A, B)` | Binary union and intersection |
-| `set_minus(A, B)`, `set_diff(A, B)` | Relative complement and symmetric difference |
+| `set_minus(A, B)` | Relative complement; write symmetric difference as `union(set_minus(A, B), set_minus(B, A))` |
 | `big_union(F)`, `big_intersect(F)` | Union or intersection of a family |
 | `power_set(A)` | Set of subsets of `A` |
 | `replacement(P, A)` | Replacement set defined by a functional predicate `P` |
@@ -2626,6 +2620,11 @@ one-layer builtin rule, builtin strategy, an applicable known `forall`, then a
 user-defined strategy. A multi-step semantic implication is not automatic
 unless it has its own reviewed direct rule. For example, `sqrt(t) != 0` now has
 the dedicated direct premise `t > 0`; the weaker `t >= 0` does not trigger it.
+
+Not-equality symmetry is one such direct one-premise rule: an exact known
+`a != b` proves `b != a`. Detailed output retains `a != b` as the checked child
+of `not-equality symmetry`; with neither orientation known, the rule remains
+`unknown`.
 
 Direct rules may package a fixed elementary implication when all of their
 premises are already known. In particular, `n $in N` together with `n > 0`

@@ -1,5 +1,7 @@
 # Litex Examples
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
 These examples are a learning path from small checked facts to small mathematical worlds, not a dump of test files.
 
 ## Reading Path
@@ -2401,7 +2403,7 @@ finite_set_size(cart({1, 2}, {3, 4, 5})) = finite_set_size({1, 2}) * finite_set_
 $is_finite_set(union({1, 2}, {2, 3}))
 $is_finite_set(intersect({1, 2}, {2, 3}))
 $is_finite_set(set_minus({1, 2}, {2, 3}))
-$is_finite_set(set_diff({1, 2}, {2, 3}))
+$is_finite_set(union(set_minus({1, 2}, {2, 3}), set_minus({2, 3}, {1, 2})))
 
 forall X finite_set:
     finite_set_size(X) >= 1
@@ -3271,8 +3273,8 @@ by thm defined_set_member(1, positive_reals)
 #### 4. Set Operations
 
 Mathematical meaning: `union`, `intersect`, and `set_minus` are the ordinary
-binary union, intersection, and relative complement of sets. `set_diff` is
-symmetric difference.
+binary union, intersection, and relative complement of sets. Symmetric
+difference is written as `union(set_minus(A, B), set_minus(B, A))`.
 
 ```litex
 2 $in union({1, 2}, {2, 3})
@@ -3281,7 +3283,7 @@ symmetric difference.
 2 $in intersect({1, 2}, {2, 3})
 not 2 $in {1}
 2 $in set_minus({1, 2}, {1})
-$is_finite_set(set_diff({1, 2}, {2, 3}))
+$is_finite_set(union(set_minus({1, 2}, {2, 3}), set_minus({2, 3}, {1, 2})))
 {1, 2} $subset {1, 2, 3}
 {1, 2} $in power_set({1, 2, 3})
 ```

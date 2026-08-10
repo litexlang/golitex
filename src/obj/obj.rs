@@ -40,7 +40,6 @@ pub enum Obj {
     Union(Union),
     Intersect(Intersect),
     SetMinus(SetMinus),
-    SetDiff(SetDiff),
     BigUnion(BigUnion),
     BigIntersect(BigIntersect),
     PowerSet(PowerSet),
@@ -106,7 +105,7 @@ pub enum ObjKind {
     Union = 14,
     Intersect = 15,
     SetMinus = 16,
-    SetDiff = 17,
+    // 17 was historically occupied by the removed symmetric-difference builtin.
     BigUnion = 18,
     BigIntersect = 19,
     PowerSet = 20,
@@ -774,12 +773,6 @@ pub struct SetMinus {
 }
 
 #[derive(Clone)]
-pub struct SetDiff {
-    pub left: Box<Obj>,
-    pub right: Box<Obj>,
-}
-
-#[derive(Clone)]
 pub struct BigUnion {
     pub left: Box<Obj>,
 }
@@ -1080,15 +1073,6 @@ impl Intersect {
 impl SetMinus {
     pub fn new(left: Obj, right: Obj) -> Self {
         SetMinus {
-            left: Box::new(left),
-            right: Box::new(right),
-        }
-    }
-}
-
-impl SetDiff {
-    pub fn new(left: Obj, right: Obj) -> Self {
-        SetDiff {
             left: Box::new(left),
             right: Box::new(right),
         }
@@ -1490,7 +1474,6 @@ impl Obj {
             Obj::Union(_) => ObjKind::Union,
             Obj::Intersect(_) => ObjKind::Intersect,
             Obj::SetMinus(_) => ObjKind::SetMinus,
-            Obj::SetDiff(_) => ObjKind::SetDiff,
             Obj::BigUnion(_) => ObjKind::BigUnion,
             Obj::BigIntersect(_) => ObjKind::BigIntersect,
             Obj::PowerSet(_) => ObjKind::PowerSet,
@@ -1579,7 +1562,6 @@ impl Obj {
             Obj::Union(_) => UNION.to_string(),
             Obj::Intersect(_) => INTERSECT.to_string(),
             Obj::SetMinus(_) => SET_MINUS.to_string(),
-            Obj::SetDiff(_) => SET_DIFF.to_string(),
             Obj::BigUnion(_) => BIG_UNION.to_string(),
             Obj::BigIntersect(_) => BIG_INTERSECT.to_string(),
             Obj::PowerSet(_) => POWER_SET.to_string(),
@@ -1769,7 +1751,6 @@ impl Obj {
             Obj::Union(x) => write!(f, "{}", x)?,
             Obj::Intersect(x) => write!(f, "{}", x)?,
             Obj::SetMinus(x) => write!(f, "{}", x)?,
-            Obj::SetDiff(x) => write!(f, "{}", x)?,
             Obj::BigUnion(x) => write!(f, "{}", x)?,
             Obj::BigIntersect(x) => write!(f, "{}", x)?,
             Obj::Atom(x) => write!(f, "{}", x)?,
@@ -1934,11 +1915,6 @@ impl Obj {
             )
             .into(),
             Obj::SetMinus(x) => SetMinus::new(
-                Obj::replace_bound_identifier(*x.left, from, to),
-                Obj::replace_bound_identifier(*x.right, from, to),
-            )
-            .into(),
-            Obj::SetDiff(x) => SetDiff::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
             )
@@ -3070,17 +3046,6 @@ impl fmt::Display for SetMinus {
     }
 }
 
-impl fmt::Display for SetDiff {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(
-            f,
-            "{}{}",
-            SET_DIFF,
-            braced_vec_to_string(&vec![self.left.as_ref(), self.right.as_ref()])
-        )
-    }
-}
-
 impl fmt::Display for BigUnion {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         write!(
@@ -3403,12 +3368,6 @@ impl From<Intersect> for Obj {
 impl From<SetMinus> for Obj {
     fn from(s: SetMinus) -> Self {
         Obj::SetMinus(s)
-    }
-}
-
-impl From<SetDiff> for Obj {
-    fn from(s: SetDiff) -> Self {
-        Obj::SetDiff(s)
     }
 }
 

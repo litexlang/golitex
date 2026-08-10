@@ -376,9 +376,6 @@ impl Runtime {
             (Obj::SetMinus(left), Obj::SetMinus(right)) => {
                 compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
             }
-            (Obj::SetDiff(left), Obj::SetDiff(right)) => {
-                compare_pairs!((&left.left, &right.left), (&left.right, &right.right),)
-            }
             (Obj::BigUnion(left), Obj::BigUnion(right)) => compare(&left.left, &right.left),
             (Obj::BigIntersect(left), Obj::BigIntersect(right)) => compare(&left.left, &right.left),
             (Obj::PowerSet(left), Obj::PowerSet(right)) => compare(&left.set, &right.set),

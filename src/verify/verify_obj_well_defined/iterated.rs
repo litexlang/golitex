@@ -1576,20 +1576,6 @@ impl Runtime {
                 return_set,
                 verify_state,
             ),
-            Obj::SetDiff(set_diff) => {
-                if !self.verify_iterand_domain_is_contained_in_return_set(
-                    set_diff.left.as_ref(),
-                    return_set,
-                    verify_state,
-                )? {
-                    return Ok(false);
-                }
-                self.verify_iterand_domain_is_contained_in_return_set(
-                    set_diff.right.as_ref(),
-                    return_set,
-                    verify_state,
-                )
-            }
             Obj::SetBuilder(builder) => self.verify_iterand_domain_is_contained_in_return_set(
                 builder.param_set.as_ref(),
                 return_set,

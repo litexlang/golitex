@@ -15,8 +15,9 @@ mod unsafe_stmt_result;
 mod witness_stmt_result;
 
 pub use builtin_rule_evidence::{
-    ArithmeticBuiltinRule, BuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
-    NonzeroExpressionOrientation,
+    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
+    DivNotEqualZeroBuiltinRuleEvidence, NonzeroExpressionOrientation, SetBuiltinRule,
+    SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;

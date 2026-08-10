@@ -426,9 +426,12 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(StmtResult::from(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 atomic_fact.clone().into(),
                 "abs: 0 < abs(x) from x != 0".to_string(),
+                BuiltinRuleEvidence::AbsoluteValue(
+                    AbsoluteValueBuiltinRule::PositiveFromNonzero,
+                ),
                 vec![nonzero_result],
             ),
         )))

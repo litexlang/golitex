@@ -215,7 +215,7 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.try_verify_finite_set_size_union_or_set_diff_le_sum(atomic_fact, builtin_state)?
+            self.try_verify_finite_set_size_union_le_sum(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -1000,10 +1000,9 @@ impl Runtime {
         ))
     }
 
-    // A union or symmetric difference has at most the sum of its two finite inputs.
-    // Examples: `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`
-    // and `finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)`.
-    fn try_verify_finite_set_size_union_or_set_diff_le_sum(
+    // A union has at most the sum of its two finite inputs.
+    // Example: `finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)`.
+    fn try_verify_finite_set_size_union_le_sum(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
@@ -1026,17 +1025,8 @@ impl Runtime {
             return Ok(None);
         };
 
-        let (left_set, right_set, rule) = match combined_size.set.as_ref() {
-            Obj::Union(union) => (
-                union.left.as_ref().clone(),
-                union.right.as_ref().clone(),
-                "finite_set_size_union_le_sum",
-            ),
-            Obj::SetDiff(set_diff) => (
-                set_diff.left.as_ref().clone(),
-                set_diff.right.as_ref().clone(),
-                "finite_set_size_set_diff_le_sum",
-            ),
+        let (left_set, right_set) = match combined_size.set.as_ref() {
+            Obj::Union(union) => (union.left.as_ref().clone(), union.right.as_ref().clone()),
             _ => return Ok(None),
         };
         if !verify_equality_by_they_are_the_same(&left_set, &left_size.set)
@@ -1060,7 +1050,7 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                 atomic_fact.clone().into(),
                 InferResult::new(),
-                rule.to_string(),
+                "finite_set_size_union_le_sum".to_string(),
                 vec![left_result, right_result],
             )
             .into(),

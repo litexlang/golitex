@@ -4,9 +4,7 @@ Jiachen Shen and The Litex Team, 2026-06-02. Email: litexlang@outlook.com
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/How_To_Contribute.md
 
-Litex is experimental and developed in public, including work that is still
-incomplete. Repository visibility is an invitation to inspect, reuse, and
-contribute, not a claim that every artifact is finished.
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
 
 The most helpful contributions right now are simple:
 

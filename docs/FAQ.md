@@ -4,6 +4,8 @@ Jiachen Shen and The Litex Team, 2026-06-03. Email: litexlang@outlook.com
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/FAQ.md
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
 This page collects common questions about Litex's design, performance model,
 and intended proof style. It is written as a living note: answers should stay
 concrete, modest, and close to the current verifier behavior.
@@ -265,7 +267,16 @@ forall x, y R:
     y < x
     =>:
         x > y
+
+forall x, y R:
+    x != y
+    =>:
+        y != x
 ```
+
+The last proof uses the one-premise `not-equality symmetry` builtin. Its output
+keeps `x != y` as a checked child; the rule cannot invent inequality when no
+orientation is known.
 
 Builtin verification rules also cover calculation-style facts:
 

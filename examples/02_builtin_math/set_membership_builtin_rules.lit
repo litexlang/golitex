@@ -46,7 +46,6 @@ forall A, B set:
     A $subset union(A, B)
     B $subset union(A, B)
     set_minus(A, B) $subset A
-    set_diff(A, B) = union(set_minus(A, B), set_minus(B, A))
 
 # A subset is recovered by removing its relative complement from the container.
 
@@ -90,11 +89,9 @@ forall A, B finite_set:
     $is_finite_set(set_minus(A, B))
     $is_finite_set(set_minus(B, A))
     $is_finite_set(union(A, B))
-    $is_finite_set(set_diff(A, B))
+    $is_finite_set(union(set_minus(A, B), set_minus(B, A)))
     finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
     finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
-    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
     intersect(A, B) $subset A
     finite_set_size(intersect(A, B)) <= finite_set_size(A)
     finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)

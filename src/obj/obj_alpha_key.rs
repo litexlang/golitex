@@ -60,7 +60,6 @@ fn collect_obj_binder_bindings(
         Obj::Union(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::Intersect(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::SetMinus(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
-        Obj::SetDiff(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::MatrixAdd(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::MatrixSub(x) => collect_two(&x.left, &x.right, bindings, seen, depth),
         Obj::MatrixMul(x) => collect_two(&x.left, &x.right, bindings, seen, depth),

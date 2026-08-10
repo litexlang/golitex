@@ -89,11 +89,11 @@ namespace showcase
 
 noncomputable section
 
-universe u
+universe LitexUniverse
 
 abbrev LitexFact := Prop
 
-class LitexObject (α : Type u) : Prop where
+class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
 instance : LitexObject ℕ := ⟨True.intro⟩
@@ -101,21 +101,19 @@ instance : LitexObject ℤ := ⟨True.intro⟩
 instance : LitexObject ℚ := ⟨True.intro⟩
 instance : LitexObject ℝ := ⟨True.intro⟩
 instance : LitexObject ℂ := ⟨True.intro⟩
-instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
 
-def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
-def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
-def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
 
-end
-
-opaque p {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
+opaque p {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
 
 -- Litex trust boundary: f4
-axiom global_fact_4 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), p a b
+axiom fact4 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), p a b
 
--- Litex stored fact f5
-theorem global_fact_5 : p (1 : ℝ) (2 : ℝ) := by
+-- Litex fact f5
+theorem fact5 : p (1 : ℝ) (2 : ℝ) := by
   -- Litex parameter requirement for `a`: 1 : ℝ
   let proof_arg_1_1 : ℝ := 1
   have proof_fact_1_2 : 1 ∈ (Set.univ : Set ℝ) := by
@@ -126,13 +124,13 @@ theorem global_fact_5 : p (1 : ℝ) (2 : ℝ) := by
   have proof_fact_1_4 : 2 ∈ (Set.univ : Set ℝ) := by
     change True
     trivial
-  have proof_fact_1_5 : p (1 : ℝ) (2 : ℝ) := global_fact_4 proof_arg_1_1 proof_arg_1_3 proof_fact_1_2 proof_fact_1_4
+  have proof_fact_1_5 : p (1 : ℝ) (2 : ℝ) := fact4 proof_arg_1_1 proof_arg_1_3 proof_fact_1_2 proof_fact_1_4
   exact proof_fact_1_5
 
-opaque transported {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact
+opaque transported {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
 
--- Litex stored fact f21
-theorem global_fact_21 : ∀ {litex_carrier_4 : Type u} [LitexObject litex_carrier_4], ∀ (a : Set litex_carrier_4), ∀ (b : Set litex_carrier_4), transported a → a = b → transported b := by
+-- Litex fact f21
+theorem fact21 : ∀ {α4 : Type LitexUniverse} [LitexObject α4], ∀ (a : Set α4), ∀ (b : Set α4), transported a → a = b → transported b := by
   intro _ _ a b proof_fact_2_1 proof_fact_2_2
   have proof_fact_2_3 : transported a := proof_fact_2_1
   have proof_fact_2_4 : a = b := proof_fact_2_2
@@ -140,10 +138,10 @@ theorem global_fact_21 : ∀ {litex_carrier_4 : Type u} [LitexObject litex_carri
     simpa only [proof_fact_2_4] using proof_fact_2_3
   exact proof_fact_2_5
 
-opaque related {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
+opaque related {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
 
--- Litex stored fact f37
-theorem global_fact_37 : ∀ {litex_carrier_7 : Type u} [LitexObject litex_carrier_7], ∀ (a : Set litex_carrier_7), ∀ (b : Set litex_carrier_7), related a b → a = b → related b a := by
+-- Litex fact f37
+theorem fact37 : ∀ {α7 : Type LitexUniverse} [LitexObject α7], ∀ (a : Set α7), ∀ (b : Set α7), related a b → a = b → related b a := by
   intro _ _ a b proof_fact_3_1 proof_fact_3_2
   have proof_fact_3_3 : related a b := proof_fact_3_1
   have proof_fact_3_4 : a = b := proof_fact_3_2
@@ -151,8 +149,8 @@ theorem global_fact_37 : ∀ {litex_carrier_7 : Type u} [LitexObject litex_carri
     simpa only [proof_fact_3_4] using proof_fact_3_3
   exact proof_fact_3_5
 
--- Litex stored fact f59
-theorem global_fact_59 : ∀ {litex_carrier_9 : Type u} [LitexObject litex_carrier_9], ∀ (a : Set litex_carrier_9), ∀ (b : Set litex_carrier_9), ∀ (c : Set litex_carrier_9), transported c → a = b → b = c → transported a := by
+-- Litex fact f59
+theorem fact59 : ∀ {α9 : Type LitexUniverse} [LitexObject α9], ∀ (a : Set α9), ∀ (b : Set α9), ∀ (c : Set α9), transported c → a = b → b = c → transported a := by
   intro _ _ a b c proof_fact_4_1 proof_fact_4_2 proof_fact_4_3
   have proof_fact_4_4 : transported c := proof_fact_4_1
   have proof_fact_4_5 : b = c := proof_fact_4_3
@@ -163,61 +161,63 @@ theorem global_fact_59 : ∀ {litex_carrier_9 : Type u} [LitexObject litex_carri
 
 def is_one (x : ℝ) : LitexFact := x = 1
 
--- Litex stored fact f62
-theorem global_fact_62 : is_one 1 := by
+-- Litex fact f62
+theorem fact62 : is_one 1 := by
   simp [is_one]
 
-opaque marked {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact
+opaque marked {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
 
 -- Litex trust boundary: f68
-axiom global_fact_68 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → marked x
+axiom fact68 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → marked x
 
--- Litex stored fact f81
-theorem global_fact_81 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x < 10 → marked x := by
+-- Litex fact f81
+theorem fact81 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x < 10 → marked x := by
   intro x proof_fact_5_1 proof_fact_5_2 proof_fact_5_3
   -- Litex parameter requirement for `x`: x : ℝ
   let proof_arg_5_4 : ℝ := x
   have proof_fact_5_5 : x ∈ (Set.univ : Set ℝ) := proof_fact_5_1
   have proof_fact_5_6 : x ≠ 0 := proof_fact_5_2
-  have proof_fact_5_7 : marked x := global_fact_68 proof_arg_5_4 proof_fact_5_5 proof_fact_5_6
+  have proof_fact_5_7 : marked x := fact68 proof_arg_5_4 proof_fact_5_5 proof_fact_5_6
   exact proof_fact_5_7
 
--- Litex stored fact f88
-theorem global_fact_88 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x ≠ 0 := by
+-- Litex fact f88
+theorem fact88 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → x ≠ 0 := by
   intro x proof_fact_6_1 proof_fact_6_2
   exact proof_fact_6_2
 
--- Litex stored fact f104
-theorem global_fact_104 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → ((a + b) / x) = ((a / x) + (b / x)) := by
+-- Litex fact f104
+theorem fact104 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → ((a + b) / x) = ((a / x) + (b / x)) := by
   intro a proof_fact_7_1 b proof_fact_7_2 x proof_fact_7_3 proof_fact_7_4
   -- native proof view, left fraction: (a + b) / x
   -- native proof view, right fraction: ((a * x) + (b * x)) / (x * x)
   field_simp [proof_fact_7_4] <;> ring
 
--- Litex stored fact f105
-theorem global_fact_105 : (((1 / 2) / 3) / 4 : ℚ) = (1 / 24) := by
+-- Litex fact f105
+theorem fact105 : (((1 / 2) / 3) / 4 : ℚ) = (1 / 24) := by
   -- native proof view, left fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))
   -- native proof view, right fraction: (1 : ℝ) / (24 : ℝ)
   norm_num
 
-opaque marked2 {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] {litex_arg_carrier_2 : Type u} [LitexObject litex_arg_carrier_2] : litex_arg_carrier_1 → litex_arg_carrier_2 → LitexFact
+opaque marked2 {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
 
 -- Litex trust boundary: f108
-axiom global_fact_108 : ∀ x ∈ (Set.univ : Set ℝ), marked2 x (x + 1)
+axiom fact108 : ∀ x ∈ (Set.univ : Set ℝ), marked2 x (x + 1)
 
--- Litex stored fact f109
-theorem global_fact_109 : marked2 (1 : ℝ) (2 : ℝ) := by
+-- Litex fact f109
+theorem fact109 : marked2 (1 : ℝ) (2 : ℝ) := by
   have proof_fact_8_1 : marked2 (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := by
     -- Litex parameter requirement for `x`: (2 - 1) : ℝ
     let proof_arg_9_1 : ℝ := (2 - 1)
     have proof_fact_9_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by
       change True
       trivial
-    have proof_fact_9_3 : marked2 (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := global_fact_108 proof_arg_9_1 proof_fact_9_2
+    have proof_fact_9_3 : marked2 (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := fact108 proof_arg_9_1 proof_fact_9_2
     exact proof_fact_9_3
   have proof_fact_8_2 : marked2 (1 : ℝ) (2 : ℝ) := by
     convert proof_fact_8_1 using 1 <;> norm_num
   exact proof_fact_8_2
+
+end
 
 end showcase
 """

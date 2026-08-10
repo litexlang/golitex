@@ -84,7 +84,6 @@ pub enum BuiltinObjOperatorToLeanIR {
     Union,
     Intersect,
     SetMinus,
-    SetDiff,
     BigUnion,
     BigIntersect,
     PowerSet,
@@ -195,11 +194,6 @@ impl ObjToLeanIR {
             ),
             Obj::SetMinus(value) => binary(
                 BuiltinObjOperatorToLeanIR::SetMinus,
-                value.left.as_ref(),
-                value.right.as_ref(),
-            ),
-            Obj::SetDiff(value) => binary(
-                BuiltinObjOperatorToLeanIR::SetDiff,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),

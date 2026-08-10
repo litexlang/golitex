@@ -239,10 +239,6 @@ fn mark_forall_param_coverage_in_obj(
             mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
             mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
         }
-        Obj::SetDiff(binary) => {
-            mark_forall_param_coverage_in_obj(binary.left.as_ref(), coverage_by_forall_param);
-            mark_forall_param_coverage_in_obj(binary.right.as_ref(), coverage_by_forall_param);
-        }
         Obj::BigUnion(unary) => {
             mark_forall_param_coverage_in_obj(unary.left.as_ref(), coverage_by_forall_param);
         }

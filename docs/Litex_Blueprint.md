@@ -4,6 +4,8 @@ Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
+> **Litex is an experimental hobby project still in beta. Expect rough edges.**
+
 ## Background
 
 Litex is a formal language for mathematics centered on objects and facts. It aims to lower the barriers to learning, writing, and reviewing formal proofs, so people and AI can express reasoning, enhance understanding and sparkle new ideas in a form close to ordinary mathematics while every conclusion is rigorously checked by a machine.
@@ -265,31 +267,34 @@ For this equality-rewrite route supported by the current MVP, it generates the f
 ```lean
 import Mathlib
 
-universe uLitex
-
 namespace tmp
 
--- Litex's primitive notion of a set.
-abbrev LitexSet := Type uLitex
+noncomputable section
+
+universe LitexUniverse
 
 -- Every generated proposition has this codomain.
 abbrev LitexFact := Prop
 
--- Litex stored fact f19
-theorem global_fact_19 : ∀ (a b c : LitexSet), a ≠ c → a = b → b ≠ c := by
-  intro a b c proof_fact_1_1 proof_fact_1_2
+-- The shared LitexObject declarations are omitted here.
+
+-- Litex fact f19
+theorem fact19 : ∀ {alpha0 : Type LitexUniverse} [LitexObject alpha0], ∀ (a : Set alpha0), ∀ (b : Set alpha0), ∀ (c : Set alpha0), a ≠ c → a = b → b ≠ c := by
+  intro _ _ a b c proof_fact_1_1 proof_fact_1_2
   have proof_fact_1_3 : a ≠ c := proof_fact_1_1
   have proof_fact_1_4 : a = b := proof_fact_1_2
   have proof_fact_1_5 : b ≠ c := by
     simpa only [proof_fact_1_4] using proof_fact_1_3
   exact proof_fact_1_5
 
+end
+
 end tmp
 ```
 
-This Lean code expands the verification route found automatically by Litex, one layer at a time. `global_fact_19` carries the environment-stored Litex `FactId`. Inside its proof, `intro` introduces the three `forall` parameters and the first two facts in proof space 1. `proof_fact_1_3` replays the known source `a ≠ c`, while `proof_fact_1_4` replays the equality `a = b` used for rewriting. Finally, `proof_fact_1_5` is checked by `simpa only [proof_fact_1_4] using proof_fact_1_3`, which transports `a ≠ c` along that equality to obtain `b ≠ c`. A nested proof block would inherit visible outer facts; if it introduced additional named facts, it would receive a fresh space number and restart its local fact index at one. The corresponding proof IR records the `forall` introduction, the IDs of both local facts, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code expands the verification route found automatically by Litex, one layer at a time. `fact19` carries the environment-stored Litex `FactId`. Inside its proof, `intro` introduces the implicit carrier and object marker, the three `forall` parameters, and the first two facts in proof space 1. `proof_fact_1_3` replays the known source `a ≠ c`, while `proof_fact_1_4` replays the equality `a = b` used for rewriting. Finally, `proof_fact_1_5` is checked by `simpa only [proof_fact_1_4] using proof_fact_1_3`, which transports `a ≠ c` along that equality to obtain `b ≠ c`. A nested proof block would inherit visible outer facts; if it introduced additional named facts, it would receive a fresh space number and restart its local fact index at one. The corresponding proof IR records the `forall` introduction, the IDs of both local facts, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
 
-Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `global_fact ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
+Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 
 For existential statements, the same principle now has a concrete implementation. A positive `witness exist` retains its concrete witnesses, type checks, local proof steps, and direct body proofs; `obtain` and body-style `have` retain the alpha-checked source existential and each exact stored projection. Lean receives a nested `Exists` proof followed by ordered `Exists.choose`/`choose_spec` terms, including multiple witnesses and proof-local extraction. `exist!`, `not exist`, and preimage extraction remain separate boundaries rather than being approximated by this node.
 

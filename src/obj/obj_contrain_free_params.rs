@@ -130,9 +130,6 @@ impl Obj {
             Obj::SetMinus(x) => {
                 collect_forall_free_param_names_in_pair(&x.left, &x.right, collector)
             }
-            Obj::SetDiff(x) => {
-                collect_forall_free_param_names_in_pair(&x.left, &x.right, collector)
-            }
             Obj::BigUnion(x) => x.left.collect_free_param_names_into(collector),
             Obj::BigIntersect(x) => x.left.collect_free_param_names_into(collector),
             Obj::PowerSet(x) => x.set.collect_free_param_names_into(collector),

@@ -2,10 +2,13 @@ use std::collections::HashMap;
 
 use crate::prelude::*;
 
+use super::helper::lean_generic_carrier_name;
+
 #[derive(Clone, Default)]
 pub(super) struct LeanTypeContext {
     symbol_carriers: HashMap<SymbolId, LeanCarrierToLeanIR>,
     object_expectations: HashMap<String, LeanCarrierToLeanIR>,
+    generic_carrier_aliases: HashMap<SymbolId, SymbolId>,
 }
 
 impl LeanTypeContext {
@@ -39,6 +42,42 @@ impl LeanTypeContext {
 
     pub(super) fn expected_object(&self, object: &Obj) -> Option<&LeanCarrierToLeanIR> {
         self.object_expectations.get(&obj_equality_key(object))
+    }
+
+    pub(super) fn unify_generic_carriers(
+        &mut self,
+        left: &LeanCarrierToLeanIR,
+        right: &LeanCarrierToLeanIR,
+    ) -> Result<(), String> {
+        let left = self.resolve_carrier(left)?;
+        let right = self.resolve_carrier(right)?;
+        match (left, right) {
+            (
+                LeanCarrierToLeanIR::Generic {
+                    anchor: left_anchor,
+                },
+                LeanCarrierToLeanIR::Generic {
+                    anchor: right_anchor,
+                },
+            ) if left_anchor != right_anchor => {
+                let (canonical, alias) = if left_anchor < right_anchor {
+                    (left_anchor, right_anchor)
+                } else {
+                    (right_anchor, left_anchor)
+                };
+                self.generic_carrier_aliases.insert(alias, canonical);
+            }
+            (
+                LeanCarrierToLeanIR::Set {
+                    element_carrier: left,
+                },
+                LeanCarrierToLeanIR::Set {
+                    element_carrier: right,
+                },
+            ) => self.unify_generic_carriers(&left, &right)?,
+            _ => {}
+        }
+        Ok(())
     }
 
     pub(super) fn object_carrier(
@@ -116,6 +155,15 @@ impl LeanTypeContext {
                     self.resolve_carrier_with_depth(element_carrier, depth + 1)?,
                 ),
             }),
+            LeanCarrierToLeanIR::Generic { anchor } => {
+                let Some(canonical) = self.generic_carrier_aliases.get(anchor).copied() else {
+                    return Ok(carrier.clone());
+                };
+                self.resolve_carrier_with_depth(
+                    &LeanCarrierToLeanIR::Generic { anchor: canonical },
+                    depth + 1,
+                )
+            }
             other => Ok(other.clone()),
         }
     }
@@ -128,7 +176,7 @@ impl LeanTypeContext {
             LeanCarrierToLeanIR::Real => Ok("ℝ".to_string()),
             LeanCarrierToLeanIR::Complex => Ok("ℂ".to_string()),
             LeanCarrierToLeanIR::Generic { anchor } => {
-                Ok(format!("litex_carrier_{}", anchor.value()))
+                Ok(lean_generic_carrier_name(anchor.value()))
             }
             LeanCarrierToLeanIR::Set { element_carrier } => {
                 Ok(format!("Set {}", self.lean_type(&element_carrier)?))
@@ -237,8 +285,7 @@ impl LeanTypeContext {
         match operator {
             BuiltinObjOperatorToLeanIR::Union
             | BuiltinObjOperatorToLeanIR::Intersect
-            | BuiltinObjOperatorToLeanIR::SetMinus
-            | BuiltinObjOperatorToLeanIR::SetDiff => {
+            | BuiltinObjOperatorToLeanIR::SetMinus => {
                 let mut joined = None;
                 for argument in arguments {
                     let Some(LeanCarrierToLeanIR::Set { element_carrier }) =

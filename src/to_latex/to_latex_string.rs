@@ -1935,17 +1935,6 @@ impl SetBuilder {
     }
 }
 
-impl SetDiff {
-    pub fn to_latex_string(&self) -> String {
-        format!(
-            r"\operatorname{{{}}}\left( {}, {} \right)",
-            SET_DIFF,
-            self.left.to_latex_string(),
-            self.right.to_latex_string()
-        )
-    }
-}
-
 impl SetMinus {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2230,7 +2219,6 @@ impl Obj {
             Obj::Union(x) => x.to_latex_string(),
             Obj::Intersect(x) => x.to_latex_string(),
             Obj::SetMinus(x) => x.to_latex_string(),
-            Obj::SetDiff(x) => x.to_latex_string(),
             Obj::BigUnion(x) => x.to_latex_string(),
             Obj::BigIntersect(x) => x.to_latex_string(),
             Obj::PowerSet(x) => x.to_latex_string(),

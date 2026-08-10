@@ -14,12 +14,9 @@
 [![Zulip](https://img.shields.io/badge/Zulip-blue?logo=zulip)](https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/)
 [![Manual](https://img.shields.io/badge/Manual-orange?logo=book)](https://litexlang.com/doc/Manual)
 
-Litex is experimental research software developed in public, so this
-repository intentionally includes drafts, experiments, and incomplete work.
-Public availability is not a completion claim; rely on tagged releases,
-current tests, and the stated `trust` boundaries and known limitations. It is
-not ready for mission-critical work. *VISIT [OUR WEBSITE](litexlang.com) FOR
-EXECUTABLE INTRODUCTION OF LITEX*
+**Litex is an experimental hobby project still in beta. Expect rough edges.**
+
+*VISIT [OUR WEBSITE](litexlang.com) FOR EXECUTABLE INTRODUCTION OF LITEX*
 
 </div>
 

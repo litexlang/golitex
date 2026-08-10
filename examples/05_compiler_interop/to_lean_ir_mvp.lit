@@ -13,7 +13,7 @@
 # FactId" and had no record that `a = b` transported the cited fact to the
 # target `$transported(b)`.
 #
-# Now (verified): To-Lean emits stored facts as `global_fact_<FactId>`. Every
+# Now (verified): To-Lean emits stored facts as `fact<FactId>`. Every
 # proof block that introduces facts gets a separate space, whose premises and
 # intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>` in
 # derivation order.

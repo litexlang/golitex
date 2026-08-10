@@ -3024,6 +3024,35 @@ forall s, t finite_set:
 }
 
 #[test]
+fn removed_set_diff_builtin_is_not_resolved_as_a_native_function() {
+    run_with_large_stack(
+        "removed_set_diff_builtin_is_not_resolved_as_a_native_function",
+        || {
+            let source_code = r#"
+have A, B set
+$is_finite_set(set_diff(A, B))
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "removed_set_diff_builtin_is_not_resolved_as_a_native_function",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "removed set_diff should not verify:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("function `set_diff` not defined"),
+                "removed set_diff should be treated as an unresolved ordinary function:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn finite_set_cardinality_interfaces_are_builtin_rules() {
     run_with_large_stack(
         "finite_set_cardinality_interfaces_are_builtin_rules",
@@ -3038,10 +3067,8 @@ forall A, B finite_set:
     finite_set_size(union(A, B)) = finite_set_size(A) + finite_set_size(B) - finite_set_size(intersect(A, B))
     finite_set_size(A) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(A, B))
     finite_set_size(B) = finite_set_size(intersect(A, B)) + finite_set_size(set_minus(B, A))
-    finite_set_size(set_diff(A, B)) = finite_set_size(set_minus(A, B)) + finite_set_size(set_minus(B, A))
     finite_set_size(intersect(A, B)) <= finite_set_size(A)
     finite_set_size(union(A, B)) <= finite_set_size(A) + finite_set_size(B)
-    finite_set_size(set_diff(A, B)) <= finite_set_size(A) + finite_set_size(B)
 
 forall A, B finite_set:
     A $superset B
@@ -3070,10 +3097,8 @@ forall a, b N:
                 "finite set size set minus finite subset",
                 "finite set size union inclusion exclusion",
                 "finite set size partition by intersection and difference",
-                "finite set size symmetric difference",
                 "finite set size subset le",
                 "finite set size union le sum",
-                "finite set size set diff le sum",
                 "finite set size closed range",
                 "finite set size range",
             ] {

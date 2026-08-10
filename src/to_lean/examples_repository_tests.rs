@@ -1,4 +1,6 @@
+use std::collections::HashSet;
 use std::fs;
+use std::ops::Range;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -8,89 +10,139 @@ use super::{
     ToLeanUnsupportedPhase,
 };
 
-const TO_LEAN_EXAMPLE_REPOSITORY: &str = "examples/09_to_lean";
-const STRICT_EXAMPLE_FILES: &[&str] = &[
-    "native_carriers.lit",
-    "bounded_facts.lit",
-    "propositions_and_trust.lit",
-    "object_definitions.lit",
-    "equality_transport.lit",
-    "builtin_arithmetic.lit",
-    "recursive_arithmetic.lit",
-    "native_sets.lit",
-    "choice.lit",
-    "existentials.lit",
-    "proof_scopes.lit",
-];
-const PARTIAL_EXAMPLE_FILES: &[&str] = &["carrier_boundaries.lit", "partial_boundary.lit"];
+const TO_LEAN_EXAMPLES_MARKDOWN: &str = "examples/09_to_lean/litex_to_lean_examples.md";
+const PARTIAL_EXAMPLE_MARKER: &str = "<!-- to-lean: partial -->";
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum ToLeanExampleMode {
+    Strict,
+    Partial,
+}
+
+struct ToLeanMarkdownExample {
+    name: String,
+    mode: ToLeanExampleMode,
+    litex_source: String,
+    lean_snapshot: String,
+    lean_body_range: Range<usize>,
+}
 
 #[test]
-fn to_lean_examples_repository_emits_checked_source() {
-    run_with_large_stack("to_lean_examples_repository_emits_checked_source", || {
-        let repository = example_repository_path();
-        let config = fs::read_to_string(repository.join("litex.config")).unwrap();
+fn to_lean_examples_markdown_emits_checked_source() {
+    run_with_large_stack("to_lean_examples_markdown_emits_checked_source", || {
+        let markdown = fs::read_to_string(example_markdown_path()).unwrap();
+        let examples = parse_to_lean_markdown_examples(&markdown);
         let mut strict_failures = Vec::new();
+        let mut saw_native_carriers = false;
+        let mut saw_propositions_and_trust = false;
+        let mut saw_carrier_boundaries = false;
+        let mut saw_partial_boundary = false;
 
-        for file in STRICT_EXAMPLE_FILES {
-            assert!(
-                config.contains(&format!("\"./{}\"", file)),
-                "{} is missing from litex.config",
-                file
-            );
-            let path = repository.join(file);
-            let source = fs::read_to_string(&path).unwrap();
-            let entry_label = example_entry_label(file);
-            let generated = match to_lean_from_source(&source, &entry_label) {
-                Ok(generated) => generated,
-                Err(error) => {
-                    let report = to_lean_from_source_with_report(&source, &entry_label).unwrap();
-                    strict_failures.push(format!(
-                        "strict To-Lean failed for {}: {}\nunsupported: {:#?}",
-                        file,
-                        error.trace_message(),
-                        report.unsupported
-                    ));
-                    continue;
+        for example in examples.iter() {
+            match example.mode {
+                ToLeanExampleMode::Strict => {
+                    let generated = match to_lean_from_source(
+                        &example.litex_source,
+                        &example_entry_label(&example.name),
+                    ) {
+                        Ok(generated) => generated,
+                        Err(error) => {
+                            let report = to_lean_from_source_with_report(
+                                &example.litex_source,
+                                &example_entry_label(&example.name),
+                            )
+                            .unwrap();
+                            strict_failures.push(format!(
+                                "strict To-Lean failed for {}: {}\nunsupported: {:#?}",
+                                example.name,
+                                error.trace_message(),
+                                report.unsupported
+                            ));
+                            continue;
+                        }
+                    };
+
+                    assert_common_generated_contract(example, &generated);
+                    if example.name == "propositions_and_trust" {
+                        saw_propositions_and_trust = true;
+                        assert_eq!(generated.matches("\naxiom fact").count(), 4);
+                        assert!(
+                            generated.contains("∀ x ∈ (Set.univ : Set ℝ), x ∈ (Set.univ : Set ℝ)"),
+                            "{}",
+                            generated
+                        );
+                        assert!(
+                            generated.contains(
+                                "∀ z ∈ (Set.univ : Set ℤ), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)"
+                            ),
+                            "{}",
+                            generated
+                        );
+                    } else {
+                        assert!(!generated.contains("\naxiom fact"), "{}", example.name);
+                    }
+
+                    if example.name == "native_carriers" {
+                        saw_native_carriers = true;
+                        assert!(generated.contains("2 = 2"), "{}", generated);
+                        assert!(
+                            generated.contains("2 ∈ (Set.univ : Set ℝ)"),
+                            "{}",
+                            generated
+                        );
+                    }
+
+                    assert_generated_snapshot_matches(example, &generated);
+                    println!(
+                        "To-Lean strict Markdown example OK: {} ({} Lean bytes)",
+                        example.name,
+                        generated.len()
+                    );
                 }
-            };
+                ToLeanExampleMode::Partial => {
+                    let report = to_lean_from_source_with_report(
+                        &example.litex_source,
+                        &example_entry_label(&example.name),
+                    )
+                    .unwrap();
 
-            assert!(generated.starts_with("import Mathlib\n"), "{}", file);
-            assert!(!generated.contains("sorry"), "{}", file);
-            assert!(!generated.contains("LitexSet"), "{}", file);
-            assert!(!generated.contains("LitexAddEq"), "{}", file);
-            if *file == "propositions_and_trust.lit" {
-                assert_eq!(generated.matches("\naxiom global_fact_").count(), 4);
-                assert!(
-                    generated.contains("∀ x ∈ (Set.univ : Set ℝ), x ∈ (Set.univ : Set ℝ)"),
-                    "{}",
-                    generated
-                );
-                assert!(
-                    generated
-                        .contains("∀ z ∈ (Set.univ : Set ℤ), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)"),
-                    "{}",
-                    generated
-                );
-            } else {
-                assert!(!generated.contains("\naxiom global_fact_"), "{}", file);
+                    assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                    assert!(!report.unsupported.is_empty(), "{}", example.name);
+                    assert!(!report.lean_code.contains("sorry"), "{}", example.name);
+                    assert!(
+                        !report.lean_code.contains("\naxiom fact"),
+                        "{}",
+                        example.name
+                    );
+
+                    if example.name == "carrier_boundaries" {
+                        saw_carrier_boundaries = true;
+                        assert_eq!(report.unsupported.len(), 11);
+                        assert!(report.unsupported[0].statement.contains("n + 1"));
+                        assert!(report.unsupported[10]
+                            .statement
+                            .contains("boundary_complex_one"));
+                    } else if example.name == "partial_boundary" {
+                        saw_partial_boundary = true;
+                        assert_eq!(report.unsupported.len(), 1);
+                        assert_eq!(report.unsupported[0].statement_index, 2);
+                        assert_eq!(
+                            report.unsupported[0].phase,
+                            ToLeanUnsupportedPhase::LeanEmission
+                        );
+                        assert!(report.unsupported[0].statement.contains("sin"));
+                        assert_eq!(report.lean_code.matches("theorem fact").count(), 2);
+                    }
+
+                    assert_generated_snapshot_matches(example, &report.lean_code);
+                    println!(
+                        "To-Lean partial Markdown example OK: {} ({} explicit omissions, {} Lean bytes)",
+                        example.name,
+                        report.unsupported.len(),
+                        report.lean_code.len()
+                    );
+                }
             }
-
-            if *file == "native_carriers.lit" {
-                assert!(generated.contains("2 = 2"), "{}", generated);
-                assert!(
-                    generated.contains("2 ∈ (Set.univ : Set ℝ)"),
-                    "{}",
-                    generated
-                );
-            }
-
-            assert_generated_snapshot_matches(file, &source, &generated);
-
-            println!(
-                "To-Lean strict example OK: {} ({} Lean bytes)",
-                file,
-                generated.len()
-            );
         }
 
         assert!(
@@ -98,89 +150,54 @@ fn to_lean_examples_repository_emits_checked_source() {
             "{}",
             strict_failures.join("\n\n")
         );
-
-        for file in PARTIAL_EXAMPLE_FILES {
-            assert!(
-                config.contains(&format!("\"./{}\"", file)),
-                "{} is missing from litex.config",
-                file
-            );
-            let partial_path = repository.join(file);
-            let partial_source = fs::read_to_string(&partial_path).unwrap();
-            let report =
-                to_lean_from_source_with_report(&partial_source, &example_entry_label(file))
-                    .unwrap();
-
-            assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
-            assert!(!report.unsupported.is_empty(), "{}", file);
-            assert!(!report.lean_code.contains("sorry"), "{}", file);
-            assert!(
-                !report.lean_code.contains("\naxiom global_fact_"),
-                "{}",
-                file
-            );
-
-            if *file == "carrier_boundaries.lit" {
-                assert_eq!(report.unsupported.len(), 11);
-                assert!(report.unsupported[0].statement.contains("n + 1"));
-                assert!(report.unsupported[10]
-                    .statement
-                    .contains("boundary_complex_one"));
-            } else if *file == "partial_boundary.lit" {
-                assert_eq!(report.unsupported.len(), 1);
-                assert_eq!(report.unsupported[0].statement_index, 2);
-                assert_eq!(
-                    report.unsupported[0].phase,
-                    ToLeanUnsupportedPhase::LeanEmission
-                );
-                assert!(report.unsupported[0].statement.contains("sin"));
-                assert_eq!(report.lean_code.matches("theorem global_fact_").count(), 2);
-            }
-
-            assert_generated_snapshot_matches(file, &partial_source, &report.lean_code);
-
-            println!(
-                "To-Lean partial example OK: {} ({} explicit omissions, {} Lean bytes)",
-                file,
-                report.unsupported.len(),
-                report.lean_code.len()
-            );
-        }
+        assert!(saw_native_carriers, "native_carriers example is missing");
+        assert!(
+            saw_propositions_and_trust,
+            "propositions_and_trust example is missing"
+        );
+        assert!(
+            saw_carrier_boundaries,
+            "carrier_boundaries partial example is missing"
+        );
+        assert!(
+            saw_partial_boundary,
+            "partial_boundary partial example is missing"
+        );
     });
 }
 
 #[test]
 #[ignore = "requires LITEX_LEAN_PROJECT pointing at a Mathlib Lake project"]
-fn generated_to_lean_examples_repository_compiles_with_mathlib() {
+fn generated_to_lean_examples_markdown_compiles_with_mathlib() {
     run_with_large_stack(
-        "generated_to_lean_examples_repository_compiles_with_mathlib",
+        "generated_to_lean_examples_markdown_compiles_with_mathlib",
         || {
             let project = std::env::var("LITEX_LEAN_PROJECT")
                 .expect("LITEX_LEAN_PROJECT must point at a Mathlib Lake project");
             let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
-            let repository = example_repository_path();
+            let markdown = fs::read_to_string(example_markdown_path()).unwrap();
+            let examples = parse_to_lean_markdown_examples(&markdown);
             let mut failures = Vec::new();
 
-            for file in STRICT_EXAMPLE_FILES {
-                let path = repository.join(file);
-                let source = fs::read_to_string(&path).unwrap();
-                let generated = to_lean_from_source(&source, &example_entry_label(file)).unwrap();
-                if let Err(failure) =
-                    compile_generated_with_mathlib(file, &generated, &project, &lake)
-                {
-                    failures.push(failure);
-                }
-            }
-
-            for file in PARTIAL_EXAMPLE_FILES {
-                let partial_path = repository.join(file);
-                let partial_source = fs::read_to_string(&partial_path).unwrap();
-                let report =
-                    to_lean_from_source_with_report(&partial_source, &example_entry_label(file))
+            for example in examples.iter() {
+                let generated = match example.mode {
+                    ToLeanExampleMode::Strict => to_lean_from_source(
+                        &example.litex_source,
+                        &example_entry_label(&example.name),
+                    )
+                    .unwrap(),
+                    ToLeanExampleMode::Partial => {
+                        let report = to_lean_from_source_with_report(
+                            &example.litex_source,
+                            &example_entry_label(&example.name),
+                        )
                         .unwrap();
-                assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                        assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                        report.lean_code
+                    }
+                };
                 if let Err(failure) =
-                    compile_generated_with_mathlib(file, &report.lean_code, &project, &lake)
+                    compile_generated_with_mathlib(&example.name, &generated, &project, &lake)
                 {
                     failures.push(failure);
                 }
@@ -192,91 +209,275 @@ fn generated_to_lean_examples_repository_compiles_with_mathlib() {
 }
 
 #[test]
-#[ignore = "rewrites every trailing generated-Lean snapshot under examples/09_to_lean"]
-fn refresh_to_lean_examples_repository_snapshots() {
-    run_with_large_stack("refresh_to_lean_examples_repository_snapshots", || {
-        let repository = example_repository_path();
+#[ignore = "rewrites generated Lean fences in the consolidated example Markdown"]
+fn refresh_to_lean_examples_markdown_snapshots() {
+    run_with_large_stack("refresh_to_lean_examples_markdown_snapshots", || {
+        let path = example_markdown_path();
+        let markdown = fs::read_to_string(&path).unwrap();
+        let examples = parse_to_lean_markdown_examples(&markdown);
+        let mut generated_snapshots = Vec::new();
 
-        for file in STRICT_EXAMPLE_FILES {
-            let path = repository.join(file);
-            let source = fs::read_to_string(&path).unwrap();
-            let litex_source = source_without_trailing_triple_quoted_block(&source);
-            let generated = to_lean_from_source(litex_source, &example_entry_label(file)).unwrap();
-            fs::write(&path, source_with_generated_lean(litex_source, &generated)).unwrap();
-            println!("Refreshed strict Lean snapshot: {}", file);
+        for example in examples.iter() {
+            let generated = match example.mode {
+                ToLeanExampleMode::Strict => {
+                    to_lean_from_source(&example.litex_source, &example_entry_label(&example.name))
+                        .unwrap()
+                }
+                ToLeanExampleMode::Partial => {
+                    let report = to_lean_from_source_with_report(
+                        &example.litex_source,
+                        &example_entry_label(&example.name),
+                    )
+                    .unwrap();
+                    assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
+                    report.lean_code
+                }
+            };
+            println!("Refreshed Markdown Lean snapshot: {}", example.name);
+            generated_snapshots.push(generated);
         }
 
-        for file in PARTIAL_EXAMPLE_FILES {
-            let path = repository.join(file);
-            let source = fs::read_to_string(&path).unwrap();
-            let litex_source = source_without_trailing_triple_quoted_block(&source);
-            let report =
-                to_lean_from_source_with_report(litex_source, &example_entry_label(file)).unwrap();
-            assert_eq!(report.status, ToLeanCompilationStatus::Incomplete);
-            fs::write(
-                &path,
-                source_with_generated_lean(litex_source, &report.lean_code),
-            )
-            .unwrap();
-            println!("Refreshed partial Lean snapshot: {}", file);
-        }
+        let refreshed =
+            markdown_with_refreshed_lean_snapshots(&markdown, &examples, &generated_snapshots);
+        fs::write(path, refreshed).unwrap();
     });
 }
 
-fn example_repository_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join(TO_LEAN_EXAMPLE_REPOSITORY)
+#[test]
+fn parses_strict_and_partial_markdown_example_pairs() {
+    let markdown = r#"# Examples
+
+## strict_example
+
+```litex
+2 = 2
+```
+
+```lean
+theorem strictExample : 2 = 2 := by norm_num
+```
+
+## partial_example
+
+<!-- to-lean: partial -->
+
+```litex
+sin(0) = 0
+```
+
+```lean
+-- incomplete
+```
+"#;
+    let examples = parse_to_lean_markdown_examples(markdown);
+
+    assert_eq!(examples.len(), 2);
+    assert_eq!(examples[0].name, "strict_example");
+    assert_eq!(examples[0].mode, ToLeanExampleMode::Strict);
+    assert_eq!(examples[1].name, "partial_example");
+    assert_eq!(examples[1].mode, ToLeanExampleMode::Partial);
 }
 
-fn example_entry_label(file: &str) -> String {
-    format!("{}/{}", TO_LEAN_EXAMPLE_REPOSITORY, file)
+#[test]
+#[should_panic(expected = "must contain exactly one lean fenced block")]
+fn rejects_markdown_example_without_lean_pair() {
+    let markdown = r#"# Examples
+
+## unpaired
+
+```litex
+2 = 2
+```
+"#;
+    let _ = parse_to_lean_markdown_examples(markdown);
 }
 
-fn assert_generated_snapshot_matches(file: &str, source: &str, generated: &str) {
-    let snapshot = trailing_triple_quoted_block(source)
-        .unwrap_or_else(|| panic!("{} must end with a triple-quoted Lean snapshot", file));
+fn example_markdown_path() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join(TO_LEAN_EXAMPLES_MARKDOWN)
+}
+
+fn example_entry_label(name: &str) -> String {
+    format!("{}#{}", TO_LEAN_EXAMPLES_MARKDOWN, name)
+}
+
+fn assert_common_generated_contract(example: &ToLeanMarkdownExample, generated: &str) {
+    assert!(
+        generated.starts_with("import Mathlib\n"),
+        "{}",
+        example.name
+    );
+    assert!(!generated.contains("sorry"), "{}", example.name);
+    assert!(!generated.contains("LitexSet"), "{}", example.name);
+    assert!(!generated.contains("LitexAddEq"), "{}", example.name);
+}
+
+fn assert_generated_snapshot_matches(example: &ToLeanMarkdownExample, generated: &str) {
     assert_eq!(
-        snapshot.trim_end(),
+        example.lean_snapshot.trim_end(),
         generated.trim_end(),
-        "generated Lean snapshot is stale for {}; run the refresh test",
-        file
+        "generated Lean snapshot is stale for {}; run the Markdown refresh test",
+        example.name
     );
 }
 
-fn source_with_generated_lean(source: &str, generated_lean: &str) -> String {
-    format!(
-        "{}\n\n\n\"\"\"\n{}\n\"\"\"\n",
-        source.trim_end(),
-        generated_lean.trim_end()
-    )
+fn parse_to_lean_markdown_examples(markdown: &str) -> Vec<ToLeanMarkdownExample> {
+    let mut headings: Vec<(usize, usize, String)> = Vec::new();
+    let mut in_fence = false;
+    let mut offset = 0;
+
+    for line in markdown.split_inclusive('\n') {
+        let line_without_ending = line.trim_end_matches('\n').trim_end_matches('\r');
+        let trimmed_start = line_without_ending.trim_start();
+        if trimmed_start.starts_with("```") {
+            in_fence = !in_fence;
+        } else if !in_fence {
+            if let Some(name) = line_without_ending.strip_prefix("## ") {
+                headings.push((offset, offset + line.len(), name.trim().to_string()));
+            }
+        }
+        offset += line.len();
+    }
+
+    assert!(
+        !headings.is_empty(),
+        "{} must contain at least one H2 example section",
+        TO_LEAN_EXAMPLES_MARKDOWN
+    );
+
+    let mut examples = Vec::new();
+    let mut names = HashSet::new();
+    for (index, (_heading_start, body_start, name)) in headings.iter().enumerate() {
+        assert!(
+            !name.is_empty()
+                && name.chars().all(|character| character.is_ascii_lowercase()
+                    || character.is_ascii_digit()
+                    || character == '_'),
+            "invalid To-Lean Markdown example name: {}",
+            name
+        );
+        assert!(
+            names.insert(name.clone()),
+            "duplicate To-Lean Markdown example name: {}",
+            name
+        );
+
+        let section_end = headings
+            .get(index + 1)
+            .map(|(next_heading_start, _, _)| *next_heading_start)
+            .unwrap_or(markdown.len());
+        let litex_ranges = fenced_body_ranges(markdown, *body_start, section_end, "litex");
+        let lean_ranges = fenced_body_ranges(markdown, *body_start, section_end, "lean");
+        assert_eq!(
+            litex_ranges.len(),
+            1,
+            "{} must contain exactly one litex fenced block",
+            name
+        );
+        assert_eq!(
+            lean_ranges.len(),
+            1,
+            "{} must contain exactly one lean fenced block",
+            name
+        );
+        let litex_range = litex_ranges[0].clone();
+        let lean_range = lean_ranges[0].clone();
+        assert!(
+            litex_range.start < lean_range.start,
+            "{} must put its litex fence before its lean fence",
+            name
+        );
+
+        let marker_count = markdown[*body_start..litex_range.start]
+            .lines()
+            .filter(|line| line.trim() == PARTIAL_EXAMPLE_MARKER)
+            .count();
+        assert!(
+            marker_count <= 1,
+            "{} contains duplicate partial markers",
+            name
+        );
+        let mode = if marker_count == 1 {
+            ToLeanExampleMode::Partial
+        } else {
+            ToLeanExampleMode::Strict
+        };
+
+        let litex_source = markdown[litex_range].trim_end().to_string();
+        let lean_snapshot = markdown[lean_range.clone()].trim_end().to_string();
+        examples.push(ToLeanMarkdownExample {
+            name: name.clone(),
+            mode,
+            litex_source,
+            lean_snapshot,
+            lean_body_range: lean_range,
+        });
+    }
+
+    examples
 }
 
-fn trailing_triple_quoted_block(source: &str) -> Option<&str> {
-    let trimmed_source = source.trim_end();
-    let before_closing_delimiter = trimmed_source.strip_suffix("\"\"\"")?;
-    let opening_marker = "\n\"\"\"\n";
-    let opening_delimiter_start = before_closing_delimiter.rfind(opening_marker)?;
-    Some(&before_closing_delimiter[opening_delimiter_start + opening_marker.len()..])
+fn fenced_body_ranges(
+    markdown: &str,
+    section_start: usize,
+    section_end: usize,
+    target_language: &str,
+) -> Vec<Range<usize>> {
+    let mut ranges = Vec::new();
+    let mut open_fence: Option<(String, usize)> = None;
+    let mut offset = section_start;
+
+    for line in markdown[section_start..section_end].split_inclusive('\n') {
+        let line_start = offset;
+        offset += line.len();
+        let trimmed = line.trim_end_matches('\n').trim_end_matches('\r').trim();
+
+        match open_fence.as_ref() {
+            Some((language, body_start)) => {
+                if trimmed == "```" {
+                    if language == target_language {
+                        ranges.push(*body_start..line_start);
+                    }
+                    open_fence = None;
+                }
+            }
+            None => {
+                if let Some(language) = trimmed.strip_prefix("```") {
+                    open_fence = Some((language.trim().to_string(), offset));
+                }
+            }
+        }
+    }
+
+    ranges
 }
 
-fn source_without_trailing_triple_quoted_block(source: &str) -> &str {
-    let trimmed_source = source.trim_end();
-    let Some(before_closing_delimiter) = trimmed_source.strip_suffix("\"\"\"") else {
-        return source;
-    };
-    let opening_marker = "\n\"\"\"\n";
-    let Some(opening_delimiter_start) = before_closing_delimiter.rfind(opening_marker) else {
-        return source;
-    };
-    &source[..opening_delimiter_start]
+fn markdown_with_refreshed_lean_snapshots(
+    markdown: &str,
+    examples: &[ToLeanMarkdownExample],
+    generated_snapshots: &[String],
+) -> String {
+    assert_eq!(examples.len(), generated_snapshots.len());
+    let mut refreshed = String::with_capacity(markdown.len());
+    let mut cursor = 0;
+
+    for (example, generated) in examples.iter().zip(generated_snapshots.iter()) {
+        assert!(cursor <= example.lean_body_range.start);
+        refreshed.push_str(&markdown[cursor..example.lean_body_range.start]);
+        refreshed.push_str(generated.trim_end());
+        refreshed.push('\n');
+        cursor = example.lean_body_range.end;
+    }
+    refreshed.push_str(&markdown[cursor..]);
+    refreshed
 }
 
 fn compile_generated_with_mathlib(
-    file: &str,
+    name: &str,
     generated: &str,
     project: &str,
     lake: &str,
 ) -> Result<(), String> {
-    let lean_file = generated_lean_path(file);
+    let lean_file = generated_lean_path(name);
     fs::write(&lean_file, generated).unwrap();
     let output = Command::new(lake)
         .args(["env", "lean"])
@@ -288,22 +489,22 @@ fn compile_generated_with_mathlib(
     if !output.status.success() {
         return Err(format!(
             "generated Lean failed for {}\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
-            file,
+            name,
             String::from_utf8_lossy(&output.stdout),
             String::from_utf8_lossy(&output.stderr),
             generated
         ));
     }
-    println!("Mathlib kernel example OK: {}", file);
+    println!("Mathlib kernel Markdown example OK: {}", name);
     Ok(())
 }
 
-fn generated_lean_path(file: &str) -> PathBuf {
+fn generated_lean_path(name: &str) -> PathBuf {
     let nonce = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_nanos();
-    let stem = file.trim_end_matches(".lit").replace('_', "-");
+    let stem = name.replace('_', "-");
     let private = Path::new(env!("CARGO_MANIFEST_DIR")).join("private");
     fs::create_dir_all(&private).unwrap();
     private.join(format!(

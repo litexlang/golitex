@@ -2,6 +2,7 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
+use super::helper::lean_generic_carrier_name;
 use super::rational_expression::{lean_name, LeanRationalExpression};
 use super::set_prelude::LITEX_OBJECT_PRELUDE;
 use super::type_context::LeanTypeContext;
@@ -447,9 +448,9 @@ impl LeanEmitter {
             }
             let proof_term = proof_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name);
             self.declarations.push(format!(
-                "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact {}",
+                "-- Litex fact {}\ntheorem {} : {} := by\n  exact {}",
                 fact_id,
-                lean_global_fact_name(fact_id),
+                lean_stored_fact_name(fact_id),
                 lean_fact_with_context(&projection.proposition, &self.type_context)?,
                 proof_term
             ));
@@ -505,9 +506,9 @@ impl LeanEmitter {
             self.type_context.insert(choice.symbol_id, element_carrier);
             self.emitted_fact_ids.insert(membership_fact_id);
             self.declarations.push(format!(
-                "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact Exists.choose_spec {}",
+                "-- Litex fact {}\ntheorem {} : {} := by\n  exact Exists.choose_spec {}",
                 membership_fact_id,
-                lean_global_fact_name(membership_fact_id),
+                lean_stored_fact_name(membership_fact_id),
                 lean_fact_with_context(&choice.membership.proposition, &self.type_context)?,
                 source_name
             ));
@@ -529,7 +530,7 @@ impl LeanEmitter {
         self.declarations.push(format!(
             "-- Litex trust boundary: {}\naxiom {} : {}",
             fact_id,
-            lean_global_fact_name(fact_id),
+            lean_stored_fact_name(fact_id),
             lean_fact_with_context(&fact.proposition, &self.type_context)?
         ));
         Ok(())
@@ -551,9 +552,9 @@ impl LeanEmitter {
         let proof = self.lean_proof(&fact.proposition, &fact.proof, &proof_context)?;
         self.emitted_fact_ids.insert(fact_id);
         self.declarations.push(format!(
-            "-- Litex stored fact {}\ntheorem {} : {} := {}",
+            "-- Litex fact {}\ntheorem {} : {} := {}",
             fact_id,
-            lean_global_fact_name(fact_id),
+            lean_stored_fact_name(fact_id),
             lean_fact_with_context(&fact.proposition, &proof_context.type_context)?,
             proof
         ));
@@ -633,11 +634,25 @@ impl LeanEmitter {
                 Ok("by\n  change True\n  trivial".to_string())
             }
             FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::ClosedNumericReflection { .. },
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                Ok("by\n  norm_num".to_string())
+            }
+            FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::RealSetNonempty,
                 parameter_requirements,
                 premises,
             } if parameter_requirements.is_empty() && premises.is_empty() => {
                 lean_real_set_nonempty(proposition)
+            }
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::StandardSetNonempty,
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty() && premises.is_empty() => {
+                lean_standard_set_nonempty(proposition)
             }
             FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::ClassicalExcludedMiddle,
@@ -1392,6 +1407,51 @@ impl LeanEmitter {
                 }
                 self.lean_arithmetic_builtin_rule(proposition, *rule, premises, context)
             }
+            BuiltinRuleToLeanIR::NotEqualSymmetry => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "not-equality symmetry evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_not_equal_symmetry_builtin(proposition, premises, context)
+            }
+            BuiltinRuleToLeanIR::SetRelationDuality(rule) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-relation duality evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_set_relation_duality_builtin(proposition, *rule, premises, context)
+            }
+            BuiltinRuleToLeanIR::Set(rule) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set builtin evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_set_builtin_rule(proposition, *rule, premises, context)
+            }
+            BuiltinRuleToLeanIR::AbsoluteValue(rule) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value builtin evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_absolute_value_builtin_rule(proposition, *rule, premises, context)
+            }
+            BuiltinRuleToLeanIR::PrimeU64Reflection => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "prime reflection evidence does not accept parameter requirements",
+                    ));
+                }
+                lean_prime_u64_reflection(proposition, premises)
+            }
             BuiltinRuleToLeanIR::PositiveRealMembership => {
                 if !parameter_requirements.is_empty() {
                     return Err(to_lean_error(
@@ -1402,6 +1462,395 @@ impl LeanEmitter {
                 self.lean_positive_real_membership(proposition, premises, context)
             }
         }
+    }
+
+    fn lean_set_builtin_rule(
+        &mut self,
+        proposition: &Fact,
+        rule: SetBuiltinRuleToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        use SetBuiltinRuleToLeanIR::*;
+
+        let expected_premises = match rule {
+            UnionCommutative
+            | UnionAssociative
+            | UnionIdempotent
+            | UnionEmptyIdentity
+            | IntersectCommutative
+            | IntersectAssociative => 0,
+            UnionMembershipLeft
+            | UnionMembershipRight
+            | IntersectNonMembershipLeft
+            | IntersectNonMembershipRight => 1,
+            IntersectMembershipBoth | SetMinusMembership => 2,
+        };
+        if premises.len() != expected_premises {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "set builtin {:?} expected {} premises but received {}",
+                    rule,
+                    expected_premises,
+                    premises.len()
+                ),
+            ));
+        }
+
+        match rule {
+            UnionCommutative | UnionAssociative | UnionIdempotent | UnionEmptyIdentity
+            | IntersectCommutative | IntersectAssociative => {
+                if !set_equality_matches_builtin_rule(proposition, rule) {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        format!("set builtin {:?} target has the wrong shape", rule),
+                    ));
+                }
+                let simp_lemmas = match rule {
+                    UnionCommutative => "[or_comm]",
+                    UnionAssociative => "[or_assoc]",
+                    IntersectCommutative => "[and_comm]",
+                    IntersectAssociative => "[and_assoc]",
+                    UnionIdempotent | UnionEmptyIdentity => "",
+                    _ => unreachable!(),
+                };
+                Ok(format!("by\n  ext x\n  simp {}", simp_lemmas))
+            }
+            UnionMembershipLeft | UnionMembershipRight => {
+                let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "union membership evidence requires an In target",
+                    ));
+                };
+                let Fact::AtomicFact(AtomicFact::InFact(premise)) = &premises[0].proposition else {
+                    return Err(to_lean_error(
+                        &premises[0].proposition.line_file(),
+                        "union membership evidence requires an In premise",
+                    ));
+                };
+                let Obj::Union(union) = &target.set else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "union membership evidence requires a union target",
+                    ));
+                };
+                let expected_set = match rule {
+                    UnionMembershipLeft => union.left.as_ref(),
+                    UnionMembershipRight => union.right.as_ref(),
+                    _ => unreachable!(),
+                };
+                if obj_equality_key(&target.element) != obj_equality_key(&premise.element)
+                    || obj_equality_key(expected_set) != obj_equality_key(&premise.set)
+                {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "union membership premise does not match its selected side",
+                    ));
+                }
+                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                lines.insert(0, "by".to_string());
+                lines.push("  rw [Set.mem_union]".to_string());
+                lines.push(format!(
+                    "  exact Or.{} {}",
+                    if matches!(rule, UnionMembershipLeft) { "inl" } else { "inr" },
+                    premise_name
+                ));
+                Ok(lines.join("\n"))
+            }
+            IntersectMembershipBoth => {
+                let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "intersection membership evidence requires an In target",
+                    ));
+                };
+                let Obj::Intersect(intersect) = &target.set else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "intersection membership evidence requires an intersection target",
+                    ));
+                };
+                let (left_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (right_name, right_lines) = self.lean_named_local_fact(&premises[1], context)?;
+                lines.extend(right_lines);
+                for (premise, expected_set) in [
+                    (&premises[0].proposition, intersect.left.as_ref()),
+                    (&premises[1].proposition, intersect.right.as_ref()),
+                ] {
+                    let Fact::AtomicFact(AtomicFact::InFact(member)) = premise else {
+                        return Err(to_lean_error(
+                            &proposition.line_file(),
+                            "intersection membership evidence requires two In premises",
+                        ));
+                    };
+                    if obj_equality_key(&member.element) != obj_equality_key(&target.element)
+                        || obj_equality_key(&member.set) != obj_equality_key(expected_set)
+                    {
+                        return Err(to_lean_error(
+                            &proposition.line_file(),
+                            "intersection membership premise does not match its side",
+                        ));
+                    }
+                }
+                lines.insert(0, "by".to_string());
+                lines.push("  rw [Set.mem_inter_iff]".to_string());
+                lines.push(format!("  exact ⟨{}, {}⟩", left_name, right_name));
+                Ok(lines.join("\n"))
+            }
+            IntersectNonMembershipLeft | IntersectNonMembershipRight => {
+                let Fact::AtomicFact(AtomicFact::NotInFact(target)) = proposition else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "intersection non-membership evidence requires a NotIn target",
+                    ));
+                };
+                let Obj::Intersect(intersect) = &target.set else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "intersection non-membership evidence requires an intersection target",
+                    ));
+                };
+                let Fact::AtomicFact(AtomicFact::NotInFact(premise)) = &premises[0].proposition else {
+                    return Err(to_lean_error(
+                        &premises[0].proposition.line_file(),
+                        "intersection non-membership evidence requires a NotIn premise",
+                    ));
+                };
+                let expected_set = match rule {
+                    IntersectNonMembershipLeft => intersect.left.as_ref(),
+                    IntersectNonMembershipRight => intersect.right.as_ref(),
+                    _ => unreachable!(),
+                };
+                if obj_equality_key(&premise.element) != obj_equality_key(&target.element)
+                    || obj_equality_key(&premise.set) != obj_equality_key(expected_set)
+                {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "intersection non-membership premise does not match its side",
+                    ));
+                }
+                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                lines.insert(0, "by".to_string());
+                lines.push("  rw [Set.mem_inter_iff]".to_string());
+                lines.push(format!("  exact fun h => {} h.{}", premise_name, if matches!(rule, IntersectNonMembershipLeft) { "1" } else { "2" }));
+                Ok(lines.join("\n"))
+            }
+            SetMinusMembership => {
+                let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-minus membership evidence requires an In target",
+                    ));
+                };
+                let Obj::SetMinus(set_minus) = &target.set else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-minus membership evidence requires a set-minus target",
+                    ));
+                };
+                let (left_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (right_name, right_lines) = self.lean_named_local_fact(&premises[1], context)?;
+                lines.extend(right_lines);
+                let Fact::AtomicFact(AtomicFact::InFact(left)) = &premises[0].proposition else {
+                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership requires an In left premise"));
+                };
+                let Fact::AtomicFact(AtomicFact::NotInFact(right)) = &premises[1].proposition else {
+                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership requires a NotIn right premise"));
+                };
+                if obj_equality_key(&left.element) != obj_equality_key(&target.element)
+                    || obj_equality_key(&left.set) != obj_equality_key(&set_minus.left)
+                    || obj_equality_key(&right.element) != obj_equality_key(&target.element)
+                    || obj_equality_key(&right.set) != obj_equality_key(&set_minus.right)
+                {
+                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership premises do not match the target"));
+                }
+                lines.insert(0, "by".to_string());
+                lines.push("  rw [Set.mem_diff]".to_string());
+                lines.push(format!("  exact ⟨{}, {}⟩", left_name, right_name));
+                Ok(lines.join("\n"))
+            }
+        }
+    }
+
+    fn lean_absolute_value_builtin_rule(
+        &mut self,
+        proposition: &Fact,
+        rule: AbsoluteValueBuiltinRuleToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        use AbsoluteValueBuiltinRuleToLeanIR::*;
+        let expected = match rule {
+            Product => 0,
+            _ => 1,
+        };
+        if premises.len() != expected {
+            return Err(to_lean_error(&proposition.line_file(), format!("absolute-value builtin {:?} expected {} premises but received {}", rule, expected, premises.len())));
+        }
+        match rule {
+            Product => {
+                if !abs_product_equality_shape(proposition) {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value product target has the wrong shape"));
+                }
+                Ok("by\n  simp only [abs_mul]".to_string())
+            }
+            NonnegativeIdentity | NonpositiveNegation => {
+                let Fact::AtomicFact(AtomicFact::EqualFact(target)) = proposition else {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value equality evidence requires an equality target"));
+                };
+                let (arg, reversed) = abs_identity_target(target, rule)?;
+                let Fact::AtomicFact(premise_fact) = &premises[0].proposition else {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value identity evidence requires an order premise"));
+                };
+                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let proof = match (rule, premise_fact) {
+                    (NonnegativeIdentity, AtomicFact::LessEqualFact(f)) if f.left.to_string() == "0" && obj_equality_key(&f.right) == obj_equality_key(arg) => format!("abs_of_nonneg {}", premise_name),
+                    (NonnegativeIdentity, AtomicFact::LessFact(f)) if f.left.to_string() == "0" && obj_equality_key(&f.right) == obj_equality_key(arg) => format!("abs_of_nonneg (le_of_lt {})", premise_name),
+                    (NonpositiveNegation, AtomicFact::LessEqualFact(f)) if obj_equality_key(&f.left) == obj_equality_key(arg) && f.right.to_string() == "0" => format!("abs_of_nonpos {}", premise_name),
+                    (NonpositiveNegation, AtomicFact::LessFact(f)) if obj_equality_key(&f.left) == obj_equality_key(arg) && f.right.to_string() == "0" => format!("abs_of_nonpos (le_of_lt {})", premise_name),
+                    _ => return Err(to_lean_error(&proposition.line_file(), "absolute-value identity premise does not match the target")),
+                };
+                lines.insert(0, "by".to_string());
+                let proof = if reversed {
+                    format!("({proof}).symm")
+                } else {
+                    proof
+                };
+                lines.push(format!("  exact {proof}"));
+                Ok(lines.join("\n"))
+            }
+            PositiveFromNonzero => {
+                let (arg, reversed) = abs_positive_target(proposition)?;
+                if reversed {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target must be 0 < abs(x)"));
+                }
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(premise)) = &premises[0].proposition else {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity evidence requires a not-equality premise"));
+                };
+                if obj_equality_key(&premise.left) != obj_equality_key(arg) || premise.right.to_string() != "0" {
+                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity premise does not match the target"));
+                }
+                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                lines.insert(0, "by".to_string());
+                lines.push(format!("  exact abs_pos.mpr {}", premise_name));
+                Ok(lines.join("\n"))
+            }
+        }
+    }
+
+    fn lean_not_equal_symmetry_builtin(
+        &mut self,
+        proposition: &Fact,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "not-equality symmetry evidence expected 1 premise but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::NotEqualFact(target)) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "not-equality symmetry evidence requires a not-equality target",
+            ));
+        };
+        let Fact::AtomicFact(AtomicFact::NotEqualFact(premise)) = &premises[0].proposition else {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "not-equality symmetry evidence requires a not-equality premise",
+            ));
+        };
+        if obj_equality_key(&target.left) != obj_equality_key(&premise.right)
+            || obj_equality_key(&target.right) != obj_equality_key(&premise.left)
+        {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "not-equality symmetry premise is not the reverse of its target",
+            ));
+        }
+
+        let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+        lines.insert(0, "by".to_string());
+        lines.push(format!("  exact Ne.symm {}", premise_name));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_set_relation_duality_builtin(
+        &mut self,
+        proposition: &Fact,
+        rule: SetRelationDualityBuiltinRuleToLeanIR,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "set-relation duality evidence expected 1 premise but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+        let Fact::AtomicFact(target) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "set-relation duality evidence requires an atomic target",
+            ));
+        };
+        let Fact::AtomicFact(premise) = &premises[0].proposition else {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "set-relation duality evidence requires an atomic premise",
+            ));
+        };
+
+        let aligned = match (rule, target, premise) {
+            (
+                SetRelationDualityBuiltinRuleToLeanIR::SubsetFromSuperset,
+                AtomicFact::SubsetFact(target),
+                AtomicFact::SupersetFact(premise),
+            )
+            | (
+                SetRelationDualityBuiltinRuleToLeanIR::SupersetFromSubset,
+                AtomicFact::SupersetFact(premise),
+                AtomicFact::SubsetFact(target),
+            ) => {
+                obj_equality_key(&target.left) == obj_equality_key(&premise.right)
+                    && obj_equality_key(&target.right) == obj_equality_key(&premise.left)
+            }
+            (
+                SetRelationDualityBuiltinRuleToLeanIR::NotSubsetFromNotSuperset,
+                AtomicFact::NotSubsetFact(target),
+                AtomicFact::NotSupersetFact(premise),
+            )
+            | (
+                SetRelationDualityBuiltinRuleToLeanIR::NotSupersetFromNotSubset,
+                AtomicFact::NotSupersetFact(premise),
+                AtomicFact::NotSubsetFact(target),
+            ) => {
+                obj_equality_key(&target.left) == obj_equality_key(&premise.right)
+                    && obj_equality_key(&target.right) == obj_equality_key(&premise.left)
+            }
+            _ => false,
+        };
+        if !aligned {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "set-relation duality premise is not the reversed relation named by its evidence",
+            ));
+        }
+
+        let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+        lines.insert(0, "by".to_string());
+        lines.push(format!("  exact {}", premise_name));
+        Ok(lines.join("\n"))
     }
 
     fn lean_positive_real_membership(
@@ -1750,7 +2199,7 @@ impl LeanEmitter {
             return Ok(local_name.clone());
         }
         if self.emitted_fact_ids.contains(&fact_id) {
-            return Ok(lean_global_fact_name(fact_id));
+            return Ok(lean_stored_fact_name(fact_id));
         }
         Err(to_lean_error(
             &proposition.line_file(),
@@ -1984,6 +2433,38 @@ enum LeanFactClass {
     StrictOrder,
 }
 
+fn lean_prime_u64_reflection(
+    proposition: &Fact,
+    premises: &[FactToLeanIR],
+) -> Result<String, RuntimeError> {
+    if !premises.is_empty() {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "prime reflection evidence must not contain premises",
+        ));
+    }
+    let (predicate, body) = match proposition {
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) => (&fact.predicate, &fact.body),
+        Fact::AtomicFact(AtomicFact::NotNormalAtomicFact(fact)) => (&fact.predicate, &fact.body),
+        _ => {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "prime reflection evidence requires `$prime(n)` or `not $prime(n)`",
+            ));
+        }
+    };
+    if !matches!(predicate, AtomicName::WithoutMod(name) if name == PRIME)
+        || body.len() != 1
+        || !matches!(&body[0], Obj::Number(number) if number.normalized_value.parse::<u64>().is_ok())
+    {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "prime reflection evidence requires one literal u64 argument",
+        ));
+    }
+    Ok("by\n  norm_num".to_string())
+}
+
 fn arithmetic_builtin_contract(
     rule: ArithmeticBuiltinRuleToLeanIR,
 ) -> (LeanFactClass, &'static [LeanFactClass]) {
@@ -2035,19 +2516,30 @@ fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
         .iter()
         .enumerate()
         .map(|(index, _)| {
-            let carrier = format!("litex_arg_carrier_{}", index + 1);
-            format!("{{{} : Type u}} [LitexObject {}]", carrier, carrier)
+            let carrier = lean_generic_carrier_name(index as u64);
+            format!(
+                "{{{} : Type LitexUniverse}} [LitexObject {}]",
+                carrier, carrier
+            )
         })
         .collect::<Vec<_>>()
         .join(" ");
     let arguments = (0..ir.params.len())
-        .map(|index| format!("litex_arg_carrier_{} → ", index + 1))
+        .map(|index| format!("{} → ", lean_generic_carrier_name(index as u64)))
         .collect::<String>();
     format!("opaque {} {} : {}LitexFact", name, binders, arguments)
 }
 
 fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
     let mut type_context = LeanTypeContext::default();
+    for group in ir.params.iter() {
+        for symbol_id in group.symbol_ids.iter() {
+            type_context.insert_param(*symbol_id, &group.param_type);
+        }
+    }
+    for fact in ir.iff_facts.iter() {
+        unify_generic_carriers_in_fact(fact, &mut type_context)?;
+    }
     let mut binders = Vec::new();
     let mut emitted_generic_carriers = HashSet::new();
     for group in ir.params.iter() {
@@ -2075,9 +2567,6 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
                 .join(" "),
             lean_type
         ));
-        for symbol_id in group.symbol_ids.iter() {
-            type_context.insert_param(*symbol_id, &group.param_type);
-        }
     }
     let binder_text = if binders.is_empty() {
         String::new()
@@ -2176,7 +2665,7 @@ fn lean_generic_param_binder(
         .lean_type(&LeanCarrierToLeanIR::Generic { anchor })
         .map_err(|message| to_lean_error(&default_line_file(), message))?;
     Ok(Some(format!(
-        "{{{} : Type u}} [LitexObject {}]",
+        "{{{} : Type LitexUniverse}} [LitexObject {}]",
         carrier, carrier
     )))
 }
@@ -2199,6 +2688,10 @@ fn apply_proof_type_hints(
             parameter_requirements,
             premises,
         } => {
+            let is_positive_real_membership = matches!(
+                rule,
+                ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::PositiveRealMembership)
+            );
             if matches!(
                 rule,
                 ProofRuleToLeanIR::Normalization {
@@ -2208,6 +2701,26 @@ fn apply_proof_type_hints(
                 expect_unconstrained_binary_fact_carrier(
                     proposition,
                     &LeanCarrierToLeanIR::Rational,
+                    type_context,
+                );
+            }
+            if let ProofRuleToLeanIR::ClosedNumericReflection { carrier } = rule {
+                expect_unconstrained_binary_fact_carrier(proposition, carrier, type_context);
+            }
+            if is_positive_real_membership {
+                expect_unconstrained_binary_fact_carrier(
+                    proposition,
+                    &LeanCarrierToLeanIR::Real,
+                    type_context,
+                );
+            }
+            if matches!(
+                rule,
+                ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::PrimeU64Reflection)
+            ) {
+                expect_normal_predicate_arguments(
+                    proposition,
+                    &LeanCarrierToLeanIR::Natural,
                     type_context,
                 );
             }
@@ -2232,22 +2745,26 @@ fn apply_proof_type_hints(
                     expect_normal_predicate_arguments(proposition, &carrier, type_context);
                 }
             }
-            for premise in premises {
-                propagate_fact_argument_expectations(
-                    &premise.proposition,
-                    proposition,
-                    type_context,
-                );
+            if !is_positive_real_membership {
+                for premise in premises {
+                    propagate_fact_argument_expectations(
+                        &premise.proposition,
+                        proposition,
+                        type_context,
+                    );
+                }
             }
             for premise in parameter_requirements.iter().chain(premises.iter()) {
                 apply_fact_proof_type_hints(premise, type_context)?;
             }
-            for premise in premises {
-                propagate_fact_argument_expectations(
-                    &premise.proposition,
-                    proposition,
-                    type_context,
-                );
+            if !is_positive_real_membership {
+                for premise in premises {
+                    propagate_fact_argument_expectations(
+                        &premise.proposition,
+                        proposition,
+                        type_context,
+                    );
+                }
             }
         }
         FactProofToLeanIR::Memo { proof } => {
@@ -2270,6 +2787,7 @@ fn apply_proof_type_hints(
                     type_context.insert_param(binding.id(), &param_type);
                 }
             }
+            constrain_forall_generic_carriers(forall, type_context)?;
             for fact in inferred_premises.iter().chain(conclusions.iter()) {
                 apply_fact_proof_type_hints(fact, type_context)?;
             }
@@ -2353,6 +2871,10 @@ fn expect_unconstrained_binary_fact_carrier(
         AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right),
         AtomicFact::GreaterFact(fact) => (&fact.left, &fact.right),
         AtomicFact::GreaterEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotLessFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotLessEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotGreaterFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotGreaterEqualFact(fact) => (&fact.left, &fact.right),
         _ => return,
     };
     if known_object_carrier(left, type_context).is_none()
@@ -2593,15 +3115,17 @@ fn lean_atomic_fact_with_context(
     type_context: &LeanTypeContext,
 ) -> Result<String, RuntimeError> {
     match fact {
-        AtomicFact::NormalAtomicFact(normal) => lean_prop_application_with_context(
-            &normal.predicate.to_string(),
+        AtomicFact::NormalAtomicFact(normal) => lean_normal_atomic_fact_with_context(
+            &normal.predicate,
             &normal.body,
+            &normal.line_file,
             false,
             type_context,
         ),
-        AtomicFact::NotNormalAtomicFact(normal) => lean_prop_application_with_context(
-            &normal.predicate.to_string(),
+        AtomicFact::NotNormalAtomicFact(normal) => lean_normal_atomic_fact_with_context(
+            &normal.predicate,
             &normal.body,
+            &normal.line_file,
             true,
             type_context,
         ),
@@ -2623,6 +3147,18 @@ fn lean_atomic_fact_with_context(
         AtomicFact::GreaterEqualFact(fact) => {
             lean_binary_fact_with_context(&fact.left, "≥", &fact.right, type_context)
         }
+        AtomicFact::NotLessFact(fact) => {
+            lean_negated_binary_fact_with_context(&fact.left, "<", &fact.right, type_context)
+        }
+        AtomicFact::NotLessEqualFact(fact) => {
+            lean_negated_binary_fact_with_context(&fact.left, "≤", &fact.right, type_context)
+        }
+        AtomicFact::NotGreaterFact(fact) => {
+            lean_negated_binary_fact_with_context(&fact.left, ">", &fact.right, type_context)
+        }
+        AtomicFact::NotGreaterEqualFact(fact) => {
+            lean_negated_binary_fact_with_context(&fact.left, "≥", &fact.right, type_context)
+        }
         AtomicFact::IsSetFact(fact) => Ok(format!(
             "litexIsSet {}",
             lean_obj_with_context(&fact.set, type_context)?
@@ -2642,6 +3178,11 @@ fn lean_atomic_fact_with_context(
             "{} ⊆ {}",
             lean_obj_with_context(&fact.left, type_context)?,
             lean_obj_with_context(&fact.right, type_context)?
+        )),
+        AtomicFact::SupersetFact(fact) => Ok(format!(
+            "{} ⊆ {}",
+            lean_obj_with_context(&fact.right, type_context)?,
+            lean_obj_with_context(&fact.left, type_context)?
         )),
         AtomicFact::NotIsSetFact(fact) => Ok(format!(
             "¬ litexIsSet {}",
@@ -2663,11 +3204,72 @@ fn lean_atomic_fact_with_context(
             lean_obj_with_context(&fact.left, type_context)?,
             lean_obj_with_context(&fact.right, type_context)?
         )),
+        AtomicFact::NotSupersetFact(fact) => Ok(format!(
+            "¬ ({} ⊆ {})",
+            lean_obj_with_context(&fact.right, type_context)?,
+            lean_obj_with_context(&fact.left, type_context)?
+        )),
         other => Err(to_lean_error(
             &other.line_file(),
             format!("To-Lean does not support atomic proposition `{}`", other),
         )),
     }
+}
+
+fn lean_normal_atomic_fact_with_context(
+    predicate: &AtomicName,
+    body: &[Obj],
+    line_file: &LineFile,
+    negated: bool,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    if matches!(predicate, AtomicName::WithoutMod(name) if name == PRIME) {
+        if body.len() != 1 {
+            return Err(to_lean_error(
+                line_file,
+                "`$prime` requires exactly one argument",
+            ));
+        }
+        let argument =
+            ObjToLeanIR::lower(&body[0]).map_err(|message| to_lean_error(line_file, message))?;
+        let argument = lean_obj_ir_with_expected(
+            &argument,
+            &LeanCarrierToLeanIR::Natural,
+            type_context,
+            false,
+        )?;
+        if negated {
+            return Ok(format!("¬ Nat.Prime {}", argument));
+        }
+        return Ok(format!("Nat.Prime {}", argument));
+    }
+
+    let proper_relation = match predicate {
+        AtomicName::WithoutMod(name) if name == PROPER_SUBSET => Some(false),
+        AtomicName::WithoutMod(name) if name == PROPER_SUPERSET => Some(true),
+        _ => None,
+    };
+    if let Some(reversed) = proper_relation {
+        if body.len() != 2 {
+            return Err(to_lean_error(
+                line_file,
+                "proper set relations require exactly two arguments",
+            ));
+        }
+        let left = lean_obj_with_context(&body[0], type_context)?;
+        let right = lean_obj_with_context(&body[1], type_context)?;
+        let containment = if reversed {
+            format!("{} ⊆ {}", right, left)
+        } else {
+            format!("{} ⊆ {}", left, right)
+        };
+        if negated {
+            return Ok(format!("¬ ({}) ∨ {} = {}", containment, left, right));
+        }
+        return Ok(format!("({}) ∧ {} ≠ {}", containment, left, right));
+    }
+
+    lean_prop_application_with_context(&predicate.to_string(), body, negated, type_context)
 }
 
 fn lean_prop_application_with_context(
@@ -2752,6 +3354,18 @@ fn lean_binary_fact_with_context(
     Ok(format!("{} {} {}", left_text, operator, right_text))
 }
 
+fn lean_negated_binary_fact_with_context(
+    left: &Obj,
+    operator: &str,
+    right: &Obj,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    Ok(format!(
+        "¬ ({})",
+        lean_binary_fact_with_context(left, operator, right, type_context)?
+    ))
+}
+
 fn lean_membership_fact(
     element: &Obj,
     set: &Obj,
@@ -2796,6 +3410,7 @@ fn lean_forall_fact_with_context(
         }
         param_types.push(param_type);
     }
+    constrain_forall_generic_carriers(forall, &mut type_context)?;
     let conclusions = forall
         .then_facts
         .iter()
@@ -2811,21 +3426,35 @@ fn lean_forall_fact_with_context(
         body = format!("{} → {}", premise, body);
     }
     let mut emitted_generic_carriers = HashSet::new();
-    for (group, param_type) in forall
+    for (index, (group, param_type)) in forall
         .params_def_with_type
         .groups
         .iter()
         .zip(param_types.iter())
+        .enumerate()
         .rev()
     {
         for binding in group.params.iter().rev() {
             let name = lean_name(binding.name());
             body = lean_forall_param_binder(&name, param_type, &body, &type_context)?;
         }
-        if let Some(generic_binder) =
-            lean_generic_param_binder(param_type, &mut emitted_generic_carriers, &type_context)?
-        {
-            body = format!("∀ {}, {}", generic_binder, body);
+        if let Some(anchor) = generic_param_anchor(param_type, &type_context)? {
+            let mut has_outer_binder = false;
+            for outer_param_type in &param_types[..index] {
+                if generic_param_anchor(outer_param_type, &type_context)? == Some(anchor) {
+                    has_outer_binder = true;
+                    break;
+                }
+            }
+            if !has_outer_binder {
+                if let Some(generic_binder) = lean_generic_param_binder(
+                    param_type,
+                    &mut emitted_generic_carriers,
+                    &type_context,
+                )? {
+                    body = format!("∀ {}, {}", generic_binder, body);
+                }
+            }
         }
     }
     Ok(body)
@@ -2860,6 +3489,128 @@ fn source_param_type_to_lean_ir(
             })
         }
     }
+}
+
+fn constrain_forall_generic_carriers(
+    forall: &ForallFact,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    for fact in forall.dom_facts.iter() {
+        unify_generic_carriers_in_fact(fact, type_context)?;
+    }
+    for fact in forall.then_facts.iter() {
+        unify_generic_carriers_in_fact(&fact.clone().to_fact(), type_context)?;
+    }
+    Ok(())
+}
+
+fn unify_generic_carriers_in_fact(
+    fact: &Fact,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    match fact {
+        Fact::AtomicFact(atomic) => unify_generic_carriers_in_atomic_fact(atomic, type_context),
+        Fact::AndFact(fact) => {
+            for atomic in fact.facts.iter() {
+                unify_generic_carriers_in_atomic_fact(atomic, type_context)?;
+            }
+            Ok(())
+        }
+        Fact::ChainFact(fact) => {
+            for atomic in fact.facts()? {
+                unify_generic_carriers_in_atomic_fact(&atomic, type_context)?;
+            }
+            Ok(())
+        }
+        Fact::OrFact(fact) => {
+            for branch in fact.facts.iter() {
+                match branch {
+                    AndChainAtomicFact::AtomicFact(atomic) => {
+                        unify_generic_carriers_in_atomic_fact(atomic, type_context)?;
+                    }
+                    AndChainAtomicFact::AndFact(fact) => {
+                        for atomic in fact.facts.iter() {
+                            unify_generic_carriers_in_atomic_fact(atomic, type_context)?;
+                        }
+                    }
+                    AndChainAtomicFact::ChainFact(fact) => {
+                        for atomic in fact.facts()? {
+                            unify_generic_carriers_in_atomic_fact(&atomic, type_context)?;
+                        }
+                    }
+                }
+            }
+            Ok(())
+        }
+        _ => Ok(()),
+    }
+}
+
+fn unify_generic_carriers_in_atomic_fact(
+    atomic: &AtomicFact,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    let (left, right) = match atomic {
+        AtomicFact::EqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::SubsetFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::SupersetFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotSubsetFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotSupersetFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::FnEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NormalAtomicFact(fact)
+            if fact.body.len() == 2
+                && matches!(
+                    &fact.predicate,
+                    AtomicName::WithoutMod(name)
+                        if matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET)
+                ) =>
+        {
+            (&fact.body[0], &fact.body[1])
+        }
+        AtomicFact::NotNormalAtomicFact(fact)
+            if fact.body.len() == 2
+                && matches!(
+                    &fact.predicate,
+                    AtomicName::WithoutMod(name)
+                        if matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET)
+                ) =>
+        {
+            (&fact.body[0], &fact.body[1])
+        }
+        _ => return Ok(()),
+    };
+    let (Some(left_carrier), Some(right_carrier)) = (
+        known_object_carrier(left, type_context),
+        known_object_carrier(right, type_context),
+    ) else {
+        return Ok(());
+    };
+    type_context
+        .unify_generic_carriers(&left_carrier, &right_carrier)
+        .map_err(|message| to_lean_error(&atomic.line_file(), message))
+}
+
+fn generic_param_anchor(
+    param_type: &ParamTypeToLeanIR,
+    type_context: &LeanTypeContext,
+) -> Result<Option<SymbolId>, RuntimeError> {
+    let element_carrier = match param_type {
+        ParamTypeToLeanIR::Set { element_carrier }
+        | ParamTypeToLeanIR::NonemptySet { element_carrier }
+        | ParamTypeToLeanIR::FiniteSet { element_carrier } => element_carrier,
+        ParamTypeToLeanIR::MemberOf {
+            element_carrier, ..
+        } => element_carrier,
+        ParamTypeToLeanIR::Unsupported(_) => return Ok(None),
+    };
+    let resolved = type_context
+        .resolve_carrier(element_carrier)
+        .unwrap_or_else(|_| element_carrier.clone());
+    let LeanCarrierToLeanIR::Generic { anchor } = resolved else {
+        return Ok(None);
+    };
+    Ok(Some(anchor))
 }
 
 fn lean_forall_param_binder(
@@ -3252,7 +4003,7 @@ fn lean_builtin_obj_application(
         BuiltinObjOperatorToLeanIR::Intersect => {
             format!("({} ∩ {})", rendered[0], rendered[1])
         }
-        BuiltinObjOperatorToLeanIR::SetMinus | BuiltinObjOperatorToLeanIR::SetDiff => {
+        BuiltinObjOperatorToLeanIR::SetMinus => {
             format!("({} \\ {})", rendered[0], rendered[1])
         }
         BuiltinObjOperatorToLeanIR::BigUnion => named_unary("Set.sUnion", &rendered),
@@ -3276,6 +4027,135 @@ fn lean_builtin_obj_application(
         }
     };
     Ok(result)
+}
+
+fn set_equality_matches_builtin_rule(
+    proposition: &Fact,
+    rule: SetBuiltinRuleToLeanIR,
+) -> bool {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else {
+        return false;
+    };
+    use SetBuiltinRuleToLeanIR::*;
+    let same = |left: &Obj, right: &Obj| obj_equality_key(left) == obj_equality_key(right);
+    let empty = |obj: &Obj| matches!(obj, Obj::ListSet(set) if set.list.is_empty());
+    let union_assoc = |left: &Obj, right: &Obj| {
+        let Obj::Union(outer) = left else { return false };
+        let Obj::Union(left_inner) = outer.left.as_ref() else { return false };
+        let Obj::Union(right_outer) = right else { return false };
+        let Obj::Union(right_inner) = right_outer.right.as_ref() else { return false };
+        same(left_inner.left.as_ref(), right_outer.left.as_ref())
+            && same(left_inner.right.as_ref(), right_inner.left.as_ref())
+            && same(outer.right.as_ref(), right_inner.right.as_ref())
+    };
+    let intersect_assoc = |left: &Obj, right: &Obj| {
+        let Obj::Intersect(outer) = left else { return false };
+        let Obj::Intersect(left_inner) = outer.left.as_ref() else { return false };
+        let Obj::Intersect(right_outer) = right else { return false };
+        let Obj::Intersect(right_inner) = right_outer.right.as_ref() else { return false };
+        same(left_inner.left.as_ref(), right_outer.left.as_ref())
+            && same(left_inner.right.as_ref(), right_inner.left.as_ref())
+            && same(outer.right.as_ref(), right_inner.right.as_ref())
+    };
+    match rule {
+        UnionCommutative => match (&equality.left, &equality.right) {
+            (Obj::Union(left), Obj::Union(right)) => {
+                same(left.left.as_ref(), right.right.as_ref())
+                    && same(left.right.as_ref(), right.left.as_ref())
+            }
+            _ => false,
+        },
+        UnionAssociative => union_assoc(&equality.left, &equality.right)
+            || union_assoc(&equality.right, &equality.left),
+        UnionIdempotent => match (&equality.left, &equality.right) {
+            (Obj::Union(union), other) | (other, Obj::Union(union)) => {
+                same(union.left.as_ref(), union.right.as_ref())
+                    && same(union.left.as_ref(), other)
+            }
+            _ => false,
+        },
+        UnionEmptyIdentity => match (&equality.left, &equality.right) {
+            (Obj::Union(union), other) | (other, Obj::Union(union)) => {
+                (empty(union.left.as_ref()) && same(union.right.as_ref(), other))
+                    || (empty(union.right.as_ref()) && same(union.left.as_ref(), other))
+            }
+            _ => false,
+        },
+        IntersectCommutative => match (&equality.left, &equality.right) {
+            (Obj::Intersect(left), Obj::Intersect(right)) => {
+                same(left.left.as_ref(), right.right.as_ref())
+                    && same(left.right.as_ref(), right.left.as_ref())
+            }
+            _ => false,
+        },
+        IntersectAssociative => intersect_assoc(&equality.left, &equality.right)
+            || intersect_assoc(&equality.right, &equality.left),
+        _ => false,
+    }
+}
+
+fn is_negation_of_obj(obj: &Obj, expected: &Obj) -> bool {
+    let Obj::Mul(mul) = obj else { return false };
+    let is_neg_one = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "-1");
+    (is_neg_one(mul.left.as_ref()) && obj_equality_key(mul.right.as_ref()) == obj_equality_key(expected))
+        || (is_neg_one(mul.right.as_ref()) && obj_equality_key(mul.left.as_ref()) == obj_equality_key(expected))
+}
+
+fn abs_identity_target(
+    target: &EqualFact,
+    rule: AbsoluteValueBuiltinRuleToLeanIR,
+) -> Result<(&Obj, bool), RuntimeError> {
+    for (abs_side, other, reversed) in [
+        (&target.left, &target.right, false),
+        (&target.right, &target.left, true),
+    ] {
+        let Obj::Abs(abs) = abs_side else { continue };
+        let matches = match rule {
+            AbsoluteValueBuiltinRuleToLeanIR::NonnegativeIdentity => {
+                obj_equality_key(abs.arg.as_ref()) == obj_equality_key(other)
+            }
+            AbsoluteValueBuiltinRuleToLeanIR::NonpositiveNegation => {
+                is_negation_of_obj(other, abs.arg.as_ref())
+            }
+            _ => false,
+        };
+        if matches {
+            return Ok((abs.arg.as_ref(), reversed));
+        }
+    }
+    Err(to_lean_error(
+        &target.line_file,
+        "absolute-value equality target has the wrong shape",
+    ))
+}
+
+fn abs_product_equality_shape(proposition: &Fact) -> bool {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else { return false };
+    let matches = |abs_side: &Obj, product_side: &Obj| {
+        let Obj::Abs(abs) = abs_side else { return false };
+        let Obj::Mul(inner) = abs.arg.as_ref() else { return false };
+        let Obj::Mul(product) = product_side else { return false };
+        let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (product.left.as_ref(), product.right.as_ref()) else { return false };
+        obj_equality_key(inner.left.as_ref()) == obj_equality_key(left_abs.arg.as_ref())
+            && obj_equality_key(inner.right.as_ref()) == obj_equality_key(right_abs.arg.as_ref())
+    };
+    matches(&equality.left, &equality.right) || matches(&equality.right, &equality.left)
+}
+
+fn abs_positive_target(proposition: &Fact) -> Result<(&Obj, bool), RuntimeError> {
+    match proposition {
+        Fact::AtomicFact(AtomicFact::LessFact(fact))
+            if fact.left.to_string() == "0" => match &fact.right {
+                Obj::Abs(abs) => Ok((abs.arg.as_ref(), false)),
+                _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
+            },
+        Fact::AtomicFact(AtomicFact::GreaterFact(fact))
+            if fact.right.to_string() == "0" => match &fact.left {
+                Obj::Abs(abs) => Ok((abs.arg.as_ref(), false)),
+                _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
+            },
+        _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
+    }
 }
 
 fn named_unary(name: &str, arguments: &[String]) -> String {
@@ -3415,6 +4295,47 @@ fn lean_real_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError> {
         ));
     }
     Ok("by\n  refine ⟨0, ?_⟩\n  exact Set.mem_univ 0".to_string())
+}
+
+fn lean_standard_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError> {
+    let Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)) = proposition else {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "standard-set nonemptiness evidence was attached to a different fact family",
+        ));
+    };
+    let Obj::StandardSet(set) = &fact.set else {
+        return Err(to_lean_error(
+            &proposition.line_file(),
+            "standard-set nonemptiness evidence requires a standard set",
+        ));
+    };
+    let witness = match set {
+        StandardSet::N
+        | StandardSet::Z
+        | StandardSet::Q
+        | StandardSet::C => "0",
+        StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => "1",
+        StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg => "-1",
+        StandardSet::QStar
+        | StandardSet::ZStar
+        | StandardSet::RStar
+        | StandardSet::CStar => "1",
+        StandardSet::R => {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "real standard-set nonemptiness should use the dedicated backend",
+            ))
+        }
+    };
+    if matches!(set, StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::C) {
+        Ok(format!(
+            "by\n  refine ⟨{}, ?_⟩\n  exact Set.mem_univ {}",
+            witness, witness
+        ))
+    } else {
+        Ok(format!("by\n  refine ⟨{}, ?_⟩\n  norm_num", witness))
+    }
 }
 
 fn validate_object_choice(choice: &ObjectChoiceToLeanIR) -> Result<FactId, RuntimeError> {
@@ -3800,8 +4721,8 @@ fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
     })
 }
 
-fn lean_global_fact_name(fact_id: FactId) -> String {
-    format!("global_fact_{}", fact_id.value())
+fn lean_stored_fact_name(fact_id: FactId) -> String {
+    format!("fact{}", fact_id.value())
 }
 
 fn lean_choice_source_name(symbol_id: SymbolId) -> String {
@@ -4137,24 +5058,60 @@ mod tests {
     }
 
     #[test]
-    fn polymorphic_global_fact_stays_inside_universe_section() {
+    fn concise_polymorphic_fact_names_stay_inside_universe_section() {
         run_with_large_stack(
-            "polymorphic_global_fact_stays_inside_universe_section",
+            "concise_polymorphic_fact_names_stay_inside_universe_section",
             || {
                 let mut runtime = Runtime::new();
                 runtime.new_file_path_new_env_new_name_scope("/virtual/tmp.lit");
                 let output = to_lean("forall a set:\n    $is_set(a)", &mut runtime).unwrap();
 
                 let theorem = output
-                    .find("theorem global_fact_")
+                    .find("theorem fact4")
                     .expect("the polymorphic stored fact must be emitted");
                 let section_and_namespace_end = output
                     .find("\nend\n\nend tmp\n")
                     .expect("the section must close before the namespace");
 
-                assert!(output.contains("{litex_carrier_0 : Type u}"));
+                assert!(
+                    output.contains("theorem fact4 : ∀ {α : Type LitexUniverse} [LitexObject α]")
+                );
+                assert!(output.contains("∀ (a : Set α), litexIsSet a"));
+                assert!(!output.contains("global_fact_"));
+                assert!(!output.contains("litex_carrier_"));
+                assert!(!output.contains("alpha0"));
+                assert!(!output.contains("universe u\n"));
                 assert!(theorem < section_and_namespace_end);
                 assert!(output.ends_with("\nend\n\nend tmp\n"));
+            },
+        );
+    }
+
+    #[test]
+    fn homogeneous_generic_set_relations_share_one_unicode_carrier() {
+        run_with_large_stack(
+            "homogeneous_generic_set_relations_share_one_unicode_carrier",
+            || {
+                let output = to_lean_from_source(
+                    "forall a set, b set:\n    a = b\n    =>:\n        a = b\n",
+                    "homogeneous-generic-carrier",
+                )
+                .unwrap();
+
+                assert!(output.contains(
+                    "∀ {α : Type LitexUniverse} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α), a = b → a = b"
+                ), "{output}");
+                assert!(!output.contains("alpha0"), "{output}");
+                assert!(!output.contains("alpha1"), "{output}");
+
+                let unrelated = to_lean_from_source(
+                    "forall a set, b set:\n    $is_set(a)\n    =>:\n        $is_set(b)\n",
+                    "independent-generic-carriers",
+                )
+                .unwrap();
+                assert!(unrelated.contains(
+                    "∀ {α : Type LitexUniverse} [LitexObject α], ∀ (a : Set α), ∀ {α1 : Type LitexUniverse} [LitexObject α1], ∀ (b : Set α1)"
+                ), "{unrelated}");
             },
         );
     }
@@ -4204,23 +5161,23 @@ forall x R:
                 let output = to_lean(source, &mut runtime).unwrap();
 
                 assert!(output.starts_with("import Mathlib\n\nnamespace to_lean_ir_mvp\n\n"));
-                assert!(output.contains("class LitexObject (α : Type u) : Prop where"));
+                assert!(output.contains("class LitexObject (α : Type LitexUniverse) : Prop where"));
                 assert!(output.contains("abbrev LitexFact := Prop"));
                 assert!(
                     output.find("abbrev LitexFact").unwrap()
                         < output.find("class LitexObject").unwrap()
                 );
                 assert!(output.contains(
-                    "opaque marked {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact"
+                    "opaque marked {α : Type LitexUniverse} [LitexObject α] : α → LitexFact"
                 ));
                 assert!(!output.contains("namespace LitexGenerated"));
                 assert!(!output.contains("end LitexGenerated"));
-                assert!(output.lines().any(|line| line == "universe u"));
+                assert!(output.lines().any(|line| line == "universe LitexUniverse"));
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
                 assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
                 assert!(!output.contains("LitexSet"));
-                assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
-                assert!(output.contains(":= global_fact_"));
+                assert_eq!(output.matches("\naxiom fact").count(), 1);
+                assert!(output.contains(":= fact"));
                 assert!(output.contains("is_one 1"));
                 assert!(output.contains("simp [is_one]"));
                 assert!(output.contains("let proof_arg_"));
@@ -4281,7 +5238,7 @@ by contra:
                     output.contains("apply Classical.byContradiction"),
                     "{output}"
                 );
-                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("axiom fact"), "{output}");
                 assert!(!output.contains("sorry"), "{output}");
             },
         );
@@ -4382,7 +5339,7 @@ by contra:
                 let output = to_lean_from_source(source, "choice-have-output").unwrap();
                 assert!(
                     output.contains(
-                        "def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty"
+                        "def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty"
                     ),
                     "{output}"
                 );
@@ -4398,7 +5355,7 @@ by contra:
                     "{output}"
                 );
                 assert!(output.contains("Exists.choose_spec"), "{output}");
-                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("axiom fact"), "{output}");
                 assert!(!output.contains("sorry"), "{output}");
             },
         );
@@ -4516,7 +5473,7 @@ by contra:
                     "{output}"
                 );
                 assert!(output.contains("Exists.choose_spec"), "{output}");
-                assert!(!output.contains("axiom global_fact_"), "{output}");
+                assert!(!output.contains("axiom fact"), "{output}");
                 assert!(!output.contains("sorry"), "{output}");
             },
         );
@@ -4664,7 +5621,7 @@ by cases:
             assert_eq!(proof_step.unsupported.len(), 1);
             assert!(proof_step.unsupported[0].reason.contains("DoNothingStmt"));
             assert!(!proof_step.lean_code.contains("sorry"));
-            assert!(!proof_step.lean_code.contains("axiom global_fact_"));
+            assert!(!proof_step.lean_code.contains("axiom fact"));
 
             let preimage = to_lean_from_source_with_report(
                 r#"
@@ -4685,7 +5642,7 @@ have by preimage root from square(2) $in fn_range(square)
                 .iter()
                 .any(|item| item.reason.contains("HaveByPreimageStmt")));
             assert!(!preimage.lean_code.contains("sorry"));
-            assert!(!preimage.lean_code.contains("axiom global_fact_"));
+            assert!(!preimage.lean_code.contains("axiom fact"));
         });
     }
 
@@ -5015,7 +5972,7 @@ forall a, b, z R:
                 assert_eq!(rule_names.len(), 20, "{rule_names:#?}");
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
-                assert_eq!(output.matches("theorem global_fact_").count(), 20);
+                assert_eq!(output.matches("theorem fact").count(), 20);
                 assert_eq!(output.matches("linarith only").count(), 16);
                 assert!(output.contains("mul_nonneg proof_fact_"));
                 assert!(output.contains("mul_pos proof_fact_"));
@@ -5210,7 +6167,7 @@ forall x, y R:
         run_with_large_stack("closed_rational_builtin_is_emitted_from_ir", || {
             let output = to_lean_from_source("1 / 2 / 3 / 4 = 1 / 24", "closed-ir").unwrap();
 
-            assert!(output.contains("theorem global_fact_1"));
+            assert!(output.contains("theorem fact1"));
             assert!(output.contains(
                 "-- native proof view, left fraction: (1 : ℝ) / (((2 : ℝ) * (3 : ℝ)) * (4 : ℝ))"
             ));
@@ -5223,13 +6180,302 @@ forall x, y R:
     fn native_standard_domain_membership_keeps_a_bare_numeral() {
         let output = to_lean_from_source("2 $in R\n", "native-standard-membership").unwrap();
         assert!(
-            output.contains("theorem global_fact_")
-                && output.contains(": 2 ∈ (Set.univ : Set ℝ) := by"),
+            output.contains("theorem fact") && output.contains(": 2 ∈ (Set.univ : Set ℝ) := by"),
             "{output}"
         );
         assert!(!output.contains("LitexSet"), "{output}");
         assert!(!output.contains("litexR"), "{output}");
         assert!(!output.contains("LitexAddEq"), "{output}");
+    }
+
+    #[test]
+    fn compact_standard_numeric_subsets_use_native_mathlib_sets() {
+        let source = r#"
+forall n N+:
+    n $in N+
+
+Z+ = N+
+
+forall q Q+:
+    q $in Q+
+
+forall r R+:
+    r $in R+
+
+forall z Z-:
+    z $in Z-
+
+forall q Q-:
+    q $in Q-
+
+forall r R-:
+    r $in R-
+
+forall z Z*:
+    z $in Z*
+
+forall q Q*:
+    q $in Q*
+
+forall r R*:
+    r $in R*
+
+forall c C*:
+    c $in C*
+"#;
+        let output = to_lean_from_source(source, "compact-standard-numeric-subsets").unwrap();
+
+        for expected in [
+            "∀ n ∈ {n : ℕ | 0 < n}, n ∈ {n : ℕ | 0 < n}",
+            "{n : ℕ | 0 < n} = {n : ℕ | 0 < n}",
+            "∀ q ∈ {q : ℚ | 0 < q}, q ∈ {q : ℚ | 0 < q}",
+            "∀ r ∈ {r : ℝ | 0 < r}, r ∈ {r : ℝ | 0 < r}",
+            "∀ z ∈ {z : ℤ | z < 0}, z ∈ {z : ℤ | z < 0}",
+            "∀ q ∈ {q : ℚ | q < 0}, q ∈ {q : ℚ | q < 0}",
+            "∀ r ∈ {r : ℝ | r < 0}, r ∈ {r : ℝ | r < 0}",
+            "∀ z ∈ {z : ℤ | z ≠ 0}, z ∈ {z : ℤ | z ≠ 0}",
+            "∀ q ∈ {q : ℚ | q ≠ 0}, q ∈ {q : ℚ | q ≠ 0}",
+            "∀ r ∈ {r : ℝ | r ≠ 0}, r ∈ {r : ℝ | r ≠ 0}",
+            "∀ c ∈ {c : ℂ | c ≠ 0}, c ∈ {c : ℂ | c ≠ 0}",
+        ] {
+            assert!(
+                output.contains(expected),
+                "missing `{expected}` in:\n{output}"
+            );
+        }
+        assert!(!output.contains("\naxiom fact"), "{output}");
+        assert!(!output.contains("sorry"), "{output}");
+
+        let positive_integer_alias =
+            to_lean_from_source("forall z Z+:\n    z $in Z+\n", "positive-integer-alias").unwrap();
+        assert!(
+            positive_integer_alias.contains("∀ z ∈ {n : ℕ | 0 < n}, z ∈ {n : ℕ | 0 < n}"),
+            "{positive_integer_alias}"
+        );
+    }
+
+    #[test]
+    fn closed_compact_numeric_memberships_emit_checked_norm_num_proofs() {
+        let source = r#"
+1 $in N+
+1 $in Q+
+2 $in R+
+0 - 1 $in Z-
+0 - 1 $in Q-
+0 - 1 $in R-
+1 $in Z*
+1 $in Q*
+1 $in R*
+1 $in C*
+not 0 $in N+
+not 0 $in Q+
+not 0 $in R+
+not 0 $in Z-
+not 0 $in Q-
+not 0 $in R-
+not 0 $in Z*
+not 0 $in Q*
+not 0 $in R*
+not 0 $in C*
+"#;
+        let output = to_lean_from_source(source, "closed-compact-numeric-memberships").unwrap();
+
+        for expected in [
+            "1 ∈ {n : ℕ | 0 < n}",
+            "1 ∈ {q : ℚ | 0 < q}",
+            "2 ∈ {r : ℝ | 0 < r}",
+            "(0 - 1) ∈ {z : ℤ | z < 0}",
+            "(0 - 1) ∈ {q : ℚ | q < 0}",
+            "(0 - 1) ∈ {r : ℝ | r < 0}",
+            "1 ∈ {z : ℤ | z ≠ 0}",
+            "1 ∈ {q : ℚ | q ≠ 0}",
+            "1 ∈ {r : ℝ | r ≠ 0}",
+            "1 ∈ {c : ℂ | c ≠ 0}",
+            "0 ∉ {n : ℕ | 0 < n}",
+            "0 ∉ {q : ℚ | 0 < q}",
+            "0 ∉ {r : ℝ | 0 < r}",
+            "0 ∉ {z : ℤ | z < 0}",
+            "0 ∉ {q : ℚ | q < 0}",
+            "0 ∉ {r : ℝ | r < 0}",
+            "0 ∉ {z : ℤ | z ≠ 0}",
+            "0 ∉ {q : ℚ | q ≠ 0}",
+            "0 ∉ {r : ℝ | r ≠ 0}",
+            "0 ∉ {c : ℂ | c ≠ 0}",
+        ] {
+            assert!(
+                output.contains(expected),
+                "missing `{expected}` in:\n{output}"
+            );
+        }
+        assert!(output.matches("by\n  norm_num").count() >= 20, "{output}");
+        assert!(!output.contains("\naxiom fact"), "{output}");
+        assert!(!output.contains("sorry"), "{output}");
+    }
+
+    #[test]
+    fn builtin_predicates_use_native_props_and_selected_checked_rules() {
+        let source = r#"
+$prime(53)
+not $prime(54)
+
+forall A, B set:
+    A $subset B
+    =>:
+        B $superset A
+
+forall A, B set:
+    not A $subset B
+    =>:
+        not B $superset A
+
+forall A, B set:
+    A $proper_subset B
+    =>:
+        A $proper_subset B
+
+forall A, B set:
+    not A $proper_subset B
+    =>:
+        not A $proper_subset B
+
+forall A, B set:
+    A $proper_superset B
+    =>:
+        A $proper_superset B
+
+forall A, B set:
+    not A $proper_superset B
+    =>:
+        not A $proper_superset B
+
+forall a, b R:
+    not a < b
+    =>:
+        not a < b
+
+forall a, b R:
+    not a <= b
+    =>:
+        not a <= b
+
+forall a, b R:
+    not a > b
+    =>:
+        not a > b
+
+forall a, b R:
+    not a >= b
+    =>:
+        not a >= b
+"#;
+        let output = to_lean_from_source(source, "builtin-predicates").unwrap();
+
+        for expected in [
+            "Nat.Prime 53",
+            "¬ Nat.Prime 54",
+            "A ⊆ B → A ⊆ B",
+            "¬ (A ⊆ B) → ¬ (A ⊆ B)",
+            "(A ⊆ B) ∧ A ≠ B → (A ⊆ B) ∧ A ≠ B",
+            "¬ (A ⊆ B) ∨ A = B → ¬ (A ⊆ B) ∨ A = B",
+            "(B ⊆ A) ∧ A ≠ B → (B ⊆ A) ∧ A ≠ B",
+            "¬ (B ⊆ A) ∨ A = B → ¬ (B ⊆ A) ∨ A = B",
+            "¬ (a < b) → ¬ (a < b)",
+            "¬ (a ≤ b) → ¬ (a ≤ b)",
+            "¬ (a > b) → ¬ (a > b)",
+            "¬ (a ≥ b) → ¬ (a ≥ b)",
+        ] {
+            assert!(
+                output.contains(expected),
+                "missing `{expected}` in:\n{output}"
+            );
+        }
+        assert!(output.matches("by\n  norm_num").count() >= 2, "{output}");
+        assert!(!output.contains("$prime"), "{output}");
+        assert!(!output.contains("$proper_"), "{output}");
+        assert!(!output.contains("\naxiom fact"), "{output}");
+        assert!(!output.contains("sorry"), "{output}");
+    }
+
+    #[test]
+    fn set_relation_duality_ir_retains_its_checked_reversed_premise() {
+        let source = r#"
+forall A, B set:
+    A $superset B
+    =>:
+        B $subset A
+
+forall A, B set:
+    A $subset B
+    =>:
+        B $superset A
+
+forall A, B set:
+    not A $superset B
+    =>:
+        not B $subset A
+
+forall A, B set:
+    not A $subset B
+    =>:
+        not B $superset A
+"#;
+        let mut statement_irs = test_to_lean_ir(source, "set-relation-duality-ir");
+        let expected_rules = [
+            SetRelationDualityBuiltinRuleToLeanIR::SubsetFromSuperset,
+            SetRelationDualityBuiltinRuleToLeanIR::SupersetFromSubset,
+            SetRelationDualityBuiltinRuleToLeanIR::NotSubsetFromNotSuperset,
+            SetRelationDualityBuiltinRuleToLeanIR::NotSupersetFromNotSubset,
+        ];
+        for (statement, expected_rule) in statement_irs.iter_mut().zip(expected_rules) {
+            let StmtToLeanIR::Fact(forall) = statement else {
+                panic!("duality tracer should produce stored forall facts");
+            };
+            let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &mut forall.fact.proof
+            else {
+                panic!("duality tracer should retain forall-introduction evidence");
+            };
+            let FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::SetRelationDuality(rule)),
+                premises,
+                ..
+            } = underlying_test_proof_mut(&mut conclusions[0].proof)
+            else {
+                panic!("duality tracer should retain typed set-relation evidence");
+            };
+            assert_eq!(*rule, expected_rule);
+            assert_eq!(premises.len(), 1);
+        }
+
+        let StmtToLeanIR::Fact(forall) = &mut statement_irs[1] else {
+            unreachable!();
+        };
+        let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &mut forall.fact.proof
+        else {
+            unreachable!();
+        };
+        let FactProofToLeanIR::RuleApplication { premises, .. } =
+            underlying_test_proof_mut(&mut conclusions[0].proof)
+        else {
+            unreachable!();
+        };
+        premises.clear();
+
+        let error = emit_lean_from_ir(&statement_irs)
+            .expect_err("duality evidence without its checked premise must fail")
+            .trace_message();
+        assert!(
+            error.contains("set-relation duality evidence expected 1 premise but received 0"),
+            "{error}"
+        );
+    }
+
+    #[test]
+    fn unordered_complex_positive_subset_remains_rejected() {
+        let result = to_lean_from_source("1 $in C+\n", "unsupported-complex-positive-subset");
+        assert!(
+            result.is_err(),
+            "C+ must not be invented as an ordered complex subset"
+        );
     }
 
     #[test]
@@ -5309,7 +6555,7 @@ forall y R:
 "#;
                 let output = to_lean_from_source(source, "local-proof-spaces").unwrap();
 
-                assert_eq!(output.matches("\ntheorem global_fact_").count(), 2);
+                assert_eq!(output.matches("\ntheorem fact").count(), 2);
                 assert!(output.contains("intro x proof_fact_1_1 proof_fact_1_2"));
                 assert!(output.contains("exact proof_fact_1_2"));
                 assert!(output.contains("intro y proof_fact_2_1 proof_fact_2_2"));
@@ -5849,7 +7095,7 @@ $p(a + b)
                 ));
 
                 let output = to_lean_from_source(source, "resolved-defined-symbols").unwrap();
-                assert!(output.contains("theorem global_fact_"), "{output}");
+                assert!(output.contains("theorem fact"), "{output}");
                 assert!(output.contains(": p (a + b) := by"), "{output}");
                 assert!(!output.contains("sorry"));
             },
@@ -6059,12 +7305,12 @@ forall x R:
                     output.contains("have proof_fact_1_6 : x ≠ 0 := proof_fact_1_2"),
                     "{output}"
                 );
-                assert!(output.contains(":= global_fact_"), "{output}");
+                assert!(output.contains(":= fact"), "{output}");
                 assert!(
                     output.contains(" proof_arg_1_4 proof_fact_1_5 proof_fact_1_6"),
                     "{output}"
                 );
-                assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
+                assert_eq!(output.matches("\naxiom fact").count(), 1);
                 assert!(!output.contains("sorry"));
             },
         );
@@ -6151,7 +7397,7 @@ $marked2(1, 2)
                     "{output}"
                 );
                 assert!(output.contains("have proof_fact_2_3 : marked2"), "{output}");
-                assert!(output.contains(":= global_fact_"), "{output}");
+                assert!(output.contains(":= fact"), "{output}");
                 assert!(output.contains(" proof_arg_2_1"), "{output}");
                 assert!(
                     output.contains("convert proof_fact_1_1 using 1 <;> norm_num"),
@@ -6224,8 +7470,8 @@ $marked2(1, 2)
                 let source = fs::read_to_string(path).unwrap();
                 let output = to_lean_from_source(&source, "set-obj-abi").unwrap();
 
-                assert!(output.contains("[LitexObject litex_carrier_"), "{output}");
-                assert!(output.contains(": Set litex_carrier_"), "{output}");
+                assert!(output.contains("[LitexObject α"), "{output}");
+                assert!(output.contains(": Set α"), "{output}");
                 assert!(output.contains("(A ∪ B) = (A ∪ B)"), "{output}");
                 assert!(output.contains("(A ∩ B) = (A ∩ B)"), "{output}");
                 assert!(output.contains("(A \\ B) = (A \\ B)"), "{output}");
@@ -6255,8 +7501,8 @@ $marked2(1, 2)
                     ToLeanUnsupportedPhase::IrConstruction
                 );
                 assert!(report.unsupported[0].reason.contains("SetBuilder"));
-                assert!(!report.lean_code.contains("theorem global_fact_"));
-                assert!(!report.lean_code.contains("axiom global_fact_"));
+                assert!(!report.lean_code.contains("theorem fact"));
+                assert!(!report.lean_code.contains("axiom fact"));
                 assert!(!report.lean_code.contains("sorry"));
             },
         );
@@ -6301,7 +7547,7 @@ $marked2(1, 2)
                 assert!(report
                     .lean_code
                     .contains("-- To-Lean omitted statement 2 during Lean emission"));
-                assert_eq!(report.lean_code.matches("theorem global_fact_").count(), 2);
+                assert_eq!(report.lean_code.matches("theorem fact").count(), 2);
                 assert!(!report.lean_code.contains("axiom"));
                 assert!(!report.lean_code.contains("sorry"));
                 assert!(!runtime.to_lean_mode());
@@ -6333,7 +7579,7 @@ $marked2(1, 2)
                 assert!(report.unsupported[0]
                     .reason
                     .contains("only an explicit Litex `trust` statement may emit a Lean axiom"));
-                assert!(!report.lean_code.contains("axiom global_fact_"));
+                assert!(!report.lean_code.contains("axiom fact"));
                 assert!(report.lean_code.contains("-- To-Lean omitted statement 1"));
             },
         );
@@ -6753,6 +7999,102 @@ $marked2(1, 2)
                 generated
             );
         });
+    }
+
+    #[test]
+    fn to_lean_builtin_set_and_abs_rules_preserve_checked_routes() {
+        run_with_large_stack("to_lean_builtin_set_and_abs_rules_preserve_checked_routes", || {
+            let source = r#"
+forall A, B set:
+    union(A, B) = union(B, A)
+
+forall A set:
+    union(A, A) = A
+
+forall A set:
+    union(A, {}) = A
+
+forall A, B set:
+    intersect(A, B) = intersect(B, A)
+
+forall A, B set, x A:
+    x $in union(A, B)
+
+forall A, B set, x A:
+    x $in B
+    =>:
+        x $in intersect(A, B)
+
+forall A, B set, x A:
+    not x $in B
+    =>:
+        x $in set_minus(A, B)
+
+forall x R:
+    0 <= x
+    =>:
+        abs(x) = x
+
+forall x R:
+    x != 0
+    =>:
+        0 < abs(x)
+
+$is_nonempty_set(N)
+$is_nonempty_set(Z)
+$is_nonempty_set(Q)
+$is_nonempty_set(R)
+$is_nonempty_set(C)
+"#;
+            let ir = test_to_lean_ir(source, "builtin-set-and-abs-rules");
+            let output = emit_lean_from_ir(&ir).unwrap();
+            assert_eq!(output.matches("theorem fact").count(), 14);
+            assert!(output.contains("simp [or_comm]"), "{output}");
+            assert!(output.contains("rw [Set.mem_union]"), "{output}");
+            assert!(output.contains("rw [Set.mem_inter_iff]"), "{output}");
+            assert!(output.contains("rw [Set.mem_diff]"), "{output}");
+            assert!(output.contains("exact abs_of_nonneg"), "{output}");
+            assert!(output.contains("exact abs_pos.mpr"), "{output}");
+            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℕ)"), "{output}");
+            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℤ)"), "{output}");
+            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℚ)"), "{output}");
+            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℝ)"), "{output}");
+            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℂ)"), "{output}");
+            assert!(!output.contains("axiom"), "{output}");
+            assert!(!output.contains("sorry"), "{output}");
+        });
+    }
+
+    #[test]
+    fn to_lean_set_membership_rejects_malformed_premise_arity() {
+        run_with_large_stack(
+            "to_lean_set_membership_rejects_malformed_premise_arity",
+            || {
+                let source = r#"
+forall A, B set, x A:
+    x $in union(A, B)
+"#;
+                let mut ir = test_to_lean_ir(source, "set-membership-malformed");
+                let StmtToLeanIR::Fact(forall) = &mut ir[0] else {
+                    panic!("set-membership tracer should store one forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("set-membership tracer should retain forall evidence");
+                };
+                let FactProofToLeanIR::RuleApplication { premises, .. } =
+                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("union membership should retain its builtin rule application");
+                };
+                premises.clear();
+                let error = emit_lean_from_ir(&ir)
+                    .expect_err("malformed union membership evidence must stop emission")
+                    .trace_message();
+                assert!(error.contains("expected 1 premises but received 0"), "{error}");
+            },
+        );
     }
 
     fn private_tmp_lean_file(stem: &str) -> std::path::PathBuf {

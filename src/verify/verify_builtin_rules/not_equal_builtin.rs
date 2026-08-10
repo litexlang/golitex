@@ -36,6 +36,27 @@ impl Runtime {
             return Ok(result);
         }
 
+        // Not-equality is symmetric.
+        // Example: a known `a != b` proves the goal `b != a`.
+        let reversed: AtomicFact = NotEqualFact::new(
+            right_obj.clone(),
+            left_obj.clone(),
+            not_equal_fact.line_file.clone(),
+        )
+        .into();
+        let reversed_result = self.verify_builtin_rule_premise(&reversed, builtin_state)?;
+        if reversed_result.is_true() {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    not_equal_fact.clone().into(),
+                    "not-equality symmetry".to_string(),
+                    BuiltinRuleEvidence::NotEqualSymmetry,
+                    vec![reversed_result],
+                )
+                .into(),
+            );
+        }
+
         if let (Obj::ListSet(left_ls), Obj::ListSet(right_ls)) = (left_obj, right_obj) {
             if left_ls.list.len() != right_ls.list.len() {
                 return Ok(
@@ -1489,5 +1510,128 @@ impl Runtime {
             )),
             None => Ok(None),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::pipeline::{render_run_source_code_output, run_source_code};
+    use crate::prelude::*;
+    use crate::to_lean::to_lean_from_source;
+    use std::fs;
+    use std::path::Path;
+    use std::process::Command;
+
+    const SYMMETRY_SOURCE: &str = r#"
+forall a set, b set:
+    $is_set(a)
+    $is_set(b)
+    a != b
+    =>:
+        b != a
+"#;
+
+    #[test]
+    fn not_equal_symmetry_is_a_builtin_rule_with_a_negative_boundary() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("not-equality-symmetry-positive");
+        let (results, error) = run_source_code(SYMMETRY_SOURCE, &mut runtime);
+        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+        assert!(succeeded, "not-equality symmetry should verify:\n{output}");
+        assert!(
+            output.contains("not-equality symmetry"),
+            "the proof should name the builtin route:\n{output}"
+        );
+
+        let mut negative_runtime = Runtime::new();
+        negative_runtime.new_file_path_new_env_new_name_scope("not-equality-symmetry-negative");
+        let (negative_results, negative_error) =
+            run_source_code("have a, b R\nb != a", &mut negative_runtime);
+        let (negative_succeeded, negative_output) = render_run_source_code_output(
+            &negative_runtime,
+            &negative_results,
+            &negative_error,
+            false,
+        );
+        assert!(
+            !negative_succeeded,
+            "symmetry must not invent a non-equality premise:\n{negative_output}"
+        );
+
+        let known_forall_source = r#"
+abstract_prop marked(x)
+
+trust forall a, b R:
+    $marked(a)
+    =>:
+        a != b
+
+have x, y R
+trust $marked(x)
+y != x
+"#;
+        let mut known_forall_runtime = Runtime::new();
+        known_forall_runtime
+            .new_file_path_new_env_new_name_scope("not-equality-symmetry-known-forall");
+        let (known_forall_results, known_forall_error) =
+            run_source_code(known_forall_source, &mut known_forall_runtime);
+        let (known_forall_succeeded, known_forall_output) = render_run_source_code_output(
+            &known_forall_runtime,
+            &known_forall_results,
+            &known_forall_error,
+            false,
+        );
+        assert!(
+            known_forall_succeeded,
+            "the later full-verifier symmetry fallback should retain known-forall proofs:\n{known_forall_output}"
+        );
+    }
+
+    #[test]
+    fn not_equal_symmetry_has_checked_to_lean_evidence() {
+        let output = to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-to-lean")
+            .expect("the builtin symmetry proof should lower to Lean");
+        assert!(
+            output.contains(
+                "∀ {α : Type LitexUniverse} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α)"
+            ),
+            "{output}"
+        );
+        assert!(output.contains("Ne.symm proof_fact_"), "{output}");
+        assert!(!output.contains("alpha0"), "{output}");
+        assert!(!output.contains("alpha1"), "{output}");
+        assert!(!output.contains("axiom"), "{output}");
+        assert!(!output.contains("sorry"), "{output}");
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_not_equal_symmetry_compiles_with_lean() {
+        let project = std::env::var("LITEX_LEAN_PROJECT")
+            .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+        let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+        let generated = to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-kernel")
+            .expect("the builtin symmetry proof should lower to Lean");
+        let private_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("private");
+        fs::create_dir_all(&private_dir).unwrap();
+        let lean_file = private_dir.join(format!(
+            "litex_to_lean_not_equal_symmetry_{}.lean",
+            std::process::id()
+        ));
+        fs::write(&lean_file, &generated).unwrap();
+        let output = Command::new(lake)
+            .args(["env", "lean"])
+            .arg(&lean_file)
+            .current_dir(project)
+            .output();
+        let _ = fs::remove_file(&lean_file);
+        let output = output.unwrap();
+        assert!(
+            output.status.success(),
+            "not-equality symmetry generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+            generated
+        );
     }
 }
