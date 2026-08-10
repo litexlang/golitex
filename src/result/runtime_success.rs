@@ -326,6 +326,39 @@ impl EqualityTransportStep {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct FactTransformationEvidence {
+    /// Proposition proved before the first transformation step.
+    pub source: Fact,
+    /// Ordered in proof-construction direction: cited source toward the goal.
+    pub steps: Vec<FactTransformationStep>,
+}
+
+impl FactTransformationEvidence {
+    pub fn new(source: Fact, steps: Vec<FactTransformationStep>) -> Self {
+        Self { source, steps }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct FactTransformationStep {
+    /// Proposition available after applying this step.
+    pub result: Fact,
+    pub rule: FactTransformationRule,
+}
+
+impl FactTransformationStep {
+    pub fn new(result: Fact, rule: FactTransformationRule) -> Self {
+        Self { result, rule }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum FactTransformationRule {
+    EqualityRewrite(EqualityTransportEvidence),
+    RationalNormalization,
+}
+
 impl fmt::Debug for EqualityTransportStep {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("EqualityTransportStep")
@@ -337,7 +370,7 @@ impl fmt::Debug for EqualityTransportStep {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct VerifiedByFactResult {
     pub detail: Option<String>,
     pub cite_what: Box<Stmt>,
@@ -347,6 +380,10 @@ pub struct VerifiedByFactResult {
     /// along these checked equality edges. `None` means no structured
     /// transport evidence was recorded for this citation route.
     pub equality_transport: Option<EqualityTransportEvidence>,
+    /// Additional checked transformations discovered while resolving the
+    /// requested fact to the cited fact. These are stored source-to-goal even
+    /// though the verifier searched goal-to-source.
+    pub fact_transformation: Option<FactTransformationEvidence>,
 }
 
 pub struct KnownForallInstantiationItem {
@@ -419,6 +456,7 @@ pub struct FactVerifiedByFactInVerifiedBys {
     pub cite_what: Box<Stmt>,
     pub source_fact_id: Option<FactId>,
     pub equality_transport: Option<EqualityTransportEvidence>,
+    pub fact_transformation: Option<FactTransformationEvidence>,
 }
 
 #[derive(Debug)]
@@ -660,6 +698,7 @@ impl VerifiedByResult {
             cite_what: Box::new(cite_what),
             source_fact_id: None,
             equality_transport: None,
+            fact_transformation: None,
         })
     }
 
@@ -668,6 +707,7 @@ impl VerifiedByResult {
         cite_what: Fact,
         source_fact_id: Option<FactId>,
         equality_transport: Option<EqualityTransportEvidence>,
+        fact_transformation: Option<FactTransformationEvidence>,
         detail: Option<String>,
     ) -> Self {
         Self::Fact(VerifiedByFactResult {
@@ -675,6 +715,7 @@ impl VerifiedByResult {
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id,
             equality_transport,
+            fact_transformation,
         })
     }
 
@@ -705,6 +746,7 @@ impl VerifiedByResult {
             cite_what: Box::new(cite_what.into_stmt()),
             source_fact_id: Some(source_fact_id),
             equality_transport: None,
+            fact_transformation: None,
         })
     }
 
@@ -799,6 +841,7 @@ impl VerifiedBysEnum {
             cite_what: Box::new(cite_what),
             source_fact_id: None,
             equality_transport: None,
+            fact_transformation: None,
         })
     }
 
@@ -842,6 +885,7 @@ impl VerifiedBysEnum {
                     cite_what: r.cite_what,
                     source_fact_id: r.source_fact_id,
                     equality_transport: r.equality_transport,
+                    fact_transformation: r.fact_transformation,
                 })]
             }
             VerifiedByResult::KnownForallInstantiation(r) => {

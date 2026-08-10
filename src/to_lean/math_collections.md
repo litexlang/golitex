@@ -87,7 +87,7 @@ HaveObjChoice {
 ```
 
 The target definition
-`litexIsNonemptySet S := ∃ x, litexMem x S` makes the verification fact itself
+`litexIsNonemptySet S := Set.Nonempty S` makes the verification fact itself
 the choice package. At file scope the emitter names that checked theorem,
 defines `x` with `Exists.choose`, and proves the stored membership with
 `Exists.choose_spec` from the same theorem. In a proof scope those three values
@@ -111,12 +111,12 @@ Concrete witness-type checks are captured before the verifier installs its
 temporary existential parameters and equalities. Otherwise a valid-looking
 proof of `e $in T` could cite binder-local facts that disappear when that
 environment is popped. Plain `set` parameters need no target proposition
-because every target value already has type `LitexSet`; object,
+because the target binder itself has type `Set α`; object,
 `nonempty_set`, and `finite_set` parameters retain their separate requirements.
 The emitter replays the local steps, names the retained proofs, and builds the
 nested existential package with its concrete witnesses. Closed numeric binary
-facts receive a `LitexSet` ascription when inference would otherwise default to
-a native Lean numeric type.
+facts receive one justified fact-level native expectation when inference would
+otherwise default to the wrong numeric carrier.
 
 Elimination freezes the result as:
 
@@ -148,7 +148,8 @@ Lean spellings. A binder occurrence with a mismatched spelling, or two
 different symbols that would both print as the same Lean identifier, is an
 explicit incomplete boundary; the backend never emits a captured formula.
 
-The implemented builtin nonemptiness backend currently covers the real carrier.
+The implemented builtin nonemptiness backend currently covers the native real
+universal set.
 A stored nonemptiness theorem can also be cited when its own proof route is
 supported. Meta-level parameter types (`set`, `nonempty_set`, `finite_set`) and
 object carriers whose proof/object lowering is unavailable remain explicit
@@ -158,13 +159,11 @@ emit an unconstrained `opaque`, or introduce a silent axiom. Positive
 separate package above. `exist!`, `not exist`, preimage selection, and
 uniqueness-based function construction still need distinct evidence contracts.
 
-Function definitions are also not native Lean function declarations at the
-canonical object boundary. A Litex function is a `LitexSet` graph object.
+Function definitions do not yet have a frozen native target contract.
 `have fn ... = ...`, case-by-case definitions, recursive definitions, and
-unique-existence definitions need a function-object declaration plus typed
-application/evaluation laws. A backend may use a native function only as a
-local proof view justified by that evidence; it may not replace the canonical
-object in emitted statements.
+unique-existence definitions need a typed function-object declaration plus
+application/evaluation laws. Until that interface is modeled, the compiler
+fails closed rather than restoring the retired universal value wrapper.
 
 Case analysis has the following proof contract:
 
@@ -360,6 +359,68 @@ The nearest boundary is a direct instance and goal that need some other form of
 transport, or a recursively verified domain requirement whose proof rule has no
 Lean backend. Both remain explicit unsupported nodes and stop compilation.
 
+## Resolved atomic-fact transformations
+
+Known atomic-fact lookup may normalize objects before it finds a stored
+proposition. That search is goal-to-source, whereas a proof term must be built
+source-to-goal. Returning only the final citation loses precisely the middle
+derivation that Lean needs. The verifier therefore retains:
+
+```text
+FactTransformationEvidence {
+    source: stored proposition reached by resolution,
+    steps: [
+        { result, RationalNormalization },
+        { result, EqualityRewrite { oriented equality edges + FactIds } },
+        ...
+    ],
+}
+```
+
+The first implemented route for `a = 13`, `b = 1`, and known `$p(14)` is:
+
+```text
+$p(14)
+  -> RationalNormalization -> $p(13 + 1)
+  -> EqualityRewrite       -> $p(a + b)
+```
+
+The intermediate `$p(13 + 1)` is intentional. It separates a closed rational
+calculation, discharged by the checked normalization backend, from the two
+stored equalities used by `simpa only`. `resolve_obj` remains proof search and
+does not become an opaque target tactic.
+
+Substitution is keyed by the symbol's `SymbolId` and applied recursively to the
+whole predicate argument object, rather than only to its top-level children.
+Consequently the evidence builder also records:
+
+```text
+$p(f(14), c)
+  -> RationalNormalization -> $p(f(13 + 1), c)
+  -> EqualityRewrite       -> $p(f(a + b), c)
+```
+
+The equality side is recursive as well. It asks for a stored proof path between
+the complete pair of subobjects before descending through the central
+same-shape matcher. A compound premise therefore stays a single explicit
+rewrite even below a function application:
+
+```text
+a + b = 14, $p(f(14), c)
+  -> EqualityRewrite(14 -> a + b) -> $p(f(a + b), c)
+```
+
+This is structural congruence at arbitrary supported depth, not a claim that
+all calls to `resolve_obj` are proof rules. A reduction which is not justified
+by a stored equality or the checked rational normalizer must acquire its own
+`FactTransformationRule` before To-Lean can replay it.
+
+This recursive evidence is independent of target object coverage. The current
+To-Lean object ABI rejects general `FnSet`/`FnObj`, so the second chain is a
+verified verifier-result regression but not yet an emitted Lean theorem. Adding
+function-object declaration and evaluation evidence is the prerequisite for
+crossing that boundary; the compiler must not flatten the chain in the meantime.
+
 ## Forall-introduction inferred premises
 
 Parameter membership facts and their immediate verifier inferences share one
@@ -376,11 +437,9 @@ a ∈ R+
   -> 0 < a
 ```
 
-Its recursive premise is the exact binder-membership citation. Lean first
-interprets `R+` membership semantically as positive real membership, then
-checks `litexMemRPosPositive`. The companion `litexMemRPosReal` lemma supplies
-the native-real proof view used by arithmetic emission without changing the
-canonical `LitexSet` object. An unsupported inferred consequence is not
+Its recursive premise is the exact binder-membership citation. Lean interprets
+`R+` as `{r : ℝ | 0 < r}`, so the positivity result follows definitionally from
+that native membership proof. An unsupported inferred consequence is not
 silently emitted; if a selected proof depends on it, the enclosing statement
 remains incomplete.
 
@@ -425,18 +484,22 @@ only implicit rather than an explicit universal premise.
 
 ## Numeric object ABI
 
-This section freezes the source-facing object interface before the compiler
-adds more proof-rule backends. Litex has one `Obj` syntax. `N`, `Z`, `Q`, `R`,
-and `C` are standard-set objects, and a declaration such as `z Z` contributes
-the fact `z $in Z`; it does not change `z` into a different kind of object.
+This section freezes the replacement for the former one-carrier `LitexSet`
+experiment. Litex has one `Obj` syntax and one source-level object identity, but
+the target is allowed to give an occurrence the native type required by its
+checked judgment. Source uniformity does not require a monomorphic Lean value
+carrier.
 
-The former real-only emitter assigned native real annotations while proving
-some arithmetic facts. That representation is not the object ABI: native
-numeric values now occur only behind a checked proof view.
+`N`, `Z`, `Q`, `R`, and `C` are ordinary Litex set objects. A declaration such
+as `z Z` still contributes the fact `z $in Z`; it is not source syntax for a
+different object category. In Lean, however, that checked membership supplies
+the faithful native interpretation `z : ℤ`. Proof provenance and target
+elaboration are separate: `trust z $in Z` may introduce the proposition as an
+axiom, but `trust` never chooses or changes `z`'s target type.
 
 ### Uniform object rendering
 
-The canonical object lowering is structural and context-free:
+The canonical object tree remains structural and context-free:
 
 ```text
 lower_obj(obj) -> ObjToLeanIR
@@ -445,116 +508,172 @@ Symbol(z)      -> z
 Number(2)      -> 2
 Div(z, 2)      -> z / 2
 Add(q, 1)      -> q + 1
-StandardSet(Q) -> litexQ
+StandardSet(Q) -> Q
 ```
 
 `ObjToLeanIR` preserves the source constructor tree, normalized number
-spelling, and `SymbolId`. It contains no inferred `Natural`, `Integer`,
-`Rational`, `Real`, or `Complex` carrier and no numeric coercion node. In
-particular, object lowering must never turn `z / 2` into an expression such as
-`(z : ℚ) / (2 : ℚ)`.
+spelling, and `SymbolId`. A separate checked target context records the native
+carrier expected by a binder or fact. Plain object lowering does not attach a
+temporary annotation such as `(z : ℝ)` and does not turn a numeral into a pair
+of value and type.
 
 This gives symbols, literals, and compound objects one stable spelling across
 definitions, facts, proof certificates, equality transport, and `FactId`
-citations. A proof may learn additional memberships about an object without
-changing the object that those facts mention.
+citations. Target coercions are elaboration nodes justified at a judgment
+boundary; they do not create another Litex object or change its `SymbolId`.
 
 ### Object universe and membership
 
-The Lean target has one carrier because every Litex object is a set. `LitexObj`
-is not a second semantic type; if that historical name appears in Rust, it is
-only an alias for the same carrier. The fixed target interface is:
+Litex's object/fact distinction remains authoritative:
+
+- every source `Obj` satisfies `$is_set(obj)`;
+- a `Fact` or proposition is not an `Obj` and cannot be passed where an object
+  is required;
+- this source invariant does not imply that every target term has one Lean
+  type.
+
+The target uses a small polymorphic marker for that invariant and native
+Mathlib carriers for standard domains. Its intended interface is equivalent to:
 
 ```text
-LitexSet : Type
-litexN, litexZ, litexQ, litexR, litexC : LitexSet
-membership : LitexSet -> LitexSet -> Prop
+LitexObject α : Prop
+litexIsSet : [LitexObject α] -> α -> Prop
+
+N -> (Set.univ : Set ℕ)
+Z -> (Set.univ : Set ℤ)
+Q -> (Set.univ : Set ℚ)
+R -> (Set.univ : Set ℝ)
+C -> (Set.univ : Set ℂ)
 ```
 
-Thus the semantic shape of the tracer is:
+`LitexObject` has instances only for supported object carriers; it is not a
+blanket instance for every Lean type. The frontend IR continues to enforce the
+stronger source distinction, so this marker is an emitted proposition rather
+than an attempt to reimplement the parser's object sort in Lean.
+
+Standard-domain membership is a genuine proposition using Mathlib's native
+membership relation:
 
 ```text
-forall z Z:
-    z / 2 $in Q
+2 $in R
 
 ->
 
-forall z LitexSet:
-    z $in litexZ
-    =>:
-        z / 2 $in litexQ
+2 ∈ (Set.univ : Set ℝ)
 ```
 
-The target binder's single `LitexSet` annotation is global compiler scaffolding;
-it is not a temporary claim that `z` is a Lean integer, rational, or real.
-Every occurrence in the translated object remains the bare symbol `z`.
+The proposition itself both elaborates the bare numeral as `ℝ` and remains
+available as a hypothesis, theorem, or trusted fact. It must not be erased as
+mere typing metadata. Equality and the supported arithmetic operators likewise
+use native `=`, `+`, `-`, `*`, and `/`; the target must not introduce wrappers
+such as `LitexAddEq` or a private equality relation.
 
-`LitexSet : Type` is the meta-level carrier of set-values. It is not a Litex
-universal-set object, and the target must not define it recursively as
-`Set LitexSet`. Facts remain `Prop`. Function objects are `LitexSet` graph
-objects too; a later application primitive may expose a local native function
-view for proofs, but a native Lean function is not their canonical value.
+### Binders preserve bounded membership
 
-A source binder `A set` therefore becomes only `(A : LitexSet)`. A source
-binder `z Z` becomes `(z : LitexSet)` followed by the proposition
-`z ∈ litexZ`. The membership is proof data, not a different binder type.
-
-Standard-set inclusion is likewise preserved as mathematics about objects:
+A standard-domain binder is emitted in bounded-quantifier form:
 
 ```text
-litexN subset litexZ subset litexQ subset litexR subset litexC
+forall x R:
+    P(x)
+
+->
+
+∀ x ∈ (Set.univ : Set ℝ), P x
 ```
 
-Refined sets such as `N+`, `Z*`, and `Q-` remain set values or membership
-predicates. They are not Lean subtypes attached to each symbol.
+Lean elaborates this as a native `x : ℝ` binder followed by a separate
+membership premise. The generated surface does not need to print `(x : ℝ)`,
+but the elaborated term is typed because `Membership.mem` fixes the element
+carrier. The membership premise receives its own proof name and `FactId`
+mapping just like any other Litex fact.
+
+Refined standard sets are native predicates over their base carrier, for
+example `{n : ℕ | 0 < n}` and `{z : ℤ | z ≠ 0}`. They remain membership
+propositions, not Lean subtypes substituted for the source symbol.
+
+A generic source set binder uses an implicit carrier:
+
+```text
+forall A, B set:
+    ...
+
+->
+
+∀ {α : Type u} (A B : Set α), ...
+```
+
+The first tranche shares one implicit carrier among connected generic-set
+binders in a declaration. Membership in such a set infers the element type from
+the set. Native `A ∪ B`, `A ∩ B`, and `A \ B` are supported when their carriers
+unify. Heterogeneous or otherwise underconstrained set expressions fail closed
+until the IR can retain a sound carrier constraint; they do not fall back to a
+universal wrapper.
 
 ### Numerals obtain constraints from facts, not annotations
 
 A `Number` node lowers to its normalized spelling and nothing else. For
 example, the object in `1 $in R` is emitted as `1`, and the containing
-membership proposition supplies the `LitexSet` expectation:
+membership proposition supplies the native expectation:
 
 ```text
-1 $in litexR
+1 ∈ (Set.univ : Set ℝ)
 ```
 
 It is not emitted as `(1 : ℝ)`. Likewise, `q + 1` keeps the bare literal `1`.
-Closed equality and order facts must use monomorphic Litex fact interfaces, or
-another enclosing `LitexSet` expectation, so Lean never needs to default an
-otherwise unconstrained numeral to `Nat`. That constraint belongs to the
-monomorphic `LitexSet` operations and fact lowering, not to local carrier
-inference in `Obj` lowering.
+An unconstrained reflexive fact such as `1 = 1` also remains `1 = 1`; the
+compiler does not invent a persistent `ℚ` or `ℝ` annotation merely because the
+object is numeric. A closed arithmetic fact whose meaning depends on a carrier,
+such as one containing division, needs one fact-level target carrier chosen
+from checked verifier evidence. For example, the rational-expression
+normalization certificate selects `ℚ` for its closed judgment. The carrier is
+not stored on each numeral. If the compiler cannot justify one carrier, it must
+report the fact as unsupported instead of silently treating division as `Nat`.
 
-This separation is important because a Litex numeral may have many true
-memberships. Prematurely assigning `1` to `Z`, `Q`, or `R` would manufacture
-different target terms for one source object and could select the wrong target
-operator, such as integer division.
+### Canonical coercions are judgment-level evidence
 
-### Operators stay attached to the object universe
+Mathlib has the canonical tower `ℕ -> ℤ -> ℚ -> ℝ -> ℂ`, but Lean does not in
+general propagate the right-hand set's element type backward through infix
+membership after the left expression already contains a fixed-typed symbol. A
+real Lean probe establishes the boundary:
 
-Each Litex operator has one target operation on `LitexSet`. The verifier's
-well-definedness and membership evidence controls where that operation may be
-used and what standard set contains its result; the object emitter does not
-select a different operator implementation from an inferred carrier.
+```text
+z : ℤ
+z / 2 ∈ (Set.univ : Set ℚ)       -- does not elaborate
+(z / 2 : ℚ) ∈ (Set.univ : Set ℚ) -- elaborates as (z : ℚ) / 2
+```
 
-Consequently:
+Therefore the tracer
 
-- `z / 2` remains `z / 2`; the premises `z $in Z` and `2 != 0` support the
-  conclusion that it belongs to `Q`.
-- `n - 1` remains `n - 1`; proving it belongs to `N` still requires the
-  Litex lower-bound evidence. It must not acquire Lean `Nat.sub` semantics.
-- `%`, powers, rounding, real order, and complex operations keep one canonical
-  object term. Their domain-specific meaning belongs to the `LitexSet`
-  operation laws and proof evidence.
+```text
+forall z Z:
+    z / 2 $in Q
+```
 
-A backend may introduce a native Mathlib value as a local proof witness—for
-example, an integer witness obtained from `z $in litexZ`—to reuse a theorem.
-Such a **proof view** is local evidence only. It must neither replace the
-canonical `z` in the theorem statement nor change the rendering of `z / 2`.
+is emitted with a target expectation on the whole compound object when needed:
+
+```text
+∀ z ∈ (Set.univ : Set ℤ),
+  (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)
+```
+
+The source object is still rendered structurally as `z / 2`; there is no
+persistent `(z : Q)` annotation in `ObjToLeanIR`. Lean inserts the canonical
+coercion in the elaborated term. The compiler may emit such a contextual
+expectation only for a supported, directed coercion in the standard numeric
+tower. Downcasts, ambiguous joins, and incompatible already-fixed carriers are
+explicit unsupported boundaries.
+
+In particular, `trust x $in R` can constrain a fresh source object whose
+carrier has not otherwise been fixed, because the proposition must elaborate.
+It cannot retroactively change an existing `x : ℤ` or narrow a generic set
+carrier. `trust` decides only whether the completed proposition is an axiom.
+Consequently, an underconstrained statement such as
+`trust 1 / 2 = 1 / 2` is rejected by To-Lean: trust supplies proof provenance,
+not the missing choice between natural and rational division.
 
 ### IR boundary
 
-The implemented context-free object IR has the following shape:
+The target-aware IR is split deliberately:
 
 ```text
 ObjToLeanIR =
@@ -564,58 +683,55 @@ ObjToLeanIR =
   | StandardSet { identity }
   | Collection { constructor, ordered_items }
 
-ProofViewToLeanIR = optional native witness and its membership/equality proof
+LeanCarrierToLeanIR =
+    Natural | Integer | Rational | Real | Complex
+  | Generic { constraint identity }
+  | Set { element carrier }
+
+ParamTypeToLeanIR =
+    Set { element carrier }
+  | MemberOf { set, element carrier }
+  | NonemptySet { element carrier }
+  | FiniteSet { element carrier }
 ```
 
-Supported Lean emission consumes `ObjToLeanIR` for every displayed object.
-The current fact IR still retains the verified source `Fact` for proof
-provenance and diagnostics, but IR construction recursively validates every
-contained object and target fact operators are monomorphic over `LitexSet`.
-A dedicated structural object-fact IR remains a later cleanup; its absence
-must not reopen contextual object typing. `ProofViewToLeanIR` may help a
-checked proof backend, but it is not an alternative object representation.
+`ObjToLeanIR` owns identity and spelling. Carrier constraints belong to
+binders, facts, and applications. The emitter solves those checked constraints,
+renders standard sets as native `Set` expressions, and inserts only canonical
+coercions justified by the solved source/target pair.
 
 The existing raw `Obj` and `Fact` values may remain attached for diagnostics.
-An unsupported object constructor, set representation, or operation law must
-make report mode `Incomplete` and strict mode fail. It must not trigger a
-fallback that assigns the object to `ℝ` or another native carrier.
+An unsupported object constructor, unresolved carrier, set representation, or
+operation law makes report mode `Incomplete` and strict mode fail. It must not
+trigger a fallback to `ℝ`, `Nat`, or the retired monomorphic carrier.
 
 ### Implementation dependency order
 
 ```text
 structural ObjToLeanIR
-  -> one LitexSet target prelude
-  -> standard-set values and membership facts
-  -> monomorphic equality and order fact interfaces
-  -> LitexSet arithmetic and domain laws
-  -> optional native proof views
-  -> normalization and builtin-rule lowering over the uniform Obj terms
+  -> explicit carrier constraints in binder/fact IR
+  -> polymorphic LitexObject marker
+  -> native standard sets and bounded membership
+  -> native equality, order, and arithmetic
+  -> canonical numeric coercion insertion
+  -> native generic set operations
+  -> normalization and builtin-rule lowering over native terms
   -> additional Obj families
 ```
 
-The selected first representation is one concrete inductive `LitexSet`
-carrier. Standard sets and unsupported atoms are carrier values; applications
-preserve an operator tag and ordered `LitexSet` arguments. A numeral elaborates
-through the carrier's `OfNat` instance, so generated source still spells it as
-bare `1`. The current real arithmetic backend stores an `ℝ` payload in the
-`realValue` constructor and may expose that payload only through a checked
-proof view justified by `x ∈ litexR`. Real order, complex arithmetic, modulo,
-powers, and rounding still need individual law and proof-view coverage; none
-may change the uniform object ABI above.
-
-The first context-free structural tranche contains symbols, numerals, standard
-sets, scalar operator nodes already used by the compiler, and the simple set
-constructors `union`, `intersect`, `set_minus`, `set_diff`, `big_union`,
-`big_intersect`, `power_set`, and list sets. Constructor identity, source
-argument order, and list order are preserved. `SetBuilder` is the nearest
-rejected boundary because it owns a binder, local facts, and scope; it must fail
-during IR construction until a binder-aware IR exists.
+The first migration tranche covers `N`, `Z`, `Q`, `R`, `C`, their refined
+subsets, bare numerals, `+ - * /`, equality/order, standard and generic
+membership, and `union`, `intersect`, and `set_minus` on one unified element
+carrier. `SetBuilder`, heterogeneous collections, unsupported transcendental or
+complex operators, and coercions outside the canonical tower remain explicit
+boundaries until their native Mathlib contracts are modeled.
 
 The numeric source tracer is
 [`to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_numeric_obj_abi.lit).
-It fixes the unchanged spelling of `z / 2`, natural and integer closure facts,
-mixed `Z`/`Q` membership, and the guarded natural-predecessor boundary. The
+It fixes native bounded binders, the unchanged source spelling of `z / 2`, the
+required contextual `ℤ -> ℚ` coercion, native equality, and bare numeral
+membership. The
 implemented structural set-object tracer is
 [`to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/to_lean_set_obj_abi.lit);
-it covers `union`, `intersect`, and `set_minus`, plus the binder-aware
-`SetBuilder` rejection boundary.
+it is the migration target for native `union`, `intersect`, and `set_minus`,
+plus the binder-aware `SetBuilder` rejection boundary.

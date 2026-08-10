@@ -1628,6 +1628,79 @@ claim:
 }
 
 #[test]
+fn prechecked_goal_certificate_replays_materialized_template_atomic_forall_rules() {
+    let source_code = r#"
+template<S nonempty_set, combine fn(a, b S) S>:
+    have fn prechecked_selected_pair by exist!:
+        ? forall x S:
+            exist! pair cart(S, S) st {pair = (x, x), combine(pair[1], pair[2]) = combine(x, x)}
+        have candidate cart(S, S) = (x, x)
+        witness exist pair cart(S, S) st {pair = (x, x), combine(pair[1], pair[2]) = combine(x, x)} from candidate:
+            candidate[1] = x
+            candidate[2] = x
+            combine(candidate[1], candidate[2]) = combine(x, x)
+        forall pair1, pair2 cart(S, S):
+            pair1 = (x, x)
+            combine(pair1[1], pair1[2]) = combine(x, x)
+            pair2 = (x, x)
+            combine(pair2[1], pair2[2]) = combine(x, x)
+            =>:
+                pair1 = pair2
+
+thm prechecked_selected_pair_projection:
+    ? forall S nonempty_set, combine fn(a, b S) S, x S:
+        combine(\prechecked_selected_pair<S, combine>(x)[1], \prechecked_selected_pair<S, combine>(x)[2]) = combine(x, x)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "prechecked_goal_certificate_replays_materialized_template_atomic_forall_rules",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "a prechecked selected-function application must retain its materialized forall property:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn prechecked_goal_certificate_keeps_materialized_case_rule_premises() {
+    let source_code = r#"
+template<S nonempty_set, A power_set(S), default S>:
+    have fn prechecked_case_value(x S) S by cases:
+        case x $in A: x
+        case not x $in A: default
+
+thm prechecked_case_rule_still_requires_its_branch:
+    ? forall S nonempty_set, A power_set(S), default S, x S:
+        \prechecked_case_value<S, A, default>(x) = default
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "prechecked_goal_certificate_keeps_materialized_case_rule_premises",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "replaying a materialized case equation must not erase its branch premise:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("cannot prove then-clause"),
+        "the premise-free case equation should remain unknown during proof verification:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn prechecked_goal_keeps_template_instantiations_alive_during_preflight() {
     let source_code = r#"
 prop preflight_metric(X set, dist fn(x, y X) R):

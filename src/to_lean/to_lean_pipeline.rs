@@ -3,7 +3,8 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use super::rational_expression::{lean_name, LeanRationalExpression};
-use super::set_prelude::LITEX_SET_PRELUDE;
+use super::set_prelude::LITEX_OBJECT_PRELUDE;
+use super::type_context::LeanTypeContext;
 use super::{
     ToLeanCompilationReport, ToLeanCompilationStatus, ToLeanUnsupported, ToLeanUnsupportedPhase,
 };
@@ -243,6 +244,7 @@ struct LeanEmitter {
     declarations: Vec<String>,
     emitted_fact_ids: HashSet<FactId>,
     next_local_space_id: usize,
+    type_context: LeanTypeContext,
 }
 
 #[derive(Clone, Default)]
@@ -251,9 +253,9 @@ struct LeanProofContext {
     // proof-space coordinates.
     proof_fact_names: HashMap<FactId, String>,
     nonzero_names: Vec<String>,
-    real_memberships: Vec<(Obj, String)>,
     local_space_id: Option<usize>,
     next_local_index: usize,
+    type_context: LeanTypeContext,
 }
 
 impl LeanProofContext {
@@ -261,9 +263,9 @@ impl LeanProofContext {
         LeanProofContext {
             proof_fact_names: self.proof_fact_names.clone(),
             nonzero_names: self.nonzero_names.clone(),
-            real_memberships: self.real_memberships.clone(),
             local_space_id: None,
             next_local_index: 0,
+            type_context: self.type_context.clone(),
         }
     }
 }
@@ -275,6 +277,14 @@ impl LeanEmitter {
             declarations: Vec::new(),
             emitted_fact_ids: HashSet::new(),
             next_local_space_id: 1,
+            type_context: LeanTypeContext::default(),
+        }
+    }
+
+    fn root_proof_context(&self) -> LeanProofContext {
+        LeanProofContext {
+            type_context: self.type_context.clone(),
+            ..LeanProofContext::default()
         }
     }
 
@@ -302,17 +312,17 @@ impl LeanEmitter {
             .map(|comment| format!("{}\n\n", comment))
             .unwrap_or_default();
         let body = format!(
-            "{}{}\n\n{}",
+            "{}noncomputable section\n\n{}\n\n{}",
             status_comment,
-            LITEX_SET_PRELUDE,
+            LITEX_OBJECT_PRELUDE,
             self.declarations.join("\n\n")
         );
         match self.namespace {
             Some(namespace) => format!(
-                "import Mathlib\n\nnamespace {}\n\n{}\n\nend {}\n",
+                "import Mathlib\n\nnamespace {}\n\n{}\n\nend\n\nend {}\n",
                 namespace, body, namespace
             ),
-            None => format!("import Mathlib\n\n{}\n", body),
+            None => format!("import Mathlib\n\n{}\n\nend\n", body),
         }
     }
 
@@ -342,11 +352,21 @@ impl LeanEmitter {
             StmtToLeanIR::HaveExistentialWitness(ir) => self.emit_existential_witnesses(ir),
             StmtToLeanIR::HaveObjEqual(ir) => {
                 for definition in ir.definitions.iter() {
+                    let lean_type = lean_ir_param_type(&definition.param_type, &self.type_context)?;
+                    let expected = param_type_object_carrier(&definition.param_type)?;
                     self.declarations.push(format!(
-                        "def {} : LitexSet := {}",
+                        "def {} : {} := {}",
                         lean_name(&definition.name),
-                        lean_obj_ir(&definition.value)?
+                        lean_type,
+                        lean_obj_ir_with_expected(
+                            &definition.value,
+                            &expected,
+                            &self.type_context,
+                            false,
+                        )?
                     ));
+                    self.type_context
+                        .insert_param(definition.symbol_id, &definition.param_type);
                 }
                 for fact in ir.facts.iter() {
                     self.emit_proved_fact(fact)?;
@@ -396,22 +416,26 @@ impl LeanEmitter {
         let source_proof = self.lean_proof(
             &ir.source.proposition,
             &ir.source.proof,
-            &LeanProofContext::default(),
+            &self.root_proof_context(),
         )?;
         self.declarations.push(format!(
             "-- Litex checked existential source for `{}`\ntheorem {} : {} := {}",
             lean_comment_text(&first_witness.name),
             source_name,
-            lean_fact(&ir.source.proposition)?,
+            lean_fact_with_context(&ir.source.proposition, &self.type_context)?,
             source_proof
         ));
 
         for (witness, value_term) in ir.witnesses.iter().zip(layout.witness_terms.iter()) {
+            let lean_type = lean_ir_param_type(&witness.param_type, &self.type_context)?;
             self.declarations.push(format!(
-                "noncomputable def {} : LitexSet := {}",
+                "noncomputable def {} : {} := {}",
                 lean_name(&witness.name),
+                lean_type,
                 value_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name)
             ));
+            self.type_context
+                .insert_param(witness.symbol_id, &witness.param_type);
         }
         for (projection, proof_term) in ir.projections.iter().zip(layout.proof_terms.iter()) {
             let fact_id = required_fact_id(projection)?;
@@ -426,7 +450,7 @@ impl LeanEmitter {
                 "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact {}",
                 fact_id,
                 lean_global_fact_name(fact_id),
-                lean_fact(&projection.proposition)?,
+                lean_fact_with_context(&projection.proposition, &self.type_context)?,
                 proof_term
             ));
         }
@@ -452,26 +476,39 @@ impl LeanEmitter {
             let source_proof = self.lean_proof(
                 &choice.nonempty_proof.proposition,
                 &choice.nonempty_proof.proof,
-                &LeanProofContext::default(),
+                &self.root_proof_context(),
             )?;
             self.declarations.push(format!(
                 "-- Litex checked choice source for `{}`\ntheorem {} : {} := {}",
                 lean_comment_text(&choice.name),
                 source_name,
-                lean_fact(&choice.nonempty_proof.proposition)?,
+                lean_fact_with_context(&choice.nonempty_proof.proposition, &self.type_context)?,
                 source_proof
             ));
+            let element_carrier = self
+                .type_context
+                .membership_element_carrier(&choice.carrier)
+                .map_err(|message| {
+                    to_lean_error(&choice.membership.proposition.line_file(), message)
+                })?;
             self.declarations.push(format!(
-                "noncomputable def {} : LitexSet := Exists.choose {}",
+                "noncomputable def {} : {} := Exists.choose {}",
                 lean_name(&choice.name),
+                self.type_context
+                    .lean_type(&element_carrier)
+                    .map_err(|message| to_lean_error(
+                        &choice.membership.proposition.line_file(),
+                        message
+                    ))?,
                 source_name
             ));
+            self.type_context.insert(choice.symbol_id, element_carrier);
             self.emitted_fact_ids.insert(membership_fact_id);
             self.declarations.push(format!(
                 "-- Litex stored fact {}\ntheorem {} : {} := by\n  exact Exists.choose_spec {}",
                 membership_fact_id,
                 lean_global_fact_name(membership_fact_id),
-                lean_fact(&choice.membership.proposition)?,
+                lean_fact_with_context(&choice.membership.proposition, &self.type_context)?,
                 source_name
             ));
         }
@@ -493,7 +530,7 @@ impl LeanEmitter {
             "-- Litex trust boundary: {}\naxiom {} : {}",
             fact_id,
             lean_global_fact_name(fact_id),
-            lean_fact(&fact.proposition)?
+            lean_fact_with_context(&fact.proposition, &self.type_context)?
         ));
         Ok(())
     }
@@ -509,14 +546,15 @@ impl LeanEmitter {
                 "trusted evidence reached theorem emission outside a `trust` statement",
             ));
         }
-        let proof =
-            self.lean_proof(&fact.proposition, &fact.proof, &LeanProofContext::default())?;
+        let mut proof_context = self.root_proof_context();
+        apply_fact_proof_type_hints(fact, &mut proof_context.type_context)?;
+        let proof = self.lean_proof(&fact.proposition, &fact.proof, &proof_context)?;
         self.emitted_fact_ids.insert(fact_id);
         self.declarations.push(format!(
             "-- Litex stored fact {}\ntheorem {} : {} := {}",
             fact_id,
             lean_global_fact_name(fact_id),
-            lean_fact(&fact.proposition)?,
+            lean_fact_with_context(&fact.proposition, &proof_context.type_context)?,
             proof
         ));
         Ok(())
@@ -540,6 +578,12 @@ impl LeanEmitter {
     ) -> Result<String, RuntimeError> {
         match proof {
             FactProofToLeanIR::KnownFactCitation { source_fact_id } => {
+                if closed_rational_equality_with_target_expectation(
+                    proposition,
+                    &context.type_context,
+                ) {
+                    return Ok("by\n  norm_num".to_string());
+                }
                 let source = self.available_fact_name(*source_fact_id, proposition, context)?;
                 Ok(format!("by\n  exact {}", source))
             }
@@ -600,7 +644,7 @@ impl LeanEmitter {
                 parameter_requirements,
                 premises,
             } if parameter_requirements.is_empty() && premises.is_empty() => {
-                lean_classical_excluded_middle(proposition)
+                lean_classical_excluded_middle(proposition, &context.type_context)
             }
             FactProofToLeanIR::RuleApplication {
                 rule:
@@ -752,6 +796,7 @@ impl LeanEmitter {
         fact: &FactToLeanIR,
         context: &mut LeanProofContext,
     ) -> Result<(String, Vec<String>), RuntimeError> {
+        apply_fact_proof_type_hints(fact, &mut context.type_context)?;
         let local_name = self.next_proof_fact_name(context);
         if let Some(fact_id) = fact.fact_id {
             if let Some(local) = context.proof_fact_names.get(&fact_id) {
@@ -760,20 +805,36 @@ impl LeanEmitter {
                     vec![format!(
                         "  have {} : {} := {}",
                         local_name,
-                        lean_fact(&fact.proposition)?,
+                        lean_fact_with_context(&fact.proposition, &context.type_context)?,
                         local
                     )],
                 ));
             }
         }
         if let FactProofToLeanIR::KnownFactCitation { source_fact_id } = &fact.proof {
+            if closed_rational_equality_with_target_expectation(
+                &fact.proposition,
+                &context.type_context,
+            ) {
+                return Ok((
+                    local_name.clone(),
+                    vec![
+                        format!(
+                            "  have {} : {} := by",
+                            local_name,
+                            lean_fact_with_context(&fact.proposition, &context.type_context)?
+                        ),
+                        "    norm_num".to_string(),
+                    ],
+                ));
+            }
             let source = self.available_fact_name(*source_fact_id, &fact.proposition, context)?;
             return Ok((
                 local_name.clone(),
                 vec![format!(
                     "  have {} : {} := {}",
                     local_name,
-                    lean_fact(&fact.proposition)?,
+                    lean_fact_with_context(&fact.proposition, &context.type_context)?,
                     source
                 )],
             ));
@@ -790,7 +851,7 @@ impl LeanEmitter {
         let mut lines = vec![format!(
             "  have {} : {} := {}",
             local_name,
-            lean_fact(&fact.proposition)?,
+            lean_fact_with_context(&fact.proposition, &context.type_context)?,
             first
         )];
         // Formerly the proof was one String containing embedded newlines. A
@@ -826,8 +887,9 @@ impl LeanEmitter {
                 "a defining object equality must be an equality fact",
             ));
         };
-        if lean_obj(&equality.left)? != definition
-            || lean_obj(&equality.right)? != lean_obj_ir(value)?
+        if lean_obj_with_context(&equality.left, &context.type_context)? != definition
+            || lean_obj_with_context(&equality.right, &context.type_context)?
+                != lean_obj_ir_with_context(value, &context.type_context)?
         {
             return Err(to_lean_error(
                 &proposition.line_file(),
@@ -944,8 +1006,9 @@ impl LeanEmitter {
                 "by-contra reverse assumption is not the logical negation of its goal",
             ));
         }
-        let _ = lean_fact(proposition)?;
-        let reverse_fact_text = lean_fact(&reverse_assumption.fact)?;
+        let _ = lean_fact_with_context(proposition, &context.type_context)?;
+        let reverse_fact_text =
+            lean_fact_with_context(&reverse_assumption.fact, &context.type_context)?;
 
         let mut lines = vec![
             "by".to_string(),
@@ -1003,11 +1066,23 @@ impl LeanEmitter {
             }
             StmtToLeanIR::HaveObjEqual(ir) => {
                 for definition in ir.definitions.iter() {
+                    let lean_type =
+                        lean_ir_param_type(&definition.param_type, &context.type_context)?;
+                    let expected = param_type_object_carrier(&definition.param_type)?;
                     lines.push(format!(
-                        "  let {} : LitexSet := {}",
+                        "  let {} : {} := {}",
                         lean_name(&definition.name),
-                        lean_obj_ir(&definition.value)?
+                        lean_type,
+                        lean_obj_ir_with_expected(
+                            &definition.value,
+                            &expected,
+                            &context.type_context,
+                            false,
+                        )?
                     ));
+                    context
+                        .type_context
+                        .insert_param(definition.symbol_id, &definition.param_type);
                 }
                 for fact in ir.facts.iter() {
                     lines.extend(self.lean_local_fact(fact, context)?);
@@ -1034,11 +1109,16 @@ impl LeanEmitter {
         let layout = validate_existential_elimination(ir)?;
         let (source_name, mut lines) = self.lean_named_local_fact(&ir.source, context)?;
         for (witness, value_term) in ir.witnesses.iter().zip(layout.witness_terms.iter()) {
+            let lean_type = lean_ir_param_type(&witness.param_type, &context.type_context)?;
             lines.push(format!(
-                "  let {} : LitexSet := {}",
+                "  let {} : {} := {}",
                 lean_name(&witness.name),
+                lean_type,
                 value_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name)
             ));
+            context
+                .type_context
+                .insert_param(witness.symbol_id, &witness.param_type);
         }
         for (projection, proof_term) in ir.projections.iter().zip(layout.proof_terms.iter()) {
             let fact_id = required_fact_id(projection)?;
@@ -1046,7 +1126,7 @@ impl LeanEmitter {
             lines.push(format!(
                 "  have {} : {} := by",
                 local_name,
-                lean_fact(&projection.proposition)?
+                lean_fact_with_context(&projection.proposition, &context.type_context)?
             ));
             lines.push(format!(
                 "    exact {}",
@@ -1074,16 +1154,32 @@ impl LeanEmitter {
             let (source_name, source_lines) =
                 self.lean_named_local_fact(&choice.nonempty_proof, context)?;
             lines.extend(source_lines);
+            let element_carrier = context
+                .type_context
+                .membership_element_carrier(&choice.carrier)
+                .map_err(|message| {
+                    to_lean_error(&choice.membership.proposition.line_file(), message)
+                })?;
             lines.push(format!(
-                "  let {} : LitexSet := Exists.choose {}",
+                "  let {} : {} := Exists.choose {}",
                 lean_name(&choice.name),
+                context
+                    .type_context
+                    .lean_type(&element_carrier)
+                    .map_err(|message| to_lean_error(
+                        &choice.membership.proposition.line_file(),
+                        message
+                    ))?,
                 source_name
             ));
+            context
+                .type_context
+                .insert(choice.symbol_id, element_carrier);
             let membership_name = self.next_proof_fact_name(context);
             lines.push(format!(
                 "  have {} : {} := by",
                 membership_name,
-                lean_fact(&choice.membership.proposition)?
+                lean_fact_with_context(&choice.membership.proposition, &context.type_context)?
             ));
             lines.push(format!("    exact Exists.choose_spec {}", source_name));
             register_local_fact(
@@ -1207,6 +1303,26 @@ impl LeanEmitter {
             }
         }
 
+        for (witness, param_type) in witnesses.iter().zip(param_types.iter()) {
+            let carrier = match param_type {
+                ParamType::Obj(set) => {
+                    let set = ObjToLeanIR::lower(set)
+                        .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+                    context
+                        .type_context
+                        .membership_element_carrier(&set)
+                        .map_err(|message| to_lean_error(&proposition.line_file(), message))?
+                }
+                ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) => {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "To-Lean native ABI does not yet infer a carrier for a concrete generic-set existential witness",
+                    ));
+                }
+            };
+            context.type_context.expect_object(witness, carrier);
+        }
+
         let mut lines = vec!["by".to_string()];
         for step in steps {
             lines.extend(self.lean_local_statement(step, context)?);
@@ -1229,7 +1345,7 @@ impl LeanEmitter {
         for (witness, param_type) in witnesses.iter().zip(param_types.iter()) {
             ObjToLeanIR::lower(witness)
                 .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
-            constructor_parts.push(lean_obj(witness)?);
+            constructor_parts.push(lean_obj_with_context(witness, &context.type_context)?);
             if !matches!(param_type, ParamType::Set(_)) {
                 validate_exist_introduction_requirement(
                     witness,
@@ -1334,7 +1450,7 @@ impl LeanEmitter {
 
         let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
         lines.insert(0, "by".to_string());
-        lines.push(format!("  exact litexMemRPosPositive {}", premise_name));
+        lines.push(format!("  simpa using {}", premise_name));
         Ok(lines.join("\n"))
     }
 
@@ -1391,8 +1507,6 @@ impl LeanEmitter {
             lines.extend(local_lines);
             premise_names.push(local_name);
         }
-        let (view_lines, real_equalities) = lean_real_view_lines(context);
-        lines.extend(view_lines);
         let proof = match rule {
             ArithmeticBuiltinRuleToLeanIR::MulNonnegative => {
                 format!("mul_nonneg {} {}", premise_names[0], premise_names[1])
@@ -1413,14 +1527,7 @@ impl LeanEmitter {
         lines.push(format!(
             "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?
-        ));
-        let mut rewrite_targets = premise_names.clone();
-        rewrite_targets.push("⊢".to_string());
-        lines.push(format!(
-            "    simp only [{}] at {}",
-            litex_real_view_simp(&real_equalities),
-            rewrite_targets.join(" ")
+            lean_fact_with_context(proposition, &context.type_context)?
         ));
         if proof.starts_with("linarith") {
             lines.push(format!("    {}", proof));
@@ -1520,8 +1627,6 @@ impl LeanEmitter {
             lines.extend(local_lines);
             premise_names.push(local_name);
         }
-        let (view_lines, real_equalities) = lean_real_view_lines(context);
-        lines.extend(view_lines);
         let forward_proof = format!("div_ne_zero {} {}", premise_names[0], premise_names[1]);
         let proof = match evidence.orientation {
             NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft => forward_proof,
@@ -1533,14 +1638,7 @@ impl LeanEmitter {
         lines.push(format!(
             "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?
-        ));
-        let mut rewrite_targets = premise_names.clone();
-        rewrite_targets.push("⊢".to_string());
-        lines.push(format!(
-            "    simp only [{}] at {}",
-            litex_real_view_simp(&real_equalities),
-            rewrite_targets.join(" ")
+            lean_fact_with_context(proposition, &context.type_context)?
         ));
         lines.push(format!("    exact {}", proof));
         lines.push(format!("  exact {}", result_name));
@@ -1573,8 +1671,12 @@ impl LeanEmitter {
         let mut parameter_requirement_names = Vec::new();
         for (argument, requirement) in arguments.iter().zip(parameter_requirements.iter()) {
             let local_name = self.next_proof_arg_name(context);
-            let lean_argument = lean_obj(&argument.argument)?;
-            let lean_param_type = lean_ir_param_type(&argument.param_type)?;
+            let argument_ir = ObjToLeanIR::lower(&argument.argument)
+                .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+            let expected = param_type_object_carrier(&argument.param_type)?;
+            let lean_argument =
+                lean_obj_ir_with_expected(&argument_ir, &expected, &context.type_context, false)?;
+            let lean_param_type = lean_ir_param_type(&argument.param_type, &context.type_context)?;
             lines.push(format!(
                 "  -- Litex parameter requirement for `{}`: {} : {}",
                 argument.param, lean_argument, lean_param_type
@@ -1584,7 +1686,7 @@ impl LeanEmitter {
                 local_name, lean_param_type, lean_argument
             ));
             argument_names.push(local_name);
-            if !matches!(argument.param_type, ParamTypeToLeanIR::LitexSet) {
+            if !matches!(argument.param_type, ParamTypeToLeanIR::Set { .. }) {
                 let (requirement_name, requirement_lines) =
                     self.lean_named_local_fact(requirement, context)?;
                 lines.extend(requirement_lines);
@@ -1607,7 +1709,7 @@ impl LeanEmitter {
         lines.push(format!(
             "  have {} : {} := {}",
             result_name,
-            lean_fact(proposition)?,
+            lean_fact_with_context(proposition, &context.type_context)?,
             terms.join(" ")
         ));
         lines.push(format!("  exact {}", result_name));
@@ -1623,18 +1725,11 @@ impl LeanEmitter {
         let mut lines = vec!["by".to_string()];
         let (source_name, source_lines) = self.lean_named_local_fact(premise, context)?;
         lines.extend(source_lines);
-        let (view_lines, real_equalities) = lean_real_view_lines(context);
-        lines.extend(view_lines);
         let result_name = self.next_proof_fact_name(context);
         lines.push(format!(
             "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?
-        ));
-        lines.push(format!(
-            "    simp only [{}] at {} ⊢",
-            litex_real_view_simp(&real_equalities),
-            source_name
+            lean_fact_with_context(proposition, &context.type_context)?
         ));
         lines.push(format!(
             "    convert {} using 1 <;> {}",
@@ -1738,7 +1833,7 @@ impl LeanEmitter {
         lines.push(format!(
             "  have {} : {} := by",
             result_name,
-            lean_fact(proposition)?
+            lean_fact_with_context(proposition, &context.type_context)?
         ));
         lines.push(format!(
             "    simpa only [{}] using {}",
@@ -1771,35 +1866,54 @@ impl LeanEmitter {
             ));
         }
 
-        let mut intro_names = forall
+        let parameter_count = forall
             .params_def_with_type
             .groups
             .iter()
-            .flat_map(|group| group.params.iter().map(|binding| lean_name(binding.name())))
-            .collect::<Vec<_>>();
-        for premise in parameter_premises.iter() {
-            if matches!(premise.fact, Fact::AtomicFact(AtomicFact::IsSetFact(_))) {
+            .map(|group| group.params.len())
+            .sum::<usize>();
+        if parameter_count != parameter_premises.len() {
+            return Err(to_lean_error(
+                &forall.line_file,
+                "forall-introduction parameter binders and retained typing premises have different arities",
+            ));
+        }
+        let mut intro_names = Vec::new();
+        let mut parameter_premises = parameter_premises.iter();
+        let mut emitted_generic_carriers = HashSet::new();
+        for group in forall.params_def_with_type.groups.iter() {
+            let param_type = source_param_type_to_lean_ir(group)?;
+            if lean_generic_param_binder(
+                &param_type,
+                &mut emitted_generic_carriers,
+                &context.type_context,
+            )?
+            .is_some()
+            {
+                intro_names.push("_".to_string());
+                intro_names.push("_".to_string());
+            }
+            for binding in group.params.iter() {
+                context.type_context.insert_param(binding.id(), &param_type);
+                intro_names.push(lean_name(binding.name()));
+                let premise = parameter_premises.next().ok_or_else(|| {
+                    to_lean_error(
+                        &forall.line_file,
+                        "forall-introduction lost a parameter typing premise",
+                    )
+                })?;
+                if matches!(premise.fact, Fact::AtomicFact(AtomicFact::IsSetFact(_))) {
+                    context
+                        .proof_fact_names
+                        .insert(premise.fact_id, "(by trivial)".to_string());
+                    continue;
+                }
+                let local_name = self.next_proof_fact_name(context);
                 context
                     .proof_fact_names
-                    .insert(premise.fact_id, "(by trivial)".to_string());
-                continue;
+                    .insert(premise.fact_id, local_name.clone());
+                intro_names.push(local_name);
             }
-            let local_name = self.next_proof_fact_name(context);
-            context
-                .proof_fact_names
-                .insert(premise.fact_id, local_name.clone());
-            if let Some((object, membership_proof)) =
-                real_membership_proof(&premise.fact, &local_name)
-            {
-                if !context
-                    .real_memberships
-                    .iter()
-                    .any(|(known, _)| obj_equality_key(known) == obj_equality_key(&object))
-                {
-                    context.real_memberships.push((object, membership_proof));
-                }
-            }
-            intro_names.push(local_name);
         }
         for premise in premises.iter() {
             let local_name = self.next_proof_fact_name(context);
@@ -1810,6 +1924,13 @@ impl LeanEmitter {
                 context.nonzero_names.push(local_name.clone());
             }
             intro_names.push(local_name);
+        }
+        // Carrier evidence for forall-bound symbols exists only after the
+        // binders above have entered this proof context. Re-run proof-tree
+        // propagation here so closed intermediate terms inherit the target
+        // carrier instead of elaborating independently (usually as `ℕ`).
+        for fact in inferred_premises.iter().chain(conclusions.iter()) {
+            apply_fact_proof_type_hints(fact, &mut context.type_context)?;
         }
         let mut inferred_lines = Vec::new();
         for inferred in inferred_premises {
@@ -1909,30 +2030,55 @@ fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
     if ir.params.is_empty() {
         return format!("opaque {} : LitexFact", name);
     }
-    format!(
-        "opaque {} : {}LitexFact",
-        name,
-        "LitexSet → ".repeat(ir.params.len())
-    )
-}
-
-fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
     let binders = ir
         .params
         .iter()
-        .map(|group| {
-            Ok(format!(
-                "({} : {})",
-                group
-                    .names
-                    .iter()
-                    .map(|name| lean_name(name))
-                    .collect::<Vec<_>>()
-                    .join(" "),
-                lean_ir_param_type(&group.param_type)?
-            ))
+        .enumerate()
+        .map(|(index, _)| {
+            let carrier = format!("litex_arg_carrier_{}", index + 1);
+            format!("{{{} : Type u}} [LitexObject {}]", carrier, carrier)
         })
-        .collect::<Result<Vec<_>, RuntimeError>>()?;
+        .collect::<Vec<_>>()
+        .join(" ");
+    let arguments = (0..ir.params.len())
+        .map(|index| format!("litex_arg_carrier_{} → ", index + 1))
+        .collect::<String>();
+    format!("opaque {} {} : {}LitexFact", name, binders, arguments)
+}
+
+fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
+    let mut type_context = LeanTypeContext::default();
+    let mut binders = Vec::new();
+    let mut emitted_generic_carriers = HashSet::new();
+    for group in ir.params.iter() {
+        if group.symbol_ids.len() != group.names.len() {
+            return Err(to_lean_error(
+                &default_line_file(),
+                "To-Lean proposition parameter names and SymbolIds have different arities",
+            ));
+        }
+        if let Some(generic_binder) = lean_generic_param_binder(
+            &group.param_type,
+            &mut emitted_generic_carriers,
+            &type_context,
+        )? {
+            binders.push(generic_binder);
+        }
+        let lean_type = lean_ir_param_type(&group.param_type, &type_context)?;
+        binders.push(format!(
+            "({} : {})",
+            group
+                .names
+                .iter()
+                .map(|name| lean_name(name))
+                .collect::<Vec<_>>()
+                .join(" "),
+            lean_type
+        ));
+        for symbol_id in group.symbol_ids.iter() {
+            type_context.insert_param(*symbol_id, &group.param_type);
+        }
+    }
     let binder_text = if binders.is_empty() {
         String::new()
     } else {
@@ -1948,7 +2094,7 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
     let body = ir
         .iff_facts
         .iter()
-        .map(lean_fact)
+        .map(|fact| lean_fact_with_context(fact, &type_context))
         .collect::<Result<Vec<_>, RuntimeError>>()?
         .join(" ∧ ");
     Ok(format!(
@@ -1959,27 +2105,325 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
     ))
 }
 
-fn lean_ir_param_type(param_type: &ParamTypeToLeanIR) -> Result<&'static str, RuntimeError> {
-    match param_type {
-        ParamTypeToLeanIR::LitexSet
-        | ParamTypeToLeanIR::MemberOf(_)
-        | ParamTypeToLeanIR::LitexNonemptySet
-        | ParamTypeToLeanIR::LitexFiniteSet => Ok("LitexSet"),
+fn lean_ir_param_type(
+    param_type: &ParamTypeToLeanIR,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let carrier = match param_type {
+        ParamTypeToLeanIR::Set { element_carrier }
+        | ParamTypeToLeanIR::NonemptySet { element_carrier }
+        | ParamTypeToLeanIR::FiniteSet { element_carrier } => LeanCarrierToLeanIR::Set {
+            element_carrier: Box::new(element_carrier.clone()),
+        },
+        ParamTypeToLeanIR::MemberOf {
+            element_carrier, ..
+        } => element_carrier.clone(),
         ParamTypeToLeanIR::Unsupported(_) => Err(to_lean_error(
             &default_line_file(),
             format!("To-Lean does not support parameter type {:?}", param_type),
-        )),
+        ))?,
+    };
+    type_context
+        .lean_type(&carrier)
+        .map_err(|message| to_lean_error(&default_line_file(), message))
+}
+
+fn param_type_object_carrier(
+    param_type: &ParamTypeToLeanIR,
+) -> Result<LeanCarrierToLeanIR, RuntimeError> {
+    Ok(match param_type {
+        ParamTypeToLeanIR::Set { element_carrier }
+        | ParamTypeToLeanIR::NonemptySet { element_carrier }
+        | ParamTypeToLeanIR::FiniteSet { element_carrier } => LeanCarrierToLeanIR::Set {
+            element_carrier: Box::new(element_carrier.clone()),
+        },
+        ParamTypeToLeanIR::MemberOf {
+            element_carrier, ..
+        } => element_carrier.clone(),
+        ParamTypeToLeanIR::Unsupported(reason) => {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!("unsupported parameter type: {reason}"),
+            ));
+        }
+    })
+}
+
+fn lean_generic_param_binder(
+    param_type: &ParamTypeToLeanIR,
+    emitted: &mut HashSet<SymbolId>,
+    type_context: &LeanTypeContext,
+) -> Result<Option<String>, RuntimeError> {
+    let element_carrier = match param_type {
+        ParamTypeToLeanIR::Set { element_carrier }
+        | ParamTypeToLeanIR::NonemptySet { element_carrier }
+        | ParamTypeToLeanIR::FiniteSet { element_carrier } => element_carrier,
+        ParamTypeToLeanIR::MemberOf {
+            element_carrier, ..
+        } => element_carrier,
+        ParamTypeToLeanIR::Unsupported(_) => return Ok(None),
+    };
+    let resolved = type_context
+        .resolve_carrier(element_carrier)
+        .unwrap_or_else(|_| element_carrier.clone());
+    let LeanCarrierToLeanIR::Generic { anchor } = resolved else {
+        return Ok(None);
+    };
+    if !emitted.insert(anchor) {
+        return Ok(None);
+    }
+    let carrier = type_context
+        .lean_type(&LeanCarrierToLeanIR::Generic { anchor })
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    Ok(Some(format!(
+        "{{{} : Type u}} [LitexObject {}]",
+        carrier, carrier
+    )))
+}
+
+fn apply_fact_proof_type_hints(
+    fact: &FactToLeanIR,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    apply_proof_type_hints(&fact.proposition, &fact.proof, type_context)
+}
+
+fn apply_proof_type_hints(
+    proposition: &Fact,
+    proof: &FactProofToLeanIR,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    match proof {
+        FactProofToLeanIR::RuleApplication {
+            rule,
+            parameter_requirements,
+            premises,
+        } => {
+            if matches!(
+                rule,
+                ProofRuleToLeanIR::Normalization {
+                    kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                }
+            ) {
+                expect_unconstrained_binary_fact_carrier(
+                    proposition,
+                    &LeanCarrierToLeanIR::Rational,
+                    type_context,
+                );
+            }
+            if let ProofRuleToLeanIR::KnownForallInstantiation { arguments, .. } = rule {
+                let mut common_carrier = None;
+                let mut common_carrier_conflict = false;
+                for argument in arguments {
+                    let carrier = param_type_object_carrier(&argument.param_type)?;
+                    type_context.expect_object(&argument.argument, carrier.clone());
+                    let carrier = type_context.resolve_carrier(&carrier).unwrap_or(carrier);
+                    common_carrier = match common_carrier.take() {
+                        None if !common_carrier_conflict => Some(carrier),
+                        Some(current) if current == carrier => Some(current),
+                        Some(_) => {
+                            common_carrier_conflict = true;
+                            None
+                        }
+                        None => None,
+                    };
+                }
+                if let Some(carrier) = common_carrier {
+                    expect_normal_predicate_arguments(proposition, &carrier, type_context);
+                }
+            }
+            for premise in premises {
+                propagate_fact_argument_expectations(
+                    &premise.proposition,
+                    proposition,
+                    type_context,
+                );
+            }
+            for premise in parameter_requirements.iter().chain(premises.iter()) {
+                apply_fact_proof_type_hints(premise, type_context)?;
+            }
+            for premise in premises {
+                propagate_fact_argument_expectations(
+                    &premise.proposition,
+                    proposition,
+                    type_context,
+                );
+            }
+        }
+        FactProofToLeanIR::Memo { proof } => {
+            apply_proof_type_hints(proposition, proof, type_context)?;
+        }
+        FactProofToLeanIR::ForallIntroduction {
+            inferred_premises,
+            conclusions,
+            ..
+        } => {
+            let Fact::ForallFact(forall) = proposition else {
+                return Err(to_lean_error(
+                    &proposition.line_file(),
+                    "forall-introduction type hints require a forall proposition",
+                ));
+            };
+            for group in &forall.params_def_with_type.groups {
+                let param_type = source_param_type_to_lean_ir(group)?;
+                for binding in &group.params {
+                    type_context.insert_param(binding.id(), &param_type);
+                }
+            }
+            for fact in inferred_premises.iter().chain(conclusions.iter()) {
+                apply_fact_proof_type_hints(fact, type_context)?;
+            }
+        }
+        FactProofToLeanIR::ObjectDefinition {
+            value_check: Some(value_check),
+            ..
+        } => apply_fact_proof_type_hints(value_check, type_context)?,
+        FactProofToLeanIR::CaseSplit { coverage, branches } => {
+            apply_fact_proof_type_hints(coverage, type_context)?;
+            for branch in branches {
+                for step in branch.steps.iter() {
+                    apply_statement_type_hints(step, type_context)?;
+                }
+            }
+        }
+        FactProofToLeanIR::ByContradiction { steps, .. } => {
+            for step in steps {
+                apply_statement_type_hints(step, type_context)?;
+            }
+        }
+        FactProofToLeanIR::Composite { steps } => {
+            for step in steps {
+                apply_fact_proof_type_hints(step, type_context)?;
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn apply_statement_type_hints(
+    statement: &StmtToLeanIR,
+    type_context: &mut LeanTypeContext,
+) -> Result<(), RuntimeError> {
+    match statement {
+        StmtToLeanIR::Fact(ir) => apply_fact_proof_type_hints(&ir.fact, type_context),
+        StmtToLeanIR::Proof(ir) => {
+            for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+                apply_fact_proof_type_hints(fact, type_context)?;
+            }
+            Ok(())
+        }
+        StmtToLeanIR::Trust(ir) => {
+            for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+                apply_fact_proof_type_hints(fact, type_context)?;
+            }
+            Ok(())
+        }
+        _ => Ok(()),
     }
 }
 
+fn expect_normal_predicate_arguments(
+    proposition: &Fact,
+    carrier: &LeanCarrierToLeanIR,
+    type_context: &mut LeanTypeContext,
+) {
+    let arguments = match proposition {
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) => &fact.body,
+        Fact::AtomicFact(AtomicFact::NotNormalAtomicFact(fact)) => &fact.body,
+        _ => return,
+    };
+    for argument in arguments.iter() {
+        type_context.expect_object(argument, carrier.clone());
+    }
+}
+
+fn expect_unconstrained_binary_fact_carrier(
+    proposition: &Fact,
+    carrier: &LeanCarrierToLeanIR,
+    type_context: &mut LeanTypeContext,
+) {
+    let Fact::AtomicFact(atomic) = proposition else {
+        return;
+    };
+    let (left, right) = match atomic {
+        AtomicFact::EqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::NotEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::LessFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::LessEqualFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::GreaterFact(fact) => (&fact.left, &fact.right),
+        AtomicFact::GreaterEqualFact(fact) => (&fact.left, &fact.right),
+        _ => return,
+    };
+    if known_object_carrier(left, type_context).is_none()
+        && known_object_carrier(right, type_context).is_none()
+    {
+        type_context.expect_object(left, carrier.clone());
+        type_context.expect_object(right, carrier.clone());
+    }
+}
+
+fn propagate_fact_argument_expectations(
+    source: &Fact,
+    target: &Fact,
+    type_context: &mut LeanTypeContext,
+) {
+    let (Fact::AtomicFact(source), Fact::AtomicFact(target)) = (source, target) else {
+        return;
+    };
+    let source_arguments = source.args_ref();
+    let target_arguments = target.args_ref();
+    if source_arguments.len() != target_arguments.len() {
+        return;
+    }
+    for (source, target) in source_arguments.iter().zip(target_arguments.iter()) {
+        let source_carrier = known_object_carrier(source, type_context);
+        let target_carrier = known_object_carrier(target, type_context);
+        match (source_carrier, target_carrier) {
+            (Some(source_carrier), None) => {
+                type_context.expect_object(target, source_carrier);
+            }
+            (None, Some(target_carrier)) => {
+                type_context.expect_object(source, target_carrier);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn known_object_carrier(
+    object: &Obj,
+    type_context: &LeanTypeContext,
+) -> Option<LeanCarrierToLeanIR> {
+    if let Some(carrier) = type_context.expected_object(object) {
+        return type_context
+            .resolve_carrier(carrier)
+            .ok()
+            .or_else(|| Some(carrier.clone()));
+    }
+    let object = ObjToLeanIR::lower(object).ok()?;
+    let carrier = type_context.object_carrier(&object).ok()??;
+    type_context
+        .resolve_carrier(&carrier)
+        .ok()
+        .or(Some(carrier))
+}
+
 fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
+    lean_fact_with_context(fact, &LeanTypeContext::default())
+}
+
+fn lean_fact_with_context(
+    fact: &Fact,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     match fact {
-        Fact::AtomicFact(atomic) => lean_atomic_fact(atomic),
+        Fact::AtomicFact(atomic) => lean_atomic_fact_with_context(atomic, type_context),
         Fact::AndFact(and_fact) => Ok(parenthesized_join(
             and_fact
                 .facts
                 .iter()
-                .map(lean_atomic_fact)
+                .map(|fact| lean_atomic_fact_with_context(fact, type_context))
                 .collect::<Result<Vec<_>, RuntimeError>>()?,
             " ∧ ",
         )),
@@ -1987,12 +2431,12 @@ fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
             or_fact
                 .facts
                 .iter()
-                .map(|branch| lean_fact(&branch.clone().into()))
+                .map(|branch| lean_fact_with_context(&branch.clone().into(), type_context))
                 .collect::<Result<Vec<_>, RuntimeError>>()?,
             " ∨ ",
         )),
-        Fact::ForallFact(forall) => lean_forall_fact(forall),
-        Fact::ExistFact(exist) => lean_exist_fact(exist),
+        Fact::ForallFact(forall) => lean_forall_fact_with_context(forall, type_context),
+        Fact::ExistFact(exist) => lean_exist_fact_with_context(exist, type_context),
         other => Err(to_lean_error(
             &other.line_file(),
             format!(
@@ -2003,7 +2447,10 @@ fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
     }
 }
 
-fn lean_exist_fact(exist: &ExistFactEnum) -> Result<String, RuntimeError> {
+fn lean_exist_fact_with_context(
+    exist: &ExistFactEnum,
+    outer_type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     let ExistFactEnum::ExistFact(body) = exist else {
         return Err(to_lean_error(
             &exist.line_file(),
@@ -2016,37 +2463,73 @@ fn lean_exist_fact(exist: &ExistFactEnum) -> Result<String, RuntimeError> {
         &body.line_file,
         "existential",
     )?;
+    let mut type_context = outer_type_context.clone();
+    let mut param_types = Vec::new();
+    for group in body.params_def_with_type.groups.iter() {
+        let param_type = source_param_type_to_lean_ir(group)?;
+        for binding in group.params.iter() {
+            type_context.insert_param(binding.id(), &param_type);
+        }
+        param_types.push(param_type);
+    }
     let body_parts = body
         .facts
         .iter()
-        .map(lean_exist_body_fact)
+        .map(|fact| lean_exist_body_fact_with_context(fact, &type_context))
         .collect::<Result<Vec<_>, RuntimeError>>()?;
     let mut tail = lean_right_associated_conjunction(&body_parts);
-    for group in body.params_def_with_type.groups.iter().rev() {
+    for (group, param_type) in body
+        .params_def_with_type
+        .groups
+        .iter()
+        .zip(param_types.iter())
+        .rev()
+    {
         for binding in group.params.iter().rev() {
             let name = lean_name(binding.name());
-            if let Some(requirement) = lean_exist_param_requirement(&name, &group.param_type)? {
-                tail = format!("{} ∧ {}", requirement, tail);
-            }
-            tail = format!("∃ {} : LitexSet, {}", name, tail);
+            tail = lean_exist_param_binder(&name, param_type, &tail, &type_context)?;
         }
     }
     Ok(tail)
 }
 
-fn lean_exist_body_fact(fact: &ExistBodyFact) -> Result<String, RuntimeError> {
-    lean_fact(&fact.from_ref_to_cloned_fact())
+fn lean_exist_body_fact_with_context(
+    fact: &ExistBodyFact,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    lean_fact_with_context(&fact.from_ref_to_cloned_fact(), type_context)
 }
 
-fn lean_exist_param_requirement(
+fn lean_exist_param_binder(
     name: &str,
-    param_type: &ParamType,
-) -> Result<Option<String>, RuntimeError> {
+    param_type: &ParamTypeToLeanIR,
+    tail: &str,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     match param_type {
-        ParamType::Set(_) => Ok(None),
-        ParamType::NonemptySet(_) => Ok(Some(format!("litexIsNonemptySet {}", name))),
-        ParamType::FiniteSet(_) => Ok(Some(format!("litexIsFiniteSet {}", name))),
-        ParamType::Obj(carrier) => Ok(Some(format!("{} ∈ {}", name, lean_obj(carrier)?))),
+        ParamTypeToLeanIR::MemberOf {
+            set,
+            element_carrier,
+        } => {
+            let set = lean_obj_ir_with_context(set, type_context)?;
+            let element_type = type_context
+                .lean_type(element_carrier)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?;
+            Ok(format!(
+                "∃ {} : {}, {} ∈ {} ∧ {}",
+                name, element_type, name, set, tail
+            ))
+        }
+        ParamTypeToLeanIR::Set { .. }
+        | ParamTypeToLeanIR::NonemptySet { .. }
+        | ParamTypeToLeanIR::FiniteSet { .. } => Err(to_lean_error(
+            &default_line_file(),
+            "To-Lean native ABI does not yet support existential generic-set binders",
+        )),
+        ParamTypeToLeanIR::Unsupported(reason) => Err(to_lean_error(
+            &default_line_file(),
+            format!("unsupported existential parameter type: {reason}"),
+        )),
     }
 }
 
@@ -2058,7 +2541,10 @@ fn lean_right_associated_conjunction(parts: &[String]) -> String {
     }
 }
 
-fn lean_classical_excluded_middle(proposition: &Fact) -> Result<String, RuntimeError> {
+fn lean_classical_excluded_middle(
+    proposition: &Fact,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     let Fact::OrFact(or_fact) = proposition else {
         return Err(to_lean_error(
             &proposition.line_file(),
@@ -2088,8 +2574,8 @@ fn lean_classical_excluded_middle(proposition: &Fact) -> Result<String, RuntimeE
             "classical excluded-middle branches are not logical complements",
         ));
     }
-    let first_text = lean_fact(&Fact::from(first.clone()))?;
-    let second_text = lean_fact(&Fact::from(second.clone()))?;
+    let first_text = lean_fact_with_context(&Fact::from(first.clone()), type_context)?;
+    let second_text = lean_fact_with_context(&Fact::from(second.clone()), type_context)?;
     if first.is_true() {
         return Ok(format!(
             "by\n  classical\n  exact Classical.em ({})",
@@ -2102,53 +2588,80 @@ fn lean_classical_excluded_middle(proposition: &Fact) -> Result<String, RuntimeE
     ))
 }
 
-fn lean_atomic_fact(fact: &AtomicFact) -> Result<String, RuntimeError> {
+fn lean_atomic_fact_with_context(
+    fact: &AtomicFact,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     match fact {
-        AtomicFact::NormalAtomicFact(normal) => {
-            lean_prop_application(&normal.predicate.to_string(), &normal.body, false)
+        AtomicFact::NormalAtomicFact(normal) => lean_prop_application_with_context(
+            &normal.predicate.to_string(),
+            &normal.body,
+            false,
+            type_context,
+        ),
+        AtomicFact::NotNormalAtomicFact(normal) => lean_prop_application_with_context(
+            &normal.predicate.to_string(),
+            &normal.body,
+            true,
+            type_context,
+        ),
+        AtomicFact::EqualFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, "=", &fact.right, type_context)
         }
-        AtomicFact::NotNormalAtomicFact(normal) => {
-            lean_prop_application(&normal.predicate.to_string(), &normal.body, true)
+        AtomicFact::NotEqualFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, "≠", &fact.right, type_context)
         }
-        AtomicFact::EqualFact(fact) => lean_binary_fact(&fact.left, "=", &fact.right),
-        AtomicFact::NotEqualFact(fact) => lean_binary_fact(&fact.left, "≠", &fact.right),
-        AtomicFact::LessFact(fact) => lean_binary_fact(&fact.left, "<", &fact.right),
-        AtomicFact::LessEqualFact(fact) => lean_binary_fact(&fact.left, "≤", &fact.right),
-        AtomicFact::GreaterFact(fact) => lean_binary_fact(&fact.left, ">", &fact.right),
-        AtomicFact::GreaterEqualFact(fact) => lean_binary_fact(&fact.left, "≥", &fact.right),
-        AtomicFact::IsSetFact(fact) => Ok(format!("litexIsSet {}", lean_obj(&fact.set)?)),
-        AtomicFact::IsNonemptySetFact(fact) => {
-            Ok(format!("litexIsNonemptySet {}", lean_obj(&fact.set)?))
+        AtomicFact::LessFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, "<", &fact.right, type_context)
         }
-        AtomicFact::IsFiniteSetFact(fact) => {
-            Ok(format!("litexIsFiniteSet {}", lean_obj(&fact.set)?))
+        AtomicFact::LessEqualFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, "≤", &fact.right, type_context)
         }
-        AtomicFact::InFact(fact) => Ok(format!(
-            "{} ∈ {}",
-            lean_obj(&fact.element)?,
-            lean_obj(&fact.set)?
+        AtomicFact::GreaterFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, ">", &fact.right, type_context)
+        }
+        AtomicFact::GreaterEqualFact(fact) => {
+            lean_binary_fact_with_context(&fact.left, "≥", &fact.right, type_context)
+        }
+        AtomicFact::IsSetFact(fact) => Ok(format!(
+            "litexIsSet {}",
+            lean_obj_with_context(&fact.set, type_context)?
         )),
+        AtomicFact::IsNonemptySetFact(fact) => Ok(format!(
+            "litexIsNonemptySet {}",
+            lean_obj_with_context(&fact.set, type_context)?
+        )),
+        AtomicFact::IsFiniteSetFact(fact) => Ok(format!(
+            "litexIsFiniteSet {}",
+            lean_obj_with_context(&fact.set, type_context)?
+        )),
+        AtomicFact::InFact(fact) => {
+            lean_membership_fact(&fact.element, &fact.set, false, type_context)
+        }
         AtomicFact::SubsetFact(fact) => Ok(format!(
-            "litexSubset {} {}",
-            lean_obj(&fact.left)?,
-            lean_obj(&fact.right)?
+            "{} ⊆ {}",
+            lean_obj_with_context(&fact.left, type_context)?,
+            lean_obj_with_context(&fact.right, type_context)?
         )),
-        AtomicFact::NotIsSetFact(fact) => Ok(format!("¬ litexIsSet {}", lean_obj(&fact.set)?)),
-        AtomicFact::NotIsNonemptySetFact(fact) => {
-            Ok(format!("¬ litexIsNonemptySet {}", lean_obj(&fact.set)?))
-        }
-        AtomicFact::NotIsFiniteSetFact(fact) => {
-            Ok(format!("¬ litexIsFiniteSet {}", lean_obj(&fact.set)?))
-        }
-        AtomicFact::NotInFact(fact) => Ok(format!(
-            "{} ∉ {}",
-            lean_obj(&fact.element)?,
-            lean_obj(&fact.set)?
+        AtomicFact::NotIsSetFact(fact) => Ok(format!(
+            "¬ litexIsSet {}",
+            lean_obj_with_context(&fact.set, type_context)?
         )),
+        AtomicFact::NotIsNonemptySetFact(fact) => Ok(format!(
+            "¬ litexIsNonemptySet {}",
+            lean_obj_with_context(&fact.set, type_context)?
+        )),
+        AtomicFact::NotIsFiniteSetFact(fact) => Ok(format!(
+            "¬ litexIsFiniteSet {}",
+            lean_obj_with_context(&fact.set, type_context)?
+        )),
+        AtomicFact::NotInFact(fact) => {
+            lean_membership_fact(&fact.element, &fact.set, true, type_context)
+        }
         AtomicFact::NotSubsetFact(fact) => Ok(format!(
-            "¬ litexSubset {} {}",
-            lean_obj(&fact.left)?,
-            lean_obj(&fact.right)?
+            "¬ ({} ⊆ {})",
+            lean_obj_with_context(&fact.left, type_context)?,
+            lean_obj_with_context(&fact.right, type_context)?
         )),
         other => Err(to_lean_error(
             &other.line_file(),
@@ -2157,11 +2670,16 @@ fn lean_atomic_fact(fact: &AtomicFact) -> Result<String, RuntimeError> {
     }
 }
 
-fn lean_prop_application(name: &str, args: &[Obj], negated: bool) -> Result<String, RuntimeError> {
+fn lean_prop_application_with_context(
+    name: &str,
+    args: &[Obj],
+    negated: bool,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     let mut application = lean_name(name);
     for arg in args {
         application.push(' ');
-        application.push_str(&lean_obj(arg)?);
+        application.push_str(&lean_obj_with_context(arg, type_context)?);
     }
     if negated {
         Ok(format!("¬ ({})", application))
@@ -2170,17 +2688,97 @@ fn lean_prop_application(name: &str, args: &[Obj], negated: bool) -> Result<Stri
     }
 }
 
-fn lean_binary_fact(left: &Obj, operator: &str, right: &Obj) -> Result<String, RuntimeError> {
-    let left_text = lean_obj(left)?;
-    let left_text = if closed_rational_expression(left) {
-        format!("({} : LitexSet)", left_text)
-    } else {
-        left_text
+fn lean_binary_fact_with_context(
+    left: &Obj,
+    operator: &str,
+    right: &Obj,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let left_ir =
+        ObjToLeanIR::lower(left).map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let right_ir = ObjToLeanIR::lower(right)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let left_hint = type_context.expected_object(left).cloned();
+    let right_hint = type_context.expected_object(right).cloned();
+    let hinted = match (left_hint, right_hint) {
+        (Some(left), Some(right)) if left != right => {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean fact assigns incompatible target carriers {:?} and {:?}",
+                    left, right
+                ),
+            ));
+        }
+        (Some(carrier), _) | (_, Some(carrier)) => Some(carrier),
+        (None, None) => None,
     };
-    Ok(format!("{} {} {}", left_text, operator, lean_obj(right)?))
+    let inferred = if hinted.is_some() {
+        hinted.clone()
+    } else {
+        type_context
+            .joined_numeric_carrier(&[&left_ir, &right_ir])
+            .map_err(|message| to_lean_error(&default_line_file(), message))?
+    };
+    if inferred.is_none()
+        && (requires_checked_closed_numeric_carrier(left)
+            || requires_checked_closed_numeric_carrier(right))
+    {
+        return Err(to_lean_error(
+            &default_line_file(),
+            format!(
+                "To-Lean has no checked target carrier for closed numeric judgment `{}` {} `{}`",
+                left, operator, right
+            ),
+        ));
+    }
+    let expected = inferred;
+    let (left_text, right_text) = if let Some(expected) = expected {
+        let hinted_untyped_left = hinted.is_some()
+            && type_context
+                .object_carrier(&left_ir)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?
+                .is_none();
+        (
+            lean_obj_ir_with_expected(&left_ir, &expected, type_context, hinted_untyped_left)?,
+            lean_obj_ir_with_expected(&right_ir, &expected, type_context, false)?,
+        )
+    } else {
+        (
+            lean_obj_ir_with_context(&left_ir, type_context)?,
+            lean_obj_ir_with_context(&right_ir, type_context)?,
+        )
+    };
+    Ok(format!("{} {} {}", left_text, operator, right_text))
 }
 
-fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
+fn lean_membership_fact(
+    element: &Obj,
+    set: &Obj,
+    negated: bool,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let element_ir = ObjToLeanIR::lower(element)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let set_ir =
+        ObjToLeanIR::lower(set).map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let element_carrier = type_context
+        .membership_element_carrier(&set_ir)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let element_text =
+        lean_obj_ir_with_expected(&element_ir, &element_carrier, type_context, false)?;
+    let set_text = lean_obj_ir_with_context(&set_ir, type_context)?;
+    Ok(if negated {
+        format!("{} ∉ {}", element_text, set_text)
+    } else {
+        format!("{} ∈ {}", element_text, set_text)
+    })
+}
+
+fn lean_forall_fact_with_context(
+    forall: &ForallFact,
+    outer_type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     let mut objects = Vec::new();
     collect_forall_objects_for_lean_name_check(forall, &mut objects);
     ensure_lean_binders_are_capture_free(
@@ -2189,54 +2787,125 @@ fn lean_forall_fact(forall: &ForallFact) -> Result<String, RuntimeError> {
         &forall.line_file,
         "universal",
     )?;
-    let mut binders = Vec::new();
-    let mut parameter_requirements = Vec::new();
+    let mut type_context = outer_type_context.clone();
+    let mut param_types = Vec::new();
     for group in forall.params_def_with_type.groups.iter() {
-        let names = group
-            .params
-            .iter()
-            .map(|binding| lean_name(binding.name()))
-            .collect::<Vec<_>>()
-            .join(" ");
-        binders.push(format!(
-            "({} : {})",
-            names,
-            lean_param_type(&group.param_type)?
-        ));
+        let param_type = source_param_type_to_lean_ir(group)?;
         for binding in group.params.iter() {
-            let name = lean_name(binding.name());
-            match &group.param_type {
-                ParamType::Set(_) => {}
-                ParamType::NonemptySet(_) => {
-                    parameter_requirements.push(format!("litexIsNonemptySet {}", name));
-                }
-                ParamType::FiniteSet(_) => {
-                    parameter_requirements.push(format!("litexIsFiniteSet {}", name));
-                }
-                ParamType::Obj(set) => {
-                    parameter_requirements.push(format!("{} ∈ {}", name, lean_obj(set)?));
-                }
-            }
+            type_context.insert_param(binding.id(), &param_type);
         }
+        param_types.push(param_type);
     }
     let conclusions = forall
         .then_facts
         .iter()
-        .map(|fact| lean_fact(&fact.clone().to_fact()))
+        .map(|fact| lean_fact_with_context(&fact.clone().to_fact(), &type_context))
         .collect::<Result<Vec<_>, RuntimeError>>()?;
     let mut body = parenthesized_join(conclusions, " ∧ ");
-    let mut requirements = parameter_requirements;
-    requirements.extend(
-        forall
-            .dom_facts
-            .iter()
-            .map(lean_fact)
-            .collect::<Result<Vec<_>, RuntimeError>>()?,
-    );
+    let requirements = forall
+        .dom_facts
+        .iter()
+        .map(|fact| lean_fact_with_context(fact, &type_context))
+        .collect::<Result<Vec<_>, RuntimeError>>()?;
     for premise in requirements.iter().rev() {
         body = format!("{} → {}", premise, body);
     }
-    Ok(format!("∀ {}, {}", binders.join(" "), body))
+    let mut emitted_generic_carriers = HashSet::new();
+    for (group, param_type) in forall
+        .params_def_with_type
+        .groups
+        .iter()
+        .zip(param_types.iter())
+        .rev()
+    {
+        for binding in group.params.iter().rev() {
+            let name = lean_name(binding.name());
+            body = lean_forall_param_binder(&name, param_type, &body, &type_context)?;
+        }
+        if let Some(generic_binder) =
+            lean_generic_param_binder(param_type, &mut emitted_generic_carriers, &type_context)?
+        {
+            body = format!("∀ {}, {}", generic_binder, body);
+        }
+    }
+    Ok(body)
+}
+
+fn source_param_type_to_lean_ir(
+    group: &ParamGroupWithParamType,
+) -> Result<ParamTypeToLeanIR, RuntimeError> {
+    let Some(anchor) = group.params.first().map(|binding| binding.id()) else {
+        return Err(to_lean_error(
+            &default_line_file(),
+            "To-Lean cannot render an empty parameter group",
+        ));
+    };
+    let generic = || LeanCarrierToLeanIR::Generic { anchor };
+    match &group.param_type {
+        ParamType::Set(_) => Ok(ParamTypeToLeanIR::Set {
+            element_carrier: generic(),
+        }),
+        ParamType::NonemptySet(_) => Ok(ParamTypeToLeanIR::NonemptySet {
+            element_carrier: generic(),
+        }),
+        ParamType::FiniteSet(_) => Ok(ParamTypeToLeanIR::FiniteSet {
+            element_carrier: generic(),
+        }),
+        ParamType::Obj(set) => {
+            let set = ObjToLeanIR::lower(set)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?;
+            Ok(ParamTypeToLeanIR::MemberOf {
+                element_carrier: LeanCarrierToLeanIR::for_membership_set(&set),
+                set,
+            })
+        }
+    }
+}
+
+fn lean_forall_param_binder(
+    name: &str,
+    param_type: &ParamTypeToLeanIR,
+    body: &str,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    match param_type {
+        ParamTypeToLeanIR::MemberOf { set, .. } => Ok(format!(
+            "∀ {} ∈ {}, {}",
+            name,
+            lean_obj_ir_with_context(set, type_context)?,
+            body
+        )),
+        ParamTypeToLeanIR::Set { element_carrier } => Ok(format!(
+            "∀ ({} : Set {}), {}",
+            name,
+            type_context
+                .lean_type(element_carrier)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?,
+            body
+        )),
+        ParamTypeToLeanIR::NonemptySet { element_carrier } => Ok(format!(
+            "∀ ({} : Set {}), litexIsNonemptySet {} → {}",
+            name,
+            type_context
+                .lean_type(element_carrier)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?,
+            name,
+            body
+        )),
+        ParamTypeToLeanIR::FiniteSet { element_carrier } => Ok(format!(
+            "∀ ({} : Set {}), litexIsFiniteSet {} → {}",
+            name,
+            type_context
+                .lean_type(element_carrier)
+                .map_err(|message| to_lean_error(&default_line_file(), message))?,
+            name,
+            body
+        )),
+        ParamTypeToLeanIR::Unsupported(reason) => Err(to_lean_error(
+            &default_line_file(),
+            format!("unsupported universal parameter type: {reason}"),
+        )),
+    }
 }
 
 fn ensure_lean_binders_are_capture_free<'a>(
@@ -2409,22 +3078,49 @@ fn collect_forall_conclusion_objects_for_lean_name_check<'a>(
     }
 }
 
-fn lean_param_type(param_type: &ParamType) -> Result<&'static str, RuntimeError> {
-    match param_type {
-        ParamType::Set(_)
-        | ParamType::NonemptySet(_)
-        | ParamType::FiniteSet(_)
-        | ParamType::Obj(_) => Ok("LitexSet"),
-    }
-}
-
-fn lean_obj(obj: &Obj) -> Result<String, RuntimeError> {
+fn lean_obj_with_context(
+    obj: &Obj,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     let ir =
         ObjToLeanIR::lower(obj).map_err(|message| to_lean_error(&default_line_file(), message))?;
-    lean_obj_ir(&ir)
+    if let Some(expected) = type_context.expected_object(obj) {
+        let force_expectation = type_context
+            .object_carrier(&ir)
+            .map_err(|message| to_lean_error(&default_line_file(), message))?
+            .is_none();
+        return lean_obj_ir_with_expected(&ir, expected, type_context, force_expectation);
+    }
+    lean_obj_ir_with_context(&ir, type_context)
 }
 
-fn lean_obj_ir(obj: &ObjToLeanIR) -> Result<String, RuntimeError> {
+fn lean_obj_ir_with_expected(
+    obj: &ObjToLeanIR,
+    expected: &LeanCarrierToLeanIR,
+    type_context: &LeanTypeContext,
+    force_expectation: bool,
+) -> Result<String, RuntimeError> {
+    let text = lean_obj_ir_with_context(obj, type_context)?;
+    let needs_expectation = type_context
+        .needs_numeric_expectation(obj, expected)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    if !force_expectation && !needs_expectation {
+        return Ok(text);
+    }
+    let lean_type = type_context
+        .lean_type(expected)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+    let annotated = text
+        .strip_prefix('(')
+        .and_then(|text| text.strip_suffix(')'))
+        .unwrap_or(text.as_str());
+    Ok(format!("({} : {})", annotated, lean_type))
+}
+
+fn lean_obj_ir_with_context(
+    obj: &ObjToLeanIR,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
     match obj {
         ObjToLeanIR::Symbol { name, .. } => Ok(lean_name(name)),
         ObjToLeanIR::Number { normalized_value } => {
@@ -2434,58 +3130,69 @@ fn lean_obj_ir(obj: &ObjToLeanIR) -> Result<String, RuntimeError> {
             {
                 Ok(normalized_value.clone())
             } else {
-                Ok(format!("litexNumber {:?}", normalized_value))
+                Err(to_lean_error(
+                    &default_line_file(),
+                    format!(
+                        "To-Lean cannot emit nonnumeric normalized literal `{normalized_value}`"
+                    ),
+                ))
             }
         }
         ObjToLeanIR::Constant(constant) => Ok(match constant {
-            ConstantObjToLeanIR::ImaginaryUnit => "litexI",
-            ConstantObjToLeanIR::EulerNumber => "litexE",
-            ConstantObjToLeanIR::Pi => "litexPi",
+            ConstantObjToLeanIR::ImaginaryUnit => "Complex.I",
+            ConstantObjToLeanIR::EulerNumber => "Real.exp 1",
+            ConstantObjToLeanIR::Pi => "Real.pi",
         }
         .to_string()),
         ObjToLeanIR::StandardSet(set) => Ok(match set {
-            StandardSetToLeanIR::PositiveNatural => "litexNPos",
-            StandardSetToLeanIR::Natural => "litexN",
-            StandardSetToLeanIR::Rational => "litexQ",
-            StandardSetToLeanIR::Integer => "litexZ",
-            StandardSetToLeanIR::Real => "litexR",
-            StandardSetToLeanIR::Complex => "litexC",
-            StandardSetToLeanIR::PositiveRational => "litexQPos",
-            StandardSetToLeanIR::PositiveReal => "litexRPos",
-            StandardSetToLeanIR::NegativeRational => "litexQNeg",
-            StandardSetToLeanIR::NegativeInteger => "litexZNeg",
-            StandardSetToLeanIR::NegativeReal => "litexRNeg",
-            StandardSetToLeanIR::NonzeroRational => "litexQStar",
-            StandardSetToLeanIR::NonzeroInteger => "litexZStar",
-            StandardSetToLeanIR::NonzeroReal => "litexRStar",
-            StandardSetToLeanIR::NonzeroComplex => "litexCStar",
+            StandardSetToLeanIR::PositiveNatural => "{n : ℕ | 0 < n}",
+            StandardSetToLeanIR::Natural => "(Set.univ : Set ℕ)",
+            StandardSetToLeanIR::Rational => "(Set.univ : Set ℚ)",
+            StandardSetToLeanIR::Integer => "(Set.univ : Set ℤ)",
+            StandardSetToLeanIR::Real => "(Set.univ : Set ℝ)",
+            StandardSetToLeanIR::Complex => "(Set.univ : Set ℂ)",
+            StandardSetToLeanIR::PositiveRational => "{q : ℚ | 0 < q}",
+            StandardSetToLeanIR::PositiveReal => "{r : ℝ | 0 < r}",
+            StandardSetToLeanIR::NegativeRational => "{q : ℚ | q < 0}",
+            StandardSetToLeanIR::NegativeInteger => "{z : ℤ | z < 0}",
+            StandardSetToLeanIR::NegativeReal => "{r : ℝ | r < 0}",
+            StandardSetToLeanIR::NonzeroRational => "{q : ℚ | q ≠ 0}",
+            StandardSetToLeanIR::NonzeroInteger => "{z : ℤ | z ≠ 0}",
+            StandardSetToLeanIR::NonzeroReal => "{r : ℝ | r ≠ 0}",
+            StandardSetToLeanIR::NonzeroComplex => "{c : ℂ | c ≠ 0}",
         }
         .to_string()),
         ObjToLeanIR::BuiltinApp {
             operator,
             arguments,
-        } => lean_builtin_obj_application(*operator, arguments),
+        } => lean_builtin_obj_application(*operator, arguments, type_context),
         ObjToLeanIR::Collection {
             constructor: CollectionObjToLeanIR::ListSet,
             items,
-        } => Ok(format!(
-            "litexListSet [{}]",
-            items
-                .iter()
-                .map(lean_obj_ir)
-                .collect::<Result<Vec<_>, RuntimeError>>()?
-                .join(", ")
-        )),
+        } => {
+            if items.is_empty() {
+                return Ok("∅".to_string());
+            }
+            Ok(format!(
+                "{{{}}}",
+                items
+                    .iter()
+                    .map(|item| lean_obj_ir_with_context(item, type_context))
+                    .collect::<Result<Vec<_>, RuntimeError>>()?
+                    .join(", ")
+            ))
+        }
     }
 }
 
 fn lean_builtin_obj_application(
     operator: BuiltinObjOperatorToLeanIR,
     arguments: &[ObjToLeanIR],
+    type_context: &LeanTypeContext,
 ) -> Result<String, RuntimeError> {
     let rendered = arguments
         .iter()
-        .map(lean_obj_ir)
+        .map(|argument| lean_obj_ir_with_context(argument, type_context))
         .collect::<Result<Vec<_>, RuntimeError>>()?;
     let expected_arity = match operator {
         BuiltinObjOperatorToLeanIR::Floor
@@ -2526,34 +3233,47 @@ fn lean_builtin_obj_application(
         BuiltinObjOperatorToLeanIR::Mul => format!("({} * {})", rendered[0], rendered[1]),
         BuiltinObjOperatorToLeanIR::Div => format!("({} / {})", rendered[0], rendered[1]),
         BuiltinObjOperatorToLeanIR::Pow => format!("({} ^ {})", rendered[0], rendered[1]),
-        BuiltinObjOperatorToLeanIR::Mod => named_binary("litexMod", &rendered),
-        BuiltinObjOperatorToLeanIR::Gcd => named_binary("litexGcd", &rendered),
-        BuiltinObjOperatorToLeanIR::Lcm => named_binary("litexLcm", &rendered),
-        BuiltinObjOperatorToLeanIR::Floor => named_unary("litexFloor", &rendered),
-        BuiltinObjOperatorToLeanIR::Ceil => named_unary("litexCeil", &rendered),
-        BuiltinObjOperatorToLeanIR::Min => named_binary("litexMin", &rendered),
-        BuiltinObjOperatorToLeanIR::Max => named_binary("litexMax", &rendered),
-        BuiltinObjOperatorToLeanIR::Exp => named_unary("litexExp", &rendered),
-        BuiltinObjOperatorToLeanIR::Ln => named_unary("litexLn", &rendered),
-        BuiltinObjOperatorToLeanIR::Sign => named_unary("litexSign", &rendered),
-        BuiltinObjOperatorToLeanIR::Factorial => named_unary("litexFactorial", &rendered),
-        BuiltinObjOperatorToLeanIR::Abs => named_unary("litexAbs", &rendered),
-        BuiltinObjOperatorToLeanIR::Sin => named_unary("litexSin", &rendered),
-        BuiltinObjOperatorToLeanIR::Cos => named_unary("litexCos", &rendered),
-        BuiltinObjOperatorToLeanIR::Tan => named_unary("litexTan", &rendered),
-        BuiltinObjOperatorToLeanIR::Cot => named_unary("litexCot", &rendered),
-        BuiltinObjOperatorToLeanIR::RealPart => named_unary("litexRealPart", &rendered),
-        BuiltinObjOperatorToLeanIR::ImaginaryPart => named_unary("litexImaginaryPart", &rendered),
-        BuiltinObjOperatorToLeanIR::ComplexAbs => named_unary("litexComplexAbs", &rendered),
-        BuiltinObjOperatorToLeanIR::Sqrt => named_unary("litexSqrt", &rendered),
-        BuiltinObjOperatorToLeanIR::Log => named_binary("litexLog", &rendered),
-        BuiltinObjOperatorToLeanIR::Union => named_binary("litexUnion", &rendered),
-        BuiltinObjOperatorToLeanIR::Intersect => named_binary("litexIntersect", &rendered),
-        BuiltinObjOperatorToLeanIR::SetMinus => named_binary("litexSetMinus", &rendered),
-        BuiltinObjOperatorToLeanIR::SetDiff => named_binary("litexSetDiff", &rendered),
-        BuiltinObjOperatorToLeanIR::BigUnion => named_unary("litexBigUnion", &rendered),
-        BuiltinObjOperatorToLeanIR::BigIntersect => named_unary("litexBigIntersect", &rendered),
-        BuiltinObjOperatorToLeanIR::PowerSet => named_unary("litexPowerSet", &rendered),
+        BuiltinObjOperatorToLeanIR::Mod => format!("({} % {})", rendered[0], rendered[1]),
+        BuiltinObjOperatorToLeanIR::Min => named_binary("min", &rendered),
+        BuiltinObjOperatorToLeanIR::Max => named_binary("max", &rendered),
+        BuiltinObjOperatorToLeanIR::Exp => named_unary("Real.exp", &rendered),
+        BuiltinObjOperatorToLeanIR::Ln => named_unary("Real.log", &rendered),
+        BuiltinObjOperatorToLeanIR::Abs => named_unary("abs", &rendered),
+        BuiltinObjOperatorToLeanIR::Sin => named_unary("Real.sin", &rendered),
+        BuiltinObjOperatorToLeanIR::Cos => named_unary("Real.cos", &rendered),
+        BuiltinObjOperatorToLeanIR::Tan => named_unary("Real.tan", &rendered),
+        BuiltinObjOperatorToLeanIR::RealPart => named_unary("Complex.re", &rendered),
+        BuiltinObjOperatorToLeanIR::ImaginaryPart => named_unary("Complex.im", &rendered),
+        BuiltinObjOperatorToLeanIR::ComplexAbs => named_unary("Complex.abs", &rendered),
+        BuiltinObjOperatorToLeanIR::Sqrt => named_unary("Real.sqrt", &rendered),
+        BuiltinObjOperatorToLeanIR::Union => {
+            format!("({} ∪ {})", rendered[0], rendered[1])
+        }
+        BuiltinObjOperatorToLeanIR::Intersect => {
+            format!("({} ∩ {})", rendered[0], rendered[1])
+        }
+        BuiltinObjOperatorToLeanIR::SetMinus | BuiltinObjOperatorToLeanIR::SetDiff => {
+            format!("({} \\ {})", rendered[0], rendered[1])
+        }
+        BuiltinObjOperatorToLeanIR::BigUnion => named_unary("Set.sUnion", &rendered),
+        BuiltinObjOperatorToLeanIR::BigIntersect => named_unary("Set.sInter", &rendered),
+        BuiltinObjOperatorToLeanIR::PowerSet => named_unary("Set.powerset", &rendered),
+        BuiltinObjOperatorToLeanIR::Gcd
+        | BuiltinObjOperatorToLeanIR::Lcm
+        | BuiltinObjOperatorToLeanIR::Floor
+        | BuiltinObjOperatorToLeanIR::Ceil
+        | BuiltinObjOperatorToLeanIR::Sign
+        | BuiltinObjOperatorToLeanIR::Factorial
+        | BuiltinObjOperatorToLeanIR::Cot
+        | BuiltinObjOperatorToLeanIR::Log => {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean native object ABI has no checked Mathlib lowering for {:?}",
+                    operator
+                ),
+            ));
+        }
     };
     Ok(result)
 }
@@ -2589,15 +3309,6 @@ fn lean_rational_builtin_proof(
             right.fraction()
         ),
     ];
-    let (view_lines, real_equalities) = lean_real_view_lines(context);
-    lines.extend(view_lines);
-    let mut rewrite_targets = context.nonzero_names.clone();
-    rewrite_targets.push("⊢".to_string());
-    lines.push(format!(
-        "  simp only [{}] at {}",
-        litex_real_view_simp(&real_equalities),
-        rewrite_targets.join(" ")
-    ));
     lines.push(format!("  {}", tactic.replace('\n', "\n  ")));
     Ok(lines.join("\n"))
 }
@@ -2676,7 +3387,7 @@ fn rational_fact_normalization_tactic(
         return Ok("rfl".to_string());
     }
     if all_closed {
-        return Ok(format!("norm_num [{}]", LITEX_REAL_VIEW_SIMP));
+        return Ok("norm_num".to_string());
     }
     if !has_denominator {
         return Ok("ring".to_string());
@@ -2703,7 +3414,7 @@ fn lean_real_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError> {
             "real-set nonemptiness evidence was attached to a non-real carrier",
         ));
     }
-    Ok("by\n  change ∃ element : LitexSet, element ∈ litexR\n  refine ⟨0, ?_⟩\n  change True\n  trivial".to_string())
+    Ok("by\n  refine ⟨0, ?_⟩\n  exact Set.mem_univ 0".to_string())
 }
 
 fn validate_object_choice(choice: &ObjectChoiceToLeanIR) -> Result<FactId, RuntimeError> {
@@ -2819,13 +3530,13 @@ fn validate_existential_elimination(
         }
         let family_matches = matches!(
             (source_type, &witness.param_type),
-            (ParamType::Set(_), ParamTypeToLeanIR::LitexSet)
+            (ParamType::Set(_), ParamTypeToLeanIR::Set { .. })
                 | (
                     ParamType::NonemptySet(_),
-                    ParamTypeToLeanIR::LitexNonemptySet
+                    ParamTypeToLeanIR::NonemptySet { .. }
                 )
-                | (ParamType::FiniteSet(_), ParamTypeToLeanIR::LitexFiniteSet)
-                | (ParamType::Obj(_), ParamTypeToLeanIR::MemberOf(_))
+                | (ParamType::FiniteSet(_), ParamTypeToLeanIR::FiniteSet { .. })
+                | (ParamType::Obj(_), ParamTypeToLeanIR::MemberOf { .. })
         );
         if !family_matches {
             return Err(to_lean_error(
@@ -3019,18 +3730,21 @@ fn validate_existential_type_projection(
         )
     };
     let valid = match (&witness.param_type, proposition) {
-        (ParamTypeToLeanIR::LitexSet, Fact::AtomicFact(AtomicFact::IsSetFact(fact))) => {
+        (ParamTypeToLeanIR::Set { .. }, Fact::AtomicFact(AtomicFact::IsSetFact(fact))) => {
             selected_matches(&fact.set)
         }
         (
-            ParamTypeToLeanIR::LitexNonemptySet,
+            ParamTypeToLeanIR::NonemptySet { .. },
             Fact::AtomicFact(AtomicFact::IsNonemptySetFact(fact)),
         ) => selected_matches(&fact.set),
         (
-            ParamTypeToLeanIR::LitexFiniteSet,
+            ParamTypeToLeanIR::FiniteSet { .. },
             Fact::AtomicFact(AtomicFact::IsFiniteSetFact(fact)),
         ) => selected_matches(&fact.set),
-        (ParamTypeToLeanIR::MemberOf(carrier), Fact::AtomicFact(AtomicFact::InFact(fact))) => {
+        (
+            ParamTypeToLeanIR::MemberOf { set: carrier, .. },
+            Fact::AtomicFact(AtomicFact::InFact(fact)),
+        ) => {
             selected_matches(&fact.element)
                 && ObjToLeanIR::lower(&fact.set).is_ok_and(|actual| actual == carrier.clone())
         }
@@ -3110,48 +3824,10 @@ fn is_nonzero_fact(fact: &Fact) -> bool {
     matches!(fact, Fact::AtomicFact(AtomicFact::NotEqualFact(_)))
 }
 
-fn real_membership_proof(fact: &Fact, name: &str) -> Option<(Obj, String)> {
-    let Fact::AtomicFact(AtomicFact::InFact(membership)) = fact else {
-        return None;
-    };
-    match membership.set {
-        Obj::StandardSet(StandardSet::R) => Some((membership.element.clone(), name.to_string())),
-        Obj::StandardSet(StandardSet::RPos) => Some((
-            membership.element.clone(),
-            format!("(litexMemRPosReal {})", name),
-        )),
-        _ => None,
-    }
-}
-
-fn lean_real_view_lines(context: &LeanProofContext) -> (Vec<String>, Vec<String>) {
-    let mut lines = Vec::with_capacity(context.real_memberships.len());
-    let mut equalities = Vec::with_capacity(context.real_memberships.len());
-    for (index, (_, membership_name)) in context.real_memberships.iter().enumerate() {
-        let witness = format!("litex_real_value_{}", index + 1);
-        let equality = format!("litex_real_eq_{}", index + 1);
-        lines.push(format!(
-            "  obtain ⟨{}, {}⟩ := litexMemRealElim {}",
-            witness, equality, membership_name
-        ));
-        equalities.push(equality);
-    }
-    (lines, equalities)
-}
-
 fn register_local_fact(fact_id: FactId, fact: &Fact, name: &str, context: &mut LeanProofContext) {
     context.proof_fact_names.insert(fact_id, name.to_string());
     if is_nonzero_fact(fact) && !context.nonzero_names.iter().any(|known| known == name) {
         context.nonzero_names.push(name.to_string());
-    }
-    if let Some((object, membership_proof)) = real_membership_proof(fact, name) {
-        if !context
-            .real_memberships
-            .iter()
-            .any(|(known, _)| obj_equality_key(known) == obj_equality_key(&object))
-        {
-            context.real_memberships.push((object, membership_proof));
-        }
     }
 }
 
@@ -3174,15 +3850,6 @@ fn push_lean_bullet(lines: &mut Vec<String>, body: &[String]) -> Result<(), Runt
     }
     Ok(())
 }
-
-fn litex_real_view_simp(real_equalities: &[String]) -> String {
-    if real_equalities.is_empty() {
-        return LITEX_REAL_VIEW_SIMP.to_string();
-    }
-    format!("{}, {}", real_equalities.join(", "), LITEX_REAL_VIEW_SIMP)
-}
-
-const LITEX_REAL_VIEW_SIMP: &str = "litexOfNatEq, litexOfNat, litexOfScientificEq, litexOfScientific, litexAddEq, litexAdd, litexSubEq, litexSub, litexMulEq, litexMul, litexDivEq, litexDiv, litexPowEq, litexPow, litexNegEq, litexNeg, litexLTIff, litexLT, litexLEIff, litexLE, litexRealValueEqIff";
 
 fn parenthesized_join(items: Vec<String>, separator: &str) -> String {
     if items.len() == 1 {
@@ -3330,6 +3997,19 @@ fn lean_comment_text(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
+fn closed_rational_equality_with_target_expectation(
+    fact: &Fact,
+    type_context: &LeanTypeContext,
+) -> bool {
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = fact else {
+        return false;
+    };
+    closed_rational_expression(&equality.left)
+        && closed_rational_expression(&equality.right)
+        && (type_context.expected_object(&equality.left).is_some()
+            || type_context.expected_object(&equality.right).is_some())
+}
+
 fn closed_rational_expression(obj: &Obj) -> bool {
     match obj {
         Obj::Number(_) => true,
@@ -3347,6 +4027,25 @@ fn closed_rational_expression(obj: &Obj) -> bool {
         }
         Obj::Pow(pow) => {
             closed_rational_expression(&pow.base) && matches!(pow.exponent.as_ref(), Obj::Number(_))
+        }
+        _ => false,
+    }
+}
+
+fn requires_checked_closed_numeric_carrier(obj: &Obj) -> bool {
+    match obj {
+        Obj::Sub(_) | Obj::Div(_) => true,
+        Obj::Add(add) => {
+            requires_checked_closed_numeric_carrier(&add.left)
+                || requires_checked_closed_numeric_carrier(&add.right)
+        }
+        Obj::Mul(mul) => {
+            requires_checked_closed_numeric_carrier(&mul.left)
+                || requires_checked_closed_numeric_carrier(&mul.right)
+        }
+        Obj::Pow(pow) => {
+            requires_checked_closed_numeric_carrier(&pow.base)
+                || requires_checked_closed_numeric_carrier(&pow.exponent)
         }
         _ => false,
     }
@@ -3427,7 +4126,7 @@ mod tests {
             assert!(registered.contains("\nnamespace A.chap2\n\n"));
             assert!(registered.ends_with("\nend A.chap2\n"));
             assert!(!registered.contains("namespace chapter02"));
-            assert!(registered.contains("def is_one (x : LitexSet) : LitexFact :="));
+            assert!(registered.contains("def is_one (x : ℝ) : LitexFact :="));
             assert!(registered.contains("simp [is_one]"));
 
             let anonymous =
@@ -3435,6 +4134,29 @@ mod tests {
                     .unwrap();
             assert!(!anonymous.contains("\nnamespace "));
         });
+    }
+
+    #[test]
+    fn polymorphic_global_fact_stays_inside_universe_section() {
+        run_with_large_stack(
+            "polymorphic_global_fact_stays_inside_universe_section",
+            || {
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("/virtual/tmp.lit");
+                let output = to_lean("forall a set:\n    $is_set(a)", &mut runtime).unwrap();
+
+                let theorem = output
+                    .find("theorem global_fact_")
+                    .expect("the polymorphic stored fact must be emitted");
+                let section_and_namespace_end = output
+                    .find("\nend\n\nend tmp\n")
+                    .expect("the section must close before the namespace");
+
+                assert!(output.contains("{litex_carrier_0 : Type u}"));
+                assert!(theorem < section_and_namespace_end);
+                assert!(output.ends_with("\nend\n\nend tmp\n"));
+            },
+        );
     }
 
     #[test]
@@ -3482,24 +4204,29 @@ forall x R:
                 let output = to_lean(source, &mut runtime).unwrap();
 
                 assert!(output.starts_with("import Mathlib\n\nnamespace to_lean_ir_mvp\n\n"));
-                assert!(output.contains("inductive LitexSet where"));
+                assert!(output.contains("class LitexObject (α : Type u) : Prop where"));
                 assert!(output.contains("abbrev LitexFact := Prop"));
                 assert!(
-                    output.find("inductive LitexSet").unwrap()
-                        < output.find("abbrev LitexFact").unwrap()
+                    output.find("abbrev LitexFact").unwrap()
+                        < output.find("class LitexObject").unwrap()
                 );
-                assert!(output.contains("opaque marked : LitexSet → LitexFact"));
+                assert!(output.contains(
+                    "opaque marked {litex_arg_carrier_1 : Type u} [LitexObject litex_arg_carrier_1] : litex_arg_carrier_1 → LitexFact"
+                ));
                 assert!(!output.contains("namespace LitexGenerated"));
                 assert!(!output.contains("end LitexGenerated"));
-                assert!(!output.lines().any(|line| line == "universe u"));
+                assert!(output.lines().any(|line| line == "universe u"));
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
-                assert!(output.contains("def is_one (x : LitexSet) : LitexFact :="));
+                assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
+                assert!(!output.contains("LitexSet"));
                 assert_eq!(output.matches("\naxiom global_fact_").count(), 1);
                 assert!(output.contains(":= global_fact_"));
                 assert!(output.contains("is_one 1"));
                 assert!(output.contains("simp [is_one]"));
                 assert!(output.contains("let proof_arg_"));
-                assert!(output.contains("intro a b x proof_fact_"));
+                assert!(output.contains("intro a proof_fact_"));
+                assert!(output.contains("b proof_fact_"));
+                assert!(output.contains("x proof_fact_"));
                 assert!(output.contains("field_simp [proof_fact_"));
                 assert!(!output.contains("sorry"));
             },
@@ -3545,8 +4272,8 @@ by contra:
                 ));
 
                 let output = to_lean_from_source(source, "statement-scopes-output").unwrap();
-                assert!(output.contains("def x : LitexSet := 2"), "{output}");
-                assert!(output.contains("let y : LitexSet := 3"), "{output}");
+                assert!(output.contains("def x : ℝ := 2"), "{output}");
+                assert!(output.contains("let y : ℝ := 3"), "{output}");
                 assert!(output.contains("simpa only [x] using"), "{output}");
                 assert!(output.contains("Classical.em (x = 2)"), "{output}");
                 assert!(output.contains("rcases"), "{output}");
@@ -3654,16 +4381,20 @@ by contra:
 
                 let output = to_lean_from_source(source, "choice-have-output").unwrap();
                 assert!(
-                    output.contains("def litexIsNonemptySet (set : LitexSet) : Prop := ∃ element, litexMem element set"),
+                    output.contains(
+                        "def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty"
+                    ),
                     "{output}"
                 );
                 assert!(output.contains("theorem litex_choice_source_"), "{output}");
                 assert!(
-                    output.contains("noncomputable def selected : LitexSet := Exists.choose litex_choice_source_"),
+                    output.contains(
+                        "noncomputable def selected : ℝ := Exists.choose litex_choice_source_"
+                    ),
                     "{output}"
                 );
                 assert!(
-                    output.contains("let local_choice : LitexSet := Exists.choose proof_fact_"),
+                    output.contains("let local_choice : ℝ := Exists.choose proof_fact_"),
                     "{output}"
                 );
                 assert!(output.contains("Exists.choose_spec"), "{output}");
@@ -3762,26 +4493,26 @@ by contra:
                 assert!(matches!(steps[0], StmtToLeanIR::HaveExistentialWitness(_)));
 
                 let output = to_lean_from_source(source, "exist-have-output").unwrap();
-                assert!(output.contains("∃ source : LitexSet"), "{output}");
+                assert!(output.contains("∃ source : ℝ"), "{output}");
                 assert!(output.contains("theorem litex_exist_source_"), "{output}");
                 assert!(
-                    output.contains("noncomputable def selected : LitexSet := Exists.choose"),
+                    output.contains("noncomputable def selected : ℝ := Exists.choose"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("noncomputable def shorthand : LitexSet := Exists.choose"),
+                    output.contains("noncomputable def shorthand : ℝ := Exists.choose"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("let local_selected : LitexSet := Exists.choose"),
+                    output.contains("let local_selected : ℝ := Exists.choose"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("noncomputable def chosen_left : LitexSet := Exists.choose"),
+                    output.contains("noncomputable def chosen_left : ℝ := Exists.choose"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("noncomputable def chosen_right : LitexSet := Exists.choose ("),
+                    output.contains("noncomputable def chosen_right : ℝ := Exists.choose ("),
                     "{output}"
                 );
                 assert!(output.contains("Exists.choose_spec"), "{output}");
@@ -4489,6 +5220,59 @@ forall x, y R:
     }
 
     #[test]
+    fn native_standard_domain_membership_keeps_a_bare_numeral() {
+        let output = to_lean_from_source("2 $in R\n", "native-standard-membership").unwrap();
+        assert!(
+            output.contains("theorem global_fact_")
+                && output.contains(": 2 ∈ (Set.univ : Set ℝ) := by"),
+            "{output}"
+        );
+        assert!(!output.contains("LitexSet"), "{output}");
+        assert!(!output.contains("litexR"), "{output}");
+        assert!(!output.contains("LitexAddEq"), "{output}");
+    }
+
+    #[test]
+    fn unconstrained_reflexive_numeral_keeps_lean_defaulting_local() {
+        let output = to_lean_from_source("2 = 2\n", "bare-reflexive-numeral").unwrap();
+
+        assert!(output.contains(": 2 = 2 := by"), "{output}");
+        assert!(!output.contains("(2 : ℚ)"), "{output}");
+        assert!(!output.contains("(2 : ℝ)"), "{output}");
+    }
+
+    #[test]
+    fn trusted_closed_division_does_not_choose_a_carrier() {
+        let error =
+            to_lean_from_source("trust 1 / 2 = 1 / 2\n", "underconstrained-trusted-division")
+                .expect_err("trust must not choose a numeric carrier")
+                .trace_message();
+
+        assert!(error.contains("no checked target carrier"), "{error}");
+    }
+
+    #[test]
+    fn native_bounded_binders_preserve_membership_and_cross_domain_expectation() {
+        let source = r#"
+trust forall x R:
+    x $in R
+
+trust forall z Z:
+    z / 2 $in Q
+"#;
+        let output = to_lean_from_source(source, "native-bounded-binders").unwrap();
+        assert!(
+            output.contains("∀ x ∈ (Set.univ : Set ℝ), x ∈ (Set.univ : Set ℝ)"),
+            "{output}"
+        );
+        assert!(
+            output.contains("∀ z ∈ (Set.univ : Set ℤ), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)"),
+            "{output}"
+        );
+        assert!(!output.contains("(z : ℚ)"), "{output}");
+    }
+
+    #[test]
     fn temporary_forall_premise_is_emitted_as_local_exact() {
         run_with_large_stack("temporary_forall_premise_is_emitted_as_local_exact", || {
             let output = to_lean_from_source(
@@ -4637,8 +5421,9 @@ forall a, b set:
                 }));
 
                 let output = to_lean_from_source(source, "equality-transport-output").unwrap();
-                assert!(output
-                    .contains("intro a b proof_fact_1_1 proof_fact_1_2\n  have proof_fact_1_3"));
+                assert!(output.contains(
+                    "intro _ _ a b proof_fact_1_1 proof_fact_1_2\n  have proof_fact_1_3"
+                ));
                 assert!(output.contains("have proof_fact_1_3 : p a := proof_fact_1_1"));
                 assert!(output.contains("have proof_fact_1_4 : a = b := proof_fact_1_2"));
                 assert!(output.contains("have proof_fact_1_5 : p b := by"));
@@ -4692,6 +5477,380 @@ forall a, b set:
                     1,
                     "one equality used at two argument positions should be emitted once"
                 );
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn resolved_atomic_fact_citation_replays_equality_and_normalization() {
+        run_with_large_stack(
+            "resolved_atomic_fact_citation_replays_equality_and_normalization",
+            || {
+                let source = include_str!(
+                    "../../examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit"
+                );
+                let statement_irs = test_to_lean_ir(source, "resolved-atomic-fact-ir");
+                let StmtToLeanIR::Fact(forall) = &statement_irs[1] else {
+                    panic!("second IR item should be the forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &forall.fact.proof
+                else {
+                    panic!("forall should retain introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                    premises: rewrite_premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("outer proof should replay the resolved equalities");
+                };
+                assert_eq!(rewrite.steps.len(), 2);
+                assert_eq!(rewrite_premises.len(), 3);
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::Normalization {
+                            kind: NormalizationKindToLeanIR::RationalExpressionSimplification,
+                        },
+                    premises: normalization_premises,
+                    ..
+                } = &rewrite_premises[0].proof
+                else {
+                    panic!("rewrite source should be produced by nested normalization");
+                };
+                assert_eq!(normalization_premises.len(), 1);
+                assert!(matches!(
+                    normalization_premises[0].proof,
+                    FactProofToLeanIR::KnownFactCitation { .. }
+                ));
+
+                let output = to_lean_from_source(source, "resolved-atomic-fact").unwrap();
+
+                assert!(
+                    output.contains("have proof_fact_1_6 : p (13 + 1 : ℝ) := by"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("have proof_fact_2_1 : p (14 : ℝ)"),
+                    "{output}"
+                );
+                assert!(!output.contains("p ((13 : ℕ) + 1)"), "{output}");
+                assert!(
+                    output.contains("convert proof_fact_2_1 using 1"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("have proof_fact_1_9 : p (a + b) := by"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains(
+                        "simpa only [proof_fact_1_7, proof_fact_1_8] using proof_fact_1_6"
+                    ),
+                    "{output}"
+                );
+                assert!(!output.contains("axiom"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn resolved_atomic_fact_composes_citation_transport_with_transformations() {
+        run_with_large_stack(
+            "resolved_atomic_fact_composes_citation_transport_with_transformations",
+            || {
+                let source = r#"
+abstract_prop p(x)
+
+forall a, b R:
+    a = 13
+    b = 1
+    14 = 15
+    $p(15)
+    =>:
+        $p(a + b)
+"#;
+                let statement_irs = test_to_lean_ir(source, "composed-resolved-atomic-fact-ir");
+                let StmtToLeanIR::Fact(forall) = &statement_irs[1] else {
+                    panic!("second IR item should be the forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &forall.fact.proof
+                else {
+                    panic!("forall should retain introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(goal_rewrite),
+                    premises: goal_rewrite_premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("outer proof should rewrite the normalized fact to the goal");
+                };
+                assert_eq!(goal_rewrite.steps.len(), 2);
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::Normalization { .. },
+                    premises: normalization_premises,
+                    ..
+                } = &goal_rewrite_premises[0].proof
+                else {
+                    panic!("outer rewrite source should be produced by normalization");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(source_rewrite),
+                    premises: source_rewrite_premises,
+                    ..
+                } = &normalization_premises[0].proof
+                else {
+                    panic!("normalization source should be transported from the cited fact");
+                };
+                assert_eq!(source_rewrite.steps.len(), 1);
+                assert_eq!(source_rewrite_premises.len(), 2);
+
+                let output = to_lean_from_source(source, "composed-resolved-atomic-fact").unwrap();
+                assert!(output.contains(": p (a + b) := by"), "{output}");
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn nested_function_argument_resolution_is_recorded_before_obj_ir_boundary() {
+        run_with_large_stack(
+            "nested_function_argument_resolution_is_recorded_before_obj_ir_boundary",
+            || {
+                let source = r#"
+abstract_prop p(x, y)
+
+forall f fn(x R) R, a, b, c R:
+    a = 13
+    b = 1
+    $p(f(14), c)
+    =>:
+        $p(f(a + b), c)
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("nested-resolved-atomic-fact");
+                let (results, error) = run_source_code(source, &mut runtime);
+                assert!(error.is_none());
+                let success = results[1].factual_success().expect("forall success");
+                let VerifiedByResult::ForallProof(forall_proof) = &success.verified_by else {
+                    panic!("second statement should retain its forall proof");
+                };
+                let conclusion = forall_proof.proves[0]
+                    .result
+                    .factual_success()
+                    .expect("forall conclusion success");
+                let VerifiedByResult::Fact(citation) = conclusion.underlying_verified_by() else {
+                    panic!("resolved conclusion should retain its source citation");
+                };
+                let transformation = citation
+                    .fact_transformation
+                    .as_ref()
+                    .expect("nested resolution should retain replayable transformations");
+                assert!(
+                    transformation.source.to_string().contains("f(14)"),
+                    "{}",
+                    transformation.source
+                );
+                assert_eq!(transformation.steps.len(), 2);
+                assert!(
+                    transformation.steps[0]
+                        .result
+                        .to_string()
+                        .contains("f(13 + 1)"),
+                    "{}",
+                    transformation.steps[0].result
+                );
+                assert!(matches!(
+                    transformation.steps[0].rule,
+                    FactTransformationRule::RationalNormalization
+                ));
+                assert!(
+                    transformation.steps[1].result.to_string().contains("a +"),
+                    "{}",
+                    transformation.steps[1].result
+                );
+                let FactTransformationRule::EqualityRewrite(rewrite) =
+                    &transformation.steps[1].rule
+                else {
+                    panic!("second transformation should be equality rewrite");
+                };
+                assert_eq!(rewrite.steps.len(), 2);
+                assert!(rewrite
+                    .steps
+                    .iter()
+                    .all(|step| step.equality_fact_id.is_some()));
+
+                let error = to_lean_from_source(source, "nested-resolved-atomic-fact")
+                    .expect_err("general function objects remain outside the current Obj IR");
+                let error_debug = format!("{error:?}");
+                assert!(error_debug.contains("FnSet object"), "{error_debug}");
+            },
+        );
+    }
+
+    #[test]
+    fn compound_equality_transport_is_recorded_at_arbitrary_object_depth() {
+        run_with_large_stack(
+            "compound_equality_transport_is_recorded_at_arbitrary_object_depth",
+            || {
+                let source = r#"
+abstract_prop p(x, y)
+
+forall f fn(x R) R, a, b, c R:
+    a + b = 14
+    $p(f(14), c)
+    =>:
+        $p(f(a + b), c)
+"#;
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("nested-compound-equality-transport");
+                let (results, error) = run_source_code(source, &mut runtime);
+                assert!(error.is_none());
+                let success = results[1].factual_success().expect("forall success");
+                let VerifiedByResult::ForallProof(forall_proof) = &success.verified_by else {
+                    panic!("second statement should retain its forall proof");
+                };
+                let conclusion = forall_proof.proves[0]
+                    .result
+                    .factual_success()
+                    .expect("forall conclusion success");
+                let VerifiedByResult::Fact(citation) = conclusion.underlying_verified_by() else {
+                    panic!("conclusion should retain its source citation");
+                };
+                let transport = citation
+                    .equality_transport
+                    .as_ref()
+                    .expect("nested compound equality should retain transport evidence");
+                assert_eq!(transport.steps.len(), 1);
+                assert_eq!(transport.steps[0].from.to_string(), "14");
+                assert!(
+                    matches!(&transport.steps[0].to, Obj::Add(_)),
+                    "{}",
+                    transport.steps[0].to
+                );
+                assert!(
+                    transport.steps[0].equality.to_string().ends_with("= 14"),
+                    "{}",
+                    transport.steps[0].equality
+                );
+                assert!(transport.steps[0].equality_fact_id.is_some());
+                assert!(citation.fact_transformation.is_none());
+
+                let error = to_lean_from_source(source, "nested-compound-equality-transport")
+                    .expect_err("general function objects remain outside the current Obj IR");
+                let error_debug = format!("{error:?}");
+                assert!(error_debug.contains("FnSet object"), "{error_debug}");
+            },
+        );
+    }
+
+    #[test]
+    fn nested_compound_equality_transport_lowers_to_lean_ir() {
+        run_with_large_stack(
+            "nested_compound_equality_transport_lowers_to_lean_ir",
+            || {
+                let source = r#"
+abstract_prop p(x, y)
+
+forall a, b, c R:
+    a + b = 14
+    $p(abs(14), c)
+    =>:
+        $p(abs(a + b), c)
+"#;
+                let statement_irs =
+                    test_to_lean_ir(source, "nested-compound-equality-transport-ir");
+                let StmtToLeanIR::Fact(forall) = &statement_irs[1] else {
+                    panic!("second IR item should be the forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &forall.fact.proof
+                else {
+                    panic!("forall should retain introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                    premises,
+                    ..
+                } = underlying_test_proof(&conclusions[0].proof)
+                else {
+                    panic!("nested compound equality should lower as equality rewrite");
+                };
+                assert_eq!(rewrite.steps.len(), 1);
+                assert_eq!(premises.len(), 2);
+
+                let output =
+                    to_lean_from_source(source, "nested-compound-equality-transport").unwrap();
+                assert!(output.contains("simpa only ["), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn unresolved_nested_symbol_does_not_create_a_partial_transformation_proof() {
+        run_with_large_stack(
+            "unresolved_nested_symbol_does_not_create_a_partial_transformation_proof",
+            || {
+                let source = r#"
+abstract_prop p(x)
+
+forall a, b R:
+    a = 13
+    $p(14)
+    =>:
+        $p(a + b)
+"#;
+                let error = to_lean_from_source(source, "partly-resolved-atomic-fact")
+                    .expect_err("an unresolved b must leave the Litex goal unverified");
+                let error_debug = format!("{error:?}");
+                assert!(error_debug.contains("verification failed"), "{error_debug}");
+            },
+        );
+    }
+
+    #[test]
+    fn resolved_defined_symbols_use_the_same_recursive_transformation_evidence() {
+        run_with_large_stack(
+            "resolved_defined_symbols_use_the_same_recursive_transformation_evidence",
+            || {
+                let source = r#"
+abstract_prop p(x)
+
+have a R = 13
+
+have b R = 1
+
+trust $p(14)
+
+$p(a + b)
+"#;
+                let statement_irs = test_to_lean_ir(source, "resolved-defined-symbols-ir");
+                let StmtToLeanIR::Fact(result) = statement_irs.last().unwrap() else {
+                    panic!("last IR item should be the resolved fact");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::EqualityRewrite(rewrite),
+                    premises,
+                    ..
+                } = underlying_test_proof(&result.fact.proof)
+                else {
+                    panic!("defined symbols should retain equality-rewrite evidence");
+                };
+                assert_eq!(rewrite.steps.len(), 2);
+                assert!(matches!(
+                    premises[0].proof,
+                    FactProofToLeanIR::RuleApplication {
+                        rule: ProofRuleToLeanIR::Normalization { .. },
+                        ..
+                    }
+                ));
+
+                let output = to_lean_from_source(source, "resolved-defined-symbols").unwrap();
+                assert!(output.contains("theorem global_fact_"), "{output}");
+                assert!(output.contains(": p (a + b) := by"), "{output}");
                 assert!(!output.contains("sorry"));
             },
         );
@@ -4887,15 +6046,13 @@ forall x R:
                     "{output}"
                 );
                 assert!(
-                    output.contains("-- Litex parameter requirement for `x`: x : LitexSet"),
+                    output.contains("-- Litex parameter requirement for `x`: x : ℝ"),
                     "{output}"
                 );
+                assert!(output.contains("let proof_arg_1_4 : ℝ := x"), "{output}");
                 assert!(
-                    output.contains("let proof_arg_1_4 : LitexSet := x"),
-                    "{output}"
-                );
-                assert!(
-                    output.contains("have proof_fact_1_5 : x ∈ litexR := proof_fact_1_1"),
+                    output
+                        .contains("have proof_fact_1_5 : x ∈ (Set.univ : Set ℝ) := proof_fact_1_1"),
                     "{output}"
                 );
                 assert!(
@@ -4971,32 +6128,33 @@ $marked2(1, 2)
                 assert_eq!(arguments.len(), 1);
                 assert_eq!(arguments[0].param, "x");
                 assert!(matches!(
-                    arguments[0].param_type,
-                    ParamTypeToLeanIR::MemberOf(ObjToLeanIR::StandardSet(
-                        StandardSetToLeanIR::Real
-                    ))
+                    &arguments[0].param_type,
+                    ParamTypeToLeanIR::MemberOf {
+                        set: ObjToLeanIR::StandardSet(StandardSetToLeanIR::Real),
+                        element_carrier: LeanCarrierToLeanIR::Real,
+                    }
                 ));
                 assert_eq!(parameter_requirements.len(), 1);
                 assert!(domain_requirements.is_empty());
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
                 assert!(
-                    output.contains("-- Litex parameter requirement for `x`: (2 - 1) : LitexSet"),
+                    output.contains("-- Litex parameter requirement for `x`: (2 - 1) : ℝ"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("let proof_arg_2_1 : LitexSet := (2 - 1)"),
+                    output.contains("let proof_arg_2_1 : ℝ := (2 - 1)"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ litexR := by"),
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by"),
                     "{output}"
                 );
                 assert!(output.contains("have proof_fact_2_3 : marked2"), "{output}");
                 assert!(output.contains(":= global_fact_"), "{output}");
                 assert!(output.contains(" proof_arg_2_1"), "{output}");
                 assert!(
-                    output.contains("convert proof_fact_1_1 using 1 <;> norm_num ["),
+                    output.contains("convert proof_fact_1_1 using 1 <;> norm_num"),
                     "{output}"
                 );
                 assert!(output.contains("exact proof_fact_1_2"), "{output}");
@@ -5023,7 +6181,7 @@ $marked2(1, 2)
                 let output = to_lean_from_source(source, "closed-membership-citation").unwrap();
 
                 assert!(
-                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ litexR := by"),
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by"),
                     "{output}"
                 );
                 assert!(output.contains("change True"), "{output}");
@@ -5057,22 +6215,23 @@ $marked2(1, 2)
     }
 
     #[test]
-    fn to_lean_set_obj_abi_uses_one_carrier_and_structural_set_operations() {
+    fn to_lean_set_obj_abi_uses_native_sets_and_structural_set_operations() {
         run_with_large_stack(
-            "to_lean_set_obj_abi_uses_one_carrier_and_structural_set_operations",
+            "to_lean_set_obj_abi_uses_native_sets_and_structural_set_operations",
             || {
                 let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("examples/05_compiler_interop/to_lean_set_obj_abi.lit");
                 let source = fs::read_to_string(path).unwrap();
                 let output = to_lean_from_source(&source, "set-obj-abi").unwrap();
 
-                assert!(output.contains("inductive LitexSet where"));
-                assert!(output.contains("def litexUnion := litexBinary \"union\""));
-                assert!(output.contains("litexUnion A B = litexUnion A B"));
-                assert!(output.contains("litexIntersect A B = litexIntersect A B"));
-                assert!(output.contains("litexSetMinus A B = litexSetMinus A B"));
-                assert_eq!(output.matches("intro A B\n  rfl").count(), 3);
-                assert!(!output.contains("LitexObj"));
+                assert!(output.contains("[LitexObject litex_carrier_"), "{output}");
+                assert!(output.contains(": Set litex_carrier_"), "{output}");
+                assert!(output.contains("(A ∪ B) = (A ∪ B)"), "{output}");
+                assert!(output.contains("(A ∩ B) = (A ∩ B)"), "{output}");
+                assert!(output.contains("(A \\ B) = (A \\ B)"), "{output}");
+                assert_eq!(output.matches("intro _ _ A B\n  rfl").count(), 3);
+                assert!(!output.contains("LitexSet"));
+                assert!(!output.contains("inductive LitexSet"));
                 assert!(!output.contains("Type uLitex"));
                 assert!(!output.contains("(A B : ℝ)"));
                 assert!(!output.contains("sorry"));
@@ -5203,56 +6362,57 @@ $marked(1)
     }
 
     #[test]
-    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
-    fn generated_to_lean_set_obj_abi_compiles_with_lean_core() {
-        run_with_large_stack(
-            "generated_to_lean_set_obj_abi_compiles_with_lean_core",
-            || {
-                let lean =
-                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
-                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("examples/05_compiler_interop/to_lean_set_obj_abi.lit");
-                let source = fs::read_to_string(path).unwrap();
-                let generated = to_lean_from_source(&source, "set-obj-abi-kernel").unwrap();
-                let generated = generated
-                    .replacen("import Mathlib", "import Init", 1)
-                    .replace("ℝ", "Rat");
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_set_obj_abi_compiles_with_lean() {
+        run_with_large_stack("generated_to_lean_set_obj_abi_compiles_with_lean", || {
+            let project = std::env::var("LITEX_LEAN_PROJECT")
+                .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("examples/05_compiler_interop/to_lean_set_obj_abi.lit");
+            let source = fs::read_to_string(path).unwrap();
+            let generated = to_lean_from_source(&source, "set-obj-abi-kernel").unwrap();
 
-                let lean_file = private_tmp_lean_file("litex_to_lean_set_obj_abi");
-                fs::write(&lean_file, &generated).unwrap();
-                let output = Command::new(lean).arg(&lean_file).output();
-                let _ = fs::remove_file(&lean_file);
-                let output = output.unwrap();
-                assert!(
-                    output.status.success(),
-                    "set-Obj generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr),
-                    generated
-                );
-            },
-        );
+            let lean_file = private_tmp_lean_file("litex_to_lean_set_obj_abi");
+            fs::write(&lean_file, &generated).unwrap();
+            let output = Command::new(lake)
+                .args(["env", "lean"])
+                .arg(&lean_file)
+                .current_dir(project)
+                .output();
+            let _ = fs::remove_file(&lean_file);
+            let output = output.unwrap();
+            assert!(
+                output.status.success(),
+                "set-Obj generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+                generated
+            );
+        });
     }
 
     #[test]
-    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
-    fn generated_to_lean_statement_scopes_compile_with_lean_core() {
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_statement_scopes_compile_with_lean() {
         run_with_large_stack(
-            "generated_to_lean_statement_scopes_compile_with_lean_core",
+            "generated_to_lean_statement_scopes_compile_with_lean",
             || {
-                let lean =
-                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
                 let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("examples/05_compiler_interop/to_lean_statement_scopes.lit");
                 let source = fs::read_to_string(path).unwrap();
                 let generated = to_lean_from_source(&source, "statement-scopes-kernel").unwrap();
-                let generated = generated
-                    .replacen("import Mathlib", "import Init", 1)
-                    .replace("ℝ", "Rat");
 
                 let lean_file = private_tmp_lean_file("litex_to_lean_statement_scopes");
                 fs::write(&lean_file, &generated).unwrap();
-                let output = Command::new(lean).arg(&lean_file).output();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
                 let _ = fs::remove_file(&lean_file);
                 let output = output.unwrap();
                 assert!(
@@ -5267,29 +6427,93 @@ $marked(1)
     }
 
     #[test]
-    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
-    fn generated_to_lean_choice_have_compiles_with_lean_core() {
-        run_with_large_stack(
-            "generated_to_lean_choice_have_compiles_with_lean_core",
-            || {
-                let lean =
-                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
-                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("examples/05_compiler_interop/to_lean_choice_have.lit");
-                let source = fs::read_to_string(path).unwrap();
-                let generated = to_lean_from_source(&source, "choice-have-kernel").unwrap();
-                let generated = generated
-                    .replacen("import Mathlib", "import Init", 1)
-                    .replace("ℝ", "Rat");
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_choice_have_compiles_with_lean() {
+        run_with_large_stack("generated_to_lean_choice_have_compiles_with_lean", || {
+            let project = std::env::var("LITEX_LEAN_PROJECT")
+                .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("examples/05_compiler_interop/to_lean_choice_have.lit");
+            let source = fs::read_to_string(path).unwrap();
+            let generated = to_lean_from_source(&source, "choice-have-kernel").unwrap();
 
-                let lean_file = private_tmp_lean_file("litex_to_lean_choice_have");
+            let lean_file = private_tmp_lean_file("litex_to_lean_choice_have");
+            fs::write(&lean_file, &generated).unwrap();
+            let output = Command::new(lake)
+                .args(["env", "lean"])
+                .arg(&lean_file)
+                .current_dir(project)
+                .output();
+            let _ = fs::remove_file(&lean_file);
+            let output = output.unwrap();
+            assert!(
+                output.status.success(),
+                "choice-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+                generated
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_exist_have_compiles_with_lean() {
+        run_with_large_stack("generated_to_lean_exist_have_compiles_with_lean", || {
+            let project = std::env::var("LITEX_LEAN_PROJECT")
+                .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("examples/05_compiler_interop/to_lean_exist_have.lit");
+            let source = fs::read_to_string(path).unwrap();
+            let generated = to_lean_from_source(&source, "exist-have-kernel").unwrap();
+
+            let lean_file = private_tmp_lean_file("litex_to_lean_exist_have");
+            fs::write(&lean_file, &generated).unwrap();
+            let output = Command::new(lake)
+                .args(["env", "lean"])
+                .arg(&lean_file)
+                .current_dir(project)
+                .output();
+            let _ = fs::remove_file(&lean_file);
+            let output = output.unwrap();
+            assert!(
+                output.status.success(),
+                "exist-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+                generated
+            );
+        });
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_resolved_atomic_fact_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_to_lean_resolved_atomic_fact_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_resolved_atomic_fact.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let generated = to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_resolved_atomic_fact");
                 fs::write(&lean_file, &generated).unwrap();
-                let output = Command::new(lean).arg(&lean_file).output();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
                 let _ = fs::remove_file(&lean_file);
                 let output = output.unwrap();
                 assert!(
                     output.status.success(),
-                    "choice-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    "resolved-atomic-fact generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
                     String::from_utf8_lossy(&output.stdout),
                     String::from_utf8_lossy(&output.stderr),
                     generated
@@ -5299,35 +6523,37 @@ $marked(1)
     }
 
     #[test]
-    #[ignore = "requires LITEX_LEAN pointing to a Lean 4 executable"]
-    fn generated_to_lean_exist_have_compiles_with_lean_core() {
-        run_with_large_stack(
-            "generated_to_lean_exist_have_compiles_with_lean_core",
-            || {
-                let lean =
-                    std::env::var("LITEX_LEAN").expect("set LITEX_LEAN to a Lean 4 executable");
-                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("examples/05_compiler_interop/to_lean_exist_have.lit");
-                let source = fs::read_to_string(path).unwrap();
-                let generated = to_lean_from_source(&source, "exist-have-kernel").unwrap();
-                let generated = generated
-                    .replacen("import Mathlib", "import Init", 1)
-                    .replace("ℝ", "Rat");
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_native_numeric_abi_compiles_with_lean() {
+        run_with_large_stack("generated_native_numeric_abi_compiles_with_lean", || {
+            let project = std::env::var("LITEX_LEAN_PROJECT")
+                .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+            let source = r#"
+trust forall x R:
+    x $in R
 
-                let lean_file = private_tmp_lean_file("litex_to_lean_exist_have");
-                fs::write(&lean_file, &generated).unwrap();
-                let output = Command::new(lean).arg(&lean_file).output();
-                let _ = fs::remove_file(&lean_file);
-                let output = output.unwrap();
-                assert!(
-                    output.status.success(),
-                    "exist-have generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
-                    String::from_utf8_lossy(&output.stdout),
-                    String::from_utf8_lossy(&output.stderr),
-                    generated
-                );
-            },
-        );
+trust forall z Z:
+    z / 2 $in Q
+"#;
+            let generated = to_lean_from_source(source, "native-numeric-abi-kernel").unwrap();
+            let lean_file = private_tmp_lean_file("litex_to_lean_native_numeric_abi");
+            fs::write(&lean_file, &generated).unwrap();
+            let output = Command::new(lake)
+                .args(["env", "lean"])
+                .arg(&lean_file)
+                .current_dir(project)
+                .output();
+            let _ = fs::remove_file(&lean_file);
+            let output = output.unwrap();
+            assert!(
+                output.status.success(),
+                "native numeric ABI generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                String::from_utf8_lossy(&output.stdout),
+                String::from_utf8_lossy(&output.stderr),
+                generated
+            );
+        });
     }
 
     #[test]

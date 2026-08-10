@@ -1,0 +1,348 @@
+# Twenty arithmetic and order facts whose successful verifier routes carry
+# typed builtin evidence to Lean.
+
+forall a, b R:
+    a < b
+    =>:
+        a <= b
+
+forall a, b R:
+    a > b
+    =>:
+        a >= b
+
+forall u, v R:
+    v <= u
+    =>:
+        0 <= u - v
+
+forall u, v R:
+    v < u
+    =>:
+        0 < u - v
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a + b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 < a
+    0 <= b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a * b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a * b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 <= a / b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a / b
+
+forall u, a, b R:
+    a <= b
+    =>:
+        u + a <= u + b
+
+forall a, b, c, d R:
+    a <= b
+    c <= d
+    =>:
+        a + c <= b + d
+
+forall u, a, b R:
+    a < b
+    =>:
+        u + a < u + b
+
+forall a, b, c, d R:
+    a < b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a <= b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c R:
+    a <= b
+    0 <= c
+    =>:
+        a - c <= b
+
+forall a, b R:
+    0 <= b
+    =>:
+        a <= a + b
+
+
+"""
+import Mathlib
+
+noncomputable section
+
+universe u
+
+abbrev LitexFact := Prop
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+-- Litex stored fact f13
+theorem global_fact_13 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a < b → a ≤ b := by
+  intro a proof_fact_1_1 b proof_fact_1_2 proof_fact_1_3
+  have proof_fact_1_4 : a < b := by
+    exact proof_fact_1_3
+  have proof_fact_1_5 : a ≤ b := by
+    linarith only [proof_fact_1_4]
+  exact proof_fact_1_5
+
+-- Litex stored fact f26
+theorem global_fact_26 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a > b → a ≥ b := by
+  intro a proof_fact_2_1 b proof_fact_2_2 proof_fact_2_3
+  have proof_fact_2_4 : a > b := by
+    exact proof_fact_2_3
+  have proof_fact_2_5 : a ≥ b := by
+    linarith only [proof_fact_2_4]
+  exact proof_fact_2_5
+
+-- Litex stored fact f39
+theorem global_fact_39 : ∀ u ∈ (Set.univ : Set ℝ), ∀ v ∈ (Set.univ : Set ℝ), v ≤ u → (0 : ℝ) ≤ (u - v) := by
+  intro u proof_fact_3_1 v proof_fact_3_2 proof_fact_3_3
+  have proof_fact_3_4 : v ≤ u := by
+    exact proof_fact_3_3
+  have proof_fact_3_5 : (0 : ℝ) ≤ (u - v) := by
+    linarith only [proof_fact_3_4]
+  exact proof_fact_3_5
+
+-- Litex stored fact f52
+theorem global_fact_52 : ∀ u ∈ (Set.univ : Set ℝ), ∀ v ∈ (Set.univ : Set ℝ), v < u → (0 : ℝ) < (u - v) := by
+  intro u proof_fact_4_1 v proof_fact_4_2 proof_fact_4_3
+  have proof_fact_4_4 : v < u := by
+    exact proof_fact_4_3
+  have proof_fact_4_5 : (0 : ℝ) < (u - v) := by
+    linarith only [proof_fact_4_4]
+  exact proof_fact_4_5
+
+-- Litex stored fact f68
+theorem global_fact_68 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 ≤ a → 0 ≤ b → 0 ≤ (a + b) := by
+  intro a proof_fact_5_1 b proof_fact_5_2 proof_fact_5_3 proof_fact_5_4
+  have proof_fact_5_5 : 0 ≤ a := by
+    exact proof_fact_5_3
+  have proof_fact_5_6 : 0 ≤ b := by
+    exact proof_fact_5_4
+  have proof_fact_5_7 : 0 ≤ (a + b) := by
+    linarith only [proof_fact_5_5, proof_fact_5_6]
+  exact proof_fact_5_7
+
+-- Litex stored fact f84
+theorem global_fact_84 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 < a → 0 < b → 0 < (a + b) := by
+  intro a proof_fact_6_1 b proof_fact_6_2 proof_fact_6_3 proof_fact_6_4
+  have proof_fact_6_5 : 0 < a := by
+    exact proof_fact_6_3
+  have proof_fact_6_6 : 0 < b := by
+    exact proof_fact_6_4
+  have proof_fact_6_7 : 0 < (a + b) := by
+    linarith only [proof_fact_6_5, proof_fact_6_6]
+  exact proof_fact_6_7
+
+-- Litex stored fact f100
+theorem global_fact_100 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 < a → 0 ≤ b → 0 < (a + b) := by
+  intro a proof_fact_7_1 b proof_fact_7_2 proof_fact_7_3 proof_fact_7_4
+  have proof_fact_7_5 : 0 < a := by
+    exact proof_fact_7_3
+  have proof_fact_7_6 : 0 ≤ b := by
+    exact proof_fact_7_4
+  have proof_fact_7_7 : 0 < (a + b) := by
+    linarith only [proof_fact_7_5, proof_fact_7_6]
+  exact proof_fact_7_7
+
+-- Litex stored fact f116
+theorem global_fact_116 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 ≤ a → 0 < b → 0 < (a + b) := by
+  intro a proof_fact_8_1 b proof_fact_8_2 proof_fact_8_3 proof_fact_8_4
+  have proof_fact_8_5 : 0 ≤ a := by
+    exact proof_fact_8_3
+  have proof_fact_8_6 : 0 < b := by
+    exact proof_fact_8_4
+  have proof_fact_8_7 : 0 < (a + b) := by
+    linarith only [proof_fact_8_5, proof_fact_8_6]
+  exact proof_fact_8_7
+
+-- Litex stored fact f132
+theorem global_fact_132 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 ≤ a → 0 ≤ b → 0 ≤ (a * b) := by
+  intro a proof_fact_9_1 b proof_fact_9_2 proof_fact_9_3 proof_fact_9_4
+  have proof_fact_9_5 : 0 ≤ a := by
+    exact proof_fact_9_3
+  have proof_fact_9_6 : 0 ≤ b := by
+    exact proof_fact_9_4
+  have proof_fact_9_7 : 0 ≤ (a * b) := by
+    exact mul_nonneg proof_fact_9_5 proof_fact_9_6
+  exact proof_fact_9_7
+
+-- Litex stored fact f148
+theorem global_fact_148 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 < a → 0 < b → 0 < (a * b) := by
+  intro a proof_fact_10_1 b proof_fact_10_2 proof_fact_10_3 proof_fact_10_4
+  have proof_fact_10_5 : 0 < a := by
+    exact proof_fact_10_3
+  have proof_fact_10_6 : 0 < b := by
+    exact proof_fact_10_4
+  have proof_fact_10_7 : 0 < (a * b) := by
+    exact mul_pos proof_fact_10_5 proof_fact_10_6
+  exact proof_fact_10_7
+
+-- Litex stored fact f164
+theorem global_fact_164 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 ≤ a → 0 < b → 0 ≤ (a / b) := by
+  intro a proof_fact_11_1 b proof_fact_11_2 proof_fact_11_3 proof_fact_11_4
+  have proof_fact_11_5 : 0 ≤ a := by
+    exact proof_fact_11_3
+  have proof_fact_11_6 : 0 < b := by
+    exact proof_fact_11_4
+  have proof_fact_11_7 : 0 ≤ (a / b) := by
+    exact div_nonneg proof_fact_11_5 (le_of_lt proof_fact_11_6)
+  exact proof_fact_11_7
+
+-- Litex stored fact f180
+theorem global_fact_180 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), 0 < a → 0 < b → 0 < (a / b) := by
+  intro a proof_fact_12_1 b proof_fact_12_2 proof_fact_12_3 proof_fact_12_4
+  have proof_fact_12_5 : 0 < a := by
+    exact proof_fact_12_3
+  have proof_fact_12_6 : 0 < b := by
+    exact proof_fact_12_4
+  have proof_fact_12_7 : 0 < (a / b) := by
+    exact div_pos proof_fact_12_5 proof_fact_12_6
+  exact proof_fact_12_7
+
+-- Litex stored fact f196
+theorem global_fact_196 : ∀ u ∈ (Set.univ : Set ℝ), ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a ≤ b → (u + a) ≤ (u + b) := by
+  intro u proof_fact_13_1 a proof_fact_13_2 b proof_fact_13_3 proof_fact_13_4
+  have proof_fact_13_5 : a ≤ b := by
+    exact proof_fact_13_4
+  have proof_fact_13_6 : (u + a) ≤ (u + b) := by
+    linarith only [proof_fact_13_5]
+  exact proof_fact_13_6
+
+-- Litex stored fact f218
+theorem global_fact_218 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ c ∈ (Set.univ : Set ℝ), ∀ d ∈ (Set.univ : Set ℝ), a ≤ b → c ≤ d → (a + c) ≤ (b + d) := by
+  intro a proof_fact_14_1 b proof_fact_14_2 c proof_fact_14_3 d proof_fact_14_4 proof_fact_14_5 proof_fact_14_6
+  have proof_fact_14_7 : a ≤ b := by
+    exact proof_fact_14_5
+  have proof_fact_14_8 : c ≤ d := by
+    exact proof_fact_14_6
+  have proof_fact_14_9 : (a + c) ≤ (b + d) := by
+    linarith only [proof_fact_14_7, proof_fact_14_8]
+  exact proof_fact_14_9
+
+-- Litex stored fact f234
+theorem global_fact_234 : ∀ u ∈ (Set.univ : Set ℝ), ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a < b → (u + a) < (u + b) := by
+  intro u proof_fact_15_1 a proof_fact_15_2 b proof_fact_15_3 proof_fact_15_4
+  have proof_fact_15_5 : a < b := by
+    exact proof_fact_15_4
+  have proof_fact_15_6 : (u + a) < (u + b) := by
+    linarith only [proof_fact_15_5]
+  exact proof_fact_15_6
+
+-- Litex stored fact f256
+theorem global_fact_256 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ c ∈ (Set.univ : Set ℝ), ∀ d ∈ (Set.univ : Set ℝ), a < b → c < d → (a + c) < (b + d) := by
+  intro a proof_fact_16_1 b proof_fact_16_2 c proof_fact_16_3 d proof_fact_16_4 proof_fact_16_5 proof_fact_16_6
+  have proof_fact_16_7 : a < b := by
+    exact proof_fact_16_5
+  have proof_fact_16_8 : c < d := by
+    exact proof_fact_16_6
+  have proof_fact_16_9 : (a + c) < (b + d) := by
+    linarith only [proof_fact_16_7, proof_fact_16_8]
+  exact proof_fact_16_9
+
+-- Litex stored fact f278
+theorem global_fact_278 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ c ∈ (Set.univ : Set ℝ), ∀ d ∈ (Set.univ : Set ℝ), a < b → c ≤ d → (a + c) < (b + d) := by
+  intro a proof_fact_17_1 b proof_fact_17_2 c proof_fact_17_3 d proof_fact_17_4 proof_fact_17_5 proof_fact_17_6
+  have proof_fact_17_7 : a < b := by
+    exact proof_fact_17_5
+  have proof_fact_17_8 : c ≤ d := by
+    exact proof_fact_17_6
+  have proof_fact_17_9 : (a + c) < (b + d) := by
+    linarith only [proof_fact_17_7, proof_fact_17_8]
+  exact proof_fact_17_9
+
+-- Litex stored fact f300
+theorem global_fact_300 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ c ∈ (Set.univ : Set ℝ), ∀ d ∈ (Set.univ : Set ℝ), a ≤ b → c < d → (a + c) < (b + d) := by
+  intro a proof_fact_18_1 b proof_fact_18_2 c proof_fact_18_3 d proof_fact_18_4 proof_fact_18_5 proof_fact_18_6
+  have proof_fact_18_7 : a ≤ b := by
+    exact proof_fact_18_5
+  have proof_fact_18_8 : c < d := by
+    exact proof_fact_18_6
+  have proof_fact_18_9 : (a + c) < (b + d) := by
+    linarith only [proof_fact_18_7, proof_fact_18_8]
+  exact proof_fact_18_9
+
+-- Litex stored fact f319
+theorem global_fact_319 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), ∀ c ∈ (Set.univ : Set ℝ), a ≤ b → (0 : ℝ) ≤ c → (a - c) ≤ b := by
+  intro a proof_fact_19_1 b proof_fact_19_2 c proof_fact_19_3 proof_fact_19_4 proof_fact_19_5
+  have proof_fact_19_6 : a ≤ b := by
+    exact proof_fact_19_4
+  have proof_fact_19_7 : (0 : ℝ) ≤ c := by
+    exact proof_fact_19_5
+  have proof_fact_19_8 : (a - c) ≤ b := by
+    linarith only [proof_fact_19_6, proof_fact_19_7]
+  exact proof_fact_19_8
+
+-- Litex stored fact f332
+theorem global_fact_332 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), (0 : ℝ) ≤ b → a ≤ (a + b) := by
+  intro a proof_fact_20_1 b proof_fact_20_2 proof_fact_20_3
+  have proof_fact_20_4 : (0 : ℝ) ≤ b := by
+    exact proof_fact_20_3
+  have proof_fact_20_5 : a ≤ (a + b) := by
+    linarith only [proof_fact_20_4]
+  exact proof_fact_20_5
+
+end
+"""

@@ -1,21 +1,21 @@
-# Tracer: uniform numeric Obj semantics for To-Lean.
-#
-# Rejected design:
-#   z Z -> a native Lean integer binder
-#   z / 2 -> (z : Q) / (2 : Q)
-# That changes one Litex Obj into several carrier-specific target terms.
+# Tracer: native Mathlib carriers with uniform Litex Obj identity.
 #
 # Selected ABI:
-#   symbols and numerals keep one structural spelling;
-#   z / 2 -> z / 2;
-#   Z and Q remain standard-set membership facts about those objects.
+#   N/Z/Q/R/C become Set.univ over Mathlib's native carriers;
+#   a domain binder becomes a bounded quantifier and keeps its membership fact;
+#   symbols and numerals retain their structural source spelling;
+#   target coercions occur only at checked judgment boundaries.
+
+# A closed numeral remains bare; R supplies the native target carrier.
+2 $in R
 
 # The same `n + 1` object can have several proved memberships.
 forall n N:
     n + 1 $in N
     n + 1 $in Z
 
-# Neither membership changes the spelling of `z - 1` or `z / 2`.
+# Neither membership changes the source identity of `z - 1` or `z / 2`.
+# The Q judgment requires a contextual canonical coercion from Z to Q in Lean.
 forall z Z:
     z - 1 $in Z
     z / 2 $in Q
@@ -34,8 +34,8 @@ forall n N+:
 #     n - 1 $in N
 #
 # That statement is rejected by Litex. A backend must preserve this boundary
-# through LitexObj subtraction laws rather than assigning `n` a temporary
-# native type or changing the canonical `n - 1` object.
+# through the verified natural-domain premise; the target must not silently
+# reinterpret the unguarded statement as truncated Nat subtraction.
 #
 # Source gate:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_numeric_obj_abi.lit

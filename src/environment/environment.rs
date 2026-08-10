@@ -98,8 +98,10 @@ pub enum KnownObjValue {
 
 impl Environment {
     /// Remove declarations and proof-control state from a temporary
-    /// well-definedness environment while retaining only directly checked
-    /// atomic consequences and reusable verification caches.
+    /// well-definedness environment while retaining directly checked atomic
+    /// consequences, the universal atomic rules created while materializing
+    /// their objects, and reusable verification caches. A cached template
+    /// application is not replay-safe without those materialized equations.
     pub fn retain_only_well_definedness_certificate_data(&mut self) {
         self.symbols = SymbolTable::new();
         self.defined_identifiers.clear();
@@ -114,8 +116,6 @@ impl Environment {
         self.known_equality = KnownEquality::new();
         self.known_exist_facts.clear();
         self.known_or_facts.clear();
-        self.known_atomic_facts_in_forall_facts.clear();
-        self.known_atomic_facts_in_forall_facts_by_arg_shape.clear();
         self.known_exist_facts_in_forall_facts.clear();
         self.known_and_facts_in_forall_facts.clear();
         self.known_or_facts_in_forall_facts.clear();

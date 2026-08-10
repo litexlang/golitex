@@ -11,12 +11,14 @@ use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use std::fmt;
 
 mod builtin_rule;
+mod carrier;
 mod obj;
 
 pub use builtin_rule::{
     ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR, DivNotEqualZeroToLeanIR,
     NonzeroExpressionOrientationToLeanIR,
 };
+pub use carrier::LeanCarrierToLeanIR;
 pub use obj::{
     BuiltinObjOperatorToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, ObjToLeanIR,
     StandardSetToLeanIR,
@@ -110,18 +112,28 @@ pub struct ProofStmtToLeanIR {
 
 #[derive(Clone, Debug)]
 pub struct ParamGroupToLeanIR {
+    pub symbol_ids: Vec<crate::symbol::SymbolId>,
     pub names: Vec<String>,
     pub param_type: ParamTypeToLeanIR,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ParamTypeToLeanIR {
-    /// A binder ranging over the one object carrier with no extra premise.
-    LitexSet,
-    /// A binder over `LitexSet` plus an explicit membership proposition.
-    MemberOf(ObjToLeanIR),
-    LitexNonemptySet,
-    LitexFiniteSet,
+    /// A native Lean set whose element carrier is retained explicitly.
+    Set {
+        element_carrier: LeanCarrierToLeanIR,
+    },
+    /// A binder plus the source membership proposition that constrains it.
+    MemberOf {
+        set: ObjToLeanIR,
+        element_carrier: LeanCarrierToLeanIR,
+    },
+    NonemptySet {
+        element_carrier: LeanCarrierToLeanIR,
+    },
+    FiniteSet {
+        element_carrier: LeanCarrierToLeanIR,
+    },
     Unsupported(String),
 }
 
@@ -416,8 +428,8 @@ impl fmt::Debug for ProofRuleToLeanIR {
 pub struct KnownForallArgumentToLeanIR {
     pub param: String,
     pub argument: Obj,
-    /// Every supported variant has Lean binder type `LitexSet`; this value
-    /// records any separate membership or set-property requirement.
+    /// Records both the native Lean binder carrier and any separate membership
+    /// or set-property requirement retained from Litex.
     pub param_type: ParamTypeToLeanIR,
 }
 

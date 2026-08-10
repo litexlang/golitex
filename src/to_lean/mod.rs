@@ -1,9 +1,12 @@
 //! Litex-to-Lean bridge driven by verifier-produced To-Lean IR.
 
 mod compilation_report;
+#[cfg(test)]
+mod examples_repository_tests;
 mod rational_expression;
 mod set_prelude;
 mod to_lean_pipeline;
+mod type_context;
 
 pub use compilation_report::{
     ToLeanCompilationReport, ToLeanCompilationStatus, ToLeanUnsupported, ToLeanUnsupportedPhase,
