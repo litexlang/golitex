@@ -9,56 +9,6 @@ theorem algebra_abs_mul
     (_hyR : y ∈ (Set.univ : Set ℝ)) : |x * y| = |x| * |y| := by
   exact abs_mul x y
 
-theorem carrier_c_nonzero_in_c
-    (x : ℂ)
-    (_hx : x ∈ {c : ℂ | c ≠ 0}) : x ∈ (Set.univ : Set ℂ) := by
-  exact Set.mem_univ x
-
-theorem carrier_n_pos_in_n
-    (x : ℕ)
-    (_hx : x ∈ {n : ℕ | 0 < n}) : x ∈ (Set.univ : Set ℕ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_neg_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | q < 0}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_nonzero_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | q ≠ 0}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_pos_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | 0 < q}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_neg_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | r < 0}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_nonzero_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | r ≠ 0}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_pos_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | 0 < r}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_z_neg_in_z
-    (x : ℤ)
-    (_hx : x ∈ {z : ℤ | z < 0}) : x ∈ (Set.univ : Set ℤ) := by
-  exact Set.mem_univ x
-
-theorem carrier_z_nonzero_in_z
-    (x : ℤ)
-    (_hx : x ∈ {z : ℤ | z ≠ 0}) : x ∈ (Set.univ : Set ℤ) := by
-  exact Set.mem_univ x
-
 theorem nonzero_div
     (a b : ℝ)
     (_haR : a ∈ (Set.univ : Set ℝ))

@@ -106,13 +106,14 @@ A fact contains its proposition, optional stored `FactId`, and a recursive
 one general `RuleApplication { rule, parameter_requirements, premises }` node,
 so a new transport method extends `ProofRuleToLeanIR` without changing the
 recursive proof-tree shape. The first rule vocabulary contains equality and
-iff rewrite, definition reduction, normalization, known-forall instantiation,
+iff rewrite, definition reduction, checked definition projection,
+normalization, known-forall instantiation,
 modus ponens, conjunction/existential introduction, case split, and an explicit
 unsupported rule. Only equality rewrite, definition reduction, the supported
 normalization slice, known-forall instantiation, and the structured quotient-
 nonzero, not-equality symmetry, subset/superset duality, closed-u64 prime
-reflection, and 96 registered local schemas—including 20 elementary real
-arithmetic/order rules and ten same-carrier refined-domain projections—currently
+reflection, standard numeric-set membership projection, and 86 registered
+local schemas—including 20 elementary real arithmetic/order rules—currently
 have Lean backends. Positive existential
 introduction is also checked
 from its retained witness, parameter requirements, local proof steps, and
@@ -172,6 +173,15 @@ local witnesses are `let`s. Type and body facts come only from the matching
 fresh binder IDs use an explicit alpha-renaming citation node admitted only
 after the verifier's canonical existential comparison succeeds. No trust,
 opaque declaration, compiler-created axiom, or `sorry` supplies a witness.
+When the source syntax is `obtain w from $P(args)`, the verifier retains a
+`DefinitionProjectionBuiltinRuleEvidence` containing the positive prop call
+and its concrete definition. Runtime lowering re-instantiates the definition,
+requires its sole clause to be the exact positive existential target, and
+requires one recursive proof of `$P(args)`. The resulting
+`DefinitionProjection` proof IR freezes both expected propositions. The pure
+emitter checks those fields and emits `simpa only [P] using source`; Lean then
+kernel-checks the definition unfolding before the normal `Exists.choose` and
+`choose_spec` path runs. No diagnostic label is used as compiler evidence.
 Before rendering an `exist` or `forall`, the emitter also compares binder and
 occurrence `SymbolId`s after Lean-name sanitization. If distinct Litex names
 would collapse to one Lean identifier and capture each other, compilation
@@ -210,24 +220,26 @@ recursive, tuple, sequence, and matrix forms remain separate boundaries. Other
 case/contradiction nodes. Binder-owning goals and unsupported local statement
 kinds also make the whole source statement incomplete transactionally.
 
-The next implementation order is: theorem/definition proof wrappers;
-function-object and evaluation evidence; function-range preimage extraction;
-then induction, finite enumeration, extension, and the remaining specialized
-`by` commands. Replacement preimages need their analogous relation-witness
-package. This order keeps object creation, temporary premises, and proof exits
-explicit before adding larger proof families.
+The active implementation order is: native bound function spaces,
+applications, and well-definedness certificates; then function-object
+declaration/evaluation evidence; theorem/definition proof wrappers;
+function-range preimage extraction; then induction, finite enumeration,
+extension, and the remaining specialized `by` commands. Replacement preimages
+need their analogous relation-witness package. This order keeps object
+creation, temporary premises, and proof exits explicit before adding larger
+proof families.
 
 ### Structured builtin-rule return path
 
 The source-derived coverage ledger is
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md). Its generator follows
 label arguments through forwarding helpers rather than counting only raw
-constructors: 465 direct success-constructor calls currently expand to 658
+constructors: 466 direct success-constructor calls currently expand to 659
 label-bearing rule/strategy sites, including 558 distinct static labels. Each
 row records its Rust source, family, checked Lean mapping, and delivery status;
-evaluation/computation-like sites are classified separately. Forty-seven
+evaluation/computation-like sites are classified separately. Forty-eight
 source sites currently have a checked mapping. One generic source site
-represents the 96 paired local RuleIds described below, so source-site and
+represents the 86 paired local RuleIds described below, so source-site and
 catalog-entry counts are intentionally distinct.
 
 Ordinary fixed-pattern local rules use a generated paired catalog. A rule has
@@ -411,8 +423,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -431,9 +441,11 @@ end
 end chapter01_introduction
 ```
 
-The marker records the source invariant that supported values are Litex
-objects; it is not a universal value wrapper. Standard domains use Mathlib's
-native carriers and are rendered inline as `Set.univ`. A numeral remains bare,
+Generated proposition declarations use Lean's `Prop` directly; no fact wrapper
+or alias is emitted. The object marker records the source invariant that
+supported values are Litex objects; it is not a universal value wrapper.
+Standard domains use Mathlib's native carriers and are rendered inline as
+`Set.univ`. A numeral remains bare,
 as in `2 ∈ (Set.univ : Set ℝ)` or the unconstrained reflexivity `2 = 2`.
 Compact standard subsets lower to native predicate sets on the same carriers:
 `R+` becomes `{r : ℝ | 0 < r}`, `R-` becomes `{r : ℝ | r < 0}`, and
@@ -449,6 +461,13 @@ underconstrained division judgment fails closed. When a fixed integer
 expression is judged to belong to `Q`, the emitter gives the whole expression a rational expectation,
 as in `(z / 2 : ℚ)`, so Lean inserts its canonical coercion without changing
 the structural `ObjToLeanIR` spelling.
+Known membership in one standard numeric set may be projected through the
+centralized Litex hierarchy by one structured certificate. Its single child is
+the exact source membership, and the emitter validates the source set, target
+set, object identity, and permitted relation before inserting any native Lean
+coercion. This covers same-carrier refinement erasure and supported widening
+through `N`, `Z`, `Q`, `R`, and `C`; it does not define the separate direct
+proposition `N $subset Z`.
 
 Builtin propositions keep their native logical shape. `A $superset B` is
 `B ⊆ A`; positive proper subset is `(A ⊆ B) ∧ A ≠ B`; its Litex negation is
@@ -535,10 +554,21 @@ The current lowering is intentionally small:
   terms and discharges them with `norm_num`, `ring`, or `field_simp` followed
   by `ring`;
 - context-free object lowering preserves symbols, bare normalized numerals,
-  standard sets, scalar applications, and the simple set constructors
+  standard sets, scalar applications, native bound function sets and exact
+  function-application layers, and the simple set constructors
   `union`, `intersect`, `set_minus`, `big_union`, `big_intersect`,
   `power_set`, and list sets;
 - binder-owning `SetBuilder` remains an explicit IR-construction boundary.
+
+The native function ABI preserves a source `fn(...)` as `Set.univ` over a
+dependent Lean function type. Within each Litex application layer all value
+arguments precede the layer's domain-proof arguments; a nested returned
+function begins the next layer. This target currying does not make additional
+Litex spellings legal. The verifier freezes every successful WD proof in a
+statement-local certificate. Target-consumed requirements are inserted as
+function arguments, while source-only obligations are still emitted as checked
+audit facts. The emitter never substitutes `by assumption` or reruns proof
+search for a missing certificate.
 
 Unsupported proof rules, propositions, objects, parameter types, composite
 proofs, and inference origins stop strict compilation with an error. Report
@@ -594,12 +624,11 @@ Rust regressions also cover the reversed legacy orientation, malformed arity,
 unknown RuleId, stale fingerprint, and unresolved-zero-alias boundary.
 
 [`examples/05_compiler_interop/to_lean_local_builtin_catalog.lit`](../../examples/05_compiler_interop/to_lean_local_builtin_catalog.lit)
-is the full paired-catalog acceptance tracer. It exercises all 96 current
+is the full paired-catalog acceptance tracer. It exercises all 86 current
 RuleIds, including dependent set-member carriers, elementary subset laws,
 native set finiteness/nonemptiness, min/max lattice laws, nonzero
 multiplication, strict-to-weak order, arithmetic sign/monotonicity rules,
-same-carrier refined-domain membership projections, and signed numerals, and
-its complete generated module is
+and signed numerals; its complete generated module is
 compiled by a real Mathlib/Lean kernel gate.
 
 [`examples/01_proof_patterns/not_equal_symmetry.lit`](../../examples/01_proof_patterns/not_equal_symmetry.lit)

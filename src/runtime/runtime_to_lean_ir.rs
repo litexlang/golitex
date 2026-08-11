@@ -50,6 +50,8 @@ impl Runtime {
             return Ok(StmtToLeanIR::Fact(FactStmtToLeanIR {
                 fact,
                 inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &excluded)?,
+                well_definedness: self
+                    .well_definedness_certificate_to_lean_ir(&success.well_definedness)?,
             }));
         }
 
@@ -91,7 +93,6 @@ impl Runtime {
                 .have_existential_witness_to_lean_ir(
                     &stmt.equal_to_bindings,
                     &stmt.exist_fact_in_have_obj_st,
-                    stmt.existential_prop_source.as_ref(),
                     &stmt.line_file,
                     success,
                 ),
@@ -104,7 +105,6 @@ impl Runtime {
                 self.have_existential_witness_to_lean_ir(
                     &stmt.param_def.collect_param_bindings(),
                     &ExistFactEnum::ExistFact(body),
-                    None,
                     &stmt.line_file,
                     success,
                 )
@@ -359,16 +359,9 @@ impl Runtime {
         &self,
         bindings: &[SymbolBinding],
         exist_fact: &ExistFactEnum,
-        existential_prop_source: Option<&ExistentialPropSource>,
         line_file: &LineFile,
         success: &NonFactualStmtSuccess,
     ) -> Result<StmtToLeanIR, RuntimeError> {
-        if existential_prop_source.is_some() {
-            return Err(to_lean_ir_error(
-                line_file,
-                "the current To-Lean elimination tranche does not yet lower `obtain ... from $prop(args)`; spell out the expanded `exist` source",
-            ));
-        }
         let Some(verification) = success.existential_elimination_verification.as_ref() else {
             return Err(to_lean_ir_error(
                 line_file,
@@ -409,22 +402,33 @@ impl Runtime {
             ));
         }
 
-        let source_proposition: Fact = exist_fact.clone().into();
-        ensure_fact_objects_lower_to_lean_ir(&source_proposition)?;
         let mut source = self.fact_to_lean_ir_from_result(
             &success.inside_results[verification.source_result_index],
             "existential elimination source proof",
             &ToLeanIrContext::default(),
         )?;
-        if source.proposition.to_string() != source_proposition.to_string() {
+        let source_proposition = source.proposition.clone();
+        let Fact::ExistFact(source_exist_fact) = &source_proposition else {
+            return Err(to_lean_ir_error(
+                line_file,
+                "existential elimination source proof does not certify an `exist` fact",
+            ));
+        };
+        if !source_exist_fact.is_plain_exist()
+            || Runtime::exist_fact_normalized_body_string(self, source_exist_fact)?
+                != Runtime::exist_fact_normalized_body_string(self, exist_fact)?
+        {
             return Err(to_lean_ir_error(
                 line_file,
                 format!(
                     "existential elimination source `{}` does not certify `{}`",
-                    source.proposition, source_proposition
+                    source.proposition,
+                    Fact::from(exist_fact.clone())
                 ),
             ));
         }
+        let source_exist_fact = source_exist_fact.clone();
+        ensure_fact_objects_lower_to_lean_ir(&source_proposition)?;
         source.fact_id = None;
 
         let witness_objs = bindings
@@ -434,11 +438,11 @@ impl Runtime {
             })
             .collect::<Vec<Obj>>();
         let instantiated_types = self.inst_param_def_with_type_one_by_one(
-            exist_fact.params_def_with_type(),
+            source_exist_fact.params_def_with_type(),
             &witness_objs,
             ParamObjType::Exist,
         )?;
-        let flat_types = exist_fact
+        let flat_types = source_exist_fact
             .params_def_with_type()
             .flat_instantiated_types_for_args(&instantiated_types);
         let mut witnesses = Vec::with_capacity(bindings.len());
@@ -494,10 +498,10 @@ impl Runtime {
             });
         }
 
-        let param_to_obj_map = exist_fact
+        let param_to_obj_map = source_exist_fact
             .params_def_with_type()
             .param_defs_and_args_to_param_to_arg_map(&witness_objs);
-        for (body_index, (body, expected)) in exist_fact
+        for (body_index, (body, expected)) in source_exist_fact
             .facts()
             .iter()
             .zip(verification.instantiated_body_facts.iter())
@@ -1257,7 +1261,31 @@ impl Runtime {
             source: source.proposition,
             facts,
             inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &excluded)?,
+            well_definedness: self
+                .well_definedness_certificate_to_lean_ir(&success.well_definedness)?,
         }))
+    }
+
+    fn well_definedness_certificate_to_lean_ir(
+        &self,
+        certificate: &WellDefinednessCertificate,
+    ) -> Result<WellDefinednessCertificateToLeanIR, RuntimeError> {
+        let mut facts = Vec::with_capacity(certificate.facts.len());
+        for evidence in certificate.facts.iter() {
+            let fact = self.fact_to_lean_ir_from_success(evidence.proof.as_ref())?;
+            if fact.proposition.to_string() != evidence.proof.stmt.to_string() {
+                return Err(to_lean_ir_error(
+                    &evidence.proof.stmt.line_file(),
+                    "well-definedness certificate proof changed its proposition during IR lowering",
+                ));
+            }
+            facts.push(WellDefinednessFactToLeanIR {
+                certificate_id: evidence.certificate_id,
+                role: evidence.role,
+                fact,
+            });
+        }
+        Ok(WellDefinednessCertificateToLeanIR { facts })
     }
 
     fn fact_to_lean_ir_from_success_with_context(
@@ -1857,6 +1885,11 @@ impl Runtime {
         subgoals: &[StmtResult],
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
+        if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = evidence {
+            return self.definition_projection_builtin_application_to_lean_ir(
+                goal, evidence, subgoals, context,
+            );
+        }
         if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = evidence {
             return self.registered_local_builtin_application_to_lean_ir(
                 goal, evidence, subgoals, context,
@@ -1877,6 +1910,72 @@ impl Runtime {
             rule,
             parameter_requirements: Vec::new(),
             premises: self.subgoals_to_lean_ir(subgoals, context)?,
+        })
+    }
+
+    fn definition_projection_builtin_application_to_lean_ir(
+        &self,
+        goal: &Fact,
+        evidence: &DefinitionProjectionBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+        context: &ToLeanIrContext,
+    ) -> Result<FactProofToLeanIR, RuntimeError> {
+        let Fact::ExistFact(goal_existential) = goal else {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "definition-projection evidence requires an existential target",
+            ));
+        };
+        if !goal_existential.is_plain_exist() {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "definition-projection evidence currently requires a positive `exist` target",
+            ));
+        }
+        if subgoals.len() != 1 {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "definition-projection evidence must retain exactly one source proof",
+            ));
+        }
+
+        let reconstructed =
+            self.instantiate_existential_prop_definition(&evidence.source, &goal.line_file())?;
+        if !reconstructed.is_plain_exist()
+            || Runtime::exist_fact_normalized_body_string(self, &reconstructed)?
+                != Runtime::exist_fact_normalized_body_string(self, goal_existential)?
+        {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                format!(
+                    "definition `{}` does not unfold source `{}` to target `{}`",
+                    evidence.source.definition.name, evidence.source.fact, goal
+                ),
+            ));
+        }
+
+        let expected_source: Fact = evidence.source.fact.clone().into();
+        ensure_fact_objects_lower_to_lean_ir(&expected_source)?;
+        ensure_fact_objects_lower_to_lean_ir(goal)?;
+        let premises = self.subgoals_to_lean_ir(subgoals, context)?;
+        if premises[0].proposition.to_string() != expected_source.to_string() {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                format!(
+                    "definition-projection source proof `{}` does not certify `{}`",
+                    premises[0].proposition, expected_source
+                ),
+            ));
+        }
+
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule: ProofRuleToLeanIR::DefinitionProjection {
+                definition: evidence.source.definition.name.clone(),
+                expected_source,
+                expected_target: goal.clone(),
+            },
+            parameter_requirements: Vec::new(),
+            premises,
         })
     }
 

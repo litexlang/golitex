@@ -143,7 +143,7 @@ impl Runtime {
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
             (&subset_fact.left, &subset_fact.right)
         {
-            if Self::standard_set_is_subset_eq(left, right) {
+            if left.is_subset_eq(right) {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         subset_fact.clone().into(),
@@ -169,7 +169,7 @@ impl Runtime {
             let range_carrier_requirement = match target {
                 StandardSet::N => Some(Some(StandardSet::N)),
                 StandardSet::NPos => Some(Some(StandardSet::NPos)),
-                _ if Self::standard_set_is_subset_eq(&StandardSet::Z, target) => Some(None),
+                _ if StandardSet::Z.is_subset_eq(target) => Some(None),
                 _ => None,
             };
             if let Some(required_start_set) = range_carrier_requirement {
@@ -298,7 +298,7 @@ impl Runtime {
         if let (Obj::StandardSet(left), Obj::StandardSet(right)) =
             (&superset_fact.left, &superset_fact.right)
         {
-            if Self::standard_set_is_subset_eq(right, left) {
+            if right.is_subset_eq(left) {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         superset_fact.clone().into(),

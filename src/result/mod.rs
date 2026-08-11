@@ -12,12 +12,14 @@ mod runtime_result;
 mod runtime_success;
 mod runtime_unknown;
 mod unsafe_stmt_result;
+mod well_definedness_certificate;
 mod witness_stmt_result;
 
 pub use builtin_rule_evidence::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    DivNotEqualZeroBuiltinRuleEvidence, NonzeroExpressionOrientation,
-    RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    DefinitionProjectionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
+    NonzeroExpressionOrientation, RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule,
+    SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;
@@ -52,4 +54,8 @@ pub use runtime_success::{
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;
+pub use well_definedness_certificate::{
+    WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
+    WellDefinednessRequirementRole,
+};
 pub use witness_stmt_result::WitnessStmtResult;

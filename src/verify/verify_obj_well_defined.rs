@@ -32,9 +32,10 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
-        if self
-            .verify_obj_well_defined_from_cache_if_known(obj)
-            .is_some()
+        if !self.captures_to_lean_well_definedness()
+            && self
+                .verify_obj_well_defined_from_cache_if_known(obj)
+                .is_some()
         {
             return Ok(());
         }
@@ -46,6 +47,10 @@ impl Runtime {
             return Ok(());
         }
 
+        let captures_evidence = self.captures_to_lean_well_definedness();
+        if captures_evidence {
+            self.well_definedness_capture_depth += 1;
+        }
         let result = match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => {
                 self.verify_identifier_well_defined(identifier)
@@ -179,6 +184,10 @@ impl Runtime {
             Obj::Atom(AtomObj::CartIndex(_)) => Ok(()),
         };
 
+        if captures_evidence {
+            self.well_definedness_capture_depth =
+                self.well_definedness_capture_depth.saturating_sub(1);
+        }
         self.active_well_defined_objects.remove(&active_key);
         result?;
 

@@ -88,9 +88,7 @@ impl Runtime {
         )
         .into();
         let verify_subset_result = match (&*set_builder.param_set, base_set) {
-            (Obj::StandardSet(left), Obj::StandardSet(right))
-                if Self::standard_set_is_subset_eq(left, right) =>
-            {
+            (Obj::StandardSet(left), Obj::StandardSet(right)) if left.is_subset_eq(right) => {
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     subset_fact.clone().into(),
                     "standard_set_subset".to_string(),
@@ -490,7 +488,7 @@ impl Runtime {
             let Obj::StandardSet(source_set) = &source_set_obj else {
                 continue;
             };
-            if !Self::standard_set_is_subset_eq(source_set, target_set) {
+            if !source_set.is_subset_eq(target_set) {
                 continue;
             }
             let source_membership: AtomicFact = InFact::new(
@@ -503,12 +501,13 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
             if source_result.is_true() {
                 return Ok(
-                    (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
                             in_fact.element, source_set_obj, in_fact.set
                         ),
+                        BuiltinRuleEvidence::StandardSetMembershipProjection,
                         vec![source_result],
                     ))
                     .into(),

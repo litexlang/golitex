@@ -282,6 +282,7 @@ pub use crate::result::CommandStmtResult;
 pub use crate::result::DefInterfaceStmtResult;
 pub use crate::result::DefObjStmtResult;
 pub use crate::result::DefPredicateStmtResult;
+pub use crate::result::DefinitionProjectionBuiltinRuleEvidence;
 pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
@@ -327,6 +328,8 @@ pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
     RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
+    WellDefinednessRequirementRole,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
@@ -440,13 +443,15 @@ pub use crate::to_lean_ir::{
     CollectionObjToLeanIR, ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
     EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
     ExistentialProjectionRoleToLeanIR, ExistentialWitnessToLeanIR, FactProofToLeanIR,
-    FactStmtToLeanIR, FactToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
+    FactStmtToLeanIR, FactToLeanIR, FunctionApplicationToLeanIR, FunctionParameterToLeanIR,
+    FunctionTypeToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
     HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LeanCarrierToLeanIR,
     LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR,
     ObjToLeanIR, ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR,
     ParamTypeToLeanIR, ProjectedForallToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR,
     SetBuiltinRuleToLeanIR, SetRelationDualityBuiltinRuleToLeanIR, StandardSetToLeanIR,
-    StmtToLeanIR, TrustToLeanIR,
+    StmtToLeanIR, TrustToLeanIR, WellDefinednessCertificateToLeanIR,
+    WellDefinednessFactToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;
@@ -505,21 +510,11 @@ pub use crate::common::keywords::CLEAR;
 pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;
-pub use crate::common::keywords::COMPACT_C_STAR;
-pub use crate::common::keywords::COMPACT_N_POS;
-pub use crate::common::keywords::COMPACT_Q_NEG;
-pub use crate::common::keywords::COMPACT_Q_POS;
-pub use crate::common::keywords::COMPACT_Q_STAR;
-pub use crate::common::keywords::COMPACT_R_NEG;
-pub use crate::common::keywords::COMPACT_R_POS;
-pub use crate::common::keywords::COMPACT_R_STAR;
-pub use crate::common::keywords::COMPACT_Z_NEG;
-pub use crate::common::keywords::COMPACT_Z_POS;
-pub use crate::common::keywords::COMPACT_Z_STAR;
 pub use crate::common::keywords::CONTRA;
 pub use crate::common::keywords::COS;
 pub use crate::common::keywords::COT;
 pub use crate::common::keywords::C_ABS;
+pub use crate::common::keywords::C_NOT_ZERO;
 pub use crate::common::keywords::DEF;
 pub use crate::common::keywords::DIV;
 pub use crate::common::keywords::DOT_AKA_FIELD_ACCESS_SIGN;
@@ -597,6 +592,7 @@ pub use crate::common::keywords::N;
 pub use crate::common::keywords::NONEMPTY_SET;
 pub use crate::common::keywords::NOT;
 pub use crate::common::keywords::NOT_EQUAL;
+pub use crate::common::keywords::N_POSITIVE;
 pub use crate::common::keywords::OBTAIN;
 pub use crate::common::keywords::OR;
 pub use crate::common::keywords::PI;
@@ -611,6 +607,9 @@ pub use crate::common::keywords::PROPER_SUBSET;
 pub use crate::common::keywords::PROPER_SUPERSET;
 pub use crate::common::keywords::Q;
 pub use crate::common::keywords::QUESTION_GOAL;
+pub use crate::common::keywords::Q_NEGATIVE;
+pub use crate::common::keywords::Q_NOT_ZERO;
+pub use crate::common::keywords::Q_POSITIVE;
 pub use crate::common::keywords::R;
 pub use crate::common::keywords::RANGE;
 pub use crate::common::keywords::RE;
@@ -622,6 +621,9 @@ pub use crate::common::keywords::RIGHT_ARROW;
 pub use crate::common::keywords::RIGHT_BRACE;
 pub use crate::common::keywords::RIGHT_BRACKET;
 pub use crate::common::keywords::RIGHT_CURLY_BRACE;
+pub use crate::common::keywords::R_NEGATIVE;
+pub use crate::common::keywords::R_NOT_ZERO;
+pub use crate::common::keywords::R_POSITIVE;
 pub use crate::common::keywords::SEQ;
 pub use crate::common::keywords::SET;
 pub use crate::common::keywords::SETTING;
@@ -660,3 +662,6 @@ pub use crate::common::keywords::USE;
 pub use crate::common::keywords::WITNESS;
 pub use crate::common::keywords::Z;
 pub use crate::common::keywords::ZORN_LEMMA;
+pub use crate::common::keywords::Z_NEGATIVE;
+pub use crate::common::keywords::Z_NOT_ZERO;
+pub use crate::common::keywords::Z_POSITIVE;

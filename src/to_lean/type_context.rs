@@ -9,6 +9,7 @@ pub(super) struct LeanTypeContext {
     symbol_carriers: HashMap<SymbolId, LeanCarrierToLeanIR>,
     object_expectations: HashMap<String, LeanCarrierToLeanIR>,
     generic_carrier_aliases: HashMap<SymbolId, SymbolId>,
+    well_definedness_proof_names: HashMap<String, String>,
 }
 
 impl LeanTypeContext {
@@ -42,6 +43,28 @@ impl LeanTypeContext {
 
     pub(super) fn expected_object(&self, object: &Obj) -> Option<&LeanCarrierToLeanIR> {
         self.object_expectations.get(&obj_equality_key(object))
+    }
+
+    pub(super) fn insert_well_definedness_proof(
+        &mut self,
+        proposition: &Fact,
+        name: String,
+    ) {
+        self.well_definedness_proof_names
+            .insert(proposition.to_string(), name);
+    }
+
+    pub(super) fn well_definedness_proof(&self, proposition: &Fact) -> Option<&str> {
+        self.well_definedness_proof_names
+            .get(&proposition.to_string())
+            .map(String::as_str)
+    }
+
+    pub(super) fn replace_well_definedness_proofs(
+        &mut self,
+        proofs: HashMap<String, String>,
+    ) -> HashMap<String, String> {
+        std::mem::replace(&mut self.well_definedness_proof_names, proofs)
     }
 
     pub(super) fn unify_generic_carriers(
@@ -96,6 +119,14 @@ impl LeanTypeContext {
             ObjToLeanIR::StandardSet(set) => Ok(Some(LeanCarrierToLeanIR::Set {
                 element_carrier: Box::new(set.element_carrier()),
             })),
+            ObjToLeanIR::FunctionSet { function } => Ok(Some(LeanCarrierToLeanIR::Set {
+                element_carrier: Box::new(LeanCarrierToLeanIR::Function {
+                    function: function.clone(),
+                }),
+            })),
+            ObjToLeanIR::FunctionApplication(application) => {
+                self.function_application_result_carrier(application)
+            }
             ObjToLeanIR::BuiltinApp {
                 operator,
                 arguments,
@@ -155,6 +186,18 @@ impl LeanTypeContext {
                     self.resolve_carrier_with_depth(element_carrier, depth + 1)?,
                 ),
             }),
+            LeanCarrierToLeanIR::Function { function } => {
+                let mut resolved = function.as_ref().clone();
+                for parameter in resolved.parameters.iter_mut() {
+                    parameter.element_carrier =
+                        self.resolve_carrier_with_depth(&parameter.element_carrier, depth + 1)?;
+                }
+                resolved.return_carrier =
+                    Box::new(self.resolve_carrier_with_depth(&resolved.return_carrier, depth + 1)?);
+                Ok(LeanCarrierToLeanIR::Function {
+                    function: Box::new(resolved),
+                })
+            }
             LeanCarrierToLeanIR::Generic { anchor } => {
                 let Some(canonical) = self.generic_carrier_aliases.get(anchor).copied() else {
                     return Ok(carrier.clone());
@@ -180,6 +223,10 @@ impl LeanTypeContext {
             }
             LeanCarrierToLeanIR::Set { element_carrier } => {
                 Ok(format!("Set {}", self.lean_type(&element_carrier)?))
+            }
+            LeanCarrierToLeanIR::Function { function } => {
+                super::to_lean_pipeline::lean_function_type_with_context(&function, self)
+                    .map_err(|error| error.trace_message())
             }
             LeanCarrierToLeanIR::ElementOfSet { .. } => {
                 Err("To-Lean could not resolve a set's element carrier".to_string())
@@ -267,14 +314,51 @@ impl LeanTypeContext {
                     self.collect_fixed_numeric_carriers(argument, result)?;
                 }
             }
+            ObjToLeanIR::FunctionApplication(application) => {
+                self.collect_fixed_numeric_carriers(&application.head, result)?;
+                for layer in application.argument_layers.iter() {
+                    for argument in layer {
+                        self.collect_fixed_numeric_carriers(argument, result)?;
+                    }
+                }
+            }
             ObjToLeanIR::Collection { items, .. } => {
                 for item in items {
                     self.collect_fixed_numeric_carriers(item, result)?;
                 }
             }
-            ObjToLeanIR::Number { .. } | ObjToLeanIR::StandardSet(_) => {}
+            ObjToLeanIR::Number { .. }
+            | ObjToLeanIR::StandardSet(_)
+            | ObjToLeanIR::FunctionSet { .. } => {}
         }
         Ok(())
+    }
+
+    fn function_application_result_carrier(
+        &self,
+        application: &FunctionApplicationToLeanIR,
+    ) -> Result<Option<LeanCarrierToLeanIR>, String> {
+        let Some(mut carrier) = self.object_carrier(&application.head)? else {
+            return Ok(None);
+        };
+        for (layer_index, arguments) in application.argument_layers.iter().enumerate() {
+            let LeanCarrierToLeanIR::Function { function } = self.resolve_carrier(&carrier)? else {
+                return Err(format!(
+                    "To-Lean function application layer {} has a non-function head carrier",
+                    layer_index + 1
+                ));
+            };
+            if arguments.len() != function.parameters.len() {
+                return Err(format!(
+                    "To-Lean function application layer {} has {} arguments but its retained signature requires {}",
+                    layer_index + 1,
+                    arguments.len(),
+                    function.parameters.len()
+                ));
+            }
+            carrier = (*function.return_carrier).clone();
+        }
+        Ok(Some(carrier))
     }
 
     fn builtin_result_carrier(
@@ -381,6 +465,7 @@ fn numeric_rank(carrier: &LeanCarrierToLeanIR) -> Option<u8> {
         LeanCarrierToLeanIR::Complex => Some(4),
         LeanCarrierToLeanIR::Generic { .. }
         | LeanCarrierToLeanIR::Set { .. }
+        | LeanCarrierToLeanIR::Function { .. }
         | LeanCarrierToLeanIR::ElementOfSet { .. } => None,
     }
 }

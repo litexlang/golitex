@@ -308,17 +308,17 @@ impl Tokenizer {
         // compact set only where its suffix ends the current lexical item.
         if !matches!(
             token,
-            COMPACT_N_POS
-                | COMPACT_Z_POS
-                | COMPACT_Q_POS
-                | COMPACT_R_POS
-                | COMPACT_Z_NEG
-                | COMPACT_Q_NEG
-                | COMPACT_R_NEG
-                | COMPACT_Z_STAR
-                | COMPACT_Q_STAR
-                | COMPACT_R_STAR
-                | COMPACT_C_STAR
+            N_POSITIVE
+                | Z_POSITIVE
+                | Q_POSITIVE
+                | R_POSITIVE
+                | Z_NEGATIVE
+                | Q_NEGATIVE
+                | R_NEGATIVE
+                | Z_NOT_ZERO
+                | Q_NOT_ZERO
+                | R_NOT_ZERO
+                | C_NOT_ZERO
         ) {
             return true;
         }

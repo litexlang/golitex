@@ -878,7 +878,7 @@ impl Runtime {
             ) || matches!(
                 (body.ret_set.as_ref(), power_set.set.as_ref()),
                 (Obj::StandardSet(left), Obj::StandardSet(right))
-                    if Self::standard_set_is_subset_eq(left, right)
+                    if left.is_subset_eq(right)
             ))
         {
             subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -925,7 +925,7 @@ impl Runtime {
             ) || matches!(
                 (&in_fact.element, power_set.set.as_ref()),
                 (Obj::StandardSet(left), Obj::StandardSet(right))
-                    if Self::standard_set_is_subset_eq(left, right)
+                    if left.is_subset_eq(right)
             ))
         {
             subset_result = FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

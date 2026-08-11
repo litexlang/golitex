@@ -1294,6 +1294,80 @@ have node &Node = ((1, 0), 0)
 }
 
 #[test]
+fn callable_struct_field_projection_is_well_defined_as_a_function_head() {
+    run_with_large_stack(
+        "callable_struct_field_projection_is_well_defined_as_a_function_head",
+        || {
+            let source_code = r#"
+struct CallableBox:
+    entries fn(k N+) N
+    tag N
+
+have fn identity_entry(k N+) N = k
+have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
+have fn projected_entry(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.entries(idx)
+
+projected_entry(identity_entry, 1) $in N
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "callable_struct_field_projection_is_well_defined_as_a_function_head",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                run_succeeded,
+                "a struct field declared with a function carrier should remain callable after an explicit view:\n{run_output}"
+            );
+            assert!(
+                run_output.contains(
+                    "have fn projected_entry(f fn (k N+) N, idx N+) = &CallableBox{boxed(f)}.entries(idx)"
+                ),
+                "the accepted definition should retain the projected function head:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
+fn callable_struct_field_projection_rejects_scalar_fields() {
+    run_with_large_stack(
+        "callable_struct_field_projection_rejects_scalar_fields",
+        || {
+            let source_code = r#"
+struct CallableBox:
+    entries fn(k N+) N
+    tag N
+
+have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
+have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.tag(idx)
+"#;
+
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "callable_struct_field_projection_rejects_scalar_fields",
+            );
+            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+            let (run_succeeded, run_output) =
+                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+            assert!(
+                !run_succeeded,
+                "a scalar struct field must not become callable:\n{run_output}"
+            );
+            assert!(
+                run_output.contains("struct field `tag` is not callable")
+                    && run_output.contains("declared carrier is N"),
+                "the rejected scalar field call should name its declared carrier:\n{run_output}"
+            );
+        },
+    );
+}
+
+#[test]
 fn chained_default_struct_views_support_module_qualified_field_types() {
     run_with_large_stack(
         "chained_default_struct_views_support_module_qualified_field_types",

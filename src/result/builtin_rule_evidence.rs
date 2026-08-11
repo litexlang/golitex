@@ -122,9 +122,33 @@ impl fmt::Debug for RegisteredLocalBuiltinRuleEvidence {
     }
 }
 
+/// Checked definition-elimination certificate for an existential hidden
+/// behind one concrete proposition call. The enclosing result is the
+/// instantiated existential and has exactly one child: a proof of `source`.
+#[derive(Clone)]
+pub struct DefinitionProjectionBuiltinRuleEvidence {
+    pub source: ExistentialPropSource,
+}
+
+impl DefinitionProjectionBuiltinRuleEvidence {
+    pub fn new(source: ExistentialPropSource) -> Self {
+        Self { source }
+    }
+}
+
+impl fmt::Debug for DefinitionProjectionBuiltinRuleEvidence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("DefinitionProjectionBuiltinRuleEvidence")
+            .field("source", &self.source.fact.to_string())
+            .field("definition", &self.source.definition.name)
+            .finish()
+    }
+}
+
 #[derive(Clone)]
 pub enum BuiltinRuleEvidence {
     RegisteredLocal(RegisteredLocalBuiltinRuleEvidence),
+    DefinitionProjection(DefinitionProjectionBuiltinRuleEvidence),
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     NotEqualSymmetry,
@@ -132,6 +156,10 @@ pub enum BuiltinRuleEvidence {
     Set(SetBuiltinRule),
     AbsoluteValue(AbsoluteValueBuiltinRule),
     PrimeU64Reflection,
+    /// Membership in one standard numeric set is projected through Litex's
+    /// centralized standard-set hierarchy. The enclosing result has exactly
+    /// one child: the checked source membership fact.
+    StandardSetMembershipProjection,
 }
 
 impl fmt::Debug for BuiltinRuleEvidence {
@@ -140,6 +168,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             BuiltinRuleEvidence::RegisteredLocal(evidence) => {
                 f.debug_tuple("RegisteredLocal").field(evidence).finish()
             }
+            BuiltinRuleEvidence::DefinitionProjection(evidence) => f
+                .debug_tuple("DefinitionProjection")
+                .field(evidence)
+                .finish(),
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 f.debug_tuple("DivNotEqualZero").field(evidence).finish()
             }
@@ -155,6 +187,9 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.debug_tuple("AbsoluteValue").field(rule).finish()
             }
             BuiltinRuleEvidence::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
+            BuiltinRuleEvidence::StandardSetMembershipProjection => {
+                f.write_str("StandardSetMembershipProjection")
+            }
         }
     }
 }

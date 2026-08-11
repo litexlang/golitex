@@ -255,6 +255,12 @@ pub struct ExistentialPropSource {
     pub definition: DefPropStmt,
 }
 
+impl ExistentialPropSource {
+    pub fn new(fact: NormalAtomicFact, definition: DefPropStmt) -> Self {
+        Self { fact, definition }
+    }
+}
+
 // have by preimage x from z $in fn_range(f)
 #[derive(Clone)]
 pub struct HaveByPreimageStmt {
@@ -816,10 +822,10 @@ impl HaveByExistStmt {
             equal_tos,
             equal_to_bindings,
             exist_fact_in_have_obj_st,
-            existential_prop_source: Some(ExistentialPropSource {
-                fact: source_fact,
-                definition: source_definition,
-            }),
+            existential_prop_source: Some(ExistentialPropSource::new(
+                source_fact,
+                source_definition,
+            )),
             line_file,
         }
     }

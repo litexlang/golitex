@@ -3,3 +3,47 @@ forall f fn(x R) R:
         f(y) = f(y - 1)
     =>:
         f(2) = f(1)
+
+
+"""
+import Mathlib
+
+namespace tmp2
+
+noncomputable section
+
+universe LitexUniverse
+
+class LitexObject (α : Type LitexUniverse) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
+
+-- Litex fact f31
+theorem fact31 : ∀ f ∈ (Set.univ : Set ((x : ℝ) → ℝ)), (∀ y ∈ (Set.univ : Set ℝ), (f y) = (f (y - 1))) → (f 2) = (f 1) := by
+  intro f proof_fact_1_1 proof_fact_1_2
+  have proof_fact_1_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := by
+    -- Litex parameter requirement for `y`: (1 + 1) : ℝ
+    let proof_arg_2_1 : ℝ := (1 + 1)
+    have proof_fact_2_2 : (1 + 1) ∈ (Set.univ : Set ℝ) := by
+      change True
+      trivial
+    have proof_fact_2_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := proof_fact_1_2 proof_arg_2_1 proof_fact_2_2
+    exact proof_fact_2_3
+  have proof_fact_1_4 : (f 2) = (f 1) := by
+    convert proof_fact_1_3 using 1 <;> norm_num
+  exact proof_fact_1_4
+
+end
+
+end tmp2
+"""

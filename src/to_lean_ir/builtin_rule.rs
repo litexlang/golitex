@@ -107,6 +107,10 @@ pub enum BuiltinRuleToLeanIR {
     AbsoluteValue(AbsoluteValueBuiltinRuleToLeanIR),
     /// Closed `$prime(n)` and `not $prime(n)` facts checked by u64 reflection.
     PrimeU64Reflection,
+    /// Membership in a standard numeric set is projected through Litex's
+    /// centralized standard-set hierarchy. The proof has exactly one source
+    /// membership premise.
+    StandardSetMembershipProjection,
     /// Positive-real membership entails strict positivity.
     /// Example: `a $in R+` proves `0 < a`.
     PositiveRealMembership,
@@ -115,7 +119,8 @@ pub enum BuiltinRuleToLeanIR {
 impl BuiltinRuleToLeanIR {
     pub(crate) fn from_legacy_evidence(evidence: &BuiltinRuleEvidence) -> Option<Self> {
         Some(match evidence {
-            BuiltinRuleEvidence::RegisteredLocal(_) => return None,
+            BuiltinRuleEvidence::RegisteredLocal(_)
+            | BuiltinRuleEvidence::DefinitionProjection(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 let orientation = match evidence.orientation {
                     NonzeroExpressionOrientation::ExpressionOnLeft => {
@@ -245,6 +250,9 @@ impl BuiltinRuleToLeanIR {
                 })
             }
             BuiltinRuleEvidence::PrimeU64Reflection => BuiltinRuleToLeanIR::PrimeU64Reflection,
+            BuiltinRuleEvidence::StandardSetMembershipProjection => {
+                BuiltinRuleToLeanIR::StandardSetMembershipProjection
+            }
         })
     }
 }
@@ -267,6 +275,9 @@ impl fmt::Debug for BuiltinRuleToLeanIR {
                 f.debug_tuple("AbsoluteValue").field(rule).finish()
             }
             BuiltinRuleToLeanIR::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
+            BuiltinRuleToLeanIR::StandardSetMembershipProjection => {
+                f.write_str("StandardSetMembershipProjection")
+            }
             BuiltinRuleToLeanIR::PositiveRealMembership => f.write_str("PositiveRealMembership"),
         }
     }

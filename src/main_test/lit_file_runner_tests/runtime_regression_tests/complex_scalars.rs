@@ -5,10 +5,10 @@ fn native_complex_names_and_complex_star_ids_are_stable() {
     let last_existing = builtin_symbol_ref(BIJECTIVE).expect("existing builtin ID should remain");
     assert_eq!(last_existing.id().value(), (1_u64 << 62) + 47);
 
-    assert!(is_key_symbol_or_keyword(COMPACT_C_STAR));
-    assert!(is_builtin_identifier_name(COMPACT_C_STAR));
+    assert!(is_key_symbol_or_keyword(C_NOT_ZERO));
+    assert!(is_builtin_identifier_name(C_NOT_ZERO));
     assert_eq!(
-        builtin_symbol_ref(COMPACT_C_STAR)
+        builtin_symbol_ref(C_NOT_ZERO)
             .expect("C* should have a builtin symbol ID")
             .id()
             .value(),

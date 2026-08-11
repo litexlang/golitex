@@ -21,3 +21,5 @@ copy = 2
 # facts, `not exist`, ordinary nonexistential definitions, and multi-clause
 # definitions are not eligible for this shorthand.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_existential_prop.lit
+# To-Lean evidence: the `obtain_from_existential_prop_definition` ledger entry
+# emits a checked definition projection and compiles in a real Mathlib project.

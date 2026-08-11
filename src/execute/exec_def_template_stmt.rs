@@ -2,27 +2,6 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    fn inst_existential_prop_source(
-        &self,
-        source: Option<&ExistentialPropSource>,
-        param_to_arg_map: &HashMap<String, Obj>,
-        line_file: &LineFile,
-    ) -> Result<Option<ExistentialPropSource>, RuntimeError> {
-        source
-            .map(|source| {
-                Ok(ExistentialPropSource {
-                    fact: self.inst_normal_atomic_fact(
-                        &source.fact,
-                        param_to_arg_map,
-                        ParamObjType::DefHeader,
-                        Some(line_file),
-                    )?,
-                    definition: source.definition.clone(),
-                })
-            })
-            .transpose()
-    }
-
     pub fn exec_def_template_stmt(
         &mut self,
         def_template_stmt: &DefTemplateStmt,
@@ -926,5 +905,26 @@ impl Runtime {
                 }
             };
         Ok(HaveFnByInducCase::new(case_fact, body))
+    }
+
+    fn inst_existential_prop_source(
+        &self,
+        source: Option<&ExistentialPropSource>,
+        param_to_arg_map: &HashMap<String, Obj>,
+        line_file: &LineFile,
+    ) -> Result<Option<ExistentialPropSource>, RuntimeError> {
+        source
+            .map(|source| {
+                Ok(ExistentialPropSource::new(
+                    self.inst_normal_atomic_fact(
+                        &source.fact,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file),
+                    )?,
+                    source.definition.clone(),
+                ))
+            })
+            .transpose()
     }
 }

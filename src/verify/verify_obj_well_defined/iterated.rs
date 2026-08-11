@@ -1521,10 +1521,7 @@ impl Runtime {
                 let Obj::StandardSet(return_standard_set) = return_set else {
                     return Ok(false);
                 };
-                Ok(Self::standard_set_is_subset_eq(
-                    domain_set,
-                    return_standard_set,
-                ))
+                Ok(domain_set.is_subset_eq(return_standard_set))
             }
             Obj::ListSet(list) => {
                 for element in &list.list {
@@ -1585,10 +1582,7 @@ impl Runtime {
                 let Obj::StandardSet(return_standard_set) = return_set else {
                     return Ok(false);
                 };
-                Ok(Self::standard_set_is_subset_eq(
-                    &StandardSet::Z,
-                    return_standard_set,
-                ))
+                Ok(StandardSet::Z.is_subset_eq(return_standard_set))
             }
             _ => Ok(false),
         }

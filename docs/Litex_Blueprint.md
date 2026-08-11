@@ -273,9 +273,6 @@ noncomputable section
 
 universe LitexUniverse
 
--- Every generated proposition has this codomain.
-abbrev LitexFact := Prop
-
 -- The shared LitexObject declarations are omitted here.
 
 -- Litex fact f19

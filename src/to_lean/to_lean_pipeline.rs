@@ -139,7 +139,9 @@ fn to_lean_with_report_and_namespace(
     // Report mode owns that boundary so it can retain the verified statement,
     // record the unsupported IR, and continue with later statements.
     let previous_mode = runtime.replace_to_lean_mode(false);
+    let previous_well_definedness_mode = runtime.replace_to_lean_well_definedness_mode(true);
     let result = to_lean_report_in_mode(source_code, runtime, namespace.as_deref());
+    runtime.replace_to_lean_well_definedness_mode(previous_well_definedness_mode);
     runtime.replace_to_lean_mode(previous_mode);
     result
 }
@@ -250,6 +252,7 @@ struct LeanEmitter {
     declarations: Vec<String>,
     emitted_fact_ids: HashSet<FactId>,
     next_local_space_id: usize,
+    next_well_definedness_helper_id: usize,
     type_context: LeanTypeContext,
     required_local_builtin_rules: HashSet<RuleId>,
 }
@@ -284,6 +287,7 @@ impl LeanEmitter {
             declarations: Vec::new(),
             emitted_fact_ids: HashSet::new(),
             next_local_space_id: 1,
+            next_well_definedness_helper_id: 1,
             type_context: LeanTypeContext::default(),
             required_local_builtin_rules: HashSet::new(),
         }
@@ -408,20 +412,102 @@ impl LeanEmitter {
                 Ok(())
             }
             StmtToLeanIR::Fact(ir) => {
-                self.emit_proved_fact(&ir.fact)?;
-                for fact in ir.inferred_facts.iter() {
-                    self.emit_proved_fact(fact)?;
-                }
-                Ok(())
+                let previous = self
+                    .type_context
+                    .replace_well_definedness_proofs(HashMap::new());
+                let result = self.emit_fact_statement_with_well_definedness(ir);
+                self.type_context
+                    .replace_well_definedness_proofs(previous);
+                result
             }
             StmtToLeanIR::ProjectedForall(ir) => {
-                validate_projected_forall_ir(ir)?;
-                for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
-                    self.emit_proved_fact(fact)?;
-                }
-                Ok(())
+                let previous = self
+                    .type_context
+                    .replace_well_definedness_proofs(HashMap::new());
+                let result = self.emit_projected_forall_with_well_definedness(ir);
+                self.type_context
+                    .replace_well_definedness_proofs(previous);
+                result
             }
         }
+    }
+
+    fn emit_fact_statement_with_well_definedness(
+        &mut self,
+        ir: &FactStmtToLeanIR,
+    ) -> Result<(), RuntimeError> {
+        self.emit_global_well_definedness_certificate(&ir.well_definedness)?;
+        self.emit_proved_fact(&ir.fact)?;
+        for fact in ir.inferred_facts.iter() {
+            self.emit_proved_fact(fact)?;
+        }
+        Ok(())
+    }
+
+    fn emit_projected_forall_with_well_definedness(
+        &mut self,
+        ir: &ProjectedForallToLeanIR,
+    ) -> Result<(), RuntimeError> {
+        validate_projected_forall_ir(ir)?;
+        self.emit_global_well_definedness_certificate(&ir.well_definedness)?;
+        for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+            self.emit_proved_fact(fact)?;
+        }
+        Ok(())
+    }
+
+    fn emit_global_well_definedness_certificate(
+        &mut self,
+        certificate: &WellDefinednessCertificateToLeanIR,
+    ) -> Result<(), RuntimeError> {
+        let mut seen_ids = HashSet::new();
+        for evidence in certificate.facts.iter() {
+            if !seen_ids.insert(evidence.certificate_id) {
+                return Err(to_lean_error(
+                    &evidence.fact.proposition.line_file(),
+                    "well-definedness certificate repeats a statement-local ID",
+                ));
+            }
+            if evidence.role != WellDefinednessRequirementRole::SourceObjectRequirement {
+                return Err(to_lean_error(
+                    &evidence.fact.proposition.line_file(),
+                    "well-definedness certificate has an unsupported requirement role",
+                ));
+            }
+            if matches!(evidence.fact.proof, FactProofToLeanIR::Trusted) {
+                return Err(to_lean_error(
+                    &evidence.fact.proposition.line_file(),
+                    "well-definedness certificate cannot introduce trusted evidence",
+                ));
+            }
+            let mut proof_context = self.root_proof_context();
+            apply_fact_proof_type_hints(&evidence.fact, &mut proof_context.type_context)?;
+            let proof = self.lean_proof(
+                &evidence.fact.proposition,
+                &evidence.fact.proof,
+                &proof_context,
+            )?;
+            let helper_name = format!(
+                "well_defined_fact_{}",
+                self.next_well_definedness_helper_id
+            );
+            self.next_well_definedness_helper_id += 1;
+            self.declarations.push(format!(
+                "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
+                evidence.certificate_id.value(),
+                helper_name,
+                lean_fact_with_context(
+                    &evidence.fact.proposition,
+                    &proof_context.type_context,
+                )?,
+                proof
+            ));
+            self.type_context.insert_well_definedness_proof(
+                &evidence.fact.proposition,
+                helper_name,
+            );
+        }
+        Ok(())
     }
 
     fn emit_existential_witnesses(
@@ -728,6 +814,24 @@ impl LeanEmitter {
             } if premises.len() == 1 => {
                 self.lean_normalization_from_premise(proposition, &premises[0], context)
             }
+            FactProofToLeanIR::RuleApplication {
+                rule:
+                    ProofRuleToLeanIR::DefinitionProjection {
+                        definition,
+                        expected_source,
+                        expected_target,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_definition_projection(
+                proposition,
+                definition,
+                expected_source,
+                expected_target,
+                parameter_requirements,
+                premises,
+                context,
+            ),
             FactProofToLeanIR::RuleApplication {
                 rule: ProofRuleToLeanIR::DefinitionReduction { definition },
                 premises,
@@ -1096,12 +1200,24 @@ impl LeanEmitter {
         let mut lines = Vec::new();
         match statement {
             StmtToLeanIR::Fact(ir) => {
+                if !ir.well_definedness.facts.is_empty() {
+                    return Err(to_lean_error(
+                        &ir.fact.proposition.line_file(),
+                        "proof-local well-definedness certificates need a scoped Lean helper backend",
+                    ));
+                }
                 lines.extend(self.lean_local_fact(&ir.fact, context)?);
                 for fact in ir.inferred_facts.iter() {
                     lines.extend(self.lean_local_fact(fact, context)?);
                 }
             }
             StmtToLeanIR::ProjectedForall(ir) => {
+                if !ir.well_definedness.facts.is_empty() {
+                    return Err(to_lean_error(
+                        &ir.source.line_file(),
+                        "proof-local projected facts retain unsupported scoped well-definedness certificates",
+                    ));
+                }
                 validate_projected_forall_ir(ir)?;
                 for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
                     lines.extend(self.lean_local_fact(fact, context)?);
@@ -1547,6 +1663,15 @@ impl LeanEmitter {
                 }
                 lean_prime_u64_reflection(proposition, premises)
             }
+            BuiltinRuleToLeanIR::StandardSetMembershipProjection => {
+                if !parameter_requirements.is_empty() {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "standard-set membership projection evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_standard_set_membership_projection(proposition, premises, context)
+            }
             BuiltinRuleToLeanIR::PositiveRealMembership => {
                 if !parameter_requirements.is_empty() {
                     return Err(to_lean_error(
@@ -1557,6 +1682,171 @@ impl LeanEmitter {
                 self.lean_positive_real_membership(proposition, premises, context)
             }
         }
+    }
+
+    fn lean_standard_set_membership_projection(
+        &mut self,
+        proposition: &Fact,
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if premises.len() != 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "standard-set membership projection evidence expected 1 premise but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "standard-set membership projection evidence requires a membership target",
+            ));
+        };
+        let Fact::AtomicFact(AtomicFact::InFact(source)) = &premises[0].proposition else {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "standard-set membership projection evidence requires a membership premise",
+            ));
+        };
+        let Obj::StandardSet(source_set) = &source.set else {
+            return Err(to_lean_error(
+                &premises[0].proposition.line_file(),
+                "standard-set membership projection premise must use a standard set",
+            ));
+        };
+        let Obj::StandardSet(target_set) = &target.set else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "standard-set membership projection target must use a standard set",
+            ));
+        };
+        if obj_equality_key(&source.element) != obj_equality_key(&target.element) {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "standard-set membership projection source and target objects do not match",
+            ));
+        }
+        if !source_set.is_subset_eq(target_set) {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "standard-set membership projection does not permit {} -> {}",
+                    source_set, target_set
+                ),
+            ));
+        }
+
+        let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+        lines.insert(0, "by".to_string());
+        if source_set == target_set {
+            lines.push(format!("  exact {}", premise_name));
+            return Ok(lines.join("\n"));
+        }
+
+        let element_ir = ObjToLeanIR::lower(&source.element)
+            .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+        let source_carrier = StandardSetToLeanIR::from(source_set).element_carrier();
+        let target_carrier = StandardSetToLeanIR::from(target_set).element_carrier();
+        let source_element =
+            lean_obj_ir_with_expected(&element_ir, &source_carrier, &context.type_context, true)?;
+        let target_element =
+            lean_obj_ir_with_expected(&element_ir, &target_carrier, &context.type_context, true)?;
+        let predicate_text = |set: &StandardSet, element: &str| match set {
+            StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => {
+                Some(format!("0 < {}", element))
+            }
+            StandardSet::ZNeg | StandardSet::QNeg | StandardSet::RNeg => {
+                Some(format!("{} < 0", element))
+            }
+            StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar => {
+                Some(format!("{} ≠ 0", element))
+            }
+            StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C => {
+                None
+            }
+        };
+
+        match target_set {
+            StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C => {
+                lines.push("  exact Set.mem_univ _".to_string())
+            }
+            StandardSet::NPos
+            | StandardSet::QPos
+            | StandardSet::RPos
+            | StandardSet::ZNeg
+            | StandardSet::QNeg
+            | StandardSet::RNeg => {
+                let source_predicate = predicate_text(source_set, &source_element).ok_or_else(|| {
+                    to_lean_error(
+                        &proposition.line_file(),
+                        format!(
+                            "standard-set membership projection has no predicate adapter for {} -> {}",
+                            source_set, target_set
+                        ),
+                    )
+                })?;
+                let target_predicate = predicate_text(target_set, &target_element)
+                    .expect("refined target must have a predicate");
+                let predicate_name = self.next_proof_fact_name(context);
+                lines.push(format!(
+                    "  have {} : {} := by",
+                    predicate_name, source_predicate
+                ));
+                lines.push(format!("    simpa using {}", premise_name));
+                lines.push(format!("  change {}", target_predicate));
+                lines.push(format!("  exact_mod_cast {}", predicate_name));
+            }
+            StandardSet::ZStar | StandardSet::QStar | StandardSet::RStar | StandardSet::CStar => {
+                let source_predicate = predicate_text(source_set, &source_element).ok_or_else(|| {
+                    to_lean_error(
+                        &proposition.line_file(),
+                        format!(
+                            "standard-set membership projection has no predicate adapter for {} -> {}",
+                            source_set, target_set
+                        ),
+                    )
+                })?;
+                let target_predicate = predicate_text(target_set, &target_element)
+                    .expect("nonzero target must have a predicate");
+                let predicate_name = self.next_proof_fact_name(context);
+                lines.push(format!(
+                    "  have {} : {} := by",
+                    predicate_name, source_predicate
+                ));
+                lines.push(format!("    simpa using {}", premise_name));
+                let nonzero_name = match source_set {
+                    StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => {
+                        let name = self.next_proof_fact_name(context);
+                        lines.push(format!("  have {} := ne_of_gt {}", name, predicate_name));
+                        name
+                    }
+                    StandardSet::ZNeg | StandardSet::QNeg | StandardSet::RNeg => {
+                        let name = self.next_proof_fact_name(context);
+                        lines.push(format!("  have {} := ne_of_lt {}", name, predicate_name));
+                        name
+                    }
+                    StandardSet::ZStar
+                    | StandardSet::QStar
+                    | StandardSet::RStar
+                    | StandardSet::CStar => predicate_name,
+                    _ => {
+                        return Err(to_lean_error(
+                            &proposition.line_file(),
+                            format!(
+                                "standard-set membership projection has no nonzero proof adapter for {} -> {}",
+                                source_set, target_set
+                            ),
+                        ));
+                    }
+                };
+                lines.push(format!("  change {}", target_predicate));
+                lines.push(format!("  exact_mod_cast {}", nonzero_name));
+            }
+        }
+        Ok(lines.join("\n"))
     }
 
     fn lean_set_builtin_rule(
@@ -2363,6 +2653,77 @@ impl LeanEmitter {
         Ok(lines.join("\n"))
     }
 
+    fn lean_definition_projection(
+        &mut self,
+        proposition: &Fact,
+        definition: &str,
+        expected_source: &Fact,
+        expected_target: &Fact,
+        parameter_requirements: &[FactToLeanIR],
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty() || premises.len() != 1 {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection evidence requires no parameter requirements and exactly one source premise",
+            ));
+        }
+        if proposition.to_string() != expected_target.to_string() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection target disagrees with its retained expected proposition",
+            ));
+        }
+        if premises[0].proposition.to_string() != expected_source.to_string() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection source disagrees with its retained expected proposition",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(source)) = expected_source else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection source must be a positive proposition fact",
+            ));
+        };
+        let Fact::ExistFact(target) = expected_target else {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection target must be an existential fact",
+            ));
+        };
+        if !target.is_plain_exist() {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection target must be a positive `exist` fact",
+            ));
+        }
+        let predicate_name = source.predicate.to_string();
+        let local_predicate_name = predicate_name
+            .rsplit_once(MOD_SIGN)
+            .map(|(_, local_name)| local_name)
+            .unwrap_or(predicate_name.as_str());
+        if local_predicate_name != definition {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                "definition-projection rule names a different definition from its source proposition",
+            ));
+        }
+        lean_fact(expected_source)?;
+        lean_fact(expected_target)?;
+
+        let mut lines = vec!["by".to_string()];
+        let (source_name, source_lines) = self.lean_named_local_fact(&premises[0], context)?;
+        lines.extend(source_lines);
+        lines.push(format!(
+            "  simpa only [{}] using {}",
+            lean_name(definition),
+            source_name
+        ));
+        Ok(lines.join("\n"))
+    }
+
     fn available_fact_name(
         &self,
         fact_id: FactId,
@@ -2709,7 +3070,7 @@ fn lean_fact_class(fact: &Fact) -> Option<LeanFactClass> {
 fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
     let name = lean_name(&ir.name);
     if ir.params.is_empty() {
-        return format!("opaque {} : LitexFact", name);
+        return format!("opaque {} : Prop", name);
     }
     let binders = ir
         .params
@@ -2727,7 +3088,7 @@ fn lean_abstract_prop(ir: &AbstractPropToLeanIR) -> String {
     let arguments = (0..ir.params.len())
         .map(|index| format!("{} → ", lean_generic_carrier_name(index as u64)))
         .collect::<String>();
-    format!("opaque {} {} : {}LitexFact", name, binders, arguments)
+    format!("opaque {} {} : {}Prop", name, binders, arguments)
 }
 
 fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
@@ -2775,7 +3136,7 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
     };
     if ir.iff_facts.is_empty() {
         return Ok(format!(
-            "opaque {}{} : LitexFact",
+            "opaque {}{} : Prop",
             lean_name(&ir.name),
             binder_text
         ));
@@ -2787,7 +3148,7 @@ fn lean_prop(ir: &PropToLeanIR) -> Result<String, RuntimeError> {
         .collect::<Result<Vec<_>, RuntimeError>>()?
         .join(" ∧ ");
     Ok(format!(
-        "def {}{} : LitexFact := {}",
+        "def {}{} : Prop := {}",
         lean_name(&ir.name),
         binder_text,
         parenthesize_if_many(&body, ir.iff_facts.len())
@@ -3141,7 +3502,7 @@ fn lean_fact(fact: &Fact) -> Result<String, RuntimeError> {
     lean_fact_with_context(fact, &LeanTypeContext::default())
 }
 
-fn lean_fact_with_context(
+pub(super) fn lean_fact_with_context(
     fact: &Fact,
     type_context: &LeanTypeContext,
 ) -> Result<String, RuntimeError> {
@@ -3626,10 +3987,14 @@ fn lean_forall_fact_with_context(
     let requirements = forall
         .dom_facts
         .iter()
-        .map(|fact| lean_fact_with_context(fact, &type_context))
+        .map(|fact| Ok((fact, lean_fact_with_context(fact, &type_context)?)))
         .collect::<Result<Vec<_>, RuntimeError>>()?;
-    for premise in requirements.iter().rev() {
-        body = format!("{} → {}", premise, body);
+    for (source, premise) in requirements.iter().rev() {
+        body = if matches!(source, Fact::ForallFact(_) | Fact::ForallFactWithIff(_)) {
+            format!("({}) → {}", premise, body)
+        } else {
+            format!("{} → {}", premise, body)
+        };
     }
     let mut emitted_generic_carriers = HashSet::new();
     for (index, (group, param_type)) in forall
@@ -3952,6 +4317,37 @@ fn ensure_obj_uses_capture_free_lean_names(
                 )?;
             }
         }
+        ObjToLeanIR::FunctionSet { function } => {
+            for parameter in function.parameters.iter() {
+                ensure_obj_uses_capture_free_lean_names(
+                    &parameter.set,
+                    binders_by_id,
+                    binders_by_lean_name,
+                    line_file,
+                    context,
+                )?;
+            }
+        }
+        ObjToLeanIR::FunctionApplication(application) => {
+            ensure_obj_uses_capture_free_lean_names(
+                &application.head,
+                binders_by_id,
+                binders_by_lean_name,
+                line_file,
+                context,
+            )?;
+            for layer in application.argument_layers.iter() {
+                for argument in layer {
+                    ensure_obj_uses_capture_free_lean_names(
+                        argument,
+                        binders_by_id,
+                        binders_by_lean_name,
+                        line_file,
+                        context,
+                    )?;
+                }
+            }
+        }
         ObjToLeanIR::Collection { items, .. } => {
             for item in items {
                 ensure_obj_uses_capture_free_lean_names(
@@ -4074,7 +4470,205 @@ fn lean_obj_ir_with_expected(
     Ok(format!("({} : {})", annotated, lean_type))
 }
 
-fn lean_obj_ir_with_context(
+pub(super) fn lean_function_type_with_context(
+    function: &FunctionTypeToLeanIR,
+    outer_type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let mut type_context = outer_type_context.clone();
+    for parameter in function.parameters.iter() {
+        type_context.insert(parameter.symbol_id, parameter.element_carrier.clone());
+    }
+
+    let mut tail = type_context
+        .lean_type(&function.return_carrier)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?;
+
+    for fact in function.domain_facts.iter().rev() {
+        tail = format!(
+            "{} → {}",
+            lean_fact_with_context(fact, &type_context)?,
+            tail
+        );
+    }
+    for parameter in function.parameters.iter().rev() {
+        if !parameter.requires_membership_proof {
+            continue;
+        }
+        let parameter_obj = ObjToLeanIR::Symbol {
+            symbol_id: parameter.symbol_id,
+            name: parameter.name.clone(),
+        };
+        let element = lean_obj_ir_with_expected(
+            &parameter_obj,
+            &parameter.element_carrier,
+            &type_context,
+            false,
+        )?;
+        let set = lean_obj_ir_with_context(&parameter.set, &type_context)?;
+        tail = format!("{} ∈ {} → {}", element, set, tail);
+    }
+    for parameter in function.parameters.iter().rev() {
+        let parameter_type = type_context
+            .lean_type(&parameter.element_carrier)
+            .map_err(|message| to_lean_error(&default_line_file(), message))?;
+        tail = format!(
+            "({} : {}) → {}",
+            lean_name(&parameter.name),
+            parameter_type,
+            tail
+        );
+    }
+    Ok(tail)
+}
+
+fn lean_function_application_with_context(
+    application: &FunctionApplicationToLeanIR,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let mut rendered = lean_obj_ir_with_context(&application.head, type_context)?;
+    let Some(mut carrier) = type_context
+        .object_carrier(&application.head)
+        .map_err(|message| to_lean_error(&default_line_file(), message))?
+    else {
+        return Err(to_lean_error(
+            &default_line_file(),
+            "To-Lean cannot determine the retained function signature for an application head",
+        ));
+    };
+
+    for (layer_index, arguments) in application.argument_layers.iter().enumerate() {
+        let resolved = type_context
+            .resolve_carrier(&carrier)
+            .map_err(|message| to_lean_error(&default_line_file(), message))?;
+        let LeanCarrierToLeanIR::Function { function } = resolved else {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean function application layer {} has a non-function retained carrier",
+                    layer_index + 1
+                ),
+            ));
+        };
+        if arguments.len() != function.parameters.len() {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean function application layer {} has {} arguments but its retained signature requires {}",
+                    layer_index + 1,
+                    arguments.len(),
+                    function.parameters.len()
+                ),
+            ));
+        }
+        let Some(source_arguments) = application.source_argument_layers.get(layer_index) else {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean function application layer {} lost its source arguments",
+                    layer_index + 1
+                ),
+            ));
+        };
+        if source_arguments.len() != arguments.len() {
+            return Err(to_lean_error(
+                &default_line_file(),
+                format!(
+                    "To-Lean function application layer {} has mismatched structural and source argument arities",
+                    layer_index + 1
+                ),
+            ));
+        }
+        for (argument, parameter) in arguments.iter().zip(function.parameters.iter()) {
+            rendered.push(' ');
+            rendered.push_str(&lean_obj_ir_with_expected(
+                argument,
+                &parameter.element_carrier,
+                type_context,
+                false,
+            )?);
+        }
+        let mut substitutions = HashMap::new();
+        for (parameter, source_argument) in
+            function.parameters.iter().zip(source_arguments.iter())
+        {
+            substitutions.insert(parameter.name.clone(), source_argument.clone());
+            substitutions.insert(
+                parameter.substitution_key.clone(),
+                source_argument.clone(),
+            );
+        }
+        let instantiator = Runtime::new();
+        for (parameter, source_argument) in
+            function.parameters.iter().zip(source_arguments.iter())
+        {
+            if !parameter.requires_membership_proof {
+                continue;
+            }
+            let instantiated_set = instantiator
+                .inst_obj(&parameter.source_set, &substitutions, ParamObjType::FnSet)
+                .map_err(|error| {
+                    to_lean_error(
+                        &default_line_file(),
+                        format!(
+                            "failed to instantiate function parameter membership for To-Lean: {}",
+                            error.trace_message()
+                        ),
+                    )
+                })?;
+            let requirement: Fact = InFact::new(
+                source_argument.clone(),
+                instantiated_set,
+                default_line_file(),
+            )
+            .into();
+            let proof_name = type_context
+                .well_definedness_proof(&requirement)
+                .ok_or_else(|| {
+                    to_lean_error(
+                        &default_line_file(),
+                        format!(
+                            "To-Lean function application layer {} is missing the retained membership proof `{}`",
+                            layer_index + 1,
+                            requirement
+                        ),
+                    )
+                })?;
+            rendered.push(' ');
+            rendered.push_str(proof_name);
+        }
+        for source_domain in function.domain_facts.iter() {
+            let requirement = instantiator
+                .inst_fact(source_domain, &substitutions, ParamObjType::FnSet, None)
+                .map_err(|error| {
+                    to_lean_error(
+                        &source_domain.line_file(),
+                        format!(
+                            "failed to instantiate function-domain evidence for To-Lean: {}",
+                            error.trace_message()
+                        ),
+                    )
+                })?;
+            let proof_name = type_context
+                .well_definedness_proof(&requirement)
+                .ok_or_else(|| {
+                    to_lean_error(
+                        &requirement.line_file(),
+                        format!(
+                            "To-Lean function application layer {} is missing the retained domain proof `{}`",
+                            layer_index + 1,
+                            requirement
+                        ),
+                    )
+                })?;
+            rendered.push(' ');
+            rendered.push_str(proof_name);
+        }
+        carrier = (*function.return_carrier).clone();
+    }
+    Ok(format!("({})", rendered))
+}
+
+pub(super) fn lean_obj_ir_with_context(
     obj: &ObjToLeanIR,
     type_context: &LeanTypeContext,
 ) -> Result<String, RuntimeError> {
@@ -4116,6 +4710,13 @@ fn lean_obj_ir_with_context(
             StandardSetToLeanIR::NonzeroComplex => "{c : ℂ | c ≠ 0}",
         }
         .to_string()),
+        ObjToLeanIR::FunctionSet { function } => Ok(format!(
+            "(Set.univ : Set ({}))",
+            lean_function_type_with_context(function, type_context)?
+        )),
+        ObjToLeanIR::FunctionApplication(application) => {
+            lean_function_application_with_context(application, type_context)
+        }
         ObjToLeanIR::BuiltinApp {
             operator,
             arguments,
@@ -4513,7 +5114,7 @@ fn rational_fact_normalization_tactic(
         if obj_equality_key(source_arg) == obj_equality_key(goal_arg) {
             continue;
         }
-        if !objs_equal_by_rational_expression_evaluation(source_arg, goal_arg) {
+        let Some(stats) = nested_rational_normalization_stats(source_arg, goal_arg)? else {
             return Err(to_lean_error(
                 &goal.line_file(),
                 format!(
@@ -4521,12 +5122,10 @@ fn rational_fact_normalization_tactic(
                     source_arg, goal_arg
                 ),
             ));
-        }
+        };
         changed = true;
-        all_closed &=
-            closed_rational_expression(source_arg) && closed_rational_expression(goal_arg);
-        has_denominator |= LeanRationalExpression::from_obj(source_arg)?.has_denominator()
-            || LeanRationalExpression::from_obj(goal_arg)?.has_denominator();
+        all_closed &= stats.all_closed;
+        has_denominator |= stats.has_denominator;
     }
 
     if !changed {
@@ -4545,6 +5144,53 @@ fn rational_fact_normalization_tactic(
         "field_simp [{}] <;> ring",
         context.nonzero_names.join(", ")
     ))
+}
+
+#[derive(Clone, Copy)]
+struct NestedRationalNormalizationStats {
+    all_closed: bool,
+    has_denominator: bool,
+}
+
+fn nested_rational_normalization_stats(
+    source: &Obj,
+    goal: &Obj,
+) -> Result<Option<NestedRationalNormalizationStats>, RuntimeError> {
+    if obj_equality_key(source) == obj_equality_key(goal) {
+        return Ok(Some(NestedRationalNormalizationStats {
+            all_closed: true,
+            has_denominator: false,
+        }));
+    }
+    if objs_equal_by_rational_expression_evaluation(source, goal) {
+        return Ok(Some(NestedRationalNormalizationStats {
+            all_closed: closed_rational_expression(source) && closed_rational_expression(goal),
+            has_denominator: LeanRationalExpression::from_obj(source)?.has_denominator()
+                || LeanRationalExpression::from_obj(goal)?.has_denominator(),
+        }));
+    }
+
+    let mut aggregate = NestedRationalNormalizationStats {
+        all_closed: true,
+        has_denominator: false,
+    };
+    let result: Result<bool, RuntimeError> = Runtime::same_shape_and_corresponding_args_match(
+        source,
+        goal,
+        &mut |source_arg, goal_arg| {
+            let Some(stats) = nested_rational_normalization_stats(source_arg, goal_arg)? else {
+                return Ok(false);
+            };
+            aggregate.all_closed &= stats.all_closed;
+            aggregate.has_denominator |= stats.has_denominator;
+            Ok(true)
+        },
+    );
+    if result? {
+        Ok(Some(aggregate))
+    } else {
+        Ok(None)
+    }
 }
 
 fn lean_real_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError> {
@@ -5396,7 +6042,7 @@ mod tests {
             assert!(registered.contains("\nnamespace A.chap2\n\n"));
             assert!(registered.ends_with("\nend A.chap2\n"));
             assert!(!registered.contains("namespace chapter02"));
-            assert!(registered.contains("def is_one (x : ℝ) : LitexFact :="));
+            assert!(registered.contains("def is_one (x : ℝ) : Prop :="));
             assert!(registered.contains("simp [is_one]"));
 
             let anonymous =
@@ -5472,6 +6118,7 @@ mod tests {
             || {
                 let source = r#"
 abstract_prop marked(x)
+abstract_prop unparameterized()
 
 prop is_one(x R):
     x = 1
@@ -5515,19 +6162,15 @@ forall x R:
                         < output.find("namespace to_lean_ir_mvp").unwrap()
                 );
                 assert!(output.contains("class LitexObject (α : Type LitexUniverse) : Prop where"));
-                assert!(output.contains("abbrev LitexFact := Prop"));
-                assert!(
-                    output.find("abbrev LitexFact").unwrap()
-                        < output.find("class LitexObject").unwrap()
-                );
-                assert!(output.contains(
-                    "opaque marked {α : Type LitexUniverse} [LitexObject α] : α → LitexFact"
-                ));
+                assert!(!output.contains("LitexFact"));
+                assert!(output
+                    .contains("opaque marked {α : Type LitexUniverse} [LitexObject α] : α → Prop"));
+                assert!(output.contains("opaque unparameterized : Prop"));
                 assert!(!output.contains("namespace LitexGenerated"));
                 assert!(!output.contains("end LitexGenerated"));
                 assert!(output.lines().any(|line| line == "universe LitexUniverse"));
                 assert!(output.ends_with("\nend to_lean_ir_mvp\n"));
-                assert!(output.contains("def is_one (x : ℝ) : LitexFact :="));
+                assert!(output.contains("def is_one (x : ℝ) : Prop :="));
                 assert!(!output.contains("LitexSet"));
                 assert_eq!(output.matches("\naxiom fact").count(), 1);
                 assert!(output.contains(":= fact"));
@@ -5902,6 +6545,180 @@ by contra:
                 "{error}"
             );
         });
+    }
+
+    #[test]
+    fn to_lean_obtain_from_existential_prop_uses_checked_definition_projection() {
+        run_with_large_stack(
+            "to_lean_obtain_from_existential_prop_uses_checked_definition_projection",
+            || {
+                let source = include_str!(
+                    "../../examples/01_proof_patterns/obtain_from_existential_prop.lit"
+                );
+                let statement_irs = test_to_lean_ir(source, "obtain-from-prop-ir.lit");
+                let StmtToLeanIR::HaveExistentialWitness(obtain) = &statement_irs[2] else {
+                    panic!("third statement should be existential-elimination IR");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::DefinitionProjection {
+                            definition,
+                            expected_source,
+                            expected_target,
+                        },
+                    parameter_requirements,
+                    premises,
+                } = &obtain.source.proof
+                else {
+                    panic!("obtain source should retain definition-projection evidence");
+                };
+                assert_eq!(definition, "has_copy");
+                assert_eq!(expected_source.to_string(), "$has_copy(2)");
+                assert_eq!(
+                    expected_target.to_string(),
+                    obtain.source.proposition.to_string()
+                );
+                assert!(parameter_requirements.is_empty());
+                assert_eq!(premises.len(), 1);
+                assert_eq!(premises[0].proposition.to_string(), "$has_copy(2)");
+
+                let output = to_lean_from_source(source, "obtain-from-prop-output.lit").unwrap();
+                assert!(output.contains("simpa only [has_copy] using"), "{output}");
+                assert!(
+                    output.contains("noncomputable def copy : ℝ := Exists.choose"),
+                    "{output}"
+                );
+                assert!(!output.contains("axiom fact"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_obtain_from_existential_prop_rejects_malformed_projection_ir() {
+        run_with_large_stack(
+            "to_lean_obtain_from_existential_prop_rejects_malformed_projection_ir",
+            || {
+                let source = include_str!(
+                    "../../examples/01_proof_patterns/obtain_from_existential_prop.lit"
+                );
+
+                let mut wrong_source = test_to_lean_ir(source, "obtain-wrong-source.lit");
+                let StmtToLeanIR::HaveExistentialWitness(obtain) = &mut wrong_source[2] else {
+                    panic!("third statement should be existential-elimination IR");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::DefinitionProjection {
+                            expected_source, ..
+                        },
+                    ..
+                } = &mut obtain.source.proof
+                else {
+                    panic!("obtain source should retain definition-projection evidence");
+                };
+                *expected_source = obtain.source.proposition.clone();
+                let error = emit_lean_from_ir(&wrong_source)
+                    .expect_err("a changed projection source must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains(
+                        "definition-projection source disagrees with its retained expected proposition"
+                    ),
+                    "{error}"
+                );
+
+                let mut wrong_target = test_to_lean_ir(source, "obtain-wrong-target.lit");
+                let StmtToLeanIR::HaveExistentialWitness(obtain) = &mut wrong_target[2] else {
+                    panic!("third statement should be existential-elimination IR");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule:
+                        ProofRuleToLeanIR::DefinitionProjection {
+                            expected_target, ..
+                        },
+                    premises,
+                    ..
+                } = &mut obtain.source.proof
+                else {
+                    panic!("obtain source should retain definition-projection evidence");
+                };
+                *expected_target = premises[0].proposition.clone();
+                let error = emit_lean_from_ir(&wrong_target)
+                    .expect_err("a changed projection target must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains(
+                        "definition-projection target disagrees with its retained expected proposition"
+                    ),
+                    "{error}"
+                );
+
+                let mut missing_source = test_to_lean_ir(source, "obtain-missing-source.lit");
+                let StmtToLeanIR::HaveExistentialWitness(obtain) = &mut missing_source[2] else {
+                    panic!("third statement should be existential-elimination IR");
+                };
+                let FactProofToLeanIR::RuleApplication { premises, .. } = &mut obtain.source.proof
+                else {
+                    panic!("obtain source should retain rule-application evidence");
+                };
+                premises.clear();
+                let error = emit_lean_from_ir(&missing_source)
+                    .expect_err("a projection without its source proof must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains(
+                        "definition-projection evidence requires no parameter requirements and exactly one source premise"
+                    ),
+                    "{error}"
+                );
+
+                let mut runtime = Runtime::new();
+                runtime.new_file_path_new_env_new_name_scope("obtain-tampered-certificate.lit");
+                let tokenizer = Tokenizer::new();
+                let blocks = tokenizer
+                    .parse_blocks(source, runtime.current_file_path_rc())
+                    .unwrap();
+                let mut obtain_result = None;
+                for mut block in blocks {
+                    let statement = runtime.parse_stmt(&mut block).unwrap();
+                    let is_obtain =
+                        matches!(&statement, Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)));
+                    let result = run_stmt_at_global_env(&statement, &mut runtime).unwrap();
+                    if is_obtain {
+                        obtain_result = Some(result);
+                        break;
+                    }
+                }
+                let mut obtain_result = obtain_result.expect("obtain result should be present");
+                let success = obtain_result
+                    .non_factual_success_mut()
+                    .expect("obtain should have a non-factual success result");
+                let projection = success.inside_results[0]
+                    .factual_success_mut()
+                    .expect("obtain source should be a factual projection result");
+                let VerifiedByResult::BuiltinRule(verification) = &mut projection.verified_by
+                else {
+                    panic!("projection should retain builtin-rule verification evidence");
+                };
+                let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) =
+                    &mut verification.evidence
+                else {
+                    panic!("projection should retain its typed definition certificate");
+                };
+                evidence.source.definition.name = "wrong_definition".to_string();
+                let error = runtime
+                    .build_stmt_to_lean_ir(&obtain_result)
+                    .expect_err("a changed verifier-side definition certificate must be rejected")
+                    .trace_message();
+                assert!(
+                    error.contains(
+                        "source prop `has_copy` does not match retained definition `wrong_definition`"
+                    ),
+                    "{error}"
+                );
+            },
+        );
     }
 
     #[test]
@@ -6491,11 +7308,16 @@ forall a, b, z R:
                     assert!(matches!(
                         underlying_test_proof(&requirement.proof),
                         FactProofToLeanIR::RuleApplication {
-                            rule: ProofRuleToLeanIR::RegisteredRule(application),
+                            rule: ProofRuleToLeanIR::Builtin(
+                                BuiltinRuleToLeanIR::StandardSetMembershipProjection
+                            ),
                             premises,
                             ..
-                        } if application.rule_id.as_str() == "carrier.r_pos_in_r"
-                            && premises.is_empty()
+                        } if premises.len() == 1
+                            && matches!(
+                                underlying_test_proof(&premises[0].proof),
+                                FactProofToLeanIR::KnownFactCitation { .. }
+                            )
                     ));
                 }
 
@@ -6528,13 +7350,141 @@ forall a, b, z R:
                 }
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
-                assert!(output.contains("_root_.Litex.BuiltinRules.carrier_r_pos_in_r"));
+                assert!(!output.contains("_root_.Litex.BuiltinRules.carrier_r_pos_in_r"));
                 assert!(output.contains("_root_.Litex.BuiltinRules.order_add_positive"));
                 assert!(output.contains("_root_.Litex.BuiltinRules.order_less_equal_of_less"));
                 assert!(output.contains("linarith only"), "{output}");
                 assert!(!output.contains("OtherUnsupported"), "{output}");
                 assert!(!output.contains("axiom"), "{output}");
                 assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_standard_set_membership_projection_is_typed_and_checked() {
+        run_with_large_stack(
+            "to_lean_standard_set_membership_projection_is_typed_and_checked",
+            || {
+                let source = r#"
+forall n N:
+    n $in Z
+
+forall z Z:
+    z $in Q
+
+forall q Q:
+    q $in R
+
+forall r R:
+    r $in C
+
+forall q Q+:
+    q $in R+
+
+forall z Z*:
+    z $in C*
+
+forall n N+:
+    n $in C*
+
+forall z Z-:
+    z $in C*
+"#;
+                let statement_irs = test_to_lean_ir(source, "standard-set-projection");
+                assert_eq!(statement_irs.len(), 8);
+                for statement in &statement_irs {
+                    let StmtToLeanIR::Fact(forall) = statement else {
+                        panic!("each projection tracer must be a stored forall fact");
+                    };
+                    let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                        &forall.fact.proof
+                    else {
+                        panic!("each projection tracer must retain forall evidence");
+                    };
+                    assert_eq!(conclusions.len(), 1);
+                    let FactProofToLeanIR::RuleApplication {
+                        rule:
+                            ProofRuleToLeanIR::Builtin(
+                                BuiltinRuleToLeanIR::StandardSetMembershipProjection,
+                            ),
+                        parameter_requirements,
+                        premises,
+                    } = underlying_test_proof(&conclusions[0].proof)
+                    else {
+                        panic!("projection conclusion must retain its typed builtin certificate");
+                    };
+                    assert!(parameter_requirements.is_empty());
+                    assert_eq!(premises.len(), 1);
+                    assert!(matches!(
+                        underlying_test_proof(&premises[0].proof),
+                        FactProofToLeanIR::KnownFactCitation { .. }
+                    ));
+                }
+
+                let output = emit_lean_from_ir(&statement_irs).unwrap();
+                assert!(output.contains("(n : ℤ) ∈ (Set.univ : Set ℤ)"), "{output}");
+                assert!(output.contains("(z : ℚ) ∈ (Set.univ : Set ℚ)"), "{output}");
+                assert!(output.contains("(q : ℝ) ∈ (Set.univ : Set ℝ)"), "{output}");
+                assert!(output.contains("(r : ℂ) ∈ (Set.univ : Set ℂ)"), "{output}");
+                assert!(output.contains("(q : ℝ) ∈ {r : ℝ | 0 < r}"), "{output}");
+                assert!(output.contains("(z : ℂ) ∈ {c : ℂ | c ≠ 0}"), "{output}");
+                assert!(output.contains("exact_mod_cast"), "{output}");
+                assert!(output.contains("ne_of_gt"), "{output}");
+                assert!(output.contains("ne_of_lt"), "{output}");
+                assert!(!output.contains("_root_.Litex.BuiltinRules.carrier_"));
+                assert!(!output.contains("OtherUnsupported"));
+                assert!(!output.contains("axiom"));
+                assert!(!output.contains("sorry"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_standard_set_membership_projection_rejects_malformed_certificate() {
+        run_with_large_stack(
+            "to_lean_standard_set_membership_projection_rejects_malformed_certificate",
+            || {
+                let mut statement_irs = test_to_lean_ir(
+                    "forall n N:\n    n $in Z\n",
+                    "standard-set-projection-malformed",
+                );
+                let StmtToLeanIR::Fact(forall) = &mut statement_irs[0] else {
+                    panic!("tracer must produce a stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("tracer must retain forall evidence");
+                };
+                let FactProofToLeanIR::RuleApplication { premises, .. } =
+                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("projection conclusion must be a rule application");
+                };
+                premises.clear();
+
+                let error = emit_lean_from_ir(&statement_irs)
+                    .expect_err("malformed projection evidence must stop strict emission")
+                    .trace_message();
+                assert!(
+                    error.contains("expected 1 premise but received 0"),
+                    "{error}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_direct_cross_carrier_standard_subset_remains_unsupported() {
+        run_with_large_stack(
+            "to_lean_direct_cross_carrier_standard_subset_remains_unsupported",
+            || {
+                let error = to_lean_from_source("N $subset Z\n", "standard-set-subset-boundary")
+                    .expect_err("direct cross-carrier subset semantics remain undecided")
+                    .trace_message();
+                assert!(error.contains("no checked backend"), "{error}");
+                assert!(error.contains("standard_set_subset"), "{error}");
             },
         );
     }
@@ -8264,6 +9214,41 @@ $marked(1)
                 generated
             );
         });
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_obtain_from_existential_prop_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_to_lean_obtain_from_existential_prop_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let source = include_str!(
+                    "../../examples/01_proof_patterns/obtain_from_existential_prop.lit"
+                );
+                let generated =
+                    to_lean_from_source(source, "obtain-from-existential-prop-kernel").unwrap();
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_obtain_from_prop");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "obtain-from-prop generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
     }
 
     #[test]

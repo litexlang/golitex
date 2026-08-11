@@ -8,10 +8,12 @@ use crate::common::fact_id::FactId;
 use crate::fact::Fact;
 use crate::obj::Obj;
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
+use crate::result::{WellDefinednessCertificateId, WellDefinednessRequirementRole};
 use std::fmt;
 
 mod builtin_rule;
 mod carrier;
+mod function;
 mod obj;
 mod registered_rule;
 
@@ -21,6 +23,7 @@ pub use builtin_rule::{
     SetRelationDualityBuiltinRuleToLeanIR,
 };
 pub use carrier::LeanCarrierToLeanIR;
+pub use function::{FunctionApplicationToLeanIR, FunctionParameterToLeanIR, FunctionTypeToLeanIR};
 pub use obj::{
     BuiltinObjOperatorToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, ObjToLeanIR,
     StandardSetToLeanIR,
@@ -151,6 +154,7 @@ pub struct TrustToLeanIR {
 pub struct FactStmtToLeanIR {
     pub fact: FactToLeanIR,
     pub inferred_facts: Vec<FactToLeanIR>,
+    pub well_definedness: WellDefinednessCertificateToLeanIR,
 }
 
 /// One source `forall` whose independently covered conclusions are stored as
@@ -160,6 +164,19 @@ pub struct ProjectedForallToLeanIR {
     pub source: Fact,
     pub facts: Vec<FactToLeanIR>,
     pub inferred_facts: Vec<FactToLeanIR>,
+    pub well_definedness: WellDefinednessCertificateToLeanIR,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct WellDefinednessCertificateToLeanIR {
+    pub facts: Vec<WellDefinednessFactToLeanIR>,
+}
+
+#[derive(Clone, Debug)]
+pub struct WellDefinednessFactToLeanIR {
+    pub certificate_id: WellDefinednessCertificateId,
+    pub role: WellDefinednessRequirementRole,
+    pub fact: FactToLeanIR,
 }
 
 #[derive(Clone, Debug)]
@@ -303,6 +320,14 @@ pub enum ProofRuleToLeanIR {
     DefinitionReduction {
         definition: String,
     },
+    /// Checked unfolding of one concrete proposition definition. In the
+    /// enclosing application, the sole premise proves `expected_source`, and
+    /// unfolding `definition` must produce `expected_target`.
+    DefinitionProjection {
+        definition: String,
+        expected_source: Fact,
+        expected_target: Fact,
+    },
     Normalization {
         kind: NormalizationKindToLeanIR,
     },
@@ -396,6 +421,16 @@ impl fmt::Debug for ProofRuleToLeanIR {
             ProofRuleToLeanIR::DefinitionReduction { definition } => f
                 .debug_struct("DefinitionReduction")
                 .field("definition", definition)
+                .finish(),
+            ProofRuleToLeanIR::DefinitionProjection {
+                definition,
+                expected_source,
+                expected_target,
+            } => f
+                .debug_struct("DefinitionProjection")
+                .field("definition", definition)
+                .field("expected_source", &expected_source.to_string())
+                .field("expected_target", &expected_target.to_string())
                 .finish(),
             ProofRuleToLeanIR::Normalization { kind } => {
                 f.debug_struct("Normalization").field("kind", kind).finish()

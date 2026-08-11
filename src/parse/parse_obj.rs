@@ -2364,21 +2364,21 @@ fn validate_module_path_segment_for_parse(
 // Maps a built-in one-token standard-set symbol to Obj::StandardSet; see reclassify_atom_as_free_param_obj.
 fn standard_set_from_bare_identifier_name(name: &str) -> Option<Obj> {
     match name {
-        COMPACT_N_POS | COMPACT_Z_POS => Some(StandardSet::NPos.into()),
+        N_POSITIVE | Z_POSITIVE => Some(StandardSet::NPos.into()),
         N => Some(StandardSet::N.into()),
         Q => Some(StandardSet::Q.into()),
         Z => Some(StandardSet::Z.into()),
         R => Some(StandardSet::R.into()),
         C => Some(StandardSet::C.into()),
-        COMPACT_Q_POS => Some(StandardSet::QPos.into()),
-        COMPACT_R_POS => Some(StandardSet::RPos.into()),
-        COMPACT_Q_NEG => Some(StandardSet::QNeg.into()),
-        COMPACT_Z_NEG => Some(StandardSet::ZNeg.into()),
-        COMPACT_R_NEG => Some(StandardSet::RNeg.into()),
-        COMPACT_Q_STAR => Some(StandardSet::QStar.into()),
-        COMPACT_Z_STAR => Some(StandardSet::ZStar.into()),
-        COMPACT_R_STAR => Some(StandardSet::RStar.into()),
-        COMPACT_C_STAR => Some(StandardSet::CStar.into()),
+        Q_POSITIVE => Some(StandardSet::QPos.into()),
+        R_POSITIVE => Some(StandardSet::RPos.into()),
+        Q_NEGATIVE => Some(StandardSet::QNeg.into()),
+        Z_NEGATIVE => Some(StandardSet::ZNeg.into()),
+        R_NEGATIVE => Some(StandardSet::RNeg.into()),
+        Q_NOT_ZERO => Some(StandardSet::QStar.into()),
+        Z_NOT_ZERO => Some(StandardSet::ZStar.into()),
+        R_NOT_ZERO => Some(StandardSet::RStar.into()),
+        C_NOT_ZERO => Some(StandardSet::CStar.into()),
         _ => None,
     }
 }

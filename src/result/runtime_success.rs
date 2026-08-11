@@ -6,6 +6,7 @@ use std::rc::Rc;
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
     pub to_lean_ir: Option<StmtToLeanIR>,
+    pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     /// Stored facts selected for ordinary statement output. Most statements keep
     /// their environment effects in the detailed execution trace only; value-
@@ -494,6 +495,7 @@ pub struct FactualStmtSuccess {
     /// subgoals legitimately keep `None`.
     pub fact_id: Option<FactId>,
     pub to_lean_ir: Option<StmtToLeanIR>,
+    pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     pub verified_by: VerifiedByResult,
     pub execution_trace: Option<StatementExecutionTrace>,
@@ -509,6 +511,7 @@ impl FactualStmtSuccess {
             stmt,
             fact_id: None,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
             execution_trace: None,
@@ -612,6 +615,7 @@ impl FactualStmtSuccess {
             stmt,
             fact_id: None,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
             execution_trace: None,
@@ -1006,6 +1010,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -1028,6 +1033,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -1050,6 +1056,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
             inside_results,
@@ -1072,6 +1079,7 @@ impl NonFactualStmtSuccess {
         NonFactualStmtSuccess {
             stmt,
             to_lean_ir: None,
+            well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
             inside_results,

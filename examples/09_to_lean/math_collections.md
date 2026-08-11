@@ -42,12 +42,14 @@ one. Closed numeric facts such as `2 $in R+`, `0 - 1 $in Z-`, and
 `not 0 $in C*` are discharged by checked numeric reflection in Lean rather
 than by a generated axiom.
 
-The ten same-carrier refinement projections are registered rules, not target
-type inference shortcuts. For example, `forall r R+: r $in R` retains the
-source premise `r $in R+`, then applies `carrier.r_pos_in_r` on native `ℝ`.
-The analogous N/Z/Q/R/C positive, negative, and nonzero projections use their
-own checked adapters. Cross-carrier inclusions such as `N ⊆ Z` remain a
-separate coercion problem and are not claimed by this batch.
+Standard numeric membership projections use one explicit builtin certificate,
+not target-type inference shortcuts. For example, `forall n N: n $in Z`
+retains the source premise `n $in N`, validates `N -> Z` against the centralized
+Litex hierarchy, and emits the target occurrence as `(n : ℤ)`. The same rule
+covers same-carrier refinement erasure and the supported
+`N -> Z -> Q -> R -> C` widening paths. It does not assign an intrinsic type to
+`n`. Direct heterogeneous set propositions such as `N $subset Z` remain a
+separate, deliberately unsupported semantic choice.
 
 ## Facts and proof evidence
 
@@ -60,7 +62,15 @@ become a Lean axiom.
 The examples cover direct facts, definition reduction, known-forall
 instantiation, equality transport, rational normalization, typed builtin
 rules, recursive additive evidence, checked choice, existential introduction
-and elimination, case splitting, and contradiction scopes.
+and elimination, named-prop definition projection, case splitting, and
+contradiction scopes.
+
+The
+[`obtain_from_existential_prop_definition`](litex_to_lean_examples.md#obtain_from_existential_prop_definition)
+section retains the verified prop fact as the sole premise of a checked
+definition-projection node. Its Lean snapshot unfolds that definition with
+`simpa only`, then feeds the resulting existential to the ordinary
+`Exists.choose` and `choose_spec` elimination path.
 
 The [`mixed_projected_forall`](litex_to_lean_examples.md#mixed_projected_forall)
 section records the clause-coverage boundary. Its one source universal becomes

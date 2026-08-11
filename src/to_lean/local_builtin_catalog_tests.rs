@@ -39,16 +39,6 @@ fn catalog_acceptance_source_emits_all_registered_wrappers() {
         .expect("compile complete registered local builtin catalog");
         for theorem in [
             "algebra_abs_mul",
-            "carrier_c_nonzero_in_c",
-            "carrier_n_pos_in_n",
-            "carrier_q_neg_in_q",
-            "carrier_q_nonzero_in_q",
-            "carrier_q_pos_in_q",
-            "carrier_r_neg_in_r",
-            "carrier_r_nonzero_in_r",
-            "carrier_r_pos_in_r",
-            "carrier_z_neg_in_z",
-            "carrier_z_nonzero_in_z",
             "order_abs_add_le",
             "order_abs_eq_neg_of_nonpositive",
             "order_abs_positive_of_nonzero",
@@ -135,7 +125,7 @@ fn catalog_acceptance_source_emits_all_registered_wrappers() {
         }
         assert_eq!(
             lean.matches("_root_.Litex.BuiltinRules.").count(),
-            96,
+            86,
             "{lean}"
         );
         assert!(

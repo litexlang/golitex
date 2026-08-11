@@ -17,6 +17,12 @@ pub enum ObjToLeanIR {
     },
     Constant(ConstantObjToLeanIR),
     StandardSet(StandardSetToLeanIR),
+    /// A Litex function set is `Set.univ` over this native function type.
+    FunctionSet {
+        function: Box<FunctionTypeToLeanIR>,
+    },
+    /// Exact Litex application layers; target currying must not erase them.
+    FunctionApplication(FunctionApplicationToLeanIR),
     BuiltinApp {
         operator: BuiltinObjOperatorToLeanIR,
         arguments: Vec<ObjToLeanIR>,
@@ -105,6 +111,10 @@ impl ObjToLeanIR {
             Obj::EulerNumber(_) => Ok(ObjToLeanIR::Constant(ConstantObjToLeanIR::EulerNumber)),
             Obj::Pi(_) => Ok(ObjToLeanIR::Constant(ConstantObjToLeanIR::Pi)),
             Obj::StandardSet(set) => Ok(ObjToLeanIR::StandardSet(set.into())),
+            Obj::FnSet(function_set) => Ok(ObjToLeanIR::FunctionSet {
+                function: Box::new(FunctionTypeToLeanIR::lower(function_set)?),
+            }),
+            Obj::FnObj(application) => lower_function_application(application),
             Obj::Add(value) => binary(
                 BuiltinObjOperatorToLeanIR::Add,
                 value.left.as_ref(),
@@ -220,6 +230,44 @@ impl ObjToLeanIR {
             )),
         }
     }
+}
+
+fn lower_function_application(application: &FnObj) -> Result<ObjToLeanIR, String> {
+    if matches!(application.head.as_ref(), FnObjHead::AnonymousFnLiteral(_)) {
+        return Err(format!(
+            "To-Lean Obj IR does not yet support anonymous function application `{}`",
+            application
+        ));
+    }
+    let head_obj: Obj = (*application.head).clone().into();
+    let head = ObjToLeanIR::lower(&head_obj)?;
+    let argument_layers = application
+        .body
+        .iter()
+        .map(|layer| {
+            layer
+                .iter()
+                .map(|argument| ObjToLeanIR::lower(argument.as_ref()))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let source_argument_layers = application
+        .body
+        .iter()
+        .map(|layer| {
+            layer
+                .iter()
+                .map(|argument| argument.as_ref().clone())
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    Ok(ObjToLeanIR::FunctionApplication(
+        FunctionApplicationToLeanIR {
+            head: Box::new(head),
+            argument_layers,
+            source_argument_layers,
+        },
+    ))
 }
 
 fn lower_atom(atom: &AtomObj) -> Result<ObjToLeanIR, String> {

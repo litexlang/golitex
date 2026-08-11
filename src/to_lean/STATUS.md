@@ -30,6 +30,30 @@ Tracer:
 Projected-forall tracer:
 [`examples/05_compiler_interop/to_lean_mixed_projected_forall.lit`](../../examples/05_compiler_interop/to_lean_mixed_projected_forall.lit)
 
+## Native function and well-definedness ABI
+
+- [x] Freeze `fn(...)` as `Set.univ` over a native dependent function type,
+  while preserving `$in` as a proposition.
+- [x] Freeze exact Litex application layers: value arguments first, then the
+  same layer's ordered domain proofs; Lean currying does not widen source
+  syntax.
+- [x] Confirm with real Mathlib that a consumed local WD premise must have an
+  explicit binder/helper name (an unnamed implication is not visible while
+  its consequent type elaborates).
+- [ ] Retain statement-local WD proof certificates across temporary verifier
+  scopes and boolean object-cache hits.
+- [ ] Lower bound function carriers and named applications, inserting only
+  target-consumed certificate proofs as term arguments.
+- [ ] Replay source-only WD obligations as checked audit facts and reject
+  missing, reordered, mismatched, or scope-invalid certificates.
+- [ ] Add the persistent function/WD tracer, malformed-evidence regressions,
+  Markdown snapshot, and real Mathlib gate.
+- [ ] Add anonymous-function and `have fn` declaration/evaluation evidence as
+  the second slice of the same ABI.
+
+Specification:
+[`math_collections.md#native-function-sets-exact-layers-and-well-definedness-proofs`](math_collections.md#native-function-sets-exact-layers-and-well-definedness-proofs)
+
 ## Resolved atomic facts
 
 - [x] Retain goal-to-source resolution as an ordered source-to-goal
@@ -83,6 +107,12 @@ Tracer:
   through checked alpha-equivalent source citations, ordered nested
   `Exists.choose`, and exact type/body `choose_spec` projections at file and
   proof scope.
+- [x] Lower `obtain ... from $P(args)` when the concrete definition has one
+  positive `exist` clause by retaining the verified prop premise,
+  re-instantiating and checking the definition projection, and emitting
+  `simpa only [P]` before the ordinary existential-elimination path.
+- [x] Reject verifier-certificate and backend-IR tampering for the named-prop
+  projection, and compile its persistent ledger tracer with real Mathlib.
 - [x] Check single- and multi-witness extraction with focused positive,
   malformed-evidence, sanitized-binder-capture, direct Litex, and real
   Mathlib/Lean gates.
@@ -110,13 +140,13 @@ Existential tracer:
 - [x] Record each rule's owning Rust file and checked Lean tactic/lemma mapping.
 - [x] Mark evaluation/computation-like rules as `not_this_round`.
 
-Current source audit: 465 direct success-constructor calls expand through
-forwarding helpers to 658 label-bearing sites (631 rules and 27 strategies),
-including 558 distinct static labels and 75 dynamic label expressions. There
+Current source audit: 466 direct success-constructor calls expand through
+forwarding helpers to 659 label-bearing sites (632 rules and 27 strategies),
+including 558 distinct static labels and 76 dynamic label expressions. There
 are 46 evaluation/computation-like sites, of which 43 remain
 `not_this_round` after the checked normalization and prime-reflection slices.
-The checked mapping count is now 47 source sites. One of those sites is the
-generic local-schema route and currently represents 96 paired RuleIds; source
+The checked mapping count is now 48 source sites. One of those sites is the
+generic local-schema route and currently represents 86 paired RuleIds; source
 site counts and paired-schema counts are deliberately reported separately.
 The existing standard numeric-set nonemptiness route covers `N/Z/Q/R/C`.
 
@@ -134,10 +164,10 @@ Inventory:
 - [x] Revalidate RuleId, fingerprint, structural target bindings, parameter
   requirements, and ordered premise propositions before Lean emission; reject
   unknown IDs, stale fingerprints, and malformed arities.
-- [x] Migrate 96 zero-, one-, and two-premise rules covering quotient/product
+- [x] Migrate 86 zero-, one-, and two-premise rules covering quotient/product
   nonzero, real absolute value/order, arithmetic signs and monotonicity,
-  same-carrier refined-domain membership projections, min/max, native
-  union/intersection/set difference/powerset, set membership, finiteness,
+  min/max, native union/intersection/set difference/powerset, set membership,
+  finiteness,
   nonemptiness, and elementary subset laws, with a full real-Mathlib acceptance
   gate.
 
@@ -147,6 +177,9 @@ Inventory:
   in all four positive/negative orientations.
 - [x] Closed positive and negative `$prime` facts as native `Nat.Prime`
   propositions checked by `norm_num` reflection.
+- [x] Standard numeric-set membership projection with one retained source
+  membership proof, centralized hierarchy validation, and checked native
+  coercions across the supported `N/Z/Q/R/C` paths.
 - [x] Native proposition lowering for superset, proper subset/superset, and all
   four negated comparisons.
 - [x] Native `Set` equality lowering for union/intersection commutativity and

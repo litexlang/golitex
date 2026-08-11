@@ -1262,8 +1262,11 @@ In the current checked To-Lean slice, that distinction is preserved directly:
 the existential remains a theorem, the named witness is selected from that
 same theorem, and each exposed type or body fact is a projection of its
 `choose_spec`. The compiler does not replace `obtain` with an unconstrained
-constant. The named-prop shorthand is not yet in this To-Lean slice; spelling
-out the expanded existential keeps the compiler boundary explicit.
+constant. For the named-prop shorthand, it additionally retains the verified
+prop call, checks that the recorded concrete definition unfolds to the exact
+existential source, and emits `simpa only [definition] using source` before
+selecting the witness. Thus the shorthand and its expanded positive `exist`
+form have the same checked Lean meaning.
 
 ## How do function ranges and preimages work?
 
