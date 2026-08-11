@@ -6,16 +6,36 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let fn_set_stored =
             self.exec_have_fn_equal_stmt_verify_well_definedness(have_fn_equal_stmt)?;
-        let inside_results = self.exec_have_fn_equal_stmt_verify_process(have_fn_equal_stmt)?;
+        let (inside_results, assumption_infers) =
+            self.exec_have_fn_equal_stmt_verify_process(have_fn_equal_stmt)?;
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
 
-        Ok((NonFactualStmtSuccess::new(
+        let function_identifier_obj = self.declared_identifier_obj(&have_fn_equal_stmt.name);
+        let function_membership: Fact = InFact::new(
+            function_identifier_obj.clone(),
+            fn_set_stored.clone().into(),
+            have_fn_equal_stmt.line_file.clone(),
+        )
+        .into();
+        let defining_equality: Fact = EqualFact::new(
+            function_identifier_obj,
+            have_fn_equal_stmt.equal_to_anonymous_fn.clone().into(),
+            have_fn_equal_stmt.line_file.clone(),
+        )
+        .into();
+        let mut success = NonFactualStmtSuccess::new(
             have_fn_equal_stmt.clone().into(),
             infer_result,
             inside_results,
-        ))
-        .into())
+        );
+        success.function_definition_verification = Some(FunctionDefinitionVerificationResult::new(
+            0,
+            assumption_infers,
+            function_membership,
+            defining_equality,
+        ));
+        Ok(success.into())
     }
 
     fn store_have_fn_equal_stmt_facts(
@@ -174,8 +194,8 @@ impl Runtime {
     fn exec_have_fn_equal_stmt_verify_process(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<Vec<StmtResult>, RuntimeError> {
-        let verify_result =
+    ) -> Result<(Vec<StmtResult>, InferResult), RuntimeError> {
+        let (verify_result, assumption_infers) =
             self.have_fn_equal_stmt_verify_return_value_in_ret_set(have_fn_equal_stmt)?;
         if verify_result.is_unknown() {
             let msg = format!(
@@ -190,7 +210,7 @@ impl Runtime {
                 vec![],
             ));
         }
-        Ok(vec![verify_result])
+        Ok((vec![verify_result], assumption_infers))
     }
 
     fn exec_have_fn_equal_stmt_affect_environment(
@@ -204,15 +224,17 @@ impl Runtime {
     fn have_fn_equal_stmt_verify_return_value_in_ret_set(
         &mut self,
         have_fn_equal_stmt: &HaveFnEqualStmt,
-    ) -> Result<StmtResult, RuntimeError> {
+    ) -> Result<(StmtResult, InferResult), RuntimeError> {
         self.run_in_local_env(|rt| {
+            let mut assumption_infers = InferResult::new();
             for param_def_with_set in have_fn_equal_stmt
                 .equal_to_anonymous_fn
                 .body
                 .params_def_with_set
                 .iter()
             {
-                rt.define_params_with_set(param_def_with_set)?;
+                let param_infers = rt.define_params_with_set(param_def_with_set)?;
+                assumption_infers.new_infer_result_inside(param_infers);
             }
             for dom_fact in have_fn_equal_stmt
                 .equal_to_anonymous_fn
@@ -220,16 +242,23 @@ impl Runtime {
                 .dom_facts
                 .iter()
             {
-                let _ = rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                    dom_fact.clone(),
-                )?;
+                let mut dom_infers = rt
+                    .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                        dom_fact.clone(),
+                    )?;
+                dom_infers
+                    .relabel_all_added_facts_with_store_reason(ForallFact::premise_store_reason());
+                assumption_infers.new_infer_result_inside(dom_infers);
             }
-            rt.verify_value_in_declared_return_set(
+            let mut return_check = rt.verify_value_in_declared_return_set(
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone(),
                 (*have_fn_equal_stmt.equal_to_anonymous_fn.body.ret_set).clone(),
                 have_fn_equal_stmt.line_file.clone(),
                 &UseContextVerifyState::new(0, false),
-            )
+            )?;
+            rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
+            rt.attach_known_fact_ids_to_stmt_result(&mut return_check)?;
+            Ok((return_check, assumption_infers))
         })
         .map_err(|verify_error| {
             short_exec_error(

@@ -1,0 +1,61 @@
+# Tracer: function sets, exact Litex application layers, and retained
+# well-definedness proofs compile to native dependent Lean functions.
+#
+# Before: Litex-to-Lean stopped at `fn(...)` with
+# `Litex-to-Lean Obj IR does not support FnSet object` and did not retain the
+# verifier's complete well-definedness proof sequence.
+#
+# Now: every restricted application receives the exact checked domain proof.
+# A closed proof is emitted as a reusable theorem because it occurs in the
+# Lean proposition itself.
+forall f fn(x R: x > 0) R:
+    f(2) = f(2)
+
+# A source domain premise remains a named binder and is passed explicitly.
+forall f fn(x R: x > 0) R, a R:
+    a > 0
+    =>:
+        f(a) = f(a)
+
+# Source-only well-definedness evidence is replayed even when it is not an
+# explicit argument of the final term.
+forall a R:
+    a / 2 = a / 2
+
+# One Litex argument group stays one source application layer. Lean may print
+# the native function type in curried form without changing Litex syntax.
+forall f fn(x, y, z R) R:
+    f(1, 2, 3) = f(1, 2, 3)
+
+# A nested function return introduces a second genuine Litex layer.
+forall f fn(x R: x > 0) fn(y R) R:
+    f(2)(3) = f(2)(3)
+
+# A checked named definition retains its body, return check, stored membership,
+# defining equality, and the exact definition source used by later evaluation.
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+forall x R:
+    x != 0
+    =>:
+        reciprocal(x) = 1 / x
+
+# Nearest rejected boundaries (comments keep this acceptance tracer passing):
+#
+# `f(1)(2, 3)` is not accepted for `f $in fn(x, y, z R) R`; Lean currying
+# cannot invent a Litex application layer.
+#
+# One symbol declared in `fn(x R) R` cannot later be retyped as `fn(x Q) Q`.
+#
+# A refined result such as `fn(x R) R+` remains fail-closed until Litex-to-Lean has
+# an explicit output-membership representation. It is not erased to `R`.
+#
+# Standalone anonymous function terms and the remaining `have fn` forms are a
+# separate follow-up slice; this tracer covers checked named equality forms.
+#
+# Source gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit
+# Focused compiler gate:
+# cargo test --release named_function_definition_replays_scoped_well_definedness -- --nocapture
+# Real Lean gate:
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release generated_restricted_function_well_definedness_compiles_with_lean -- --ignored --nocapture

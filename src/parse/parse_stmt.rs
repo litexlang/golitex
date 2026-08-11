@@ -37,7 +37,7 @@ impl Runtime {
                 )),
                 _ => self.parse_have_obj_stmt(tb),
             },
-            OBTAIN => self.parse_obtain_exist_stmt(tb),
+            OBTAIN => self.parse_obtain_obj(tb),
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),

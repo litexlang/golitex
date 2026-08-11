@@ -1,0 +1,107 @@
+# Tracer: verifier-produced proof-rule IR preserves equality transport.
+#
+# Before (did not work):
+# abstract_prop transported(a)
+# forall a, b set:
+#     $transported(a)
+#     a = b
+#     =>:
+#         $transported(b)
+#
+# Former behavior: Litex verified the forall, but flattened the conclusion to
+# a citation of `$transported(a)`. Litex-to-Lean then failed with "has no stored
+# FactId" and had no record that `a = b` transported the cited fact to the
+# target `$transported(b)`.
+#
+# Now (verified): Litex-to-Lean emits stored facts as `fact<FactId>`. Every
+# proof block that introduces facts gets a separate space, whose premises and
+# intermediate facts are named `proof_fact_<SpaceId>_<LocalIndex>` in
+# derivation order.
+abstract_prop transported(a)
+
+forall a, b set:
+    $transported(a)
+    a = b
+    =>:
+        $transported(b)
+
+# The proof forest keeps one deterministic witness path. Here the useful path
+# is a -> b -> c -> g -> f. The later shortcut a = c, the attached side branch
+# b -> h -> u -> v, and the disconnected w = z component must not appear in
+# the equality premises consumed by Litex-to-Lean.
+forall a, b, c, f, g, h, u, v, w, z set:
+    a = b
+    b = c
+    a = c
+    c = g
+    f = g
+    h = b
+    h = u
+    u = v
+    w = z
+    $transported(a)
+    =>:
+        $transported(f)
+
+# Broader first-slice coverage:
+abstract_prop marked(x)
+
+prop is_one(x R):
+    x = 1
+
+trust forall x R:
+    x != 0
+    =>:
+        $marked(x)
+
+$is_one(1)
+
+# A known-forall match may choose an Obj that is only rationally equal to the
+# spelling in the requested goal. The compiler must retain that exact Obj,
+# create a typed local `proof_arg`, name the direct forall instance, and only
+# then normalize that instance to the goal in the enclosing proof space.
+abstract_prop marked2(x, y)
+
+trust forall x R:
+    $marked2(x, x + 1)
+
+$marked2(1, 2)
+
+forall x R:
+    x != 0
+    x < 10
+    =>:
+        $marked(x)
+
+forall x R:
+    x != 0
+    =>:
+        x != 0
+
+forall a, b, x R:
+    x != 0
+    =>:
+        (a + b) / x = a / x + b / x
+# Current behavior: while the local premise environment is alive, the verifier
+# freezes the ordered equality path together with every source/equality FactId.
+# Litex-to-Lean represents the conclusion as a `RuleApplication`
+# containing `EqualityRewrite`, a cited source-fact premise, and equality-proof
+# premises; it does not rediscover equality identities after the local scope
+# has ended. The emitter then gives the introduced premises, replayed source,
+# equality evidence, and checked result consecutive coordinates in that proof
+# space. Known-forall IR separately records typed Obj arguments, parameter and
+# domain requirements, its direct instantiated conclusion, and any outer
+# normalization needed to reach the target. The same extensible rule node also
+# represents definition reduction and normalization. Only explicit `trust`
+# becomes `axiom`.
+#
+# Boundary: transports without structured verifier evidence (currently, for
+# example, order-predicate transposition) become `OtherUnsupported` and stop
+# compilation. Directly compiling `$marked(1)` also still requires a nested
+# numeric proof backend. Neither boundary becomes `sorry` or an implicit axiom.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/litex_to_lean_ir_mvp.lit
+# Compiler evidence: cargo test --release compile_to_lean:: -- --nocapture
+# Implementation: src/environment/known_equality.rs,
+# src/verify/verify_known_atomic_facts.rs, src/result/runtime_success.rs,
+# src/litex_to_lean_ir, src/runtime/runtime_litex_to_lean_ir.rs, src/compile_to_lean

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/existentials.lit",
+  "session_command": "target/release/litex -compact -session -before examples/09_compile_to_lean/existentials.lit",
+  "proof_spine": [
+    "Introduce checked existential packages from explicit witnesses",
+    "Extract witnesses through obtain or body-style have",
+    "Use the extraction statements themselves instead of repeating stored projections"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Introduce one checked real witness",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "witness exist demo_source R st {demo_source = 1, demo_source = demo_source} from 1:\n    1 = 1\n    1 = 1",
+          "result": "passed",
+          "verifier_evidence": "session block B001 returned ok: true",
+          "diagnosis": "The explicit witness and both direct body equalities verify in project context.",
+          "next_change": "Commit the existential and test extraction."
+        }
+      ],
+      "accepted_litex": "witness exist demo_source R st {demo_source = 1, demo_source = demo_source} from 1:\n    1 = 1\n    1 = 1",
+      "reusable_lesson": "Explicit real witnesses retain their checked type and direct body facts.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "Extract the first witness and its stored projections",
+      "dependencies": ["B001"],
+      "attempts": [
+        {
+          "candidate": "obtain demo_selected from exist demo_source R st {demo_source = 1, demo_source = demo_source}",
+          "result": "passed",
+          "verifier_evidence": "session block B002 returned ok: true",
+          "diagnosis": "The stored existential is found and its witness projections are installed.",
+          "next_change": "Keep obtain without repeated projection facts."
+        }
+      ],
+      "accepted_litex": "obtain demo_selected from exist demo_source R st {demo_source = 1, demo_source = demo_source}",
+      "reusable_lesson": "The obtain statement is the complete reader-facing extraction step.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "Test whether a repeated projected equality belongs in the reader example",
+      "dependencies": ["B002"],
+      "attempts": [
+        {
+          "candidate": "demo_selected = 1",
+          "result": "failed",
+          "verifier_evidence": "examples/09_to_lean/existentials.lit:9: unknown result for existentials::demo_selected = 1 in project context",
+          "diagnosis": "The line only echoes a projection already stored by obtain and is not part of the mathematical interface demonstrated here.",
+          "next_change": "Remove the echo and retain the obtain statement as the checked extraction example."
+        }
+      ],
+      "accepted_litex": "",
+      "reusable_lesson": "Do not republish obtain projections in reader-facing examples when the extraction statement already carries them.",
+      "status": "discarded"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "Exercise body-style existential extraction",
+      "dependencies": ["B001"],
+      "attempts": [
+        {
+          "candidate": "have demo_shorthand R:\n    demo_shorthand = 1\n    demo_shorthand = demo_shorthand",
+          "result": "passed",
+          "verifier_evidence": "session block B004 returned ok: true",
+          "diagnosis": "Body-style have packages the same checked existential extraction.",
+          "next_change": "Keep the declaration without projection echoes."
+        }
+      ],
+      "accepted_litex": "have demo_shorthand R:\n    demo_shorthand = 1\n    demo_shorthand = demo_shorthand",
+      "reusable_lesson": "Body-style have is sufficient to demonstrate shorthand extraction.",
+      "status": "materialized"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "intent": "Introduce two checked witnesses",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "witness exist demo_left, demo_right R st {demo_left = 1, demo_right = 2} from 1, 2:\n    1 = 1\n    2 = 2",
+          "result": "passed",
+          "verifier_evidence": "session block B005 returned ok: true",
+          "diagnosis": "The two witness package verifies in declaration order.",
+          "next_change": "Extract both witnesses in one obtain statement."
+        }
+      ],
+      "accepted_litex": "witness exist demo_left, demo_right R st {demo_left = 1, demo_right = 2} from 1, 2:\n    1 = 1\n    2 = 2",
+      "reusable_lesson": "Multiple witnesses form one ordered existential package.",
+      "status": "materialized"
+    },
+    {
+      "id": "B006",
+      "source_order": 6,
+      "intent": "Extract two witnesses in declaration order",
+      "dependencies": ["B005"],
+      "attempts": [
+        {
+          "candidate": "obtain demo_chosen_left, demo_chosen_right from exist demo_left, demo_right R st {demo_left = 1, demo_right = 2}",
+          "result": "passed",
+          "verifier_evidence": "session block B006 returned ok: true",
+          "diagnosis": "Both witnesses and their ordered projections are installed by one obtain statement.",
+          "next_change": "Materialize the accepted source without projection echoes."
+        }
+      ],
+      "accepted_litex": "obtain demo_chosen_left, demo_chosen_right from exist demo_left, demo_right R st {demo_left = 1, demo_right = 2}",
+      "reusable_lesson": "One obtain statement is sufficient for a multiple-witness extraction example.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001", "B002", "B004", "B005", "B006"],
+    "file_gate_command": "target/release/litex -compact -runner -f examples/09_compile_to_lean/existentials.lit",
+    "file_gate_result": "passed with top-level ok: true and exit code 0"
+  }
+}

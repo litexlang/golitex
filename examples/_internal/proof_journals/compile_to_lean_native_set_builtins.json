@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/compile_to_lean_examples.md#native_set_builtins",
+  "proof_spine": [
+    "Preserve verifier-selected native Set equality routes as typed Litex-to-Lean builtin IR",
+    "Lower one-premise union membership and two-premise intersection/set-minus membership without re-running proof search",
+    "Lower checked absolute-value identities to Mathlib lemmas",
+    "Use native Set.univ witnesses for standard N/Z/Q/R/C nonemptiness"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "accepted_litex": "forall A, B set:\n    union(A, B) = union(B, A)",
+      "result": "accepted_and_materialized",
+      "lean_route": "ext x; simp [or_comm]"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "accepted_litex": "forall A set:\n    union(A, A) = A",
+      "result": "accepted_and_materialized",
+      "lean_route": "simp"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "accepted_litex": "forall A set:\n    union(A, {}) = A",
+      "result": "accepted_and_materialized",
+      "lean_route": "simp"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "accepted_litex": "forall A, B set:\n    intersect(A, B) = intersect(B, A)",
+      "result": "accepted_and_materialized",
+      "lean_route": "ext x; simp [and_comm]"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "accepted_litex": "forall A, B set, x A:\n    x $in union(A, B)",
+      "result": "accepted_and_materialized",
+      "lean_route": "Set.mem_union; Or.inl"
+    },
+    {
+      "id": "B006",
+      "source_order": 6,
+      "accepted_litex": "forall A, B set, x A:\n    x $in B\n    =>:\n        x $in intersect(A, B)",
+      "result": "accepted_and_materialized",
+      "lean_route": "Set.mem_inter_iff; pair"
+    },
+    {
+      "id": "B007",
+      "source_order": 7,
+      "accepted_litex": "forall A, B set, x A:\n    not x $in B\n    =>:\n        x $in set_minus(A, B)",
+      "result": "accepted_and_materialized",
+      "lean_route": "Set.mem_diff; pair"
+    },
+    {
+      "id": "B008",
+      "source_order": 8,
+      "accepted_litex": "forall x R:\n    0 <= x\n    =>:\n        abs(x) = x",
+      "result": "accepted_and_materialized",
+      "lean_route": "abs_of_nonneg"
+    },
+    {
+      "id": "B009",
+      "source_order": 9,
+      "accepted_litex": "forall x R:\n    x != 0\n    =>:\n        0 < abs(x)",
+      "result": "accepted_and_materialized",
+      "lean_route": "abs_pos.mpr"
+    },
+    {
+      "id": "B010",
+      "source_order": 10,
+      "accepted_litex": "$is_nonempty_set(N), $is_nonempty_set(Z), $is_nonempty_set(Q), $is_nonempty_set(R), $is_nonempty_set(C)",
+      "result": "accepted_and_materialized",
+      "lean_route": "Exists witness 0; Set.mem_univ"
+    }
+  ],
+  "materialization": {
+    "focused_test": "cargo test --release compile_to_lean::pipeline::tests::compile_to_lean_builtin_set_and_abs_rules_preserve_checked_routes -- --nocapture --exact",
+    "malformed_certificate_test": "cargo test --release compile_to_lean::pipeline::tests::compile_to_lean_set_membership_rejects_malformed_premise_arity -- --nocapture --exact",
+    "snapshot_test": "cargo test --release compile_to_lean::examples_repository_tests::refresh_compile_to_lean_examples_markdown_snapshots -- --ignored --nocapture --exact",
+    "lean_tactic_probe": "lake env lean /private/tmp/litex_native_set_builtins.lean",
+    "mathlib_test": "Not run by the native symmetric-difference removal; Cargo now compiles and the focused structural-set lowering test passes.",
+    "verification_result": "Focused emitter tests and the consolidated Markdown snapshot refresh pass; generated Lean contains no axiom or sorry for this strict section."
+  }
+}

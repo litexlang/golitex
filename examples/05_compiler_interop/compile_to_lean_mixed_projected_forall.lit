@@ -1,0 +1,25 @@
+# Tracer: mixed-carrier forall conclusions projected to stored facts.
+#
+# Before (did not work):
+# forall a R, b set:
+#     a = a
+#     b = b
+# Former behavior: Litex verified the statement, but strict Litex-to-Lean failed
+# because the source-wide forall had no FactId after runtime projected its two
+# independently covered conclusions.
+#
+# Now (verified and compiled):
+forall a R, b set:
+    a = a
+    b = b
+# Current behavior: Litex-to-Lean emits the two runtime-stored forall projections,
+# preserving `a : ℝ`, polymorphic `b : Set α`, and both stored FactIds.
+#
+# Boundary: the separate equalities do not unify the real carrier of `a` with
+# the element carrier of `b`; the Rust regression still rejects `a = b` here.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_mixed_projected_forall.lit
+# Focused compiler gate: cargo test --release compile_to_lean_mixed_projected_forall -- --nocapture
+# Mathlib gate: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_mixed_projected_forall_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/runtime/runtime_store_fact.rs,
+# src/runtime/runtime_litex_to_lean_ir.rs, src/litex_to_lean_ir/mod.rs, and
+# src/compile_to_lean/pipeline.rs

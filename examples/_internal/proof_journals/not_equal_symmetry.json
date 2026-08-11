@@ -17,7 +17,7 @@
         {
           "candidate": "forall a, b R:\n    a != b\n    =>:\n        b != a",
           "result": "partially passed",
-          "verifier_evidence": "the isolated release runner returned top-level ok: true, but To-Lean failed with `citation a != b changed goal b != a without structured rewrite evidence`",
+          "verifier_evidence": "the isolated release runner returned top-level ok: true, but Litex-to-Lean failed with `citation a != b changed goal b != a without structured rewrite evidence`",
           "diagnosis": "The verifier used a transposed known-fact citation instead of an owned not-equality builtin rule.",
           "next_change": "Route direct symmetry through the NotEqual builtin dispatcher and retain its reversed premise."
         }

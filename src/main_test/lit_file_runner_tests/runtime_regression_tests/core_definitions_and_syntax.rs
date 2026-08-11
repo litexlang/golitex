@@ -2109,6 +2109,15 @@ $leaf(y)
                 "obtain should expose its direct predicate body:\n{}",
                 run_output
             );
+            let success = stmt_results[3]
+                .non_factual_success()
+                .expect("direct obtain should be a nonfactual success");
+            let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) = &success.stmt
+            else {
+                panic!("literal `exist` must parse as ObtainObjFromExistFact")
+            };
+            assert_eq!(stmt.equal_tos[0].name(), "y");
+            assert!(stmt.fact.is_plain_exist());
         },
     );
 }
@@ -2181,6 +2190,14 @@ unique_copy = 3
     assert!(run_output.contains("obtain copy from $has_copy(2)"));
     assert!(run_output.contains("obtain unique_copy from $has_unique_copy(3)"));
     assert!(run_output.contains("existential projection from prop definition `has_copy`"));
+    let success = stmt_results[3]
+        .non_factual_success()
+        .expect("atomic obtain should be a nonfactual success");
+    let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) = &success.stmt else {
+        panic!("prop source must parse as ObtainObjFromAtomicFact")
+    };
+    assert_eq!(stmt.equal_tos[0].name(), "copy");
+    assert_eq!(stmt.fact.to_string(), "$has_copy(2)");
 }
 
 #[test]
@@ -2263,6 +2280,238 @@ obtain chosen from not $has_copy(1)
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope(
             format!("obtain_from_prop_rejects_{}", label).as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+        assert!(
+            run_output.contains(expected_message),
+            "{} should report `{}`:\n{}",
+            label,
+            expected_message,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn witness_atomic_fact_resolves_the_definition_only_during_execution() {
+    let source_code = r#"
+prop has_copy(a R):
+    exist x R st {x = a}
+
+witness $has_copy(2) from 2:
+    2 = 2
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "witness_atomic_fact_resolves_the_definition_only_during_execution",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "atomic fact witness should prove the prop and expose its existential meaning:\n{}",
+        run_output
+    );
+    let success = stmt_results[1]
+        .non_factual_success()
+        .expect("the atomic fact witness should be nonfactual statement success");
+    let Stmt::Witness(WitnessStmt::WitnessAtomicFact(stmt)) = &success.stmt else {
+        panic!("the parser must retain an atomic-fact witness AST node")
+    };
+    assert_eq!(stmt.atomic_fact.to_string(), "$has_copy(2)");
+    assert_eq!(stmt.witnesses.len(), 1);
+    let verification = success
+        .witness_atomic_fact_verification
+        .as_ref()
+        .expect("execution must retain the resolved existential certificate");
+    assert_eq!(verification.definition.name, "has_copy");
+    assert_eq!(
+        verification.instantiated_existential.to_string(),
+        "exist #1#x R st {#1#x = 2}"
+    );
+    assert!(success
+        .infers
+        .contains_added_fact(&Fact::from(stmt.atomic_fact.clone())));
+    assert!(success
+        .infers
+        .contains_added_fact(&verification.instantiated_existential.clone().into()));
+    assert!(runtime
+        .known_fact_id_for_fact(&verification.instantiated_existential.clone().into())
+        .unwrap()
+        .is_some());
+}
+
+#[test]
+fn witness_atomic_fact_accepts_exist_unique_with_explicit_uniqueness_proof() {
+    let source_code = r#"
+prop has_unique_copy(a R):
+    exist! x R st {x = a}
+
+witness $has_unique_copy(1) from 1:
+    1 = 1
+    claim:
+        ? forall u, v R:
+            u = 1
+            v = 1
+            =>:
+                u = v
+        u = 1
+        1 = v
+        u = v
+
+$has_unique_copy(1)
+exist! x R st {x = 1}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "witness_atomic_fact_accepts_exist_unique_with_explicit_uniqueness_proof",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "atomic-fact witness should verify both existence and uniqueness:\n{}",
+        run_output
+    );
+    let success = stmt_results[1]
+        .non_factual_success()
+        .expect("the atomic-fact witness should be nonfactual statement success");
+    let Stmt::Witness(WitnessStmt::WitnessAtomicFact(stmt)) = &success.stmt else {
+        panic!("the parser must retain an atomic-fact witness AST node")
+    };
+    let verification = success
+        .witness_atomic_fact_verification
+        .as_ref()
+        .expect("execution must retain the unique-existential certificate");
+    assert!(verification.instantiated_existential.is_exist_unique());
+    assert!(
+        verification
+            .witness_verification
+            .uniqueness_check_index
+            .is_some(),
+        "the certificate must identify the checked uniqueness obligation"
+    );
+    assert!(success
+        .infers
+        .contains_added_fact(&Fact::from(stmt.atomic_fact.clone())));
+    assert!(success
+        .infers
+        .contains_added_fact(&verification.instantiated_existential.clone().into()));
+}
+
+#[test]
+fn witness_atomic_fact_exist_unique_rejects_missing_uniqueness_proof() {
+    let source_code = r#"
+prop has_nonunique_self_witness(a R):
+    exist! x R st {x = x}
+
+witness $has_nonunique_self_witness(0) from 0:
+    0 = 0
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "witness_atomic_fact_exist_unique_rejects_missing_uniqueness_proof",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "an atomic-fact witness must not introduce false unique existence:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("witness exist!: failed to verify uniqueness obligation"),
+        "the missing uniqueness obligation should be explicit:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn witness_atomic_fact_rejects_unsupported_definition_shapes_and_bad_witnesses() {
+    let cases = [
+        (
+            "ordinary clause",
+            r#"
+prop positive(a R):
+    a > 0
+
+witness $positive(1) from 1
+"#,
+            "sole definition clause of `positive` must be `exist` or `exist!`",
+        ),
+        (
+            "multiple clauses",
+            r#"
+prop has_copy_and_reflexivity(a R):
+    exist x R st {x = a}
+    a = a
+
+witness $has_copy_and_reflexivity(1) from 1
+"#,
+            "must have exactly one definition clause",
+        ),
+        (
+            "abstract prop",
+            r#"
+abstract_prop opaque(a)
+
+witness $opaque(1) from 1
+"#,
+            "is an `abstract_prop`",
+        ),
+        (
+            "not exist",
+            r#"
+prop has_no_copy(a R):
+    not exist x R st {x = a}
+
+witness $has_no_copy(1) from 1
+"#,
+            "definition clause of `has_no_copy` is `not exist`",
+        ),
+        (
+            "witness count",
+            r#"
+prop has_pair(a R):
+    exist x, y R st {x = a, y = a}
+
+witness $has_pair(1) from 1
+"#,
+            "parameter count mismatch",
+        ),
+        (
+            "unproved body",
+            r#"
+prop has_square(a R):
+    exist x R st {x^2 = a}
+
+witness $has_square(4) from 1
+"#,
+            "failed to verify internal fact `1 ^ 2 = 4`",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("witness_atomic_fact_rejects_{}", label).as_str(),
         );
         let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
         let (run_succeeded, run_output) =

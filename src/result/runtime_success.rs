@@ -5,7 +5,7 @@ use std::rc::Rc;
 #[derive(Debug)]
 pub struct NonFactualStmtSuccess {
     pub stmt: Stmt,
-    pub to_lean_ir: Option<StmtToLeanIR>,
+    pub litex_to_lean_ir: Option<LitexToLeanStatementIr>,
     pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     /// Stored facts selected for ordinary statement output. Most statements keep
@@ -23,10 +23,44 @@ pub struct NonFactualStmtSuccess {
     /// Checked witness, parameter, and body-result layout for
     /// `witness exist ... from ...`.
     pub witness_exist_verification: Option<WitnessExistVerificationResult>,
+    /// Runtime-resolved definition and witness evidence for
+    /// `witness $P(args) from ...`.
+    pub witness_atomic_fact_verification: Option<WitnessAtomicFactVerificationResult>,
     /// Exact source-to-environment projection contract for `obtain ... from
     /// exist ...` and body-style `have x T: ...`.
     pub existential_elimination_verification: Option<ExistentialEliminationVerificationResult>,
+    /// Exact verifier-to-environment contract for `have fn f(...) ... = body`.
+    /// The statement retains the signature/body; this mapping freezes which
+    /// checked result certifies the return value and which two stored facts
+    /// introduce the function object to later statements.
+    pub function_definition_verification: Option<FunctionDefinitionVerificationResult>,
     pub by_verification: Option<ByVerificationResult>,
+}
+
+#[derive(Clone, Debug)]
+pub struct FunctionDefinitionVerificationResult {
+    pub return_check_index: usize,
+    /// Membership/domain facts installed while checking the return value,
+    /// with their temporary FactIds frozen before that local scope closes.
+    pub assumption_infers: InferResult,
+    pub function_membership: Fact,
+    pub defining_equality: Fact,
+}
+
+impl FunctionDefinitionVerificationResult {
+    pub fn new(
+        return_check_index: usize,
+        assumption_infers: InferResult,
+        function_membership: Fact,
+        defining_equality: Fact,
+    ) -> Self {
+        Self {
+            return_check_index,
+            assumption_infers,
+            function_membership,
+            defining_equality,
+        }
+    }
 }
 
 pub struct TheoremVerificationResult {
@@ -241,6 +275,46 @@ pub struct WitnessExistVerificationResult {
     pub uniqueness_check_index: Option<usize>,
 }
 
+pub struct WitnessAtomicFactVerificationResult {
+    pub definition: DefPropStmt,
+    pub instantiated_existential: ExistFactEnum,
+    pub definition_parameter_check: Box<StmtResult>,
+    pub witness_verification: WitnessExistVerificationResult,
+}
+
+impl WitnessAtomicFactVerificationResult {
+    pub fn new(
+        definition: DefPropStmt,
+        instantiated_existential: ExistFactEnum,
+        definition_parameter_check: StmtResult,
+        witness_verification: WitnessExistVerificationResult,
+    ) -> Self {
+        WitnessAtomicFactVerificationResult {
+            definition,
+            instantiated_existential,
+            definition_parameter_check: Box::new(definition_parameter_check),
+            witness_verification,
+        }
+    }
+}
+
+impl fmt::Debug for WitnessAtomicFactVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("WitnessAtomicFactVerificationResult")
+            .field("definition", &self.definition.name)
+            .field(
+                "instantiated_existential",
+                &self.instantiated_existential.to_string(),
+            )
+            .field(
+                "definition_parameter_check",
+                &self.definition_parameter_check,
+            )
+            .field("witness_verification", &self.witness_verification)
+            .finish()
+    }
+}
+
 impl WitnessExistVerificationResult {
     pub fn new(
         proof_step_count: usize,
@@ -257,10 +331,12 @@ impl WitnessExistVerificationResult {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct ExistentialEliminationVerificationResult {
     /// Index of the checked source existential in `inside_results`.
     pub source_result_index: usize,
+    /// Exact existential eliminated after any definition projection.
+    pub source_exist_fact: ExistFactEnum,
     /// Exact instantiated type fact stored for every introduced witness.
     pub witness_type_facts: Vec<Fact>,
     /// Exact instantiated direct body facts stored by elimination.
@@ -270,15 +346,29 @@ pub struct ExistentialEliminationVerificationResult {
     pub includes_uniqueness: bool,
 }
 
+impl fmt::Debug for ExistentialEliminationVerificationResult {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("ExistentialEliminationVerificationResult")
+            .field("source_result_index", &self.source_result_index)
+            .field("source_exist_fact", &self.source_exist_fact.to_string())
+            .field("witness_type_facts", &self.witness_type_facts)
+            .field("instantiated_body_facts", &self.instantiated_body_facts)
+            .field("includes_uniqueness", &self.includes_uniqueness)
+            .finish()
+    }
+}
+
 impl ExistentialEliminationVerificationResult {
     pub fn new(
         source_result_index: usize,
+        source_exist_fact: ExistFactEnum,
         witness_type_facts: Vec<Fact>,
         instantiated_body_facts: Vec<Fact>,
         includes_uniqueness: bool,
     ) -> Self {
         Self {
             source_result_index,
+            source_exist_fact,
             witness_type_facts,
             instantiated_body_facts,
             includes_uniqueness,
@@ -385,6 +475,41 @@ pub struct VerifiedByFactResult {
     /// requested fact to the cited fact. These are stored source-to-goal even
     /// though the verifier searched goal-to-source.
     pub fact_transformation: Option<FactTransformationEvidence>,
+    /// Exact source retained when equality verification unfolded one checked
+    /// named function definition. This is distinct from an ordinary citation:
+    /// the goal itself may only exist in a temporary forall scope.
+    pub checked_definition_replay: Option<CheckedDefinitionReplayEvidence>,
+}
+
+#[derive(Clone)]
+pub struct CheckedDefinitionReplayEvidence {
+    pub definition_object: Obj,
+    pub defining_equality: Fact,
+    pub defining_equality_fact_id: FactId,
+    pub application_side: Obj,
+    pub reduced: Obj,
+    pub other_side: Obj,
+    pub application_is_left: bool,
+    pub reduced_matches_other_by_alpha: bool,
+}
+
+impl fmt::Debug for CheckedDefinitionReplayEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("CheckedDefinitionReplayEvidence")
+            .field("definition_object", &self.definition_object.to_string())
+            .field("defining_equality", &self.defining_equality.to_string())
+            .field("defining_equality_fact_id", &self.defining_equality_fact_id)
+            .field("application_side", &self.application_side.to_string())
+            .field("reduced", &self.reduced.to_string())
+            .field("other_side", &self.other_side.to_string())
+            .field("application_is_left", &self.application_is_left)
+            .field(
+                "reduced_matches_other_by_alpha",
+                &self.reduced_matches_other_by_alpha,
+            )
+            .finish()
+    }
 }
 
 pub struct KnownForallInstantiationItem {
@@ -494,7 +619,7 @@ pub struct FactualStmtSuccess {
     /// Filled when this proved fact has actually been stored. Verification-only
     /// subgoals legitimately keep `None`.
     pub fact_id: Option<FactId>,
-    pub to_lean_ir: Option<StmtToLeanIR>,
+    pub litex_to_lean_ir: Option<LitexToLeanStatementIr>,
     pub well_definedness: WellDefinednessCertificate,
     pub infers: InferResult,
     pub verified_by: VerifiedByResult,
@@ -510,7 +635,7 @@ impl FactualStmtSuccess {
         FactualStmtSuccess {
             stmt,
             fact_id: None,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
@@ -614,7 +739,7 @@ impl FactualStmtSuccess {
         FactualStmtSuccess {
             stmt,
             fact_id: None,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             verified_by,
@@ -703,6 +828,7 @@ impl VerifiedByResult {
             source_fact_id: None,
             equality_transport: None,
             fact_transformation: None,
+            checked_definition_replay: None,
         })
     }
 
@@ -720,6 +846,7 @@ impl VerifiedByResult {
             source_fact_id,
             equality_transport,
             fact_transformation,
+            checked_definition_replay: None,
         })
     }
 
@@ -743,6 +870,22 @@ impl VerifiedByResult {
         Self::cited_fact(goal, cite_what, msg)
     }
 
+    pub fn fact_with_checked_definition_replay(
+        goal: Fact,
+        evidence: CheckedDefinitionReplayEvidence,
+        detail: Option<String>,
+    ) -> Self {
+        let cite_what = goal.clone().into_stmt();
+        Self::Fact(VerifiedByFactResult {
+            detail,
+            cite_what: Box::new(cite_what),
+            source_fact_id: None,
+            equality_transport: None,
+            fact_transformation: None,
+            checked_definition_replay: Some(evidence),
+        })
+    }
+
     pub fn cached_fact(fact: Fact, cite_fact_source: LineFile, source_fact_id: FactId) -> Self {
         let cite_what = fact.with_line_file(cite_fact_source);
         Self::Fact(VerifiedByFactResult {
@@ -751,6 +894,7 @@ impl VerifiedByResult {
             source_fact_id: Some(source_fact_id),
             equality_transport: None,
             fact_transformation: None,
+            checked_definition_replay: None,
         })
     }
 
@@ -1009,7 +1153,7 @@ impl NonFactualStmtSuccess {
     pub fn new(stmt: Stmt, infers: InferResult, inside_results: Vec<StmtResult>) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1019,7 +1163,9 @@ impl NonFactualStmtSuccess {
             claim_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
+            witness_atomic_fact_verification: None,
             existential_elimination_verification: None,
+            function_definition_verification: None,
             by_verification: None,
         }
     }
@@ -1032,7 +1178,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1042,7 +1188,9 @@ impl NonFactualStmtSuccess {
             claim_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
+            witness_atomic_fact_verification: None,
             existential_elimination_verification: None,
+            function_definition_verification: None,
             by_verification: None,
         }
     }
@@ -1055,7 +1203,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1065,7 +1213,9 @@ impl NonFactualStmtSuccess {
             claim_verification: Some(claim_verification),
             object_choice_verification: None,
             witness_exist_verification: None,
+            witness_atomic_fact_verification: None,
             existential_elimination_verification: None,
+            function_definition_verification: None,
             by_verification: None,
         }
     }
@@ -1078,7 +1228,7 @@ impl NonFactualStmtSuccess {
     ) -> Self {
         NonFactualStmtSuccess {
             stmt,
-            to_lean_ir: None,
+            litex_to_lean_ir: None,
             well_definedness: WellDefinednessCertificate::default(),
             infers,
             reported_store_facts: vec![],
@@ -1088,7 +1238,9 @@ impl NonFactualStmtSuccess {
             claim_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
+            witness_atomic_fact_verification: None,
             existential_elimination_verification: None,
+            function_definition_verification: None,
             by_verification: Some(by_verification),
         }
     }

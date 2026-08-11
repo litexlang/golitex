@@ -134,7 +134,7 @@ impl Runtime {
         }
         let output_fact = fact.clone();
         let may_store_forall_projections =
-            self.to_lean_mode && matches!(&fact, Fact::ForallFact(_));
+            self.litex_to_lean_ir_mode && matches!(&fact, Fact::ForallFact(_));
 
         let ret = match fact {
             Fact::AtomicFact(_)
@@ -526,6 +526,12 @@ impl Runtime {
         let line_file = fact.line_file();
         let fact_string = fact.to_string();
         let normalized_key = nested_obj_binder_normalized_fact_key(fact);
+        let alpha_normalized_exist_key = match fact {
+            Fact::ExistFact(exist_fact) => {
+                Some(self.alpha_normalized_exist_fact_id_key(exist_fact)?)
+            }
+            _ => None,
+        };
         let fact_id = self
             .known_fact_id_for_fact(fact)?
             .map(Ok)
@@ -537,10 +543,19 @@ impl Runtime {
         )?;
         if normalized_key != fact_string {
             self.top_level_env().store_fact_to_cache_known_fact(
-                normalized_key,
+                normalized_key.clone(),
                 line_file,
                 fact_id,
             )?;
+        }
+        if let Some(alpha_key) = alpha_normalized_exist_key {
+            if alpha_key != fact_string && alpha_key != normalized_key {
+                self.top_level_env().store_fact_to_cache_known_fact(
+                    alpha_key,
+                    fact.line_file(),
+                    fact_id,
+                )?;
+            }
         }
         Ok(fact_id)
     }

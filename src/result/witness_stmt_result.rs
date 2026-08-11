@@ -3,6 +3,7 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum WitnessStmtResult {
     WitnessExistFact(NonFactualStmtSuccess),
+    WitnessAtomicFact(NonFactualStmtSuccess),
     WitnessNonemptySet(NonFactualStmtSuccess),
 }
 
@@ -11,6 +12,9 @@ impl WitnessStmtResult {
         match &success.stmt {
             Stmt::Witness(WitnessStmt::WitnessExistFact(_)) => {
                 WitnessStmtResult::WitnessExistFact(success)
+            }
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(_)) => {
+                WitnessStmtResult::WitnessAtomicFact(success)
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(_)) => {
                 WitnessStmtResult::WitnessNonemptySet(success)
@@ -22,6 +26,7 @@ impl WitnessStmtResult {
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
             WitnessStmtResult::WitnessExistFact(success)
+            | WitnessStmtResult::WitnessAtomicFact(success)
             | WitnessStmtResult::WitnessNonemptySet(success) => success,
         }
     }
@@ -29,6 +34,7 @@ impl WitnessStmtResult {
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
             WitnessStmtResult::WitnessExistFact(success)
+            | WitnessStmtResult::WitnessAtomicFact(success)
             | WitnessStmtResult::WitnessNonemptySet(success) => success,
         }
     }
@@ -36,6 +42,7 @@ impl WitnessStmtResult {
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
             WitnessStmtResult::WitnessExistFact(success)
+            | WitnessStmtResult::WitnessAtomicFact(success)
             | WitnessStmtResult::WitnessNonemptySet(success) => success,
         }
     }

@@ -19,7 +19,7 @@ file for a particular kind of behavior.
    compiler acceptance examples and current boundaries.
 6. [`08_module_repository/`](08_module_repository/) is a configured module
    project that demonstrates ordered exports and submodules.
-7. [`09_to_lean/`](09_to_lean/) is a configured, reader-facing repository of
+7. [`09_compile_to_lean/`](09_compile_to_lean/) is a configured, reader-facing repository of
    source files that exercise the current checked Litex-to-Lean slice.
 
 The numbering is a reading order, not a requirement that every number exist.
@@ -30,7 +30,7 @@ module or import.
 ## Developer Material
 
 [`_internal/`](_internal/) contains named regression fixtures, imported module
-fixtures, exploratory drafts, generated To-Lean work, and historical proof
+fixtures, exploratory drafts, generated Litex-to-Lean work, and historical proof
 journals. These files may be useful to maintainers, but they are not the
 recommended reader entry point.
 

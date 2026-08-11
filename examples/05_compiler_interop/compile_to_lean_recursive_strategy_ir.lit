@@ -1,0 +1,27 @@
+# Tracer: recursive builtin-strategy evidence reaches checked Lean proof IR.
+#
+# Before (Litex verified, but Litex-to-Lean rejected the proof route):
+# forall a, b, c, d R+:
+#     (a + b) + (c + d) > 0
+# Former behavior: both successful additive strategy nodes retained only the
+# diagnostic label `numeric-order strategy: structurally smaller order goals`.
+# Litex-to-Lean preserved their child results, but rejected each label-only parent as
+# `OtherUnsupported` instead of guessing a Lean proof.
+#
+# Now (verified and compiled from typed recursive proof IR):
+forall a, b, c, d R+:
+    (a + b) + (c + d) > 0
+# Current behavior: the outer strategy records `AddPositiveLeftStrict`; its
+# right child strategy records `AddNonnegative`. Their recursively checked
+# builtin-rule and citation children are emitted bottom-up with `linarith only`.
+#
+# Boundary: other structural numeric strategies, such as deriving
+# `abs(x) < abs(y)` from `x^2 < y^2`, remain label-only until they receive a
+# typed semantic rule. Malformed rule IDs or premise lists are rejected by
+# executable Rust regressions.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_recursive_strategy_ir.lit
+# Compiler evidence: cargo test --release compile_to_lean_recursive_strategy_ir -- --nocapture
+# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_recursive_strategy_ir_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/verify/verify_builtin_strategies/numeric_sign.rs,
+# src/result/runtime_success.rs, src/runtime/runtime_litex_to_lean_ir.rs,
+# src/compile_to_lean/pipeline.rs

@@ -12,9 +12,9 @@ namespace tmp2
 
 noncomputable section
 
-universe LitexUniverse
+universe u
 
-class LitexObject (α : Type LitexUniverse) : Prop where
+class LitexObject (α : Type u) : Prop where
   valid : True
 
 instance : LitexObject ℕ := ⟨True.intro⟩
@@ -22,26 +22,117 @@ instance : LitexObject ℤ := ⟨True.intro⟩
 instance : LitexObject ℚ := ⟨True.intro⟩
 instance : LitexObject ℝ := ⟨True.intro⟩
 instance : LitexObject ℂ := ⟨True.intro⟩
-instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
 
-def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := True
-def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
-def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
--- Litex fact f31
-theorem fact31 : ∀ f ∈ (Set.univ : Set ((x : ℝ) → ℝ)), (∀ y ∈ (Set.univ : Set ℝ), (f y) = (f (y - 1))) → (f 2) = (f 1) := by
-  intro f proof_fact_1_1 proof_fact_1_2
-  have proof_fact_1_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := by
+-- Litex well-definedness certificate 1 (forall type witness)
+theorem well_defined_fact_1 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 2 (forall type witness)
+theorem well_defined_fact_2 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 3 (forall type witness)
+theorem well_defined_fact_3 : 1 ∈ (Set.univ : Set ℂ) := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 4 (forall type witness)
+theorem well_defined_fact_4 : 1 ∈ (Set.univ : Set ℝ) := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 5 (forall type witness)
+theorem well_defined_fact_5 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 6 (forall type witness)
+theorem well_defined_fact_6 : 2 ∈ (Set.univ : Set ℝ) := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 8 (forall type witness)
+theorem well_defined_fact_7 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 9 (forall type witness)
+theorem well_defined_fact_8 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 12 (forall type witness)
+theorem well_defined_fact_9 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 16 (forall type witness)
+theorem well_defined_fact_10 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 17 (forall type witness)
+theorem well_defined_fact_11 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 20 (forall type witness)
+theorem well_defined_fact_12 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+  intro y
+  change True
+  trivial
+
+-- Litex fact f34
+theorem fact34 : ∀ (f : (x : ℝ) → ℝ) (litex_param_fact_1 : f ∈ (Set.univ : Set ((x : ℝ) → ℝ))), ∀ (litex_domain_fact_1 : ∀ (y : ℝ) (litex_param_fact_1 : y ∈ (Set.univ : Set ℝ)), (f y) = (f (y - 1))), (f 2) = (f 1) := by
+  intro f litex_param_fact_1 litex_domain_fact_1
+  -- Litex well-definedness certificate 1 replayed by generalized helper well_defined_fact_10
+  -- Litex well-definedness certificate 2 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 3 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 4 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 5 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 6 reuses well_defined_fact_6
+  -- Litex well-definedness certificate 7 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 8 replayed by generalized helper well_defined_fact_10
+  -- Litex well-definedness certificate 9 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 10 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 12 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 13 reuses well_defined_fact_6
+  -- Litex well-definedness certificate 14 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 15 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 16 replayed by generalized helper well_defined_fact_10
+  -- Litex well-definedness certificate 17 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 18 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 19 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 20 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 21 reuses well_defined_fact_6
+  -- Litex well-definedness certificate 22 reuses well_defined_fact_4
+  have proof_fact_1_1 : (f (1 + 1)) = (f ((1 + 1) - 1)) := by
     -- Litex parameter requirement for `y`: (1 + 1) : ℝ
     let proof_arg_2_1 : ℝ := (1 + 1)
     have proof_fact_2_2 : (1 + 1) ∈ (Set.univ : Set ℝ) := by
       change True
       trivial
-    have proof_fact_2_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := proof_fact_1_2 proof_arg_2_1 proof_fact_2_2
+    have proof_fact_2_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := litex_domain_fact_1 proof_arg_2_1 proof_fact_2_2
     exact proof_fact_2_3
-  have proof_fact_1_4 : (f 2) = (f 1) := by
-    convert proof_fact_1_3 using 1 <;> norm_num
-  exact proof_fact_1_4
+  have proof_fact_1_2 : (f 2) = (f 1) := by
+    convert proof_fact_1_1 using 1 <;> norm_num
+  exact proof_fact_1_2
 
 end
 

@@ -42,7 +42,8 @@ impl fmt::Display for DefObjStmt {
             DefObjStmt::HaveObjInNonemptySetStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjEqualStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
-            DefObjStmt::HaveByExistStmt(x) => write!(f, "{}", x),
+            DefObjStmt::ObtainObjFromExistFact(x) => write!(f, "{}", x),
+            DefObjStmt::ObtainObjFromAtomicFact(x) => write!(f, "{}", x),
             DefObjStmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),
@@ -105,6 +106,7 @@ impl fmt::Display for WitnessStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             WitnessStmt::WitnessExistFact(x) => write!(f, "{}", x),
+            WitnessStmt::WitnessAtomicFact(x) => write!(f, "{}", x),
             WitnessStmt::WitnessNonemptySet(x) => write!(f, "{}", x),
         }
     }

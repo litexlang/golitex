@@ -1065,20 +1065,35 @@ impl GreaterFact {
     }
 }
 
-impl HaveByExistStmt {
+impl ObtainObjFromExistFact {
     pub fn to_latex_string(&self) -> String {
         let names = self
             .equal_tos
             .iter()
-            .map(|s| latex_local_ident(s))
+            .map(|binding| latex_local_ident(binding.name()))
             .collect::<Vec<_>>()
             .join(", ");
-        let source = self
-            .existential_prop_source
-            .as_ref()
-            .map(|source| source.fact.to_latex_string())
-            .unwrap_or_else(|| self.exist_fact_in_have_obj_st.to_latex_string());
-        format!(r"\mathrm{{have}}\ \mathrm{{by}}\ {} : {}", source, names)
+        format!(
+            r"\mathrm{{have}}\ \mathrm{{by}}\ {} : {}",
+            self.fact.to_latex_string(),
+            names
+        )
+    }
+}
+
+impl ObtainObjFromAtomicFact {
+    pub fn to_latex_string(&self) -> String {
+        let names = self
+            .equal_tos
+            .iter()
+            .map(|binding| latex_local_ident(binding.name()))
+            .collect::<Vec<_>>()
+            .join(", ");
+        format!(
+            r"\mathrm{{have}}\ \mathrm{{by}}\ {} : {}",
+            self.fact.to_latex_string(),
+            names
+        )
     }
 }
 
@@ -2046,6 +2061,34 @@ impl WitnessExistFact {
     }
 }
 
+impl WitnessAtomicFact {
+    pub fn to_latex_string(&self) -> String {
+        let witnesses = self
+            .witnesses
+            .iter()
+            .map(|object| object.to_latex_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        let head = format!(
+            r"\mathrm{{witness}}\ {}\ \mathrm{{from}}\ {}",
+            self.atomic_fact.to_latex_string(),
+            witnesses
+        );
+        if self.proof.is_empty() {
+            head
+        } else {
+            let mut rows = vec![format!(r"{} &", head)];
+            for stmt in &self.proof {
+                rows.push(format!(r"& \quad {}", stmt.to_latex_string()));
+            }
+            format!(
+                "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+                rows.join(" \\\\\n")
+            )
+        }
+    }
+}
+
 impl WitnessNonemptySet {
     pub fn to_latex_string(&self) -> String {
         let head = format!(
@@ -2298,7 +2341,8 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }
@@ -2337,6 +2381,7 @@ impl Stmt {
             Stmt::Command(CommandStmt::UseStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Command(CommandStmt::StopStrategyStmt(x)) => latex_texttt_escape(&x.to_string()),
             Stmt::Witness(WitnessStmt::WitnessExistFact(x)) => x.to_latex_string(),
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(x)) => x.to_latex_string(),
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByCasesStmt(x)) => x.to_latex_string(),
             Stmt::By(ByStmt::ByContraStmt(x)) => x.to_latex_string(),

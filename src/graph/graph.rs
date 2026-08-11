@@ -1370,6 +1370,11 @@ fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
                 collect_by_thm_names_in_stmt(stmt, out);
             }
         }
+        Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
+            for stmt in s.proof.iter() {
+                collect_by_thm_names_in_stmt(stmt, out);
+            }
+        }
         Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
             for stmt in s.proof.iter() {
                 collect_by_thm_names_in_stmt(stmt, out);

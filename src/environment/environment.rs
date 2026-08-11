@@ -857,7 +857,7 @@ impl Environment {
 /// The deliberately small payload kept by the fact cache.
 ///
 /// Proof trees, origins, scopes, and Lean names belong to statement results
-/// and the To-Lean IR. The environment only needs a stable identity and the
+/// and the Litex-to-Lean IR. The environment only needs a stable identity and the
 /// source location already used by diagnostics.
 #[derive(Clone, Debug)]
 pub struct CachedKnownFact {

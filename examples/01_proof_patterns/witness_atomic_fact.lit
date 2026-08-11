@@ -1,0 +1,26 @@
+# Tracer: introduce an atomic prop fact whose complete meaning is one existential.
+#
+# Before (did not work):
+# witness $divides(6, 2) from 3:
+#     6 = 2 * 3
+# Former implementation name: this statement was represented by
+# `WitnessNamedExistFact`.
+#
+# Now (verified): it is represented by `WitnessAtomicFact`; the parser retains
+# only the atomic fact, and execution resolves
+# its current concrete definition before checking the supplied witness.
+
+prop divides(p Z, u Z):
+    exist k Z st {p = u * k}
+
+witness $divides(6, 2) from 3:
+    6 = 2 * 3
+
+$divides(6, 2)
+obtain divisor_witness from $divides(6, 2)
+6 = 2 * divisor_witness
+
+# Boundary: `exist!` is covered by `witness_atomic_exist_unique_fact.lit`.
+# `not exist`, abstract props, nonexistential definitions, and definitions with
+# multiple clauses remain rejected.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/witness_atomic_fact.lit

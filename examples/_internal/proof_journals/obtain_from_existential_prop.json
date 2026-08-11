@@ -37,7 +37,7 @@
         {
           "candidate": "Compile the accepted shorthand without expanding it to a literal `exist` source.",
           "result": "accepted_by_lean_kernel",
-          "verifier_evidence": "Runtime retained `DefinitionProjectionBuiltinRuleEvidence`; To-Lean re-instantiated the concrete prop definition, checked the exact existential target and sole source premise, then emitted `simpa only [has_copy] using ...` before `Exists.choose`. The focused generated Lean compiled successfully in a real Mathlib 4.28 project.",
+          "verifier_evidence": "Runtime retained `DefinitionProjectionBuiltinRuleEvidence`; Litex-to-Lean re-instantiated the concrete prop definition, checked the exact existential target and sole source premise, then emitted `simpa only [has_copy] using ...` before `Exists.choose`. The focused generated Lean compiled successfully in a real Mathlib 4.28 project.",
           "diagnosis": "The shorthand now has a structured source-to-existential certificate and no longer depends on a compiler diagnostic label or a source-level expansion workaround.",
           "next_change": "Keep verifier-certificate tampering and pure-IR source/target/premise tampering in negative Rust coverage, and keep the generated Lean snapshot in the consolidated ledger."
         }
@@ -53,11 +53,11 @@
     "file_gate_result": "exit 0; top-level ok=true",
     "focused_test_command": "cargo test --release obtain_ -- --nocapture",
     "focused_test_result": "exit 0; 12 passed, 0 failed, 1 real-Mathlib test ignored by its declaration",
-    "to_lean_snapshot_gate_command": "cargo test --release to_lean_examples_markdown_emits_checked_source -- --nocapture",
-    "to_lean_snapshot_gate_result": "exit 0; all 18 ledger entries matched, including obtain_from_existential_prop_definition",
-    "mathlib_gate_command": "LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_to_lean_obtain_from_existential_prop_compiles_with_lean -- --ignored --nocapture",
+    "compile_to_lean_snapshot_gate_command": "cargo test --release compile_to_lean_examples_markdown_emits_checked_source -- --nocapture",
+    "compile_to_lean_snapshot_gate_result": "exit 0; all 18 ledger entries matched, including obtain_from_existential_prop_definition",
+    "mathlib_gate_command": "LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_obtain_from_existential_prop_compiles_with_lean -- --ignored --nocapture",
     "mathlib_gate_result": "exit 0; generated Lean accepted by Mathlib 4.28",
-    "aggregate_mathlib_gate_command": "LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture",
+    "aggregate_mathlib_gate_command": "LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture",
     "aggregate_mathlib_gate_result": "the new obtain_from_existential_prop_definition entry passed; the aggregate process later exited 101 in the independently modified standard_numeric_subsets entry because Mathlib rejected its cross-carrier exact_mod_cast proofs",
     "examples_gate_command": "cargo test --release run_examples -- --nocapture",
     "examples_gate_result": "exit 0; 438 example/documentation run units passed",

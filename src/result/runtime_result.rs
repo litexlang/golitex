@@ -71,20 +71,20 @@ impl StmtResult {
         self
     }
 
-    pub fn with_to_lean_ir(mut self, to_lean_ir: StmtToLeanIR) -> Self {
+    pub fn with_litex_to_lean_ir(mut self, litex_to_lean_ir: LitexToLeanStatementIr) -> Self {
         if let Some(success) = self.non_factual_success_mut() {
-            success.to_lean_ir = Some(to_lean_ir);
+            success.litex_to_lean_ir = Some(litex_to_lean_ir);
         } else if let Some(success) = self.factual_success_mut() {
-            success.to_lean_ir = Some(to_lean_ir);
+            success.litex_to_lean_ir = Some(litex_to_lean_ir);
         }
         self
     }
 
-    pub fn to_lean_ir(&self) -> Option<&StmtToLeanIR> {
+    pub fn litex_to_lean_ir(&self) -> Option<&LitexToLeanStatementIr> {
         if let Some(success) = self.non_factual_success() {
-            success.to_lean_ir.as_ref()
+            success.litex_to_lean_ir.as_ref()
         } else if let Some(success) = self.factual_success() {
-            success.to_lean_ir.as_ref()
+            success.litex_to_lean_ir.as_ref()
         } else {
             None
         }

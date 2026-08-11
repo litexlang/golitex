@@ -43,14 +43,16 @@ pub use runtime_success::{
     ByEnumerateFiniteSetVerificationResult, ByEnumerateRangeVerificationResult,
     ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
-    ClaimFactVerificationResult, ClaimForallVerificationResult, ClaimVerificationResult,
-    EqualityTransportEvidence, EqualityTransportStep, ExistentialEliminationVerificationResult,
-    FactTransformationEvidence, FactTransformationRule, FactTransformationStep, FactualStmtSuccess,
-    ForallProofResult, ForallProvedFactResult, KnownForallInstantiationItem,
+    CheckedDefinitionReplayEvidence, ClaimFactVerificationResult, ClaimForallVerificationResult,
+    ClaimVerificationResult, EqualityTransportEvidence, EqualityTransportStep,
+    ExistentialEliminationVerificationResult, FactTransformationEvidence, FactTransformationRule,
+    FactTransformationStep, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
+    FunctionDefinitionVerificationResult, KnownForallInstantiationItem,
     KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
     NonFactualStmtSuccess, ObjectChoiceVerificationResult, ObjectIntroductionItem,
     TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
     VerifiedBysEnum, VerifiedBysResult, WitnessExistVerificationResult,
+    WitnessAtomicFactVerificationResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

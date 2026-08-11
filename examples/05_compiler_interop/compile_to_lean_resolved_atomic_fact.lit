@@ -1,0 +1,50 @@
+# Tracer: recursive object resolution retains a replayable source-to-goal proof.
+#
+# Before (Litex verified, but generated Lean did not type-check):
+# abstract_prop p(x)
+#
+# forall a, b R:
+#     a = 13
+#     b = 1
+#     $p(14)
+#     =>:
+#         $p(a + b)
+#
+# Former behavior: the atomic-fact lookup resolved `a + b` to `14`, found the
+# stored `$p(14)`, and then returned only that citation. Litex-to-Lean consequently
+# emitted an `exact` proof of `$p(14)` at the different goal `$p(a + b)`.
+#
+# Now (verified and compiled from explicit transformations):
+abstract_prop p(x)
+
+forall a, b R:
+    a = 13
+    b = 1
+    $p(14)
+    =>:
+        $p(a + b)
+
+# Current behavior: verification searches from the requested goal to the
+# stored source, but records the successful proof in construction order:
+#
+#     $p(14)
+#       -- RationalNormalization --> $p(13 + 1)
+#       -- EqualityRewrite[a = 13, b = 1] --> $p(a + b)
+#
+# Each equality rewrite retains its stored FactId. Litex-to-Lean lowers both steps as
+# nested RuleApplication nodes and emits a checked `convert` followed by
+# `simpa only` over the two named equality proofs. It does not rerun resolve.
+#
+# Recursive boundary check: the same verifier evidence builder descends through
+# every supported Obj shape. The focused Rust regression confirms that
+# `$p(f(14), c)` becomes `$p(f(13 + 1), c)` and then `$p(f(a + b), c)`.
+# General function objects still lack a Litex-to-Lean Obj ABI, so compiling that
+# second source remains an explicit `FnSet object` boundary rather than an
+# axiom, `sorry`, or flattened citation.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_resolved_atomic_fact.lit
+# Compiler evidence: cargo test --release resolved_atomic_fact -- --nocapture
+# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_resolved_atomic_fact_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/verify/verify_known_atomic_facts.rs,
+# src/result/runtime_success.rs, src/runtime/runtime_litex_to_lean_ir.rs,
+# src/compile_to_lean/pipeline.rs

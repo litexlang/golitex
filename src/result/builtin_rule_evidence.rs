@@ -127,20 +127,21 @@ impl fmt::Debug for RegisteredLocalBuiltinRuleEvidence {
 /// instantiated existential and has exactly one child: a proof of `source`.
 #[derive(Clone)]
 pub struct DefinitionProjectionBuiltinRuleEvidence {
-    pub source: ExistentialPropSource,
+    pub fact: NormalAtomicFact,
+    pub definition: DefPropStmt,
 }
 
 impl DefinitionProjectionBuiltinRuleEvidence {
-    pub fn new(source: ExistentialPropSource) -> Self {
-        Self { source }
+    pub fn new(fact: NormalAtomicFact, definition: DefPropStmt) -> Self {
+        Self { fact, definition }
     }
 }
 
 impl fmt::Debug for DefinitionProjectionBuiltinRuleEvidence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         f.debug_struct("DefinitionProjectionBuiltinRuleEvidence")
-            .field("source", &self.source.fact.to_string())
-            .field("definition", &self.source.definition.name)
+            .field("source", &self.fact.to_string())
+            .field("definition", &self.definition.name)
             .finish()
     }
 }
@@ -152,6 +153,9 @@ pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     NotEqualSymmetry,
+    /// Two checked real-carrier premises followed by one strict comparison
+    /// between the target operands prove their inequality.
+    NotEqualFromStrictOrder,
     SetRelationDuality(SetRelationDualityBuiltinRule),
     Set(SetBuiltinRule),
     AbsoluteValue(AbsoluteValueBuiltinRule),
@@ -179,6 +183,7 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.debug_tuple("Arithmetic").field(rule).finish()
             }
             BuiltinRuleEvidence::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),
+            BuiltinRuleEvidence::NotEqualFromStrictOrder => f.write_str("NotEqualFromStrictOrder"),
             BuiltinRuleEvidence::SetRelationDuality(rule) => {
                 f.debug_tuple("SetRelationDuality").field(rule).finish()
             }

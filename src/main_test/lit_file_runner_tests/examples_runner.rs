@@ -14,7 +14,8 @@ use super::helper::{
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
-const TO_LEAN_EXAMPLES_MARKDOWN: &str = "examples/09_to_lean/litex_to_lean_examples.md";
+const COMPILE_TO_LEAN_EXAMPLES_MARKDOWN: &str =
+    "examples/09_compile_to_lean/compile_to_lean_examples.md";
 
 #[derive(Clone)]
 struct LitexRunItem {
@@ -638,9 +639,13 @@ fn collect_examples_phase1_groups(
             }],
         });
     }
-    let to_lean_markdown_path = manifest_dir.join(TO_LEAN_EXAMPLES_MARKDOWN);
-    if to_lean_markdown_path.is_file() {
-        push_markdown_run_groups(&mut phase1_groups, manifest_dir, &[to_lean_markdown_path]);
+    let compile_to_lean_markdown_path = manifest_dir.join(COMPILE_TO_LEAN_EXAMPLES_MARKDOWN);
+    if compile_to_lean_markdown_path.is_file() {
+        push_markdown_run_groups(
+            &mut phase1_groups,
+            manifest_dir,
+            &[compile_to_lean_markdown_path],
+        );
     }
     push_markdown_run_groups(&mut phase1_groups, manifest_dir, &manual_md_paths);
     phase1_groups
@@ -809,7 +814,7 @@ fn examples_phase_label(include_manual_docs: bool) -> &'static str {
     if include_manual_docs {
         "phase 1 (selected examples + docs/Manual.md ```litex```)"
     } else {
-        "examples dataset (selected .lit files + To-Lean Markdown ledger)"
+        "examples dataset (selected .lit files + Litex-to-Lean Markdown ledger)"
     }
 }
 

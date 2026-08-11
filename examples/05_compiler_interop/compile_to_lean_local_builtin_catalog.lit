@@ -1,0 +1,442 @@
+# Acceptance ledger for the paired local-builtin catalog.
+#
+# One rule is authored as exactly two files:
+#   src/verify/local_builtin_catalog/<rule>.lit
+#   src/compile_to_lean/local_builtin_adapters/<rule>.lean
+# The generator derives the RuleId, semantic fingerprint, Rust manifests, and
+# linked Lean wrapper name. The verifier emits one generic certificate shape;
+# the compiler validates that certificate before applying the checked wrapper.
+#
+# Tracer: elementary subset laws and nonzero multiplication.
+#
+# Before (Litex verified, but Litex-to-Lean had no replayable certificate):
+# forall A, B set:
+#     intersect(A, B) $subset A
+# forall a, b R:
+#     a != 0
+#     b != 0
+#     =>:
+#         a * b != 0
+# Former behavior: these conclusions used legacy diagnostic-only Rust branches
+# (`intersection subset operand` and
+# `mul_not_equal_zero_both_factors_nonzero_by_known_facts`).
+#
+# Now (verified below): both conclusions carry path-derived registered RuleIds
+# and compile by applying checked native Set/Mathlib wrapper theorems.
+# The same route also covers union containment from two known containments and
+# the premise-free empty-set containment law.
+#
+# Boundary: a local schema may cite already-known atomic premises only. It may
+# not recursively invoke another local builtin, computation, definition
+# unfolding, resolve, or a strategy; focused Rust negative tests enforce this.
+#
+# Batch tracer: strict order weakens to non-strict order.
+#
+# Before (verified and compiled through a hand-written arithmetic evidence
+# variant):
+# forall a, b R:
+#     a < b
+#     =>:
+#         a <= b
+# Former behavior: Litex-to-Lean selected `LessEqualFromStrictOrder` in a per-rule
+# Rust enum and emitted a dedicated arithmetic proof recipe.
+#
+# Now (verified below): the same source carries the registered RuleId
+# `order.less_equal_of_less` and the generic emitter applies its checked
+# Mathlib wrapper. The following nineteen elementary order/arithmetic facts use
+# the same schema-and-wrapper route.
+#
+# Boundary: transitivity through a middle object not present in the conclusion,
+# such as `a < b`, `b < c` => `a < c`, remains outside this range-restricted
+# catalog.
+#
+# The first three facts freeze the common ABI at zero, one, and two semantic
+# premises. The remaining facts exercise mechanical batches: real
+# absolute-value laws plus native union, intersection, set difference, and
+# membership/subset laws. Parameter facts such as x $in R, $is_set(A), and
+# x $in A remain separate checked requirements and become ordinary proofs
+# passed to wrappers.
+#
+# Regenerate/check:
+# python3 src/compile_to_lean/generate_local_builtin_catalog.py --write
+# python3 src/compile_to_lean/generate_local_builtin_catalog.py --check
+#
+# Litex gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_local_builtin_catalog.lit
+#
+# Litex-to-Lean gate:
+# cargo test --release zero_one_and_two_premise_local_builtins_emit_registered_wrappers -- --nocapture
+#
+# Real Mathlib gate:
+# LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release registered_local_builtin_output_compiles_with_real_mathlib -- --ignored --nocapture
+
+forall x R:
+    0 <= abs(x)
+
+forall x R:
+    0 <= x
+    =>:
+        abs(x) = x
+
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+
+forall x R:
+    x <= abs(x)
+
+forall x R:
+    -x <= abs(x)
+
+forall x R:
+    -abs(x) <= x
+
+forall x, y R:
+    abs(x * y) = abs(x) * abs(y)
+
+forall x, y R:
+    abs(x + y) <= abs(x) + abs(y)
+
+forall x, y R:
+    abs(x - y) <= abs(x) + abs(y)
+
+forall x, y R:
+    abs(x) - abs(y) <= abs(x + y)
+
+forall x, y R:
+    abs(x) - abs(y) <= abs(x - y)
+
+forall x R:
+    x <= 0
+    =>:
+        abs(x) = -x
+
+forall x R:
+    x != 0
+    =>:
+        0 < abs(x)
+
+forall A, B set:
+    union(A, B) = union(B, A)
+
+forall A, B, c set:
+    union(union(A, B), c) = union(A, union(B, c))
+
+forall A set:
+    union(A, A) = A
+
+forall A set:
+    union(A, {}) = A
+
+forall A set:
+    union({}, A) = A
+
+forall A, B set:
+    intersect(A, B) = intersect(B, A)
+
+forall A, B, c set:
+    intersect(intersect(A, B), c) = intersect(A, intersect(B, c))
+
+forall A, B, c set:
+    intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))
+
+forall A, B, c set:
+    set_minus(A, union(B, c)) = intersect(set_minus(A, B), set_minus(A, c))
+
+forall A, B, c set:
+    set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))
+
+forall A, B set, x A:
+    x $in union(A, B)
+
+forall A, B set, x B:
+    x $in union(A, B)
+
+forall A, B set, x A:
+    x $in B
+    =>:
+        x $in intersect(A, B)
+
+forall A, B set, x A:
+    not x $in B
+    =>:
+        x $in set_minus(A, B)
+
+forall A, B set:
+    intersect(A, B) $subset A
+
+forall A, B set:
+    intersect(A, B) $subset B
+
+forall A, B set:
+    A $subset union(A, B)
+
+forall A, B set:
+    B $subset union(A, B)
+
+forall A, B set:
+    set_minus(A, B) $subset A
+
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a * b != 0
+
+forall A, B, S set:
+    A $subset S
+    B $subset S
+    =>:
+        union(A, B) $subset S
+
+forall A set:
+    {} $subset A
+
+forall a, b R:
+    min(a, b) <= a
+
+forall a, b R:
+    min(a, b) <= b
+
+forall a, b R:
+    a <= max(a, b)
+
+forall a, b R:
+    b <= max(a, b)
+
+forall a, b R:
+    a <= b
+    =>:
+        min(a, b) = a
+
+forall a, b R:
+    a <= b
+    =>:
+        max(a, b) = b
+
+forall a, b R:
+    b <= a
+    =>:
+        min(a, b) = b
+
+forall a, b R:
+    b <= a
+    =>:
+        max(a, b) = a
+
+forall a, b R:
+    min(a, b) = min(b, a)
+
+forall a, b R:
+    max(a, b) = max(b, a)
+
+forall a, b, c R:
+    min(min(a, b), c) = min(a, min(b, c))
+
+forall a, b, c R:
+    max(max(a, b), c) = max(a, max(b, c))
+
+forall a R:
+    min(a, a) = a
+
+forall a R:
+    max(a, a) = a
+
+forall a, b R:
+    min(a, max(a, b)) = a
+
+forall a, b R:
+    max(a, min(a, b)) = a
+
+forall a, b, c, d R:
+    a <= c
+    b <= d
+    =>:
+        min(a, b) <= min(c, d)
+
+forall a, b, c, d R:
+    a <= c
+    b <= d
+    =>:
+        max(a, b) <= max(c, d)
+
+forall A, B set:
+    A $subset B
+    =>:
+        intersect(A, B) = A
+
+forall A, B set:
+    B $subset A
+    =>:
+        intersect(A, B) = B
+
+forall A, B set:
+    B $subset A
+    =>:
+        set_minus(A, set_minus(A, B)) = B
+
+forall A, B set:
+    B $subset A
+    =>:
+        B = set_minus(A, set_minus(A, B))
+
+forall A, B set:
+    $is_nonempty_set(A)
+    =>:
+        $is_nonempty_set(union(A, B))
+
+forall A, B set:
+    $is_nonempty_set(B)
+    =>:
+        $is_nonempty_set(union(A, B))
+
+forall A, B set:
+    $is_finite_set(A)
+    $is_finite_set(B)
+    =>:
+        $is_finite_set(union(A, B))
+
+forall A, B set:
+    $is_finite_set(A)
+    $is_finite_set(B)
+    =>:
+        $is_finite_set(intersect(A, B))
+
+forall A, B set:
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(set_minus(A, B))
+
+forall A set:
+    $is_nonempty_set(power_set(A))
+
+forall A set:
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(power_set(A))
+
+forall A, B set:
+    A $subset B
+    =>:
+        A $in power_set(B)
+
+forall X, S set:
+    not $is_finite_set(X)
+    $is_finite_set(S)
+    =>:
+        not $is_finite_set(set_minus(X, S))
+
+forall a, b R:
+    a < b
+    =>:
+        a <= b
+
+forall a, b R:
+    a > b
+    =>:
+        a >= b
+
+forall u, v R:
+    v <= u
+    =>:
+        0 <= u - v
+
+forall u, v R:
+    v < u
+    =>:
+        0 < u - v
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a + b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 < a
+    0 <= b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 < a + b
+
+forall a, b R:
+    0 <= a
+    0 <= b
+    =>:
+        0 <= a * b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a * b
+
+forall a, b R:
+    0 <= a
+    0 < b
+    =>:
+        0 <= a / b
+
+forall a, b R:
+    0 < a
+    0 < b
+    =>:
+        0 < a / b
+
+forall u, a, b R:
+    a <= b
+    =>:
+        u + a <= u + b
+
+forall a, b, c, d R:
+    a <= b
+    c <= d
+    =>:
+        a + c <= b + d
+
+forall u, a, b R:
+    a < b
+    =>:
+        u + a < u + b
+
+forall a, b, c, d R:
+    a < b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a < b
+    c <= d
+    =>:
+        a + c < b + d
+
+forall a, b, c, d R:
+    a <= b
+    c < d
+    =>:
+        a + c < b + d
+
+forall a, b, c R:
+    a <= b
+    0 <= c
+    =>:
+        a - c <= b
+
+forall a, b R:
+    0 <= b
+    =>:
+        a <= a + b

@@ -61,7 +61,9 @@ impl Runtime {
     }
 
     fn record_well_definedness_proof_if_active(&mut self, proof: Rc<FactualStmtSuccess>) {
-        if self.well_definedness_capture_depth == 0 || !self.captures_to_lean_well_definedness() {
+        if self.well_definedness_capture_depth == 0
+            || !self.captures_litex_to_lean_well_definedness()
+        {
             return;
         }
         let Some(certificate) = self.well_definedness_capture_stack.last_mut() else {
@@ -278,9 +280,9 @@ mod tests {
     }
 
     #[test]
-    fn to_lean_capture_retains_function_domain_well_definedness_proof() {
+    fn compile_to_lean_capture_retains_function_domain_well_definedness_proof() {
         let mut runtime = new_test_runtime();
-        runtime.replace_to_lean_well_definedness_mode(true);
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
 
         let result = runtime
@@ -306,14 +308,14 @@ mod tests {
     }
 
     #[test]
-    fn to_lean_capture_does_not_accept_a_boolean_obj_cache_without_proof_evidence() {
+    fn compile_to_lean_capture_does_not_accept_a_boolean_obj_cache_without_proof_evidence() {
         let mut runtime = new_test_runtime();
         let warmup = parse_stmt(&mut runtime, "2 > 0");
         runtime
             .exec_stmt(&warmup)
             .expect("warmup fact should populate ordinary verifier caches");
 
-        runtime.replace_to_lean_well_definedness_mode(true);
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
         let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
         let result = runtime
             .exec_stmt(&stmt)
@@ -323,6 +325,82 @@ mod tests {
             .facts
             .iter()
             .any(|evidence| evidence.proof.stmt.to_string() == "2 > 0"));
+    }
+
+    #[test]
+    fn compile_to_lean_capture_retains_have_fn_body_well_definedness_proofs() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(&mut runtime, "have fn reciprocal(x R: x != 0) R = 1 / x");
+
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("restricted function definition should verify in Litex");
+        let success = result
+            .non_factual_success()
+            .expect("have-fn should return a non-factual success");
+        let captured = success
+            .well_definedness
+            .facts
+            .iter()
+            .map(|evidence| evidence.proof.stmt.to_string())
+            .collect::<Vec<_>>();
+
+        assert!(
+            captured.iter().any(|fact| fact.ends_with("x != 0")),
+            "captured facts: {captured:?}"
+        );
+        assert_eq!(
+            success.inside_results.len(),
+            1,
+            "have-fn must retain its checked return-membership result"
+        );
+        let verification = success
+            .function_definition_verification
+            .as_ref()
+            .expect("have-fn must freeze its body-to-environment verification mapping");
+        assert_eq!(verification.return_check_index, 0);
+        assert_eq!(
+            verification.assumption_infers.store_fact_outputs.len(),
+            2,
+            "the function parameter and domain premise must both be retained"
+        );
+        assert!(verification
+            .assumption_infers
+            .store_fact_outputs
+            .iter()
+            .all(|output| output.fact_id.is_some()));
+        assert!(verification
+            .function_membership
+            .to_string()
+            .contains("reciprocal $in fn"));
+        assert!(verification
+            .defining_equality
+            .to_string()
+            .contains("reciprocal = fn"));
+        let return_check = success.inside_results[0]
+            .factual_success()
+            .expect("the retained return check must be factual");
+        assert!(
+            return_check.stmt.to_string().ends_with("x $in R"),
+            "return check: {}",
+            return_check.stmt
+        );
+        assert_eq!(
+            success.infers.store_fact_outputs.len(),
+            2,
+            "stored function effects: {:?}",
+            success.infers
+        );
+        assert!(
+            success
+                .infers
+                .store_fact_outputs
+                .iter()
+                .all(|output| output.inferred_facts.is_empty()),
+            "unexpected inferred function effects: {:?}",
+            success.infers
+        );
     }
 
     fn new_test_runtime() -> Runtime {

@@ -186,7 +186,7 @@ impl InferResult {
     }
 
     pub fn add_exist_elimination(&mut self, fact: &Fact) {
-        self.add_store_fact_output(fact, HaveByExistStmt::store_reason(), Vec::new());
+        self.add_store_fact_output(fact, ObtainObjFromExistFact::store_reason(), Vec::new());
     }
 
     pub fn add_theorem_instantiation(&mut self, fact: &Fact) {
@@ -330,7 +330,7 @@ impl InferReason {
                 HaveObjInNonemptySetOrParamTypeStmt::store_reason().to_string()
             }
             InferReason::FunctionDefinition => HaveFnEqualStmt::store_reason().to_string(),
-            InferReason::ExistElimination => HaveByExistStmt::store_reason().to_string(),
+            InferReason::ExistElimination => ObtainObjFromExistFact::store_reason().to_string(),
             InferReason::TheoremInstantiation => ByThmStmt::store_reason().to_string(),
             InferReason::ByDefinition(_) => "inferred by definition".to_string(),
             InferReason::BuiltinInference(reason) => {

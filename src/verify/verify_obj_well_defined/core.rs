@@ -207,9 +207,13 @@ impl Runtime {
 
         let mut last_error: Option<RuntimeError> = None;
         for space in candidate_spaces.iter() {
+            let certificate_checkpoint = self.well_definedness_capture_checkpoint();
             let trial = self.run_in_local_env(|rt| {
                 rt.verify_fn_obj_well_defined_against_space(fn_obj, space.clone(), verify_state)
             });
+            // Candidate trials are search scopes, not selected proof scopes.
+            // The accepted candidate is rerun below in the real environment.
+            self.rollback_well_definedness_capture(certificate_checkpoint);
             match trial {
                 Ok(()) => {
                     return self.verify_fn_obj_well_defined_against_space(
