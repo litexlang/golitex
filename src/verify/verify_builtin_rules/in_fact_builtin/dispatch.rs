@@ -928,7 +928,7 @@ impl Runtime {
                 if list_set_carrier_result.is_true() {
                     return Ok(list_set_carrier_result);
                 }
-                self.verify_in_fact_by_known_standard_subset_membership(in_fact, target_set_obj)
+                self.verify_in_fact_by_known_standard_subset_membership(in_fact)
             }
         }
     }

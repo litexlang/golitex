@@ -1,0 +1,2 @@
+forall a, b R:
+    b <= max(a, b)

@@ -1,6 +1,8 @@
 mod builtin_rule_verify_state;
 pub mod known_forall_profile;
+pub(crate) mod local_builtin_catalog;
 mod not_exist_demorgan_forall;
+pub mod rule_schema;
 mod verify_and_chain_fact;
 mod verify_atomic_fact;
 mod verify_atomic_fact_by_definition;

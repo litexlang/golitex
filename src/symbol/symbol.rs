@@ -306,7 +306,6 @@ pub enum SymbolRole {
     Object,
     Predicate,
     AbstractPredicate,
-    Algorithm,
     Structure,
     StructureField,
     Template,
@@ -314,7 +313,6 @@ pub enum SymbolRole {
     Theorem,
     Axiom,
     Strategy,
-    Module,
     Binder,
 }
 
@@ -324,7 +322,6 @@ impl SymbolRole {
             SymbolRole::Object => "object",
             SymbolRole::Predicate => "prop",
             SymbolRole::AbstractPredicate => "abstract_prop",
-            SymbolRole::Algorithm => "algorithm",
             SymbolRole::Structure => "struct",
             SymbolRole::StructureField => "struct field",
             SymbolRole::Template => "template",
@@ -332,9 +329,12 @@ impl SymbolRole {
             SymbolRole::Theorem => "theorem",
             SymbolRole::Axiom => "axiom",
             SymbolRole::Strategy => "strategy",
-            SymbolRole::Module => "module",
             SymbolRole::Binder => "local binder",
         }
+    }
+
+    pub fn is_public_declaration(self) -> bool {
+        !matches!(self, SymbolRole::StructureField | SymbolRole::Binder)
     }
 }
 

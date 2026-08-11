@@ -2,6 +2,71 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    pub(crate) fn contextual_rewrite_diagnostic_for_fact(&mut self, fact: &Fact) -> Vec<String> {
+        let Fact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+            return Vec::new();
+        };
+
+        for side in [&equal_fact.left, &equal_fact.right] {
+            let Obj::FnObj(application) = side else {
+                continue;
+            };
+            let total_arguments = application.body.iter().map(Vec::len).sum::<usize>();
+            if total_arguments < 2 {
+                continue;
+            }
+
+            let mut prefix_candidates = Vec::new();
+            for group_index in 0..application.body.len() {
+                let group = &application.body[group_index];
+                for argument_count in 1..=group.len() {
+                    let mut prefix_body = application.body[..group_index].to_vec();
+                    prefix_body.push(group[..argument_count].to_vec());
+                    let used_arguments = prefix_body.iter().map(Vec::len).sum::<usize>();
+                    if used_arguments < total_arguments {
+                        prefix_candidates.push((prefix_body, total_arguments - used_arguments));
+                    }
+                }
+            }
+
+            for (prefix_body, remaining_arguments) in prefix_candidates.into_iter().rev() {
+                let prefix: Obj = FnObj {
+                    head: application.head.clone(),
+                    body: prefix_body,
+                }
+                .into();
+                let representative = self
+                    .get_all_obj_representatives_equal_to_given(&prefix)
+                    .into_iter()
+                    .next()
+                    .or_else(|| {
+                        self.unfold_known_fn_application_once(
+                            &prefix,
+                            &UseContextVerifyState::new(0, true),
+                        )
+                        .ok()
+                        .flatten()
+                    });
+                let Some(representative) = representative else {
+                    continue;
+                };
+                return vec![
+                    format!("unmatched outer head: function application {}", side),
+                    format!(
+                        "nearest known equal operand: {} = {}",
+                        prefix, representative
+                    ),
+                    format!(
+                        "the known equality stops before {} remaining argument(s); project or rewrite the prefix before applying them",
+                        remaining_arguments
+                    ),
+                ];
+            }
+        }
+
+        Vec::new()
+    }
+
     pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
         &mut self,
         atomic_fact: &AtomicFact,

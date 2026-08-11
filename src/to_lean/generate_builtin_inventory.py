@@ -11,6 +11,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "src/to_lean/builtin_rule_inventory.md"
 SOURCE_ROOTS = [ROOT / "src/verify", ROOT / "src/execute"]
+LOCAL_BUILTIN_CATALOG_ROOT = ROOT / "src/verify/local_builtin_catalog"
+LOCAL_BUILTIN_RULE_COUNT = len(tuple(LOCAL_BUILTIN_CATALOG_ROOT.rglob("*.lit")))
 
 # Function name -> (label argument index, provenance kind).
 INITIAL_SINKS = {
@@ -72,6 +74,27 @@ EVALUATION_MARKERS = (
     "core value",
     "closed numeric",
     "numeric normalization",
+)
+
+TYPED_LOCAL_RULE_SINKS = {
+    "new_with_verified_by_builtin_rule_evidence_and_steps",
+    "new_with_verified_by_builtin_rule_evidence_recording_stmt",
+}
+
+TRANSFORM_FUNCTION_MARKERS = (
+    "duality",
+    "rewrite",
+    "symmetr",
+    "transpose",
+    "transport",
+)
+
+QUANTIFIED_FUNCTION_MARKERS = (
+    "enumerate",
+    "forall",
+    "induc",
+    "pointwise",
+    "replacement",
 )
 
 
@@ -340,6 +363,7 @@ def inventory_entries(sources, functions_by_path, sinks):
                             "sink": sink_name,
                             "expression": expression,
                             "label": label,
+                            "function": function["name"] if function is not None else None,
                         }
                     )
     entries.sort(key=lambda item: (item["path"], item["line"], item["expression"]))
@@ -370,8 +394,45 @@ def is_evaluation(entry) -> bool:
     return any(marker in text for marker in EVALUATION_MARKERS)
 
 
+def mechanism_class(entry) -> str:
+    """Conservatively classify the executable proof mechanism at a site.
+
+    The classifier follows the sink, enclosing function, and source family;
+    diagnostic labels are not semantic identities. Mixed or unaudited routes
+    remain ``legacy_custom`` until they are migrated or classified explicitly.
+    """
+
+    if entry["kind"] == "strategy":
+        return "strategy"
+    if is_evaluation(entry) and "trusted file load" not in (
+        entry["label"] or entry["expression"]
+    ).lower():
+        return "reflection"
+
+    path = entry["path"]
+    function = (entry.get("function") or "").lower()
+    function_without_negative_forall = function.replace("non_forall", "")
+    if "by_definition" in path or "definition" in function:
+        return "definition"
+    if any(marker in function for marker in TRANSFORM_FUNCTION_MARKERS):
+        return "transform"
+    if any(
+        marker in function_without_negative_forall
+        for marker in QUANTIFIED_FUNCTION_MARKERS
+    ):
+        return "quantified"
+    if entry["sink"] in TYPED_LOCAL_RULE_SINKS:
+        return "local_schema"
+    return "legacy_custom"
+
+
 def lean_mapping(entry) -> tuple[str, str]:
     text = entry["label"] or entry["expression"]
+    if entry["path"].endswith("verify/local_builtin_catalog/verify.rs"):
+        return (
+            f"paired Litex schema + checked Lean adapter ({LOCAL_BUILTIN_RULE_COUNT} RuleIds)",
+            "implemented",
+        )
     direct_mapping = SET_AND_ABSOLUTE_VALUE_LEAN_MAPPINGS.get(text)
     if direct_mapping is not None:
         return direct_mapping, "implemented"
@@ -422,6 +483,18 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
     )
     evaluation_count = sum(is_evaluation(item) for item in entries)
     implemented_count = sum(lean_mapping(item)[1] == "implemented" for item in entries)
+    mechanism_counts = {
+        name: sum(mechanism_class(item) == name for item in entries)
+        for name in (
+            "local_schema",
+            "reflection",
+            "transform",
+            "strategy",
+            "definition",
+            "quantified",
+            "legacy_custom",
+        )
+    }
     lines = [
         "# To-Lean Builtin Rule Inventory",
         "",
@@ -443,6 +516,10 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         "appears once with its source expression even when it can render several labels",
         "at runtime.",
         "",
+        "`Mechanism class` describes the executable proof shape independently of",
+        "the diagnostic label. The classification is deliberately conservative:",
+        "unaudited or mixed branches remain `legacy_custom`.",
+        "",
         f"Of these sites, {static_count} have a static string label and {dynamic_count} use",
         f"a dynamic label expression. {evaluation_count} evaluation/computation-like sites",
         "are explicitly marked `not_this_round`. The classification is intentionally",
@@ -452,6 +529,8 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         "A Lean mapping is recorded only when the current backend actually emits and the",
         "Lean kernel checks that tactic or lemma. `none` means no checked mapping exists",
         "yet for that individual local rule schema, not that Lean lacks the mathematics.",
+        f"The generic local-schema site currently represents {LOCAL_BUILTIN_RULE_COUNT} paired RuleIds;",
+        "the implemented summary still counts source sites, not catalog entries.",
         "Closed numeric membership results may instead use the backend's generic,",
         "carrier-bearing `norm_num` reflection path. The closed-u64 `$prime` route is",
         "listed as implemented because it now carries explicit structured reflection",
@@ -478,11 +557,15 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         f"| Evaluation/computation (`not_this_round`) | {evaluation_count} |",
         f"| Checked Lean mappings currently implemented | {implemented_count} |",
         f"| Forwarding sink functions discovered | {len(sinks)} |",
+        *(
+            f"| Mechanism: `{name}` | {count} |"
+            for name, count in mechanism_counts.items()
+        ),
         "",
         "## Rule sites",
         "",
-        "| ID | Kind | Label or dynamic expression | Source | Family | Checked Lean mapping | Status |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| ID | Kind | Mechanism class | Label or dynamic expression | Source | Family | Checked Lean mapping | Status |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for index, entry in enumerate(entries, 1):
         label = entry["label"]
@@ -491,7 +574,7 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         source = f"`{entry['path']}:{entry['line']}`"
         mapping, status = lean_mapping(entry)
         lines.append(
-            f"| B{index:04d} | {entry['kind']} | {rendered} | {source} | "
+            f"| B{index:04d} | {entry['kind']} | `{mechanism_class(entry)}` | {rendered} | {source} | "
             f"{family(entry)} | {mapping} | `{status}` |"
         )
     lines.append("")

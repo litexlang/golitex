@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "target": "examples/01_proof_patterns/bounded_range_classification.lit",
+  "session_command": "target/release/litex -compact -session",
+  "proof_spine": [
+    "Use the natural carrier and q < 10 to establish q in range(0, 10).",
+    "Enumerate the range once and eliminate residues other than 4 and 6."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Provide the public runnable tracer for goal-shaped range enumeration.",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "claim:\n    ? forall q N:\n        q < 10\n        q^2 % 10 = 6\n        =>:\n            q = 4 or q = 6\n    by enumerate range: q $in range(0, 10)\n    by cases:\n        ? q = 4 or q = 6\n        case q = 0:\n            q^2 % 10 = 0\n            impossible q^2 % 10 = 6\n        case q = 1:\n            q^2 % 10 = 1\n            impossible q^2 % 10 = 6\n        case q = 2:\n            q^2 % 10 = 4\n            impossible q^2 % 10 = 6\n        case q = 3:\n            q^2 % 10 = 9\n            impossible q^2 % 10 = 6\n        case q = 4\n        case q = 5:\n            q^2 % 10 = 5\n            impossible q^2 % 10 = 6\n        case q = 6\n        case q = 7:\n            q^2 % 10 = 9\n            impossible q^2 % 10 = 6\n        case q = 8:\n            q^2 % 10 = 4\n            impossible q^2 % 10 = 6\n        case q = 9:\n            q^2 % 10 = 1\n            impossible q^2 % 10 = 6",
+          "result": "failed",
+          "verifier_evidence": "Release runner code gate reached case q = 1, then reported atomic fact unknown for q^2 % 10 = 1.",
+          "failed_phase": "proof",
+          "failure_mechanism": "Known q = 1 is not automatically rewritten through the compound square-and-remainder expression.",
+          "diagnosis": "The range enumeration is sufficient; each rejected residue still needs the exact substituted atomic expression before numeric evaluation.",
+          "next_change": "Restore q^2 % 10 = c^2 % 10 = residue in every rejected constant branch."
+        },
+        {
+          "candidate": "The same range-enumeration proof with each rejected branch changed from `q^2 % 10 = residue` to `q^2 % 10 = c^2 % 10 = residue` for its case constant c.",
+          "result": "accepted",
+          "verifier_evidence": "target/release/litex -compact -runner -e <corrected candidate>: exit 0, top-level ok=true.",
+          "diagnosis": "This keeps only the smallest contextual rewrite bridge demonstrated by the first failure.",
+          "next_change": "Materialize the public example and run its isolated file gate."
+        }
+      ],
+      "accepted_litex": "claim:\n    ? forall q N:\n        q < 10\n        q^2 % 10 = 6\n        =>:\n            q = 4 or q = 6\n    by enumerate range: q $in range(0, 10)\n    by cases:\n        ? q = 4 or q = 6\n        case q = 0:\n            q^2 % 10 = 0^2 % 10 = 0\n            impossible q^2 % 10 = 6\n        case q = 1:\n            q^2 % 10 = 1^2 % 10 = 1\n            impossible q^2 % 10 = 6\n        case q = 2:\n            q^2 % 10 = 2^2 % 10 = 4\n            impossible q^2 % 10 = 6\n        case q = 3:\n            q^2 % 10 = 3^2 % 10 = 9\n            impossible q^2 % 10 = 6\n        case q = 4\n        case q = 5:\n            q^2 % 10 = 5^2 % 10 = 5\n            impossible q^2 % 10 = 6\n        case q = 6\n        case q = 7:\n            q^2 % 10 = 7^2 % 10 = 9\n            impossible q^2 % 10 = 6\n        case q = 8:\n            q^2 % 10 = 8^2 % 10 = 4\n            impossible q^2 % 10 = 6\n        case q = 9:\n            q^2 % 10 = 9^2 % 10 = 1\n            impossible q^2 % 10 = 6",
+      "reusable_lesson": "Range enumeration removes the manual coverage ladder, but rewriting a case equality through a compound arithmetic expression can still require an explicit substituted atomic calculation.",
+      "status": "materialized_clean"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bounded_range_classification.lit",
+    "file_gate_result": "exit 0; top-level ok=true"
+  }
+}

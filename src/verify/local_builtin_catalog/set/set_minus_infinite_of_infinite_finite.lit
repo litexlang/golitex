@@ -1,0 +1,5 @@
+forall X, S set:
+    not $is_finite_set(X)
+    $is_finite_set(S)
+    =>:
+        not $is_finite_set(set_minus(X, S))

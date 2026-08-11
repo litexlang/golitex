@@ -1,0 +1,2 @@
+forall A, B set, x A:
+    x $in union(A, B)

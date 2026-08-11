@@ -416,6 +416,11 @@ an explicit reserved builtin theorem call such as
 `by thm set_builder_member(x, B)` or
 `by thm tuple_equal_from_coordinates(L, R)`. These calls check their
 requirements with the full verifier and commit no conclusion on failure.
+The canonical rational interface is
+`by thm rational_has_unique_reduced_fraction(q)`. For a known `q $in Q`, it
+stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. The name is bare and
+reserved, accepts exactly one argument, and reuses the kernel's direct
+reduced-fraction existential rule rather than a trusted `std/basics` theorem.
 When only one atomic consequence should escape, use the preview form
 `by thm name(args) => atomic_fact`, or the equivalent bodyless goal block
 `by thm name(args):` followed by one `? atomic_fact`. Litex applies the ordinary
@@ -460,6 +465,28 @@ A theorem about groups should live beside the source that needs it; a theorem
 about real analysis should live beside that analysis source. The owning module
 imports the package in `litex.config` when that background is actually needed. This keeps the active
 known-fact and known-`forall` space closer to the topic of the current proof.
+
+## Can an imported package's public symbols be used without the module prefix?
+
+Yes, but only through an explicit `litex.config` opt-in. Use
+`[allow bare export]`, `[allow bare import std]`, or `[allow bare import]` with
+one name per line from the matching `[export]`, `[import std]`, or `[import]`
+table. Existing configurations remain qualified-only.
+
+Litex indexes terminal symbols from the enabled package's complete recursive
+public export tree once when a source file is entered. It does not expose the
+package's private imports. Flattened packages participate normally, so bare
+`b` can denote the same underlying symbol as public `A::b`. If two enabled
+trees expose different symbols both named `b`, the manifest is rejected; there
+is no Python-style last-import-wins rule.
+
+Explicit `A::b` always bypasses bare lookup. Module names and symbol names are
+separate, so `A` may still be both a module head and a local object. In contrast,
+once external bare `b` is active, no local declaration or binder may also use
+`b`; struct fields such as `value.b` remain separate. Permissions inherit into
+submodules, but an export is not visible until it has loaded, so an earlier file
+cannot accidentally cite a later file. Dynamic imports in isolated sessions
+remain qualified-only.
 
 A practical rule of thumb is:
 
@@ -1039,6 +1066,13 @@ This makes the feedback loop more useful. An `unknown` result usually suggests
 "add the missing mathematical fact." An `error` result suggests "fix the
 expression or its domain information before discussing truth."
 
+Some atomic equality failures include a narrower `detail`. If a known equality
+stops at a function-valued prefix such as `trace(q) = base(q)` while the goal
+asks about `trace(q)(row)`, Litex reports the unmatched outer application and
+that nearest prefix. This is guidance to project or rewrite the prefix before
+applying the remaining argument; it does not perform new congruence or accept
+the failed goal.
+
 ## Why does Litex check well-definedness before truth?
 
 Litex treats mathematical expressions as meaningful only when their objects,
@@ -1062,6 +1096,13 @@ This design matters because many mathematical mistakes are not false theorems
 but ill-formed statements: applying a function outside its domain, using a
 projection from the wrong Cartesian product, or writing an expression with a
 missing side condition. Litex tries to make that distinction explicit.
+
+For a checked definition `have x S = value`, carrier compatibility belongs to
+the statement's `verify_process` phase and runs before `x` is stored. When a
+standard numeric source carrier can be established, the error reports both
+the required `S` and that source carrier. Thus a `Z`-valued remainder reports
+`required N` and `known Z`; later proof-body inequalities cannot retroactively
+make that failed declaration an `N` binding.
 
 ## Can a predicate premise make a later expression well-defined?
 

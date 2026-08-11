@@ -1,0 +1,2 @@
+forall a R:
+    max(a, a) = a

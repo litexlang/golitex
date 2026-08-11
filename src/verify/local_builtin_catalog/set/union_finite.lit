@@ -1,0 +1,5 @@
+forall A, B set:
+    $is_finite_set(A)
+    $is_finite_set(B)
+    =>:
+        $is_finite_set(union(A, B))

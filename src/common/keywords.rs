@@ -427,6 +427,7 @@ pub fn is_builtin_theorem_name(name: &str) -> bool {
             | "tuple_equal_from_coordinates"
             | "finite_set_sum_substitution"
             | "sum_over_bijective_finite_set_enumerations"
+            | "rational_has_unique_reduced_fraction"
     )
 }
 

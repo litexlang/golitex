@@ -1,0 +1,4 @@
+forall A, B set:
+    A $subset B
+    =>:
+        intersect(A, B) = A

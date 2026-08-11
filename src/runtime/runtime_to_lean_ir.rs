@@ -1,4 +1,9 @@
 use crate::prelude::*;
+use crate::to_lean_ir::{RegisteredRuleApplicationToLeanIR, TypedBoundObjToLeanIR};
+use crate::verify::local_builtin_catalog::registered_local_builtin_rules;
+use crate::verify::rule_schema::{
+    canonical_atomic_facts_equal, canonical_objs_equal, match_conclusion, MatchLimits,
+};
 use std::collections::{HashMap, HashSet};
 
 #[derive(Clone, Default)]
@@ -39,6 +44,9 @@ impl Runtime {
             ensure_fact_objects_lower_to_lean_ir(&success.stmt)?;
             let fact = self.fact_to_lean_ir_from_success(success)?;
             let excluded = HashSet::from([success.stmt.to_string()]);
+            if success.fact_id.is_none() {
+                return self.projected_forall_stmt_to_lean_ir(success, fact, excluded);
+            }
             return Ok(StmtToLeanIR::Fact(FactStmtToLeanIR {
                 fact,
                 inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &excluded)?,
@@ -1051,6 +1059,198 @@ impl Runtime {
         self.fact_to_lean_ir_from_success_with_context(success, &ToLeanIrContext::default())
     }
 
+    fn projected_forall_stmt_to_lean_ir(
+        &self,
+        success: &FactualStmtSuccess,
+        source: FactToLeanIR,
+        mut excluded: HashSet<String>,
+    ) -> Result<StmtToLeanIR, RuntimeError> {
+        let Fact::ForallFact(source_forall) = &source.proposition else {
+            return Err(to_lean_ir_error(
+                &source.proposition.line_file(),
+                "a verified non-forall fact was not assigned a stored FactId",
+            ));
+        };
+        let FactProofToLeanIR::ForallIntroduction {
+            parameter_premises,
+            premises,
+            inferred_premises,
+            conclusions,
+        } = &source.proof
+        else {
+            return Err(to_lean_ir_error(
+                &source.proposition.line_file(),
+                "an unstored forall did not retain forall-introduction evidence",
+            ));
+        };
+
+        let source_bindings = source_forall
+            .params_def_with_type
+            .groups
+            .iter()
+            .flat_map(|group| {
+                group
+                    .params
+                    .iter()
+                    .map(move |binding| (binding, &group.param_type))
+            })
+            .collect::<Vec<_>>();
+        if source_bindings.len() != parameter_premises.len()
+            || source_forall.then_facts.len() != conclusions.len()
+        {
+            return Err(to_lean_ir_error(
+                &source_forall.line_file,
+                "projected forall evidence does not match its source binder or conclusion arity",
+            ));
+        }
+
+        let source_conclusion_keys = source_forall
+            .then_facts
+            .iter()
+            .map(|fact| fact.clone().to_fact().to_string())
+            .collect::<HashSet<_>>();
+        let mut facts = Vec::new();
+        for output in success.infers.store_fact_outputs.iter() {
+            let candidates =
+                std::iter::once((&output.itself_and_why_itself_is_stored.0, output.fact_id)).chain(
+                    output
+                        .inferred_facts
+                        .iter()
+                        .zip(output.inferred_fact_ids.iter())
+                        .map(|(fact, fact_id)| (fact, *fact_id)),
+                );
+            for (proposition, recorded_fact_id) in candidates {
+                if proposition.to_string() == source.proposition.to_string() {
+                    continue;
+                }
+                let Fact::ForallFact(projected) = proposition else {
+                    continue;
+                };
+                if projected.then_facts.is_empty()
+                    || projected.then_facts.iter().any(|fact| {
+                        !source_conclusion_keys.contains(&fact.clone().to_fact().to_string())
+                    })
+                    || projected
+                        .dom_facts
+                        .iter()
+                        .map(ToString::to_string)
+                        .ne(source_forall.dom_facts.iter().map(ToString::to_string))
+                {
+                    continue;
+                }
+                let fact_id = recorded_fact_id.ok_or_else(|| {
+                    to_lean_ir_error(
+                        &proposition.line_file(),
+                        "a stored forall projection reached To-Lean without a FactId",
+                    )
+                })?;
+
+                let projected_bindings = projected
+                    .params_def_with_type
+                    .groups
+                    .iter()
+                    .flat_map(|group| {
+                        group
+                            .params
+                            .iter()
+                            .map(move |binding| (binding, &group.param_type))
+                    })
+                    .collect::<Vec<_>>();
+                let mut retained_ids = HashSet::new();
+                let mut retained_names = HashSet::new();
+                let mut last_source_index = None;
+                for (binding, projected_type) in projected_bindings {
+                    let Some((source_index, (_, source_type))) = source_bindings
+                        .iter()
+                        .enumerate()
+                        .find(|(_, (source_binding, _))| source_binding.id() == binding.id())
+                    else {
+                        return Err(to_lean_ir_error(
+                            &projected.line_file,
+                            "a stored forall projection introduced a new binder",
+                        ));
+                    };
+                    if last_source_index.is_some_and(|last| source_index <= last)
+                        || !param_types_match_for_projection(source_type, projected_type)
+                    {
+                        return Err(to_lean_ir_error(
+                            &projected.line_file,
+                            "a stored forall projection changed binder order or type",
+                        ));
+                    }
+                    last_source_index = Some(source_index);
+                    retained_ids.insert(binding.id());
+                    retained_names.insert(binding.name().to_string());
+                }
+
+                let projected_parameter_premises = source_bindings
+                    .iter()
+                    .zip(parameter_premises.iter())
+                    .filter(|((binding, _), _)| retained_ids.contains(&binding.id()))
+                    .map(|(_, premise)| premise.clone())
+                    .collect::<Vec<_>>();
+                let mut projected_conclusions = Vec::with_capacity(projected.then_facts.len());
+                let mut used_source_conclusions = HashSet::new();
+                for projected_conclusion in projected.then_facts.iter() {
+                    let projected_key = projected_conclusion.clone().to_fact().to_string();
+                    let Some(source_index) = source_forall
+                        .then_facts
+                        .iter()
+                        .enumerate()
+                        .find(|(index, source_conclusion)| {
+                            !used_source_conclusions.contains(index)
+                                && (*source_conclusion).clone().to_fact().to_string()
+                                    == projected_key
+                        })
+                        .map(|(index, _)| index)
+                    else {
+                        return Err(to_lean_ir_error(
+                            &projected.line_file,
+                            "a stored forall projection introduced a new conclusion",
+                        ));
+                    };
+                    used_source_conclusions.insert(source_index);
+                    projected_conclusions.push(conclusions[source_index].clone());
+                }
+                if projected_conclusions.is_empty() {
+                    return Err(to_lean_ir_error(
+                        &projected.line_file,
+                        "a stored forall projection has no conclusion",
+                    ));
+                }
+
+                let projected_inferred_premises = inferred_premises
+                    .iter()
+                    .filter(|fact| fact_uses_only_forall_params(fact, &retained_names))
+                    .cloned()
+                    .collect();
+                excluded.insert(proposition.to_string());
+                facts.push(FactToLeanIR {
+                    fact_id: Some(fact_id),
+                    proposition: proposition.clone(),
+                    proof: FactProofToLeanIR::ForallIntroduction {
+                        parameter_premises: projected_parameter_premises,
+                        premises: premises.clone(),
+                        inferred_premises: projected_inferred_premises,
+                        conclusions: projected_conclusions,
+                    },
+                });
+            }
+        }
+        if facts.is_empty() {
+            return Err(to_lean_ir_error(
+                &source_forall.line_file,
+                "a verified forall had neither a FactId nor stored projections",
+            ));
+        }
+
+        Ok(StmtToLeanIR::ProjectedForall(ProjectedForallToLeanIR {
+            source: source.proposition,
+            facts,
+            inferred_facts: self.inferred_facts_to_lean_ir(&success.infers, &excluded)?,
+        }))
+    }
+
     fn fact_to_lean_ir_from_success_with_context(
         &self,
         success: &FactualStmtSuccess,
@@ -1648,14 +1848,164 @@ impl Runtime {
         subgoals: &[StmtResult],
         context: &ToLeanIrContext,
     ) -> Result<FactProofToLeanIR, RuntimeError> {
+        if let Some(BuiltinRuleEvidence::RegisteredLocal(evidence)) = evidence {
+            return self.registered_local_builtin_application_to_lean_ir(
+                goal, evidence, subgoals, context,
+            );
+        }
         let rule = match evidence {
-            Some(evidence) => ProofRuleToLeanIR::Builtin(evidence.into()),
+            Some(evidence) => ProofRuleToLeanIR::Builtin(
+                BuiltinRuleToLeanIR::from_legacy_evidence(evidence).ok_or_else(|| {
+                    to_lean_ir_error(
+                        &goal.line_file(),
+                        "registered local builtin reached legacy evidence lowering",
+                    )
+                })?,
+            ),
             None => ProofRuleToLeanIR::from_verified_builtin_label(label, goal),
         };
         Ok(FactProofToLeanIR::RuleApplication {
             rule,
             parameter_requirements: Vec::new(),
             premises: self.subgoals_to_lean_ir(subgoals, context)?,
+        })
+    }
+
+    fn registered_local_builtin_application_to_lean_ir(
+        &self,
+        goal: &Fact,
+        evidence: &RegisteredLocalBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+        context: &ToLeanIrContext,
+    ) -> Result<FactProofToLeanIR, RuntimeError> {
+        let rules = registered_local_builtin_rules()?;
+        let rule = rules
+            .iter()
+            .find(|rule| rule.id() == &evidence.rule_id)
+            .ok_or_else(|| {
+                to_lean_ir_error(
+                    &goal.line_file(),
+                    format!(
+                        "unknown local builtin RuleId `{}`",
+                        evidence.rule_id.as_str()
+                    ),
+                )
+            })?;
+        if rule.semantic_fingerprint() != &evidence.semantic_fingerprint {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                format!(
+                    "stale local builtin fingerprint for `{}`",
+                    evidence.rule_id.as_str()
+                ),
+            ));
+        }
+        if evidence.bindings.len() != rule.schema().variables.len()
+            || evidence.parameter_requirement_count != rule.schema().parameter_requirements.len()
+        {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "local builtin certificate has the wrong binding or requirement arity",
+            ));
+        }
+        let Fact::AtomicFact(goal_atomic) = goal else {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "local builtin certificate target must be atomic",
+            ));
+        };
+        let matched = match_conclusion(rule.schema(), goal_atomic, MatchLimits::default())
+            .map_err(|error| to_lean_ir_error(&goal.line_file(), error.message))?
+            .ok_or_else(|| {
+                to_lean_ir_error(
+                    &goal.line_file(),
+                    "local builtin certificate target does not match its registered schema",
+                )
+            })?;
+        for (expected, actual) in matched.bindings().iter().zip(&evidence.bindings) {
+            if !canonical_objs_equal(expected, actual, MatchLimits::default())
+                .map_err(|error| to_lean_ir_error(&goal.line_file(), error.message))?
+            {
+                return Err(to_lean_ir_error(
+                    &goal.line_file(),
+                    "local builtin certificate binding does not match its target",
+                ));
+            }
+        }
+
+        let mut param_to_arg_map = HashMap::new();
+        for (variable, binding) in rule.schema().variables.iter().zip(&evidence.bindings) {
+            insert_symbol_substitution(&mut param_to_arg_map, &variable.binding, binding.clone());
+        }
+        let expected_templates = rule
+            .schema()
+            .parameter_requirements
+            .iter()
+            .chain(rule.schema().premises.iter())
+            .collect::<Vec<_>>();
+        if subgoals.len() != expected_templates.len() {
+            return Err(to_lean_ir_error(
+                &goal.line_file(),
+                "local builtin certificate has the wrong child-proof arity",
+            ));
+        }
+        let children = self.subgoals_to_lean_ir(subgoals, context)?;
+        for (template, child) in expected_templates.iter().zip(&children) {
+            let expected = self.inst_atomic_fact(
+                template,
+                &param_to_arg_map,
+                ParamObjType::Forall,
+                Some(&goal.line_file()),
+            )?;
+            let Fact::AtomicFact(actual) = &child.proposition else {
+                return Err(to_lean_ir_error(
+                    &child.proposition.line_file(),
+                    "local builtin child proof is not atomic",
+                ));
+            };
+            if !canonical_atomic_facts_equal(&expected, actual, MatchLimits::default())
+                .map_err(|error| to_lean_ir_error(&child.proposition.line_file(), error.message))?
+            {
+                return Err(to_lean_ir_error(
+                    &child.proposition.line_file(),
+                    "local builtin child proof does not match its instantiated schema fact",
+                ));
+            }
+        }
+
+        let mut bindings = Vec::with_capacity(evidence.bindings.len());
+        for (variable, object) in rule.schema().variables.iter().zip(&evidence.bindings) {
+            let object = ObjToLeanIR::lower(object)
+                .map_err(|message| to_lean_ir_error(&goal.line_file(), message))?;
+            let instantiated_param_type = self.inst_param_type(
+                &variable.param_type,
+                &param_to_arg_map,
+                ParamObjType::Forall,
+            )?;
+            // This is an occurrence-local carrier view, not a typed Fact IR.
+            // A generic set parameter must use the target binding's SymbolId,
+            // while a dependent parameter such as `x A` must mention the
+            // instantiated target `A`, never the catalog template's symbol.
+            let generic_anchor = match &object {
+                ObjToLeanIR::Symbol { symbol_id, .. } => *symbol_id,
+                _ => variable.binding.id(),
+            };
+            bindings.push(TypedBoundObjToLeanIR {
+                object,
+                param_type: param_type_to_lean_ir(&instantiated_param_type, generic_anchor)?,
+            });
+        }
+        let premises = children.split_at(evidence.parameter_requirement_count);
+        Ok(FactProofToLeanIR::RuleApplication {
+            rule: ProofRuleToLeanIR::RegisteredRule(RegisteredRuleApplicationToLeanIR {
+                rule_id: evidence.rule_id.clone(),
+                semantic_fingerprint: evidence.semantic_fingerprint.clone(),
+                bindings,
+                parameter_requirement_count: rule.schema().parameter_requirements.len(),
+                premise_count: rule.schema().premises.len(),
+            }),
+            parameter_requirements: premises.0.to_vec(),
+            premises: premises.1.to_vec(),
         })
     }
 
@@ -2145,6 +2495,27 @@ fn collect_forall_conclusion_objects_for_to_lean<'a>(
         ExistOrAndChainAtomicFact::OrFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
         ExistOrAndChainAtomicFact::ExistFact(fact) => objects.extend(fact.get_args_from_fact_ref()),
     }
+}
+
+fn param_types_match_for_projection(left: &ParamType, right: &ParamType) -> bool {
+    match (left, right) {
+        (ParamType::Set(_), ParamType::Set(_))
+        | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+        | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
+        (ParamType::Obj(left), ParamType::Obj(right)) => {
+            obj_equality_key(left) == obj_equality_key(right)
+        }
+        _ => false,
+    }
+}
+
+fn fact_uses_only_forall_params(fact: &FactToLeanIR, retained_names: &HashSet<String>) -> bool {
+    let mut objects = Vec::new();
+    collect_fact_objects_for_to_lean(&fact.proposition, &mut objects);
+    objects
+        .into_iter()
+        .flat_map(Obj::collect_forall_free_param_names)
+        .all(|name| retained_names.contains(&name))
 }
 
 fn to_lean_ir_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeError {

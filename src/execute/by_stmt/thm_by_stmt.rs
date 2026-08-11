@@ -482,6 +482,98 @@ impl Runtime {
         }
 
         let verify_state = UseContextVerifyState::new(0, false);
+        if name == "rational_has_unique_reduced_fraction" {
+            require_arity!(1);
+
+            let numerator_group = self.fresh_param_group_with_type(
+                vec!["p".to_string()],
+                ParamType::Obj(StandardSet::Z.into()),
+            )?;
+            let denominator_group = self.fresh_param_group_with_type(
+                vec!["d".to_string()],
+                ParamType::Obj(StandardSet::NPos.into()),
+            )?;
+            let numerator =
+                obj_for_bound_param_in_scope(&numerator_group.params[0], ParamObjType::Exist);
+            let denominator =
+                obj_for_bound_param_in_scope(&denominator_group.params[0], ParamObjType::Exist);
+            let ratio: Obj = Div::new(numerator.clone(), denominator.clone()).into();
+            let gcd: Obj = Gcd::new(numerator, denominator).into();
+            let ratio_fact: AtomicFact =
+                EqualFact::new(stmt.args[0].clone(), ratio, stmt.line_file.clone()).into();
+            let coprime_fact: AtomicFact = EqualFact::new(
+                gcd,
+                Number::new("1".to_string()).into(),
+                stmt.line_file.clone(),
+            )
+            .into();
+            let body = ExistFactBody::new(
+                ParamDefWithType::new(vec![numerator_group, denominator_group]),
+                vec![ratio_fact.into(), coprime_fact.into()],
+                stmt.line_file.clone(),
+            )?;
+            let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistUniqueFact(body).into();
+
+            let verification = if verify_requirements {
+                Some(self.verify_exist_or_and_chain_atomic_fact(&conclusion, &verify_state)?)
+            } else {
+                None
+            };
+            let mut inside_results = Vec::new();
+            let mut requirement_facts = Vec::new();
+            let mut requirement_roles = Vec::new();
+            if let Some(result) = verification {
+                if !result.is_true() {
+                    return Err(builtin_thm_exec_error(
+                        stmt,
+                        "builtin theorem `rational_has_unique_reduced_fraction` requires its argument to belong to `Q`"
+                            .to_string(),
+                        vec![result],
+                    ));
+                }
+                let verified_requirement = result
+                    .factual_success()
+                    .map(|success| success.stmt.to_string())
+                    .unwrap_or_else(|| conclusion.to_string());
+                requirement_facts.push(verified_requirement);
+                requirement_roles.push(
+                    "rational membership discharges the canonical reduced-fraction rule"
+                        .to_string(),
+                );
+                inside_results.push(result);
+            }
+
+            let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
+            let infer_result = if verify_requirements {
+                self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    conclusion.clone(),
+                    store_reason.store_reason(),
+                )?
+            } else {
+                self.store_trusted_fact_and_infer_with_reason(
+                    conclusion.clone().to_fact(),
+                    store_reason,
+                )?
+            };
+            let verification = ByTheoremVerificationResult::new_builtin(
+                name.to_string(),
+                stmt.args.iter().map(ToString::to_string).collect(),
+                requirement_facts,
+                requirement_roles,
+                vec![conclusion.to_string()],
+                None,
+            );
+            return Ok(Some(
+                NonFactualStmtSuccess::new_with_by_verification(
+                    stmt.clone().into(),
+                    infer_result,
+                    inside_results,
+                    verification.into(),
+                )
+                .into(),
+            ));
+        }
+
         let (conclusion, requirement_role, verification, provenance): (
             AtomicFact,
             String,

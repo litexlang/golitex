@@ -1,25 +1,36 @@
-# Tracer: twenty structured arithmetic/order builtin rules for To-Lean
+# Tracer: twenty registered arithmetic/order builtin rules for To-Lean
 #
-# Before (Litex verified, To-Lean rejected the label-only rule):
+# Before (compiled through a hand-written arithmetic evidence variant):
+# forall a, b R:
+#     a < b
+#     =>:
+#         a <= b
+# Former behavior: the verifier selected `LessEqualFromStrictOrder`, runtime
+# lowered a dedicated arithmetic enum variant, and the emitter selected a
+# per-rule proof recipe.
+#
+# Earlier label-only boundary retained for context:
 # forall a, b R:
 #     0 <= a
 #     0 <= b
 #     =>:
 #         0 <= a * b
-# Former behavior: the verifier returned only the diagnostic label
+# The original verifier returned only the diagnostic label
 # "0 <= a * b from 0 <= a and 0 <= b", so no checked Lean backend ran.
 #
 # Now (verified and compiled):
-# The active multiplication theorem below returns a typed rule ID plus its two
-# recursive premise proofs; Lean validates the certificate and checks it with
-# `nlinarith only [...]`. The surrounding statements exercise all 20 rule IDs.
+# Every active theorem below returns a path-derived registered RuleId,
+# occurrence-local bindings, parameter proofs, and ordered premise proofs. The
+# generic emitter applies the paired checked Mathlib wrapper; no per-rule
+# verifier, evidence, IR, or emitter branch was added for this migration.
 #
-# Boundary: evaluation-only rules and every label not enumerated in the typed
-# evidence enum remain unsupported and produce an Incomplete report.
+# Boundary: a rule such as `a < b`, `b < c` => `a < c` has a middle parameter
+# absent from the conclusion, so it remains outside the range-restricted local
+# catalog. Recursive arithmetic strategies retain their dedicated evidence.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/to_lean_builtin_rules_20.lit
 # Focused compiler gate: cargo test --release to_lean_builtin_rules_20 -- --nocapture
-# Implementation: src/result/builtin_rule_evidence.rs, src/to_lean_ir/builtin_rule.rs,
-# src/runtime/runtime_to_lean_ir.rs, and src/to_lean/to_lean_pipeline.rs
+# Implementation: src/verify/local_builtin_catalog/order/ and
+# src/to_lean/local_builtin_adapters/order/
 
 forall a, b R:
     a < b

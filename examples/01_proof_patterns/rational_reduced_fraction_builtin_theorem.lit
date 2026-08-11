@@ -1,0 +1,22 @@
+# Tracer: obtain the canonical reduced fraction of a rational
+#
+# Before (library-owned and trusted):
+# import std basics
+# by thm basics::rational_has_unique_reduced_fraction(q)
+# Former behavior: the reusable name lived in std/basics and its existential
+# conclusion was introduced by `trust`.
+#
+# Now (kernel-checked): the reserved bare theorem constructs the canonical
+# existential and verifies it with the same rational reduced-fraction rule used
+# by direct automatic checking.
+
+have q Q
+by thm rational_has_unique_reduced_fraction(q)
+obtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
+q = p / d
+gcd(p, d) = 1
+
+# Boundary: the call has arity one, requires a known `Q` argument, and cannot
+# be module-qualified. Its fixed conclusion uses an integer numerator, a
+# positive-natural denominator, and gcd exactly 1.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit

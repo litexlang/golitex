@@ -1,0 +1,4 @@
+forall u, v R:
+    v < u
+    =>:
+        0 < u - v

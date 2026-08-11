@@ -396,6 +396,9 @@ fn discover_module_config(
 ) -> Result<(), RuntimeError> {
     let module_flatten = config.module_flatten;
     let module_flatten_line = config.module_flatten_line;
+    let allow_bare_exports = config.allow_bare_exports.clone();
+    let allow_bare_std_imports = config.allow_bare_std_imports.clone();
+    let allow_bare_imports = config.allow_bare_imports.clone();
     let module_hierarchy = runtime
         .module_manager
         .module(module_id)
@@ -462,6 +465,89 @@ fn discover_module_config(
         };
         module.flattened_export_file = Some(file_id);
     }
+    record_bare_symbol_sources(
+        runtime,
+        module_id,
+        config_path,
+        &allow_bare_exports,
+        &allow_bare_std_imports,
+        &allow_bare_imports,
+    )?;
+    Ok(())
+}
+
+fn record_bare_symbol_sources(
+    runtime: &mut Runtime,
+    module_id: ModuleId,
+    config_path: &Path,
+    allow_bare_exports: &[ProjectBareName],
+    allow_bare_std_imports: &[ProjectBareName],
+    allow_bare_imports: &[ProjectBareName],
+) -> Result<(), RuntimeError> {
+    let config_label: Rc<str> = Rc::from(config_path.to_string_lossy().to_string());
+    let mut sources = Vec::new();
+    {
+        let module = runtime
+            .module_manager
+            .module(module_id)
+            .expect("manifest owner module should exist");
+        for allowed in allow_bare_exports {
+            let target = module
+                .exports
+                .get(&allowed.name)
+                .expect("allowed export was checked present")
+                .target(module_id);
+            if !matches!(target, ImportTarget::Module(_)) {
+                return Err(repository_error(
+                    format!(
+                        "[allow bare export] `{}` must name an exported folder/submodule, not a .lit file",
+                        allowed.name
+                    ),
+                    &config_path.to_string_lossy(),
+                    allowed.line,
+                ));
+            }
+            sources.push(ConfigBareSymbolSource {
+                name: allowed.name.clone(),
+                target,
+                kind: BareSymbolSourceKind::Export,
+                line_file: (allowed.line, config_label.clone()),
+            });
+        }
+        for allowed in allow_bare_std_imports {
+            let config_import = module
+                .config_imports
+                .iter()
+                .find(|import| {
+                    import.name == allowed.name && import.kind == ConfigImportKind::Standard
+                })
+                .expect("allowed standard import was checked present");
+            sources.push(ConfigBareSymbolSource {
+                name: allowed.name.clone(),
+                target: ImportTarget::Module(config_import.module_id),
+                kind: BareSymbolSourceKind::StandardImport,
+                line_file: (allowed.line, config_label.clone()),
+            });
+        }
+        for allowed in allow_bare_imports {
+            let config_import = module
+                .config_imports
+                .iter()
+                .find(|import| import.name == allowed.name && import.kind == ConfigImportKind::Path)
+                .expect("allowed path import was checked present");
+            sources.push(ConfigBareSymbolSource {
+                name: allowed.name.clone(),
+                target: ImportTarget::Module(config_import.module_id),
+                kind: BareSymbolSourceKind::Import,
+                line_file: (allowed.line, config_label.clone()),
+            });
+        }
+    }
+    runtime
+        .module_manager
+        .module_mut(module_id)
+        .expect("manifest owner module should exist")
+        .bare_symbol_sources = sources;
     Ok(())
 }
 
@@ -594,6 +680,7 @@ fn discover_config_import(
         return Ok(ConfigImport {
             name: import.name,
             module_id: existing_module_id,
+            kind: ConfigImportKind::Path,
             line_file: (
                 import.line,
                 Rc::from(config_path.to_string_lossy().to_string()),
@@ -625,6 +712,7 @@ fn discover_config_import(
     Ok(ConfigImport {
         name: import.name,
         module_id: child_module_id,
+        kind: ConfigImportKind::Path,
         line_file: (
             import.line,
             Rc::from(config_path.to_string_lossy().to_string()),
@@ -652,6 +740,7 @@ fn discover_config_std_import(
     Ok(ConfigImport {
         name: import.name,
         module_id: std_module_id,
+        kind: ConfigImportKind::Standard,
         line_file: (
             import.line,
             Rc::from(config_path.to_string_lossy().to_string()),
@@ -1540,6 +1629,272 @@ fn standard_library_root_candidates(
 mod tests {
     use super::*;
     use std::sync::atomic::{AtomicUsize, Ordering};
+
+    #[test]
+    fn allow_bare_export_collects_recursive_public_symbols_once_per_file() {
+        run_repository_test_with_large_stack("allow-bare-recursive-export", || {
+            let fixture = Fixture::new("allow-bare-recursive-export");
+            let root = fixture.path("root");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+A = "./A"
+B = "./B"
+main = "./main.lit"
+
+[allow bare export]
+A
+"#,
+            );
+            write_file(
+                &root.join("A/litex.config"),
+                r#"[hierarchy]
+submodule
+
+[export]
+chap2 = "./chap2.lit"
+chap3 = "./chap3.lit"
+"#,
+            );
+            write_file(&root.join("A/chap2.lit"), "have x R = 1\n");
+            write_file(&root.join("A/chap3.lit"), "A::chap2::x = 1\nhave z R = 1\n");
+            write_file(
+                &root.join("B/litex.config"),
+                "[hierarchy]\nsubmodule\n\n[export]\nconsumer = \"./consumer.lit\"\n",
+            );
+            write_file(
+                &root.join("B/consumer.lit"),
+                "z = 1\nhave inherited R = 1\n",
+            );
+            write_file(
+                &root.join("main.lit"),
+                "z = 1\nA::chap3::z = 1\nB::consumer::inherited = 1\nhave A R = 1\nA = 1\nstruct Holder:\n    z R\nhave answer R = 1\n",
+            );
+
+            let (ok, output) = run_repository(&root);
+            assert!(ok, "{output}");
+            assert!(output.contains("answer"), "{output}");
+        });
+    }
+
+    #[test]
+    fn allow_bare_import_resolves_flattened_package_symbols() {
+        run_repository_test_with_large_stack("allow-bare-flattened-import", || {
+            let fixture = Fixture::new("allow-bare-flattened-import");
+            let package = fixture.path("package");
+            write_file(
+                &package.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(
+                &package.join("main.lit"),
+                "have b R = 1\nhave fn f(x R) R = x + 1\nhave algo for f(x):\n    x + 1\n",
+            );
+
+            let root = fixture.path("root");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[import]
+A = "../package"
+
+[export]
+main = "./main.lit"
+
+[allow bare import]
+A
+"#,
+            );
+            write_file(
+                &root.join("main.lit"),
+                "b = 1\nA::b = 1\neval f(1)\nhave answer R = 1\n",
+            );
+
+            let (ok, output) = run_repository(&root);
+            assert!(ok, "{output}");
+
+            let python = crate::to_python::to_python_from_repository(
+                root.to_str().expect("temporary repository path is UTF-8"),
+            )
+            .expect("Python project traversal should share allow-bare resolution");
+            assert!(python.contains("def f(x):"), "{python}");
+        });
+    }
+
+    #[test]
+    fn allow_bare_standard_import_uses_its_own_opt_in_table() {
+        run_repository_test_with_large_stack("allow-bare-standard-import", || {
+            let fixture = Fixture::new("allow-bare-standard-import");
+            let std_root = fixture.path("std");
+            write_file(
+                &std_root.join("demo/litex.config"),
+                r#"[hierarchy]
+module
+
+[module]
+flatten = true
+
+[export]
+main = "./main.lit"
+"#,
+            );
+            write_file(&std_root.join("demo/main.lit"), "have std_value R = 1\n");
+
+            let root = fixture.path("root");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[import std]
+demo
+
+[export]
+main = "./main.lit"
+
+[allow bare import std]
+demo
+"#,
+            );
+            write_file(
+                &root.join("main.lit"),
+                "std_value = 1\ndemo::std_value = 1\n",
+            );
+
+            with_standard_library_root(&std_root, || {
+                let (ok, output) = run_repository(&root);
+                assert!(ok, "{output}");
+            });
+        });
+    }
+
+    #[test]
+    fn allow_bare_rejects_ambiguous_terminals_and_source_name_reuse() {
+        run_repository_test_with_large_stack("allow-bare-conflicts", || {
+            let fixture = Fixture::new("allow-bare-conflicts");
+
+            let ambiguous = fixture.path("ambiguous");
+            write_file(
+                &ambiguous.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+A = "./A"
+main = "./main.lit"
+
+[allow bare export]
+A
+"#,
+            );
+            write_file(
+                &ambiguous.join("A/litex.config"),
+                "[hierarchy]\nsubmodule\n\n[export]\none = \"./one.lit\"\ntwo = \"./two.lit\"\n",
+            );
+            write_file(&ambiguous.join("A/one.lit"), "have same R = 1\n");
+            write_file(&ambiguous.join("A/two.lit"), "have same R = 2\n");
+            write_file(&ambiguous.join("main.lit"), "have answer R = 1\n");
+            let (ok, output) = run_repository(&ambiguous);
+            assert!(!ok, "ambiguous bare names must fail");
+            assert!(output.contains("ambiguous bare symbol `same`"), "{output}");
+            assert!(output.contains("[allow bare export]"), "{output}");
+
+            let reserved = fixture.path("reserved");
+            write_file(
+                &reserved.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+A = "./A"
+main = "./main.lit"
+
+[allow bare export]
+A
+"#,
+            );
+            write_file(
+                &reserved.join("A/litex.config"),
+                "[hierarchy]\nsubmodule\n\n[export]\nvalue = \"./value.lit\"\n",
+            );
+            write_file(&reserved.join("A/value.lit"), "have z R = 1\n");
+            write_file(&reserved.join("main.lit"), "have z R = 1\n");
+            let (ok, output) = run_repository(&reserved);
+            assert!(
+                !ok,
+                "local declaration must not shadow an allowed bare symbol"
+            );
+            assert!(output.contains("name `z` is reserved"), "{output}");
+
+            let binder = fixture.path("binder");
+            write_file(
+                &binder.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+A = "./A"
+main = "./main.lit"
+
+[allow bare export]
+A
+"#,
+            );
+            write_file(
+                &binder.join("A/litex.config"),
+                "[hierarchy]\nsubmodule\n\n[export]\nvalue = \"./value.lit\"\n",
+            );
+            write_file(&binder.join("A/value.lit"), "have z R = 1\n");
+            write_file(&binder.join("main.lit"), "forall z R:\n    z = z\n");
+            let (ok, output) = run_repository(&binder);
+            assert!(!ok, "source binders must not shadow an allowed bare symbol");
+            assert!(output.contains("name `z` is reserved"), "{output}");
+        });
+    }
+
+    #[test]
+    fn allow_bare_export_does_not_reveal_a_later_target_to_an_earlier_file() {
+        run_repository_test_with_large_stack("allow-bare-export-boundary", || {
+            let fixture = Fixture::new("allow-bare-export-boundary");
+            let root = fixture.path("root");
+            write_file(
+                &root.join("litex.config"),
+                r#"[hierarchy]
+module
+
+[export]
+before = "./before.lit"
+A = "./A"
+
+[allow bare export]
+A
+"#,
+            );
+            write_file(&root.join("before.lit"), "z = 1\n");
+            write_file(
+                &root.join("A/litex.config"),
+                "[hierarchy]\nsubmodule\n\n[export]\nvalue = \"./value.lit\"\n",
+            );
+            write_file(&root.join("A/value.lit"), "have z R = 1\n");
+
+            let (ok, output) = run_repository(&root);
+            assert!(!ok, "a later export must not leak into an earlier file");
+            assert!(!output.contains("A::value::z = 1"), "{output}");
+        });
+    }
 
     #[test]
     fn full_module_run_follows_recursive_export_order() {

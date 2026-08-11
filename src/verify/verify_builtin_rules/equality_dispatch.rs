@@ -1556,12 +1556,14 @@ impl Runtime {
     ) -> StmtResult {
         let fact = EqualFact::new(left.clone(), right.clone(), line_file).into();
         match evidence {
-            Some(rule) => FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                fact,
-                reason.to_string(),
-                BuiltinRuleEvidence::Set(rule),
-                Vec::new(),
-            ),
+            Some(rule) => {
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    fact,
+                    reason.to_string(),
+                    BuiltinRuleEvidence::Set(rule),
+                    Vec::new(),
+                )
+            }
             None => FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 fact,
                 reason.to_string(),

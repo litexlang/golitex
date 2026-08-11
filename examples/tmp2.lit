@@ -1,53 +1,5 @@
-abstract_prop p(a, b, c)
-
-forall a, a2, b, b2, c, c2 set:
-    b = b2
-    a = a2
-    $p(a, b, c)
-    c = c2
+forall f fn(x R) R:
+    forall y R:
+        f(y) = f(y - 1)
     =>:
-        $p(a2, b2, c2)
-
-
-"""
-import Mathlib
-
-namespace tmp2
-
-noncomputable section
-
-universe LitexUniverse
-
-abbrev LitexFact := Prop
-
-class LitexObject (α : Type LitexUniverse) : Prop where
-  valid : True
-
-instance : LitexObject ℕ := ⟨True.intro⟩
-instance : LitexObject ℤ := ⟨True.intro⟩
-instance : LitexObject ℚ := ⟨True.intro⟩
-instance : LitexObject ℝ := ⟨True.intro⟩
-instance : LitexObject ℂ := ⟨True.intro⟩
-instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
-
-def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := True
-def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
-def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
-
-opaque p {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] {α2 : Type LitexUniverse} [LitexObject α2] : α → α1 → α2 → LitexFact
-
--- Litex fact f34
-theorem fact34 : ∀ {α1 : Type LitexUniverse} [LitexObject α1], ∀ (a : Set α1), ∀ (a2 : Set α1), ∀ (b : Set α1), ∀ (b2 : Set α1), ∀ (c : Set α1), ∀ (c2 : Set α1), b = b2 → a = a2 → p a b c → c = c2 → p a2 b2 c2 := by
-  intro _ _ a a2 b b2 c c2 proof_fact_1_1 proof_fact_1_2 proof_fact_1_3 proof_fact_1_4
-  have proof_fact_1_5 : p a b c := proof_fact_1_3
-  have proof_fact_1_6 : a = a2 := proof_fact_1_2
-  have proof_fact_1_7 : b = b2 := proof_fact_1_1
-  have proof_fact_1_8 : c = c2 := proof_fact_1_4
-  have proof_fact_1_9 : p a2 b2 c2 := by
-    simpa only [proof_fact_1_6, proof_fact_1_7, proof_fact_1_8] using proof_fact_1_5
-  exact proof_fact_1_9
-
-end
-
-end tmp2
-"""
+        f(2) = f(1)

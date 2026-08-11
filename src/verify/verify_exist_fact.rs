@@ -470,6 +470,28 @@ fn rational_reduced_fraction_exist_fact_non_witness_operand(
         return None;
     }
 
+    // Canonical reduced form may state coprimality directly. For example:
+    // `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`.
+    let gcd_is_one = exist_fact.facts().iter().any(|fact| {
+        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+            return false;
+        };
+        let is_selected_gcd = |obj: &Obj| match obj {
+            Obj::Gcd(gcd) => {
+                (is_named_exist_param(gcd.left.as_ref(), numerator_name)
+                    && is_named_exist_param(gcd.right.as_ref(), denominator_name))
+                    || (is_named_exist_param(gcd.left.as_ref(), denominator_name)
+                        && is_named_exist_param(gcd.right.as_ref(), numerator_name))
+            }
+            _ => false,
+        };
+        (is_selected_gcd(&equal_fact.left) && is_one(&equal_fact.right))
+            || (is_one(&equal_fact.left) && is_selected_gcd(&equal_fact.right))
+    });
+    if gcd_is_one {
+        return Some(rational);
+    }
+
     let reducedness_forall = exist_fact.facts().iter().find_map(|fact| match fact {
         ExistBodyFact::InlineForall(forall_fact) => Some(forall_fact),
         _ => None,
@@ -608,8 +630,8 @@ impl Runtime {
         }
 
         // Every rational has one unique reduced integer fraction with a positive
-        // denominator. Example: `exist! p Z, q N+ st {a = p / q, forall z
-        // N+: p % z = 0 and q % z = 0 => {z = 1}}` for `a Q`.
+        // denominator. Reducedness may be written as `gcd(p, q) = 1` or as the
+        // equivalent common-positive-divisor condition.
         if let Some(rational) = rational_reduced_fraction_exist_fact_non_witness_operand(exist_fact)
         {
             let in_q: AtomicFact =

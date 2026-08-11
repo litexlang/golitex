@@ -1,0 +1,2 @@
+forall a R:
+    min(a, a) = a

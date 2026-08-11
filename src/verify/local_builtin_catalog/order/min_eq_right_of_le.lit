@@ -1,0 +1,4 @@
+forall a, b R:
+    b <= a
+    =>:
+        min(a, b) = b

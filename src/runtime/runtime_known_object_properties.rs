@@ -279,6 +279,41 @@ impl Runtime {
         ))
     }
 
+    /// Follow a short chain of checked `have fn` definitions until its value is
+    /// a set builder. This is intentionally bounded: it exposes a declared
+    /// carrier through set-valued function families without turning definition
+    /// unfolding into unbounded proof search.
+    pub(crate) fn unfold_known_fn_application_to_set_builder(
+        &mut self,
+        application: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<SetBuilder>, RuntimeError> {
+        const MAX_SET_BUILDER_UNFOLD_DEPTH: usize = 8;
+
+        let mut current = application.clone();
+        let mut seen = std::collections::HashSet::new();
+        for _ in 0..MAX_SET_BUILDER_UNFOLD_DEPTH {
+            if let Obj::SetBuilder(set_builder) = &current {
+                return Ok(Some(set_builder.clone()));
+            }
+            if let Some(set_builder) = self.get_obj_equal_to_set_builder(&current) {
+                return Ok(Some(set_builder));
+            }
+            if !seen.insert(obj_equality_key(&current)) {
+                return Ok(None);
+            }
+            let next = match self.unfold_known_fn_application_once(&current, verify_state)? {
+                Some(next) => Some(next),
+                None => self.beta_reduce_complete_anonymous_application_once(&current)?,
+            };
+            let Some(next) = next else {
+                return Ok(None);
+            };
+            current = next;
+        }
+        Ok(None)
+    }
+
     /// Capture-avoiding beta reduction for one complete anonymous-function
     /// application layer. Any remaining curried application layers are kept on
     /// the substituted result when that result is callable.

@@ -97,7 +97,7 @@ conclusion is rejected rather than stored with changed empty-domain semantics.
 | `trust have` | Rejected in strict mode; parameters are checked and bound; attached facts must be well-defined. | None for the attached facts. | Stages names, parameter type facts, attached facts, and inference together, then commits them atomically; failure releases none of them. |
 | `let a = x` (preview) | `a` must be unused and `x` must already be well-defined; exactly one name and one value are accepted. | None beyond checking the right-side object. | Stores the object name and the ordinary equality `a = x`; it declares no type or set membership. A later call through `a` may reuse already registered callable metadata from its stored equality class, while retaining ordinary arity and domain checks. |
 | `have a R` | `a` must be unused; `R` must be a well-defined object. | Checks `R` is nonempty, for example `$is_nonempty_set(R)`. | Stores the object name `a`, stores `a $in R`, and runs inference. |
-| `have a T = x` | Parameter count must match assigned objects; declared types are instantiated; `x` must be well-defined. | Verifies each assigned object satisfies its declared type. | Stores the object name, its type fact, `a = x`, and sequence or matrix value caches when relevant. |
+| `have a T = x` | Parameter count must match assigned objects; declared types are instantiated; `x` must be well-defined. | Verifies each assigned object satisfies its declared type during `verify_process`; a mismatch reports required and known standard numeric carriers when available. | Stores the object name, its type fact, `a = x`, and sequence or matrix value caches when relevant; a failed carrier check stores nothing. |
 | `obtain ... from exist` | Existential shape and parameter count must match the named witnesses. | Verifies the existential fact. | Stores witness names, witness type facts, instantiated body facts, and inference results. |
 | `have ... by preimage` | Preimage count and function/range shape must match. | Verifies the source range membership. | Stores preimage names, source-domain facts, domain facts, and value equality facts. |
 | `have fn = anonymous_fn` | Function body, function set, return set, and function name are checked. | Verifies the function value belongs to the return set. | Stores the function name, `f $in fn_set`, known function-body data, `f = anonymous_fn`, and inferred facts. |
@@ -133,6 +133,57 @@ conclusion is rejected rather than stored with changed empty-domain semantics.
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
 | `try` | Rejects the `clear` control statement. Module imports are manifest declarations, not source statements. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 
+## Goal-Shape Routing Table
+
+Use this table before expanding a proof manually. It is organized by the fact
+you need next, rather than by parser keyword. The default search order is:
+reuse a known fact, try one direct builtin consequence, choose the matching
+native proof surface, cite an existing mathematical interface, and only then
+write a manual proof.
+
+First distinguish data from facts. If later code must cite a value, introduce
+it with `have`; if it must apply `f(x)`, use `have fn`; if it asserts
+`$P(x)`, define a `prop`; if it should visibly cite a stable mathematical
+result, use `thm`. `claim` is for a nearby derived fact, not a substitute for
+an object or reusable function. See [Facts And Object Introduction](#facts-and-object-introduction)
+and [Definitions And Interfaces](#definitions-and-interfaces) for their exact
+execution contracts.
+
+<!-- BEGIN GENERATED GOAL-SHAPE ROUTES -->
+| Goal shape | Fact kind | Required known leaves | Supported direction | Try first | Nearest rejected or over-expanded shape | Executable evidence |
+|---|---|---|---|---|---|---|
+| An atomic arithmetic, carrier, membership, equality, or order consequence already supported by context | Direct fact / one-layer builtin | The exact operands, carrier facts, and any immediate premise required by that rule | Construct the requested atomic fact | State the fact directly | Adding a wrapper `claim` or `thm` around a fact the verifier already knows | [`fundamental_comparison_builtin_rules.lit`](../examples/02_builtin_math/fundamental_comparison_builtin_rules.lit) |
+| A positive concrete predicate call whose definition body is already proved | Definition introduction | The instantiated definition clauses and well-defined arguments | Body facts to named positive predicate | `by def $P(args)` | Bare `by def` on equality, a negative predicate goal, or the placeholder `by def:` form when no nested proof is needed | [`by_definition.lit`](../examples/01_proof_patterns/by_definition.lit), [`inline_by_definition.lit`](../examples/01_proof_patterns/inline_by_definition.lit) |
+| A result supplied by a named user theorem | Named mathematical interface | The theorem's domain requirements and arguments | Theorem premises to its stored conclusions, or to one selected atomic consequence | `by thm name(args)` or `by thm name(args) => fact` | Expecting a theorem call inside bare `forall` conclusion syntax, or selecting a compound target | [`by_theorem_selected_fact.lit`](../examples/01_proof_patterns/by_theorem_selected_fact.lit) |
+| A set-builder, tuple, Cartesian product, function-set, iterated-object, or canonical rational-fraction conclusion whose reserved interface has compound requirements | Explicit builtin theorem interface | The interface-specific full-verifier requirements, such as builder predicate, every coordinate equality, pointwise order, or rational membership | Requirements to one constructed atomic fact, or to the fixed unique-existence fact for `rational_has_unique_reduced_fraction(q)` | Bare reserved `by thm set_builder_member(...)`, `tuple_equal_from_coordinates(...)`, `rational_has_unique_reduced_fraction(q)`, or the matching iterated-object interface | Expecting a one-layer atomic builtin to synthesize an arbitrary quantified premise; qualifying a reserved builtin name | [`rational_reduced_fraction_builtin_theorem.lit`](../examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit), [`generic_cart_member_coordinates.lit`](../examples/_internal/regression/generic_cart_member_coordinates.lit), [`builtin_interfaces.rs`](../src/main_test/lit_file_runner_tests/runtime_regression_tests/builtin_interfaces.rs) |
+| Equality of two sets | Extensional proof | Well-defined set objects and both membership directions | Mutual subset facts to set equality | `by extension A = B` or goal-block `by extension:` | Syntactic normalization of unrelated construction histories, or using set extensionality for functions | [`inline_by_proof_methods.lit`](../examples/01_proof_patterns/inline_by_proof_methods.lit) |
+| A universal fact over displayed finite sets | Finite enumeration | Every quantified domain must be concretely enumerable | All concrete assignments to the universal fact | `by enumerate finite_set` | Enumeration over `N`, an opaque set, or another domain with no concrete finite expansion | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit), [`enumerate_finite_set.lit`](../examples/_internal/regression/enumerate_finite_set.lit) |
+| Equality alternatives for a known integer member of `range` or `closed_range` | Bounded range classification | Integer endpoints and enough carrier/order facts to verify membership | Range membership to one equality or a flat disjunction of equalities | `by enumerate range` / `by enumerate closed_range` | A nested numeric boundary-case ladder; arbitrary-set or unbounded enumeration | [`bounded_range_classification.lit`](../examples/01_proof_patterns/bounded_range_classification.lit) |
+| A universal fact over an integer range or supported finite Cartesian product | Bounded universal proof | A supported finite/range domain and a well-defined universal target | Each generated assignment to the universal fact | `by for` | Treating `by for` as unbounded quantifier automation | [`inline_by_proof_methods.lit`](../examples/01_proof_patterns/inline_by_proof_methods.lit) |
+| A goal under an available disjunction or generated alternatives | Case proof | The matching disjunction or exhaustive alternatives must already be known | Every covered branch to the same target | `by cases` | Inventing cases with no known exhaustive source; writing `case fact:` with an empty body instead of bodyless `case fact` | [`bodyless_by_cases.lit`](../examples/01_proof_patterns/bodyless_by_cases.lit) |
+| A negative or contradiction-shaped goal | Contradiction proof | A well-defined target and facts that yield both sides of a contradiction | Negated target assumption to the original target | `by contra` | A bare `impossible` with no contradictory pair; unlike other bodyless routes, omitting the final `impossible` | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit) |
+| A discrete natural/integer or finite-set invariant | Inductive proof | Supported induction parameter, base, and invariant shape | Base plus successor/insertion step to the generated universal fact | `by induc` / `by strong_induc` | Induction over an arbitrary real or an invariant that has not been packaged in the required goal shape | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit), [`finite_set_induction.lit`](../examples/_internal/regression/finite_set_induction.lit) |
+| A bare universal statement needs proof-control commands such as cases, theorem calls, witnesses, or induction | Local proved fact | The complete universal target must be well-defined | Local proof body to one stored fact | Wrap the target in `claim:` or name it with `thm` when reusable | Putting `by thm`, `by def`, or another proof-control statement directly in a bare `forall ... =>:` conclusion list | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit) |
+<!-- END GENERATED GOAL-SHAPE ROUTES -->
+
+The table is generated from [`goal_shape_routes.json`](goal_shape_routes.json).
+After editing that data, run
+`python3 tools/generate_goal_shape_routing.py --write`; CI uses the same command
+with `--check` to reject stale rows or missing evidence files.
+
+These routes are directional. For example, known set-builder membership can
+expose its base and predicate facts automatically, while constructing that
+membership from the base and predicate uses the explicit
+`set_builder_member` interface. Likewise, a case equality may still need one
+explicit substituted atomic equality before the verifier can rewrite through a
+compound expression; the range-classification example records that boundary.
+
+When the proof action is known but the input object is still unusable, continue
+with the [Object Proof Playbook](Object_Proof_Playbook.md). Its construction-
+before-consumption rules cover exact carriers, set-valued functions, finite
+aggregates, dependent field projection, tuple reconstruction, and recursive
+indices.
+
 ## By Statements
 
 For every `by ...:` goal-block route, ordinary proof statements after the `?`
@@ -143,7 +194,7 @@ cannot admit an unproved target. Required structural arms remain, and
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `by def fact` | A concrete positive prop call, or a supported positive builtin definition: subset/superset, proper subset/superset, injective/surjective/bijective, `fn_eq_in`, or `fn_eq`. | Explicitly runs the selected mathematical definition with the full verifier. Ordinary round-0 atomic verification may also try this direction before known `forall` facts and user strategies. | Stores the target and runs inference only after every requirement succeeds. |
-| `by thm name(args)` | A user theorem must exist and accept the arguments. Reserved bare builtin theorem names instead validate their fixed target-object shape and arity. | Verifies user-theorem domains or the builtin handler's full-verifier requirements. One-layer builtin rules and structural builtin strategies are not unrestricted full-verifier entries. | Stores conclusions and runs inference only after every requirement succeeds; a failed builtin call stores nothing. |
+| `by thm name(args)` | A user theorem must exist and accept the arguments. Reserved bare builtin theorem names instead validate their fixed target-object shape and arity. `rational_has_unique_reduced_fraction(q)` has arity one and requires `q $in Q`. | Verifies user-theorem domains or the builtin handler's full-verifier requirements. The rational interface reuses the canonical reduced-fraction existential rule. One-layer builtin rules and structural builtin strategies are not unrestricted full-verifier entries. | Stores conclusions and runs inference only after every requirement succeeds; the rational interface stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. A failed builtin call stores nothing. |
 | `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The selected atomic fact must be well-defined in the parent context; the theorem call has the same checks as the legacy form. The goal-block spelling is bodyless, and neither spelling accepts a compound target. | Applies the theorem in a temporary child scope, then checks the selected fact with the full atomic verifier there. The fact may be derived rather than a direct conclusion. | Discards the theorem's temporary conclusions, commits only the selected fact as the parent seed, then runs ordinary inference. Any failure commits nothing. |
 | `by cases` | Then-facts must be well-defined; case/prove shape restrictions must hold. A zero-statement proof arm is written `case fact` without `:`. | Verifies cases cover all situations; each case, including a bodyless case, must prove every then-fact. | Stores the then-facts. |
 | `by contra` | Target fact must be well-defined. | Assumes the negated target, runs the proof, and verifies both contradiction sides. | Stores the original target fact. |
@@ -166,7 +217,7 @@ cannot admit an unproved target. Required structural arms remain, and
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct child in recursive execution order. Imported targets must be external modules, exported folders must be submodules, and no configured child may be omitted. | None during discovery. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix through a registered file. |
+| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct child in recursive execution order. Optional `[allow bare export]`, `[allow bare import std]`, and `[allow bare import]` entries must name items in their matching tables; allow-bare exports must be folders. | None during discovery. Enabled, loaded sources must expose a unique recursive public terminal-symbol set; different symbols with one bare name are a config error. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix. A source gets one inherited bare-symbol index; explicit qualified names and fields bypass it, private imports and isolated imports stay qualified-only, and active external names cannot be rebound locally. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |

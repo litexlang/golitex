@@ -1,0 +1,2 @@
+forall A, B, c set:
+    intersect(intersect(A, B), c) = intersect(A, intersect(B, c))

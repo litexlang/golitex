@@ -127,6 +127,18 @@ This is a proof-action menu, not the first tutorial. If you are new to Litex,
 start with [Start Here](#start-here), then come back here when you need a
 specific move.
 
+If you know the shape of the goal but not which interface to try first, use
+the [Goal-Shape Routing Table](cheatsheet.md#goal-shape-routing-table). It
+distinguishes direct facts, definition folding, theorem interfaces, explicit
+builtin theorem calls, and native proof-control surfaces before manual proof
+expansion.
+
+If the goal shape is clear but the object still has the wrong carrier,
+representation, field surface, or recursive index, use the
+[Object Proof Playbook](Object_Proof_Playbook.md). It covers refined numeric
+values, set-valued constructions, finite aggregates, dependent records, and
+recursive callables with current executable probes.
+
 Small proof moves come up again and again: conjunctions, cases, contradiction,
 witnesses, induction, theorem reuse, and named facts.
 

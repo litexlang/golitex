@@ -1,0 +1,2 @@
+forall A, B, c set:
+    union(union(A, B), c) = union(A, union(B, c))

@@ -153,9 +153,11 @@ thm rational_has_reduced_fraction:
 ```
 
 Using a positive denominator is preferable to an unrestricted nonzero integer
-denominator because it fixes the sign convention. A separate unique
-reduced-fraction theorem is currently trusted; uniqueness is therefore an
-explicit proof hole, while ordinary reduced-fraction existence is checked from
+denominator because it fixes the sign convention. The unique canonical form is
+owned by the kernel and can be requested with the reserved bare call
+`by thm rational_has_unique_reduced_fraction(q)`. It returns
+`exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`; no trusted `std/basics`
+wrapper is involved. Ordinary source-level existence remains checked here from
 the gcd interface.
 
 ## Named positive real constants

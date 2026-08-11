@@ -68,6 +68,11 @@ pub fn run_repository_before_file_target(
             source_path.as_str(),
             execution_mode,
         );
+        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
+            runtime.pop_execution_frame();
+            runtime.isolated = isolated_before;
+            return (result.0, Some(error));
+        }
     }
     runtime.isolated = isolated_before;
     result
@@ -129,19 +134,6 @@ fn run_isolated_import(
     if let Some(error) = runtime_error {
         runtime.module_manager = module_manager_before;
         return Err(error);
-    }
-    let alias = match import {
-        ImportStmt::Module(stmt) => stmt.alias.as_str(),
-        ImportStmt::Std(stmt) => stmt.name.as_str(),
-    };
-    if let Err(error) = runtime.register_declared_symbol(alias, SymbolRole::Module) {
-        runtime.module_manager = module_manager_before;
-        return Err(short_exec_error(
-            import.clone().into(),
-            format!("cannot register imported module name `{}`", alias),
-            Some(error),
-            vec![],
-        ));
     }
     Ok(NonFactualStmtSuccess::new_with_stmt(import.clone().into()).into())
 }
@@ -361,6 +353,9 @@ fn run_repository_module_plan_to_target(
     if let Some(error) = import_error {
         return (results, Some(error));
     }
+    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
+        return (results, Some(error));
+    }
     let Some(module) = runtime.module_manager.module(module_id) else {
         return (
             results,
@@ -411,6 +406,9 @@ fn run_repository_module_plan_to_target(
         if let Some(error) = runtime_error {
             return (results, Some(error));
         }
+        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
+            return (results, Some(error));
+        }
         if target_matches || target_contains {
             return (results, None);
         }
@@ -430,6 +428,9 @@ fn run_repository_module_plan(
 ) -> (Vec<StmtResult>, Option<RuntimeError>) {
     let (mut results, import_error) = run_config_imports(runtime, module_id);
     if let Some(error) = import_error {
+        return (results, Some(error));
+    }
+    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
         return (results, Some(error));
     }
     let Some(module) = runtime.module_manager.module(module_id) else {
@@ -453,6 +454,9 @@ fn run_repository_module_plan(
             run_repository_import_target(runtime, target, execution_mode);
         results.append(&mut target_results);
         if let Some(error) = runtime_error {
+            return (results, Some(error));
+        }
+        if let Err(error) = runtime.refresh_current_bare_symbol_index() {
             return (results, Some(error));
         }
     }
@@ -553,20 +557,6 @@ fn run_config_imports(
         results.append(&mut import_results);
         if let Some(error) = import_error {
             return (results, Some(error));
-        }
-        if let Err(error) =
-            runtime.register_declared_symbol(&config_import.name, SymbolRole::Module)
-        {
-            return (
-                results,
-                Some(repository_target_error(
-                    format!(
-                        "cannot register imported module name `{}`: {}",
-                        config_import.name, error
-                    )
-                    .as_str(),
-                )),
-            );
         }
         runtime
             .module_manager
@@ -669,6 +659,11 @@ fn run_repository_exported_file_target_with_mode(
         source_path.as_str(),
         execution_mode,
     );
+    if let Err(error) = runtime.refresh_current_bare_symbol_index() {
+        runtime.pop_execution_frame();
+        runtime.module_manager = module_manager_before;
+        return (vec![], Some(error));
+    }
     let execution_start = profile_repository_run.then(Instant::now);
     let result = run_repository_source_file(runtime, source_path.as_str());
     let execution_duration = execution_start.map(|start| start.elapsed());

@@ -1,0 +1,4 @@
+forall x R:
+    0 <= x
+    =>:
+        abs(x) = x

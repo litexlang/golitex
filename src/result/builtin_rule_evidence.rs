@@ -1,4 +1,5 @@
 use crate::prelude::*;
+use crate::verify::rule_schema::{RuleFingerprint, RuleId};
 use std::fmt;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -96,8 +97,34 @@ pub enum AbsoluteValueBuiltinRule {
     PositiveFromNonzero,
 }
 
+/// Generic certificate payload for a paired, registry-owned local builtin.
+/// Child results are stored in the enclosing result in this exact order:
+/// parameter requirements first, followed by semantic premises.
+#[derive(Clone)]
+pub struct RegisteredLocalBuiltinRuleEvidence {
+    pub rule_id: RuleId,
+    pub semantic_fingerprint: RuleFingerprint,
+    pub bindings: Vec<Obj>,
+    pub parameter_requirement_count: usize,
+}
+
+impl fmt::Debug for RegisteredLocalBuiltinRuleEvidence {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        f.debug_struct("RegisteredLocalBuiltinRuleEvidence")
+            .field("rule_id", &self.rule_id)
+            .field("semantic_fingerprint", &self.semantic_fingerprint)
+            .field("binding_count", &self.bindings.len())
+            .field(
+                "parameter_requirement_count",
+                &self.parameter_requirement_count,
+            )
+            .finish()
+    }
+}
+
 #[derive(Clone)]
 pub enum BuiltinRuleEvidence {
+    RegisteredLocal(RegisteredLocalBuiltinRuleEvidence),
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     NotEqualSymmetry,
@@ -110,6 +137,9 @@ pub enum BuiltinRuleEvidence {
 impl fmt::Debug for BuiltinRuleEvidence {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
+            BuiltinRuleEvidence::RegisteredLocal(evidence) => {
+                f.debug_tuple("RegisteredLocal").field(evidence).finish()
+            }
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 f.debug_tuple("DivNotEqualZero").field(evidence).finish()
             }

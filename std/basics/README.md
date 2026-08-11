@@ -47,11 +47,12 @@ user-facing gcd object and requires the side condition `a != 0 or b != 0`.
 
 | Theorem | Conclusion | Status |
 | --- | --- | --- |
-| `rational_has_unique_reduced_fraction(q)` | one `a : Z`, `b : N+` with `q = a / b` and `is_reduced_fraction(a, b)` | Trusted |
+| bare kernel `rational_has_unique_reduced_fraction(q)` | unique `p : Z`, `d : N+` with `q = p / d` and `gcd(p, d) = 1` | Builtin |
 | `rational_has_reduced_fraction(q)` | some `p : Z`, `d : N+` with `q = p / d` and `gcd(p, d) = 1` | Checked |
 
-The second theorem is the checked reduced-fraction existence theorem. The first
-is a separate, currently trusted unique-normal-form interface.
+The unique-normal-form theorem is a reserved bare kernel interface and is not
+exported from `std/basics`. The source-level theorem remains useful when only
+ordinary existence is needed.
 
 ### Finite sets
 

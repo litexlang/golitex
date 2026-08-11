@@ -193,6 +193,9 @@ impl Runtime {
                 existing.role().description(),
             ));
         }
+        if let Some(external) = self.bare_symbol(name) {
+            return Err(bare_symbol_name_reserved_error(name, external, None));
+        }
         if is_keyword(name) || is_builtin_identifier_name(name) || is_builtin_predicate(name) {
             return Err(symbol_name_already_used_error(name, "builtin"));
         }
@@ -280,6 +283,15 @@ impl Runtime {
             {
                 return Err(active_parse_name_error(name, &line_file));
             }
+            if source_binder_must_respect_bare_symbols(kind, name) {
+                if let Some(external) = self.bare_symbol(name) {
+                    return Err(bare_symbol_name_reserved_error(
+                        name,
+                        external,
+                        Some(line_file.clone()),
+                    ));
+                }
+            }
             let binding = if kind == ParamObjType::Identifier {
                 self.allocate_declared_symbol_binding(name.clone())?
             } else {
@@ -323,6 +335,39 @@ impl Runtime {
             set,
         ))
     }
+}
+
+pub(crate) fn source_binder_must_respect_bare_symbols(kind: ParamObjType, name: &str) -> bool {
+    if name.starts_with("#binder_") {
+        return false;
+    }
+    !matches!(
+        kind,
+        ParamObjType::DefStructField
+            | ParamObjType::TheoremInstantiation
+            | ParamObjType::AlphaRename
+            | ParamObjType::BinderRetag(_)
+    )
+}
+
+pub(crate) fn bare_symbol_name_reserved_error(
+    name: &str,
+    external: &BareSymbol,
+    line_file: Option<LineFile>,
+) -> RuntimeError {
+    let message = format!(
+        "name `{}` is reserved by {} `{}` for external {} `{}`; use a different local name or remove the allow-bare entry",
+        name,
+        external.source_kind.table_name(),
+        external.source_name,
+        external.role.description(),
+        external.symbol.display_name(),
+    );
+    let detail = match line_file {
+        Some(line_file) => RuntimeErrorStruct::new_with_msg_and_line_file(message, line_file),
+        None => RuntimeErrorStruct::new_with_just_msg(message),
+    };
+    NameAlreadyUsedRuntimeError(detail).into()
 }
 
 fn symbol_name_already_used_error(name: &str, existing_role: &str) -> RuntimeError {

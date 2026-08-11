@@ -1738,6 +1738,43 @@ fn detail_output_marks_failed_phase_and_does_not_claim_environment_effects_impl(
 }
 
 #[test]
+fn object_definition_carrier_mismatch_names_phase_and_known_carrier() {
+    let source_code = r#"
+template<p, q, x N+>:
+    have remainder N = q * x % p
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "object_definition_carrier_mismatch_names_phase_and_known_carrier",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "carrier mismatch fixture should fail:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("carrier mismatch during verify_process"),
+        "{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("requires type N for binding remainder"),
+        "{}",
+        run_output
+    );
+    assert!(run_output.contains("known carrier(s): Z"), "{}", run_output);
+    assert!(
+        run_output.contains("the binding was not stored"),
+        "{}",
+        run_output
+    );
+}
+
+#[test]
 fn object_definition_output_exposes_checks_and_defined_facts() {
     run_with_large_stack(
         "object_definition_output_exposes_checks_and_defined_facts_large_stack",
@@ -2367,6 +2404,50 @@ pub(super) fn unknown_fact_failure_has_structured_output_fields() {
     assert!(
         run_output.contains("\"goal\": \"1 = 2\""),
         "unknown atomic fact should expose its goal:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn dependent_application_unknown_names_outer_head_and_known_prefix() {
+    let source_code = r#"
+template<n N+>:
+    have fn base(k closed_range(0, n)) fn(j N+: j <= n) N = fn(t N+: t <= n) N {t}
+template<n N+>:
+    have fn trace(k closed_range(0, n)) fn(j N+: j <= n) N = \base<n>(k)
+thm dependent_application_probe:
+    ? forall n N+, q closed_range(0, n), row N+:
+        row <= n
+        =>:
+            \trace<n>(q)(row) = row
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "dependent_application_unknown_names_outer_head_and_known_prefix",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "dependent application boundary should remain rejected:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("unmatched outer head: function application \\\\trace<n>(q)(row)"),
+        "{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("nearest known equal operand: \\\\trace<n>(q) = \\\\base<n>(q)"),
+        "{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("project or rewrite the prefix before applying them"),
+        "{}",
         run_output
     );
 }

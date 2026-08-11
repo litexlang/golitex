@@ -154,6 +154,13 @@ impl Runtime {
         kind: ParamObjType,
     ) -> Result<(), RuntimeError> {
         let name = binding.name();
+        if crate::runtime::source_binder_must_respect_bare_symbols(kind, name) {
+            if let Some(external) = self.bare_symbol(name) {
+                return Err(crate::runtime::bare_symbol_name_reserved_error(
+                    name, external, None,
+                ));
+            }
+        }
         if let Some(existing_kind) = self.top_level_env().defined_identifiers.get(name) {
             return Err(
                 NameAlreadyUsedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!(

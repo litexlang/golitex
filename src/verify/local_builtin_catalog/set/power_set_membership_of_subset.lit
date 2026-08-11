@@ -1,0 +1,4 @@
+forall A, B set:
+    A $subset B
+    =>:
+        A $in power_set(B)

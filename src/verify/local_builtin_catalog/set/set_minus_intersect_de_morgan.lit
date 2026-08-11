@@ -1,0 +1,2 @@
+forall A, B, c set:
+    set_minus(A, intersect(B, c)) = union(set_minus(A, B), set_minus(A, c))

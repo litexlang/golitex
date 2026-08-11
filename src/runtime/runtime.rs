@@ -494,7 +494,10 @@ impl Runtime {
 
     /// Make the discovered repository's root module the persistent environment for
     /// interactive input. This method does not itself execute the ordered `[export]` plan.
-    pub fn prepare_current_repository_for_repl(&mut self, source_label: &str) {
+    pub fn prepare_current_repository_for_repl(
+        &mut self,
+        source_label: &str,
+    ) -> Result<(), RuntimeError> {
         let module_id = self.current_module_id();
         self.module_manager
             .module_mut(module_id)
@@ -503,6 +506,7 @@ impl Runtime {
             .last_mut()
             .expect("repository REPL should have an execution frame")
             .source_path = Rc::from(source_label);
+        self.refresh_current_bare_symbol_index()
     }
 
     /// Rebuild the module registry between independent runner items.
@@ -718,6 +722,15 @@ impl Runtime {
                     name, &line_file,
                 ));
             }
+            if let Some(external) = self.bare_symbol(name) {
+                return Err(
+                    crate::runtime::runtime_symbol::bare_symbol_name_reserved_error(
+                        name,
+                        external,
+                        Some(line_file.clone()),
+                    ),
+                );
+            }
         }
         self.current_parse_context_mut().free_params.begin_scope(
             ParamObjType::Identifier,
@@ -780,6 +793,20 @@ impl Runtime {
             .map(|binding| binding.name().to_string())
             .collect::<Vec<_>>();
         for binding in bindings {
+            if crate::runtime::runtime_symbol::source_binder_must_respect_bare_symbols(
+                kind,
+                binding.name(),
+            ) {
+                if let Some(external) = self.bare_symbol(binding.name()) {
+                    return Err(
+                        crate::runtime::runtime_symbol::bare_symbol_name_reserved_error(
+                            binding.name(),
+                            external,
+                            Some(line_file.clone()),
+                        ),
+                    );
+                }
+            }
             if let Some(active) = self.current_parse_context().active_binding(binding.name()) {
                 if active.id() != binding.id() {
                     return Err(crate::runtime::runtime_symbol::active_parse_name_error(

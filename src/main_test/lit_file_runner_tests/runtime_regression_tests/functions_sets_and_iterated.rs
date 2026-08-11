@@ -2024,6 +2024,56 @@ forall p cart(R, R):
 }
 
 #[test]
+fn function_valued_set_family_preserves_member_cart_carrier() {
+    let source_code = r#"
+have fn row(x N+) power_set(cart(N+, N+)) = {point cart(N+, N+): point[1] = x}
+have fn rows(n N+) fn(K N+) power_set(cart(N+, N+)) = fn(x N+) power_set(cart(N+, N+)) {row(x)}
+
+forall n, K N+, point rows(n)(K):
+    point[1] $in N+
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "function_valued_set_family_preserves_member_cart_carrier",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "function-valued set family should expose its member cart carrier:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn function_valued_scalar_set_family_does_not_invent_tuple_carrier() {
+    let source_code = r#"
+have fn scalar_row(x N+) power_set(N+) = {x}
+have fn scalar_rows(n N+) fn(K N+) power_set(N+) = fn(x N+) power_set(N+) {scalar_row(x)}
+
+forall n, K N+, point scalar_rows(n)(K):
+    point[1] $in N+
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "function_valued_scalar_set_family_does_not_invent_tuple_carrier",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded && run_output.contains("index target point is not a tuple"),
+        "scalar-set members must remain non-tuples:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn exactly_indexed_named_set_builder_unfolds_for_membership() {
     let source_code = r#"
 have nonnegative_reals power_set(R) = {x R: x >= 0}
@@ -3729,6 +3779,88 @@ claim:
     assert!(
         run_succeeded,
         "known forall should infer g = anonymous fn from g(x) inside the anonymous body:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_binds_named_function_prefix_inside_different_codomain_anonymous_body() {
+    let source_code = r#"
+abstract_prop p(x)
+
+trust forall F fn(K {1}) power_set({1}):
+    forall K {1}:
+        $is_finite_set(F(K))
+    =>:
+        $p(fn(K {1}) N {finite_set_size(F(K))})
+
+have fn rows(a R) fn(L {1}) power_set({1}) = fn(t {1}) power_set({1}) {{1}}
+
+claim:
+    ? forall a R:
+        forall M {1}:
+            $is_finite_set(rows(a)(M))
+        =>:
+            $p(fn(x {1}) N {finite_set_size(rows(a)(x))})
+    claim:
+        ? forall M {1}:
+            $is_finite_set(rows(a)(M))
+        rows(a)(M) = {1}
+    $p(fn(x {1}) N {finite_set_size(rows(a)(x))})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_binds_named_function_prefix_inside_different_codomain_anonymous_body",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "known forall should bind F to the callable rows(a) prefix, not synthesize an N-valued function:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn known_forall_does_not_strip_nonmatching_named_function_suffix() {
+    let source_code = r#"
+abstract_prop p(x)
+
+trust forall F fn(K {1}) power_set({1}):
+    forall K {1}:
+        $is_finite_set(F(K))
+    =>:
+        $p(fn(K {1}) N {finite_set_size(F(K))})
+
+have fn rows(a R) fn(L {1}) power_set({1}) = fn(t {1}) power_set({1}) {{1}}
+
+claim:
+    ? forall a R:
+        forall M {1}:
+            $is_finite_set(rows(a)(M))
+        =>:
+            $p(fn(x {1}) N {finite_set_size(rows(a)(1))})
+    claim:
+        ? forall M {1}:
+            $is_finite_set(rows(a)(M))
+        rows(a)(M) = {1}
+    $p(fn(x {1}) N {finite_set_size(rows(a)(1))})
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "known_forall_does_not_strip_nonmatching_named_function_suffix",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded && run_output.contains("atomic fact unknown"),
+        "only an exact anonymous-binder suffix may be stripped:\n{}",
         run_output
     );
 }

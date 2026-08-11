@@ -1,0 +1,27 @@
+# Dependent application diagnostics.
+# Focused gate:
+# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/dependent_application_diagnostic.lit
+
+template<n N+>:
+    have fn diagnostic_base(k closed_range(0, n)) fn(j N+: j <= n) N = fn(t N+: t <= n) N {t}
+template<n N+>:
+    have fn diagnostic_trace(k closed_range(0, n)) fn(j N+: j <= n) N = \diagnostic_base<n>(k)
+
+# Before, this direct dependent application was only "atomic fact unknown":
+# \diagnostic_trace<n>(q)(row) = row
+
+# Project the function-valued prefix, expose the anonymous function, and then
+# apply that explicit equality at the requested argument.
+thm dependent_application_projection_route:
+    ? forall n N+, q closed_range(0, n), row N+:
+        row <= n
+        =>:
+            \diagnostic_trace<n>(q)(row) = row
+    \diagnostic_trace<n>(q) = \diagnostic_base<n>(q)
+    \diagnostic_base<n>(q) = fn(t N+: t <= n) N {t}
+    \diagnostic_base<n>(q)(row) = (fn(t N+: t <= n) N {t})(row) = row
+    \diagnostic_trace<n>(q)(row) = \diagnostic_base<n>(q)(row) = row
+
+# Remaining boundary: the direct nested application is still rejected by the
+# focused Rust regression. The diagnostic now names the unmatched application
+# and the nearest known prefix equality; it does not add congruence.

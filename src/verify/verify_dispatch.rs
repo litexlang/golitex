@@ -114,7 +114,14 @@ impl Runtime {
                 }
                 Ok(result.wrap_unknown_for_fact(fact.clone()))
             }
-            _ => Ok(result.wrap_unknown_for_fact(fact.clone())),
+            _ => {
+                let detail_lines = self.contextual_rewrite_diagnostic_for_fact(fact);
+                if detail_lines.is_empty() {
+                    Ok(result.wrap_unknown_for_fact(fact.clone()))
+                } else {
+                    Ok(FactUnknown::new_with_detail_lines(fact.clone(), detail_lines).into())
+                }
+            }
         }
     }
     pub fn verify_exist_or_and_chain_atomic_fact(

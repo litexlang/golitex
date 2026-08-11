@@ -107,7 +107,11 @@ impl Runtime {
                     rt.verify_exist_or_and_chain_atomic_fact(then_fact, &then_verify_state)?;
                 if result.is_unknown() {
                     let then_goal = then_fact.clone().to_fact();
-                    result = result.wrap_unknown_for_fact(then_goal.clone());
+                    result = rt.structured_unknown_result_for_failed_fact(
+                        &then_goal,
+                        &then_verify_state,
+                        result,
+                    )?;
                     return Err(RuntimeError::from(UnknownRuntimeError(
                         RuntimeErrorStruct::new_with_output(
                             Some(then_goal.clone().into()),

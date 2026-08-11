@@ -1,0 +1,57 @@
+# Tracer: classify a bounded natural with native range enumeration
+#
+# Before (checkable but unnecessarily nested):
+# by cases:
+#     ? q = 4 or q = 6
+#     case q = 9: ...
+#     case q < 9:
+#         by cases:
+#             ? q = 4 or q = 6
+#             case q = 8: ...
+#             case q < 8: ...
+# Former behavior in the source proof: manual boundary cases continued to q = 0.
+#
+# Now (verified): enumerate the known half-open range once, then inspect its
+# flat equality alternatives.
+
+claim:
+    ? forall q N:
+        q < 10
+        q^2 % 10 = 6
+        =>:
+            q = 4 or q = 6
+    by enumerate range: q $in range(0, 10)
+    by cases:
+        ? q = 4 or q = 6
+        case q = 0:
+            q^2 % 10 = 0^2 % 10 = 0
+            impossible q^2 % 10 = 6
+        case q = 1:
+            q^2 % 10 = 1^2 % 10 = 1
+            impossible q^2 % 10 = 6
+        case q = 2:
+            q^2 % 10 = 2^2 % 10 = 4
+            impossible q^2 % 10 = 6
+        case q = 3:
+            q^2 % 10 = 3^2 % 10 = 9
+            impossible q^2 % 10 = 6
+        case q = 4
+        case q = 5:
+            q^2 % 10 = 5^2 % 10 = 5
+            impossible q^2 % 10 = 6
+        case q = 6
+        case q = 7:
+            q^2 % 10 = 7^2 % 10 = 9
+            impossible q^2 % 10 = 6
+        case q = 8:
+            q^2 % 10 = 8^2 % 10 = 4
+            impossible q^2 % 10 = 6
+        case q = 9:
+            q^2 % 10 = 9^2 % 10 = 1
+            impossible q^2 % 10 = 6
+
+# Boundary: this surface requires a known integer membership in a concrete
+# range. It does not enumerate arbitrary or unbounded sets. Case equality does
+# not always rewrite through a compound expression automatically, so rejected
+# residues retain the smallest explicit substituted calculation.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bounded_range_classification.lit

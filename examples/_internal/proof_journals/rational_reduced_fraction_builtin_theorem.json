@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "target": "examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit",
+  "proof_spine": [
+    "Introduce an arbitrary rational q.",
+    "Invoke the reserved kernel theorem to store its unique reduced-fraction existential.",
+    "Eliminate the existential and reuse both canonical body facts."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Expose and consume the kernel-owned canonical rational representation.",
+      "dependencies": [
+        "rational reduced-fraction existential builtin",
+        "by thm reserved-name dispatcher",
+        "existential elimination"
+      ],
+      "attempts": [
+        {
+          "candidate": "have q Q\nby thm rational_has_unique_reduced_fraction(q)",
+          "result": "failed_before_implementation",
+          "verifier_evidence": "release runner reported: by thm: theorem `rational_has_unique_reduced_fraction` is not defined",
+          "failed_phase": "proof",
+          "failure_mechanism": "The reduced-fraction fact existed only as an automatic existential rule and a trusted std/basics wrapper; no reserved theorem name dispatched to it.",
+          "diagnosis": "Add a bare reserved theorem handler that constructs the canonical existential and verifies it through the existing rule.",
+          "next_change": "Reserve the name, accept one argument, construct integer/positive-natural witnesses with gcd 1, and store only after verification."
+        },
+        {
+          "candidate": "have q Q\nby thm rational_has_unique_reduced_fraction(q)\nobtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}\nq = p / d\ngcd(p, d) = 1",
+          "result": "accepted",
+          "verifier_evidence": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit: exit 0, top-level ok=true; the nested verification cites `exist!: unique rational reduced fraction with positive denominator`.",
+          "diagnosis": "The named surface and the direct existential now share one checked mathematical rule, and elimination exposes the expected numerator, denominator, ratio, and gcd facts.",
+          "next_change": "Keep non-Q, arity, qualification, malformed-gcd, and no-leak cases in Rust regression coverage."
+        }
+      ],
+      "accepted_litex": "have q Q\nby thm rational_has_unique_reduced_fraction(q)\nobtain p, d from exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}\nq = p / d\ngcd(p, d) = 1",
+      "reusable_lesson": "A named builtin theorem can expose a stable public constructor without adding trust when it constructs a canonical fact and delegates truth verification to an existing kernel rule.",
+      "status": "materialized_clean"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit",
+    "file_gate_result": "exit 0; top-level ok=true"
+  }
+}

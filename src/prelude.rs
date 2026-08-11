@@ -112,10 +112,11 @@ pub use crate::infer::{
 };
 pub use crate::module_manager::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,
-    discover_repository_for_file, parse_project_config, resolve_std_root, ConfigImport,
-    ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleManager,
-    ModuleRunner, ModuleStatus, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
-    ProjectStdImport, RepositoryFileTarget,
+    discover_repository_for_file, parse_project_config, resolve_std_root, BareSymbolSourceKind,
+    ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry, FileId, FileRunner,
+    FileStatus, ImportTarget, ModuleId, ModuleManager, ModuleRunner, ModuleStatus, ProjectBareName,
+    ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport, ProjectStdImport,
+    RepositoryFileTarget,
 };
 pub use crate::obj::nested_obj_binder_normalized_key;
 pub use crate::obj::obj_equality_key;
@@ -324,8 +325,8 @@ pub use crate::result::VerifiedBysResult;
 pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
-    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule,
+    AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
+    RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
@@ -342,8 +343,8 @@ pub use crate::runtime::ParseContext;
 pub use crate::runtime::RunMode;
 pub use crate::runtime::ScopeFrame;
 pub use crate::runtime::{
-    ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixPolicy, TrustedPrefixReport,
-    TrustedPrefixStatementContext,
+    BareSymbol, ExecutionFrame, ExecutionLayer, OutputStyle, Runtime, TrustedPrefixPolicy,
+    TrustedPrefixReport, TrustedPrefixStatementContext,
 };
 pub use crate::stmt::by_stmt::ByAntisymmetricPropStmt;
 pub use crate::stmt::by_stmt::ByAxiomOfChoiceStmt;
@@ -434,16 +435,15 @@ pub use crate::symbol::{
 };
 pub use crate::to_lean_ir::{
     AbsoluteValueBuiltinRuleToLeanIR, AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR,
-    BuiltinObjOperatorToLeanIR,
-    BuiltinRuleToLeanIR, CaseBranchExitToLeanIR, CaseBranchToLeanIR, CollectionObjToLeanIR,
-    ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
+    BuiltinObjOperatorToLeanIR, BuiltinRuleToLeanIR, CaseBranchExitToLeanIR, CaseBranchToLeanIR,
+    CollectionObjToLeanIR, ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
     EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
     ExistentialProjectionRoleToLeanIR, ExistentialWitnessToLeanIR, FactProofToLeanIR,
     FactStmtToLeanIR, FactToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
     HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LeanCarrierToLeanIR,
     LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR,
     ObjToLeanIR, ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR,
-    ParamTypeToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR,
+    ParamTypeToLeanIR, ProjectedForallToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR,
     SetBuiltinRuleToLeanIR, SetRelationDualityBuiltinRuleToLeanIR, StandardSetToLeanIR,
     StmtToLeanIR, TrustToLeanIR,
 };
