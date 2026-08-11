@@ -1073,11 +1073,12 @@ impl HaveByExistStmt {
             .map(|s| latex_local_ident(s))
             .collect::<Vec<_>>()
             .join(", ");
-        format!(
-            r"\mathrm{{have}}\ \mathrm{{by}}\ {} : {}",
-            self.exist_fact_in_have_obj_st.to_latex_string(),
-            names
-        )
+        let source = self
+            .existential_prop_source
+            .as_ref()
+            .map(|source| source.fact.to_latex_string())
+            .unwrap_or_else(|| self.exist_fact_in_have_obj_st.to_latex_string());
+        format!(r"\mathrm{{have}}\ \mathrm{{by}}\ {} : {}", source, names)
     }
 }
 

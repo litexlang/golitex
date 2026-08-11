@@ -2,6 +2,27 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
+    fn inst_existential_prop_source(
+        &self,
+        source: Option<&ExistentialPropSource>,
+        param_to_arg_map: &HashMap<String, Obj>,
+        line_file: &LineFile,
+    ) -> Result<Option<ExistentialPropSource>, RuntimeError> {
+        source
+            .map(|source| {
+                Ok(ExistentialPropSource {
+                    fact: self.inst_normal_atomic_fact(
+                        &source.fact,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                        Some(line_file),
+                    )?,
+                    definition: source.definition.clone(),
+                })
+            })
+            .transpose()
+    }
+
     pub fn exec_def_template_stmt(
         &mut self,
         def_template_stmt: &DefTemplateStmt,
@@ -259,13 +280,19 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                Ok(HaveByExistStmt::new(
+                let existential_prop_source = self.inst_existential_prop_source(
+                    s.existential_prop_source.as_ref(),
+                    param_to_arg_map,
+                    line_file,
+                )?;
+                let mut instantiated = HaveByExistStmt::new(
                     vec![instance_name.to_string()],
                     vec![instance_binding.clone()],
                     exist_fact,
                     line_file.clone(),
-                )
-                .into())
+                );
+                instantiated.existential_prop_source = existential_prop_source;
+                Ok(instantiated.into())
             }
             TemplateDefEnum::HaveFnEqualStmt(s) => {
                 let obj = self.inst_obj(
@@ -573,13 +600,19 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                Ok(HaveByExistStmt::new(
+                let existential_prop_source = self.inst_existential_prop_source(
+                    s.existential_prop_source.as_ref(),
+                    param_to_arg_map,
+                    line_file,
+                )?;
+                let mut instantiated = HaveByExistStmt::new(
                     s.equal_tos.clone(),
                     s.equal_to_bindings.clone(),
                     exist_fact,
                     line_file.clone(),
-                )
-                .into())
+                );
+                instantiated.existential_prop_source = existential_prop_source;
+                Ok(instantiated.into())
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 let mut groups = Vec::with_capacity(s.param_def.groups.len());

@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "target": "examples/01_proof_patterns/obtain_from_existential_prop.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_existential_prop.lit",
+  "proof_spine": [
+    "Define a concrete prop whose complete meaning is one existential clause.",
+    "Verify a call of that prop.",
+    "Project the instantiated existential through the prop definition and eliminate it with obtain."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Use a verified existential prop call directly as the source of obtain.",
+      "dependencies": [
+        "concrete prop definition lookup",
+        "capture-avoiding definition argument substitution",
+        "existential elimination"
+      ],
+      "attempts": [
+        {
+          "candidate": "prop has_copy(a R):\n    exist x R st {x = a}\n\n$has_copy(2)\nobtain copy from $has_copy(2)\ncopy = 2",
+          "result": "failed_before_implementation",
+          "verifier_evidence": "the runner accepted the prop definition and $has_copy(2), then reported ParseError: `obtain` expects an `exist` fact after `from`",
+          "failed_phase": "parse",
+          "failure_mechanism": "The obtain parser admitted only literal exist syntax and could not retain a prop call as the checked source.",
+          "diagnosis": "Treat exactly-one-existential concrete prop definitions as named existential packages, while preserving source verification.",
+          "next_change": "Retain the source prop and definition, instantiate its sole existential clause, then feed that checked projection to the existing eliminator."
+        },
+        {
+          "candidate": "prop has_copy(a R):\n    exist x R st {x = a}\n\n$has_copy(2)\nobtain copy from $has_copy(2)\ncopy = 2",
+          "result": "accepted",
+          "verifier_evidence": "release runner exited 0 with ok=true; obtain retained statement `obtain copy from $has_copy(2)`, checked `exist x R st {x = 2}` by `existential projection from prop definition has_copy`, and exposed `copy = 2`.",
+          "diagnosis": "The new source form performs checked definition elimination and reuses ordinary existential elimination without adding trust.",
+          "next_change": "Keep unverified source, abstract/negated prop, ordinary clause, multi-clause definition, and exist! cases in Rust regression coverage."
+        }
+      ],
+      "accepted_litex": "prop has_copy(a R):\n    exist x R st {x = a}\n\n$has_copy(2)\nobtain copy from $has_copy(2)\ncopy = 2",
+      "reusable_lesson": "A named prop can safely act as an existential package only when the kernel verifies the source and rechecks an exact positive existential definition projection.",
+      "status": "materialized_clean"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_existential_prop.lit",
+    "file_gate_result": "exit 0; top-level ok=true",
+    "focused_test_command": "cargo test --release obtain_ -- --nocapture",
+    "focused_test_result": "exit 0; 10 passed, 0 failed",
+    "examples_gate_command": "cargo test --release run_examples -- --nocapture",
+    "examples_gate_result": "exit 0; 1 passed, 0 failed",
+    "full_gate_command": "cargo test --release run_all -- --nocapture",
+    "full_gate_result": "exit 0; run_all passed, 0 failed; one separately ignored slow suite remained ignored by its declaration"
+  }
+}

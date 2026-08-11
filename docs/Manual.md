@@ -2273,8 +2273,9 @@ This is an `error` because an abstract predicate has no definition to unfold.
 ### Witnesses, `obtain`, and preimages
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
-name witnesses from an already known existential. Use `have by preimage` to
-name a preimage from known range or replacement membership.
+name witnesses from an already known existential, either written directly or
+wrapped by one concrete prop definition. Use `have by preimage` to name a
+preimage from known range or replacement membership.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
@@ -2290,16 +2291,32 @@ obtain w from exist u R st {0 < u, u < 1}
 w $in R
 0 < w < 1
 
+prop has_copy(a R):
+    exist x R st {x = a}
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
 ```
+
+The prop shorthand is a checked definition-elimination step. The source
+`$has_copy(2)` must itself verify, and the concrete prop definition must have
+exactly one clause whose outer form is positive `exist` or `exist!`. Litex
+substitutes the call arguments into that clause and then uses the ordinary
+existential eliminator. `abstract_prop`, negated prop facts, `not exist`,
+ordinary nonexistential definitions, and multi-clause definitions are rejected.
 
 The checked To-Lean subset currently lowers positive `witness exist` and
 positive extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
 existential citations, introduces file-scope or proof-local witness names with
 ordered `Exists.choose`, and exports only the exact parameter and direct-body
 facts justified by `choose_spec`. Unique/non-existence and preimage forms still
-report an explicit compiler boundary.
+report an explicit compiler boundary. The `obtain ... from $prop(args)`
+shorthand also currently reports an explicit compiler boundary; use the
+expanded `exist` source when compiling this proof shape to Lean.
 If two distinct Litex identifiers would sanitize to the same Lean binder name,
 the compiler asks for a rename rather than emitting a captured quantifier.
 

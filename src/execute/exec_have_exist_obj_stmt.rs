@@ -5,11 +5,13 @@ impl Runtime {
         &mut self,
         have_exist_obj_stmt: &HaveByExistStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let exist_fact = self.resolve_have_by_exist_source(have_exist_obj_stmt)?;
         self.exec_have_exist_obj_core(
             have_exist_obj_stmt.clone().into(),
             &have_exist_obj_stmt.equal_tos,
             &have_exist_obj_stmt.equal_to_bindings,
-            &have_exist_obj_stmt.exist_fact_in_have_obj_st,
+            &exist_fact,
+            have_exist_obj_stmt.existential_prop_source.as_ref(),
             have_exist_obj_stmt.line_file.clone(),
         )
     }
@@ -18,10 +20,11 @@ impl Runtime {
         &mut self,
         have_exist_obj_stmt: &HaveByExistStmt,
     ) -> Result<StmtResult, RuntimeError> {
+        let exist_fact = self.resolve_have_by_exist_source(have_exist_obj_stmt)?;
         let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
             have_exist_obj_stmt.clone().into(),
             &have_exist_obj_stmt.equal_to_bindings,
-            &have_exist_obj_stmt.exist_fact_in_have_obj_st,
+            &exist_fact,
             have_exist_obj_stmt.line_file.clone(),
         )?;
         Ok(
@@ -48,6 +51,7 @@ impl Runtime {
             &equal_tos,
             &equal_to_bindings,
             &exist_fact,
+            None,
             stmt.line_file.clone(),
         )
     }
@@ -79,6 +83,7 @@ impl Runtime {
         equal_tos: &[String],
         equal_to_bindings: &[SymbolBinding],
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
+        existential_prop_source: Option<&ExistentialPropSource>,
         line_file: LineFile,
     ) -> Result<StmtResult, RuntimeError> {
         self.exec_have_exist_obj_stmt_verify_well_definedness(
@@ -87,8 +92,11 @@ impl Runtime {
             equal_to_bindings,
             exist_fact_in_have_obj_stmt,
         )?;
-        let inside_results = self
-            .exec_have_exist_obj_stmt_verify_process(stmt.clone(), exist_fact_in_have_obj_stmt)?;
+        let inside_results = self.exec_have_exist_obj_stmt_verify_process(
+            stmt.clone(),
+            exist_fact_in_have_obj_stmt,
+            existential_prop_source,
+        )?;
         let infer_result = self.exec_have_exist_obj_stmt_affect_environment(
             stmt.clone(),
             equal_to_bindings,
@@ -152,8 +160,37 @@ impl Runtime {
         &mut self,
         stmt: Stmt,
         exist_fact_in_have_obj_stmt: &ExistFactEnum,
+        existential_prop_source: Option<&ExistentialPropSource>,
     ) -> Result<Vec<StmtResult>, RuntimeError> {
         let verify_state = UseContextVerifyState::new(0, false);
+
+        if let Some(source) = existential_prop_source {
+            let source_atomic: AtomicFact = source.fact.clone().into();
+            let source_result = self
+                .verify_atomic_fact(&source_atomic, &verify_state)
+                .map_err(|verify_error| {
+                    exec_stmt_error_with_stmt_and_cause(stmt.clone(), verify_error)
+                })?;
+            if source_result.is_unknown() {
+                return Err(short_exec_error(
+                    stmt,
+                    format!("obtain: source prop `{}` is not verified", source.fact),
+                    None,
+                    vec![],
+                ));
+            }
+
+            let projection_result =
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    exist_fact_in_have_obj_stmt.clone().into(),
+                    format!(
+                        "existential projection from prop definition `{}`",
+                        source.definition.name
+                    ),
+                    vec![source_result],
+                );
+            return Ok(vec![projection_result.into()]);
+        }
 
         let result = self
             .verify_exist_fact(exist_fact_in_have_obj_stmt, &verify_state)
@@ -170,6 +207,79 @@ impl Runtime {
         }
 
         Ok(vec![result])
+    }
+
+    /// Resolve the existential used by elimination. For the shorthand source,
+    /// this repeats the definition-shape and substitution checks at execution
+    /// time; the kernel does not rely on the parser's cached expansion.
+    fn resolve_have_by_exist_source(
+        &self,
+        stmt: &HaveByExistStmt,
+    ) -> Result<ExistFactEnum, RuntimeError> {
+        let Some(source) = stmt.existential_prop_source.as_ref() else {
+            return Ok(stmt.exist_fact_in_have_obj_st.clone());
+        };
+
+        let predicate_name = source.fact.predicate.to_string();
+        let local_predicate_name = predicate_name
+            .rsplit_once(MOD_SIGN)
+            .map(|(_, local_name)| local_name)
+            .unwrap_or(predicate_name.as_str());
+        if local_predicate_name != source.definition.name {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "obtain: source prop `{}` does not match retained definition `{}`",
+                    predicate_name, source.definition.name
+                ),
+                None,
+                vec![],
+            ));
+        }
+        if source.definition.iff_facts.len() != 1 {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "obtain: prop `{}` must have exactly one definition clause",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
+        let Fact::ExistFact(definition_exist_fact) = &source.definition.iff_facts[0] else {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "obtain: the sole definition clause of `{}` must be `exist` or `exist!`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        };
+        if definition_exist_fact.is_not_exist() {
+            return Err(short_exec_error(
+                stmt.clone().into(),
+                format!(
+                    "obtain: the definition clause of `{}` is `not exist`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
+
+        let param_to_arg_map = self
+            .params_to_arg_map(&source.definition.params_def_with_type, &source.fact.body)
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause))?;
+        self.inst_exist_fact(
+            definition_exist_fact,
+            &param_to_arg_map,
+            ParamObjType::DefHeader,
+            Some(&stmt.line_file),
+        )
+        .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause))
     }
 
     fn exec_have_exist_obj_stmt_affect_environment(

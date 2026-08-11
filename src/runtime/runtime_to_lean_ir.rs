@@ -91,6 +91,7 @@ impl Runtime {
                 .have_existential_witness_to_lean_ir(
                     &stmt.equal_to_bindings,
                     &stmt.exist_fact_in_have_obj_st,
+                    stmt.existential_prop_source.as_ref(),
                     &stmt.line_file,
                     success,
                 ),
@@ -103,6 +104,7 @@ impl Runtime {
                 self.have_existential_witness_to_lean_ir(
                     &stmt.param_def.collect_param_bindings(),
                     &ExistFactEnum::ExistFact(body),
+                    None,
                     &stmt.line_file,
                     success,
                 )
@@ -357,9 +359,16 @@ impl Runtime {
         &self,
         bindings: &[SymbolBinding],
         exist_fact: &ExistFactEnum,
+        existential_prop_source: Option<&ExistentialPropSource>,
         line_file: &LineFile,
         success: &NonFactualStmtSuccess,
     ) -> Result<StmtToLeanIR, RuntimeError> {
+        if existential_prop_source.is_some() {
+            return Err(to_lean_ir_error(
+                line_file,
+                "the current To-Lean elimination tranche does not yet lower `obtain ... from $prop(args)`; spell out the expanded `exist` source",
+            ));
+        }
         let Some(verification) = success.existential_elimination_verification.as_ref() else {
             return Err(to_lean_ir_error(
                 line_file,
