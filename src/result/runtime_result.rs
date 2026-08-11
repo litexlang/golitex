@@ -59,6 +59,18 @@ impl From<FactUnknown> for StmtResult {
 }
 
 impl StmtResult {
+    pub fn with_well_definedness_certificate(
+        mut self,
+        certificate: WellDefinednessCertificate,
+    ) -> Self {
+        if let Some(success) = self.non_factual_success_mut() {
+            success.well_definedness = certificate;
+        } else if let Some(success) = self.factual_success_mut() {
+            success.well_definedness = certificate;
+        }
+        self
+    }
+
     pub fn with_to_lean_ir(mut self, to_lean_ir: StmtToLeanIR) -> Self {
         if let Some(success) = self.non_factual_success_mut() {
             success.to_lean_ir = Some(to_lean_ir);

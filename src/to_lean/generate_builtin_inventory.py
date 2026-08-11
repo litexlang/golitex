@@ -421,6 +421,8 @@ def mechanism_class(entry) -> str:
         for marker in QUANTIFIED_FUNCTION_MARKERS
     ):
         return "quantified"
+    if function == "verify_in_fact_by_known_standard_subset_membership":
+        return "transform"
     if entry["sink"] in TYPED_LOCAL_RULE_SINKS:
         return "local_schema"
     return "legacy_custom"
@@ -447,6 +449,11 @@ def lean_mapping(entry) -> tuple[str, str]:
     ):
         return "`div_ne_zero` / `Ne.symm`", "implemented"
     if entry["sink"] == "new_with_verified_by_builtin_rule_evidence_recording_stmt":
+        if entry.get("function") == "verify_in_fact_by_known_standard_subset_membership":
+            return (
+                "native membership projection + checked numeric coercion",
+                "implemented",
+            )
         if text == "not-equality symmetry":
             return "`Ne.symm`", "implemented"
         if text == "subset_superset_duality":

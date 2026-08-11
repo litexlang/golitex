@@ -727,10 +727,10 @@ impl Runtime {
         // Narrow known membership implies broader target membership directly.
         // Broad known membership may match a narrow target only when the narrow
         // membership is already a known atomic fact, not merely builtin-provable.
-        if Self::standard_set_is_subset_eq(known_set, given_set) {
+        if known_set.is_subset_eq(given_set) {
             return Ok(Some(Some(element_map)));
         }
-        if Self::standard_set_is_subset_eq(given_set, known_set) {
+        if given_set.is_subset_eq(known_set) {
             let known_only_result =
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(given_fact)?;
             if known_only_result.is_true() {
@@ -2670,82 +2670,6 @@ impl Runtime {
             left.set_obj(),
             given.set_obj(),
         )
-    }
-
-    pub(crate) fn standard_set_is_subset_eq(subset: &StandardSet, superset: &StandardSet) -> bool {
-        match (subset, superset) {
-            (_, StandardSet::C)
-            | (StandardSet::NPos, StandardSet::NPos)
-            | (StandardSet::NPos, StandardSet::N)
-            | (StandardSet::NPos, StandardSet::Z)
-            | (StandardSet::NPos, StandardSet::Q)
-            | (StandardSet::NPos, StandardSet::R)
-            | (StandardSet::NPos, StandardSet::QPos)
-            | (StandardSet::NPos, StandardSet::RPos)
-            | (StandardSet::NPos, StandardSet::ZStar)
-            | (StandardSet::NPos, StandardSet::QStar)
-            | (StandardSet::NPos, StandardSet::RStar)
-            | (StandardSet::N, StandardSet::N)
-            | (StandardSet::N, StandardSet::Z)
-            | (StandardSet::N, StandardSet::Q)
-            | (StandardSet::N, StandardSet::R)
-            | (StandardSet::ZNeg, StandardSet::ZNeg)
-            | (StandardSet::ZNeg, StandardSet::Z)
-            | (StandardSet::ZNeg, StandardSet::Q)
-            | (StandardSet::ZNeg, StandardSet::R)
-            | (StandardSet::ZNeg, StandardSet::QNeg)
-            | (StandardSet::ZNeg, StandardSet::RNeg)
-            | (StandardSet::ZNeg, StandardSet::ZStar)
-            | (StandardSet::ZNeg, StandardSet::QStar)
-            | (StandardSet::ZNeg, StandardSet::RStar)
-            | (StandardSet::ZStar, StandardSet::ZStar)
-            | (StandardSet::ZStar, StandardSet::Z)
-            | (StandardSet::ZStar, StandardSet::Q)
-            | (StandardSet::ZStar, StandardSet::R)
-            | (StandardSet::ZStar, StandardSet::QStar)
-            | (StandardSet::ZStar, StandardSet::RStar)
-            | (StandardSet::Z, StandardSet::Z)
-            | (StandardSet::Z, StandardSet::Q)
-            | (StandardSet::Z, StandardSet::R)
-            | (StandardSet::QPos, StandardSet::QPos)
-            | (StandardSet::QPos, StandardSet::Q)
-            | (StandardSet::QPos, StandardSet::R)
-            | (StandardSet::QPos, StandardSet::RPos)
-            | (StandardSet::QPos, StandardSet::QStar)
-            | (StandardSet::QPos, StandardSet::RStar)
-            | (StandardSet::QNeg, StandardSet::QNeg)
-            | (StandardSet::QNeg, StandardSet::Q)
-            | (StandardSet::QNeg, StandardSet::R)
-            | (StandardSet::QNeg, StandardSet::RNeg)
-            | (StandardSet::QNeg, StandardSet::QStar)
-            | (StandardSet::QNeg, StandardSet::RStar)
-            | (StandardSet::QStar, StandardSet::QStar)
-            | (StandardSet::QStar, StandardSet::Q)
-            | (StandardSet::QStar, StandardSet::R)
-            | (StandardSet::QStar, StandardSet::RStar)
-            | (StandardSet::Q, StandardSet::Q)
-            | (StandardSet::Q, StandardSet::R)
-            | (StandardSet::RPos, StandardSet::RPos)
-            | (StandardSet::RPos, StandardSet::R)
-            | (StandardSet::RPos, StandardSet::RStar)
-            | (StandardSet::RNeg, StandardSet::RNeg)
-            | (StandardSet::RNeg, StandardSet::R)
-            | (StandardSet::RNeg, StandardSet::RStar)
-            | (StandardSet::RStar, StandardSet::RStar)
-            | (StandardSet::RStar, StandardSet::R)
-            | (StandardSet::NPos, StandardSet::CStar)
-            | (StandardSet::ZNeg, StandardSet::CStar)
-            | (StandardSet::ZStar, StandardSet::CStar)
-            | (StandardSet::QPos, StandardSet::CStar)
-            | (StandardSet::QNeg, StandardSet::CStar)
-            | (StandardSet::QStar, StandardSet::CStar)
-            | (StandardSet::RPos, StandardSet::CStar)
-            | (StandardSet::RNeg, StandardSet::CStar)
-            | (StandardSet::RStar, StandardSet::CStar)
-            | (StandardSet::CStar, StandardSet::CStar)
-            | (StandardSet::R, StandardSet::R) => true,
-            _ => false,
-        }
     }
 
     fn match_arg_when_left_is_cart(

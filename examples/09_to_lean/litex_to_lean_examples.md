@@ -14,6 +14,7 @@ Use a standalone `.lit` file only when module imports, project paths, CLI behavi
 # Expected Lean shapes:
 #   2 = 2                         stays bare
 #   2 $in R                       becomes 2 ∈ (Set.univ : Set ℝ)
+#   proposition codomains         use Prop directly, with no LitexFact alias
 #   cross-carrier bounded facts   live in the propositions_and_trust section,
 #                                 their explicit trust boundary is visible
 
@@ -31,8 +32,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -81,8 +80,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -161,8 +158,6 @@ end Litex.BuiltinRules
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -266,8 +261,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -282,7 +275,7 @@ def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := Tru
 def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
 
-opaque demo_marked {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque demo_marked {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 -- Litex trust boundary: f3
 axiom fact3 : ∀ x ∈ (Set.univ : Set ℝ), demo_marked x
@@ -297,13 +290,13 @@ theorem fact4 : demo_marked (3 : ℝ) := by
   have proof_fact_1_3 : demo_marked (3 : ℝ) := fact3 proof_arg_1_1 proof_fact_1_2
   exact proof_fact_1_3
 
-def demo_is_one (x : ℝ) : LitexFact := x = 1
+def demo_is_one (x : ℝ) : Prop := x = 1
 
 -- Litex fact f7
 theorem fact7 : demo_is_one 1 := by
   simp [demo_is_one]
 
-opaque demo_successor_pair {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
+opaque demo_successor_pair {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → Prop
 
 -- Litex trust boundary: f12
 axiom fact12 : ∀ x ∈ (Set.univ : Set ℝ), demo_successor_pair x (x + 1)
@@ -356,8 +349,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -436,8 +427,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -452,7 +441,7 @@ def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := Tru
 def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
 
-opaque demo_transported {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque demo_transported {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 -- Litex fact f16
 theorem fact16 : ∀ {α1 : Type LitexUniverse} [LitexObject α1], ∀ (a : Set α1), ∀ (b : Set α1), demo_transported a → a = b → demo_transported b := by
@@ -463,7 +452,7 @@ theorem fact16 : ∀ {α1 : Type LitexUniverse} [LitexObject α1], ∀ (a : Set 
     simpa only [proof_fact_1_4] using proof_fact_1_3
   exact proof_fact_1_5
 
-opaque demo_related {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
+opaque demo_related {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → Prop
 
 -- Litex fact f32
 theorem fact32 : ∀ {α4 : Type LitexUniverse} [LitexObject α4], ∀ (a : Set α4), ∀ (b : Set α4), demo_related a b → a = b → demo_related b a := by
@@ -484,7 +473,7 @@ theorem fact54 : ∀ {α6 : Type LitexUniverse} [LitexObject α6], ∀ (a : Set 
     simpa only [proof_fact_3_5, proof_fact_3_6] using proof_fact_3_4
   exact proof_fact_3_7
 
-opaque demo_resolved {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque demo_resolved {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 -- Litex fact f73
 theorem fact73 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), a = 13 → b = 1 → demo_resolved (14 : ℝ) → demo_resolved (a + b) := by
@@ -798,8 +787,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -1100,11 +1087,6 @@ import Mathlib
 
 namespace Litex.BuiltinRules
 
-theorem carrier_r_pos_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | 0 < r}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
 theorem order_add_positive
     (a b : ℝ)
     (_haR : a ∈ (Set.univ : Set ℝ))
@@ -1125,8 +1107,6 @@ end Litex.BuiltinRules
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -1161,11 +1141,11 @@ theorem fact34 : ∀ a ∈ {r : ℝ | 0 < r}, ∀ b ∈ {r : ℝ | 0 < r}, ∀ c
     have proof_fact_6_1 : a ∈ (Set.univ : Set ℝ) := by
       have proof_fact_7_1 : a ∈ {r : ℝ | 0 < r} := by
         exact proof_fact_1_1
-      exact _root_.Litex.BuiltinRules.carrier_r_pos_in_r a proof_fact_7_1
+      exact Set.mem_univ _
     have proof_fact_6_2 : b ∈ (Set.univ : Set ℝ) := by
       have proof_fact_8_1 : b ∈ {r : ℝ | 0 < r} := by
         exact proof_fact_1_2
-      exact _root_.Litex.BuiltinRules.carrier_r_pos_in_r b proof_fact_8_1
+      exact Set.mem_univ _
     have proof_fact_6_3 : (0 : ℝ) < a := by
       exact proof_fact_1_5
     have proof_fact_6_4 : (0 : ℝ) < b := by
@@ -1179,7 +1159,7 @@ theorem fact34 : ∀ a ∈ {r : ℝ | 0 < r}, ∀ b ∈ {r : ℝ | 0 < r}, ∀ c
       have proof_fact_10_2 : c ∈ (Set.univ : Set ℝ) := by
         have proof_fact_11_1 : c ∈ {r : ℝ | 0 < r} := by
           exact proof_fact_1_3
-        exact _root_.Litex.BuiltinRules.carrier_r_pos_in_r c proof_fact_11_1
+        exact Set.mem_univ _
       have proof_fact_10_3 : (0 : ℝ) < c := by
         exact proof_fact_1_7
       exact _root_.Litex.BuiltinRules.order_less_equal_of_less 0 c proof_fact_10_1 proof_fact_10_2 proof_fact_10_3
@@ -1190,7 +1170,7 @@ theorem fact34 : ∀ a ∈ {r : ℝ | 0 < r}, ∀ b ∈ {r : ℝ | 0 < r}, ∀ c
       have proof_fact_12_2 : d ∈ (Set.univ : Set ℝ) := by
         have proof_fact_13_1 : d ∈ {r : ℝ | 0 < r} := by
           exact proof_fact_1_4
-        exact _root_.Litex.BuiltinRules.carrier_r_pos_in_r d proof_fact_13_1
+        exact Set.mem_univ _
       have proof_fact_12_3 : (0 : ℝ) < d := by
         exact proof_fact_1_8
       exact _root_.Litex.BuiltinRules.order_less_equal_of_less 0 d proof_fact_12_1 proof_fact_12_2 proof_fact_12_3
@@ -1231,8 +1211,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -1894,8 +1872,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -2481,8 +2457,9 @@ forall r R*:
 forall c C*:
     c $in C*
 
-# Refined membership projects to the base set on the same native carrier.
-# These facts use registered certificates; they are not inferred target types.
+# Standard numeric membership uses one checked projection rule backed by the
+# centralized Litex subset hierarchy. It retains the exact source membership;
+# target-carrier casts exist only in the generated Lean fact occurrence.
 forall n N+:
     n $in N
 
@@ -2513,6 +2490,33 @@ forall r R*:
 forall c C*:
     c $in C
 
+# Before, cross-carrier membership reached a label-only builtin result and the
+# strict compiler rejected it as OtherUnsupported. The same projection
+# certificate now covers the native tower and refined cross-carrier cases.
+forall n N:
+    n $in Z
+
+forall z Z:
+    z $in Q
+
+forall q Q:
+    q $in R
+
+forall r R:
+    r $in C
+
+forall q Q+:
+    q $in R+
+
+forall z Z*:
+    z $in C*
+
+forall n N+:
+    n $in C*
+
+forall z Z-:
+    z $in C*
+
 # Closed numeric memberships use checked reflection rather than trust.
 1 $in N+
 1 $in Q+
@@ -2535,77 +2539,24 @@ not 0 $in Q*
 not 0 $in R*
 not 0 $in C*
 
-# Boundary: C+ is intentionally not a Litex standard set because complex
-# numbers have no canonical order. The Rust regression rejects `1 $in C+`.
+# Boundaries: C+ is intentionally not a Litex standard set because complex
+# numbers have no canonical order. Direct heterogeneous set propositions such
+# as `N $subset Z` remain unsupported until their Lean meaning is chosen; this
+# batch only compiles an object's membership projection.
 # Evidence: cargo test --release compact_standard_numeric_subsets -- --nocapture
 # and cargo test --release closed_compact_numeric_memberships -- --nocapture
 # Ledger gate: cargo test --release to_lean_examples_markdown_emits_checked_source -- --nocapture
-# Implementation: src/to_lean_ir/obj.rs, src/to_lean_ir/carrier.rs,
-# and src/to_lean/to_lean_pipeline.rs.
+# Implementation: src/obj/standard_set.rs,
+# src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs,
+# src/to_lean_ir/builtin_rule.rs, and src/to_lean/to_lean_pipeline.rs.
 ```
 
 ```lean
 import Mathlib
 
-namespace Litex.BuiltinRules
-
-theorem carrier_c_nonzero_in_c
-    (x : ℂ)
-    (_hx : x ∈ {c : ℂ | c ≠ 0}) : x ∈ (Set.univ : Set ℂ) := by
-  exact Set.mem_univ x
-
-theorem carrier_n_pos_in_n
-    (x : ℕ)
-    (_hx : x ∈ {n : ℕ | 0 < n}) : x ∈ (Set.univ : Set ℕ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_neg_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | q < 0}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_nonzero_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | q ≠ 0}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_q_pos_in_q
-    (x : ℚ)
-    (_hx : x ∈ {q : ℚ | 0 < q}) : x ∈ (Set.univ : Set ℚ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_neg_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | r < 0}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_nonzero_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | r ≠ 0}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_r_pos_in_r
-    (x : ℝ)
-    (_hx : x ∈ {r : ℝ | 0 < r}) : x ∈ (Set.univ : Set ℝ) := by
-  exact Set.mem_univ x
-
-theorem carrier_z_neg_in_z
-    (x : ℤ)
-    (_hx : x ∈ {z : ℤ | z < 0}) : x ∈ (Set.univ : Set ℤ) := by
-  exact Set.mem_univ x
-
-theorem carrier_z_nonzero_in_z
-    (x : ℤ)
-    (_hx : x ∈ {z : ℤ | z ≠ 0}) : x ∈ (Set.univ : Set ℤ) := by
-  exact Set.mem_univ x
-
-end Litex.BuiltinRules
-
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -2683,42 +2634,42 @@ theorem fact105 : ∀ n ∈ {n : ℕ | 0 < n}, n ∈ (Set.univ : Set ℕ) := by
   intro n proof_fact_12_1
   have proof_fact_12_2 : n ∈ {n : ℕ | 0 < n} := by
     exact proof_fact_12_1
-  exact _root_.Litex.BuiltinRules.carrier_n_pos_in_n n proof_fact_12_2
+  exact Set.mem_univ _
 
 -- Litex fact f121
 theorem fact121 : ∀ z ∈ {z : ℤ | z < 0}, z ∈ (Set.univ : Set ℤ) := by
   intro z proof_fact_13_1
   have proof_fact_13_2 : z ∈ {z : ℤ | z < 0} := by
     exact proof_fact_13_1
-  exact _root_.Litex.BuiltinRules.carrier_z_neg_in_z z proof_fact_13_2
+  exact Set.mem_univ _
 
 -- Litex fact f131
 theorem fact131 : ∀ z ∈ {z : ℤ | z ≠ 0}, z ∈ (Set.univ : Set ℤ) := by
   intro z proof_fact_14_1
   have proof_fact_14_2 : z ∈ {z : ℤ | z ≠ 0} := by
     exact proof_fact_14_1
-  exact _root_.Litex.BuiltinRules.carrier_z_nonzero_in_z z proof_fact_14_2
+  exact Set.mem_univ _
 
 -- Litex fact f141
 theorem fact141 : ∀ q ∈ {q : ℚ | 0 < q}, q ∈ (Set.univ : Set ℚ) := by
   intro q proof_fact_15_1
   have proof_fact_15_2 : q ∈ {q : ℚ | 0 < q} := by
     exact proof_fact_15_1
-  exact _root_.Litex.BuiltinRules.carrier_q_pos_in_q q proof_fact_15_2
+  exact Set.mem_univ _
 
 -- Litex fact f157
 theorem fact157 : ∀ q ∈ {q : ℚ | q < 0}, q ∈ (Set.univ : Set ℚ) := by
   intro q proof_fact_16_1
   have proof_fact_16_2 : q ∈ {q : ℚ | q < 0} := by
     exact proof_fact_16_1
-  exact _root_.Litex.BuiltinRules.carrier_q_neg_in_q q proof_fact_16_2
+  exact Set.mem_univ _
 
 -- Litex fact f167
 theorem fact167 : ∀ q ∈ {q : ℚ | q ≠ 0}, q ∈ (Set.univ : Set ℚ) := by
   intro q proof_fact_17_1
   have proof_fact_17_2 : q ∈ {q : ℚ | q ≠ 0} := by
     exact proof_fact_17_1
-  exact _root_.Litex.BuiltinRules.carrier_q_nonzero_in_q q proof_fact_17_2
+  exact Set.mem_univ _
 
 -- Litex fact f177
 theorem fact177 : ∀ r ∈ {r : ℝ | 0 < r}, r ∈ (Set.univ : Set ℝ) := by
@@ -2728,124 +2679,194 @@ theorem fact177 : ∀ r ∈ {r : ℝ | 0 < r}, r ∈ (Set.univ : Set ℝ) := by
     simpa using proof_fact_19_1
   have proof_fact_18_3 : r ∈ {r : ℝ | 0 < r} := by
     exact proof_fact_18_1
-  exact _root_.Litex.BuiltinRules.carrier_r_pos_in_r r proof_fact_18_3
+  exact Set.mem_univ _
 
 -- Litex fact f193
 theorem fact193 : ∀ r ∈ {r : ℝ | r < 0}, r ∈ (Set.univ : Set ℝ) := by
   intro r proof_fact_20_1
   have proof_fact_20_2 : r ∈ {r : ℝ | r < 0} := by
     exact proof_fact_20_1
-  exact _root_.Litex.BuiltinRules.carrier_r_neg_in_r r proof_fact_20_2
+  exact Set.mem_univ _
 
 -- Litex fact f203
 theorem fact203 : ∀ r ∈ {r : ℝ | r ≠ 0}, r ∈ (Set.univ : Set ℝ) := by
   intro r proof_fact_21_1
   have proof_fact_21_2 : r ∈ {r : ℝ | r ≠ 0} := by
     exact proof_fact_21_1
-  exact _root_.Litex.BuiltinRules.carrier_r_nonzero_in_r r proof_fact_21_2
+  exact Set.mem_univ _
 
 -- Litex fact f213
 theorem fact213 : ∀ c ∈ {c : ℂ | c ≠ 0}, c ∈ (Set.univ : Set ℂ) := by
   intro c proof_fact_22_1
   have proof_fact_22_2 : c ∈ {c : ℂ | c ≠ 0} := by
     exact proof_fact_22_1
-  exact _root_.Litex.BuiltinRules.carrier_c_nonzero_in_c c proof_fact_22_2
-
--- Litex fact f214
-theorem fact214 : 1 ∈ {n : ℕ | 0 < n} := by
-  norm_num
-
--- Litex fact f215
-theorem fact215 : (0 : ℕ) < 1 := by
-  norm_num
-
--- Litex fact f216
-theorem fact216 : 1 ∈ {q : ℚ | 0 < q} := by
-  norm_num
-
--- Litex fact f217
-theorem fact217 : 2 ∈ {r : ℝ | 0 < r} := by
-  norm_num
-
--- Litex fact f218
-theorem fact218 : (0 : ℝ) < 2 := by
-  have proof_fact_23_1 : 2 ∈ {r : ℝ | 0 < r} := fact217
-  simpa using proof_fact_23_1
-
--- Litex fact f219
-theorem fact219 : (0 - 1) ∈ {z : ℤ | z < 0} := by
-  norm_num
-
--- Litex fact f220
-theorem fact220 : (0 - 1 : ℤ) < 0 := by
-  norm_num
-
--- Litex fact f222
-theorem fact222 : (0 - 1) ∈ {q : ℚ | q < 0} := by
-  norm_num
-
--- Litex fact f223
-theorem fact223 : (0 - 1) ∈ {r : ℝ | r < 0} := by
-  norm_num
-
--- Litex fact f224
-theorem fact224 : 1 ∈ {z : ℤ | z ≠ 0} := by
-  norm_num
-
--- Litex fact f225
-theorem fact225 : (1 : ℤ) ≠ 0 := by
-  norm_num
+  exact Set.mem_univ _
 
 -- Litex fact f226
-theorem fact226 : 1 ∈ {q : ℚ | q ≠ 0} := by
-  norm_num
-
--- Litex fact f227
-theorem fact227 : 1 ∈ {r : ℝ | r ≠ 0} := by
-  norm_num
-
--- Litex fact f228
-theorem fact228 : 1 ∈ {c : ℂ | c ≠ 0} := by
-  norm_num
-
--- Litex fact f229
-theorem fact229 : 0 ∉ {n : ℕ | 0 < n} := by
-  norm_num
-
--- Litex fact f230
-theorem fact230 : 0 ∉ {q : ℚ | 0 < q} := by
-  norm_num
-
--- Litex fact f231
-theorem fact231 : 0 ∉ {r : ℝ | 0 < r} := by
-  norm_num
-
--- Litex fact f232
-theorem fact232 : 0 ∉ {z : ℤ | z < 0} := by
-  norm_num
+theorem fact226 : ∀ n ∈ (Set.univ : Set ℕ), (n : ℤ) ∈ (Set.univ : Set ℤ) := by
+  intro n proof_fact_23_1
+  have proof_fact_23_2 : n ∈ (Set.univ : Set ℕ) := by
+    exact proof_fact_23_1
+  exact Set.mem_univ _
 
 -- Litex fact f233
-theorem fact233 : 0 ∉ {q : ℚ | q < 0} := by
+theorem fact233 : ∀ z ∈ (Set.univ : Set ℤ), (z : ℚ) ∈ (Set.univ : Set ℚ) := by
+  intro z proof_fact_24_1
+  have proof_fact_24_2 : z ∈ (Set.univ : Set ℤ) := by
+    exact proof_fact_24_1
+  exact Set.mem_univ _
+
+-- Litex fact f240
+theorem fact240 : ∀ q ∈ (Set.univ : Set ℚ), (q : ℝ) ∈ (Set.univ : Set ℝ) := by
+  intro q proof_fact_25_1
+  have proof_fact_25_2 : q ∈ (Set.univ : Set ℚ) := by
+    exact proof_fact_25_1
+  exact Set.mem_univ _
+
+-- Litex fact f247
+theorem fact247 : ∀ r ∈ (Set.univ : Set ℝ), (r : ℂ) ∈ (Set.univ : Set ℂ) := by
+  intro r proof_fact_26_1
+  have proof_fact_26_2 : r ∈ (Set.univ : Set ℝ) := by
+    exact proof_fact_26_1
+  exact Set.mem_univ _
+
+-- Litex fact f257
+theorem fact257 : ∀ q ∈ {q : ℚ | 0 < q}, (q : ℝ) ∈ {r : ℝ | 0 < r} := by
+  intro q proof_fact_27_1
+  have proof_fact_27_2 : q ∈ {q : ℚ | 0 < q} := by
+    exact proof_fact_27_1
+  have proof_fact_27_3 : 0 < (q : ℚ) := by
+    simpa using proof_fact_27_2
+  change 0 < (q : ℝ)
+  exact_mod_cast proof_fact_27_3
+
+-- Litex fact f267
+theorem fact267 : ∀ z ∈ {z : ℤ | z ≠ 0}, (z : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+  intro z proof_fact_28_1
+  have proof_fact_28_2 : z ∈ {z : ℤ | z ≠ 0} := by
+    exact proof_fact_28_1
+  have proof_fact_28_3 : (z : ℤ) ≠ 0 := by
+    simpa using proof_fact_28_2
+  change (z : ℂ) ≠ 0
+  exact_mod_cast proof_fact_28_3
+
+-- Litex fact f280
+theorem fact280 : ∀ n ∈ {n : ℕ | 0 < n}, (n : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+  intro n proof_fact_29_1
+  have proof_fact_29_2 : n ∈ {n : ℕ | 0 < n} := by
+    exact proof_fact_29_1
+  have proof_fact_29_3 : 0 < (n : ℕ) := by
+    simpa using proof_fact_29_2
+  have proof_fact_29_4 := ne_of_gt proof_fact_29_3
+  change (n : ℂ) ≠ 0
+  exact_mod_cast proof_fact_29_4
+
+-- Litex fact f299
+theorem fact299 : ∀ z ∈ {z : ℤ | z < 0}, (z : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+  intro z proof_fact_30_1
+  have proof_fact_30_2 : z ∈ {z : ℤ | z < 0} := by
+    exact proof_fact_30_1
+  have proof_fact_30_3 : (z : ℤ) < 0 := by
+    simpa using proof_fact_30_2
+  have proof_fact_30_4 := ne_of_lt proof_fact_30_3
+  change (z : ℂ) ≠ 0
+  exact_mod_cast proof_fact_30_4
+
+-- Litex fact f300
+theorem fact300 : 1 ∈ {n : ℕ | 0 < n} := by
   norm_num
 
--- Litex fact f234
-theorem fact234 : 0 ∉ {r : ℝ | r < 0} := by
+-- Litex fact f301
+theorem fact301 : (0 : ℕ) < 1 := by
   norm_num
 
--- Litex fact f235
-theorem fact235 : 0 ∉ {z : ℤ | z ≠ 0} := by
+-- Litex fact f302
+theorem fact302 : 1 ∈ {q : ℚ | 0 < q} := by
   norm_num
 
--- Litex fact f236
-theorem fact236 : 0 ∉ {q : ℚ | q ≠ 0} := by
+-- Litex fact f303
+theorem fact303 : 2 ∈ {r : ℝ | 0 < r} := by
   norm_num
 
--- Litex fact f237
-theorem fact237 : 0 ∉ {r : ℝ | r ≠ 0} := by
+-- Litex fact f304
+theorem fact304 : (0 : ℝ) < 2 := by
+  have proof_fact_31_1 : 2 ∈ {r : ℝ | 0 < r} := fact303
+  simpa using proof_fact_31_1
+
+-- Litex fact f305
+theorem fact305 : (0 - 1) ∈ {z : ℤ | z < 0} := by
   norm_num
 
--- Litex fact f238
-theorem fact238 : 0 ∉ {c : ℂ | c ≠ 0} := by
+-- Litex fact f306
+theorem fact306 : (0 - 1 : ℤ) < 0 := by
+  norm_num
+
+-- Litex fact f308
+theorem fact308 : (0 - 1) ∈ {q : ℚ | q < 0} := by
+  norm_num
+
+-- Litex fact f309
+theorem fact309 : (0 - 1) ∈ {r : ℝ | r < 0} := by
+  norm_num
+
+-- Litex fact f310
+theorem fact310 : 1 ∈ {z : ℤ | z ≠ 0} := by
+  norm_num
+
+-- Litex fact f311
+theorem fact311 : (1 : ℤ) ≠ 0 := by
+  norm_num
+
+-- Litex fact f312
+theorem fact312 : 1 ∈ {q : ℚ | q ≠ 0} := by
+  norm_num
+
+-- Litex fact f313
+theorem fact313 : 1 ∈ {r : ℝ | r ≠ 0} := by
+  norm_num
+
+-- Litex fact f314
+theorem fact314 : 1 ∈ {c : ℂ | c ≠ 0} := by
+  norm_num
+
+-- Litex fact f315
+theorem fact315 : 0 ∉ {n : ℕ | 0 < n} := by
+  norm_num
+
+-- Litex fact f316
+theorem fact316 : 0 ∉ {q : ℚ | 0 < q} := by
+  norm_num
+
+-- Litex fact f317
+theorem fact317 : 0 ∉ {r : ℝ | 0 < r} := by
+  norm_num
+
+-- Litex fact f318
+theorem fact318 : 0 ∉ {z : ℤ | z < 0} := by
+  norm_num
+
+-- Litex fact f319
+theorem fact319 : 0 ∉ {q : ℚ | q < 0} := by
+  norm_num
+
+-- Litex fact f320
+theorem fact320 : 0 ∉ {r : ℝ | r < 0} := by
+  norm_num
+
+-- Litex fact f321
+theorem fact321 : 0 ∉ {z : ℤ | z ≠ 0} := by
+  norm_num
+
+-- Litex fact f322
+theorem fact322 : 0 ∉ {q : ℚ | q ≠ 0} := by
+  norm_num
+
+-- Litex fact f323
+theorem fact323 : 0 ∉ {r : ℝ | r ≠ 0} := by
+  norm_num
+
+-- Litex fact f324
+theorem fact324 : 0 ∉ {c : ℂ | c ≠ 0} := by
   norm_num
 
 end
@@ -2944,8 +2965,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -3064,8 +3083,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -3141,8 +3158,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -3253,6 +3268,63 @@ theorem fact55 : demo_chosen_right = 2 := by
 end
 ```
 
+## obtain_from_existential_prop_definition
+
+```litex
+# A concrete prop with one existential clause can be eliminated directly.
+prop has_copy(a R):
+    exist x R st {x = a}
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+```
+
+```lean
+import Mathlib
+
+noncomputable section
+
+universe LitexUniverse
+
+class LitexObject (α : Type LitexUniverse) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type LitexUniverse} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
+
+def has_copy (a : ℝ) : Prop := ∃ x : ℝ, x ∈ (Set.univ : Set ℝ) ∧ x = a
+
+-- Litex fact f5
+theorem fact5 : has_copy 2 := by
+  simp [has_copy]
+
+-- Litex checked existential source for `copy`
+theorem litex_exist_source_3 : ∃ x : ℝ, x ∈ (Set.univ : Set ℝ) ∧ x = 2 := by
+  have proof_fact_1_1 : has_copy 2 := fact5
+  simpa only [has_copy] using proof_fact_1_1
+
+noncomputable def copy : ℝ := Exists.choose (litex_exist_source_3)
+
+-- Litex fact f10
+theorem fact10 : copy ∈ (Set.univ : Set ℝ) := by
+  exact (Exists.choose_spec (litex_exist_source_3)).1
+
+-- Litex fact f11
+theorem fact11 : copy = 2 := by
+  exact (Exists.choose_spec (litex_exist_source_3)).2
+
+end
+```
+
 ## proof_scopes
 
 ```litex
@@ -3279,8 +3351,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
@@ -3391,8 +3461,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -3479,8 +3547,6 @@ import Mathlib
 noncomputable section
 
 universe LitexUniverse
-
-abbrev LitexFact := Prop
 
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True

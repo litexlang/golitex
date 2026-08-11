@@ -18,7 +18,7 @@ impl Runtime {
             || matches!(
                 (&carrier, &in_fact.set),
                 (Obj::StandardSet(source), Obj::StandardSet(target))
-                    if Self::standard_set_is_subset_eq(source, target)
+                    if source.is_subset_eq(target)
             );
         if !carrier_is_contained {
             return None;
@@ -63,7 +63,7 @@ impl Runtime {
             let Obj::StandardSet(source_carrier) = &source_set else {
                 continue;
             };
-            if !Self::standard_set_is_subset_eq(source_carrier, &StandardSet::Z) {
+            if !source_carrier.is_subset_eq(&StandardSet::Z) {
                 continue;
             }
             let source_membership: AtomicFact = InFact::new(
@@ -104,7 +104,7 @@ impl Runtime {
         let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
             return Ok(StmtUnknown::new().into());
         };
-        if !Self::standard_set_is_subset_eq(&ret_set, &target_set) {
+        if !ret_set.is_subset_eq(&target_set) {
             return Ok(StmtUnknown::new().into());
         }
         let reason = format!("{op}: iterand return set {ret_set} is contained in {target_set}");
@@ -167,7 +167,7 @@ impl Runtime {
                 "finite_set_sum: positive summand over a nonempty finite set",
             ));
         }
-        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+        if !ret_standard_set.is_subset_eq(&target_set) {
             return Ok((StmtUnknown::new()).into());
         }
         let reason = format!(
@@ -204,7 +204,7 @@ impl Runtime {
                 "finite_set_product: positive factors give a positive finite product",
             ));
         }
-        if !Self::standard_set_is_subset_eq(&ret_standard_set, &target_set) {
+        if !ret_standard_set.is_subset_eq(&target_set) {
             return Ok((StmtUnknown::new()).into());
         }
         let reason = format!(
@@ -290,7 +290,7 @@ impl Runtime {
             };
         let ret_is_standard_subset = match (&typed_ret, target) {
             (Obj::StandardSet(ret_set), Obj::StandardSet(target_set)) => {
-                Self::standard_set_is_subset_eq(ret_set, target_set)
+                ret_set.is_subset_eq(target_set)
             }
             _ => false,
         };
@@ -1371,7 +1371,7 @@ impl Runtime {
                 let Obj::StandardSet(source_standard_set) = &source_set else {
                     continue;
                 };
-                if !Self::standard_set_is_subset_eq(source_standard_set, &StandardSet::Z) {
+                if !source_standard_set.is_subset_eq(&StandardSet::Z) {
                     continue;
                 }
                 let source_membership: AtomicFact =
@@ -1451,7 +1451,7 @@ impl Runtime {
                 if let (Obj::StandardSet(source), AtomicFact::SubsetFact(subset_fact)) =
                     (&source_set, &subset)
                 {
-                    if Self::standard_set_is_subset_eq(source, &carrier) {
+                    if source.is_subset_eq(&carrier) {
                         let subset_result =
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                                 subset_fact.clone().into(),
@@ -1484,7 +1484,7 @@ impl Runtime {
             let Some(Obj::StandardSet(ret_set)) = self.iterated_op_func_ret_set(func) else {
                 return Ok(None);
             };
-            return if Self::standard_set_is_subset_eq(&ret_set, &StandardSet::R) {
+            return if ret_set.is_subset_eq(&StandardSet::R) {
                 Ok(Some(Vec::new()))
             } else {
                 Ok(None)

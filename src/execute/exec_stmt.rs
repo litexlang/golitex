@@ -3,6 +3,9 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         self.clear_statement_verified_atomic_facts();
+        if self.captures_to_lean_well_definedness() {
+            self.begin_statement_well_definedness_capture();
+        }
         let trusted = self.current_execution_is_trusted_file();
         let result = if trusted {
             self.exec_stmt_affect_environment_only(stmt)
@@ -21,6 +24,12 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(mut result) => {
+                let well_definedness = if self.captures_to_lean_well_definedness() {
+                    self.end_statement_well_definedness_capture()
+                } else {
+                    WellDefinednessCertificate::default()
+                };
+                result = result.with_well_definedness_certificate(well_definedness);
                 self.attach_known_fact_ids_to_stmt_result(&mut result)?;
                 let in_trusted_prefix_run = self.current_statement_is_in_trusted_prefix_run();
                 let trace = if in_trusted_prefix_run && !result.is_unknown() {
@@ -43,6 +52,9 @@ impl Runtime {
                 }
             }
             Err(error) => {
+                if self.captures_to_lean_well_definedness() {
+                    let _ = self.end_statement_well_definedness_capture();
+                }
                 let phase = execution_phase_for_error(&error);
                 let message = error.trace_message();
                 Err(error.with_execution_trace(StatementExecutionTrace::failed(phase, message)))

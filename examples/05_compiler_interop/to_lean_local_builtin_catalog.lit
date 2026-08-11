@@ -50,13 +50,6 @@
 # such as `a < b`, `b < c` => `a < c`, remains outside this range-restricted
 # catalog.
 #
-# Batch tracer: refined standard-set membership projects to its native base
-# carrier. Before, `a $in R+` implied `a $in R` through a diagnostic-only
-# standard-subset branch. Now `carrier.r_pos_in_r` records that exact source
-# requirement and links a checked `ℝ`/`Set.univ` adapter. Nine same-carrier
-# N/Z/Q/R/C refinements follow the same route; cross-carrier inclusions remain
-# outside this batch.
-#
 # The first three facts freeze the common ABI at zero, one, and two semantic
 # premises. The remaining facts exercise mechanical batches: real
 # absolute-value laws plus native union, intersection, set difference, and
@@ -447,33 +440,3 @@ forall a, b R:
     0 <= b
     =>:
         a <= a + b
-
-forall x N+:
-    x $in N
-
-forall x Z-:
-    x $in Z
-
-forall x Z*:
-    x $in Z
-
-forall x Q+:
-    x $in Q
-
-forall x Q-:
-    x $in Q
-
-forall x Q*:
-    x $in Q
-
-forall x R+:
-    x $in R
-
-forall x R-:
-    x $in R
-
-forall x R*:
-    x $in R
-
-forall x C*:
-    x $in C

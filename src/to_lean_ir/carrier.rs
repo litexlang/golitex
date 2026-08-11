@@ -1,6 +1,6 @@
 use crate::symbol::SymbolId;
 
-use super::{ObjToLeanIR, StandardSetToLeanIR};
+use super::{FunctionTypeToLeanIR, ObjToLeanIR, StandardSetToLeanIR};
 
 /// A checked target carrier constraint attached to a binder or fact boundary.
 ///
@@ -21,6 +21,9 @@ pub enum LeanCarrierToLeanIR {
     Set {
         element_carrier: Box<LeanCarrierToLeanIR>,
     },
+    Function {
+        function: Box<FunctionTypeToLeanIR>,
+    },
     ElementOfSet {
         set: Box<ObjToLeanIR>,
     },
@@ -30,6 +33,9 @@ impl LeanCarrierToLeanIR {
     pub fn for_membership_set(set: &ObjToLeanIR) -> Self {
         match set {
             ObjToLeanIR::StandardSet(standard) => standard.element_carrier(),
+            ObjToLeanIR::FunctionSet { function } => LeanCarrierToLeanIR::Function {
+                function: function.clone(),
+            },
             _ => LeanCarrierToLeanIR::ElementOfSet {
                 set: Box::new(set.clone()),
             },

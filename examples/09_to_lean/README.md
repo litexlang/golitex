@@ -51,10 +51,11 @@ that marker to hide a strict compiler regression.
 | `recursive_arithmetic` | A recursively structured positive-addition proof tree |
 | `native_sets` | Polymorphic `Set α`, union, intersection, and set difference |
 | `native_set_builtins` | Checked paired adapters for set equalities, membership, predicates, absolute value, and min/max |
-| `standard_numeric_subsets` | Native predicates plus checked same-carrier projections for positive, negative, and nonzero numeric subsets |
+| `standard_numeric_subsets` | Native predicates plus one checked membership projection across the standard numeric-set hierarchy |
 | `builtin_predicates` | Native prime, superset, proper-relation, and negated-comparison propositions with two checked MVP proof routes |
 | `choice` | Checked choice from a nonempty native carrier, globally and locally |
 | `existentials` | Existential introduction, extraction, projections, and multiple witnesses |
+| `obtain_from_existential_prop_definition` | Checked unfolding of one verified concrete prop into the exact existential eliminated by `obtain` |
 | `proof_scopes` | Object definitions, `by cases`, and `by contra` proof scopes |
 | `carrier_boundaries` | Partial report for carrier facts without complete strict backends |
 | `partial_boundary` | Partial report around one unsupported trigonometric proof |

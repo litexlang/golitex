@@ -1,0 +1,19 @@
+# Regression: a function-typed field remains callable after explicit struct selection.
+# Focused release check:
+# target/release/litex -compact -isolated -f examples/03_language_features/callable_struct_field_projection.lit
+
+struct CallableBox:
+    entries fn(k N+) N
+    tag N
+
+have fn identity_entry(k N+) N = k
+have fn boxed(f fn(k N+) N) &CallableBox = (f, 0)
+
+# Formerly rejected code, preserved line-for-line:
+# have fn projected_entry(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.entries(idx)
+have fn projected_entry(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.entries(idx)
+
+projected_entry(identity_entry, 1) $in N
+
+# Remaining boundary: a scalar field is not callable.
+# have fn invalid_scalar_call(f fn(k N+) N, idx N+) N = &CallableBox{boxed(f)}.tag(idx)

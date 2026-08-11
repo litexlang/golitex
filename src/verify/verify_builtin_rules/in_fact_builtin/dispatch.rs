@@ -155,6 +155,15 @@ impl Runtime {
                 }
             }
         }
+        // One ordinary membership rule covers both same-carrier refinement
+        // erasure (`R+ -> R`) and cross-carrier widening
+        // (`N -> Z -> Q -> R -> C`). It runs before target-specific
+        // construction rules but after closed-number reflection.
+        let standard_projection =
+            self.verify_in_fact_by_known_standard_subset_membership(in_fact)?;
+        if standard_projection.is_true() {
+            return Ok(standard_projection);
+        }
         let direct_superset_result = self.verify_in_fact_by_known_direct_superset(in_fact)?;
         if direct_superset_result.is_true() {
             return Ok(direct_superset_result);
@@ -928,7 +937,7 @@ impl Runtime {
                 if list_set_carrier_result.is_true() {
                     return Ok(list_set_carrier_result);
                 }
-                self.verify_in_fact_by_known_standard_subset_membership(in_fact)
+                Ok((StmtUnknown::new()).into())
             }
         }
     }

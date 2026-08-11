@@ -34,11 +34,16 @@ impl Runtime {
         }
 
         let key = fact.to_string();
-        if self.iter_environments_from_top().any(|environment| {
-            environment
-                .statement_verified_atomic_facts
-                .contains_key(&key)
-        }) {
+        let existing_source = {
+            self.iter_environments_from_top().find_map(|environment| {
+                environment
+                    .statement_verified_atomic_facts
+                    .get(&key)
+                    .cloned()
+            })
+        };
+        if let Some(source) = existing_source {
+            self.record_well_definedness_proof_if_active(source);
             return result;
         }
 
@@ -50,8 +55,31 @@ impl Runtime {
         self.top_level_env()
             .statement_verified_atomic_facts
             .insert(key, source.clone());
+        self.record_well_definedness_proof_if_active(source.clone());
 
         FactualStmtSuccess::new_with_statement_memo(fact.clone().into(), infers, source).into()
+    }
+
+    fn record_well_definedness_proof_if_active(&mut self, proof: Rc<FactualStmtSuccess>) {
+        if self.well_definedness_capture_depth == 0 || !self.captures_to_lean_well_definedness() {
+            return;
+        }
+        let Some(certificate) = self.well_definedness_capture_stack.last_mut() else {
+            return;
+        };
+        if certificate
+            .facts
+            .iter()
+            .any(|evidence| Rc::ptr_eq(&evidence.proof, &proof))
+        {
+            return;
+        }
+        let certificate_id = WellDefinednessCertificateId::new(certificate.facts.len() as u64 + 1);
+        certificate.facts.push(WellDefinednessFactEvidence {
+            certificate_id,
+            role: WellDefinednessRequirementRole::SourceObjectRequirement,
+            proof,
+        });
     }
 
     /// End the statement-local lifetime on every active scope of the current execution frame.
@@ -247,6 +275,54 @@ mod tests {
         let output = display_stmt_exec_result_json(&runtime, &result, false);
         assert!(output.contains("number comparison"), "{output}");
         assert!(!output.contains("statement memo"), "{output}");
+    }
+
+    #[test]
+    fn to_lean_capture_retains_function_domain_well_definedness_proof() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
+
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("restricted-domain application should verify in Litex");
+        let certificate = &result
+            .factual_success()
+            .expect("forall should return a factual success")
+            .well_definedness;
+
+        assert!(
+            certificate
+                .facts
+                .iter()
+                .any(|evidence| evidence.proof.stmt.to_string() == "2 > 0"),
+            "captured facts: {:?}",
+            certificate
+                .facts
+                .iter()
+                .map(|evidence| evidence.proof.stmt.to_string())
+                .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn to_lean_capture_does_not_accept_a_boolean_obj_cache_without_proof_evidence() {
+        let mut runtime = new_test_runtime();
+        let warmup = parse_stmt(&mut runtime, "2 > 0");
+        runtime
+            .exec_stmt(&warmup)
+            .expect("warmup fact should populate ordinary verifier caches");
+
+        runtime.replace_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(&mut runtime, "forall f fn(x R: x > 0) R:\n    f(2) = f(2)");
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("cached restricted-domain application should still verify");
+        let certificate = &result.factual_success().unwrap().well_definedness;
+        assert!(certificate
+            .facts
+            .iter()
+            .any(|evidence| evidence.proof.stmt.to_string() == "2 > 0"));
     }
 
     fn new_test_runtime() -> Runtime {

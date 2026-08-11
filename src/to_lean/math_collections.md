@@ -49,6 +49,7 @@ The current mapping is:
 | `have x S` | symbol identity, checked nonemptiness producer, exact stored membership `FactId` | top-level `noncomputable def`, or local `let`, via `Exists.choose`; membership via `choose_spec` |
 | `witness exist ... from ...` | concrete witnesses, pre-binder type proofs, scoped proof steps, checked direct body facts | nested `Exists` introduction from the retained proof nodes |
 | `obtain ... from exist ...` / `have x T: ...` | alpha-checked source existential, fresh symbol identities, instantiated type/body facts and `FactId`s | ordered nested `Exists.choose`; exact `choose_spec` projections |
+| `obtain ... from $P(args)` | verified positive prop premise, retained one-clause concrete definition, re-instantiated exact existential target, then the ordinary elimination package | `simpa only [P] using source`; ordered `Exists.choose`; exact `choose_spec` projections |
 | `by cases` | coverage proof, ordered local premise IDs, nested steps, conclusion/contradiction exits | coverage `have`; `rcases`; scoped branches |
 | `by contra` | target, logical reverse premise ID, nested steps, final fact/negation pair | scoped `Classical.byContradiction` |
 
@@ -142,6 +143,16 @@ corresponding `Exists.choose_spec` path. The emitter checks source, role order,
 selected symbol, instantiated type family, expected proposition, and distinct
 `FactId`s before emitting any part of the statement.
 
+A named concrete prop source reaches that same package through one additional
+certificate. `DefinitionProjectionBuiltinRuleEvidence` retains the exact prop
+call and definition beside its single recursively checked source result.
+Runtime lowering re-instantiates the sole positive existential clause and
+compares its alpha-normalized body with the enclosing target. It then emits a
+`DefinitionProjection { definition, expected_source, expected_target }` rule.
+The pure backend requires exactly one matching source premise and emits
+`simpa only [definition] using premise`; the Lean kernel checks that unfolding
+really proves the existential before any witness is selected.
+
 Quantifier rendering retains one further identity guard. Binder declarations
 and every object occurrence are compared by `SymbolId` and by their sanitized
 Lean spellings. A binder occurrence with a mismatched spelling, or two
@@ -159,11 +170,12 @@ emit an unconstrained `opaque`, or introduce a silent axiom. Positive
 separate package above. `exist!`, `not exist`, preimage selection, and
 uniqueness-based function construction still need distinct evidence contracts.
 
-Function definitions do not yet have a frozen native target contract.
+Bound function spaces and applications use the native function ABI specified
+below. Function *definitions* remain the next separate statement-effect slice:
 `have fn ... = ...`, case-by-case definitions, recursive definitions, and
-unique-existence definitions need a typed function-object declaration plus
-application/evaluation laws. Until that interface is modeled, the compiler
-fails closed rather than restoring the retired universal value wrapper.
+unique-existence definitions still need a retained body plus checked
+application/evaluation laws. Until that evidence is modeled, those statements
+fail closed rather than restoring the retired universal value wrapper.
 
 Case analysis has the following proof contract:
 
@@ -269,10 +281,9 @@ resolution, computation, definition unfolding, or another builtin. Runtime
 lowering parses the registered source through Litex's normal parser and
 revalidates the target, complete-subtree bindings, instantiated parameter
 requirements, and ordered premises. The Lean linker then requires the same
-RuleId/fingerprint pair and emits each adapter once. The current 96 RuleIds
+RuleId/fingerprint pair and emits each adapter once. The current 86 RuleIds
 cover zero-, one-, and two-premise absolute-value, quotient/product-nonzero,
-native min/max, elementary real arithmetic/order, same-carrier refined-domain
-membership projections, and native set rules,
+native min/max, elementary real arithmetic/order, and native set rules,
 including subset, powerset,
 nonempty-set, and finite-set facts, without per-rule Rust evidence or IR
 variants.
@@ -708,6 +719,66 @@ rewrite of a negated conjunction. This tranche renders all four proper
 relations; the explicit `by def` proof statement that constructs one remains a
 separate statement/proof-ABI boundary.
 
+### Native function sets, exact layers, and well-definedness proofs
+
+A Litex function set remains a set object. The target preserves that fact as
+`Set.univ` over a native, possibly dependent Lean function type:
+
+```text
+fn(x R) R
+  -> (Set.univ : Set ((x : ℝ) → ℝ))
+
+fn(x R: x > 0) R
+  -> (Set.univ : Set ((x : ℝ) → x > 0 → ℝ))
+```
+
+Consequently `f $in fn(x R) R` keeps an ordinary membership proposition; it is
+not erased into target typing metadata. One source function symbol receives
+one such carrier in its lexical scope. The compiler does not reinterpret that
+symbol at another function signature merely because a later occurrence could
+elaborate at a different Lean type.
+
+Arguments and proof arguments follow the source application layers exactly.
+For one flat layer, all declared value arguments come first, followed by all
+domain proofs in source order:
+
+```text
+f $in fn(x, y, z R: x < y, y < z) C
+f(a, b, c)
+  -> f a b c wd₁ wd₂
+```
+
+Lean's curried surface does not widen Litex syntax. The frontend continues to
+accept only a nonempty ordered prefix that is legal under Litex's own layer
+rules; in particular a source declaration with one three-argument layer does
+not make `f(1)(2, 3)` legal. A genuinely nested return function preserves its
+layer boundary:
+
+```text
+f $in fn(x R: x > 0) fn(y R) R
+f(2)(3)
+  -> f 2 wd₁ 3
+```
+
+Every proof comes from the successful Litex well-definedness pass. The
+verifier freezes a statement-local certificate before its temporary scopes and
+memoized proof trees disappear. Runtime-to-IR validates and converts that
+certificate; it never repeats proof search. Requirements consumed by a native
+function type become application proof arguments. Requirements which Lean's
+total operation does not consume—for example the source proof that the
+denominator of `1 / 2` is nonzero—are still materialized and kernel-checked as
+source-only audit facts.
+
+The certificate is occurrence- and scope-aware. A boolean object-cache hit
+without compatible statement-local evidence cannot certify compiler output; a
+failed overload candidate cannot leak its trial proofs; and missing, reordered,
+out-of-scope, or proposition-mismatched evidence makes the statement
+unsupported. A real Lean probe also fixes one important surface constraint:
+an unnamed implication premise is not available while Lean elaborates a proof
+argument in its consequent type. Any consumed WD premise therefore receives a
+deterministic binder/helper name, or is rendered as its exact inline proof
+term. The emitter must not recover it with `by assumption`.
+
 ### Numerals obtain constraints from facts, not annotations
 
 A `Number` node lowers to its normalized spelling and nothing else. For
@@ -761,6 +832,16 @@ coercion in the elaborated term. The compiler may emit such a contextual
 expectation only for a supported, directed coercion in the standard numeric
 tower. Downcasts, ambiguous joins, and incompatible already-fixed carriers are
 explicit unsupported boundaries.
+
+Membership projection through the standard numeric-set hierarchy is a
+separate structured builtin, not ten local schemas and not persistent symbol
+typing. Its certificate has exactly one child, the checked source membership.
+The emitter verifies that source and target contain the same Litex object and
+that the directed relation is present in `StandardSet::is_subset_eq`, then
+places a native coercion only at the target occurrence. This covers both
+same-carrier refinement erasure and supported widening through
+`N -> Z -> Q -> R -> C`. It intentionally does not assign a Lean meaning to a
+direct heterogeneous proposition such as `N $subset Z`.
 
 In particular, `trust x $in R` can constrain a fresh source object whose
 carrier has not otherwise been fixed, because the proposition must elaborate.

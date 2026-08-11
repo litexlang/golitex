@@ -181,11 +181,14 @@ impl Runtime {
             }
 
             let projection_result =
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     exist_fact_in_have_obj_stmt.clone().into(),
                     format!(
                         "existential projection from prop definition `{}`",
                         source.definition.name
+                    ),
+                    BuiltinRuleEvidence::DefinitionProjection(
+                        DefinitionProjectionBuiltinRuleEvidence::new(source.clone()),
                     ),
                     vec![source_result],
                 );
@@ -220,66 +223,8 @@ impl Runtime {
             return Ok(stmt.exist_fact_in_have_obj_st.clone());
         };
 
-        let predicate_name = source.fact.predicate.to_string();
-        let local_predicate_name = predicate_name
-            .rsplit_once(MOD_SIGN)
-            .map(|(_, local_name)| local_name)
-            .unwrap_or(predicate_name.as_str());
-        if local_predicate_name != source.definition.name {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "obtain: source prop `{}` does not match retained definition `{}`",
-                    predicate_name, source.definition.name
-                ),
-                None,
-                vec![],
-            ));
-        }
-        if source.definition.iff_facts.len() != 1 {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "obtain: prop `{}` must have exactly one definition clause",
-                    predicate_name
-                ),
-                None,
-                vec![],
-            ));
-        }
-        let Fact::ExistFact(definition_exist_fact) = &source.definition.iff_facts[0] else {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "obtain: the sole definition clause of `{}` must be `exist` or `exist!`",
-                    predicate_name
-                ),
-                None,
-                vec![],
-            ));
-        };
-        if definition_exist_fact.is_not_exist() {
-            return Err(short_exec_error(
-                stmt.clone().into(),
-                format!(
-                    "obtain: the definition clause of `{}` is `not exist`",
-                    predicate_name
-                ),
-                None,
-                vec![],
-            ));
-        }
-
-        let param_to_arg_map = self
-            .params_to_arg_map(&source.definition.params_def_with_type, &source.fact.body)
-            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause))?;
-        self.inst_exist_fact(
-            definition_exist_fact,
-            &param_to_arg_map,
-            ParamObjType::DefHeader,
-            Some(&stmt.line_file),
-        )
-        .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause))
+        self.instantiate_existential_prop_definition(source, &stmt.line_file)
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone().into(), cause))
     }
 
     fn exec_have_exist_obj_stmt_affect_environment(

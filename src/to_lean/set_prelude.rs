@@ -6,8 +6,6 @@
 /// not define a universal value wrapper or private arithmetic/equality laws.
 pub(super) const LITEX_OBJECT_PRELUDE: &str = r#"universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 

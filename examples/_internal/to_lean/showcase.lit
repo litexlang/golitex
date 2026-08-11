@@ -91,8 +91,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -107,7 +105,7 @@ def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := Tru
 def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
 
-opaque p {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
+opaque p {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → Prop
 
 -- Litex trust boundary: f4
 axiom fact4 : ∀ a ∈ (Set.univ : Set ℝ), ∀ b ∈ (Set.univ : Set ℝ), p a b
@@ -127,7 +125,7 @@ theorem fact5 : p (1 : ℝ) (2 : ℝ) := by
   have proof_fact_1_5 : p (1 : ℝ) (2 : ℝ) := fact4 proof_arg_1_1 proof_arg_1_3 proof_fact_1_2 proof_fact_1_4
   exact proof_fact_1_5
 
-opaque transported {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque transported {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 -- Litex fact f21
 theorem fact21 : ∀ {α4 : Type LitexUniverse} [LitexObject α4], ∀ (a : Set α4), ∀ (b : Set α4), transported a → a = b → transported b := by
@@ -138,7 +136,7 @@ theorem fact21 : ∀ {α4 : Type LitexUniverse} [LitexObject α4], ∀ (a : Set 
     simpa only [proof_fact_2_4] using proof_fact_2_3
   exact proof_fact_2_5
 
-opaque related {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
+opaque related {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → Prop
 
 -- Litex fact f37
 theorem fact37 : ∀ {α7 : Type LitexUniverse} [LitexObject α7], ∀ (a : Set α7), ∀ (b : Set α7), related a b → a = b → related b a := by
@@ -159,13 +157,13 @@ theorem fact59 : ∀ {α9 : Type LitexUniverse} [LitexObject α9], ∀ (a : Set 
     simpa only [proof_fact_4_5, ← proof_fact_4_6] using proof_fact_4_4
   exact proof_fact_4_7
 
-def is_one (x : ℝ) : LitexFact := x = 1
+def is_one (x : ℝ) : Prop := x = 1
 
 -- Litex fact f62
 theorem fact62 : is_one 1 := by
   simp [is_one]
 
-opaque marked {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque marked {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 -- Litex trust boundary: f68
 axiom fact68 : ∀ x ∈ (Set.univ : Set ℝ), x ≠ 0 → marked x
@@ -198,7 +196,7 @@ theorem fact105 : (((1 / 2) / 3) / 4 : ℚ) = (1 / 24) := by
   -- native proof view, right fraction: (1 : ℝ) / (24 : ℝ)
   norm_num
 
-opaque marked2 {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → LitexFact
+opaque marked2 {α : Type LitexUniverse} [LitexObject α] {α1 : Type LitexUniverse} [LitexObject α1] : α → α1 → Prop
 
 -- Litex trust boundary: f108
 axiom fact108 : ∀ x ∈ (Set.univ : Set ℝ), marked2 x (x + 1)

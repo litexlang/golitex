@@ -1521,10 +1521,7 @@ impl Runtime {
                 })?;
             (
                 instantiated_exist_fact,
-                Some(ExistentialPropSource {
-                    fact: source_prop,
-                    definition,
-                }),
+                Some(ExistentialPropSource::new(source_prop, definition)),
             )
         };
         if !tb.exceed_end_of_head() {

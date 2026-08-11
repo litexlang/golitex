@@ -69,17 +69,17 @@ pub const SET: &str = "set";
 pub const NONEMPTY_SET: &str = "nonempty_set";
 pub const FINITE_SET: &str = "finite_set";
 /// Mathematical spellings for signed and nonzero standard sets.
-pub const COMPACT_N_POS: &str = "N+";
-pub const COMPACT_Z_POS: &str = "Z+";
-pub const COMPACT_Q_POS: &str = "Q+";
-pub const COMPACT_R_POS: &str = "R+";
-pub const COMPACT_Z_NEG: &str = "Z-";
-pub const COMPACT_Q_NEG: &str = "Q-";
-pub const COMPACT_R_NEG: &str = "R-";
-pub const COMPACT_Z_STAR: &str = "Z*";
-pub const COMPACT_Q_STAR: &str = "Q*";
-pub const COMPACT_R_STAR: &str = "R*";
-pub const COMPACT_C_STAR: &str = "C*";
+pub const N_POSITIVE: &str = "N+";
+pub const Z_POSITIVE: &str = "Z+";
+pub const Q_POSITIVE: &str = "Q+";
+pub const R_POSITIVE: &str = "R+";
+pub const Z_NEGATIVE: &str = "Z-";
+pub const Q_NEGATIVE: &str = "Q-";
+pub const R_NEGATIVE: &str = "R-";
+pub const Z_NOT_ZERO: &str = "Z*";
+pub const Q_NOT_ZERO: &str = "Q*";
+pub const R_NOT_ZERO: &str = "R*";
+pub const C_NOT_ZERO: &str = "C*";
 pub const N: &str = "N";
 pub const Q: &str = "Q";
 pub const Z: &str = "Z";
@@ -213,17 +213,17 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         FACT_PREFIX,
         DOT_AKA_FIELD_ACCESS_SIGN,
         MOD_SIGN,
-        COMPACT_N_POS,
-        COMPACT_Z_POS,
-        COMPACT_Q_POS,
-        COMPACT_R_POS,
-        COMPACT_Z_NEG,
-        COMPACT_Q_NEG,
-        COMPACT_R_NEG,
-        COMPACT_Z_STAR,
-        COMPACT_Q_STAR,
-        COMPACT_R_STAR,
-        COMPACT_C_STAR,
+        N_POSITIVE,
+        Z_POSITIVE,
+        Q_POSITIVE,
+        R_POSITIVE,
+        Z_NEGATIVE,
+        Q_NEGATIVE,
+        R_NEGATIVE,
+        Z_NOT_ZERO,
+        Q_NOT_ZERO,
+        R_NOT_ZERO,
+        C_NOT_ZERO,
         ADD,
         SUB,
         MUL,
@@ -485,17 +485,17 @@ pub fn is_builtin_identifier_name(atom_name: &str) -> bool {
         || atom_name == MATRIX_MUL
         || atom_name == MATRIX_SCALAR_MUL
         || atom_name == MATRIX_POW
-        || atom_name == COMPACT_N_POS
-        || atom_name == COMPACT_Z_POS
-        || atom_name == COMPACT_Q_POS
-        || atom_name == COMPACT_R_POS
-        || atom_name == COMPACT_Z_NEG
-        || atom_name == COMPACT_Q_NEG
-        || atom_name == COMPACT_R_NEG
-        || atom_name == COMPACT_Z_STAR
-        || atom_name == COMPACT_Q_STAR
-        || atom_name == COMPACT_R_STAR
-        || atom_name == COMPACT_C_STAR
+        || atom_name == N_POSITIVE
+        || atom_name == Z_POSITIVE
+        || atom_name == Q_POSITIVE
+        || atom_name == R_POSITIVE
+        || atom_name == Z_NEGATIVE
+        || atom_name == Q_NEGATIVE
+        || atom_name == R_NEGATIVE
+        || atom_name == Z_NOT_ZERO
+        || atom_name == Q_NOT_ZERO
+        || atom_name == R_NOT_ZERO
+        || atom_name == C_NOT_ZERO
         || atom_name == N
         || atom_name == Q
         || atom_name == Z

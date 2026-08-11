@@ -292,9 +292,6 @@ noncomputable section
 
 universe LitexUniverse
 
--- Every generated proposition has this codomain.
-abbrev LitexFact := Prop
-
 -- 此处省略共享的 LitexObject 声明。
 
 -- Litex fact f19

@@ -83,7 +83,7 @@ impl Runtime {
             let Obj::StandardSet(known_standard_set) = &known_set else {
                 continue;
             };
-            if !Self::standard_set_is_subset_eq(known_standard_set, &standard_set) {
+            if !known_standard_set.is_subset_eq(&standard_set) {
                 continue;
             }
             let known_membership: AtomicFact =

@@ -848,9 +848,11 @@ item.point.x $in R
 Here `item.point.x` lowers to
 `&Coordinates{&TaggedPoint{item}.point}.x`. Parameterized and
 module-qualified struct field types work the same way. A final field may be
-called, as in `space.scalars.mul(a, b)`, but field access after a call, index,
-or parenthesized expression is not currently supported; select that next view
-explicitly with `&Struct{expr}.field`.
+called, as in `space.scalars.mul(a, b)` or
+`&CallableBox{make_box(f)}.entries(i)`. The selected field's declared carrier
+must be a function set. Field access after a call, index, or parenthesized
+expression is not currently supported; select that next view explicitly with
+`&Struct{expr}.field`.
 
 When `expr` is a materialized template-selected struct object, a callable
 field projects through the selected tuple value before application. Thus an
@@ -2314,9 +2316,11 @@ positive extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
 existential citations, introduces file-scope or proof-local witness names with
 ordered `Exists.choose`, and exports only the exact parameter and direct-body
 facts justified by `choose_spec`. Unique/non-existence and preimage forms still
-report an explicit compiler boundary. The `obtain ... from $prop(args)`
-shorthand also currently reports an explicit compiler boundary; use the
-expanded `exist` source when compiling this proof shape to Lean.
+report an explicit compiler boundary. For `obtain ... from $prop(args)`, the
+compiler retains the verified prop call as a premise, re-instantiates the sole
+existential definition clause, and emits a checked definition-unfolding proof
+before applying the same `Exists.choose` projections. This path does not add
+trust or require the user to spell out the expanded existential.
 If two distinct Litex identifiers would sanitize to the same Lean binder name,
 the compiler asks for a rename rather than emitting a captured quantifier.
 

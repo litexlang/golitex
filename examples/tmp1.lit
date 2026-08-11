@@ -12,8 +12,6 @@ noncomputable section
 
 universe LitexUniverse
 
-abbrev LitexFact := Prop
-
 class LitexObject (α : Type LitexUniverse) : Prop where
   valid : True
 
@@ -28,7 +26,7 @@ def litexIsSet {α : Type LitexUniverse} [LitexObject α] (_ : α) : Prop := Tru
 def litexIsNonemptySet {α : Type LitexUniverse} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type LitexUniverse} (set : Set α) : Prop := set.Finite
 
-opaque scratch {α : Type LitexUniverse} [LitexObject α] : α → LitexFact
+opaque scratch {α : Type LitexUniverse} [LitexObject α] : α → Prop
 
 end
 

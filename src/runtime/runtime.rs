@@ -38,6 +38,13 @@ pub struct Runtime {
     /// Only compiler entry points enable this. Ordinary verification never
     /// pays the cost of constructing To-Lean IR.
     pub(crate) to_lean_mode: bool,
+    /// Report compilation collects verifier evidence without eagerly building
+    /// IR inside `exec_stmt`.
+    pub(crate) to_lean_well_definedness_mode: bool,
+    /// Nonzero only while constructor-specific object WD checks are running.
+    pub(crate) well_definedness_capture_depth: usize,
+    /// One isolated collector per (possibly nested) executed statement.
+    pub(crate) well_definedness_capture_stack: Vec<WellDefinednessCertificate>,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub(crate) next_fact_id: u64,
@@ -85,6 +92,9 @@ impl Runtime {
             execution_stack: vec![],
             run_mode: RunMode::File,
             to_lean_mode: false,
+            to_lean_well_definedness_mode: false,
+            well_definedness_capture_depth: 0,
+            well_definedness_capture_stack: Vec::new(),
             next_fact_id: 1,
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
@@ -118,6 +128,25 @@ impl Runtime {
 
     pub fn replace_to_lean_mode(&mut self, enabled: bool) -> bool {
         std::mem::replace(&mut self.to_lean_mode, enabled)
+    }
+
+    pub(crate) fn replace_to_lean_well_definedness_mode(&mut self, enabled: bool) -> bool {
+        std::mem::replace(&mut self.to_lean_well_definedness_mode, enabled)
+    }
+
+    pub(crate) fn captures_to_lean_well_definedness(&self) -> bool {
+        self.to_lean_mode || self.to_lean_well_definedness_mode
+    }
+
+    pub(crate) fn begin_statement_well_definedness_capture(&mut self) {
+        self.well_definedness_capture_stack
+            .push(WellDefinednessCertificate::default());
+    }
+
+    pub(crate) fn end_statement_well_definedness_capture(&mut self) -> WellDefinednessCertificate {
+        self.well_definedness_capture_stack
+            .pop()
+            .unwrap_or_default()
     }
 
     pub(crate) fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {
