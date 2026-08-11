@@ -262,7 +262,7 @@ Litex 目前把数百条这类小而具体的数学模式放在内置验证规�
 
 除此之外，Litex 会把已经验证的事实放进当前上下文，并尝试匹配和替换。已知的 `forall` 事实在参数条件满足时可以被实例化；已知等式也可以帮助较大的表达式匹配。这不是“猜测证明”：每次成功仍要经过规则和上下文检查。对于真正大型、昂贵或需要读者明确看见依赖的结果，Litex 仍保留具名 theorem 和显式 `by thm` 调用。
 
-从编译视角看，每次成功验证都会形成一条带有递归结构、可以被完整记录的证明路径；To-Lean 编译器的目标，是把这条路径翻译成 Lean proof term，再交给 Lean kernel 独立检查。
+从编译视角看，每次成功验证都会形成一条带有递归结构、可以被完整记录的证明路径；Litex-to-Lean 编译器的目标，是把这条路径翻译成 Lean proof term，再交给 Lean kernel 独立检查。
 
 <details>
 <summary><strong>延伸阅读：Litex 到 Lean 的编译器如何工作</strong></summary>
@@ -271,7 +271,7 @@ Litex 目前把数百条这类小而具体的数学模式放在内置验证规�
 
 下文会用到三个编译器内部术语：`proof IR` 是记录证明树的中间表示，`FactId` 是已存事实的内部编号，`normalization`（规范化）是把某些书写不同但可判定相等的表达式整理为可比较形式。它们都不是 Litex 用户写证明时必须使用的语法。
 
-从编译视角看，一条 Litex 事实的成功验证，本质上是一棵可以递归展开的证明树：引用已有事实、引入 `forall` 参数与前提、等式替换、定义展开、计算和 builtin rule 都是树上具体的验证步骤，一个步骤也可能继续分成多个分支。To-Lean 编译器的目标不是在验证结束后重新阅读源码并“猜”一组 tactic，而是记录 checker 已经找到的验证路径，再把其中每个受支持的节点降为 Lean proof term——必要时表现为若干条 tactic——交给 Lean kernel 独立检查。例如，下面这条 Litex 全称事实说：如果 `a != c` 且 `a = b`，那么 `b != c`：
+从编译视角看，一条 Litex 事实的成功验证，本质上是一棵可以递归展开的证明树：引用已有事实、引入 `forall` 参数与前提、等式替换、定义展开、计算和 builtin rule 都是树上具体的验证步骤，一个步骤也可能继续分成多个分支。Litex-to-Lean 编译器的目标不是在验证结束后重新阅读源码并“猜”一组 tactic，而是记录 checker 已经找到的验证路径，再把其中每个受支持的节点降为 Lean proof term——必要时表现为若干条 tactic——交给 Lean kernel 独立检查。例如，下面这条 Litex 全称事实说：如果 `a != c` 且 `a = b`，那么 `b != c`：
 
 ```litex
 forall a, b, c set:
@@ -290,12 +290,12 @@ namespace tmp
 
 noncomputable section
 
-universe LitexUniverse
+universe u
 
 -- 此处省略共享的 LitexObject 声明。
 
 -- Litex fact f19
-theorem fact19 : ∀ {alpha0 : Type LitexUniverse} [LitexObject alpha0], ∀ (a : Set alpha0), ∀ (b : Set alpha0), ∀ (c : Set alpha0), a ≠ c → a = b → b ≠ c := by
+theorem fact19 : ∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α), ∀ (c : Set α), a ≠ c → a = b → b ≠ c := by
   intro _ _ a b c proof_fact_1_1 proof_fact_1_2
   have proof_fact_1_3 : a ≠ c := proof_fact_1_1
   have proof_fact_1_4 : a = b := proof_fact_1_2
@@ -312,7 +312,7 @@ end tmp
 
 使用已知 `forall` 时也会按同样的方式展开。IR 会保留每个绑定参数实际选中的 Litex 对象、该对象的参数类型检查、每个命题形式的前提，以及直接代入后得到的结论。Lean 会把选中的对象具名化为 `proof_arg_2_1` 这样带类型的局部名字，把命题前提复读成 `proof_fact`，再给直接的定理应用取名。如果这个直接实例与目标的书写形式只是有理表达式上相等，外层的 normalization 节点会再单独命名最终结果并检查这次转换。因此，一次代入不会被压成一行看不出过程的 `factN ...`，匹配器判定的相等也不会被默认成 Lean 里的定义相等（仅靠展开定义和计算即可相同）。
 
-对于 builtin rule、已知 `forall` 的实例化、计算以及更深的组合证明，proof IR 也应当递归保留相应依据和分支。Litex 为常见数学对象提供了丰富的自动验证路径；一旦某条成功路径被选定，其中每一步都有明确依据，并且应当可以被记录和重放。当前 To-Lean MVP 只覆盖其中一部分路径；不受支持的规则会停止编译，而不会退化成隐式 `axiom`（公理假设）、`sorry`（未完成证明的占位符），或伪装成已经证明。因此，“每条 Litex 验证都能编译成 Lean 并由 Lean kernel 接受”目前是正确性工作的目标，而不是已经完成的事实；当这一覆盖充分完整、翻译保持语义且编译器本身经过审计时，它将为 Litex 的验证结果提供很强的独立正确性保证。
+对于 builtin rule、已知 `forall` 的实例化、计算以及更深的组合证明，proof IR 也应当递归保留相应依据和分支。Litex 为常见数学对象提供了丰富的自动验证路径；一旦某条成功路径被选定，其中每一步都有明确依据，并且应当可以被记录和重放。当前 Litex-to-Lean MVP 只覆盖其中一部分路径；不受支持的规则会停止编译，而不会退化成隐式 `axiom`（公理假设）、`sorry`（未完成证明的占位符），或伪装成已经证明。因此，“每条 Litex 验证都能编译成 Lean 并由 Lean kernel 接受”目前是正确性工作的目标，而不是已经完成的事实；当这一覆盖充分完整、翻译保持语义且编译器本身经过审计时，它将为 Litex 的验证结果提供很强的独立正确性保证。
 
 > **当前边界：** Litex 到 Lean 的编译器仍在设计和实现中，尚未经过大规模测试。经过若干内核迭代后，上述的示例代码可能编译成的Lean代码也会有变化。欢迎交流。
 

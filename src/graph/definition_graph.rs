@@ -1915,8 +1915,12 @@ fn collect_template_definition_dependencies(
                 collector.collect_fact(fact);
             }
         }
-        TemplateDefEnum::HaveByExistStmt(statement) => {
-            collector.collect_exist_fact(&statement.exist_fact_in_have_obj_st);
+        TemplateDefEnum::ObtainObjFromExistFact(statement) => {
+            collector.collect_exist_fact(&statement.fact);
+        }
+        TemplateDefEnum::ObtainObjFromAtomicFact(statement) => {
+            let fact: AtomicFact = statement.fact.clone().into();
+            collector.collect_atomic_fact(&fact);
         }
         TemplateDefEnum::HaveFnEqualStmt(statement) => {
             collector.add_local_name(&statement.name);

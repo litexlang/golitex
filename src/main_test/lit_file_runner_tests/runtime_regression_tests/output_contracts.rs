@@ -1818,8 +1818,9 @@ obtain c from exist x R st {x = x}
                 )
                 .as_str()
             ));
-            assert!(run_output
-                .contains(format!("\"reason\": \"{}\"", HaveByExistStmt::store_reason()).as_str()));
+            assert!(run_output.contains(
+                format!("\"reason\": \"{}\"", ObtainObjFromExistFact::store_reason()).as_str(),
+            ));
             assert!(!run_output.contains("\"equal_to\""));
         },
     );

@@ -224,7 +224,8 @@ pub enum TemplateDefEnum {
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
     TrustHaveStmt(TrustHaveStmt),
-    HaveByExistStmt(HaveByExistStmt),
+    ObtainObjFromExistFact(ObtainObjFromExistFact),
+    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -238,27 +239,17 @@ pub enum TemplateDefEnum {
 
 // obtain a from exist x R st {$p(x)}
 #[derive(Clone)]
-pub struct HaveByExistStmt {
-    pub equal_tos: Vec<String>,
-    pub equal_to_bindings: Vec<SymbolBinding>,
-    pub exist_fact_in_have_obj_st: ExistFactEnum,
-    /// Present when the user wrote `obtain ... from $p(args)`. The concrete
-    /// definition is retained so execution can re-check the exact
-    /// definition-elimination step instead of trusting a parser-only rewrite.
-    pub existential_prop_source: Option<ExistentialPropSource>,
+pub struct ObtainObjFromExistFact {
+    pub equal_tos: Vec<SymbolBinding>,
+    pub fact: ExistFactEnum,
     pub line_file: LineFile,
 }
 
 #[derive(Clone)]
-pub struct ExistentialPropSource {
+pub struct ObtainObjFromAtomicFact {
+    pub equal_tos: Vec<SymbolBinding>,
     pub fact: NormalAtomicFact,
-    pub definition: DefPropStmt,
-}
-
-impl ExistentialPropSource {
-    pub fn new(fact: NormalAtomicFact, definition: DefPropStmt) -> Self {
-        Self { fact, definition }
-    }
+    pub line_file: LineFile,
 }
 
 // have by preimage x from z $in fn_range(f)
@@ -434,7 +425,7 @@ impl HaveObjByExistFactsStmt {
     }
 
     pub fn store_reason() -> &'static str {
-        HaveByExistStmt::store_reason()
+        ObtainObjFromExistFact::store_reason()
     }
 }
 
@@ -794,38 +785,15 @@ impl TrustHaveStmt {
     }
 }
 
-impl HaveByExistStmt {
+impl ObtainObjFromExistFact {
     pub fn new(
-        equal_tos: Vec<String>,
-        equal_to_bindings: Vec<SymbolBinding>,
-        exist_fact_in_have_obj_st: ExistFactEnum,
+        equal_tos: Vec<SymbolBinding>,
+        fact: ExistFactEnum,
         line_file: LineFile,
     ) -> Self {
-        HaveByExistStmt {
+        ObtainObjFromExistFact {
             equal_tos,
-            equal_to_bindings,
-            exist_fact_in_have_obj_st,
-            existential_prop_source: None,
-            line_file,
-        }
-    }
-
-    pub fn new_from_existential_prop(
-        equal_tos: Vec<String>,
-        equal_to_bindings: Vec<SymbolBinding>,
-        exist_fact_in_have_obj_st: ExistFactEnum,
-        source_fact: NormalAtomicFact,
-        source_definition: DefPropStmt,
-        line_file: LineFile,
-    ) -> Self {
-        HaveByExistStmt {
-            equal_tos,
-            equal_to_bindings,
-            exist_fact_in_have_obj_st,
-            existential_prop_source: Some(ExistentialPropSource::new(
-                source_fact,
-                source_definition,
-            )),
+            fact,
             line_file,
         }
     }
@@ -835,20 +803,58 @@ impl HaveByExistStmt {
     }
 }
 
-impl fmt::Display for HaveByExistStmt {
+impl fmt::Display for ObtainObjFromExistFact {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        let source = self
-            .existential_prop_source
-            .as_ref()
-            .map(|source| source.fact.to_string())
-            .unwrap_or_else(|| self.exist_fact_in_have_obj_st.to_string());
         write!(
             f,
             "{} {} {} {}",
             OBTAIN,
-            vec_to_string_join_by_comma(&self.equal_tos),
+            vec_to_string_join_by_comma(
+                &self
+                    .equal_tos
+                    .iter()
+                    .map(|binding| binding.name())
+                    .collect::<Vec<_>>(),
+            ),
             FROM,
-            source,
+            self.fact,
+        )
+    }
+}
+
+impl ObtainObjFromAtomicFact {
+    pub fn new(
+        equal_tos: Vec<SymbolBinding>,
+        fact: NormalAtomicFact,
+        line_file: LineFile,
+    ) -> Self {
+        ObtainObjFromAtomicFact {
+            equal_tos,
+            fact,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        ObtainObjFromExistFact::store_reason()
+    }
+}
+
+impl fmt::Display for ObtainObjFromAtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{} {} {} {}",
+            OBTAIN,
+            vec_to_string_join_by_comma(
+                &self
+                    .equal_tos
+                    .iter()
+                    .map(|binding| binding.name())
+                    .collect::<Vec<_>>(),
+            ),
+            FROM,
+            self.fact,
         )
     }
 }
@@ -998,9 +1004,16 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.single_defined_name(),
             TemplateDefEnum::TrustHaveStmt(stmt) => stmt.single_defined_name(),
-            TemplateDefEnum::HaveByExistStmt(stmt) => {
+            TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
                 if stmt.equal_tos.len() == 1 {
-                    Some(stmt.equal_tos[0].clone())
+                    Some(stmt.equal_tos[0].name().to_string())
+                } else {
+                    None
+                }
+            }
+            TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
+                if stmt.equal_tos.len() == 1 {
+                    Some(stmt.equal_tos[0].name().to_string())
                 } else {
                     None
                 }
@@ -1023,7 +1036,8 @@ impl TemplateDefEnum {
             TemplateDefEnum::HaveObjEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::TrustHaveStmt(stmt) => stmt.clone().into(),
-            TemplateDefEnum::HaveByExistStmt(stmt) => stmt.clone().into(),
+            TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.clone().into(),
+            TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => stmt.clone().into(),
@@ -1044,7 +1058,8 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::HaveObjEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::TrustHaveStmt(stmt) => write!(f, "{}", stmt),
-            TemplateDefEnum::HaveByExistStmt(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::ObtainObjFromExistFact(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => write!(f, "{}", stmt),

@@ -82,7 +82,7 @@ Comparisons](Representative_Lean_Litex_Example_Comparisons.md).
 Litex is not a replacement for Lean, Coq, or Isabelle. Its checker, builtin
 objects, builtin verification and inference rules, imported assumptions, and
 every explicit `trust` or `axiom` are relevant to the trusted boundary.
-`trust` records an assumption; it is not a proof. The current To-Lean code is a
+`trust` records an assumption; it is not a proof. The current Litex-to-Lean code is a
 deliberately partial compiler, not a general compiler. Its checked subset now
 includes selected declarations, recursive proof certificates, explicit-value
 `have`, checked real-carrier selection such as `have x R`, binary `by cases`,
@@ -193,7 +193,7 @@ forall x R, n Z:
 The five names are hard-reserved. LaTeX uses the conventional floor, ceiling,
 minimum, maximum, and least-common-multiple notation. Python extraction uses
 `math.floor`, `math.ceil`, `min`, `max`, and `math.lcm`. These objects are
-outside the current checked To-Lean subset.
+outside the current checked Litex-to-Lean subset.
 
 The second native-function batch adds `exp`, `ln`, `sign`, and `factorial`.
 Their exact special values and finite integer calculations normalize directly:
@@ -257,7 +257,7 @@ exposes the successor recurrence, preserves weak order (and strict order away
 from the `0! = 1!` boundary), and makes every earlier factorial divide a later
 one. All four names are hard-reserved. Python extraction uses `math.exp`,
 `math.log`, a conditional sign expression, and `math.factorial`. These objects
-are outside the current checked To-Lean subset.
+are outside the current checked Litex-to-Lean subset.
 
 The parser does not make an invalid expression meaningful:
 
@@ -303,7 +303,7 @@ approximations:
 | LaTeX | `\mathrm{e}` | `\pi` |
 | Python extractor | `math.e` | `math.pi` |
 
-The current checked To-Lean subset does not lower these symbolic constants.
+The current checked Litex-to-Lean subset does not lower these symbolic constants.
 
 The symbolic evaluator likewise does not assign decimal runtime values to
 these constants.
@@ -387,7 +387,7 @@ The names `sin`, `cos`, `tan`, and `cot` are hard-reserved. Their bare names
 are not first-class function values; higher-order code can use
 `fn(x R) R {sin(x)}`. LaTeX emits standard trigonometric notation. The
 evaluator and current Python extractor report native trigonometric expressions
-as unsupported. They are also outside the current checked To-Lean subset rather
+as unsupported. They are also outside the current checked Litex-to-Lean subset rather
 than being assigned a library semantics silently.
 
 ### Complex scalars (beta preview)
@@ -2296,13 +2296,28 @@ w $in R
 prop has_copy(a R):
     exist x R st {x = a}
 
-$has_copy(2)
+witness $has_copy(2) from 2:
+    2 = 2
+
 obtain copy from $has_copy(2)
 copy = 2
 
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
 ```
+
+`witness $has_copy(2) from 2` is a checked definition-introduction statement.
+The AST retains the named positive prop call, witness values, and proof. Only
+when the statement executes does Litex resolve the active concrete definition,
+substitute the call arguments, and require its sole clause to be positive
+`exist` or `exist!`. The existing existential-witness checker then verifies the
+witness types and body. For `exist!`, it also constructs the ordinary
+uniqueness `forall` for two arbitrary satisfying values and verifies that
+obligation from the proof and surrounding context. On success Litex stores
+`$has_copy(2)` as the primary fact, and ordinary definition inference exposes
+the exact instantiated `exist` or `exist!` consequence. `not exist`, abstract
+props, nonexistential definitions, and multi-clause definitions remain
+unsupported for this atomic-fact witness form.
 
 The prop shorthand is a checked definition-elimination step. The source
 `$has_copy(2)` must itself verify, and the concrete prop definition must have
@@ -2311,16 +2326,22 @@ substitutes the call arguments into that clause and then uses the ordinary
 existential eliminator. `abstract_prop`, negated prop facts, `not exist`,
 ordinary nonexistential definitions, and multi-clause definitions are rejected.
 
-The checked To-Lean subset currently lowers positive `witness exist` and
-positive extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
+The checked Litex-to-Lean subset currently lowers positive `witness exist`,
+atomic-fact witnesses whose sole clause is plain positive `exist`, and positive
+extraction by `obtain` or `have x T: ...`. It preserves alpha-renamed
 existential citations, introduces file-scope or proof-local witness names with
 ordered `Exists.choose`, and exports only the exact parameter and direct-body
-facts justified by `choose_spec`. Unique/non-existence and preimage forms still
-report an explicit compiler boundary. For `obtain ... from $prop(args)`, the
+facts justified by `choose_spec`. Although the Litex verifier accepts an
+atomic-fact witness backed by `exist!`, unique/non-existence and preimage forms
+still report an explicit compiler boundary. For `obtain ... from $prop(args)`, the
 compiler retains the verified prop call as a premise, re-instantiates the sole
 existential definition clause, and emits a checked definition-unfolding proof
 before applying the same `Exists.choose` projections. This path does not add
 trust or require the user to spell out the expanded existential.
+For `witness $prop(args) from values`, the compiler consumes the definition
+frozen by execution, constructs the existential from the checked values, and
+folds it to the named prop with a validated `DefinitionIntroduction` node and
+`simpa only [definition]`. It never performs a fresh definition lookup.
 If two distinct Litex identifiers would sanitize to the same Lean binder name,
 the compiler asks for a rename rather than emitting a captured quantifier.
 

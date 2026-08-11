@@ -352,15 +352,25 @@ impl Runtime {
                 self.verify_non_equational_atomic_fact_with_known_atomic_facts(&order_atomic)?;
             if sub.is_true() {
                 steps.push(sub);
-                return Ok(Some(
+                let success = if self.captures_litex_to_lean_well_definedness() {
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_and_steps(
+                        not_equal_fact.clone().into(),
+                        InferResult::new(),
+                        "not_equal_from_known_strict_order".to_string(),
+                        BuiltinRuleEvidence::NotEqualFromStrictOrder,
+                        steps,
+                    )
+                } else {
+                    // Preserve the established ordinary-runtime proof shape;
+                    // the typed certificate is backend-only provenance.
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                         not_equal_fact.clone().into(),
                         InferResult::new(),
                         "not_equal_from_known_strict_order".to_string(),
                         steps,
                     )
-                    .into(),
-                ));
+                };
+                return Ok(Some(success.into()));
             }
         }
         Ok(None)
@@ -1515,9 +1525,9 @@ impl Runtime {
 
 #[cfg(test)]
 mod tests {
+    use crate::compile_to_lean::compile_to_lean_from_source;
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
-    use crate::to_lean::to_lean_from_source;
     use std::fs;
     use std::path::Path;
     use std::process::Command;
@@ -1588,13 +1598,12 @@ y != x
     }
 
     #[test]
-    fn not_equal_symmetry_has_checked_to_lean_evidence() {
-        let output = to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-to-lean")
-            .expect("the builtin symmetry proof should lower to Lean");
+    fn not_equal_symmetry_has_checked_litex_to_lean_evidence() {
+        let output =
+            compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-compile-to-lean")
+                .expect("the builtin symmetry proof should lower to Lean");
         assert!(
-            output.contains(
-                "∀ {α : Type LitexUniverse} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α)"
-            ),
+            output.contains("∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α)"),
             "{output}"
         );
         assert!(output.contains("Ne.symm proof_fact_"), "{output}");
@@ -1610,8 +1619,9 @@ y != x
         let project = std::env::var("LITEX_LEAN_PROJECT")
             .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
         let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
-        let generated = to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-kernel")
-            .expect("the builtin symmetry proof should lower to Lean");
+        let generated =
+            compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-kernel")
+                .expect("the builtin symmetry proof should lower to Lean");
         let private_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("private");
         fs::create_dir_all(&private_dir).unwrap();
         let lean_file = private_dir.join(format!(

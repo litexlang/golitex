@@ -48,9 +48,15 @@ impl From<HaveObjByExistFactsStmt> for Stmt {
     }
 }
 
-impl From<HaveByExistStmt> for Stmt {
-    fn from(v: HaveByExistStmt) -> Self {
-        DefObjStmt::HaveByExistStmt(v).into()
+impl From<ObtainObjFromExistFact> for Stmt {
+    fn from(v: ObtainObjFromExistFact) -> Self {
+        DefObjStmt::ObtainObjFromExistFact(v).into()
+    }
+}
+
+impl From<ObtainObjFromAtomicFact> for Stmt {
+    fn from(v: ObtainObjFromAtomicFact) -> Self {
+        DefObjStmt::ObtainObjFromAtomicFact(v).into()
     }
 }
 
@@ -183,6 +189,12 @@ impl From<EvalStmt> for Stmt {
 impl From<WitnessExistFact> for Stmt {
     fn from(v: WitnessExistFact) -> Self {
         WitnessStmt::WitnessExistFact(v).into()
+    }
+}
+
+impl From<WitnessAtomicFact> for Stmt {
+    fn from(v: WitnessAtomicFact) -> Self {
+        WitnessStmt::WitnessAtomicFact(v).into()
     }
 }
 

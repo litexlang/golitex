@@ -36,11 +36,11 @@ pub struct Runtime {
     pub execution_stack: Vec<ExecutionFrame>,
     pub run_mode: RunMode,
     /// Only compiler entry points enable this. Ordinary verification never
-    /// pays the cost of constructing To-Lean IR.
-    pub(crate) to_lean_mode: bool,
+    /// pays the cost of constructing Litex-to-Lean IR.
+    pub(crate) litex_to_lean_ir_mode: bool,
     /// Report compilation collects verifier evidence without eagerly building
     /// IR inside `exec_stmt`.
-    pub(crate) to_lean_well_definedness_mode: bool,
+    pub(crate) litex_to_lean_well_definedness_mode: bool,
     /// Nonzero only while constructor-specific object WD checks are running.
     pub(crate) well_definedness_capture_depth: usize,
     /// One isolated collector per (possibly nested) executed statement.
@@ -91,8 +91,8 @@ impl Runtime {
             module_manager: Box::new(ModuleManager::new()),
             execution_stack: vec![],
             run_mode: RunMode::File,
-            to_lean_mode: false,
-            to_lean_well_definedness_mode: false,
+            litex_to_lean_ir_mode: false,
+            litex_to_lean_well_definedness_mode: false,
             well_definedness_capture_depth: 0,
             well_definedness_capture_stack: Vec::new(),
             next_fact_id: 1,
@@ -122,20 +122,20 @@ impl Runtime {
 }
 
 impl Runtime {
-    pub fn to_lean_mode(&self) -> bool {
-        self.to_lean_mode
+    pub fn litex_to_lean_ir_mode(&self) -> bool {
+        self.litex_to_lean_ir_mode
     }
 
-    pub fn replace_to_lean_mode(&mut self, enabled: bool) -> bool {
-        std::mem::replace(&mut self.to_lean_mode, enabled)
+    pub fn replace_litex_to_lean_ir_mode(&mut self, enabled: bool) -> bool {
+        std::mem::replace(&mut self.litex_to_lean_ir_mode, enabled)
     }
 
-    pub(crate) fn replace_to_lean_well_definedness_mode(&mut self, enabled: bool) -> bool {
-        std::mem::replace(&mut self.to_lean_well_definedness_mode, enabled)
+    pub(crate) fn replace_litex_to_lean_well_definedness_mode(&mut self, enabled: bool) -> bool {
+        std::mem::replace(&mut self.litex_to_lean_well_definedness_mode, enabled)
     }
 
-    pub(crate) fn captures_to_lean_well_definedness(&self) -> bool {
-        self.to_lean_mode || self.to_lean_well_definedness_mode
+    pub(crate) fn captures_litex_to_lean_well_definedness(&self) -> bool {
+        self.litex_to_lean_ir_mode || self.litex_to_lean_well_definedness_mode
     }
 
     pub(crate) fn begin_statement_well_definedness_capture(&mut self) {
@@ -147,6 +147,21 @@ impl Runtime {
         self.well_definedness_capture_stack
             .pop()
             .unwrap_or_default()
+    }
+
+    pub(crate) fn well_definedness_capture_checkpoint(&self) -> Option<usize> {
+        self.well_definedness_capture_stack
+            .last()
+            .map(|certificate| certificate.facts.len())
+    }
+
+    pub(crate) fn rollback_well_definedness_capture(&mut self, checkpoint: Option<usize>) {
+        let (Some(checkpoint), Some(certificate)) =
+            (checkpoint, self.well_definedness_capture_stack.last_mut())
+        else {
+            return;
+        };
+        certificate.facts.truncate(checkpoint);
     }
 
     pub(crate) fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {

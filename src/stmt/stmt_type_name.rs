@@ -76,6 +76,12 @@ impl WitnessExistFact {
     }
 }
 
+impl WitnessAtomicFact {
+    pub fn stmt_type_name(&self) -> String {
+        "WitnessAtomicFact".to_string()
+    }
+}
+
 impl WitnessNonemptySet {
     pub fn stmt_type_name(&self) -> String {
         "WitnessNonemptySet".to_string()
@@ -262,9 +268,15 @@ impl HaveObjByExistFactsStmt {
     }
 }
 
-impl HaveByExistStmt {
+impl ObtainObjFromExistFact {
     pub fn stmt_type_name(&self) -> String {
-        "HaveByExistStmt".to_string()
+        "ObtainObjFromExistFact".to_string()
+    }
+}
+
+impl ObtainObjFromAtomicFact {
+    pub fn stmt_type_name(&self) -> String {
+        "ObtainObjFromAtomicFact".to_string()
     }
 }
 
@@ -391,6 +403,12 @@ impl ClearStmt {
 impl WitnessExistFact {
     pub fn output_type_string() -> String {
         "existence witness".to_string()
+    }
+}
+
+impl WitnessAtomicFact {
+    pub fn output_type_string() -> String {
+        "atomic fact witness".to_string()
     }
 }
 
@@ -568,7 +586,13 @@ impl HaveObjByExistFactsStmt {
     }
 }
 
-impl HaveByExistStmt {
+impl ObtainObjFromExistFact {
+    pub fn output_type_string() -> String {
+        "object definition by existence".to_string()
+    }
+}
+
+impl ObtainObjFromAtomicFact {
     pub fn output_type_string() -> String {
         "object definition by existence".to_string()
     }

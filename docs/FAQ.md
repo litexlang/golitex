@@ -637,7 +637,7 @@ normalizer.
 `cos(x) != 0`, while `cot(x)` requires `sin(x) != 0`; an undefined expression
 fails well-definedness before equality checking. The preview remains symbolic:
 `eval` and Python extraction reject native trigonometric expressions explicitly.
-The current To-Lean compiler has no checked trigonometric proof backend, so
+The current Litex-to-Lean compiler has no checked trigonometric proof backend, so
 trigonometric expressions remain outside its declared subset even though some
 nontrigonometric declarations and scoped proof commands are now supported. The
 preview also does not yet include inverse or complex trigonometry, analytic
@@ -664,7 +664,7 @@ with a nonnegative real result.
 The native complex layer is symbolic in this release. Verification supports
 the builtin imaginary unit, coordinates, modulus interface, legal integer
 powers, and finite aggregation, but `eval` and Python extraction do not acquire
-a complex runtime representation. The current To-Lean compiler still has no
+a complex runtime representation. The current Litex-to-Lean compiler still has no
 checked complex-number proof view or complex-operation backend and therefore
 does not accept complex expressions.
 Existing sources that used `C`, `i`, `re`, `img`, or `C_abs` as ordinary
@@ -1032,7 +1032,7 @@ ordinary numeric calculation, and then stores the new fact. This is the core
 reader experience: write the next useful fact, let the checker explain why it
 follows, then continue from the stronger context.
 
-The partial To-Lean compiler preserves the distinction between that explicit
+The partial Litex-to-Lean compiler preserves the distinction between that explicit
 value and bare `have x R`. The latter is genuine witness selection: its runtime
 result links the checked nonemptiness proof to the stored `x $in R` fact, and
 Lean receives `Exists.choose`/`choose_spec` from that same certificate. It is
@@ -1248,17 +1248,40 @@ obtain copy from $has_copy(2)
 copy = 2
 ```
 
+The same wrapper can also be the target of `witness`:
+
+```litex
+prop divides(p Z, u Z):
+    exist k Z st {p = u * k}
+
+witness $divides(6, 2) from 3:
+    6 = 2 * 3
+```
+
+Here the primary proved fact is `$divides(6, 2)`, not a parser-expanded
+existential. At execution time Litex checks that the active definition has
+exactly one positive `exist` or `exist!` clause, instantiates it, and reuses the
+ordinary witness checker. An `exist!` definition additionally requires the
+generated uniqueness `forall` to verify; supplying one satisfying value alone
+is insufficient. Normal definition inference then makes the matching
+existential variant available.
+
 This is deliberately narrow. Litex first verifies the source prop, then
 rechecks its retained definition and substitutes the call arguments. The
 definition must contain exactly one clause and that clause must be positive
 `exist` or `exist!`. An abstract prop, a negated source, `not exist`, or a
 definition with an extra clause is not treated as an existential package.
 
+The current Litex-to-Lean backend supports the introduction direction only for
+the plain positive `exist` case. A verifier-accepted atomic-fact witness backed
+by `exist!` therefore reports an explicit compiler boundary instead of being
+lowered to an unchecked Lean term.
+
 The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current
 argument.
 
-In the current checked To-Lean slice, that distinction is preserved directly:
+In the current checked Litex-to-Lean slice, that distinction is preserved directly:
 the existential remains a theorem, the named witness is selected from that
 same theorem, and each exposed type or body fact is a projection of its
 `choose_spec`. The compiler does not replace `obtain` with an unconstrained
@@ -1267,6 +1290,11 @@ prop call, checks that the recorded concrete definition unfolds to the exact
 existential source, and emits `simpa only [definition] using source` before
 selecting the witness. Thus the shorthand and its expanded positive `exist`
 form have the same checked Lean meaning.
+In the introduction direction, the compiler instead retains a checked
+`DefinitionIntroduction` certificate, proves the instantiated existential from
+the supplied witness, and folds it to the named prop with `simpa only`. The
+compiler uses the definition frozen by execution rather than looking it up
+again.
 
 ## How do function ranges and preimages work?
 

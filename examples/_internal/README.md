@@ -8,7 +8,7 @@ reading path.
   test. A fixture is not a standalone tutorial.
 - `drafts/` contains exploratory Litex developments whose names state the
   mathematical or diagnostic topic instead of using `tmp*` names.
-- `to_lean/` contains inputs used while developing generated Lean output.
+- `compile_to_lean/` contains inputs used while developing generated Lean output.
 - `proof_journals/` preserves proof-attempt evidence associated with example
   work; it is not input to the Litex runner.
 

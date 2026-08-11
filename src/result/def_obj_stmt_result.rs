@@ -6,7 +6,8 @@ pub enum DefObjStmtResult {
     HaveObjInNonemptySetStmt(NonFactualStmtSuccess),
     HaveObjEqualStmt(NonFactualStmtSuccess),
     HaveObjByExistFactsStmt(NonFactualStmtSuccess),
-    HaveByExistStmt(NonFactualStmtSuccess),
+    ObtainObjFromExistFact(NonFactualStmtSuccess),
+    ObtainObjFromAtomicFact(NonFactualStmtSuccess),
     HaveByPreimageStmt(NonFactualStmtSuccess),
     HaveFnEqualStmt(NonFactualStmtSuccess),
     HaveFnEqualCaseByCaseStmt(NonFactualStmtSuccess),
@@ -32,8 +33,11 @@ impl DefObjStmtResult {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(_)) => {
                 DefObjStmtResult::HaveObjByExistFactsStmt(success)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(_)) => {
-                DefObjStmtResult::HaveByExistStmt(success)
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(_)) => {
+                DefObjStmtResult::ObtainObjFromExistFact(success)
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(_)) => {
+                DefObjStmtResult::ObtainObjFromAtomicFact(success)
             }
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(_)) => {
                 DefObjStmtResult::HaveByPreimageStmt(success)
@@ -73,7 +77,8 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
-            | DefObjStmtResult::HaveByExistStmt(success)
+            | DefObjStmtResult::ObtainObjFromExistFact(success)
+            | DefObjStmtResult::ObtainObjFromAtomicFact(success)
             | DefObjStmtResult::HaveByPreimageStmt(success)
             | DefObjStmtResult::HaveFnEqualStmt(success)
             | DefObjStmtResult::HaveFnEqualCaseByCaseStmt(success)
@@ -93,7 +98,8 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
-            | DefObjStmtResult::HaveByExistStmt(success)
+            | DefObjStmtResult::ObtainObjFromExistFact(success)
+            | DefObjStmtResult::ObtainObjFromAtomicFact(success)
             | DefObjStmtResult::HaveByPreimageStmt(success)
             | DefObjStmtResult::HaveFnEqualStmt(success)
             | DefObjStmtResult::HaveFnEqualCaseByCaseStmt(success)
@@ -113,7 +119,8 @@ impl DefObjStmtResult {
             | DefObjStmtResult::HaveObjInNonemptySetStmt(success)
             | DefObjStmtResult::HaveObjEqualStmt(success)
             | DefObjStmtResult::HaveObjByExistFactsStmt(success)
-            | DefObjStmtResult::HaveByExistStmt(success)
+            | DefObjStmtResult::ObtainObjFromExistFact(success)
+            | DefObjStmtResult::ObtainObjFromAtomicFact(success)
             | DefObjStmtResult::HaveByPreimageStmt(success)
             | DefObjStmtResult::HaveFnEqualStmt(success)
             | DefObjStmtResult::HaveFnEqualCaseByCaseStmt(success)

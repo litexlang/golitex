@@ -12,7 +12,7 @@ impl Runtime {
         // Prefer a named builtin certificate over replay-safe structural
         // equality when both establish the same equality.  Structural replay
         // is intentionally a leaf fallback, whereas a builtin keeps the
-        // premise-bearing proof route available to To-Lean.
+        // premise-bearing proof route available to Litex-to-Lean.
         let builtin_state = UseBuiltinRuleVerifyState::new();
         if matches!(goal, AtomicFact::EqualFact(_)) {
             let builtin_result =

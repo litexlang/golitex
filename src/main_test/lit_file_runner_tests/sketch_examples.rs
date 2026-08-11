@@ -2,9 +2,9 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Instant;
 
+use crate::compile_to_lean::compile_to_lean;
 use crate::pipeline::{render_run_source_code_output, run_source_code};
 use crate::prelude::*;
-use crate::to_lean::to_lean;
 
 use super::helper::{run_with_large_stack, source_has_isolated_import};
 
@@ -53,7 +53,7 @@ fn run_example_lit_file(relative_path: &str) {
     );
 }
 
-fn run_example_lit_file_to_lean(relative_path: &str) -> Option<String> {
+fn compile_example_lit_file_to_lean(relative_path: &str) -> Option<String> {
     run_example_lit_file(relative_path);
 
     let lit_path = example_lit_path(relative_path);
@@ -75,7 +75,7 @@ fn run_example_lit_file_to_lean(relative_path: &str) -> Option<String> {
     runtime.isolated = source_has_isolated_import(normalized_source.as_str());
 
     let generated_lean =
-        to_lean(normalized_source.as_str(), &mut runtime).unwrap_or_else(|error| {
+        compile_to_lean(normalized_source.as_str(), &mut runtime).unwrap_or_else(|error| {
             panic!(
                 "failed to generate Lean from {}:\n{}",
                 path_str,
@@ -156,13 +156,13 @@ fn run_tmp0() {
     run_with_large_stack("run_tmp0_large_stack", || run_example_lit_file("tmp.lit"));
 }
 
-fn run_tmp_to_lean(index: usize) {
+fn compile_tmp_to_lean(index: usize) {
     let relative_path = if index == 0 {
         "tmp.lit".to_string()
     } else {
         format!("tmp{}.lit", index)
     };
-    let Some(generated_lean) = run_example_lit_file_to_lean(&relative_path) else {
+    let Some(generated_lean) = compile_example_lit_file_to_lean(&relative_path) else {
         return;
     };
     let output_path = std::env::var_os("LITEX_TMP_LEAN_PATH")
@@ -183,31 +183,37 @@ fn run_tmp_to_lean(index: usize) {
 }
 
 #[test]
-fn run_tmp0_to_lean() {
-    run_with_large_stack("run_tmp0_to_lean_large_stack", || run_tmp_to_lean(0));
-}
-
-#[test]
-fn run_tmp1_to_lean() {
-    run_with_large_stack("run_tmp1_to_lean_large_stack", || run_tmp_to_lean(1));
-}
-
-#[test]
-fn run_tmp2_to_lean() {
-    run_with_large_stack("run_tmp2_to_lean_large_stack", || run_tmp_to_lean(2));
-}
-
-#[test]
-fn run_empty_to_lean() {
-    run_with_large_stack("run_empty_to_lean_large_stack", || {
-        run_example_lit_file_to_lean("_internal/to_lean/empty.lit");
+fn compile_tmp0_to_lean() {
+    run_with_large_stack("compile_tmp0_to_lean_large_stack", || {
+        compile_tmp_to_lean(0)
     });
 }
 
 #[test]
-fn run_to_lean_showcase() {
-    run_with_large_stack("run_to_lean_showcase_large_stack", || {
-        run_example_lit_file_to_lean("_internal/to_lean/showcase.lit");
+fn compile_tmp1_to_lean() {
+    run_with_large_stack("compile_tmp1_to_lean_large_stack", || {
+        compile_tmp_to_lean(1)
+    });
+}
+
+#[test]
+fn compile_tmp2_to_lean() {
+    run_with_large_stack("compile_tmp2_to_lean_large_stack", || {
+        compile_tmp_to_lean(2)
+    });
+}
+
+#[test]
+fn compile_empty_to_lean() {
+    run_with_large_stack("compile_empty_to_lean_large_stack", || {
+        compile_example_lit_file_to_lean("_internal/compile_to_lean/empty.lit");
+    });
+}
+
+#[test]
+fn compile_to_lean_showcase() {
+    run_with_large_stack("compile_to_lean_showcase_large_stack", || {
+        compile_example_lit_file_to_lean("_internal/compile_to_lean/showcase.lit");
     });
 }
 

@@ -1,0 +1,425 @@
+use crate::prelude::*;
+
+/// A structural compiler representation of one Litex object.
+///
+/// The tree preserves source object syntax and symbol identity. Its native Lean
+/// carrier is supplied separately by `LitexToLeanCarrierIr` constraints, so the
+/// same numeral or arithmetic tree can elaborate in `ℕ`, `ℤ`, `ℚ`, `ℝ`, or
+/// `ℂ` without attaching a guessed type to the object itself.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum LitexToLeanObjectIr {
+    Symbol {
+        symbol_id: SymbolId,
+        name: String,
+    },
+    Number {
+        normalized_value: String,
+    },
+    Constant(LitexToLeanConstantObjectIr),
+    StandardSet(LitexToLeanStandardSetIr),
+    /// A Litex function set is `Set.univ` over this native function type.
+    FunctionSet {
+        function: Box<LitexToLeanFunctionTypeIr>,
+    },
+    /// Exact Litex application layers; target currying must not erase them.
+    FunctionApplication(LitexToLeanFunctionApplicationIr),
+    BuiltinApp {
+        operator: LitexToLeanBuiltinObjectOperatorIr,
+        arguments: Vec<LitexToLeanObjectIr>,
+    },
+    Collection {
+        constructor: LitexToLeanCollectionObjectIr,
+        items: Vec<LitexToLeanObjectIr>,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanConstantObjectIr {
+    ImaginaryUnit,
+    EulerNumber,
+    Pi,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanStandardSetIr {
+    PositiveNatural,
+    Natural,
+    Rational,
+    Integer,
+    Real,
+    Complex,
+    PositiveRational,
+    PositiveReal,
+    NegativeRational,
+    NegativeInteger,
+    NegativeReal,
+    NonzeroRational,
+    NonzeroInteger,
+    NonzeroReal,
+    NonzeroComplex,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanBuiltinObjectOperatorIr {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Mod,
+    Gcd,
+    Lcm,
+    Floor,
+    Ceil,
+    Min,
+    Max,
+    Exp,
+    Ln,
+    Sign,
+    Factorial,
+    Pow,
+    Abs,
+    Sin,
+    Cos,
+    Tan,
+    Cot,
+    RealPart,
+    ImaginaryPart,
+    ComplexAbs,
+    Sqrt,
+    Log,
+    Union,
+    Intersect,
+    SetMinus,
+    BigUnion,
+    BigIntersect,
+    PowerSet,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanCollectionObjectIr {
+    ListSet,
+}
+
+impl LitexToLeanObjectIr {
+    pub fn lower(obj: &Obj) -> Result<Self, String> {
+        match obj {
+            Obj::Atom(atom) => lower_atom(atom),
+            Obj::Number(number) => Ok(LitexToLeanObjectIr::Number {
+                normalized_value: number.normalized_value.clone(),
+            }),
+            Obj::ImaginaryUnit(_) => Ok(LitexToLeanObjectIr::Constant(
+                LitexToLeanConstantObjectIr::ImaginaryUnit,
+            )),
+            Obj::EulerNumber(_) => Ok(LitexToLeanObjectIr::Constant(
+                LitexToLeanConstantObjectIr::EulerNumber,
+            )),
+            Obj::Pi(_) => Ok(LitexToLeanObjectIr::Constant(
+                LitexToLeanConstantObjectIr::Pi,
+            )),
+            Obj::StandardSet(set) => Ok(LitexToLeanObjectIr::StandardSet(set.into())),
+            Obj::FnSet(function_set) => Ok(LitexToLeanObjectIr::FunctionSet {
+                function: Box::new(LitexToLeanFunctionTypeIr::lower(function_set)?),
+            }),
+            Obj::FnObj(application) => lower_function_application(application),
+            Obj::Add(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Add,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Sub(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Sub,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Mul(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Mul,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Div(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Div,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Mod(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Mod,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Gcd(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Gcd,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Lcm(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Lcm,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Floor(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::Floor,
+                value.arg.as_ref(),
+            ),
+            Obj::Ceil(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Ceil, value.arg.as_ref()),
+            Obj::Min(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Min,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Max(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Max,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Exp(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Exp, value.arg.as_ref()),
+            Obj::Ln(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Ln, value.arg.as_ref()),
+            Obj::Sign(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sign, value.arg.as_ref()),
+            Obj::Factorial(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::Factorial,
+                value.arg.as_ref(),
+            ),
+            Obj::Pow(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Pow,
+                value.base.as_ref(),
+                value.exponent.as_ref(),
+            ),
+            Obj::Abs(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Abs, value.arg.as_ref()),
+            Obj::Sin(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sin, value.arg.as_ref()),
+            Obj::Cos(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Cos, value.arg.as_ref()),
+            Obj::Tan(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Tan, value.arg.as_ref()),
+            Obj::Cot(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Cot, value.arg.as_ref()),
+            Obj::RealPart(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::RealPart,
+                value.arg.as_ref(),
+            ),
+            Obj::ImaginaryPart(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::ImaginaryPart,
+                value.arg.as_ref(),
+            ),
+            Obj::ComplexAbs(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::ComplexAbs,
+                value.arg.as_ref(),
+            ),
+            Obj::Sqrt(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sqrt, value.arg.as_ref()),
+            Obj::Log(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Log,
+                value.base.as_ref(),
+                value.arg.as_ref(),
+            ),
+            Obj::Union(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Union,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::Intersect(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::Intersect,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::SetMinus(value) => binary(
+                LitexToLeanBuiltinObjectOperatorIr::SetMinus,
+                value.left.as_ref(),
+                value.right.as_ref(),
+            ),
+            Obj::BigUnion(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::BigUnion,
+                value.left.as_ref(),
+            ),
+            Obj::BigIntersect(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::BigIntersect,
+                value.left.as_ref(),
+            ),
+            Obj::PowerSet(value) => unary(
+                LitexToLeanBuiltinObjectOperatorIr::PowerSet,
+                value.set.as_ref(),
+            ),
+            Obj::ListSet(value) => Ok(LitexToLeanObjectIr::Collection {
+                constructor: LitexToLeanCollectionObjectIr::ListSet,
+                items: value
+                    .list
+                    .iter()
+                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .collect::<Result<Vec<_>, _>>()?,
+            }),
+            other => Err(format!(
+                "Litex-to-Lean Obj IR does not support {:?} object `{}`",
+                other.kind(),
+                other
+            )),
+        }
+    }
+}
+
+fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr, String> {
+    if matches!(application.head.as_ref(), FnObjHead::AnonymousFnLiteral(_)) {
+        return Err(format!(
+            "Litex-to-Lean Obj IR does not yet support anonymous function application `{}`",
+            application
+        ));
+    }
+    let head_obj: Obj = (*application.head).clone().into();
+    let head = LitexToLeanObjectIr::lower(&head_obj)?;
+    let argument_layers = application
+        .body
+        .iter()
+        .map(|layer| {
+            layer
+                .iter()
+                .map(|argument| LitexToLeanObjectIr::lower(argument.as_ref()))
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let source_argument_layers = application
+        .body
+        .iter()
+        .map(|layer| {
+            layer
+                .iter()
+                .map(|argument| argument.as_ref().clone())
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    Ok(LitexToLeanObjectIr::FunctionApplication(
+        LitexToLeanFunctionApplicationIr {
+            head: Box::new(head),
+            argument_layers,
+            source_argument_layers,
+        },
+    ))
+}
+
+fn lower_atom(atom: &AtomObj) -> Result<LitexToLeanObjectIr, String> {
+    let Some(symbol) = atom.symbol_ref() else {
+        return Err(format!(
+            "Litex-to-Lean Obj IR requires a resolved SymbolId for atom `{}`",
+            atom
+        ));
+    };
+    Ok(LitexToLeanObjectIr::Symbol {
+        symbol_id: symbol.id(),
+        name: symbol.display_name().to_string(),
+    })
+}
+
+fn unary(
+    operator: LitexToLeanBuiltinObjectOperatorIr,
+    argument: &Obj,
+) -> Result<LitexToLeanObjectIr, String> {
+    Ok(LitexToLeanObjectIr::BuiltinApp {
+        operator,
+        arguments: vec![LitexToLeanObjectIr::lower(argument)?],
+    })
+}
+
+fn binary(
+    operator: LitexToLeanBuiltinObjectOperatorIr,
+    left: &Obj,
+    right: &Obj,
+) -> Result<LitexToLeanObjectIr, String> {
+    Ok(LitexToLeanObjectIr::BuiltinApp {
+        operator,
+        arguments: vec![
+            LitexToLeanObjectIr::lower(left)?,
+            LitexToLeanObjectIr::lower(right)?,
+        ],
+    })
+}
+
+impl From<&StandardSet> for LitexToLeanStandardSetIr {
+    fn from(value: &StandardSet) -> Self {
+        match value {
+            StandardSet::NPos => LitexToLeanStandardSetIr::PositiveNatural,
+            StandardSet::N => LitexToLeanStandardSetIr::Natural,
+            StandardSet::Q => LitexToLeanStandardSetIr::Rational,
+            StandardSet::Z => LitexToLeanStandardSetIr::Integer,
+            StandardSet::R => LitexToLeanStandardSetIr::Real,
+            StandardSet::C => LitexToLeanStandardSetIr::Complex,
+            StandardSet::QPos => LitexToLeanStandardSetIr::PositiveRational,
+            StandardSet::RPos => LitexToLeanStandardSetIr::PositiveReal,
+            StandardSet::QNeg => LitexToLeanStandardSetIr::NegativeRational,
+            StandardSet::ZNeg => LitexToLeanStandardSetIr::NegativeInteger,
+            StandardSet::RNeg => LitexToLeanStandardSetIr::NegativeReal,
+            StandardSet::QStar => LitexToLeanStandardSetIr::NonzeroRational,
+            StandardSet::ZStar => LitexToLeanStandardSetIr::NonzeroInteger,
+            StandardSet::RStar => LitexToLeanStandardSetIr::NonzeroReal,
+            StandardSet::CStar => LitexToLeanStandardSetIr::NonzeroComplex,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn simple_set_constructors_preserve_identity_and_order() {
+        let left_binding =
+            SymbolBinding::new(SymbolId::new(11), "left".to_string(), "left".to_string());
+        let right_binding =
+            SymbolBinding::new(SymbolId::new(12), "right".to_string(), "right".to_string());
+        let left: Obj = Identifier::new_bound("left".to_string(), left_binding.as_ref()).into();
+        let right: Obj = Identifier::new_bound("right".to_string(), right_binding.as_ref()).into();
+
+        let union: Obj = Union::new(left.clone(), right.clone()).into();
+        assert_eq!(
+            LitexToLeanObjectIr::lower(&union).unwrap(),
+            LitexToLeanObjectIr::BuiltinApp {
+                operator: LitexToLeanBuiltinObjectOperatorIr::Union,
+                arguments: vec![
+                    LitexToLeanObjectIr::Symbol {
+                        symbol_id: left_binding.id(),
+                        name: "left".to_string(),
+                    },
+                    LitexToLeanObjectIr::Symbol {
+                        symbol_id: right_binding.id(),
+                        name: "right".to_string(),
+                    },
+                ],
+            }
+        );
+
+        let list: Obj = ListSet::new(vec![right, left]).into();
+        assert_eq!(
+            LitexToLeanObjectIr::lower(&list).unwrap(),
+            LitexToLeanObjectIr::Collection {
+                constructor: LitexToLeanCollectionObjectIr::ListSet,
+                items: vec![
+                    LitexToLeanObjectIr::Symbol {
+                        symbol_id: right_binding.id(),
+                        name: "right".to_string(),
+                    },
+                    LitexToLeanObjectIr::Symbol {
+                        symbol_id: left_binding.id(),
+                        name: "left".to_string(),
+                    },
+                ],
+            }
+        );
+    }
+
+    #[test]
+    fn unresolved_symbol_is_rejected() {
+        let left: Obj = Identifier::new("left".to_string()).into();
+        let right: Obj = Identifier::new("right".to_string()).into();
+        let unresolved: Obj = Union::new(left, right).into();
+
+        let error = LitexToLeanObjectIr::lower(&unresolved).unwrap_err();
+        assert!(error.contains("resolved SymbolId"));
+    }
+
+    #[test]
+    fn set_builder_is_an_explicit_binder_boundary() {
+        let binding = SymbolBinding::new(SymbolId::new(7), "x".to_string(), "x".to_string());
+        let parameter: Obj = SetBuilderFreeParamObj::new(binding.as_ref()).into();
+        let builder: Obj = SetBuilder::new(
+            binding.clone(),
+            StandardSet::R.into(),
+            vec![EqualFact::new(parameter.clone(), parameter, default_line_file()).into()],
+        )
+        .expect("test set-builder should be well formed")
+        .into();
+
+        let error = LitexToLeanObjectIr::lower(&builder).unwrap_err();
+        assert!(error.contains("SetBuilder"));
+    }
+}

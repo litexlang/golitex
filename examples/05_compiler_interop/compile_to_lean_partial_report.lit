@@ -1,0 +1,20 @@
+# Tracer: honest partial Litex-to-Lean compilation
+#
+# Before (did not work):
+# 1 / 2 / 3 / 4 = 1 / 24
+# sin(0) = 0
+# 1 / 3 + 2 / 3 = 1
+# Former behavior: strict Litex-to-Lean stopped at sin(0) = 0 and returned no Lean source.
+#
+# Now (verified):
+1 / 2 / 3 / 4 = 1 / 24
+sin(0) = 0
+1 / 3 + 2 / 3 = 1
+# Current behavior: report mode returns Incomplete, identifies statement 2, and emits
+# checked Lean declarations for statements 1 and 3 with no axiom or sorry fallback.
+#
+# Boundary: parse errors and unverified Litex statements remain hard errors; strict
+# Litex-to-Lean remains fail-closed for callers that require an all-or-nothing conversion.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_partial_report.lit
+# Focused compiler gate: cargo test --release compile_to_lean_partial_report -- --nocapture
+# Implementation: src/compile_to_lean/compilation_report.rs and src/compile_to_lean/pipeline.rs

@@ -136,6 +136,9 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
         Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }
+        Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
+            first_disallowed_control_stmt_in_stmts(&s.proof)
+        }
         Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }

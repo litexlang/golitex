@@ -3,7 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn exec_stmt(&mut self, stmt: &Stmt) -> Result<StmtResult, RuntimeError> {
         self.clear_statement_verified_atomic_facts();
-        if self.captures_to_lean_well_definedness() {
+        if self.captures_litex_to_lean_well_definedness() {
             self.begin_statement_well_definedness_capture();
         }
         let trusted = self.current_execution_is_trusted_file();
@@ -24,7 +24,7 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match result {
             Ok(mut result) => {
-                let well_definedness = if self.captures_to_lean_well_definedness() {
+                let well_definedness = if self.captures_litex_to_lean_well_definedness() {
                     self.end_statement_well_definedness_capture()
                 } else {
                     WellDefinednessCertificate::default()
@@ -44,15 +44,15 @@ impl Runtime {
                     StatementExecutionTrace::verified(result.is_unknown())
                 };
                 let result = result.with_execution_trace(trace);
-                if self.to_lean_mode && !result.is_unknown() {
-                    let to_lean_ir = self.build_stmt_to_lean_ir(&result)?;
-                    Ok(result.with_to_lean_ir(to_lean_ir))
+                if self.litex_to_lean_ir_mode && !result.is_unknown() {
+                    let litex_to_lean_ir = self.build_litex_to_lean_ir_statement(&result)?;
+                    Ok(result.with_litex_to_lean_ir(litex_to_lean_ir))
                 } else {
                     Ok(result)
                 }
             }
             Err(error) => {
-                if self.captures_to_lean_well_definedness() {
+                if self.captures_litex_to_lean_well_definedness() {
                     let _ = self.end_statement_well_definedness_capture();
                 }
                 let phase = execution_phase_for_error(&error);
@@ -82,6 +82,22 @@ impl Runtime {
                     self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
                 }
             }
+            if let Some(verification) = success.witness_atomic_fact_verification.as_mut() {
+                self.attach_known_fact_ids_to_stmt_result(
+                    verification.definition_parameter_check.as_mut(),
+                )?;
+                for check in verification
+                    .witness_verification
+                    .parameter_checks
+                    .iter_mut()
+                    .flatten()
+                {
+                    self.attach_known_fact_ids_to_stmt_result(check.as_mut())?;
+                }
+            }
+            if let Some(verification) = success.function_definition_verification.as_mut() {
+                self.attach_known_fact_ids_to_infer_result(&mut verification.assumption_infers)?;
+            }
         }
         Ok(())
     }
@@ -96,7 +112,7 @@ impl Runtime {
             {
                 output.fact_id = Some(fact_id);
             }
-            if !self.to_lean_mode {
+            if !self.litex_to_lean_ir_mode {
                 continue;
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
@@ -211,7 +227,12 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(d)) => {
                 self.exec_have_obj_by_exist_facts_stmt(d)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(d)) => self.exec_have_exist_obj_stmt(d),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(d)) => {
+                self.exec_obtain_obj_from_exist_fact(d)
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(d)) => {
+                self.exec_obtain_obj_from_atomic_fact(d)
+            }
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(d)) => {
                 self.exec_have_by_preimage_stmt(d)
             }
@@ -263,6 +284,9 @@ impl Runtime {
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
+                self.exec_witness_atomic_fact(s)
+            }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => self.exec_witness_nonempty_set(s),
             Stmt::By(ByStmt::ByCasesStmt(s)) => self.exec_by_cases_stmt(s),
             Stmt::By(ByStmt::ByContraStmt(s)) => self.exec_by_contra_stmt(s),
@@ -325,8 +349,11 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(s)) => {
                 self.exec_have_obj_by_exist_facts_stmt_affect_environment_only(s)
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(s)) => {
-                self.exec_have_exist_obj_stmt_affect_environment_only(s)
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(s)) => {
+                self.exec_obtain_obj_from_exist_fact_affect_environment_only(s)
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
+                self.exec_obtain_obj_from_atomic_fact_affect_environment_only(s)
             }
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(s)) => {
                 self.exec_have_by_preimage_stmt_affect_environment_only(s)
@@ -411,6 +438,9 @@ impl Runtime {
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
                 self.exec_witness_exist_fact_stmt_affect_environment_only(s)
+            }
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
+                self.exec_witness_atomic_fact_stmt_affect_environment_only(s)
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
                 self.exec_witness_nonempty_set_stmt_affect_environment_only(s)

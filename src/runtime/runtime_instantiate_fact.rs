@@ -807,7 +807,8 @@ impl Runtime {
     /// neither path trusts the parser's cached expansion.
     pub(crate) fn instantiate_existential_prop_definition(
         &self,
-        source: &ExistentialPropSource,
+        fact: &NormalAtomicFact,
+        definition: &DefPropStmt,
         line_file: &LineFile,
     ) -> Result<ExistFactEnum, RuntimeError> {
         let invalid_source = |message: String| {
@@ -815,24 +816,24 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(message, line_file.clone()),
             ))
         };
-        let predicate_name = source.fact.predicate.to_string();
+        let predicate_name = fact.predicate.to_string();
         let local_predicate_name = predicate_name
             .rsplit_once(MOD_SIGN)
             .map(|(_, local_name)| local_name)
             .unwrap_or(predicate_name.as_str());
-        if local_predicate_name != source.definition.name {
+        if local_predicate_name != definition.name {
             return Err(invalid_source(format!(
                 "source prop `{}` does not match retained definition `{}`",
-                predicate_name, source.definition.name
+                predicate_name, definition.name
             )));
         }
-        if source.definition.iff_facts.len() != 1 {
+        if definition.iff_facts.len() != 1 {
             return Err(invalid_source(format!(
                 "prop `{}` must have exactly one definition clause",
                 predicate_name
             )));
         }
-        let Fact::ExistFact(definition_exist_fact) = &source.definition.iff_facts[0] else {
+        let Fact::ExistFact(definition_exist_fact) = &definition.iff_facts[0] else {
             return Err(invalid_source(format!(
                 "the sole definition clause of `{}` must be `exist` or `exist!`",
                 predicate_name
@@ -845,8 +846,7 @@ impl Runtime {
             )));
         }
 
-        let param_to_arg_map =
-            self.params_to_arg_map(&source.definition.params_def_with_type, &source.fact.body)?;
+        let param_to_arg_map = self.params_to_arg_map(&definition.params_def_with_type, &fact.body)?;
         self.inst_exist_fact(
             definition_exist_fact,
             &param_to_arg_map,

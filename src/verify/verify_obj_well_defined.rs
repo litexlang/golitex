@@ -32,7 +32,7 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
-        if !self.captures_to_lean_well_definedness()
+        if !self.captures_litex_to_lean_well_definedness()
             && self
                 .verify_obj_well_defined_from_cache_if_known(obj)
                 .is_some()
@@ -47,7 +47,7 @@ impl Runtime {
             return Ok(());
         }
 
-        let captures_evidence = self.captures_to_lean_well_definedness();
+        let captures_evidence = self.captures_litex_to_lean_well_definedness();
         if captures_evidence {
             self.well_definedness_capture_depth += 1;
         }

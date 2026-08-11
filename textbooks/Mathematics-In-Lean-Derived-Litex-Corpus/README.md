@@ -180,7 +180,7 @@ The current Litex-to-Lean bridge supports only a limited trust-free arithmetic
 subset. This thirteen-chapter project is not currently compiled to Lean.
 Within the supported subset, trusted or unsupported forms must not be
 presented as trust-free Lean output. See
-[`src/to_lean/README.md`](../../../src/to_lean/README.md) for the current
+[`src/compile_to_lean/README.md`](../../../src/compile_to_lean/README.md) for the current
 implementation boundary.
 
 ## Run entrypoint

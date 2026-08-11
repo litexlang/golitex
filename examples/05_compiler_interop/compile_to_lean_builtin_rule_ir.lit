@@ -1,0 +1,33 @@
+# Tracer: structured builtin-rule evidence reaches a checked Lean proof.
+#
+# Before (Litex verified, but Litex-to-Lean rejected the proof route):
+# forall a, b R:
+#     a != 0
+#     b != 0
+#     =>:
+#         a / b != 0
+# Former behavior: the verifier returned the diagnostic label
+# `div_not_equal_zero_from_numerator_nonzero`, but no typed rule bindings.
+# Litex-to-Lean therefore stopped at `OtherUnsupported` instead of guessing a proof.
+#
+# Now (verified and compiled through the paired local-builtin catalog):
+forall a, b R:
+    a != 0
+    b != 0
+    =>:
+        a / b != 0
+# Current behavior: `nonzero.div` is a generated RuleId paired with a semantic
+# fingerprint. The verifier freezes `a` and `b` in one generic rule certificate;
+# independent lowering re-instantiates the schema and checks both child facts.
+# The generic Lean emitter then applies the paired `nonzero_div` wrapper, whose
+# proof is checked by Mathlib's `div_ne_zero`.
+#
+# Boundary: resolved aliases of zero are outside strict structural matching and
+# fall back to the legacy verifier route. Unknown IDs, stale fingerprints, and
+# malformed children are rejected before Lean; none becomes `axiom` or `sorry`.
+#
+# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_builtin_rule_ir.lit
+# Compiler evidence: cargo test --release compile_to_lean_builtin_rule_ir -- --nocapture
+# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release compile_to_lean_mvp_compiles_with_lean -- --ignored --nocapture
+# Implementation: src/verify/rule_schema/, src/verify/local_builtin_catalog/,
+# src/compile_to_lean/local_builtin_adapters/, and the generic runtime/emitter bridge.

@@ -88,6 +88,22 @@ witness exist x R st {x^2 = 4} from 2:
     2^2 = 4
 ```
 
+A concrete proposition whose complete definition is one existential can keep
+its public name while supplying the same witness:
+
+```litex
+prop has_copy(a R):
+    exist x R st {x = a}
+
+witness $has_copy(2) from 2:
+    2 = 2
+```
+
+This stores `$has_copy(2)` as the proved fact. Definition inference exposes its
+existential meaning afterward; the parser does not rewrite the statement. If
+the sole definition clause is `exist!`, the same form additionally requires a
+proof that any two values satisfying the body are equal.
+
 `obtain` uses an existing witness, `by contra` exposes a contradiction,
 `by cases` splits alternatives, and `by induc` handles induction. These forms
 are ways to establish a fact; they do not replace the central question of what
@@ -223,18 +239,19 @@ mean, then let the machine expose the verification, provenance, and boundaries
 clearly. (Since Litex operates on a higher mathematical abstraction level, it usually runs faster than existing formal languages.)
 
 Litex is also researching a compilation path to Lean. The current MVP assigns
-stable IDs to stored facts and, only in explicit To-Lean mode, returns a
+stable IDs to stored facts and, only in explicit Litex-to-Lean mode, returns a
 recursive IR recording which fact, forall instantiation, definition, or builtin
 rule verified each step. The Lean emitter consumes that IR rather than
 re-running pattern matching over source statements. Its supported surface is
 still deliberately narrow; the current scoped-statement slice includes
 explicit-value `have`, checked bare selection such as `have x R`, binary
 `by cases`, atomic `by contra`, trust-free positive `witness exist`, and
-existential extraction through `obtain` or body-style `have x T: ...`. Bare
+atomic-fact witnesses for single-clause plain positive existential props, and existential
+extraction through `obtain` or body-style `have x T: ...`. Bare
 selection and existential extraction are compiled from their exact checked
 packages with `Exists.choose`/`choose_spec`, never an invented opaque constant.
 Unsupported routes fail instead of becoming `sorry` or implicit axioms. See the
-[compiler README](src/to_lean/README.md) for the supported subset and current
+[compiler README](src/compile_to_lean/README.md) for the supported subset and current
 boundary.
 
 ## Real mathematics is the pressure test

@@ -17,6 +17,14 @@ pub struct WitnessExistFact {
     pub line_file: LineFile,
 }
 
+#[derive(Clone)]
+pub struct WitnessAtomicFact {
+    pub atomic_fact: NormalAtomicFact,
+    pub witnesses: Vec<Obj>,
+    pub proof: Vec<Stmt>,
+    pub line_file: LineFile,
+}
+
 impl WitnessExistFact {
     pub fn new(
         equal_tos: Vec<Obj>,
@@ -27,6 +35,22 @@ impl WitnessExistFact {
         WitnessExistFact {
             equal_tos,
             exist_fact_in_witness,
+            proof,
+            line_file,
+        }
+    }
+}
+
+impl WitnessAtomicFact {
+    pub fn new(
+        atomic_fact: NormalAtomicFact,
+        witnesses: Vec<Obj>,
+        proof: Vec<Stmt>,
+        line_file: LineFile,
+    ) -> Self {
+        WitnessAtomicFact {
+            atomic_fact,
+            witnesses,
             proof,
             line_file,
         }
@@ -62,6 +86,29 @@ impl fmt::Display for WitnessExistFact {
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
             ),
+        }
+    }
+}
+
+impl fmt::Display for WitnessAtomicFact {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let head = format!(
+            "{} {} {} {}",
+            WITNESS,
+            self.atomic_fact,
+            FROM,
+            vec_to_string_with_sep(&self.witnesses, COMMA.to_string())
+        );
+        if self.proof.is_empty() {
+            write!(f, "{}", head)
+        } else {
+            write!(
+                f,
+                "{}{}\n{}",
+                head,
+                COLON,
+                vec_to_string_add_four_spaces_at_beginning_of_each_line(&self.proof, 1)
+            )
         }
     }
 }

@@ -110,6 +110,27 @@ pub use crate::infer::{
     BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
     StoreFactOutput,
 };
+pub use crate::litex_to_lean_ir::{
+    LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAbstractPropIr,
+    LitexToLeanArithmeticBuiltinRuleIr, LitexToLeanBuiltinObjectOperatorIr,
+    LitexToLeanBuiltinRuleIr, LitexToLeanCarrierIr, LitexToLeanCaseBranchExitIr,
+    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
+    LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
+    LitexToLeanEqualityRewriteDirectionIr, LitexToLeanEqualityRewriteIr,
+    LitexToLeanEqualityRewriteStepIr, LitexToLeanExistentialProjectionRoleIr,
+    LitexToLeanExistentialWitnessIr, LitexToLeanFactIr, LitexToLeanFactProofIr,
+    LitexToLeanFactStatementIr, LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr,
+    LitexToLeanFunctionTypeIr, LitexToLeanHaveExistentialWitnessIr, LitexToLeanHaveFunctionEqualIr,
+    LitexToLeanHaveObjectChoiceIr, LitexToLeanHaveObjectEqualIr, LitexToLeanIffDirectionIr,
+    LitexToLeanKnownForallArgumentIr, LitexToLeanLocalPremiseIr,
+    LitexToLeanNonzeroExpressionOrientationIr, LitexToLeanNormalizationKindIr,
+    LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
+    LitexToLeanParameterGroupIr, LitexToLeanParameterTypeIr, LitexToLeanProjectedForallIr,
+    LitexToLeanProofRuleIr, LitexToLeanProofStatementIr, LitexToLeanPropIr,
+    LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
+    LitexToLeanStandardSetIr, LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr,
+    LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
+};
 pub use crate::module_manager::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,
     discover_repository_for_file, parse_project_config, resolve_std_root, BareSymbolSourceKind,
@@ -275,6 +296,7 @@ pub use crate::result::ByStmtResult;
 pub use crate::result::ByTheoremVerificationResult;
 pub use crate::result::ByVerificationResult;
 pub use crate::result::ChainFactUnknown;
+pub use crate::result::CheckedDefinitionReplayEvidence;
 pub use crate::result::ClaimFactVerificationResult;
 pub use crate::result::ClaimForallVerificationResult;
 pub use crate::result::ClaimVerificationResult;
@@ -302,6 +324,7 @@ pub use crate::result::ForallFactUnknown;
 pub use crate::result::ForallFactWithIffUnknown;
 pub use crate::result::ForallProofResult;
 pub use crate::result::ForallProvedFactResult;
+pub use crate::result::FunctionDefinitionVerificationResult;
 pub use crate::result::KnownForallInstantiationResult;
 pub use crate::result::KnownForallRequirementResult;
 pub use crate::result::NonFactualStmtSuccess;
@@ -324,6 +347,7 @@ pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
 pub use crate::result::WitnessExistVerificationResult;
+pub use crate::result::WitnessAtomicFactVerificationResult;
 pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
@@ -374,9 +398,7 @@ pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::DefSettingStmt;
 pub use crate::stmt::definition_stmt::DefTemplateStmt;
-pub use crate::stmt::definition_stmt::ExistentialPropSource;
 pub use crate::stmt::definition_stmt::FnSetClause;
-pub use crate::stmt::definition_stmt::HaveByExistStmt;
 pub use crate::stmt::definition_stmt::HaveByPreimageStmt;
 pub use crate::stmt::definition_stmt::HaveCartStmt;
 pub use crate::stmt::definition_stmt::HaveFiniteSeqStmt;
@@ -393,6 +415,8 @@ pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::definition_stmt::HaveSeqStmt;
 pub use crate::stmt::definition_stmt::HaveTupleStmt;
 pub use crate::stmt::definition_stmt::LetObjStmt;
+pub use crate::stmt::definition_stmt::ObtainObjFromExistFact;
+pub use crate::stmt::definition_stmt::ObtainObjFromAtomicFact;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
@@ -413,6 +437,7 @@ pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
 pub use crate::stmt::witness_stmt::WitnessExistFact;
+pub use crate::stmt::witness_stmt::WitnessAtomicFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::ByDefStmt;
@@ -436,22 +461,6 @@ pub use crate::stmt::WitnessStmt;
 pub use crate::symbol::{
     builtin_symbol_ref, insert_symbol_substitution, IntoSymbolRef, SymbolBinding, SymbolDefinition,
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
-};
-pub use crate::to_lean_ir::{
-    AbsoluteValueBuiltinRuleToLeanIR, AbstractPropToLeanIR, ArithmeticBuiltinRuleToLeanIR,
-    BuiltinObjOperatorToLeanIR, BuiltinRuleToLeanIR, CaseBranchExitToLeanIR, CaseBranchToLeanIR,
-    CollectionObjToLeanIR, ConstantObjToLeanIR, ContradictionToLeanIR, DivNotEqualZeroToLeanIR,
-    EqualityRewriteDirectionToLeanIR, EqualityRewriteStepToLeanIR, EqualityRewriteToLeanIR,
-    ExistentialProjectionRoleToLeanIR, ExistentialWitnessToLeanIR, FactProofToLeanIR,
-    FactStmtToLeanIR, FactToLeanIR, FunctionApplicationToLeanIR, FunctionParameterToLeanIR,
-    FunctionTypeToLeanIR, HaveExistentialWitnessToLeanIR, HaveObjChoiceToLeanIR,
-    HaveObjEqualToLeanIR, IffDirectionToLeanIR, KnownForallArgumentToLeanIR, LeanCarrierToLeanIR,
-    LocalPremiseToLeanIR, NonzeroExpressionOrientationToLeanIR, NormalizationKindToLeanIR,
-    ObjToLeanIR, ObjectChoiceToLeanIR, ObjectDefinitionToLeanIR, ParamGroupToLeanIR,
-    ParamTypeToLeanIR, ProjectedForallToLeanIR, ProofRuleToLeanIR, ProofStmtToLeanIR, PropToLeanIR,
-    SetBuiltinRuleToLeanIR, SetRelationDualityBuiltinRuleToLeanIR, StandardSetToLeanIR,
-    StmtToLeanIR, TrustToLeanIR, WellDefinednessCertificateToLeanIR,
-    WellDefinednessFactToLeanIR,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
 pub(crate) use crate::verify::general_cart_member_pointwise_fact;

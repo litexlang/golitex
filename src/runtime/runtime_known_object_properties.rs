@@ -454,7 +454,24 @@ impl Runtime {
                 return Ok(Some(fact_id));
             }
         }
+        if let Fact::ExistFact(exist_fact) = fact {
+            let alpha_key = self.alpha_normalized_exist_fact_id_key(exist_fact)?;
+            if let Some(fact_id) = self.known_fact_id(&alpha_key) {
+                return Ok(Some(fact_id));
+            }
+        }
         Ok(None)
+    }
+
+    pub(crate) fn alpha_normalized_exist_fact_id_key(
+        &self,
+        exist_fact: &ExistFactEnum,
+    ) -> Result<String, RuntimeError> {
+        Ok(format!(
+            "#exist-fact-id:{}:{}",
+            exist_fact.keyword_prefix(),
+            Runtime::exist_fact_normalized_body_string(self, exist_fact)?
+        ))
     }
 
     pub fn infer_rule_firing_cached(&self, key: &str) -> bool {

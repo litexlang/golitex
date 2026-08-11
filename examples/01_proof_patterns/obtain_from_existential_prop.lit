@@ -1,14 +1,13 @@
 # Tracer: eliminate an existential hidden behind a named prop definition.
 #
-# Before:
+# Before (old internal representation):
 # obtain copy from $has_copy(2)
-# Former behavior: parsing stopped because `obtain` required the literal
-# `exist ...` syntax after `from`.
+# Former implementation: direct existential and atomic sources shared
+# `ObtainObjFromExistFact`, which cached a parser-expanded definition.
 #
-# Now: a verified positive prop may be used directly when its concrete
-# definition consists of exactly one positive `exist` or `exist!` clause.
-# Litex substitutes the call arguments into that clause, then performs the
-# ordinary existential elimination.
+# Now: this line parses as `ObtainObjFromAtomicFact`, containing only the
+# atomic fact. Execution resolves its current concrete definition and then
+# performs ordinary existential elimination.
 
 prop has_copy(a R):
     exist x R st {x = a}
@@ -21,5 +20,5 @@ copy = 2
 # facts, `not exist`, ordinary nonexistential definitions, and multi-clause
 # definitions are not eligible for this shorthand.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_existential_prop.lit
-# To-Lean evidence: the `obtain_from_existential_prop_definition` ledger entry
+# Litex-to-Lean evidence: the `obtain_from_existential_prop_definition` ledger entry
 # emits a checked definition projection and compiles in a real Mathlib project.

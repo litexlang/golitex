@@ -28,7 +28,8 @@ pub enum DefObjStmt {
     HaveObjInNonemptySetStmt(HaveObjInNonemptySetOrParamTypeStmt),
     HaveObjEqualStmt(HaveObjEqualStmt),
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
-    HaveByExistStmt(HaveByExistStmt),
+    ObtainObjFromExistFact(ObtainObjFromExistFact),
+    ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
     HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
@@ -79,6 +80,7 @@ pub enum ByStmt {
 #[derive(Clone)]
 pub enum WitnessStmt {
     WitnessExistFact(WitnessExistFact),
+    WitnessAtomicFact(WitnessAtomicFact),
     WitnessNonemptySet(WitnessNonemptySet),
 }
 

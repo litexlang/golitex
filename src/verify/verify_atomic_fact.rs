@@ -16,7 +16,7 @@ impl Runtime {
         {
             return Ok(
                 if self.well_definedness_capture_depth != 0
-                    && self.captures_to_lean_well_definedness()
+                    && self.captures_litex_to_lean_well_definedness()
                 {
                     self.remember_successful_atomic_fact_for_statement(fact, cached_result)
                 } else {

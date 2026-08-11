@@ -245,14 +245,14 @@ When doing mathematics, people often begin by recognizing a pattern: the current
 
 Litex therefore places verified facts in the current context and tries to match and substitute them. A known `forall` fact can be instantiated when its parameter conditions are satisfied, and a known equality can help match a larger expression. This is not “guessing a proof”: every successful step must still pass the rule and context checks. Litex retains named theorems and explicit `by thm` invocations for results that are large, expensive, or whose dependencies should remain visible to the reader.
 
-From a compiler perspective, every successful verification produces a proof route with recursive structure that can be recorded in full. The To-Lean compiler aims to translate that route into a Lean proof term and submit it to the Lean kernel for an independent check.
+From a compiler perspective, every successful verification produces a proof route with recursive structure that can be recorded in full. The Litex-to-Lean compiler aims to translate that route into a Lean proof term and submit it to the Lean kernel for an independent check.
 
 <details>
 <summary><strong>Further reading: How the Litex-to-Lean compiler works</strong></summary>
 
 *This section expands on the implementation and its current correctness boundary. Skipping it does not affect the discussion that follows.*
 
-From a compiler perspective, the successful verification of a Litex fact is essentially a recursively expandable proof tree. Citation of known facts, introduction of `forall` parameters and premises, equality substitution, definition unfolding, computation, and builtin rules form concrete steps in that tree, and any one step may itself branch further. The To-Lean compiler is not intended to reread the source after verification and “guess” a collection of tactics. Instead, it records the verification route already found by the checker, lowers each supported node to a Lean proof term—sometimes expressed as several tactics—and submits the result to the Lean kernel for an independent check. For example, the following universally quantified Litex fact says that if `a != c` and `a = b`, then `b != c`:
+From a compiler perspective, the successful verification of a Litex fact is essentially a recursively expandable proof tree. Citation of known facts, introduction of `forall` parameters and premises, equality substitution, definition unfolding, computation, and builtin rules form concrete steps in that tree, and any one step may itself branch further. The Litex-to-Lean compiler is not intended to reread the source after verification and “guess” a collection of tactics. Instead, it records the verification route already found by the checker, lowers each supported node to a Lean proof term—sometimes expressed as several tactics—and submits the result to the Lean kernel for an independent check. For example, the following universally quantified Litex fact says that if `a != c` and `a = b`, then `b != c`:
 
 ```litex
 forall a, b, c set:
@@ -271,12 +271,12 @@ namespace tmp
 
 noncomputable section
 
-universe LitexUniverse
+universe u
 
 -- The shared LitexObject declarations are omitted here.
 
 -- Litex fact f19
-theorem fact19 : ∀ {alpha0 : Type LitexUniverse} [LitexObject alpha0], ∀ (a : Set alpha0), ∀ (b : Set alpha0), ∀ (c : Set alpha0), a ≠ c → a = b → b ≠ c := by
+theorem fact19 : ∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α), ∀ (c : Set α), a ≠ c → a = b → b ≠ c := by
   intro _ _ a b c proof_fact_1_1 proof_fact_1_2
   have proof_fact_1_3 : a ≠ c := proof_fact_1_1
   have proof_fact_1_4 : a = b := proof_fact_1_2
@@ -295,7 +295,7 @@ Known-`forall` use is expanded in the same style. The IR retains every concrete 
 
 For existential statements, the same principle now has a concrete implementation. A positive `witness exist` retains its concrete witnesses, type checks, local proof steps, and direct body proofs; `obtain` and body-style `have` retain the alpha-checked source existential and each exact stored projection. Lean receives a nested `Exists` proof followed by ordered `Exists.choose`/`choose_spec` terms, including multiple witnesses and proof-local extraction. `exist!`, `not exist`, and preimage extraction remain separate boundaries rather than being approximated by this node.
 
-For builtin rules, known-`forall` instantiation, computation, and deeper composite proofs, the proof IR should likewise retain the corresponding evidence and branches recursively. Litex provides rich automatic verification routes for common mathematical objects; once a successful route has been selected, each step has explicit support and should be recordable and replayable. The current To-Lean MVP covers only some of these routes. An unsupported rule stops compilation instead of degrading into an implicit `axiom`, a `sorry`, or something presented as proved. Therefore, “every Litex verification can be compiled to Lean and accepted by the Lean kernel” remains a correctness goal rather than a completed fact. Once coverage is sufficiently complete, the translation preserves semantics, and the compiler itself has been audited, this path can provide a strong independent correctness guarantee for Litex verification results.
+For builtin rules, known-`forall` instantiation, computation, and deeper composite proofs, the proof IR should likewise retain the corresponding evidence and branches recursively. Litex provides rich automatic verification routes for common mathematical objects; once a successful route has been selected, each step has explicit support and should be recordable and replayable. The current Litex-to-Lean MVP covers only some of these routes. An unsupported rule stops compilation instead of degrading into an implicit `axiom`, a `sorry`, or something presented as proved. Therefore, “every Litex verification can be compiled to Lean and accepted by the Lean kernel” remains a correctness goal rather than a completed fact. Once coverage is sufficiently complete, the translation preserves semantics, and the compiler itself has been audited, this path can provide a strong independent correctness guarantee for Litex verification results.
 
 > **Current boundary:** The Litex-to-Lean compiler remains under design and implementation and has not yet been tested at scale. The Lean code generated by the same Litex code might vary when Litex version updates. Discussion and collaboration are welcome.
 

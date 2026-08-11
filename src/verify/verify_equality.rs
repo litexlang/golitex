@@ -195,6 +195,14 @@ impl Runtime {
         // known non-forall facts, obligation-free computation/normalization,
         // and constructor descent; it cannot instantiate forall facts or
         // reopen definition replay.
+        // Structured definition provenance is a Litex-to-Lean capture concern. Keep
+        // ordinary Litex verification on its established replay path so the
+        // compiler cannot perturb rule selection or environment effects.
+        let checked_function_source = if self.captures_litex_to_lean_well_definedness() {
+            self.checked_function_definition_replay_source(application_side)?
+        } else {
+            None
+        };
         let reduced = match self.unfold_known_fn_application_once(application_side, verify_state)? {
             Some(reduced) => reduced,
             None => {
@@ -230,6 +238,44 @@ impl Runtime {
                 "one checked definition replay `{}` = `{}`",
                 application_side, comparison_candidate
             );
+            let application_is_left =
+                objs_equal_with_nested_binder_alpha_equivalence(statement_left, application_side);
+            let application_is_right =
+                objs_equal_with_nested_binder_alpha_equivalence(statement_right, application_side);
+            if let (Some((definition_object, defining_equality, defining_equality_fact_id)), true) = (
+                checked_function_source.clone(),
+                application_is_left ^ application_is_right,
+            ) {
+                let fact: Fact = EqualFact::new(
+                    statement_left.clone(),
+                    statement_right.clone(),
+                    line_file.clone(),
+                )
+                .into();
+                let evidence = CheckedDefinitionReplayEvidence {
+                    definition_object,
+                    defining_equality,
+                    defining_equality_fact_id,
+                    application_side: application_side.clone(),
+                    reduced: comparison_candidate.clone(),
+                    other_side: other_side.clone(),
+                    application_is_left,
+                    reduced_matches_other_by_alpha: alpha_equal,
+                };
+                let verified_by = VerifiedByResult::fact_with_checked_definition_replay(
+                    fact.clone(),
+                    evidence,
+                    Some(reason),
+                );
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_known_fact(
+                        fact,
+                        verified_by,
+                        Vec::new(),
+                    )
+                    .into(),
+                ));
+            }
             return Ok(Some(known_equality_representative_replay_success(
                 statement_left,
                 statement_right,
@@ -240,6 +286,48 @@ impl Runtime {
             )));
         }
         Ok(None)
+    }
+
+    fn checked_function_definition_replay_source(
+        &self,
+        application: &Obj,
+    ) -> Result<Option<(Obj, Fact, FactId)>, RuntimeError> {
+        let Obj::FnObj(function_application) = application else {
+            return Ok(None);
+        };
+        if function_application.body.is_empty() {
+            return Ok(None);
+        }
+        let definition_object: Obj = match function_application.head.as_ref() {
+            FnObjHead::Identifier(_) | FnObjHead::IdentifierWithMod(_) => {
+                (*function_application.head).clone().into()
+            }
+            _ => return Ok(None),
+        };
+        let Some((body, equal_to, line_file)) =
+            self.get_known_fn_body_and_equal_to_for_obj(&definition_object)
+        else {
+            return Ok(None);
+        };
+        let anonymous_function = AnonymousFn {
+            body,
+            equal_to: Box::new(equal_to),
+        };
+        let defining_equality: Fact = EqualFact::new(
+            definition_object.clone(),
+            anonymous_function.into(),
+            line_file,
+        )
+        .into();
+        let Some(defining_equality_fact_id) = self.known_fact_id_for_fact(&defining_equality)?
+        else {
+            return Ok(None);
+        };
+        Ok(Some((
+            definition_object,
+            defining_equality,
+            defining_equality_fact_id,
+        )))
     }
 
     /// Build equality closures without merging the underlying environments.

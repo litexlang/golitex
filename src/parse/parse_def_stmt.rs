@@ -1389,7 +1389,7 @@ impl Runtime {
         ))
     }
 
-    pub fn parse_obtain_exist_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
+    pub fn parse_obtain_obj(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(OBTAIN)?;
 
         let mut equal_tos = vec![];
@@ -1431,7 +1431,7 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, source_line_file.clone()),
             ))
         };
-        let (true_fact, existential_prop_source) = if tb.current_token_is_equal_to(EXIST) {
+        let (true_fact, source_atomic_fact) = if tb.current_token_is_equal_to(EXIST) {
             (self.parse_exist_fact(tb)?, None)
         } else {
             let source_atomic = self.parse_atomic_fact(tb, true)?;
@@ -1519,10 +1519,7 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
-            (
-                instantiated_exist_fact,
-                Some(ExistentialPropSource::new(source_prop, definition)),
-            )
+            (instantiated_exist_fact, Some(source_prop))
         };
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -1576,23 +1573,18 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        let stmt = match existential_prop_source {
-            Some(source) => HaveByExistStmt::new_from_existential_prop(
-                equal_tos,
-                equal_to_bindings,
-                true_fact,
-                source.fact,
-                source.definition,
-                tb.line_file.clone(),
-            ),
-            None => HaveByExistStmt::new(
-                equal_tos,
+        let stmt = match source_atomic_fact {
+            Some(fact) => {
+                ObtainObjFromAtomicFact::new(equal_to_bindings, fact, tb.line_file.clone()).into()
+            }
+            None => ObtainObjFromExistFact::new(
                 equal_to_bindings,
                 true_fact,
                 tb.line_file.clone(),
-            ),
+            )
+            .into(),
         };
-        Ok(stmt.into())
+        Ok(stmt)
     }
 
     pub fn parse_have_preimage(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -1834,8 +1826,11 @@ impl Runtime {
             Stmt::UnsafeStmt(UnsafeStmt::TrustHaveStmt(stmt)) => {
                 Ok(TemplateDefEnum::TrustHaveStmt(stmt))
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(stmt)) => {
-                Ok(TemplateDefEnum::HaveByExistStmt(stmt))
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) => {
+                Ok(TemplateDefEnum::ObtainObjFromExistFact(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => {
+                Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
             }
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))

@@ -16,6 +16,128 @@ impl Runtime {
         Ok(success.into())
     }
 
+    pub fn exec_witness_atomic_fact(
+        &mut self,
+        stmt: &WitnessAtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let witness_stmt: Stmt = stmt.clone().into();
+        let (definition, instantiated_existential) = self.resolve_witness_atomic_fact(stmt)?;
+        let definition_parameter_check =
+            self.verify_witness_atomic_fact_definition_parameters(stmt, &definition)?;
+        let expanded = WitnessExistFact::new(
+            stmt.witnesses.clone(),
+            instantiated_existential.clone(),
+            stmt.proof.clone(),
+            stmt.line_file.clone(),
+        );
+        self.exec_witness_exist_fact_stmt_verify_well_definedness(&expanded)
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
+        let (inside_results, witness_verification) = self
+            .exec_witness_exist_fact_stmt_verify_process(&expanded)
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
+        let infer_result = self.exec_witness_atomic_fact_stmt_affect_environment(stmt)?;
+
+        let mut success = NonFactualStmtSuccess::new(witness_stmt, infer_result, inside_results);
+        success.witness_atomic_fact_verification = Some(WitnessAtomicFactVerificationResult::new(
+            definition,
+            instantiated_existential,
+            definition_parameter_check,
+            witness_verification,
+        ));
+        Ok(success.into())
+    }
+
+    fn resolve_witness_atomic_fact(
+        &self,
+        stmt: &WitnessAtomicFact,
+    ) -> Result<(DefPropStmt, ExistFactEnum), RuntimeError> {
+        let witness_stmt: Stmt = stmt.clone().into();
+        let predicate_name = stmt.atomic_fact.predicate.to_string();
+        if self
+            .get_abstract_prop_definition_by_name(&predicate_name)
+            .is_some()
+        {
+            return Err(short_exec_error(
+                witness_stmt,
+                format!(
+                    "atomic fact witness requires a concrete `prop`; `{}` is an `abstract_prop`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
+        let definition = self
+            .get_active_prop_definition_by_name(&predicate_name)
+            .ok_or_else(|| {
+                short_exec_error(
+                    witness_stmt.clone(),
+                    format!(
+                        "atomic fact witness could not find a concrete prop definition for `{}`",
+                        predicate_name
+                    ),
+                    None,
+                    vec![],
+                )
+            })?;
+        let existential = self
+            .instantiate_existential_prop_definition(
+                &stmt.atomic_fact,
+                &definition,
+                &stmt.line_file,
+            )
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
+        match &existential {
+            ExistFactEnum::ExistFact(_) | ExistFactEnum::ExistUniqueFact(_) => {}
+            ExistFactEnum::NotExistFact(_) => {
+                return Err(short_exec_error(
+                    witness_stmt,
+                    format!(
+                        "atomic fact witness requires the sole definition clause of `{}` to be positive `exist` or `exist!`",
+                        predicate_name
+                    ),
+                    None,
+                    vec![],
+                ));
+            }
+        }
+        Ok((definition, existential))
+    }
+
+    fn verify_witness_atomic_fact_definition_parameters(
+        &mut self,
+        stmt: &WitnessAtomicFact,
+        definition: &DefPropStmt,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.run_in_local_env(|rt| {
+            let witness_stmt: Stmt = stmt.clone().into();
+            let verify_state = UseContextVerifyState::new(0, false);
+            let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
+            rt.verify_atomic_fact_well_defined(&atomic_fact, &verify_state)
+                .map_err(|cause| {
+                    exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause)
+                })?;
+            let result = rt.verify_args_satisfy_param_def_flat_types(
+                &definition.params_def_with_type,
+                &stmt.atomic_fact.body,
+                &verify_state,
+                ParamObjType::DefHeader,
+            )?;
+            if result.is_unknown() {
+                return Err(short_exec_error(
+                    witness_stmt,
+                    format!(
+                        "atomic fact witness arguments do not satisfy the parameter types of `{}`",
+                        definition.name
+                    ),
+                    None,
+                    vec![result],
+                ));
+            }
+            Ok(result)
+        })
+    }
+
     /// Mathematical contract: an existential witness supplies exactly one
     /// well-defined value per bound variable, the existential formula itself
     /// is meaningful, and every witness value satisfies its instantiated
@@ -298,6 +420,37 @@ impl Runtime {
         stmt: &WitnessExistFact,
     ) -> Result<StmtResult, RuntimeError> {
         let infer_result = self.exec_witness_exist_fact_stmt_affect_environment(stmt)?;
+        Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
+    }
+
+    pub(crate) fn exec_witness_atomic_fact_stmt_affect_environment(
+        &mut self,
+        stmt: &WitnessAtomicFact,
+    ) -> Result<InferResult, RuntimeError> {
+        let witness_stmt: Stmt = stmt.clone().into();
+        let atomic_fact: AtomicFact = stmt.atomic_fact.clone().into();
+        let fact: Fact = atomic_fact.into();
+        let store_result = if self.current_execution_is_trusted_file() {
+            self.store_trusted_fact_and_infer_with_reason(fact, InferReason::VerifiedStatement)
+        } else {
+            self.store_with_well_defined_verification_and_infer_with_default_verify_state(fact)
+        };
+        store_result.map_err(|store_error| {
+            short_exec_error(
+                witness_stmt,
+                "atomic fact witness: failed to store the prop fact".to_string(),
+                Some(store_error),
+                vec![],
+            )
+        })
+    }
+
+    pub(crate) fn exec_witness_atomic_fact_stmt_affect_environment_only(
+        &mut self,
+        stmt: &WitnessAtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        self.resolve_witness_atomic_fact(stmt)?;
+        let infer_result = self.exec_witness_atomic_fact_stmt_affect_environment(stmt)?;
         Ok(NonFactualStmtSuccess::new(stmt.clone().into(), infer_result, vec![]).into())
     }
 

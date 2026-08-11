@@ -211,8 +211,7 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                Ok(HaveByExistStmt::new(
-                    vec![instance_name.to_string()],
+                Ok(ObtainObjFromExistFact::new(
                     vec![instance_binding.clone()],
                     exist_fact,
                     line_file.clone(),
@@ -252,26 +251,33 @@ impl Runtime {
                 }
                 Ok(TrustHaveStmt::new(param_def, facts, line_file.clone()).into())
             }
-            TemplateDefEnum::HaveByExistStmt(s) => {
+            TemplateDefEnum::ObtainObjFromExistFact(s) => {
                 let exist_fact = self.inst_exist_fact(
-                    &s.exist_fact_in_have_obj_st,
+                    &s.fact,
                     param_to_arg_map,
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                let existential_prop_source = self.inst_existential_prop_source(
-                    s.existential_prop_source.as_ref(),
-                    param_to_arg_map,
-                    line_file,
-                )?;
-                let mut instantiated = HaveByExistStmt::new(
-                    vec![instance_name.to_string()],
+                Ok(ObtainObjFromExistFact::new(
                     vec![instance_binding.clone()],
                     exist_fact,
                     line_file.clone(),
-                );
-                instantiated.existential_prop_source = existential_prop_source;
-                Ok(instantiated.into())
+                )
+                .into())
+            }
+            TemplateDefEnum::ObtainObjFromAtomicFact(s) => {
+                let fact = self.inst_normal_atomic_fact(
+                    &s.fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                Ok(ObtainObjFromAtomicFact::new(
+                    vec![instance_binding.clone()],
+                    fact,
+                    line_file.clone(),
+                )
+                .into())
             }
             TemplateDefEnum::HaveFnEqualStmt(s) => {
                 let obj = self.inst_obj(
@@ -572,26 +578,33 @@ impl Runtime {
                 }
                 Ok(TrustStmt::new(facts, line_file.clone()).into())
             }
-            Stmt::DefObjStmt(DefObjStmt::HaveByExistStmt(s)) => {
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(s)) => {
                 let exist_fact = self.inst_exist_fact(
-                    &s.exist_fact_in_have_obj_st,
+                    &s.fact,
                     param_to_arg_map,
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                let existential_prop_source = self.inst_existential_prop_source(
-                    s.existential_prop_source.as_ref(),
-                    param_to_arg_map,
-                    line_file,
-                )?;
-                let mut instantiated = HaveByExistStmt::new(
+                Ok(ObtainObjFromExistFact::new(
                     s.equal_tos.clone(),
-                    s.equal_to_bindings.clone(),
                     exist_fact,
                     line_file.clone(),
-                );
-                instantiated.existential_prop_source = existential_prop_source;
-                Ok(instantiated.into())
+                )
+                .into())
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
+                let fact = self.inst_normal_atomic_fact(
+                    &s.fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                Ok(ObtainObjFromAtomicFact::new(
+                    s.equal_tos.clone(),
+                    fact,
+                    line_file.clone(),
+                )
+                .into())
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 let mut groups = Vec::with_capacity(s.param_def.groups.len());
@@ -686,6 +699,37 @@ impl Runtime {
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(WitnessExistFact::new(equal_tos, exist_fact, proof, line_file.clone()).into())
+            }
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
+                let atomic: AtomicFact = s.atomic_fact.clone().into();
+                let atomic = self.inst_atomic_fact(
+                    &atomic,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file),
+                )?;
+                let AtomicFact::NormalAtomicFact(atomic_fact) = atomic else {
+                    return Err(RuntimeError::from(InstantiateRuntimeError(
+                        RuntimeErrorStruct::new_with_just_msg(
+                            "atomic fact witness target did not remain a positive prop after template instantiation"
+                                .to_string(),
+                        ),
+                    )));
+                };
+                let mut witnesses = Vec::with_capacity(s.witnesses.len());
+                for witness in s.witnesses.iter() {
+                    witnesses.push(self.inst_obj(
+                        witness,
+                        param_to_arg_map,
+                        ParamObjType::DefHeader,
+                    )?);
+                }
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(
+                    WitnessAtomicFact::new(atomic_fact, witnesses, proof, line_file.clone())
+                        .into(),
+                )
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
                 let obj = self.inst_obj(&s.obj, param_to_arg_map, ParamObjType::DefHeader)?;
@@ -907,24 +951,4 @@ impl Runtime {
         Ok(HaveFnByInducCase::new(case_fact, body))
     }
 
-    fn inst_existential_prop_source(
-        &self,
-        source: Option<&ExistentialPropSource>,
-        param_to_arg_map: &HashMap<String, Obj>,
-        line_file: &LineFile,
-    ) -> Result<Option<ExistentialPropSource>, RuntimeError> {
-        source
-            .map(|source| {
-                Ok(ExistentialPropSource::new(
-                    self.inst_normal_atomic_fact(
-                        &source.fact,
-                        param_to_arg_map,
-                        ParamObjType::DefHeader,
-                        Some(line_file),
-                    )?,
-                    source.definition.clone(),
-                ))
-            })
-            .transpose()
-    }
 }

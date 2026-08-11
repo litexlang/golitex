@@ -35,7 +35,7 @@ Blueprint](https://litexlang.com/doc/Litex_Blueprint). For language details,
 see the [Manual](https://litexlang.com/doc/Manual) and [System
 Map](https://litexlang.com/doc/Litex_System_Map). The current Litex-to-Lean
 experiment has a deliberately narrow boundary documented in the
-[compiler README](https://github.com/litexlang/golitex/blob/main/src/to_lean/README.md).
+[compiler README](https://github.com/litexlang/golitex/blob/main/src/compile_to_lean/README.md).
 
 The complete `Group` comparison is kept in the Blueprint rather than repeated
 here. This page concentrates on examples that add distinct evidence.
@@ -674,5 +674,5 @@ example collection:
 - [System Map](https://litexlang.com/doc/Litex_System_Map): parser, verifier,
   runtime, and trust boundaries;
 - [Litex-to-Lean compiler
-  README](https://github.com/litexlang/golitex/blob/main/src/to_lean/README.md):
+  README](https://github.com/litexlang/golitex/blob/main/src/compile_to_lean/README.md):
   the exact supported compilation subset and current limitations.

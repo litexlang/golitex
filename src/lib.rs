@@ -1,5 +1,6 @@
 pub mod cli;
 pub mod common;
+pub mod compile_to_lean;
 #[cfg(test)]
 pub mod debug_test;
 pub mod environment;
@@ -8,6 +9,7 @@ pub mod execute;
 pub mod fact;
 pub mod graph;
 pub mod infer;
+pub mod litex_to_lean_ir;
 pub mod main_test;
 pub mod module_manager;
 pub mod obj;
@@ -22,7 +24,5 @@ pub mod runtime;
 pub mod stmt;
 pub mod symbol;
 pub mod to_latex;
-pub mod to_lean;
-pub mod to_lean_ir;
 pub mod to_python;
 pub mod verify;
