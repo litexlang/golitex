@@ -227,102 +227,6 @@ impl Runtime {
         )
     }
 
-    pub(super) fn standard_subset_set_objs_for_target_set(
-        target_set_obj: &Obj,
-    ) -> Option<Vec<Obj>> {
-        match target_set_obj {
-            Obj::StandardSet(StandardSet::NPos) => Some(vec![]),
-            Obj::StandardSet(StandardSet::N) => Some(vec![StandardSet::NPos.into()]),
-            Obj::StandardSet(StandardSet::ZNeg) => Some(vec![]),
-            Obj::StandardSet(StandardSet::ZStar) => {
-                Some(vec![StandardSet::NPos.into(), StandardSet::ZNeg.into()])
-            }
-            Obj::StandardSet(StandardSet::Z) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::N.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-            ]),
-            Obj::StandardSet(StandardSet::QPos) => Some(vec![StandardSet::NPos.into()]),
-            Obj::StandardSet(StandardSet::QNeg) => Some(vec![StandardSet::ZNeg.into()]),
-            Obj::StandardSet(StandardSet::QStar) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-            ]),
-            Obj::StandardSet(StandardSet::Q) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::N.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::Z.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-                StandardSet::QStar.into(),
-            ]),
-            Obj::StandardSet(StandardSet::RPos) => {
-                Some(vec![StandardSet::NPos.into(), StandardSet::QPos.into()])
-            }
-            Obj::StandardSet(StandardSet::RNeg) => {
-                Some(vec![StandardSet::ZNeg.into(), StandardSet::QNeg.into()])
-            }
-            Obj::StandardSet(StandardSet::RStar) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-                StandardSet::QStar.into(),
-                StandardSet::RPos.into(),
-                StandardSet::RNeg.into(),
-            ]),
-            Obj::StandardSet(StandardSet::R) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::N.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::Z.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-                StandardSet::QStar.into(),
-                StandardSet::Q.into(),
-                StandardSet::RPos.into(),
-                StandardSet::RNeg.into(),
-                StandardSet::RStar.into(),
-            ]),
-            Obj::StandardSet(StandardSet::CStar) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-                StandardSet::QStar.into(),
-                StandardSet::RPos.into(),
-                StandardSet::RNeg.into(),
-                StandardSet::RStar.into(),
-            ]),
-            Obj::StandardSet(StandardSet::C) => Some(vec![
-                StandardSet::NPos.into(),
-                StandardSet::N.into(),
-                StandardSet::ZNeg.into(),
-                StandardSet::ZStar.into(),
-                StandardSet::Z.into(),
-                StandardSet::QPos.into(),
-                StandardSet::QNeg.into(),
-                StandardSet::QStar.into(),
-                StandardSet::Q.into(),
-                StandardSet::RPos.into(),
-                StandardSet::RNeg.into(),
-                StandardSet::RStar.into(),
-                StandardSet::R.into(),
-                StandardSet::CStar.into(),
-            ]),
-            _ => None,
-        }
-    }
-
     // If the env already has `element $in fn_def` (from `known_objs_in_fn_sets`), compare to the RHS `fn ...`.
     pub(crate) fn verify_in_fact_element_in_fn_set_by_stored_definition(
         &mut self,
@@ -575,32 +479,37 @@ impl Runtime {
     pub(super) fn verify_in_fact_by_known_standard_subset_membership(
         &mut self,
         in_fact: &InFact,
-        target_set_obj: &Obj,
     ) -> Result<StmtResult, RuntimeError> {
-        let standard_subset_set_objs =
-            match Self::standard_subset_set_objs_for_target_set(target_set_obj) {
-                Some(standard_subset_set_objs) => standard_subset_set_objs,
-                None => return Ok((StmtUnknown::new()).into()),
+        let Obj::StandardSet(target_set) = &in_fact.set else {
+            return Ok(StmtUnknown::new().into());
+        };
+
+        // Membership is monotone through the standard numeric-set hierarchy.
+        // Example: known `z $in Z` proves `z $in R`, while `z $in C` does not.
+        for source_set_obj in self.known_sets_containing_obj(&in_fact.element) {
+            let Obj::StandardSet(source_set) = &source_set_obj else {
+                continue;
             };
-        for standard_subset_set_obj in standard_subset_set_objs.iter() {
-            let in_fact_into_standard_subset = InFact::new(
+            if !Self::standard_set_is_subset_eq(source_set, target_set) {
+                continue;
+            }
+            let source_membership: AtomicFact = InFact::new(
                 in_fact.element.clone(),
-                standard_subset_set_obj.clone(),
+                source_set_obj.clone(),
                 in_fact.line_file.clone(),
             )
             .into();
-            let verify_result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(
-                &in_fact_into_standard_subset,
-            )?;
-            if verify_result.is_true() {
+            let source_result =
+                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+            if source_result.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         in_fact.clone().into(),
                         format!(
                             "{} in {} implies in {} (standard subset relation)",
-                            in_fact.element, standard_subset_set_obj, target_set_obj
+                            in_fact.element, source_set_obj, in_fact.set
                         ),
-                        Vec::new(),
+                        vec![source_result],
                     ))
                     .into(),
                 );

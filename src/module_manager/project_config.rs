@@ -11,6 +11,9 @@ pub struct ProjectConfig {
     pub imports: Vec<ProjectImport>,
     pub std_imports: Vec<ProjectStdImport>,
     pub exports: Vec<ProjectExport>,
+    pub allow_bare_exports: Vec<ProjectBareName>,
+    pub allow_bare_std_imports: Vec<ProjectBareName>,
+    pub allow_bare_imports: Vec<ProjectBareName>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -39,6 +42,12 @@ pub struct ProjectExport {
     pub line: usize,
 }
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ProjectBareName {
+    pub name: String,
+    pub line: usize,
+}
+
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ConfigTable {
     Hierarchy,
@@ -46,6 +55,9 @@ enum ConfigTable {
     Import,
     ImportStd,
     Export,
+    AllowBareExport,
+    AllowBareImportStd,
+    AllowBareImport,
 }
 
 pub fn parse_project_config(
@@ -59,9 +71,15 @@ pub fn parse_project_config(
     let mut imports = vec![];
     let mut std_imports = vec![];
     let mut exports = vec![];
+    let mut allow_bare_exports = vec![];
+    let mut allow_bare_std_imports = vec![];
+    let mut allow_bare_imports = vec![];
     let mut import_names = HashSet::new();
     let mut std_import_names = HashSet::new();
     let mut export_names = HashSet::new();
+    let mut allow_bare_export_names = HashSet::new();
+    let mut allow_bare_std_import_names = HashSet::new();
+    let mut allow_bare_import_names = HashSet::new();
 
     for (index, raw_line) in source.lines().enumerate() {
         let line = index + 1;
@@ -77,11 +95,14 @@ pub fn parse_project_config(
                 "[import]" => Some(ConfigTable::Import),
                 "[import std]" => Some(ConfigTable::ImportStd),
                 "[export]" => Some(ConfigTable::Export),
+                "[allow bare export]" => Some(ConfigTable::AllowBareExport),
+                "[allow bare import std]" => Some(ConfigTable::AllowBareImportStd),
+                "[allow bare import]" => Some(ConfigTable::AllowBareImport),
                 _ => {
                     return Err(config_error(
                         config_path,
                         line,
-                        "litex.config only supports the [hierarchy], [module], [import], [import std], and [export] tables",
+                        "litex.config only supports the [hierarchy], [module], [import], [import std], [export], [allow bare export], [allow bare import std], and [allow bare import] tables",
                     ))
                 }
             };
@@ -100,11 +121,13 @@ pub fn parse_project_config(
                 let value = match text {
                     "module" => ProjectHierarchy::Module,
                     "submodule" => ProjectHierarchy::Submodule,
-                    _ => return Err(config_error(
-                        config_path,
-                        line,
-                        "[hierarchy] expects exactly `module` or `submodule`",
-                    )),
+                    _ => {
+                        return Err(config_error(
+                            config_path,
+                            line,
+                            "[hierarchy] expects exactly `module` or `submodule`",
+                        ))
+                    }
                 };
                 hierarchy = Some((value, line));
             }
@@ -133,11 +156,13 @@ pub fn parse_project_config(
                 module_flatten = match value.trim() {
                     "true" => true,
                     "false" => false,
-                    _ => return Err(config_error(
-                        config_path,
-                        line,
-                        "[module] flatten must be `true` or `false`",
-                    )),
+                    _ => {
+                        return Err(config_error(
+                            config_path,
+                            line,
+                            "[module] flatten must be `true` or `false`",
+                        ))
+                    }
                 };
                 module_flatten_line = Some(line);
             }
@@ -213,11 +238,37 @@ pub fn parse_project_config(
                     line,
                 });
             }
-            None => return Err(config_error(
+            Some(ConfigTable::AllowBareExport) => parse_bare_name(
+                text,
+                "[allow bare export]",
                 config_path,
                 line,
-                "declare [hierarchy], [import], [import std], or [export] before configuration values",
-            )),
+                &mut allow_bare_export_names,
+                &mut allow_bare_exports,
+            )?,
+            Some(ConfigTable::AllowBareImportStd) => parse_bare_name(
+                text,
+                "[allow bare import std]",
+                config_path,
+                line,
+                &mut allow_bare_std_import_names,
+                &mut allow_bare_std_imports,
+            )?,
+            Some(ConfigTable::AllowBareImport) => parse_bare_name(
+                text,
+                "[allow bare import]",
+                config_path,
+                line,
+                &mut allow_bare_import_names,
+                &mut allow_bare_imports,
+            )?,
+            None => {
+                return Err(config_error(
+                    config_path,
+                    line,
+                    "declare a supported litex.config table before configuration values",
+                ))
+            }
         }
     }
 
@@ -295,6 +346,57 @@ pub fn parse_project_config(
             ));
         }
     }
+    for import in std_imports.iter() {
+        if export_names.contains(&import.name) {
+            return Err(config_error(
+                config_path,
+                import.line,
+                format!(
+                    "`{}` cannot be both a standard import and an export",
+                    import.name
+                )
+                .as_str(),
+            ));
+        }
+    }
+    validate_allowed_bare_names(
+        &allow_bare_exports,
+        &export_names,
+        "[allow bare export]",
+        "[export]",
+        config_path,
+    )?;
+    validate_allowed_bare_names(
+        &allow_bare_std_imports,
+        &std_import_names,
+        "[allow bare import std]",
+        "[import std]",
+        config_path,
+    )?;
+    validate_allowed_bare_names(
+        &allow_bare_imports,
+        &import_names,
+        "[allow bare import]",
+        "[import]",
+        config_path,
+    )?;
+    for allowed in allow_bare_exports.iter() {
+        let export = exports
+            .iter()
+            .find(|export| export.name == allowed.name)
+            .expect("allowed export was checked present");
+        if export.path.ends_with(".lit") {
+            return Err(config_error(
+                config_path,
+                allowed.line,
+                format!(
+                    "[allow bare export] `{}` must name an exported folder/submodule, not a .lit file",
+                    allowed.name
+                )
+                .as_str(),
+            ));
+        }
+    }
 
     Ok(ProjectConfig {
         hierarchy,
@@ -304,7 +406,64 @@ pub fn parse_project_config(
         imports,
         std_imports,
         exports,
+        allow_bare_exports,
+        allow_bare_std_imports,
+        allow_bare_imports,
     })
+}
+
+fn parse_bare_name(
+    text: &str,
+    table: &str,
+    config_path: &str,
+    line: usize,
+    names: &mut HashSet<String>,
+    entries: &mut Vec<ProjectBareName>,
+) -> Result<(), RuntimeError> {
+    if text.contains('=') || text.split_whitespace().count() != 1 {
+        return Err(config_error(
+            config_path,
+            line,
+            format!("{} expects exactly one module name per line", table).as_str(),
+        ));
+    }
+    is_valid_litex_name(text)
+        .map_err(|message| config_error(config_path, line, message.as_str()))?;
+    if !names.insert(text.to_string()) {
+        return Err(config_error(
+            config_path,
+            line,
+            format!("duplicate module name `{}` in {}", text, table).as_str(),
+        ));
+    }
+    entries.push(ProjectBareName {
+        name: text.to_string(),
+        line,
+    });
+    Ok(())
+}
+
+fn validate_allowed_bare_names(
+    entries: &[ProjectBareName],
+    declared_names: &HashSet<String>,
+    allow_table: &str,
+    source_table: &str,
+    config_path: &str,
+) -> Result<(), RuntimeError> {
+    for entry in entries {
+        if !declared_names.contains(&entry.name) {
+            return Err(config_error(
+                config_path,
+                entry.line,
+                format!(
+                    "{} name `{}` must be declared in {}",
+                    allow_table, entry.name, source_table
+                )
+                .as_str(),
+            ));
+        }
+    }
+    Ok(())
 }
 
 fn parse_quoted_path(value: &str, config_path: &str, line: usize) -> Result<String, RuntimeError> {
@@ -376,6 +535,67 @@ mod tests {
         assert_eq!(config.std_imports[1].line, 6);
         assert_eq!(config.imports.len(), 1);
         assert_eq!(config.imports[0].name, "Algebra");
+    }
+
+    #[test]
+    fn parses_three_allow_bare_tables_without_enabling_them_by_default() {
+        let config = parse_project_config(
+            "[hierarchy]\nmodule\n\n[import]\nLocal = \"../local\"\n\n[import std]\nbasics\n\n[export]\nPublic = \"./Public\"\nmain = \"./main.lit\"\n\n[allow bare export]\nPublic\n\n[allow bare import std]\nbasics\n\n[allow bare import]\nLocal\n",
+            "litex.config",
+        )
+        .expect("parse allow-bare configuration");
+
+        assert_eq!(config.allow_bare_exports[0].name, "Public");
+        assert_eq!(config.allow_bare_std_imports[0].name, "basics");
+        assert_eq!(config.allow_bare_imports[0].name, "Local");
+
+        let default_config = parse_project_config(
+            "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n",
+            "litex.config",
+        )
+        .expect("legacy qualified-only configuration");
+        assert!(default_config.allow_bare_exports.is_empty());
+        assert!(default_config.allow_bare_std_imports.is_empty());
+        assert!(default_config.allow_bare_imports.is_empty());
+    }
+
+    #[test]
+    fn allow_bare_entries_are_strict_and_category_checked() {
+        for (source, expected) in [
+            (
+                "[hierarchy]\nmodule\n\n[export]\nA = \"./A\"\n\n[allow bare export]\nA = true\n",
+                "expects exactly one module name per line",
+            ),
+            (
+                "[hierarchy]\nmodule\n\n[export]\nA = \"./A\"\n\n[allow bare export]\nA\nA\n",
+                "duplicate module name `A`",
+            ),
+            (
+                "[hierarchy]\nmodule\n\n[import]\nA = \"../A\"\n\n[export]\nmain = \"./main.lit\"\n\n[allow bare export]\nA\n",
+                "must be declared in [export]",
+            ),
+            (
+                "[hierarchy]\nmodule\n\n[export]\nmain = \"./main.lit\"\n\n[allow bare export]\nmain\n",
+                "must name an exported folder/submodule",
+            ),
+        ] {
+            let Err(error) = parse_project_config(source, "litex.config") else {
+                panic!("invalid allow-bare entry must be rejected");
+            };
+            assert!(format!("{error:?}").contains(expected), "{error:?}");
+        }
+    }
+
+    #[test]
+    fn module_alias_namespace_includes_standard_imports_and_exports() {
+        let result = parse_project_config(
+            "[hierarchy]\nmodule\n\n[import std]\nbasics\n\n[export]\nbasics = \"./basics\"\n",
+            "litex.config",
+        );
+        let Err(error) = result else {
+            panic!("standard import and export aliases must not collide");
+        };
+        assert!(format!("{error:?}").contains("both a standard import and an export"));
     }
 
     #[test]

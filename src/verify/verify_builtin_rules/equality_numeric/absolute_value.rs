@@ -84,9 +84,7 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "abs: abs(x) = x from 0 <= x".to_string(),
-                BuiltinRuleEvidence::AbsoluteValue(
-                    AbsoluteValueBuiltinRule::NonnegativeIdentity,
-                ),
+                BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonnegativeIdentity),
                 vec![nonnegative_result],
             )
             .into(),
@@ -132,9 +130,7 @@ impl Runtime {
             FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 EqualFact::new(left.clone(), right.clone(), line_file).into(),
                 "abs: abs(x) = -x from x <= 0".to_string(),
-                BuiltinRuleEvidence::AbsoluteValue(
-                    AbsoluteValueBuiltinRule::NonpositiveNegation,
-                ),
+                BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonpositiveNegation),
                 vec![nonpositive_result],
             )
             .into(),

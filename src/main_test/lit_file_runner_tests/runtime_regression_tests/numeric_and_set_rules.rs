@@ -1,6 +1,67 @@
 use super::*;
 
 #[test]
+fn standard_set_membership_lifting_uses_known_membership_only_forward() {
+    let source_code = "forall a Z:\n    a $in R";
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "standard_set_membership_lifting_uses_known_membership_only_forward",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "known integer membership should lift to real membership:\n{run_output}"
+    );
+
+    let forall_success = stmt_results
+        .last()
+        .and_then(StmtResult::factual_success)
+        .expect("the tracer forall should have a factual result");
+    let VerifiedByResult::ForallProof(forall_proof) = forall_success.underlying_verified_by()
+    else {
+        panic!("the tracer should retain its forall proof: {forall_success:?}");
+    };
+    let conclusion = forall_proof.proves[0]
+        .result
+        .factual_success()
+        .expect("the real-membership conclusion should have a factual result");
+    let VerifiedByResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
+        panic!("the membership conclusion should use a builtin rule: {conclusion:?}");
+    };
+    assert_eq!(rule.subgoals.len(), 1);
+    let source_membership = rule.subgoals[0]
+        .factual_success()
+        .expect("the builtin should retain its known source membership");
+    let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = &source_membership.stmt else {
+        panic!("the builtin subgoal should be a membership fact: {source_membership:?}");
+    };
+    assert!(matches!(
+        &source_in_fact.set,
+        Obj::StandardSet(StandardSet::Z)
+    ));
+    assert!(matches!(
+        source_membership.underlying_verified_by(),
+        VerifiedByResult::Fact(_)
+    ));
+
+    let boundary_source = "forall c C:\n    c $in R";
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "standard_set_membership_lifting_rejects_complex_to_real",
+    );
+    let (boundary_results, boundary_error) =
+        run_source_code(boundary_source, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "complex membership must not lift backward to real membership:\n{boundary_output}"
+    );
+}
+
+#[test]
 fn compatible_modulus_remainder_absorption_requires_divisibility() {
     let positive_source = "forall p Z:\n    p % 2 = (p % 8) % 2\n\nforall p Z, m, d N+:\n    m % d = 0\n    =>:\n        p % d = (p % m) % d";
     let mut positive_runtime = Runtime::new();

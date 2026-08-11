@@ -112,9 +112,10 @@ pub enum BuiltinRuleToLeanIR {
     PositiveRealMembership,
 }
 
-impl From<&BuiltinRuleEvidence> for BuiltinRuleToLeanIR {
-    fn from(evidence: &BuiltinRuleEvidence) -> Self {
-        match evidence {
+impl BuiltinRuleToLeanIR {
+    pub(crate) fn from_legacy_evidence(evidence: &BuiltinRuleEvidence) -> Option<Self> {
+        Some(match evidence {
+            BuiltinRuleEvidence::RegisteredLocal(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 let orientation = match evidence.orientation {
                     NonzeroExpressionOrientation::ExpressionOnLeft => {
@@ -208,23 +209,43 @@ impl From<&BuiltinRuleEvidence> for BuiltinRuleToLeanIR {
                 SetBuiltinRule::UnionAssociative => SetBuiltinRuleToLeanIR::UnionAssociative,
                 SetBuiltinRule::UnionIdempotent => SetBuiltinRuleToLeanIR::UnionIdempotent,
                 SetBuiltinRule::UnionEmptyIdentity => SetBuiltinRuleToLeanIR::UnionEmptyIdentity,
-                SetBuiltinRule::IntersectCommutative => SetBuiltinRuleToLeanIR::IntersectCommutative,
-                SetBuiltinRule::IntersectAssociative => SetBuiltinRuleToLeanIR::IntersectAssociative,
+                SetBuiltinRule::IntersectCommutative => {
+                    SetBuiltinRuleToLeanIR::IntersectCommutative
+                }
+                SetBuiltinRule::IntersectAssociative => {
+                    SetBuiltinRuleToLeanIR::IntersectAssociative
+                }
                 SetBuiltinRule::UnionMembershipLeft => SetBuiltinRuleToLeanIR::UnionMembershipLeft,
-                SetBuiltinRule::UnionMembershipRight => SetBuiltinRuleToLeanIR::UnionMembershipRight,
-                SetBuiltinRule::IntersectMembershipBoth => SetBuiltinRuleToLeanIR::IntersectMembershipBoth,
-                SetBuiltinRule::IntersectNonMembershipLeft => SetBuiltinRuleToLeanIR::IntersectNonMembershipLeft,
-                SetBuiltinRule::IntersectNonMembershipRight => SetBuiltinRuleToLeanIR::IntersectNonMembershipRight,
+                SetBuiltinRule::UnionMembershipRight => {
+                    SetBuiltinRuleToLeanIR::UnionMembershipRight
+                }
+                SetBuiltinRule::IntersectMembershipBoth => {
+                    SetBuiltinRuleToLeanIR::IntersectMembershipBoth
+                }
+                SetBuiltinRule::IntersectNonMembershipLeft => {
+                    SetBuiltinRuleToLeanIR::IntersectNonMembershipLeft
+                }
+                SetBuiltinRule::IntersectNonMembershipRight => {
+                    SetBuiltinRuleToLeanIR::IntersectNonMembershipRight
+                }
                 SetBuiltinRule::SetMinusMembership => SetBuiltinRuleToLeanIR::SetMinusMembership,
             }),
-            BuiltinRuleEvidence::AbsoluteValue(rule) => BuiltinRuleToLeanIR::AbsoluteValue(match rule {
-                AbsoluteValueBuiltinRule::NonnegativeIdentity => AbsoluteValueBuiltinRuleToLeanIR::NonnegativeIdentity,
-                AbsoluteValueBuiltinRule::NonpositiveNegation => AbsoluteValueBuiltinRuleToLeanIR::NonpositiveNegation,
-                AbsoluteValueBuiltinRule::Product => AbsoluteValueBuiltinRuleToLeanIR::Product,
-                AbsoluteValueBuiltinRule::PositiveFromNonzero => AbsoluteValueBuiltinRuleToLeanIR::PositiveFromNonzero,
-            }),
+            BuiltinRuleEvidence::AbsoluteValue(rule) => {
+                BuiltinRuleToLeanIR::AbsoluteValue(match rule {
+                    AbsoluteValueBuiltinRule::NonnegativeIdentity => {
+                        AbsoluteValueBuiltinRuleToLeanIR::NonnegativeIdentity
+                    }
+                    AbsoluteValueBuiltinRule::NonpositiveNegation => {
+                        AbsoluteValueBuiltinRuleToLeanIR::NonpositiveNegation
+                    }
+                    AbsoluteValueBuiltinRule::Product => AbsoluteValueBuiltinRuleToLeanIR::Product,
+                    AbsoluteValueBuiltinRule::PositiveFromNonzero => {
+                        AbsoluteValueBuiltinRuleToLeanIR::PositiveFromNonzero
+                    }
+                })
+            }
             BuiltinRuleEvidence::PrimeU64Reflection => BuiltinRuleToLeanIR::PrimeU64Reflection,
-        }
+        })
     }
 }
 

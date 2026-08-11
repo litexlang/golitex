@@ -173,10 +173,9 @@ impl Runtime {
         }
         let set_builder = match &fact.set {
             Obj::SetBuilder(set_builder) => Some(set_builder.clone()),
-            _ => match self.unfold_known_fn_application_once(&fact.set, &final_state)? {
-                Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-                _ => indexed_set_builder,
-            },
+            _ => self
+                .unfold_known_fn_application_to_set_builder(&fact.set, &final_state)?
+                .or(indexed_set_builder),
         };
         let Some(set_builder) = set_builder else {
             return Ok(StmtUnknown::new().into());

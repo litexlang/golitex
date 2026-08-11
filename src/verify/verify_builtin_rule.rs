@@ -15,22 +15,24 @@ impl Runtime {
         // premise-bearing proof route available to To-Lean.
         let builtin_state = UseBuiltinRuleVerifyState::new();
         if matches!(goal, AtomicFact::EqualFact(_)) {
-            let builtin_result = self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
+            let builtin_result =
+                self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
             if builtin_result.is_true() {
                 return Ok(builtin_result);
             }
-            let leaf_result = self
-                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+            let leaf_result =
+                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
             if leaf_result.is_true() {
                 return Ok(leaf_result);
             }
         } else {
-            let leaf_result = self
-                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
+            let leaf_result =
+                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
             if leaf_result.is_true() {
                 return Ok(leaf_result);
             }
-            let builtin_result = self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
+            let builtin_result =
+                self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
             if builtin_result.is_true() {
                 return Ok(builtin_result);
             }
@@ -249,6 +251,9 @@ impl Runtime {
         goal: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.try_verify_atomic_fact_with_local_builtin_catalog(goal)? {
+            return Ok(result);
+        }
         if let Some(result) = self.try_verify_atomic_fact_from_known_set_builder_membership(goal)? {
             return Ok(result);
         }

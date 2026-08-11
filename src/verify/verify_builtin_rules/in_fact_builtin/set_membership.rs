@@ -13,7 +13,9 @@ impl Runtime {
             return Ok(None);
         }
         self.active_set_builder_forall_transport = true;
-        let result = self.unfold_known_fn_application_once(obj, verify_state);
+        let result = self
+            .unfold_known_fn_application_to_set_builder(obj, verify_state)
+            .map(|set_builder| set_builder.map(Obj::from));
         self.active_set_builder_forall_transport = false;
         result
     }
@@ -1089,10 +1091,9 @@ impl Runtime {
         if let Obj::InstantiatedTemplateObj(template_obj) = &in_fact.set {
             self.materialize_instantiated_template_obj(template_obj, verify_state)?;
         }
-        let set_builder = match self.unfold_known_fn_application_once(&in_fact.set, verify_state)? {
-            Some(Obj::SetBuilder(set_builder)) => Some(set_builder),
-            _ => self.get_obj_equal_to_set_builder(&in_fact.set),
-        };
+        let set_builder = self
+            .unfold_known_fn_application_to_set_builder(&in_fact.set, verify_state)?
+            .or_else(|| self.get_obj_equal_to_set_builder(&in_fact.set));
         let Some(set_builder) = set_builder else {
             return Ok(None);
         };

@@ -1,0 +1,17 @@
+# Object-definition carrier diagnostics.
+# Focused gate:
+# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/object_definition_carrier_diagnostic.lit
+
+# Before the diagnostic named only "q * x % p is not in type N":
+# template<p, q, x N+>:
+#     have remainder N = q * x % p
+
+# Keep the expression in its declaration-time carrier. A later proof may
+# establish nonnegativity and select an N-valued alias when that refinement is
+# mathematically available.
+template<p, q, x N+>:
+    have remainder Z = q * x % p
+
+# Remaining boundary: a checked object definition never narrows the Z-valued
+# remainder to N merely because p, q, and x are positive naturals. The focused
+# Rust regression keeps the rejected N declaration active.

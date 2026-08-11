@@ -1,0 +1,4 @@
+forall A, B set, x A:
+    x $in B
+    =>:
+        x $in intersect(A, B)

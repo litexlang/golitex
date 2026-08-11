@@ -15,6 +15,9 @@ fn run_source(source: &str, label: &str, detailed: bool) -> (Runtime, bool, Stri
 fn all_explicit_builtin_theorem_interfaces_succeed() {
     run_with_large_stack("all_explicit_builtin_theorem_interfaces", || {
         let source = r#"
+have q Q
+by thm rational_has_unique_reduced_fraction(q)
+
 by thm fn_set_member(fn(x R) R {x}, fn(y R) R)
 by thm set_builder_member(1, {x R: x > 0})
 
@@ -71,6 +74,8 @@ by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), f
             succeeded,
             "all builtin theorem interfaces should succeed:\n{output}"
         );
+        assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
+        assert!(output.contains("exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}"));
         assert!(output.contains("\"theorem_source\": \"builtin_rule\""));
         assert!(output.contains("\"requirement_checks\":"));
         assert!(output.contains("\"role\": \"function signature matches the target function set\""));
@@ -99,6 +104,16 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
             "by thm M::fn_set_member(fn(x R) R {x}, fn(y R) R)",
             "cannot use keyword as name: fn_set_member",
         ),
+        (
+            "rational arity",
+            "have q Q\nby thm rational_has_unique_reduced_fraction(q, q)",
+            "expects 1 argument(s), but got 2",
+        ),
+        (
+            "qualified rational",
+            "have q Q\nby thm M::rational_has_unique_reduced_fraction(q)",
+            "cannot use keyword as name: rational_has_unique_reduced_fraction",
+        ),
     ];
 
     for (label, source, expected) in cases {
@@ -106,6 +121,67 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
         assert!(!succeeded, "{label} should fail:\n{output}");
         assert!(output.contains(expected), "{label}:\n{output}");
     }
+}
+
+#[test]
+fn rational_reduced_fraction_builtin_accepts_only_the_canonical_shape() {
+    let positive = r#"
+have q Q
+exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
+"#;
+    let (_, succeeded, output) = run_source(positive, "rational_reduced_fraction_gcd", false);
+    assert!(
+        succeeded,
+        "the direct canonical gcd form should use the rational existence rule:\n{output}"
+    );
+    assert!(output.contains("exist!: unique rational reduced fraction with positive denominator"));
+
+    for (label, source) in [
+        (
+            "wrong gcd value",
+            "have q Q\nexist! p Z, d N+ st {q = p / d, gcd(p, d) = 2}",
+        ),
+        (
+            "wrong numerator carrier",
+            "have q Q\nexist! p N, d N+ st {q = p / d, gcd(p, d) = 1}",
+        ),
+        (
+            "non-rational target",
+            "have x R\nexist! p Z, d N+ st {x = p / d, gcd(p, d) = 1}",
+        ),
+    ] {
+        let (_, succeeded, output) = run_source(source, label, false);
+        assert!(
+            !succeeded,
+            "{label} must not match the canonical rule:\n{output}"
+        );
+    }
+}
+
+#[test]
+fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_does_not_leak() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("rational_reduced_fraction_no_leak");
+    let (setup_results, setup_error) = run_source_code("have x R", &mut runtime);
+    let (setup_succeeded, setup_output) =
+        render_run_source_code_output(&runtime, &setup_results, &setup_error, false);
+    assert!(setup_succeeded, "setup should succeed:\n{setup_output}");
+
+    let call = "by thm rational_has_unique_reduced_fraction(x)";
+    let (results, error) = run_source_code(call, &mut runtime);
+    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    assert!(!succeeded, "a merely real argument must fail:\n{output}");
+    assert!(output.contains("requires its argument to belong to `Q`"));
+
+    let target = "exist! p Z, d N+ st {x = p / d, gcd(p, d) = 1}";
+    assert!(!runtime.cache_known_facts_contains(target).0);
+    let (probe_results, probe_error) = run_source_code(target, &mut runtime);
+    let (probe_succeeded, probe_output) =
+        render_run_source_code_output(&runtime, &probe_results, &probe_error, false);
+    assert!(
+        !probe_succeeded,
+        "a failed builtin theorem must not store its existential conclusion:\n{probe_output}"
+    );
 }
 
 #[test]
@@ -148,6 +224,16 @@ fn builtin_theorem_names_are_reserved_and_normal_theorems_still_fall_back() {
         let (_, succeeded, output) = run_source(source, label, false);
         assert!(!succeeded, "reserved {label} name should fail:\n{output}");
     }
+
+    let (_, succeeded, output) = run_source(
+        "have rational_has_unique_reduced_fraction R",
+        "reserved_rational_theorem_name",
+        false,
+    );
+    assert!(
+        !succeeded,
+        "the rational builtin theorem name should be reserved:\n{output}"
+    );
 
     let ordinary = r#"
 thm local_reflexivity:

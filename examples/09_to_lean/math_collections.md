@@ -42,6 +42,13 @@ one. Closed numeric facts such as `2 $in R+`, `0 - 1 $in Z-`, and
 `not 0 $in C*` are discharged by checked numeric reflection in Lean rather
 than by a generated axiom.
 
+The ten same-carrier refinement projections are registered rules, not target
+type inference shortcuts. For example, `forall r R+: r $in R` retains the
+source premise `r $in R+`, then applies `carrier.r_pos_in_r` on native `ℝ`.
+The analogous N/Z/Q/R/C positive, negative, and nonzero projections use their
+own checked adapters. Cross-carrier inclusions such as `N ⊆ Z` remain a
+separate coercion problem and are not claimed by this batch.
+
 ## Facts and proof evidence
 
 Facts remain propositions rather than objects. Bounded universal facts retain
@@ -54,6 +61,13 @@ The examples cover direct facts, definition reduction, known-forall
 instantiation, equality transport, rational normalization, typed builtin
 rules, recursive additive evidence, checked choice, existential introduction
 and elimination, case splitting, and contradiction scopes.
+
+The [`mixed_projected_forall`](litex_to_lean_examples.md#mixed_projected_forall)
+section records the clause-coverage boundary. Its one source universal becomes
+the two universal facts actually stored by the runtime, so the real symbol and
+the polymorphic set symbol keep independent native carriers and reusable
+FactIds. The nearby rejected form is a heterogeneous equality between those
+symbols; separate reflexive conclusions do not authorize carrier unification.
 
 The [`builtin_predicates`](litex_to_lean_examples.md#builtin_predicates)
 section fixes the first native builtin-proposition tranche. Closed prime facts
@@ -86,6 +100,13 @@ carrier. `union`, `intersect`, and `set_minus` map to native Mathlib set
 operations. This avoids a monomorphic `LitexSet` universe while preserving the
 source claim that all Litex objects satisfy `$is_set` through a polymorphic
 object marker.
+
+The `native_set_builtins` and `builtin_arithmetic` ledger sections also check
+the generic paired-rule path. Rule schemas keep `$is_set(A)`, `x $in A`, and
+numeric carrier membership as ordinary proof requirements. Checked adapters
+receive native `Set α`/`ℝ` values and those exact proofs. A dependent binder
+such as `x A` carries only an occurrence-local view of `A`'s element carrier,
+not a global type annotation on Litex objects.
 
 Binder-owning set builders and several richer object families remain outside
 this executable collection. They are not approximated by axioms or custom

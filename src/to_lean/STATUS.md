@@ -1,6 +1,6 @@
 # To-Lean Implementation Status
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 This file is the implementation ledger for the current To-Lean work. The
 inventory is authoritative for rule-by-rule coverage; this page tracks the
@@ -20,9 +20,15 @@ pipeline and delivery checkpoints.
   kernel gates.
 - [x] Small self-contained compiler examples use one paired-fence Markdown
   ledger whose Litex inputs and generated Lean snapshots are checked together.
+- [x] Preserve clause-coverage projections for unstored source `forall` facts,
+  emit their real FactIds, and build checked conjunctions for stored
+  multi-conclusion universals.
 
 Tracer:
 [`examples/05_compiler_interop/to_lean_partial_report.lit`](../../examples/05_compiler_interop/to_lean_partial_report.lit)
+
+Projected-forall tracer:
+[`examples/05_compiler_interop/to_lean_mixed_projected_forall.lit`](../../examples/05_compiler_interop/to_lean_mixed_projected_forall.lit)
 
 ## Resolved atomic facts
 
@@ -104,19 +110,36 @@ Existential tracer:
 - [x] Record each rule's owning Rust file and checked Lean tactic/lemma mapping.
 - [x] Mark evaluation/computation-like rules as `not_this_round`.
 
-Current source audit: 462 direct success-constructor calls expand through
-forwarding helpers to 657 label-bearing sites (630 rules and 27 strategies),
-including 558 distinct static labels and 74 dynamic label expressions. There
+Current source audit: 465 direct success-constructor calls expand through
+forwarding helpers to 658 label-bearing sites (631 rules and 27 strategies),
+including 558 distinct static labels and 75 dynamic label expressions. There
 are 46 evaluation/computation-like sites, of which 43 remain
 `not_this_round` after the checked normalization and prime-reflection slices.
-The checked mapping count is now 46 sites: the previous 32, six native set
-equalities, four native set-membership routes, and four absolute-value routes.
-The existing standard numeric-set nonemptiness route now covers `N/Z/Q/R/C`.
+The checked mapping count is now 47 source sites. One of those sites is the
+generic local-schema route and currently represents 96 paired RuleIds; source
+site counts and paired-schema counts are deliberately reported separately.
+The existing standard numeric-set nonemptiness route covers `N/Z/Q/R/C`.
 
 Inventory:
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md)
 
 ## Structured builtin implementations
+
+- [x] Add a paired local-builtin catalog: one restricted `.lit` forall schema
+  and one checked `.lean` adapter per RuleId, with generated manifests and a
+  whitespace-stable semantic fingerprint.
+- [x] Use one generic `RegisteredLocal` verifier certificate and one generic
+  `RegisteredRule` IR node instead of adding evidence/IR enum variants per
+  ordinary fixed-pattern rule.
+- [x] Revalidate RuleId, fingerprint, structural target bindings, parameter
+  requirements, and ordered premise propositions before Lean emission; reject
+  unknown IDs, stale fingerprints, and malformed arities.
+- [x] Migrate 96 zero-, one-, and two-premise rules covering quotient/product
+  nonzero, real absolute value/order, arithmetic signs and monotonicity,
+  same-carrier refined-domain membership projections, min/max, native
+  union/intersection/set difference/powerset, set membership, finiteness,
+  nonemptiness, and elementary subset laws, with a full real-Mathlib acceptance
+  gate.
 
 - [x] Quotient nonzero (`div_ne_zero`, including reversed orientation).
 - [x] Not-equality symmetry (`Ne.symm` from one checked reversed premise).
@@ -204,10 +227,13 @@ Recursive-strategy tracer:
   normalization, equality-rewrite, existential, and forall-introduction proof
   trees; the resolved-atomic regression prevents an intermediate `ℕ` default
   from crossing an `ℝ` goal.
+- [x] Instantiate dependent parameter carriers at each registered-rule
+  occurrence (`x A` refers to the target `A`, not the catalog template symbol)
+  without introducing a complete typed Fact IR.
 - [ ] Give refined-domain prop parameters and unsupported scalar operators
   dedicated native contracts rather than relying on incidental elaboration.
-- [ ] Replace the remaining raw `Fact` payload with a dedicated typed
-  structural object-fact IR.
+- [ ] Extend the same occurrence-local carrier view only where new object
+  families require it; a repository-wide typed Fact rewrite is not required.
 
 Specification:
 [`math_collections.md#numeric-object-abi`](math_collections.md#numeric-object-abi)

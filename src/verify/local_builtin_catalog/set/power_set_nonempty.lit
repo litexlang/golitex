@@ -1,0 +1,2 @@
+forall A set:
+    $is_nonempty_set(power_set(A))

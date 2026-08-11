@@ -1,0 +1,2 @@
+forall A set:
+    union(A, A) = A

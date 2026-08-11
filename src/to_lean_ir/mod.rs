@@ -13,6 +13,7 @@ use std::fmt;
 mod builtin_rule;
 mod carrier;
 mod obj;
+mod registered_rule;
 
 pub use builtin_rule::{
     AbsoluteValueBuiltinRuleToLeanIR, ArithmeticBuiltinRuleToLeanIR, BuiltinRuleToLeanIR,
@@ -24,6 +25,7 @@ pub use obj::{
     BuiltinObjOperatorToLeanIR, CollectionObjToLeanIR, ConstantObjToLeanIR, ObjToLeanIR,
     StandardSetToLeanIR,
 };
+pub use registered_rule::{RegisteredRuleApplicationToLeanIR, TypedBoundObjToLeanIR};
 
 #[derive(Clone, Debug)]
 pub enum StmtToLeanIR {
@@ -35,6 +37,7 @@ pub enum StmtToLeanIR {
     Proof(ProofStmtToLeanIR),
     Trust(TrustToLeanIR),
     Fact(FactStmtToLeanIR),
+    ProjectedForall(ProjectedForallToLeanIR),
 }
 
 #[derive(Clone, Debug)]
@@ -147,6 +150,15 @@ pub struct TrustToLeanIR {
 #[derive(Clone, Debug)]
 pub struct FactStmtToLeanIR {
     pub fact: FactToLeanIR,
+    pub inferred_facts: Vec<FactToLeanIR>,
+}
+
+/// One source `forall` whose independently covered conclusions are stored as
+/// separate runtime facts rather than as one fact with a single `FactId`.
+#[derive(Clone, Debug)]
+pub struct ProjectedForallToLeanIR {
+    pub source: Fact,
+    pub facts: Vec<FactToLeanIR>,
     pub inferred_facts: Vec<FactToLeanIR>,
 }
 
@@ -276,6 +288,7 @@ pub struct ContradictionToLeanIR {
 #[derive(Clone)]
 pub enum ProofRuleToLeanIR {
     Builtin(BuiltinRuleToLeanIR),
+    RegisteredRule(RegisteredRuleApplicationToLeanIR),
     ObjectReflexivity,
     ClosedRealMembership,
     ClosedNumericReflection {
@@ -362,6 +375,9 @@ impl fmt::Debug for ProofRuleToLeanIR {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ProofRuleToLeanIR::Builtin(rule) => f.debug_tuple("Builtin").field(rule).finish(),
+            ProofRuleToLeanIR::RegisteredRule(application) => {
+                f.debug_tuple("RegisteredRule").field(application).finish()
+            }
             ProofRuleToLeanIR::ObjectReflexivity => f.write_str("ObjectReflexivity"),
             ProofRuleToLeanIR::ClosedRealMembership => f.write_str("ClosedRealMembership"),
             ProofRuleToLeanIR::ClosedNumericReflection { carrier } => f

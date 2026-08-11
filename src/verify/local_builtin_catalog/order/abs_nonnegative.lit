@@ -1,0 +1,2 @@
+forall x R:
+    0 <= abs(x)

@@ -1,0 +1,19 @@
+# Tracer: standard-set membership lifting from a known membership
+#
+# Before (verified without retaining its known-fact premise):
+# forall a Z:
+#     a $in R
+# Former behavior: the membership builtin reverse-enumerated every standard
+# subset of R and returned an empty builtin evidence chain.
+#
+# Now (verified with `a $in Z` as the builtin rule's known-fact subgoal):
+forall a Z:
+    a $in R
+# Current behavior: the rule reads the memberships already known for `a` and
+# checks that the known source set Z is contained in the target set R.
+#
+# Boundary: `forall c C: c $in R` remains rejected; C is not a subset of R.
+# The executable negative regression is
+# `standard_set_membership_lifting_uses_known_membership_only_forward`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/standard_set_membership_lifting.lit
+# Implementation: src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs

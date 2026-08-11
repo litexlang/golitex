@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "columns": [
+    "Goal shape",
+    "Fact kind",
+    "Required known leaves",
+    "Supported direction",
+    "Try first",
+    "Nearest rejected or over-expanded shape",
+    "Executable evidence"
+  ],
+  "routes": [
+    {
+      "id": "direct-atomic-fact",
+      "goal_shape": "An atomic arithmetic, carrier, membership, equality, or order consequence already supported by context",
+      "fact_kind": "Direct fact / one-layer builtin",
+      "required_known_leaves": "The exact operands, carrier facts, and any immediate premise required by that rule",
+      "supported_direction": "Construct the requested atomic fact",
+      "try_first": "State the fact directly",
+      "rejected_shape": "Adding a wrapper `claim` or `thm` around a fact the verifier already knows",
+      "evidence": [
+        {"label": "fundamental_comparison_builtin_rules.lit", "path": "examples/02_builtin_math/fundamental_comparison_builtin_rules.lit"}
+      ]
+    },
+    {
+      "id": "definition-introduction",
+      "goal_shape": "A positive concrete predicate call whose definition body is already proved",
+      "fact_kind": "Definition introduction",
+      "required_known_leaves": "The instantiated definition clauses and well-defined arguments",
+      "supported_direction": "Body facts to named positive predicate",
+      "try_first": "`by def $P(args)`",
+      "rejected_shape": "Bare `by def` on equality, a negative predicate goal, or the placeholder `by def:` form when no nested proof is needed",
+      "evidence": [
+        {"label": "by_definition.lit", "path": "examples/01_proof_patterns/by_definition.lit"},
+        {"label": "inline_by_definition.lit", "path": "examples/01_proof_patterns/inline_by_definition.lit"}
+      ]
+    },
+    {
+      "id": "named-theorem",
+      "goal_shape": "A result supplied by a named user theorem",
+      "fact_kind": "Named mathematical interface",
+      "required_known_leaves": "The theorem's domain requirements and arguments",
+      "supported_direction": "Theorem premises to its stored conclusions, or to one selected atomic consequence",
+      "try_first": "`by thm name(args)` or `by thm name(args) => fact`",
+      "rejected_shape": "Expecting a theorem call inside bare `forall` conclusion syntax, or selecting a compound target",
+      "evidence": [
+        {"label": "by_theorem_selected_fact.lit", "path": "examples/01_proof_patterns/by_theorem_selected_fact.lit"}
+      ]
+    },
+    {
+      "id": "explicit-builtin-interface",
+      "goal_shape": "A set-builder, tuple, Cartesian product, function-set, or iterated-object conclusion whose reserved interface has compound requirements",
+      "fact_kind": "Explicit builtin theorem interface",
+      "required_known_leaves": "The interface-specific full-verifier requirements, such as builder predicate, every coordinate equality, or pointwise order",
+      "supported_direction": "Requirements to one constructed membership, equality, or order fact",
+      "try_first": "Bare reserved `by thm set_builder_member(...)`, `tuple_equal_from_coordinates(...)`, or the matching iterated-object interface",
+      "rejected_shape": "Expecting a one-layer atomic builtin to synthesize a quantified or compound premise; qualifying a reserved builtin name",
+      "evidence": [
+        {"label": "gcd_from_finite_divisors.lit", "path": "examples/04_case_studies/gcd_from_finite_divisors.lit"},
+        {"label": "generic_cart_member_coordinates.lit", "path": "examples/_internal/regression/generic_cart_member_coordinates.lit"},
+        {"label": "builtin_interfaces.rs", "path": "src/main_test/lit_file_runner_tests/runtime_regression_tests/builtin_interfaces.rs"}
+      ]
+    },
+    {
+      "id": "set-extensionality",
+      "goal_shape": "Equality of two sets",
+      "fact_kind": "Extensional proof",
+      "required_known_leaves": "Well-defined set objects and both membership directions",
+      "supported_direction": "Mutual subset facts to set equality",
+      "try_first": "`by extension A = B` or goal-block `by extension:`",
+      "rejected_shape": "Syntactic normalization of unrelated construction histories, or using set extensionality for functions",
+      "evidence": [
+        {"label": "inline_by_proof_methods.lit", "path": "examples/01_proof_patterns/inline_by_proof_methods.lit"}
+      ]
+    },
+    {
+      "id": "finite-enumeration",
+      "goal_shape": "A universal fact over displayed finite sets",
+      "fact_kind": "Finite enumeration",
+      "required_known_leaves": "Every quantified domain must be concretely enumerable",
+      "supported_direction": "All concrete assignments to the universal fact",
+      "try_first": "`by enumerate finite_set`",
+      "rejected_shape": "Enumeration over `N`, an opaque set, or another domain with no concrete finite expansion",
+      "evidence": [
+        {"label": "bodyless_by_goal_blocks.lit", "path": "examples/01_proof_patterns/bodyless_by_goal_blocks.lit"},
+        {"label": "enumerate_finite_set.lit", "path": "examples/_internal/regression/enumerate_finite_set.lit"}
+      ]
+    },
+    {
+      "id": "bounded-range-classification",
+      "goal_shape": "Equality alternatives for a known integer member of `range` or `closed_range`",
+      "fact_kind": "Bounded range classification",
+      "required_known_leaves": "Integer endpoints and enough carrier/order facts to verify membership",
+      "supported_direction": "Range membership to one equality or a flat disjunction of equalities",
+      "try_first": "`by enumerate range` / `by enumerate closed_range`",
+      "rejected_shape": "A nested numeric boundary-case ladder; arbitrary-set or unbounded enumeration",
+      "evidence": [
+        {"label": "bounded_range_classification.lit", "path": "examples/01_proof_patterns/bounded_range_classification.lit"}
+      ]
+    },
+    {
+      "id": "bounded-universal",
+      "goal_shape": "A universal fact over an integer range or supported finite Cartesian product",
+      "fact_kind": "Bounded universal proof",
+      "required_known_leaves": "A supported finite/range domain and a well-defined universal target",
+      "supported_direction": "Each generated assignment to the universal fact",
+      "try_first": "`by for`",
+      "rejected_shape": "Treating `by for` as unbounded quantifier automation",
+      "evidence": [
+        {"label": "inline_by_proof_methods.lit", "path": "examples/01_proof_patterns/inline_by_proof_methods.lit"}
+      ]
+    },
+    {
+      "id": "case-proof",
+      "goal_shape": "A goal under an available disjunction or generated alternatives",
+      "fact_kind": "Case proof",
+      "required_known_leaves": "The matching disjunction or exhaustive alternatives must already be known",
+      "supported_direction": "Every covered branch to the same target",
+      "try_first": "`by cases`",
+      "rejected_shape": "Inventing cases with no known exhaustive source; writing `case fact:` with an empty body instead of bodyless `case fact`",
+      "evidence": [
+        {"label": "bodyless_by_cases.lit", "path": "examples/01_proof_patterns/bodyless_by_cases.lit"}
+      ]
+    },
+    {
+      "id": "contradiction-proof",
+      "goal_shape": "A negative or contradiction-shaped goal",
+      "fact_kind": "Contradiction proof",
+      "required_known_leaves": "A well-defined target and facts that yield both sides of a contradiction",
+      "supported_direction": "Negated target assumption to the original target",
+      "try_first": "`by contra`",
+      "rejected_shape": "A bare `impossible` with no contradictory pair; unlike other bodyless routes, omitting the final `impossible`",
+      "evidence": [
+        {"label": "bodyless_by_goal_blocks.lit", "path": "examples/01_proof_patterns/bodyless_by_goal_blocks.lit"}
+      ]
+    },
+    {
+      "id": "induction",
+      "goal_shape": "A discrete natural/integer or finite-set invariant",
+      "fact_kind": "Inductive proof",
+      "required_known_leaves": "Supported induction parameter, base, and invariant shape",
+      "supported_direction": "Base plus successor/insertion step to the generated universal fact",
+      "try_first": "`by induc` / `by strong_induc`",
+      "rejected_shape": "Induction over an arbitrary real or an invariant that has not been packaged in the required goal shape",
+      "evidence": [
+        {"label": "bodyless_by_goal_blocks.lit", "path": "examples/01_proof_patterns/bodyless_by_goal_blocks.lit"},
+        {"label": "finite_set_induction.lit", "path": "examples/_internal/regression/finite_set_induction.lit"}
+      ]
+    },
+    {
+      "id": "universal-proof-control",
+      "goal_shape": "A bare universal statement needs proof-control commands such as cases, theorem calls, witnesses, or induction",
+      "fact_kind": "Local proved fact",
+      "required_known_leaves": "The complete universal target must be well-defined",
+      "supported_direction": "Local proof body to one stored fact",
+      "try_first": "Wrap the target in `claim:` or name it with `thm` when reusable",
+      "rejected_shape": "Putting `by thm`, `by def`, or another proof-control statement directly in a bare `forall ... =>:` conclusion list",
+      "evidence": [
+        {"label": "bodyless_by_goal_blocks.lit", "path": "examples/01_proof_patterns/bodyless_by_goal_blocks.lit"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# Tracer: a function-valued set family preserves its member carrier through
+# multiple checked `have fn` definitions.
+
+have fn row(x N+) power_set(cart(N+, N+)) = {point cart(N+, N+): point[1] = x}
+have fn rows(n N+) fn(K N+) power_set(cart(N+, N+)) = fn(x N+) power_set(cart(N+, N+)) {row(x)}
+
+# Before (did not work):
+# forall n, K N+, point rows(n)(K):
+#     point[1] $in N+
+# Former behavior: well-definedness stopped after unfolding `rows(n)(K)` to
+# `row(K)` and reported `index target point is not a tuple`.
+
+# Now (verified):
+forall n, K N+, point rows(n)(K):
+    point[1] $in N+
+# Current behavior: bounded unfolding reaches row(K)'s checked set builder, so
+# membership supplies the declared cart(N+, N+) carrier and its first projection.
+# Boundary: a family returning power_set(N+) does not make its members tuples;
+# the executable Rust regression still rejects indexing such a member.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/function_valued_set_family_carrier.lit
+# Implementation: src/runtime/runtime_known_object_properties.rs and membership inference/verification.

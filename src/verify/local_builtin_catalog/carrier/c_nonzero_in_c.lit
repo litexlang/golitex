@@ -1,0 +1,2 @@
+forall x C*:
+    x $in C

@@ -124,9 +124,26 @@ impl Runtime {
     }
 
     pub fn get_algo_definition_by_name(&self, algo_name: &str) -> Option<DefAlgoStmt> {
+        if let Some((module_name, local_name)) = split_module_qualified_name(algo_name) {
+            if self.is_current_parse_module(module_name) {
+                return self
+                    .get_algo_definition_by_name_in_current_envs(local_name)
+                    .cloned();
+            }
+            return self
+                .imported_module_environments(module_name)
+                .into_iter()
+                .find_map(|environment| environment.defined_algorithms.get(local_name).cloned());
+        }
+
+        self.get_algo_definition_by_name_in_current_envs(algo_name)
+            .cloned()
+    }
+
+    fn get_algo_definition_by_name_in_current_envs(&self, algo_name: &str) -> Option<&DefAlgoStmt> {
         for environment in self.iter_environments_from_top() {
             if let Some(definition) = environment.defined_algorithms.get(algo_name) {
-                return Some(definition.clone());
+                return Some(definition);
             }
         }
         None

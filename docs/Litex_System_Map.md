@@ -114,6 +114,31 @@ An existential fact therefore does not silently expose a globally named
 witness. Use `witness` to prove an existential and `obtain` to introduce opaque
 witness names from an existential that is already known.
 
+## Module and Bare-Name Resolution
+
+Manifest imports and exports define a module namespace separate from the symbol
+namespace. Therefore `A::x` always treats `A` as a module head, while bare `A`
+is a symbol lookup; a module alias and local symbol may share the spelling.
+Field access is separate again, so `.field` never enters module or bare-symbol
+search.
+
+By default, external symbols require their qualified names. The optional
+`[allow bare export]`, `[allow bare import std]`, and `[allow bare import]`
+tables select sources whose recursively public terminal symbols may be bare.
+At source entry the runtime walks the current module and its ancestors, keeps
+only already-loaded enabled targets, recursively visits their ordered public
+exports (never private imports), and builds one unique `name -> canonical
+owner, SymbolRef, role` index. Per-token lookup is then constant-time. Explicit
+qualified names bypass it.
+
+The same `SymbolRef` reached by re-export is harmless. Different symbols with
+one terminal name are a configuration error, not an overwrite. An active entry
+also reserves its spelling against source-created declarations and binders in
+that file; compiler-generated binders and struct fields are outside that
+reservation. Because an export contributes only after it is loaded, no earlier
+file can resolve a later export through this mechanism. Isolated imports do not
+populate the index.
+
 ## How Fact Shapes Run
 
 Compound facts are not all handled in the same way. Their logical shape
@@ -388,7 +413,7 @@ not persist or propagate trust metadata through later facts and theorems.
 | Bare `fact` | Determined by the fact shape. | Every object and binder must be well-defined. | Verify using the fact-shape and atomic loops. | Store the accepted fact or its reusable components, then infer. | Adds no new trust. |
 | `let x = value` (preview) | The new object name becomes visible only after the right side passes. | `x` must be fresh; `value` must already be well-defined; the form accepts one name and one value. | No type or membership subgoal. | Bind `x`, store the ordinary equality `x = value`, then run existing equality inference. | Checked object definition with no declared carrier. |
 | `have x S` | Introduces `x` in the current scope only after checks pass. | `x` must be unused; `S` must be well-defined. | Prove that `S` is nonempty. | Bind `x`, store `x $in S`, then infer. | Checked object introduction. |
-| `have x S = value` | The defining value is checked before `x` is committed. | Name, type, and value must be well-defined. | Prove `value $in S`. | Bind `x`; store its type/membership and `x = value`; then infer. | Checked definition. |
+| `have x S = value` | The defining value is checked before `x` is committed. | Name, type, and value must be well-defined. | Prove `value $in S` during `verify_process`. On failure, diagnostics name the required carrier, the narrowest provable standard numeric source carrier when available, and the uncommitted binding. | Bind `x`; store its type/membership and `x = value`; then infer. | Checked definition. |
 | `have x S: body` | Uses an existential binder while checking the obligation. | The corresponding `exist x S st {body}` must be well-defined. | Prove that corresponding existential fact. | Bind an opaque witness `x`; store its type and instantiated body facts; then infer. | Checked existence, not unrestricted witness creation. |
 | `obtain names from exist ...` | Opens existential binders into the current scope. | Witness count, parameter types, and existential shape must match. | Verify the source existential fact from the current context. | Bind opaque witness names and store the instantiated direct body facts; positive concrete predicate bodies recursively expose their positive clauses under cycle guards. | Adds no new trust. |
 | `prop P(params): clauses` | Parameters are local while the definition is checked. | Name, parameter domains, and clauses must be well-defined. | The clauses are not proved; they declare the meaning of `P`. | Store the concrete predicate definition. | A definition, not a theorem or assumption about existing objects. |
@@ -437,7 +462,7 @@ retain an explicit final `impossible` statement.
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | `by def fact` | No persistent child scope. | The single target must be a concrete positive prop or supported positive builtin definition. The older goal-block spelling remains parser-compatible. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
-| `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. | Verify theorem domains or explicit builtin requirements with the full verifier. | Store conclusions and infer only after all checks succeed. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
+| `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. The arity-one `rational_has_unique_reduced_fraction(q)` additionally requires `q $in Q`. | Verify theorem domains or explicit builtin requirements with the full verifier. The rational interface constructs its fixed `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` conclusion and sends it through the ordinary reduced-fraction existential verifier. | Store conclusions and infer only after all checks succeed. Builtin conclusions are normally atomic; the rational interface stores its supported existential through the compound-fact store path. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
 | `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The ordinary theorem application and its inferred consequences live in a disposable child scope. | The selected atomic fact must be well-defined in the parent; theorem lookup, arguments, domains, and builtin shapes use the legacy checks. The goal-block spelling accepts no proof body. | Apply the theorem in the child, then use the full atomic verifier on the selected fact. | Discard the child and transactionally store only the selected fact as the parent seed; ordinary inference from that seed remains enabled. | Detailed output separates `temporary_then_facts`, `target_check`, and `parent_stored_facts`; strict/trusted execution follows the existing theorem and file trust boundaries. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. `case fact` denotes a zero-statement proof branch; branches with statements use `case fact:`. | Prove the cases are exhaustive, then prove every target in every branch, including after zero proof steps in a bodyless branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |
@@ -491,7 +516,7 @@ specified result is released.
 | Result | Meaning | Context consequence |
 |---|---|---|
 | `true` | The statement was structurally valid, its objects were well-defined, and its required verification route or declaration action succeeded. | The statement's documented commit effect occurs, followed by inference where applicable. |
-| `unknown` | The verifier found the target meaningful but could not establish it from the visible context and supported routes. This does not mean false. A bare top-level fact surfaces this as a verification failure whose reason is `unknown`, not as a successful statement. | The target is not committed as a proved fact. Add a missing premise, equality, witness, case, or intermediate result. |
+| `unknown` | The verifier found the target meaningful but could not establish it from the visible context and supported routes. This does not mean false. A bare top-level fact surfaces this as a verification failure whose reason is `unknown`, not as a successful statement. Nested function-application equality failures may additionally report the unmatched application, nearest known prefix equality, and remaining argument count. | The target is not committed as a proved fact. Add a missing premise, equality, witness, case, or intermediate result; prefix guidance is diagnostic only and does not add congruence. |
 | `error` | Parsing, name resolution, statement shape, scope, or well-definedness failed, or a proof block violated its execution contract. | The failed target is not committed as a verified result. Supporting effects may already be present unless the form explicitly documents a discarded child or atomic commit. In particular, failed `trust`, `trust have`, and `try` statements do not expose their child-environment effects. |
 | Direct trusted statement | The source explicitly uses `axiom`, `trust`, `trust have`, or another trusted proof form. This is a statement classification, not a fourth truth value. | The declared fact can enter the context. Strict mode rejects the source-level trusted form; later results are not transitively tagged by the runtime. |
 

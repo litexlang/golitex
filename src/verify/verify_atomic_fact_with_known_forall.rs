@@ -2443,6 +2443,12 @@ impl Runtime {
                 given.arg.as_ref(),
                 anonymous_fn_body,
             ),
+            (Obj::FiniteSetSize(left), Obj::FiniteSetSize(given)) => self
+                .match_arg_in_anonymous_fn_body_with_given_arg(
+                    left.set.as_ref(),
+                    given.set.as_ref(),
+                    anonymous_fn_body,
+                ),
             (Obj::FiniteSetMax(left), Obj::FiniteSetMax(given)) => self
                 .match_arg_in_anonymous_fn_body_with_given_arg(
                     left.set.as_ref(),
@@ -2582,6 +2588,36 @@ impl Runtime {
         }
         if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {
             return Ok(None);
+        }
+
+        // Prefer the callable prefix when the given body is itself an
+        // application to the same anonymous-function binders.  For example,
+        // matching `F(K)` against `rows(p,q,h,k)(K)` must bind `F` to
+        // `rows(p,q,h,k)`, not synthesize `fn(K) {rows(...)(K)}` with the
+        // surrounding anonymous summand's return type.
+        if let Obj::FnObj(given_fn_obj) = given_arg {
+            let applied_group_count = fn_obj.body.len();
+            if given_fn_obj.body.len() >= applied_group_count {
+                let prefix_group_count = given_fn_obj.body.len() - applied_group_count;
+                let given_suffix = &given_fn_obj.body[prefix_group_count..];
+                let suffix_matches = fn_obj.body.iter().zip(given_suffix.iter()).all(
+                    |(known_group, given_group)| {
+                        known_group.len() == given_group.len()
+                            && known_group
+                                .iter()
+                                .zip(given_group.iter())
+                                .all(|(known, given)| known.to_string() == given.to_string())
+                    },
+                );
+                if suffix_matches {
+                    let mut map = HashMap::new();
+                    map.insert(
+                        arg_match_binding_key(&forall_param.symbol),
+                        given_fn_obj.prefix_obj(prefix_group_count),
+                    );
+                    return Ok(Some(map));
+                }
+            }
         }
 
         let anonymous_fn = AnonymousFn::new(

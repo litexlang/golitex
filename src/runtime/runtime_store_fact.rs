@@ -133,6 +133,8 @@ impl Runtime {
             return self.infer(&fact);
         }
         let output_fact = fact.clone();
+        let may_store_forall_projections =
+            self.to_lean_mode && matches!(&fact, Fact::ForallFact(_));
 
         let ret = match fact {
             Fact::AtomicFact(_)
@@ -150,9 +152,13 @@ impl Runtime {
                 ),
         };
 
-        let inferred_facts = ret?.inferred_facts();
+        let nested_infer_result = ret?;
+        let inferred_facts = nested_infer_result.inferred_facts();
         let mut infer_result = InferResult::new();
         infer_result.add_store_fact_output(&output_fact, reason_text, inferred_facts);
+        if may_store_forall_projections && self.known_fact_id_for_fact(&output_fact)?.is_none() {
+            infer_result.new_infer_result_inside(nested_infer_result);
+        }
         Ok(infer_result)
     }
 

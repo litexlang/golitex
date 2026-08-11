@@ -1,0 +1,4 @@
+forall A set:
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(power_set(A))

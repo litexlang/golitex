@@ -1,0 +1,5 @@
+forall A, B, S set:
+    A $subset S
+    B $subset S
+    =>:
+        union(A, B) $subset S

@@ -1,0 +1,5 @@
+forall a, b, c, d R:
+    a <= c
+    b <= d
+    =>:
+        min(a, b) <= min(c, d)

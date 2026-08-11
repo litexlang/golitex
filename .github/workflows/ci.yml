@@ -32,6 +32,9 @@ jobs:
       - name: Clippy
         run: cargo clippy -- -W warnings
 
+      - name: Generated documentation drift
+        run: python3 tools/generate_goal_shape_routing.py --check
+
       - name: Core tests
         run: |
           cargo test --lib common::

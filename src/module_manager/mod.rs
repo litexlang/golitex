@@ -5,12 +5,12 @@ mod repository;
 
 pub use module_manager::ModuleManager;
 pub use module_runner::{
-    ConfigImport, ExportEntry, FileId, FileRunner, FileStatus, ImportTarget, ModuleId,
-    ModuleRunner, ModuleStatus,
+    BareSymbolSourceKind, ConfigBareSymbolSource, ConfigImport, ConfigImportKind, ExportEntry,
+    FileId, FileRunner, FileStatus, ImportTarget, ModuleId, ModuleRunner, ModuleStatus,
 };
 pub use project_config::{
-    parse_project_config, ProjectConfig, ProjectExport, ProjectHierarchy, ProjectImport,
-    ProjectStdImport,
+    parse_project_config, ProjectBareName, ProjectConfig, ProjectExport, ProjectHierarchy,
+    ProjectImport, ProjectStdImport,
 };
 pub use repository::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,

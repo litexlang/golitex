@@ -1010,10 +1010,10 @@ impl Runtime {
                 if !equal_fn_set_infer.is_empty() {
                     return Ok(equal_fn_set_infer);
                 }
-                // If the set side is a one-layer user-defined set builder, unfold it
-                // for inference too. Example: `(3,4) $in circle(5)` infers
-                // `(3,4) $in cart(R,R)` and the instantiated circle equation.
-                if let Some(Obj::SetBuilder(set_builder)) = self.unfold_known_fn_application_once(
+                // Follow checked set-valued definitions to their set builder for
+                // inference too. Besides `circle(5)`, this covers a declared
+                // family such as `rows(n)(K) = row(K)`.
+                if let Some(set_builder) = self.unfold_known_fn_application_to_set_builder(
                     set_obj,
                     &UseContextVerifyState::new(0, false),
                 )? {

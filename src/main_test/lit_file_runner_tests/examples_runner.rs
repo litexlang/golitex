@@ -358,6 +358,24 @@ fn run_examples_phase1_sequential_with_runtime(
         crate::verify::known_forall_profile::reset();
 
         for (item_index, item) in phase1_items.iter().enumerate() {
+            if item.run_in_project_context {
+                let start_time_for_one_file = Instant::now();
+                let (run_succeeded, run_output) =
+                    run_source_code_in_file_with_ok(item.path_for_runtime.as_str());
+                let duration_ms_for_one_file =
+                    start_time_for_one_file.elapsed().as_secs_f64() * 1000.0;
+                file_label_and_duration_ms_list
+                    .push((item.report_label.clone(), duration_ms_for_one_file));
+                if !run_succeeded {
+                    every_file_run_ok = false;
+                    println!(
+                        "=== [FAILED] {} ===\n{}\n>>> FAILED project file: {}\n",
+                        item.report_label, run_output, item.report_label
+                    );
+                    break;
+                }
+                continue;
+            }
             if item_index > 0 {
                 runtime.reset_for_isolated_runner_item();
                 runtime.set_current_user_lit_file_path(item.path_for_runtime.as_str());
@@ -590,6 +608,33 @@ fn collect_examples_phase1_groups(
                 source: source_code,
                 path_for_runtime: lit_file_path_str.to_string(),
                 run_in_project_context: false,
+            }],
+        });
+    }
+    let repository_main = manifest_dir
+        .join(REPOSITORY_EXAMPLES_SUBDIR)
+        .join("main.lit");
+    if repository_main.is_file() {
+        let path_for_runtime = repository_main
+            .to_str()
+            .expect("repository example path must be valid UTF-8")
+            .to_string();
+        let report_label = repository_main
+            .strip_prefix(manifest_dir)
+            .unwrap_or(&repository_main)
+            .display()
+            .to_string();
+        let source =
+            fs::read_to_string(&repository_main).expect("read repository module example main file");
+        let group_index = phase1_groups.len();
+        phase1_groups.push(LitexRunGroup {
+            group_index,
+            group_label: report_label.clone(),
+            items: vec![LitexRunItem {
+                report_label,
+                source,
+                path_for_runtime,
+                run_in_project_context: true,
             }],
         });
     }

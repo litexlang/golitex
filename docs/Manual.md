@@ -1483,6 +1483,14 @@ Common binder forms are:
 | `have A nonempty_set` | Introduce a nonempty set. |
 | `have A finite_set` | Introduce a finite set. |
 
+For `have x S = value`, Litex checks `value $in S` during `verify_process`
+before committing `x`. A carrier-mismatch error names the required carrier,
+the narrowest standard numeric carrier currently provable for `value` when one
+is available, and confirms that the binding was not stored. For example,
+`q * x % p` is declaration-time `Z` data even when `p`, `q`, and `x` are
+positive naturals; declaring it directly as `N` is rejected rather than
+silently narrowed.
+
 `let` is the minimal form for naming an already well-defined object:
 
 ```litex
@@ -1917,6 +1925,15 @@ basics
 chap1 = "./chapter01.lit"
 Part2 = "./Part2"
 chap3 = "./chapter03.lit"
+
+[allow bare export]
+Part2
+
+[allow bare import std]
+basics
+
+[allow bare import]
+Algebra
 ```
 
 Important rules:
@@ -1932,9 +1949,37 @@ Important rules:
 5. Canonical names follow the mounted module and export path, for example
    `Algebra::chapter::name`.
 
+The three `allow bare` tables are optional, explicit conveniences. Each line is
+one name from its matching source table: `[allow bare export]` accepts only an
+exported folder/submodule (never a `.lit` file), `[allow bare import std]`
+selects an `[import std]` package, and `[allow bare import]` selects an
+`[import]` alias. Without these tables, existing projects remain
+qualified-only.
+
+For each source file, Litex builds one bare-name index after configured imports
+and preceding exports have loaded. An enabled package contributes the terminal
+symbols from its entire recursive public `[export]` tree, but not anything from
+its private imports. A flattened package behaves the same way: bare `b` and
+public `A::b` resolve to the symbol stored in its sole exported file. Re-export
+of the same symbol is deduplicated; two different symbols with the same
+terminal name make the allow-bare configuration invalid. The stable diagnostic
+scan order is export, standard import, then path import; it is not an overwrite
+precedence.
+
+Explicit `A::b` always resolves `A` in the module namespace and bypasses the
+bare index. Module aliases and symbols are separate, so a local symbol may also
+be named `A`; field selection such as `obj.b` likewise remains in the field
+namespace. Once external bare `b` is active, however, the source file may not
+declare or bind another symbol named `b` at any level. Struct field names are
+the exception because they are selected through a struct/field namespace. An
+enabled export is unavailable while it is still loading, so an earlier file
+cannot cite a later export by its bare name. These permissions inherit into
+descendant submodules.
+
 Source-level `import "../Algebra" as Algebra` and `import std basics` are
 available only in an isolated source session. Repository module sources use
-their manifest; dynamic imports there are rejected.
+their manifest; dynamic imports there are rejected. Isolated imports remain
+qualified-only and never activate manifest allow-bare tables.
 
 ```text
 [hierarchy]
@@ -2573,7 +2618,7 @@ automation immediately:
 
 | Unknown shape | Useful next question |
 |---|---|
-| Atomic | Is an equality, membership, sign, domain condition, or matching lemma missing? |
+| Atomic | Is an equality, membership, sign, domain condition, or matching lemma missing? For a nested function application, `detail` may name the unmatched application, the nearest known prefix equality, and the remaining unapplied argument count. |
 | Conjunction | Which component failed? |
 | Chain | Which adjacent step failed? |
 | Universal | Which local conclusion failed under the displayed assumptions? |
@@ -2730,9 +2775,13 @@ after it succeeds:
 | `by thm tuple_equal_from_coordinates(L, R)` | `L = R` |
 | `by thm finite_set_sum_substitution(L, R)` | `L = R` |
 | `by thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
+| `by thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
 
 These names are bare global reserved names. They cannot be rebound by user
 objects, parameters, theorems, or axioms, and a qualified spelling is rejected.
+The rational interface has arity one and requires its argument to be known in
+`Q`; unlike the other entries above, its fixed stored conclusion is an
+existential rather than an atomic fact.
 Detailed output marks the route with `"theorem_source": "builtin_rule"`, shows
 `requirement_checks`, and preserves `axiom_of_choice` provenance on the two
 general-cart nonemptiness interfaces.
@@ -2971,13 +3020,25 @@ negated, but the checker does not automatically search for a counterexample.
 ### Reduced rational fractions (preview)
 
 Litex has a narrow builtin for the standard reduced-fraction representation of
-a rational number with positive denominator.
+a rational number with positive denominator. The public named form is:
+
+```litex
+have a Q
+by thm rational_has_unique_reduced_fraction(a)
+exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
+```
+
+The same kernel rule also recognizes the canonical existential directly,
+including the older expanded common-divisor spelling:
 
 ```litex
 forall a Q:
+    exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
     exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
 ```
 
+The theorem name is reserved, bare, and has arity one. A non-`Q` argument,
+extra argument, or qualified call is rejected without storing a conclusion.
 This rule recognizes the displayed representation; it is not a general gcd
 construction and does not replace checked source-level arithmetic libraries.
 

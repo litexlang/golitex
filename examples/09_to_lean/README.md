@@ -42,14 +42,16 @@ that marker to hide a strict compiler regression.
 | Section | Demonstrates |
 | --- | --- |
 | `native_carriers` | Primary tracer: bare equality and `2 $in R` on native `ℝ` |
+| `mixed_projected_forall` | Mixed real/set binders whose independently covered conclusions retain separate stored FactIds |
 | `bounded_facts` | Bounded `forall`, retained membership premises, rational normalization |
 | `propositions_and_trust` | Proposition interfaces, known-forall use, explicit trust provenance |
 | `object_definitions` | A checked real `have x R = value` definition and generated facts |
 | `equality_transport` | Unary/binary predicate transport and resolved arithmetic arguments |
-| `builtin_arithmetic` | Twenty typed arithmetic and order builtin rules |
+| `builtin_arithmetic` | Twenty registered arithmetic/order rules with paired Mathlib adapters |
 | `recursive_arithmetic` | A recursively structured positive-addition proof tree |
 | `native_sets` | Polymorphic `Set α`, union, intersection, and set difference |
-| `standard_numeric_subsets` | Native predicates for positive, negative, and nonzero numeric subsets |
+| `native_set_builtins` | Checked paired adapters for set equalities, membership, predicates, absolute value, and min/max |
+| `standard_numeric_subsets` | Native predicates plus checked same-carrier projections for positive, negative, and nonzero numeric subsets |
 | `builtin_predicates` | Native prime, superset, proper-relation, and negated-comparison propositions with two checked MVP proof routes |
 | `choice` | Checked choice from a nonempty native carrier, globally and locally |
 | `existentials` | Existential introduction, extraction, projections, and multiple witnesses |

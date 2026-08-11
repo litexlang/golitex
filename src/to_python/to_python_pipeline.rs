@@ -94,6 +94,7 @@ fn to_python_project_prefix(
                 RepositoryFileTarget::Module(config_import.module_id),
             )?;
             push_python_fragment(&mut fragments, fragment);
+            runtime.refresh_current_bare_symbol_index()?;
         }
         for run_target in run_targets {
             let target_matches = repository_target_matches(selected_target, run_target);
@@ -111,6 +112,7 @@ fn to_python_project_prefix(
                 to_python_project_target(runtime, repository_file_target(run_target))?
             };
             push_python_fragment(&mut fragments, fragment);
+            runtime.refresh_current_bare_symbol_index()?;
             if target_matches || target_contains {
                 return Ok(fragments.join("\n"));
             }
@@ -120,6 +122,13 @@ fn to_python_project_prefix(
             "selected target is missing from its recursive ordered [export] tree".to_string(),
         ))
     })();
+    if output.is_ok() {
+        runtime
+            .module_manager
+            .module_mut(module_id)
+            .expect("discovered module should exist")
+            .status = ModuleStatus::Loaded;
+    }
     if pushed_frame {
         runtime.pop_execution_frame();
     }
@@ -155,6 +164,7 @@ fn to_python_project_target(
                         RepositoryFileTarget::Module(config_import.module_id),
                     )?;
                     push_python_fragment(&mut fragments, fragment);
+                    runtime.refresh_current_bare_symbol_index()?;
                 }
                 for run_target in run_targets {
                     let fragment = match run_target {
@@ -168,9 +178,17 @@ fn to_python_project_target(
                         ),
                     }?;
                     push_python_fragment(&mut fragments, fragment);
+                    runtime.refresh_current_bare_symbol_index()?;
                 }
                 Ok(fragments.join("\n"))
             })();
+            if output.is_ok() {
+                runtime
+                    .module_manager
+                    .module_mut(module_id)
+                    .expect("discovered module should exist")
+                    .status = ModuleStatus::Loaded;
+            }
             if pushed_frame {
                 runtime.pop_execution_frame();
             }
@@ -201,7 +219,9 @@ fn to_python_project_target(
                 .expect("registered project file should exist")
                 .status = FileStatus::Loading;
             runtime.push_file_execution_frame(module_id, file_id, source_path.as_str());
-            let output = read_source(source_path.as_str())
+            let output = runtime
+                .refresh_current_bare_symbol_index()
+                .and_then(|_| read_source(source_path.as_str()))
                 .and_then(|source| to_python(source.as_str(), runtime));
             runtime.pop_execution_frame();
             runtime

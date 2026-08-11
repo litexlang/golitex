@@ -1,0 +1,2 @@
+forall A, B, c set:
+    intersect(A, union(B, c)) = union(intersect(A, B), intersect(A, c))

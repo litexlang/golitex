@@ -96,6 +96,7 @@ impl Runtime {
                             vec![],
                         )
                     })?;
+                let mut known_source_sets = Vec::new();
                 // A `have x T = y` declaration may transport `y` across a
                 // propositionally equal indexed carrier.  Typical examples
                 // are `FiniteList<A, m>` and `FiniteList<A, n>` after the
@@ -105,10 +106,11 @@ impl Runtime {
                 // equal.
                 if verify_result.is_unknown() {
                     if let ParamType::Obj(target_set) = current_type {
-                        for source_set in self.known_sets_containing_obj(current_param_equal_to) {
+                        known_source_sets = self.known_sets_containing_obj(current_param_equal_to);
+                        for source_set in known_source_sets.iter() {
                             let set_equality = self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
                                 &EqualFact::new(
-                                    source_set,
+                                    source_set.clone(),
                                     target_set.clone(),
                                     have_obj_equal_stmt.line_file.clone(),
                                 )
@@ -122,9 +124,56 @@ impl Runtime {
                     }
                 }
                 if verify_result.is_unknown() {
+                    // Error-only carrier provenance: when the expression's
+                    // carrier was derived rather than stored as a direct
+                    // membership fact, find the narrowest standard numeric
+                    // carrier that the ordinary type checker can establish.
+                    // This does not accept the failed declaration or store a
+                    // new fact.
+                    if known_source_sets.is_empty() {
+                        for standard_set in [
+                            StandardSet::NPos,
+                            StandardSet::N,
+                            StandardSet::Z,
+                            StandardSet::Q,
+                            StandardSet::R,
+                            StandardSet::C,
+                        ] {
+                            let candidate_set: Obj = standard_set.into();
+                            if candidate_set.to_string() == current_type.to_string() {
+                                continue;
+                            }
+                            let candidate_type = ParamType::Obj(candidate_set.clone());
+                            if let Ok(candidate_result) = self.verify_obj_satisfies_param_type(
+                                current_param_equal_to.clone(),
+                                &candidate_type,
+                                &UseContextVerifyState::new(0, false),
+                            ) {
+                                if candidate_result.is_true() {
+                                    known_source_sets.push(candidate_set);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    let mut known_carriers = Vec::new();
+                    for source_set in known_source_sets {
+                        let source_text = source_set.to_string();
+                        if !known_carriers.contains(&source_text) {
+                            known_carriers.push(source_text);
+                        }
+                    }
+                    let known_carrier_detail = if known_carriers.is_empty() {
+                        "no source carrier is known".to_string()
+                    } else {
+                        format!("known carrier(s): {}", known_carriers.join(", "))
+                    };
                     let msg = format!(
-                        "have_obj_equal_stmt: {} is not in type {}",
-                        current_param_equal_to, current_type
+                        "have_obj_equal_stmt: carrier mismatch during verify_process: {} requires type {} for binding {}; {}; the binding was not stored",
+                        current_param_equal_to,
+                        current_type,
+                        name,
+                        known_carrier_detail,
                     );
                     return Err(short_exec_error(
                         have_obj_equal_stmt.clone().into(),

@@ -331,7 +331,11 @@ fn initialize_session_runtime(
         if runtime.isolated {
             return Ok(("isolated", stmt_results));
         }
-        runtime.prepare_current_repository_for_repl(format!("{}::<session>", path_string).as_str());
+        if let Err(error) = runtime
+            .prepare_current_repository_for_repl(format!("{}::<session>", path_string).as_str())
+        {
+            return Err((stmt_results, error));
+        }
         return Ok(("project", stmt_results));
     }
 
@@ -384,7 +388,11 @@ fn initialize_session_runtime(
     if let Err(error) = discover_repository(runtime, root.as_str()) {
         return Err((vec![], error));
     }
-    runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str());
+    if let Err(error) =
+        runtime.prepare_current_repository_for_repl(format!("{}/<session>", root).as_str())
+    {
+        return Err((vec![], error));
+    }
     Ok(("project", vec![]))
 }
 

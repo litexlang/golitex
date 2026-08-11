@@ -40,6 +40,38 @@ pub enum ExportEntry {
 pub struct ConfigImport {
     pub name: String,
     pub module_id: ModuleId,
+    pub kind: ConfigImportKind,
+    pub line_file: LineFile,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ConfigImportKind {
+    Path,
+    Standard,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BareSymbolSourceKind {
+    Export,
+    StandardImport,
+    Import,
+}
+
+impl BareSymbolSourceKind {
+    pub fn table_name(self) -> &'static str {
+        match self {
+            BareSymbolSourceKind::Export => "[allow bare export]",
+            BareSymbolSourceKind::StandardImport => "[allow bare import std]",
+            BareSymbolSourceKind::Import => "[allow bare import]",
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct ConfigBareSymbolSource {
+    pub name: String,
+    pub target: ImportTarget,
+    pub kind: BareSymbolSourceKind,
     pub line_file: LineFile,
 }
 
@@ -98,6 +130,10 @@ pub struct ModuleRunner {
     pub run_targets: Vec<ImportTarget>,
     pub run_target_lines: HashMap<ImportTarget, LineFile>,
     pub config_imports: Vec<ConfigImport>,
+    /// Explicit opt-ins whose recursively public terminal symbols may be used
+    /// without a module head. Stored in stable diagnostic order: export, std,
+    /// then path import.
+    pub bare_symbol_sources: Vec<ConfigBareSymbolSource>,
     pub imports: Vec<ModuleId>,
     pub status: ModuleStatus,
     pub execution_mode: ExecutionMode,
@@ -129,6 +165,7 @@ impl ModuleRunner {
             run_targets: vec![],
             run_target_lines: HashMap::new(),
             config_imports: vec![],
+            bare_symbol_sources: vec![],
             imports: vec![],
             status,
             execution_mode: ExecutionMode::Verified,

@@ -235,7 +235,7 @@ orientation, and recursively checked premises. This distinction matters after
 the Litex verifier scope has returned: a compiler must reconstruct the selected
 derivation without running the matcher or proof search again.
 
-The implemented interface has two typed layers:
+The specialized legacy interface has two typed layers:
 
 ```text
 BuiltinRuleEvidence
@@ -252,6 +252,35 @@ into a `VerifiedBys` sequence. `FactProofToLeanIR::RuleApplication` owns the
 second pair. This node is recursively compositional: a premise may itself be a
 citation, normalization, known-forall application, another supported builtin,
 or any later proof rule with a checked backend.
+
+Ordinary fixed-pattern rules now use one generic sibling path:
+
+```text
+paired .lit forall schema + paired .lean theorem
+  -> RuleId + semantic fingerprint + structural substitution
+  -> RegisteredLocal { bindings, parameter_requirement_count }
+  -> RegisteredRule { occurrence-local binding views, premise_count }
+  -> linked checked adapter application
+```
+
+The matcher compares object constructors, scalar payloads, and bound SymbolIds
+directly; it does not use printed objects as semantic keys and does not call
+resolution, computation, definition unfolding, or another builtin. Runtime
+lowering parses the registered source through Litex's normal parser and
+revalidates the target, complete-subtree bindings, instantiated parameter
+requirements, and ordered premises. The Lean linker then requires the same
+RuleId/fingerprint pair and emits each adapter once. The current 96 RuleIds
+cover zero-, one-, and two-premise absolute-value, quotient/product-nonzero,
+native min/max, elementary real arithmetic/order, same-carrier refined-domain
+membership projections, and native set rules,
+including subset, powerset,
+nonempty-set, and finite-set facts, without per-rule Rust evidence or IR
+variants.
+
+Parameter carriers on this route are local to each bound occurrence.
+Instantiating `x A` replaces the schema's `A` with the target occurrence before
+lowering the binding view. Bare symbols and numerals are not globally decorated
+with types, and this mechanism does not require a complete typed Fact IR.
 
 The IR's recursive shape is independent of proof-search depth. Litex's current
 one-builtin-rule budget remains authoritative; recording and replaying the
@@ -323,9 +352,10 @@ its environment. The verifier can prove it, but the current builtin evidence
 does not carry the equality path from `z` to `0`. Supporting that target should
 compose explicit equality-transport evidence around the direct builtin
 instance; it must not broaden the quotient rule to erase that missing proof.
-Other label-only builtin rules likewise remain `OtherUnsupported` until their
-complete bindings and premise contract have a typed evidence variant and a
-checked Lean backend.
+Other label-only builtin rules likewise remain `OtherUnsupported` until they
+either receive a paired local schema and checked adapter, or—when their
+mechanism is reflection, transformation, strategy, definition, or quantified
+reasoning—a dedicated certificate and checked backend.
 
 The first broader tranche uses `ArithmeticBuiltinRule`, a stable 20-case rule
 identity whose complete certificate is the target plus an ordered list of
@@ -652,6 +682,17 @@ the set. Native `A ∪ B`, `A ∩ B`, and `A \ B` are supported when their carri
 unify. Heterogeneous or otherwise underconstrained set expressions fail closed
 until the IR can retain a sound carrier constraint; they do not fall back to a
 universal wrapper.
+
+Clause coverage remains visible at the statement boundary. For example,
+`forall a R, b set:` followed by the independent conclusions `a = a` and
+`b = b` is stored by Litex as two smaller universal facts. `ProjectedForall`
+retains those exact propositions and FactIds, then emits one real-bounded
+theorem and one polymorphic `Set α` theorem. It does not force the two symbols
+into one carrier or assign a synthetic ID to the source-wide statement. When
+every conclusion really covers every binder, several conclusions instead form
+one native Lean conjunction and the retained proofs fill its components in
+source order. A projection whose recorded proof still needs an omitted local
+binder remains rejected rather than receiving an invented witness.
 
 Set-relation propositions also stay native:
 

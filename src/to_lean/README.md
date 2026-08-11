@@ -89,7 +89,7 @@ flattening away the scope.
 
 ## Statement and proof IR
 
-The MVP currently constructs eight statement forms:
+The MVP currently constructs nine statement forms:
 
 - `AbstractProp`
 - `Prop`
@@ -99,6 +99,7 @@ The MVP currently constructs eight statement forms:
 - `HaveObjEqual`
 - `HaveExistentialWitness`
 - `Proof`
+- `ProjectedForall`
 
 A fact contains its proposition, optional stored `FactId`, and a recursive
 `FactProofToLeanIR`. Direct citations are proof-tree leaves. Derived facts use
@@ -110,9 +111,22 @@ modus ponens, conjunction/existential introduction, case split, and an explicit
 unsupported rule. Only equality rewrite, definition reduction, the supported
 normalization slice, known-forall instantiation, and the structured quotient-
 nonzero, not-equality symmetry, subset/superset duality, closed-u64 prime
-reflection, and 20 arithmetic/order builtin rules currently have Lean backends.
-Positive existential introduction is also checked from its retained witness,
-parameter requirements, local proof steps, and direct body proofs.
+reflection, and 96 registered local schemas—including 20 elementary real
+arithmetic/order rules and ten same-carrier refined-domain projections—currently
+have Lean backends. Positive existential
+introduction is also checked
+from its retained witness, parameter requirements, local proof steps, and
+direct body proofs.
+
+`ProjectedForall` preserves the runtime's clause-coverage behavior. When one
+source universal has independently covered conclusions, the runtime may store
+smaller universal facts rather than assign one `FactId` to the source-wide
+conjunction. To-Lean retains those exact stored propositions and IDs, filters
+the recorded parameter premises to each retained binder set, and reuses the
+matching checked conclusion proofs. A genuinely multi-conclusion stored
+universal instead emits a native Lean conjunction whose components are proved
+in source order. Neither route invents a synthetic ID for an unstored source
+fact.
 
 ### Object definitions, existential witnesses, checked choice, and scoped proof commands
 
@@ -208,13 +222,33 @@ explicit before adding larger proof families.
 The source-derived coverage ledger is
 [`builtin_rule_inventory.md`](builtin_rule_inventory.md). Its generator follows
 label arguments through forwarding helpers rather than counting only raw
-constructors: 463 direct success-constructor calls currently expand to 659
-label-bearing rule/strategy sites, including 560 distinct static labels. Each
+constructors: 465 direct success-constructor calls currently expand to 658
+label-bearing rule/strategy sites, including 558 distinct static labels. Each
 row records its Rust source, family, checked Lean mapping, and delivery status;
-evaluation/computation-like sites are classified separately from the current
-20-rule tranche. Thirty-two source sites currently have a checked mapping: the
-previous 27, closed-u64 prime reflection, and four premise-bearing
-subset/superset-duality orientations.
+evaluation/computation-like sites are classified separately. Forty-seven
+source sites currently have a checked mapping. One generic source site
+represents the 96 paired local RuleIds described below, so source-site and
+catalog-entry counts are intentionally distinct.
+
+Ordinary fixed-pattern local rules use a generated paired catalog. A rule has
+exactly one restricted Litex `forall` schema under
+`src/verify/local_builtin_catalog/<rule>.lit` and one checked Mathlib theorem
+under `src/to_lean/local_builtin_adapters/<rule>.lean`. Its path is the stable
+`RuleId`; the generator freezes a semantic fingerprint and rejects missing or
+duplicate pairs. The verifier uses a display-free structural matcher, binds
+complete object subtrees, checks only already-known parameter requirements and
+premises, and returns one generic `RegisteredLocal` certificate. Runtime
+lowering rechecks the target, bindings, fingerprint, and child propositions;
+the emitter links each required adapter exactly once and applies it in the
+fixed binding/requirement/premise ABI. Adding another ordinary schema therefore
+does not add another Rust evidence or IR enum variant.
+
+Carrier information in that path remains occurrence-local. For example, the
+certificate for `forall A, B set, x A` instantiates the type view of `x` with
+the target occurrence of `A`; it does not attach types to every Litex object or
+replace `Fact` with a complete typed Fact IR. Numerals likewise remain bare
+objects, including signed canonical decimals; a judgment supplies a native
+carrier expectation only when Lean needs one.
 
 A diagnostic rule label is not a proof certificate. A compiler-supported
 builtin therefore freezes its successful matcher bindings in
@@ -234,6 +268,10 @@ RuleApplication {
     premises: [<recursive child proof IR>, ...],
 }
 ```
+
+Registered local rules use the sibling `RegisteredRule` identity in the same
+`RuleApplication` node. Legacy specialized evidence remains for reflection,
+transforms, strategies, and rules not yet migrated to the paired catalog.
 
 `BuiltinStrategy` remains the diagnostic identity of the search route. When a
 successful structural decomposition exactly matches a supported arithmetic
@@ -255,14 +293,14 @@ This serialization does not widen verifier automation. The existing
 proof tree Litex may select; the compiler only preserves and checks that
 already-selected tree.
 
-The first vertical slice is quotient nonzero. For literal-zero targets, the
-verifier records the numerator, denominator, and whether the quotient occurred
-on the left or right of `!=`. The two subgoals retain the proofs of numerator
-and denominator nonzeroness. Lean emits `div_ne_zero hNumerator hDenominator`,
-using `Ne.symm` for the reversed target. A resolved identifier that merely
-denotes zero still verifies in Litex, but it has no compiler evidence for that
-resolution yet; it deliberately remains `OtherUnsupported` rather than
-silently treating the identifier as literal zero.
+Quotient nonzero illustrates the migration boundary. The direct
+`a / b != 0` orientation is RuleId `nonzero.div`; its schema binds `a` and `b`,
+retains both nonzero premises, and links the `div_ne_zero` adapter. The reversed
+`0 != a / b` orientation still uses its earlier specialized evidence and
+`Ne.symm`, because it is a distinct target schema. A resolved identifier that
+merely denotes zero still verifies in Litex, but it has no compiler equality
+transport for that resolution yet; it deliberately remains unsupported rather
+than silently treating the identifier as literal zero.
 
 Not-equality symmetry is the one-premise slice. The verifier records the
 `NotEqualSymmetry` identity and returns the exact reversed non-equality as its
@@ -452,7 +490,8 @@ The current lowering is intentionally small:
   native Mathlib carriers and generic sets using `Set α`;
 - only an explicit Litex `trust` becomes Lean `axiom`;
 - stored proved facts become `theorem fact<FactId>`; for example, source fact
-  `f4` becomes `fact4`;
+  `f4` becomes `fact4`; independently covered `forall` clauses become their
+  exact runtime-stored projected theorems rather than one synthetic fact;
 - explicit-value `have x T = e` becomes a checked `def` at file scope or a
   checked `let` inside a proof, followed by its stored type and equality facts;
 - `by cases` proves its coverage, opens one scoped branch per recorded local
@@ -489,6 +528,9 @@ The current lowering is intentionally small:
 - arithmetic/order builtin evidence checks the target and ordered premise fact
   families, recursively materializes those premise proofs, and applies one of
   `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
+- registered local evidence revalidates its RuleId and fingerprint, recursively
+  materializes parameter requirements and premises, and applies the generated
+  checked adapter without consulting a diagnostic label;
 - verified rational-expression normalization operates directly on native
   terms and discharges them with `norm_num`, `ring`, or `field_simp` followed
   by `ring`;
@@ -546,9 +588,19 @@ current explicit function-object ABI boundary.
 
 [`examples/05_compiler_interop/to_lean_builtin_rule_ir.lit`](../../examples/05_compiler_interop/to_lean_builtin_rule_ir.lit)
 is the builtin-rule tracer. It follows one quotient-nonzero proof from matched
-Litex arguments, through recursively returned subgoal results and typed proof
-IR, to a checked `div_ne_zero` Lean term. Focused Rust regressions also cover
-the reversed target, malformed IR, and the unresolved-zero-alias boundary.
+Litex arguments, through the generic RuleId/fingerprint certificate and
+recursive subgoal results, to the paired checked `div_ne_zero` adapter. Focused
+Rust regressions also cover the reversed legacy orientation, malformed arity,
+unknown RuleId, stale fingerprint, and unresolved-zero-alias boundary.
+
+[`examples/05_compiler_interop/to_lean_local_builtin_catalog.lit`](../../examples/05_compiler_interop/to_lean_local_builtin_catalog.lit)
+is the full paired-catalog acceptance tracer. It exercises all 96 current
+RuleIds, including dependent set-member carriers, elementary subset laws,
+native set finiteness/nonemptiness, min/max lattice laws, nonzero
+multiplication, strict-to-weak order, arithmetic sign/monotonicity rules,
+same-carrier refined-domain membership projections, and signed numerals, and
+its complete generated module is
+compiled by a real Mathlib/Lean kernel gate.
 
 [`examples/01_proof_patterns/not_equal_symmetry.lit`](../../examples/01_proof_patterns/not_equal_symmetry.lit)
 is the not-equality-symmetry tracer. It preserves the formerly rejected
@@ -556,10 +608,10 @@ To-Lean route, keeps `a != b` as the builtin child for `b != a`, and checks the
 generated `Ne.symm` proof without adding an axiom or `sorry`.
 
 [`examples/05_compiler_interop/to_lean_builtin_rules_20.lit`](../../examples/05_compiler_interop/to_lean_builtin_rules_20.lit)
-is the representative 20-rule tracer. It covers strict-to-weak order,
+is the representative 20-rule arithmetic migration tracer. It covers strict-to-weak order,
 subtraction signs, addition signs and monotonicity, multiplication signs, and
-division signs. A focused regression requires 20 distinct typed rule IDs,
-rejects malformed premise arity, and sends the complete generated module
+division signs. A focused regression requires 20 distinct registered RuleIds,
+rejects malformed registered premise arity, and sends the complete generated module
 through the real Lean kernel.
 
 [`examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit`](../../examples/05_compiler_interop/to_lean_recursive_strategy_ir.lit)

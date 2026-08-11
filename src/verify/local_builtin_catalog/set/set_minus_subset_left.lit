@@ -1,0 +1,2 @@
+forall A, B set:
+    set_minus(A, B) $subset A

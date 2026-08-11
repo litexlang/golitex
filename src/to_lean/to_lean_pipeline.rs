@@ -3,12 +3,17 @@ use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
 use super::helper::lean_generic_carrier_name;
+use super::local_builtin_adapters::{linked_local_builtin_adapter_module, local_builtin_adapter};
 use super::rational_expression::{lean_name, LeanRationalExpression};
 use super::set_prelude::LITEX_OBJECT_PRELUDE;
 use super::type_context::LeanTypeContext;
 use super::{
     ToLeanCompilationReport, ToLeanCompilationStatus, ToLeanUnsupported, ToLeanUnsupportedPhase,
 };
+use crate::to_lean_ir::RegisteredRuleApplicationToLeanIR;
+#[cfg(test)]
+use crate::verify::rule_schema::RuleFingerprint;
+use crate::verify::rule_schema::RuleId;
 
 enum ToLeanStatementOutcome {
     Ir(StmtToLeanIR),
@@ -246,6 +251,7 @@ struct LeanEmitter {
     emitted_fact_ids: HashSet<FactId>,
     next_local_space_id: usize,
     type_context: LeanTypeContext,
+    required_local_builtin_rules: HashSet<RuleId>,
 }
 
 #[derive(Clone, Default)]
@@ -279,6 +285,7 @@ impl LeanEmitter {
             emitted_fact_ids: HashSet::new(),
             next_local_space_id: 1,
             type_context: LeanTypeContext::default(),
+            required_local_builtin_rules: HashSet::new(),
         }
     }
 
@@ -309,6 +316,14 @@ impl LeanEmitter {
     }
 
     fn finish_with_status_comment(self, status_comment: Option<String>) -> String {
+        let adapter_module =
+            linked_local_builtin_adapter_module(&self.required_local_builtin_rules)
+                .expect("registered local builtin adapters were validated during emission");
+        let adapter_module = if adapter_module.is_empty() {
+            String::new()
+        } else {
+            format!("{}\n\n", adapter_module)
+        };
         let status_comment = status_comment
             .map(|comment| format!("{}\n\n", comment))
             .unwrap_or_default();
@@ -320,10 +335,10 @@ impl LeanEmitter {
         );
         match self.namespace {
             Some(namespace) => format!(
-                "import Mathlib\n\nnamespace {}\n\n{}\n\nend\n\nend {}\n",
-                namespace, body, namespace
+                "import Mathlib\n\n{}namespace {}\n\n{}\n\nend\n\nend {}\n",
+                adapter_module, namespace, body, namespace
             ),
-            None => format!("import Mathlib\n\n{}\n\nend\n", body),
+            None => format!("import Mathlib\n\n{}{}\n\nend\n", adapter_module, body),
         }
     }
 
@@ -395,6 +410,13 @@ impl LeanEmitter {
             StmtToLeanIR::Fact(ir) => {
                 self.emit_proved_fact(&ir.fact)?;
                 for fact in ir.inferred_facts.iter() {
+                    self.emit_proved_fact(fact)?;
+                }
+                Ok(())
+            }
+            StmtToLeanIR::ProjectedForall(ir) => {
+                validate_projected_forall_ir(ir)?;
+                for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
                     self.emit_proved_fact(fact)?;
                 }
                 Ok(())
@@ -603,6 +625,17 @@ impl LeanEmitter {
             } => self.lean_builtin_rule_application(
                 proposition,
                 rule,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            FactProofToLeanIR::RuleApplication {
+                rule: ProofRuleToLeanIR::RegisteredRule(application),
+                parameter_requirements,
+                premises,
+            } => self.lean_registered_rule_application(
+                proposition,
+                application,
                 parameter_requirements,
                 premises,
                 context,
@@ -1068,6 +1101,12 @@ impl LeanEmitter {
                     lines.extend(self.lean_local_fact(fact, context)?);
                 }
             }
+            StmtToLeanIR::ProjectedForall(ir) => {
+                validate_projected_forall_ir(ir)?;
+                for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+                    lines.extend(self.lean_local_fact(fact, context)?);
+                }
+            }
             StmtToLeanIR::Proof(ir) => {
                 for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
                     lines.extend(self.lean_local_fact(fact, context)?);
@@ -1380,6 +1419,62 @@ impl LeanEmitter {
         Ok(lines.join("\n"))
     }
 
+    fn lean_registered_rule_application(
+        &mut self,
+        proposition: &Fact,
+        application: &RegisteredRuleApplicationToLeanIR,
+        parameter_requirements: &[FactToLeanIR],
+        premises: &[FactToLeanIR],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if parameter_requirements.len() != application.parameter_requirement_count
+            || premises.len() != application.premise_count
+        {
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "registered local builtin `{}` expected {} parameter requirements and {} premises but received {} and {}",
+                    application.rule_id.as_str(),
+                    application.parameter_requirement_count,
+                    application.premise_count,
+                    parameter_requirements.len(),
+                    premises.len()
+                ),
+            ));
+        }
+        let adapter =
+            local_builtin_adapter(&application.rule_id, &application.semantic_fingerprint)
+                .map_err(|message| to_lean_error(&proposition.line_file(), message))?;
+        self.required_local_builtin_rules
+            .insert(application.rule_id.clone());
+
+        let mut arguments = Vec::with_capacity(
+            application.bindings.len() + parameter_requirements.len() + premises.len(),
+        );
+        for binding in &application.bindings {
+            let carrier = param_type_object_carrier(&binding.param_type)?;
+            arguments.push(lean_obj_ir_with_expected(
+                &binding.object,
+                &carrier,
+                &context.type_context,
+                false,
+            )?);
+        }
+
+        let mut lines = vec!["by".to_string()];
+        for child in parameter_requirements.iter().chain(premises.iter()) {
+            let (name, child_lines) = self.lean_named_local_fact(child, context)?;
+            lines.extend(child_lines);
+            arguments.push(name);
+        }
+        lines.push(format!(
+            "  exact _root_.Litex.BuiltinRules.{} {}",
+            adapter.theorem_name,
+            arguments.join(" ")
+        ));
+        Ok(lines.join("\n"))
+    }
+
     fn lean_builtin_rule_application(
         &mut self,
         proposition: &Fact,
@@ -1474,12 +1569,8 @@ impl LeanEmitter {
         use SetBuiltinRuleToLeanIR::*;
 
         let expected_premises = match rule {
-            UnionCommutative
-            | UnionAssociative
-            | UnionIdempotent
-            | UnionEmptyIdentity
-            | IntersectCommutative
-            | IntersectAssociative => 0,
+            UnionCommutative | UnionAssociative | UnionIdempotent | UnionEmptyIdentity
+            | IntersectCommutative | IntersectAssociative => 0,
             UnionMembershipLeft
             | UnionMembershipRight
             | IntersectNonMembershipLeft
@@ -1549,12 +1640,17 @@ impl LeanEmitter {
                         "union membership premise does not match its selected side",
                     ));
                 }
-                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (premise_name, mut lines) =
+                    self.lean_named_local_fact(&premises[0], context)?;
                 lines.insert(0, "by".to_string());
                 lines.push("  rw [Set.mem_union]".to_string());
                 lines.push(format!(
                     "  exact Or.{} {}",
-                    if matches!(rule, UnionMembershipLeft) { "inl" } else { "inr" },
+                    if matches!(rule, UnionMembershipLeft) {
+                        "inl"
+                    } else {
+                        "inr"
+                    },
                     premise_name
                 ));
                 Ok(lines.join("\n"))
@@ -1573,7 +1669,8 @@ impl LeanEmitter {
                     ));
                 };
                 let (left_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
-                let (right_name, right_lines) = self.lean_named_local_fact(&premises[1], context)?;
+                let (right_name, right_lines) =
+                    self.lean_named_local_fact(&premises[1], context)?;
                 lines.extend(right_lines);
                 for (premise, expected_set) in [
                     (&premises[0].proposition, intersect.left.as_ref()),
@@ -1612,7 +1709,8 @@ impl LeanEmitter {
                         "intersection non-membership evidence requires an intersection target",
                     ));
                 };
-                let Fact::AtomicFact(AtomicFact::NotInFact(premise)) = &premises[0].proposition else {
+                let Fact::AtomicFact(AtomicFact::NotInFact(premise)) = &premises[0].proposition
+                else {
                     return Err(to_lean_error(
                         &premises[0].proposition.line_file(),
                         "intersection non-membership evidence requires a NotIn premise",
@@ -1631,10 +1729,19 @@ impl LeanEmitter {
                         "intersection non-membership premise does not match its side",
                     ));
                 }
-                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (premise_name, mut lines) =
+                    self.lean_named_local_fact(&premises[0], context)?;
                 lines.insert(0, "by".to_string());
                 lines.push("  rw [Set.mem_inter_iff]".to_string());
-                lines.push(format!("  exact fun h => {} h.{}", premise_name, if matches!(rule, IntersectNonMembershipLeft) { "1" } else { "2" }));
+                lines.push(format!(
+                    "  exact fun h => {} h.{}",
+                    premise_name,
+                    if matches!(rule, IntersectNonMembershipLeft) {
+                        "1"
+                    } else {
+                        "2"
+                    }
+                ));
                 Ok(lines.join("\n"))
             }
             SetMinusMembership => {
@@ -1651,20 +1758,31 @@ impl LeanEmitter {
                     ));
                 };
                 let (left_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
-                let (right_name, right_lines) = self.lean_named_local_fact(&premises[1], context)?;
+                let (right_name, right_lines) =
+                    self.lean_named_local_fact(&premises[1], context)?;
                 lines.extend(right_lines);
                 let Fact::AtomicFact(AtomicFact::InFact(left)) = &premises[0].proposition else {
-                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership requires an In left premise"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-minus membership requires an In left premise",
+                    ));
                 };
-                let Fact::AtomicFact(AtomicFact::NotInFact(right)) = &premises[1].proposition else {
-                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership requires a NotIn right premise"));
+                let Fact::AtomicFact(AtomicFact::NotInFact(right)) = &premises[1].proposition
+                else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-minus membership requires a NotIn right premise",
+                    ));
                 };
                 if obj_equality_key(&left.element) != obj_equality_key(&target.element)
                     || obj_equality_key(&left.set) != obj_equality_key(&set_minus.left)
                     || obj_equality_key(&right.element) != obj_equality_key(&target.element)
                     || obj_equality_key(&right.set) != obj_equality_key(&set_minus.right)
                 {
-                    return Err(to_lean_error(&proposition.line_file(), "set-minus membership premises do not match the target"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "set-minus membership premises do not match the target",
+                    ));
                 }
                 lines.insert(0, "by".to_string());
                 lines.push("  rw [Set.mem_diff]".to_string());
@@ -1687,30 +1805,73 @@ impl LeanEmitter {
             _ => 1,
         };
         if premises.len() != expected {
-            return Err(to_lean_error(&proposition.line_file(), format!("absolute-value builtin {:?} expected {} premises but received {}", rule, expected, premises.len())));
+            return Err(to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "absolute-value builtin {:?} expected {} premises but received {}",
+                    rule,
+                    expected,
+                    premises.len()
+                ),
+            ));
         }
         match rule {
             Product => {
                 if !abs_product_equality_shape(proposition) {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value product target has the wrong shape"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value product target has the wrong shape",
+                    ));
                 }
                 Ok("by\n  simp only [abs_mul]".to_string())
             }
             NonnegativeIdentity | NonpositiveNegation => {
                 let Fact::AtomicFact(AtomicFact::EqualFact(target)) = proposition else {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value equality evidence requires an equality target"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value equality evidence requires an equality target",
+                    ));
                 };
                 let (arg, reversed) = abs_identity_target(target, rule)?;
                 let Fact::AtomicFact(premise_fact) = &premises[0].proposition else {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value identity evidence requires an order premise"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value identity evidence requires an order premise",
+                    ));
                 };
-                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (premise_name, mut lines) =
+                    self.lean_named_local_fact(&premises[0], context)?;
                 let proof = match (rule, premise_fact) {
-                    (NonnegativeIdentity, AtomicFact::LessEqualFact(f)) if f.left.to_string() == "0" && obj_equality_key(&f.right) == obj_equality_key(arg) => format!("abs_of_nonneg {}", premise_name),
-                    (NonnegativeIdentity, AtomicFact::LessFact(f)) if f.left.to_string() == "0" && obj_equality_key(&f.right) == obj_equality_key(arg) => format!("abs_of_nonneg (le_of_lt {})", premise_name),
-                    (NonpositiveNegation, AtomicFact::LessEqualFact(f)) if obj_equality_key(&f.left) == obj_equality_key(arg) && f.right.to_string() == "0" => format!("abs_of_nonpos {}", premise_name),
-                    (NonpositiveNegation, AtomicFact::LessFact(f)) if obj_equality_key(&f.left) == obj_equality_key(arg) && f.right.to_string() == "0" => format!("abs_of_nonpos (le_of_lt {})", premise_name),
-                    _ => return Err(to_lean_error(&proposition.line_file(), "absolute-value identity premise does not match the target")),
+                    (NonnegativeIdentity, AtomicFact::LessEqualFact(f))
+                        if f.left.to_string() == "0"
+                            && obj_equality_key(&f.right) == obj_equality_key(arg) =>
+                    {
+                        format!("abs_of_nonneg {}", premise_name)
+                    }
+                    (NonnegativeIdentity, AtomicFact::LessFact(f))
+                        if f.left.to_string() == "0"
+                            && obj_equality_key(&f.right) == obj_equality_key(arg) =>
+                    {
+                        format!("abs_of_nonneg (le_of_lt {})", premise_name)
+                    }
+                    (NonpositiveNegation, AtomicFact::LessEqualFact(f))
+                        if obj_equality_key(&f.left) == obj_equality_key(arg)
+                            && f.right.to_string() == "0" =>
+                    {
+                        format!("abs_of_nonpos {}", premise_name)
+                    }
+                    (NonpositiveNegation, AtomicFact::LessFact(f))
+                        if obj_equality_key(&f.left) == obj_equality_key(arg)
+                            && f.right.to_string() == "0" =>
+                    {
+                        format!("abs_of_nonpos (le_of_lt {})", premise_name)
+                    }
+                    _ => {
+                        return Err(to_lean_error(
+                            &proposition.line_file(),
+                            "absolute-value identity premise does not match the target",
+                        ))
+                    }
                 };
                 lines.insert(0, "by".to_string());
                 let proof = if reversed {
@@ -1724,15 +1885,28 @@ impl LeanEmitter {
             PositiveFromNonzero => {
                 let (arg, reversed) = abs_positive_target(proposition)?;
                 if reversed {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target must be 0 < abs(x)"));
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value positivity target must be 0 < abs(x)",
+                    ));
                 }
-                let Fact::AtomicFact(AtomicFact::NotEqualFact(premise)) = &premises[0].proposition else {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity evidence requires a not-equality premise"));
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(premise)) = &premises[0].proposition
+                else {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value positivity evidence requires a not-equality premise",
+                    ));
                 };
-                if obj_equality_key(&premise.left) != obj_equality_key(arg) || premise.right.to_string() != "0" {
-                    return Err(to_lean_error(&proposition.line_file(), "absolute-value positivity premise does not match the target"));
+                if obj_equality_key(&premise.left) != obj_equality_key(arg)
+                    || premise.right.to_string() != "0"
+                {
+                    return Err(to_lean_error(
+                        &proposition.line_file(),
+                        "absolute-value positivity premise does not match the target",
+                    ));
                 }
-                let (premise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+                let (premise_name, mut lines) =
+                    self.lean_named_local_fact(&premises[0], context)?;
                 lines.insert(0, "by".to_string());
                 lines.push(format!("  exact abs_pos.mpr {}", premise_name));
                 Ok(lines.join("\n"))
@@ -2308,11 +2482,24 @@ impl LeanEmitter {
                 "forall-introduction evidence was attached to a non-forall proposition",
             ));
         };
-        if conclusions.len() != 1 || forall.then_facts.len() != 1 {
+        if conclusions.is_empty() || conclusions.len() != forall.then_facts.len() {
             return Err(to_lean_error(
                 &forall.line_file,
-                "To-Lean MVP requires one conclusion in a forall proof",
+                format!(
+                    "forall-introduction source has {} conclusions but its evidence retained {}",
+                    forall.then_facts.len(),
+                    conclusions.len()
+                ),
             ));
+        }
+        for (source_conclusion, conclusion) in forall.then_facts.iter().zip(conclusions.iter()) {
+            if source_conclusion.clone().to_fact().to_string() != conclusion.proposition.to_string()
+            {
+                return Err(to_lean_error(
+                    &forall.line_file,
+                    "forall-introduction conclusions are not in source order",
+                ));
+            }
         }
 
         let parameter_count = forall
@@ -2388,16 +2575,29 @@ impl LeanEmitter {
             inferred_lines.extend(local_lines);
             register_local_fact(fact_id, &inferred.proposition, &local_name, context);
         }
-        let conclusion = &conclusions[0];
-        let inner =
-            self.lean_proof_in_current_space(&conclusion.proposition, &conclusion.proof, context)?;
-        let inner = inner.strip_prefix("by\n").unwrap_or(inner.as_str());
         let mut lines = vec![
             "by".to_string(),
             format!("  intro {}", intro_names.join(" ")),
         ];
         lines.extend(inferred_lines);
-        lines.push(inner.to_string());
+        if conclusions.len() == 1 {
+            let conclusion = &conclusions[0];
+            let inner = self.lean_proof_in_current_space(
+                &conclusion.proposition,
+                &conclusion.proof,
+                context,
+            )?;
+            let inner = inner.strip_prefix("by\n").unwrap_or(inner.as_str());
+            lines.push(inner.to_string());
+        } else {
+            let mut conclusion_names = Vec::with_capacity(conclusions.len());
+            for conclusion in conclusions {
+                let (name, conclusion_lines) = self.lean_named_local_fact(conclusion, context)?;
+                lines.extend(conclusion_lines);
+                conclusion_names.push(name);
+            }
+            lines.push(format!("  exact ⟨{}⟩", conclusion_names.join(", ")));
+        }
         Ok(lines.join("\n"))
     }
 
@@ -2825,6 +3025,12 @@ fn apply_statement_type_hints(
 ) -> Result<(), RuntimeError> {
     match statement {
         StmtToLeanIR::Fact(ir) => apply_fact_proof_type_hints(&ir.fact, type_context),
+        StmtToLeanIR::ProjectedForall(ir) => {
+            for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
+                apply_fact_proof_type_hints(fact, type_context)?;
+            }
+            Ok(())
+        }
         StmtToLeanIR::Proof(ir) => {
             for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
                 apply_fact_proof_type_hints(fact, type_context)?;
@@ -3875,10 +4081,7 @@ fn lean_obj_ir_with_context(
     match obj {
         ObjToLeanIR::Symbol { name, .. } => Ok(lean_name(name)),
         ObjToLeanIR::Number { normalized_value } => {
-            if normalized_value
-                .chars()
-                .all(|character| character.is_ascii_digit() || character == '.')
-            {
+            if is_safe_lean_decimal_literal(normalized_value) {
                 Ok(normalized_value.clone())
             } else {
                 Err(to_lean_error(
@@ -3933,6 +4136,27 @@ fn lean_obj_ir_with_context(
                     .join(", ")
             ))
         }
+    }
+}
+
+fn is_safe_lean_decimal_literal(value: &str) -> bool {
+    let magnitude = value.strip_prefix('-').unwrap_or(value);
+    if magnitude.is_empty() {
+        return false;
+    }
+    let mut parts = magnitude.split('.');
+    let Some(integer) = parts.next() else {
+        return false;
+    };
+    if integer.is_empty() || !integer.chars().all(|character| character.is_ascii_digit()) {
+        return false;
+    }
+    match (parts.next(), parts.next()) {
+        (None, None) => true,
+        (Some(fraction), None) => {
+            !fraction.is_empty() && fraction.chars().all(|character| character.is_ascii_digit())
+        }
+        _ => false,
     }
 }
 
@@ -4029,10 +4253,7 @@ fn lean_builtin_obj_application(
     Ok(result)
 }
 
-fn set_equality_matches_builtin_rule(
-    proposition: &Fact,
-    rule: SetBuiltinRuleToLeanIR,
-) -> bool {
+fn set_equality_matches_builtin_rule(proposition: &Fact, rule: SetBuiltinRuleToLeanIR) -> bool {
     let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else {
         return false;
     };
@@ -4040,19 +4261,35 @@ fn set_equality_matches_builtin_rule(
     let same = |left: &Obj, right: &Obj| obj_equality_key(left) == obj_equality_key(right);
     let empty = |obj: &Obj| matches!(obj, Obj::ListSet(set) if set.list.is_empty());
     let union_assoc = |left: &Obj, right: &Obj| {
-        let Obj::Union(outer) = left else { return false };
-        let Obj::Union(left_inner) = outer.left.as_ref() else { return false };
-        let Obj::Union(right_outer) = right else { return false };
-        let Obj::Union(right_inner) = right_outer.right.as_ref() else { return false };
+        let Obj::Union(outer) = left else {
+            return false;
+        };
+        let Obj::Union(left_inner) = outer.left.as_ref() else {
+            return false;
+        };
+        let Obj::Union(right_outer) = right else {
+            return false;
+        };
+        let Obj::Union(right_inner) = right_outer.right.as_ref() else {
+            return false;
+        };
         same(left_inner.left.as_ref(), right_outer.left.as_ref())
             && same(left_inner.right.as_ref(), right_inner.left.as_ref())
             && same(outer.right.as_ref(), right_inner.right.as_ref())
     };
     let intersect_assoc = |left: &Obj, right: &Obj| {
-        let Obj::Intersect(outer) = left else { return false };
-        let Obj::Intersect(left_inner) = outer.left.as_ref() else { return false };
-        let Obj::Intersect(right_outer) = right else { return false };
-        let Obj::Intersect(right_inner) = right_outer.right.as_ref() else { return false };
+        let Obj::Intersect(outer) = left else {
+            return false;
+        };
+        let Obj::Intersect(left_inner) = outer.left.as_ref() else {
+            return false;
+        };
+        let Obj::Intersect(right_outer) = right else {
+            return false;
+        };
+        let Obj::Intersect(right_inner) = right_outer.right.as_ref() else {
+            return false;
+        };
         same(left_inner.left.as_ref(), right_outer.left.as_ref())
             && same(left_inner.right.as_ref(), right_inner.left.as_ref())
             && same(outer.right.as_ref(), right_inner.right.as_ref())
@@ -4065,12 +4302,13 @@ fn set_equality_matches_builtin_rule(
             }
             _ => false,
         },
-        UnionAssociative => union_assoc(&equality.left, &equality.right)
-            || union_assoc(&equality.right, &equality.left),
+        UnionAssociative => {
+            union_assoc(&equality.left, &equality.right)
+                || union_assoc(&equality.right, &equality.left)
+        }
         UnionIdempotent => match (&equality.left, &equality.right) {
             (Obj::Union(union), other) | (other, Obj::Union(union)) => {
-                same(union.left.as_ref(), union.right.as_ref())
-                    && same(union.left.as_ref(), other)
+                same(union.left.as_ref(), union.right.as_ref()) && same(union.left.as_ref(), other)
             }
             _ => false,
         },
@@ -4088,17 +4326,22 @@ fn set_equality_matches_builtin_rule(
             }
             _ => false,
         },
-        IntersectAssociative => intersect_assoc(&equality.left, &equality.right)
-            || intersect_assoc(&equality.right, &equality.left),
+        IntersectAssociative => {
+            intersect_assoc(&equality.left, &equality.right)
+                || intersect_assoc(&equality.right, &equality.left)
+        }
         _ => false,
     }
 }
 
 fn is_negation_of_obj(obj: &Obj, expected: &Obj) -> bool {
     let Obj::Mul(mul) = obj else { return false };
-    let is_neg_one = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "-1");
-    (is_neg_one(mul.left.as_ref()) && obj_equality_key(mul.right.as_ref()) == obj_equality_key(expected))
-        || (is_neg_one(mul.right.as_ref()) && obj_equality_key(mul.left.as_ref()) == obj_equality_key(expected))
+    let is_neg_one =
+        |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "-1");
+    (is_neg_one(mul.left.as_ref())
+        && obj_equality_key(mul.right.as_ref()) == obj_equality_key(expected))
+        || (is_neg_one(mul.right.as_ref())
+            && obj_equality_key(mul.left.as_ref()) == obj_equality_key(expected))
 }
 
 fn abs_identity_target(
@@ -4130,12 +4373,24 @@ fn abs_identity_target(
 }
 
 fn abs_product_equality_shape(proposition: &Fact) -> bool {
-    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else { return false };
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = proposition else {
+        return false;
+    };
     let matches = |abs_side: &Obj, product_side: &Obj| {
-        let Obj::Abs(abs) = abs_side else { return false };
-        let Obj::Mul(inner) = abs.arg.as_ref() else { return false };
-        let Obj::Mul(product) = product_side else { return false };
-        let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (product.left.as_ref(), product.right.as_ref()) else { return false };
+        let Obj::Abs(abs) = abs_side else {
+            return false;
+        };
+        let Obj::Mul(inner) = abs.arg.as_ref() else {
+            return false;
+        };
+        let Obj::Mul(product) = product_side else {
+            return false;
+        };
+        let (Obj::Abs(left_abs), Obj::Abs(right_abs)) =
+            (product.left.as_ref(), product.right.as_ref())
+        else {
+            return false;
+        };
         obj_equality_key(inner.left.as_ref()) == obj_equality_key(left_abs.arg.as_ref())
             && obj_equality_key(inner.right.as_ref()) == obj_equality_key(right_abs.arg.as_ref())
     };
@@ -4144,26 +4399,37 @@ fn abs_product_equality_shape(proposition: &Fact) -> bool {
 
 fn abs_positive_target(proposition: &Fact) -> Result<(&Obj, bool), RuntimeError> {
     match proposition {
-        Fact::AtomicFact(AtomicFact::LessFact(fact))
-            if fact.left.to_string() == "0" => match &fact.right {
+        Fact::AtomicFact(AtomicFact::LessFact(fact)) if fact.left.to_string() == "0" => {
+            match &fact.right {
                 Obj::Abs(abs) => Ok((abs.arg.as_ref(), false)),
-                _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
-            },
-        Fact::AtomicFact(AtomicFact::GreaterFact(fact))
-            if fact.right.to_string() == "0" => match &fact.left {
+                _ => Err(to_lean_error(
+                    &proposition.line_file(),
+                    "absolute-value positivity target has the wrong shape",
+                )),
+            }
+        }
+        Fact::AtomicFact(AtomicFact::GreaterFact(fact)) if fact.right.to_string() == "0" => {
+            match &fact.left {
                 Obj::Abs(abs) => Ok((abs.arg.as_ref(), false)),
-                _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
-            },
-        _ => Err(to_lean_error(&proposition.line_file(), "absolute-value positivity target has the wrong shape")),
+                _ => Err(to_lean_error(
+                    &proposition.line_file(),
+                    "absolute-value positivity target has the wrong shape",
+                )),
+            }
+        }
+        _ => Err(to_lean_error(
+            &proposition.line_file(),
+            "absolute-value positivity target has the wrong shape",
+        )),
     }
 }
 
 fn named_unary(name: &str, arguments: &[String]) -> String {
-    format!("{} {}", name, arguments[0])
+    format!("({} {})", name, arguments[0])
 }
 
 fn named_binary(name: &str, arguments: &[String]) -> String {
-    format!("{} {} {}", name, arguments[0], arguments[1])
+    format!("({} {} {})", name, arguments[0], arguments[1])
 }
 
 fn lean_rational_builtin_proof(
@@ -4311,16 +4577,10 @@ fn lean_standard_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError
         ));
     };
     let witness = match set {
-        StandardSet::N
-        | StandardSet::Z
-        | StandardSet::Q
-        | StandardSet::C => "0",
+        StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::C => "0",
         StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => "1",
         StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg => "-1",
-        StandardSet::QStar
-        | StandardSet::ZStar
-        | StandardSet::RStar
-        | StandardSet::CStar => "1",
+        StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar => "1",
         StandardSet::R => {
             return Err(to_lean_error(
                 &proposition.line_file(),
@@ -4328,7 +4588,10 @@ fn lean_standard_set_nonempty(proposition: &Fact) -> Result<String, RuntimeError
             ))
         }
     };
-    if matches!(set, StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::C) {
+    if matches!(
+        set,
+        StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::C
+    ) {
         Ok(format!(
             "by\n  refine ⟨{}, ?_⟩\n  exact Set.mem_univ {}",
             witness, witness
@@ -4712,6 +4975,80 @@ fn validate_exist_introduction_requirement(
     }
 }
 
+fn validate_projected_forall_ir(ir: &ProjectedForallToLeanIR) -> Result<(), RuntimeError> {
+    let Fact::ForallFact(source) = &ir.source else {
+        return Err(to_lean_error(
+            &ir.source.line_file(),
+            "projected-forall IR source is not a forall fact",
+        ));
+    };
+    if ir.facts.is_empty() {
+        return Err(to_lean_error(
+            &source.line_file,
+            "projected-forall IR contains no stored projection",
+        ));
+    }
+
+    let source_binding_ids = source
+        .params_def_with_type
+        .collect_param_bindings()
+        .into_iter()
+        .map(|binding| binding.id())
+        .collect::<HashSet<_>>();
+    let source_conclusions = source
+        .then_facts
+        .iter()
+        .map(|fact| fact.clone().to_fact().to_string())
+        .collect::<HashSet<_>>();
+    let source_premises = source
+        .dom_facts
+        .iter()
+        .map(ToString::to_string)
+        .collect::<Vec<_>>();
+    let mut fact_ids = HashSet::new();
+    for fact in ir.facts.iter() {
+        let fact_id = required_fact_id(fact)?;
+        if !fact_ids.insert(fact_id) {
+            return Err(to_lean_error(
+                &fact.proposition.line_file(),
+                "projected-forall IR repeats a stored FactId",
+            ));
+        }
+        let Fact::ForallFact(projected) = &fact.proposition else {
+            return Err(to_lean_error(
+                &fact.proposition.line_file(),
+                "projected-forall IR contains a non-forall stored fact",
+            ));
+        };
+        let has_foreign_binding = projected
+            .params_def_with_type
+            .collect_param_bindings()
+            .iter()
+            .any(|binding| !source_binding_ids.contains(&binding.id()));
+        let has_foreign_conclusion = projected.then_facts.iter().any(|conclusion| {
+            !source_conclusions.contains(&conclusion.clone().to_fact().to_string())
+        });
+        let premises_changed = projected
+            .dom_facts
+            .iter()
+            .map(ToString::to_string)
+            .ne(source_premises.iter().cloned());
+        if has_foreign_binding || has_foreign_conclusion || premises_changed {
+            return Err(to_lean_error(
+                &projected.line_file,
+                "projected-forall IR is not a binder-and-conclusion subset of its source",
+            ));
+        }
+        if !matches!(fact.proof, FactProofToLeanIR::ForallIntroduction { .. }) {
+            return Err(to_lean_error(
+                &projected.line_file,
+                "a stored forall projection has no forall-introduction proof",
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn required_fact_id(fact: &FactToLeanIR) -> Result<FactId, RuntimeError> {
     fact.fact_id.ok_or_else(|| {
         to_lean_error(
@@ -4878,6 +5215,7 @@ fn statement_ir_display(statement: &StmtToLeanIR) -> String {
             None => "trust <empty>".to_string(),
         },
         StmtToLeanIR::Fact(ir) => ir.fact.proposition.to_string(),
+        StmtToLeanIR::ProjectedForall(ir) => ir.source.to_string(),
     }
 }
 
@@ -4911,6 +5249,7 @@ fn statement_ir_line_file(statement: &StmtToLeanIR) -> LineFile {
             .map(|fact| fact.proposition.line_file())
             .unwrap_or_else(default_line_file),
         StmtToLeanIR::Fact(ir) => ir.fact.proposition.line_file(),
+        StmtToLeanIR::ProjectedForall(ir) => ir.source.line_file(),
     }
 }
 
@@ -4978,6 +5317,16 @@ mod tests {
     use std::fs;
     use std::process::Command;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn lean_decimal_literal_validation_accepts_signed_canonical_decimals_only() {
+        for accepted in ["0", "1", "-1", "0.5", "-12.25"] {
+            assert!(is_safe_lean_decimal_literal(accepted), "{accepted}");
+        }
+        for rejected in ["", "-", ".", ".5", "1.", "1.2.3", "+1", "1e3"] {
+            assert!(!is_safe_lean_decimal_literal(rejected), "{rejected}");
+        }
+    }
 
     #[test]
     fn ordinary_runtime_does_not_return_to_lean_ir() {
@@ -5160,7 +5509,11 @@ forall x R:
                 runtime.new_file_path_new_env_new_name_scope("to-lean-ir-mvp.lit");
                 let output = to_lean(source, &mut runtime).unwrap();
 
-                assert!(output.starts_with("import Mathlib\n\nnamespace to_lean_ir_mvp\n\n"));
+                assert!(output.starts_with("import Mathlib\n\nnamespace Litex.BuiltinRules\n\n"));
+                assert!(
+                    output.find("end Litex.BuiltinRules").unwrap()
+                        < output.find("namespace to_lean_ir_mvp").unwrap()
+                );
                 assert!(output.contains("class LitexObject (α : Type LitexUniverse) : Prop where"));
                 assert!(output.contains("abbrev LitexFact := Prop"));
                 assert!(
@@ -5799,14 +6152,18 @@ forall a, b R:
                 assert_eq!(conclusions.len(), 1);
 
                 let FactProofToLeanIR::RuleApplication {
-                    rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::DivNotEqualZero(evidence)),
+                    rule: ProofRuleToLeanIR::RegisteredRule(application),
                     parameter_requirements,
                     premises: rule_premises,
                 } = underlying_test_proof(&conclusions[0].proof)
                 else {
-                    panic!("forall conclusion should retain typed div-nonzero evidence");
+                    panic!("forall conclusion should retain a registered rule certificate");
                 };
-                assert!(parameter_requirements.is_empty());
+                assert_eq!(application.rule_id.as_str(), "nonzero.div");
+                assert_eq!(application.bindings.len(), 2);
+                assert_eq!(application.parameter_requirement_count, 2);
+                assert_eq!(application.premise_count, 2);
+                assert_eq!(parameter_requirements.len(), 2);
                 let Fact::AtomicFact(AtomicFact::NotEqualFact(target)) =
                     &conclusions[0].proposition
                 else {
@@ -5816,16 +6173,12 @@ forall a, b R:
                     panic!("tracer conclusion should retain its quotient");
                 };
                 assert_eq!(
-                    obj_equality_key(&evidence.numerator),
-                    obj_equality_key(quotient.left.as_ref())
+                    application.bindings[0].object,
+                    ObjToLeanIR::lower(quotient.left.as_ref()).unwrap()
                 );
                 assert_eq!(
-                    obj_equality_key(&evidence.denominator),
-                    obj_equality_key(quotient.right.as_ref())
-                );
-                assert_eq!(
-                    evidence.orientation,
-                    NonzeroExpressionOrientationToLeanIR::ExpressionOnLeft
+                    application.bindings[1].object,
+                    ObjToLeanIR::lower(quotient.right.as_ref()).unwrap()
                 );
                 assert_eq!(rule_premises.len(), 2);
                 for (rule_premise, local_premise) in rule_premises.iter().zip(premises.iter()) {
@@ -5852,7 +6205,7 @@ forall a, b R:
                 let output = to_lean(&source, &mut runtime).unwrap();
 
                 assert!(output.contains("namespace to_lean_builtin_rule_ir"));
-                assert!(output.contains("div_ne_zero proof_fact_"));
+                assert!(output.contains("_root_.Litex.BuiltinRules.nonzero_div"));
                 assert!(output.contains("have proof_fact_"));
                 assert!(!output.contains("OtherUnsupported"));
                 assert!(!output.contains("axiom"));
@@ -5912,7 +6265,69 @@ forall a, b R:
                 let error = emit_lean_from_ir(&statement_irs)
                     .expect_err("malformed builtin certificate must stop emission")
                     .trace_message();
-                assert!(error.contains("expected 2 premises but received 1"));
+                assert!(error.contains("expected 2 parameter requirements and 2 premises"));
+                assert!(error.contains("received 2 and 1"));
+            },
+        );
+    }
+
+    #[test]
+    fn to_lean_registered_rule_linker_rejects_unknown_id_and_stale_fingerprint() {
+        run_with_large_stack(
+            "to_lean_registered_rule_linker_rejects_unknown_id_and_stale_fingerprint",
+            || {
+                let source = r#"
+forall x R:
+    0 <= abs(x)
+"#;
+                let original = test_to_lean_ir(source, "registered-rule-linker-negative");
+
+                let mut unknown = original.clone();
+                let StmtToLeanIR::Fact(forall) = &mut unknown[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("tracer should retain forall-introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::RegisteredRule(application),
+                    ..
+                } = underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("tracer conclusion should retain registered evidence");
+                };
+                application.rule_id = RuleId::new("unknown.missing").unwrap();
+                let error = emit_lean_from_ir(&unknown)
+                    .expect_err("unknown registered RuleId must stop emission")
+                    .trace_message();
+                assert!(error.contains("no Lean adapter for local builtin `unknown.missing`"));
+
+                let mut stale = original;
+                let StmtToLeanIR::Fact(forall) = &mut stale[0] else {
+                    panic!("tracer should produce one stored forall fact");
+                };
+                let FactProofToLeanIR::ForallIntroduction { conclusions, .. } =
+                    &mut forall.fact.proof
+                else {
+                    panic!("tracer should retain forall-introduction evidence");
+                };
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::RegisteredRule(application),
+                    ..
+                } = underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("tracer conclusion should retain registered evidence");
+                };
+                application.semantic_fingerprint =
+                    RuleFingerprint::from_hex("0".repeat(64)).unwrap();
+                let error = emit_lean_from_ir(&stale)
+                    .expect_err("stale registered fingerprint must stop emission")
+                    .trace_message();
+                assert!(error.contains(
+                    "Lean adapter fingerprint disagrees with local builtin `order.abs_nonnegative`"
+                ));
             },
         );
     }
@@ -5940,9 +6355,9 @@ forall a, b, z R:
     }
 
     #[test]
-    fn to_lean_builtin_rules_20_preserve_distinct_typed_rules_and_compile() {
+    fn to_lean_builtin_rules_20_use_distinct_registered_rules_and_compile() {
         run_with_large_stack(
-            "to_lean_builtin_rules_20_preserve_distinct_typed_rules_and_compile",
+            "to_lean_builtin_rules_20_use_distinct_registered_rules_and_compile",
             || {
                 let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
                     .join("examples/05_compiler_interop/to_lean_builtin_rules_20.lit");
@@ -5959,25 +6374,25 @@ forall a, b, z R:
                         panic!("each tracer statement should retain forall evidence");
                     };
                     let FactProofToLeanIR::RuleApplication {
-                        rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(rule)),
+                        rule: ProofRuleToLeanIR::RegisteredRule(application),
                         ..
                     } = underlying_test_proof(&conclusions[0].proof)
                     else {
-                        panic!("each tracer conclusion should retain typed arithmetic evidence");
+                        panic!("each tracer conclusion should retain registered-rule evidence");
                     };
-                    rule_names.push(format!("{:?}", rule));
+                    rule_names.push(application.rule_id.as_str().to_string());
                 }
                 rule_names.sort();
                 rule_names.dedup();
                 assert_eq!(rule_names.len(), 20, "{rule_names:#?}");
+                assert!(rule_names.contains(&"order.less_equal_of_less".to_string()));
+                assert!(rule_names.contains(&"order.div_positive".to_string()));
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
                 assert_eq!(output.matches("theorem fact").count(), 20);
-                assert_eq!(output.matches("linarith only").count(), 16);
-                assert!(output.contains("mul_nonneg proof_fact_"));
-                assert!(output.contains("mul_pos proof_fact_"));
-                assert!(output.contains("div_nonneg proof_fact_"));
-                assert!(output.contains("div_pos proof_fact_"));
+                assert_eq!(output.matches("_root_.Litex.BuiltinRules.").count(), 20);
+                assert!(output.contains("_root_.Litex.BuiltinRules.order_less_equal_of_less"));
+                assert!(output.contains("_root_.Litex.BuiltinRules.order_div_positive"));
                 assert!(!output.contains("axiom"));
                 assert!(!output.contains("sorry"));
             },
@@ -6011,7 +6426,9 @@ forall a, b, z R:
                 let error = emit_lean_from_ir(&statement_irs)
                     .expect_err("malformed arithmetic evidence must stop strict emission")
                     .trace_message();
-                assert!(error.contains("expected 1 premises but received 0"));
+                assert!(error.contains(
+                    "expected 2 parameter requirements and 1 premises but received 2 and 0"
+                ));
             },
         );
     }
@@ -6059,16 +6476,28 @@ forall a, b, z R:
                 };
                 assert_eq!(outer_premises.len(), 2);
 
-                assert!(matches!(
-                    underlying_test_proof(&outer_premises[0].proof),
-                    FactProofToLeanIR::RuleApplication {
-                        rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
-                            ArithmeticBuiltinRuleToLeanIR::AddPositive
-                        )),
-                        premises,
-                        ..
-                    } if premises.len() == 2
-                ));
+                let FactProofToLeanIR::RuleApplication {
+                    rule: ProofRuleToLeanIR::RegisteredRule(application),
+                    parameter_requirements,
+                    premises,
+                } = underlying_test_proof(&outer_premises[0].proof)
+                else {
+                    panic!("left strategy child should use its registered addition rule");
+                };
+                assert_eq!(application.rule_id.as_str(), "order.add_positive");
+                assert_eq!(parameter_requirements.len(), 2);
+                assert_eq!(premises.len(), 2);
+                for requirement in parameter_requirements {
+                    assert!(matches!(
+                        underlying_test_proof(&requirement.proof),
+                        FactProofToLeanIR::RuleApplication {
+                            rule: ProofRuleToLeanIR::RegisteredRule(application),
+                            premises,
+                            ..
+                        } if application.rule_id.as_str() == "carrier.r_pos_in_r"
+                            && premises.is_empty()
+                    ));
+                }
 
                 let FactProofToLeanIR::RuleApplication {
                     rule:
@@ -6086,12 +6515,11 @@ forall a, b, z R:
                     assert!(matches!(
                         underlying_test_proof(&premise.proof),
                         FactProofToLeanIR::RuleApplication {
-                            rule: ProofRuleToLeanIR::Builtin(BuiltinRuleToLeanIR::Arithmetic(
-                                ArithmeticBuiltinRuleToLeanIR::LessEqualFromStrictOrder
-                            )),
+                            rule: ProofRuleToLeanIR::RegisteredRule(application),
                             premises,
                             ..
-                        } if premises.len() == 1
+                        } if application.rule_id.as_str() == "order.less_equal_of_less"
+                            && premises.len() == 1
                             && matches!(
                                 underlying_test_proof(&premises[0].proof),
                                 FactProofToLeanIR::KnownFactCitation { .. }
@@ -6100,6 +6528,9 @@ forall a, b, z R:
                 }
 
                 let output = emit_lean_from_ir(&statement_irs).unwrap();
+                assert!(output.contains("_root_.Litex.BuiltinRules.carrier_r_pos_in_r"));
+                assert!(output.contains("_root_.Litex.BuiltinRules.order_add_positive"));
+                assert!(output.contains("_root_.Litex.BuiltinRules.order_less_equal_of_less"));
                 assert!(output.contains("linarith only"), "{output}");
                 assert!(!output.contains("OtherUnsupported"), "{output}");
                 assert!(!output.contains("axiom"), "{output}");
@@ -6516,6 +6947,73 @@ trust forall z Z:
             "{output}"
         );
         assert!(!output.contains("(z : ℚ)"), "{output}");
+    }
+
+    #[test]
+    fn to_lean_mixed_projected_forall() {
+        run_with_large_stack("to_lean_mixed_projected_forall", || {
+            let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                .join("examples/05_compiler_interop/to_lean_mixed_projected_forall.lit");
+            let source = fs::read_to_string(&path).unwrap();
+            let ir = test_to_lean_ir(&source, &path.to_string_lossy());
+            let [StmtToLeanIR::ProjectedForall(projected)] = ir.as_slice() else {
+                panic!("mixed forall must retain its runtime-stored projections");
+            };
+            assert_eq!(projected.facts.len(), 2);
+            assert!(projected.facts.iter().all(|fact| fact.fact_id.is_some()));
+            assert!(projected.facts.iter().all(|fact| matches!(
+                &fact.proof,
+                FactProofToLeanIR::ForallIntroduction { conclusions, .. }
+                    if conclusions.len() == 1
+            )));
+
+            let output = to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
+            assert!(
+                output.contains("∀ a ∈ (Set.univ : Set ℝ), a = a"),
+                "{output}"
+            );
+            assert!(output.contains("∀ (b : Set"), "{output}");
+            assert_eq!(output.matches("theorem fact").count(), 2, "{output}");
+            assert!(!output.contains("a = b"), "{output}");
+
+            let reused = format!(
+                "{}\n\nforall a R:\n    a = a\n\nforall b set:\n    b = b\n",
+                source
+            );
+            let reused_output = to_lean_from_source(&reused, "projected-forall-reuse").unwrap();
+            assert_eq!(reused_output.matches("theorem fact").count(), 2);
+
+            assert!(to_lean_from_source(
+                "forall a R, b set:\n    a = b\n",
+                "mixed-carrier-equality-boundary"
+            )
+            .is_err());
+        });
+    }
+
+    #[test]
+    fn to_lean_multiple_conclusion_forall_builds_checked_conjunction() {
+        let source = "forall a, b R:\n    a + b = a + b\n    a * b = a * b\n";
+        let output = to_lean_from_source(source, "multiple-forall-conclusions").unwrap();
+        assert!(
+            output.contains("(a + b) = (a + b) ∧ (a * b) = (a * b)"),
+            "{output}"
+        );
+        assert!(output.contains("exact ⟨proof_fact_"), "{output}");
+
+        let mut ir = test_to_lean_ir(source, "malformed-multiple-forall-conclusions");
+        let [StmtToLeanIR::Fact(forall)] = ir.as_mut_slice() else {
+            panic!("fully covered forall should be stored as one fact");
+        };
+        let FactProofToLeanIR::ForallIntroduction { conclusions, .. } = &mut forall.fact.proof
+        else {
+            panic!("forall should retain introduction evidence");
+        };
+        conclusions.pop();
+        let error = emit_lean_from_ir(&ir)
+            .expect_err("missing conjunction evidence must fail")
+            .trace_message();
+        assert!(error.contains("source has 2 conclusions"), "{error}");
     }
 
     #[test]
@@ -7609,6 +8107,40 @@ $marked(1)
 
     #[test]
     #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn generated_to_lean_mixed_projected_forall_compiles_with_lean() {
+        run_with_large_stack(
+            "generated_to_lean_mixed_projected_forall_compiles_with_lean",
+            || {
+                let project = std::env::var("LITEX_LEAN_PROJECT")
+                    .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
+                let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+                let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("examples/05_compiler_interop/to_lean_mixed_projected_forall.lit");
+                let source = fs::read_to_string(&path).unwrap();
+                let generated = to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
+
+                let lean_file = private_tmp_lean_file("litex_to_lean_mixed_projected_forall");
+                fs::write(&lean_file, &generated).unwrap();
+                let output = Command::new(lake)
+                    .args(["env", "lean"])
+                    .arg(&lean_file)
+                    .current_dir(project)
+                    .output();
+                let _ = fs::remove_file(&lean_file);
+                let output = output.unwrap();
+                assert!(
+                    output.status.success(),
+                    "mixed projected-forall generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
+                    String::from_utf8_lossy(&output.stdout),
+                    String::from_utf8_lossy(&output.stderr),
+                    generated
+                );
+            },
+        );
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
     fn generated_to_lean_set_obj_abi_compiles_with_lean() {
         run_with_large_stack("generated_to_lean_set_obj_abi_compiles_with_lean", || {
             let project = std::env::var("LITEX_LEAN_PROJECT")
@@ -8003,8 +8535,10 @@ $marked2(1, 2)
 
     #[test]
     fn to_lean_builtin_set_and_abs_rules_preserve_checked_routes() {
-        run_with_large_stack("to_lean_builtin_set_and_abs_rules_preserve_checked_routes", || {
-            let source = r#"
+        run_with_large_stack(
+            "to_lean_builtin_set_and_abs_rules_preserve_checked_routes",
+            || {
+                let source = r#"
 forall A, B set:
     union(A, B) = union(B, A)
 
@@ -8046,23 +8580,51 @@ $is_nonempty_set(Q)
 $is_nonempty_set(R)
 $is_nonempty_set(C)
 "#;
-            let ir = test_to_lean_ir(source, "builtin-set-and-abs-rules");
-            let output = emit_lean_from_ir(&ir).unwrap();
-            assert_eq!(output.matches("theorem fact").count(), 14);
-            assert!(output.contains("simp [or_comm]"), "{output}");
-            assert!(output.contains("rw [Set.mem_union]"), "{output}");
-            assert!(output.contains("rw [Set.mem_inter_iff]"), "{output}");
-            assert!(output.contains("rw [Set.mem_diff]"), "{output}");
-            assert!(output.contains("exact abs_of_nonneg"), "{output}");
-            assert!(output.contains("exact abs_pos.mpr"), "{output}");
-            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℕ)"), "{output}");
-            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℤ)"), "{output}");
-            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℚ)"), "{output}");
-            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℝ)"), "{output}");
-            assert!(output.contains("litexIsNonemptySet (Set.univ : Set ℂ)"), "{output}");
-            assert!(!output.contains("axiom"), "{output}");
-            assert!(!output.contains("sorry"), "{output}");
-        });
+                let ir = test_to_lean_ir(source, "builtin-set-and-abs-rules");
+                let output = emit_lean_from_ir(&ir).unwrap();
+                assert_eq!(output.matches("theorem fact").count(), 14);
+                for theorem in [
+                    "set_union_commutative",
+                    "set_union_idempotent",
+                    "set_union_empty_right",
+                    "set_intersect_commutative",
+                    "set_union_membership_left",
+                    "set_intersect_membership",
+                    "set_set_minus_membership",
+                    "order_abs_eq_self_of_nonnegative",
+                    "order_abs_positive_of_nonzero",
+                ] {
+                    assert!(
+                        output.contains(&format!("_root_.Litex.BuiltinRules.{theorem}")),
+                        "{output}"
+                    );
+                }
+                assert!(output.contains("exact abs_of_nonneg"), "{output}");
+                assert!(output.contains("exact abs_pos.mpr"), "{output}");
+                assert!(
+                    output.contains("litexIsNonemptySet (Set.univ : Set ℕ)"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("litexIsNonemptySet (Set.univ : Set ℤ)"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("litexIsNonemptySet (Set.univ : Set ℚ)"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("litexIsNonemptySet (Set.univ : Set ℝ)"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("litexIsNonemptySet (Set.univ : Set ℂ)"),
+                    "{output}"
+                );
+                assert!(!output.contains("axiom"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
     }
 
     #[test]
@@ -8083,16 +8645,23 @@ forall A, B set, x A:
                 else {
                     panic!("set-membership tracer should retain forall evidence");
                 };
-                let FactProofToLeanIR::RuleApplication { premises, .. } =
-                    underlying_test_proof_mut(&mut conclusions[0].proof)
+                let FactProofToLeanIR::RuleApplication {
+                    parameter_requirements,
+                    ..
+                } = underlying_test_proof_mut(&mut conclusions[0].proof)
                 else {
                     panic!("union membership should retain its builtin rule application");
                 };
-                premises.clear();
+                parameter_requirements.pop();
                 let error = emit_lean_from_ir(&ir)
                     .expect_err("malformed union membership evidence must stop emission")
                     .trace_message();
-                assert!(error.contains("expected 1 premises but received 0"), "{error}");
+                assert!(
+                    error.contains(
+                        "expected 3 parameter requirements and 0 premises but received 2 and 0"
+                    ),
+                    "{error}"
+                );
             },
         );
     }

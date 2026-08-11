@@ -1,0 +1,4 @@
+forall u, a, b R:
+    a < b
+    =>:
+        u + a < u + b
