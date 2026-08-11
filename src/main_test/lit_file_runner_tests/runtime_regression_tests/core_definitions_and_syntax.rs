@@ -2148,6 +2148,138 @@ $leaf(y)
 }
 
 #[test]
+fn obtain_accepts_a_verified_prop_with_one_existential_definition_clause() {
+    let source_code = r#"
+prop has_copy(a R):
+    exist x R st {x = a}
+
+prop has_unique_copy(a R):
+    exist! x R st {x = a}
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+
+$has_unique_copy(3)
+obtain unique_copy from $has_unique_copy(3)
+unique_copy = 3
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "obtain_accepts_a_verified_prop_with_one_existential_definition_clause",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "obtain should project an instantiated exist/exist! clause from a verified prop:\n{}",
+        run_output
+    );
+    assert!(run_output.contains("obtain copy from $has_copy(2)"));
+    assert!(run_output.contains("obtain unique_copy from $has_unique_copy(3)"));
+    assert!(run_output.contains("existential projection from prop definition `has_copy`"));
+}
+
+#[test]
+fn obtain_from_existential_prop_still_requires_the_source_prop_to_be_verified() {
+    let source_code = r#"
+abstract_prop marked(x)
+
+prop has_marked_witness(a R):
+    exist x R st {$marked(x)}
+
+obtain chosen from $has_marked_witness(0)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "obtain_from_existential_prop_still_requires_the_source_prop_to_be_verified",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "an unverified source prop must not manufacture an existential witness:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("source prop `$has_marked_witness(0)` is not verified"),
+        "the failure should identify the unverified prop source:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn obtain_from_prop_rejects_nonexistential_definition_shapes() {
+    let cases = [
+        (
+            "ordinary clause",
+            r#"
+prop positive(a R):
+    a > 0
+
+obtain chosen from $positive(1)
+"#,
+            "sole definition clause of `positive` to be `exist` or `exist!`",
+        ),
+        (
+            "multiple clauses",
+            r#"
+prop has_copy_and_reflexivity(a R):
+    exist x R st {x = a}
+    a = a
+
+obtain chosen from $has_copy_and_reflexivity(1)
+"#,
+            "exactly one definition clause",
+        ),
+        (
+            "abstract prop",
+            r#"
+abstract_prop opaque(a)
+
+obtain chosen from $opaque(1)
+"#,
+            "`abstract_prop` has no existential body",
+        ),
+        (
+            "negated prop",
+            r#"
+prop has_copy(a R):
+    exist x R st {x = a}
+
+obtain chosen from not $has_copy(1)
+"#,
+            "expects a positive `exist`/`exist!` fact or a positive prop fact",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("obtain_from_prop_rejects_{}", label).as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+        assert!(
+            run_output.contains(expected_message),
+            "{} should report `{}`:\n{}",
+            label,
+            expected_message,
+            run_output
+        );
+    }
+}
+
+#[test]
 fn grouped_forall_law_projects_clause_over_used_nonempty_parameters() {
     run_with_large_stack(
         "grouped_forall_law_projects_clause_over_used_nonempty_parameters",

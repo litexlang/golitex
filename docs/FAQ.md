@@ -1217,11 +1217,11 @@ and `{k closed_range(0, n): P(k)}` is finite because it only filters a finite
 base. If that filtered set is also proved nonempty, its finite minimum can be
 used with the inherited natural-number carrier.
 
-## Why does `obtain ... from exist` name witnesses explicitly?
+## Why does `obtain` name witnesses explicitly, and can its source be a prop?
 
 An existential fact says that some object exists. A later proof often needs to
-choose a name for such an object and use its properties. `obtain ... from exist` is the
-Litex form of that ordinary mathematical move.
+choose a name for such an object and use its properties. `obtain ... from
+exist` is the Litex form of that ordinary mathematical move.
 
 For example:
 
@@ -1237,6 +1237,23 @@ The first block proves an existential fact. The `obtain` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
 
+A concrete prop can serve as a named wrapper around that existential:
+
+```litex
+prop has_copy(a R):
+    exist x R st {x = a}
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+```
+
+This is deliberately narrow. Litex first verifies the source prop, then
+rechecks its retained definition and substitutes the call arguments. The
+definition must contain exactly one clause and that clause must be positive
+`exist` or `exist!`. An abstract prop, a negated source, `not exist`, or a
+definition with an extra clause is not treated as an existential package.
+
 The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current
 argument.
@@ -1245,7 +1262,8 @@ In the current checked To-Lean slice, that distinction is preserved directly:
 the existential remains a theorem, the named witness is selected from that
 same theorem, and each exposed type or body fact is a projection of its
 `choose_spec`. The compiler does not replace `obtain` with an unconstrained
-constant.
+constant. The named-prop shorthand is not yet in this To-Lean slice; spelling
+out the expanded existential keeps the compiler boundary explicit.
 
 ## How do function ranges and preimages work?
 

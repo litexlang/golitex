@@ -1,0 +1,23 @@
+# Tracer: eliminate an existential hidden behind a named prop definition.
+#
+# Before:
+# obtain copy from $has_copy(2)
+# Former behavior: parsing stopped because `obtain` required the literal
+# `exist ...` syntax after `from`.
+#
+# Now: a verified positive prop may be used directly when its concrete
+# definition consists of exactly one positive `exist` or `exist!` clause.
+# Litex substitutes the call arguments into that clause, then performs the
+# ordinary existential elimination.
+
+prop has_copy(a R):
+    exist x R st {x = a}
+
+$has_copy(2)
+obtain copy from $has_copy(2)
+copy = 2
+
+# Boundary: the source prop itself must verify. `abstract_prop`, negated prop
+# facts, `not exist`, ordinary nonexistential definitions, and multi-clause
+# definitions are not eligible for this shorthand.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_existential_prop.lit

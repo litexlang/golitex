@@ -242,7 +242,17 @@ pub struct HaveByExistStmt {
     pub equal_tos: Vec<String>,
     pub equal_to_bindings: Vec<SymbolBinding>,
     pub exist_fact_in_have_obj_st: ExistFactEnum,
+    /// Present when the user wrote `obtain ... from $p(args)`. The concrete
+    /// definition is retained so execution can re-check the exact
+    /// definition-elimination step instead of trusting a parser-only rewrite.
+    pub existential_prop_source: Option<ExistentialPropSource>,
     pub line_file: LineFile,
+}
+
+#[derive(Clone)]
+pub struct ExistentialPropSource {
+    pub fact: NormalAtomicFact,
+    pub definition: DefPropStmt,
 }
 
 // have by preimage x from z $in fn_range(f)
@@ -789,6 +799,27 @@ impl HaveByExistStmt {
             equal_tos,
             equal_to_bindings,
             exist_fact_in_have_obj_st,
+            existential_prop_source: None,
+            line_file,
+        }
+    }
+
+    pub fn new_from_existential_prop(
+        equal_tos: Vec<String>,
+        equal_to_bindings: Vec<SymbolBinding>,
+        exist_fact_in_have_obj_st: ExistFactEnum,
+        source_fact: NormalAtomicFact,
+        source_definition: DefPropStmt,
+        line_file: LineFile,
+    ) -> Self {
+        HaveByExistStmt {
+            equal_tos,
+            equal_to_bindings,
+            exist_fact_in_have_obj_st,
+            existential_prop_source: Some(ExistentialPropSource {
+                fact: source_fact,
+                definition: source_definition,
+            }),
             line_file,
         }
     }
@@ -800,13 +831,18 @@ impl HaveByExistStmt {
 
 impl fmt::Display for HaveByExistStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let source = self
+            .existential_prop_source
+            .as_ref()
+            .map(|source| source.fact.to_string())
+            .unwrap_or_else(|| self.exist_fact_in_have_obj_st.to_string());
         write!(
             f,
             "{} {} {} {}",
             OBTAIN,
             vec_to_string_join_by_comma(&self.equal_tos),
             FROM,
-            self.exist_fact_in_have_obj_st,
+            source,
         )
     }
 }

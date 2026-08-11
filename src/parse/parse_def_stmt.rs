@@ -1425,19 +1425,112 @@ impl Runtime {
         }
 
         tb.skip_token(FROM)?;
-        if !tb.current_token_is_equal_to(EXIST) {
-            return Err(RuntimeError::from(ParseRuntimeError(
-                RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "`obtain` expects an `exist` fact after `from`".to_string(),
-                    tb.line_file.clone(),
-                ),
-            )));
-        }
-        let true_fact = self.parse_exist_fact(tb)?;
+        let source_line_file = tb.line_file.clone();
+        let obtain_source_error = |msg: String| {
+            RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(msg, source_line_file.clone()),
+            ))
+        };
+        let (true_fact, existential_prop_source) = if tb.current_token_is_equal_to(EXIST) {
+            (self.parse_exist_fact(tb)?, None)
+        } else {
+            let source_atomic = self.parse_atomic_fact(tb, true)?;
+            let AtomicFact::NormalAtomicFact(source_prop) = source_atomic else {
+                return Err(obtain_source_error(
+                    "`obtain` expects a positive `exist`/`exist!` fact or a positive prop fact after `from`"
+                        .to_string(),
+                ));
+            };
+            let predicate_name = source_prop.predicate.to_string();
+            let Some(definition) = self.get_active_prop_definition_by_name(&predicate_name) else {
+                let message = if self
+                    .get_abstract_prop_definition_by_name(&predicate_name)
+                    .is_some()
+                {
+                    format!(
+                        "`obtain ... from {}` requires a concrete `prop` definition; `abstract_prop` has no existential body",
+                        source_prop
+                    )
+                } else {
+                    format!(
+                        "`obtain ... from {}` could not find a concrete prop definition",
+                        source_prop
+                    )
+                };
+                return Err(obtain_source_error(message));
+            };
+            if definition.iff_facts.len() != 1 {
+                return Err(obtain_source_error(format!(
+                    "`obtain ... from {}` requires `{}` to have exactly one definition clause, which must be `exist` or `exist!`",
+                    source_prop, predicate_name
+                )));
+            }
+            let Fact::ExistFact(definition_exist_fact) = &definition.iff_facts[0] else {
+                return Err(obtain_source_error(format!(
+                    "`obtain ... from {}` requires the sole definition clause of `{}` to be `exist` or `exist!`",
+                    source_prop, predicate_name
+                )));
+            };
+            if definition_exist_fact.is_not_exist() {
+                return Err(obtain_source_error(format!(
+                    "`obtain ... from {}` cannot eliminate a `not exist` definition clause",
+                    source_prop
+                )));
+            }
+            let expected_args = definition.params_def_with_type.number_of_params();
+            if source_prop.body.len() != expected_args {
+                return Err(obtain_source_error(format!(
+                    "`obtain ... from {}` expected {} prop argument(s), got {}",
+                    source_prop,
+                    expected_args,
+                    source_prop.body.len()
+                )));
+            }
+            let param_to_arg_map = self
+                .params_to_arg_map(&definition.params_def_with_type, &source_prop.body)
+                .map_err(|cause| {
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to instantiate existential definition of `{}`",
+                            predicate_name
+                        ),
+                        source_line_file.clone(),
+                        Some(cause),
+                        vec![],
+                    )))
+                })?;
+            let instantiated_exist_fact = self
+                .inst_exist_fact(
+                    definition_exist_fact,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(&source_line_file),
+                )
+                .map_err(|cause| {
+                    RuntimeError::from(ParseRuntimeError(RuntimeErrorStruct::new(
+                        None,
+                        format!(
+                            "failed to instantiate existential definition of `{}`",
+                            predicate_name
+                        ),
+                        source_line_file.clone(),
+                        Some(cause),
+                        vec![],
+                    )))
+                })?;
+            (
+                instantiated_exist_fact,
+                Some(ExistentialPropSource {
+                    fact: source_prop,
+                    definition,
+                }),
+            )
+        };
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "unexpected token after `obtain ... from exist ...`".to_string(),
+                    "unexpected token after `obtain` source fact".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
@@ -1486,13 +1579,23 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        Ok(HaveByExistStmt::new(
-            equal_tos,
-            equal_to_bindings,
-            true_fact,
-            tb.line_file.clone(),
-        )
-        .into())
+        let stmt = match existential_prop_source {
+            Some(source) => HaveByExistStmt::new_from_existential_prop(
+                equal_tos,
+                equal_to_bindings,
+                true_fact,
+                source.fact,
+                source.definition,
+                tb.line_file.clone(),
+            ),
+            None => HaveByExistStmt::new(
+                equal_tos,
+                equal_to_bindings,
+                true_fact,
+                tb.line_file.clone(),
+            ),
+        };
+        Ok(stmt.into())
     }
 
     pub fn parse_have_preimage(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {

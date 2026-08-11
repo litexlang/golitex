@@ -371,6 +371,7 @@ pub use crate::stmt::definition_stmt::DefAbstractPropStmt;
 pub use crate::stmt::definition_stmt::DefPropStmt;
 pub use crate::stmt::definition_stmt::DefSettingStmt;
 pub use crate::stmt::definition_stmt::DefTemplateStmt;
+pub use crate::stmt::definition_stmt::ExistentialPropSource;
 pub use crate::stmt::definition_stmt::FnSetClause;
 pub use crate::stmt::definition_stmt::HaveByExistStmt;
 pub use crate::stmt::definition_stmt::HaveByPreimageStmt;
