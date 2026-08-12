@@ -1,6 +1,8 @@
 use crate::prelude::*;
 use std::rc::Rc;
 
+use super::runtime::WellDefinednessObjectCaptureFrame;
+
 impl Runtime {
     /// Reuse a completed proof visible in the current environment chain.
     pub(crate) fn verify_atomic_fact_from_statement_memo(
@@ -43,7 +45,7 @@ impl Runtime {
             })
         };
         if let Some(source) = existing_source {
-            self.record_well_definedness_proof_if_active(source);
+            let _ = self.record_well_definedness_proof_if_active(source);
             return result;
         }
 
@@ -55,33 +57,162 @@ impl Runtime {
         self.top_level_env()
             .statement_verified_atomic_facts
             .insert(key, source.clone());
-        self.record_well_definedness_proof_if_active(source.clone());
+        let _ = self.record_well_definedness_proof_if_active(source.clone());
 
         FactualStmtSuccess::new_with_statement_memo(fact.clone().into(), infers, source).into()
     }
 
-    fn record_well_definedness_proof_if_active(&mut self, proof: Rc<FactualStmtSuccess>) {
+    fn record_well_definedness_proof_if_active(
+        &mut self,
+        proof: Rc<FactualStmtSuccess>,
+    ) -> Option<WellDefinednessCertificateId> {
         if self.well_definedness_capture_depth == 0
             || !self.captures_litex_to_lean_well_definedness()
         {
+            return None;
+        }
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let Some(certificate) = self.well_definedness_capture_stack.last_mut() else {
+            return None;
+        };
+        let certificate_id = if let Some(evidence) = certificate
+            .facts
+            .iter()
+            .find(|evidence| Rc::ptr_eq(&evidence.proof, &proof))
+        {
+            evidence.certificate_id
+        } else {
+            let certificate_id =
+                WellDefinednessCertificateId::new(certificate.facts.len() as u64 + 1);
+            certificate.facts.push(WellDefinednessFactEvidence {
+                certificate_id,
+                role: WellDefinednessRequirementRole::SourceObjectRequirement,
+                proof,
+            });
+            certificate_id
+        };
+        for frame in self.well_definedness_object_capture_stack.iter_mut() {
+            if frame.statement_capture_depth == statement_capture_depth
+                && !frame.fact_ids.contains(&certificate_id)
+            {
+                frame.fact_ids.push(certificate_id);
+            }
+        }
+        Some(certificate_id)
+    }
+
+    pub(crate) fn begin_well_definedness_object_capture(&mut self, object: &Obj) {
+        if !self.captures_litex_to_lean_well_definedness()
+            || self.well_definedness_capture_stack.is_empty()
+        {
+            return;
+        }
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let certificate = self
+            .well_definedness_capture_stack
+            .last()
+            .expect("checked nonempty WD certificate stack");
+        let active_count = self
+            .well_definedness_object_capture_stack
+            .iter()
+            .filter(|frame| frame.statement_capture_depth == statement_capture_depth)
+            .count();
+        let occurrence_id = WellDefinednessObjectOccurrenceId::new(
+            certificate.objects.len() as u64 + active_count as u64 + 1,
+        );
+        self.well_definedness_object_capture_stack
+            .push(WellDefinednessObjectCaptureFrame::new(
+                occurrence_id,
+                object.clone(),
+                statement_capture_depth,
+            ));
+    }
+
+    pub(crate) fn end_well_definedness_object_capture(
+        &mut self,
+        succeeded: bool,
+        intrinsic_result_set: Option<Obj>,
+    ) {
+        if !self.captures_litex_to_lean_well_definedness() {
+            return;
+        }
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let Some(frame) = self.well_definedness_object_capture_stack.pop() else {
+            return;
+        };
+        if frame.statement_capture_depth != statement_capture_depth || !succeeded {
             return;
         }
         let Some(certificate) = self.well_definedness_capture_stack.last_mut() else {
             return;
         };
-        if certificate
-            .facts
-            .iter()
-            .any(|evidence| Rc::ptr_eq(&evidence.proof, &proof))
+        certificate.objects.push(WellDefinednessObjectEvidence::new(
+            frame.occurrence_id,
+            frame.object,
+            intrinsic_result_set,
+            frame.fact_ids,
+        ));
+    }
+
+    pub(crate) fn record_well_definedness_target_requirement(
+        &mut self,
+        source_object: &Obj,
+        role: WellDefinednessRequirementRole,
+        result: StmtResult,
+    ) {
+        if role == WellDefinednessRequirementRole::SourceObjectRequirement
+            || !self.captures_litex_to_lean_well_definedness()
         {
             return;
         }
-        let certificate_id = WellDefinednessCertificateId::new(certificate.facts.len() as u64 + 1);
-        certificate.facts.push(WellDefinednessFactEvidence {
-            certificate_id,
-            role: WellDefinednessRequirementRole::SourceObjectRequirement,
-            proof,
-        });
+        let Some(success) = result.into_factual_success() else {
+            return;
+        };
+        let expected_proposition = success.stmt.clone();
+        let proof = if let VerifiedByResult::StatementMemo(proof) = &success.verified_by {
+            proof.clone()
+        } else {
+            // A successful requirement need not have passed through the memo
+            // cache. Preserve that exact verifier result rather than losing
+            // the target proof reference or asking the Lean backend to search.
+            Rc::new(success)
+        };
+        let Some(certificate_id) = self.record_well_definedness_proof_if_active(proof) else {
+            return;
+        };
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let source_key = obj_equality_key(source_object);
+        let Some(object_occurrence_id) = self
+            .well_definedness_object_capture_stack
+            .iter()
+            .rev()
+            .find(|frame| {
+                frame.statement_capture_depth == statement_capture_depth
+                    && obj_equality_key(&frame.object) == source_key
+            })
+            .map(|frame| frame.occurrence_id)
+        else {
+            return;
+        };
+        let Some(certificate) = self.well_definedness_capture_stack.last_mut() else {
+            return;
+        };
+        if certificate.target_requirements.iter().any(|requirement| {
+            requirement.object_occurrence_id == object_occurrence_id
+                && requirement.role == role
+                && requirement.certificate_id == certificate_id
+        }) {
+            return;
+        }
+        certificate
+            .target_requirements
+            .push(WellDefinednessTargetRequirementEvidence::new(
+                object_occurrence_id,
+                source_object.clone(),
+                role,
+                certificate_id,
+                expected_proposition,
+            ));
     }
 
     /// End the statement-local lifetime on every active scope of the current execution frame.
@@ -305,6 +436,25 @@ mod tests {
                 .map(|evidence| evidence.proof.stmt.to_string())
                 .collect::<Vec<_>>()
         );
+        let requirement = certificate
+            .target_requirements
+            .iter()
+            .find(|requirement| {
+                requirement.expected_proposition.to_string() == "2 > 0"
+                    && requirement.role
+                        == WellDefinednessRequirementRole::FunctionDomain {
+                            layer_index: 0,
+                            domain_index: 0,
+                        }
+            })
+            .expect("the application must retain its exact domain-proof reference");
+        let object = certificate
+            .objects
+            .iter()
+            .find(|object| object.occurrence_id == requirement.object_occurrence_id)
+            .expect("the domain-proof reference must point to a checked object occurrence");
+        assert!(object.object.to_string().ends_with("f(2)"));
+        assert!(object.fact_ids.contains(&requirement.certificate_id));
     }
 
     #[test]

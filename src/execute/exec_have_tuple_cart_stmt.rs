@@ -54,7 +54,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
-        let target = self.declared_identifier_obj(&stmt.name);
+        let target = self.declared_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsTupleFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveTupleStmt::store_reason(),
@@ -123,7 +123,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
 
         let mut infer_result = InferResult::new();
-        let target = self.declared_identifier_obj(&stmt.name);
+        let target = self.declared_identifier_obj(stmt.name());
         infer_result.new_infer_result_inside(self.store_have_tuple_or_cart_fact(
             IsSetFact::new(target.clone(), stmt.line_file.clone()).into(),
             HaveCartStmt::store_reason(),
@@ -250,9 +250,9 @@ impl Runtime {
             std::slice::from_ref(&stmt.index_binding),
             ParamObjType::Forall,
         );
-        let index_obj = index_map[&stmt.index_name].clone();
+        let index_obj = index_map[stmt.index_name()].clone();
         let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::TupleIndex)?;
-        let target = self.declared_identifier_obj(&stmt.name);
+        let target = self.declared_identifier_obj(stmt.name());
         let left: Obj = ObjAtIndex::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new_canonical_forall(
@@ -268,9 +268,9 @@ impl Runtime {
             std::slice::from_ref(&stmt.index_binding),
             ParamObjType::Forall,
         );
-        let index_obj = index_map[&stmt.index_name].clone();
+        let index_obj = index_map[stmt.index_name()].clone();
         let value = self.inst_obj(&stmt.value, &index_map, ParamObjType::CartIndex)?;
-        let target = self.declared_identifier_obj(&stmt.name);
+        let target = self.declared_identifier_obj(stmt.name());
         let left: Obj = Proj::new(target, index_obj).into();
         let equal_fact = EqualFact::new(left, value, stmt.line_file.clone());
         ForallFact::new_canonical_forall(

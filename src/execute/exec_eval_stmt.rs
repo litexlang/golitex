@@ -1437,7 +1437,7 @@ impl Runtime {
         let Some(algo_definition) = self.get_algo_definition_by_name(&fn_name) else {
             return Ok(None);
         };
-        if algo_definition.params.len() != 1 {
+        if algo_definition.param_bindings.len() != 1 {
             return Ok(None);
         }
         let Some((start_value, _tail_bound)) = Self::unary_integer_algo_base_range(
@@ -1648,12 +1648,12 @@ impl Runtime {
             }
         };
 
-        if flattened_number_args.len() != algo_definition.params.len() {
+        if flattened_number_args.len() != algo_definition.param_bindings.len() {
             return Err(short_exec_error(
                 eval_stmt.clone().into(),
                 format!(
                     "eval: argument count mismatch (expected {}, got {})",
-                    algo_definition.params.len(),
+                    algo_definition.param_bindings.len(),
                     flattened_number_args.len()
                 ),
                 None,

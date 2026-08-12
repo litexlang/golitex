@@ -97,7 +97,7 @@ fn normal_atomic_has_args_refl(fact: &NormalAtomicFact, left: &str, right: &str)
 
 fn obj_is_forall_param_refl(obj: &Obj, name: &str) -> bool {
     match obj {
-        Obj::Atom(AtomObj::Forall(p)) => p.name == name,
+        Obj::Atom(AtomObj::Forall(p)) => p.name() == name,
         _ => false,
     }
 }

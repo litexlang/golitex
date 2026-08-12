@@ -125,7 +125,7 @@ fn equal_fact_has_args_antisym(fact: &EqualFact, left: &str, right: &str) -> boo
 
 fn obj_is_forall_param_antisym(obj: &Obj, name: &str) -> bool {
     match obj {
-        Obj::Atom(AtomObj::Forall(p)) => p.name == name,
+        Obj::Atom(AtomObj::Forall(p)) => p.name() == name,
         _ => false,
     }
 }

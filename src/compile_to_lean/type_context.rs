@@ -4,12 +4,33 @@ use crate::prelude::*;
 
 use super::helper::lean_generic_carrier_name;
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct LeanWellDefinednessTargetRequirementKey {
+    source_object_key: String,
+    role: WellDefinednessRequirementRole,
+    proposition: String,
+}
+
+#[derive(Clone, Default)]
+pub(super) struct LeanWellDefinednessContext {
+    proof_names_by_proposition: HashMap<String, String>,
+    /// Membership binders may be re-created with alpha-renamed nested
+    /// SetBuilder/FnSet parameters during verifier proof search. Retain their
+    /// structural objects so exact alpha-equivalent reuse does not depend on a
+    /// display string or a preflight FactId.
+    membership_proofs: Vec<(Obj, Obj, String)>,
+    proof_names_by_certificate_id: HashMap<WellDefinednessCertificateId, String>,
+    certificate_ids_by_proposition: HashMap<String, Vec<WellDefinednessCertificateId>>,
+    target_requirement_ids:
+        HashMap<LeanWellDefinednessTargetRequirementKey, Vec<WellDefinednessCertificateId>>,
+}
+
 #[derive(Clone, Default)]
 pub(super) struct LeanTypeContext {
     symbol_carriers: HashMap<SymbolId, LitexToLeanCarrierIr>,
     object_expectations: HashMap<String, LitexToLeanCarrierIr>,
     generic_carrier_aliases: HashMap<SymbolId, SymbolId>,
-    well_definedness_proof_names: HashMap<String, String>,
+    well_definedness: LeanWellDefinednessContext,
 }
 
 impl LeanTypeContext {
@@ -44,7 +65,8 @@ impl LeanTypeContext {
 
     pub(super) fn expect_object(&mut self, object: &Obj, carrier: LitexToLeanCarrierIr) {
         self.object_expectations
-            .insert(obj_equality_key(object), carrier);
+            .entry(obj_equality_key(object))
+            .or_insert(carrier);
     }
 
     pub(super) fn expected_object(&self, object: &Obj) -> Option<&LitexToLeanCarrierIr> {
@@ -52,21 +74,171 @@ impl LeanTypeContext {
     }
 
     pub(super) fn insert_well_definedness_proof(&mut self, proposition: &Fact, name: String) {
-        self.well_definedness_proof_names
-            .insert(proposition.to_string(), name);
+        if let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition {
+            if let Some(existing) =
+                self.well_definedness
+                    .membership_proofs
+                    .iter_mut()
+                    .find(|(element, set, _)| {
+                        obj_equality_key(element) == obj_equality_key(&membership.element)
+                            && obj_equality_key(set) == obj_equality_key(&membership.set)
+                    })
+            {
+                existing.2 = name.clone();
+            } else {
+                self.well_definedness.membership_proofs.push((
+                    membership.element.clone(),
+                    membership.set.clone(),
+                    name.clone(),
+                ));
+            }
+        }
+        let proposition = proposition.to_string();
+        self.well_definedness
+            .proof_names_by_proposition
+            .insert(proposition.clone(), name.clone());
+        if let Some(certificate_ids) = self
+            .well_definedness
+            .certificate_ids_by_proposition
+            .get(&proposition)
+        {
+            for certificate_id in certificate_ids {
+                self.well_definedness
+                    .proof_names_by_certificate_id
+                    .insert(*certificate_id, name.clone());
+            }
+        }
+    }
+
+    /// Register a source parameter-membership proof together with the
+    /// predicate that Lean obtains by reducing a refined standard set.
+    ///
+    /// For example, a binder proof of `b ∈ Z*` is definitionally also a proof
+    /// of `b ≠ 0` in the emitted Lean type. This is not backend proof search:
+    /// it is the checked source parameter proof, reused under the exact
+    /// definition chosen for that source set.
+    pub(super) fn insert_parameter_well_definedness_proof(
+        &mut self,
+        proposition: &Fact,
+        name: String,
+    ) {
+        self.insert_well_definedness_proof(proposition, name.clone());
+        for consequence in refined_parameter_membership_consequences(proposition) {
+            self.insert_well_definedness_proof(&consequence, name.clone());
+        }
     }
 
     pub(super) fn well_definedness_proof(&self, proposition: &Fact) -> Option<&str> {
-        self.well_definedness_proof_names
+        self.well_definedness
+            .proof_names_by_proposition
             .get(&proposition.to_string())
             .map(String::as_str)
     }
 
-    pub(super) fn replace_well_definedness_proofs(
+    pub(super) fn alpha_equivalent_membership_proof(
+        &self,
+        element: &Obj,
+        set: &Obj,
+    ) -> Option<&str> {
+        self.well_definedness
+            .membership_proofs
+            .iter()
+            .rev()
+            .find(|(candidate_element, candidate_set, _)| {
+                objs_equal_with_nested_binder_alpha_equivalence(candidate_element, element)
+                    && objs_equal_with_nested_binder_alpha_equivalence(candidate_set, set)
+            })
+            .map(|(_, _, name)| name.as_str())
+    }
+
+    pub(super) fn insert_well_definedness_proof_by_certificate_id(
         &mut self,
-        proofs: HashMap<String, String>,
-    ) -> HashMap<String, String> {
-        std::mem::replace(&mut self.well_definedness_proof_names, proofs)
+        certificate_id: WellDefinednessCertificateId,
+        proposition: &Fact,
+        name: String,
+    ) {
+        self.insert_well_definedness_proof(proposition, name.clone());
+        self.well_definedness
+            .proof_names_by_certificate_id
+            .insert(certificate_id, name);
+    }
+
+    pub(super) fn install_well_definedness_certificate_metadata(
+        &mut self,
+        certificate: &LitexToLeanWellDefinednessCertificateIr,
+    ) {
+        for evidence in certificate.facts.iter() {
+            let ids = self
+                .well_definedness
+                .certificate_ids_by_proposition
+                .entry(evidence.expected_proposition.to_string())
+                .or_default();
+            if !ids.contains(&evidence.certificate_id) {
+                ids.push(evidence.certificate_id);
+            }
+        }
+        for requirement in certificate.target_requirements.iter() {
+            let key = LeanWellDefinednessTargetRequirementKey {
+                source_object_key: obj_equality_key(&requirement.source_object),
+                role: requirement.role,
+                proposition: requirement.expected_proposition.to_string(),
+            };
+            let ids = self
+                .well_definedness
+                .target_requirement_ids
+                .entry(key)
+                .or_default();
+            if !ids.contains(&requirement.certificate_id) {
+                ids.push(requirement.certificate_id);
+            }
+        }
+    }
+
+    pub(super) fn function_requirement_proof(
+        &self,
+        source_application: &Obj,
+        role: WellDefinednessRequirementRole,
+        proposition: &Fact,
+    ) -> Result<(WellDefinednessCertificateId, &str), String> {
+        let key = LeanWellDefinednessTargetRequirementKey {
+            source_object_key: obj_equality_key(source_application),
+            role,
+            proposition: proposition.to_string(),
+        };
+        let Some(certificate_ids) = self.well_definedness.target_requirement_ids.get(&key) else {
+            return Err(format!(
+                "missing an exact retained WD requirement reference for `{}`",
+                proposition
+            ));
+        };
+        let mut replayed = certificate_ids.iter().filter_map(|certificate_id| {
+            self.well_definedness
+                .proof_names_by_certificate_id
+                .get(certificate_id)
+                .map(|name| (*certificate_id, name.as_str()))
+        });
+        let Some(first) = replayed.next() else {
+            return Err(format!(
+                "retained WD requirement reference for `{}` has not been replayed in this Lean scope",
+                proposition
+            ));
+        };
+        for candidate in replayed {
+            if candidate.1 != first.1 {
+                return Err(format!(
+                    "multiple checked occurrences of `{}` retain different WD proof terms for `{}`; exact occurrence identity is required",
+                    source_application, proposition
+                ));
+            }
+        }
+        Ok(first)
+    }
+
+    pub(super) fn replace_well_definedness_context(
+        &mut self,
+        context: LeanWellDefinednessContext,
+    ) -> LeanWellDefinednessContext {
+        std::mem::replace(&mut self.well_definedness, context)
     }
 
     pub(super) fn unify_generic_carriers(
@@ -128,6 +300,14 @@ impl LeanTypeContext {
                     function: function.clone(),
                 }),
             })),
+            LitexToLeanObjectIr::SetBuilder(builder) => Ok(Some(LitexToLeanCarrierIr::Set {
+                element_carrier: Box::new(builder.element_carrier.clone()),
+            })),
+            LitexToLeanObjectIr::AnonymousFunction(function) => {
+                Ok(Some(LitexToLeanCarrierIr::Function {
+                    function: Box::new(function.function.clone()),
+                }))
+            }
             LitexToLeanObjectIr::FunctionApplication(application) => {
                 self.function_application_result_carrier(application)
             }
@@ -333,7 +513,9 @@ impl LeanTypeContext {
             }
             LitexToLeanObjectIr::Number { .. }
             | LitexToLeanObjectIr::StandardSet(_)
-            | LitexToLeanObjectIr::FunctionSet { .. } => {}
+            | LitexToLeanObjectIr::FunctionSet { .. }
+            | LitexToLeanObjectIr::SetBuilder(_)
+            | LitexToLeanObjectIr::AnonymousFunction(_) => {}
         }
         Ok(())
     }
@@ -371,6 +553,9 @@ impl LeanTypeContext {
         operator: LitexToLeanBuiltinObjectOperatorIr,
         arguments: &[LitexToLeanObjectIr],
     ) -> Result<Option<LitexToLeanCarrierIr>, String> {
+        if let Some(carrier) = operator.intrinsic_result_carrier() {
+            return Ok(Some(carrier));
+        }
         match operator {
             LitexToLeanBuiltinObjectOperatorIr::Union
             | LitexToLeanBuiltinObjectOperatorIr::Intersect
@@ -447,6 +632,34 @@ impl LeanTypeContext {
     }
 }
 
+fn refined_parameter_membership_consequences(proposition: &Fact) -> Vec<Fact> {
+    let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
+        return Vec::new();
+    };
+    let Obj::StandardSet(set) = &membership.set else {
+        return Vec::new();
+    };
+    let element = membership.element.clone();
+    let zero: Obj = Number::new("0".to_string()).into();
+    let line_file = membership.line_file.clone();
+    match set {
+        StandardSet::NPos | StandardSet::QPos | StandardSet::RPos => vec![
+            LessFact::new(zero.clone(), element.clone(), line_file.clone()).into(),
+            // Litex accepts the comparison-dual spelling in function domains;
+            // Lean elaborates `element > 0` as the same `<` proposition.
+            GreaterFact::new(element, zero, line_file).into(),
+        ],
+        StandardSet::QNeg | StandardSet::ZNeg | StandardSet::RNeg => vec![
+            LessFact::new(element.clone(), zero.clone(), line_file.clone()).into(),
+            GreaterFact::new(zero, element, line_file).into(),
+        ],
+        StandardSet::QStar | StandardSet::ZStar | StandardSet::RStar | StandardSet::CStar => {
+            vec![NotEqualFact::new(element, zero, line_file).into()]
+        }
+        _ => Vec::new(),
+    }
+}
+
 fn join_numeric_carriers(
     left: &LitexToLeanCarrierIr,
     right: &LitexToLeanCarrierIr,
@@ -473,5 +686,65 @@ fn numeric_rank(carrier: &LitexToLeanCarrierIr) -> Option<u8> {
         | LitexToLeanCarrierIr::Set { .. }
         | LitexToLeanCarrierIr::Function { .. }
         | LitexToLeanCarrierIr::ElementOfSet { .. } => None,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn structurally_equal_applications_with_different_wd_certificates_are_not_guessed() {
+        let source_application: Obj = Number::new("1".to_string()).into();
+        let proposition: Fact = NotEqualFact::new(
+            source_application.clone(),
+            Number::new("0".to_string()).into(),
+            default_line_file(),
+        )
+        .into();
+        let role = WellDefinednessRequirementRole::FunctionDomain {
+            layer_index: 0,
+            domain_index: 0,
+        };
+        let first_id = WellDefinednessCertificateId::new(1);
+        let second_id = WellDefinednessCertificateId::new(2);
+        let certificate = LitexToLeanWellDefinednessCertificateIr {
+            facts: Vec::new(),
+            objects: Vec::new(),
+            target_requirements: vec![
+                LitexToLeanWellDefinednessTargetRequirementIr {
+                    object_occurrence_id: WellDefinednessObjectOccurrenceId::new(1),
+                    source_object: source_application.clone(),
+                    role,
+                    certificate_id: first_id,
+                    expected_proposition: proposition.clone(),
+                },
+                LitexToLeanWellDefinednessTargetRequirementIr {
+                    object_occurrence_id: WellDefinednessObjectOccurrenceId::new(2),
+                    source_object: source_application.clone(),
+                    role,
+                    certificate_id: second_id,
+                    expected_proposition: proposition.clone(),
+                },
+            ],
+        };
+
+        let mut context = LeanTypeContext::default();
+        context.install_well_definedness_certificate_metadata(&certificate);
+        context.insert_well_definedness_proof_by_certificate_id(
+            first_id,
+            &proposition,
+            "wd_1".to_string(),
+        );
+        context.insert_well_definedness_proof_by_certificate_id(
+            second_id,
+            &proposition,
+            "wd_2".to_string(),
+        );
+
+        let error = context
+            .function_requirement_proof(&source_application, role, &proposition)
+            .expect_err("the emitter must not choose between distinct occurrence certificates");
+        assert!(error.contains("different WD proof terms"));
     }
 }

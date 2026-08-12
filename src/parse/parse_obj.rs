@@ -1577,11 +1577,11 @@ impl Runtime {
         Ok(definition
             .fields
             .iter()
-            .map(|(field_name, _)| {
+            .map(|field| {
                 ObjAsStructInstanceWithFieldAccess::new(
                     struct_obj.clone(),
                     obj.clone(),
-                    field_name.clone(),
+                    field.name().to_string(),
                 )
                 .into()
             })
@@ -1842,13 +1842,13 @@ impl Runtime {
         let name_for_set_builder = match &left {
             Obj::Atom(AtomObj::Identifier(a)) => Some(a.name.as_str()),
             Obj::Atom(AtomObj::IdentifierWithMod(m)) => Some(m.name.as_str()),
-            Obj::Atom(AtomObj::Forall(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Def(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Exist(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::Induc(p)) => Some(p.name.as_str()),
-            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name.as_str()),
+            Obj::Atom(AtomObj::Forall(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::Def(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::Exist(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::SetBuilder(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::FnSet(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::Induc(p)) => Some(p.name()),
+            Obj::Atom(AtomObj::DefAlgo(p)) => Some(p.name()),
             _ => None,
         };
         if let Some(name) = name_for_set_builder {
@@ -2116,10 +2116,10 @@ impl Runtime {
             )));
         }
 
-        let Some((_, field_type)) = def
+        let Some(field) = def
             .fields
             .iter()
-            .find(|(field_name, _)| field_name == &field_access.field_name)
+            .find(|field| field.name() == field_access.field_name)
         else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -2131,7 +2131,7 @@ impl Runtime {
                 ),
             )));
         };
-        if !matches!(field_type, Obj::StructObj(_)) {
+        if !matches!(&field.field_type, Obj::StructObj(_)) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
@@ -2149,9 +2149,13 @@ impl Runtime {
         let instantiated_field_type = if let Some((param_def, _)) = &def.param_def_with_dom {
             let param_to_arg_map =
                 param_def.param_defs_and_args_to_param_to_arg_map(&field_access.struct_obj.params);
-            self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?
+            self.inst_obj(
+                &field.field_type,
+                &param_to_arg_map,
+                ParamObjType::DefHeader,
+            )?
         } else {
-            field_type.clone()
+            field.field_type.clone()
         };
         let Obj::StructObj(struct_obj) = instantiated_field_type else {
             unreachable!(
@@ -2564,7 +2568,7 @@ mod module_qualification_parse_tests {
         let Obj::Atom(AtomObj::Forall(arg)) = &atomic_fact.body[0] else {
             panic!("expected forall-bound argument");
         };
-        assert_eq!(arg.name, "x");
+        assert_eq!(arg.name(), "x");
     }
 
     #[test]

@@ -236,7 +236,7 @@ impl Runtime {
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
 
         let function_in_function_set_fact: Fact = InFact::new(
-            self.declared_identifier_obj(&stmt.name),
+            self.declared_identifier_obj(stmt.name()),
             recursive_fn_set.into(),
             stmt.line_file.clone(),
         )

@@ -1,6 +1,6 @@
 # Litex-to-Lean Implementation Status
 
-Last updated: 2026-08-11
+Last updated: 2026-08-12
 
 This file is the implementation ledger for the current Litex-to-Lean work. The
 inventory is authoritative for rule-by-rule coverage; this page tracks the
@@ -23,6 +23,12 @@ pipeline and delivery checkpoints.
 - [x] Preserve clause-coverage projections for unstored source `forall` facts,
   emit their real FactIds, and build checked conjunctions for stored
   multi-conclusion universals.
+- [x] Lower verified source `thm` declarations to source-named Lean theorems,
+  retain their exact proof scope, and map the primary stored `FactId` directly
+  to that name instead of emitting a duplicate `factN` theorem.
+- [x] Reject malformed theorem scope evidence and target-name collisions
+  transactionally; keep explicit `axiom`, `by thm`, and imported theorem
+  linking as fail-closed follow-up boundaries.
 
 Tracer:
 [`examples/05_compiler_interop/compile_to_lean_partial_report.lit`](../../examples/05_compiler_interop/compile_to_lean_partial_report.lit)
@@ -30,10 +36,14 @@ Tracer:
 Projected-forall tracer:
 [`examples/05_compiler_interop/compile_to_lean_mixed_projected_forall.lit`](../../examples/05_compiler_interop/compile_to_lean_mixed_projected_forall.lit)
 
+Named-theorem tracer:
+[`examples/09_compile_to_lean/compile_to_lean_examples.md#named_theorem`](../../examples/09_compile_to_lean/compile_to_lean_examples.md#named_theorem)
+
 ## Native function and well-definedness ABI
 
-- [x] Freeze `fn(...)` as `Set.univ` over a native dependent function type,
-  while preserving `$in` as a proposition.
+- [x] Freeze `fn(...)` as a set over a native dependent function carrier:
+  universal returns use `Set.univ`, refined returns use a pointwise membership
+  predicate, and `$in` remains a proposition.
 - [x] Freeze exact Litex application layers: value arguments first, then the
   same layer's ordered domain proofs; Lean currying does not widen source
   syntax.
@@ -42,6 +52,11 @@ Projected-forall tracer:
   its consequent type elaborates).
 - [x] Retain statement-local WD proof certificates across temporary verifier
   scopes and boolean object-cache hits.
+- [x] Retain checked object occurrences, all observed WD fact IDs, and exact
+  function parameter/domain target references; never recover a consumed proof
+  by proposition search in the Lean backend.
+- [x] Reuse refined `R*` and `R+` binder memberships definitionally as the
+  exact nonzero/positive proofs consumed by restricted applications.
 - [x] Lower bound function carriers and named applications, inserting only
   target-consumed certificate proofs as term arguments.
 - [x] Replay source-only WD obligations as checked audit facts and reject
@@ -50,8 +65,14 @@ Projected-forall tracer:
   Markdown snapshot, and real Mathlib gate.
 - [x] Add the first checked `have fn` declaration/evaluation slice for named,
   numeric-return function definitions, including exact defining-fact replay.
-- [ ] Add standalone anonymous-function values, refined return-set evidence,
-  and the remaining `have fn` forms as later slices of the same ABI.
+- [x] Lower `SetBuilder` and anonymous-function values with binder-owned scope;
+  reconstruct erased universal parameter-membership arguments when applying
+  the verifier's checked pointwise proof.
+- [x] Retain refined return-set membership, eliminate function membership
+  through every exact source application layer, and replay checked refined
+  body membership for named `have fn` definitions.
+- [ ] Add the remaining richer `have fn` forms and unsupported binder-owning
+  constructors without widening this typed evidence ABI.
 
 Specification:
 [`math_collections.md#native-function-sets-exact-layers-and-well-definedness-proofs`](math_collections.md#native-function-sets-exact-layers-and-well-definedness-proofs)
@@ -254,8 +275,10 @@ Recursive-strategy tracer:
 
 - [x] Keep structural `LitexToLeanObjectIr` identity separate from checked target
   carrier constraints.
-- [x] Map `N`, `Z`, `Q`, `R`, and `C` to `Set.univ` over Mathlib's
-  `ℕ`, `ℤ`, `ℚ`, `ℝ`, and `ℂ`.
+- [x] Declare the complete current 15-set numeric family once per generated
+  file as transparent `Litex.StandardSets.*` aliases, and render every
+  standard-set object through those names. The aliases still reduce to native
+  Mathlib `Set.univ`, interval, or nonzero predicates.
 - [x] Emit standard-domain parameters as bounded quantifiers so membership
   remains an ordinary named proposition.
 - [x] Keep numerals and symbols bare in structural object output.
@@ -268,8 +291,9 @@ Recursive-strategy tracer:
   marker that does not admit facts as source objects.
 - [x] Lower generic set binders through an implicit element carrier and native
   `Set α`; map `union`, `intersect`, and `set_minus` to `∪`, `∩`, and `\`.
-- [x] Reject binder-owning `SetBuilder` during IR construction instead of
-  guessing a carrier or emitting a fallback.
+- [x] Lower binder-owning `SetBuilder` to a native predicate set with its local
+  symbol, inferred element carrier, base membership, and ordered defining
+  facts; malformed or underconstrained builders still fail closed.
 - [x] Propagate checked carrier constraints through known-forall,
   normalization, equality-rewrite, existential, and forall-introduction proof
   trees; the resolved-atomic regression prevents an intermediate `ℕ` default
@@ -277,6 +301,9 @@ Recursive-strategy tracer:
 - [x] Instantiate dependent parameter carriers at each registered-rule
   occurrence (`x A` refers to the target `A`, not the catalog template symbol)
   without introducing a complete typed Fact IR.
+- [x] Give `%` an intrinsic integer operand/result contract, retain structured
+  integer closure evidence for `+`, `-`, `*`, and `%`, and check closed
+  remainder computation through integer reflection plus real Mathlib.
 - [ ] Give refined-domain prop parameters and unsupported scalar operators
   dedicated native contracts rather than relying on incidental elaboration.
 - [ ] Extend the same occurrence-local carrier view only where new object

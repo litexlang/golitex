@@ -281,6 +281,16 @@ impl Runtime {
         in_fact: &InFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
+            &anon.clone().into(),
+            expected_fn_set,
+            in_fact,
+            verify_state,
+        )? {
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
         let signature_from_anon = FnSet::new(
             anon.body.params_def_with_set.clone(),
             anon.body.dom_facts.clone(),

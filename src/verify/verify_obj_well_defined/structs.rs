@@ -122,8 +122,12 @@ impl Runtime {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
         let mut fields = Vec::with_capacity(def.fields.len());
-        for (_, field_type) in def.fields.iter() {
-            fields.push(self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?);
+        for field in def.fields.iter() {
+            fields.push(self.inst_obj(
+                &field.field_type,
+                &param_to_arg_map,
+                ParamObjType::DefHeader,
+            )?);
         }
         Ok(fields)
     }
@@ -158,7 +162,7 @@ impl Runtime {
             })?;
         def.fields
             .iter()
-            .position(|(name, _)| name == field_name)
+            .position(|field| field.name() == field_name)
             .map(|idx| idx + 1)
             .ok_or_else(|| {
                 RuntimeError::from(WellDefinedRuntimeError(
@@ -210,34 +214,40 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
-        for (_, field_type) in def.fields.iter() {
+        for field in def.fields.iter() {
             let instantiated_field_type =
-                self.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+                self.inst_obj(&field.field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
             self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
         }
         self.run_in_local_env(|rt| {
+            let field_bindings = def
+                .fields
+                .iter()
+                .map(|field| field.binding.clone())
+                .collect::<Vec<_>>();
             let field_rename_map = rt.visible_binding_conflict_rename_map(
-                &def.field_bindings,
+                &field_bindings,
                 ParamObjType::DefStructField,
             )?;
             let active_field_bindings = def
-                .field_bindings
+                .fields
                 .iter()
                 .map(
-                    |binding| match field_rename_map.get(&binding.substitution_key()) {
+                    |field| match field_rename_map.get(&field.binding.substitution_key()) {
                         Some(Obj::Atom(AtomObj::DefStructField(param))) => {
                             param.symbol.to_local_binding()
                         }
-                        _ => binding.clone(),
+                        _ => field.binding.clone(),
                     },
                 )
                 .collect::<Vec<_>>();
 
-            for (field_binding, (_, field_type)) in
-                active_field_bindings.iter().zip(def.fields.iter())
-            {
-                let instantiated_field_type =
-                    rt.inst_obj(field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+            for (field_binding, field) in active_field_bindings.iter().zip(def.fields.iter()) {
+                let instantiated_field_type = rt.inst_obj(
+                    &field.field_type,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                )?;
                 let instantiated_field_type = rt.inst_obj(
                     &instantiated_field_type,
                     &field_rename_map,
@@ -260,10 +270,7 @@ impl Runtime {
                 rt.verify_well_defined_and_store_without_infer_with_state(
                     instantiated_fact,
                     verify_state,
-                    InferReason::ByDefinition(ByDefinitionReason::new(
-                        None,
-                        Some(def.name.clone()),
-                    )),
+                    InferReason::ByDefinition,
                 )?;
             }
             Ok::<(), RuntimeError>(())

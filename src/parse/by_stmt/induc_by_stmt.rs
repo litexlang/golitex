@@ -103,7 +103,6 @@ impl Runtime {
 
         Ok(ByInducStmt::new(
             to_prove,
-            param,
             param_bindings[0].clone(),
             induc_from,
             proof,

@@ -1175,9 +1175,7 @@ impl Runtime {
 
         let mut step_results = vec![carrier_result];
         let mut field_map = HashMap::new();
-        for (index, (field_binding, _)) in
-            def.field_bindings.iter().zip(def.fields.iter()).enumerate()
-        {
+        for (index, field) in def.fields.iter().enumerate() {
             let field_obj = if def.fields.len() == 1 {
                 in_fact.element.clone()
             } else {
@@ -1190,7 +1188,7 @@ impl Runtime {
                     .into(),
                 }
             };
-            insert_symbol_substitution(&mut field_map, field_binding, field_obj);
+            insert_symbol_substitution(&mut field_map, &field.binding, field_obj);
         }
 
         for fact in def.equivalent_facts.iter() {

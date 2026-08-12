@@ -126,6 +126,21 @@ impl Runtime {
         {
             return Ok(result);
         }
+        // Function-application typing is independent of the shape of its
+        // instantiated return set.  Dispatch it before target-specific
+        // standard-set arms so refined carriers such as `R+` retain the exact
+        // application-return evidence instead of being hidden by the numeric
+        // membership switch below.
+        if let Obj::FnObj(fn_obj) = &in_fact.element {
+            let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
+                fn_obj,
+                in_fact,
+                builtin_state,
+            )?;
+            if fn_try.is_true() {
+                return Ok(fn_try);
+            }
+        }
         if let Obj::StandardSet(standard_set) = &in_fact.set {
             if !matches!(&in_fact.element, Obj::Number(_)) {
                 if let Some(evaluated_number) =
@@ -921,16 +936,6 @@ impl Runtime {
                     )?;
                 if cart_projection_result.is_true() {
                     return Ok(cart_projection_result);
-                }
-                if let Obj::FnObj(fn_obj) = &in_fact.element {
-                    let fn_try = self.verify_in_fact_fn_application_in_typed_return_set(
-                        fn_obj,
-                        in_fact,
-                        builtin_state,
-                    )?;
-                    if fn_try.is_true() {
-                        return Ok(fn_try);
-                    }
                 }
                 let list_set_carrier_result =
                     self.verify_in_fact_by_known_list_set_carrier(in_fact, builtin_state)?;

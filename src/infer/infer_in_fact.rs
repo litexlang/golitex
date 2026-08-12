@@ -30,14 +30,14 @@ fn extra_known_fn_set_keys_for_bare_name_lookup(element: &Obj) -> Vec<String> {
             p.name.clone(),
             format!("{}{}{}", p.mod_name, MOD_SIGN, p.name),
         ],
-        Obj::Atom(AtomObj::Forall(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::Exist(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::Def(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::FnSet(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::Induc(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name.clone()],
-        Obj::Atom(AtomObj::DefStructField(p)) => vec![p.name.clone()],
+        Obj::Atom(AtomObj::Forall(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::Exist(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::Def(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::SetBuilder(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::FnSet(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::Induc(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::DefAlgo(p)) => vec![p.name().to_string()],
+        Obj::Atom(AtomObj::DefStructField(p)) => vec![p.name().to_string()],
         _ => vec![],
     }
 }
@@ -649,9 +649,9 @@ impl Runtime {
                     &UseContextVerifyState::new(0, false),
                 )?;
                 let mut field_types = Vec::with_capacity(def.fields.len());
-                for (_, field_type) in def.fields.iter() {
+                for field in def.fields.iter() {
                     field_types.push(self.inst_obj(
-                        field_type,
+                        &field.field_type,
                         &header_map,
                         ParamObjType::DefHeader,
                     )?);
@@ -712,13 +712,11 @@ impl Runtime {
                         .unwrap_or_else(|| in_fact.element.clone()),
                     _ => in_fact.element.clone(),
                 };
-                for (index, (field_binding, (field_name, _))) in
-                    def.field_bindings.iter().zip(def.fields.iter()).enumerate()
-                {
+                for (index, field) in def.fields.iter().enumerate() {
                     let field_access: Obj = ObjAsStructInstanceWithFieldAccess::new(
                         struct_obj.clone(),
                         field_access_element.clone(),
-                        field_name.clone(),
+                        field.name().to_string(),
                     )
                     .into();
                     let law_field_value = if def.fields.len() == 1 {
@@ -726,13 +724,13 @@ impl Runtime {
                     } else {
                         field_access.clone()
                     };
-                    insert_symbol_substitution(&mut field_map, field_binding, law_field_value);
+                    insert_symbol_substitution(&mut field_map, &field.binding, law_field_value);
                     if let Some(identity_projection_field_map) =
                         identity_projection_field_map.as_mut()
                     {
                         insert_symbol_substitution(
                             identity_projection_field_map,
-                            field_binding,
+                            &field.binding,
                             field_access.clone(),
                         );
                     }
@@ -756,7 +754,7 @@ impl Runtime {
                         let projected_field = (*tuple.args[index]).clone();
                         insert_symbol_substitution(
                             projection_field_map,
-                            field_binding,
+                            &field.binding,
                             projected_field.clone(),
                         );
                         let projected_field_in_type: Fact = InFact::new(

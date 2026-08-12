@@ -49,6 +49,7 @@ impl Runtime {
 
         let captures_evidence = self.captures_litex_to_lean_well_definedness();
         if captures_evidence {
+            self.begin_well_definedness_object_capture(obj);
             self.well_definedness_capture_depth += 1;
         }
         let result = match obj {
@@ -187,6 +188,10 @@ impl Runtime {
         if captures_evidence {
             self.well_definedness_capture_depth =
                 self.well_definedness_capture_depth.saturating_sub(1);
+            self.end_well_definedness_object_capture(
+                result.is_ok(),
+                intrinsic_well_definedness_result_set(obj),
+            );
         }
         self.active_well_defined_objects.remove(&active_key);
         result?;
@@ -194,6 +199,16 @@ impl Runtime {
         self.store_well_defined_obj_cache(obj);
 
         Ok(())
+    }
+}
+
+/// Constructor-owned result carriers are part of the checked object contract,
+/// not guesses from surrounding Lean syntax. Example: Litex remainder is an
+/// integer operation even when both operands are closed numerals.
+fn intrinsic_well_definedness_result_set(obj: &Obj) -> Option<Obj> {
+    match obj {
+        Obj::Mod(_) => Some(StandardSet::Z.into()),
+        _ => None,
     }
 }
 

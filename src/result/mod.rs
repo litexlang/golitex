@@ -17,8 +17,11 @@ mod witness_stmt_result;
 
 pub use builtin_rule_evidence::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    DefinitionProjectionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
-    NonzeroExpressionOrientation, RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule,
+    ClosedNumericComparisonBuiltinRuleEvidence, DefinitionProjectionBuiltinRuleEvidence,
+    DivNotEqualZeroBuiltinRuleEvidence, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
+    NonzeroExpressionOrientation, RefinedNumericMembershipBuiltinRuleEvidence,
+    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
     SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
@@ -51,13 +54,14 @@ pub use runtime_success::{
     KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
     NonFactualStmtSuccess, ObjectChoiceVerificationResult, ObjectIntroductionItem,
     TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
-    VerifiedBysEnum, VerifiedBysResult, WitnessExistVerificationResult,
-    WitnessAtomicFactVerificationResult,
+    VerifiedBysEnum, VerifiedBysResult, WitnessAtomicFactVerificationResult,
+    WitnessExistVerificationResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;
 pub use well_definedness_certificate::{
     WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
-    WellDefinednessRequirementRole,
+    WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
+    WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
 };
 pub use witness_stmt_result::WitnessStmtResult;

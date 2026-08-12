@@ -236,7 +236,7 @@ impl Runtime {
                     )));
                 }
 
-                let mut fields: Vec<(String, Obj)> = Vec::new();
+                let mut parsed_fields: Vec<(String, Obj)> = Vec::new();
                 let mut field_bindings: Vec<SymbolBinding> = Vec::new();
                 let mut equivalent_facts: Vec<Fact> = Vec::new();
                 let mut seen_equivalent = false;
@@ -252,13 +252,13 @@ impl Runtime {
                             )));
                         }
                         seen_equivalent = true;
-                        let field_names = fields
+                        let field_names = parsed_fields
                             .iter()
                             .map(|(field_name, _)| field_name.clone())
                             .collect::<Vec<_>>();
                         field_bindings = this.allocate_local_symbol_bindings(&field_names)?;
                         for ((_, field_type), field_binding) in
-                            fields.iter().zip(field_bindings.iter())
+                            parsed_fields.iter().zip(field_bindings.iter())
                         {
                             if let Obj::StructObj(struct_obj) = field_type {
                                 this.register_default_struct_view(
@@ -279,7 +279,7 @@ impl Runtime {
                             )));
                         }
                         let field = this.parse_struct_field(block)?;
-                        if fields.iter().any(|(name, _)| name == &field.0) {
+                        if parsed_fields.iter().any(|(name, _)| name == &field.0) {
                             return Err(RuntimeError::from(ParseRuntimeError(
                                 RuntimeErrorStruct::new_with_msg_and_line_file(
                                     format!("duplicate struct field `{}`", field.0),
@@ -287,11 +287,11 @@ impl Runtime {
                                 ),
                             )));
                         }
-                        fields.push(field);
+                        parsed_fields.push(field);
                     }
                 }
 
-                if fields.is_empty() {
+                if parsed_fields.is_empty() {
                     return Err(RuntimeError::from(ParseRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
                             "struct definition expects at least one field".to_string(),
@@ -300,18 +300,26 @@ impl Runtime {
                     )));
                 }
                 if field_bindings.is_empty() {
-                    let field_names = fields
+                    let field_names = parsed_fields
                         .iter()
                         .map(|(field_name, _)| field_name.clone())
                         .collect::<Vec<_>>();
                     field_bindings = this.allocate_local_symbol_bindings(&field_names)?;
                 }
 
+                let fields = parsed_fields
+                    .into_iter()
+                    .zip(field_bindings)
+                    .map(|((field_name, field_type), binding)| {
+                        debug_assert_eq!(field_name, binding.name());
+                        StructFieldDef::new(binding, field_type)
+                    })
+                    .collect();
+
                 Ok(DefStructStmt::new(
                     name.clone(),
                     param_def_with_dom,
                     fields,
-                    field_bindings,
                     equivalent_facts,
                     tb.line_file.clone(),
                 ))
@@ -543,7 +551,7 @@ impl Runtime {
             &[symbol_binding.clone()],
             tb.line_file.clone(),
         )?;
-        Ok(LetObjStmt::new(name, symbol_binding, value, tb.line_file.clone()).into())
+        Ok(LetObjStmt::new(symbol_binding, value, tb.line_file.clone()).into())
     }
 
     // return HaveObjInNonemptySetOrParamTypeStmt, HaveObjEqualStmt, or HaveObjByExistFactsStmt
@@ -707,9 +715,7 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
         Ok(HaveTupleStmt::new(
-            name,
             symbol_binding,
-            index_name,
             index_bindings[0].clone(),
             dimension,
             value,
@@ -756,9 +762,7 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
         Ok(HaveCartStmt::new(
-            name,
             symbol_binding,
-            index_name,
             index_bindings[0].clone(),
             dimension,
             value,
@@ -814,10 +818,8 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
         Ok(HaveSeqStmt::new(
-            name,
             symbol_binding,
             seq_set,
-            index_name,
             index_bindings[0].clone(),
             value,
             tb.line_file.clone(),
@@ -877,10 +879,8 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
         Ok(HaveFiniteSeqStmt::new(
-            name,
             symbol_binding,
             finite_seq_set,
-            index_name,
             index_bindings[0].clone(),
             bound,
             value,
@@ -948,13 +948,10 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
         Ok(HaveMatrixStmt::new(
-            name,
             symbol_binding,
             matrix_set,
-            row_index_name,
             index_bindings[0].clone(),
             row_bound,
-            col_index_name,
             index_bindings[1].clone(),
             col_bound,
             value,
@@ -982,7 +979,7 @@ impl Runtime {
                         ),
                     )));
                 }
-                return self.parse_have_fn_by_exist_unique_body(tb, name, symbol_binding);
+                return self.parse_have_fn_by_exist_unique_body(tb, symbol_binding);
             }
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1014,7 +1011,6 @@ impl Runtime {
                 equal_to,
             )?;
             let stmt = HaveFnEqualStmt::new(
-                name,
                 symbol_binding.clone(),
                 equal_to_anonymous_fn,
                 tb.line_file.clone(),
@@ -1028,7 +1024,6 @@ impl Runtime {
             tb.skip_token(COLON)?;
             self.parse_have_fn_case_by_case_stmt_after_colon(
                 tb,
-                name,
                 symbol_binding,
                 fs,
                 &fn_param_bindings,
@@ -1037,7 +1032,6 @@ impl Runtime {
             if tb.token_at_add_index(1) == CASES {
                 self.parse_have_fn_by_cases_stmt_after_signature(
                     tb,
-                    name,
                     symbol_binding,
                     fs,
                     &fn_param_bindings,
@@ -1073,7 +1067,6 @@ impl Runtime {
     fn parse_have_fn_by_exist_unique_body(
         &mut self,
         tb: &mut TokenBlock,
-        name: String,
         symbol_binding: SymbolBinding,
     ) -> Result<Stmt, RuntimeError> {
         let lf = tb.line_file.clone();
@@ -1131,7 +1124,6 @@ impl Runtime {
             },
         )?;
         let stmt = HaveFnByForallExistUniqueStmt::new(
-            name,
             symbol_binding.clone(),
             forall,
             prove_process,
@@ -1147,7 +1139,6 @@ impl Runtime {
     fn parse_have_fn_case_by_case_stmt_after_colon(
         &mut self,
         tb: &mut TokenBlock,
-        name: String,
         symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         fn_param_bindings: &[SymbolBinding],
@@ -1155,7 +1146,6 @@ impl Runtime {
         let (cases, equal_tos) =
             self.parse_have_fn_case_by_case_blocks(&mut tb.body, fn_param_bindings)?;
         let stmt = HaveFnEqualCaseByCaseStmt::new(
-            name,
             symbol_binding.clone(),
             fn_set_clause,
             cases,
@@ -1172,7 +1162,6 @@ impl Runtime {
     fn parse_have_fn_by_cases_stmt_after_signature(
         &mut self,
         tb: &mut TokenBlock,
-        name: String,
         symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         fn_param_bindings: &[SymbolBinding],
@@ -1190,7 +1179,6 @@ impl Runtime {
         }
         self.parse_have_fn_case_by_case_stmt_after_colon(
             tb,
-            name,
             symbol_binding,
             fn_set_clause,
             fn_param_bindings,
@@ -1300,7 +1288,6 @@ impl Runtime {
         self.end_parsing_scope(ParamObjType::Identifier, &function_names);
         let cases = cases_result?;
         let stmt = HaveFnByInducStmt::new(
-            name,
             symbol_binding.clone(),
             fn_set_clause,
             measure,
@@ -1577,12 +1564,8 @@ impl Runtime {
             Some(fact) => {
                 ObtainObjFromAtomicFact::new(equal_to_bindings, fact, tb.line_file.clone()).into()
             }
-            None => ObtainObjFromExistFact::new(
-                equal_to_bindings,
-                true_fact,
-                tb.line_file.clone(),
-            )
-            .into(),
+            None => ObtainObjFromExistFact::new(equal_to_bindings, true_fact, tb.line_file.clone())
+                .into(),
         };
         Ok(stmt)
     }
@@ -1656,7 +1639,6 @@ impl Runtime {
         )?;
 
         Ok(HaveByPreimageStmt::new(
-            preimage_names,
             preimage_bindings,
             range_membership,
             tb.line_file.clone(),
@@ -1703,7 +1685,6 @@ impl Runtime {
                 }
                 Ok(DefAlgoStmt::new(
                     name,
-                    params,
                     param_bindings,
                     algo_cases,
                     default_return,
@@ -2029,15 +2010,15 @@ fn is_identifier_named(obj: &Obj, name: &str) -> bool {
 }
 
 fn is_tuple_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::TupleIndex(index)) if index.name == name)
+    matches!(obj, Obj::Atom(AtomObj::TupleIndex(index)) if index.name() == name)
 }
 
 fn is_cart_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::CartIndex(index)) if index.name == name)
+    matches!(obj, Obj::Atom(AtomObj::CartIndex(index)) if index.name() == name)
 }
 
 fn is_fn_set_index_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::FnSet(index)) if index.name == name)
+    matches!(obj, Obj::Atom(AtomObj::FnSet(index)) if index.name() == name)
 }
 
 fn have_tuple_or_cart_parse_error(msg: &str, line_file: LineFile) -> RuntimeError {

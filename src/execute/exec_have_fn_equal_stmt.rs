@@ -11,7 +11,7 @@ impl Runtime {
         let infer_result =
             self.exec_have_fn_equal_stmt_affect_environment(have_fn_equal_stmt, &fn_set_stored)?;
 
-        let function_identifier_obj = self.declared_identifier_obj(&have_fn_equal_stmt.name);
+        let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
         let function_membership: Fact = InFact::new(
             function_identifier_obj.clone(),
             fn_set_stored.clone().into(),
@@ -45,7 +45,7 @@ impl Runtime {
     ) -> Result<InferResult, RuntimeError> {
         self.store_parameter_binding(&have_fn_equal_stmt.symbol_binding, ParamObjType::Identifier)?;
 
-        let function_identifier_obj = self.declared_identifier_obj(&have_fn_equal_stmt.name);
+        let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj.clone(),

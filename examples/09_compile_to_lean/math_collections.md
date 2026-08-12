@@ -21,8 +21,9 @@ forall z Z:
     z / 2 $in Q
 ```
 
-The intended Lean shapes are `2 ∈ (Set.univ : Set ℝ)` and
-`(z / 2 : ℚ) ∈ (Set.univ : Set ℚ)`. The nearest rejected shape is a
+The intended Lean shapes are `2 ∈ Litex.StandardSets.R` and
+`(z / 2 : ℚ) ∈ Litex.StandardSets.Q`. These transparent aliases unfold to
+Mathlib's native universal sets. The nearest rejected shape is a
 closed ambiguous division admitted only by `trust`; proof provenance must not
 select its carrier.
 
@@ -34,7 +35,8 @@ forall r R+:
     r $in R+
 ```
 
-Here `R+` becomes `{r : ℝ | 0 < r}`. The same checked interface covers
+Here `R+` becomes `Litex.StandardSets.RPos`, a transparent alias of
+`Set.Ioi 0`. The same checked interface covers
 `N+`/`Z+` (positive naturals), `Q+`, `Z-`/`Q-`/`R-`, and
 `Z*`/`Q*`/`R*`/`C*`. Membership remains an ordinary proposition in every
 case. Litex has no ordered `C+` standard set, so the compiler does not invent

@@ -449,6 +449,19 @@ def lean_mapping(entry) -> tuple[str, str]:
     ):
         return "`div_ne_zero` / `Ne.symm`", "implemented"
     if entry["sink"] == "new_with_verified_by_builtin_rule_evidence_recording_stmt":
+        if text == "fn application in its exact instantiated declared return set":
+            return (
+                "exact source-layer elimination of retained function membership",
+                "implemented",
+            )
+        if (
+            text
+            == "fn membership: same input domain and pointwise values lie in the target return set"
+        ):
+            return (
+                "checked pointwise `forall` specialization into a native function-set predicate",
+                "implemented",
+            )
         if entry.get("function") == "verify_in_fact_by_known_standard_subset_membership":
             return (
                 "native membership projection + checked numeric coercion",
@@ -460,6 +473,14 @@ def lean_mapping(entry) -> tuple[str, str]:
             return "native subset proposition (one reversed checked premise)", "implemented"
         if text == "deterministic primality computation for u64":
             return "`Nat.Prime` / `norm_num`", "implemented"
+        if text in (
+            "integer expression closure under +, -, and *",
+            "Z closure: binary integer arithmetic",
+        ):
+            return (
+                "native `ℤ` membership with checked ordered operand proofs",
+                "implemented",
+            )
         mapping = ARITHMETIC_LEAN_MAPPINGS.get(text)
         if mapping is not None:
             return mapping, "implemented"

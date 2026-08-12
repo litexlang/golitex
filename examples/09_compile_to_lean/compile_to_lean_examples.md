@@ -13,7 +13,7 @@ Use a standalone `.lit` file only when module imports, project paths, CLI behavi
 #
 # Expected Lean shapes:
 #   2 = 2                         stays bare
-#   2 $in R                       becomes 2 ∈ (Set.univ : Set ℝ)
+#   2 $in R                       becomes 2 ∈ Litex.StandardSets.R
 #   proposition codomains         use Prop directly, with no LitexFact alias
 #   cross-carrier bounded facts   live in the propositions_and_trust section,
 #                                 their explicit trust boundary is visible
@@ -47,12 +47,36 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f1
 theorem fact1 : 2 = 2 := by
   rfl
 
 -- Litex fact f2
-theorem fact2 : 2 ∈ (Set.univ : Set ℝ) := by
+theorem fact2 : 2 ∈ Litex.StandardSets.R := by
   change True
   trivial
 
@@ -95,8 +119,32 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f13
-theorem fact13 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), a = a := by
+theorem fact13 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), a = a := by
   intro a litex_param_fact_1
   rfl
 
@@ -173,49 +221,73 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f7
-theorem fact7 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), x = x := by
+theorem fact7 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x = x := by
   intro x litex_param_fact_1
   rfl
 
 -- Litex fact f14
-theorem fact14 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ (Set.univ : Set ℤ)), z = z := by
+theorem fact14 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), z = z := by
   intro z litex_param_fact_1
   rfl
 
 -- Litex fact f21
-theorem fact21 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ (Set.univ : Set ℚ)), q = q := by
+theorem fact21 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.Q), q = q := by
   intro q litex_param_fact_1
   rfl
 
 -- Litex fact f28
-theorem fact28 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : x ≠ 0), x ≠ 0 := by
+theorem fact28 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x ≠ 0), x ≠ 0 := by
   intro x litex_param_fact_1 litex_domain_fact_1
   exact litex_domain_fact_1
 
 -- Litex fact f44
-theorem fact44 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (x : ℝ) (litex_param_fact_3 : x ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : x ≠ 0), ((a + b) / x) = ((a / x) + (b / x)) := by
+theorem fact44 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (x : ℝ) (litex_param_fact_3 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x ≠ 0), ((a + b) / x) = ((a / x) + (b / x)) := by
   intro a litex_param_fact_1 b litex_param_fact_2 x litex_param_fact_3 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
-  have well_defined_fact_2 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses litex_param_fact_2
-  have well_defined_fact_4 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses litex_domain_fact_1
-  have well_defined_fact_6 : (a + b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_6 : (a + b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses litex_param_fact_3
-  have well_defined_fact_8 : (x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_8 : (x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_9 : (a / x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_9 : (a / x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_10 : (b / x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_10 : (b / x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 11 reuses litex_param_fact_1
@@ -243,15 +315,15 @@ theorem fact44 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ))
   field_simp [litex_domain_fact_1] <;> ring
 
 -- Litex fact f60
-theorem fact60 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≠ 0), ∀ (litex_domain_fact_2 : b ≠ 0), (a / b) ≠ 0 := by
+theorem fact60 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≠ 0), ∀ (litex_domain_fact_2 : b ≠ 0), (a / b) ≠ 0 := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_domain_fact_2
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
-  have well_defined_fact_3 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
-  have well_defined_fact_5 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_5 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 6 reuses litex_domain_fact_2
@@ -264,15 +336,89 @@ theorem fact60 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ))
   -- Litex well-definedness certificate 13 reuses well_defined_fact_3
   -- Litex well-definedness certificate 14 reuses litex_param_fact_2
   -- Litex well-definedness certificate 15 reuses well_defined_fact_5
-  have proof_fact_1_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_1_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_1_3 : a ≠ 0 := by
     exact litex_domain_fact_1
   have proof_fact_1_4 : b ≠ 0 := by
     exact litex_domain_fact_2
   exact _root_.Litex.BuiltinRules.nonzero_div a b proof_fact_1_1 proof_fact_1_2 proof_fact_1_3 proof_fact_1_4
+
+end
+```
+
+## named_theorem
+
+```litex
+# Primary tracer: a source `thm` keeps its declaration name in Lean.
+#
+# Before: IR construction rejected this verified `DefThmStmt` as unsupported.
+# Now: the complete checked forall is emitted as `theorem real_reflexivity`;
+#      its primary FactId resolves to that name, with no duplicate `factN`.
+# Boundary: explicit `axiom`, theorem calls through `by thm`, imported theorem
+#           linking, and unsupported proof-local statement families stay out
+#           of this slice and fail closed.
+# Evidence:
+#   cargo test --release named_theorem -- --nocapture
+#   cargo test --release compile_to_lean_examples_markdown_emits_checked_source -- --nocapture
+#   cargo test --release compile_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture
+
+thm real_reflexivity:
+    ? forall x R:
+        x = x
+```
+
+```lean
+import Mathlib
+
+noncomputable section
+
+universe u
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
+-- Litex theorem `real_reflexivity`
+theorem real_reflexivity : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x = x := by
+  intro x litex_param_fact_1
+  rfl
 
 end
 ```
@@ -336,16 +482,40 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 opaque demo_marked {α : Type u} [LitexObject α] : α → Prop
 
 -- Litex trust boundary: f3
-axiom fact3 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), demo_marked x
+axiom fact3 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), demo_marked x
 
 -- Litex fact f4
 theorem fact4 : demo_marked (3 : ℝ) := by
   -- Litex parameter requirement for `x`: 3 : ℝ
   let proof_arg_1_1 : ℝ := 3
-  have proof_fact_1_2 : 3 ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_2 : 3 ∈ Litex.StandardSets.R := by
     change True
     trivial
   have proof_fact_1_3 : demo_marked (3 : ℝ) := fact3 proof_arg_1_1 proof_fact_1_2
@@ -360,15 +530,15 @@ theorem fact7 : demo_is_one 1 := by
 opaque demo_successor_pair {α : Type u} [LitexObject α] {α1 : Type u} [LitexObject α1] : α → α1 → Prop
 
 -- Litex trust boundary: f12
-axiom fact12 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), demo_successor_pair x (x + 1)
+axiom fact12 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), demo_successor_pair x (x + 1)
 
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_1 : 2 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_1 : 2 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_2 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_2 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -377,7 +547,7 @@ theorem fact13 : demo_successor_pair (1 : ℝ) (2 : ℝ) := by
   have proof_fact_2_1 : demo_successor_pair (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := by
     -- Litex parameter requirement for `x`: (2 - 1) : ℝ
     let proof_arg_3_1 : ℝ := (2 - 1)
-    have proof_fact_3_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_3_2 : (2 - 1) ∈ Litex.StandardSets.R := by
       change True
       trivial
     have proof_fact_3_3 : demo_successor_pair (2 - 1 : ℝ) ((2 - 1) + 1 : ℝ) := fact12 proof_arg_3_1 proof_fact_3_2
@@ -387,10 +557,10 @@ theorem fact13 : demo_successor_pair (1 : ℝ) (2 : ℝ) := by
   exact proof_fact_2_2
 
 -- Litex trust boundary: f15
-axiom fact15 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), x ∈ (Set.univ : Set ℝ)
+axiom fact15 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x ∈ Litex.StandardSets.R
 
 -- Litex trust boundary: f18
-axiom fact18 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ (Set.univ : Set ℤ)), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)
+axiom fact18 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), (z / 2 : ℚ) ∈ Litex.StandardSets.Q
 
 end
 ```
@@ -435,11 +605,35 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 def demo_real_two : ℝ := 2
 
 -- Litex fact f2
-theorem fact2 : demo_real_two ∈ (Set.univ : Set ℝ) := by
-  have proof_fact_1_1 : 2 ∈ (Set.univ : Set ℝ) := by
+theorem fact2 : demo_real_two ∈ Litex.StandardSets.R := by
+  have proof_fact_1_1 : 2 ∈ Litex.StandardSets.R := by
     change True
     trivial
   simpa only [demo_real_two] using proof_fact_1_1
@@ -512,6 +706,30 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 opaque demo_transported {α : Type u} [LitexObject α] : α → Prop
 
 -- Litex fact f16
@@ -547,12 +765,12 @@ theorem fact54 : ∀ {α6 : Type u} [LitexObject α6], ∀ (a : Set α6), ∀ (b
 opaque demo_resolved {α : Type u} [LitexObject α] : α → Prop
 
 -- Litex fact f73
-theorem fact73 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a = 13), ∀ (litex_domain_fact_2 : b = 1), ∀ (litex_domain_fact_3 : demo_resolved (14 : ℝ)), demo_resolved (a + b) := by
+theorem fact73 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a = 13), ∀ (litex_domain_fact_2 : b = 1), ∀ (litex_domain_fact_3 : demo_resolved (14 : ℝ)), demo_resolved (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
@@ -882,86 +1100,110 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f13
-theorem fact13 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a < b), a ≤ b := by
+theorem fact13 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a < b), a ≤ b := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  have proof_fact_1_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_1_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_1_3 : a < b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_less_equal_of_less a b proof_fact_1_1 proof_fact_1_2 proof_fact_1_3
 
 -- Litex fact f26
-theorem fact26 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a > b), a ≥ b := by
+theorem fact26 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a > b), a ≥ b := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  have proof_fact_2_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_2_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_2_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_2_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_2_3 : a > b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_greater_equal_of_greater a b proof_fact_2_1 proof_fact_2_2 proof_fact_2_3
 
 -- Litex fact f39
-theorem fact39 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)), ∀ (v : ℝ) (litex_param_fact_2 : v ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : v ≤ u), (0 : ℝ) ≤ (u - v) := by
+theorem fact39 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ Litex.StandardSets.R), ∀ (v : ℝ) (litex_param_fact_2 : v ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : v ≤ u), (0 : ℝ) ≤ (u - v) := by
   intro u litex_param_fact_1 v litex_param_fact_2 litex_domain_fact_1
-  have well_defined_fact_1 : (u : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (u : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (v : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (v : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_3_1 : u ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_3_1 : u ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_3_2 : v ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_3_2 : v ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_3_3 : v ≤ u := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_sub_nonnegative_of_less_equal u v proof_fact_3_1 proof_fact_3_2 proof_fact_3_3
 
 -- Litex fact f52
-theorem fact52 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)), ∀ (v : ℝ) (litex_param_fact_2 : v ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : v < u), (0 : ℝ) < (u - v) := by
+theorem fact52 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ Litex.StandardSets.R), ∀ (v : ℝ) (litex_param_fact_2 : v ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : v < u), (0 : ℝ) < (u - v) := by
   intro u litex_param_fact_1 v litex_param_fact_2 litex_domain_fact_1
-  have well_defined_fact_1 : (u : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (u : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (v : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (v : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_4_1 : u ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_4_1 : u ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_4_2 : v ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_4_2 : v ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_4_3 : v < u := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_sub_positive_of_less u v proof_fact_4_1 proof_fact_4_2 proof_fact_4_3
 
 -- Litex fact f68
-theorem fact68 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 ≤ (a + b) := by
+theorem fact68 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 ≤ (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_5_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_5_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_5_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_5_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_5_3 : 0 ≤ a := by
     exact litex_domain_fact_1
@@ -970,21 +1212,21 @@ theorem fact68 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ))
   exact _root_.Litex.BuiltinRules.order_add_nonnegative a b proof_fact_5_1 proof_fact_5_2 proof_fact_5_3 proof_fact_5_4
 
 -- Litex fact f84
-theorem fact84 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a + b) := by
+theorem fact84 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_6_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_6_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_6_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_6_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_6_3 : 0 < a := by
     exact litex_domain_fact_1
@@ -993,21 +1235,21 @@ theorem fact84 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ))
   exact _root_.Litex.BuiltinRules.order_add_positive a b proof_fact_6_1 proof_fact_6_2 proof_fact_6_3 proof_fact_6_4
 
 -- Litex fact f100
-theorem fact100 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 < (a + b) := by
+theorem fact100 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 < (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_7_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_7_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_7_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_7_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_7_3 : 0 < a := by
     exact litex_domain_fact_1
@@ -1016,21 +1258,21 @@ theorem fact100 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_positive_of_positive_nonnegative a b proof_fact_7_1 proof_fact_7_2 proof_fact_7_3 proof_fact_7_4
 
 -- Litex fact f116
-theorem fact116 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a + b) := by
+theorem fact116 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_8_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_8_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_8_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_8_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_8_3 : 0 ≤ a := by
     exact litex_domain_fact_1
@@ -1039,21 +1281,21 @@ theorem fact116 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_positive_of_nonnegative_positive a b proof_fact_8_1 proof_fact_8_2 proof_fact_8_3 proof_fact_8_4
 
 -- Litex fact f132
-theorem fact132 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 ≤ (a * b) := by
+theorem fact132 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 ≤ b), 0 ≤ (a * b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_9_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_9_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_9_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_9_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_9_3 : 0 ≤ a := by
     exact litex_domain_fact_1
@@ -1062,21 +1304,21 @@ theorem fact132 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_mul_nonnegative a b proof_fact_9_1 proof_fact_9_2 proof_fact_9_3 proof_fact_9_4
 
 -- Litex fact f148
-theorem fact148 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a * b) := by
+theorem fact148 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a * b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_10_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_10_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_10_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_10_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_10_3 : 0 < a := by
     exact litex_domain_fact_1
@@ -1085,12 +1327,12 @@ theorem fact148 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_mul_positive a b proof_fact_10_1 proof_fact_10_2 proof_fact_10_3 proof_fact_10_4
 
 -- Litex well-definedness certificate 2 (forall type witness)
-theorem well_defined_fact_1 : 0 ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_1 : 0 ∈ Litex.StandardSets.R := by
   change True
   trivial
 
 -- Litex fact f164
-theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 < b), 0 ≤ (a / b) := by
+theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 ≤ a), ∀ (litex_domain_fact_2 : 0 < b), 0 ≤ (a / b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_2
   -- Litex well-definedness certificate 2 reuses well_defined_fact_1
@@ -1098,9 +1340,9 @@ theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
     have proof_fact_12_1 : (0 : ℝ) < b := litex_domain_fact_2
     exact proof_fact_12_1
   have proof_fact_11_2 : b ≠ 0 := by
-    have proof_fact_13_1 : b ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_13_1 : b ∈ Litex.StandardSets.R := by
       exact litex_param_fact_2
-    have proof_fact_13_2 : 0 ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_13_2 : 0 ∈ Litex.StandardSets.R := by
       change True
       trivial
     have proof_fact_13_3 : b > 0 := by
@@ -1109,10 +1351,10 @@ theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
     intro litex_equal
     rw [litex_equal] at proof_fact_13_3
     exact (lt_irrefl _ proof_fact_13_3)
-  have well_defined_fact_5 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_5 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_6 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_6 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses litex_param_fact_2
@@ -1127,9 +1369,9 @@ theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 16 reuses proof_fact_11_2
   -- Litex well-definedness certificate 17 reuses well_defined_fact_5
   -- Litex well-definedness certificate 18 reuses well_defined_fact_6
-  have proof_fact_11_3 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_11_3 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_11_4 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_11_4 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_11_5 : (0 : ℝ) ≤ a := by
     exact litex_domain_fact_1
@@ -1138,12 +1380,12 @@ theorem fact164 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_div_nonnegative a b proof_fact_11_3 proof_fact_11_4 proof_fact_11_5 proof_fact_11_6
 
 -- Litex well-definedness certificate 2 (forall type witness)
-theorem well_defined_fact_2 : 0 ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_2 : 0 ∈ Litex.StandardSets.R := by
   change True
   trivial
 
 -- Litex fact f180
-theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a / b) := by
+theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : 0 < a), ∀ (litex_domain_fact_2 : 0 < b), 0 < (a / b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_2
   -- Litex well-definedness certificate 2 reuses well_defined_fact_2
@@ -1151,9 +1393,9 @@ theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
     have proof_fact_16_1 : (0 : ℝ) < b := litex_domain_fact_2
     exact proof_fact_16_1
   have proof_fact_15_2 : b ≠ 0 := by
-    have proof_fact_17_1 : b ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_17_1 : b ∈ Litex.StandardSets.R := by
       exact litex_param_fact_2
-    have proof_fact_17_2 : 0 ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_17_2 : 0 ∈ Litex.StandardSets.R := by
       change True
       trivial
     have proof_fact_17_3 : b > 0 := by
@@ -1162,10 +1404,10 @@ theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
     intro litex_equal
     rw [litex_equal] at proof_fact_17_3
     exact (lt_irrefl _ proof_fact_17_3)
-  have well_defined_fact_5 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_5 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_6 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_6 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses litex_param_fact_2
@@ -1180,9 +1422,9 @@ theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 16 reuses proof_fact_15_2
   -- Litex well-definedness certificate 17 reuses well_defined_fact_5
   -- Litex well-definedness certificate 18 reuses well_defined_fact_6
-  have proof_fact_15_3 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_15_3 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_15_4 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_15_4 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_15_5 : (0 : ℝ) < a := by
     exact litex_domain_fact_1
@@ -1191,16 +1433,16 @@ theorem fact180 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_div_positive a b proof_fact_15_3 proof_fact_15_4 proof_fact_15_5 proof_fact_15_6
 
 -- Litex fact f196
-theorem fact196 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)), ∀ (a : ℝ) (litex_param_fact_2 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_3 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), (u + a) ≤ (u + b) := by
+theorem fact196 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ Litex.StandardSets.R), ∀ (a : ℝ) (litex_param_fact_2 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_3 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), (u + a) ≤ (u + b) := by
   intro u litex_param_fact_1 a litex_param_fact_2 b litex_param_fact_3 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
-  have well_defined_fact_2 : (u : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (u : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
@@ -1211,29 +1453,29 @@ theorem fact196 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_19_1 : u ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_19_1 : u ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_19_2 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_19_2 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_19_3 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_19_3 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
   have proof_fact_19_4 : a ≤ b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_add_le_add_left u a b proof_fact_19_1 proof_fact_19_2 proof_fact_19_3 proof_fact_19_4
 
 -- Litex fact f218
-theorem fact218 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : c ≤ d), (a + c) ≤ (b + d) := by
+theorem fact218 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : c ≤ d), (a + c) ≤ (b + d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
@@ -1244,13 +1486,13 @@ theorem fact218 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_20_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_20_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_20_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_20_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_20_5 : a ≤ b := by
     exact litex_domain_fact_1
@@ -1259,16 +1501,16 @@ theorem fact218 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_le_add a b c d proof_fact_20_1 proof_fact_20_2 proof_fact_20_3 proof_fact_20_4 proof_fact_20_5 proof_fact_20_6
 
 -- Litex fact f234
-theorem fact234 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)), ∀ (a : ℝ) (litex_param_fact_2 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_3 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a < b), (u + a) < (u + b) := by
+theorem fact234 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ Litex.StandardSets.R), ∀ (a : ℝ) (litex_param_fact_2 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_3 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a < b), (u + a) < (u + b) := by
   intro u litex_param_fact_1 a litex_param_fact_2 b litex_param_fact_3 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
-  have well_defined_fact_2 : (u : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (u : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
@@ -1279,29 +1521,29 @@ theorem fact234 : ∀ (u : ℝ) (litex_param_fact_1 : u ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_21_1 : u ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_21_1 : u ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_21_2 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_21_2 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_21_3 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_21_3 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
   have proof_fact_21_4 : a < b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_add_lt_add_left u a b proof_fact_21_1 proof_fact_21_2 proof_fact_21_3 proof_fact_21_4
 
 -- Litex fact f256
-theorem fact256 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a < b), ∀ (litex_domain_fact_2 : c < d), (a + c) < (b + d) := by
+theorem fact256 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a < b), ∀ (litex_domain_fact_2 : c < d), (a + c) < (b + d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
@@ -1312,13 +1554,13 @@ theorem fact256 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_22_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_22_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_22_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_22_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_22_5 : a < b := by
     exact litex_domain_fact_1
@@ -1327,18 +1569,18 @@ theorem fact256 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_lt_add a b c d proof_fact_22_1 proof_fact_22_2 proof_fact_22_3 proof_fact_22_4 proof_fact_22_5 proof_fact_22_6
 
 -- Litex fact f278
-theorem fact278 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a < b), ∀ (litex_domain_fact_2 : c ≤ d), (a + c) < (b + d) := by
+theorem fact278 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a < b), ∀ (litex_domain_fact_2 : c ≤ d), (a + c) < (b + d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
@@ -1349,13 +1591,13 @@ theorem fact278 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_23_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_23_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_23_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_23_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_23_5 : a < b := by
     exact litex_domain_fact_1
@@ -1364,18 +1606,18 @@ theorem fact278 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_lt_add_of_lt_of_le a b c d proof_fact_23_1 proof_fact_23_2 proof_fact_23_3 proof_fact_23_4 proof_fact_23_5 proof_fact_23_6
 
 -- Litex fact f300
-theorem fact300 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : c < d), (a + c) < (b + d) := by
+theorem fact300 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : c < d), (a + c) < (b + d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
@@ -1386,13 +1628,13 @@ theorem fact300 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses well_defined_fact_3
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_24_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_24_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_24_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_24_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_24_5 : a ≤ b := by
     exact litex_domain_fact_1
@@ -1401,23 +1643,23 @@ theorem fact300 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_add_lt_add_of_le_of_lt a b c d proof_fact_24_1 proof_fact_24_2 proof_fact_24_3 proof_fact_24_4 proof_fact_24_5 proof_fact_24_6
 
 -- Litex fact f319
-theorem fact319 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : (0 : ℝ) ≤ c), (a - c) ≤ b := by
+theorem fact319 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), ∀ (litex_domain_fact_2 : (0 : ℝ) ≤ c), (a - c) ≤ b := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
   -- Litex well-definedness certificate 4 reuses well_defined_fact_2
   -- Litex well-definedness certificate 5 reuses well_defined_fact_1
   -- Litex well-definedness certificate 6 reuses well_defined_fact_2
-  have proof_fact_25_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_25_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_25_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_25_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_25_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_25_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
   have proof_fact_25_4 : a ≤ b := by
     exact litex_domain_fact_1
@@ -1426,13 +1668,13 @@ theorem fact319 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_sub_le_of_le_of_nonnegative a b c proof_fact_25_1 proof_fact_25_2 proof_fact_25_3 proof_fact_25_4 proof_fact_25_5
 
 -- Litex fact f332
-theorem fact332 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : (0 : ℝ) ≤ b), a ≤ (a + b) := by
+theorem fact332 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : (0 : ℝ) ≤ b), a ≤ (a + b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
-  have well_defined_fact_2 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_1
@@ -1441,9 +1683,9 @@ theorem fact332 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 7 reuses litex_param_fact_1
   -- Litex well-definedness certificate 8 reuses well_defined_fact_2
   -- Litex well-definedness certificate 9 reuses well_defined_fact_3
-  have proof_fact_26_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_26_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_26_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_26_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_26_3 : (0 : ℝ) ≤ b := by
     exact litex_domain_fact_1
@@ -1502,46 +1744,70 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex well-definedness certificate 7 (forall type witness)
-theorem well_defined_fact_1 : -1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_1 : -1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex fact f34
-theorem fact34 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ {r : ℝ | 0 < r}), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ {r : ℝ | 0 < r}), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ {r : ℝ | 0 < r}), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ {r : ℝ | 0 < r}), ((a + b) + (c + d)) > 0 := by
+theorem fact34 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.RPos), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.RPos), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.RPos), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.RPos), ((a + b) + (c + d)) > 0 := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4
   have proof_fact_1_1 : (0 : ℝ) < a := by
-    have proof_fact_2_1 : a ∈ {r : ℝ | 0 < r} := litex_param_fact_1
+    have proof_fact_2_1 : a ∈ Litex.StandardSets.RPos := litex_param_fact_1
     simpa using proof_fact_2_1
   have proof_fact_1_2 : (0 : ℝ) < b := by
-    have proof_fact_3_1 : b ∈ {r : ℝ | 0 < r} := litex_param_fact_2
+    have proof_fact_3_1 : b ∈ Litex.StandardSets.RPos := litex_param_fact_2
     simpa using proof_fact_3_1
   have proof_fact_1_3 : (0 : ℝ) < c := by
-    have proof_fact_4_1 : c ∈ {r : ℝ | 0 < r} := litex_param_fact_3
+    have proof_fact_4_1 : c ∈ Litex.StandardSets.RPos := litex_param_fact_3
     simpa using proof_fact_4_1
   have proof_fact_1_4 : (0 : ℝ) < d := by
-    have proof_fact_5_1 : d ∈ {r : ℝ | 0 < r} := litex_param_fact_4
+    have proof_fact_5_1 : d ∈ Litex.StandardSets.RPos := litex_param_fact_4
     simpa using proof_fact_5_1
-  have well_defined_fact_1 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_1 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_2 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_3 : (c : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_3 : (c : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_4 : (d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_5 : (a + b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_5 : (a + b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have well_defined_fact_6 : (c + d : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_6 : (c + d : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses well_defined_fact_1
-  have well_defined_fact_8 : ((a + b) + (c + d) : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_8 : ((a + b) + (c + d) : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 9 reuses well_defined_fact_1
@@ -1561,12 +1827,12 @@ theorem fact34 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ {r : ℝ | 0 < r}), �
   -- Litex well-definedness certificate 23 reuses well_defined_fact_1
   -- Litex well-definedness certificate 24 reuses well_defined_fact_8
   have proof_fact_1_5 : (0 : ℝ) < (a + b) := by
-    have proof_fact_6_1 : a ∈ (Set.univ : Set ℝ) := by
-      have proof_fact_7_1 : a ∈ {r : ℝ | 0 < r} := by
+    have proof_fact_6_1 : a ∈ Litex.StandardSets.R := by
+      have proof_fact_7_1 : a ∈ Litex.StandardSets.RPos := by
         exact litex_param_fact_1
       exact Set.mem_univ _
-    have proof_fact_6_2 : b ∈ (Set.univ : Set ℝ) := by
-      have proof_fact_8_1 : b ∈ {r : ℝ | 0 < r} := by
+    have proof_fact_6_2 : b ∈ Litex.StandardSets.R := by
+      have proof_fact_8_1 : b ∈ Litex.StandardSets.RPos := by
         exact litex_param_fact_2
       exact Set.mem_univ _
     have proof_fact_6_3 : (0 : ℝ) < a := by
@@ -1576,22 +1842,22 @@ theorem fact34 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ {r : ℝ | 0 < r}), �
     exact _root_.Litex.BuiltinRules.order_add_positive a b proof_fact_6_1 proof_fact_6_2 proof_fact_6_3 proof_fact_6_4
   have proof_fact_1_6 : (0 : ℝ) ≤ (c + d) := by
     have proof_fact_9_1 : (0 : ℝ) ≤ c := by
-      have proof_fact_10_1 : 0 ∈ (Set.univ : Set ℝ) := by
+      have proof_fact_10_1 : 0 ∈ Litex.StandardSets.R := by
         change True
         trivial
-      have proof_fact_10_2 : c ∈ (Set.univ : Set ℝ) := by
-        have proof_fact_11_1 : c ∈ {r : ℝ | 0 < r} := by
+      have proof_fact_10_2 : c ∈ Litex.StandardSets.R := by
+        have proof_fact_11_1 : c ∈ Litex.StandardSets.RPos := by
           exact litex_param_fact_3
         exact Set.mem_univ _
       have proof_fact_10_3 : (0 : ℝ) < c := by
         exact proof_fact_1_3
       exact _root_.Litex.BuiltinRules.order_less_equal_of_less 0 c proof_fact_10_1 proof_fact_10_2 proof_fact_10_3
     have proof_fact_9_2 : (0 : ℝ) ≤ d := by
-      have proof_fact_12_1 : 0 ∈ (Set.univ : Set ℝ) := by
+      have proof_fact_12_1 : 0 ∈ Litex.StandardSets.R := by
         change True
         trivial
-      have proof_fact_12_2 : d ∈ (Set.univ : Set ℝ) := by
-        have proof_fact_13_1 : d ∈ {r : ℝ | 0 < r} := by
+      have proof_fact_12_2 : d ∈ Litex.StandardSets.R := by
+        have proof_fact_13_1 : d ∈ Litex.StandardSets.RPos := by
           exact litex_param_fact_4
         exact Set.mem_univ _
       have proof_fact_12_3 : (0 : ℝ) < d := by
@@ -1649,6 +1915,30 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f10
 theorem fact10 : ∀ {α : Type u} [LitexObject α], ∀ (A : Set α), ∀ (B : Set α), (A ∪ B) = (A ∪ B) := by
   intro _ _ A B
@@ -1665,11 +1955,11 @@ theorem fact30 : ∀ {α4 : Type u} [LitexObject α4], ∀ (A : Set α4), ∀ (B
   rfl
 
 -- Litex fact f31
-theorem fact31 : (Set.univ : Set ℝ) = (Set.univ : Set ℝ) := by
+theorem fact31 : Litex.StandardSets.R = Litex.StandardSets.R := by
   rfl
 
 -- Litex fact f32
-theorem fact32 : (Set.univ : Set ℚ) = (Set.univ : Set ℚ) := by
+theorem fact32 : Litex.StandardSets.Q = Litex.StandardSets.Q := by
   rfl
 
 end
@@ -2309,6 +2599,30 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f10
 theorem fact10 : ∀ {α : Type u} [LitexObject α], ∀ (A : Set α), ∀ (B : Set α), (A ∪ B) = (B ∪ A) := by
   intro _ _ A B
@@ -2424,14 +2738,14 @@ theorem fact192 : ∀ {α35 : Type u} [LitexObject α35], ∀ (A : Set α35), �
   exact _root_.Litex.BuiltinRules.set_set_minus_subset_left A B proof_fact_12_1 proof_fact_12_2
 
 -- Litex fact f208
-theorem fact208 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≠ 0), ∀ (litex_domain_fact_2 : b ≠ 0), (a * b) ≠ 0 := by
+theorem fact208 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≠ 0), ∀ (litex_domain_fact_2 : b ≠ 0), (a * b) ≠ 0 := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
-  have well_defined_fact_2 : (a : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_2 : (a : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses litex_param_fact_2
-  have well_defined_fact_4 : (b : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (b : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
@@ -2442,9 +2756,9 @@ theorem fact208 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses well_defined_fact_2
   -- Litex well-definedness certificate 11 reuses litex_param_fact_2
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
-  have proof_fact_13_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_13_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_13_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_13_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_13_3 : a ≠ 0 := by
     exact litex_domain_fact_1
@@ -2475,7 +2789,7 @@ theorem fact273 : ∀ {α54 : Type u} [LitexObject α54], ∀ (A : Set α54), �
   exact _root_.Litex.BuiltinRules.set_empty_subset A proof_fact_15_1
 
 -- Litex fact f283
-theorem fact283 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (min a b) ≤ a := by
+theorem fact283 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (min a b) ≤ a := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2483,14 +2797,14 @@ theorem fact283 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_16_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_16_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_16_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_16_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_min_le_left a b proof_fact_16_1 proof_fact_16_2
 
 -- Litex fact f293
-theorem fact293 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (min a b) ≤ b := by
+theorem fact293 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (min a b) ≤ b := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2498,14 +2812,14 @@ theorem fact293 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_17_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_17_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_17_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_17_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_min_le_right a b proof_fact_17_1 proof_fact_17_2
 
 -- Litex fact f303
-theorem fact303 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), a ≤ (max a b) := by
+theorem fact303 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), a ≤ (max a b) := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2513,14 +2827,14 @@ theorem fact303 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_18_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_18_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_18_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_18_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_le_max_left a b proof_fact_18_1 proof_fact_18_2
 
 -- Litex fact f313
-theorem fact313 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), b ≤ (max a b) := by
+theorem fact313 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), b ≤ (max a b) := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2528,14 +2842,14 @@ theorem fact313 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_19_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_19_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_19_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_19_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_le_max_right a b proof_fact_19_1 proof_fact_19_2
 
 -- Litex fact f326
-theorem fact326 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), (min a b) = a := by
+theorem fact326 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), (min a b) = a := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2543,16 +2857,16 @@ theorem fact326 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_20_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_20_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_20_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_20_3 : a ≤ b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_min_eq_left_of_le a b proof_fact_20_1 proof_fact_20_2 proof_fact_20_3
 
 -- Litex fact f339
-theorem fact339 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ b), (max a b) = b := by
+theorem fact339 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ b), (max a b) = b := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2560,16 +2874,16 @@ theorem fact339 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_21_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_21_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_21_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_21_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_21_3 : a ≤ b := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_max_eq_right_of_le a b proof_fact_21_1 proof_fact_21_2 proof_fact_21_3
 
 -- Litex fact f352
-theorem fact352 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : b ≤ a), (min a b) = b := by
+theorem fact352 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : b ≤ a), (min a b) = b := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2577,16 +2891,16 @@ theorem fact352 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_22_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_22_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_22_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_22_3 : b ≤ a := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_min_eq_right_of_le a b proof_fact_22_1 proof_fact_22_2 proof_fact_22_3
 
 -- Litex fact f365
-theorem fact365 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : b ≤ a), (max a b) = a := by
+theorem fact365 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : b ≤ a), (max a b) = a := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2594,16 +2908,16 @@ theorem fact365 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_23_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_23_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_23_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   have proof_fact_23_3 : b ≤ a := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_max_eq_left_of_le a b proof_fact_23_1 proof_fact_23_2 proof_fact_23_3
 
 -- Litex fact f375
-theorem fact375 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (min a b) = (min b a) := by
+theorem fact375 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (min a b) = (min b a) := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2611,14 +2925,14 @@ theorem fact375 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_24_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_24_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_24_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_min_commutative a b proof_fact_24_1 proof_fact_24_2
 
 -- Litex fact f385
-theorem fact385 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (max a b) = (max b a) := by
+theorem fact385 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (max a b) = (max b a) := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2626,22 +2940,22 @@ theorem fact385 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 4 reuses litex_param_fact_2
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
   -- Litex well-definedness certificate 6 reuses litex_param_fact_2
-  have proof_fact_25_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_25_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_25_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_25_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_max_commutative a b proof_fact_25_1 proof_fact_25_2
 
 -- Litex fact f398
-theorem fact398 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), (min (min a b) c) = (min a (min b c)) := by
+theorem fact398 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), (min (min a b) c) = (min a (min b c)) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
-  have well_defined_fact_3 : (min a b) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_3 : (min a b) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_3
-  have well_defined_fact_5 : (min b c) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_5 : (min b c) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 6 reuses litex_param_fact_1
@@ -2654,24 +2968,24 @@ theorem fact398 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 13 reuses well_defined_fact_3
   -- Litex well-definedness certificate 14 reuses litex_param_fact_3
   -- Litex well-definedness certificate 15 reuses well_defined_fact_5
-  have proof_fact_26_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_26_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_26_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_26_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_26_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_26_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
   exact _root_.Litex.BuiltinRules.order_min_associative a b c proof_fact_26_1 proof_fact_26_2 proof_fact_26_3
 
 -- Litex fact f411
-theorem fact411 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), (max (max a b) c) = (max a (max b c)) := by
+theorem fact411 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), (max (max a b) c) = (max a (max b c)) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
-  have well_defined_fact_3 : (max a b) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_3 : (max a b) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_3
-  have well_defined_fact_5 : (max b c) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_5 : (max b c) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 6 reuses litex_param_fact_1
@@ -2684,40 +2998,40 @@ theorem fact411 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 13 reuses well_defined_fact_3
   -- Litex well-definedness certificate 14 reuses litex_param_fact_3
   -- Litex well-definedness certificate 15 reuses well_defined_fact_5
-  have proof_fact_27_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_27_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_27_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_27_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_27_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_27_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
   exact _root_.Litex.BuiltinRules.order_max_associative a b c proof_fact_27_1 proof_fact_27_2 proof_fact_27_3
 
 -- Litex fact f418
-theorem fact418 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), (min a a) = a := by
+theorem fact418 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), (min a a) = a := by
   intro a litex_param_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have proof_fact_28_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_28_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
   exact _root_.Litex.BuiltinRules.order_min_idempotent a proof_fact_28_1
 
 -- Litex fact f425
-theorem fact425 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), (max a a) = a := by
+theorem fact425 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), (max a a) = a := by
   intro a litex_param_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have proof_fact_29_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_29_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
   exact _root_.Litex.BuiltinRules.order_max_idempotent a proof_fact_29_1
 
 -- Litex fact f435
-theorem fact435 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (min a (max a b)) = a := by
+theorem fact435 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (min a (max a b)) = a := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
-  have well_defined_fact_3 : (max a b) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_3 : (max a b) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_1
@@ -2726,18 +3040,18 @@ theorem fact435 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 7 reuses litex_param_fact_1
   -- Litex well-definedness certificate 8 reuses litex_param_fact_2
   -- Litex well-definedness certificate 9 reuses well_defined_fact_3
-  have proof_fact_30_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_30_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_30_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_30_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_min_absorb_max_left a b proof_fact_30_1 proof_fact_30_2
 
 -- Litex fact f445
-theorem fact445 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), (max a (min a b)) = a := by
+theorem fact445 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), (max a (min a b)) = a := by
   intro a litex_param_fact_1 b litex_param_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
-  have well_defined_fact_3 : (min a b) ∈ (Set.univ : Set ℝ) := by
+  have well_defined_fact_3 : (min a b) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_1
@@ -2746,14 +3060,14 @@ theorem fact445 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 7 reuses litex_param_fact_1
   -- Litex well-definedness certificate 8 reuses litex_param_fact_2
   -- Litex well-definedness certificate 9 reuses well_defined_fact_3
-  have proof_fact_31_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_31_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_31_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_31_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
   exact _root_.Litex.BuiltinRules.order_max_absorb_min_left a b proof_fact_31_1 proof_fact_31_2
 
 -- Litex fact f467
-theorem fact467 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ c), ∀ (litex_domain_fact_2 : b ≤ d), (min a b) ≤ (min c d) := by
+theorem fact467 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ c), ∀ (litex_domain_fact_2 : b ≤ d), (min a b) ≤ (min c d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2767,13 +3081,13 @@ theorem fact467 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses litex_param_fact_2
   -- Litex well-definedness certificate 11 reuses litex_param_fact_3
   -- Litex well-definedness certificate 12 reuses litex_param_fact_4
-  have proof_fact_32_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_32_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_32_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_32_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_32_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_32_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_32_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_32_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_32_5 : a ≤ c := by
     exact litex_domain_fact_1
@@ -2782,7 +3096,7 @@ theorem fact467 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   exact _root_.Litex.BuiltinRules.order_min_monotone a b c d proof_fact_32_1 proof_fact_32_2 proof_fact_32_3 proof_fact_32_4 proof_fact_32_5 proof_fact_32_6
 
 -- Litex fact f489
-theorem fact489 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ (Set.univ : Set ℝ)), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : a ≤ c), ∀ (litex_domain_fact_2 : b ≤ d), (max a b) ≤ (max c d) := by
+theorem fact489 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (c : ℝ) (litex_param_fact_3 : c ∈ Litex.StandardSets.R), ∀ (d : ℝ) (litex_param_fact_4 : d ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : a ≤ c), ∀ (litex_domain_fact_2 : b ≤ d), (max a b) ≤ (max c d) := by
   intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 d litex_param_fact_4 litex_domain_fact_1 litex_domain_fact_2
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_2
@@ -2796,13 +3110,13 @@ theorem fact489 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)
   -- Litex well-definedness certificate 10 reuses litex_param_fact_2
   -- Litex well-definedness certificate 11 reuses litex_param_fact_3
   -- Litex well-definedness certificate 12 reuses litex_param_fact_4
-  have proof_fact_33_1 : a ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_33_1 : a ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
-  have proof_fact_33_2 : b ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_33_2 : b ∈ Litex.StandardSets.R := by
     exact litex_param_fact_2
-  have proof_fact_33_3 : c ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_33_3 : c ∈ Litex.StandardSets.R := by
     exact litex_param_fact_3
-  have proof_fact_33_4 : d ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_33_4 : d ∈ Litex.StandardSets.R := by
     exact litex_param_fact_4
   have proof_fact_33_5 : a ≤ c := by
     exact litex_domain_fact_1
@@ -2954,51 +3268,51 @@ theorem fact709 : ∀ {α138 : Type u} [LitexObject α138], ∀ (X : Set α138),
   exact _root_.Litex.BuiltinRules.set_set_minus_infinite_of_infinite_finite X S proof_fact_46_1 proof_fact_46_2 proof_fact_46_3 proof_fact_46_4
 
 -- Litex fact f719
-theorem fact719 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : (0 : ℝ) ≤ x), (abs x) = x := by
+theorem fact719 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : (0 : ℝ) ≤ x), (abs x) = x := by
   intro x litex_param_fact_1 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have proof_fact_47_1 : x ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_47_1 : x ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
   have proof_fact_47_2 : (0 : ℝ) ≤ x := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_abs_eq_self_of_nonnegative x proof_fact_47_1 proof_fact_47_2
 
 -- Litex fact f729
-theorem fact729 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : x ≠ 0), (0 : ℝ) < (abs x) := by
+theorem fact729 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x ≠ 0), (0 : ℝ) < (abs x) := by
   intro x litex_param_fact_1 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have proof_fact_48_1 : x ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_48_1 : x ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
   have proof_fact_48_2 : x ≠ 0 := by
     exact litex_domain_fact_1
   exact _root_.Litex.BuiltinRules.order_abs_positive_of_nonzero x proof_fact_48_1 proof_fact_48_2
 
 -- Litex fact f730
-theorem fact730 : litexIsNonemptySet (Set.univ : Set ℕ) := by
+theorem fact730 : litexIsNonemptySet Litex.StandardSets.N := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
 -- Litex fact f731
-theorem fact731 : litexIsNonemptySet (Set.univ : Set ℤ) := by
+theorem fact731 : litexIsNonemptySet Litex.StandardSets.Z := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
 -- Litex fact f732
-theorem fact732 : litexIsNonemptySet (Set.univ : Set ℚ) := by
+theorem fact732 : litexIsNonemptySet Litex.StandardSets.Q := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
 -- Litex fact f733
-theorem fact733 : litexIsNonemptySet (Set.univ : Set ℝ) := by
+theorem fact733 : litexIsNonemptySet Litex.StandardSets.R := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
 -- Litex fact f734
-theorem fact734 : litexIsNonemptySet (Set.univ : Set ℂ) := by
+theorem fact734 : litexIsNonemptySet Litex.StandardSets.C := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
@@ -3010,17 +3324,17 @@ end
 ```litex
 # Tracer: compact standard numeric subsets use native Mathlib sets.
 #
-# Before (not part of the strict compiler contract):
+# Before (compiled, but repeated the set expression at every use):
 # forall r R+:
 #     r $in R+
-# Former limitation: compact-subset renderer branches existed, but no durable
-# strict example or real Mathlib gate established this source-to-target ABI.
+# Former generated Lean used `{r : ℝ | 0 < r}` in both the binder premise and
+# conclusion, and declared no reusable standard-set name.
 #
 # Now (verified):
 forall r R+:
     r $in R+
-# Current behavior: R+ binds an `ℝ` value and retains membership in
-# `{r : ℝ | 0 < r}` as an ordinary proposition.
+# Current behavior: R+ binds an `ℝ` value and retains membership in the
+# transparent `Litex.StandardSets.RPos` alias as an ordinary proposition.
 #
 # Z+ is Litex's canonical alias of N+, so both target positive naturals.
 forall n N+:
@@ -3141,7 +3455,8 @@ not 0 $in C*
 # Evidence: cargo test --release compact_standard_numeric_subsets -- --nocapture
 # and cargo test --release closed_compact_numeric_memberships -- --nocapture
 # Ledger gate: cargo test --release compile_to_lean_examples_markdown_emits_checked_source -- --nocapture
-# Implementation: src/obj/standard_set.rs,
+# Implementation: src/compile_to_lean/set_prelude.rs,
+# src/obj/standard_set.rs,
 # src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs,
 # src/litex_to_lean_ir/builtin_rule.rs, and src/compile_to_lean/pipeline.rs.
 ```
@@ -3167,168 +3482,192 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f7
-theorem fact7 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | 0 < r}), r ∈ {r : ℝ | 0 < r} := by
+theorem fact7 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RPos), r ∈ Litex.StandardSets.RPos := by
   intro r litex_param_fact_1
   have proof_fact_1_1 : 0 < r := by
-    have proof_fact_2_1 : r ∈ {r : ℝ | 0 < r} := litex_param_fact_1
+    have proof_fact_2_1 : r ∈ Litex.StandardSets.RPos := litex_param_fact_1
     simpa using proof_fact_2_1
   exact litex_param_fact_1
 
 -- Litex fact f14
-theorem fact14 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ {n : ℕ | 0 < n}), n ∈ {n : ℕ | 0 < n} := by
+theorem fact14 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ Litex.StandardSets.NPos), n ∈ Litex.StandardSets.NPos := by
   intro n litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f15
-theorem fact15 : {n : ℕ | 0 < n} = {n : ℕ | 0 < n} := by
+theorem fact15 : Litex.StandardSets.NPos = Litex.StandardSets.NPos := by
   rfl
 
 -- Litex fact f22
-theorem fact22 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | 0 < q}), q ∈ {q : ℚ | 0 < q} := by
+theorem fact22 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QPos), q ∈ Litex.StandardSets.QPos := by
   intro q litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f35
-theorem fact35 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z < 0}), z ∈ {z : ℤ | z < 0} := by
+theorem fact35 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZNeg), z ∈ Litex.StandardSets.ZNeg := by
   intro z litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f48
-theorem fact48 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q < 0}), q ∈ {q : ℚ | q < 0} := by
+theorem fact48 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QNeg), q ∈ Litex.StandardSets.QNeg := by
   intro q litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f61
-theorem fact61 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r < 0}), r ∈ {r : ℝ | r < 0} := by
+theorem fact61 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RNeg), r ∈ Litex.StandardSets.RNeg := by
   intro r litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f68
-theorem fact68 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z ≠ 0}), z ∈ {z : ℤ | z ≠ 0} := by
+theorem fact68 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZStar), z ∈ Litex.StandardSets.ZStar := by
   intro z litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f75
-theorem fact75 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q ≠ 0}), q ∈ {q : ℚ | q ≠ 0} := by
+theorem fact75 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QStar), q ∈ Litex.StandardSets.QStar := by
   intro q litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f82
-theorem fact82 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r ≠ 0}), r ∈ {r : ℝ | r ≠ 0} := by
+theorem fact82 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RStar), r ∈ Litex.StandardSets.RStar := by
   intro r litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f89
-theorem fact89 : ∀ (c : ℂ) (litex_param_fact_1 : c ∈ {c : ℂ | c ≠ 0}), c ∈ {c : ℂ | c ≠ 0} := by
+theorem fact89 : ∀ (c : ℂ) (litex_param_fact_1 : c ∈ Litex.StandardSets.CStar), c ∈ Litex.StandardSets.CStar := by
   intro c litex_param_fact_1
   exact litex_param_fact_1
 
 -- Litex fact f105
-theorem fact105 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ {n : ℕ | 0 < n}), n ∈ (Set.univ : Set ℕ) := by
+theorem fact105 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ Litex.StandardSets.NPos), n ∈ Litex.StandardSets.N := by
   intro n litex_param_fact_1
-  have proof_fact_3_1 : n ∈ {n : ℕ | 0 < n} := by
+  have proof_fact_3_1 : n ∈ Litex.StandardSets.NPos := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f121
-theorem fact121 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z < 0}), z ∈ (Set.univ : Set ℤ) := by
+theorem fact121 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZNeg), z ∈ Litex.StandardSets.Z := by
   intro z litex_param_fact_1
-  have proof_fact_4_1 : z ∈ {z : ℤ | z < 0} := by
+  have proof_fact_4_1 : z ∈ Litex.StandardSets.ZNeg := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f131
-theorem fact131 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z ≠ 0}), z ∈ (Set.univ : Set ℤ) := by
+theorem fact131 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZStar), z ∈ Litex.StandardSets.Z := by
   intro z litex_param_fact_1
-  have proof_fact_5_1 : z ∈ {z : ℤ | z ≠ 0} := by
+  have proof_fact_5_1 : z ∈ Litex.StandardSets.ZStar := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f141
-theorem fact141 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | 0 < q}), q ∈ (Set.univ : Set ℚ) := by
+theorem fact141 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QPos), q ∈ Litex.StandardSets.Q := by
   intro q litex_param_fact_1
-  have proof_fact_6_1 : q ∈ {q : ℚ | 0 < q} := by
+  have proof_fact_6_1 : q ∈ Litex.StandardSets.QPos := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f157
-theorem fact157 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q < 0}), q ∈ (Set.univ : Set ℚ) := by
+theorem fact157 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QNeg), q ∈ Litex.StandardSets.Q := by
   intro q litex_param_fact_1
-  have proof_fact_7_1 : q ∈ {q : ℚ | q < 0} := by
+  have proof_fact_7_1 : q ∈ Litex.StandardSets.QNeg := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f167
-theorem fact167 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q ≠ 0}), q ∈ (Set.univ : Set ℚ) := by
+theorem fact167 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QStar), q ∈ Litex.StandardSets.Q := by
   intro q litex_param_fact_1
-  have proof_fact_8_1 : q ∈ {q : ℚ | q ≠ 0} := by
+  have proof_fact_8_1 : q ∈ Litex.StandardSets.QStar := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f177
-theorem fact177 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | 0 < r}), r ∈ (Set.univ : Set ℝ) := by
+theorem fact177 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RPos), r ∈ Litex.StandardSets.R := by
   intro r litex_param_fact_1
   have proof_fact_9_1 : 0 < r := by
-    have proof_fact_10_1 : r ∈ {r : ℝ | 0 < r} := litex_param_fact_1
+    have proof_fact_10_1 : r ∈ Litex.StandardSets.RPos := litex_param_fact_1
     simpa using proof_fact_10_1
-  have proof_fact_9_2 : r ∈ {r : ℝ | 0 < r} := by
+  have proof_fact_9_2 : r ∈ Litex.StandardSets.RPos := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f193
-theorem fact193 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r < 0}), r ∈ (Set.univ : Set ℝ) := by
+theorem fact193 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RNeg), r ∈ Litex.StandardSets.R := by
   intro r litex_param_fact_1
-  have proof_fact_11_1 : r ∈ {r : ℝ | r < 0} := by
+  have proof_fact_11_1 : r ∈ Litex.StandardSets.RNeg := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f203
-theorem fact203 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r ≠ 0}), r ∈ (Set.univ : Set ℝ) := by
+theorem fact203 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RStar), r ∈ Litex.StandardSets.R := by
   intro r litex_param_fact_1
-  have proof_fact_12_1 : r ∈ {r : ℝ | r ≠ 0} := by
+  have proof_fact_12_1 : r ∈ Litex.StandardSets.RStar := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f213
-theorem fact213 : ∀ (c : ℂ) (litex_param_fact_1 : c ∈ {c : ℂ | c ≠ 0}), c ∈ (Set.univ : Set ℂ) := by
+theorem fact213 : ∀ (c : ℂ) (litex_param_fact_1 : c ∈ Litex.StandardSets.CStar), c ∈ Litex.StandardSets.C := by
   intro c litex_param_fact_1
-  have proof_fact_13_1 : c ∈ {c : ℂ | c ≠ 0} := by
+  have proof_fact_13_1 : c ∈ Litex.StandardSets.CStar := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f226
-theorem fact226 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ (Set.univ : Set ℕ)), (n : ℤ) ∈ (Set.univ : Set ℤ) := by
+theorem fact226 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ Litex.StandardSets.N), (n : ℤ) ∈ Litex.StandardSets.Z := by
   intro n litex_param_fact_1
-  have proof_fact_14_1 : n ∈ (Set.univ : Set ℕ) := by
+  have proof_fact_14_1 : n ∈ Litex.StandardSets.N := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f233
-theorem fact233 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ (Set.univ : Set ℤ)), (z : ℚ) ∈ (Set.univ : Set ℚ) := by
+theorem fact233 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), (z : ℚ) ∈ Litex.StandardSets.Q := by
   intro z litex_param_fact_1
-  have proof_fact_15_1 : z ∈ (Set.univ : Set ℤ) := by
+  have proof_fact_15_1 : z ∈ Litex.StandardSets.Z := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f240
-theorem fact240 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ (Set.univ : Set ℚ)), (q : ℝ) ∈ (Set.univ : Set ℝ) := by
+theorem fact240 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.Q), (q : ℝ) ∈ Litex.StandardSets.R := by
   intro q litex_param_fact_1
-  have proof_fact_16_1 : q ∈ (Set.univ : Set ℚ) := by
+  have proof_fact_16_1 : q ∈ Litex.StandardSets.Q := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f247
-theorem fact247 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ (Set.univ : Set ℝ)), (r : ℂ) ∈ (Set.univ : Set ℂ) := by
+theorem fact247 : ∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.R), (r : ℂ) ∈ Litex.StandardSets.C := by
   intro r litex_param_fact_1
-  have proof_fact_17_1 : r ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_17_1 : r ∈ Litex.StandardSets.R := by
     exact litex_param_fact_1
   exact Set.mem_univ _
 
 -- Litex fact f257
-theorem fact257 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | 0 < q}), (q : ℝ) ∈ {r : ℝ | 0 < r} := by
+theorem fact257 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QPos), (q : ℝ) ∈ Litex.StandardSets.RPos := by
   intro q litex_param_fact_1
-  have proof_fact_18_1 : q ∈ {q : ℚ | 0 < q} := by
+  have proof_fact_18_1 : q ∈ Litex.StandardSets.QPos := by
     exact litex_param_fact_1
   have proof_fact_18_2 : 0 < (q : ℚ) := by
     simpa using proof_fact_18_1
@@ -3336,9 +3675,9 @@ theorem fact257 : ∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | 0 < q}), 
   exact_mod_cast proof_fact_18_2
 
 -- Litex fact f267
-theorem fact267 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z ≠ 0}), (z : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+theorem fact267 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZStar), (z : ℂ) ∈ Litex.StandardSets.CStar := by
   intro z litex_param_fact_1
-  have proof_fact_19_1 : z ∈ {z : ℤ | z ≠ 0} := by
+  have proof_fact_19_1 : z ∈ Litex.StandardSets.ZStar := by
     exact litex_param_fact_1
   have proof_fact_19_2 : (z : ℤ) ≠ 0 := by
     simpa using proof_fact_19_1
@@ -3346,9 +3685,9 @@ theorem fact267 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z ≠ 0})
   exact_mod_cast proof_fact_19_2
 
 -- Litex fact f280
-theorem fact280 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ {n : ℕ | 0 < n}), (n : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+theorem fact280 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ Litex.StandardSets.NPos), (n : ℂ) ∈ Litex.StandardSets.CStar := by
   intro n litex_param_fact_1
-  have proof_fact_20_1 : n ∈ {n : ℕ | 0 < n} := by
+  have proof_fact_20_1 : n ∈ Litex.StandardSets.NPos := by
     exact litex_param_fact_1
   have proof_fact_20_2 : 0 < (n : ℕ) := by
     simpa using proof_fact_20_1
@@ -3357,9 +3696,9 @@ theorem fact280 : ∀ (n : ℕ) (litex_param_fact_1 : n ∈ {n : ℕ | 0 < n}), 
   exact_mod_cast proof_fact_20_3
 
 -- Litex fact f299
-theorem fact299 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z < 0}), (z : ℂ) ∈ {c : ℂ | c ≠ 0} := by
+theorem fact299 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZNeg), (z : ℂ) ∈ Litex.StandardSets.CStar := by
   intro z litex_param_fact_1
-  have proof_fact_21_1 : z ∈ {z : ℤ | z < 0} := by
+  have proof_fact_21_1 : z ∈ Litex.StandardSets.ZNeg := by
     exact litex_param_fact_1
   have proof_fact_21_2 : (z : ℤ) < 0 := by
     simpa using proof_fact_21_1
@@ -3368,7 +3707,7 @@ theorem fact299 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z < 0}), 
   exact_mod_cast proof_fact_21_3
 
 -- Litex fact f300
-theorem fact300 : 1 ∈ {n : ℕ | 0 < n} := by
+theorem fact300 : 1 ∈ Litex.StandardSets.NPos := by
   norm_num
 
 -- Litex fact f301
@@ -3376,30 +3715,30 @@ theorem fact301 : (0 : ℕ) < 1 := by
   norm_num
 
 -- Litex fact f302
-theorem fact302 : 1 ∈ {q : ℚ | 0 < q} := by
+theorem fact302 : 1 ∈ Litex.StandardSets.QPos := by
   norm_num
 
 -- Litex fact f303
-theorem fact303 : 2 ∈ {r : ℝ | 0 < r} := by
+theorem fact303 : 2 ∈ Litex.StandardSets.RPos := by
   norm_num
 
 -- Litex fact f304
 theorem fact304 : (0 : ℝ) < 2 := by
-  have proof_fact_22_1 : 2 ∈ {r : ℝ | 0 < r} := fact303
+  have proof_fact_22_1 : 2 ∈ Litex.StandardSets.RPos := fact303
   simpa using proof_fact_22_1
 
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_1 : 0 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_1 : 0 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_2 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_2 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex fact f305
-theorem fact305 : (0 - 1) ∈ {z : ℤ | z < 0} := by
+theorem fact305 : (0 - 1) ∈ Litex.StandardSets.ZNeg := by
   norm_num
 
 -- Litex fact f306
@@ -3407,35 +3746,35 @@ theorem fact306 : (0 - 1 : ℤ) < 0 := by
   norm_num
 
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_3 : 0 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_3 : 0 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_4 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_4 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex fact f308
-theorem fact308 : (0 - 1) ∈ {q : ℚ | q < 0} := by
+theorem fact308 : (0 - 1) ∈ Litex.StandardSets.QNeg := by
   norm_num
 
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_5 : 0 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_5 : 0 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_6 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_6 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex fact f309
-theorem fact309 : (0 - 1) ∈ {r : ℝ | r < 0} := by
+theorem fact309 : (0 - 1) ∈ Litex.StandardSets.RNeg := by
   norm_num
 
 -- Litex fact f310
-theorem fact310 : 1 ∈ {z : ℤ | z ≠ 0} := by
+theorem fact310 : 1 ∈ Litex.StandardSets.ZStar := by
   norm_num
 
 -- Litex fact f311
@@ -3443,55 +3782,55 @@ theorem fact311 : (1 : ℤ) ≠ 0 := by
   norm_num
 
 -- Litex fact f312
-theorem fact312 : 1 ∈ {q : ℚ | q ≠ 0} := by
+theorem fact312 : 1 ∈ Litex.StandardSets.QStar := by
   norm_num
 
 -- Litex fact f313
-theorem fact313 : 1 ∈ {r : ℝ | r ≠ 0} := by
+theorem fact313 : 1 ∈ Litex.StandardSets.RStar := by
   norm_num
 
 -- Litex fact f314
-theorem fact314 : 1 ∈ {c : ℂ | c ≠ 0} := by
+theorem fact314 : 1 ∈ Litex.StandardSets.CStar := by
   norm_num
 
 -- Litex fact f315
-theorem fact315 : 0 ∉ {n : ℕ | 0 < n} := by
+theorem fact315 : 0 ∉ Litex.StandardSets.NPos := by
   norm_num
 
 -- Litex fact f316
-theorem fact316 : 0 ∉ {q : ℚ | 0 < q} := by
+theorem fact316 : 0 ∉ Litex.StandardSets.QPos := by
   norm_num
 
 -- Litex fact f317
-theorem fact317 : 0 ∉ {r : ℝ | 0 < r} := by
+theorem fact317 : 0 ∉ Litex.StandardSets.RPos := by
   norm_num
 
 -- Litex fact f318
-theorem fact318 : 0 ∉ {z : ℤ | z < 0} := by
+theorem fact318 : 0 ∉ Litex.StandardSets.ZNeg := by
   norm_num
 
 -- Litex fact f319
-theorem fact319 : 0 ∉ {q : ℚ | q < 0} := by
+theorem fact319 : 0 ∉ Litex.StandardSets.QNeg := by
   norm_num
 
 -- Litex fact f320
-theorem fact320 : 0 ∉ {r : ℝ | r < 0} := by
+theorem fact320 : 0 ∉ Litex.StandardSets.RNeg := by
   norm_num
 
 -- Litex fact f321
-theorem fact321 : 0 ∉ {z : ℤ | z ≠ 0} := by
+theorem fact321 : 0 ∉ Litex.StandardSets.ZStar := by
   norm_num
 
 -- Litex fact f322
-theorem fact322 : 0 ∉ {q : ℚ | q ≠ 0} := by
+theorem fact322 : 0 ∉ Litex.StandardSets.QStar := by
   norm_num
 
 -- Litex fact f323
-theorem fact323 : 0 ∉ {r : ℝ | r ≠ 0} := by
+theorem fact323 : 0 ∉ Litex.StandardSets.RStar := by
   norm_num
 
 -- Litex fact f324
-theorem fact324 : 0 ∉ {c : ℂ | c ≠ 0} := by
+theorem fact324 : 0 ∉ Litex.StandardSets.CStar := by
   norm_num
 
 end
@@ -3605,37 +3944,34 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_1 : 2 ∈ (Set.univ : Set ℤ) := by
+theorem well_defined_fact_1 : 2 ∈ Litex.StandardSets.Z := by
   change True
   trivial
-
--- Litex well-definedness certificate 2
-theorem well_defined_fact_2 : 53 ∈ (Set.univ : Set ℤ) := by
-  change True
-  trivial
-
--- Litex well-definedness certificate 4
-theorem well_defined_fact_3 : ∀ (_binder_0 : ℤ), (_binder_0 : ℝ) ∈ (Set.univ : Set ℝ) := by
-  intro _binder_0
-  change True
-  trivial
-
--- Litex well-definedness certificate 5
-theorem well_defined_fact_4 : 0 ∈ (Set.univ : Set ℝ) := by
-  change True
-  trivial
-
--- Litex well-definedness certificate 6 (generalized local premise)
-theorem well_defined_fact_5 : ∀ (_binder_0 : ℤ), 0 < _binder_0 → _binder_0 > 0 := by
-  intro _binder_0 litex_wd_source
-  exact litex_wd_source
-
--- Litex well-definedness certificate 7 (generalized strict-order premise)
-theorem well_defined_fact_6 : ∀ (_binder_0 : ℤ), _binder_0 > 0 → _binder_0 ≠ 0 := by
-  intro _binder_0 litex_strict_order litex_equal
-  rw [litex_equal] at litex_strict_order
-  exact (lt_irrefl _ litex_strict_order)
 
 -- Litex fact f1
 theorem fact1 : Nat.Prime 53 := by
@@ -3694,22 +4030,22 @@ theorem fact162 : ∀ {α33 : Type u} [LitexObject α33], ∀ (A : Set α33), �
   exact litex_domain_fact_1
 
 -- Litex fact f172
-theorem fact172 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : ¬ (a < b)), ¬ (a < b) := by
+theorem fact172 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : ¬ (a < b)), ¬ (a < b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   exact litex_domain_fact_1
 
 -- Litex fact f182
-theorem fact182 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : ¬ (a ≤ b)), ¬ (a ≤ b) := by
+theorem fact182 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : ¬ (a ≤ b)), ¬ (a ≤ b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   exact litex_domain_fact_1
 
 -- Litex fact f192
-theorem fact192 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : ¬ (a > b)), ¬ (a > b) := by
+theorem fact192 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : ¬ (a > b)), ¬ (a > b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   exact litex_domain_fact_1
 
 -- Litex fact f202
-theorem fact202 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : ¬ (a ≥ b)), ¬ (a ≥ b) := by
+theorem fact202 : ∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), ∀ (b : ℝ) (litex_param_fact_2 : b ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : ¬ (a ≥ b)), ¬ (a ≥ b) := by
   intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
   exact litex_domain_fact_1
 
@@ -3754,15 +4090,39 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex checked choice source for `demo_chosen_real`
-theorem litex_choice_source_1 : litexIsNonemptySet (Set.univ : Set ℝ) := by
+theorem litex_choice_source_1 : litexIsNonemptySet Litex.StandardSets.R := by
   refine ⟨0, ?_⟩
   exact Set.mem_univ 0
 
 noncomputable def demo_chosen_real : ℝ := Exists.choose litex_choice_source_1
 
 -- Litex fact f3
-theorem fact3 : demo_chosen_real ∈ (Set.univ : Set ℝ) := by
+theorem fact3 : demo_chosen_real ∈ Litex.StandardSets.R := by
   exact Exists.choose_spec litex_choice_source_1
 
 -- Litex fact f8
@@ -3770,13 +4130,13 @@ theorem fact8 : demo_chosen_real = demo_chosen_real := by
   classical
   apply Classical.byContradiction
   intro proof_fact_1_1
-  have proof_fact_1_2 : litexIsNonemptySet (Set.univ : Set ℝ) := by
+  have proof_fact_1_2 : litexIsNonemptySet Litex.StandardSets.R := by
     refine ⟨0, ?_⟩
     exact Set.mem_univ 0
   let demo_local_choice : ℝ := Exists.choose proof_fact_1_2
-  have proof_fact_1_3 : demo_local_choice ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_3 : demo_local_choice ∈ Litex.StandardSets.R := by
     exact Exists.choose_spec proof_fact_1_2
-  have proof_fact_1_4 : demo_local_choice ∈ (Set.univ : Set ℝ) := proof_fact_1_3
+  have proof_fact_1_4 : demo_local_choice ∈ Litex.StandardSets.R := proof_fact_1_3
   have proof_fact_1_5 : demo_chosen_real ≠ demo_chosen_real := proof_fact_1_1
   have proof_fact_1_6 : demo_chosen_real = demo_chosen_real := by
     rfl
@@ -3830,12 +4190,36 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex fact f10
-theorem fact10 : ∃ demo_source : ℝ, demo_source ∈ (Set.univ : Set ℝ) ∧ (demo_source = 1) ∧ demo_source = demo_source := by
+theorem fact10 : ∃ demo_source : ℝ, demo_source ∈ Litex.StandardSets.R ∧ (demo_source = 1) ∧ demo_source = demo_source := by
   have proof_fact_1_1 : (1 : ℝ) = 1 := by
     rfl
   have proof_fact_1_2 : (1 : ℝ) = 1 := proof_fact_1_1
-  have proof_fact_1_3 : 1 ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_1_3 : 1 ∈ Litex.StandardSets.R := by
     change True
     trivial
   have proof_fact_1_4 : (1 : ℝ) = 1 := by
@@ -3845,13 +4229,13 @@ theorem fact10 : ∃ demo_source : ℝ, demo_source ∈ (Set.univ : Set ℝ) ∧
   exact ⟨(1 : ℝ), proof_fact_1_3, proof_fact_1_4, proof_fact_1_5⟩
 
 -- Litex checked existential source for `demo_selected`
-theorem litex_exist_source_2 : ∃ demo_source : ℝ, demo_source ∈ (Set.univ : Set ℝ) ∧ (demo_source = 1) ∧ demo_source = demo_source := by
+theorem litex_exist_source_2 : ∃ demo_source : ℝ, demo_source ∈ Litex.StandardSets.R ∧ (demo_source = 1) ∧ demo_source = demo_source := by
   exact fact10
 
 noncomputable def demo_selected : ℝ := Exists.choose (litex_exist_source_2)
 
 -- Litex fact f17
-theorem fact17 : demo_selected ∈ (Set.univ : Set ℝ) := by
+theorem fact17 : demo_selected ∈ Litex.StandardSets.R := by
   exact (Exists.choose_spec (litex_exist_source_2)).1
 
 -- Litex fact f18
@@ -3863,13 +4247,13 @@ theorem fact19 : demo_selected = demo_selected := by
   exact ((Exists.choose_spec (litex_exist_source_2)).2).2
 
 -- Litex checked existential source for `demo_shorthand`
-theorem litex_exist_source_4 : ∃ demo_shorthand : ℝ, demo_shorthand ∈ (Set.univ : Set ℝ) ∧ (demo_shorthand = 1) ∧ demo_shorthand = demo_shorthand := by
+theorem litex_exist_source_4 : ∃ demo_shorthand : ℝ, demo_shorthand ∈ Litex.StandardSets.R ∧ (demo_shorthand = 1) ∧ demo_shorthand = demo_shorthand := by
   exact fact10
 
 noncomputable def demo_shorthand : ℝ := Exists.choose (litex_exist_source_4)
 
 -- Litex fact f26
-theorem fact26 : demo_shorthand ∈ (Set.univ : Set ℝ) := by
+theorem fact26 : demo_shorthand ∈ Litex.StandardSets.R := by
   exact (Exists.choose_spec (litex_exist_source_4)).1
 
 -- Litex fact f27
@@ -3881,15 +4265,15 @@ theorem fact28 : demo_shorthand = demo_shorthand := by
   exact ((Exists.choose_spec (litex_exist_source_4)).2).2
 
 -- Litex fact f43
-theorem fact43 : ∃ demo_left : ℝ, demo_left ∈ (Set.univ : Set ℝ) ∧ ∃ demo_right : ℝ, demo_right ∈ (Set.univ : Set ℝ) ∧ (demo_left = 1) ∧ demo_right = 2 := by
+theorem fact43 : ∃ demo_left : ℝ, demo_left ∈ Litex.StandardSets.R ∧ ∃ demo_right : ℝ, demo_right ∈ Litex.StandardSets.R ∧ (demo_left = 1) ∧ demo_right = 2 := by
   have proof_fact_2_1 : (1 : ℝ) = 1 := by
     rfl
   have proof_fact_2_2 : (2 : ℝ) = 2 := by
     rfl
-  have proof_fact_2_3 : 1 ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_2_3 : 1 ∈ Litex.StandardSets.R := by
     change True
     trivial
-  have proof_fact_2_4 : 2 ∈ (Set.univ : Set ℝ) := by
+  have proof_fact_2_4 : 2 ∈ Litex.StandardSets.R := by
     change True
     trivial
   have proof_fact_2_5 : (1 : ℝ) = 1 := by
@@ -3899,7 +4283,7 @@ theorem fact43 : ∃ demo_left : ℝ, demo_left ∈ (Set.univ : Set ℝ) ∧ ∃
   exact ⟨(1 : ℝ), proof_fact_2_3, (2 : ℝ), proof_fact_2_4, proof_fact_2_5, proof_fact_2_6⟩
 
 -- Litex checked existential source for `demo_chosen_left`
-theorem litex_exist_source_9 : ∃ demo_left : ℝ, demo_left ∈ (Set.univ : Set ℝ) ∧ ∃ demo_right : ℝ, demo_right ∈ (Set.univ : Set ℝ) ∧ (demo_left = 1) ∧ demo_right = 2 := by
+theorem litex_exist_source_9 : ∃ demo_left : ℝ, demo_left ∈ Litex.StandardSets.R ∧ ∃ demo_right : ℝ, demo_right ∈ Litex.StandardSets.R ∧ (demo_left = 1) ∧ demo_right = 2 := by
   exact fact43
 
 noncomputable def demo_chosen_left : ℝ := Exists.choose (litex_exist_source_9)
@@ -3907,11 +4291,11 @@ noncomputable def demo_chosen_left : ℝ := Exists.choose (litex_exist_source_9)
 noncomputable def demo_chosen_right : ℝ := Exists.choose ((Exists.choose_spec (litex_exist_source_9)).2)
 
 -- Litex fact f52
-theorem fact52 : demo_chosen_left ∈ (Set.univ : Set ℝ) := by
+theorem fact52 : demo_chosen_left ∈ Litex.StandardSets.R := by
   exact (Exists.choose_spec (litex_exist_source_9)).1
 
 -- Litex fact f53
-theorem fact53 : demo_chosen_right ∈ (Set.univ : Set ℝ) := by
+theorem fact53 : demo_chosen_right ∈ Litex.StandardSets.R := by
   exact (Exists.choose_spec ((Exists.choose_spec (litex_exist_source_9)).2)).1
 
 -- Litex fact f54
@@ -3967,22 +4351,46 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
-def divides (p : ℤ) (u : ℤ) : Prop := ∃ k : ℤ, k ∈ (Set.univ : Set ℤ) ∧ p = (u * k)
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
+def divides (p : ℤ) (u : ℤ) : Prop := ∃ k : ℤ, k ∈ Litex.StandardSets.Z ∧ p = (u * k)
 
 -- Litex fact f11
 theorem fact11 : divides 6 2 := by
-  have proof_fact_1_1 : ∃ k : ℤ, k ∈ (Set.univ : Set ℤ) ∧ 6 = (2 * k) := by
-    have proof_fact_2_1_wd_1 : 2 ∈ (Set.univ : Set ℂ) := by
+  have proof_fact_1_1 : ∃ k : ℤ, k ∈ Litex.StandardSets.Z ∧ 6 = (2 * k) := by
+    have proof_fact_2_1_wd_1 : 2 ∈ Litex.StandardSets.C := by
       change True
       trivial
-    have proof_fact_2_1_wd_2 : 3 ∈ (Set.univ : Set ℂ) := by
+    have proof_fact_2_1_wd_2 : 3 ∈ Litex.StandardSets.C := by
       change True
       trivial
     have proof_fact_2_2 : (6 : ℤ) = (2 * 3) := by
       -- native proof view, left fraction: (6 : ℝ) / (1 : ℝ)
       -- native proof view, right fraction: ((2 : ℝ) * (3 : ℝ)) / (1 : ℝ)
       norm_num
-    have proof_fact_2_3 : 3 ∈ (Set.univ : Set ℤ) := by
+    have proof_fact_2_3 : 3 ∈ Litex.StandardSets.Z := by
       change True
       trivial
     have proof_fact_2_4 : (6 : ℤ) = (2 * 3) := by
@@ -3991,19 +4399,19 @@ theorem fact11 : divides 6 2 := by
   simpa only [divides] using proof_fact_1_1
 
 -- Litex fact f14
-theorem fact14 : ∃ k : ℤ, k ∈ (Set.univ : Set ℤ) ∧ 6 = (2 * k) := by
+theorem fact14 : ∃ k : ℤ, k ∈ Litex.StandardSets.Z ∧ 6 = (2 * k) := by
   have proof_fact_3_1 : divides 6 2 := fact11
   simpa only [divides] using proof_fact_3_1
 
 -- Litex checked existential source for `named_divisor`
-theorem litex_exist_source_4 : ∃ k : ℤ, k ∈ (Set.univ : Set ℤ) ∧ 6 = (2 * k) := by
+theorem litex_exist_source_4 : ∃ k : ℤ, k ∈ Litex.StandardSets.Z ∧ 6 = (2 * k) := by
   have proof_fact_4_1 : divides 6 2 := fact11
   simpa only [divides] using proof_fact_4_1
 
 noncomputable def named_divisor : ℤ := Exists.choose (litex_exist_source_4)
 
 -- Litex fact f17
-theorem fact17 : named_divisor ∈ (Set.univ : Set ℤ) := by
+theorem fact17 : named_divisor ∈ Litex.StandardSets.Z := by
   exact (Exists.choose_spec (litex_exist_source_4)).1
 
 -- Litex fact f18
@@ -4011,12 +4419,12 @@ theorem fact18 : 6 = (2 * named_divisor) := by
   exact (Exists.choose_spec (litex_exist_source_4)).2
 
 -- Litex well-definedness certificate 1
-theorem well_defined_fact_1 : 2 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_1 : 2 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_2 : (named_divisor : ℂ) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_2 : (named_divisor : ℂ) ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -4056,21 +4464,45 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
-def has_copy (a : ℝ) : Prop := ∃ x : ℝ, x ∈ (Set.univ : Set ℝ) ∧ x = a
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
+def has_copy (a : ℝ) : Prop := ∃ x : ℝ, x ∈ Litex.StandardSets.R ∧ x = a
 
 -- Litex fact f5
 theorem fact5 : has_copy 2 := by
   simp [has_copy]
 
 -- Litex checked existential source for `copy`
-theorem litex_exist_source_3 : ∃ x : ℝ, x ∈ (Set.univ : Set ℝ) ∧ x = 2 := by
+theorem litex_exist_source_3 : ∃ x : ℝ, x ∈ Litex.StandardSets.R ∧ x = 2 := by
   have proof_fact_1_1 : has_copy 2 := fact5
   simpa only [has_copy] using proof_fact_1_1
 
 noncomputable def copy : ℝ := Exists.choose (litex_exist_source_3)
 
 -- Litex fact f10
-theorem fact10 : copy ∈ (Set.univ : Set ℝ) := by
+theorem fact10 : copy ∈ Litex.StandardSets.R := by
   exact (Exists.choose_spec (litex_exist_source_3)).1
 
 -- Litex fact f11
@@ -4121,11 +4553,35 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 def demo_scope_value : ℝ := 2
 
 -- Litex fact f2
-theorem fact2 : demo_scope_value ∈ (Set.univ : Set ℝ) := by
-  have proof_fact_1_1 : 2 ∈ (Set.univ : Set ℝ) := by
+theorem fact2 : demo_scope_value ∈ Litex.StandardSets.R := by
+  have proof_fact_1_1 : 2 ∈ Litex.StandardSets.R := by
     change True
     trivial
   simpa only [demo_scope_value] using proof_fact_1_1
@@ -4141,8 +4597,8 @@ theorem fact9 : demo_scope_value = demo_scope_value := by
     exact Classical.em (demo_scope_value = 2)
   rcases proof_fact_2_1 with proof_fact_3_1 | proof_fact_5_1
   · let demo_case_value : ℝ := 3
-    have proof_fact_3_2 : demo_case_value ∈ (Set.univ : Set ℝ) := by
-      have proof_fact_4_1 : 3 ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_3_2 : demo_case_value ∈ Litex.StandardSets.R := by
+      have proof_fact_4_1 : 3 ∈ Litex.StandardSets.R := by
         change True
         trivial
       simpa only [demo_case_value] using proof_fact_4_1
@@ -4168,19 +4624,24 @@ theorem fact12 : 2 = 2 := by
 end
 ```
 
-## function_sets_and_well_definedness
+## exact_well_definedness_and_integer_remainder
 
 ```litex
-# A named restricted function becomes one native dependent Lean function.
-# Its later evaluation cites the exact checked defining equality, while all
-# source-only and application well-definedness proofs remain explicit.
+# Object WD is audited before fact verification. A dependent function call
+# receives the exact retained domain proof; refined membership supplies that
+# same proof definitionally rather than triggering Lean-side proof search.
+forall f fn(x R: x > 0) R:
+    f(2) = f(2)
 
-have fn reciprocal(x R: x != 0) R = 1 / x
+forall f fn(x R: x != 0) R, a R*:
+    f(a) = f(a)
 
-forall x R:
-    x != 0
-    =>:
-        reciprocal(x) = 1 / x
+# `%` keeps its intrinsic integer contract for symbolic and closed terms.
+forall a Z, b Z*:
+    a % b $in Z
+    a % b = a % b
+
+5 % 2 = 1
 ```
 
 ```lean
@@ -4204,30 +4665,388 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
+-- Litex well-definedness certificate 1 (forall type witness)
+theorem well_defined_fact_1 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 2 (forall type witness)
+theorem well_defined_fact_2 : 0 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 3 (forall type witness)
+theorem well_defined_fact_3 : -1 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 4 (forall type witness)
+theorem well_defined_fact_4 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 5 (forall type witness)
+theorem well_defined_fact_5 : -1 ∈ Litex.StandardSets.C := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 6 (forall type witness)
+theorem well_defined_fact_6 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 7 (forall type witness)
+theorem well_defined_fact_7 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 10 (forall type witness)
+theorem well_defined_fact_8 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 12 (forall type witness)
+theorem well_defined_fact_9 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 13 (forall type witness)
+theorem well_defined_fact_10 : 2 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 15 (forall type witness)
+theorem well_defined_fact_11 : (2 : ℝ) > 0 := by
+  norm_num
+
+-- Litex well-definedness certificate 16 (forall type witness)
+theorem well_defined_fact_12 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 19 (forall type witness)
+theorem well_defined_fact_13 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 21 (forall type witness)
+theorem well_defined_fact_14 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 22 (forall type witness)
+theorem well_defined_fact_15 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 25 (forall type witness)
+theorem well_defined_fact_16 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 27 (forall type witness)
+theorem well_defined_fact_17 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 31 (forall type witness)
+theorem well_defined_fact_18 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 34 (forall type witness)
+theorem well_defined_fact_19 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 36 (forall type witness)
+theorem well_defined_fact_20 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 37 (forall type witness)
+theorem well_defined_fact_21 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 40 (forall type witness)
+theorem well_defined_fact_22 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 42 (forall type witness)
+theorem well_defined_fact_23 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex fact f31
+theorem fact31 : ∀ (f : (x : ℝ) → x > 0 → ℝ) (litex_param_fact_1 : f ∈ (Set.univ : Set ((x : ℝ) → x > 0 → ℝ))), (f 2 well_defined_fact_11) = (f 2 well_defined_fact_11) := by
+  intro f litex_param_fact_1
+  -- Litex well-definedness certificate 1 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 2 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 3 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 4 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 5 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 6 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 7 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 8 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 9 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 10 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 12 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 13 reuses well_defined_fact_10
+  -- Litex well-definedness certificate 14 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 15 reuses well_defined_fact_11
+  -- Litex well-definedness certificate 16 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 17 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 18 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 19 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 20 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 21 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 22 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 23 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 24 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 25 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 26 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 27 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 28 reuses well_defined_fact_10
+  -- Litex well-definedness certificate 29 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 30 reuses well_defined_fact_11
+  -- Litex well-definedness certificate 31 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 32 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 33 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 34 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 35 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 36 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 37 replayed by generalized helper well_defined_fact_21
+  -- Litex well-definedness certificate 38 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 39 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 40 replayed by generalized helper well_defined_fact_22
+  -- Litex well-definedness certificate 41 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 42 replayed by generalized helper well_defined_fact_23
+  -- Litex well-definedness certificate 43 reuses well_defined_fact_10
+  -- Litex well-definedness certificate 44 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 45 reuses well_defined_fact_11
+  rfl
+
+-- Litex fact f56
+theorem fact56 : ∀ (f : (x : ℝ) → x ≠ 0 → ℝ) (litex_param_fact_1 : f ∈ (Set.univ : Set ((x : ℝ) → x ≠ 0 → ℝ))), ∀ (a : ℝ) (litex_param_fact_2 : a ∈ Litex.StandardSets.RStar), (f a litex_param_fact_2) = (f a litex_param_fact_2) := by
+  intro f litex_param_fact_1 a litex_param_fact_2
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_2
+  have well_defined_fact_2 : a ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 3 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 4 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 5 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 6 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 7 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 8 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 9 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 10 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 11 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 12 reuses litex_param_fact_2
+  rfl
+
+-- Litex fact f72
+theorem fact72 : ∀ (a : ℤ) (litex_param_fact_1 : a ∈ Litex.StandardSets.Z), ∀ (b : ℤ) (litex_param_fact_2 : b ∈ Litex.StandardSets.ZStar), (((a : ℤ) % (b : ℤ)) ∈ Litex.StandardSets.Z ∧ ((a : ℤ) % (b : ℤ)) = ((a : ℤ) % (b : ℤ))) := by
+  intro a litex_param_fact_1 b litex_param_fact_2
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 2 reuses litex_param_fact_2
+  have well_defined_fact_3 : b ∈ Litex.StandardSets.Z := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 4 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 5 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 6 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 7 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 8 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 9 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 10 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_3
+  -- Litex well-definedness certificate 12 reuses litex_param_fact_2
+  have proof_fact_1_1 : ((a : ℤ) % (b : ℤ)) ∈ Litex.StandardSets.Z := by
+    have proof_fact_2_1 : a ∈ Litex.StandardSets.Z := by
+      exact litex_param_fact_1
+    have proof_fact_2_2 : b ∈ Litex.StandardSets.Z := by
+      have proof_fact_3_1 : b ∈ Litex.StandardSets.ZStar := by
+        exact litex_param_fact_2
+      exact Set.mem_univ _
+    change True
+    trivial
+  have proof_fact_1_2 : ((a : ℤ) % (b : ℤ)) = ((a : ℤ) % (b : ℤ)) := by
+    rfl
+  exact ⟨proof_fact_1_1, proof_fact_1_2⟩
+
+-- Litex well-definedness certificate 1
+theorem well_defined_fact_24 : 5 ∈ Litex.StandardSets.Z := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 2
+theorem well_defined_fact_25 : 2 ∈ Litex.StandardSets.Z := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 3
+theorem well_defined_fact_26 : (2 : ℤ) ≠ 0 := by
+  norm_num
+
+-- Litex fact f73
+theorem fact73 : ((5 : ℤ) % (2 : ℤ)) = 1 := by
+  norm_num
+
+end
+```
+
+## function_sets_and_well_definedness
+
+```litex
+# A named restricted function becomes one native dependent Lean function.
+# Its later evaluation cites the exact checked defining equality, while all
+# source-only and application well-definedness proofs remain explicit.
+
+have fn reciprocal(x R: x != 0) R = 1 / x
+
+forall x R:
+    x != 0
+    =>:
+        reciprocal(x) = 1 / x
+
+# Binder-owned objects keep their local scope in the target. Refined function
+# sets keep pointwise output membership instead of collapsing to Set.univ.
+forall x R:
+    x > 0
+    =>:
+        x $in {y R: y > 0}
+
+fn(x R: x > 0) R+ {x + 1} $in fn(x R: x > 0) R+
+
+forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:
+    x > 0
+    y > 0
+    =>:
+        f(x)(y) $in R+
+
+have fn positive_successor(x R: x > 0) R+ = x + 1
+
+forall x R:
+    x > 0
+    =>:
+        positive_successor(x) $in R+
+```
+
+```lean
+import Mathlib
+
+noncomputable section
+
+universe u
+
+class LitexObject (α : Type u) : Prop where
+  valid : True
+
+instance : LitexObject ℕ := ⟨True.intro⟩
+instance : LitexObject ℤ := ⟨True.intro⟩
+instance : LitexObject ℚ := ⟨True.intro⟩
+instance : LitexObject ℝ := ⟨True.intro⟩
+instance : LitexObject ℂ := ⟨True.intro⟩
+instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+
+def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
+def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
+def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex checked function definition `reciprocal`
 def reciprocal : (x : ℝ) → x ≠ 0 → ℝ := fun (x : ℝ) (litex_domain_fact_1 : x ≠ 0) => by
-  have litex_param_fact_1 : x ∈ (Set.univ : Set ℝ) := by
+  have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 1 reuses litex_domain_fact_1
-  have litex_function_wd_0_2 : 1 ∈ (Set.univ : Set ℂ) := by
+  have litex_function_wd_0_2 : 1 ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have litex_function_wd_0_4 : (x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have litex_function_wd_0_4 : (x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have litex_function_wd_0_5 : 1 ∈ (Set.univ : Set ℝ) := by
+  have litex_function_wd_0_5 : 1 ∈ Litex.StandardSets.R := by
     change True
     trivial
-  have litex_function_wd_0_6 : (1 / x) ∈ (Set.univ : Set ℝ) := by
+  have litex_function_wd_0_6 : (1 / x) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses litex_domain_fact_1
   -- Litex well-definedness certificate 8 reuses litex_function_wd_0_2
   -- Litex well-definedness certificate 9 reuses litex_param_fact_1
   -- Litex well-definedness certificate 10 reuses litex_function_wd_0_4
-  have litex_function_return_check_0 : (1 / x) ∈ (Set.univ : Set ℝ) := by
+  have litex_function_return_check_0 : (1 / x) ∈ Litex.StandardSets.R := by
     change True
     trivial
   exact (1 / x)
@@ -4240,45 +5059,45 @@ theorem fact9 : reciprocal ∈ (Set.univ : Set ((x : ℝ) → x ≠ 0 → ℝ)) 
 -- Litex checked defining equality: #0#reciprocal = fn (#1#x R: #1#x != 0) R {1 / #1#x}
 -- Litex fact f10
 theorem fact10 : reciprocal = (fun (x : ℝ) (litex_domain_fact_1 : x ≠ 0) => by
-  have litex_param_fact_1 : x ∈ (Set.univ : Set ℝ) := by
+  have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 1 reuses litex_domain_fact_1
-  have litex_function_wd_0_2 : 1 ∈ (Set.univ : Set ℂ) := by
+  have litex_function_wd_0_2 : 1 ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 3 reuses litex_param_fact_1
-  have litex_function_wd_0_4 : (x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have litex_function_wd_0_4 : (x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
-  have litex_function_wd_0_5 : 1 ∈ (Set.univ : Set ℝ) := by
+  have litex_function_wd_0_5 : 1 ∈ Litex.StandardSets.R := by
     change True
     trivial
-  have litex_function_wd_0_6 : (1 / x) ∈ (Set.univ : Set ℝ) := by
+  have litex_function_wd_0_6 : (1 / x) ∈ Litex.StandardSets.R := by
     change True
     trivial
   -- Litex well-definedness certificate 7 reuses litex_domain_fact_1
   -- Litex well-definedness certificate 8 reuses litex_function_wd_0_2
   -- Litex well-definedness certificate 9 reuses litex_param_fact_1
   -- Litex well-definedness certificate 10 reuses litex_function_wd_0_4
-  have litex_function_return_check_0 : (1 / x) ∈ (Set.univ : Set ℝ) := by
+  have litex_function_return_check_0 : (1 / x) ∈ Litex.StandardSets.R := by
     change True
     trivial
   exact (1 / x)) := by
   rfl
 
 -- Litex well-definedness certificate 3 (forall type witness)
-theorem well_defined_fact_1 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_1 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
--- Litex fact f23
-theorem fact23 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), ∀ (litex_domain_fact_1 : x ≠ 0), (reciprocal x litex_domain_fact_1) = (1 / x) := by
+-- Litex fact f20
+theorem fact20 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x ≠ 0), (reciprocal x litex_domain_fact_1) = (1 / x) := by
   intro x litex_param_fact_1 litex_domain_fact_1
   -- Litex well-definedness certificate 1 reuses litex_param_fact_1
   -- Litex well-definedness certificate 2 reuses litex_domain_fact_1
   -- Litex well-definedness certificate 3 reuses well_defined_fact_1
-  have well_defined_fact_4 : (x : ℂ) ∈ (Set.univ : Set ℂ) := by
+  have well_defined_fact_4 : (x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 5 reuses litex_param_fact_1
@@ -4290,6 +5109,728 @@ theorem fact23 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ))
   -- Litex well-definedness certificate 11 reuses well_defined_fact_1
   -- Litex well-definedness certificate 12 reuses well_defined_fact_4
   simpa only [reciprocal]
+
+-- Litex well-definedness certificate 1 (forall type witness)
+theorem well_defined_fact_2 : -1 ∈ Litex.StandardSets.C := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 3 (forall type witness)
+theorem well_defined_fact_3 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 4 (forall type witness)
+theorem well_defined_fact_4 : 0 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 5 (forall type witness)
+theorem well_defined_fact_5 : -1 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 6 (forall type witness)
+theorem well_defined_fact_6 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 7 (forall type witness)
+theorem well_defined_fact_7 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 10 (forall type witness)
+theorem well_defined_fact_8 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 13 (forall type witness)
+theorem well_defined_fact_9 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 14 (forall type witness)
+theorem well_defined_fact_10 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 17 (forall type witness)
+theorem well_defined_fact_11 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 20 (forall type witness)
+theorem well_defined_fact_12 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 21 (forall type witness)
+theorem well_defined_fact_13 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex fact f48
+theorem fact48 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x > 0), x ∈ {y : ℝ | (y ∈ Litex.StandardSets.R) ∧ y > 0} := by
+  intro x litex_param_fact_1 litex_domain_fact_1
+  -- Litex well-definedness certificate 1 reuses well_defined_fact_2
+  have well_defined_fact_2 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 3 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 4 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 5 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 6 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 7 replayed by generalized helper well_defined_fact_13
+  -- Litex well-definedness certificate 8 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 9 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 10 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 12 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 13 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 14 replayed by generalized helper well_defined_fact_13
+  -- Litex well-definedness certificate 15 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 16 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 17 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 18 reuses well_defined_fact_4
+  -- Litex well-definedness certificate 19 reuses well_defined_fact_5
+  -- Litex well-definedness certificate 20 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 21 replayed by generalized helper well_defined_fact_13
+  have proof_fact_1_1 : x ∈ Litex.StandardSets.R := by
+    exact litex_param_fact_1
+  have proof_fact_1_2 : x > 0 := litex_domain_fact_1
+  exact ⟨proof_fact_1_1, proof_fact_1_2⟩
+
+-- Litex fact f83
+theorem fact83 : (fun (x : ℝ) (litex_fn_domain_1 : x > 0) => (x + 1)) ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
+  have proof_fact_2_1 : ∀ (_binder_8 : ℝ) (litex_param_fact_1 : _binder_8 ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : _binder_8 > 0), (_binder_8 + 1) ∈ Litex.StandardSets.RPos := by
+    intro _binder_8 litex_param_fact_1 litex_domain_fact_1
+    have proof_fact_3_1 : (0 : ℝ) < (_binder_8 + 1) := by
+      have proof_fact_4_1 : (0 : ℝ) < _binder_8 := by
+        have proof_fact_5_1 : _binder_8 > 0 := litex_domain_fact_1
+        exact proof_fact_5_1
+      have proof_fact_4_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_4_3 : (0 : ℝ) < (_binder_8 + 1) := by
+        linarith only [proof_fact_4_1, proof_fact_4_2]
+      exact proof_fact_4_3
+    simpa using proof_fact_3_1
+  intro x litex_fn_domain_1
+  have litex_fn_universal_membership_1 : x ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  exact proof_fact_2_1 x litex_fn_universal_membership_1 litex_fn_domain_1
+
+-- Litex well-definedness certificate 1 (forall type witness)
+theorem well_defined_fact_14 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 2 (forall type witness)
+theorem well_defined_fact_15 : 0 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 3 (forall type witness)
+theorem well_defined_fact_16 : -1 ∈ Litex.StandardSets.R := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 4 (forall type witness)
+theorem well_defined_fact_17 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 5 (forall type witness)
+theorem well_defined_fact_18 : -1 ∈ Litex.StandardSets.C := by
+  change True
+  trivial
+
+-- Litex well-definedness certificate 6 (forall type witness)
+theorem well_defined_fact_19 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 7 (forall type witness)
+theorem well_defined_fact_20 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 8 (forall type witness)
+theorem well_defined_fact_21 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 9 (forall type witness)
+theorem well_defined_fact_22 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 10 (forall type witness)
+theorem well_defined_fact_23 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 13 (forall type witness)
+theorem well_defined_fact_24 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 15 (forall type witness)
+theorem well_defined_fact_25 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 16 (forall type witness)
+theorem well_defined_fact_26 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 17 (forall type witness)
+theorem well_defined_fact_27 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 18 (forall type witness)
+theorem well_defined_fact_28 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 28 (forall type witness)
+theorem well_defined_fact_29 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 31 (forall type witness)
+theorem well_defined_fact_30 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 33 (forall type witness)
+theorem well_defined_fact_31 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 34 (forall type witness)
+theorem well_defined_fact_32 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 35 (forall type witness)
+theorem well_defined_fact_33 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 36 (forall type witness)
+theorem well_defined_fact_34 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 37 (forall type witness)
+theorem well_defined_fact_35 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 40 (forall type witness)
+theorem well_defined_fact_36 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 42 (forall type witness)
+theorem well_defined_fact_37 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 43 (forall type witness)
+theorem well_defined_fact_38 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 44 (forall type witness)
+theorem well_defined_fact_39 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 45 (forall type witness)
+theorem well_defined_fact_40 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 55 (forall type witness)
+theorem well_defined_fact_41 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 58 (forall type witness)
+theorem well_defined_fact_42 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 60 (forall type witness)
+theorem well_defined_fact_43 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 61 (forall type witness)
+theorem well_defined_fact_44 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 62 (forall type witness)
+theorem well_defined_fact_45 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 63 (forall type witness)
+theorem well_defined_fact_46 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 64 (forall type witness)
+theorem well_defined_fact_47 : ∀ (x : ℝ), x ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 67 (forall type witness)
+theorem well_defined_fact_48 : ∀ (x : ℝ), (-1 * x) ∈ Litex.StandardSets.R := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 69 (forall type witness)
+theorem well_defined_fact_49 : ∀ (x : ℝ), (x : ℂ) ∈ Litex.StandardSets.C := by
+  intro x
+  change True
+  trivial
+
+-- Litex well-definedness certificate 70 (forall type witness)
+theorem well_defined_fact_50 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 71 (forall type witness)
+theorem well_defined_fact_51 : ∀ (y : ℝ), (-1 * y) ∈ Litex.StandardSets.R := by
+  intro y
+  change True
+  trivial
+
+-- Litex well-definedness certificate 72 (forall type witness)
+theorem well_defined_fact_52 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
+  intro y
+  change True
+  trivial
+
+-- Litex fact f168
+theorem fact168 : ∀ (f : (x : ℝ) → x > 0 → (y : ℝ) → y > 0 → ℝ) (litex_param_fact_1 : f ∈ {litex_function_value : ((x : ℝ) → x > 0 → (y : ℝ) → y > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ {litex_function_value : ((y : ℝ) → y > 0 → ℝ) | ∀ (y : ℝ) (litex_fn_domain_1 : y > 0), (litex_function_value y litex_fn_domain_1) ∈ Litex.StandardSets.RPos}}), ∀ (x : ℝ) (litex_param_fact_2 : x ∈ Litex.StandardSets.R), ∀ (y : ℝ) (litex_param_fact_3 : y ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x > 0), ∀ (litex_domain_fact_2 : y > 0), (f x litex_domain_fact_1 y litex_domain_fact_2) ∈ Litex.StandardSets.RPos := by
+  intro f litex_param_fact_1 x litex_param_fact_2 y litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2
+  -- Litex well-definedness certificate 1 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 2 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 3 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 4 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 5 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 6 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 7 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 8 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 9 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 10 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 12 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 13 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 14 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 15 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 16 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 17 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 18 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 19 reuses well_defined_fact_18
+  have well_defined_fact_20 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have well_defined_fact_21 : (y : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 22 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 23 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 24 reuses litex_domain_fact_1
+  -- Litex well-definedness certificate 25 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 26 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 27 reuses litex_domain_fact_2
+  -- Litex well-definedness certificate 28 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 29 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 30 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 31 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 32 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 33 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 34 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 35 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 36 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 37 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 38 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 39 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 40 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 41 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 42 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 43 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 44 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 45 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 46 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 47 reuses well_defined_fact_20
+  -- Litex well-definedness certificate 48 reuses well_defined_fact_21
+  -- Litex well-definedness certificate 49 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 50 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 51 reuses litex_domain_fact_1
+  -- Litex well-definedness certificate 52 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 53 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 54 reuses litex_domain_fact_2
+  -- Litex well-definedness certificate 55 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 56 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 57 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 58 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 59 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 60 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 61 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 62 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 63 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 64 replayed by generalized helper well_defined_fact_47
+  -- Litex well-definedness certificate 65 reuses well_defined_fact_15
+  -- Litex well-definedness certificate 66 reuses well_defined_fact_16
+  -- Litex well-definedness certificate 67 replayed by generalized helper well_defined_fact_48
+  -- Litex well-definedness certificate 68 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 69 replayed by generalized helper well_defined_fact_49
+  -- Litex well-definedness certificate 70 replayed by generalized helper well_defined_fact_50
+  -- Litex well-definedness certificate 71 replayed by generalized helper well_defined_fact_51
+  -- Litex well-definedness certificate 72 replayed by generalized helper well_defined_fact_52
+  -- Litex well-definedness certificate 73 reuses well_defined_fact_18
+  -- Litex well-definedness certificate 74 reuses well_defined_fact_20
+  -- Litex well-definedness certificate 75 reuses well_defined_fact_21
+  -- Litex well-definedness certificate 76 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 77 reuses litex_param_fact_2
+  -- Litex well-definedness certificate 78 reuses litex_domain_fact_1
+  -- Litex well-definedness certificate 79 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 80 reuses litex_param_fact_3
+  -- Litex well-definedness certificate 81 reuses litex_domain_fact_2
+  exact (litex_param_fact_1 x litex_domain_fact_1 y litex_domain_fact_2)
+
+-- Litex checked function definition `positive_successor`
+def positive_successor : (x : ℝ) → x > 0 → ℝ := fun (x : ℝ) (litex_domain_fact_1 : x > 0) => by
+  have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_1
+  have litex_function_wd_21_2 : 0 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_3 : -1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_4 : (-1 * x) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_5 : -1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_6 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_7 : 1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_8 : 1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_9 : (x + 1) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have proof_fact_6_1 : (0 : ℝ) < x := by
+    have proof_fact_7_1 : x > 0 := litex_domain_fact_1
+    exact proof_fact_7_1
+  have litex_function_wd_21_11 : (0 : ℝ) < 1 := by
+    norm_num
+  have proof_fact_6_2 : (0 : ℝ) < (x + 1) := by
+    have proof_fact_8_1 : (0 : ℝ) < x := by
+      have proof_fact_9_1 : x > 0 := litex_domain_fact_1
+      exact proof_fact_9_1
+    have proof_fact_8_2 : (0 : ℝ) < 1 := by
+      norm_num
+    have proof_fact_8_3 : (0 : ℝ) < (x + 1) := by
+      linarith only [proof_fact_8_1, proof_fact_8_2]
+    exact proof_fact_8_3
+  have proof_fact_6_3 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_10_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_11_1 : (0 : ℝ) < x := by
+        have proof_fact_12_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_12_1
+      have proof_fact_11_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_11_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_11_1, proof_fact_11_2]
+      exact proof_fact_11_3
+    simpa using proof_fact_10_1
+  -- Litex well-definedness certificate 14 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 15 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 16 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 17 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 18 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 19 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 20 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 21 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 22 reuses litex_function_wd_21_7
+  -- Litex well-definedness certificate 23 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 24 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 25 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 26 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 27 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 28 reuses litex_function_wd_21_6
+  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_13_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_14_1 : (0 : ℝ) < x := by
+        have proof_fact_15_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_15_1
+      have proof_fact_14_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_14_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_14_1, proof_fact_14_2]
+      exact proof_fact_14_3
+    simpa using proof_fact_13_1
+  exact (x + 1)
+
+-- Litex fact f185
+theorem fact185 : positive_successor ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
+  intro x litex_domain_fact_1
+  have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_1
+  have litex_function_wd_21_2 : 0 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_3 : -1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_4 : (-1 * x) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_5 : -1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_6 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_7 : 1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_8 : 1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_9 : (x + 1) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have proof_fact_6_1 : (0 : ℝ) < x := by
+    have proof_fact_7_1 : x > 0 := litex_domain_fact_1
+    exact proof_fact_7_1
+  have litex_function_wd_21_11 : (0 : ℝ) < 1 := by
+    norm_num
+  have proof_fact_6_2 : (0 : ℝ) < (x + 1) := by
+    have proof_fact_8_1 : (0 : ℝ) < x := by
+      have proof_fact_9_1 : x > 0 := litex_domain_fact_1
+      exact proof_fact_9_1
+    have proof_fact_8_2 : (0 : ℝ) < 1 := by
+      norm_num
+    have proof_fact_8_3 : (0 : ℝ) < (x + 1) := by
+      linarith only [proof_fact_8_1, proof_fact_8_2]
+    exact proof_fact_8_3
+  have proof_fact_6_3 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_10_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_11_1 : (0 : ℝ) < x := by
+        have proof_fact_12_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_12_1
+      have proof_fact_11_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_11_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_11_1, proof_fact_11_2]
+      exact proof_fact_11_3
+    simpa using proof_fact_10_1
+  -- Litex well-definedness certificate 14 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 15 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 16 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 17 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 18 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 19 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 20 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 21 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 22 reuses litex_function_wd_21_7
+  -- Litex well-definedness certificate 23 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 24 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 25 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 26 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 27 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 28 reuses litex_function_wd_21_6
+  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_13_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_14_1 : (0 : ℝ) < x := by
+        have proof_fact_15_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_15_1
+      have proof_fact_14_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_14_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_14_1, proof_fact_14_2]
+      exact proof_fact_14_3
+    simpa using proof_fact_13_1
+  simpa only [positive_successor] using litex_function_return_check_21
+
+-- Litex checked defining equality: #21#positive_successor = fn (#22#x R: #22#x > 0) R+ {#22#x + 1}
+-- Litex fact f186
+theorem fact186 : positive_successor = (fun (x : ℝ) (litex_domain_fact_1 : x > 0) => by
+  have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_1
+  have litex_function_wd_21_2 : 0 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_3 : -1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_4 : (-1 * x) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_5 : -1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_6 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_7 : 1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  have litex_function_wd_21_8 : 1 ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have litex_function_wd_21_9 : (x + 1) ∈ Litex.StandardSets.R := by
+    change True
+    trivial
+  have proof_fact_6_1 : (0 : ℝ) < x := by
+    have proof_fact_7_1 : x > 0 := litex_domain_fact_1
+    exact proof_fact_7_1
+  have litex_function_wd_21_11 : (0 : ℝ) < 1 := by
+    norm_num
+  have proof_fact_6_2 : (0 : ℝ) < (x + 1) := by
+    have proof_fact_8_1 : (0 : ℝ) < x := by
+      have proof_fact_9_1 : x > 0 := litex_domain_fact_1
+      exact proof_fact_9_1
+    have proof_fact_8_2 : (0 : ℝ) < 1 := by
+      norm_num
+    have proof_fact_8_3 : (0 : ℝ) < (x + 1) := by
+      linarith only [proof_fact_8_1, proof_fact_8_2]
+    exact proof_fact_8_3
+  have proof_fact_6_3 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_10_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_11_1 : (0 : ℝ) < x := by
+        have proof_fact_12_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_12_1
+      have proof_fact_11_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_11_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_11_1, proof_fact_11_2]
+      exact proof_fact_11_3
+    simpa using proof_fact_10_1
+  -- Litex well-definedness certificate 14 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 15 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 16 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 17 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 18 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 19 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 20 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 21 reuses litex_function_wd_21_6
+  -- Litex well-definedness certificate 22 reuses litex_function_wd_21_7
+  -- Litex well-definedness certificate 23 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 24 reuses litex_function_wd_21_2
+  -- Litex well-definedness certificate 25 reuses litex_function_wd_21_3
+  -- Litex well-definedness certificate 26 reuses litex_function_wd_21_4
+  -- Litex well-definedness certificate 27 reuses litex_function_wd_21_5
+  -- Litex well-definedness certificate 28 reuses litex_function_wd_21_6
+  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+    have proof_fact_13_1 : (0 : ℝ) < (x + 1) := by
+      have proof_fact_14_1 : (0 : ℝ) < x := by
+        have proof_fact_15_1 : x > 0 := litex_domain_fact_1
+        exact proof_fact_15_1
+      have proof_fact_14_2 : (0 : ℝ) < 1 := by
+        norm_num
+      have proof_fact_14_3 : (0 : ℝ) < (x + 1) := by
+        linarith only [proof_fact_14_1, proof_fact_14_2]
+      exact proof_fact_14_3
+    simpa using proof_fact_13_1
+  exact (x + 1)) := by
+  rfl
+
+-- Litex well-definedness certificate 1 (forall type witness)
+theorem well_defined_fact_53 : -1 ∈ Litex.StandardSets.C := by
+  change True
+  trivial
+
+-- Litex fact f205
+theorem fact205 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x > 0), (positive_successor x litex_domain_fact_1) ∈ Litex.StandardSets.RPos := by
+  intro x litex_param_fact_1 litex_domain_fact_1
+  -- Litex well-definedness certificate 1 reuses well_defined_fact_53
+  have well_defined_fact_2 : (x : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 3 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 4 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 5 reuses litex_domain_fact_1
+  -- Litex well-definedness certificate 6 reuses well_defined_fact_53
+  -- Litex well-definedness certificate 7 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 8 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 9 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 10 reuses litex_domain_fact_1
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_53
+  -- Litex well-definedness certificate 12 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 13 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 14 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 15 reuses litex_domain_fact_1
+  have proof_fact_16_1 : positive_successor ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
+    exact fact185
+  exact (proof_fact_16_1 x litex_domain_fact_1)
 
 end
 ```
@@ -4336,7 +5877,7 @@ have boundary_complex_one C = 1
 import Mathlib
 
 -- Litex-to-Lean status: incomplete
--- Omitted statements: 11
+-- Omitted statements: 7
 
 noncomputable section
 
@@ -4356,49 +5897,123 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex-to-Lean omitted statement 1 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:4.
 -- Statement: forall #0#n N: #0#n + 1 $in N
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "N: a + b from a in N and b in N" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "N: a + b from a in N and b in N" } on `#0#n + 1 $in N`
 
 -- Litex-to-Lean omitted statement 2 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:7.
 -- Statement: forall #1#n N: #1#n + 1 $in Z
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Z" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Z" } on `#1#n + 1 $in Z`
 
--- Litex-to-Lean omitted statement 3 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:10.
--- Statement: forall #2#z Z: #2#z - 1 $in Z
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N+ and exponent in N" }
+-- Litex well-definedness certificate 3 (forall type witness)
+theorem well_defined_fact_1 : 1 ∈ Litex.StandardSets.C := by
+  change True
+  trivial
+
+-- Litex fact f39
+theorem fact39 : ∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), (z - 1) ∈ Litex.StandardSets.Z := by
+  intro z litex_param_fact_1
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_1
+  have well_defined_fact_2 : (z : ℂ) ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  -- Litex well-definedness certificate 3 reuses well_defined_fact_1
+  -- Litex well-definedness certificate 4 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 5 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 6 reuses well_defined_fact_1
+  -- Litex well-definedness certificate 7 reuses litex_param_fact_1
+  -- Litex well-definedness certificate 8 reuses well_defined_fact_2
+  -- Litex well-definedness certificate 9 reuses well_defined_fact_1
+  have proof_fact_1_1 : z ∈ Litex.StandardSets.Z := by
+    exact litex_param_fact_1
+  have proof_fact_1_2 : 1 ∈ Litex.StandardSets.Z := by
+    change True
+    trivial
+  change True
+  trivial
 
 -- Litex-to-Lean omitted statement 4 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:13.
 -- Statement: forall #3#z Z: #3#z / 2 $in Q
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" } on `#3#z / 2 $in Q`
 
 -- Litex-to-Lean omitted statement 5 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:16.
 -- Statement: forall #4#z Z, #5#q Q: #4#z + #5#q $in Q
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" } on `#4#z + #5#q $in Q`
 
 -- Litex-to-Lean omitted statement 6 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:19.
 -- Statement: forall #6#z Z, #7#q Q: #6#z / 2 + #7#q $in Q
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "numeric-carrier strategy: structural closure in Q" } on `#6#z / 2 + #7#q $in Q`
 
 -- Litex-to-Lean omitted statement 7 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:22.
 -- Statement: forall #8#n N+: #8#n - 1 $in N
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "N: n - 1 from n in N+" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "N: n - 1 from n in N+" } on `#8#n - 1 $in N`
 
 -- Litex-to-Lean omitted statement 8 during IR construction at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:25.
 -- Statement: have #10#boundary_natural_two N = 2
 -- Reason: have-object equality inferred consequences are not represented by this Litex-to-Lean tranche
 
--- Litex-to-Lean omitted statement 9 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:26.
--- Statement: have #12#boundary_integer_two Z = 2
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "number in Z" }
+def boundary_integer_two : ℤ := 2
 
--- Litex-to-Lean omitted statement 10 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:27.
--- Statement: have #14#boundary_rational_half Q = 1 / 2
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "number in Q" }
+-- Litex fact f91
+theorem fact91 : boundary_integer_two ∈ Litex.StandardSets.Z := by
+  have proof_fact_2_1 : 2 ∈ Litex.StandardSets.Z := by
+    change True
+    trivial
+  simpa only [boundary_integer_two] using proof_fact_2_1
 
--- Litex-to-Lean omitted statement 11 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#carrier_boundaries:28.
--- Statement: have #16#boundary_complex_one C = 1
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "number in C" }
+-- Litex fact f92
+theorem fact92 : boundary_integer_two = 2 := by
+  rfl
+
+def boundary_rational_half : ℚ := (1 / 2)
+
+-- Litex fact f94
+theorem fact94 : boundary_rational_half ∈ Litex.StandardSets.Q := by
+  have proof_fact_3_1 : (1 / 2) ∈ Litex.StandardSets.Q := by
+    change True
+    trivial
+  simpa only [boundary_rational_half] using proof_fact_3_1
+
+-- Litex fact f95
+theorem fact95 : boundary_rational_half = (1 / 2) := by
+  rfl
+
+def boundary_complex_one : ℂ := 1
+
+-- Litex fact f97
+theorem fact97 : boundary_complex_one ∈ Litex.StandardSets.C := by
+  have proof_fact_4_1 : 1 ∈ Litex.StandardSets.C := by
+    change True
+    trivial
+  simpa only [boundary_complex_one] using proof_fact_4_1
+
+-- Litex fact f98
+theorem fact98 : boundary_complex_one = 1 := by
+  rfl
 
 end
 ```
@@ -4443,17 +6058,41 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex well-definedness certificate 1
 theorem well_defined_fact_1 : (2 : ℂ) ≠ 0 := by
   norm_num
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_2 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_2 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 3
-theorem well_defined_fact_3 : 2 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_3 : 2 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -4462,12 +6101,12 @@ theorem well_defined_fact_4 : (3 : ℂ) ≠ 0 := by
   norm_num
 
 -- Litex well-definedness certificate 5
-theorem well_defined_fact_5 : (1 / 2) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_5 : (1 / 2) ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 6
-theorem well_defined_fact_6 : 3 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_6 : 3 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -4476,12 +6115,12 @@ theorem well_defined_fact_7 : (4 : ℂ) ≠ 0 := by
   norm_num
 
 -- Litex well-definedness certificate 8
-theorem well_defined_fact_8 : ((1 / 2) / 3) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_8 : ((1 / 2) / 3) ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 9
-theorem well_defined_fact_9 : 4 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_9 : 4 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -4490,7 +6129,7 @@ theorem well_defined_fact_10 : (24 : ℂ) ≠ 0 := by
   norm_num
 
 -- Litex well-definedness certificate 11
-theorem well_defined_fact_11 : 24 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_11 : 24 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
@@ -4502,34 +6141,34 @@ theorem fact1 : (((1 / 2) / 3) / 4 : ℚ) = (1 / 24) := by
 
 -- Litex-to-Lean omitted statement 2 during Lean emission at examples/09_compile_to_lean/compile_to_lean_examples.md#partial_boundary:5.
 -- Statement: sin(0) = 0
--- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "trigonometry layer 0: canonical expansion from core values at zero" }
+-- Reason: Litex-to-Lean has no checked backend for proof rule OtherUnsupported { name: "trigonometry layer 0: canonical expansion from core values at zero" } on `sin(0) = 0`
 
 -- Litex well-definedness certificate 1
 theorem well_defined_fact_12 : (3 : ℂ) ≠ 0 := by
   norm_num
 
 -- Litex well-definedness certificate 2
-theorem well_defined_fact_13 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_13 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 3
-theorem well_defined_fact_14 : 3 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_14 : 3 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 4
-theorem well_defined_fact_15 : 2 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_15 : 2 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 5
-theorem well_defined_fact_16 : (1 / 3) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_16 : (1 / 3) ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 6
-theorem well_defined_fact_17 : (2 / 3) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_17 : (2 / 3) ∈ Litex.StandardSets.C := by
   change True
   trivial
 

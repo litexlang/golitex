@@ -1139,7 +1139,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::Exist(ref p)) => match given_arg {
                 Obj::Atom(AtomObj::Exist(_))
-                    if self.arg_match_binding_is_active(ParamObjType::Exist, &p.name) =>
+                    if self.arg_match_binding_is_active(ParamObjType::Exist, p.name()) =>
                 {
                     let mut m = HashMap::new();
                     m.insert(arg_match_binding_key(&p.symbol), given_arg.clone());
@@ -1183,7 +1183,7 @@ impl Runtime {
                 Ok(Some(HashMap::new()))
             }
             Obj::Atom(AtomObj::TupleIndex(ref p)) => {
-                if !self.arg_match_binding_is_active(ParamObjType::TupleIndex, &p.name) {
+                if !self.arg_match_binding_is_active(ParamObjType::TupleIndex, p.name()) {
                     return if p.to_string() == given_arg.to_string() {
                         Ok(Some(HashMap::new()))
                     } else {
@@ -1195,7 +1195,7 @@ impl Runtime {
                 Ok(Some(map))
             }
             Obj::Atom(AtomObj::CartIndex(ref p)) => {
-                if !self.arg_match_binding_is_active(ParamObjType::CartIndex, &p.name) {
+                if !self.arg_match_binding_is_active(ParamObjType::CartIndex, p.name()) {
                     return if p.to_string() == given_arg.to_string() {
                         Ok(Some(HashMap::new()))
                     } else {
@@ -1214,7 +1214,7 @@ impl Runtime {
         id_known: &ForallFreeParamObj,
         given_arg: &Obj,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !self.arg_match_binding_is_active(ParamObjType::Forall, &id_known.name) {
+        if !self.arg_match_binding_is_active(ParamObjType::Forall, id_known.name()) {
             return if id_known.to_string() == given_arg.to_string() {
                 Ok(Some(HashMap::new()))
             } else {
@@ -1941,7 +1941,7 @@ impl Runtime {
         left: &SetBuilder,
         given: &SetBuilder,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if left.param != given.param {
+        if left.param_name() != given.param_name() {
             return Ok(None);
         }
         let Some(mut merged) = self.match_arg_in_atomic_fact_in_known_forall_with_given_arg(
@@ -2583,7 +2583,7 @@ impl Runtime {
         let FnObjHead::Forall(forall_param) = fn_obj.head.as_ref() else {
             return Ok(None);
         };
-        if !self.arg_match_binding_is_active(ParamObjType::Forall, &forall_param.name) {
+        if !self.arg_match_binding_is_active(ParamObjType::Forall, forall_param.name()) {
             return Ok(None);
         }
         if !Self::fn_obj_applies_to_exact_anonymous_fn_params(fn_obj, anonymous_fn_body) {

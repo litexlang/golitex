@@ -6,30 +6,35 @@
 
 use crate::common::fact_id::FactId;
 use crate::fact::{AtomicFact, Fact};
-use crate::obj::Obj;
+use crate::obj::{Obj, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
-use crate::result::{WellDefinednessCertificateId, WellDefinednessRequirementRole};
+use crate::result::{
+    WellDefinednessCertificateId, WellDefinednessObjectOccurrenceId, WellDefinednessRequirementRole,
+};
 use std::fmt;
 
 mod builtin_rule;
 mod carrier;
 mod function;
+mod named_theorem;
 mod object;
 mod registered_rule;
 
 pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanDivNotEqualZeroIr,
-    LitexToLeanNonzeroExpressionOrientationIr, LitexToLeanSetBuiltinRuleIr,
-    LitexToLeanSetRelationDualityBuiltinRuleIr,
+    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
 pub use carrier::LitexToLeanCarrierIr;
 pub use function::{
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
 };
+pub use named_theorem::{LitexToLeanNamedTheoremIr, LitexToLeanNamedTheoremProofStepIr};
 pub use object::{
-    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
-    LitexToLeanObjectIr, LitexToLeanStandardSetIr,
+    LitexToLeanAnonymousFunctionIr, LitexToLeanBuiltinObjectOperatorIr,
+    LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr, LitexToLeanObjectIr,
+    LitexToLeanSetBuilderIr, LitexToLeanStandardSetIr,
 };
 pub use registered_rule::{LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr};
 
@@ -41,6 +46,7 @@ pub enum LitexToLeanStatementIr {
     HaveObjEqual(LitexToLeanHaveObjectEqualIr),
     HaveFnEqual(LitexToLeanHaveFunctionEqualIr),
     HaveExistentialWitness(LitexToLeanHaveExistentialWitnessIr),
+    NamedTheorem(LitexToLeanNamedTheoremIr),
     Proof(LitexToLeanProofStatementIr),
     Trust(LitexToLeanTrustIr),
     Fact(LitexToLeanFactStatementIr),
@@ -229,6 +235,8 @@ pub struct LitexToLeanProjectedForallIr {
 #[derive(Clone, Debug, Default)]
 pub struct LitexToLeanWellDefinednessCertificateIr {
     pub facts: Vec<LitexToLeanWellDefinednessFactIr>,
+    pub objects: Vec<LitexToLeanWellDefinednessObjectIr>,
+    pub target_requirements: Vec<LitexToLeanWellDefinednessTargetRequirementIr>,
 }
 
 #[derive(Clone, Debug)]
@@ -239,6 +247,51 @@ pub struct LitexToLeanWellDefinednessFactIr {
     /// retarget a verifier certificate to another proposition.
     pub expected_proposition: Fact,
     pub fact: LitexToLeanFactIr,
+}
+
+#[derive(Clone)]
+pub struct LitexToLeanWellDefinednessObjectIr {
+    pub occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub source_object: Obj,
+    pub intrinsic_result_carrier: Option<LitexToLeanCarrierIr>,
+    pub fact_ids: Vec<WellDefinednessCertificateId>,
+}
+
+impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LitexToLeanWellDefinednessObjectIr")
+            .field("occurrence_id", &self.occurrence_id)
+            .field("source_object", &self.source_object.to_string())
+            .field("intrinsic_result_carrier", &self.intrinsic_result_carrier)
+            .field("fact_ids", &self.fact_ids)
+            .finish()
+    }
+}
+
+#[derive(Clone)]
+pub struct LitexToLeanWellDefinednessTargetRequirementIr {
+    pub object_occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub source_object: Obj,
+    pub role: WellDefinednessRequirementRole,
+    pub certificate_id: WellDefinednessCertificateId,
+    pub expected_proposition: Fact,
+}
+
+impl fmt::Debug for LitexToLeanWellDefinednessTargetRequirementIr {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LitexToLeanWellDefinednessTargetRequirementIr")
+            .field("object_occurrence_id", &self.object_occurrence_id)
+            .field("source_object", &self.source_object.to_string())
+            .field("role", &self.role)
+            .field("certificate_id", &self.certificate_id)
+            .field(
+                "expected_proposition",
+                &self.expected_proposition.to_string(),
+            )
+            .finish()
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -376,6 +429,38 @@ pub enum LitexToLeanProofRuleIr {
     },
     RealSetNonempty,
     StandardSetNonempty,
+    /// Literal set-builder membership from the base membership and each
+    /// instantiated defining fact, in source order.
+    SetBuilderMembership {
+        set_builder: LitexToLeanObjectIr,
+        expected_target: Fact,
+        expected_premises: Vec<Fact>,
+    },
+    /// Extensional function-space membership. The sole semantic premise is
+    /// the verifier-checked pointwise `forall` in `expected_pointwise`.
+    FunctionSetMembership {
+        element: LitexToLeanObjectIr,
+        function_set: LitexToLeanObjectIr,
+        expected_target: Fact,
+        expected_pointwise: Fact,
+    },
+    /// Membership in a refined standard numeric set, reconstructed from the
+    /// native base carrier and its defining sign/nonzero predicate.
+    RefinedNumericMembership {
+        target_set: StandardSet,
+        expected_target: Fact,
+        expected_premises: Vec<Fact>,
+    },
+    ClosedNumericComparison {
+        expected_target: Fact,
+    },
+    FunctionApplicationReturnMembership {
+        source_application: LitexToLeanObjectIr,
+        function_set: LitexToLeanObjectIr,
+        typed_return_set: LitexToLeanObjectIr,
+        expected_target: Fact,
+        expected_head_membership: Fact,
+    },
     EqualityRewrite(LitexToLeanEqualityRewriteIr),
     IffRewrite {
         direction: LitexToLeanIffDirectionIr,
@@ -449,6 +534,7 @@ pub enum LitexToLeanProofRuleIr {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LitexToLeanNormalizationKindIr {
     RationalExpressionSimplification,
+    IntegerExpressionSimplification,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -505,6 +591,71 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .finish(),
             LitexToLeanProofRuleIr::RealSetNonempty => f.write_str("RealSetNonempty"),
             LitexToLeanProofRuleIr::StandardSetNonempty => f.write_str("StandardSetNonempty"),
+            LitexToLeanProofRuleIr::SetBuilderMembership {
+                set_builder,
+                expected_target,
+                expected_premises,
+            } => f
+                .debug_struct("SetBuilderMembership")
+                .field("set_builder", set_builder)
+                .field("expected_target", &expected_target.to_string())
+                .field(
+                    "expected_premises",
+                    &expected_premises
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                )
+                .finish(),
+            LitexToLeanProofRuleIr::FunctionSetMembership {
+                element,
+                function_set,
+                expected_target,
+                expected_pointwise,
+            } => f
+                .debug_struct("FunctionSetMembership")
+                .field("element", element)
+                .field("function_set", function_set)
+                .field("expected_target", &expected_target.to_string())
+                .field("expected_pointwise", &expected_pointwise.to_string())
+                .finish(),
+            LitexToLeanProofRuleIr::RefinedNumericMembership {
+                target_set,
+                expected_target,
+                expected_premises,
+            } => f
+                .debug_struct("RefinedNumericMembership")
+                .field("target_set", &target_set.to_string())
+                .field("expected_target", &expected_target.to_string())
+                .field(
+                    "expected_premises",
+                    &expected_premises
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>(),
+                )
+                .finish(),
+            LitexToLeanProofRuleIr::ClosedNumericComparison { expected_target } => f
+                .debug_struct("ClosedNumericComparison")
+                .field("expected_target", &expected_target.to_string())
+                .finish(),
+            LitexToLeanProofRuleIr::FunctionApplicationReturnMembership {
+                source_application,
+                function_set,
+                typed_return_set,
+                expected_target,
+                expected_head_membership,
+            } => f
+                .debug_struct("FunctionApplicationReturnMembership")
+                .field("source_application", source_application)
+                .field("function_set", function_set)
+                .field("typed_return_set", typed_return_set)
+                .field("expected_target", &expected_target.to_string())
+                .field(
+                    "expected_head_membership",
+                    &expected_head_membership.to_string(),
+                )
+                .finish(),
             LitexToLeanProofRuleIr::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
             }
@@ -691,6 +842,19 @@ impl LitexToLeanProofRuleIr {
         }
         if is_closed_universal_native_membership(goal) {
             return LitexToLeanProofRuleIr::ClosedUniversalNativeMembership;
+        }
+        if is_checked_closed_integer_remainder_equality(goal) {
+            return LitexToLeanProofRuleIr::Normalization {
+                kind: LitexToLeanNormalizationKindIr::IntegerExpressionSimplification,
+            };
+        }
+        if matches!(
+            goal,
+            Fact::AtomicFact(crate::fact::AtomicFact::EqualFact(equality))
+                if crate::obj::obj_equality_key(&equality.left)
+                    == crate::obj::obj_equality_key(&equality.right)
+        ) {
+            return LitexToLeanProofRuleIr::ObjectReflexivity;
         }
         if label == "injectivity of native exp"
             && matches!(
@@ -901,6 +1065,59 @@ pub(crate) fn is_closed_numeric_relation(goal: &Fact) -> bool {
         }
         crate::fact::AtomicFact::NotGreaterEqualFact(fact) => {
             is_closed_rational_obj(&fact.left) && is_closed_rational_obj(&fact.right)
+        }
+        _ => false,
+    }
+}
+
+/// Validate the small closed-integer fragment used for checked `%`
+/// computation. At least one remainder node must occur, every literal is an
+/// integer, every divisor evaluates to a nonzero integer, and Litex's own
+/// evaluator must produce equal normalized results on both sides.
+pub(crate) fn is_checked_closed_integer_remainder_equality(goal: &Fact) -> bool {
+    let Fact::AtomicFact(crate::fact::AtomicFact::EqualFact(equality)) = goal else {
+        return false;
+    };
+    let mut contains_remainder = false;
+    if !is_closed_integer_obj_with_remainder(&equality.left, &mut contains_remainder)
+        || !is_closed_integer_obj_with_remainder(&equality.right, &mut contains_remainder)
+        || !contains_remainder
+    {
+        return false;
+    }
+    match (
+        equality.left.evaluate_to_normalized_decimal_number(),
+        equality.right.evaluate_to_normalized_decimal_number(),
+    ) {
+        (Some(left), Some(right)) => left.normalized_value == right.normalized_value,
+        _ => false,
+    }
+}
+
+fn is_closed_integer_obj_with_remainder(obj: &Obj, contains_remainder: &mut bool) -> bool {
+    match obj {
+        Obj::Number(number) => !number.normalized_value.contains('.'),
+        Obj::Add(value) => {
+            is_closed_integer_obj_with_remainder(value.left.as_ref(), contains_remainder)
+                && is_closed_integer_obj_with_remainder(value.right.as_ref(), contains_remainder)
+        }
+        Obj::Sub(value) => {
+            is_closed_integer_obj_with_remainder(value.left.as_ref(), contains_remainder)
+                && is_closed_integer_obj_with_remainder(value.right.as_ref(), contains_remainder)
+        }
+        Obj::Mul(value) => {
+            is_closed_integer_obj_with_remainder(value.left.as_ref(), contains_remainder)
+                && is_closed_integer_obj_with_remainder(value.right.as_ref(), contains_remainder)
+        }
+        Obj::Mod(value) => {
+            *contains_remainder = true;
+            let divisor_is_nonzero = value
+                .right
+                .evaluate_to_normalized_decimal_number()
+                .is_some_and(|number| number.normalized_value != "0");
+            divisor_is_nonzero
+                && is_closed_integer_obj_with_remainder(value.left.as_ref(), contains_remainder)
+                && is_closed_integer_obj_with_remainder(value.right.as_ref(), contains_remainder)
         }
         _ => false,
     }

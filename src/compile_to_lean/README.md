@@ -422,8 +422,9 @@ their own proof rules.
 Known-forall evidence retains each parameter name, structural argument object,
 parameter constraint, native target carrier, and recursively verified
 requirement. A constraint such as `z Z` is emitted as the bounded binder
-`z ∈ (Set.univ : Set ℤ)`: Lean elaborates `z` at type `ℤ`, while the membership
-remains a separate proposition and proof argument. The runtime also
+`z ∈ Litex.StandardSets.Z`: Lean unfolds that transparent alias to
+`Set.univ : Set ℤ`, elaborates `z` at type `ℤ`, and keeps the membership as a
+separate proposition and proof argument. The runtime also
 instantiates the cited forall's selected conclusion with the recorded objects.
 Consequently, `KnownForallInstantiation` proves that direct instance rather
 than silently claiming the final goal. If the verifier matched objects that
@@ -444,8 +445,9 @@ Typed consequences inferred in that same temporary environment are stored in
 `ForallIntroduction.inferred_premises` with their original `FactId`s before the
 scope closes. The first checked instance is `a ∈ R+ -> 0 < a`:
 `PositiveRealMembership` cites the binder membership, validates the exact
-object on both sides, and uses the definitional membership predicate of
-`{r : ℝ | 0 < r}`. No private real-value projection is required.
+object on both sides, and uses the definitional membership predicate of the
+transparent `Litex.StandardSets.RPos` alias. No private real-value projection
+is required.
 
 ## Lean surface
 
@@ -472,6 +474,26 @@ instance : LitexObject ℂ := ⟨True.intro⟩
 instance {α : Type u} [LitexObject α] : LitexObject (Set α) :=
   ⟨True.intro⟩
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- generated declarations
 
 end
@@ -482,14 +504,17 @@ end chapter01_introduction
 Generated proposition declarations use Lean's `Prop` directly; no fact wrapper
 or alias is emitted. The object marker records the source invariant that
 supported values are Litex objects; it is not a universal value wrapper.
-Standard domains use Mathlib's native carriers and are rendered inline as
-`Set.univ`. A numeral remains bare,
-as in `2 ∈ (Set.univ : Set ℝ)` or the unconstrained reflexivity `2 = 2`.
-Compact standard subsets lower to native predicate sets on the same carriers:
-`R+` becomes `{r : ℝ | 0 < r}`, `R-` becomes `{r : ℝ | r < 0}`, and
-`R*` becomes `{r : ℝ | r ≠ 0}`. The corresponding natural, integer,
-rational, and complex variants follow the same rule; `Z+` is Litex's alias of
-`N+`, while the unordered `C+` spelling remains invalid.
+Every generated file declares the complete current standard-set family once
+under `Litex.StandardSets`. Standard-domain objects then render as transparent
+names such as `Litex.StandardSets.R`, whose definition is Mathlib's native
+`Set.univ : Set ℝ`. A numeral remains bare, as in
+`2 ∈ Litex.StandardSets.R`, or in the unconstrained reflexivity `2 = 2`.
+Compact standard subsets use the same native predicate sets behind stable
+names: `R+`, `R-`, and `R*` become `RPos`, `RNeg`, and `RStar`. The
+corresponding natural, integer, rational, and complex variants follow the same
+rule; `Z+` is Litex's alias of `N+`, while the unordered `C+` spelling remains
+invalid. These declarations are `abbrev`s, not typeclass instances or
+subtypes, so membership stays an ordinary reducible proposition.
 Closed numeric membership and nonmembership facts over these compact sets use
 a fact-level carrier recorded by the verifier-to-IR bridge and emit a checked
 `norm_num` proof. This carrier expectation applies to the whole judgment; it
@@ -549,6 +574,10 @@ The current lowering is intentionally small:
 - stored proved facts become `theorem fact<FactId>`; for example, source fact
   `f4` becomes `fact4`; independently covered `forall` clauses become their
   exact runtime-stored projected theorems rather than one synthetic fact;
+- a verified `thm name` becomes `theorem name`; its complete forall proof keeps
+  the source parameter/domain scope and ordered proof steps, and a primary
+  stored `FactId` resolves directly to `name` rather than producing a second
+  synonymous `factN` declaration;
 - explicit-value `have x T = e` becomes a checked `def` at file scope or a
   checked `let` inside a proof, followed by its stored type and equality facts;
 - `by cases` proves its coverage, opens one scoped branch per recorded local
@@ -596,17 +625,22 @@ The current lowering is intentionally small:
   function-application layers, and the simple set constructors
   `union`, `intersect`, `set_minus`, `big_union`, `big_intersect`,
   `power_set`, and list sets;
-- binder-owning `SetBuilder` remains an explicit IR-construction boundary.
+- binder-owning `SetBuilder` retains its local symbol, base set, carrier, and
+  ordered predicates, then lowers to one native predicate set;
+- anonymous functions retain their own parameter scope and lower to native
+  lambdas; membership in a refined function set replays the checked pointwise
+  `forall` proof instead of trusting signature equality.
 
-The native function ABI preserves a source `fn(...)` as `Set.univ` over a
-dependent Lean function type. Within each Litex application layer all value
-arguments precede the layer's domain-proof arguments; a nested returned
-function begins the next layer. This target currying does not make additional
-Litex spellings legal. The verifier freezes every successful WD proof in a
-statement-local certificate. Target-consumed requirements are inserted as
-function arguments, while source-only obligations are still emitted as checked
-audit facts. The emitter never substitutes `by assumption` or reruns proof
-search for a missing certificate.
+The native function ABI preserves a source `fn(...)` as a set over a dependent
+Lean function carrier. A universal return set uses `Set.univ`; a refined return
+set uses a set predicate requiring pointwise membership. Within each Litex
+application layer all value arguments precede the layer's domain-proof
+arguments; a nested returned function begins the next layer. This target
+currying does not make additional Litex spellings legal. The verifier freezes
+every successful WD proof in a statement-local certificate. Target-consumed
+requirements are inserted as function arguments, while source-only obligations
+are still emitted as checked audit facts. The emitter never substitutes
+`by assumption` or reruns proof search for a missing certificate.
 
 Certificate replay follows Litex's verification order. The complete WD result
 for every relevant object occurrence is retained before the containing fact is
@@ -616,14 +650,15 @@ function signature is generalized in its helper, while a closed witness may
 be emitted globally. Failed function-space candidates roll back their trial
 evidence, and an evidence-free boolean object-cache hit cannot certify output.
 
-The first named-definition slice lowers a checked numeric-return
+The checked named-definition slice lowers a checked numeric-return
 `have fn ... = ...` to a native dependent `def`, its membership theorem, and
 the exact stored defining equality. Later evaluation is accepted only from a
 structured verifier result that names that defining `FactId`, the application
 side, the reduced side, and the checked orientation; Lean then checks the
-reduction with `simpa only [name]`. Standalone anonymous-function values,
-refined return sets such as `R+`, and richer function-definition forms remain
-fail-closed boundaries until their output-membership evidence is explicit.
+reduction with `simpa only [name]`. For a refined return set such as `R+`, the
+definition replays its checked body-membership proof under the same binders and
+exports it as the function's pointwise membership theorem. Other richer
+function-definition forms and untyped proof routes remain fail-closed.
 
 Unsupported proof rules, propositions, objects, parameter types, composite
 proofs, and inference origins stop strict compilation with an error. Report
@@ -673,10 +708,14 @@ current explicit function-object ABI boundary.
 
 [`examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit`](../../examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit)
 is the native function and WD-certificate tracer. It covers closed and local
-restricted applications, source-only division checks, flat versus nested
-application layers, a named reciprocal definition, and later evaluation from
-the exact retained defining equality. Its commented cases record wrong-layer,
-signature-switching, refined-return, and anonymous-function boundaries.
+restricted applications, refined `R*`/`R+` binder proofs, source-only division
+checks, flat versus nested application layers, native `SetBuilder` predicates,
+anonymous lambdas, flat and nested refined output membership, a named
+reciprocal definition, and a named refined-return definition. Object
+occurrences retain all audited WD facts, while target-consumed function
+requirements point to exact certificate IDs. Its commented cases record the
+remaining wrong-layer, signature-switching, unsupported-constructor, and
+untyped-proof boundaries.
 
 [`examples/05_compiler_interop/compile_to_lean_builtin_rule_ir.lit`](../../examples/05_compiler_interop/compile_to_lean_builtin_rule_ir.lit)
 is the builtin-rule tracer. It follows one quotient-nonzero proof from matched
@@ -723,13 +762,15 @@ rule.
 
 [`examples/05_compiler_interop/compile_to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_numeric_obj_abi.lit)
 is the numeric-object semantic tracer. It fixes source-side membership facts,
-uniform object spellings, and the guarded natural-subtraction boundary.
+uniform object spellings, structured integer closure, the intrinsic `ℤ`
+contract and closed computation of `%`, refined `Z*` divisor evidence, and the
+guarded natural-subtraction boundary.
 
 [`examples/05_compiler_interop/compile_to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_set_obj_abi.lit)
 is the implemented structural object tracer. It sends `union`, `intersect`,
-and `set_minus` through `LitexToLeanObjectIr` to native `Set α` operations, while a
-focused negative regression requires `SetBuilder` to fail during IR
-construction.
+and `set_minus` through `LitexToLeanObjectIr` to native `Set α` operations.
+Binder-owned predicate sets are covered by the function/WD tracer and its
+focused native-`SetBuilder` regression.
 
 [`examples/05_compiler_interop/compile_to_lean_statement_scopes.lit`](../../examples/05_compiler_interop/compile_to_lean_statement_scopes.lit)
 is the statement-scope tracer. It covers explicit-value `have`, local proof
@@ -766,6 +807,7 @@ target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_builtin_rules_20.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_recursive_strategy_ir.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_obj_abi.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_statement_scopes.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_choice_have.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_exist_have.lit
@@ -783,6 +825,9 @@ LITEX_LAKE=/optional/absolute/path/to/lake \
 LITEX_LEAN_PROJECT=/path/to/mathlib-project \
 LITEX_LAKE=/optional/absolute/path/to/lake \
   cargo test --release compile_to_lean_recursive_strategy_ir_compiles_with_lean -- --ignored --nocapture
+LITEX_LEAN_PROJECT=/path/to/mathlib-project \
+LITEX_LAKE=/optional/absolute/path/to/lake \
+  cargo test --release generated_restricted_function_well_definedness_compiles_with_lean -- --ignored --nocapture
 LITEX_LEAN=/absolute/path/to/lean \
   cargo test --release compile_to_lean_set_obj_abi_compiles_with_lean_core -- --ignored --nocapture
 LITEX_LEAN=/absolute/path/to/lean \

@@ -34,6 +34,6 @@ pub use stmt::WitnessStmt;
 pub use strategy_stmt::DefStrategyStmt;
 pub use strategy_stmt::StopStrategyStmt;
 pub use strategy_stmt::UseStrategyStmt;
-pub use struct_stmt::DefStructStmt;
+pub use struct_stmt::{DefStructStmt, StructFieldDef};
 pub use thm_stmt::DefThmKind;
 pub use thm_stmt::DefThmStmt;

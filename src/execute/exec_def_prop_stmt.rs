@@ -43,10 +43,7 @@ impl Runtime {
         for fact in def_prop_stmt.iff_facts.iter() {
             self.verify_well_defined_and_store_without_infer(
                 fact.clone(),
-                InferReason::ByDefinition(ByDefinitionReason::new(
-                    None,
-                    Some(def_prop_stmt.name.clone()),
-                )),
+                InferReason::ByDefinition,
             )
             .map_err(|inner_exec_error| {
                 exec_stmt_error_with_stmt_and_cause(def_prop_stmt.clone().into(), inner_exec_error)

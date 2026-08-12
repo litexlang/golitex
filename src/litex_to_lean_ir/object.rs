@@ -17,10 +17,18 @@ pub enum LitexToLeanObjectIr {
     },
     Constant(LitexToLeanConstantObjectIr),
     StandardSet(LitexToLeanStandardSetIr),
-    /// A Litex function set is `Set.univ` over this native function type.
+    /// A Litex function set is a set over this native function carrier.
+    /// Universal returns use `Set.univ`; refined returns add a pointwise
+    /// membership predicate.
     FunctionSet {
         function: Box<LitexToLeanFunctionTypeIr>,
     },
+    /// A native Lean set comprehension. The binder stays owned by this node;
+    /// its identity must not leak into the surrounding type context.
+    SetBuilder(Box<LitexToLeanSetBuilderIr>),
+    /// A raw native Lean function value. Its output-membership certificate is
+    /// carried by the enclosing factual proof, not packed into a subtype.
+    AnonymousFunction(Box<LitexToLeanAnonymousFunctionIr>),
     /// Exact Litex application layers; target currying must not erase them.
     FunctionApplication(LitexToLeanFunctionApplicationIr),
     BuiltinApp {
@@ -31,6 +39,51 @@ pub enum LitexToLeanObjectIr {
         constructor: LitexToLeanCollectionObjectIr,
         items: Vec<LitexToLeanObjectIr>,
     },
+}
+
+#[derive(Clone)]
+pub struct LitexToLeanSetBuilderIr {
+    pub semantic_key: String,
+    pub symbol_id: SymbolId,
+    pub name: String,
+    pub set: Box<LitexToLeanObjectIr>,
+    pub element_carrier: LitexToLeanCarrierIr,
+    pub facts: Vec<Fact>,
+}
+
+impl PartialEq for LitexToLeanSetBuilderIr {
+    fn eq(&self, other: &Self) -> bool {
+        self.semantic_key == other.semantic_key
+    }
+}
+
+impl Eq for LitexToLeanSetBuilderIr {}
+
+impl std::fmt::Debug for LitexToLeanSetBuilderIr {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("LitexToLeanSetBuilderIr")
+            .field("semantic_key", &self.semantic_key)
+            .field("symbol_id", &self.symbol_id)
+            .field("name", &self.name)
+            .field("set", &self.set)
+            .field("element_carrier", &self.element_carrier)
+            .field(
+                "facts",
+                &self
+                    .facts
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>(),
+            )
+            .finish()
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct LitexToLeanAnonymousFunctionIr {
+    pub function: LitexToLeanFunctionTypeIr,
+    pub body: Box<LitexToLeanObjectIr>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -100,6 +153,28 @@ pub enum LitexToLeanCollectionObjectIr {
     ListSet,
 }
 
+impl LitexToLeanBuiltinObjectOperatorIr {
+    /// Carrier fixed by the source operator itself rather than by a target
+    /// judgment. Litex remainder is always integer-valued.
+    pub(crate) fn intrinsic_result_carrier(self) -> Option<LitexToLeanCarrierIr> {
+        match self {
+            Self::Mod => Some(LitexToLeanCarrierIr::Integer),
+            _ => None,
+        }
+    }
+
+    /// Per-argument source carrier fixed by the operator contract.
+    pub(crate) fn intrinsic_argument_carrier(
+        self,
+        argument_index: usize,
+    ) -> Option<LitexToLeanCarrierIr> {
+        match (self, argument_index) {
+            (Self::Mod, 0 | 1) => Some(LitexToLeanCarrierIr::Integer),
+            _ => None,
+        }
+    }
+}
+
 impl LitexToLeanObjectIr {
     pub fn lower(obj: &Obj) -> Result<Self, String> {
         match obj {
@@ -120,6 +195,29 @@ impl LitexToLeanObjectIr {
             Obj::FnSet(function_set) => Ok(LitexToLeanObjectIr::FunctionSet {
                 function: Box::new(LitexToLeanFunctionTypeIr::lower(function_set)?),
             }),
+            Obj::SetBuilder(set_builder) => {
+                let set = LitexToLeanObjectIr::lower(set_builder.param_set.as_ref())?;
+                Ok(LitexToLeanObjectIr::SetBuilder(Box::new(
+                    LitexToLeanSetBuilderIr {
+                        semantic_key: obj_equality_key(&set_builder.clone().into()),
+                        symbol_id: set_builder.param_binding.id(),
+                        name: set_builder.param_binding.name().to_string(),
+                        element_carrier: LitexToLeanCarrierIr::for_membership_set(&set),
+                        set: Box::new(set),
+                        facts: set_builder
+                            .facts
+                            .iter()
+                            .map(ExistBodyFact::from_ref_to_cloned_fact)
+                            .collect(),
+                    },
+                )))
+            }
+            Obj::AnonymousFn(function) => Ok(LitexToLeanObjectIr::AnonymousFunction(Box::new(
+                LitexToLeanAnonymousFunctionIr {
+                    function: LitexToLeanFunctionTypeIr::lower_anonymous(function)?,
+                    body: Box::new(LitexToLeanObjectIr::lower(function.equal_to.as_ref())?),
+                },
+            ))),
             Obj::FnObj(application) => lower_function_application(application),
             Obj::Add(value) => binary(
                 LitexToLeanBuiltinObjectOperatorIr::Add,
@@ -251,12 +349,6 @@ impl LitexToLeanObjectIr {
 }
 
 fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr, String> {
-    if matches!(application.head.as_ref(), FnObjHead::AnonymousFnLiteral(_)) {
-        return Err(format!(
-            "Litex-to-Lean Obj IR does not yet support anonymous function application `{}`",
-            application
-        ));
-    }
     let head_obj: Obj = (*application.head).clone().into();
     let head = LitexToLeanObjectIr::lower(&head_obj)?;
     let argument_layers = application
@@ -282,6 +374,7 @@ fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr
     Ok(LitexToLeanObjectIr::FunctionApplication(
         LitexToLeanFunctionApplicationIr {
             head: Box::new(head),
+            source_application: application.clone().into(),
             argument_layers,
             source_argument_layers,
         },

@@ -2,11 +2,16 @@ use crate::prelude::*;
 use std::fmt;
 
 #[derive(Clone)]
+pub struct StructFieldDef {
+    pub binding: SymbolBinding,
+    pub field_type: Obj,
+}
+
+#[derive(Clone)]
 pub struct DefStructStmt {
     pub name: String,
     pub param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
-    pub fields: Vec<(String, Obj)>,
-    pub field_bindings: Vec<SymbolBinding>,
+    pub fields: Vec<StructFieldDef>,
     pub equivalent_facts: Vec<Fact>,
     pub line_file: LineFile,
 }
@@ -15,8 +20,7 @@ impl DefStructStmt {
     pub fn new(
         name: String,
         param_def_with_dom: Option<(ParamDefWithType, Vec<OrAndChainAtomicFact>)>,
-        fields: Vec<(String, Obj)>,
-        field_bindings: Vec<SymbolBinding>,
+        fields: Vec<StructFieldDef>,
         equivalent_facts: Vec<Fact>,
         line_file: LineFile,
     ) -> Self {
@@ -24,7 +28,6 @@ impl DefStructStmt {
             name,
             param_def_with_dom,
             fields,
-            field_bindings,
             equivalent_facts,
             line_file,
         }
@@ -36,6 +39,19 @@ impl DefStructStmt {
 
     pub fn output_type_string() -> String {
         "structure definition".to_string()
+    }
+}
+
+impl StructFieldDef {
+    pub fn new(binding: SymbolBinding, field_type: Obj) -> Self {
+        StructFieldDef {
+            binding,
+            field_type,
+        }
+    }
+
+    pub fn name(&self) -> &str {
+        self.binding.name()
     }
 }
 

@@ -8,7 +8,6 @@ pub struct ByInducStmt {
     pub proof: Vec<Stmt>,
     pub base_proof: Option<Vec<Stmt>>,
     pub step_proof: Option<Vec<Stmt>>,
-    pub param: String,
     pub param_binding: SymbolBinding,
     pub induc_from: Obj,
     /// When true, the induction step uses `forall y` with `m <= y <= n` as the hypothesis band (strong / complete induction).
@@ -19,7 +18,6 @@ pub struct ByInducStmt {
 impl ByInducStmt {
     pub fn new(
         fact: Vec<ExistOrAndChainAtomicFact>,
-        param: String,
         param_binding: SymbolBinding,
         induc_from: Obj,
         proof: Vec<Stmt>,
@@ -33,7 +31,6 @@ impl ByInducStmt {
             proof,
             base_proof,
             step_proof,
-            param,
             param_binding,
             induc_from,
             strong,
@@ -43,6 +40,10 @@ impl ByInducStmt {
 
     pub fn has_structured_proof(&self) -> bool {
         self.base_proof.is_some() || self.step_proof.is_some()
+    }
+
+    pub fn param(&self) -> &str {
+        self.param_binding.name()
     }
 }
 
@@ -69,14 +70,14 @@ impl fmt::Display for ByInducStmt {
                 "{} {} {} {} {}{}\n{}\n{} {} {} {} {}{}\n{}\n{} {}{}\n{}",
                 BY,
                 keyword,
-                self.param,
+                self.param(),
                 FROM,
                 self.induc_from,
                 COLON,
                 vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1),
                 add_four_spaces_at_beginning(QUESTION_GOAL.to_string(), 1),
                 FROM,
-                self.param,
+                self.param(),
                 EQUAL,
                 self.induc_from,
                 COLON,
@@ -95,7 +96,7 @@ impl fmt::Display for ByInducStmt {
                 "{} {} {} {} {}{}\n{}",
                 BY,
                 STRONG_INDUC,
-                self.param,
+                self.param(),
                 FROM,
                 self.induc_from,
                 COLON,
@@ -107,7 +108,7 @@ impl fmt::Display for ByInducStmt {
                 "{} {} {} {} {}{}\n{}",
                 BY,
                 INDUC,
-                self.param,
+                self.param(),
                 FROM,
                 self.induc_from,
                 COLON,

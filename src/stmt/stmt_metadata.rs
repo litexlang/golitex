@@ -128,9 +128,7 @@ impl DefObjStmt {
             DefObjStmt::HaveObjEqualStmt(_) => HaveObjEqualStmt::output_type_string(),
             DefObjStmt::HaveObjByExistFactsStmt(_) => HaveObjByExistFactsStmt::output_type_string(),
             DefObjStmt::ObtainObjFromExistFact(_) => ObtainObjFromExistFact::output_type_string(),
-            DefObjStmt::ObtainObjFromAtomicFact(_) => {
-                ObtainObjFromAtomicFact::output_type_string()
-            }
+            DefObjStmt::ObtainObjFromAtomicFact(_) => ObtainObjFromAtomicFact::output_type_string(),
             DefObjStmt::HaveByPreimageStmt(_) => HaveByPreimageStmt::output_type_string(),
             DefObjStmt::HaveFnEqualStmt(_) => HaveFnEqualStmt::output_type_string(),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(_) => {

@@ -106,30 +106,30 @@ pub use crate::graph::{
     run_graph_for_file_with_strict_language_and_isolation, run_graph_for_repo,
     run_graph_for_repo_with_strict, run_graph_for_repo_with_strict_and_language,
 };
-pub use crate::infer::{
-    BuiltinInferenceReason, ByDefinitionReason, InferReason, InferResult, InferRuleReason,
-    StoreFactOutput,
-};
+pub use crate::infer::{InferReason, InferResult, StoreFactOutput};
 pub use crate::litex_to_lean_ir::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAbstractPropIr,
-    LitexToLeanArithmeticBuiltinRuleIr, LitexToLeanBuiltinObjectOperatorIr,
-    LitexToLeanBuiltinRuleIr, LitexToLeanCarrierIr, LitexToLeanCaseBranchExitIr,
-    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
-    LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
+    LitexToLeanAnonymousFunctionIr, LitexToLeanArithmeticBuiltinRuleIr,
+    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanCarrierIr,
+    LitexToLeanCaseBranchExitIr, LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr,
+    LitexToLeanConstantObjectIr, LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
     LitexToLeanEqualityRewriteDirectionIr, LitexToLeanEqualityRewriteIr,
     LitexToLeanEqualityRewriteStepIr, LitexToLeanExistentialProjectionRoleIr,
     LitexToLeanExistentialWitnessIr, LitexToLeanFactIr, LitexToLeanFactProofIr,
     LitexToLeanFactStatementIr, LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr,
     LitexToLeanFunctionTypeIr, LitexToLeanHaveExistentialWitnessIr, LitexToLeanHaveFunctionEqualIr,
     LitexToLeanHaveObjectChoiceIr, LitexToLeanHaveObjectEqualIr, LitexToLeanIffDirectionIr,
-    LitexToLeanKnownForallArgumentIr, LitexToLeanLocalPremiseIr,
+    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanKnownForallArgumentIr,
+    LitexToLeanLocalPremiseIr, LitexToLeanNamedTheoremIr, LitexToLeanNamedTheoremProofStepIr,
     LitexToLeanNonzeroExpressionOrientationIr, LitexToLeanNormalizationKindIr,
     LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
     LitexToLeanParameterGroupIr, LitexToLeanParameterTypeIr, LitexToLeanProjectedForallIr,
     LitexToLeanProofRuleIr, LitexToLeanProofStatementIr, LitexToLeanPropIr,
-    LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
-    LitexToLeanStandardSetIr, LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr,
-    LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
+    LitexToLeanSetBuilderIr, LitexToLeanSetBuiltinRuleIr,
+    LitexToLeanSetRelationDualityBuiltinRuleIr, LitexToLeanStandardSetIr, LitexToLeanStatementIr,
+    LitexToLeanStoredFunctionFactIr, LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr,
+    LitexToLeanWellDefinednessFactIr, LitexToLeanWellDefinednessObjectIr,
+    LitexToLeanWellDefinednessTargetRequirementIr,
 };
 pub use crate::module_manager::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,
@@ -346,14 +346,19 @@ pub use crate::result::VerifiedByFactResult;
 pub use crate::result::VerifiedByResult;
 pub use crate::result::VerifiedBysEnum;
 pub use crate::result::VerifiedBysResult;
-pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessAtomicFactVerificationResult;
+pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    ClosedNumericComparisonBuiltinRuleEvidence,
+    FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
     WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
-    WellDefinednessRequirementRole,
+    WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
+    WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
@@ -415,8 +420,8 @@ pub use crate::stmt::definition_stmt::HaveObjInNonemptySetOrParamTypeStmt;
 pub use crate::stmt::definition_stmt::HaveSeqStmt;
 pub use crate::stmt::definition_stmt::HaveTupleStmt;
 pub use crate::stmt::definition_stmt::LetObjStmt;
-pub use crate::stmt::definition_stmt::ObtainObjFromExistFact;
 pub use crate::stmt::definition_stmt::ObtainObjFromAtomicFact;
+pub use crate::stmt::definition_stmt::ObtainObjFromExistFact;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
@@ -436,8 +441,8 @@ pub use crate::stmt::tooling_stmt::ImportStdStmt;
 pub use crate::stmt::tooling_stmt::ImportStmt;
 pub use crate::stmt::trust_stmt::TrustStmt;
 pub use crate::stmt::try_stmt::TryStmt;
-pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessAtomicFact;
+pub use crate::stmt::witness_stmt::WitnessExistFact;
 pub use crate::stmt::witness_stmt::WitnessNonemptySet;
 pub use crate::stmt::ByClosedRangeAsCasesStmt;
 pub use crate::stmt::ByDefStmt;
@@ -450,6 +455,7 @@ pub use crate::stmt::DefObjStmt;
 pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
+pub use crate::stmt::StructFieldDef;
 pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::ProofBlockStmt;

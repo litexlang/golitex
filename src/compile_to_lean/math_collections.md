@@ -50,6 +50,7 @@ The current mapping is:
 | `witness exist ... from ...` | concrete witnesses, pre-binder type proofs, scoped proof steps, checked direct body facts | nested `Exists` introduction from the retained proof nodes |
 | `obtain ... from exist ...` / `have x T: ...` | alpha-checked source existential, fresh symbol identities, instantiated type/body facts and `FactId`s | ordered nested `Exists.choose`; exact `choose_spec` projections |
 | `obtain ... from $P(args)` | verified positive prop premise, retained one-clause concrete definition, re-instantiated exact existential target, then the ordinary elimination package | `simpa only [P] using source`; ordered `Exists.choose`; exact `choose_spec` projections |
+| `thm name: ? forall ...` | source name, exact stored forall effect, parameter/domain premises, nested proof steps, ordered checked conclusions, statement WD certificate | source-named Lean `theorem`; its primary `FactId` resolves to that name rather than a duplicate `factN` |
 | `by cases` | coverage proof, ordered local premise IDs, nested steps, conclusion/contradiction exits | coverage `have`; `rcases`; scoped branches |
 | `by contra` | target, logical reverse premise ID, nested steps, final fact/negation pair | scoped `Classical.byContradiction` |
 
@@ -158,6 +159,36 @@ and every object occurrence are compared by `SymbolId` and by their sanitized
 Lean spellings. A binder occurrence with a mismatched spelling, or two
 different symbols that would both print as the same Lean identifier, is an
 explicit incomplete boundary; the backend never emits a captured formula.
+
+A named theorem is a declaration plus a proof scope, not an ordinary stored
+fact with a prettier comment. Runtime lowering retains the source theorem name,
+the complete `ForallFact`, every temporary parameter and domain premise, the
+ordered nested statement results, the ordered conclusion proofs, and the
+statement well-definedness certificate. The target emits the complete source
+forall under the sanitized source name:
+
+```text
+thm real_reflexivity:
+    ? forall x R:
+        x = x
+
+  -> theorem real_reflexivity :
+         ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x = x := by ...
+```
+
+If the runtime stored the complete forall with a `FactId`, the global target
+fact-name map binds that ID directly to `real_reflexivity`; the backend does
+not emit a second `theorem factN` for the same proposition. Clause-coverage
+projections and other separately stored consequences keep their own checked
+helper declarations. Missing, reordered, or mismatched proof steps,
+conclusions, stored effects, or scoped facts reject the complete theorem
+transactionally.
+
+Lean lexical sanitization is the only permitted spelling adjustment. A source
+theorem name that collides with an already reserved target declaration fails
+closed instead of receiving a silent suffix. Explicit `axiom`, theorem calls
+through `by thm`, imported theorem linking, and proof-step families without a
+local statement backend remain separate boundaries.
 
 The implemented builtin nonemptiness backend currently covers the native real
 universal set.
@@ -521,11 +552,11 @@ a ∈ R+
   -> 0 < a
 ```
 
-Its recursive premise is the exact binder-membership citation. Lean interprets
-`R+` as `{r : ℝ | 0 < r}`, so the positivity result follows definitionally from
-that native membership proof. An unsupported inferred consequence is not
-silently emitted; if a selected proof depends on it, the enclosing statement
-remains incomplete.
+Its recursive premise is the exact binder-membership citation. Lean unfolds
+the transparent `Litex.StandardSets.RPos` alias to `Set.Ioi 0`, so the
+positivity result follows definitionally from that native membership proof. An
+unsupported inferred consequence is not silently emitted; if a selected proof
+depends on it, the enclosing statement remains incomplete.
 
 ## Recursive fraction pair
 
@@ -623,11 +654,11 @@ Mathlib carriers for standard domains. Its intended interface is equivalent to:
 LitexObject α : Prop
 litexIsSet : [LitexObject α] -> α -> Prop
 
-N -> (Set.univ : Set ℕ)
-Z -> (Set.univ : Set ℤ)
-Q -> (Set.univ : Set ℚ)
-R -> (Set.univ : Set ℝ)
-C -> (Set.univ : Set ℂ)
+N -> Litex.StandardSets.N     -- abbrev of Set.univ : Set ℕ
+Z -> Litex.StandardSets.Z     -- abbrev of Set.univ : Set ℤ
+Q -> Litex.StandardSets.Q     -- abbrev of Set.univ : Set ℚ
+R -> Litex.StandardSets.R     -- abbrev of Set.univ : Set ℝ
+C -> Litex.StandardSets.C     -- abbrev of Set.univ : Set ℂ
 ```
 
 `LitexObject` has instances only for supported object carriers; it is not a
@@ -643,7 +674,7 @@ membership relation:
 
 ->
 
-2 ∈ (Set.univ : Set ℝ)
+2 ∈ Litex.StandardSets.R
 ```
 
 The proposition itself both elaborates the bare numeral as `ℝ` and remains
@@ -662,7 +693,7 @@ forall x R:
 
 ->
 
-∀ x ∈ (Set.univ : Set ℝ), P x
+∀ x ∈ Litex.StandardSets.R, P x
 ```
 
 Lean elaborates this as a native `x : ℝ` binder followed by a separate
@@ -671,9 +702,11 @@ but the elaborated term is typed because `Membership.mem` fixes the element
 carrier. The membership premise receives its own proof name and `FactId`
 mapping just like any other Litex fact.
 
-Refined standard sets are native predicates over their base carrier, for
-example `{n : ℕ | 0 < n}` and `{z : ℤ | z ≠ 0}`. They remain membership
-propositions, not Lean subtypes substituted for the source symbol.
+Refined standard sets are transparent names for native predicates over their
+base carrier, for example `Litex.StandardSets.NPos` abbreviates `Set.Ioi 0`
+over `ℕ`, and `Litex.StandardSets.ZStar` abbreviates `{z : ℤ | z ≠ 0}`.
+They remain membership propositions, not Lean subtypes substituted for the
+source symbol.
 
 A generic source set binder uses an implicit carrier:
 
@@ -721,7 +754,7 @@ separate statement/proof-ABI boundary.
 
 ### Native function sets, exact layers, and well-definedness proofs
 
-A Litex function set remains a set object. The target preserves that fact as
+A Litex function set remains a set object. A universal return set becomes
 `Set.univ` over a native, possibly dependent Lean function type:
 
 ```text
@@ -730,6 +763,16 @@ fn(x R) R
 
 fn(x R: x > 0) R
   -> (Set.univ : Set ((x : ℝ) → x > 0 → ℝ))
+```
+
+A refined return set keeps the same raw function carrier and adds an
+extensional pointwise predicate:
+
+```text
+fn(x R: x > 0) R+
+  -> {f : ((x : ℝ) → x > 0 → ℝ) |
+        ∀ (x : ℝ) (domain : x > 0),
+          f x domain ∈ Litex.StandardSets.RPos}
 ```
 
 Consequently `f $in fn(x R) R` keeps an ordinary membership proposition; it is
@@ -787,6 +830,23 @@ argument in its consequent type. Any consumed WD premise therefore receives a
 deterministic binder/helper name, or is rendered as its exact inline proof
 term. The emitter must not recover it with `by assumption`.
 
+Binder-owned values are structural IR nodes. A set builder owns its symbol and
+renders base membership followed by its defining facts in source order:
+
+```text
+{x R: x > 0}
+  -> {x : ℝ | x ∈ Litex.StandardSets.R ∧ x > 0}
+```
+
+An anonymous function owns its parameter scope and renders as a raw lambda.
+Its membership certificate is separate: the compiler introduces exactly the
+binders of the target function-set predicate, reconstructs only those
+universal membership arguments erased by native typing, and specializes the
+verifier-checked pointwise `forall`. For a refined application result, the
+compiler starts from the retained head function membership and eliminates it
+through each exact source application layer, supplying the ordered parameter
+membership and domain proofs for that layer.
+
 A checked named definition such as
 `have fn reciprocal(x R: x != 0) R = 1 / x` now becomes a dependent Lean
 `def`, a function-set membership theorem, and the exact stored defining
@@ -794,9 +854,11 @@ equality. Its body WD certificate and return check execute inside the function
 binders. A later `reciprocal(x) = 1 / x` uses a structured evaluation result
 which retains that defining equality's `FactId` and checked reduction, so Lean
 can close it with `simpa only [reciprocal]` without a compiler-invented law.
-Standalone anonymous values, refined return sets such as `R+`, and richer
-function definitions remain explicit boundaries pending output-membership
-evidence.
+A refined definition such as
+`have fn positive_successor(x R: x > 0) R+ = x + 1` additionally replays the
+checked body-in-`R+` proof under the definition's own binders and exports the
+resulting pointwise function membership theorem. Richer definition forms and
+untyped proof routes remain explicit boundaries.
 
 ### Numerals obtain constraints from facts, not annotations
 
@@ -805,7 +867,7 @@ example, the object in `1 $in R` is emitted as `1`, and the containing
 membership proposition supplies the native expectation:
 
 ```text
-1 ∈ (Set.univ : Set ℝ)
+1 ∈ Litex.StandardSets.R
 ```
 
 It is not emitted as `(1 : ℝ)`. Likewise, `q + 1` keeps the bare literal `1`.
@@ -827,8 +889,8 @@ real Lean probe establishes the boundary:
 
 ```text
 z : ℤ
-z / 2 ∈ (Set.univ : Set ℚ)       -- does not elaborate
-(z / 2 : ℚ) ∈ (Set.univ : Set ℚ) -- elaborates as (z : ℚ) / 2
+z / 2 ∈ Litex.StandardSets.Q       -- does not elaborate
+(z / 2 : ℚ) ∈ Litex.StandardSets.Q -- elaborates as (z : ℚ) / 2
 ```
 
 Therefore the tracer
@@ -841,8 +903,8 @@ forall z Z:
 is emitted with a target expectation on the whole compound object when needed:
 
 ```text
-∀ z ∈ (Set.univ : Set ℤ),
-  (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)
+∀ z ∈ Litex.StandardSets.Z,
+  (z / 2 : ℚ) ∈ Litex.StandardSets.Q
 ```
 
 The source object is still rendered structurally as `z / 2`; there is no
@@ -870,6 +932,48 @@ Consequently, an underconstrained statement such as
 `trust 1 / 2 = 1 / 2` is rejected by Litex-to-Lean: trust supplies proof provenance,
 not the missing choice between natural and rational division.
 
+### Object well-definedness proof ABI
+
+Litex checks every source object before it invokes the fact verifier. The
+compiler now preserves that phase boundary instead of reconstructing it from
+the final proposition. A statement certificate contains three linked views:
+
+```text
+checked object occurrence
+  -> ordered certificate IDs for every WD fact observed in its traversal
+
+target requirement (application layer, parameter/domain position)
+  -> exact checked object occurrence
+  -> exact WD certificate ID
+  -> frozen proposition
+```
+
+All observed WD facts remain source-audit evidence. Only an explicit target
+requirement becomes a dependent Lean argument. Thus a checked application of
+`f $in fn(x R: x > 0) R` is emitted as `f a wd_proof`, while a divisor's
+nonzero certificate is replayed and audited without becoming an invented
+argument to Lean division. Missing object IDs, fact IDs, target references, or
+changed propositions fail before Lean text is returned. The emitter resolves
+the retained certificate ID to its already emitted local/global proof name; it
+does not search by proposition or use `assumption`. If structurally identical
+application occurrences expose distinct replayed proof terms before occurrence
+identity reaches the emitted term, compilation fails as ambiguous instead of
+silently choosing either proof. Distinct occurrence certificates may share one
+proof term when statement memoization or a common local binder proves both.
+
+Refined parameter sets preserve the same source proof. For example, the binder
+proof `b $in Z*` reduces definitionally to `b != 0` in the selected native Lean
+set representation, so the exact binder proof discharges `%` well-definedness.
+Likewise `a $in R+` supplies the exact `a > 0`/`0 < a` domain proof.
+
+Integer remainder has an intrinsic source carrier contract: both operands and
+the result are `Z`, even for bare closed numerals. Integer membership closure
+under `+`, `-`, `*`, and `%` carries a structured operator identity plus the two
+ordered operand-membership proofs. Closed remainder equalities use a separate
+checked integer-reflection certificate; the IR re-evaluates the complete
+closed target and the Lean backend checks it with `norm_num`. It never lets
+Lean default `5 % 2` to `Nat`.
+
 ### IR boundary
 
 The target-aware IR is split deliberately:
@@ -880,6 +984,10 @@ LitexToLeanObjectIr =
   | Number { normalized_value }
   | BuiltinApp { operator, ordered_args }
   | StandardSet { identity }
+  | FunctionSet { function type, return set, return carrier }
+  | SetBuilder { owned symbol, base set, element carrier, ordered facts }
+  | AnonymousFunction { function type, body }
+  | FunctionApplication { head, exact source layers }
   | Collection { constructor, ordered_items }
 
 LitexToLeanCarrierIr =
@@ -896,8 +1004,9 @@ LitexToLeanParameterTypeIr =
 
 `LitexToLeanObjectIr` owns identity and spelling. Carrier constraints belong to
 binders, facts, and applications. The emitter solves those checked constraints,
-renders standard sets as native `Set` expressions, and inserts only canonical
-coercions justified by the solved source/target pair.
+renders standard sets through transparent `Litex.StandardSets.*` names backed
+by native `Set` expressions, and inserts only canonical coercions justified by
+the solved source/target pair.
 
 The existing raw `Obj` and `Fact` values may remain attached for diagnostics.
 An unsupported object constructor, unresolved carrier, set representation, or
@@ -921,16 +1030,21 @@ structural LitexToLeanObjectIr
 The first migration tranche covers `N`, `Z`, `Q`, `R`, `C`, their refined
 subsets, bare numerals, `+ - * /`, equality/order, standard and generic
 membership, and `union`, `intersect`, and `set_minus` on one unified element
-carrier. `SetBuilder`, heterogeneous collections, unsupported transcendental or
-complex operators, and coercions outside the canonical tower remain explicit
-boundaries until their native Mathlib contracts are modeled.
+carrier. The binder-owning tranche adds `SetBuilder`, anonymous functions,
+refined function return sets, and exact application-return membership.
+Heterogeneous collections, unsupported transcendental or complex operators,
+coercions outside the canonical tower, and other untyped binder constructors
+remain explicit boundaries until their native Mathlib contracts are modeled.
 
 The numeric source tracer is
 [`compile_to_lean_numeric_obj_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_numeric_obj_abi.lit).
 It fixes native bounded binders, the unchanged source spelling of `z / 2`, the
 required contextual `ℤ -> ℚ` coercion, native equality, and bare numeral
-membership. The
+membership. It also pins structured integer closure, refined `Z*` divisor
+evidence, the intrinsic `ℤ` contract of `%`, and closed remainder reflection.
+The
 implemented structural set-object tracer is
 [`compile_to_lean_set_obj_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_set_obj_abi.lit);
-it is the migration target for native `union`, `intersect`, and `set_minus`,
-plus the binder-aware `SetBuilder` rejection boundary.
+it is the migration target for native `union`, `intersect`, and `set_minus`.
+The binder-owned set/function terms and refined output proofs are fixed by
+[`compile_to_lean_function_well_definedness.lit`](../../examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit).

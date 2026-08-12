@@ -2112,8 +2112,7 @@ $leaf(y)
             let success = stmt_results[3]
                 .non_factual_success()
                 .expect("direct obtain should be a nonfactual success");
-            let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) = &success.stmt
-            else {
+            let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) = &success.stmt else {
                 panic!("literal `exist` must parse as ObtainObjFromExistFact")
             };
             assert_eq!(stmt.equal_tos[0].name(), "y");
@@ -2353,7 +2352,7 @@ copy = 2
 }
 
 #[test]
-fn witness_atomic_fact_accepts_exist_unique_with_explicit_uniqueness_proof() {
+fn witness_atomic_fact_rejects_exist_unique_even_with_explicit_uniqueness_proof() {
     let source_code = r#"
 prop has_unique_copy(a R):
     exist! x R st {x = a}
@@ -2376,56 +2375,7 @@ exist! x R st {x = 1}
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "witness_atomic_fact_accepts_exist_unique_with_explicit_uniqueness_proof",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "atomic-fact witness should verify both existence and uniqueness:\n{}",
-        run_output
-    );
-    let success = stmt_results[1]
-        .non_factual_success()
-        .expect("the atomic-fact witness should be nonfactual statement success");
-    let Stmt::Witness(WitnessStmt::WitnessAtomicFact(stmt)) = &success.stmt else {
-        panic!("the parser must retain an atomic-fact witness AST node")
-    };
-    let verification = success
-        .witness_atomic_fact_verification
-        .as_ref()
-        .expect("execution must retain the unique-existential certificate");
-    assert!(verification.instantiated_existential.is_exist_unique());
-    assert!(
-        verification
-            .witness_verification
-            .uniqueness_check_index
-            .is_some(),
-        "the certificate must identify the checked uniqueness obligation"
-    );
-    assert!(success
-        .infers
-        .contains_added_fact(&Fact::from(stmt.atomic_fact.clone())));
-    assert!(success
-        .infers
-        .contains_added_fact(&verification.instantiated_existential.clone().into()));
-}
-
-#[test]
-fn witness_atomic_fact_exist_unique_rejects_missing_uniqueness_proof() {
-    let source_code = r#"
-prop has_nonunique_self_witness(a R):
-    exist! x R st {x = x}
-
-witness $has_nonunique_self_witness(0) from 0:
-    0 = 0
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "witness_atomic_fact_exist_unique_rejects_missing_uniqueness_proof",
+        "witness_atomic_fact_rejects_exist_unique_even_with_explicit_uniqueness_proof",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -2433,14 +2383,60 @@ witness $has_nonunique_self_witness(0) from 0:
 
     assert!(
         !run_succeeded,
-        "an atomic-fact witness must not introduce false unique existence:\n{}",
+        "atomic-fact witness should leave unique existence to the explicit form:\n{}",
         run_output
     );
     assert!(
-        run_output.contains("witness exist!: failed to verify uniqueness obligation"),
-        "the missing uniqueness obligation should be explicit:\n{}",
+        run_output.contains(
+            "atomic fact witness does not support the `exist!` definition of `has_unique_copy`; use explicit `witness exist! ...` and then `by def`"
+        ),
+        "the diagnostic should name the explicit fallback:\n{}",
         run_output
     );
+}
+
+#[test]
+fn witness_atomic_fact_exist_unique_uses_explicit_fallback() {
+    let source_code = r#"
+prop has_unique_copy(a R):
+    exist! x R st {x = a}
+
+witness exist! x R st {x = 1} from 1:
+    1 = 1
+    claim:
+        ? forall u, v R:
+            u = 1
+            v = 1
+            =>:
+                u = v
+        u = 1
+        1 = v
+        u = v
+by def:
+    ? $has_unique_copy(1)
+
+$has_unique_copy(1)
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "witness_atomic_fact_exist_unique_uses_explicit_fallback",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "explicit unique existence plus `by def` should remain available:\n{}",
+        run_output
+    );
+    let success = stmt_results[1]
+        .non_factual_success()
+        .expect("the explicit unique-existence witness should succeed");
+    let Stmt::Witness(WitnessStmt::WitnessExistFact(_)) = &success.stmt else {
+        panic!("the fallback must retain the explicit existential AST node")
+    };
 }
 
 #[test]
@@ -2454,7 +2450,7 @@ prop positive(a R):
 
 witness $positive(1) from 1
 "#,
-            "sole definition clause of `positive` must be `exist` or `exist!`",
+            "sole definition clause of `positive` to be positive `exist`",
         ),
         (
             "multiple clauses",
@@ -2465,7 +2461,7 @@ prop has_copy_and_reflexivity(a R):
 
 witness $has_copy_and_reflexivity(1) from 1
 "#,
-            "must have exactly one definition clause",
+            "to have exactly one definition clause",
         ),
         (
             "abstract prop",
@@ -2484,7 +2480,7 @@ prop has_no_copy(a R):
 
 witness $has_no_copy(1) from 1
 "#,
-            "definition clause of `has_no_copy` is `not exist`",
+            "sole definition clause of `has_no_copy` to be positive `exist`",
         ),
         (
             "witness count",

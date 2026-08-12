@@ -7,7 +7,6 @@ use std::fmt;
 #[derive(Clone)]
 pub struct DefAlgoStmt {
     pub name: String,
-    pub params: Vec<String>,
     pub param_bindings: Vec<SymbolBinding>,
     pub default_return: Option<AlgoReturn>,
     pub cases: Vec<AlgoCase>,
@@ -35,7 +34,6 @@ pub enum AlgoReturnOrAlgoCase {
 impl DefAlgoStmt {
     pub fn new(
         name: String,
-        params: Vec<String>,
         param_bindings: Vec<SymbolBinding>,
         cases: Vec<AlgoCase>,
         default_return: Option<AlgoReturn>,
@@ -43,12 +41,15 @@ impl DefAlgoStmt {
     ) -> Self {
         DefAlgoStmt {
             name,
-            params,
             param_bindings,
             default_return,
             cases,
             line_file,
         }
+    }
+
+    pub fn param_names(&self) -> impl Iterator<Item = &str> {
+        self.param_bindings.iter().map(|binding| binding.name())
     }
 }
 
@@ -82,6 +83,7 @@ impl fmt::Display for AlgoCase {
 
 impl fmt::Display for DefAlgoStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        let param_names = self.param_names().collect::<Vec<_>>();
         let mut body = self
             .cases
             .iter()
@@ -97,7 +99,7 @@ impl fmt::Display for DefAlgoStmt {
             ALGO,
             FOR,
             self.name,
-            braced_vec_to_string(&self.params),
+            braced_vec_to_string(&param_names),
             COLON,
             to_string_and_add_four_spaces_at_beginning_of_each_line(
                 &vec_to_string_with_sep(&body, "\n".to_string()),

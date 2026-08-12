@@ -294,7 +294,6 @@ impl Runtime {
                     )));
                 };
                 Ok(HaveFnEqualStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     anonymous_fn,
                     line_file.clone(),
@@ -318,7 +317,6 @@ impl Runtime {
                     equal_tos.push(self.inst_obj(obj, &body_map, ParamObjType::DefHeader)?);
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     fn_set_clause,
                     cases,
@@ -344,7 +342,6 @@ impl Runtime {
                     cases.push(self.inst_have_fn_by_induc_case(c, &body_map, line_file)?);
                 }
                 Ok(HaveFnByInducStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     fn_set_clause,
                     measure,
@@ -381,7 +378,6 @@ impl Runtime {
                     line_file,
                 )?;
                 Ok(HaveFnByForallExistUniqueStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     forall,
                     prove_process,
@@ -390,7 +386,8 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveTupleStmt(s) => {
-                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let index_binding =
+                    self.allocate_local_symbol_binding(s.index_name().to_string())?;
                 let mut body_map = param_to_arg_map.clone();
                 insert_symbol_substitution(
                     &mut body_map,
@@ -401,9 +398,7 @@ impl Runtime {
                     self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
                 let value = self.inst_obj(&s.value, &body_map, ParamObjType::TupleIndex)?;
                 Ok(HaveTupleStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
-                    s.index_name.clone(),
                     index_binding,
                     dimension,
                     value,
@@ -412,7 +407,8 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveCartStmt(s) => {
-                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let index_binding =
+                    self.allocate_local_symbol_binding(s.index_name().to_string())?;
                 let mut body_map = param_to_arg_map.clone();
                 insert_symbol_substitution(
                     &mut body_map,
@@ -423,9 +419,7 @@ impl Runtime {
                     self.inst_obj(&s.dimension, param_to_arg_map, ParamObjType::DefHeader)?;
                 let value = self.inst_obj(&s.value, &body_map, ParamObjType::CartIndex)?;
                 Ok(HaveCartStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
-                    s.index_name.clone(),
                     index_binding,
                     dimension,
                     value,
@@ -434,7 +428,8 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveSeqStmt(s) => {
-                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let index_binding =
+                    self.allocate_local_symbol_binding(s.index_name().to_string())?;
                 let mut body_map = param_to_arg_map.clone();
                 insert_symbol_substitution(
                     &mut body_map,
@@ -445,10 +440,8 @@ impl Runtime {
                     self.inst_obj(&s.seq_set.set, param_to_arg_map, ParamObjType::DefHeader)?;
                 let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveSeqStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     SeqSet::new(set),
-                    s.index_name.clone(),
                     index_binding,
                     value,
                     line_file.clone(),
@@ -456,7 +449,8 @@ impl Runtime {
                 .into())
             }
             TemplateDefEnum::HaveFiniteSeqStmt(s) => {
-                let index_binding = self.allocate_local_symbol_binding(s.index_name.clone())?;
+                let index_binding =
+                    self.allocate_local_symbol_binding(s.index_name().to_string())?;
                 let mut body_map = param_to_arg_map.clone();
                 insert_symbol_substitution(
                     &mut body_map,
@@ -476,10 +470,8 @@ impl Runtime {
                 let bound = self.inst_obj(&s.bound, param_to_arg_map, ParamObjType::DefHeader)?;
                 let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveFiniteSeqStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     FiniteSeqSet::new(set, n),
-                    s.index_name.clone(),
                     index_binding,
                     bound,
                     value,
@@ -489,9 +481,9 @@ impl Runtime {
             }
             TemplateDefEnum::HaveMatrixStmt(s) => {
                 let row_index_binding =
-                    self.allocate_local_symbol_binding(s.row_index_name.clone())?;
+                    self.allocate_local_symbol_binding(s.row_index_name().to_string())?;
                 let col_index_binding =
-                    self.allocate_local_symbol_binding(s.col_index_name.clone())?;
+                    self.allocate_local_symbol_binding(s.col_index_name().to_string())?;
                 let mut body_map = param_to_arg_map.clone();
                 insert_symbol_substitution(
                     &mut body_map,
@@ -521,13 +513,10 @@ impl Runtime {
                     self.inst_obj(&s.col_bound, param_to_arg_map, ParamObjType::DefHeader)?;
                 let value = self.inst_obj(&s.value, &body_map, ParamObjType::FnSet)?;
                 Ok(HaveMatrixStmt::new(
-                    instance_name.to_string(),
                     instance_binding.clone(),
                     MatrixSet::new(set, row_len, col_len),
-                    s.row_index_name.clone(),
                     row_index_binding,
                     row_bound,
-                    s.col_index_name.clone(),
                     col_index_binding,
                     col_bound,
                     value,
@@ -585,12 +574,10 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                Ok(ObtainObjFromExistFact::new(
-                    s.equal_tos.clone(),
-                    exist_fact,
-                    line_file.clone(),
+                Ok(
+                    ObtainObjFromExistFact::new(s.equal_tos.clone(), exist_fact, line_file.clone())
+                        .into(),
                 )
-                .into())
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
                 let fact = self.inst_normal_atomic_fact(
@@ -599,12 +586,10 @@ impl Runtime {
                     ParamObjType::DefHeader,
                     Some(line_file),
                 )?;
-                Ok(ObtainObjFromAtomicFact::new(
-                    s.equal_tos.clone(),
-                    fact,
-                    line_file.clone(),
+                Ok(
+                    ObtainObjFromAtomicFact::new(s.equal_tos.clone(), fact, line_file.clone())
+                        .into(),
                 )
-                .into())
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 let mut groups = Vec::with_capacity(s.param_def.groups.len());
@@ -650,7 +635,6 @@ impl Runtime {
                     equal_tos.push(self.inst_obj(equal_to, &body_map, ParamObjType::DefHeader)?);
                 }
                 Ok(HaveFnEqualCaseByCaseStmt::new(
-                    s.name.clone(),
                     s.symbol_binding.clone(),
                     fn_set_clause,
                     cases,
@@ -674,7 +658,6 @@ impl Runtime {
                     )));
                 };
                 Ok(HaveFnEqualStmt::new(
-                    s.name.clone(),
                     s.symbol_binding.clone(),
                     anonymous_fn,
                     line_file.clone(),
@@ -726,10 +709,7 @@ impl Runtime {
                 }
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
-                Ok(
-                    WitnessAtomicFact::new(atomic_fact, witnesses, proof, line_file.clone())
-                        .into(),
-                )
+                Ok(WitnessAtomicFact::new(atomic_fact, witnesses, proof, line_file.clone()).into())
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => {
                 let obj = self.inst_obj(&s.obj, param_to_arg_map, ParamObjType::DefHeader)?;
@@ -950,5 +930,4 @@ impl Runtime {
             };
         Ok(HaveFnByInducCase::new(case_fact, body))
     }
-
 }

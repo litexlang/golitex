@@ -498,7 +498,7 @@ fn check_set_builder_has_no_duplicate_free_parameter(
 ) -> Result<(), RuntimeError> {
     let pushed_scope = if free_param_type == ParamObjType::SetBuilder {
         push_param_names_scope_or_error(
-            vec![set_builder.param.clone()],
+            vec![set_builder.param_name().to_string()],
             free_param_type,
             params_already_used,
         )?;

@@ -453,7 +453,7 @@ impl ByInducStmt {
         let mut rows = vec![format!(
             r"{} {} \text{{ from }} {} \texttt{{:}} & {}",
             induc_label,
-            latex_local_ident(&self.param),
+            latex_local_ident(self.param()),
             self.induc_from.to_latex_string(),
             goals
         )];
@@ -696,8 +696,7 @@ impl DefAbstractPropStmt {
 impl DefAlgoStmt {
     pub fn to_latex_string(&self) -> String {
         let ps = self
-            .params
-            .iter()
+            .param_names()
             .map(|p| latex_local_ident(p))
             .collect::<Vec<_>>()
             .join(", ");
@@ -898,20 +897,20 @@ impl FnObj {
         let head = match self.head.as_ref() {
             FnObjHead::Identifier(i) => i.to_latex_string(),
             FnObjHead::IdentifierWithMod(i) => i.to_latex_string(),
-            FnObjHead::Forall(p) => latex_local_ident(&p.name),
-            FnObjHead::DefHeader(p) => latex_local_ident(&p.name),
-            FnObjHead::Exist(p) => latex_local_ident(&p.name),
-            FnObjHead::SetBuilder(p) => latex_local_ident(&p.name),
-            FnObjHead::FnSet(p) => latex_local_ident(&p.name),
-            FnObjHead::DefStructField(p) => latex_local_ident(&p.name),
+            FnObjHead::Forall(p) => latex_local_ident(p.name()),
+            FnObjHead::DefHeader(p) => latex_local_ident(p.name()),
+            FnObjHead::Exist(p) => latex_local_ident(p.name()),
+            FnObjHead::SetBuilder(p) => latex_local_ident(p.name()),
+            FnObjHead::FnSet(p) => latex_local_ident(p.name()),
+            FnObjHead::DefStructField(p) => latex_local_ident(p.name()),
             FnObjHead::AnonymousFnLiteral(a) => a.to_latex_string(),
             FnObjHead::FiniteSeqListObj(v) => v.to_latex_string(),
             FnObjHead::ObjAtIndex(v) => v.to_latex_string(),
             FnObjHead::ObjAsStructInstanceWithFieldAccess(v) => latex_texttt_escape(&v.to_string()),
-            FnObjHead::Induc(p) => latex_local_ident(&p.name),
-            FnObjHead::DefAlgo(p) => latex_local_ident(&p.name),
-            FnObjHead::TupleIndex(p) => latex_local_ident(&p.name),
-            FnObjHead::CartIndex(p) => latex_local_ident(&p.name),
+            FnObjHead::Induc(p) => latex_local_ident(p.name()),
+            FnObjHead::DefAlgo(p) => latex_local_ident(p.name()),
+            FnObjHead::TupleIndex(p) => latex_local_ident(p.name()),
+            FnObjHead::CartIndex(p) => latex_local_ident(p.name()),
             FnObjHead::InstantiatedTemplateObj(t) => latex_texttt_escape(&t.to_string()),
             FnObjHead::MatrixOperator(matrix) => {
                 format!("\\left({}\\right)", matrix.to_latex_string())
@@ -1102,7 +1101,7 @@ impl HaveFnByInducStmt {
         let mut rows: Vec<String> = Vec::new();
         rows.push(format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} \quad \mathrm{{by}}\ \mathrm{{induc}}\ {} \ \mathrm{{from}}\ {}",
-            latex_local_ident(&self.name),
+            latex_local_ident(self.name()),
             fn_set_clause_latex(&self.fn_set_clause),
             self.measure.to_latex_string(),
             self.lower_bound.to_latex_string(),
@@ -1141,7 +1140,7 @@ impl HaveFnEqualCaseByCaseStmt {
     pub fn to_latex_string(&self) -> String {
         let head = format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{by}}\ \mathrm{{cases}}\texttt{{:}}",
-            latex_local_ident(&self.name)
+            latex_local_ident(self.name())
         );
         let clause = fn_set_clause_latex(&self.fn_set_clause);
         let mut rows = vec![format!(r"{} & {}", head, clause)];
@@ -1169,7 +1168,7 @@ impl HaveFnEqualStmt {
         .expect("anonymous function signature was already validated");
         format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ {} {}",
-            latex_local_ident(&self.name),
+            latex_local_ident(self.name()),
             fn_set_clause_latex(&fn_set_clause),
             self.equal_to_anonymous_fn.equal_to.to_latex_string()
         )
@@ -1180,7 +1179,7 @@ impl HaveFnByForallExistUniqueStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\mathrm{{have}}\ \mathrm{{fn}}\ {}\ \mathrm{{as}}\ \mathrm{{set}}:\ {}",
-            latex_local_ident(&self.fn_name),
+            latex_local_ident(self.fn_name()),
             self.forall.to_latex_string()
         )
     }
@@ -1206,7 +1205,7 @@ impl LetObjStmt {
     pub fn to_latex_string(&self) -> String {
         format!(
             r"\mathrm{{let}}\ {} = {}",
-            latex_local_ident(&self.name),
+            latex_local_ident(self.name()),
             self.value.to_latex_string()
         )
     }
@@ -1944,7 +1943,7 @@ impl SetBuilder {
             .join(r" \land ");
         format!(
             r"\left\{{ {} \in {} \,\middle|\, {} \right\}}",
-            latex_local_ident(&self.param),
+            latex_local_ident(self.param_name()),
             self.param_set.to_latex_string(),
             cond
         )
@@ -2299,16 +2298,16 @@ impl Obj {
             Obj::InstantiatedTemplateObj(x) => latex_texttt_escape(&x.to_string()),
             Obj::OneSideInfinityIntervalObj(x) => x.to_latex_string(),
             Obj::IntervalObj(x) => x.to_latex_string(),
-            Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::Def(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::DefStructField(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::TupleIndex(x)) => latex_local_ident(&x.name),
-            Obj::Atom(AtomObj::CartIndex(x)) => latex_local_ident(&x.name),
+            Obj::Atom(AtomObj::Forall(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::Def(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::Exist(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::SetBuilder(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::FnSet(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::Induc(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::DefAlgo(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::DefStructField(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::TupleIndex(x)) => latex_local_ident(x.name()),
+            Obj::Atom(AtomObj::CartIndex(x)) => latex_local_ident(x.name()),
             Obj::MatrixSet(x) => x.to_latex_string(),
             Obj::MatrixListObj(x) => x.to_latex_string(),
             Obj::MatrixAdd(x) => x.to_latex_string(),

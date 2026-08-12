@@ -1,22 +1,26 @@
-# Tracer: introduce an atomic prop fact whose complete meaning is unique existence.
-#
-# Before (did not work):
-# prop unique_value(a R):
-#     exist! x R st {x = a}
+# Boundary tracer: named atomic-fact witnesses intentionally stop at ordinary
+# positive `exist`. The formerly accepted named `exist!` form is preserved as
+# comments:
 #
 # witness $unique_value(2) from 2:
 #     2 = 2
-# Former behavior: the atomic-fact witness resolver rejected the `exist!`
-# definition before checking its body or uniqueness obligation.
+#     claim:
+#         ? forall u, v R:
+#             u = 2
+#             v = 2
+#             =>:
+#                 u = v
+#         u = 2
+#         2 = v
+#         u = v
 #
-# Now (verified): execution expands the concrete definition, checks the
-# supplied witness and the generated uniqueness forall, then stores the atomic
-# fact.
+# Use the explicit unique-existence statement and fold the checked result into
+# the named predicate with `by def`.
 
 prop unique_value(a R):
     exist! x R st {x = a}
 
-witness $unique_value(2) from 2:
+witness exist! x R st {x = 2} from 2:
     2 = 2
     claim:
         ? forall u, v R:
@@ -28,10 +32,13 @@ witness $unique_value(2) from 2:
         2 = v
         u = v
 
+by def:
+    ? $unique_value(2)
+
 $unique_value(2)
 exist! x R st {x = 2}
 
-# Boundary: omitting the uniqueness proof must still fail. `not exist`,
-# abstract props, nonexistential definitions, and multi-clause definitions
-# also remain unsupported atomic-fact witness sources.
+# Boundary: `witness $unique_value(2) from 2` is rejected even if its proof body
+# contains a complete uniqueness proof. Explicit `witness exist!` remains the
+# supported route.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/witness_atomic_exist_unique_fact.lit

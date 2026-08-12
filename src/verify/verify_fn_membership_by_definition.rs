@@ -200,12 +200,23 @@ impl Runtime {
             return Ok(None);
         }
 
+        let target: Fact = flow.in_fact.clone().into();
+        let pointwise: Fact = forall.into();
+
         Ok(Some(
-            (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                flow.in_fact.into(),
+            (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                target.clone(),
                 "fn membership: same input domain and pointwise values lie in the target return set"
                     .to_string(),
-                Vec::new(),
+                BuiltinRuleEvidence::FunctionSetMembership(
+                    FunctionSetMembershipBuiltinRuleEvidence::new(
+                        flow.in_fact.element.clone(),
+                        expected_fn_set.clone(),
+                        target,
+                        pointwise,
+                    ),
+                ),
+                vec![forall_result],
             ))
             .into(),
         ))
@@ -217,8 +228,14 @@ impl Runtime {
         expected_fn_set: &FnSet,
         in_fact: &InFact,
     ) -> Result<Option<FnMembershipProofFlow>, RuntimeError> {
-        let Some(known_fn_body) = self.get_cloned_object_in_fn_set(element) else {
-            return Ok(None);
+        let known_fn_body = match element {
+            Obj::AnonymousFn(function) => function.body.clone(),
+            _ => {
+                let Some(body) = self.get_cloned_object_in_fn_set(element) else {
+                    return Ok(None);
+                };
+                body
+            }
         };
         let expected_flat_param_names = Self::collect_fn_param_names(&expected_fn_set.body);
         let known_flat_param_names = Self::collect_fn_param_names(&known_fn_body);
@@ -229,7 +246,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let Some(fn_head) = FnObjHead::given_an_atom_return_a_fn_obj_head(element.clone()) else {
+        let Some(fn_head) = FnObjHead::from_callable_obj(element.clone()) else {
             return Ok(None);
         };
         let expected_flat_param_bindings = expected_fn_set
@@ -284,11 +301,37 @@ impl Runtime {
             &full_param_to_forall_obj,
             ParamObjType::BinderRetag(BinderRetagSource::FnSet),
         )?;
-        let applied_fn_obj: Obj = FnObj::new(
-            fn_head,
-            Self::build_full_application_arg_groups(&known_fn_body, &forall_param_names),
-        )
-        .into();
+        let applied_fn_obj = if let Obj::AnonymousFn(function) = element {
+            let known_bindings = known_fn_body
+                .params_def_with_set
+                .iter()
+                .flat_map(|group| group.params.iter())
+                .collect::<Vec<_>>();
+            if known_bindings.len() != forall_param_names.len() {
+                return Ok(None);
+            }
+            let mut known_param_to_forall_obj = HashMap::new();
+            for (binding, forall_binding) in
+                known_bindings.into_iter().zip(forall_param_names.iter())
+            {
+                insert_symbol_substitution(
+                    &mut known_param_to_forall_obj,
+                    binding,
+                    obj_for_bound_param_in_scope(forall_binding, ParamObjType::Forall),
+                );
+            }
+            self.inst_obj(
+                function.equal_to.as_ref(),
+                &known_param_to_forall_obj,
+                ParamObjType::BinderRetag(BinderRetagSource::FnSet),
+            )?
+        } else {
+            FnObj::new(
+                fn_head,
+                Self::build_full_application_arg_groups(&known_fn_body, &forall_param_names),
+            )
+            .into()
+        };
 
         Ok(Some(FnMembershipProofFlow {
             in_fact: in_fact.clone(),

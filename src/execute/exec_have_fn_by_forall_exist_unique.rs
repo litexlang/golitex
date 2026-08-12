@@ -110,7 +110,7 @@ impl Runtime {
                             Some(proof_stmt.clone()),
                             format!(
                                 "have fn `{}` by exist! failed: proof step is unknown",
-                                stmt.fn_name
+                                stmt.fn_name()
                             ),
                             proof_stmt.line_file(),
                             None,
@@ -144,7 +144,7 @@ impl Runtime {
                             Some(then_goal.clone().into()),
                             format!(
                                 "have fn `{}` by exist! failed: cannot prove then-clause",
-                                stmt.fn_name
+                                stmt.fn_name()
                             ),
                             then_fact.line_file(),
                             None,
@@ -178,7 +178,7 @@ impl Runtime {
         self.store_parameter_binding(&stmt.symbol_binding, ParamObjType::Identifier)
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
         let function_binding = self
-            .visible_symbol_definition(&stmt.fn_name)
+            .visible_symbol_definition(stmt.fn_name())
             .expect("function symbol was just stored")
             .binding()
             .clone();
@@ -190,7 +190,7 @@ impl Runtime {
                 ParamObjType::Identifier,
             )
             .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
-        let function_identifier_obj = self.declared_identifier_obj(&stmt.fn_name);
+        let function_identifier_obj = self.declared_identifier_obj(stmt.fn_name());
         let bind_fact: Fact = InFact::new(
             function_identifier_obj,
             fn_set.clone().into(),
@@ -349,7 +349,7 @@ impl Runtime {
     ) -> Result<ForallFact, RuntimeError> {
         let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
         let function_obj = build_declared_function_obj_with_param_bindings(
-            self.declared_identifier_obj(&stmt.fn_name),
+            self.declared_identifier_obj(stmt.fn_name()),
             &forall_param_bindings,
         );
         self.have_fn_by_forall_exist_unique_property_forall_with_function(stmt, shape, function_obj)
@@ -419,7 +419,7 @@ impl Runtime {
     ) -> Result<ForallFact, RuntimeError> {
         let forall_param_bindings = stmt.forall.params_def_with_type.collect_param_bindings();
         let function_obj = build_declared_function_obj_with_param_bindings(
-            self.declared_identifier_obj(&stmt.fn_name),
+            self.declared_identifier_obj(stmt.fn_name()),
             &forall_param_bindings,
         );
         let (witness_names, witness_map) = self.fresh_binder_retag_plan_for_bindings(

@@ -92,7 +92,7 @@ impl AtomObj {
                 AtomObj::IdentifierWithMod(renamed)
             }
             AtomObj::Forall(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -100,7 +100,7 @@ impl AtomObj {
                 AtomObj::Forall(ForallFreeParamObj::new(symbol))
             }
             AtomObj::Def(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -108,7 +108,7 @@ impl AtomObj {
                 AtomObj::Def(DefHeaderFreeParamObj::new(symbol))
             }
             AtomObj::Exist(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -116,7 +116,7 @@ impl AtomObj {
                 AtomObj::Exist(ExistFreeParamObj::new(symbol))
             }
             AtomObj::SetBuilder(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -124,7 +124,7 @@ impl AtomObj {
                 AtomObj::SetBuilder(SetBuilderFreeParamObj::new(symbol))
             }
             AtomObj::FnSet(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -132,7 +132,7 @@ impl AtomObj {
                 AtomObj::FnSet(FnSetFreeParamObj::new(symbol))
             }
             AtomObj::Induc(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -140,7 +140,7 @@ impl AtomObj {
                 AtomObj::Induc(ByInducFreeParamObj::new(symbol))
             }
             AtomObj::DefAlgo(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -148,7 +148,7 @@ impl AtomObj {
                 AtomObj::DefAlgo(DefAlgoFreeParamObj::new(symbol))
             }
             AtomObj::DefStructField(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -156,7 +156,7 @@ impl AtomObj {
                 AtomObj::DefStructField(DefStructFieldFreeParamObj::new(symbol))
             }
             AtomObj::TupleIndex(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol
@@ -164,7 +164,7 @@ impl AtomObj {
                 AtomObj::TupleIndex(TupleIndexFreeParamObj::new(symbol))
             }
             AtomObj::CartIndex(p) => {
-                let symbol = if p.name == from {
+                let symbol = if p.name() == from {
                     p.symbol.with_display_name(to.to_string())
                 } else {
                     p.symbol

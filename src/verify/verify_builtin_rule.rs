@@ -187,9 +187,12 @@ impl Runtime {
                 if self.verify_number_comparison_builtin_rule(fact) != Some(true) {
                     return StmtUnknown::new().into();
                 }
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                     fact.clone().into(),
                     "number comparison".to_string(),
+                    BuiltinRuleEvidence::ClosedNumericComparison(
+                        ClosedNumericComparisonBuiltinRuleEvidence::new(fact.clone().into()),
+                    ),
                     Vec::new(),
                 )
                 .into()

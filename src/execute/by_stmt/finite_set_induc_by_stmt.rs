@@ -326,7 +326,7 @@ impl Runtime {
             std::slice::from_ref(&stmt.param_binding),
             ParamObjType::Forall,
         );
-        let param = param_to_forall[&stmt.param].clone();
+        let param = param_to_forall[stmt.param()].clone();
         let mut then_facts = Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
             then_facts.push(self.inst_exist_or_and_chain_atomic_fact(
@@ -433,7 +433,7 @@ impl Runtime {
             false,
             true,
             true,
-            stmt.param.clone(),
+            stmt.param().to_string(),
             "{}".to_string(),
             stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
             generated_forall.to_string(),

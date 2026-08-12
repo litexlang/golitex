@@ -164,7 +164,7 @@ fn fn_set_has_nonzero_first_parameter_condition(fn_set: &FnSet) -> bool {
 }
 
 fn obj_is_fn_set_param_named(obj: &Obj, name: &str) -> bool {
-    matches!(obj, Obj::Atom(AtomObj::FnSet(param)) if param.name == name)
+    matches!(obj, Obj::Atom(AtomObj::FnSet(param)) if param.name() == name)
 }
 
 fn obj_is_literal_zero(obj: &Obj) -> bool {
