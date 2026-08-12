@@ -26,8 +26,7 @@ impl Runtime {
                     fn_equal_fact.line_file.clone(),
                 )
                 .into();
-                let reason =
-                    InferReason::InferRule("fn_eq implies ordinary equality".to_string());
+                let reason = InferReason::InferRule("fn_eq implies ordinary equality".to_string());
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     inferred_equality,
                     reason.store_reason(),

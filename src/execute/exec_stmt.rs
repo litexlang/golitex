@@ -25,7 +25,7 @@ impl Runtime {
         match result {
             Ok(mut result) => {
                 let well_definedness = if self.captures_litex_to_lean_well_definedness() {
-                    self.end_statement_well_definedness_capture()
+                    self.end_statement_well_definedness_capture()?
                 } else {
                     WellDefinednessCertificate::default()
                 };
@@ -53,7 +53,7 @@ impl Runtime {
             }
             Err(error) => {
                 if self.captures_litex_to_lean_well_definedness() {
-                    let _ = self.end_statement_well_definedness_capture();
+                    self.discard_statement_well_definedness_capture();
                 }
                 let phase = execution_phase_for_error(&error);
                 let message = error.trace_message();

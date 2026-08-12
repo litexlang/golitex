@@ -1,19 +1,30 @@
-# Tracer: standard-set membership lifting from a known membership
+# Tracer: target-driven standard-set membership lifting
 #
-# Before (verified without retaining its known-fact premise):
-# forall a Z:
-#     a $in R
-# Former behavior: the membership builtin reverse-enumerated every standard
-# subset of R and returned an empty builtin evidence chain.
+# Before (failed unless the intermediate N membership was stated first):
+# forall x, y N:
+#     (x, y)[1] $in C
+# Former behavior: widening enumerated only the sets already stored for the
+# projected object, so its derivable N carrier was invisible on a cold query.
 #
-# Now (verified with `a $in Z` as the builtin rule's known-fact subgoal):
+# Now (verified without pre-materializing the intermediate carrier):
+forall x, y N:
+    (x, y)[1] $in C
+# Current behavior: the C goal enumerates C's fixed proper standard
+# subcarriers and checks `(x, y)[1] $in N` as a bounded proof premise.
+
+# Materializing the same intermediate fact first must not change the result.
+forall x, y N:
+    (x, y)[1] $in N
+    (x, y)[1] $in C
+
+# Ordinary direct widening remains supported.
 forall a Z:
     a $in R
-# Current behavior: the rule reads the memberships already known for `a` and
-# checks that the known source set Z is contained in the target set R.
 #
 # Boundary: `forall c C: c $in R` remains rejected; C is not a subset of R.
-# The executable negative regression is
-# `standard_set_membership_lifting_uses_known_membership_only_forward`.
+# The executable positive, order-independence, architecture, and negative
+# regressions are in
+# `standard_set_membership_lifting_is_target_driven_and_forward_only` and
+# `standard_set_membership_lifting_does_not_enumerate_stored_owner_sets`.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/standard_set_membership_lifting.lit
 # Implementation: src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs

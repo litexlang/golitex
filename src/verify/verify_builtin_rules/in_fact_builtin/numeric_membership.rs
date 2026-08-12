@@ -322,13 +322,11 @@ impl Runtime {
                     target_fact.clone(),
                     "fn application in its exact instantiated declared return set".to_string(),
                     BuiltinRuleEvidence::FunctionApplicationReturnMembership(
-                        FunctionApplicationReturnMembershipBuiltinRuleEvidence {
-                            source_application: Obj::FnObj(fn_obj.clone()),
-                            function_set: initial_function_set,
-                            typed_return_set: typed_ret,
-                            expected_target: target_fact,
-                            expected_head_membership: head_membership_fact,
-                        },
+                        FunctionApplicationReturnMembershipBuiltinRuleEvidence::new(
+                            typed_ret,
+                            target_fact,
+                            head_membership_fact,
+                        ),
                     ),
                     vec![head_membership_result],
                 )
@@ -1398,19 +1396,24 @@ impl Runtime {
                 }
             }
 
-            // `finite_set_size(S)` is intrinsically natural when `S` is
-            // finite. Integer-discreteness rules use this restricted leaf
-            // checker, so expose that native carrier here without reopening
-            // general builtin recursion.
+            // `finite_set_size(S)` is natural once `S` is already known finite.
+            // This integer leaf may reuse that exact premise, but must not prove
+            // it with another direct builtin rule. Example: a finite-set binder
+            // lets integer discreteness treat `finite_set_size(S)` as integral.
             if let Obj::FiniteSetSize(finite_set_size) = obj {
                 let in_n = InFact::new((*obj).clone(), StandardSet::N.into(), line_file.clone());
-                let finite_size_result = self.verify_finite_set_size_in_standard_number_set(
-                    &in_n,
-                    finite_set_size,
-                    &UseBuiltinRuleVerifyState::new(),
-                )?;
-                if finite_size_result.is_true() {
-                    steps.push(finite_size_result);
+                let finite_fact: AtomicFact =
+                    IsFiniteSetFact::new(finite_set_size.set.as_ref().clone(), line_file.clone())
+                        .into();
+                let finite_result = self.verify_known_non_forall_atomic_fact(&finite_fact)?;
+                if finite_result.is_true() {
+                    steps.push(
+                        number_in_set_verified_by_builtin_rules_result_with_subgoals(
+                            &in_n,
+                            "finite_set_size of a known finite set is a natural number",
+                            vec![finite_result],
+                        ),
+                    );
                     continue;
                 }
             }

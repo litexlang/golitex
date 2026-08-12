@@ -227,7 +227,12 @@ impl Runtime {
                 .verify_resolved_numeric_not_equal_without_builtin_recursion(fact)
                 .unwrap_or_else(|| StmtUnknown::new().into()),
             AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
-                self.verify_prime_fact_by_computation(fact)
+                let prime_result = self.verify_prime_fact_by_computation(fact);
+                if prime_result.is_unknown() {
+                    self.verify_coprime_fact_by_computation(fact)
+                } else {
+                    prime_result
+                }
             }
             _ => StmtUnknown::new().into(),
         }
@@ -305,6 +310,7 @@ fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use std::fs;
     use std::path::Path;
 
@@ -345,6 +351,50 @@ mod tests {
                 path.display()
             );
         });
+    }
+
+    #[test]
+    fn integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("integer_leaf_finite_set_size_test.lit");
+
+        let start: Obj = Identifier::new("a".to_string()).into();
+        let end: Obj = Identifier::new("b".to_string()).into();
+        let set: Obj = ClosedRange::new(start, end).into();
+        let size: Obj = FiniteSetSize::new(set.clone()).into();
+        let line_file = default_line_file();
+
+        let cold = runtime
+            .verify_objects_are_known_integers_in_builtin_leaf(&[&size], &line_file)
+            .expect("integer leaf verification should not error");
+        assert!(
+            cold.is_none(),
+            "the integer leaf must not open the direct closed-range finiteness rule"
+        );
+
+        let finite_fact: AtomicFact = IsFiniteSetFact::new(set, line_file.clone()).into();
+        let finite_result = runtime
+            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&finite_fact)
+            .expect("direct finiteness verification should not error");
+        assert!(finite_result.is_true());
+
+        let mut warm = runtime
+            .verify_objects_are_known_integers_in_builtin_leaf(&[&size], &line_file)
+            .expect("integer leaf verification should not error")
+            .expect("known finiteness should type finite_set_size as an integer");
+        let size_result = warm
+            .pop()
+            .expect("finite_set_size integer evidence should be retained")
+            .into_factual_success()
+            .expect("finite_set_size integer evidence should be factual");
+        let VerifiedByResult::BuiltinRule(rule) = size_result.underlying_verified_by() else {
+            panic!("finite_set_size membership should keep its builtin rule evidence");
+        };
+        assert_eq!(
+            rule.subgoals.len(),
+            1,
+            "the known finite-set premise must remain in the proof tree"
+        );
     }
 
     #[test]

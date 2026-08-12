@@ -9,7 +9,8 @@ use crate::fact::{AtomicFact, Fact};
 use crate::obj::{Obj, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use crate::result::{
-    WellDefinednessCertificateId, WellDefinednessObjectOccurrenceId, WellDefinednessRequirementRole,
+    WellDefinedFactId, WellDefinedObjProofId, WellDefinednessCertificateId,
+    WellDefinednessObjectOccurrenceId, WellDefinednessRequirementRole,
 };
 use std::fmt;
 
@@ -234,6 +235,7 @@ pub struct LitexToLeanProjectedForallIr {
 
 #[derive(Clone, Debug, Default)]
 pub struct LitexToLeanWellDefinednessCertificateIr {
+    pub root_proof_ids: Vec<WellDefinedObjProofId>,
     pub facts: Vec<LitexToLeanWellDefinednessFactIr>,
     pub objects: Vec<LitexToLeanWellDefinednessObjectIr>,
     pub target_requirements: Vec<LitexToLeanWellDefinednessTargetRequirementIr>,
@@ -242,6 +244,7 @@ pub struct LitexToLeanWellDefinednessCertificateIr {
 #[derive(Clone, Debug)]
 pub struct LitexToLeanWellDefinednessFactIr {
     pub certificate_id: WellDefinednessCertificateId,
+    pub well_defined_fact_id: WellDefinedFactId,
     pub role: WellDefinednessRequirementRole,
     /// Frozen separately from the recursive proof node so malformed IR cannot
     /// retarget a verifier certificate to another proposition.
@@ -252,8 +255,11 @@ pub struct LitexToLeanWellDefinednessFactIr {
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessObjectIr {
     pub occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub source_object: Obj,
     pub intrinsic_result_carrier: Option<LitexToLeanCarrierIr>,
+    pub child_proof_ids: Vec<WellDefinedObjProofId>,
+    pub well_defined_fact_ids: Vec<WellDefinedFactId>,
     pub fact_ids: Vec<WellDefinednessCertificateId>,
 }
 
@@ -262,8 +268,11 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
         formatter
             .debug_struct("LitexToLeanWellDefinednessObjectIr")
             .field("occurrence_id", &self.occurrence_id)
+            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("source_object", &self.source_object.to_string())
             .field("intrinsic_result_carrier", &self.intrinsic_result_carrier)
+            .field("child_proof_ids", &self.child_proof_ids)
+            .field("well_defined_fact_ids", &self.well_defined_fact_ids)
             .field("fact_ids", &self.fact_ids)
             .finish()
     }
@@ -272,9 +281,11 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessTargetRequirementIr {
     pub object_occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub source_object: Obj,
     pub role: WellDefinednessRequirementRole,
     pub certificate_id: WellDefinednessCertificateId,
+    pub well_defined_fact_id: WellDefinedFactId,
     pub expected_proposition: Fact,
 }
 
@@ -283,9 +294,11 @@ impl fmt::Debug for LitexToLeanWellDefinednessTargetRequirementIr {
         formatter
             .debug_struct("LitexToLeanWellDefinednessTargetRequirementIr")
             .field("object_occurrence_id", &self.object_occurrence_id)
+            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("source_object", &self.source_object.to_string())
             .field("role", &self.role)
             .field("certificate_id", &self.certificate_id)
+            .field("well_defined_fact_id", &self.well_defined_fact_id)
             .field(
                 "expected_proposition",
                 &self.expected_proposition.to_string(),

@@ -118,6 +118,8 @@ pub enum LitexToLeanBuiltinRuleIr {
     AbsoluteValue(LitexToLeanAbsoluteValueBuiltinRuleIr),
     /// Closed `$prime(n)` and `not $prime(n)` facts checked by u64 reflection.
     PrimeU64Reflection,
+    /// Closed `$coprime(a, b)` facts checked by exact natural gcd reflection.
+    CoprimeNaturalReflection,
     /// Membership in a standard numeric set is projected through Litex's
     /// centralized standard-set hierarchy. The proof has exactly one source
     /// membership premise.
@@ -301,6 +303,9 @@ impl LitexToLeanBuiltinRuleIr {
                 })
             }
             BuiltinRuleEvidence::PrimeU64Reflection => LitexToLeanBuiltinRuleIr::PrimeU64Reflection,
+            BuiltinRuleEvidence::CoprimeNaturalReflection => {
+                LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection
+            }
             BuiltinRuleEvidence::StandardSetMembershipProjection => {
                 LitexToLeanBuiltinRuleIr::StandardSetMembershipProjection
             }
@@ -333,6 +338,9 @@ impl fmt::Debug for LitexToLeanBuiltinRuleIr {
                 f.debug_tuple("AbsoluteValue").field(rule).finish()
             }
             LitexToLeanBuiltinRuleIr::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
+            LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => {
+                f.write_str("CoprimeNaturalReflection")
+            }
             LitexToLeanBuiltinRuleIr::StandardSetMembershipProjection => {
                 f.write_str("StandardSetMembershipProjection")
             }

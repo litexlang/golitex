@@ -13,6 +13,7 @@ mod runtime_success;
 mod runtime_unknown;
 mod unsafe_stmt_result;
 mod well_definedness_certificate;
+mod well_definedness_proof;
 mod witness_stmt_result;
 
 pub use builtin_rule_evidence::{
@@ -63,5 +64,10 @@ pub use well_definedness_certificate::{
     WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
     WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
     WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
+};
+pub use well_definedness_proof::{
+    CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,
+    WellDefinedFunctionContract, WellDefinedObjProof, WellDefinedObjProofId,
+    WellDefinedTargetRequirementProof,
 };
 pub use witness_stmt_result::WitnessStmtResult;

@@ -72,6 +72,30 @@ forall a, b Z:
         a + 1 <= b
         a <= b - 1
 
+# Tracer: finite cardinality participates in integer discreteness without
+# reopening a second direct builtin rule.
+#
+# Before (verified through the wrong internal route):
+# forall s finite_set, t N:
+#     t < finite_set_size(s)
+#     =>:
+#         t + 1 <= finite_set_size(s)
+# Former behavior: the integer leaf created a fresh builtin root to re-prove
+# `$is_finite_set(s)`.
+#
+# Now (verified with the already-established finite-set premise):
+forall s finite_set, t N:
+    t < finite_set_size(s)
+    =>:
+        t + 1 <= finite_set_size(s)
+# Current behavior: the integer leaf reuses the known finiteness proof and
+# retains it as a child certificate.
+#
+# Boundary: without already-established finiteness, the restricted integer
+# leaf remains unknown; it cannot invoke the closed-range finiteness rule.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/order_semantics_builtin_rules.lit
+# Rust boundary: cargo test --release integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule -- --nocapture
+
 forall x, n Z:
     x <= n or x >= n + 1
 

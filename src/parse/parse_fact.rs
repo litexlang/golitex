@@ -1111,8 +1111,20 @@ mod inline_forall_parse_tests {
         assert_eq!(
             forall_fact
                 .params_def_with_type
-                .param_type_cited_param_indices,
-            vec![vec![], vec![0], vec![0]]
+                .cited_param_indices_for_group(0),
+            []
+        );
+        assert_eq!(
+            forall_fact
+                .params_def_with_type
+                .cited_param_indices_for_group(1),
+            [0]
+        );
+        assert_eq!(
+            forall_fact
+                .params_def_with_type
+                .cited_param_indices_for_group(2),
+            [0]
         );
     }
 

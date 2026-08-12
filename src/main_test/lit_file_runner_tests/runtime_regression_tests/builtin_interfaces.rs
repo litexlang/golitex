@@ -18,6 +18,10 @@ fn all_explicit_builtin_theorem_interfaces_succeed() {
 have q Q
 by thm rational_has_unique_reduced_fraction(q)
 
+by def {1} $subset {1, 2}
+by thm subset_of_finite_set_is_finite({1}, {1, 2})
+by thm finite_set_has_bijective_index({})
+
 by thm fn_set_member(fn(x R) R {x}, fn(y R) R)
 by thm set_builder_member(1, {x R: x > 0})
 
@@ -76,6 +80,11 @@ by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), f
         );
         assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
         assert!(output.contains("exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}"));
+        assert!(output.contains("\"theorem\": \"subset_of_finite_set_is_finite\""));
+        assert!(output.contains("\"theorem\": \"finite_set_has_bijective_index\""));
+        assert!(output.contains(
+            "exist idx finite_seq({}, finite_set_size({})) st {$bijective(closed_range(1, finite_set_size({})), {}, idx)}"
+        ));
         assert!(output.contains("\"theorem_source\": \"builtin_rule\""));
         assert!(output.contains("\"requirement_checks\":"));
         assert!(output.contains("\"role\": \"function signature matches the target function set\""));
@@ -113,6 +122,26 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
             "qualified rational",
             "have q Q\nby thm M::rational_has_unique_reduced_fraction(q)",
             "cannot use keyword as name: rational_has_unique_reduced_fraction",
+        ),
+        (
+            "finite subset arity",
+            "by thm subset_of_finite_set_is_finite({1})",
+            "expects 2 argument(s), but got 1",
+        ),
+        (
+            "finite index arity",
+            "by thm finite_set_has_bijective_index({}, {})",
+            "expects 1 argument(s), but got 2",
+        ),
+        (
+            "qualified finite subset",
+            "by thm M::subset_of_finite_set_is_finite({1}, {1})",
+            "cannot use keyword as name: subset_of_finite_set_is_finite",
+        ),
+        (
+            "qualified finite index",
+            "by thm M::finite_set_has_bijective_index({})",
+            "cannot use keyword as name: finite_set_has_bijective_index",
         ),
     ];
 
@@ -185,6 +214,68 @@ fn rational_reduced_fraction_builtin_theorem_requires_a_rational_argument_and_do
 }
 
 #[test]
+fn finite_set_builtin_theorems_check_requirements_and_do_not_leak() {
+    let mut subset_runtime = Runtime::new();
+    subset_runtime.new_file_path_new_env_new_name_scope("finite_subset_builtin_no_leak");
+    let (setup_results, setup_error) =
+        run_source_code("have A set\nhave B finite_set = {1}", &mut subset_runtime);
+    let (setup_succeeded, setup_output) =
+        render_run_source_code_output(&subset_runtime, &setup_results, &setup_error, false);
+    assert!(
+        setup_succeeded,
+        "subset setup should succeed:\n{setup_output}"
+    );
+
+    let (results, error) = run_source_code(
+        "by thm subset_of_finite_set_is_finite(A, B)",
+        &mut subset_runtime,
+    );
+    let (succeeded, output) =
+        render_run_source_code_output(&subset_runtime, &results, &error, false);
+    assert!(
+        !succeeded,
+        "the missing subset premise must fail:\n{output}"
+    );
+    assert!(output.contains("requires that the first argument is a subset of the second"));
+    assert!(
+        !subset_runtime
+            .cache_known_facts_contains("$is_finite_set(A)")
+            .0
+    );
+    let (probe_results, probe_error) = run_source_code("$is_finite_set(A)", &mut subset_runtime);
+    let (probe_succeeded, probe_output) =
+        render_run_source_code_output(&subset_runtime, &probe_results, &probe_error, false);
+    assert!(
+        !probe_succeeded,
+        "a failed subset theorem must not store its conclusion:\n{probe_output}"
+    );
+
+    let mut index_runtime = Runtime::new();
+    index_runtime.new_file_path_new_env_new_name_scope("finite_index_builtin_no_leak");
+    let (setup_results, setup_error) = run_source_code("have S set", &mut index_runtime);
+    let (setup_succeeded, setup_output) =
+        render_run_source_code_output(&index_runtime, &setup_results, &setup_error, false);
+    assert!(
+        setup_succeeded,
+        "index setup should succeed:\n{setup_output}"
+    );
+
+    let (results, error) = run_source_code(
+        "by thm finite_set_has_bijective_index(S)",
+        &mut index_runtime,
+    );
+    let (succeeded, output) =
+        render_run_source_code_output(&index_runtime, &results, &error, false);
+    assert!(
+        !succeeded,
+        "a merely set-valued argument must fail:\n{output}"
+    );
+    assert!(output.contains("requires a finite-set argument"));
+    let target = "exist idx finite_seq(S, finite_set_size(S)) st {$bijective(closed_range(1, finite_set_size(S)), S, idx)}";
+    assert!(!index_runtime.cache_known_facts_contains(target).0);
+}
+
+#[test]
 fn failed_builtin_theorem_call_does_not_leak_its_conclusion() {
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope("builtin_theorem_no_leak");
@@ -234,6 +325,18 @@ fn builtin_theorem_names_are_reserved_and_normal_theorems_still_fall_back() {
         !succeeded,
         "the rational builtin theorem name should be reserved:\n{output}"
     );
+
+    for name in [
+        "subset_of_finite_set_is_finite",
+        "finite_set_has_bijective_index",
+    ] {
+        let source = format!("have {name} R");
+        let (_, succeeded, output) = run_source(&source, name, false);
+        assert!(
+            !succeeded,
+            "the builtin theorem name `{name}` should be reserved:\n{output}"
+        );
+    }
 
     let ordinary = r#"
 thm local_reflexivity:

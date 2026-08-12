@@ -108,8 +108,7 @@ impl Runtime {
         let mut args_for_algo_params: Vec<Obj> =
             Vec::with_capacity(def_algo_stmt.param_bindings.len());
         for param_binding in def_algo_stmt.param_bindings.iter() {
-            args_for_algo_params
-                .push(algo_param_to_forall_obj[param_binding.name()].clone());
+            args_for_algo_params.push(algo_param_to_forall_obj[param_binding.name()].clone());
         }
 
         let param_satisfy_fn_param_set_facts_atomic =

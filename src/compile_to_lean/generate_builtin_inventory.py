@@ -387,7 +387,11 @@ def family(entry) -> str:
 def is_evaluation(entry) -> bool:
     text = (entry["label"] or entry["expression"]).lower()
     path = entry["path"]
-    if path.endswith("prime_builtin.rs") or path.endswith("in_fact_builtin/numeric_values.rs"):
+    if (
+        path.endswith("prime_builtin.rs")
+        or path.endswith("coprime_builtin.rs")
+        or path.endswith("in_fact_builtin/numeric_values.rs")
+    ):
         return True
     if "trusted file load" in text:
         return True
@@ -421,7 +425,7 @@ def mechanism_class(entry) -> str:
         for marker in QUANTIFIED_FUNCTION_MARKERS
     ):
         return "quantified"
-    if function == "verify_in_fact_by_known_standard_subset_membership":
+    if function == "verify_in_fact_by_standard_subset_membership":
         return "transform"
     if entry["sink"] in TYPED_LOCAL_RULE_SINKS:
         return "local_schema"
@@ -462,7 +466,7 @@ def lean_mapping(entry) -> tuple[str, str]:
                 "checked pointwise `forall` specialization into a native function-set predicate",
                 "implemented",
             )
-        if entry.get("function") == "verify_in_fact_by_known_standard_subset_membership":
+        if entry.get("function") == "verify_in_fact_by_standard_subset_membership":
             return (
                 "native membership projection + checked numeric coercion",
                 "implemented",
@@ -473,6 +477,8 @@ def lean_mapping(entry) -> tuple[str, str]:
             return "native subset proposition (one reversed checked premise)", "implemented"
         if text == "deterministic primality computation for u64":
             return "`Nat.Prime` / `norm_num`", "implemented"
+        if text == "deterministic natural coprimality computation":
+            return "`Nat.Coprime` / `norm_num`", "implemented"
         if text in (
             "integer expression closure under +, -, and *",
             "Z closure: binary integer arithmetic",
@@ -560,9 +566,10 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         f"The generic local-schema site currently represents {LOCAL_BUILTIN_RULE_COUNT} paired RuleIds;",
         "the implemented summary still counts source sites, not catalog entries.",
         "Closed numeric membership results may instead use the backend's generic,",
-        "carrier-bearing `norm_num` reflection path. The closed-u64 `$prime` route is",
-        "listed as implemented because it now carries explicit structured reflection",
-        "evidence; other evaluation sites remain `not_this_round`.",
+        "carrier-bearing `norm_num` reflection path. The closed-u64 `$prime` and",
+        "closed-natural `$coprime` routes are listed as implemented because they carry",
+        "explicit structured reflection evidence; other evaluation sites remain",
+        "`not_this_round`.",
         "",
         "Regenerate or audit drift with:",
         "",

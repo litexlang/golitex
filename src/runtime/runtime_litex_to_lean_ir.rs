@@ -1857,6 +1857,7 @@ impl Runtime {
             }
             facts.push(LitexToLeanWellDefinednessFactIr {
                 certificate_id: evidence.certificate_id,
+                well_defined_fact_id: evidence.well_defined_fact_id,
                 role: evidence.role,
                 expected_proposition: evidence.proof.stmt.clone(),
                 fact,
@@ -1899,8 +1900,11 @@ impl Runtime {
                 .transpose()?;
             objects.push(LitexToLeanWellDefinednessObjectIr {
                 occurrence_id: evidence.occurrence_id,
+                well_defined_obj_proof_id: evidence.well_defined_obj_proof_id,
                 source_object: evidence.object.clone(),
                 intrinsic_result_carrier,
+                child_proof_ids: evidence.child_proof_ids.clone(),
+                well_defined_fact_ids: evidence.well_defined_fact_ids.clone(),
                 fact_ids: evidence.fact_ids.clone(),
             });
         }
@@ -1938,13 +1942,16 @@ impl Runtime {
             }
             target_requirements.push(LitexToLeanWellDefinednessTargetRequirementIr {
                 object_occurrence_id: requirement.object_occurrence_id,
+                well_defined_obj_proof_id: requirement.well_defined_obj_proof_id,
                 source_object: requirement.source_object.clone(),
                 role: requirement.role,
                 certificate_id: requirement.certificate_id,
+                well_defined_fact_id: requirement.well_defined_fact_id,
                 expected_proposition: requirement.expected_proposition.clone(),
             });
         }
         Ok(LitexToLeanWellDefinednessCertificateIr {
+            root_proof_ids: certificate.root_proof_ids.clone(),
             facts,
             objects,
             target_requirements,
@@ -2696,9 +2703,49 @@ impl Runtime {
                     "function-application return membership evidence lost its exact head-membership premise",
                 ));
             }
-            let source_application = LitexToLeanObjectIr::lower(&evidence.source_application)
+            let Fact::AtomicFact(AtomicFact::InFact(expected_target)) = &evidence.expected_target
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence retained a non-membership target",
+                ));
+            };
+            let Obj::FnObj(expected_application) = &expected_target.element else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence retained a non-application target element",
+                ));
+            };
+            let Fact::AtomicFact(AtomicFact::InFact(expected_head_membership)) =
+                &evidence.expected_head_membership
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence retained a non-membership premise",
+                ));
+            };
+            if !matches!(&expected_head_membership.set, Obj::FnSet(_)) {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence retained a non-function-space head premise",
+                ));
+            }
+            let expected_head: Obj = expected_application.head.as_ref().clone().into();
+            if obj_equality_key(&expected_head_membership.element)
+                != obj_equality_key(&expected_head)
+                || !objs_equal_with_nested_binder_alpha_equivalence(
+                    &expected_target.set,
+                    &evidence.typed_return_set,
+                )
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence changed its application head or typed return set",
+                ));
+            }
+            let source_application = LitexToLeanObjectIr::lower(&expected_target.element)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            let function_set = LitexToLeanObjectIr::lower(&evidence.function_set.clone().into())
+            let function_set = LitexToLeanObjectIr::lower(&expected_head_membership.set)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
             let typed_return_set = LitexToLeanObjectIr::lower(&evidence.typed_return_set)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
@@ -2749,6 +2796,19 @@ impl Runtime {
                     "refined numeric membership evidence was retargeted after verification",
                 ));
             }
+            let Fact::AtomicFact(AtomicFact::InFact(expected_target)) = &evidence.expected_target
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "refined numeric membership evidence retained a non-membership target",
+                ));
+            };
+            let Obj::StandardSet(target_set) = &expected_target.set else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "refined numeric membership evidence retained a non-numeric target set",
+                ));
+            };
             let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
             if premises.len() != evidence.expected_premises.len()
                 || premises.iter().zip(evidence.expected_premises.iter()).any(
@@ -2762,7 +2822,7 @@ impl Runtime {
             }
             return Ok(LitexToLeanFactProofIr::RuleApplication {
                 rule: LitexToLeanProofRuleIr::RefinedNumericMembership {
-                    target_set: evidence.target_set.clone(),
+                    target_set: *target_set,
                     expected_target: evidence.expected_target.clone(),
                     expected_premises: evidence.expected_premises.clone(),
                 },
@@ -2777,19 +2837,16 @@ impl Runtime {
                     "function-set membership evidence was retargeted after verification",
                 ));
             }
-            let Fact::AtomicFact(AtomicFact::InFact(target)) = goal else {
+            let Fact::AtomicFact(AtomicFact::InFact(target)) = &evidence.expected_target else {
                 return Err(litex_to_lean_ir_error(
                     &goal.line_file(),
                     "function-set membership evidence was attached to a non-membership fact",
                 ));
             };
-            if obj_equality_key(&target.element) != obj_equality_key(&evidence.element)
-                || obj_equality_key(&target.set)
-                    != obj_equality_key(&evidence.function_set.clone().into())
-            {
+            if !matches!(&target.set, Obj::FnSet(_)) {
                 return Err(litex_to_lean_ir_error(
                     &goal.line_file(),
-                    "function-set membership evidence changed its element or function space",
+                    "function-set membership evidence retained a non-function-space target",
                 ));
             }
             let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
@@ -2802,9 +2859,9 @@ impl Runtime {
                     "function-set membership evidence did not retain its exact pointwise forall proof",
                 ));
             }
-            let element = LitexToLeanObjectIr::lower(&evidence.element)
+            let element = LitexToLeanObjectIr::lower(&target.element)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
-            let function_set = LitexToLeanObjectIr::lower(&evidence.function_set.clone().into())
+            let function_set = LitexToLeanObjectIr::lower(&target.set)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
             if !matches!(function_set, LitexToLeanObjectIr::FunctionSet { .. }) {
                 return Err(litex_to_lean_ir_error(
@@ -2830,6 +2887,19 @@ impl Runtime {
                     "set-builder membership evidence was retargeted after verification",
                 ));
             }
+            let Fact::AtomicFact(AtomicFact::InFact(expected_target)) = &evidence.expected_target
+            else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "set-builder membership evidence retained a non-membership target",
+                ));
+            };
+            if !matches!(&expected_target.set, Obj::SetBuilder(_)) {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "set-builder membership evidence retained a non-builder target set",
+                ));
+            }
             let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
             if premises.len() != evidence.expected_premises.len()
                 || premises.iter().zip(evidence.expected_premises.iter()).any(
@@ -2841,7 +2911,7 @@ impl Runtime {
                     "set-builder membership evidence does not retain the exact ordered constructor premises",
                 ));
             }
-            let set_builder = LitexToLeanObjectIr::lower(&evidence.set_builder.clone().into())
+            let set_builder = LitexToLeanObjectIr::lower(&expected_target.set)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
             if !matches!(set_builder, LitexToLeanObjectIr::SetBuilder(_)) {
                 return Err(litex_to_lean_ir_error(

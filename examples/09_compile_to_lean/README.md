@@ -42,6 +42,7 @@ that marker to hide a strict compiler regression.
 | Section | Demonstrates |
 | --- | --- |
 | `native_carriers` | Primary tracer: bare equality and `2 $in R` on native `ℝ` |
+| `coprime_natural_builtin` | Native `$coprime` on `N x N` lowered to Mathlib `Nat.Coprime` with checked reflection |
 | `mixed_projected_forall` | Mixed real/set binders whose independently covered conclusions retain separate stored FactIds |
 | `bounded_facts` | Bounded `forall`, retained membership premises, rational normalization |
 | `propositions_and_trust` | Proposition interfaces, known-forall use, explicit trust provenance |
@@ -52,12 +53,13 @@ that marker to hide a strict compiler regression.
 | `native_sets` | Polymorphic `Set α`, union, intersection, and set difference |
 | `native_set_builtins` | Checked paired adapters for set equalities, membership, predicates, absolute value, and min/max |
 | `standard_numeric_subsets` | Native predicates plus one checked membership projection across the standard numeric-set hierarchy |
-| `builtin_predicates` | Native prime, superset, proper-relation, and negated-comparison propositions with two checked MVP proof routes |
+| `builtin_predicates` | Native prime/coprime, superset, proper-relation, and negated-comparison propositions with checked reflection and duality routes |
 | `choice` | Checked choice from a nonempty native carrier, globally and locally |
 | `existentials` | Existential introduction, extraction, projections, and multiple witnesses |
 | `obtain_from_existential_prop_definition` | Checked unfolding of one verified concrete prop into the exact existential eliminated by `obtain` |
 | `proof_scopes` | Object definitions, `by cases`, and `by contra` proof scopes |
 | `function_sets_and_well_definedness` | Native dependent function sets, checked body/application WD certificates, and exact named-function evaluation |
+| `environment_well_definedness_cache` | Environment-owned WD proof IDs/DAGs, exact function-contract cache keys, and one reused Lean helper across statements |
 | `carrier_boundaries` | Partial report for carrier facts without complete strict backends |
 | `partial_boundary` | Partial report around one unsupported trigonometric proof |
 

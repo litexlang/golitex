@@ -484,23 +484,21 @@ impl Runtime {
         )
     }
 
-    pub(super) fn verify_in_fact_by_known_standard_subset_membership(
+    pub(super) fn verify_in_fact_by_standard_subset_membership(
         &mut self,
         in_fact: &InFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let Obj::StandardSet(target_set) = &in_fact.set else {
             return Ok(StmtUnknown::new().into());
         };
 
         // Membership is monotone through the standard numeric-set hierarchy.
-        // Example: known `z $in Z` proves `z $in R`, while `z $in C` does not.
-        for source_set_obj in self.known_sets_containing_obj(&in_fact.element) {
-            let Obj::StandardSet(source_set) = &source_set_obj else {
-                continue;
-            };
-            if !source_set.is_subset_eq(target_set) {
-                continue;
-            }
+        // Derive candidates from the target, not from materialized owner-set
+        // history. Example: a cold `(x, y)[1] $in C` query may prove the
+        // projection is in `N`, then widen that result to `C`.
+        for source_set in target_set.proper_subsets_in_membership_proof_order() {
+            let source_set_obj: Obj = source_set.into();
             let source_membership: AtomicFact = InFact::new(
                 in_fact.element.clone(),
                 source_set_obj.clone(),
@@ -508,7 +506,7 @@ impl Runtime {
             )
             .into();
             let source_result =
-                self.verify_non_equational_atomic_fact_with_known_atomic_facts(&source_membership)?;
+                self.verify_builtin_rule_premise(&source_membership, builtin_state)?;
             if source_result.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(

@@ -374,6 +374,29 @@ fn trust_before_line_replays_builtin_theorem_conclusions_without_rechecking_requ
 }
 
 #[test]
+fn trust_before_line_replays_finite_set_index_existential() {
+    let fixture = TrustedPrefixFixture::new(
+        "finite_set_index_builtin_theorem_replay",
+        r#"by thm finite_set_has_bijective_index({})
+
+obtain idx from exist idx finite_seq({}, finite_set_size({})) st {$bijective(closed_range(1, finite_set_size({})), {}, idx)}
+$bijective(closed_range(1, finite_set_size({})), {}, idx)
+"#,
+    );
+    let mut runtime = Runtime::new();
+    let (results, error) = run_trusted_prefix(&fixture, &mut runtime, 3);
+
+    assert!(
+        error.is_none(),
+        "trusted-prefix replay should restore the finite-set index existential: {error:?}"
+    );
+    assert_eq!(results.len(), 3);
+    assert_trace(&results[0], "trusted_prefix");
+    assert_trace(&results[1], "verified");
+    assert_trace(&results[2], "verified");
+}
+
+#[test]
 fn trust_before_line_replays_only_the_selected_builtin_theorem_fact() {
     let fixture = TrustedPrefixFixture::new(
         "selected_builtin_theorem_replay",

@@ -47,7 +47,7 @@ impl Runtime {
 
         let function_identifier_obj = self.declared_identifier_obj(have_fn_equal_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
-        let function_in_function_set_fact = InFact::new(
+        let function_in_function_set_fact: Fact = InFact::new(
             function_identifier_obj.clone(),
             function_set_obj,
             have_fn_equal_stmt.line_file.clone(),
@@ -56,7 +56,7 @@ impl Runtime {
 
         let infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
-                function_in_function_set_fact,
+                function_in_function_set_fact.clone(),
                 InferReason::FunctionDefinition,
             )
             .map_err(|store_fact_error| {
@@ -68,10 +68,12 @@ impl Runtime {
                 )
             })?;
 
+        let membership_fact_id = self.known_fact_id_for_fact(&function_in_function_set_fact)?;
         let stmt_lf = have_fn_equal_stmt.line_file.clone();
         self.register_known_objs_in_fn_sets_for_element_body(
             &function_identifier_obj,
             fn_set_stored.body.clone(),
+            membership_fact_id,
             Some((*have_fn_equal_stmt.equal_to_anonymous_fn.equal_to).clone()),
             stmt_lf.clone(),
             stmt_lf,

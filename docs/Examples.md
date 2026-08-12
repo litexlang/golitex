@@ -2012,11 +2012,11 @@ forall x R:
 For a complete checked sample, see
 [`examples/02_builtin_math/trigonometric_builtin_rules.lit`](../examples/02_builtin_math/trigonometric_builtin_rules.lit).
 
-### 2.3. Native Gcd And Prime
+### 2.3. Native Gcd, Prime, And Coprime
 
 - Category: `builtin object and predicate`
 - Purpose: Shows direct gcd calculation, optional explicit evaluation, and
-  concrete primality decisions.
+  concrete primality and coprimality decisions.
 
 ```litex
 gcd(54, -24) = 6
@@ -2026,6 +2026,9 @@ eval gcd(54, -24)
 $prime(97)
 not $prime(0)
 not $prime(1)
+$coprime(14, 25)
+not $coprime(14, 21)
+not $coprime(0, 0)
 ```
 
 `gcd(a, b)` takes integer arguments and requires `a != 0 or b != 0`.
@@ -2036,8 +2039,15 @@ predicate on `N`; it is false at `0` and `1`. Concrete natural literals in the
 trial-divisor definition. Arguments known only to lie in `Z` or `R` remain
 outside the predicate's domain.
 
+`$coprime(a, b)` is also native on `N x N` and means `gcd(a, b) = 1`.
+Closed natural pairs are decided exactly; `by def $coprime(a, b)` exposes the
+non-all-zero fact together with the gcd-one equation. This predicate does not
+accept arguments known only to lie in `Z` or `R`.
+
 For symbolic examples, see
 [`examples/02_builtin_math/gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit).
+The dedicated carrier and zero-boundary tracer is
+[`examples/02_builtin_math/coprime_on_natural.lit`](../examples/02_builtin_math/coprime_on_natural.lit).
 
 ### 3. Common Builtin Rules
 
@@ -3374,18 +3384,21 @@ fn(x 1...3) R {a(x)}(2) = fn(x 1...3) R {a(x)}(k)
 #### 9. Sequences, Finite Sequences, And Matrices
 
 Mathematical meaning: `seq(R)` is the set of positive-integer-indexed real
-sequences, `finite_seq(R, n)` is a length-`n` sequence, and `matrix(R, r, c)` is
-an `r` by `c` rectangular array.  All three are function-like objects with
-index application syntax.
+sequences, `finite_seq(R, n)` is a length-`n` sequence for `n` in `N`, and
+`matrix(R, r, c)` is an `r` by `c` rectangular array. The literal `[]` is the
+finite sequence of length zero. All three families are function-like objects
+with index application syntax.
 
 ```litex
 have a finite_seq(R, 3) = [1, 2, 3]
+have no_terms finite_seq(R, 0) = []
 
 a $in fn(x N+: x <= 3) R
 a(1) = 1
 a(2) = 2
 a(3) = 3
 finite_seq(R, 3) = fn(x N+: x <= 3) R
+[] $in finite_seq({}, 0)
 ```
 
 ```litex

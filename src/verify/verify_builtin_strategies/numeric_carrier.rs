@@ -69,7 +69,6 @@ impl Runtime {
                     ),
                     BuiltinRuleEvidence::RefinedNumericMembership(
                         RefinedNumericMembershipBuiltinRuleEvidence::new(
-                            target.clone(),
                             fact.clone().into(),
                             required.iter().cloned().map(Fact::from).collect(),
                         ),

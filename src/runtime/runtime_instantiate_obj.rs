@@ -1568,12 +1568,14 @@ impl Runtime {
         let mut arg_index: usize = 0;
         let mut instantiated_param_sets: Vec<Obj> = Vec::with_capacity(param_defs.groups.len());
         for (group_index, param_def) in param_defs.groups.iter().enumerate() {
-            let instantiated_param_set =
-                if !param_defs.param_set_cited_param_indices[group_index].is_empty() {
-                    self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
-                } else {
-                    param_def.set_obj().clone()
-                };
+            let instantiated_param_set = if !param_defs
+                .cited_param_indices_for_group(group_index)
+                .is_empty()
+            {
+                self.inst_obj(param_def.set_obj(), &param_to_arg_map, param_obj_type)?
+            } else {
+                param_def.set_obj().clone()
+            };
             instantiated_param_sets.push(instantiated_param_set);
 
             for binding in param_def.params.iter() {
@@ -1607,7 +1609,10 @@ impl Runtime {
         let mut arg_index: usize = 0;
         let mut new_types: Vec<ParamType> = Vec::with_capacity(total_param_count);
         for (group_index, param_def) in param_defs.groups.iter().enumerate() {
-            let new_type = if !param_defs.param_type_cited_param_indices[group_index].is_empty() {
+            let new_type = if !param_defs
+                .cited_param_indices_for_group(group_index)
+                .is_empty()
+            {
                 self.inst_param_type(&param_def.param_type, &param_arg_map, param_obj_type)?
             } else {
                 param_def.param_type.clone()

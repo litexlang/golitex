@@ -264,11 +264,13 @@ struct LeanEmitter {
     namespace: Option<String>,
     declarations: Vec<String>,
     emitted_fact_names: HashMap<FactId, String>,
+    emitted_well_defined_fact_names: HashMap<WellDefinedFactId, String>,
+    emitted_well_defined_declarations: HashSet<WellDefinedFactId>,
     emitted_declaration_names: HashSet<String>,
     emitted_function_definition_equalities: HashMap<FactId, String>,
-    generalized_scoped_well_definedness: HashMap<String, (String, Vec<(SymbolId, String)>)>,
+    generalized_scoped_well_definedness:
+        HashMap<WellDefinedFactId, (String, Vec<(SymbolId, String)>)>,
     next_local_space_id: usize,
-    next_well_definedness_helper_id: usize,
     type_context: LeanTypeContext,
     required_local_builtin_rules: HashSet<RuleId>,
 }
@@ -278,12 +280,13 @@ struct LeanProofContext {
     // Litex FactIds remain the lookup keys; emitted local names use independent
     // proof-space coordinates.
     proof_fact_names: HashMap<FactId, String>,
+    well_defined_fact_names: HashMap<WellDefinedFactId, String>,
     nonzero_names: Vec<String>,
     local_space_id: Option<usize>,
     next_local_index: usize,
     type_context: LeanTypeContext,
-    /// A top-level forall owns these statement-local WD proofs. They are
-    /// replayed only after its parameter and domain binders enter scope.
+    /// Scoped projections of environment-owned WD facts. They are replayed
+    /// only after this forall's parameter and domain binders enter scope.
     scoped_well_definedness: Vec<LitexToLeanWellDefinednessFactIr>,
     /// Source binders that have corresponding Lean term binders in this proof
     /// space. Function-signature-only binders deliberately do not enter here.
@@ -395,13 +398,45 @@ fn validate_well_definedness_object_contract(
         .iter()
         .map(|evidence| (evidence.certificate_id, &evidence.expected_proposition))
         .collect::<HashMap<_, _>>();
+    if facts_by_id.len() != certificate.facts.len() {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness environment projection repeats a statement-local fact ID",
+        ));
+    }
+    let facts_by_stable_id = certificate
+        .facts
+        .iter()
+        .map(|evidence| {
+            (
+                evidence.well_defined_fact_id,
+                &evidence.expected_proposition,
+            )
+        })
+        .collect::<HashMap<_, _>>();
+    if facts_by_stable_id.len() != certificate.facts.len() {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness environment projection repeats a WellDefinedFactId",
+        ));
+    }
     let mut objects_by_id = HashMap::new();
+    let mut objects_by_stable_id = HashMap::new();
     let mut referenced_fact_ids = HashSet::new();
     for object in certificate.objects.iter() {
         if objects_by_id.insert(object.occurrence_id, object).is_some() {
             return Err(litex_to_lean_error(
                 &default_line_file(),
                 "well-definedness object occurrence IDs are duplicated",
+            ));
+        }
+        if objects_by_stable_id
+            .insert(object.well_defined_obj_proof_id, object)
+            .is_some()
+        {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness environment projection repeats a WellDefinedObjProofId",
             ));
         }
         for certificate_id in object.fact_ids.iter() {
@@ -413,6 +448,16 @@ fn validate_well_definedness_object_contract(
             }
             referenced_fact_ids.insert(*certificate_id);
         }
+        if object
+            .well_defined_fact_ids
+            .iter()
+            .any(|fact_id| !facts_by_stable_id.contains_key(fact_id))
+        {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness DAG node references a missing WellDefinedFactId",
+            ));
+        }
         if matches!(object.source_object, Obj::Mod(_))
             && object.intrinsic_result_carrier != Some(LitexToLeanCarrierIr::Integer)
         {
@@ -422,6 +467,62 @@ fn validate_well_definedness_object_contract(
             ));
         }
     }
+    if certificate
+        .root_proof_ids
+        .iter()
+        .any(|proof_id| !objects_by_stable_id.contains_key(proof_id))
+    {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness statement use references a missing root proof",
+        ));
+    }
+    if certificate
+        .root_proof_ids
+        .iter()
+        .copied()
+        .collect::<HashSet<_>>()
+        .len()
+        != certificate.root_proof_ids.len()
+    {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness statement use repeats a root proof",
+        ));
+    }
+    for object in certificate.objects.iter() {
+        if object
+            .child_proof_ids
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>()
+            .len()
+            != object.child_proof_ids.len()
+            || object
+                .well_defined_fact_ids
+                .iter()
+                .copied()
+                .collect::<HashSet<_>>()
+                .len()
+                != object.well_defined_fact_ids.len()
+        {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness DAG node repeats a direct child or fact edge",
+            ));
+        }
+        if object
+            .child_proof_ids
+            .iter()
+            .any(|proof_id| !objects_by_stable_id.contains_key(proof_id))
+        {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness DAG node references a missing child proof",
+            ));
+        }
+    }
+    validate_well_definedness_dag_projection(certificate, &objects_by_stable_id)?;
     if !certificate.objects.is_empty()
         && certificate
             .facts
@@ -446,10 +547,24 @@ fn validate_well_definedness_object_contract(
                 "target well-definedness requirement references a missing fact certificate",
             ));
         };
+        let Some(stable_expected_proposition) =
+            facts_by_stable_id.get(&requirement.well_defined_fact_id)
+        else {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement references a missing WellDefinedFactId",
+            ));
+        };
         if expected_proposition.to_string() != requirement.expected_proposition.to_string() {
             return Err(litex_to_lean_error(
                 &requirement.expected_proposition.line_file(),
                 "target well-definedness requirement changed its frozen proposition",
+            ));
+        }
+        if stable_expected_proposition.to_string() != requirement.expected_proposition.to_string() {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement changed its stable fact proposition",
             ));
         }
         let Some(object) = objects_by_id.get(&requirement.object_occurrence_id) else {
@@ -459,6 +574,10 @@ fn validate_well_definedness_object_contract(
             ));
         };
         if obj_equality_key(&object.source_object) != obj_equality_key(&requirement.source_object)
+            || object.well_defined_obj_proof_id != requirement.well_defined_obj_proof_id
+            || !object
+                .well_defined_fact_ids
+                .contains(&requirement.well_defined_fact_id)
             || !object.fact_ids.contains(&requirement.certificate_id)
             || !matches!(requirement.source_object, Obj::FnObj(_))
         {
@@ -467,6 +586,100 @@ fn validate_well_definedness_object_contract(
                 "target well-definedness requirement does not belong to its function application occurrence",
             ));
         }
+    }
+    Ok(())
+}
+
+fn validate_well_definedness_dag_projection(
+    certificate: &LitexToLeanWellDefinednessCertificateIr,
+    objects: &HashMap<WellDefinedObjProofId, &LitexToLeanWellDefinednessObjectIr>,
+) -> Result<(), RuntimeError> {
+    let certificate_ids = certificate
+        .facts
+        .iter()
+        .map(|fact| (fact.well_defined_fact_id, fact.certificate_id))
+        .collect::<HashMap<_, _>>();
+    let mut visiting = HashSet::new();
+    let mut reachable = HashSet::new();
+    let mut transitive_fact_ids = HashMap::new();
+
+    fn visit(
+        proof_id: WellDefinedObjProofId,
+        objects: &HashMap<WellDefinedObjProofId, &LitexToLeanWellDefinednessObjectIr>,
+        certificate_ids: &HashMap<WellDefinedFactId, WellDefinednessCertificateId>,
+        visiting: &mut HashSet<WellDefinedObjProofId>,
+        reachable: &mut HashSet<WellDefinedObjProofId>,
+        transitive_fact_ids: &mut HashMap<WellDefinedObjProofId, Vec<WellDefinedFactId>>,
+    ) -> Result<Vec<WellDefinedFactId>, RuntimeError> {
+        reachable.insert(proof_id);
+        if let Some(known) = transitive_fact_ids.get(&proof_id) {
+            return Ok(known.clone());
+        }
+        if !visiting.insert(proof_id) {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness object proof graph contains a cycle",
+            ));
+        }
+        let object = objects.get(&proof_id).ok_or_else(|| {
+            litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness DAG traversal reached a missing object proof",
+            )
+        })?;
+        let mut facts = object.well_defined_fact_ids.clone();
+        for child_id in object.child_proof_ids.iter().copied() {
+            for fact_id in visit(
+                child_id,
+                objects,
+                certificate_ids,
+                visiting,
+                reachable,
+                transitive_fact_ids,
+            )? {
+                if !facts.contains(&fact_id) {
+                    facts.push(fact_id);
+                }
+            }
+        }
+        visiting.remove(&proof_id);
+        facts.sort_by_key(|fact_id| fact_id.value());
+        let projected_ids = facts
+            .iter()
+            .map(|fact_id| {
+                certificate_ids.get(fact_id).copied().ok_or_else(|| {
+                    litex_to_lean_error(
+                        &default_line_file(),
+                        "well-definedness DAG projection references a missing stable fact",
+                    )
+                })
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        if projected_ids != object.fact_ids {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness stable DAG edges disagree with the statement-local fact projection",
+            ));
+        }
+        transitive_fact_ids.insert(proof_id, facts.clone());
+        Ok(facts)
+    }
+
+    for root_id in certificate.root_proof_ids.iter().copied() {
+        visit(
+            root_id,
+            objects,
+            &certificate_ids,
+            &mut visiting,
+            &mut reachable,
+            &mut transitive_fact_ids,
+        )?;
+    }
+    if reachable.len() != objects.len() {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness environment projection contains an object proof unreachable from its statement roots",
+        ));
     }
     Ok(())
 }
@@ -585,6 +798,7 @@ impl LeanProofContext {
     fn new_proof_space(&self) -> Self {
         LeanProofContext {
             proof_fact_names: self.proof_fact_names.clone(),
+            well_defined_fact_names: self.well_defined_fact_names.clone(),
             nonzero_names: self.nonzero_names.clone(),
             local_space_id: None,
             next_local_index: 0,
@@ -601,6 +815,8 @@ impl LeanEmitter {
             namespace,
             declarations: Vec::new(),
             emitted_fact_names: HashMap::new(),
+            emitted_well_defined_fact_names: HashMap::new(),
+            emitted_well_defined_declarations: HashSet::new(),
             emitted_declaration_names: HashSet::from([
                 TO_LEAN_OBJECT_CLASS.to_string(),
                 TO_LEAN_IS_SET.to_string(),
@@ -610,7 +826,6 @@ impl LeanEmitter {
             emitted_function_definition_equalities: HashMap::new(),
             generalized_scoped_well_definedness: HashMap::new(),
             next_local_space_id: 1,
-            next_well_definedness_helper_id: 1,
             type_context: LeanTypeContext::default(),
             required_local_builtin_rules: HashSet::new(),
         }
@@ -618,6 +833,7 @@ impl LeanEmitter {
 
     fn root_proof_context(&self) -> LeanProofContext {
         LeanProofContext {
+            well_defined_fact_names: self.emitted_well_defined_fact_names.clone(),
             type_context: self.type_context.clone(),
             ..LeanProofContext::default()
         }
@@ -860,13 +1076,14 @@ impl LeanEmitter {
         ))
     }
 
-    fn next_well_definedness_helper_name(
+    fn well_definedness_helper_name(
         &mut self,
+        fact_id: WellDefinedFactId,
         line_file: &LineFile,
     ) -> Result<String, RuntimeError> {
-        let name = format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-        self.next_well_definedness_helper_id += 1;
+        let name = format!("well_defined_fact_{}", fact_id.value());
         self.reserve_declaration_name(&name, line_file)?;
+        self.emitted_well_defined_declarations.insert(fact_id);
         Ok(name)
     }
 
@@ -942,6 +1159,25 @@ impl LeanEmitter {
                     "well-definedness certificate cannot introduce trusted evidence",
                 ));
             }
+            if let Some(name) = self
+                .emitted_well_defined_fact_names
+                .get(&evidence.well_defined_fact_id)
+                .cloned()
+            {
+                self.type_context
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        name,
+                    );
+                continue;
+            }
+            if self
+                .emitted_well_defined_declarations
+                .contains(&evidence.well_defined_fact_id)
+            {
+                continue;
+            }
             if binder_owned_fact_ids.contains(&evidence.certificate_id) {
                 // The exact certificate metadata remains installed above.  A
                 // proof argument consumed by a nested application is linked
@@ -950,6 +1186,8 @@ impl LeanEmitter {
             }
             if let Some(fact_id) = evidence.fact.fact_id {
                 if let Some(name) = self.emitted_fact_names.get(&fact_id) {
+                    self.emitted_well_defined_fact_names
+                        .insert(evidence.well_defined_fact_id, name.clone());
                     self.type_context
                         .insert_well_definedness_proof_by_certificate_id(
                             evidence.certificate_id,
@@ -965,6 +1203,8 @@ impl LeanEmitter {
             }
             if let Some(source_fact_id) = direct_citation_fact_id(&evidence.fact.proof) {
                 if let Some(name) = self.emitted_fact_names.get(&source_fact_id) {
+                    self.emitted_well_defined_fact_names
+                        .insert(evidence.well_defined_fact_id, name.clone());
                     self.type_context
                         .insert_well_definedness_proof_by_certificate_id(
                             evidence.certificate_id,
@@ -983,8 +1223,10 @@ impl LeanEmitter {
             if let Some((proposition, proof, is_closed)) = self
                 .lean_standard_membership_well_definedness(evidence, &certificate_symbol_carriers)?
             {
-                let helper_name =
-                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+                let helper_name = self.well_definedness_helper_name(
+                    evidence.well_defined_fact_id,
+                    &evidence.fact.proposition.line_file(),
+                )?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -993,6 +1235,8 @@ impl LeanEmitter {
                     proof
                 ));
                 if is_closed {
+                    self.emitted_well_defined_fact_names
+                        .insert(evidence.well_defined_fact_id, helper_name.clone());
                     self.type_context
                         .insert_well_definedness_proof_by_certificate_id(
                             evidence.certificate_id,
@@ -1005,8 +1249,10 @@ impl LeanEmitter {
             if let Some((proposition, proof)) =
                 self.lean_closed_numeric_well_definedness(evidence, &certificate_object_carriers)?
             {
-                let helper_name =
-                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+                let helper_name = self.well_definedness_helper_name(
+                    evidence.well_defined_fact_id,
+                    &evidence.fact.proposition.line_file(),
+                )?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -1020,14 +1266,23 @@ impl LeanEmitter {
                         &evidence.fact.proposition,
                         helper_name,
                     );
+                self.emitted_well_defined_fact_names.insert(
+                    evidence.well_defined_fact_id,
+                    format!(
+                        "well_defined_fact_{}",
+                        evidence.well_defined_fact_id.value()
+                    ),
+                );
                 continue;
             }
             if let Some((proposition, proof)) = self.lean_generalized_comparison_well_definedness(
                 evidence,
                 &certificate_symbol_carriers,
             )? {
-                let helper_name =
-                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+                let helper_name = self.well_definedness_helper_name(
+                    evidence.well_defined_fact_id,
+                    &evidence.fact.proposition.line_file(),
+                )?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {} (generalized local premise)\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -1043,8 +1298,10 @@ impl LeanEmitter {
                     &certificate_symbol_carriers,
                 )?
             {
-                let helper_name =
-                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+                let helper_name = self.well_definedness_helper_name(
+                    evidence.well_defined_fact_id,
+                    &evidence.fact.proposition.line_file(),
+                )?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {} (generalized strict-order premise)\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -1073,8 +1330,10 @@ impl LeanEmitter {
                         ),
                     )
                 })?;
-            let helper_name =
-                self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+            let helper_name = self.well_definedness_helper_name(
+                evidence.well_defined_fact_id,
+                &evidence.fact.proposition.line_file(),
+            )?;
             self.declarations.push(format!(
                 "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                 evidence.certificate_id.value(),
@@ -1088,6 +1347,13 @@ impl LeanEmitter {
                     &evidence.fact.proposition,
                     helper_name,
                 );
+            self.emitted_well_defined_fact_names.insert(
+                evidence.well_defined_fact_id,
+                format!(
+                    "well_defined_fact_{}",
+                    evidence.well_defined_fact_id.value()
+                ),
+            );
         }
         Ok(())
     }
@@ -1127,6 +1393,25 @@ impl LeanEmitter {
                 // certificate error before any Lean text can be returned.
                 continue;
             }
+            if let Some(name) = self
+                .emitted_well_defined_fact_names
+                .get(&evidence.well_defined_fact_id)
+                .cloned()
+            {
+                self.type_context
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        name,
+                    );
+                continue;
+            }
+            if self
+                .emitted_well_defined_declarations
+                .contains(&evidence.well_defined_fact_id)
+            {
+                continue;
+            }
             if self
                 .type_context
                 .well_definedness_proof(&evidence.fact.proposition)
@@ -1146,6 +1431,8 @@ impl LeanEmitter {
             }
             if let Some(fact_id) = evidence.fact.fact_id {
                 if let Some(name) = self.emitted_fact_names.get(&fact_id) {
+                    self.emitted_well_defined_fact_names
+                        .insert(evidence.well_defined_fact_id, name.clone());
                     self.type_context
                         .insert_well_definedness_proof_by_certificate_id(
                             evidence.certificate_id,
@@ -1157,6 +1444,8 @@ impl LeanEmitter {
             }
             if let Some(source_fact_id) = direct_citation_fact_id(&evidence.fact.proof) {
                 if let Some(name) = self.emitted_fact_names.get(&source_fact_id) {
+                    self.emitted_well_defined_fact_names
+                        .insert(evidence.well_defined_fact_id, name.clone());
                     self.type_context
                         .insert_well_definedness_proof_by_certificate_id(
                             evidence.certificate_id,
@@ -1181,8 +1470,10 @@ impl LeanEmitter {
                 } else {
                     continue;
                 };
-            let helper_name =
-                self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
+            let helper_name = self.well_definedness_helper_name(
+                evidence.well_defined_fact_id,
+                &evidence.fact.proposition.line_file(),
+            )?;
             self.declarations.push(format!(
                 "-- Litex well-definedness certificate {} (forall type witness)\ntheorem {} : {} := {}",
                 evidence.certificate_id.value(),
@@ -1191,6 +1482,8 @@ impl LeanEmitter {
                 proof
             ));
             if is_closed {
+                self.emitted_well_defined_fact_names
+                    .insert(evidence.well_defined_fact_id, helper_name.clone());
                 self.type_context
                     .insert_well_definedness_proof_by_certificate_id(
                         evidence.certificate_id,
@@ -1214,10 +1507,8 @@ impl LeanEmitter {
                 helper_binders.retain(|(symbol_id, _)| {
                     self.type_context.symbol_carrier(*symbol_id).is_none()
                 });
-                self.generalized_scoped_well_definedness.insert(
-                    evidence.fact.proposition.to_string(),
-                    (helper_name, helper_binders),
-                );
+                self.generalized_scoped_well_definedness
+                    .insert(evidence.well_defined_fact_id, (helper_name, helper_binders));
             }
         }
         Ok(())
@@ -1982,24 +2273,19 @@ impl LeanEmitter {
     fn lean_function_well_definedness_lines(
         &mut self,
         certificate: &LitexToLeanWellDefinednessCertificateIr,
-        function_symbol_id: SymbolId,
+        _function_symbol_id: SymbolId,
         context: &mut LeanProofContext,
     ) -> Result<Vec<String>, RuntimeError> {
         validate_well_definedness_object_contract(certificate)?;
         context
             .type_context
             .install_well_definedness_certificate_metadata(certificate);
-        self.lean_scoped_well_definedness_lines(
-            &certificate.facts,
-            &format!("litex_function_wd_{}", function_symbol_id.value()),
-            context,
-        )
+        self.lean_scoped_well_definedness_lines(&certificate.facts, context)
     }
 
     fn lean_scoped_well_definedness_lines(
         &mut self,
         evidence_facts: &[LitexToLeanWellDefinednessFactIr],
-        name_prefix: &str,
         context: &mut LeanProofContext,
     ) -> Result<Vec<String>, RuntimeError> {
         let mut lines = Vec::new();
@@ -2028,10 +2314,16 @@ impl LeanEmitter {
                 ));
             }
 
-            let reusable = evidence
-                .fact
-                .fact_id
-                .and_then(|fact_id| context.proof_fact_names.get(&fact_id).cloned())
+            let reusable = context
+                .well_defined_fact_names
+                .get(&evidence.well_defined_fact_id)
+                .cloned()
+                .or_else(|| {
+                    evidence
+                        .fact
+                        .fact_id
+                        .and_then(|fact_id| context.proof_fact_names.get(&fact_id).cloned())
+                })
                 .or_else(|| {
                     direct_citation_fact_id(&evidence.fact.proof)
                         .and_then(|fact_id| context.proof_fact_names.get(&fact_id).cloned())
@@ -2053,14 +2345,17 @@ impl LeanEmitter {
                     .insert_well_definedness_proof_by_certificate_id(
                         evidence.certificate_id,
                         &evidence.fact.proposition,
-                        reusable,
+                        reusable.clone(),
                     );
+                context
+                    .well_defined_fact_names
+                    .insert(evidence.well_defined_fact_id, reusable.clone());
                 continue;
             }
 
             if let Some((helper_name, helper_binders)) = self
                 .generalized_scoped_well_definedness
-                .get(&evidence.fact.proposition.to_string())
+                .get(&evidence.well_defined_fact_id)
                 .cloned()
             {
                 if helper_binders
@@ -2078,7 +2373,7 @@ impl LeanEmitter {
                     ));
                     continue;
                 }
-                let local_name = format!("{}_{}", name_prefix, evidence.certificate_id.value());
+                let local_name = self.next_well_defined_fact_name(context);
                 let proposition =
                     lean_fact_with_context(&evidence.fact.proposition, &context.type_context)?;
                 let helper_arguments = helper_binders
@@ -2099,6 +2394,9 @@ impl LeanEmitter {
                         &evidence.fact.proposition,
                         local_name.clone(),
                     );
+                context
+                    .well_defined_fact_names
+                    .insert(evidence.well_defined_fact_id, local_name.clone());
                 if let Some(fact_id) = evidence.fact.fact_id {
                     register_local_fact(fact_id, &evidence.fact.proposition, &local_name, context);
                 }
@@ -2106,7 +2404,7 @@ impl LeanEmitter {
             }
 
             apply_fact_proof_type_hints(&evidence.fact, &mut context.type_context)?;
-            let local_name = format!("{}_{}", name_prefix, evidence.certificate_id.value());
+            let local_name = self.next_well_defined_fact_name(context);
             let proposition =
                 lean_fact_with_context(&evidence.fact.proposition, &context.type_context)?;
             if is_universal_native_membership_fact(&evidence.fact.proposition) {
@@ -2133,20 +2431,23 @@ impl LeanEmitter {
                         )
                     })?;
                 lines.extend(generated_lines);
+                let proposition =
+                    lean_fact_with_context(&evidence.fact.proposition, &context.type_context)?;
+                lines.push(format!(
+                    "  have {local_name} : {proposition} := {generated_name}"
+                ));
                 context
                     .type_context
                     .insert_well_definedness_proof_by_certificate_id(
                         evidence.certificate_id,
                         &evidence.fact.proposition,
-                        generated_name.clone(),
+                        local_name.clone(),
                     );
+                context
+                    .well_defined_fact_names
+                    .insert(evidence.well_defined_fact_id, local_name.clone());
                 if let Some(fact_id) = evidence.fact.fact_id {
-                    register_local_fact(
-                        fact_id,
-                        &evidence.fact.proposition,
-                        &generated_name,
-                        context,
-                    );
+                    register_local_fact(fact_id, &evidence.fact.proposition, &local_name, context);
                 }
                 continue;
             }
@@ -2157,6 +2458,9 @@ impl LeanEmitter {
                     &evidence.fact.proposition,
                     local_name.clone(),
                 );
+            context
+                .well_defined_fact_names
+                .insert(evidence.well_defined_fact_id, local_name.clone());
             if let Some(fact_id) = evidence.fact.fact_id {
                 register_local_fact(fact_id, &evidence.fact.proposition, &local_name, context);
             }
@@ -2995,12 +3299,12 @@ impl LeanEmitter {
                         .type_context
                         .install_well_definedness_certificate_metadata(&ir.well_definedness);
                     apply_fact_proof_type_hints(&ir.fact, &mut context.type_context)?;
-                    let name_prefix = format!("{}_wd", self.next_proof_fact_name(context));
-                    lines.extend(self.lean_scoped_well_definedness_lines(
-                        &ir.well_definedness.facts,
-                        &name_prefix,
-                        context,
-                    )?);
+                    lines.extend(
+                        self.lean_scoped_well_definedness_lines(
+                            &ir.well_definedness.facts,
+                            context,
+                        )?,
+                    );
                 }
                 lines.extend(self.lean_local_fact(&ir.fact, context)?);
                 for fact in ir.inferred_facts.iter() {
@@ -3493,6 +3797,15 @@ impl LeanEmitter {
                     ));
                 }
                 lean_prime_u64_reflection(proposition, premises)
+            }
+            LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection => {
+                if !parameter_requirements.is_empty() {
+                    return Err(litex_to_lean_error(
+                        &proposition.line_file(),
+                        "coprime reflection evidence does not accept parameter requirements",
+                    ));
+                }
+                lean_coprime_natural_reflection(proposition, premises)
             }
             LitexToLeanBuiltinRuleIr::StandardSetMembershipProjection => {
                 if !parameter_requirements.is_empty() {
@@ -5583,11 +5896,8 @@ impl LeanEmitter {
         // and register those exact FactIds first, so a WD certificate can cite
         // (for example) positivity inferred from an `R+` binder.
         let scoped_well_definedness = std::mem::take(&mut context.scoped_well_definedness);
-        let scoped_well_definedness_lines = self.lean_scoped_well_definedness_lines(
-            &scoped_well_definedness,
-            "well_defined_fact",
-            context,
-        )?;
+        let scoped_well_definedness_lines =
+            self.lean_scoped_well_definedness_lines(&scoped_well_definedness, context)?;
         let mut lines = vec![
             "by".to_string(),
             format!("  intro {}", intro_names.join(" ")),
@@ -5626,6 +5936,11 @@ impl LeanEmitter {
     fn next_proof_arg_name(&mut self, context: &mut LeanProofContext) -> String {
         let (local_space_id, local_index) = self.next_local_coordinate(context);
         lean_proof_arg_name(local_space_id, local_index)
+    }
+
+    fn next_well_defined_fact_name(&mut self, context: &mut LeanProofContext) -> String {
+        let (local_space_id, local_index) = self.next_local_coordinate(context);
+        format!("well_defined_fact_{}_{}", local_space_id, local_index)
     }
 
     fn next_local_coordinate(&mut self, context: &mut LeanProofContext) -> (usize, usize) {
@@ -5680,6 +5995,42 @@ fn lean_prime_u64_reflection(
         ));
     }
     Ok("by\n  norm_num".to_string())
+}
+
+fn lean_coprime_natural_reflection(
+    proposition: &Fact,
+    premises: &[LitexToLeanFactIr],
+) -> Result<String, RuntimeError> {
+    if !premises.is_empty() {
+        return Err(litex_to_lean_error(
+            &proposition.line_file(),
+            "coprime reflection evidence must not contain premises",
+        ));
+    }
+    let (predicate, body) = match proposition {
+        Fact::AtomicFact(AtomicFact::NormalAtomicFact(fact)) => (&fact.predicate, &fact.body),
+        Fact::AtomicFact(AtomicFact::NotNormalAtomicFact(fact)) => (&fact.predicate, &fact.body),
+        _ => {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "coprime reflection evidence requires `$coprime(a, b)` or its negation",
+            ));
+        }
+    };
+    if !matches!(predicate, AtomicName::WithoutMod(name) if name == COPRIME)
+        || body.len() != 2
+        || body.iter().any(|argument| {
+            !matches!(argument, Obj::Number(number)
+                if !number.normalized_value.starts_with('-')
+                    && !number.normalized_value.contains('.'))
+        })
+    {
+        return Err(litex_to_lean_error(
+            &proposition.line_file(),
+            "coprime reflection evidence requires two natural-number literals",
+        ));
+    }
+    Ok("by\n  norm_num [Nat.Coprime]".to_string())
 }
 
 fn arithmetic_builtin_contract(
@@ -5948,6 +6299,16 @@ fn apply_proof_type_hints(
             if matches!(
                 rule,
                 LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::PrimeU64Reflection)
+            ) {
+                expect_normal_predicate_arguments(
+                    proposition,
+                    &LitexToLeanCarrierIr::Natural,
+                    type_context,
+                );
+            }
+            if matches!(
+                rule,
+                LitexToLeanProofRuleIr::Builtin(LitexToLeanBuiltinRuleIr::CoprimeNaturalReflection)
             ) {
                 expect_normal_predicate_arguments(
                     proposition,
@@ -6533,6 +6894,28 @@ fn lean_normal_atomic_fact_with_context(
             return Ok(format!("¬ Nat.Prime {}", argument));
         }
         return Ok(format!("Nat.Prime {}", argument));
+    }
+
+    if matches!(predicate, AtomicName::WithoutMod(name) if name == COPRIME) {
+        if body.len() != 2 {
+            return Err(litex_to_lean_error(
+                line_file,
+                "`$coprime` requires exactly two arguments",
+            ));
+        }
+        let left = LitexToLeanObjectIr::lower(&body[0])
+            .map_err(|message| litex_to_lean_error(line_file, message))?;
+        let right = LitexToLeanObjectIr::lower(&body[1])
+            .map_err(|message| litex_to_lean_error(line_file, message))?;
+        let left =
+            lean_obj_ir_with_expected(&left, &LitexToLeanCarrierIr::Natural, type_context, false)?;
+        let right =
+            lean_obj_ir_with_expected(&right, &LitexToLeanCarrierIr::Natural, type_context, false)?;
+        let coprime = format!("Nat.Coprime {} {}", left, right);
+        if negated {
+            return Ok(format!("¬ {}", coprime));
+        }
+        return Ok(coprime);
     }
 
     let proper_relation = match predicate {
@@ -9322,6 +9705,115 @@ mod tests {
     }
 
     #[test]
+    fn stable_wd_fact_id_emits_one_lean_helper_across_statements() {
+        run_with_large_stack(
+            "stable_wd_fact_id_emits_one_lean_helper_across_statements",
+            || {
+                let source = "have fn f(x R: x > 0) R = x\n\nf(2) = f(2)\n\nf(2) = 2";
+                let ir = test_litex_to_lean_ir(source, "stable-wd-helper.lit");
+                assert_eq!(ir.len(), 3);
+
+                let application_proof_id = |statement: &LitexToLeanStatementIr| {
+                    let LitexToLeanStatementIr::Fact(statement) = statement else {
+                        panic!("expected a fact after the named function definition")
+                    };
+                    statement
+                        .well_definedness
+                        .objects
+                        .iter()
+                        .find(|evidence| evidence.source_object.to_string().ends_with("f(2)"))
+                        .expect("the statement should retain the application proof")
+                        .well_defined_obj_proof_id
+                };
+                assert_eq!(
+                    application_proof_id(&ir[1]),
+                    application_proof_id(&ir[2]),
+                    "a later statement should cite the environment's exact application proof"
+                );
+
+                let domain_fact_id = |statement: &LitexToLeanStatementIr| {
+                    let LitexToLeanStatementIr::Fact(statement) = statement else {
+                        unreachable!()
+                    };
+                    statement
+                        .well_definedness
+                        .facts
+                        .iter()
+                        .find(|evidence| evidence.fact.proposition.to_string() == "2 > 0")
+                        .expect("the application should retain its checked domain fact")
+                        .well_defined_fact_id
+                };
+                let first_fact_id = domain_fact_id(&ir[1]);
+                assert_eq!(first_fact_id, domain_fact_id(&ir[2]));
+
+                let lean = emit_lean_from_litex_to_lean_ir(&ir)
+                    .expect("the stable environment proof identity should lower to Lean");
+                let helper_name = format!("well_defined_fact_{}", first_fact_id.value());
+                assert_eq!(
+                    lean.matches(&format!("theorem {helper_name} :")).count(),
+                    1,
+                    "one stable WD fact must produce at most one global Lean helper\n{lean}"
+                );
+                assert!(
+                    lean.matches(&format!("f 2 {helper_name}")).count() >= 3,
+                    "both repeated propositions should cite the same helper\n{lean}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn generalized_wd_helpers_are_indexed_by_stable_fact_id() {
+        run_with_large_stack(
+            "generalized_wd_helpers_are_indexed_by_stable_fact_id",
+            || {
+                let source = "forall f fn(x R: x > 0) R:\n    f(2) = f(2)";
+                let ir = test_litex_to_lean_ir(source, "exact-generalized-wd-id.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &ir[0] else {
+                    panic!("expected one forall fact")
+                };
+                let stable_ids_by_certificate = statement
+                    .well_definedness
+                    .facts
+                    .iter()
+                    .map(|evidence| {
+                        (
+                            evidence.certificate_id.value(),
+                            evidence.well_defined_fact_id.value(),
+                        )
+                    })
+                    .collect::<HashMap<_, _>>();
+                let lean = emit_lean_from_litex_to_lean_ir(&ir)
+                    .expect("generalized WD facts should lower with exact identities");
+
+                let mut checked = 0;
+                for line in lean.lines().filter(|line| {
+                    line.contains("replayed by generalized helper well_defined_fact_")
+                }) {
+                    let words = line.split_whitespace().collect::<Vec<_>>();
+                    let certificate_id = words[4]
+                        .parse::<u64>()
+                        .expect("certificate comment should contain a numeric local ID");
+                    let helper_id = words[9]
+                        .strip_prefix("well_defined_fact_")
+                        .and_then(|value| value.parse::<u64>().ok())
+                        .expect("generalized helper should carry its stable WD fact ID");
+                    assert_eq!(
+                        stable_ids_by_certificate.get(&certificate_id),
+                        Some(&helper_id),
+                        "a proposition-equal WD fact was linked to another stable helper: {line}"
+                    );
+                    checked += 1;
+                }
+                assert!(
+                    checked > 1,
+                    "the tracer should exercise repeated generalized facts"
+                );
+            },
+        );
+    }
+
+    #[test]
     fn restricted_function_application_uses_the_exact_named_local_premise() {
         run_with_large_stack(
             "restricted_function_application_uses_the_exact_named_local_premise",
@@ -9676,6 +10168,79 @@ mod tests {
                         .contains("missing an exact retained WD requirement reference"),
                     "{missing_reference_error}"
                 );
+
+                let mut missing_root =
+                    test_litex_to_lean_ir(source, "missing-environment-wd-root.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &mut missing_root[0] else {
+                    panic!("expected one fact statement")
+                };
+                statement.well_definedness.root_proof_ids[0] = WellDefinedObjProofId::new(u64::MAX);
+                let missing_root_error = emit_lean_from_litex_to_lean_ir(&missing_root)
+                    .unwrap_err()
+                    .trace_message();
+                assert!(
+                    missing_root_error.contains("missing root proof"),
+                    "{missing_root_error}"
+                );
+
+                let mut cyclic = test_litex_to_lean_ir(source, "cyclic-environment-wd.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &mut cyclic[0] else {
+                    panic!("expected one fact statement")
+                };
+                let root_id = statement.well_definedness.root_proof_ids[0];
+                statement
+                    .well_definedness
+                    .objects
+                    .iter_mut()
+                    .find(|object| object.well_defined_obj_proof_id == root_id)
+                    .expect("the projected root should be present")
+                    .child_proof_ids
+                    .push(root_id);
+                let cyclic_error = emit_lean_from_litex_to_lean_ir(&cyclic)
+                    .unwrap_err()
+                    .trace_message();
+                assert!(cyclic_error.contains("contains a cycle"), "{cyclic_error}");
+
+                let mut disconnected =
+                    test_litex_to_lean_ir(source, "disconnected-environment-wd.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &mut disconnected[0] else {
+                    panic!("expected one fact statement")
+                };
+                let mut orphan = statement.well_definedness.objects[0].clone();
+                orphan.occurrence_id = WellDefinednessObjectOccurrenceId::new(u64::MAX - 1);
+                orphan.well_defined_obj_proof_id = WellDefinedObjProofId::new(u64::MAX - 1);
+                statement.well_definedness.objects.push(orphan);
+                let disconnected_error = emit_lean_from_litex_to_lean_ir(&disconnected)
+                    .unwrap_err()
+                    .trace_message();
+                assert!(
+                    disconnected_error.contains("unreachable from its statement roots"),
+                    "{disconnected_error}"
+                );
+
+                let mut inconsistent_projection =
+                    test_litex_to_lean_ir(source, "inconsistent-environment-wd-projection.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &mut inconsistent_projection[0]
+                else {
+                    panic!("expected one fact statement")
+                };
+                let object = statement
+                    .well_definedness
+                    .objects
+                    .iter_mut()
+                    .find(|object| !object.fact_ids.is_empty())
+                    .expect("at least one projected object should own a fact");
+                object.fact_ids.push(object.fact_ids[0]);
+                let inconsistent_projection_error =
+                    emit_lean_from_litex_to_lean_ir(&inconsistent_projection)
+                        .unwrap_err()
+                        .trace_message();
+                assert!(
+                    inconsistent_projection_error.contains(
+                        "stable DAG edges disagree with the statement-local fact projection"
+                    ),
+                    "{inconsistent_projection_error}"
+                );
             },
         );
     }
@@ -9864,7 +10429,7 @@ mod tests {
                 "/virtual/project/chapter02.lit",
             );
             let registered = compile_to_lean(
-                "prop is_one(x R):\n    x = 1\n\n$is_one(1)",
+                "prop is_one(x R):\n    x = 1\n\n$is_one(1)\n\n2 $in R",
                 &mut registered_runtime,
             )
             .unwrap();
@@ -9875,7 +10440,7 @@ mod tests {
                 registered.matches("namespace Litex.StandardSets").count(),
                 1
             );
-            assert!(registered.contains("x ∈ Litex.StandardSets.R"));
+            assert!(registered.contains("2 ∈ Litex.StandardSets.R"));
             assert!(registered.contains("def is_one (x : ℝ) : Prop :="));
             assert!(registered.contains("simp [is_one]"));
 
@@ -9884,7 +10449,9 @@ mod tests {
                 "/virtual/diagnostic-only.lit",
             )
             .unwrap();
-            assert!(!anonymous.contains("\nnamespace "));
+            assert!(!anonymous.contains("\nnamespace diagnostic_only\n"));
+            assert_eq!(anonymous.matches("\nnamespace ").count(), 1);
+            assert!(anonymous.contains("\nnamespace Litex.StandardSets\n"));
         });
     }
 
@@ -11786,6 +12353,8 @@ not 0 $in C*
         let source = r#"
 $prime(53)
 not $prime(54)
+$coprime(14, 25)
+not $coprime(14, 21)
 
 forall A, B set:
     A $subset B
@@ -11842,6 +12411,8 @@ forall a, b R:
         for expected in [
             "Nat.Prime 53",
             "¬ Nat.Prime 54",
+            "Nat.Coprime 14 25",
+            "¬ Nat.Coprime 14 21",
             "(litex_domain_fact_1 : A ⊆ B), A ⊆ B",
             "(litex_domain_fact_1 : ¬ (A ⊆ B)), ¬ (A ⊆ B)",
             "(litex_domain_fact_1 : (A ⊆ B) ∧ A ≠ B), (A ⊆ B) ∧ A ≠ B",
@@ -11858,8 +12429,9 @@ forall a, b R:
                 "missing `{expected}` in:\n{output}"
             );
         }
-        assert!(output.matches("by\n  norm_num").count() >= 2, "{output}");
+        assert!(output.matches("norm_num").count() >= 4, "{output}");
         assert!(!output.contains("$prime"), "{output}");
+        assert!(!output.contains("$coprime"), "{output}");
         assert!(!output.contains("$proper_"), "{output}");
         assert!(!output.contains("\naxiom fact"), "{output}");
         assert!(!output.contains("sorry"), "{output}");
@@ -12223,6 +12795,23 @@ thm replay_reflexivity:
     }
 
     #[test]
+    fn finite_set_index_builtin_theorem_remains_a_fail_closed_compiler_boundary() {
+        run_with_large_stack(
+            "finite_set_index_builtin_theorem_remains_a_fail_closed_compiler_boundary",
+            || {
+                let result = compile_to_lean_from_source(
+                    "by thm finite_set_has_bijective_index({})\n",
+                    "finite-set-index-builtin-theorem-boundary.lit",
+                );
+                assert!(
+                    result.is_err(),
+                    "the compiler must reject this kernel-only existential instead of emitting Lean"
+                );
+            },
+        );
+    }
+
+    #[test]
     fn compile_to_lean_mixed_projected_forall() {
         run_with_large_stack("compile_to_lean_mixed_projected_forall", || {
             let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -12548,26 +13137,36 @@ forall a, b set:
                 let output = compile_to_lean_from_source(source, "resolved-atomic-fact").unwrap();
 
                 assert!(
-                    output.contains("have proof_fact_1_1 : p (13 + 1 : ℝ) := by"),
+                    output.lines().any(|line| {
+                        line.contains("have proof_fact_") && line.contains(": p (13 + 1 : ℝ) := by")
+                    }),
                     "{output}"
                 );
                 assert!(
-                    output.contains("have proof_fact_2_1 : p (14 : ℝ)"),
+                    output.lines().any(|line| {
+                        line.contains("have proof_fact_") && line.contains(": p (14 : ℝ)")
+                    }),
                     "{output}"
                 );
                 assert!(!output.contains("p ((13 : ℕ) + 1)"), "{output}");
                 assert!(
-                    output.contains("convert proof_fact_2_1 using 1"),
+                    output.lines().any(|line| {
+                        line.contains("convert proof_fact_") && line.contains(" using 1")
+                    }),
                     "{output}"
                 );
                 assert!(
-                    output.contains("have proof_fact_1_4 : p (a + b) := by"),
+                    output.lines().any(|line| {
+                        line.contains("have proof_fact_") && line.contains(": p (a + b) := by")
+                    }),
                     "{output}"
                 );
                 assert!(
-                    output.contains(
-                        "simpa only [proof_fact_1_2, proof_fact_1_3] using proof_fact_1_1"
-                    ),
+                    output.lines().any(|line| {
+                        line.contains("simpa only [proof_fact_")
+                            && line.contains(", proof_fact_")
+                            && line.contains("] using proof_fact_")
+                    }),
                     "{output}"
                 );
                 assert!(!output.contains("axiom"));
@@ -12773,7 +13372,10 @@ forall f fn(x R) R, a, b, c R:
                 assert!(lean.contains("Set ((x : ℝ) → ℝ)"), "{lean}");
                 assert!(lean.contains("p (f (a + b)) c"), "{lean}");
                 assert!(
-                    lean.contains("simpa only [proof_fact_1_2] using proof_fact_1_1"),
+                    lean.lines().any(|line| {
+                        line.contains("simpa only [proof_fact_")
+                            && line.contains("] using proof_fact_")
+                    }),
                     "{lean}"
                 );
                 assert!(!lean.contains("sorry"), "{lean}");

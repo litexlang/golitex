@@ -1638,12 +1638,10 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        Ok(HaveByPreimageStmt::new(
-            preimage_bindings,
-            range_membership,
-            tb.line_file.clone(),
+        Ok(
+            HaveByPreimageStmt::new(preimage_bindings, range_membership, tb.line_file.clone())
+                .into(),
         )
-        .into())
     }
 
     /// Parses `have algo for f(a, b):` as an executable implementation of `f`.

@@ -428,6 +428,12 @@ impl PythonExtractor {
                 "python extractor v1 does not support builtin prime",
             ));
         }
+        if rendered.contains("$coprime(") {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support builtin coprime",
+            ));
+        }
         if fact.contains_native_complex_syntax() {
             return Err(python_extract_error(
                 &fact.line_file(),

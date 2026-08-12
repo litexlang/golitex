@@ -303,6 +303,25 @@ impl Runtime {
             }
             Obj::GeneralCart(_) => Ok((StmtUnknown::new()).into()),
             Obj::FiniteSeqSet(fs) => {
+                // A zero-length finite-sequence space contains the empty sequence,
+                // even when its codomain is empty. Example: `finite_seq({}, 0)`.
+                let zero: Obj = Number::new("0".to_string()).into();
+                let length_zero = self.verify_objs_are_equal_by_known_equality(
+                    fs.n.as_ref(),
+                    &zero,
+                    is_nonempty_set_fact.line_file.clone(),
+                );
+                if length_zero.is_true() {
+                    return Ok(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                            is_nonempty_set_fact.clone().into(),
+                            InferResult::new(),
+                            "finite_seq_set_is_nonempty_when_length_is_zero".to_string(),
+                            vec![length_zero],
+                        )
+                        .into(),
+                    );
+                }
                 let codomain_nonempty = IsNonemptySetFact::new(
                     (*fs.set).clone(),
                     is_nonempty_set_fact.line_file.clone(),

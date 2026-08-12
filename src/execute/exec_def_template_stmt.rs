@@ -293,12 +293,10 @@ impl Runtime {
                         ),
                     )));
                 };
-                Ok(HaveFnEqualStmt::new(
-                    instance_binding.clone(),
-                    anonymous_fn,
-                    line_file.clone(),
+                Ok(
+                    HaveFnEqualStmt::new(instance_binding.clone(), anonymous_fn, line_file.clone())
+                        .into(),
                 )
-                .into())
             }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(s) => {
                 let (fn_set_clause, body_map) =
@@ -657,12 +655,10 @@ impl Runtime {
                         ),
                     )));
                 };
-                Ok(HaveFnEqualStmt::new(
-                    s.symbol_binding.clone(),
-                    anonymous_fn,
-                    line_file.clone(),
+                Ok(
+                    HaveFnEqualStmt::new(s.symbol_binding.clone(), anonymous_fn, line_file.clone())
+                        .into(),
                 )
-                .into())
             }
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => {
                 let mut equal_tos = Vec::with_capacity(s.equal_tos.len());

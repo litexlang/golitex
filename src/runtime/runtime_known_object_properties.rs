@@ -1,5 +1,6 @@
 use crate::prelude::*;
 use std::collections::HashSet;
+use std::rc::Rc;
 
 impl Runtime {
     pub fn iter_environments_from_top(&self) -> impl Iterator<Item = &Environment> {
@@ -413,12 +414,212 @@ impl Runtime {
     }
 
     pub fn cache_well_defined_obj_contains(&self, key: &str) -> bool {
-        for env in self.iter_environments_from_top() {
-            if env.cache_well_defined_obj.contains_key(key) {
-                return true;
+        let key = WellDefinedCacheKey::without_function_contract(key.to_string());
+        self.well_defined_cache_entry(&key).is_some()
+    }
+
+    pub(crate) fn well_defined_cache_key_for_obj(&self, obj: &Obj) -> Option<WellDefinedCacheKey> {
+        let mut contracts = Vec::new();
+        if !self.collect_well_defined_function_contracts(obj, &mut contracts) {
+            return None;
+        }
+        Some(WellDefinedCacheKey::new(obj.to_string(), contracts))
+    }
+
+    fn known_function_contract_for_obj(&self, obj: &Obj) -> Option<WellDefinedFunctionContract> {
+        let contract_from_info = |key: &str, info: KnownFnInfo| {
+            let (body, _) = info.fn_set?;
+            Some(
+                info.fn_set_membership_fact_id
+                    .map(WellDefinedFunctionContract::StoredMembershipFact)
+                    .unwrap_or_else(|| {
+                        WellDefinedFunctionContract::Structural(format!("{}::{}", key, body))
+                    }),
+            )
+        };
+        if let Some(info) = self.get_known_fn_info_for_obj(obj) {
+            if let Some(contract) = contract_from_info(&obj.to_string(), info) {
+                return Some(contract);
             }
         }
-        false
+        for representative in self.get_all_obj_representatives_equal_to_given(obj) {
+            if let Some(info) = self.get_known_fn_info_for_obj(&representative) {
+                if let Some(contract) = contract_from_info(&representative.to_string(), info) {
+                    return Some(contract);
+                }
+            }
+        }
+        None
+    }
+
+    fn collect_well_defined_function_contracts(
+        &self,
+        obj: &Obj,
+        contracts: &mut Vec<WellDefinedFunctionContract>,
+    ) -> bool {
+        if let Obj::FnObj(fn_obj) = obj {
+            let head_is_cacheable =
+                match fn_obj.head.as_ref() {
+                    FnObjHead::AnonymousFnLiteral(_) => false,
+                    FnObjHead::FiniteSeqListObj(list) => list.objs.iter().all(|child| {
+                        self.collect_well_defined_function_contracts(child, contracts)
+                    }),
+                    FnObjHead::MatrixOperator(matrix) => {
+                        self.collect_well_defined_function_contracts(matrix, contracts)
+                    }
+                    FnObjHead::ObjAsStructInstanceWithFieldAccess(field) => {
+                        field.struct_obj.params.iter().all(|child| {
+                            self.collect_well_defined_function_contracts(child, contracts)
+                        }) && self.collect_well_defined_function_contracts(&field.obj, contracts)
+                    }
+                    head => {
+                        let head_obj: Obj = head.clone().into();
+                        let Some(contract) = self.known_function_contract_for_obj(&head_obj) else {
+                            return false;
+                        };
+                        if !contracts.contains(&contract) {
+                            contracts.push(contract);
+                        }
+                        self.collect_well_defined_function_contracts(&head_obj, contracts)
+                    }
+                };
+            return head_is_cacheable
+                && fn_obj.body.iter().flatten().all(|argument| {
+                    self.collect_well_defined_function_contracts(argument, contracts)
+                });
+        }
+        let mut collect =
+            |child: &Obj| self.collect_well_defined_function_contracts(child, contracts);
+        let mut collect_two = |left: &Obj, right: &Obj| collect(left) && collect(right);
+        match obj {
+            Obj::Atom(_)
+            | Obj::Number(_)
+            | Obj::ImaginaryUnit(_)
+            | Obj::EulerNumber(_)
+            | Obj::Pi(_)
+            | Obj::StandardSet(_) => true,
+            Obj::FnObj(_) => unreachable!("function objects returned before recursive dispatch"),
+            Obj::Add(x) => collect_two(&x.left, &x.right),
+            Obj::Sub(x) => collect_two(&x.left, &x.right),
+            Obj::Mul(x) => collect_two(&x.left, &x.right),
+            Obj::Div(x) => collect_two(&x.left, &x.right),
+            Obj::Mod(x) => collect_two(&x.left, &x.right),
+            Obj::Gcd(x) => collect_two(&x.left, &x.right),
+            Obj::Lcm(x) => collect_two(&x.left, &x.right),
+            Obj::Min(x) => collect_two(&x.left, &x.right),
+            Obj::Max(x) => collect_two(&x.left, &x.right),
+            Obj::Pow(x) => collect_two(&x.base, &x.exponent),
+            Obj::Log(x) => collect_two(&x.base, &x.arg),
+            Obj::Union(x) => collect_two(&x.left, &x.right),
+            Obj::Intersect(x) => collect_two(&x.left, &x.right),
+            Obj::SetMinus(x) => collect_two(&x.left, &x.right),
+            Obj::Range(x) => collect_two(&x.start, &x.end),
+            Obj::ClosedRange(x) => collect_two(&x.start, &x.end),
+            Obj::IntervalObj(x) => collect_two(x.start(), x.end()),
+            Obj::MatrixAdd(x) => collect_two(&x.left, &x.right),
+            Obj::MatrixSub(x) => collect_two(&x.left, &x.right),
+            Obj::MatrixMul(x) => collect_two(&x.left, &x.right),
+            Obj::MatrixScalarMul(x) => collect_two(&x.scalar, &x.matrix),
+            Obj::MatrixPow(x) => collect_two(&x.base, &x.exponent),
+            Obj::Proj(x) => collect_two(&x.set, &x.dim),
+            Obj::ObjAtIndex(x) => collect_two(&x.obj, &x.index),
+            Obj::FiniteSeqSet(x) => collect_two(&x.set, &x.n),
+            Obj::Exp(x) => collect(&x.arg),
+            Obj::Ln(x) => collect(&x.arg),
+            Obj::Sign(x) => collect(&x.arg),
+            Obj::Factorial(x) => collect(&x.arg),
+            Obj::RealPart(x) => collect(&x.arg),
+            Obj::ImaginaryPart(x) => collect(&x.arg),
+            Obj::ComplexAbs(x) => collect(&x.arg),
+            Obj::Abs(x) => collect(&x.arg),
+            Obj::Floor(x) => collect(&x.arg),
+            Obj::Ceil(x) => collect(&x.arg),
+            Obj::Sin(x) => collect(&x.arg),
+            Obj::Cos(x) => collect(&x.arg),
+            Obj::Tan(x) => collect(&x.arg),
+            Obj::Cot(x) => collect(&x.arg),
+            Obj::Sqrt(x) => collect(&x.arg),
+            Obj::BigUnion(x) => collect(&x.left),
+            Obj::BigIntersect(x) => collect(&x.left),
+            Obj::PowerSet(x) => collect(&x.set),
+            Obj::FiniteSetSize(x) => collect(&x.set),
+            Obj::FiniteSetMax(x) => collect(&x.set),
+            Obj::FiniteSetMin(x) => collect(&x.set),
+            Obj::FnRange(x) => collect(&x.function),
+            Obj::TupleDim(x) => collect(&x.arg),
+            Obj::CartDim(x) => collect(&x.set),
+            Obj::OneSideInfinityIntervalObj(x) => collect(x.start()),
+            Obj::SeqSet(x) => collect(&x.set),
+            Obj::Replacement(x) => collect(&x.source_set),
+            Obj::MatrixSet(x) => collect(&x.set) && collect(&x.row_len) && collect(&x.col_len),
+            Obj::Sum(x) => collect(&x.start) && collect(&x.end) && collect(&x.func),
+            Obj::SumOfFiniteSet(x) => collect(&x.set) && collect(&x.func),
+            Obj::Product(x) => collect(&x.start) && collect(&x.end) && collect(&x.func),
+            Obj::ProductOfFiniteSet(x) => collect(&x.set) && collect(&x.func),
+            Obj::Reduce(x) => [&x.start, &x.end, &x.func, &x.op, &x.seed]
+                .into_iter()
+                .all(|child| collect(child)),
+            Obj::FiniteSetReduce(x) => [&x.set, &x.func, &x.op, &x.seed]
+                .into_iter()
+                .all(|child| collect(child)),
+            Obj::ListSet(x) => x.list.iter().all(|child| collect(child)),
+            Obj::GeneralCart(x) => {
+                collect(&x.index_set) && collect(&x.family_set) && collect(&x.family_fn)
+            }
+            Obj::Cart(x) => x.args.iter().all(|child| collect(child)),
+            Obj::Tuple(x) => x.args.iter().all(|child| collect(child)),
+            Obj::FiniteSeqListObj(x) => x.objs.iter().all(|child| collect(child)),
+            Obj::MatrixListObj(x) => x.rows.iter().flatten().all(|child| collect(child)),
+            Obj::StructObj(x) => x.params.iter().all(|child| collect(child)),
+            Obj::ObjAsStructInstanceWithFieldAccess(x) => {
+                x.struct_obj.params.iter().all(|child| collect(child)) && collect(&x.obj)
+            }
+            Obj::InstantiatedTemplateObj(x) => x.args.iter().all(|child| collect(child)),
+            // Their WD traversals open binder scopes and may contain facts
+            // whose callable contracts are not children in the object AST.
+            // Keep the environment proof, but deliberately do not reuse a
+            // boolean/object cache entry for these binder-owning objects.
+            Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_) => false,
+        }
+    }
+
+    pub(crate) fn well_defined_cache_entry(
+        &self,
+        key: &WellDefinedCacheKey,
+    ) -> Option<&CachedWellDefinedObj> {
+        self.iter_environments_from_top()
+            .find_map(|env| env.cache_well_defined_obj.get(key))
+    }
+
+    pub(crate) fn well_defined_obj_proof(
+        &self,
+        proof_id: WellDefinedObjProofId,
+    ) -> Option<Rc<WellDefinedObjProof>> {
+        self.iter_environments_from_top()
+            .find_map(|env| env.well_defined_obj_proofs.get(&proof_id).cloned())
+    }
+
+    pub(crate) fn well_defined_fact_proof(
+        &self,
+        fact_id: WellDefinedFactId,
+    ) -> Option<Rc<WellDefinedFactProof>> {
+        self.iter_environments_from_top()
+            .find_map(|env| env.well_defined_fact_proofs.get(&fact_id).cloned())
+    }
+
+    pub(crate) fn well_defined_fact_id_for_proof(
+        &self,
+        proof: &Rc<FactualStmtSuccess>,
+    ) -> Option<WellDefinedFactId> {
+        self.iter_environments_from_top().find_map(|env| {
+            env.well_defined_fact_proofs.iter().find_map(|(id, known)| {
+                if Rc::ptr_eq(&known.proof, proof) {
+                    Some(*id)
+                } else {
+                    None
+                }
+            })
+        })
     }
 
     pub fn cache_known_facts_contains(&self, key: &str) -> (bool, LineFile) {

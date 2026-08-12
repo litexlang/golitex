@@ -12,15 +12,6 @@ impl Runtime {
     /// Mathematical contract support: reuse a successful
     /// check of the same rendered object; absence from the cache proves
     /// nothing and falls through to the constructor-specific obligations.
-    fn verify_obj_well_defined_from_cache_if_known(&self, obj: &Obj) -> Option<()> {
-        let key = obj.to_string();
-        if self.cache_well_defined_obj_contains(&key) {
-            Some(())
-        } else {
-            None
-        }
-    }
-
     /// Mathematical contract: an object is well-defined exactly when all of
     /// its subobjects are meaningful and its constructor-specific domain
     /// conditions hold (for example, a divisor is nonzero and a function
@@ -32,12 +23,31 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
-        if !self.captures_litex_to_lean_well_definedness()
-            && self
-                .verify_obj_well_defined_from_cache_if_known(obj)
-                .is_some()
-        {
-            return Ok(());
+        let compiler_reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
+        // Binder-owning objects keep Litex's historical boolean cache so a
+        // later store phase need not reopen a parameter scope that has already
+        // closed. That proofless entry is never sufficient for To-Lean: only
+        // the contract-sensitive key above may carry a reusable proof DAG.
+        let ordinary_cache_key = compiler_reusable_cache_key
+            .clone()
+            .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
+        let captures_evidence = self.captures_litex_to_lean_well_definedness()
+            && !self.well_definedness_capture_stack.is_empty();
+        let cached = if captures_evidence {
+            compiler_reusable_cache_key
+                .as_ref()
+                .and_then(|key| self.well_defined_cache_entry(key))
+        } else {
+            self.well_defined_cache_entry(&ordinary_cache_key)
+        };
+        if let Some(cached) = cached {
+            if !captures_evidence {
+                return Ok(());
+            }
+            if let Some(proof_id) = cached.proof_id {
+                self.record_well_defined_obj_proof_use(proof_id);
+                return Ok(());
+            }
         }
 
         let active_key = obj_equality_key(obj);
@@ -47,9 +57,12 @@ impl Runtime {
             return Ok(());
         }
 
-        let captures_evidence = self.captures_litex_to_lean_well_definedness();
         if captures_evidence {
-            self.begin_well_definedness_object_capture(obj);
+            self.begin_well_definedness_object_capture(
+                obj,
+                ordinary_cache_key.clone(),
+                compiler_reusable_cache_key.is_some(),
+            );
             self.well_definedness_capture_depth += 1;
         }
         let result = match obj {
@@ -188,15 +201,23 @@ impl Runtime {
         if captures_evidence {
             self.well_definedness_capture_depth =
                 self.well_definedness_capture_depth.saturating_sub(1);
-            self.end_well_definedness_object_capture(
+            let capture_result = self.end_well_definedness_object_capture(
                 result.is_ok(),
                 intrinsic_well_definedness_result_set(obj),
             );
+            self.active_well_defined_objects.remove(&active_key);
+            capture_result?;
+        } else {
+            self.active_well_defined_objects.remove(&active_key);
         }
-        self.active_well_defined_objects.remove(&active_key);
         result?;
 
-        self.store_well_defined_obj_cache(obj);
+        if !captures_evidence {
+            self.top_level_env()
+                .cache_well_defined_obj
+                .entry(ordinary_cache_key)
+                .or_insert_with(CachedWellDefinedObj::ordinary);
+        }
 
         Ok(())
     }

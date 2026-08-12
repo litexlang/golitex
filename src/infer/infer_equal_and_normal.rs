@@ -239,6 +239,7 @@ impl Runtime {
                 self.register_known_objs_in_fn_sets_for_element_body(
                     &equal_fact.left,
                     anon.body.clone(),
+                    None,
                     Some(eq),
                     lf.clone(),
                     lf,
@@ -252,6 +253,7 @@ impl Runtime {
                 self.register_known_objs_in_fn_sets_for_element_body(
                     &equal_fact.right,
                     anon.body.clone(),
+                    None,
                     Some(eq),
                     lf.clone(),
                     lf,
@@ -516,7 +518,10 @@ impl Runtime {
             Some(facts) => Some(facts),
             None => match self.builtin_prime_definition_facts(normal_atomic_fact)? {
                 Some(facts) => Some(facts),
-                None => self.builtin_function_property_definition_facts(normal_atomic_fact)?,
+                None => match self.builtin_coprime_definition_facts(normal_atomic_fact) {
+                    Some(facts) => Some(facts),
+                    None => self.builtin_function_property_definition_facts(normal_atomic_fact)?,
+                },
             },
         };
         if let Some(definition_facts) = builtin_definition_facts {

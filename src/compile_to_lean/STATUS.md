@@ -29,6 +29,11 @@ pipeline and delivery checkpoints.
 - [x] Reject malformed theorem scope evidence and target-name collisions
   transactionally; keep explicit `axiom`, `by thm`, and imported theorem
   linking as fail-closed follow-up boundaries.
+- [ ] Lower the kernel-only finite-set foundation slice. `finite_seq`,
+  `finite_set_size`, `closed_range`, and the existential conclusion of
+  `finite_set_has_bijective_index` remain unsupported; the compiler must also
+  reject `subset_of_finite_set_is_finite` until an explicit certificate adapter
+  exists, never emit either theorem as an implicit assumption.
 
 Tracer:
 [`examples/05_compiler_interop/compile_to_lean_partial_report.lit`](../../examples/05_compiler_interop/compile_to_lean_partial_report.lit)
@@ -50,11 +55,21 @@ Named-theorem tracer:
 - [x] Confirm with real Mathlib that a consumed local WD premise must have an
   explicit binder/helper name (an unnamed implication is not visible while
   its consequent type elaborates).
-- [x] Retain statement-local WD proof certificates across temporary verifier
-  scopes and boolean object-cache hits.
-- [x] Retain checked object occurrences, all observed WD fact IDs, and exact
+- [x] Store successful WD facts and object-proof DAG nodes in their Litex
+  environment under runtime-wide `WellDefinedFactId` and
+  `WellDefinedObjProofId`; keep statement results as frozen root projections.
+- [x] Preserve ordinary environment visibility: children see parents,
+  uncommitted children discard their WD store/cache, outer-referenced nodes
+  are projected before pop, and committed children merge both store and cache.
+- [x] Key reusable object proofs by the exact current function-membership
+  `FactId` selected for every callable in the object; a replaced return
+  contract cannot reuse stale WD evidence.
+- [x] Retain direct nested-object DAG edges, all observed WD fact IDs, and exact
   function parameter/domain target references; never recover a consumed proof
   by proposition search in the Lean backend.
+- [x] Treat an evidence-free ordinary boolean cache hit and the active-object
+  recursion guard as non-proofs; failed function candidates roll back all
+  compiler evidence.
 - [x] Reuse refined `R*` and `R+` binder memberships definitionally as the
   exact nonzero/positive proofs consumed by restricted applications.
 - [x] Lower bound function carriers and named applications, inserting only
@@ -63,6 +78,9 @@ Named-theorem tracer:
   missing, reordered, mismatched, or scope-invalid certificates.
 - [x] Add the persistent function/WD tracer, malformed-evidence regressions,
   Markdown snapshot, and real Mathlib gate.
+- [x] Emit closed WD helpers once as
+  `well_defined_fact_<WellDefinedFactId>`, keep scoped helpers proof-local, and
+  add the cross-statement environment-cache ledger tracer.
 - [x] Add the first checked `have fn` declaration/evaluation slice for named,
   numeric-return function definitions, including exact defining-fact replay.
 - [x] Lower `SetBuilder` and anonymous-function values with binder-owned scope;
@@ -79,6 +97,9 @@ Specification:
 
 Tracer:
 [`examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit`](../../examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit)
+
+Environment-cache tracer:
+[`examples/09_compile_to_lean/compile_to_lean_examples.md#environment_well_definedness_cache`](../../examples/09_compile_to_lean/compile_to_lean_examples.md#environment_well_definedness_cache)
 
 ## Resolved atomic facts
 
@@ -212,6 +233,8 @@ Inventory:
   in all four positive/negative orientations.
 - [x] Closed positive and negative `$prime` facts as native `Nat.Prime`
   propositions checked by `norm_num` reflection.
+- [x] Closed positive and negative `$coprime` facts on natural literals as
+  native `Nat.Coprime` propositions checked by `norm_num` reflection.
 - [x] Standard numeric-set membership projection with one retained source
   membership proof, centralized hierarchy validation, and checked native
   coercions across the supported `N/Z/Q/R/C` paths.

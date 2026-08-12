@@ -89,12 +89,19 @@ FactIds. The nearby rejected form is a heterogeneous equality between those
 symbols; separate reflexive conclusions do not authorize carrier unification.
 
 The [`builtin_predicates`](compile_to_lean_examples.md#builtin_predicates)
-section fixes the first native builtin-proposition tranche. Closed prime facts
-become `Nat.Prime` and use checked `norm_num` reflection. Superset reverses the
+section fixes the first native builtin-proposition tranche. Closed prime and
+natural-coprime facts become `Nat.Prime` and `Nat.Coprime`, respectively, and
+use checked `norm_num` reflection. Superset reverses the
 arguments of native `⊆`; its duality proof retains the exact subset premise.
 Proper subset/superset become containment plus inequality, while their negative
 forms use Litex's direct `not containment OR equality` definition. Negated
 comparisons remain logical negations of native order relations.
+
+The dedicated
+[`coprime_natural_builtin`](compile_to_lean_examples.md#coprime_natural_builtin)
+section fixes the domain decision independently: both source arguments require
+`N`, both target occurrences are `ℕ`, and the proposition is Mathlib's
+`Nat.Coprime`. No `natAbs` adapter is emitted for integer arguments.
 
 This section intentionally separates proposition coverage from proof-route
 coverage. It does not claim compilation of explicit proper-relation `by def`
@@ -141,7 +148,16 @@ are explicit arguments after the values in their source application layer, and
 every source-only WD obligation is still emitted and kernel-checked before the
 containing fact. The named reciprocal example also retains the exact checked
 defining equality used by its later evaluation. Anonymous values and refined
-return sets remain explicit boundaries rather than inferred target laws.
+return sets use explicit binder-owned and pointwise proof contracts rather than
+inferred target laws.
+
+The
+[`environment_well_definedness_cache`](compile_to_lean_examples.md#environment_well_definedness_cache)
+section fixes proof lifetime and identity across statements. Its second
+restricted application cites the same environment-owned object DAG and domain
+`WellDefinedFactId` as the first; generated Lean declares the closed domain
+helper once and reuses that exact name. The ledger's Rust checks also keep this
+independent of the concrete numeric value allocated to the stable ID.
 
 ## Honest incomplete output
 

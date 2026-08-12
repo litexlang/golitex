@@ -33,10 +33,8 @@ impl Runtime {
 
         self.run_in_local_env(|rt| {
             for field in def_struct_stmt.fields.iter() {
-                let param_def = ParamGroupWithSet::new(
-                    vec![field.binding.clone()],
-                    field.field_type.clone(),
-                );
+                let param_def =
+                    ParamGroupWithSet::new(vec![field.binding.clone()], field.field_type.clone());
                 rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
             }
 

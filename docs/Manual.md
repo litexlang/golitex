@@ -676,6 +676,7 @@ proj(cart(R, Z), 1) = R
 (1, 2)[1] = 1
 
 [1, 2, 3] $in finite_seq(N+, 3)
+[] $in finite_seq({}, 0)
 [[1, 0], [0, 1]] $in matrix(Z, 2, 2)
 ```
 
@@ -684,12 +685,16 @@ proj(cart(R, Z), 1) = R
 | `cart(A, B, ...)` | Cartesian product |
 | `cart_dim(c)`, `proj(c, i1)` | Product dimension and the `i1`-th factor set |
 | `(a, b, ...)`, `tuple_dim(t)` | Tuple and tuple dimension |
-| `finite_seq(S, n)`, `seq(S)` | Finite or infinite sequence set |
+| `finite_seq(S, n)`, `seq(S)` | Finite (`n : N`, including zero) or infinite sequence set |
 | `[a, b, ...]`, `a[i1]` | Displayed finite sequence and index access |
 | `matrix(S, r, c)` | Matrix set |
 | `[[...], [...]]` | Displayed matrix |
 | `A '+ B`, `A '- B`, `A '* B` | Matrix addition, subtraction, multiplication |
 | `c *' A`, `A '^ n` | Scalar multiplication and matrix power |
+
+`[]` is the finite-sequence literal of length zero. Thus
+`[] $in finite_seq(S, 0)` for every set `S`, including the empty set; a literal
+with a different number of entries than `n` is still rejected.
 
 Dimensions are checked, not inferred from wishful notation:
 
@@ -1226,6 +1231,8 @@ not 4 $in {1, 2, 3}
 $prime(97)
 not $prime(0)
 not $prime(1)
+$coprime(14, 25)
+not $coprime(14, 21)
 ```
 
 `$prime(p)` is a native predicate on `N`. It is false at `0` and `1`;
@@ -1234,6 +1241,14 @@ literals are left to proof rather than guessed. `by def $prime(p)` exposes the
 symbolic trial-divisor contract (`2 <= p` and no divisor in `range(2, p)`). An
 arbitrary integer or real argument is still rejected unless its membership in
 `N` is known.
+
+`$coprime(a, b)` likewise follows Mathlib's elementary-number-theory surface:
+both arguments must belong to `N`, and the predicate means `gcd(a, b) = 1`.
+It is total on natural pairs, so `$coprime(0, 1)` holds while
+`$coprime(0, 0)` does not. A positive fact exposes both the non-all-zero
+condition needed by native `gcd` and the gcd-one equation. Integer or real
+arguments require a separate future interface rather than silently changing
+this predicate's domain.
 
 An object expression alone is not a fact:
 
@@ -3001,12 +3016,17 @@ after it succeeds:
 | `by thm finite_set_sum_substitution(L, R)` | `L = R` |
 | `by thm sum_over_bijective_finite_set_enumerations(L, R)` | `L = R` |
 | `by thm rational_has_unique_reduced_fraction(q)` | `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` |
+| `by thm subset_of_finite_set_is_finite(A, B)` | `$is_finite_set(A)` after checking `A $subset B` and finite `B` |
+| `by thm finite_set_has_bijective_index(s)` | `exist idx finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, idx)}` |
 
 These names are bare global reserved names. They cannot be rebound by user
 objects, parameters, theorems, or axioms, and a qualified spelling is rejected.
 The rational interface has arity one and requires its argument to be known in
-`Q`; unlike the other entries above, its fixed stored conclusion is an
-existential rather than an atomic fact.
+`Q`. The finite-set indexing interface likewise stores an existential and
+requires finite `s`; its witness is noncanonical. The finite-subset interface
+requires an already verified subset premise and does not enable automatic
+subset-chain search. Both finite-set names are kernel interfaces, not
+`std/basics` exports.
 Detailed output marks the route with `"theorem_source": "builtin_rule"`, shows
 `requirement_checks`, and preserves `axiom_of_choice` provenance on the two
 general-cart nonemptiness interfaces.
@@ -3051,6 +3071,17 @@ Builtin success has six distinct mechanisms:
 | Structural builtin strategy | Strictly smaller constructor children, each with known lookup plus one fresh direct rule. | It does not enter definitions, known `forall` matching, or user strategies. |
 | Definition route | One exact builtin/user definition such as subset, prime, or a checked outer object definition. | It does not recursively unfold an arbitrary chain of definitions. |
 | Explicit builtin theorem | The ordinary full verifier for named compound, universal, or existential requirements. | It runs only after `by thm reserved_name(...)`; it is not silent automation. |
+
+Automatic routes with a closed premise family are goal-directed and
+cache-neutral. Their finite candidate premises come from the target rule or
+target constructor, not from a reverse scan of facts that happen to have been
+stored for the subject. For example, `value $in C` checks the fixed proper
+standard subcarriers of `C`. Writing its already derivable intermediate
+`value $in N` first may make that premise a faster lookup, but it cannot be
+required to turn the later `C` goal from `unknown` into success. Cold and warm
+forms of that route must agree. Litex remains deliberately bounded: an
+explicit user lemma outside a rule's documented premise family may still
+enable a later proof.
 
 Detailed output distinguishes these routes through the reason/provenance tree.
 This matters when a nearby spelling is `unknown`: a direct rule cannot silently
@@ -3212,7 +3243,7 @@ diagnostic branches separately.
 | Function membership/equality/mapping | Function-set membership, `$fn_eq_in`, `$fn_eq`, injective/surjective/bijective definitions, finite range cardinality. | [`function_mapping_properties.lit`](../examples/03_language_features/function_mapping_properties.lit) |
 | Finite aggregates | Closed-range and finite-set sums/products, empty/insert/remove/union laws, pointwise congruence, scalar/product distribution, and bijective reindexing. | [`finite_set_product_builtin_rules.lit`](../examples/02_builtin_math/finite_set_product_builtin_rules.lit), [`sum_subtraction_negation_builtin_rules.lit`](../examples/02_builtin_math/sum_subtraction_negation_builtin_rules.lit) |
 | Generic reductions | Ordered left-fold evaluation, endpoint consumption, adjacent partition, interval translation, associative-commutative finite-set folding, aggregate bridges, congruence, and reindexing. | [`reduce_builtin_rules.lit`](../examples/02_builtin_math/reduce_builtin_rules.lit) |
-| Number theory and remainder | Exact primality, prime definition consequences, gcd/lcm contracts, Euclidean remainder uniqueness, and compatible-modulus absorption. | [`gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit), [`integer_quotient_euclidean.lit`](../examples/02_builtin_math/integer_quotient_euclidean.lit), [`modulo_compatible_moduli.lit`](../examples/02_builtin_math/modulo_compatible_moduli.lit) |
+| Number theory and remainder | Exact primality and natural coprimality, definition consequences, gcd/lcm contracts, Euclidean remainder uniqueness, and compatible-modulus absorption. | [`gcd_and_prime_builtin.lit`](../examples/02_builtin_math/gcd_and_prime_builtin.lit), [`coprime_on_natural.lit`](../examples/02_builtin_math/coprime_on_natural.lit), [`integer_quotient_euclidean.lit`](../examples/02_builtin_math/integer_quotient_euclidean.lit), [`modulo_compatible_moduli.lit`](../examples/02_builtin_math/modulo_compatible_moduli.lit) |
 | Native exponential/sign/factorial and integer extrema | Special values, domains, monotonicity/reflection, inverse/algebra laws, sign characterization, factorial recurrence/divisibility, floor/ceiling, min/max, and lcm. | [`native_exp_sign_factorial.lit`](../examples/02_builtin_math/native_exp_sign_factorial.lit), [`native_rounding_extrema_and_lcm.lit`](../examples/02_builtin_math/native_rounding_extrema_and_lcm.lit) |
 | Trigonometry | Core values/addition/unit-circle laws, normalized parity/shift/double-angle layers, bounds, sign intervals, and partial tangent/cotangent domains. | [`trigonometric_builtin_rules.lit`](../examples/02_builtin_math/trigonometric_builtin_rules.lit) |
 | Complex scalars | Coordinates, reconstruction/extensionality, arithmetic coordinates, integer powers, modulus bounds/multiplication/nonzero behavior. | [`native_complex_modulus.lit`](../examples/02_builtin_math/native_complex_modulus.lit), [`complex_star_standard_set.lit`](../examples/02_builtin_math/complex_star_standard_set.lit) |
@@ -3746,7 +3777,7 @@ Most triggers are atomic facts. A few larger shapes have explicit behavior.
 |---|---|
 | Equality | Numeric values, simple linear solved values, `u-v=0` equality, tuple/cart/set-builder/sequence/matrix/function structure, and positive-real membership transported from a known power side. |
 | `$fn_eq(f,g)` | Ordinary object equality `f=g`, so known-equality congruence can use it. `$fn_eq_in` alone has no such global consequence. |
-| Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
+| Positive concrete or builtin predicate | Instantiated parameter-type and defining clauses. Proper inclusion exposes inclusion plus inequality; `$prime` exposes its lower bound and trial-divisor universal; `$coprime(a,b)` exposes `a != 0 or b != 0` and `gcd(a,b)=1`; mapping properties expose their exact definitions. Abstract predicates have no clauses to expose. |
 | Membership | Constructor-specific carrier, shape, bound, component, disjunction, or existential information listed below. |
 | `$is_cart(C)` | The structural lower bound `2 <= cart_dim(C)`. Other positive/negative type predicates have no general inference branch. |
 | Subset or superset | One fresh universal membership consequence in the corresponding direction. A builder on the subset side skips this eager universal because builder membership already exposes its domain and filters. |
@@ -3904,6 +3935,7 @@ change:
 - native positive real constants `e` and `pi`;
 - native symbolic real trigonometry `sin`, `cos`, `tan`, and `cot`;
 - native `floor`, `ceil`, binary `min`/`max`, and integer `lcm`;
+- native natural-number `$coprime(a, b)`;
 - native real `exp`/`ln`, real `sign`, and natural `factorial`;
 - `struct`, struct view objects, and default-view field access;
 - proper subset and proper superset relations;

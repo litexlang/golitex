@@ -223,9 +223,7 @@ impl Runtime {
 
     pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
-            Obj::Atom(AtomObj::Exist(p)) => {
-                names.iter().any(|name| name.as_str() == p.name())
-            }
+            Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name.as_str() == p.name()),
             Obj::Atom(_)
             | Obj::Number(_)
             | Obj::ImaginaryUnit(_)

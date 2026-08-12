@@ -65,6 +65,8 @@ impl AtomicFact {
             }
             AtomicFact::NormalAtomicFact(a) if a.predicate.to_string() == PRIME => 1,
             AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == PRIME => 1,
+            AtomicFact::NormalAtomicFact(a) if a.predicate.to_string() == COPRIME => 2,
+            AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == COPRIME => 2,
             _ => unreachable!("other cases are not builtin predicates"),
         }
     }

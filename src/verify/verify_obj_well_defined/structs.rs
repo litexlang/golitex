@@ -215,8 +215,11 @@ impl Runtime {
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
         for field in def.fields.iter() {
-            let instantiated_field_type =
-                self.inst_obj(&field.field_type, &param_to_arg_map, ParamObjType::DefHeader)?;
+            let instantiated_field_type = self.inst_obj(
+                &field.field_type,
+                &param_to_arg_map,
+                ParamObjType::DefHeader,
+            )?;
             self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
         }
         self.run_in_local_env(|rt| {

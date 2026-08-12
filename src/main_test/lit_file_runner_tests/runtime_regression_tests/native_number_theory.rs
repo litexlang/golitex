@@ -4,8 +4,10 @@ use super::*;
 fn native_number_theory_names_and_ids_are_stable() {
     assert!(is_keyword(GCD));
     assert!(is_keyword(PRIME));
+    assert!(is_keyword(COPRIME));
     assert!(is_builtin_identifier_name(GCD));
     assert!(is_builtin_predicate(PRIME));
+    assert!(is_builtin_predicate(COPRIME));
     assert_eq!(
         builtin_symbol_ref(GCD)
             .expect("gcd builtin symbol")
@@ -19,6 +21,13 @@ fn native_number_theory_names_and_ids_are_stable() {
             .id()
             .value(),
         (1_u64 << 62) + 49
+    );
+    assert_eq!(
+        builtin_symbol_ref(COPRIME)
+            .expect("coprime builtin symbol")
+            .id()
+            .value(),
+        (1_u64 << 62) + 60
     );
     let gcd: Obj = Gcd::new(
         Number::new("6".to_string()).into(),
@@ -139,8 +148,95 @@ fn native_prime_rejects_non_natural_carriers_and_does_not_guess_beyond_u64() {
 }
 
 #[test]
-fn native_number_theory_names_are_hard_reserved_but_uppercase_prime_is_available() {
-    for name in [GCD, PRIME] {
+fn native_coprime_computation_definition_and_zero_boundary_are_exact() {
+    assert_source_succeeds(
+        r#"
+$coprime(14, 25)
+$coprime(0, 1)
+$coprime(1, 0)
+not $coprime(14, 21)
+not $coprime(0, 0)
+$coprime(1234567890123456789012345678901, 10)
+by def $coprime(14, 25)
+
+claim:
+    ? forall a, b N:
+        a != 0 or b != 0
+        gcd(a, b) = 1
+        =>:
+            $coprime(a, b)
+    by def $coprime(a, b)
+
+claim:
+    ? forall a, b N:
+        a != 0 or b != 0
+        gcd(a, b) = 1
+        =>:
+            $coprime(a, b)
+    by def:
+        ? $coprime(a, b)
+
+forall a, b N:
+    $coprime(a, b)
+    =>:
+        a != 0 or b != 0
+        gcd(a, b) = 1
+"#,
+        "native_coprime_computation_definition_and_zero_boundary_are_exact",
+    );
+}
+
+#[test]
+fn native_coprime_rejects_false_claims_arity_and_non_natural_carriers() {
+    for (label, source) in [
+        ("native_coprime_zero_zero_is_false", "$coprime(0, 0)"),
+        (
+            "native_coprime_noncoprime_pair_is_false",
+            "$coprime(14, 21)",
+        ),
+        (
+            "native_coprime_coprime_pair_is_not_false",
+            "not $coprime(14, 25)",
+        ),
+        ("native_coprime_wrong_arity", "$coprime(14)"),
+        (
+            "native_coprime_rejects_arbitrary_integers",
+            "forall a, b Z:\n    $coprime(a, b)\n    =>:\n        a = a",
+        ),
+        (
+            "native_coprime_rejects_arbitrary_reals",
+            "forall a, b R:\n    not $coprime(a, b)\n    =>:\n        a = a",
+        ),
+        (
+            "native_coprime_rejects_negative_integer",
+            "$coprime(-14, 25)",
+        ),
+    ] {
+        assert_source_fails(source, label);
+    }
+}
+
+#[test]
+fn native_number_theory_symbolic_builtin_targets_can_be_deferred_to_their_proofs() {
+    assert_source_succeeds(
+        r#"
+thm deferred_symbolic_coprime:
+    ? forall a, b N:
+        $coprime(a, b)
+    trust $coprime(a, b)
+
+thm deferred_symbolic_prime:
+    ? forall n N:
+        $prime(n)
+    trust $prime(n)
+"#,
+        "native_number_theory_symbolic_builtin_targets_can_be_deferred_to_their_proofs",
+    );
+}
+
+#[test]
+fn native_number_theory_names_are_hard_reserved_but_uppercase_names_are_available() {
+    for name in [GCD, PRIME, COPRIME] {
         for (position, source) in [
             ("declaration", format!("have {name} Z = 1")),
             ("forall binder", format!("forall {name} Z:\n    1 = 1")),
@@ -155,20 +251,22 @@ fn native_number_theory_names_are_hard_reserved_but_uppercase_prime_is_available
         }
     }
     assert_source_succeeds(
-        "have Prime Z = 1\nPrime = 1",
-        "uppercase_prime_remains_available",
+        "have Prime Z = 1\nhave Coprime Z = 2\nPrime = 1\nCoprime = 2",
+        "uppercase_number_theory_names_remain_available",
     );
 }
 
 #[test]
 fn native_number_theory_latex_is_mathematical() {
     let latex = to_latex_from_source(
-        "gcd(54, 24) = 6\n$prime(97)",
+        "gcd(54, 24) = 6\n$prime(97)\n$coprime(14, 25)\nnot $coprime(14, 21)",
         "native_number_theory_latex_is_mathematical",
     )
     .expect("native number theory should convert to LaTeX");
     assert!(latex.contains(r"\gcd\left( 54, 24 \right)"), "{latex}");
     assert!(latex.contains(r"\operatorname{prime}"), "{latex}");
+    assert!(latex.contains(r"\operatorname{coprime}"), "{latex}");
+    assert!(latex.contains(r"\neg \operatorname{coprime}"), "{latex}");
 }
 
 #[test]
@@ -206,6 +304,17 @@ forall x R:
     assert!(
         prime_error.contains("does not support builtin prime"),
         "{prime_error}"
+    );
+
+    let coprime_error = to_python_from_source(
+        "$coprime(14, 25)",
+        "native_coprime_python_boundary_is_structural",
+    )
+    .expect_err("the builtin coprime predicate is not supported by the Python extractor")
+    .trace_message();
+    assert!(
+        coprime_error.contains("does not support builtin coprime"),
+        "{coprime_error}"
     );
 }
 

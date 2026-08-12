@@ -11,6 +11,8 @@ use super::helper::{
 /// This prelude marks the supported target carriers as Litex objects and keeps
 /// `$is_set`, nonemptiness, and finiteness as ordinary propositions. It does
 /// not define a universal value wrapper or private arithmetic/equality laws.
+/// The standard numeric sets are transparent aliases, so later generated
+/// objects cite stable names while Lean still sees native Mathlib sets.
 pub(super) fn lean_object_prelude() -> String {
     let carrier = TO_LEAN_GENERIC_CARRIER_PREFIX;
     let generic_type_binder = format!("{{{} : Type {}}}", carrier, TO_LEAN_DEFAULT_UNIVERSE);
@@ -117,7 +119,11 @@ mod tests {
             "abbrev C : Set ℂ := Set.univ",
             "abbrev CStar : Set ℂ := {c | c ≠ 0}",
         ] {
-            assert!(prelude.contains(declaration), "missing `{declaration}`");
+            assert_eq!(
+                prelude.matches(declaration).count(),
+                1,
+                "expected one `{declaration}` declaration"
+            );
         }
         assert!(!prelude.contains("LitexUniverse"));
         assert!(!prelude.contains("LitexFact"));

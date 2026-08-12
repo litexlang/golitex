@@ -482,6 +482,162 @@ impl Runtime {
         }
 
         let verify_state = UseContextVerifyState::new(0, false);
+        if name == "subset_of_finite_set_is_finite" {
+            require_arity!(2);
+
+            let conclusion: AtomicFact =
+                IsFiniteSetFact::new(stmt.args[0].clone(), stmt.line_file.clone()).into();
+            let first_is_set: AtomicFact =
+                IsSetFact::new(stmt.args[0].clone(), stmt.line_file.clone()).into();
+            let second_is_finite: AtomicFact =
+                IsFiniteSetFact::new(stmt.args[1].clone(), stmt.line_file.clone()).into();
+            let subset: AtomicFact = SubsetFact::new(
+                stmt.args[0].clone(),
+                stmt.args[1].clone(),
+                stmt.line_file.clone(),
+            )
+            .into();
+
+            let mut inside_results = Vec::new();
+            let mut requirement_facts = Vec::new();
+            let mut requirement_roles = Vec::new();
+            if verify_requirements {
+                for (requirement, role) in [
+                    (first_is_set, "the first argument is a set"),
+                    (second_is_finite, "the second argument is a finite set"),
+                    (subset, "the first argument is a subset of the second"),
+                ] {
+                    self.verify_atomic_fact_well_defined(&requirement, &verify_state)?;
+                    let result = self.verify_atomic_fact(&requirement, &verify_state)?;
+                    if !result.is_true() {
+                        return Err(builtin_thm_exec_error(
+                            stmt,
+                            format!(
+                                "builtin theorem `subset_of_finite_set_is_finite` requires that {}",
+                                role
+                            ),
+                            vec![result],
+                        ));
+                    }
+                    requirement_facts.push(requirement.to_string());
+                    requirement_roles.push(role.to_string());
+                    inside_results.push(result);
+                }
+                self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
+            }
+
+            let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
+            let infer_result = if verify_requirements {
+                self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    conclusion.clone(),
+                    store_reason.store_reason(),
+                )?
+            } else {
+                self.store_trusted_fact_and_infer_with_reason(
+                    conclusion.clone().into(),
+                    store_reason,
+                )?
+            };
+            let verification = ByTheoremVerificationResult::new_builtin(
+                name.to_string(),
+                stmt.args.iter().map(ToString::to_string).collect(),
+                requirement_facts,
+                requirement_roles,
+                vec![conclusion.to_string()],
+                None,
+            );
+            return Ok(Some(
+                NonFactualStmtSuccess::new_with_by_verification(
+                    stmt.clone().into(),
+                    infer_result,
+                    inside_results,
+                    verification.into(),
+                )
+                .into(),
+            ));
+        }
+
+        if name == "finite_set_has_bijective_index" {
+            require_arity!(1);
+
+            let finite_set = stmt.args[0].clone();
+            let size: Obj = FiniteSetSize::new(finite_set.clone()).into();
+            let sequence_set: Obj = FiniteSeqSet::new(finite_set.clone(), size.clone()).into();
+            let index_group = self.fresh_param_group_with_type(
+                vec!["idx".to_string()],
+                ParamType::Obj(sequence_set),
+            )?;
+            let index = obj_for_bound_param_in_scope(&index_group.params[0], ParamObjType::Exist);
+            let domain: Obj = ClosedRange::new(Number::new("1".to_string()).into(), size).into();
+            let bijective: AtomicFact = NormalAtomicFact::new(
+                AtomicName::WithoutMod(BIJECTIVE.to_string()),
+                vec![domain, finite_set.clone(), index],
+                stmt.line_file.clone(),
+            )
+            .into();
+            let body = ExistFactBody::new(
+                ParamDefWithType::new(vec![index_group]),
+                vec![bijective.into()],
+                stmt.line_file.clone(),
+            )?;
+            let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistFact(body).into();
+
+            let mut inside_results = Vec::new();
+            let mut requirement_facts = Vec::new();
+            let mut requirement_roles = Vec::new();
+            if verify_requirements {
+                let finite_requirement: AtomicFact =
+                    IsFiniteSetFact::new(finite_set, stmt.line_file.clone()).into();
+                self.verify_atomic_fact_well_defined(&finite_requirement, &verify_state)?;
+                let result = self.verify_atomic_fact(&finite_requirement, &verify_state)?;
+                if !result.is_true() {
+                    return Err(builtin_thm_exec_error(
+                        stmt,
+                        "builtin theorem `finite_set_has_bijective_index` requires a finite-set argument"
+                            .to_string(),
+                        vec![result],
+                    ));
+                }
+                requirement_facts.push(finite_requirement.to_string());
+                requirement_roles.push("the argument is a finite set".to_string());
+                inside_results.push(result);
+                self.verify_exist_or_and_chain_atomic_fact_well_defined(
+                    &conclusion,
+                    &verify_state,
+                )?;
+            }
+
+            let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
+            let infer_result = if verify_requirements {
+                self.store_exist_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+                    conclusion.clone(),
+                    store_reason.store_reason(),
+                )?
+            } else {
+                self.store_trusted_fact_and_infer_with_reason(
+                    conclusion.clone().to_fact(),
+                    store_reason,
+                )?
+            };
+            let verification = ByTheoremVerificationResult::new_builtin(
+                name.to_string(),
+                stmt.args.iter().map(ToString::to_string).collect(),
+                requirement_facts,
+                requirement_roles,
+                vec![conclusion.to_string()],
+                None,
+            );
+            return Ok(Some(
+                NonFactualStmtSuccess::new_with_by_verification(
+                    stmt.clone().into(),
+                    infer_result,
+                    inside_results,
+                    verification.into(),
+                )
+                .into(),
+            ));
+        }
+
         if name == "rational_has_unique_reduced_fraction" {
             require_arity!(1);
 

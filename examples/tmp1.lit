@@ -26,6 +26,30 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 opaque scratch {α : Type u} [LitexObject α] : α → Prop
 
 end

@@ -24,22 +24,29 @@ pub struct UnverifiedImport {
 }
 
 pub(crate) struct WellDefinednessObjectCaptureFrame {
-    pub occurrence_id: WellDefinednessObjectOccurrenceId,
     pub object: Obj,
-    pub fact_ids: Vec<WellDefinednessCertificateId>,
+    pub cache_key: WellDefinedCacheKey,
+    pub cacheable: bool,
+    pub child_proof_ids: Vec<WellDefinedObjProofId>,
+    pub fact_ids: Vec<WellDefinedFactId>,
+    pub target_requirements: Vec<WellDefinedTargetRequirementProof>,
     pub statement_capture_depth: usize,
 }
 
 impl WellDefinednessObjectCaptureFrame {
     pub(crate) fn new(
-        occurrence_id: WellDefinednessObjectOccurrenceId,
         object: Obj,
+        cache_key: WellDefinedCacheKey,
+        cacheable: bool,
         statement_capture_depth: usize,
     ) -> Self {
         Self {
-            occurrence_id,
             object,
+            cache_key,
+            cacheable,
+            child_proof_ids: Vec::new(),
             fact_ids: Vec::new(),
+            target_requirements: Vec::new(),
             statement_capture_depth,
         }
     }
@@ -47,10 +54,10 @@ impl WellDefinednessObjectCaptureFrame {
 
 #[derive(Clone)]
 pub(crate) struct WellDefinednessCaptureCheckpoint {
-    fact_count: usize,
-    object_count: usize,
-    target_requirement_count: usize,
+    root_proof_count: usize,
+    active_object_child_counts: Vec<usize>,
     active_object_fact_counts: Vec<usize>,
+    active_object_target_requirement_counts: Vec<usize>,
 }
 
 impl OutputStyle {
@@ -80,6 +87,11 @@ pub struct Runtime {
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub(crate) next_fact_id: u64,
+    /// Monotone runtime-wide allocators for compiler-only WD proof identity.
+    /// Environment visibility remains the authority for whether an ID may be
+    /// cited.
+    pub(crate) next_well_defined_obj_proof_id: u64,
+    pub(crate) next_well_defined_fact_id: u64,
     /// Parameters that the active recursive fact matcher may instantiate.
     /// Captured parameters of the same object kind must remain rigid.
     pub(crate) active_arg_match_bindings: Vec<(ParamObjType, String)>,
@@ -129,6 +141,8 @@ impl Runtime {
             well_definedness_capture_stack: Vec::new(),
             well_definedness_object_capture_stack: Vec::new(),
             next_fact_id: 1,
+            next_well_defined_obj_proof_id: 1,
+            next_well_defined_fact_id: 1,
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
             active_well_defined_objects: HashSet::new(),
@@ -176,10 +190,18 @@ impl Runtime {
             .push(WellDefinednessCertificate::default());
     }
 
-    pub(crate) fn end_statement_well_definedness_capture(&mut self) -> WellDefinednessCertificate {
-        self.well_definedness_capture_stack
+    pub(crate) fn end_statement_well_definedness_capture(
+        &mut self,
+    ) -> Result<WellDefinednessCertificate, RuntimeError> {
+        let certificate = self
+            .well_definedness_capture_stack
             .pop()
-            .unwrap_or_default()
+            .unwrap_or_default();
+        self.freeze_well_definedness_certificate(certificate)
+    }
+
+    pub(crate) fn discard_statement_well_definedness_capture(&mut self) {
+        let _ = self.well_definedness_capture_stack.pop();
     }
 
     pub(crate) fn well_definedness_capture_checkpoint(
@@ -187,13 +209,21 @@ impl Runtime {
     ) -> Option<WellDefinednessCaptureCheckpoint> {
         let certificate = self.well_definedness_capture_stack.last()?;
         Some(WellDefinednessCaptureCheckpoint {
-            fact_count: certificate.facts.len(),
-            object_count: certificate.objects.len(),
-            target_requirement_count: certificate.target_requirements.len(),
+            root_proof_count: certificate.root_proof_ids.len(),
+            active_object_child_counts: self
+                .well_definedness_object_capture_stack
+                .iter()
+                .map(|frame| frame.child_proof_ids.len())
+                .collect(),
             active_object_fact_counts: self
                 .well_definedness_object_capture_stack
                 .iter()
                 .map(|frame| frame.fact_ids.len())
+                .collect(),
+            active_object_target_requirement_counts: self
+                .well_definedness_object_capture_stack
+                .iter()
+                .map(|frame| frame.target_requirements.len())
                 .collect(),
         })
     }
@@ -207,17 +237,29 @@ impl Runtime {
         else {
             return;
         };
-        certificate.facts.truncate(checkpoint.fact_count);
-        certificate.objects.truncate(checkpoint.object_count);
         certificate
-            .target_requirements
-            .truncate(checkpoint.target_requirement_count);
+            .root_proof_ids
+            .truncate(checkpoint.root_proof_count);
+        for (frame, child_count) in self
+            .well_definedness_object_capture_stack
+            .iter_mut()
+            .zip(checkpoint.active_object_child_counts)
+        {
+            frame.child_proof_ids.truncate(child_count);
+        }
         for (frame, fact_count) in self
             .well_definedness_object_capture_stack
             .iter_mut()
             .zip(checkpoint.active_object_fact_counts)
         {
             frame.fact_ids.truncate(fact_count);
+        }
+        for (frame, requirement_count) in self
+            .well_definedness_object_capture_stack
+            .iter_mut()
+            .zip(checkpoint.active_object_target_requirement_counts)
+        {
+            frame.target_requirements.truncate(requirement_count);
         }
     }
 
@@ -229,6 +271,30 @@ impl Runtime {
             )))
         })?;
         Ok(FactId::new(value))
+    }
+
+    pub(crate) fn allocate_well_defined_obj_proof_id(
+        &mut self,
+    ) -> Result<WellDefinedObjProofId, RuntimeError> {
+        let value = self.next_well_defined_obj_proof_id;
+        self.next_well_defined_obj_proof_id = value.checked_add(1).ok_or_else(|| {
+            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                "well-defined object proof ID space exhausted".to_string(),
+            )))
+        })?;
+        Ok(WellDefinedObjProofId::new(value))
+    }
+
+    pub(crate) fn allocate_well_defined_fact_id(
+        &mut self,
+    ) -> Result<WellDefinedFactId, RuntimeError> {
+        let value = self.next_well_defined_fact_id;
+        self.next_well_defined_fact_id = value.checked_add(1).ok_or_else(|| {
+            RuntimeError::from(UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(
+                "well-defined fact ID space exhausted".to_string(),
+            )))
+        })?;
+        Ok(WellDefinedFactId::new(value))
     }
 
     pub fn set_output_style(&mut self, output_style: OutputStyle) {
@@ -671,17 +737,6 @@ impl Runtime {
             .push(Box::new(Environment::new_empty_env()));
     }
 
-    fn pop_env(&mut self) {
-        let frame = self
-            .execution_stack
-            .last_mut()
-            .expect("an execution frame should always exist");
-        frame
-            .local_environment_stack
-            .pop()
-            .expect("no local environment to pop");
-    }
-
     /// Replace the top user environment with an empty one and clear parse-time free-param scopes.
     pub fn clear_current_env_and_parse_name_scope(&mut self) {
         if self
@@ -723,8 +778,92 @@ impl Runtime {
     {
         self.push_env();
         let result = f(self);
-        self.pop_env();
+        let mut child = self
+            .execution_stack
+            .last_mut()
+            .and_then(|frame| frame.local_environment_stack.pop())
+            .expect("local environment should exist after push_env");
+        if result.is_ok() && self.captures_litex_to_lean_well_definedness() {
+            self.promote_referenced_well_definedness_from_child(&mut child);
+        }
         result
+    }
+
+    /// Preserve only child-owned compiler evidence that an enclosing capture
+    /// still cites. Ordinary Litex data and child cache entries disappear with
+    /// the child environment. A certificate that was already frozen into a
+    /// `StmtResult` owns its own snapshot and therefore needs no promotion.
+    fn promote_referenced_well_definedness_from_child(&mut self, child: &mut Environment) {
+        let mut pending_object_ids = self
+            .well_definedness_capture_stack
+            .iter()
+            .flat_map(|certificate| certificate.root_proof_ids.iter().copied())
+            .collect::<Vec<_>>();
+        let mut retained_fact_ids = HashSet::new();
+        for frame in &self.well_definedness_object_capture_stack {
+            pending_object_ids.extend(frame.child_proof_ids.iter().copied());
+            retained_fact_ids.extend(frame.fact_ids.iter().copied());
+            retained_fact_ids.extend(
+                frame
+                    .target_requirements
+                    .iter()
+                    .map(|requirement| requirement.fact_id),
+            );
+        }
+
+        let mut retained_object_ids = HashSet::new();
+        while let Some(proof_id) = pending_object_ids.pop() {
+            if !retained_object_ids.insert(proof_id) {
+                continue;
+            }
+            let Some(proof) = child.well_defined_obj_proofs.get(&proof_id) else {
+                continue;
+            };
+            pending_object_ids.extend(proof.child_proof_ids.iter().copied());
+            retained_fact_ids.extend(proof.fact_ids.iter().copied());
+            retained_fact_ids.extend(
+                proof
+                    .target_requirements
+                    .iter()
+                    .map(|requirement| requirement.fact_id),
+            );
+        }
+
+        let retained_order = child
+            .well_defined_fact_order
+            .iter()
+            .copied()
+            .filter(|fact_id| retained_fact_ids.contains(fact_id))
+            .collect::<Vec<_>>();
+        let retained_object_proofs = retained_object_ids
+            .into_iter()
+            .filter_map(|proof_id| {
+                child
+                    .well_defined_obj_proofs
+                    .remove(&proof_id)
+                    .map(|proof| (proof_id, proof))
+            })
+            .collect::<Vec<_>>();
+        let retained_fact_proofs = retained_fact_ids
+            .into_iter()
+            .filter_map(|fact_id| {
+                child
+                    .well_defined_fact_proofs
+                    .remove(&fact_id)
+                    .map(|proof| (fact_id, proof))
+            })
+            .collect::<Vec<_>>();
+
+        let parent = self.top_level_env();
+        parent
+            .well_defined_obj_proofs
+            .extend(retained_object_proofs);
+        parent.well_defined_fact_proofs.extend(retained_fact_proofs);
+        for fact_id in retained_order {
+            if !parent.well_defined_fact_order.contains(&fact_id) {
+                parent.well_defined_fact_order.push(fact_id);
+            }
+        }
     }
 
     /// Runs a closure in an isolated child environment and returns that child
@@ -1170,9 +1309,10 @@ impl Runtime {
     }
 
     pub fn store_well_defined_obj_cache(&mut self, obj: &Obj) {
-        self.top_level_env()
-            .cache_well_defined_obj
-            .insert(obj.to_string(), ());
+        self.top_level_env().cache_well_defined_obj.insert(
+            WellDefinedCacheKey::without_function_contract(obj.to_string()),
+            CachedWellDefinedObj::ordinary(),
+        );
     }
 
     /// Replays only the sound side effects produced while checking a theorem

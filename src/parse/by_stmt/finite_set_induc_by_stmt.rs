@@ -43,13 +43,7 @@ impl Runtime {
         let goal_line = tb.body[0].line_file.clone();
         let goal_param = [param.clone()];
         let (
-            (
-                to_prove,
-                base_proof,
-                element_param_binding,
-                smaller_set_param_binding,
-                step_proof,
-            ),
+            (to_prove, base_proof, element_param_binding, smaller_set_param_binding, step_proof),
             param_bindings,
         ) = self.parse_in_local_free_param_scope_with_bindings(
             ParamObjType::Induc,
@@ -63,12 +57,8 @@ impl Runtime {
                         "finite-set induc",
                     )?);
                 }
-                let (
-                    base_proof,
-                    element_param_binding,
-                    smaller_set_param_binding,
-                    step_proof,
-                ) = this.parse_finite_set_induc_proof_blocks(tb, &param, question_goal_count)?;
+                let (base_proof, element_param_binding, smaller_set_param_binding, step_proof) =
+                    this.parse_finite_set_induc_proof_blocks(tb, &param, question_goal_count)?;
                 Ok((
                     to_prove,
                     base_proof,
@@ -160,12 +150,13 @@ impl Runtime {
                 tb.line_file.clone(),
             )
         })?;
-        let (element_param_binding, smaller_set_param_binding, step_proof) = step.ok_or_else(|| {
-            Self::finite_set_induc_parse_error(
-                "finite-set induc: missing `? induc x, S` block".to_string(),
-                tb.line_file.clone(),
-            )
-        })?;
+        let (element_param_binding, smaller_set_param_binding, step_proof) =
+            step.ok_or_else(|| {
+                Self::finite_set_induc_parse_error(
+                    "finite-set induc: missing `? induc x, S` block".to_string(),
+                    tb.line_file.clone(),
+                )
+            })?;
         Ok((
             base_proof,
             element_param_binding,

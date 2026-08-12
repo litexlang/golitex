@@ -80,7 +80,13 @@ pub struct Environment {
     pub known_reflexive_props: HashMap<String, ()>,
     pub known_antisymmetric_props: HashMap<String, ()>,
 
-    pub cache_well_defined_obj: HashMap<ObjString, ()>,
+    pub cache_well_defined_obj: HashMap<WellDefinedCacheKey, CachedWellDefinedObj>,
+    /// Compiler-only proof DAG. These propositions are intentionally absent
+    /// from Litex's ordinary known-fact indexes.
+    pub well_defined_obj_proofs: HashMap<WellDefinedObjProofId, Rc<WellDefinedObjProof>>,
+    pub well_defined_fact_proofs: HashMap<WellDefinedFactId, Rc<WellDefinedFactProof>>,
+    /// Creation order within this environment; Lean emission preserves it.
+    pub well_defined_fact_order: Vec<WellDefinedFactId>,
     pub cache_known_fact: HashMap<FactString, CachedKnownFact>,
     pub cache_infer_rule_firing: HashMap<String, ()>,
     /// Successful atomic subgoals reusable only while the current statement executes.
@@ -225,7 +231,18 @@ impl Environment {
             known_symmetric_props: HashMap::new(),
             known_reflexive_props: HashMap::new(),
             known_antisymmetric_props: HashMap::new(),
-            cache_well_defined_obj: cache_known_valid_obj,
+            cache_well_defined_obj: cache_known_valid_obj
+                .into_keys()
+                .map(|key| {
+                    (
+                        WellDefinedCacheKey::without_function_contract(key),
+                        CachedWellDefinedObj::ordinary(),
+                    )
+                })
+                .collect(),
+            well_defined_obj_proofs: HashMap::new(),
+            well_defined_fact_proofs: HashMap::new(),
+            well_defined_fact_order: Vec::new(),
             cache_known_fact,
             cache_infer_rule_firing: HashMap::new(),
             statement_verified_atomic_facts: HashMap::new(),

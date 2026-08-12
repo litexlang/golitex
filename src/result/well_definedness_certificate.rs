@@ -54,19 +54,27 @@ pub enum WellDefinednessRequirementRole {
 #[derive(Clone, Debug)]
 pub struct WellDefinednessFactEvidence {
     pub certificate_id: WellDefinednessCertificateId,
+    /// Runtime-wide identity of the environment-owned proof fact.
+    pub well_defined_fact_id: WellDefinedFactId,
     pub role: WellDefinednessRequirementRole,
     pub proof: Rc<FactualStmtSuccess>,
 }
 
-/// One source object occurrence and every statement-local WD proof observed
-/// while its constructor check was active. Child requirements are retained in
-/// the parent occurrence as well, so the compiler can audit the complete
-/// verifier traversal without reconstructing it from target syntax.
+/// Frozen statement projection of one environment-owned object-proof node.
+/// `well_defined_fact_ids` are its direct edges; `fact_ids` also includes the
+/// transitive compatibility view used by the current Lean ownership checks.
 #[derive(Clone)]
 pub struct WellDefinednessObjectEvidence {
     pub occurrence_id: WellDefinednessObjectOccurrenceId,
+    /// Runtime-wide identity of the environment-owned DAG node.
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub object: Obj,
     pub intrinsic_result_set: Option<Obj>,
+    pub child_proof_ids: Vec<WellDefinedObjProofId>,
+    pub well_defined_fact_ids: Vec<WellDefinedFactId>,
+    /// Statement-local projection retained for compatibility with the Lean
+    /// certificate validator. The authoritative edges are the stable IDs
+    /// above.
     pub fact_ids: Vec<WellDefinednessCertificateId>,
 }
 
@@ -75,11 +83,14 @@ impl std::fmt::Debug for WellDefinednessObjectEvidence {
         formatter
             .debug_struct("WellDefinednessObjectEvidence")
             .field("occurrence_id", &self.occurrence_id)
+            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("object", &self.object.to_string())
             .field(
                 "intrinsic_result_set",
                 &self.intrinsic_result_set.as_ref().map(ToString::to_string),
             )
+            .field("child_proof_ids", &self.child_proof_ids)
+            .field("well_defined_fact_ids", &self.well_defined_fact_ids)
             .field("fact_ids", &self.fact_ids)
             .finish()
     }
@@ -88,14 +99,20 @@ impl std::fmt::Debug for WellDefinednessObjectEvidence {
 impl WellDefinednessObjectEvidence {
     pub fn new(
         occurrence_id: WellDefinednessObjectOccurrenceId,
+        well_defined_obj_proof_id: WellDefinedObjProofId,
         object: Obj,
         intrinsic_result_set: Option<Obj>,
+        child_proof_ids: Vec<WellDefinedObjProofId>,
+        well_defined_fact_ids: Vec<WellDefinedFactId>,
         fact_ids: Vec<WellDefinednessCertificateId>,
     ) -> Self {
         Self {
             occurrence_id,
+            well_defined_obj_proof_id,
             object,
             intrinsic_result_set,
+            child_proof_ids,
+            well_defined_fact_ids,
             fact_ids,
         }
     }
@@ -107,9 +124,11 @@ impl WellDefinednessObjectEvidence {
 #[derive(Clone)]
 pub struct WellDefinednessTargetRequirementEvidence {
     pub object_occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub source_object: Obj,
     pub role: WellDefinednessRequirementRole,
     pub certificate_id: WellDefinednessCertificateId,
+    pub well_defined_fact_id: WellDefinedFactId,
     pub expected_proposition: Fact,
 }
 
@@ -118,9 +137,11 @@ impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
         formatter
             .debug_struct("WellDefinednessTargetRequirementEvidence")
             .field("object_occurrence_id", &self.object_occurrence_id)
+            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("source_object", &self.source_object.to_string())
             .field("role", &self.role)
             .field("certificate_id", &self.certificate_id)
+            .field("well_defined_fact_id", &self.well_defined_fact_id)
             .field(
                 "expected_proposition",
                 &self.expected_proposition.to_string(),
@@ -132,16 +153,20 @@ impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
 impl WellDefinednessTargetRequirementEvidence {
     pub fn new(
         object_occurrence_id: WellDefinednessObjectOccurrenceId,
+        well_defined_obj_proof_id: WellDefinedObjProofId,
         source_object: Obj,
         role: WellDefinednessRequirementRole,
         certificate_id: WellDefinednessCertificateId,
+        well_defined_fact_id: WellDefinedFactId,
         expected_proposition: Fact,
     ) -> Self {
         Self {
             object_occurrence_id,
+            well_defined_obj_proof_id,
             source_object,
             role,
             certificate_id,
+            well_defined_fact_id,
             expected_proposition,
         }
     }
@@ -149,6 +174,10 @@ impl WellDefinednessTargetRequirementEvidence {
 
 #[derive(Clone, Debug, Default)]
 pub struct WellDefinednessCertificate {
+    /// Roots used by this statement. All proof/fact bodies remain owned by
+    /// their Litex environments; the remaining fields are a frozen projection
+    /// used after a local environment has left runtime scope.
+    pub root_proof_ids: Vec<WellDefinedObjProofId>,
     pub facts: Vec<WellDefinednessFactEvidence>,
     pub objects: Vec<WellDefinednessObjectEvidence>,
     pub target_requirements: Vec<WellDefinednessTargetRequirementEvidence>,
