@@ -427,6 +427,7 @@ pub use crate::stmt::definition_stmt::HaveTupleStmt;
 pub use crate::stmt::definition_stmt::LetObjStmt;
 pub use crate::stmt::definition_stmt::ObtainObjFromAtomicFact;
 pub use crate::stmt::definition_stmt::ObtainObjFromExistFact;
+pub use crate::stmt::definition_stmt::ObtainObjFromThm;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;

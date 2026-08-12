@@ -211,6 +211,7 @@ pub enum TemplateDefEnum {
     TrustHaveStmt(TrustHaveStmt),
     ObtainObjFromExistFact(ObtainObjFromExistFact),
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
+    ObtainObjFromThm(ObtainObjFromThm),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),
     HaveFnByInducStmt(HaveFnByInducStmt),
@@ -234,6 +235,16 @@ pub struct ObtainObjFromExistFact {
 pub struct ObtainObjFromAtomicFact {
     pub equal_tos: Vec<SymbolBinding>,
     pub fact: NormalAtomicFact,
+    pub line_file: LineFile,
+}
+
+/// Apply a named theorem in a temporary environment and eliminate its sole
+/// direct positive existential conclusion into `equal_tos`.
+#[derive(Clone)]
+pub struct ObtainObjFromThm {
+    pub equal_tos: Vec<SymbolBinding>,
+    pub thm_name: AtomicName,
+    pub args: Vec<Obj>,
     pub line_file: LineFile,
 }
 
@@ -854,6 +865,47 @@ impl fmt::Display for ObtainObjFromAtomicFact {
     }
 }
 
+impl ObtainObjFromThm {
+    pub fn new(
+        equal_tos: Vec<SymbolBinding>,
+        thm_name: AtomicName,
+        args: Vec<Obj>,
+        line_file: LineFile,
+    ) -> Self {
+        Self {
+            equal_tos,
+            thm_name,
+            args,
+            line_file,
+        }
+    }
+
+    pub fn store_reason() -> &'static str {
+        ObtainObjFromExistFact::store_reason()
+    }
+}
+
+impl fmt::Display for ObtainObjFromThm {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        write!(
+            f,
+            "{} {} {} {} {}{}",
+            OBTAIN,
+            vec_to_string_join_by_comma(
+                &self
+                    .equal_tos
+                    .iter()
+                    .map(|binding| binding.name())
+                    .collect::<Vec<_>>(),
+            ),
+            FROM,
+            THM,
+            self.thm_name,
+            braced_vec_to_string(&self.args),
+        )
+    }
+}
+
 impl HaveByPreimageStmt {
     pub fn new(
         preimage_bindings: Vec<SymbolBinding>,
@@ -1021,6 +1073,13 @@ impl TemplateDefEnum {
                     None
                 }
             }
+            TemplateDefEnum::ObtainObjFromThm(stmt) => {
+                if stmt.equal_tos.len() == 1 {
+                    Some(stmt.equal_tos[0].name().to_string())
+                } else {
+                    None
+                }
+            }
             TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name().to_string()),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name().to_string()),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name().to_string()),
@@ -1043,6 +1102,7 @@ impl TemplateDefEnum {
             TemplateDefEnum::TrustHaveStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => stmt.clone().into(),
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => stmt.clone().into(),
+            TemplateDefEnum::ObtainObjFromThm(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => stmt.clone().into(),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => stmt.clone().into(),
@@ -1065,6 +1125,7 @@ impl fmt::Display for TemplateDefEnum {
             TemplateDefEnum::TrustHaveStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => write!(f, "{}", stmt),
+            TemplateDefEnum::ObtainObjFromThm(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => write!(f, "{}", stmt),
             TemplateDefEnum::HaveFnByInducStmt(stmt) => write!(f, "{}", stmt),

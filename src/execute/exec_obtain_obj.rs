@@ -39,6 +39,37 @@ impl Runtime {
         )
     }
 
+    pub fn exec_obtain_obj_from_thm(
+        &mut self,
+        obtain: &ObtainObjFromThm,
+    ) -> Result<StmtResult, RuntimeError> {
+        let stmt: Stmt = obtain.clone().into();
+        let theorem_call = ByThmStmt::new(
+            obtain.thm_name.clone(),
+            obtain.args.clone(),
+            None,
+            obtain.line_file.clone(),
+        );
+        let application_result = self
+            .run_in_local_env(|rt| rt.exec_by_thm_stmt(&theorem_call))
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;
+        let (source_exist_fact, application_result) =
+            self.extract_obtain_existential_from_theorem_result(stmt.clone(), application_result)?;
+
+        self.verify_obj_from_exist_fact_well_definedness(
+            stmt.clone(),
+            &obtain.equal_tos,
+            &source_exist_fact,
+        )?;
+        self.finish_exec_obj_from_exist_fact(
+            stmt,
+            &obtain.equal_tos,
+            &source_exist_fact,
+            vec![application_result],
+            obtain.line_file.clone(),
+        )
+    }
+
     pub(crate) fn exec_obtain_obj_from_exist_fact_affect_environment_only(
         &mut self,
         obtain: &ObtainObjFromExistFact,
@@ -64,6 +95,91 @@ impl Runtime {
             obtain.line_file.clone(),
         )?;
         Ok(NonFactualStmtSuccess::new(obtain.clone().into(), infer_result, vec![]).into())
+    }
+
+    pub(crate) fn exec_obtain_obj_from_thm_affect_environment_only(
+        &mut self,
+        obtain: &ObtainObjFromThm,
+    ) -> Result<StmtResult, RuntimeError> {
+        let stmt: Stmt = obtain.clone().into();
+        let theorem_call = ByThmStmt::new(
+            obtain.thm_name.clone(),
+            obtain.args.clone(),
+            None,
+            obtain.line_file.clone(),
+        );
+        let application_result = self
+            .run_in_local_env(|rt| rt.exec_by_thm_stmt_affect_environment_only(&theorem_call))
+            .map_err(|cause| exec_stmt_error_with_stmt_and_cause(stmt.clone(), cause))?;
+        let (source_exist_fact, _) =
+            self.extract_obtain_existential_from_theorem_result(stmt.clone(), application_result)?;
+        let infer_result = self.apply_obj_from_exist_fact_to_environment(
+            stmt.clone(),
+            &obtain.equal_tos,
+            &source_exist_fact,
+            obtain.line_file.clone(),
+        )?;
+        Ok(NonFactualStmtSuccess::new(stmt, infer_result, vec![]).into())
+    }
+
+    /// Recover the exact direct theorem conclusion selected by the existing
+    /// `by thm` executor. The theorem application result is returned intact so
+    /// it remains the sole proof source retained by existential elimination.
+    fn extract_obtain_existential_from_theorem_result(
+        &self,
+        stmt: Stmt,
+        application_result: StmtResult,
+    ) -> Result<(ExistFactEnum, StmtResult), RuntimeError> {
+        let extracted = (|| -> Result<ExistFactEnum, String> {
+            let success = application_result.non_factual_success().ok_or_else(|| {
+                "obtain from thm: theorem application did not return a statement success"
+                    .to_string()
+            })?;
+            let Some(ByVerificationResult::Theorem(verification)) =
+                success.by_verification.as_ref()
+            else {
+                return Err(
+                    "obtain from thm: theorem application did not retain theorem verification evidence"
+                        .to_string(),
+                );
+            };
+            if verification.mode != "release_all" || verification.selected_fact.is_some() {
+                return Err(
+                    "obtain from thm: theorem application must expose all direct conclusions"
+                        .to_string(),
+                );
+            }
+            if verification.direct_conclusions.len() != 1 {
+                return Err(format!(
+                    "obtain from thm `{}` requires exactly one direct theorem conclusion, got {}",
+                    verification.theorem,
+                    verification.direct_conclusions.len()
+                ));
+            }
+            let Fact::ExistFact(exist_fact) = &verification.direct_conclusions[0] else {
+                return Err(format!(
+                    "obtain from thm `{}` requires its sole direct conclusion to be `exist` or `exist!`",
+                    verification.theorem
+                ));
+            };
+            if exist_fact.is_not_exist() {
+                return Err(format!(
+                    "obtain from thm `{}` cannot eliminate a `not exist` conclusion",
+                    verification.theorem
+                ));
+            }
+            Ok(exist_fact.clone())
+        })();
+
+        match extracted {
+            Ok(exist_fact) => Ok((exist_fact, application_result)),
+            Err(message) => Err(short_exec_error(
+                stmt,
+                message,
+                None,
+                vec![application_result],
+            )),
+        }
     }
 
     pub fn exec_have_obj_by_exist_facts_stmt(

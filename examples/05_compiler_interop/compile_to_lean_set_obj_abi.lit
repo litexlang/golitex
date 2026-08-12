@@ -19,10 +19,12 @@ forall A, B set:
 forall A, B set:
     set_minus(A, B) = set_minus(A, B)
 
-# Boundary:
 # A set-builder owns a binder, its carrier, local facts, and local symbol scope.
-# It remains unsupported until Litex-to-Lean has binder-aware Obj IR. The focused Rust
-# regression constructs that node and requires IR construction to reject it.
+# It now lowers structurally to a native Lean predicate set.
+{x R: x = x} = {x R: x = x}
+
+# Boundary: malformed or underconstrained builders still fail closed; compiling
+# one supported builder does not assign carriers to unrelated set expressions.
 #
 # Evidence:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_obj_abi.lit

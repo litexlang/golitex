@@ -1390,18 +1390,6 @@ fn collect_module_names_from_exist_body_fact(fact: &ExistBodyFact, module_names:
                 collect_module_names_from_and_chain_atomic_fact(branch, module_names);
             }
         }
-        ExistBodyFact::InlineForall(forall_fact) => {
-            collect_module_names_from_param_def_with_type(
-                &forall_fact.params_def_with_type,
-                module_names,
-            );
-            for fact in forall_fact.dom_facts.iter() {
-                collect_module_names_from_fact(fact, module_names);
-            }
-            for fact in forall_fact.then_facts.iter() {
-                collect_module_names_from_exist_or_and_chain_atomic_fact(fact, module_names);
-            }
-        }
     }
 }
 
@@ -1441,102 +1429,6 @@ fn collect_module_names_from_atomic_fact(fact: &AtomicFact, module_names: &mut V
     }
     for arg in fact.args().iter() {
         collect_module_names_from_obj(arg, module_names);
-    }
-}
-
-fn collect_module_names_from_exist_or_and_chain_atomic_fact(
-    fact: &ExistOrAndChainAtomicFact,
-    module_names: &mut Vec<String>,
-) {
-    match fact {
-        ExistOrAndChainAtomicFact::AtomicFact(fact) => {
-            collect_module_names_from_atomic_fact(fact, module_names);
-        }
-        ExistOrAndChainAtomicFact::AndFact(fact) => {
-            for atomic_fact in fact.facts.iter() {
-                collect_module_names_from_atomic_fact(atomic_fact, module_names);
-            }
-        }
-        ExistOrAndChainAtomicFact::ChainFact(fact) => {
-            for name in fact.prop_names.iter() {
-                collect_module_name_from_atomic_name(name, module_names);
-            }
-            for obj in fact.objs.iter() {
-                collect_module_names_from_obj(obj, module_names);
-            }
-        }
-        ExistOrAndChainAtomicFact::OrFact(fact) => {
-            for branch in fact.facts.iter() {
-                collect_module_names_from_and_chain_atomic_fact(branch, module_names);
-            }
-        }
-        ExistOrAndChainAtomicFact::ExistFact(fact) => {
-            collect_module_names_from_exist_fact(fact, module_names);
-        }
-    }
-}
-
-fn collect_module_names_from_fact(fact: &Fact, module_names: &mut Vec<String>) {
-    match fact {
-        Fact::AtomicFact(fact) => collect_module_names_from_atomic_fact(fact, module_names),
-        Fact::ExistFact(fact) => collect_module_names_from_exist_fact(fact, module_names),
-        Fact::OrFact(fact) => {
-            for branch in fact.facts.iter() {
-                collect_module_names_from_and_chain_atomic_fact(branch, module_names);
-            }
-        }
-        Fact::AndFact(fact) => {
-            for atomic_fact in fact.facts.iter() {
-                collect_module_names_from_atomic_fact(atomic_fact, module_names);
-            }
-        }
-        Fact::ChainFact(fact) => {
-            for name in fact.prop_names.iter() {
-                collect_module_name_from_atomic_name(name, module_names);
-            }
-            for obj in fact.objs.iter() {
-                collect_module_names_from_obj(obj, module_names);
-            }
-        }
-        Fact::ForallFact(fact) => collect_module_names_from_forall_fact(fact, module_names),
-        Fact::ForallFactWithIff(fact) => {
-            collect_module_names_from_forall_fact(&fact.forall_fact, module_names);
-            for iff_fact in fact.iff_facts.iter() {
-                collect_module_names_from_exist_or_and_chain_atomic_fact(iff_fact, module_names);
-            }
-        }
-        Fact::NotForall(fact) => {
-            collect_module_names_from_forall_fact(&fact.forall_fact, module_names)
-        }
-    }
-}
-
-fn collect_module_names_from_forall_fact(fact: &ForallFact, module_names: &mut Vec<String>) {
-    collect_module_names_from_param_def_with_type(&fact.params_def_with_type, module_names);
-    for dom_fact in fact.dom_facts.iter() {
-        collect_module_names_from_fact(dom_fact, module_names);
-    }
-    for then_fact in fact.then_facts.iter() {
-        collect_module_names_from_exist_or_and_chain_atomic_fact(then_fact, module_names);
-    }
-}
-
-fn collect_module_names_from_exist_fact(fact: &ExistFactEnum, module_names: &mut Vec<String>) {
-    let body = fact.body();
-    collect_module_names_from_param_def_with_type(&body.params_def_with_type, module_names);
-    for body_fact in body.facts.iter() {
-        collect_module_names_from_exist_body_fact(body_fact, module_names);
-    }
-}
-
-fn collect_module_names_from_param_def_with_type(
-    param_def: &ParamDefWithType,
-    module_names: &mut Vec<String>,
-) {
-    for group in param_def.groups.iter() {
-        if let ParamType::Obj(obj) = &group.param_type {
-            collect_module_names_from_obj(obj, module_names);
-        }
     }
 }
 

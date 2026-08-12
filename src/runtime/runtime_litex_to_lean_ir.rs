@@ -112,6 +112,12 @@ impl Runtime {
                     &stmt.line_file,
                     success,
                 ),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) => Err(
+                litex_to_lean_ir_error(
+                    &stmt.line_file,
+                    "Litex-to-Lean does not yet support theorem-backed `obtain`; use an explicit theorem application followed by existential elimination",
+                ),
+            ),
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => self
                 .build_litex_to_lean_ir_existential_witness(
                     &stmt.param_def.collect_param_bindings(),

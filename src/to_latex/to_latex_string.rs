@@ -852,7 +852,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(x) => x.to_latex_string(),
             ExistBodyFact::ChainFact(x) => x.to_latex_string(),
             ExistBodyFact::OrFact(x) => x.to_latex_string(),
-            ExistBodyFact::InlineForall(x) => x.to_latex_string(),
         }
     }
 }
@@ -1093,6 +1092,12 @@ impl ObtainObjFromAtomicFact {
             self.fact.to_latex_string(),
             names
         )
+    }
+}
+
+impl ObtainObjFromThm {
+    pub fn to_latex_string(&self) -> String {
+        latex_texttt_escape(&self.to_string())
     }
 }
 
@@ -2356,6 +2361,7 @@ impl Stmt {
             Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(x)) => x.to_latex_string(),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(x)) => x.to_latex_string(),
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(x)) => {
                 latex_texttt_escape(&x.to_string())
             }

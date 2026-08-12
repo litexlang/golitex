@@ -279,6 +279,19 @@ impl Runtime {
                 )
                 .into())
             }
+            TemplateDefEnum::ObtainObjFromThm(s) => {
+                let mut args = Vec::with_capacity(s.args.len());
+                for arg in s.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                }
+                Ok(ObtainObjFromThm::new(
+                    vec![instance_binding.clone()],
+                    s.thm_name.clone(),
+                    args,
+                    line_file.clone(),
+                )
+                .into())
+            }
             TemplateDefEnum::HaveFnEqualStmt(s) => {
                 let obj = self.inst_obj(
                     &s.equal_to_anonymous_fn.clone().into(),
@@ -588,6 +601,19 @@ impl Runtime {
                     ObtainObjFromAtomicFact::new(s.equal_tos.clone(), fact, line_file.clone())
                         .into(),
                 )
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => {
+                let mut args = Vec::with_capacity(s.args.len());
+                for arg in s.args.iter() {
+                    args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
+                }
+                Ok(ObtainObjFromThm::new(
+                    s.equal_tos.clone(),
+                    s.thm_name.clone(),
+                    args,
+                    line_file.clone(),
+                )
+                .into())
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(s)) => {
                 let mut groups = Vec::with_capacity(s.param_def.groups.len());

@@ -134,8 +134,10 @@ receive native `Set α`/`ℝ` values and those exact proofs. A dependent binder
 such as `x A` carries only an occurrence-local view of `A`'s element carrier,
 not a global type annotation on Litex objects.
 
-Binder-owning set builders and several richer object families remain outside
-this executable collection. They are not approximated by axioms or custom
+Binder-owning set builders are part of the executable collection: they lower to
+native predicate sets with their base membership and ordered defining facts.
+Malformed or underconstrained builders and several richer object families
+remain explicit boundaries; they are not approximated by axioms or custom
 equality.
 
 ## Native functions and well-definedness
@@ -150,6 +152,13 @@ containing fact. The named reciprocal example also retains the exact checked
 defining equality used by its later evaluation. Anonymous values and refined
 return sets use explicit binder-owned and pointwise proof contracts rather than
 inferred target laws.
+
+The same section also fixes the generic-set case. For `f $in fn(x A) A`, Lean
+uses one inferred element carrier, an ordinary set value `A : Set α`, and a
+function shape `(x : α) -> x ∈ A -> α` plus pointwise output membership. If the
+same source object is also proved to lie in another set `B`, that proof remains
+an additional proposition; it neither changes `f`'s domain nor retypes the
+object.
 
 The
 [`environment_well_definedness_cache`](compile_to_lean_examples.md#environment_well_definedness_cache)

@@ -1656,7 +1656,6 @@ have g fn(alpha I) X
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
 $is_nonempty_set(general_cart(I, X, g))
-general_cart(I, X, g) = {f fn(t I)big_union(X): forall alpha I => {f(alpha) $in g(alpha)}}
 have c general_cart(I, X, g)
 c $in fn(t I)big_union(X)
 forall alpha I:
@@ -2293,6 +2292,224 @@ obtain chosen from not $has_copy(1)
             run_output
         );
     }
+}
+
+#[test]
+fn obtain_from_theorem_scopes_the_application_and_retains_provenance() {
+    let source_code = r#"
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain copy from thm self_exists(2)
+copy $in R
+copy = 2
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "obtain_from_theorem_scopes_the_application_and_retains_provenance",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        run_succeeded,
+        "theorem-backed obtain should apply and eliminate in one statement:\n{}",
+        run_output
+    );
+    let success = stmt_results[1]
+        .non_factual_success()
+        .expect("theorem-backed obtain should be a nonfactual success");
+    let Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) = &success.stmt else {
+        panic!("the parser must retain an ObtainObjFromThm AST node")
+    };
+    assert_eq!(stmt.equal_tos[0].name(), "copy");
+    assert_eq!(stmt.thm_name.to_string(), "self_exists");
+    assert_eq!(stmt.args[0].to_string(), "2");
+    assert_eq!(success.inside_results.len(), 1);
+    assert!(run_output.contains("\"type\": \"proof by theorem\""));
+    assert!(run_output.contains("\"statement\": \"by thm self_exists(2)\""));
+    let application = success.inside_results[0]
+        .non_factual_success()
+        .expect("elimination should retain the theorem application result");
+    assert!(matches!(
+        application.by_verification,
+        Some(ByVerificationResult::Theorem(_))
+    ));
+    assert!(success.existential_elimination_verification.is_some());
+
+    // The application runs in a child environment: its instantiated
+    // existential itself does not enter the parent, while the witness facts do.
+    let source_exist = success
+        .existential_elimination_verification
+        .as_ref()
+        .unwrap()
+        .source_exist_fact
+        .clone();
+    assert!(runtime
+        .known_fact_id_for_fact(&source_exist.into())
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn obtain_from_theorem_rejects_invalid_conclusion_shapes_and_witness_counts() {
+    let cases = [
+        (
+            "ordinary conclusion",
+            r#"
+thm reflexive:
+    ? forall a R:
+        a = a
+
+obtain chosen from thm reflexive(1)
+"#,
+            "sole direct conclusion to be `exist` or `exist!`",
+        ),
+        (
+            "multiple conclusions",
+            r#"
+thm two_results:
+    ? forall a R:
+        exist x R st {x = a}
+        a = a
+    witness exist x R st {x = a} from a
+
+obtain chosen from thm two_results(1)
+"#,
+            "requires exactly one direct theorem conclusion, got 2",
+        ),
+        (
+            "negated existential conclusion",
+            r#"
+axiom no_copy:
+    ? forall a R:
+        not exist x R st {x = a}
+
+obtain chosen from thm no_copy(1)
+"#,
+            "cannot eliminate a `not exist` conclusion",
+        ),
+        (
+            "nonexistential builtin conclusion",
+            r#"
+by def {1} $subset {1}
+obtain chosen from thm subset_of_finite_set_is_finite({1}, {1})
+"#,
+            "sole direct conclusion to be `exist` or `exist!`",
+        ),
+        (
+            "wrong witness count",
+            r#"
+thm pair_exists:
+    ? forall a R:
+        exist x, y R st {x = a, y = a}
+    witness exist x, y R st {x = a, y = a} from a, a
+
+obtain chosen from thm pair_exists(1)
+"#,
+            "number of parameters does not match number of obtained objects",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("obtain_from_theorem_rejects_{}", label).as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+        assert!(
+            run_output.contains(expected_message),
+            "{} should report `{}`:\n{}",
+            label,
+            expected_message,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn obtain_from_theorem_reuses_argument_and_domain_checks() {
+    let cases = [
+        (
+            "wrong argument type",
+            r#"
+thm real_copy:
+    ? forall a R:
+        exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain chosen from thm real_copy({1})
+"#,
+            "could not verify argument parameter types",
+        ),
+        (
+            "unproved domain",
+            r#"
+abstract_prop eligible(a)
+
+thm eligible_copy:
+    ? forall a R:
+        $eligible(a)
+        =>:
+            exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain chosen from thm eligible_copy(1)
+"#,
+            "domain fact `$eligible(1)` is not verified",
+        ),
+    ];
+
+    for (label, source_code, expected_message) in cases {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope(
+            format!("obtain_from_theorem_checks_{}", label).as_str(),
+        );
+        let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+        let (run_succeeded, run_output) =
+            render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+        assert!(!run_succeeded, "{} should fail:\n{}", label, run_output);
+        assert!(
+            run_output.contains(expected_message),
+            "{} should report `{}`:\n{}",
+            label,
+            expected_message,
+            run_output
+        );
+    }
+}
+
+#[test]
+fn litex_to_lean_rejects_theorem_backed_obtain_explicitly() {
+    let source_code = r#"
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain copy from thm self_exists(2)
+"#;
+
+    let error = crate::compile_to_lean::compile_to_lean_from_source(
+        source_code,
+        "litex_to_lean_rejects_theorem_backed_obtain_explicitly",
+    )
+    .expect_err("theorem-backed obtain must fail closed until theorem-call IR exists")
+    .trace_message();
+    assert!(
+        error.contains("does not yet support theorem-backed `obtain`"),
+        "the compiler boundary should be explicit:\n{}",
+        error
+    );
 }
 
 #[test]

@@ -524,6 +524,17 @@ Set-builder conditions are facts, not arbitrary statements:
 ```
 
 This is a parse `error`. Use facts such as `{x R: x >= 0}` inside the builder.
+The body may contain atomic facts, conjunctions, chains, and disjunctions, but
+not an anonymous `forall`. Name a quantified condition with `prop`, then use
+the resulting atomic prop fact:
+
+```litex
+prop below_all_squares(a R):
+    forall x R:
+        a <= x ^ 2
+
+have lower_bounds set = {a R: $below_all_squares(a)}
+```
 
 For a family `g` of nonempty sets indexed by `I`, `general_cart(I, S, g)` is
 the set of choice functions selecting an element of each `g(alpha)`:
@@ -535,12 +546,15 @@ trust forall A S => {$is_nonempty_set(A)}
 have g fn(alpha I) S
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
-general_cart(I, S, g) = {f fn(t I) big_union(S): forall alpha I => {f(alpha) $in g(alpha)}}
+have f general_cart(I, S, g)
+forall alpha I:
+    f(alpha) $in g(alpha)
 ```
 
 The `trust` line makes the required factor-nonemptiness background explicit,
-and the named builtin theorem makes the axiom-of-choice step explicit. The
-equality shows the canonical mathematical shape of the general product.
+and the named builtin theorem makes the axiom-of-choice step explicit.
+Membership in `general_cart` exposes the pointwise selection facts directly;
+there is no anonymous-`forall` set-builder equality.
 
 The family operators and replacement have different proof interfaces; their
 similar set-valued syntax does not make them interchangeable:
@@ -1326,14 +1340,20 @@ x = 1
 The second line is an `error` because the existential `x` is out of scope. Use
 `obtain` to introduce a fresh witness name.
 
-Existential bodies may contain atomic facts, conjunctions, chains,
-disjunctions, and compact `forall` conditions. Braces delimit the body:
+Existential bodies may contain atomic facts, conjunctions, chains, and
+disjunctions. They do not contain anonymous `forall` facts. Put the quantified
+condition in a named `prop` and reference it atomically. Braces delimit the
+body:
 
 ```litex
+prop universally_self_equal(x R):
+    forall y R:
+        x = x
+
 forall:
-    exist f fn(x R) R st {forall x R => {f(x) = x}}
+    exist x R st {$universally_self_equal(x)}
     =>:
-        exist f fn(x R) R st {forall x R => {f(x) = x}}
+        exist x R st {$universally_self_equal(x)}
 ```
 
 ### Universal facts
@@ -2226,6 +2246,7 @@ tuple/cart/sequence/matrix introductions.
 | `trust fact`, `trust have ...` | Parsing, binding, well-definedness, and atomic staging still run; proof truth is assumed. | One atomic trusted transaction. Failure commits nothing. |
 | `obtain ... from exist ...` | The source existential is known; names, count, and dependent parameter types match. | Opaque witness names plus their type and direct body facts. |
 | `obtain ... from $P(args)` | `$P(args)` is known and its concrete definition has exactly one positive `exist`/`exist!` clause. | The same witness facts after checked definition projection. |
+| `obtain ... from thm name(args)` | The named user, imported, or reserved builtin theorem passes the ordinary `by thm` argument/premise checks and has exactly one direct positive `exist`/`exist!` conclusion. | The theorem application remains scoped; only the eliminated witnesses, types, body facts, and `exist!` uniqueness interface escape. |
 | `have by preimage ...` | Known membership in `fn_range(f)` or `replacement(P,A)` and matching source shape. | Opaque preimage names and the application/relation witness facts. |
 | `have fn ... = ...` | Ordered parameter domains, return carrier, body membership, and side conditions. | A callable function, its signature, and checked defining equation. |
 | `have fn ... by cases` | Cases are exhaustive, pairwise disjoint, and every result belongs to the return set. | A callable piecewise function and guarded case equations. |
@@ -2248,7 +2269,8 @@ tuple/cart/sequence/matrix introductions.
 | Enumeration, induction, `by for`, `by extension` | The target has the exact finite/range/discrete/extensional shape and every generated subgoal closes. | The requested universal/equality/atomic target. |
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
-| `by zorn_lemma`, `by axiom_of_choice`, `by regularity_axiom` | Their displayed set/order/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
+| `by zorn_lemma`, `by axiom_of_choice` | These legacy forms are currently unavailable because their old conclusions embedded anonymous `forall` facts inside existential bodies. | No conclusion is stored; use an explicit named-property theorem interface. Choice-backed general products already expose `general_cart_nonempty_by_choice_*`. |
 | `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 | `clear` | No proof obligation. | Resets the current user environment. |
@@ -2313,8 +2335,9 @@ explanation; this index does not repeat its examples.
   division bind more tightly than addition and subtraction.
 - `[]` is index access. Function arguments use `()`.
 - `{a, b}` is a displayed set; `{x S: facts}` is a set comprehension.
-- `st { ... }` delimits an existential body; `forall ... => { ... }` is the
-  compact universal form inside such bodies.
+- `st { ... }` delimits an existential body. Its entries are atomic facts or
+  their supported boolean combinations; name a quantified condition with
+  `prop` before using it there. The same restriction applies to set builders.
 - `#` starts a line comment. Indentation defines block structure.
 - Matrix operators contain an apostrophe: `'+`, `'-`, `'*`, `*'`, and `'^`.
 
@@ -2472,9 +2495,10 @@ This is an `error` because an abstract predicate has no definition to unfold.
 ### Witnesses, `obtain`, and preimages
 
 Use `witness` to prove an existential or nonempty-set goal. Use `obtain` to
-name witnesses from an already known existential, either written directly or
-wrapped by one concrete prop definition. Use `have by preimage` to name a
-preimage from known range or replacement membership.
+name witnesses from an already known existential, from one concrete prop
+definition, or from the sole direct existential conclusion of a named theorem.
+Use `have by preimage` to name a preimage from known range or replacement
+membership.
 
 `obtain` exposes each direct fact in the existential body. Positive concrete
 predicates among those facts may expose positive clauses through forward
@@ -2498,6 +2522,14 @@ witness $has_copy(2) from 2:
 
 obtain copy from $has_copy(2)
 copy = 2
+
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain theorem_copy from thm self_exists(3)
+theorem_copy = 3
 
 witness $is_nonempty_set({1, 2}) from 1:
     1 $in {1, 2}
@@ -2523,6 +2555,19 @@ exactly one clause whose outer form is positive `exist` or `exist!`. Litex
 substitutes the call arguments into that clause and then uses the ordinary
 existential eliminator. `abstract_prop`, negated prop facts, `not exist`,
 ordinary nonexistential definitions, and multi-clause definitions are rejected.
+
+`obtain names from thm name(args)` performs the ordinary explicit theorem call
+inside a temporary child environment, then eliminates its sole direct positive
+`exist` or `exist!` conclusion. The theorem may be local, module-qualified and
+imported, or a reserved builtin theorem interface. Argument types, theorem
+domain facts, and builtin requirements are checked exactly as for `by thm`.
+Zero or multiple direct conclusions, a nonexistential conclusion, `not exist`,
+or a witness-count mismatch are errors. The intermediate existential does not
+enter the parent context; detailed output retains the nested named-theorem
+application as the elimination's proof source. Litex-to-Lean currently rejects
+this combined form explicitly until theorem-application IR exists. The older
+two-line `by thm` plus `obtain` spelling is not a compiler workaround because
+general theorem calls are outside the current compiled subset too.
 
 The checked Litex-to-Lean subset currently lowers positive `witness exist`,
 atomic-fact witnesses whose sole clause is plain positive `exist`, and positive
@@ -2821,28 +2866,23 @@ the same user-defined predicate.
 
 ### Trusted preview proof steps
 
-Three preview statements expose set-theoretic background as explicit trusted
-steps:
+`by regularity_axiom` exposes set-theoretic foundation as an explicit trusted
+step:
 
 | Form | Checked obligations | Trusted conclusion |
 |---|---|---|
-| `by zorn_lemma S from P` | Set, nonemptiness, order properties, chain upper bounds | Existence of a maximal element |
-| `by axiom_of_choice: set S` | `S` is a set of nonempty sets | Existence of a choice function |
 | `by regularity_axiom(A)` | `A` is nonempty | A member of `A` disjoint from `A` |
 
-```litex
-claim:
-    ? forall S set:
-        forall A S:
-            $is_nonempty_set(A)
-        =>:
-            exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
-    by axiom_of_choice: set S
-```
+This form is not an ordinary derived proof. Its statement form and output keep
+the direct boundary visible; `-strict` rejects it. Litex does not taint later
+theorems or facts with transitive trust metadata.
 
-These forms are not ordinary derived proofs. Their statement form and output
-keep the direct boundary visible; `-strict` rejects them. Litex does not taint
-later theorems or facts with transitive trust metadata.
+The legacy `by axiom_of_choice` and `by zorn_lemma` statements are currently
+unavailable: their former conclusions put anonymous universal facts inside
+existential bodies. Choice-backed general Cartesian products use the explicit
+`general_cart_nonempty_by_choice_from_family` or
+`general_cart_nonempty_by_choice_from_pointwise` theorem interfaces. A future
+Zorn interface must likewise name its maximality property explicitly.
 
 ### Reading verifier output
 
@@ -3719,19 +3759,12 @@ by thm rational_has_unique_reduced_fraction(a)
 exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
 ```
 
-The same kernel rule also recognizes the canonical existential directly,
-including the older expanded common-divisor spelling:
-
-```litex
-forall a Q:
-    exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
-    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
-```
-
 The theorem name is reserved, bare, and has arity one. A non-`Q` argument,
 extra argument, or qualified call is rejected without storing a conclusion.
-This rule recognizes the displayed representation; it is not a general gcd
-construction and does not replace checked source-level arithmetic libraries.
+The existential is not proved implicitly: callers must use the explicit
+theorem interface. This rule recognizes the displayed representation; it is
+not a general gcd construction and does not replace checked source-level
+arithmetic libraries.
 
 ---
 

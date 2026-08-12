@@ -280,6 +280,12 @@ impl ObtainObjFromAtomicFact {
     }
 }
 
+impl ObtainObjFromThm {
+    pub fn stmt_type_name(&self) -> String {
+        "ObtainObjFromThm".to_string()
+    }
+}
+
 impl HaveByPreimageStmt {
     pub fn stmt_type_name(&self) -> String {
         "HaveByPreimageStmt".to_string()
@@ -595,6 +601,12 @@ impl ObtainObjFromExistFact {
 impl ObtainObjFromAtomicFact {
     pub fn output_type_string() -> String {
         "object definition by existence".to_string()
+    }
+}
+
+impl ObtainObjFromThm {
+    pub fn output_type_string() -> String {
+        "object definition by theorem existence".to_string()
     }
 }
 

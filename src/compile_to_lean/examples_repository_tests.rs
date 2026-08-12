@@ -122,6 +122,20 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                                 "{}",
                                 generated
                             );
+                            assert!(generated.contains("∀ (A : Set "), "{}", generated);
+                            assert!(generated.contains("∀ (B : Set "), "{}", generated);
+                            assert!(
+                                generated.contains("(f a litex_param_fact_4) ∈ A"),
+                                "the generic application must consume a's declared A-membership, not its later B-membership:\n{}",
+                                generated
+                            );
+                            assert!(
+                                generated.contains(
+                                    "exact (litex_param_fact_3 a litex_param_fact_4)"
+                                ),
+                                "the pointwise A-output proof must use the same retained A-membership:\n{}",
+                                generated
+                            );
                         }
                         if example.name == "exact_well_definedness_and_integer_remainder" {
                             saw_exact_well_definedness_and_integer_remainder = true;

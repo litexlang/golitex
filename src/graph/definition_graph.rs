@@ -1922,6 +1922,11 @@ fn collect_template_definition_dependencies(
             let fact: AtomicFact = statement.fact.clone().into();
             collector.collect_atomic_fact(&fact);
         }
+        TemplateDefEnum::ObtainObjFromThm(statement) => {
+            for argument in &statement.args {
+                collector.collect_obj(argument);
+            }
+        }
         TemplateDefEnum::HaveFnEqualStmt(statement) => {
             collector.add_local_name(statement.name());
             collector.collect_anonymous_fn(&statement.equal_to_anonymous_fn);

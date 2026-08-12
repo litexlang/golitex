@@ -2317,33 +2317,6 @@ by symmetric_prop:
     x = y
     y = x
 
-have local_family set
-by axiom_of_choice: set local_family:
-    trust forall A local_family:
-        $is_nonempty_set(A)
-
-have local_ordered_set set
-abstract_prop local_leq(x, y)
-by zorn_lemma: set local_ordered_set, prop local_leq:
-    trust $is_nonempty_set(local_ordered_set)
-    trust:
-        forall x local_ordered_set:
-            $local_leq(x, x)
-        forall x, y, z local_ordered_set:
-            $local_leq(x, y)
-            $local_leq(y, z)
-            =>:
-                $local_leq(x, z)
-        forall x, y local_ordered_set:
-            $local_leq(x, y)
-            $local_leq(y, x)
-            =>:
-                x = y
-        forall c power_set(local_ordered_set):
-            forall x, y c:
-                $local_leq(x, y) or $local_leq(y, x)
-            =>:
-                exist u local_ordered_set st {forall x c => {$local_leq(x, u)}}
 "#;
 
             let mut runtime = Runtime::new();
@@ -2361,8 +2334,6 @@ by zorn_lemma: set local_ordered_set, prop local_leq:
             );
             assert!(run_output.contains("\"type\": \"by induc proof\""));
             assert!(run_output.contains("\"type\": \"by prop registration proof\""));
-            assert!(run_output.contains("\"type\": \"by axiom_of_choice proof\""));
-            assert!(run_output.contains("\"type\": \"by zorn_lemma proof\""));
             assert!(run_output.contains("\"type\": \"unproved assumption\""));
             assert!(run_output.contains("\"statement\": \"$local_induc_p(n + 1)\""));
             assert!(!run_output.contains("\"base_case\": {"));

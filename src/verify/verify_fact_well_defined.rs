@@ -345,10 +345,6 @@ impl Runtime {
                             body_fact,
                         )?;
                     }
-                    ExistBodyFact::InlineForall(f) => {
-                        rt.verify_forall_fact_well_defined(f, verify_state)?;
-                        rt.store_forall_fact_without_well_defined_verified_and_infer(f.clone())?;
-                    }
                 }
             }
             Ok(())

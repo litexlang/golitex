@@ -24,7 +24,6 @@ pub enum ExistBodyFact {
     AndFact(AndFact),
     ChainFact(ChainFact),
     OrFact(OrFact),
-    InlineForall(ForallFact),
 }
 
 impl ExistFactBody {
@@ -88,7 +87,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(a) => a.key(),
             ExistBodyFact::ChainFact(c) => c.key(),
             ExistBodyFact::OrFact(o) => o.key(),
-            ExistBodyFact::InlineForall(f) => inline_forall_fact_string(f),
         }
     }
 
@@ -98,7 +96,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(a) => a.line_file(),
             ExistBodyFact::ChainFact(c) => c.line_file(),
             ExistBodyFact::OrFact(o) => o.line_file.clone(),
-            ExistBodyFact::InlineForall(f) => f.line_file.clone(),
         }
     }
 
@@ -108,7 +105,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(a) => a.get_args_from_fact(),
             ExistBodyFact::ChainFact(c) => c.get_args_from_fact(),
             ExistBodyFact::OrFact(o) => o.get_args_from_fact(),
-            ExistBodyFact::InlineForall(f) => forall_fact_args(f),
         }
     }
 
@@ -118,7 +114,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(a) => a.get_args_from_fact_ref(),
             ExistBodyFact::ChainFact(c) => c.get_args_from_fact_ref(),
             ExistBodyFact::OrFact(o) => o.get_args_from_fact_ref(),
-            ExistBodyFact::InlineForall(f) => forall_fact_args_ref(f),
         }
     }
 
@@ -128,7 +123,6 @@ impl ExistBodyFact {
             ExistBodyFact::AndFact(a) => a.into(),
             ExistBodyFact::ChainFact(c) => c.into(),
             ExistBodyFact::OrFact(o) => o.into(),
-            ExistBodyFact::InlineForall(f) => f.into(),
         }
     }
 
@@ -163,9 +157,6 @@ impl ExistBodyFact {
                     .collect(),
                 o.line_file,
             )),
-            ExistBodyFact::InlineForall(f) => {
-                ExistBodyFact::InlineForall(replace_in_inline_forall_for_exist_alpha(f, from, to))
-            }
         }
     }
 }
@@ -177,9 +168,6 @@ impl fmt::Display for ExistBodyFact {
             ExistBodyFact::AndFact(a) => write!(f, "{}", a),
             ExistBodyFact::ChainFact(c) => write!(f, "{}", c),
             ExistBodyFact::OrFact(o) => write!(f, "{}", o),
-            ExistBodyFact::InlineForall(forall_fact) => {
-                write!(f, "{}", inline_forall_fact_string(forall_fact))
-            }
         }
     }
 }
@@ -204,217 +192,6 @@ impl From<AtomicFact> for ExistBodyFact {
 impl From<EqualFact> for ExistBodyFact {
     fn from(equal_fact: EqualFact) -> Self {
         ExistBodyFact::AtomicFact(equal_fact.into())
-    }
-}
-
-fn forall_fact_args(forall_fact: &ForallFact) -> Vec<Obj> {
-    let mut args: Vec<Obj> = Vec::new();
-    for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
-        if let ParamType::Obj(obj) = &param_def_with_type.param_type {
-            args.push(obj.clone());
-        }
-    }
-    for fact in forall_fact.dom_facts.iter() {
-        match fact {
-            Fact::AtomicFact(a) => args.extend(a.get_args_from_fact()),
-            Fact::ExistFact(e) => args.extend(e.get_args_from_fact()),
-            Fact::OrFact(o) => args.extend(o.get_args_from_fact()),
-            Fact::AndFact(a) => args.extend(a.get_args_from_fact()),
-            Fact::ChainFact(c) => args.extend(c.get_args_from_fact()),
-            Fact::ForallFact(f) => args.extend(forall_fact_args(f)),
-            Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
-        }
-    }
-    for fact in forall_fact.then_facts.iter() {
-        match fact {
-            ExistOrAndChainAtomicFact::AtomicFact(a) => args.extend(a.get_args_from_fact()),
-            ExistOrAndChainAtomicFact::AndFact(a) => args.extend(a.get_args_from_fact()),
-            ExistOrAndChainAtomicFact::ChainFact(c) => args.extend(c.get_args_from_fact()),
-            ExistOrAndChainAtomicFact::OrFact(o) => args.extend(o.get_args_from_fact()),
-            ExistOrAndChainAtomicFact::ExistFact(e) => args.extend(e.get_args_from_fact()),
-        }
-    }
-    args
-}
-
-fn forall_fact_args_ref(forall_fact: &ForallFact) -> Vec<&Obj> {
-    let mut args: Vec<&Obj> = Vec::new();
-    for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
-        if let ParamType::Obj(obj) = &param_def_with_type.param_type {
-            args.push(obj);
-        }
-    }
-    for fact in forall_fact.dom_facts.iter() {
-        match fact {
-            Fact::AtomicFact(a) => args.extend(a.get_args_from_fact_ref()),
-            Fact::ExistFact(e) => args.extend(e.get_args_from_fact_ref()),
-            Fact::OrFact(o) => args.extend(o.get_args_from_fact_ref()),
-            Fact::AndFact(a) => args.extend(a.get_args_from_fact_ref()),
-            Fact::ChainFact(c) => args.extend(c.get_args_from_fact_ref()),
-            Fact::ForallFact(f) => args.extend(forall_fact_args_ref(f)),
-            Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {}
-        }
-    }
-    for fact in forall_fact.then_facts.iter() {
-        match fact {
-            ExistOrAndChainAtomicFact::AtomicFact(a) => args.extend(a.get_args_from_fact_ref()),
-            ExistOrAndChainAtomicFact::AndFact(a) => args.extend(a.get_args_from_fact_ref()),
-            ExistOrAndChainAtomicFact::ChainFact(c) => args.extend(c.get_args_from_fact_ref()),
-            ExistOrAndChainAtomicFact::OrFact(o) => args.extend(o.get_args_from_fact_ref()),
-            ExistOrAndChainAtomicFact::ExistFact(e) => args.extend(e.get_args_from_fact_ref()),
-        }
-    }
-    args
-}
-
-fn inline_forall_fact_string(forall_fact: &ForallFact) -> String {
-    let then_facts = curly_braced_vec_to_string_with_sep(
-        &forall_fact
-            .then_facts
-            .iter()
-            .map(|fact| fact.to_string())
-            .collect::<Vec<String>>(),
-        format!("{} ", COMMA),
-    );
-    if forall_fact.dom_facts.is_empty() {
-        return format!(
-            "{} {} {} {}",
-            FORALL, forall_fact.params_def_with_type, RIGHT_ARROW, then_facts
-        );
-    }
-    format!(
-        "{} {}{} {} {} {}",
-        FORALL,
-        forall_fact.params_def_with_type,
-        COLON,
-        vec_to_string_join_by_comma(
-            &forall_fact
-                .dom_facts
-                .iter()
-                .map(inline_fact_string)
-                .collect::<Vec<String>>()
-        ),
-        RIGHT_ARROW,
-        then_facts
-    )
-}
-
-fn inline_fact_string(fact: &Fact) -> String {
-    match fact {
-        Fact::ForallFact(forall_fact) => inline_forall_fact_string(forall_fact),
-        Fact::NotForall(not_forall) => {
-            format!(
-                "{} {}",
-                NOT,
-                inline_forall_fact_string(&not_forall.forall_fact)
-            )
-        }
-        _ => fact.to_string(),
-    }
-}
-
-fn replace_in_inline_forall_for_exist_alpha(
-    forall_fact: ForallFact,
-    from: &str,
-    to: &str,
-) -> ForallFact {
-    let binds_same_name = forall_fact
-        .params_def_with_type
-        .collect_param_names()
-        .iter()
-        .any(|name| name == from);
-    if binds_same_name {
-        return forall_fact;
-    }
-
-    let dom_facts = forall_fact
-        .dom_facts
-        .into_iter()
-        .map(|fact| replace_in_fact_for_exist_alpha(fact, from, to))
-        .collect();
-    let then_facts = forall_fact
-        .then_facts
-        .into_iter()
-        .map(|fact| replace_in_exist_or_and_chain_for_exist_alpha(fact, from, to))
-        .collect();
-
-    ForallFact::new_canonical_forall(
-        forall_fact.params_def_with_type,
-        dom_facts,
-        then_facts,
-        forall_fact.line_file,
-    )
-    .expect("alpha replacement preserves inline forall validity")
-}
-
-fn replace_in_fact_for_exist_alpha(fact: Fact, from: &str, to: &str) -> Fact {
-    match fact {
-        Fact::AtomicFact(a) => a.replace_bound_identifier(from, to).into(),
-        Fact::ExistFact(e) => e.into(),
-        Fact::OrFact(o) => OrFact::new(
-            o.facts
-                .into_iter()
-                .map(|x| x.replace_bound_identifier(from, to))
-                .collect(),
-            o.line_file,
-        )
-        .into(),
-        Fact::AndFact(a) => AndFact::new(
-            a.facts
-                .into_iter()
-                .map(|x| x.replace_bound_identifier(from, to))
-                .collect(),
-            a.line_file,
-        )
-        .into(),
-        Fact::ChainFact(c) => ChainFact::new(
-            c.objs
-                .into_iter()
-                .map(|o| Obj::replace_bound_identifier(o, from, to))
-                .collect(),
-            c.prop_names,
-            c.line_file,
-        )
-        .into(),
-        Fact::ForallFact(f) => replace_in_inline_forall_for_exist_alpha(f, from, to).into(),
-        Fact::ForallFactWithIff(f) => f.into(),
-        Fact::NotForall(f) => f.into(),
-    }
-}
-
-fn replace_in_exist_or_and_chain_for_exist_alpha(
-    fact: ExistOrAndChainAtomicFact,
-    from: &str,
-    to: &str,
-) -> ExistOrAndChainAtomicFact {
-    match fact {
-        ExistOrAndChainAtomicFact::AtomicFact(a) => a.replace_bound_identifier(from, to).into(),
-        ExistOrAndChainAtomicFact::AndFact(a) => AndFact::new(
-            a.facts
-                .into_iter()
-                .map(|x| x.replace_bound_identifier(from, to))
-                .collect(),
-            a.line_file,
-        )
-        .into(),
-        ExistOrAndChainAtomicFact::ChainFact(c) => ChainFact::new(
-            c.objs
-                .into_iter()
-                .map(|o| Obj::replace_bound_identifier(o, from, to))
-                .collect(),
-            c.prop_names,
-            c.line_file,
-        )
-        .into(),
-        ExistOrAndChainAtomicFact::OrFact(o) => OrFact::new(
-            o.facts
-                .into_iter()
-                .map(|x| x.replace_bound_identifier(from, to))
-                .collect(),
-            o.line_file,
-        )
-        .into(),
-        ExistOrAndChainAtomicFact::ExistFact(e) => e.into(),
     }
 }
 
@@ -493,7 +270,6 @@ impl ExistFactEnum {
                 ExistBodyFact::AndFact(_) => "and",
                 ExistBodyFact::ChainFact(_) => "chain",
                 ExistBodyFact::OrFact(_) => "or",
-                ExistBodyFact::InlineForall(_) => "forall",
             })
             .collect::<Vec<&str>>()
             .join(",");

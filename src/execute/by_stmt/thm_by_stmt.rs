@@ -107,6 +107,7 @@ impl Runtime {
         }
 
         let mut stored_then_facts = Vec::new();
+        let mut direct_conclusions = Vec::new();
         for then_fact in thm.forall_fact.then_facts.iter() {
             let instantiated_then = self
                 .inst_exist_or_and_chain_atomic_fact(
@@ -127,6 +128,7 @@ impl Runtime {
                     )
                 })?;
             stored_then_facts.push(instantiated_then.to_string());
+            direct_conclusions.push(instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
                 self.store_exist_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
                     &instantiated_then,
@@ -151,6 +153,7 @@ impl Runtime {
             thm_name,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
             domain_facts,
+            direct_conclusions,
             stored_then_facts,
         );
         Ok(NonFactualStmtSuccess::new_with_by_verification(
@@ -189,6 +192,7 @@ impl Runtime {
 
         let mut infer_result = InferResult::new();
         let mut stored_then_facts = Vec::new();
+        let mut direct_conclusions = Vec::new();
         for then_fact in thm.forall_fact.then_facts.iter() {
             let instantiated_then = self
                 .inst_exist_or_and_chain_atomic_fact(
@@ -209,6 +213,7 @@ impl Runtime {
                     )
                 })?;
             stored_then_facts.push(instantiated_then.to_string());
+            direct_conclusions.push(instantiated_then.clone().to_fact());
             infer_result.new_infer_result_inside(
                 self.store_trusted_fact_and_infer_with_reason(
                     instantiated_then.clone().to_fact(),
@@ -232,6 +237,7 @@ impl Runtime {
             thm_name,
             stmt.args.iter().map(|arg| arg.to_string()).collect(),
             vec![],
+            direct_conclusions,
             stored_then_facts,
         );
         Ok(NonFactualStmtSuccess::new_with_by_verification(
@@ -543,6 +549,7 @@ impl Runtime {
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
                 requirement_roles,
+                vec![conclusion.clone().into()],
                 vec![conclusion.to_string()],
                 None,
             );
@@ -624,6 +631,7 @@ impl Runtime {
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
                 requirement_roles,
+                vec![conclusion.clone().to_fact()],
                 vec![conclusion.to_string()],
                 None,
             );
@@ -670,8 +678,18 @@ impl Runtime {
             )?;
             let conclusion: ExistOrAndChainAtomicFact = ExistFactEnum::ExistUniqueFact(body).into();
 
+            let rational_requirement: AtomicFact = InFact::new(
+                stmt.args[0].clone(),
+                StandardSet::Q.into(),
+                stmt.line_file.clone(),
+            )
+            .into();
+
             let verification = if verify_requirements {
-                Some(self.verify_exist_or_and_chain_atomic_fact(&conclusion, &verify_state)?)
+                Some(self.verify_non_equational_known_then_builtin_rules_only(
+                    &rational_requirement,
+                    &verify_state,
+                )?)
             } else {
                 None
             };
@@ -687,16 +705,13 @@ impl Runtime {
                         vec![result],
                     ));
                 }
-                let verified_requirement = result
-                    .factual_success()
-                    .map(|success| success.stmt.to_string())
-                    .unwrap_or_else(|| conclusion.to_string());
-                requirement_facts.push(verified_requirement);
-                requirement_roles.push(
-                    "rational membership discharges the canonical reduced-fraction rule"
-                        .to_string(),
-                );
+                requirement_facts.push(rational_requirement.to_string());
+                requirement_roles.push("the argument belongs to Q".to_string());
                 inside_results.push(result);
+                self.verify_exist_or_and_chain_atomic_fact_well_defined(
+                    &conclusion,
+                    &verify_state,
+                )?;
             }
 
             let store_reason = InferReason::Other(format!("builtin theorem `{}`", name));
@@ -716,6 +731,7 @@ impl Runtime {
                 stmt.args.iter().map(ToString::to_string).collect(),
                 requirement_facts,
                 requirement_roles,
+                vec![conclusion.clone().to_fact()],
                 vec![conclusion.to_string()],
                 None,
             );
@@ -1349,6 +1365,7 @@ impl Runtime {
             stmt.args.iter().map(ToString::to_string).collect(),
             requirement_facts,
             requirement_roles,
+            vec![conclusion.clone().into()],
             stored_then_facts,
             provenance,
         );

@@ -3,13 +3,7 @@ use crate::prelude::*;
 impl Runtime {
     pub fn parse_by_thm_stmt(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         tb.skip_token(THM)?;
-        let name = if is_builtin_theorem_name(tb.current()?) && tb.token_at_add_index(1) != MOD_SIGN
-        {
-            AtomicName::WithoutMod(tb.advance()?)
-        } else {
-            self.parse_module_qualified_reference_name(tb)?
-        };
-        let args = self.parse_braced_objs(tb)?;
+        let (name, args) = self.parse_theorem_call(tb)?;
         let selected_fact = if tb.current_token_is_equal_to(RIGHT_ARROW) {
             if !tb.body.is_empty() {
                 return Err(RuntimeError::from(ParseRuntimeError(
@@ -70,6 +64,21 @@ impl Runtime {
             )));
         }
         Ok(ByThmStmt::new(name, args, selected_fact, tb.line_file.clone()).into())
+    }
+
+    /// Parse the shared `name(args)` portion of an explicit theorem call.
+    pub(crate) fn parse_theorem_call(
+        &mut self,
+        tb: &mut TokenBlock,
+    ) -> Result<(AtomicName, Vec<Obj>), RuntimeError> {
+        let name = if is_builtin_theorem_name(tb.current()?) && tb.token_at_add_index(1) != MOD_SIGN
+        {
+            AtomicName::WithoutMod(tb.advance()?)
+        } else {
+            self.parse_module_qualified_reference_name(tb)?
+        };
+        let args = self.parse_braced_objs(tb)?;
+        Ok((name, args))
     }
 }
 

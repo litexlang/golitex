@@ -1418,8 +1418,16 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_msg_and_line_file(msg, source_line_file.clone()),
             ))
         };
-        let (true_fact, source_atomic_fact) = if tb.current_token_is_equal_to(EXIST) {
-            (self.parse_exist_fact(tb)?, None)
+        let mut source_atomic_fact = None;
+        let mut source_thm_call = None;
+        let true_fact = if tb.current_token_is_equal_to(EXIST) {
+            Some(self.parse_exist_fact(tb)?)
+        } else if tb.current_token_is_equal_to(THM) {
+            tb.skip_token(THM)?;
+            let (thm_name, args) = self.parse_theorem_call(tb)?;
+            let preview = self.preview_obtain_obj_from_thm(&thm_name, &args, &source_line_file)?;
+            source_thm_call = Some((thm_name, args));
+            preview
         } else {
             let source_atomic = self.parse_atomic_fact(tb, true)?;
             let AtomicFact::NormalAtomicFact(source_prop) = source_atomic else {
@@ -1506,7 +1514,8 @@ impl Runtime {
                         vec![],
                     )))
                 })?;
-            (instantiated_exist_fact, Some(source_prop))
+            source_atomic_fact = Some(source_prop);
+            Some(instantiated_exist_fact)
         };
         if !tb.exceed_end_of_head() {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -1520,38 +1529,40 @@ impl Runtime {
         self.register_collected_param_names_for_def_parse(&equal_tos, tb.line_file.clone())?;
         let equal_to_bindings = self.allocate_local_symbol_bindings(&equal_tos)?;
 
-        let exist_param_defs = true_fact.params_def_with_type();
-        if exist_param_defs.number_of_params() == equal_to_bindings.len() {
-            let equal_to_objs = equal_to_bindings
-                .iter()
-                .map(|binding| {
-                    param_binding_element_obj_for_store(binding, ParamObjType::Identifier)
-                })
-                .collect::<Vec<_>>();
-            let param_to_arg_map =
-                exist_param_defs.param_defs_and_args_to_param_to_arg_map(&equal_to_objs);
-            let mut default_struct_views = Vec::new();
-            let mut equal_to_index = 0;
+        if let Some(true_fact) = true_fact.as_ref() {
+            let exist_param_defs = true_fact.params_def_with_type();
+            if exist_param_defs.number_of_params() == equal_to_bindings.len() {
+                let equal_to_objs = equal_to_bindings
+                    .iter()
+                    .map(|binding| {
+                        param_binding_element_obj_for_store(binding, ParamObjType::Identifier)
+                    })
+                    .collect::<Vec<_>>();
+                let param_to_arg_map =
+                    exist_param_defs.param_defs_and_args_to_param_to_arg_map(&equal_to_objs);
+                let mut default_struct_views = Vec::new();
+                let mut equal_to_index = 0;
 
-            for param_group in exist_param_defs.groups.iter() {
-                for _ in param_group.params.iter() {
-                    if let ParamType::Obj(Obj::StructObj(_)) = &param_group.param_type {
-                        let instantiated_type = self.inst_param_type(
-                            &param_group.param_type,
-                            &param_to_arg_map,
-                            ParamObjType::Exist,
-                        )?;
-                        if let ParamType::Obj(Obj::StructObj(struct_obj)) = instantiated_type {
-                            default_struct_views
-                                .push((equal_to_bindings[equal_to_index].clone(), struct_obj));
+                for param_group in exist_param_defs.groups.iter() {
+                    for _ in param_group.params.iter() {
+                        if let ParamType::Obj(Obj::StructObj(_)) = &param_group.param_type {
+                            let instantiated_type = self.inst_param_type(
+                                &param_group.param_type,
+                                &param_to_arg_map,
+                                ParamObjType::Exist,
+                            )?;
+                            if let ParamType::Obj(Obj::StructObj(struct_obj)) = instantiated_type {
+                                default_struct_views
+                                    .push((equal_to_bindings[equal_to_index].clone(), struct_obj));
+                            }
                         }
+                        equal_to_index += 1;
                     }
-                    equal_to_index += 1;
                 }
-            }
 
-            for (binding, struct_obj) in default_struct_views {
-                self.register_default_struct_view(std::slice::from_ref(&binding), &struct_obj);
+                for (binding, struct_obj) in default_struct_views {
+                    self.register_default_struct_view(std::slice::from_ref(&binding), &struct_obj);
+                }
             }
         }
 
@@ -1560,14 +1571,88 @@ impl Runtime {
             tb.line_file.clone(),
         )?;
 
-        let stmt = match source_atomic_fact {
-            Some(fact) => {
+        let stmt = match (source_thm_call, source_atomic_fact, true_fact) {
+            (Some((thm_name, args)), None, _) => {
+                ObtainObjFromThm::new(equal_to_bindings, thm_name, args, tb.line_file.clone())
+                    .into()
+            }
+            (None, Some(fact), _) => {
                 ObtainObjFromAtomicFact::new(equal_to_bindings, fact, tb.line_file.clone()).into()
             }
-            None => ObtainObjFromExistFact::new(equal_to_bindings, true_fact, tb.line_file.clone())
-                .into(),
+            (None, None, Some(fact)) => {
+                ObtainObjFromExistFact::new(equal_to_bindings, fact, tb.line_file.clone()).into()
+            }
+            _ => unreachable!("obtain parser must retain exactly one source form"),
         };
         Ok(stmt)
+    }
+
+    /// Preview a locally resolvable theorem only to register dependent struct
+    /// views for the names introduced by `obtain`. Execution resolves and
+    /// validates the theorem again; no theorem definition or existential fact
+    /// is cached in the statement.
+    fn preview_obtain_obj_from_thm(
+        &self,
+        thm_name: &AtomicName,
+        args: &[Obj],
+        line_file: &LineFile,
+    ) -> Result<Option<ExistFactEnum>, RuntimeError> {
+        let Some(thm) = self.get_thm_definition_by_name(&thm_name.to_string()) else {
+            // Reserved builtin theorem interfaces are execution-owned. An
+            // unresolved user/imported theorem likewise receives its normal
+            // authoritative diagnostic during execution.
+            return Ok(None);
+        };
+        if thm.forall_fact.then_facts.len() != 1 {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "obtain from thm `{}` requires exactly one direct theorem conclusion, got {}",
+                        thm_name,
+                        thm.forall_fact.then_facts.len()
+                    ),
+                    line_file.clone(),
+                ),
+            )));
+        }
+        let ExistOrAndChainAtomicFact::ExistFact(exist_fact) = &thm.forall_fact.then_facts[0]
+        else {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "obtain from thm `{}` requires its sole direct conclusion to be `exist` or `exist!`",
+                        thm_name
+                    ),
+                    line_file.clone(),
+                ),
+            )));
+        };
+        if exist_fact.is_not_exist() {
+            return Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    format!(
+                        "obtain from thm `{}` cannot eliminate a `not exist` conclusion",
+                        thm_name
+                    ),
+                    line_file.clone(),
+                ),
+            )));
+        }
+        let Ok(param_to_arg_map) =
+            self.params_to_arg_map(&thm.forall_fact.params_def_with_type, args)
+        else {
+            // Preview data is optional. The executor owns theorem arity and
+            // argument diagnostics through the ordinary `by thm` path.
+            return Ok(None);
+        };
+        Ok(self
+            .inst_exist_fact(
+                exist_fact,
+                &param_to_arg_map,
+                ParamObjType::TheoremInstantiation,
+                Some(line_file),
+            )
+            .ok())
     }
 
     pub fn parse_have_preimage(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
@@ -1810,6 +1895,9 @@ impl Runtime {
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => {
                 Ok(TemplateDefEnum::ObtainObjFromAtomicFact(stmt))
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) => {
+                Ok(TemplateDefEnum::ObtainObjFromThm(stmt))
             }
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
                 Ok(TemplateDefEnum::HaveFnEqualStmt(stmt))

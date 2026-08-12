@@ -39,8 +39,6 @@ setting EqualPair:
 forall [EqualPair] => {x = y}
 
 trust not forall [EqualPair] => {x != y}
-
-trust exist z R st {forall [EqualPair] => {x = y}}
 "#;
     let (succeeded, output) = run_setting_source(source, "setting_inline_expansion");
     assert!(succeeded, "inline setting fixture failed:\n{}", output);
@@ -49,17 +47,30 @@ trust exist z R st {forall [EqualPair] => {x = y}}
 }
 
 #[test]
-fn plain_forall_uses_inline_syntax_only_where_a_body_is_impossible() {
-    let source = r#"
-trust exist x R st {forall y R => {y = y}}
-trust {x R: forall y R => {y = y}} = {x R: forall y R => {y = y}}
+fn existential_and_set_builder_bodies_reject_forall() {
+    let cases = [
+        (
+            "exist_inline_forall",
+            "trust exist x R st {forall y R => {y = y}}",
+        ),
+        (
+            "set_builder_inline_forall",
+            "trust {x R: forall y R => {y = y}} = {x R: x = x}",
+        ),
+        (
+            "exist_block_forall",
+            "have x R:\n    forall y R:\n        y = y",
+        ),
+    ];
 
-have x R:
-    forall y R:
-        y = y
-"#;
-    let (succeeded, output) = run_setting_source(source, "forall_context_dispatch");
-    assert!(succeeded, "forall context fixture failed:\n{}", output);
+    for (label, source) in cases {
+        let (succeeded, output) = run_setting_source(source, label);
+        assert!(!succeeded, "{label} unexpectedly succeeded:\n{output}");
+        assert!(
+            output.contains("inline `forall` is not allowed in existential or set-builder bodies"),
+            "{label} produced the wrong diagnostic:\n{output}"
+        );
+    }
 }
 
 #[test]

@@ -85,6 +85,7 @@ impl DefObjStmt {
             DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::ObtainObjFromExistFact(stmt) => stmt.line_file.clone(),
             DefObjStmt::ObtainObjFromAtomicFact(stmt) => stmt.line_file.clone(),
+            DefObjStmt::ObtainObjFromThm(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveByPreimageStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnEqualStmt(stmt) => stmt.line_file.clone(),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.line_file.clone(),
@@ -106,6 +107,7 @@ impl DefObjStmt {
             DefObjStmt::HaveObjByExistFactsStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::ObtainObjFromExistFact(stmt) => stmt.stmt_type_name(),
             DefObjStmt::ObtainObjFromAtomicFact(stmt) => stmt.stmt_type_name(),
+            DefObjStmt::ObtainObjFromThm(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveByPreimageStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnEqualStmt(stmt) => stmt.stmt_type_name(),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(stmt) => stmt.stmt_type_name(),
@@ -129,6 +131,7 @@ impl DefObjStmt {
             DefObjStmt::HaveObjByExistFactsStmt(_) => HaveObjByExistFactsStmt::output_type_string(),
             DefObjStmt::ObtainObjFromExistFact(_) => ObtainObjFromExistFact::output_type_string(),
             DefObjStmt::ObtainObjFromAtomicFact(_) => ObtainObjFromAtomicFact::output_type_string(),
+            DefObjStmt::ObtainObjFromThm(_) => ObtainObjFromThm::output_type_string(),
             DefObjStmt::HaveByPreimageStmt(_) => HaveByPreimageStmt::output_type_string(),
             DefObjStmt::HaveFnEqualStmt(_) => HaveFnEqualStmt::output_type_string(),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(_) => {

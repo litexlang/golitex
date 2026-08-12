@@ -420,146 +420,6 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
     Some(witness_set.clone())
 }
 
-fn rational_reduced_fraction_exist_fact_non_witness_operand(
-    exist_fact: &ExistFactEnum,
-) -> Option<Obj> {
-    if (!exist_fact.is_plain_exist() && !exist_fact.is_exist_unique())
-        || exist_fact.facts().len() != 2
-    {
-        return None;
-    }
-
-    let params = exist_fact
-        .params_def_with_type()
-        .collect_param_names_with_types();
-    let [(numerator_name, ParamType::Obj(Obj::StandardSet(StandardSet::Z))), (denominator_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
-        params.as_slice()
-    else {
-        return None;
-    };
-
-    let is_named_exist_param = |obj: &Obj, name: &str| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == name);
-    let is_selected_ratio = |obj: &Obj| match obj {
-        Obj::Div(div) => {
-            is_named_exist_param(div.left.as_ref(), numerator_name)
-                && is_named_exist_param(div.right.as_ref(), denominator_name)
-        }
-        _ => false,
-    };
-    let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
-    let is_one = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "1");
-
-    let rational = exist_fact.facts().iter().find_map(|fact| {
-        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
-            return None;
-        };
-        if is_selected_ratio(&equal_fact.left) {
-            Some(equal_fact.right.clone())
-        } else if is_selected_ratio(&equal_fact.right) {
-            Some(equal_fact.left.clone())
-        } else {
-            None
-        }
-    })?;
-    if Runtime::obj_depends_on_given_exist_param(
-        &rational,
-        &[numerator_name.clone(), denominator_name.clone()],
-    ) {
-        return None;
-    }
-
-    // Canonical reduced form may state coprimality directly. For example:
-    // `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`.
-    let gcd_is_one = exist_fact.facts().iter().any(|fact| {
-        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
-            return false;
-        };
-        let is_selected_gcd = |obj: &Obj| match obj {
-            Obj::Gcd(gcd) => {
-                (is_named_exist_param(gcd.left.as_ref(), numerator_name)
-                    && is_named_exist_param(gcd.right.as_ref(), denominator_name))
-                    || (is_named_exist_param(gcd.left.as_ref(), denominator_name)
-                        && is_named_exist_param(gcd.right.as_ref(), numerator_name))
-            }
-            _ => false,
-        };
-        (is_selected_gcd(&equal_fact.left) && is_one(&equal_fact.right))
-            || (is_one(&equal_fact.left) && is_selected_gcd(&equal_fact.right))
-    });
-    if gcd_is_one {
-        return Some(rational);
-    }
-
-    let reducedness_forall = exist_fact.facts().iter().find_map(|fact| match fact {
-        ExistBodyFact::InlineForall(forall_fact) => Some(forall_fact),
-        _ => None,
-    })?;
-    let common_divisor_params = reducedness_forall
-        .params_def_with_type
-        .collect_param_names_with_types();
-    let [(common_divisor_name, ParamType::Obj(Obj::StandardSet(StandardSet::NPos)))] =
-        common_divisor_params.as_slice()
-    else {
-        return None;
-    };
-
-    let mut divisibility_premises = Vec::new();
-    for domain_fact in reducedness_forall.dom_facts.iter() {
-        match domain_fact {
-            Fact::AtomicFact(atomic_fact) => divisibility_premises.push(atomic_fact),
-            Fact::AndFact(and_fact) => divisibility_premises.extend(and_fact.facts.iter()),
-            _ => return None,
-        }
-    }
-    if divisibility_premises.len() != 2 || reducedness_forall.then_facts.len() != 1 {
-        return None;
-    }
-
-    let divides_witness = |atomic_fact: &AtomicFact, dividend_name: &str| {
-        let AtomicFact::EqualFact(equal_fact) = atomic_fact else {
-            return false;
-        };
-        let is_remainder = |obj: &Obj| match obj {
-            Obj::Mod(modulo) => {
-                is_named_exist_param(modulo.left.as_ref(), dividend_name)
-                    && matches!(
-                        modulo.right.as_ref(),
-                        Obj::Atom(AtomObj::Forall(param)) if param.name() == common_divisor_name.as_str()
-                    )
-            }
-            _ => false,
-        };
-        (is_remainder(&equal_fact.left) && is_zero(&equal_fact.right))
-            || (is_zero(&equal_fact.left) && is_remainder(&equal_fact.right))
-    };
-    let numerator_divisible = divisibility_premises
-        .iter()
-        .any(|premise| divides_witness(premise, numerator_name));
-    let denominator_divisible = divisibility_premises
-        .iter()
-        .any(|premise| divides_witness(premise, denominator_name));
-    if !numerator_divisible || !denominator_divisible {
-        return None;
-    }
-
-    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(conclusion)) =
-        &reducedness_forall.then_facts[0]
-    else {
-        return None;
-    };
-    let common_divisor_is_one = |left: &Obj, right: &Obj| {
-        matches!(left, Obj::Atom(AtomObj::Forall(param)) if param.name() == common_divisor_name.as_str())
-            && is_one(right)
-    };
-    if !common_divisor_is_one(&conclusion.left, &conclusion.right)
-        && !common_divisor_is_one(&conclusion.right, &conclusion.left)
-    {
-        return None;
-    }
-
-    Some(rational)
-}
-
 impl Runtime {
     pub fn verify_exist_fact(
         &mut self,
@@ -621,32 +481,6 @@ impl Runtime {
                         exist_fact.clone().into(),
                         "exist: member of a nonempty set".to_string(),
                         vec![nonempty_result],
-                    )
-                    .into(),
-                );
-            }
-        }
-
-        // Every rational has one unique reduced integer fraction with a positive
-        // denominator. Reducedness may be written as `gcd(p, q) = 1` or as the
-        // equivalent common-positive-divisor condition.
-        if let Some(rational) = rational_reduced_fraction_exist_fact_non_witness_operand(exist_fact)
-        {
-            let in_q: AtomicFact =
-                InFact::new(rational, StandardSet::Q.into(), exist_fact.line_file()).into();
-            let rational_membership =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
-            if rational_membership.is_true() {
-                return Ok(
-                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        exist_fact.clone().into(),
-                        if exist_fact.is_exist_unique() {
-                            "exist!: unique rational reduced fraction with positive denominator"
-                                .to_string()
-                        } else {
-                            "exist: rational reduced fraction with positive denominator".to_string()
-                        },
-                        vec![rational_membership],
                     )
                     .into(),
                 );
@@ -1407,13 +1241,9 @@ impl Runtime {
 
         let mut fact_strings: Vec<String> = Vec::new();
         for fact in instantiated_exist_fact.facts().iter() {
-            let fact_as_fact = fact.from_ref_to_cloned_fact();
-            match fact_as_fact {
-                Fact::ForallFact(forall_fact) => {
-                    fact_strings.push(runtime.alpha_normalized_forall_cache_key(&forall_fact)?);
-                }
-                fact => fact_strings.push(nested_obj_binder_normalized_fact_key(&fact)),
-            }
+            fact_strings.push(nested_obj_binder_normalized_fact_key(
+                &fact.from_ref_to_cloned_fact(),
+            ));
         }
 
         let mut params_string_parts: Vec<String> = Vec::new();

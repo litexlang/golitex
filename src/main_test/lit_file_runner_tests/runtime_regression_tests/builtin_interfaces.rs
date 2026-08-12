@@ -153,38 +153,22 @@ fn builtin_theorem_rejects_arity_shape_and_qualified_names() {
 }
 
 #[test]
-fn rational_reduced_fraction_builtin_accepts_only_the_canonical_shape() {
-    let positive = r#"
+fn rational_reduced_fraction_requires_the_explicit_theorem_interface() {
+    let direct = r#"
 have q Q
 exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}
 "#;
-    let (_, succeeded, output) = run_source(positive, "rational_reduced_fraction_gcd", false);
+    let (_, succeeded, output) = run_source(direct, "rational_reduced_fraction_direct", false);
     assert!(
-        succeeded,
-        "the direct canonical gcd form should use the rational existence rule:\n{output}"
+        !succeeded,
+        "the reduced-fraction fact must not be proved implicitly:\n{output}"
     );
-    assert!(output.contains("exist!: unique rational reduced fraction with positive denominator"));
+    assert!(!output.contains("unique rational reduced fraction with positive denominator"));
 
-    for (label, source) in [
-        (
-            "wrong gcd value",
-            "have q Q\nexist! p Z, d N+ st {q = p / d, gcd(p, d) = 2}",
-        ),
-        (
-            "wrong numerator carrier",
-            "have q Q\nexist! p N, d N+ st {q = p / d, gcd(p, d) = 1}",
-        ),
-        (
-            "non-rational target",
-            "have x R\nexist! p Z, d N+ st {x = p / d, gcd(p, d) = 1}",
-        ),
-    ] {
-        let (_, succeeded, output) = run_source(source, label, false);
-        assert!(
-            !succeeded,
-            "{label} must not match the canonical rule:\n{output}"
-        );
-    }
+    let explicit = "have q Q\nby thm rational_has_unique_reduced_fraction(q)";
+    let (_, succeeded, output) = run_source(explicit, "rational_reduced_fraction_theorem", false);
+    assert!(succeeded, "the explicit theorem should succeed:\n{output}");
+    assert!(output.contains("\"theorem\": \"rational_has_unique_reduced_fraction\""));
 }
 
 #[test]

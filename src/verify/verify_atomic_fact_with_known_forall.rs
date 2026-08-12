@@ -3196,9 +3196,6 @@ fn exist_body_facts_have_same_shape(
         (ExistBodyFact::OrFact(left), ExistBodyFact::OrFact(right)) => {
             Runtime::_verify_or_fact_the_same_type_ref(left, right)
         }
-        (ExistBodyFact::InlineForall(left), ExistBodyFact::InlineForall(right)) => {
-            Ok(left.to_string() == right.to_string())
-        }
         _ => Ok(false),
     }
 }

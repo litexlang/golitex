@@ -674,23 +674,6 @@ fn mark_forall_param_coverage_in_exist_body_fact(
                 );
             }
         }
-        ExistBodyFact::InlineForall(forall_fact) => {
-            for param_def_with_type in forall_fact.params_def_with_type.groups.iter() {
-                mark_forall_param_coverage_in_param_type(
-                    &param_def_with_type.param_type,
-                    coverage_by_forall_param,
-                );
-            }
-            for fact in forall_fact.dom_facts.iter() {
-                mark_forall_param_coverage_in_fact(fact, coverage_by_forall_param);
-            }
-            for fact in forall_fact.then_facts.iter() {
-                mark_forall_param_coverage_in_exist_or_and_chain_atomic_fact(
-                    fact,
-                    coverage_by_forall_param,
-                );
-            }
-        }
     }
 }
 

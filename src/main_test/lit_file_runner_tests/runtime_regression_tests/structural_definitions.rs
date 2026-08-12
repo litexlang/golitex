@@ -1895,8 +1895,7 @@ template<S nonempty_set>:
     have fn selected_self_with_local_proof by exist!:
         ? forall x S:
             exist! y S st {y = x}
-        by thm self_exists(S, x)
-        obtain y from exist candidate S st {candidate = x}
+        obtain y from thm self_exists(S, x)
         witness exist candidate S st {candidate = x} from y
         forall y1, y2 S:
             y1 = x
@@ -2427,99 +2426,6 @@ exist a Z, b Z* st {sqrt(2) = a / b}
         !run_succeeded,
         "the rational representation builtin must not apply to arbitrary reals:\n{}",
         run_output
-    );
-}
-
-#[test]
-fn rational_reduced_fraction_representations_are_builtin_rules() {
-    let source_code = r#"
-forall a Q:
-    exist p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
-
-forall a Q:
-    exist p Z, q N+ st {p / q = a, forall z N+: 0 = q % z and 0 = p % z => {1 = z}}
-
-forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
-"#;
-
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "rational_reduced_fraction_representations_are_builtin_rules",
-    );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    let (run_succeeded, run_output) =
-        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-    assert!(
-        run_succeeded,
-        "reduced rational fractions should verify without std facts:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("exist: rational reduced fraction with positive denominator"),
-        "reduced rational fractions should expose builtin provenance:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("exist!: unique rational reduced fraction with positive denominator"),
-        "unique reduced rational fractions should expose builtin provenance:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn rational_reduced_fraction_builtin_rejects_nearby_shapes() {
-    run_with_large_stack(
-        "rational_reduced_fraction_builtin_rejects_nearby_shapes",
-        || {
-            let rules = [
-                "exist: rational reduced fraction with positive denominator",
-                "exist!: unique rational reduced fraction with positive denominator",
-            ];
-            for (label, source_code) in [
-                (
-                    "irrational_target",
-                    r#"
-exist p Z, q N+ st {sqrt(2) = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
-"#,
-                ),
-                (
-                    "wrong_unique_reducedness_conclusion",
-                    r#"
-forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 2}}
-"#,
-                ),
-                (
-                    "wrong_witness_carriers",
-                    r#"
-forall a Q:
-    exist p N, q Z* st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
-"#,
-                ),
-            ] {
-                let mut runtime = Runtime::new();
-                runtime.new_file_path_new_env_new_name_scope(
-                    format!("rational_reduced_fraction_builtin_rejects_{}", label).as_str(),
-                );
-                let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-                let (run_succeeded, run_output) =
-                    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-                assert!(
-                    !run_succeeded,
-                    "{} must not receive a reduced-fraction builtin proof:\n{}",
-                    label, run_output
-                );
-                assert!(
-                    rules.iter().all(|rule| !run_output.contains(rule)),
-                    "{} must not expose reduced-fraction builtin provenance:\n{}",
-                    label,
-                    run_output
-                );
-            }
-        },
     );
 }
 

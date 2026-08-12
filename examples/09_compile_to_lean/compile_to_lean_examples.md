@@ -2043,7 +2043,8 @@ forall A, B set:
 R = R
 Q = Q
 
-# Binder-owning set builders remain a separate unsupported Obj-IR boundary.
+# Binder-owning set builders are exercised in the
+# `function_sets_and_well_definedness` section below.
 ```
 
 ```lean
@@ -5099,6 +5100,14 @@ forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:
     =>:
         f(x)(y) $in R+
 
+# A and B are two set values on one inferred carrier. Proving that a also lies
+# in B does not retype f: its declared domain is still A, and applying it uses
+# the retained a $in A parameter fact.
+forall A, B set, f fn(x A) A, a A:
+    a $in B
+    =>:
+        f(a) $in A
+
 have fn positive_successor(x R: x > 0) R+ = x + 1
 
 forall x R:
@@ -5683,6 +5692,14 @@ theorem fact168 : ∀ (f : (x : ℝ) → x > 0 → (y : ℝ) → y > 0 → ℝ) 
   -- Litex well-definedness certificate 81 reuses litex_domain_fact_2
   exact (litex_param_fact_1 x litex_domain_fact_1 y litex_domain_fact_2)
 
+-- Litex fact f193
+theorem fact193 : ∀ {α21 : Type u} [LitexObject α21], ∀ (A : Set α21), ∀ (B : Set α21), ∀ (f : (x : α21) → x ∈ A → α21) (litex_param_fact_3 : f ∈ {litex_function_value : ((x : α21) → x ∈ A → α21) | ∀ (x : α21) (litex_fn_parameter_membership_1 : x ∈ A), (litex_function_value x litex_fn_parameter_membership_1) ∈ A}), ∀ (a : α21) (litex_param_fact_4 : a ∈ A), ∀ (litex_domain_fact_1 : a ∈ B), (f a litex_param_fact_4) ∈ A := by
+  intro _ _ A B f litex_param_fact_3 a litex_param_fact_4 litex_domain_fact_1
+  -- Litex well-definedness certificate 1 reuses litex_param_fact_4
+  -- Litex well-definedness certificate 2 reuses litex_param_fact_4
+  -- Litex well-definedness certificate 3 reuses litex_param_fact_4
+  exact (litex_param_fact_3 a litex_param_fact_4)
+
 -- Litex checked function definition `positive_successor`
 def positive_successor : (x : ℝ) → x > 0 → ℝ := fun (x : ℝ) (litex_domain_fact_1 : x > 0) => by
   have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
@@ -5757,7 +5774,7 @@ def positive_successor : (x : ℝ) → x > 0 → ℝ := fun (x : ℝ) (litex_dom
   -- Litex well-definedness certificate 27 reuses well_defined_fact_9_3
   -- Litex well-definedness certificate 28 reuses well_defined_fact_9_4
   -- Litex well-definedness certificate 29 reuses well_defined_fact_9_5
-  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+  have litex_function_return_check_26 : (x + 1) ∈ Litex.StandardSets.RPos := by
     have proof_fact_16_1 : (0 : ℝ) < (x + 1) := by
       have proof_fact_17_1 : (0 : ℝ) < x := by
         have proof_fact_18_1 : x > 0 := litex_domain_fact_1
@@ -5770,8 +5787,8 @@ def positive_successor : (x : ℝ) → x > 0 → ℝ := fun (x : ℝ) (litex_dom
     simpa using proof_fact_16_1
   exact (x + 1)
 
--- Litex fact f185
-theorem fact185 : positive_successor ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
+-- Litex fact f210
+theorem fact210 : positive_successor ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
   intro x litex_domain_fact_1
   have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
     change True
@@ -5845,7 +5862,7 @@ theorem fact185 : positive_successor ∈ {litex_function_value : ((x : ℝ) → 
   -- Litex well-definedness certificate 27 reuses well_defined_fact_9_3
   -- Litex well-definedness certificate 28 reuses well_defined_fact_9_4
   -- Litex well-definedness certificate 29 reuses well_defined_fact_9_5
-  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+  have litex_function_return_check_26 : (x + 1) ∈ Litex.StandardSets.RPos := by
     have proof_fact_16_1 : (0 : ℝ) < (x + 1) := by
       have proof_fact_17_1 : (0 : ℝ) < x := by
         have proof_fact_18_1 : x > 0 := litex_domain_fact_1
@@ -5856,11 +5873,11 @@ theorem fact185 : positive_successor ∈ {litex_function_value : ((x : ℝ) → 
         linarith only [proof_fact_17_1, proof_fact_17_2]
       exact proof_fact_17_3
     simpa using proof_fact_16_1
-  simpa only [positive_successor] using litex_function_return_check_21
+  simpa only [positive_successor] using litex_function_return_check_26
 
--- Litex checked defining equality: #21#positive_successor = fn (#22#x R: #22#x > 0) R+ {#22#x + 1}
--- Litex fact f186
-theorem fact186 : positive_successor = (fun (x : ℝ) (litex_domain_fact_1 : x > 0) => by
+-- Litex checked defining equality: #26#positive_successor = fn (#27#x R: #27#x > 0) R+ {#27#x + 1}
+-- Litex fact f211
+theorem fact211 : positive_successor = (fun (x : ℝ) (litex_domain_fact_1 : x > 0) => by
   have litex_param_fact_1 : x ∈ Litex.StandardSets.R := by
     change True
     trivial
@@ -5933,7 +5950,7 @@ theorem fact186 : positive_successor = (fun (x : ℝ) (litex_domain_fact_1 : x >
   -- Litex well-definedness certificate 27 reuses well_defined_fact_9_3
   -- Litex well-definedness certificate 28 reuses well_defined_fact_9_4
   -- Litex well-definedness certificate 29 reuses well_defined_fact_9_5
-  have litex_function_return_check_21 : (x + 1) ∈ Litex.StandardSets.RPos := by
+  have litex_function_return_check_26 : (x + 1) ∈ Litex.StandardSets.RPos := by
     have proof_fact_16_1 : (0 : ℝ) < (x + 1) := by
       have proof_fact_17_1 : (0 : ℝ) < x := by
         have proof_fact_18_1 : x > 0 := litex_domain_fact_1
@@ -5948,32 +5965,32 @@ theorem fact186 : positive_successor = (fun (x : ℝ) (litex_domain_fact_1 : x >
   rfl
 
 -- Litex well-definedness certificate 1 (forall type witness)
-theorem well_defined_fact_221 : -1 ∈ Litex.StandardSets.C := by
+theorem well_defined_fact_224 : -1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
--- Litex fact f205
-theorem fact205 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x > 0), (positive_successor x litex_domain_fact_1) ∈ Litex.StandardSets.RPos := by
+-- Litex fact f230
+theorem fact230 : ∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), ∀ (litex_domain_fact_1 : x > 0), (positive_successor x litex_domain_fact_1) ∈ Litex.StandardSets.RPos := by
   intro x litex_param_fact_1 litex_domain_fact_1
-  -- Litex well-definedness certificate 1 reuses well_defined_fact_221
+  -- Litex well-definedness certificate 1 reuses well_defined_fact_224
   -- Litex well-definedness certificate 2 reuses litex_param_fact_1
   have well_defined_fact_19_1 : (x : ℂ) ∈ Litex.StandardSets.C := by
     change True
     trivial
   -- Litex well-definedness certificate 4 reuses litex_param_fact_1
   -- Litex well-definedness certificate 5 reuses litex_domain_fact_1
-  -- Litex well-definedness certificate 6 reuses well_defined_fact_221
+  -- Litex well-definedness certificate 6 reuses well_defined_fact_224
   -- Litex well-definedness certificate 7 reuses litex_param_fact_1
   -- Litex well-definedness certificate 8 reuses well_defined_fact_19_1
   -- Litex well-definedness certificate 9 reuses litex_param_fact_1
   -- Litex well-definedness certificate 10 reuses litex_domain_fact_1
-  -- Litex well-definedness certificate 11 reuses well_defined_fact_221
+  -- Litex well-definedness certificate 11 reuses well_defined_fact_224
   -- Litex well-definedness certificate 12 reuses litex_param_fact_1
   -- Litex well-definedness certificate 13 reuses well_defined_fact_19_1
   -- Litex well-definedness certificate 14 reuses litex_param_fact_1
   -- Litex well-definedness certificate 15 reuses litex_domain_fact_1
   have proof_fact_19_2 : positive_successor ∈ {litex_function_value : ((x : ℝ) → x > 0 → ℝ) | ∀ (x : ℝ) (litex_fn_domain_1 : x > 0), (litex_function_value x litex_fn_domain_1) ∈ Litex.StandardSets.RPos} := by
-    exact fact185
+    exact fact210
   exact (proof_fact_19_2 x litex_domain_fact_1)
 
 end

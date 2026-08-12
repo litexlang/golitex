@@ -6,9 +6,9 @@
 # Former behavior: the reusable name lived in std/basics and its existential
 # conclusion was introduced by `trust`.
 #
-# Now (kernel-checked): the reserved bare theorem constructs the canonical
-# existential and verifies it with the same rational reduced-fraction rule used
-# by direct automatic checking.
+# Now (kernel-checked): the reserved bare theorem checks rational membership,
+# constructs the canonical existential, verifies its well-definedness, and
+# stores it. The existential is not an implicit direct builtin rule.
 
 have q Q
 by thm rational_has_unique_reduced_fraction(q)
@@ -17,6 +17,7 @@ q = p / d
 gcd(p, d) = 1
 
 # Boundary: the call has arity one, requires a known `Q` argument, and cannot
-# be module-qualified. Its fixed conclusion uses an integer numerator, a
-# positive-natural denominator, and gcd exactly 1.
+# be module-qualified. Writing the fixed existential directly does not invoke
+# this handler. Its conclusion uses an integer numerator, a positive-natural
+# denominator, and gcd exactly 1.
 # Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit

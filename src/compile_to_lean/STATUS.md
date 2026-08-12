@@ -109,8 +109,8 @@ Environment-cache tracer:
   every used equality's stored `FactId`.
 - [x] Replay the supported arithmetic route as nested proof IR and checked Lean
   without rerunning `resolve_obj`.
-- [x] Descend through nested object shapes, including function arguments, while
-  keeping unsupported general function objects as an explicit Obj IR boundary.
+- [x] Descend through nested object shapes, including function applications in
+  predicate arguments, and replay their now-structural function-object ABI.
 - [x] Replay a stored equality between compound subobjects at any depth covered
   by the central structural matcher, without flattening it into resolution.
 - [x] Add a persistent arithmetic tracer plus focused supported and boundary
