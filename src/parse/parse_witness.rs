@@ -77,10 +77,7 @@ impl Runtime {
     // witness $p(args) from value:
     // The atomic prop fact remains opaque during parsing. Execution resolves and
     // validates its sole positive existential definition clause.
-    pub fn parse_witness_atomic_fact(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Stmt, RuntimeError> {
+    pub fn parse_witness_atomic_fact(&mut self, tb: &mut TokenBlock) -> Result<Stmt, RuntimeError> {
         let atomic_fact = self.parse_atomic_fact(tb, true)?;
         let AtomicFact::NormalAtomicFact(atomic_fact) = atomic_fact else {
             return Err(RuntimeError::from(ParseRuntimeError(

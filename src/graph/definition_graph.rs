@@ -696,8 +696,8 @@ impl DefinitionGraphBuilder {
                 Some(&definition.to_string()),
             );
             let mut definition_body = DepCollector::new();
-            for parameter in &definition.params {
-                definition_body.add_local_name(parameter);
+            for parameter in &definition.param_bindings {
+                definition_body.add_local_name(parameter.name());
             }
             for case in &definition.cases {
                 definition_body.collect_atomic_fact(&case.condition);
@@ -734,8 +734,8 @@ impl DefinitionGraphBuilder {
                     well_definedness.collect_or_and_chain_atomic_fact(fact);
                 }
             }
-            for (_, field) in &definition.fields {
-                signature.collect_obj(field);
+            for field in &definition.fields {
+                signature.collect_obj(&field.field_type);
             }
             self.add_dependency_edges(&node_id, signature, "signature");
             self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
@@ -1024,16 +1024,16 @@ impl DefinitionGraphBuilder {
         statement: &HaveFnByForallExistUniqueStmt,
         success: &NonFactualStmtSuccess,
     ) {
-        let function_id = definition_id("fn", &statement.fn_name);
+        let function_id = definition_id("fn", statement.fn_name());
         if !self.node_is_defined(&function_id) {
             return;
         }
-        let certificate_id = selection_certificate_id(&statement.fn_name, &statement.line_file);
+        let certificate_id = selection_certificate_id(statement.fn_name(), &statement.line_file);
         self.ensure_node(
             certificate_id.clone(),
             "certificate",
             "selection_certificate",
-            format!("{} exist!", statement.fn_name).as_str(),
+            format!("{} exist!", statement.fn_name()).as_str(),
             true,
             Some(&statement.line_file),
             Some(&statement.forall.to_string()),
@@ -1923,11 +1923,11 @@ fn collect_template_definition_dependencies(
             collector.collect_atomic_fact(&fact);
         }
         TemplateDefEnum::HaveFnEqualStmt(statement) => {
-            collector.add_local_name(&statement.name);
+            collector.add_local_name(statement.name());
             collector.collect_anonymous_fn(&statement.equal_to_anonymous_fn);
         }
         TemplateDefEnum::HaveFnEqualCaseByCaseStmt(statement) => {
-            collector.add_local_name(&statement.name);
+            collector.add_local_name(statement.name());
             collector.collect_fn_set_clause(&statement.fn_set_clause);
             for condition in &statement.cases {
                 collector.collect_and_chain_atomic_fact(condition);
@@ -1937,7 +1937,7 @@ fn collect_template_definition_dependencies(
             }
         }
         TemplateDefEnum::HaveFnByInducStmt(statement) => {
-            collector.add_local_name(&statement.name);
+            collector.add_local_name(statement.name());
             collector.collect_fn_set_clause(&statement.fn_set_clause);
             collector.collect_obj(&statement.measure);
             collector.collect_obj(&statement.lower_bound);
@@ -1946,33 +1946,33 @@ fn collect_template_definition_dependencies(
             }
         }
         TemplateDefEnum::HaveFnByForallExistUniqueStmt(statement) => {
-            collector.add_local_name(&statement.fn_name);
+            collector.add_local_name(statement.fn_name());
             collector.collect_forall_fact(&statement.forall);
         }
         TemplateDefEnum::HaveTupleStmt(statement) => {
-            collector.add_local_name(&statement.index_name);
+            collector.add_local_name(statement.index_name());
             collector.collect_obj(&statement.dimension);
             collector.collect_obj(&statement.value);
         }
         TemplateDefEnum::HaveCartStmt(statement) => {
-            collector.add_local_name(&statement.index_name);
+            collector.add_local_name(statement.index_name());
             collector.collect_obj(&statement.dimension);
             collector.collect_obj(&statement.value);
         }
         TemplateDefEnum::HaveSeqStmt(statement) => {
-            collector.add_local_name(&statement.index_name);
+            collector.add_local_name(statement.index_name());
             collector.collect_obj(&statement.seq_set.clone().into());
             collector.collect_obj(&statement.value);
         }
         TemplateDefEnum::HaveFiniteSeqStmt(statement) => {
-            collector.add_local_name(&statement.index_name);
+            collector.add_local_name(statement.index_name());
             collector.collect_obj(&statement.finite_seq_set.clone().into());
             collector.collect_obj(&statement.bound);
             collector.collect_obj(&statement.value);
         }
         TemplateDefEnum::HaveMatrixStmt(statement) => {
-            collector.add_local_name(&statement.row_index_name);
-            collector.add_local_name(&statement.col_index_name);
+            collector.add_local_name(statement.row_index_name());
+            collector.add_local_name(statement.col_index_name());
             collector.collect_obj(&statement.matrix_set.clone().into());
             collector.collect_obj(&statement.row_bound);
             collector.collect_obj(&statement.col_bound);

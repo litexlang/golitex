@@ -1260,22 +1260,22 @@ witness $divides(6, 2) from 3:
 
 Here the primary proved fact is `$divides(6, 2)`, not a parser-expanded
 existential. At execution time Litex checks that the active definition has
-exactly one positive `exist` or `exist!` clause, instantiates it, and reuses the
-ordinary witness checker. An `exist!` definition additionally requires the
-generated uniqueness `forall` to verify; supplying one satisfying value alone
-is insufficient. Normal definition inference then makes the matching
-existential variant available.
+exactly one positive ordinary `exist` clause, instantiates it, and reuses the
+ordinary witness checker. Normal definition inference then makes the matching
+existential fact available. For unique existence, write the explicit
+`witness exist! ...` proof, including its uniqueness obligation, and introduce
+the named predicate separately with `by def`.
 
 This is deliberately narrow. Litex first verifies the source prop, then
 rechecks its retained definition and substitutes the call arguments. The
 definition must contain exactly one clause and that clause must be positive
-`exist` or `exist!`. An abstract prop, a negated source, `not exist`, or a
-definition with an extra clause is not treated as an existential package.
+ordinary `exist`. An `exist!` definition, abstract prop, negated source,
+`not exist`, or definition with an extra clause is not accepted by this named
+witness form.
 
-The current Litex-to-Lean backend supports the introduction direction only for
-the plain positive `exist` case. A verifier-accepted atomic-fact witness backed
-by `exist!` therefore reports an explicit compiler boundary instead of being
-lowered to an unchecked Lean term.
+The Litex-to-Lean backend lowers this plain positive `exist` introduction with
+checked definition-introduction evidence. Explicit unique existence remains a
+separate compiler boundary rather than being lowered to an unchecked Lean term.
 
 The design keeps the difference clear: the existential statement itself is a
 fact, while the witness name is a local object introduced for the current

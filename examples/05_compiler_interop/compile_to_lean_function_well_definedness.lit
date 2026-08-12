@@ -17,6 +17,15 @@ forall f fn(x R: x > 0) R, a R:
     =>:
         f(a) = f(a)
 
+# Refined-set binder proofs are not rediscovered in Lean. Membership in R*
+# and R+ reduces to the exact nonzero/positive predicate required by the
+# function application and is passed as that retained source proof.
+forall f fn(x R: x != 0) R, a R*:
+    f(a) = f(a)
+
+forall f fn(x R: x > 0) R, a R+:
+    f(a) = f(a)
+
 # Source-only well-definedness evidence is replayed even when it is not an
 # explicit argument of the final term.
 forall a R:
@@ -31,6 +40,30 @@ forall f fn(x, y, z R) R:
 forall f fn(x R: x > 0) fn(y R) R:
     f(2)(3) = f(2)(3)
 
+# Binder-owning values stay structural. A SetBuilder becomes one native Lean
+# predicate set, and an anonymous function keeps its own parameter scope plus
+# the pointwise proof that its values inhabit the refined return set.
+forall x R:
+    x > 0
+    =>:
+        x $in {y R: y > 0}
+
+fn(x R: x > 0) R+ {x + 1} $in fn(x R: x > 0) R+
+
+# Applying a function with a refined result eliminates the retained head
+# membership proof through the exact Litex application layers. The output
+# membership is evidence, not an erasure of R+ to R.
+forall f fn(x R: x > 0) R+, x R:
+    x > 0
+    =>:
+        f(x) $in R+
+
+forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:
+    x > 0
+    y > 0
+    =>:
+        f(x)(y) $in R+
+
 # A checked named definition retains its body, return check, stored membership,
 # defining equality, and the exact definition source used by later evaluation.
 have fn reciprocal(x R: x != 0) R = 1 / x
@@ -40,6 +73,15 @@ forall x R:
     =>:
         reciprocal(x) = 1 / x
 
+# A checked named definition replays its retained body-in-return-set proof and
+# exports the resulting pointwise function-set membership theorem.
+have fn positive_successor(x R: x > 0) R+ = x + 1
+
+forall x R:
+    x > 0
+    =>:
+        positive_successor(x) $in R+
+
 # Nearest rejected boundaries (comments keep this acceptance tracer passing):
 #
 # `f(1)(2, 3)` is not accepted for `f $in fn(x, y, z R) R`; Lean currying
@@ -47,11 +89,9 @@ forall x R:
 #
 # One symbol declared in `fn(x R) R` cannot later be retyped as `fn(x Q) Q`.
 #
-# A refined result such as `fn(x R) R+` remains fail-closed until Litex-to-Lean has
-# an explicit output-membership representation. It is not erased to `R`.
-#
-# Standalone anonymous function terms and the remaining `have fn` forms are a
-# separate follow-up slice; this tracer covers checked named equality forms.
+# Unsupported binder-owning constructors and untyped proof routes still stop
+# compilation; this slice adds only SetBuilder, FnSet/anonymous-function terms,
+# and exact application-return membership evidence.
 #
 # Source gate:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit

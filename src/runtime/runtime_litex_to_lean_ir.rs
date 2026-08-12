@@ -112,13 +112,12 @@ impl Runtime {
                     &stmt.line_file,
                     success,
                 ),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
-                self.build_litex_to_lean_ir_existential_witness(
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => self
+                .build_litex_to_lean_ir_existential_witness(
                     &stmt.param_def.collect_param_bindings(),
                     &stmt.line_file,
                     success,
-                )
-            }
+                ),
             Stmt::Witness(WitnessStmt::WitnessExistFact(stmt)) => {
                 self.build_litex_to_lean_ir_witness_exist_statement(stmt, success)
             }
@@ -130,6 +129,9 @@ impl Runtime {
             }
             Stmt::By(ByStmt::ByContraStmt(stmt)) => {
                 self.build_litex_to_lean_ir_by_contra_statement(stmt, success)
+            }
+            Stmt::DefThmStmt(stmt) => {
+                self.build_litex_to_lean_ir_named_theorem_statement(stmt, success)
             }
             Stmt::UnsafeStmt(UnsafeStmt::TrustStmt(stmt)) => {
                 let excluded = stmt
@@ -180,20 +182,6 @@ impl Runtime {
             ));
         }
         let source_return_set = stmt.equal_to_anonymous_fn.body.ret_set.as_ref().clone();
-        if !matches!(
-            source_return_set,
-            Obj::StandardSet(
-                StandardSet::N | StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C
-            )
-        ) {
-            return Err(litex_to_lean_ir_error(
-                &stmt.line_file,
-                format!(
-                    "the current Litex-to-Lean `have fn` slice requires an unrestricted native numeric return set; `{}` needs an explicit output-membership representation",
-                    source_return_set
-                ),
-            ));
-        }
 
         let function_set = FnSet::from_body(stmt.equal_to_anonymous_fn.body.clone())?;
         let source_function_set: Obj = function_set.clone().into();
@@ -265,23 +253,11 @@ impl Runtime {
         }
         let inferred_premises = self
             .build_litex_to_lean_ir_supported_inferred_premises(&verification.assumption_infers)?;
-        let retained_inferred = verification
-            .assumption_infers
-            .store_fact_outputs
-            .iter()
-            .flat_map(|output| output.inferred_facts.iter())
-            .map(ToString::to_string)
-            .collect::<HashSet<_>>();
-        let represented_inferred = inferred_premises
-            .iter()
-            .map(|fact| fact.proposition.to_string())
-            .collect::<HashSet<_>>();
-        if retained_inferred != represented_inferred {
-            return Err(litex_to_lean_ir_error(
-                &stmt.line_file,
-                "function definition has assumption inferences without a checked Litex-to-Lean adapter",
-            ));
-        }
+        // Inference may derive additional facts from a parameter/domain
+        // assumption that the selected return proof never uses.  Emit only
+        // the inferred premises with checked adapters; if the retained return
+        // proof cites any omitted inference, its unresolved FactId still makes
+        // construction/emission fail closed.
 
         let expected_return_check: Fact = InFact::new(
             source_body.clone(),
@@ -307,7 +283,7 @@ impl Runtime {
         }
         return_check.fact_id = None;
 
-        let function_identifier_obj = self.declared_identifier_obj(&stmt.name);
+        let function_identifier_obj = self.declared_identifier_obj(stmt.name());
         let expected_membership: Fact = InFact::new(
             function_identifier_obj.clone(),
             source_function_set.clone(),
@@ -354,7 +330,7 @@ impl Runtime {
         Ok(LitexToLeanStatementIr::HaveFnEqual(
             LitexToLeanHaveFunctionEqualIr {
                 symbol_id: stmt.symbol_binding.id(),
-                name: stmt.name.clone(),
+                name: stmt.name().to_string(),
                 function,
                 source_function_set,
                 body,
@@ -687,11 +663,8 @@ impl Runtime {
         let existential: Fact = verification.instantiated_existential.clone().into();
         ensure_fact_objects_supported_by_litex_to_lean_ir(&target)?;
         ensure_fact_objects_supported_by_litex_to_lean_ir(&existential)?;
-        let target_id = stored_fact_id_from_infer_result(
-            &success.infers,
-            &target,
-            "atomic fact witness",
-        )?;
+        let target_id =
+            stored_fact_id_from_infer_result(&success.infers, &target, "atomic fact witness")?;
         let existential_id = added_fact_id_from_infer_result(
             &success.infers,
             &existential,
@@ -1455,6 +1428,156 @@ impl Runtime {
         }
     }
 
+    fn build_litex_to_lean_ir_named_theorem_statement(
+        &self,
+        stmt: &DefThmStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<LitexToLeanStatementIr, RuntimeError> {
+        if stmt.is_axiom() {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "Litex-to-Lean does not compile explicit `axiom` declarations",
+            ));
+        }
+        let verification = success.theorem_verification.as_ref().ok_or_else(|| {
+            litex_to_lean_ir_error(
+                &stmt.line_file,
+                "a verified theorem reached Litex-to-Lean without theorem proof-scope evidence",
+            )
+        })?;
+        if verification.name != stmt.name
+            || verification.forall_fact.to_string() != stmt.forall_fact.to_string()
+        {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "theorem proof-scope evidence does not match the source declaration",
+            ));
+        }
+        if verification.proof_step_count != stmt.prove_process.len()
+            || success.inside_results.len()
+                != verification.proof_step_count + verification.forall_fact.then_facts.len()
+        {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "theorem proof-scope results are missing or out of verifier order",
+            ));
+        }
+
+        let proposition: Fact = verification.forall_fact.clone().into();
+        ensure_fact_objects_supported_by_litex_to_lean_ir(&proposition)?;
+        let matching_outputs = success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.itself_and_why_itself_is_stored.0.to_string() == proposition.to_string()
+            })
+            .collect::<Vec<_>>();
+        if matching_outputs.len() != 1 {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "theorem environment effect does not contain exactly one complete source forall",
+            ));
+        }
+
+        let parameter_reason = InferReason::ParameterDefinition.store_reason();
+        let parameter_premises = verification
+            .assumption_infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| output.itself_and_why_itself_is_stored.1 == parameter_reason)
+            .map(|output| {
+                let fact = output.itself_and_why_itself_is_stored.0.clone();
+                let fact_id = output.fact_id.ok_or_else(|| {
+                    litex_to_lean_ir_error(
+                        &fact.line_file(),
+                        "a theorem parameter premise reached Litex-to-Lean without a FactId",
+                    )
+                })?;
+                Ok(LitexToLeanLocalPremiseIr::new(fact_id, fact))
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        let mut premises = Vec::with_capacity(verification.forall_fact.dom_facts.len());
+        for dom_fact in verification.forall_fact.dom_facts.iter() {
+            let fact_id = verification
+                .assumption_infers
+                .store_fact_outputs
+                .iter()
+                .find(|output| {
+                    output.itself_and_why_itself_is_stored.0.to_string() == dom_fact.to_string()
+                })
+                .and_then(|output| output.fact_id)
+                .ok_or_else(|| {
+                    litex_to_lean_ir_error(
+                        &dom_fact.line_file(),
+                        "a theorem domain premise reached Litex-to-Lean without a FactId",
+                    )
+                })?;
+            premises.push(LitexToLeanLocalPremiseIr::new(fact_id, dom_fact.clone()));
+        }
+        let inferred_premises = self
+            .build_litex_to_lean_ir_supported_inferred_premises(&verification.assumption_infers)?;
+        let theorem_context = LitexToLeanIrConstructionContext::default()
+            .with_infer_result(&verification.assumption_infers);
+        let proof_steps = success.inside_results[..verification.proof_step_count]
+            .iter()
+            .enumerate()
+            .map(|(index, result)| {
+                Ok(LitexToLeanNamedTheoremProofStepIr {
+                    position: index + 1,
+                    statement: self.build_litex_to_lean_ir_nested_statement(result)?,
+                })
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        let mut conclusions = Vec::with_capacity(verification.forall_fact.then_facts.len());
+        for result in success.inside_results[verification.proof_step_count..].iter() {
+            conclusions.push(self.build_litex_to_lean_ir_fact_from_result(
+                result,
+                "theorem conclusion",
+                &theorem_context,
+            )?);
+        }
+        let theorem = LitexToLeanFactIr {
+            fact_id: matching_outputs[0].fact_id,
+            proposition: proposition.clone(),
+            proof: LitexToLeanFactProofIr::ForallIntroduction {
+                parameter_premises,
+                premises,
+                inferred_premises,
+                conclusions,
+            },
+        };
+
+        let mut excluded = HashSet::from([proposition.to_string()]);
+        let stored_projections = self.build_litex_to_lean_ir_forall_projections(
+            &success.infers,
+            &theorem,
+            &mut excluded,
+        )?;
+        if theorem.fact_id.is_none() && stored_projections.is_empty() {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "a verified theorem had neither a complete FactId nor stored projections",
+            ));
+        }
+
+        Ok(LitexToLeanStatementIr::NamedTheorem(
+            LitexToLeanNamedTheoremIr {
+                name: verification.name.clone(),
+                theorem,
+                expected_proof_step_count: verification.proof_step_count,
+                proof_steps,
+                stored_projections,
+                inferred_facts: self
+                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+                well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
+                    &success.well_definedness,
+                    &theorem_context,
+                )?,
+            },
+        ))
+    }
+
     fn build_litex_to_lean_ir_wrapped_contradiction(
         &self,
         result: &StmtResult,
@@ -1491,6 +1614,44 @@ impl Runtime {
         source: LitexToLeanFactIr,
         mut excluded: HashSet<String>,
     ) -> Result<LitexToLeanStatementIr, RuntimeError> {
+        let facts = self.build_litex_to_lean_ir_forall_projections(
+            &success.infers,
+            &source,
+            &mut excluded,
+        )?;
+        let Fact::ForallFact(source_forall) = &source.proposition else {
+            return Err(litex_to_lean_ir_error(
+                &source.proposition.line_file(),
+                "a verified non-forall fact was not assigned a stored FactId",
+            ));
+        };
+        if facts.is_empty() {
+            return Err(litex_to_lean_ir_error(
+                &source_forall.line_file,
+                "a verified forall had neither a FactId nor stored projections",
+            ));
+        }
+
+        Ok(LitexToLeanStatementIr::ProjectedForall(
+            LitexToLeanProjectedForallIr {
+                source: source.proposition,
+                facts,
+                inferred_facts: self
+                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+                well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
+                    &success.well_definedness,
+                    &self.well_definedness_context_for_factual_success(success),
+                )?,
+            },
+        ))
+    }
+
+    fn build_litex_to_lean_ir_forall_projections(
+        &self,
+        infer_result: &InferResult,
+        source: &LitexToLeanFactIr,
+        excluded: &mut HashSet<String>,
+    ) -> Result<Vec<LitexToLeanFactIr>, RuntimeError> {
         let Fact::ForallFact(source_forall) = &source.proposition else {
             return Err(litex_to_lean_ir_error(
                 &source.proposition.line_file(),
@@ -1536,7 +1697,7 @@ impl Runtime {
             .map(|fact| fact.clone().to_fact().to_string())
             .collect::<HashSet<_>>();
         let mut facts = Vec::new();
-        for output in success.infers.store_fact_outputs.iter() {
+        for output in infer_result.store_fact_outputs.iter() {
             let candidates =
                 std::iter::once((&output.itself_and_why_itself_is_stored.0, output.fact_id)).chain(
                     output
@@ -1663,25 +1824,7 @@ impl Runtime {
                 });
             }
         }
-        if facts.is_empty() {
-            return Err(litex_to_lean_ir_error(
-                &source_forall.line_file,
-                "a verified forall had neither a FactId nor stored projections",
-            ));
-        }
-
-        Ok(LitexToLeanStatementIr::ProjectedForall(
-            LitexToLeanProjectedForallIr {
-                source: source.proposition,
-                facts,
-                inferred_facts: self
-                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
-                well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
-                    &success.well_definedness,
-                    &self.well_definedness_context_for_factual_success(success),
-                )?,
-            },
-        ))
+        Ok(facts)
     }
 
     fn well_definedness_context_for_factual_success(
@@ -1719,7 +1862,93 @@ impl Runtime {
                 fact,
             });
         }
-        Ok(LitexToLeanWellDefinednessCertificateIr { facts })
+        let facts_by_id = facts
+            .iter()
+            .map(|evidence| (evidence.certificate_id, &evidence.expected_proposition))
+            .collect::<HashMap<_, _>>();
+        let mut objects = Vec::with_capacity(certificate.objects.len());
+        let mut objects_by_id = HashMap::new();
+        for evidence in certificate.objects.iter() {
+            if evidence
+                .fact_ids
+                .iter()
+                .any(|certificate_id| !facts_by_id.contains_key(certificate_id))
+            {
+                return Err(litex_to_lean_ir_error(
+                    &default_line_file(),
+                    "well-definedness object occurrence references a missing fact certificate",
+                ));
+            }
+            if objects_by_id
+                .insert(evidence.occurrence_id, evidence.object.clone())
+                .is_some()
+            {
+                return Err(litex_to_lean_ir_error(
+                    &default_line_file(),
+                    "well-definedness object occurrence ID is duplicated",
+                ));
+            }
+            let intrinsic_result_carrier = evidence
+                .intrinsic_result_set
+                .as_ref()
+                .map(|set| {
+                    LitexToLeanObjectIr::lower(set)
+                        .map(|set| LitexToLeanCarrierIr::for_membership_set(&set))
+                        .map_err(|message| litex_to_lean_ir_error(&default_line_file(), message))
+                })
+                .transpose()?;
+            objects.push(LitexToLeanWellDefinednessObjectIr {
+                occurrence_id: evidence.occurrence_id,
+                source_object: evidence.object.clone(),
+                intrinsic_result_carrier,
+                fact_ids: evidence.fact_ids.clone(),
+            });
+        }
+        let mut target_requirements = Vec::with_capacity(certificate.target_requirements.len());
+        for requirement in certificate.target_requirements.iter() {
+            if requirement.role == WellDefinednessRequirementRole::SourceObjectRequirement {
+                return Err(litex_to_lean_ir_error(
+                    &requirement.expected_proposition.line_file(),
+                    "target well-definedness requirement has an audit-only role",
+                ));
+            }
+            let Some(expected_fact) = facts_by_id.get(&requirement.certificate_id) else {
+                return Err(litex_to_lean_ir_error(
+                    &requirement.expected_proposition.line_file(),
+                    "target well-definedness requirement references a missing fact certificate",
+                ));
+            };
+            if expected_fact.to_string() != requirement.expected_proposition.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &requirement.expected_proposition.line_file(),
+                    "target well-definedness requirement changed its verifier proposition",
+                ));
+            }
+            let Some(source_object) = objects_by_id.get(&requirement.object_occurrence_id) else {
+                return Err(litex_to_lean_ir_error(
+                    &requirement.expected_proposition.line_file(),
+                    "target well-definedness requirement references a missing object occurrence",
+                ));
+            };
+            if obj_equality_key(source_object) != obj_equality_key(&requirement.source_object) {
+                return Err(litex_to_lean_ir_error(
+                    &requirement.expected_proposition.line_file(),
+                    "target well-definedness requirement changed its source object occurrence",
+                ));
+            }
+            target_requirements.push(LitexToLeanWellDefinednessTargetRequirementIr {
+                object_occurrence_id: requirement.object_occurrence_id,
+                source_object: requirement.source_object.clone(),
+                role: requirement.role,
+                certificate_id: requirement.certificate_id,
+                expected_proposition: requirement.expected_proposition.clone(),
+            });
+        }
+        Ok(LitexToLeanWellDefinednessCertificateIr {
+            facts,
+            objects,
+            target_requirements,
+        })
     }
 
     fn build_litex_to_lean_ir_fact_from_success_with_context(
@@ -2450,6 +2679,186 @@ impl Runtime {
         subgoals: &[StmtResult],
         context: &LitexToLeanIrConstructionContext,
     ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+        if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence was retargeted",
+                ));
+            }
+            let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
+            if premises.len() != 1
+                || premises[0].proposition.to_string()
+                    != evidence.expected_head_membership.to_string()
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence lost its exact head-membership premise",
+                ));
+            }
+            let source_application = LitexToLeanObjectIr::lower(&evidence.source_application)
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            let function_set = LitexToLeanObjectIr::lower(&evidence.function_set.clone().into())
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            let typed_return_set = LitexToLeanObjectIr::lower(&evidence.typed_return_set)
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            if !matches!(
+                source_application,
+                LitexToLeanObjectIr::FunctionApplication(_)
+            ) || !matches!(function_set, LitexToLeanObjectIr::FunctionSet { .. })
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-application return membership evidence lowered to the wrong object constructors",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::FunctionApplicationReturnMembership {
+                    source_application,
+                    function_set,
+                    typed_return_set,
+                    expected_target: evidence.expected_target.clone(),
+                    expected_head_membership: evidence.expected_head_membership.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises,
+            });
+        }
+        if let Some(BuiltinRuleEvidence::ClosedNumericComparison(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string()
+                || !subgoals.is_empty()
+                || !crate::litex_to_lean_ir::is_closed_numeric_relation(goal)
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "closed numeric comparison evidence changed its checked target or gained premises",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::ClosedNumericComparison {
+                    expected_target: evidence.expected_target.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+        if let Some(BuiltinRuleEvidence::RefinedNumericMembership(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "refined numeric membership evidence was retargeted after verification",
+                ));
+            }
+            let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
+            if premises.len() != evidence.expected_premises.len()
+                || premises.iter().zip(evidence.expected_premises.iter()).any(
+                    |(actual, expected)| actual.proposition.to_string() != expected.to_string(),
+                )
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "refined numeric membership evidence lost its exact constructor premises",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::RefinedNumericMembership {
+                    target_set: evidence.target_set.clone(),
+                    expected_target: evidence.expected_target.clone(),
+                    expected_premises: evidence.expected_premises.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises,
+            });
+        }
+        if let Some(BuiltinRuleEvidence::FunctionSetMembership(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-set membership evidence was retargeted after verification",
+                ));
+            }
+            let Fact::AtomicFact(AtomicFact::InFact(target)) = goal else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-set membership evidence was attached to a non-membership fact",
+                ));
+            };
+            if obj_equality_key(&target.element) != obj_equality_key(&evidence.element)
+                || obj_equality_key(&target.set)
+                    != obj_equality_key(&evidence.function_set.clone().into())
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-set membership evidence changed its element or function space",
+                ));
+            }
+            let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
+            if premises.len() != 1
+                || premises[0].proposition.to_string() != evidence.expected_pointwise.to_string()
+                || !matches!(&evidence.expected_pointwise, Fact::ForallFact(_))
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-set membership evidence did not retain its exact pointwise forall proof",
+                ));
+            }
+            let element = LitexToLeanObjectIr::lower(&evidence.element)
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            let function_set = LitexToLeanObjectIr::lower(&evidence.function_set.clone().into())
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            if !matches!(function_set, LitexToLeanObjectIr::FunctionSet { .. }) {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "function-set membership evidence lowered to a non-function-space object",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::FunctionSetMembership {
+                    element,
+                    function_set,
+                    expected_target: evidence.expected_target.clone(),
+                    expected_pointwise: evidence.expected_pointwise.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises,
+            });
+        }
+        if let Some(BuiltinRuleEvidence::SetBuilderMembership(evidence)) = evidence {
+            if evidence.expected_target.to_string() != goal.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "set-builder membership evidence was retargeted after verification",
+                ));
+            }
+            let premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
+            if premises.len() != evidence.expected_premises.len()
+                || premises.iter().zip(evidence.expected_premises.iter()).any(
+                    |(actual, expected)| actual.proposition.to_string() != expected.to_string(),
+                )
+            {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "set-builder membership evidence does not retain the exact ordered constructor premises",
+                ));
+            }
+            let set_builder = LitexToLeanObjectIr::lower(&evidence.set_builder.clone().into())
+                .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
+            if !matches!(set_builder, LitexToLeanObjectIr::SetBuilder(_)) {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "set-builder membership evidence lowered to a non-builder object",
+                ));
+            }
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::SetBuilderMembership {
+                    set_builder,
+                    expected_target: evidence.expected_target.clone(),
+                    expected_premises: evidence.expected_premises.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises,
+            });
+        }
         if let Some(BuiltinRuleEvidence::DefinitionProjection(evidence)) = evidence {
             return self.build_litex_to_lean_ir_definition_projection_builtin_application(
                 goal, evidence, subgoals, context,
@@ -2471,10 +2880,26 @@ impl Runtime {
             ),
             None => LitexToLeanProofRuleIr::from_verified_builtin_label(label, goal),
         };
+        let premises = if matches!(
+            rule,
+            LitexToLeanProofRuleIr::Normalization {
+                kind: LitexToLeanNormalizationKindIr::IntegerExpressionSimplification,
+            }
+        ) && crate::litex_to_lean_ir::is_checked_closed_integer_remainder_equality(
+            goal,
+        ) {
+            // Closed integer reflection rechecks the complete target value in
+            // the IR contract. Incidental verifier detours (currently through
+            // injectivity of `exp`) are not semantic premises of that
+            // certificate and must not leak into Lean replay.
+            Vec::new()
+        } else {
+            self.build_litex_to_lean_ir_subgoals(subgoals, context)?
+        };
         Ok(LitexToLeanFactProofIr::RuleApplication {
             rule,
             parameter_requirements: Vec::new(),
-            premises: self.build_litex_to_lean_ir_subgoals(subgoals, context)?,
+            premises,
         })
     }
 

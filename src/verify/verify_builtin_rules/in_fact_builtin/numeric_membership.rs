@@ -249,17 +249,23 @@ impl Runtime {
         &mut self,
         fn_obj: &FnObj,
         in_fact: &InFact,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let typed_ret = match fn_obj.head.as_ref() {
-            FnObjHead::AnonymousFnLiteral(a) => (*a.body.ret_set).clone(),
+        let (head_obj, initial_function_set) = match fn_obj.head.as_ref() {
+            FnObjHead::AnonymousFnLiteral(function) => (
+                Obj::AnonymousFn((**function).clone()),
+                FnSet::from_body(function.body.clone())?,
+            ),
             _ => {
                 let head_obj: Obj = (*fn_obj.head.clone()).into();
-                let Some(fn_set) = self.get_cloned_object_in_fn_set(&head_obj) else {
+                let Some(body) = self.get_cloned_object_in_fn_set(&head_obj) else {
                     return Ok((StmtUnknown::new()).into());
                 };
-                (*fn_set.ret_set).clone()
+                (head_obj, FnSet::from_body(body)?)
             }
+        };
+        let Some(typed_ret) = self.fn_obj_return_set_after_application(fn_obj)? else {
+            return Ok((StmtUnknown::new()).into());
         };
         let target = &in_fact.set;
         let ret_matches = self
@@ -296,6 +302,38 @@ impl Runtime {
         };
         if !ret_matches && !ret_matches_alpha_renamed_fn_set && !ret_is_standard_subset {
             return Ok((StmtUnknown::new()).into());
+        }
+        if objs_equal_with_nested_binder_alpha_equivalence(target, &typed_ret) {
+            let head_membership: AtomicFact = InFact::new(
+                head_obj,
+                initial_function_set.clone().into(),
+                in_fact.line_file.clone(),
+            )
+            .into();
+            let head_membership_result =
+                self.verify_builtin_rule_premise(&head_membership, builtin_state)?;
+            if !head_membership_result.is_true() {
+                return Ok((StmtUnknown::new()).into());
+            }
+            let target_fact: Fact = in_fact.clone().into();
+            let head_membership_fact: Fact = head_membership.into();
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    target_fact.clone(),
+                    "fn application in its exact instantiated declared return set".to_string(),
+                    BuiltinRuleEvidence::FunctionApplicationReturnMembership(
+                        FunctionApplicationReturnMembershipBuiltinRuleEvidence {
+                            source_application: Obj::FnObj(fn_obj.clone()),
+                            function_set: initial_function_set,
+                            typed_return_set: typed_ret,
+                            expected_target: target_fact,
+                            expected_head_membership: head_membership_fact,
+                        },
+                    ),
+                    vec![head_membership_result],
+                )
+                .into(),
+            );
         }
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1324,13 +1362,23 @@ impl Runtime {
             // and multiplication. Recurse only through these strictly smaller
             // syntax nodes so order rules can recognize composite endpoints
             // without opening general builtin proof search.
-            let integer_operands: Option<[&Obj; 2]> = match obj {
-                Obj::Add(add) => Some([add.left.as_ref(), add.right.as_ref()]),
-                Obj::Sub(sub) => Some([sub.left.as_ref(), sub.right.as_ref()]),
-                Obj::Mul(mul) => Some([mul.left.as_ref(), mul.right.as_ref()]),
-                _ => None,
-            };
-            if let Some(integer_operands) = integer_operands {
+            let integer_operands: Option<([&Obj; 2], IntegerMembershipClosureBuiltinRule)> =
+                match obj {
+                    Obj::Add(add) => Some((
+                        [add.left.as_ref(), add.right.as_ref()],
+                        IntegerMembershipClosureBuiltinRule::Add,
+                    )),
+                    Obj::Sub(sub) => Some((
+                        [sub.left.as_ref(), sub.right.as_ref()],
+                        IntegerMembershipClosureBuiltinRule::Sub,
+                    )),
+                    Obj::Mul(mul) => Some((
+                        [mul.left.as_ref(), mul.right.as_ref()],
+                        IntegerMembershipClosureBuiltinRule::Mul,
+                    )),
+                    _ => None,
+                };
+            if let Some((integer_operands, rule)) = integer_operands {
                 if let Some(operator_steps) = self
                     .verify_objects_are_known_integers_in_builtin_leaf(
                         &integer_operands,
@@ -1338,9 +1386,10 @@ impl Runtime {
                     )?
                 {
                     steps.push(
-                        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                             in_z.clone().into(),
                             "integer expression closure under +, -, and *".to_string(),
+                            BuiltinRuleEvidence::IntegerMembershipClosure(rule),
                             operator_steps,
                         )
                         .into(),
@@ -1616,6 +1665,29 @@ impl Runtime {
         let Some(subgoals) = subgoals else {
             return Ok((StmtUnknown::new()).into());
         };
+
+        // Integer closure is a specialized recursive certificate: the target
+        // syntax fixes the operator, while the two retained children prove
+        // the operands are integers. Example: `a, b $in Z` proves
+        // `a % b $in Z` after `%` well-definedness has checked `b != 0`.
+        let closure_rule = match &in_fact.element {
+            Obj::Add(_) => Some(IntegerMembershipClosureBuiltinRule::Add),
+            Obj::Sub(_) => Some(IntegerMembershipClosureBuiltinRule::Sub),
+            Obj::Mul(_) => Some(IntegerMembershipClosureBuiltinRule::Mul),
+            Obj::Mod(_) => Some(IntegerMembershipClosureBuiltinRule::Mod),
+            _ => None,
+        };
+        if let Some(rule) = closure_rule {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "Z closure: binary integer arithmetic".to_string(),
+                    BuiltinRuleEvidence::IntegerMembershipClosure(rule),
+                    subgoals,
+                )
+                .into(),
+            );
+        }
 
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(

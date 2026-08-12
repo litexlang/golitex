@@ -28,12 +28,12 @@ impl Runtime {
         stmt: &HaveByPreimageStmt,
     ) -> Result<(), RuntimeError> {
         if let Obj::Replacement(replacement) = &stmt.range_membership.set {
-            if stmt.preimage_names.len() != 1 {
+            if stmt.preimage_bindings.len() != 1 {
                 return Err(short_exec_error(
                     stmt.clone().into(),
                     format!(
                         "have by preimage: expected 1 preimage name(s), got {}",
-                        stmt.preimage_names.len()
+                        stmt.preimage_bindings.len()
                     ),
                     None,
                     vec![],
@@ -45,13 +45,13 @@ impl Runtime {
 
         let (_function, fn_body) = self.preimage_function_and_body(stmt)?;
         let param_count = fn_body.params_def_with_set.number_of_params();
-        if stmt.preimage_names.len() != param_count {
+        if stmt.preimage_bindings.len() != param_count {
             return Err(short_exec_error(
                 stmt.clone().into(),
                 format!(
                     "have by preimage: expected {} preimage name(s), got {}",
                     param_count,
-                    stmt.preimage_names.len()
+                    stmt.preimage_bindings.len()
                 ),
                 None,
                 vec![],

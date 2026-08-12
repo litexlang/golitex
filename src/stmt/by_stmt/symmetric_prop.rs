@@ -135,7 +135,7 @@ fn forall_param_names_in_order_sym(fact: &NormalAtomicFact) -> Result<Vec<String
     let mut v = Vec::new();
     for obj in fact.body.iter() {
         match obj {
-            Obj::Atom(AtomObj::Forall(p)) => v.push(p.name.clone()),
+            Obj::Atom(AtomObj::Forall(p)) => v.push(p.name().to_string()),
             _ => {
                 return Err(
                     "by symmetric_prop: each argument must be a forall parameter".to_string(),

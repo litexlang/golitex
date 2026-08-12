@@ -32,30 +32,12 @@ pub enum InferReason {
     FunctionDefinition,
     ExistElimination,
     TheoremInstantiation,
-    ByDefinition(ByDefinitionReason),
-    BuiltinInference(BuiltinInferenceReason),
-    InferRule(InferRuleReason),
+    ByDefinition,
+    BuiltinInference(String),
+    InferRule(String),
     Evaluation,
     ParameterDefinition,
     Other(String),
-}
-
-#[derive(Clone, Debug)]
-pub struct ByDefinitionReason {
-    pub source_fact: Option<Box<Fact>>,
-    pub definition: Option<String>,
-}
-
-#[derive(Clone, Debug)]
-pub struct BuiltinInferenceReason {
-    pub source_fact: Option<Box<Fact>>,
-    pub rule: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct InferRuleReason {
-    pub source_fact: Option<Box<Fact>>,
-    pub rule: String,
 }
 
 impl InferResult {
@@ -193,40 +175,24 @@ impl InferResult {
         self.add_store_fact_output(fact, ByThmStmt::store_reason(), Vec::new());
     }
 
-    pub fn add_fact_by_definition(
-        &mut self,
-        source_fact: Option<Fact>,
-        definition: Option<String>,
-        fact: &Fact,
-    ) {
-        self.add_fact_with_reason(
-            InferReason::ByDefinition(ByDefinitionReason::new(source_fact, definition)),
-            fact,
-        );
+    pub fn add_fact_by_definition(&mut self, fact: &Fact) {
+        self.add_fact_with_reason(InferReason::ByDefinition, fact);
     }
 
     pub fn add_builtin_inference(
         &mut self,
         rule: impl Into<String>,
-        source_fact: Option<Fact>,
         fact: &Fact,
     ) {
-        self.add_fact_with_reason(
-            InferReason::BuiltinInference(BuiltinInferenceReason::new(source_fact, rule.into())),
-            fact,
-        );
+        self.add_fact_with_reason(InferReason::BuiltinInference(rule.into()), fact);
     }
 
     pub fn add_infer_rule(
         &mut self,
-        source_fact: Option<Fact>,
         rule: impl Into<String>,
         fact: &Fact,
     ) {
-        self.add_fact_with_reason(
-            InferReason::InferRule(InferRuleReason::new(source_fact, rule.into())),
-            fact,
-        );
+        self.add_fact_with_reason(InferReason::InferRule(rule.into()), fact);
     }
 
     pub fn add_evaluation(&mut self, fact: &Fact) {
@@ -332,41 +298,14 @@ impl InferReason {
             InferReason::FunctionDefinition => HaveFnEqualStmt::store_reason().to_string(),
             InferReason::ExistElimination => ObtainObjFromExistFact::store_reason().to_string(),
             InferReason::TheoremInstantiation => ByThmStmt::store_reason().to_string(),
-            InferReason::ByDefinition(_) => "inferred by definition".to_string(),
-            InferReason::BuiltinInference(reason) => {
-                format!("inferred by builtin rule `{}`", reason.rule)
+            InferReason::ByDefinition => "inferred by definition".to_string(),
+            InferReason::BuiltinInference(rule) => {
+                format!("inferred by builtin rule `{}`", rule)
             }
-            InferReason::InferRule(reason) => format!("inferred by infer rule `{}`", reason.rule),
+            InferReason::InferRule(rule) => format!("inferred by infer rule `{}`", rule),
             InferReason::Evaluation => EvalStmt::store_reason().to_string(),
             InferReason::ParameterDefinition => ParamDefWithType::store_reason().to_string(),
             InferReason::Other(s) => s.clone(),
-        }
-    }
-}
-
-impl ByDefinitionReason {
-    pub fn new(source_fact: Option<Fact>, definition: Option<String>) -> Self {
-        ByDefinitionReason {
-            source_fact: source_fact.map(Box::new),
-            definition,
-        }
-    }
-}
-
-impl BuiltinInferenceReason {
-    pub fn new(source_fact: Option<Fact>, rule: String) -> Self {
-        BuiltinInferenceReason {
-            source_fact: source_fact.map(Box::new),
-            rule,
-        }
-    }
-}
-
-impl InferRuleReason {
-    pub fn new(source_fact: Option<Fact>, rule: String) -> Self {
-        InferRuleReason {
-            source_fact: source_fact.map(Box::new),
-            rule,
         }
     }
 }

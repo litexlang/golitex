@@ -820,7 +820,7 @@ fn collect_cited_param_indices_from_obj(
                 shadowed_names,
                 out,
             );
-            shadowed_names.push(x.param.clone());
+            shadowed_names.push(x.param_name().to_string());
             for fact in x.facts.iter() {
                 collect_cited_param_indices_from_exist_body_fact(
                     fact,
@@ -1216,34 +1216,34 @@ fn collect_cited_param_indices_from_atom(
         }
         AtomObj::IdentifierWithMod(_) => {}
         AtomObj::Forall(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::Def(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::Exist(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::SetBuilder(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::FnSet(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::Induc(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::DefAlgo(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::DefStructField(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::TupleIndex(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         AtomObj::CartIndex(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
     }
 }
@@ -1260,22 +1260,22 @@ fn collect_cited_param_indices_from_fn_head(
         }
         FnObjHead::IdentifierWithMod(_) => {}
         FnObjHead::Forall(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::DefHeader(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::Exist(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::SetBuilder(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::FnSet(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::DefStructField(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::AnonymousFnLiteral(x) => collect_cited_param_indices_from_anonymous_fn(
             x,
@@ -1324,16 +1324,16 @@ fn collect_cited_param_indices_from_fn_head(
             );
         }
         FnObjHead::Induc(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::DefAlgo(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::TupleIndex(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::CartIndex(x) => {
-            push_cited_param_index(&x.name, previous_param_indices, shadowed_names, out)
+            push_cited_param_index(x.name(), previous_param_indices, shadowed_names, out)
         }
         FnObjHead::InstantiatedTemplateObj(x) => {
             for arg in x.args.iter() {

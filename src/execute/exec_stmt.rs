@@ -112,7 +112,7 @@ impl Runtime {
             {
                 output.fact_id = Some(fact_id);
             }
-            if !self.litex_to_lean_ir_mode {
+            if !self.captures_litex_to_lean_well_definedness() {
                 continue;
             }
             if output.inferred_fact_ids.len() != output.inferred_facts.len() {
@@ -284,9 +284,7 @@ impl Runtime {
             Stmt::Command(CommandStmt::UseStrategyStmt(s)) => self.exec_use_strategy_stmt(s),
             Stmt::Command(CommandStmt::StopStrategyStmt(s)) => self.exec_stop_strategy_stmt(s),
             Stmt::Witness(WitnessStmt::WitnessExistFact(s)) => self.exec_witness_exist_fact(s),
-            Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => {
-                self.exec_witness_atomic_fact(s)
-            }
+            Stmt::Witness(WitnessStmt::WitnessAtomicFact(s)) => self.exec_witness_atomic_fact(s),
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(s)) => self.exec_witness_nonempty_set(s),
             Stmt::By(ByStmt::ByCasesStmt(s)) => self.exec_by_cases_stmt(s),
             Stmt::By(ByStmt::ByContraStmt(s)) => self.exec_by_contra_stmt(s),

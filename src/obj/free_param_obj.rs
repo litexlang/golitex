@@ -104,161 +104,161 @@ pub fn strip_free_param_numeric_tags_in_display(text: &str) -> String {
 
 #[derive(Clone, Debug)]
 pub struct ForallFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct DefHeaderFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct ExistFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct SetBuilderFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct FnSetFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct ByInducFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct DefAlgoFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct DefStructFieldFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct TupleIndexFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 #[derive(Clone, Debug)]
 pub struct CartIndexFreeParamObj {
-    pub name: String,
     pub symbol: SymbolRef,
 }
 
 impl ForallFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        ForallFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        ForallFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl DefHeaderFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        DefHeaderFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        DefHeaderFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl ExistFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        ExistFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        ExistFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl SetBuilderFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        SetBuilderFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        SetBuilderFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl FnSetFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        FnSetFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        FnSetFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl ByInducFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        ByInducFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        ByInducFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl DefAlgoFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        DefAlgoFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        DefAlgoFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl DefStructFieldFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        DefStructFieldFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        DefStructFieldFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl TupleIndexFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        TupleIndexFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        TupleIndexFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
 impl CartIndexFreeParamObj {
     pub fn new(symbol: impl IntoSymbolRef) -> Self {
         let symbol = symbol.into_symbol_ref();
-        CartIndexFreeParamObj {
-            name: symbol.display_name().to_string(),
-            symbol,
-        }
+        CartIndexFreeParamObj { symbol }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol.display_name()
     }
 }
 
@@ -291,61 +291,61 @@ impl_free_param_eq!(
 
 impl fmt::Display for ForallFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for DefHeaderFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for ExistFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for SetBuilderFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for FnSetFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for ByInducFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for DefAlgoFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for DefStructFieldFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for TupleIndexFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 
 impl fmt::Display for CartIndexFreeParamObj {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write_symbol_identity_spine(f, &self.symbol, &self.name)
+        write_symbol_identity_spine(f, &self.symbol, self.name())
     }
 }
 

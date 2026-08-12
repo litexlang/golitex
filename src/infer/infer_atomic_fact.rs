@@ -20,17 +20,14 @@ impl Runtime {
             // A stored global function equality is ordinary object equality.
             // Example: `$fn_eq(f, g)` infers `f = g`, which then supports congruence.
             AtomicFact::FnEqualFact(fn_equal_fact) => {
-                let source_fact: Fact = fn_equal_fact.clone().into();
                 let inferred_equality: AtomicFact = EqualFact::new(
                     fn_equal_fact.left.clone(),
                     fn_equal_fact.right.clone(),
                     fn_equal_fact.line_file.clone(),
                 )
                 .into();
-                let reason = InferReason::InferRule(InferRuleReason::new(
-                    Some(source_fact),
-                    "fn_eq implies ordinary equality".to_string(),
-                ));
+                let reason =
+                    InferReason::InferRule("fn_eq implies ordinary equality".to_string());
                 self.store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     inferred_equality,
                     reason.store_reason(),

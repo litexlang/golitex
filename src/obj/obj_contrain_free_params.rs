@@ -13,25 +13,25 @@ impl FnObjHead {
             FnObjHead::Identifier(param) => {
                 collector.insert(ParamObjType::Identifier, &param.name);
             }
-            FnObjHead::Forall(param) => collector.insert(ParamObjType::Forall, &param.name),
+            FnObjHead::Forall(param) => collector.insert(ParamObjType::Forall, param.name()),
             FnObjHead::DefHeader(param) => {
-                collector.insert(ParamObjType::DefHeader, &param.name);
+                collector.insert(ParamObjType::DefHeader, param.name());
             }
-            FnObjHead::Exist(param) => collector.insert(ParamObjType::Exist, &param.name),
+            FnObjHead::Exist(param) => collector.insert(ParamObjType::Exist, param.name()),
             FnObjHead::SetBuilder(param) => {
-                collector.insert(ParamObjType::SetBuilder, &param.name);
+                collector.insert(ParamObjType::SetBuilder, param.name());
             }
-            FnObjHead::FnSet(param) => collector.insert(ParamObjType::FnSet, &param.name),
+            FnObjHead::FnSet(param) => collector.insert(ParamObjType::FnSet, param.name()),
             FnObjHead::DefStructField(param) => {
-                collector.insert(ParamObjType::DefStructField, &param.name);
+                collector.insert(ParamObjType::DefStructField, param.name());
             }
-            FnObjHead::Induc(param) => collector.insert(ParamObjType::Induc, &param.name),
-            FnObjHead::DefAlgo(param) => collector.insert(ParamObjType::DefAlgo, &param.name),
+            FnObjHead::Induc(param) => collector.insert(ParamObjType::Induc, param.name()),
+            FnObjHead::DefAlgo(param) => collector.insert(ParamObjType::DefAlgo, param.name()),
             FnObjHead::TupleIndex(param) => {
-                collector.insert(ParamObjType::TupleIndex, &param.name);
+                collector.insert(ParamObjType::TupleIndex, param.name());
             }
             FnObjHead::CartIndex(param) => {
-                collector.insert(ParamObjType::CartIndex, &param.name);
+                collector.insert(ParamObjType::CartIndex, param.name());
             }
             FnObjHead::AnonymousFnLiteral(anonymous_fn) => {
                 collect_forall_free_param_names_in_fn_set_body(&anonymous_fn.body, collector);
@@ -142,7 +142,7 @@ impl Obj {
             }
             Obj::ListSet(x) => collect_forall_free_param_names_in_boxed_objs(&x.list, collector),
             Obj::SetBuilder(x) => {
-                collector.insert_binder(ParamObjType::SetBuilder, &x.param);
+                collector.insert_binder(ParamObjType::SetBuilder, x.param_name());
                 x.param_set.collect_free_param_names_into(collector);
                 collect_forall_free_param_names_in_exist_body_facts(&x.facts, collector);
             }
@@ -278,18 +278,18 @@ impl FreeParamNameCollector {
         match atom {
             AtomObj::Identifier(param) => self.insert(ParamObjType::Identifier, &param.name),
             AtomObj::IdentifierWithMod(_) => {}
-            AtomObj::Forall(param) => self.insert(ParamObjType::Forall, &param.name),
-            AtomObj::Def(param) => self.insert(ParamObjType::DefHeader, &param.name),
-            AtomObj::Exist(param) => self.insert(ParamObjType::Exist, &param.name),
-            AtomObj::SetBuilder(param) => self.insert(ParamObjType::SetBuilder, &param.name),
-            AtomObj::FnSet(param) => self.insert(ParamObjType::FnSet, &param.name),
-            AtomObj::Induc(param) => self.insert(ParamObjType::Induc, &param.name),
-            AtomObj::DefAlgo(param) => self.insert(ParamObjType::DefAlgo, &param.name),
+            AtomObj::Forall(param) => self.insert(ParamObjType::Forall, param.name()),
+            AtomObj::Def(param) => self.insert(ParamObjType::DefHeader, param.name()),
+            AtomObj::Exist(param) => self.insert(ParamObjType::Exist, param.name()),
+            AtomObj::SetBuilder(param) => self.insert(ParamObjType::SetBuilder, param.name()),
+            AtomObj::FnSet(param) => self.insert(ParamObjType::FnSet, param.name()),
+            AtomObj::Induc(param) => self.insert(ParamObjType::Induc, param.name()),
+            AtomObj::DefAlgo(param) => self.insert(ParamObjType::DefAlgo, param.name()),
             AtomObj::DefStructField(param) => {
-                self.insert(ParamObjType::DefStructField, &param.name);
+                self.insert(ParamObjType::DefStructField, param.name());
             }
-            AtomObj::TupleIndex(param) => self.insert(ParamObjType::TupleIndex, &param.name),
-            AtomObj::CartIndex(param) => self.insert(ParamObjType::CartIndex, &param.name),
+            AtomObj::TupleIndex(param) => self.insert(ParamObjType::TupleIndex, param.name()),
+            AtomObj::CartIndex(param) => self.insert(ParamObjType::CartIndex, param.name()),
         }
     }
 }

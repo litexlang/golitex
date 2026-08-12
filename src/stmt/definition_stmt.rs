@@ -21,7 +21,6 @@ pub enum HaveFnByInducCaseBody {
 //         case b > 0: f(a, b - 1) + 1
 #[derive(Clone)]
 pub struct HaveFnByInducStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub fn_set_clause: FnSetClause,
     pub measure: Obj,
@@ -83,7 +82,6 @@ impl FnSetClause {
 
 #[derive(Clone)]
 pub struct HaveFnEqualCaseByCaseStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub fn_set_clause: FnSetClause,
     pub cases: Vec<AndChainAtomicFact>,
@@ -93,7 +91,6 @@ pub struct HaveFnEqualCaseByCaseStmt {
 
 #[derive(Clone)]
 pub struct HaveFnEqualStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub equal_to_anonymous_fn: AnonymousFn,
     pub line_file: LineFile,
@@ -101,7 +98,6 @@ pub struct HaveFnEqualStmt {
 
 #[derive(Clone)]
 pub struct HaveFnByForallExistUniqueStmt {
-    pub fn_name: String,
     pub symbol_binding: SymbolBinding,
     pub forall: ForallFact,
     pub prove_process: Vec<Stmt>,
@@ -110,9 +106,7 @@ pub struct HaveFnByForallExistUniqueStmt {
 
 #[derive(Clone)]
 pub struct HaveTupleStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
-    pub index_name: String,
     pub index_binding: SymbolBinding,
     pub dimension: Obj,
     pub value: Obj,
@@ -121,9 +115,7 @@ pub struct HaveTupleStmt {
 
 #[derive(Clone)]
 pub struct HaveCartStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
-    pub index_name: String,
     pub index_binding: SymbolBinding,
     pub dimension: Obj,
     pub value: Obj,
@@ -132,10 +124,8 @@ pub struct HaveCartStmt {
 
 #[derive(Clone)]
 pub struct HaveSeqStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub seq_set: SeqSet,
-    pub index_name: String,
     pub index_binding: SymbolBinding,
     pub value: Obj,
     pub line_file: LineFile,
@@ -143,10 +133,8 @@ pub struct HaveSeqStmt {
 
 #[derive(Clone)]
 pub struct HaveFiniteSeqStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub finite_seq_set: FiniteSeqSet,
-    pub index_name: String,
     pub index_binding: SymbolBinding,
     pub bound: Obj,
     pub value: Obj,
@@ -155,13 +143,10 @@ pub struct HaveFiniteSeqStmt {
 
 #[derive(Clone)]
 pub struct HaveMatrixStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub matrix_set: MatrixSet,
-    pub row_index_name: String,
     pub row_index_binding: SymbolBinding,
     pub row_bound: Obj,
-    pub col_index_name: String,
     pub col_index_binding: SymbolBinding,
     pub col_bound: Obj,
     pub value: Obj,
@@ -255,7 +240,6 @@ pub struct ObtainObjFromAtomicFact {
 // have by preimage x from z $in fn_range(f)
 #[derive(Clone)]
 pub struct HaveByPreimageStmt {
-    pub preimage_names: Vec<String>,
     pub preimage_bindings: Vec<SymbolBinding>,
     pub range_membership: InFact,
     pub line_file: LineFile,
@@ -263,7 +247,6 @@ pub struct HaveByPreimageStmt {
 
 #[derive(Clone)]
 pub struct LetObjStmt {
-    pub name: String,
     pub symbol_binding: SymbolBinding,
     pub value: Obj,
     pub line_file: LineFile,
@@ -443,18 +426,16 @@ impl fmt::Display for HaveObjByExistFactsStmt {
 }
 
 impl LetObjStmt {
-    pub fn new(
-        name: String,
-        symbol_binding: SymbolBinding,
-        value: Obj,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(symbol_binding: SymbolBinding, value: Obj, line_file: LineFile) -> Self {
         LetObjStmt {
-            name,
             symbol_binding,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -464,7 +445,7 @@ impl LetObjStmt {
 
 impl fmt::Display for LetObjStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "{} {} {} {}", LET, self.name, EQUAL, self.value)
+        write!(f, "{} {} {} {}", LET, self.name(), EQUAL, self.value)
     }
 }
 
@@ -497,23 +478,27 @@ impl fmt::Display for HaveObjEqualStmt {
 
 impl HaveTupleStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
-        index_name: String,
         index_binding: SymbolBinding,
         dimension: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveTupleStmt {
-            name,
             symbol_binding,
-            index_name,
             index_binding,
             dimension,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
+    }
+
+    pub fn index_name(&self) -> &str {
+        self.index_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -528,13 +513,13 @@ impl fmt::Display for HaveTupleStmt {
             "{} {} {} {} {} {} {}, {}[{}] {} {}",
             HAVE,
             TUPLE,
-            self.name,
+            self.name(),
             FOR,
-            self.index_name,
+            self.index_name(),
             LESS_EQUAL,
             self.dimension,
-            self.name,
-            self.index_name,
+            self.name(),
+            self.index_name(),
             EQUAL,
             self.value
         )
@@ -543,23 +528,27 @@ impl fmt::Display for HaveTupleStmt {
 
 impl HaveCartStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
-        index_name: String,
         index_binding: SymbolBinding,
         dimension: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveCartStmt {
-            name,
             symbol_binding,
-            index_name,
             index_binding,
             dimension,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
+    }
+
+    pub fn index_name(&self) -> &str {
+        self.index_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -574,14 +563,14 @@ impl fmt::Display for HaveCartStmt {
             "{} {} {} {} {} {} {}, {}({}, {}) {} {}",
             HAVE,
             CART,
-            self.name,
+            self.name(),
             FOR,
-            self.index_name,
+            self.index_name(),
             LESS_EQUAL,
             self.dimension,
             PROJ,
-            self.name,
-            self.index_name,
+            self.name(),
+            self.index_name(),
             EQUAL,
             self.value
         )
@@ -590,23 +579,27 @@ impl fmt::Display for HaveCartStmt {
 
 impl HaveSeqStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         seq_set: SeqSet,
-        index_name: String,
         index_binding: SymbolBinding,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveSeqStmt {
-            name,
             symbol_binding,
             seq_set,
-            index_name,
             index_binding,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
+    }
+
+    pub fn index_name(&self) -> &str {
+        self.index_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -621,12 +614,12 @@ impl fmt::Display for HaveSeqStmt {
             "{} {} {} {} {} {}, {}({}) {} {}",
             HAVE,
             SEQ,
-            self.name,
+            self.name(),
             self.seq_set,
             FOR,
-            self.index_name,
-            self.name,
-            self.index_name,
+            self.index_name(),
+            self.name(),
+            self.index_name(),
             EQUAL,
             self.value
         )
@@ -635,25 +628,29 @@ impl fmt::Display for HaveSeqStmt {
 
 impl HaveFiniteSeqStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         finite_seq_set: FiniteSeqSet,
-        index_name: String,
         index_binding: SymbolBinding,
         bound: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveFiniteSeqStmt {
-            name,
             symbol_binding,
             finite_seq_set,
-            index_name,
             index_binding,
             bound,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
+    }
+
+    pub fn index_name(&self) -> &str {
+        self.index_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -668,14 +665,14 @@ impl fmt::Display for HaveFiniteSeqStmt {
             "{} {} {} {} {} {} {} {}, {}({}) {} {}",
             HAVE,
             FINITE_SEQ,
-            self.name,
+            self.name(),
             self.finite_seq_set,
             FOR,
-            self.index_name,
+            self.index_name(),
             LESS_EQUAL,
             self.bound,
-            self.name,
-            self.index_name,
+            self.name(),
+            self.index_name(),
             EQUAL,
             self.value
         )
@@ -684,31 +681,37 @@ impl fmt::Display for HaveFiniteSeqStmt {
 
 impl HaveMatrixStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         matrix_set: MatrixSet,
-        row_index_name: String,
         row_index_binding: SymbolBinding,
         row_bound: Obj,
-        col_index_name: String,
         col_index_binding: SymbolBinding,
         col_bound: Obj,
         value: Obj,
         line_file: LineFile,
     ) -> Self {
         HaveMatrixStmt {
-            name,
             symbol_binding,
             matrix_set,
-            row_index_name,
             row_index_binding,
             row_bound,
-            col_index_name,
             col_index_binding,
             col_bound,
             value,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
+    }
+
+    pub fn row_index_name(&self) -> &str {
+        self.row_index_binding.name()
+    }
+
+    pub fn col_index_name(&self) -> &str {
+        self.col_index_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -723,18 +726,18 @@ impl fmt::Display for HaveMatrixStmt {
             "{} {} {} {} {} {} {} {}, {} {} {}, {}({}, {}) {} {}",
             HAVE,
             MATRIX,
-            self.name,
+            self.name(),
             self.matrix_set,
             FOR,
-            self.row_index_name,
+            self.row_index_name(),
             LESS_EQUAL,
             self.row_bound,
-            self.col_index_name,
+            self.col_index_name(),
             LESS_EQUAL,
             self.col_bound,
-            self.name,
-            self.row_index_name,
-            self.col_index_name,
+            self.name(),
+            self.row_index_name(),
+            self.col_index_name(),
             EQUAL,
             self.value
         )
@@ -786,11 +789,7 @@ impl TrustHaveStmt {
 }
 
 impl ObtainObjFromExistFact {
-    pub fn new(
-        equal_tos: Vec<SymbolBinding>,
-        fact: ExistFactEnum,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(equal_tos: Vec<SymbolBinding>, fact: ExistFactEnum, line_file: LineFile) -> Self {
         ObtainObjFromExistFact {
             equal_tos,
             fact,
@@ -823,11 +822,7 @@ impl fmt::Display for ObtainObjFromExistFact {
 }
 
 impl ObtainObjFromAtomicFact {
-    pub fn new(
-        equal_tos: Vec<SymbolBinding>,
-        fact: NormalAtomicFact,
-        line_file: LineFile,
-    ) -> Self {
+    pub fn new(equal_tos: Vec<SymbolBinding>, fact: NormalAtomicFact, line_file: LineFile) -> Self {
         ObtainObjFromAtomicFact {
             equal_tos,
             fact,
@@ -861,13 +856,11 @@ impl fmt::Display for ObtainObjFromAtomicFact {
 
 impl HaveByPreimageStmt {
     pub fn new(
-        preimage_names: Vec<String>,
         preimage_bindings: Vec<SymbolBinding>,
         range_membership: InFact,
         line_file: LineFile,
     ) -> Self {
         HaveByPreimageStmt {
-            preimage_names,
             preimage_bindings,
             range_membership,
             line_file,
@@ -883,7 +876,13 @@ impl fmt::Display for HaveByPreimageStmt {
             HAVE,
             BY,
             PREIMAGE,
-            vec_to_string_join_by_comma(&self.preimage_names),
+            vec_to_string_join_by_comma(
+                &self
+                    .preimage_bindings
+                    .iter()
+                    .map(|binding| binding.name())
+                    .collect::<Vec<_>>(),
+            ),
             FROM,
             self.range_membership,
         )
@@ -892,17 +891,19 @@ impl fmt::Display for HaveByPreimageStmt {
 
 impl HaveFnEqualStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         equal_to_anonymous_fn: AnonymousFn,
         line_file: LineFile,
     ) -> Self {
         HaveFnEqualStmt {
-            name,
             symbol_binding,
             equal_to_anonymous_fn,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -923,7 +924,7 @@ impl fmt::Display for HaveFnEqualStmt {
             "{} {} {}{} {} {}",
             HAVE,
             FN_LOWER_CASE,
-            self.name,
+            self.name(),
             brace_vec_colon_vec_to_string(
                 &fn_set_clause.params_def_with_set,
                 &fn_set_clause.dom_facts
@@ -936,19 +937,21 @@ impl fmt::Display for HaveFnEqualStmt {
 
 impl HaveFnByForallExistUniqueStmt {
     pub fn new(
-        fn_name: String,
         symbol_binding: SymbolBinding,
         forall: ForallFact,
         prove_process: Vec<Stmt>,
         line_file: LineFile,
     ) -> Self {
         HaveFnByForallExistUniqueStmt {
-            fn_name,
             symbol_binding,
             forall,
             prove_process,
             line_file,
         }
+    }
+
+    pub fn fn_name(&self) -> &str {
+        self.symbol_binding.name()
     }
 }
 
@@ -959,7 +962,7 @@ impl fmt::Display for HaveFnByForallExistUniqueStmt {
             "{} {} {} {} {}{}\n{}",
             HAVE,
             FN_LOWER_CASE,
-            self.fn_name,
+            self.fn_name(),
             AS,
             SET,
             COLON,
@@ -1018,15 +1021,17 @@ impl TemplateDefEnum {
                     None
                 }
             }
-            TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => Some(stmt.fn_name.clone()),
-            TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name.clone()),
-            TemplateDefEnum::HaveMatrixStmt(stmt) => Some(stmt.name.clone()),
+            TemplateDefEnum::HaveFnEqualStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveFnByInducStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
+                Some(stmt.fn_name().to_string())
+            }
+            TemplateDefEnum::HaveTupleStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveCartStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveSeqStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveFiniteSeqStmt(stmt) => Some(stmt.name().to_string()),
+            TemplateDefEnum::HaveMatrixStmt(stmt) => Some(stmt.name().to_string()),
         }
     }
 
@@ -1116,7 +1121,7 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
             "{} {} {}{} {} {} {} {}\n{}",
             HAVE,
             FN_LOWER_CASE,
-            self.name,
+            self.name(),
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
                 &self.fn_set_clause.dom_facts
@@ -1132,7 +1137,6 @@ impl fmt::Display for HaveFnEqualCaseByCaseStmt {
 
 impl HaveFnEqualCaseByCaseStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         cases: Vec<AndChainAtomicFact>,
@@ -1140,13 +1144,16 @@ impl HaveFnEqualCaseByCaseStmt {
         line_file: LineFile,
     ) -> Self {
         HaveFnEqualCaseByCaseStmt {
-            name,
             symbol_binding,
             fn_set_clause,
             cases,
             equal_tos,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
     }
 
     pub fn store_reason() -> &'static str {
@@ -1188,7 +1195,6 @@ impl HaveFnByInducCase {
 
 impl HaveFnByInducStmt {
     pub fn new(
-        name: String,
         symbol_binding: SymbolBinding,
         fn_set_clause: FnSetClause,
         measure: Obj,
@@ -1197,7 +1203,6 @@ impl HaveFnByInducStmt {
         line_file: LineFile,
     ) -> Self {
         HaveFnByInducStmt {
-            name,
             symbol_binding,
             fn_set_clause,
             measure,
@@ -1205,6 +1210,10 @@ impl HaveFnByInducStmt {
             cases,
             line_file,
         }
+    }
+
+    pub fn name(&self) -> &str {
+        self.symbol_binding.name()
     }
 
     pub fn param_names(&self) -> Vec<String> {
@@ -1218,7 +1227,6 @@ impl HaveFnByInducStmt {
         let mut equal_tos: Vec<Obj> = Vec::new();
         Self::flatten_case_list(&self.cases, None, &mut cases, &mut equal_tos, &line_file);
         HaveFnEqualCaseByCaseStmt::new(
-            self.name.clone(),
             self.symbol_binding.clone(),
             self.fn_set_clause.clone(),
             cases,
@@ -1262,7 +1270,7 @@ impl fmt::Display for HaveFnByInducStmt {
             "{} {} {}{} {} {} {} {} {} {}",
             HAVE,
             FN_LOWER_CASE,
-            self.name,
+            self.name(),
             brace_vec_colon_vec_to_string(
                 &self.fn_set_clause.params_def_with_set,
                 &self.fn_set_clause.dom_facts

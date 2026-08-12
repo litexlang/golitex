@@ -63,6 +63,14 @@ pub enum LitexToLeanArithmeticBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanIntegerMembershipClosureBuiltinRuleIr {
+    Add,
+    Sub,
+    Mul,
+    Mod,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanSetRelationDualityBuiltinRuleIr {
     SubsetFromSuperset,
     SupersetFromSubset,
@@ -98,6 +106,7 @@ pub enum LitexToLeanAbsoluteValueBuiltinRuleIr {
 pub enum LitexToLeanBuiltinRuleIr {
     DivNotEqualZero(LitexToLeanDivNotEqualZeroIr),
     Arithmetic(LitexToLeanArithmeticBuiltinRuleIr),
+    IntegerMembershipClosure(LitexToLeanIntegerMembershipClosureBuiltinRuleIr),
     /// Not-equality is symmetric. Example: `a != b` proves `b != a`.
     NotEqualSymmetry,
     /// A strict order between two checked real objects proves they differ.
@@ -122,7 +131,12 @@ impl LitexToLeanBuiltinRuleIr {
     pub(crate) fn from_legacy_evidence(evidence: &BuiltinRuleEvidence) -> Option<Self> {
         Some(match evidence {
             BuiltinRuleEvidence::RegisteredLocal(_)
-            | BuiltinRuleEvidence::DefinitionProjection(_) => return None,
+            | BuiltinRuleEvidence::DefinitionProjection(_)
+            | BuiltinRuleEvidence::SetBuilderMembership(_)
+            | BuiltinRuleEvidence::FunctionSetMembership(_)
+            | BuiltinRuleEvidence::RefinedNumericMembership(_)
+            | BuiltinRuleEvidence::ClosedNumericComparison(_)
+            | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 let orientation = match evidence.orientation {
                     NonzeroExpressionOrientation::ExpressionOnLeft => {
@@ -199,6 +213,22 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                     ArithmeticBuiltinRule::AddComponentwiseLessEqualLess => {
                         LitexToLeanArithmeticBuiltinRuleIr::AddComponentwiseLessEqualLess
+                    }
+                })
+            }
+            BuiltinRuleEvidence::IntegerMembershipClosure(rule) => {
+                LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(match rule {
+                    IntegerMembershipClosureBuiltinRule::Add => {
+                        LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Add
+                    }
+                    IntegerMembershipClosureBuiltinRule::Sub => {
+                        LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Sub
+                    }
+                    IntegerMembershipClosureBuiltinRule::Mul => {
+                        LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mul
+                    }
+                    IntegerMembershipClosureBuiltinRule::Mod => {
+                        LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mod
                     }
                 })
             }
@@ -287,6 +317,10 @@ impl fmt::Debug for LitexToLeanBuiltinRuleIr {
             LitexToLeanBuiltinRuleIr::Arithmetic(rule) => {
                 f.debug_tuple("Arithmetic").field(rule).finish()
             }
+            LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule) => f
+                .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
             LitexToLeanBuiltinRuleIr::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),
             LitexToLeanBuiltinRuleIr::NotEqualFromStrictOrder => {
                 f.write_str("NotEqualFromStrictOrder")

@@ -6,12 +6,12 @@ Do not hand-edit the table; update the generator's mapping policy and regenerate
 
 ## Scope and counting contract
 
-The inventory contains **660 label-bearing builtin success sites**:
-**633 builtin-rule sites** and **27 builtin-strategy sites**.
-The lower-level source contains 467 direct success-constructor calls; expanding
+The inventory contains **663 label-bearing builtin success sites**:
+**635 builtin-rule sites** and **28 builtin-strategy sites**.
+The lower-level source contains 470 direct success-constructor calls; expanding
 their forwarding helpers exposes the label-bearing sites below. The repository's
-informal 'about 500 rules' estimate is therefore closest to the 558
-distinct static labels, while 660 is the exhaustive source-site count used here.
+informal 'about 500 rules' estimate is therefore closest to the 560
+distinct static labels, while 663 is the exhaustive source-site count used here.
 Forwarding helpers such as a constructor receiving `reason.to_string()` are
 collapsed into their outer label-bearing callers. This is why the count is a
 semantic call-site count rather than a raw constructor grep. A dynamic site
@@ -22,7 +22,7 @@ at runtime.
 the diagnostic label. The classification is deliberately conservative:
 unaudited or mixed branches remain `legacy_custom`.
 
-Of these sites, 584 have a static string label and 76 use
+Of these sites, 587 have a static string label and 76 use
 a dynamic label expression. 46 evaluation/computation-like sites
 are explicitly marked `not_this_round`. The classification is intentionally
 conservative and source-derived; it does not claim one Rust site equals one
@@ -49,23 +49,23 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 
 | Metric | Count |
 | --- | ---: |
-| Total label-bearing sites | 660 |
-| Direct success-constructor calls | 467 |
-| Builtin rules | 633 |
-| Builtin strategies | 27 |
-| Static labels | 584 |
-| Distinct static labels | 558 |
+| Total label-bearing sites | 663 |
+| Direct success-constructor calls | 470 |
+| Builtin rules | 635 |
+| Builtin strategies | 28 |
+| Static labels | 587 |
+| Distinct static labels | 560 |
 | Dynamic label expressions | 76 |
 | Evaluation/computation (`not_this_round`) | 46 |
-| Checked Lean mappings currently implemented | 48 |
+| Checked Lean mappings currently implemented | 54 |
 | Forwarding sink functions discovered | 21 |
-| Mechanism: `local_schema` | 38 |
+| Mechanism: `local_schema` | 42 |
 | Mechanism: `reflection` | 45 |
 | Mechanism: `transform` | 2 |
-| Mechanism: `strategy` | 27 |
+| Mechanism: `strategy` | 28 |
 | Mechanism: `definition` | 16 |
 | Mechanism: `quantified` | 12 |
-| Mechanism: `legacy_custom` | 520 |
+| Mechanism: `legacy_custom` | 518 |
 
 ## Rule sites
 
@@ -73,15 +73,15 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | B0001 | rule | `legacy_custom` | real matrix operator has the requested matrix type | `src/execute/by_stmt/thm_by_stmt.rs:655` | execution bridge | none | `pending` |
 | B0002 | rule | `legacy_custom` | trusted file load | `src/execute/exec_fact_stmt.rs:51` | execution bridge | none | `not_this_round` |
-| B0003 | rule | `local_schema` | dynamic: format!( "existential projection from prop definition '{}'", source.definition.name ) | `src/execute/exec_obtain_obj_from_exist_fact.rs:177` | execution bridge | none | `pending` |
+| B0003 | rule | `local_schema` | dynamic: format!( "existential projection from prop definition '{}'", definition.name ) | `src/execute/exec_obtain_obj.rs:241` | execution bridge | none | `pending` |
 | B0004 | rule | `local_schema` | dynamic: format!("local builtin {}", rule.id().as_str()) | `src/verify/local_builtin_catalog/verify.rs:81` | verify | paired Litex schema + checked Lean adapter (86 RuleIds) | `implemented` |
 | B0005 | rule | `definition` | prime by trial-division definition | `src/verify/verify_atomic_fact_by_definition.rs:59` | atomic fact by definition | none | `pending` |
 | B0006 | rule | `definition` | subset by definition (forall x in left: x in right) | `src/verify/verify_atomic_fact_by_definition.rs:120` | atomic fact by definition | none | `pending` |
 | B0007 | rule | `definition` | superset by definition (forall x in right: x in left) | `src/verify/verify_atomic_fact_by_definition.rs:156` | atomic fact by definition | none | `pending` |
 | B0008 | rule | `legacy_custom` | replay-safe structural equality | `src/verify/verify_builtin_rule.rs:52` | builtin rule | none | `pending` |
 | B0009 | rule | `legacy_custom` | replay-safe structural equality | `src/verify/verify_builtin_rule.rs:100` | builtin rule | none | `pending` |
-| B0010 | rule | `legacy_custom` | number comparison | `src/verify/verify_builtin_rule.rs:190` | builtin rule | none | `pending` |
-| B0011 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rule.rs:216` | builtin rule | none | `pending` |
+| B0010 | rule | `local_schema` | number comparison | `src/verify/verify_builtin_rule.rs:190` | builtin rule | none | `pending` |
+| B0011 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rule.rs:219` | builtin rule | none | `pending` |
 | B0012 | rule | `legacy_custom` | abs: x <= abs(x) and -x <= abs(x) | `src/verify/verify_builtin_rules/abs_order_builtin.rs:235` | abs order | none | `pending` |
 | B0013 | rule | `legacy_custom` | abs: -abs(x) <= x | `src/verify/verify_builtin_rules/abs_order_builtin.rs:249` | abs order | none | `pending` |
 | B0014 | rule | `legacy_custom` | abs: finite sum triangle inequality | `src/verify/verify_builtin_rules/abs_order_builtin.rs:333` | abs order | none | `pending` |
@@ -276,25 +276,25 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0203 | rule | `legacy_custom` | tuple in cart: each component is in the corresponding cart factor | `src/verify/verify_builtin_rules/in_fact_builtin/cart_membership.rs:37` | membership | none | `pending` |
 | B0204 | rule | `legacy_custom` | cart membership from symbolic dimension and projections | `src/verify/verify_builtin_rules/in_fact_builtin/cart_membership.rs:108` | membership | none | `pending` |
 | B0205 | rule | `legacy_custom` | set-minus membership excludes the right operand | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:85` | membership | none | `pending` |
-| B0206 | rule | `legacy_custom` | native imaginary unit is in C | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:191` | membership | none | `pending` |
-| B0207 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:216` | membership | none | `pending` |
-| B0208 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:234` | membership | none | `pending` |
-| B0209 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:252` | membership | none | `pending` |
-| B0210 | rule | `legacy_custom` | N: a^k from a in N and k in N | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:344` | membership | none | `pending` |
-| B0211 | rule | `legacy_custom` | absolute value of a known nonzero integer is a positive natural | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:415` | membership | none | `pending` |
-| B0212 | rule | `legacy_custom` | N+: a^k from a in N+ and k in N | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:437` | membership | none | `pending` |
-| B0213 | rule | `legacy_custom` | gcd of a non-all-zero integer pair is a positive integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:457` | membership | none | `pending` |
-| B0214 | rule | `legacy_custom` | lcm of two integers is a nonnegative integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:474` | membership | none | `pending` |
-| B0215 | rule | `legacy_custom` | floor and ceil return integers | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:485` | membership | none | `pending` |
-| B0216 | rule | `legacy_custom` | minimum and maximum of real arguments are real | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:493` | membership | none | `pending` |
-| B0217 | rule | `legacy_custom` | real exponential values are positive reals | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:504` | membership | none | `pending` |
-| B0218 | rule | `legacy_custom` | natural logarithm of a positive real is real | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:512` | membership | none | `pending` |
-| B0219 | rule | `legacy_custom` | the real sign function returns an integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:523` | membership | none | `pending` |
-| B0220 | rule | `legacy_custom` | factorial of a natural number is a positive integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:543` | membership | none | `pending` |
-| B0221 | rule | `legacy_custom` | Q+: 0 < x and x in Q | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:563` | membership | none | `pending` |
-| B0222 | rule | `legacy_custom` | R+: 0 < x and x in R | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:570` | membership | none | `pending` |
-| B0223 | rule | `legacy_custom` | finite_seq list: length equals n and each entry in co-domain | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:822` | membership | none | `pending` |
-| B0224 | rule | `reflection` | matrix literal: shape matches matrix(...) and each entry in co-domain | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:863` | membership | none | `not_this_round` |
+| B0206 | rule | `legacy_custom` | native imaginary unit is in C | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:206` | membership | none | `pending` |
+| B0207 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:231` | membership | none | `pending` |
+| B0208 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:249` | membership | none | `pending` |
+| B0209 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:267` | membership | none | `pending` |
+| B0210 | rule | `legacy_custom` | N: a^k from a in N and k in N | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:359` | membership | none | `pending` |
+| B0211 | rule | `legacy_custom` | absolute value of a known nonzero integer is a positive natural | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:430` | membership | none | `pending` |
+| B0212 | rule | `legacy_custom` | N+: a^k from a in N+ and k in N | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:452` | membership | none | `pending` |
+| B0213 | rule | `legacy_custom` | gcd of a non-all-zero integer pair is a positive integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:472` | membership | none | `pending` |
+| B0214 | rule | `legacy_custom` | lcm of two integers is a nonnegative integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:489` | membership | none | `pending` |
+| B0215 | rule | `legacy_custom` | floor and ceil return integers | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:500` | membership | none | `pending` |
+| B0216 | rule | `legacy_custom` | minimum and maximum of real arguments are real | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:508` | membership | none | `pending` |
+| B0217 | rule | `legacy_custom` | real exponential values are positive reals | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:519` | membership | none | `pending` |
+| B0218 | rule | `legacy_custom` | natural logarithm of a positive real is real | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:527` | membership | none | `pending` |
+| B0219 | rule | `legacy_custom` | the real sign function returns an integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:538` | membership | none | `pending` |
+| B0220 | rule | `legacy_custom` | factorial of a natural number is a positive integer | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:558` | membership | none | `pending` |
+| B0221 | rule | `legacy_custom` | Q+: 0 < x and x in Q | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:578` | membership | none | `pending` |
+| B0222 | rule | `legacy_custom` | R+: 0 < x and x in R | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:585` | membership | none | `pending` |
+| B0223 | rule | `legacy_custom` | finite_seq list: length equals n and each entry in co-domain | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:837` | membership | none | `pending` |
+| B0224 | rule | `reflection` | matrix literal: shape matches matrix(...) and each entry in co-domain | `src/verify/verify_builtin_rules/in_fact_builtin/dispatch.rs:878` | membership | none | `not_this_round` |
 | B0225 | rule | `legacy_custom` | dynamic: format!( "{name}: operation carrier {carrier} is contained in {}", in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:27` | membership | none | `pending` |
 | B0226 | rule | `legacy_custom` | refined integer carrier from known integer membership and strict sign | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:80` | membership | none | `pending` |
 | B0227 | rule | `legacy_custom` | dynamic: reason.as_str() | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:111` | membership | none | `pending` |
@@ -303,431 +303,434 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0230 | rule | `legacy_custom` | finite_set_product: positive factors give a positive finite product | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:202` | membership | none | `pending` |
 | B0231 | rule | `legacy_custom` | dynamic: reason.as_str() | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:214` | membership | none | `pending` |
 | B0232 | rule | `legacy_custom` | dynamic: reason.as_str() | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:238` | membership | none | `pending` |
-| B0233 | rule | `legacy_custom` | fn application in declared return set or standard numeric superset (well-defined under typing) | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:301` | membership | none | `pending` |
-| B0234 | rule | `legacy_custom` | N: a + b from a in N and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:339` | membership | none | `pending` |
-| B0235 | rule | `legacy_custom` | N: n - 1 from n in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:376` | membership | none | `pending` |
-| B0236 | rule | `legacy_custom` | N: n - 1 from n in N and n > 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:393` | membership | none | `pending` |
-| B0237 | rule | `legacy_custom` | N: a - b from a,b in Z and b <= a | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:426` | membership | none | `pending` |
-| B0238 | rule | `legacy_custom` | N: a - b from a,b in Z and known nonnegative difference | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:448` | membership | none | `pending` |
-| B0239 | rule | `legacy_custom` | N: a * b from a in N and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:490` | membership | none | `pending` |
-| B0240 | rule | `legacy_custom` | R+: a^x from 0 < a and x in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:570` | membership | none | `pending` |
-| B0241 | rule | `legacy_custom` | N+: n - 1 from n in N+ and n > 1 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:617` | membership | none | `pending` |
-| B0242 | rule | `legacy_custom` | N+: a + b from a in N+ and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:656` | membership | none | `pending` |
-| B0243 | rule | `legacy_custom` | N+: a + b from a in N+ and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:673` | membership | none | `pending` |
-| B0244 | rule | `legacy_custom` | N+: a + b from a in N and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:696` | membership | none | `pending` |
-| B0245 | rule | `legacy_custom` | N+: a * b from a in N+ and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:734` | membership | none | `pending` |
-| B0246 | rule | `legacy_custom` | N+: x in N and x != 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:761` | membership | none | `pending` |
-| B0247 | rule | `legacy_custom` | N+: 0 < x and x in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:781` | membership | none | `pending` |
-| B0248 | rule | `legacy_custom` | N+: 0 < x and x in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:792` | membership | none | `pending` |
-| B0249 | rule | `legacy_custom` | N: x in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:852` | membership | none | `pending` |
-| B0250 | rule | `legacy_custom` | N: x in Z and x >= 0 or x > 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:877` | membership | none | `pending` |
-| B0251 | rule | `legacy_custom` | in closed_range: a <= i and i <= b | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:917` | membership | none | `pending` |
-| B0252 | rule | `legacy_custom` | in range: a <= i and i < b | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:949` | membership | none | `pending` |
-| B0253 | rule | `legacy_custom` | in real interval: x in R and endpoint bounds | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:999` | membership | none | `pending` |
-| B0254 | rule | `legacy_custom` | in half-infinite real interval: x in R and endpoint bound | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1048` | membership | none | `pending` |
-| B0255 | rule | `legacy_custom` | complex scalar arithmetic is closed in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1218` | membership | none | `pending` |
-| B0256 | rule | `legacy_custom` | real arithmetic has real operands and result | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1268` | membership | none | `pending` |
-| B0257 | rule | `legacy_custom` | integer expression closure under +, -, and * | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1341` | membership | none | `pending` |
-| B0258 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1386` | membership | none | `pending` |
-| B0259 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1456` | membership | none | `pending` |
-| B0260 | rule | `legacy_custom` | Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N+ and exponent in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1621` | membership | none | `pending` |
-| B0261 | rule | `legacy_custom` | Q closure: +-*/ operands in Q; pow base in Q and exponent in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1679` | membership | none | `pending` |
-| B0262 | rule | `legacy_custom` | negation maps a positive scalar into the matching negative carrier | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1731` | membership | none | `pending` |
-| B0263 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_reals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1766` | membership | none | `pending` |
-| B0264 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_rationals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1785` | membership | none | `pending` |
-| B0265 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_integers | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1808` | membership | none | `pending` |
-| B0266 | rule | `reflection` | number in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:49` | membership | none | `not_this_round` |
-| B0267 | rule | `reflection` | number in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:52` | membership | none | `not_this_round` |
-| B0268 | rule | `reflection` | number in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:57` | membership | none | `not_this_round` |
-| B0269 | rule | `reflection` | number in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:60` | membership | none | `not_this_round` |
-| B0270 | rule | `reflection` | number in R- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:67` | membership | none | `not_this_round` |
-| B0271 | rule | `reflection` | number in R* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:74` | membership | none | `not_this_round` |
-| B0272 | rule | `reflection` | number in Q | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:79` | membership | none | `not_this_round` |
-| B0273 | rule | `reflection` | number in Q+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:82` | membership | none | `not_this_round` |
-| B0274 | rule | `reflection` | number in Q- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:89` | membership | none | `not_this_round` |
-| B0275 | rule | `reflection` | number in Q* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:96` | membership | none | `not_this_round` |
-| B0276 | rule | `reflection` | number in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:103` | membership | none | `not_this_round` |
-| B0277 | rule | `reflection` | number in Z- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:110` | membership | none | `not_this_round` |
-| B0278 | rule | `reflection` | number in Z* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:117` | membership | none | `not_this_round` |
-| B0279 | rule | `reflection` | number in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:124` | membership | none | `not_this_round` |
-| B0280 | rule | `reflection` | number in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:131` | membership | none | `not_this_round` |
-| B0281 | rule | `reflection` | number not in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:148` | membership | none | `not_this_round` |
-| B0282 | rule | `reflection` | number not in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:155` | membership | none | `not_this_round` |
-| B0283 | rule | `reflection` | number not in R- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:162` | membership | none | `not_this_round` |
-| B0284 | rule | `reflection` | number not in R* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:169` | membership | none | `not_this_round` |
-| B0285 | rule | `reflection` | number not in Q+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:176` | membership | none | `not_this_round` |
-| B0286 | rule | `reflection` | number not in Q- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:183` | membership | none | `not_this_round` |
-| B0287 | rule | `reflection` | number not in Q* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:190` | membership | none | `not_this_round` |
-| B0288 | rule | `reflection` | number not in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:197` | membership | none | `not_this_round` |
-| B0289 | rule | `reflection` | number not in Z- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:204` | membership | none | `not_this_round` |
-| B0290 | rule | `reflection` | number not in Z* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:211` | membership | none | `not_this_round` |
-| B0291 | rule | `reflection` | number not in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:218` | membership | none | `not_this_round` |
-| B0292 | rule | `reflection` | number not in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:225` | membership | none | `not_this_round` |
-| B0293 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/operator_signature.rs:95` | membership | none | `pending` |
-| B0294 | rule | `definition` | set-builder membership transport through one unfolded definition | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:66` | membership | none | `pending` |
-| B0295 | rule | `definition` | set-builder membership transport from a known universal named-set membership | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:163` | membership | none | `pending` |
-| B0296 | rule | `legacy_custom` | universal set-builder membership eliminates to its defining fact | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:265` | membership | none | `pending` |
-| B0297 | rule | `legacy_custom` | set-builder membership eliminates to its instantiated defining fact | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:344` | membership | none | `pending` |
-| B0298 | rule | `local_schema` | dynamic: format!("union membership: member of the {side_name} side") | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:378` | membership | `Set.mem_union` + `Or.inl`/`Or.inr` | `implemented` |
-| B0299 | rule | `local_schema` | intersection membership: member of both sides | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:429` | membership | `Set.mem_inter_iff` + pair | `implemented` |
-| B0300 | rule | `local_schema` | dynamic: format!("intersection non-membership: non-member of the {side_name} side") | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:461` | membership | `Set.mem_inter_iff` + contradiction | `implemented` |
-| B0301 | rule | `local_schema` | set-minus membership: member of left side and non-member of right side | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:512` | membership | `Set.mem_diff` + pair | `implemented` |
-| B0302 | rule | `legacy_custom` | big_union membership: an element of a member set is in the family union | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:537` | membership | none | `pending` |
-| B0303 | rule | `legacy_custom` | big_union membership: an element of a member set is in the family union | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:572` | membership | none | `pending` |
-| B0304 | rule | `quantified` | replacement membership: a relation witness is in the replacement set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:625` | membership | none | `pending` |
-| B0305 | rule | `quantified` | replacement membership: a relation witness is in the replacement set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:658` | membership | none | `pending` |
-| B0306 | rule | `legacy_custom` | fn_range membership: a well-defined function application is in the function range | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:845` | membership | none | `pending` |
-| B0307 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:884` | membership | none | `pending` |
-| B0308 | rule | `legacy_custom` | fn_range power_set membership: function range is contained in the codomain | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:896` | membership | none | `pending` |
-| B0309 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:931` | membership | none | `pending` |
-| B0310 | rule | `legacy_custom` | power_set membership: a subset of the base set is an element of the power set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:943` | membership | none | `pending` |
-| B0311 | rule | `legacy_custom` | general_cart membership: function into big_union(family) with pointwise factor membership | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:988` | membership | none | `pending` |
-| B0312 | rule | `legacy_custom` | set builder membership: element is in the base set and satisfies all defining facts | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1055` | membership | none | `pending` |
-| B0313 | rule | `legacy_custom` | membership in a set-valued definition: unfold one function or template definition to a set builder | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1116` | membership | none | `pending` |
-| B0314 | rule | `reflection` | dependent struct constructor: each literal tuple field has its instantiated carrier | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1162` | membership | none | `not_this_round` |
-| B0315 | rule | `legacy_custom` | struct membership: element is in the named structure carrier and satisfies struct equivalent facts | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1219` | membership | none | `pending` |
-| B0316 | rule | `legacy_custom` | finite_set_size of a finite set is a natural number | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1239` | membership | none | `pending` |
-| B0317 | rule | `legacy_custom` | dynamic: rule_name.to_string() | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1268` | membership | none | `pending` |
-| B0318 | rule | `legacy_custom` | finite-set extremum: member of a standard numeric superset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1296` | membership | none | `pending` |
-| B0319 | rule | `legacy_custom` | membership through a known direct set inclusion | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1473` | membership | none | `pending` |
-| B0320 | rule | `reflection` | selected literal tuple component has a real carrier | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:52` | membership | none | `not_this_round` |
-| B0321 | rule | `reflection` | literal tuple projection inherits the selected component carrier | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:65` | membership | none | `not_this_round` |
-| B0322 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:92` | membership | none | `pending` |
-| B0323 | rule | `legacy_custom` | subset reflexivity | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:100` | membership | none | `pending` |
-| B0324 | rule | `legacy_custom` | set_builder in power_set: param_set subset of base implies builder defines a subset of base | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:116` | membership | none | `pending` |
-| B0325 | rule | `legacy_custom` | list_set in power_set: each element is in the base set | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:151` | membership | none | `pending` |
-| B0326 | rule | `legacy_custom` | dynamic: format!( "{} equals one element in list_set {}", in_fact.element, in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:177` | membership | none | `pending` |
-| B0327 | rule | `legacy_custom` | dynamic: format!( "{} is not equal to every element in list_set {}", not_in_fact.element, not_in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:216` | membership | none | `pending` |
-| B0328 | rule | `definition` | fn membership: stored fn signature matches RHS | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:240` | membership | none | `pending` |
-| B0329 | rule | `definition` | fn membership: stored fn signature matches RHS (alpha-renamed parameters) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:262` | membership | none | `pending` |
-| B0330 | rule | `legacy_custom` | anonymous function: signature (params, dom, co-domain) matches 'fn' set | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:291` | membership | none | `pending` |
-| B0331 | rule | `legacy_custom` | anonymous function: signature matches 'fn' set (alpha-renamed parameters) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:314` | membership | none | `pending` |
-| B0332 | rule | `legacy_custom` | anonymous function: signature matches 'fn' set through propositionally equal parameter sets | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:334` | membership | none | `pending` |
-| B0333 | rule | `reflection` | dynamic: format!( "finite sequence literal application is in {}", target_set_obj ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:405` | membership | none | `not_this_round` |
-| B0334 | rule | `legacy_custom` | dynamic: format!( "cart projection list_set elements are all in {}", target_set_obj ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:465` | membership | none | `pending` |
-| B0335 | rule | `transform` | dynamic: format!( "{} in {} implies in {} (standard subset relation)", in_fact.element, source_set_obj, in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:504` | membership | native membership projection + checked numeric coercion | `implemented` |
-| B0336 | rule | `legacy_custom` | listed-set member inherits a carrier shared by every listed element | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:575` | membership | none | `pending` |
-| B0337 | rule | `legacy_custom` | numeric division not in Z: resolved numerator % denominator != 0 | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:606` | membership | none | `pending` |
-| B0338 | rule | `legacy_custom` | finite codomain of a surjection from a finite set | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:38` | mapping properties | none | `pending` |
-| B0339 | rule | `legacy_custom` | finite injection has range cardinality equal to its source | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:93` | mapping properties | none | `pending` |
-| B0340 | rule | `legacy_custom` | finite bijection preserves cardinality | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:164` | mapping properties | none | `pending` |
-| B0341 | rule | `legacy_custom` | finite surjection bounds codomain cardinality by source cardinality | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:215` | mapping properties | none | `pending` |
-| B0342 | rule | `reflection` | literal/range finite-set structure | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:279` | mapping properties | none | `not_this_round` |
-| B0343 | rule | `legacy_custom` | native exp/ln inverse or canonical-base identity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:16` | native exp sign factorial | none | `pending` |
-| B0344 | rule | `legacy_custom` | injectivity of native exp | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:41` | native exp sign factorial | none | `pending` |
-| B0345 | rule | `legacy_custom` | injectivity of native ln | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:68` | native exp sign factorial | none | `pending` |
-| B0346 | rule | `legacy_custom` | sign is zero only at zero | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:99` | native exp sign factorial | none | `pending` |
-| B0347 | rule | `legacy_custom` | sign is nonzero exactly for nonzero arguments | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:142` | native exp sign factorial | none | `pending` |
-| B0348 | rule | `legacy_custom` | native exp/ln algebra identity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:161` | native exp sign factorial | none | `pending` |
-| B0349 | rule | `legacy_custom` | sign value selected from the argument order at zero | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:199` | native exp sign factorial | none | `pending` |
-| B0350 | rule | `legacy_custom` | sign times absolute value restores the argument | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:217` | native exp sign factorial | none | `pending` |
-| B0351 | rule | `legacy_custom` | native sign oddness or multiplicativity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:240` | native exp sign factorial | none | `pending` |
-| B0352 | rule | `legacy_custom` | factorial successor recurrence | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:258` | native exp sign factorial | none | `pending` |
-| B0353 | rule | `legacy_custom` | earlier factorial divides later factorial | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:300` | native exp sign factorial | none | `pending` |
-| B0354 | rule | `legacy_custom` | native exp/sign/factorial characteristic order bound | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:340` | native exp sign factorial | none | `pending` |
-| B0355 | rule | `legacy_custom` | native factorial monotonicity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:405` | native exp sign factorial | none | `pending` |
-| B0356 | rule | `legacy_custom` | native sign preserves weak order | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:439` | native exp sign factorial | none | `pending` |
-| B0357 | rule | `legacy_custom` | dynamic: format!("native exp/ln reflects {order_kind} order") | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:587` | native exp sign factorial | none | `pending` |
-| B0358 | rule | `legacy_custom` | dynamic: format!("native {function_name} preserves {order_kind} order") | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:629` | native exp sign factorial | none | `pending` |
-| B0359 | rule | `legacy_custom` | dynamic: format!("{name} fixes integer inputs") | `src/verify/verify_builtin_rules/native_integer_extrema.rs:34` | native integer extrema | none | `pending` |
-| B0360 | rule | `legacy_custom` | native floor/ceil negation duality | `src/verify/verify_builtin_rules/native_integer_extrema.rs:55` | native integer extrema | none | `pending` |
-| B0361 | rule | `legacy_custom` | native floor/ceil integer translation | `src/verify/verify_builtin_rules/native_integer_extrema.rs:76` | native integer extrema | none | `pending` |
-| B0362 | rule | `legacy_custom` | dynamic: format!("{name} selects the ordered argument: {premise_left} <= {premise_right}") | `src/verify/verify_builtin_rules/native_integer_extrema.rs:125` | native integer extrema | none | `pending` |
-| B0363 | rule | `legacy_custom` | native rounding/extremum characteristic order bound | `src/verify/verify_builtin_rules/native_integer_extrema.rs:166` | native integer extrema | none | `pending` |
-| B0364 | rule | `legacy_custom` | native lcm is bounded by every positive common multiple | `src/verify/verify_builtin_rules/native_integer_extrema.rs:220` | native integer extrema | none | `pending` |
-| B0365 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/native_integer_extrema.rs:306` | native integer extrema | none | `pending` |
-| B0366 | rule | `legacy_custom` | native min/max lattice identity | `src/verify/verify_builtin_rules/native_integer_extrema.rs:328` | native integer extrema | none | `pending` |
-| B0367 | rule | `legacy_custom` | lcm times gcd is the absolute product | `src/verify/verify_builtin_rules/native_integer_extrema.rs:350` | native integer extrema | none | `pending` |
-| B0368 | rule | `legacy_custom` | native lcm symmetry, zero law, or divisibility | `src/verify/verify_builtin_rules/native_integer_extrema.rs:372` | native integer extrema | none | `pending` |
-| B0369 | rule | `legacy_custom` | Every object is a set. | `src/verify/verify_builtin_rules/non_equational_dispatch.rs:52` | non equational dispatch | none | `pending` |
-| B0370 | rule | `local_schema` | not-equality symmetry | `src/verify/verify_builtin_rules/not_equal_builtin.rs:50` | not equal | `Ne.symm` | `implemented` |
-| B0371 | rule | `legacy_custom` | list_set_different_length | `src/verify/verify_builtin_rules/not_equal_builtin.rs:63` | not equal | none | `pending` |
-| B0372 | rule | `legacy_custom` | native real constant distinctness | `src/verify/verify_builtin_rules/not_equal_builtin.rs:207` | not equal | none | `pending` |
-| B0373 | rule | `legacy_custom` | well-defined exp/factorial values are strictly positive | `src/verify/verify_builtin_rules/not_equal_builtin.rs:230` | not equal | none | `pending` |
-| B0374 | rule | `reflection` | not_equal_numeric_resolved_or_equal_class_calculation | `src/verify/verify_builtin_rules/not_equal_builtin.rs:252` | not equal | none | `not_this_round` |
-| B0375 | rule | `legacy_custom` | not_equal_empty_set_from_nonempty | `src/verify/verify_builtin_rules/not_equal_builtin.rs:320` | not equal | none | `pending` |
-| B0376 | rule | `local_schema` | not_equal_from_known_strict_order | `src/verify/verify_builtin_rules/not_equal_builtin.rs:356` | not equal | none | `pending` |
-| B0377 | rule | `legacy_custom` | not_equal_from_known_strict_order | `src/verify/verify_builtin_rules/not_equal_builtin.rs:366` | not equal | none | `pending` |
-| B0378 | rule | `legacy_custom` | not_equal_from_known_positive_lower_bound | `src/verify/verify_builtin_rules/not_equal_builtin.rs:438` | not equal | none | `pending` |
-| B0379 | rule | `legacy_custom` | not_equal_from_membership_contradiction | `src/verify/verify_builtin_rules/not_equal_builtin.rs:479` | not equal | none | `pending` |
-| B0380 | rule | `legacy_custom` | abs_not_equal_zero_from_arg_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:522` | not equal | none | `pending` |
-| B0381 | rule | `legacy_custom` | sqrt(x) != 0 from x > 0 | `src/verify/verify_builtin_rules/not_equal_builtin.rs:564` | not equal | none | `pending` |
-| B0382 | rule | `legacy_custom` | sub_not_equal_zero_from_operand_not_equal | `src/verify/verify_builtin_rules/not_equal_builtin.rs:612` | not equal | none | `pending` |
-| B0383 | rule | `legacy_custom` | add_not_equal_zero_from_operand_not_equal_negation | `src/verify/verify_builtin_rules/not_equal_builtin.rs:673` | not equal | none | `pending` |
-| B0384 | rule | `legacy_custom` | operand_not_equal_from_sub_not_equal_zero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:715` | not equal | none | `pending` |
-| B0385 | rule | `legacy_custom` | operand_not_equal_negation_from_add_not_equal_zero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:783` | not equal | none | `pending` |
-| B0386 | rule | `legacy_custom` | n != 0 from n $in N and 1 <= n | `src/verify/verify_builtin_rules/not_equal_builtin.rs:821` | not equal | none | `pending` |
-| B0387 | rule | `legacy_custom` | n != 0 from n $in N and 1 <= n | `src/verify/verify_builtin_rules/not_equal_builtin.rs:833` | not equal | none | `pending` |
-| B0388 | rule | `legacy_custom` | not_equal_pow_from_base_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:910` | not equal | none | `pending` |
-| B0389 | rule | `legacy_custom` | not_equal_pow_from_positive_base_carrier | `src/verify/verify_builtin_rules/not_equal_builtin.rs:930` | not equal | none | `pending` |
-| B0390 | rule | `local_schema` | div_not_equal_zero_from_numerator_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:996` | not equal | `div_ne_zero` / `Ne.symm` | `implemented` |
-| B0391 | rule | `legacy_custom` | div_not_equal_zero_from_numerator_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1006` | not equal | none | `pending` |
-| B0392 | rule | `legacy_custom` | product_nonzero_component: a * b != 0 gives a != 0 and b != 0 | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1099` | not equal | none | `pending` |
-| B0393 | rule | `legacy_custom` | square_sum_not_equal_zero_from_nonzero_component_or | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1161` | not equal | none | `pending` |
-| B0394 | rule | `legacy_custom` | square_sum_not_equal_zero_from_left_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1175` | not equal | none | `pending` |
-| B0395 | rule | `legacy_custom` | square_sum_not_equal_zero_from_right_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1189` | not equal | none | `pending` |
-| B0396 | rule | `legacy_custom` | dynamic: rule_label.to_string() | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1514` | not equal | none | `pending` |
-| B0397 | rule | `legacy_custom` | every positive common divisor is at most the gcd | `src/verify/verify_builtin_rules/number_compare.rs:73` | number compare | none | `pending` |
-| B0398 | rule | `legacy_custom` | less_equal_fact_equal | `src/verify/verify_builtin_rules/number_compare.rs:311` | number compare | none | `pending` |
-| B0399 | rule | `legacy_custom` | less_equal_fact_from_known_equality | `src/verify/verify_builtin_rules/number_compare.rs:325` | number compare | none | `pending` |
-| B0400 | rule | `local_schema` | less_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:342` | number compare | `linarith only` | `implemented` |
-| B0401 | rule | `legacy_custom` | greater_equal_fact_equal | `src/verify/verify_builtin_rules/number_compare.rs:356` | number compare | none | `pending` |
-| B0402 | rule | `legacy_custom` | greater_equal_fact_from_known_equality | `src/verify/verify_builtin_rules/number_compare.rs:370` | number compare | none | `pending` |
-| B0403 | rule | `local_schema` | greater_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:389` | number compare | `linarith only` | `implemented` |
-| B0404 | rule | `legacy_custom` | native mathematical constant positivity bound | `src/verify/verify_builtin_rules/number_compare.rs:502` | number compare | none | `pending` |
-| B0405 | rule | `legacy_custom` | n >= 0 from n $in N | `src/verify/verify_builtin_rules/number_compare.rs:752` | number compare | none | `pending` |
-| B0406 | rule | `legacy_custom` | n >= 1 from n $in N+ | `src/verify/verify_builtin_rules/number_compare.rs:800` | number compare | none | `pending` |
-| B0407 | rule | `legacy_custom` | finite_nonempty_set_size_at_least_one | `src/verify/verify_builtin_rules/number_compare.rs:862` | number compare | none | `pending` |
-| B0408 | rule | `legacy_custom` | finite set cardinality is nonnegative | `src/verify/verify_builtin_rules/number_compare.rs:897` | number compare | none | `pending` |
-| B0409 | rule | `legacy_custom` | finite_set_size_subset_le | `src/verify/verify_builtin_rules/number_compare.rs:946` | number compare | none | `pending` |
-| B0410 | rule | `legacy_custom` | finite_set_size_subset_le | `src/verify/verify_builtin_rules/number_compare.rs:993` | number compare | none | `pending` |
-| B0411 | rule | `legacy_custom` | finite_set_size_union_le_sum | `src/verify/verify_builtin_rules/number_compare.rs:1050` | number compare | none | `pending` |
-| B0412 | rule | `legacy_custom` | 1 <= n from n $in N and n != 0 | `src/verify/verify_builtin_rules/number_compare.rs:1118` | number compare | none | `pending` |
-| B0413 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1192` | number compare | none | `pending` |
-| B0414 | rule | `legacy_custom` | 1 <= n from n $in Z and 0 < n | `src/verify/verify_builtin_rules/number_compare.rs:1246` | number compare | none | `pending` |
-| B0415 | rule | `local_schema` | less_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:1287` | number compare | `linarith only` | `implemented` |
-| B0416 | rule | `legacy_custom` | weaken numeric lower bound from known lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1299` | number compare | none | `pending` |
-| B0417 | rule | `legacy_custom` | integer weak lower bound from strict predecessor lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1318` | number compare | none | `pending` |
-| B0418 | rule | `legacy_custom` | weaken numeric strict lower bound from known lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1352` | number compare | none | `pending` |
-| B0419 | rule | `legacy_custom` | weaken numeric upper bound from known upper bound | `src/verify/verify_builtin_rules/number_compare.rs:1449` | number compare | none | `pending` |
-| B0420 | rule | `legacy_custom` | 0 <= abs(x) for x in R | `src/verify/verify_builtin_rules/number_compare.rs:1519` | number compare | none | `pending` |
-| B0421 | rule | `legacy_custom` | sqrt: 0 <= sqrt(x) from 0 <= x | `src/verify/verify_builtin_rules/number_compare.rs:1558` | number compare | none | `pending` |
-| B0422 | rule | `legacy_custom` | sqrt: 0 < sqrt(x) from 0 < x | `src/verify/verify_builtin_rules/number_compare.rs:1596` | number compare | none | `pending` |
-| B0423 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1675` | number compare | none | `pending` |
-| B0424 | rule | `legacy_custom` | dynamic: msg.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1693` | number compare | none | `pending` |
-| B0425 | rule | `legacy_custom` | order_from_known_negated_complement | `src/verify/verify_builtin_rules/number_compare.rs:1938` | number compare | none | `pending` |
-| B0426 | rule | `legacy_custom` | log order: base > 1 preserves strict order | `src/verify/verify_builtin_rules/number_compare.rs:2012` | number compare | none | `pending` |
-| B0427 | rule | `legacy_custom` | log order: 0 < base < 1 reverses strict order | `src/verify/verify_builtin_rules/number_compare.rs:2028` | number compare | none | `pending` |
-| B0428 | rule | `legacy_custom` | log sign: 0 < log(a, x) from 1 < a and 1 < x | `src/verify/verify_builtin_rules/number_compare.rs:2057` | number compare | none | `pending` |
-| B0429 | rule | `legacy_custom` | log sign: log(a, x) < 0 from 1 < a and 0 < x < 1 | `src/verify/verify_builtin_rules/number_compare.rs:2093` | number compare | none | `pending` |
-| B0430 | rule | `legacy_custom` | negated_order_from_known_equivalent_order | `src/verify/verify_builtin_rules/number_compare.rs:2168` | number compare | none | `pending` |
-| B0431 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2212` | number compare | none | `pending` |
-| B0432 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2239` | number compare | none | `pending` |
-| B0433 | rule | `local_schema` | 0 <= u - v from v <= u | `src/verify/verify_builtin_rules/number_compare.rs:2271` | number compare | `linarith only` | `implemented` |
-| B0434 | rule | `local_schema` | 0 < u - v from v < u | `src/verify/verify_builtin_rules/number_compare.rs:2297` | number compare | `linarith only` | `implemented` |
-| B0435 | rule | `local_schema` | 0 <= a + b from known atomic facts 0 <= a and 0 <= b | `src/verify/verify_builtin_rules/number_compare.rs:2358` | number compare | `linarith only` | `implemented` |
-| B0436 | rule | `local_schema` | 0 < a + b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2407` | number compare | `linarith only` | `implemented` |
-| B0437 | rule | `local_schema` | 0 < a + b from (0 < a and 0 <= b) | `src/verify/verify_builtin_rules/number_compare.rs:2443` | number compare | `linarith only` | `implemented` |
-| B0438 | rule | `local_schema` | 0 < a + b from (0 <= a and 0 < b) | `src/verify/verify_builtin_rules/number_compare.rs:2477` | number compare | `linarith only` | `implemented` |
-| B0439 | rule | `legacy_custom` | dynamic: msg | `src/verify/verify_builtin_rules/number_compare.rs:2539` | number compare | none | `pending` |
-| B0440 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2597` | number compare | none | `pending` |
-| B0441 | rule | `legacy_custom` | 0 < a^b from 0 < a and b in R | `src/verify/verify_builtin_rules/number_compare.rs:2642` | number compare | none | `pending` |
-| B0442 | rule | `legacy_custom` | 0 <= a^b from 0 < a and b in R | `src/verify/verify_builtin_rules/number_compare.rs:2688` | number compare | none | `pending` |
-| B0443 | rule | `legacy_custom` | 0 <= a^n from 0 <= a and n in N+ | `src/verify/verify_builtin_rules/number_compare.rs:2735` | number compare | none | `pending` |
-| B0444 | rule | `legacy_custom` | dynamic: msg | `src/verify/verify_builtin_rules/number_compare.rs:2794` | number compare | none | `pending` |
-| B0445 | rule | `local_schema` | 0 <= a * b from 0 <= a and 0 <= b | `src/verify/verify_builtin_rules/number_compare.rs:2846` | number compare | `mul_nonneg` | `implemented` |
-| B0446 | rule | `local_schema` | 0 < a * b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2899` | number compare | `mul_pos` | `implemented` |
-| B0447 | rule | `local_schema` | 0 <= a / b from 0 <= a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2952` | number compare | `div_nonneg` + `le_of_lt` | `implemented` |
-| B0448 | rule | `local_schema` | 0 < a / b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:3005` | number compare | `div_pos` | `implemented` |
-| B0449 | rule | `legacy_custom` | a^n <= b^n from 0 <= a, a <= b, and positive integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:318` | order algebra | none | `pending` |
-| B0450 | rule | `legacy_custom` | a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:428` | order algebra | none | `pending` |
-| B0451 | rule | `legacy_custom` | a <= b from positive bases and exponent, and a^q <= b^q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:474` | order algebra | none | `pending` |
-| B0452 | rule | `legacy_custom` | a^n <= b^n from a <= b and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:517` | order algebra | none | `pending` |
-| B0453 | rule | `legacy_custom` | a^n <= b^n from 0 < b <= a and negative integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:567` | order algebra | none | `pending` |
-| B0454 | rule | `legacy_custom` | a^k <= b^k from abs(a) <= abs(b) and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:608` | order algebra | none | `pending` |
-| B0455 | rule | `legacy_custom` | a^k < b^k from abs(a) < abs(b) and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:648` | order algebra | none | `pending` |
-| B0456 | rule | `legacy_custom` | abs(x) <= abs(y) from x^k <= y^k and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:707` | order algebra | none | `pending` |
-| B0457 | rule | `legacy_custom` | a^q < b^q from 0 < a, 0 < b, a < b, 0 < q, and q in R or Q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:768` | order algebra | none | `pending` |
-| B0458 | rule | `legacy_custom` | a < b from positive bases and exponent, and a^q < b^q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:811` | order algebra | none | `pending` |
-| B0459 | rule | `legacy_custom` | a^n < b^n from a < b and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:854` | order algebra | none | `pending` |
-| B0460 | rule | `legacy_custom` | a^n <= 0 from a <= 0 and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:887` | order algebra | none | `pending` |
-| B0461 | rule | `legacy_custom` | a^n < 0 from a < 0 and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:920` | order algebra | none | `pending` |
-| B0462 | rule | `legacy_custom` | a^n < b^n from 0 <= a, a < b, and positive integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:972` | order algebra | none | `pending` |
-| B0463 | rule | `legacy_custom` | x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <= | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1096` | order algebra | none | `pending` |
-| B0464 | rule | `legacy_custom` | a * b <= 0 from a <= 0 and 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1128` | order algebra | none | `pending` |
-| B0465 | rule | `legacy_custom` | 0 <= a * b from a,b having the same weak sign | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1168` | order algebra | none | `pending` |
-| B0466 | rule | `legacy_custom` | a * b < 0 from opposite strict signs | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1201` | order algebra | none | `pending` |
-| B0467 | rule | `legacy_custom` | 0 < a * b from same strict signs | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1248` | order algebra | none | `pending` |
-| B0468 | rule | `quantified` | finite sum monotonicity from pointwise order on the index range | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1352` | order algebra | none | `pending` |
-| B0469 | rule | `quantified` | finite-set sum monotonicity from pointwise order on the finite set | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1414` | order algebra | none | `pending` |
-| B0470 | rule | `legacy_custom` | finite-set sum: non-negative summand is at most the total | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1484` | order algebra | none | `pending` |
-| B0471 | rule | `legacy_custom` | a / c <= b / c from 0 < c and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1547` | order algebra | none | `pending` |
-| B0472 | rule | `legacy_custom` | b / c <= a / c from c < 0 and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1571` | order algebra | none | `pending` |
-| B0473 | rule | `local_schema` | u + a <= u + b from a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1666` | order algebra | `linarith only` | `implemented` |
-| B0474 | rule | `local_schema` | a - c <= b from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1691` | order algebra | `linarith only` | `implemented` |
-| B0475 | rule | `legacy_custom` | a - c <= b from a <= b + c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1710` | order algebra | none | `pending` |
-| B0476 | rule | `local_schema` | a <= a + b from 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1733` | order algebra | `linarith only` | `implemented` |
-| B0477 | rule | `legacy_custom` | a <= b + c from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1753` | order algebra | none | `pending` |
-| B0478 | rule | `legacy_custom` | a <= b + c from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1768` | order algebra | none | `pending` |
-| B0479 | rule | `legacy_custom` | a <= b - c from a + c <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1786` | order algebra | none | `pending` |
-| B0480 | rule | `legacy_custom` | a <= x - n from a + n <= x | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1803` | order algebra | none | `pending` |
-| B0481 | rule | `legacy_custom` | a - n <= a for n >= 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1819` | order algebra | none | `pending` |
-| B0482 | rule | `legacy_custom` | a + b <= 0 from a <= 0 and b <= 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1840` | order algebra | none | `pending` |
-| B0483 | rule | `legacy_custom` | a <= b * a from 0 <= a and 1 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1898` | order algebra | none | `pending` |
-| B0484 | rule | `legacy_custom` | k * a <= k * b from 0 <= k and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1920` | order algebra | none | `pending` |
-| B0485 | rule | `legacy_custom` | k * a <= k * b from k <= 0 and b <= a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1920` | order algebra | none | `pending` |
-| B0486 | rule | `legacy_custom` | a * k <= b * k from 0 <= k and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1934` | order algebra | none | `pending` |
-| B0487 | rule | `legacy_custom` | a * k <= b * k from k <= 0 and b <= a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1934` | order algebra | none | `pending` |
-| B0488 | rule | `local_schema` | a + c <= b + d from a <= b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1971` | order algebra | `linarith only` | `implemented` |
-| B0489 | rule | `legacy_custom` | a - d <= b - c from a <= b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2006` | order algebra | none | `pending` |
-| B0490 | rule | `legacy_custom` | a <= b / c from 0 < c and (c * a <= b or a * c <= b) | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2062` | order algebra | none | `pending` |
-| B0491 | rule | `legacy_custom` | a <= b * c from 0 < c and a / c <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2112` | order algebra | none | `pending` |
-| B0492 | rule | `legacy_custom` | a / c < b / c from 0 < c and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2154` | order algebra | none | `pending` |
-| B0493 | rule | `legacy_custom` | b / c < a / c from c < 0 and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2178` | order algebra | none | `pending` |
-| B0494 | rule | `local_schema` | u + a < u + b from a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2245` | order algebra | `linarith only` | `implemented` |
-| B0495 | rule | `legacy_custom` | a - d < b - c from a < b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2277` | order algebra | none | `pending` |
-| B0496 | rule | `legacy_custom` | a - d < b - c from a <= b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2303` | order algebra | none | `pending` |
-| B0497 | rule | `legacy_custom` | abs(x - n) < abs(x) for positive x and nonnegative x - n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2328` | order algebra | none | `pending` |
-| B0498 | rule | `legacy_custom` | a - c < b from a < b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2353` | order algebra | none | `pending` |
-| B0499 | rule | `legacy_custom` | a - c < b from a <= b and 0 < c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2372` | order algebra | none | `pending` |
-| B0500 | rule | `legacy_custom` | a - c < b from a < b + c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2388` | order algebra | none | `pending` |
-| B0501 | rule | `legacy_custom` | a < a + b from 0 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2411` | order algebra | none | `pending` |
-| B0502 | rule | `legacy_custom` | a < b + c from a < b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2428` | order algebra | none | `pending` |
-| B0503 | rule | `legacy_custom` | a < b + c from a < c and 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2443` | order algebra | none | `pending` |
-| B0504 | rule | `legacy_custom` | a < b - c from a + c < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2461` | order algebra | none | `pending` |
-| B0505 | rule | `legacy_custom` | a - n < a for n > 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2475` | order algebra | none | `pending` |
-| B0506 | rule | `legacy_custom` | a / b < a from 0 < a and 1 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2500` | order algebra | none | `pending` |
-| B0507 | rule | `legacy_custom` | a + b < 0 from one negative term and one nonpositive term | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2530` | order algebra | none | `pending` |
-| B0508 | rule | `legacy_custom` | a < b * a from 0 < a and 1 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2590` | order algebra | none | `pending` |
-| B0509 | rule | `legacy_custom` | k * a < k * b from 0 < k and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2601` | order algebra | none | `pending` |
-| B0510 | rule | `legacy_custom` | k * a < k * b from k < 0 and b < a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2601` | order algebra | none | `pending` |
-| B0511 | rule | `legacy_custom` | a * k < b * k from 0 < k and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2615` | order algebra | none | `pending` |
-| B0512 | rule | `legacy_custom` | a * k < b * k from k < 0 and b < a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2615` | order algebra | none | `pending` |
-| B0513 | rule | `local_schema` | a + c < b + d from a < b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2647` | order algebra | `linarith only` | `implemented` |
-| B0514 | rule | `local_schema` | a + c < b + d from a < b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2673` | order algebra | `linarith only` | `implemented` |
-| B0515 | rule | `local_schema` | a + c < b + d from a <= b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2699` | order algebra | `linarith only` | `implemented` |
-| B0516 | rule | `legacy_custom` | positive even integer is greater than one | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:162` | order semantics | none | `pending` |
-| B0517 | rule | `legacy_custom` | order: transitivity through a shared ordered numeric middle term | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:244` | order semantics | none | `pending` |
-| B0518 | rule | `legacy_custom` | finite_set_max: every member is at most the maximum | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:281` | order semantics | none | `pending` |
-| B0519 | rule | `legacy_custom` | finite_set_max: every member is at most a known-equal maximum | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:310` | order semantics | none | `pending` |
-| B0520 | rule | `legacy_custom` | finite_set_min: the minimum is at most every member | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:331` | order semantics | none | `pending` |
-| B0521 | rule | `legacy_custom` | finite_set_min: a known-equal minimum is at most every member | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:360` | order semantics | none | `pending` |
-| B0522 | rule | `legacy_custom` | membership by concrete finite-set structure | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:388` | order semantics | none | `pending` |
-| B0523 | rule | `legacy_custom` | integer difference: a < b gives b - a >= 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:472` | order semantics | none | `pending` |
-| B0524 | rule | `legacy_custom` | integer adjacency: a < b + 1 gives a <= b | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:500` | order semantics | none | `pending` |
-| B0525 | rule | `legacy_custom` | integer successor: a < b gives a + 1 <= b | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:524` | order semantics | none | `pending` |
-| B0526 | rule | `legacy_custom` | integer predecessor: a < b gives a <= b - 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:548` | order semantics | none | `pending` |
-| B0527 | rule | `legacy_custom` | integer singleton interval: n <= x < n + 1 gives x = n | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:591` | order semantics | none | `pending` |
-| B0528 | rule | `legacy_custom` | integer successor singleton interval: n < x <= n + 1 gives x = n + 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:625` | order semantics | none | `pending` |
-| B0529 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:680` | order semantics | none | `pending` |
-| B0530 | rule | `reflection` | deterministic primality computation for u64 | `src/verify/verify_builtin_rules/prime_builtin.rs:23` | prime | `Nat.Prime` / `norm_num` | `implemented` |
-| B0531 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/set_relation_duality.rs:34` | set relation duality | none | `pending` |
-| B0532 | rule | `legacy_custom` | union subset from both operand subsets | `src/verify/verify_builtin_rules/set_relation_duality.rs:64` | set relation duality | none | `pending` |
-| B0533 | rule | `reflection` | literal finite-set subset from member facts | `src/verify/verify_builtin_rules/set_relation_duality.rs:95` | set relation duality | none | `not_this_round` |
-| B0534 | rule | `legacy_custom` | Cartesian-product subset from componentwise subsets | `src/verify/verify_builtin_rules/set_relation_duality.rs:131` | set relation duality | none | `pending` |
-| B0535 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/set_relation_duality.rs:148` | set relation duality | none | `pending` |
-| B0536 | rule | `legacy_custom` | integer range is contained in its standard numeric carrier | `src/verify/verify_builtin_rules/set_relation_duality.rs:192` | set relation duality | none | `pending` |
-| B0537 | rule | `legacy_custom` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:206` | set relation duality | none | `pending` |
-| B0538 | rule | `legacy_custom` | real_interval_subset_R | `src/verify/verify_builtin_rules/set_relation_duality.rs:221` | set relation duality | none | `pending` |
-| B0539 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/set_relation_duality.rs:244` | set relation duality | none | `pending` |
-| B0540 | rule | `legacy_custom` | fn_range_subset_codomain | `src/verify/verify_builtin_rules/set_relation_duality.rs:255` | set relation duality | none | `pending` |
-| B0541 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:276` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
-| B0542 | rule | `legacy_custom` | standard_set_superset | `src/verify/verify_builtin_rules/set_relation_duality.rs:303` | set relation duality | none | `pending` |
-| B0543 | rule | `legacy_custom` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:320` | set relation duality | none | `pending` |
-| B0544 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:338` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
-| B0545 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:370` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
-| B0546 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:402` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
-| B0547 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/trigonometry.rs:155` | trigonometry | none | `pending` |
-| B0548 | rule | `legacy_custom` | dynamic: format!( "trigonometry layer {}: {} derived from the unit-circle identity", TrigLemma::Bounds.level(), TrigLemma::Bounds.name() ) | `src/verify/verify_builtin_rules/trigonometry.rs:197` | trigonometry | none | `pending` |
-| B0549 | rule | `legacy_custom` | trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound | `src/verify/verify_builtin_rules/trigonometry.rs:225` | trigonometry | none | `pending` |
-| B0550 | rule | `legacy_custom` | dynamic: format!("trigonometry: {reason}") | `src/verify/verify_builtin_rules/trigonometry.rs:561` | trigonometry | none | `pending` |
-| B0551 | rule | `legacy_custom` | trigonometry: sine/cosine is nonzero on a canonical sign interval | `src/verify/verify_builtin_rules/trigonometry.rs:669` | trigonometry | none | `pending` |
-| B0552 | rule | `legacy_custom` | trigonometry: pi shift changes only sign, preserving non-zero | `src/verify/verify_builtin_rules/trigonometry.rs:689` | trigonometry | none | `pending` |
-| B0553 | rule | `legacy_custom` | trigonometry: non-zero transfer through canonical expansion | `src/verify/verify_builtin_rules/trigonometry.rs:712` | trigonometry | none | `pending` |
-| B0554 | rule | `definition` | trigonometry core: tan/cot quotient definition | `src/verify/verify_builtin_rules/trigonometry.rs:1072` | trigonometry | none | `pending` |
-| B0555 | rule | `legacy_custom` | trigonometry core: sin(x)^2 + cos(x)^2 = 1 | `src/verify/verify_builtin_rules/trigonometry.rs:1092` | trigonometry | none | `pending` |
-| B0556 | rule | `legacy_custom` | trigonometry core: sine addition formula | `src/verify/verify_builtin_rules/trigonometry.rs:1194` | trigonometry | none | `pending` |
-| B0557 | rule | `legacy_custom` | nonempty_set_from_not_equal_empty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:22` | type predicates | none | `pending` |
-| B0558 | rule | `legacy_custom` | standard_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:41` | type predicates | existential witness `0` over `N/Z/Q/R/C` | `implemented` |
-| B0559 | rule | `legacy_custom` | list_set_nonempty_has_member_in_syntax | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:53` | type predicates | none | `pending` |
-| B0560 | rule | `legacy_custom` | power_set_is_nonempty_because_empty_set_is_subset | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:65` | type predicates | none | `pending` |
-| B0561 | rule | `legacy_custom` | closed_range_nonempty_when_start_le_end | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:87` | type predicates | none | `pending` |
-| B0562 | rule | `legacy_custom` | range_nonempty_when_start_lt_end | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:109` | type predicates | none | `pending` |
-| B0563 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:154` | type predicates | none | `pending` |
-| B0564 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:180` | type predicates | none | `pending` |
-| B0565 | rule | `legacy_custom` | union_is_nonempty_set_when_left_side_is_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:200` | type predicates | none | `pending` |
-| B0566 | rule | `legacy_custom` | union_is_nonempty_set_when_right_side_is_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:218` | type predicates | none | `pending` |
-| B0567 | rule | `legacy_custom` | dynamic: format!( "sets '{}' in '{}' are nonempty sets", cart.args .iter() .map(\|arg\| arg.as_ref().to_string()) .collect::<Vec<String>>() .join(", "), cart.to_string() ) | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:246` | type predicates | none | `pending` |
-| B0568 | rule | `legacy_custom` | fn_set_is_nonempty_when_ret_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:272` | type predicates | none | `pending` |
-| B0569 | rule | `legacy_custom` | fn_set_is_nonempty_when_ret_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:293` | type predicates | none | `pending` |
-| B0570 | rule | `legacy_custom` | finite_seq_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:315` | type predicates | none | `pending` |
-| B0571 | rule | `legacy_custom` | seq_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:336` | type predicates | none | `pending` |
-| B0572 | rule | `legacy_custom` | matrix_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:357` | type predicates | none | `pending` |
-| B0573 | rule | `legacy_custom` | nonempty_set_from_equal_structural_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:387` | type predicates | none | `pending` |
-| B0574 | rule | `legacy_custom` | nonempty_finite_set_from_positive_finite_set_size | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:432` | type predicates | none | `pending` |
-| B0575 | rule | `legacy_custom` | list_set_finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:454` | type predicates | none | `pending` |
-| B0576 | rule | `legacy_custom` | closed_range_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:462` | type predicates | none | `pending` |
-| B0577 | rule | `legacy_custom` | range_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:470` | type predicates | none | `pending` |
-| B0578 | rule | `legacy_custom` | set-builder over a finite base is finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:491` | type predicates | none | `pending` |
-| B0579 | rule | `legacy_custom` | fn_range_is_finite_set_when_domain_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:520` | type predicates | none | `pending` |
-| B0580 | rule | `legacy_custom` | union_is_finite_set_when_both_sides_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:556` | type predicates | none | `pending` |
-| B0581 | rule | `legacy_custom` | intersect_is_finite_set_when_both_sides_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:589` | type predicates | none | `pending` |
-| B0582 | rule | `legacy_custom` | set_minus_is_finite_set_when_left_side_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:611` | type predicates | none | `pending` |
-| B0583 | rule | `legacy_custom` | power_set_is_finite_set_when_base_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:633` | type predicates | none | `pending` |
-| B0584 | rule | `legacy_custom` | cart_is_finite_set_when_all_factors_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:660` | type predicates | none | `pending` |
-| B0585 | rule | `legacy_custom` | set_minus_is_infinite_when_left_side_is_infinite_and_right_side_is_finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:717` | type predicates | none | `pending` |
-| B0586 | rule | `legacy_custom` | any 'cart' object is a cart | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:735` | type predicates | none | `pending` |
-| B0587 | rule | `legacy_custom` | any 'cart_dim' object is a cart_dim | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:758` | type predicates | none | `pending` |
-| B0588 | rule | `legacy_custom` | it is a known tuple | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:773` | type predicates | none | `pending` |
-| B0589 | rule | `legacy_custom` | list_set_empty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:795` | type predicates | none | `pending` |
-| B0590 | rule | `legacy_custom` | finite_set_size_zero_is_not_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:815` | type predicates | none | `pending` |
-| B0591 | rule | `legacy_custom` | not_nonempty_set_from_equal_empty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:831` | type predicates | none | `pending` |
-| B0592 | rule | `legacy_custom` | closed_range_empty_when_end_lt_start | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:852` | type predicates | none | `pending` |
-| B0593 | rule | `legacy_custom` | range_empty_when_end_le_start | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:873` | type predicates | none | `pending` |
-| B0594 | rule | `legacy_custom` | dynamic: label.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:914` | type predicates | none | `pending` |
-| B0595 | strategy | `strategy` | finite-set product congruence strategy: prove pointwise factor equality | `src/verify/verify_builtin_strategies/equality.rs:68` | builtin strategy | none | `pending` |
-| B0596 | strategy | `strategy` | finite-extremum equality strategy: prove both weak-order directions | `src/verify/verify_builtin_strategies/equality.rs:119` | builtin strategy | none | `pending` |
-| B0597 | strategy | `strategy` | mod-congruence strategy: reduce immediate binary operands modulo m | `src/verify/verify_builtin_strategies/equality.rs:203` | builtin strategy | none | `pending` |
-| B0598 | strategy | `strategy` | numeric-carrier strategy: cardinality of a structurally finite set | `src/verify/verify_builtin_strategies/numeric_carrier.rs:34` | builtin strategy | none | `pending` |
-| B0599 | strategy | `strategy` | numeric-carrier strategy: finite extremum source is real-valued | `src/verify/verify_builtin_strategies/numeric_carrier.rs:50` | builtin strategy | none | `pending` |
-| B0600 | strategy | `strategy` | dynamic: format!( "numeric-carrier strategy: base carrier and sign conditions for {target}" ) | `src/verify/verify_builtin_strategies/numeric_carrier.rs:65` | builtin strategy | none | `pending` |
-| B0601 | strategy | `strategy` | dynamic: format!("numeric-carrier strategy: structural closure in {target}") | `src/verify/verify_builtin_strategies/numeric_carrier.rs:92` | builtin strategy | none | `pending` |
-| B0602 | strategy | `strategy` | numeric-carrier strategy: structural closure in N+ | `src/verify/verify_builtin_strategies/numeric_carrier.rs:346` | builtin strategy | none | `pending` |
-| B0603 | strategy | `strategy` | additive sign strategy: normalized order goal | `src/verify/verify_builtin_strategies/numeric_sign.rs:21` | builtin strategy | none | `pending` |
-| B0604 | strategy | `strategy` | dynamic: strategy_label | `src/verify/verify_builtin_strategies/numeric_sign.rs:35` | builtin strategy | recursive typed arithmetic evidence (`linarith only`) | `implemented` |
-| B0605 | strategy | `strategy` | dynamic: strategy_label | `src/verify/verify_builtin_strategies/numeric_sign.rs:41` | builtin strategy | none | `pending` |
-| B0606 | strategy | `strategy` | additive sign strategy: nonnegative summands | `src/verify/verify_builtin_strategies/numeric_sign.rs:71` | builtin strategy | none | `pending` |
-| B0607 | strategy | `strategy` | additive sign strategy: one positive and one nonnegative summand | `src/verify/verify_builtin_strategies/numeric_sign.rs:89` | builtin strategy | none | `pending` |
-| B0608 | strategy | `strategy` | set-membership strategy: constructor membership decomposition | `src/verify/verify_builtin_strategies/set_membership.rs:109` | builtin strategy | none | `pending` |
-| B0609 | strategy | `strategy` | set-builder membership strategy: unfold one set definition and verify its atomic obligations | `src/verify/verify_builtin_strategies/set_membership.rs:245` | builtin strategy | none | `pending` |
-| B0610 | strategy | `strategy` | set-containment strategy: constructor containment decomposition | `src/verify/verify_builtin_strategies/set_membership.rs:306` | builtin strategy | none | `pending` |
-| B0611 | strategy | `strategy` | dynamic: reason.to_string() | `src/verify/verify_builtin_strategies/type_predicates.rs:99` | builtin strategy | none | `pending` |
-| B0612 | strategy | `strategy` | nonempty-set strategy: closed integer range has ordered endpoints | `src/verify/verify_builtin_strategies/type_predicates.rs:142` | builtin strategy | none | `pending` |
-| B0613 | strategy | `strategy` | nonempty-set strategy: half-open integer range has strictly ordered endpoints | `src/verify/verify_builtin_strategies/type_predicates.rs:165` | builtin strategy | none | `pending` |
-| B0614 | strategy | `strategy` | dynamic: reason.to_string() | `src/verify/verify_builtin_strategies/type_predicates.rs:204` | builtin strategy | none | `pending` |
-| B0615 | strategy | `strategy` | nonempty-set strategy: a union has a nonempty side | `src/verify/verify_builtin_strategies/type_predicates.rs:218` | builtin strategy | none | `pending` |
-| B0616 | strategy | `strategy` | nonempty-set strategy: all Cartesian factors are nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:241` | builtin strategy | none | `pending` |
-| B0617 | strategy | `strategy` | nonempty-set strategy: function codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:249` | builtin strategy | none | `pending` |
-| B0618 | strategy | `strategy` | nonempty-set strategy: anonymous-function codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:254` | builtin strategy | none | `pending` |
-| B0619 | strategy | `strategy` | nonempty-set strategy: finite-sequence codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:259` | builtin strategy | none | `pending` |
-| B0620 | strategy | `strategy` | nonempty-set strategy: sequence codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:264` | builtin strategy | none | `pending` |
-| B0621 | strategy | `strategy` | nonempty-set strategy: matrix entry set is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:269` | builtin strategy | none | `pending` |
-| B0622 | rule | `legacy_custom` | dynamic: same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right) | `src/verify/verify_equality.rs:45` | equality | none | `pending` |
-| B0623 | rule | `legacy_custom` | builtin rules | `src/verify/verify_equality.rs:560` | equality | none | `pending` |
-| B0624 | rule | `legacy_custom` | dynamic: same_shape_and_equal_args_reason(left_obj, right_obj) | `src/verify/verify_equality.rs:593` | equality | none | `pending` |
-| B0625 | rule | `legacy_custom` | exist: real-line comparison witness | `src/verify/verify_exist_fact.rs:603` | exist fact | none | `pending` |
-| B0626 | rule | `legacy_custom` | exist: member of a nonempty set | `src/verify/verify_exist_fact.rs:622` | exist fact | none | `pending` |
-| B0627 | rule | `legacy_custom` | dynamic: if exist_fact.is_exist_unique() { "exist!: unique rational reduced fraction with positive denominator" .to_string() } else { "exist: rational reduced fraction with positive denominator".to_string() } | `src/verify/verify_exist_fact.rs:643` | exist fact | none | `pending` |
-| B0628 | rule | `legacy_custom` | exist: rational representation with positive integer denominator | `src/verify/verify_exist_fact.rs:673` | exist fact | none | `pending` |
-| B0629 | rule | `legacy_custom` | exist: rational integer ratio representation | `src/verify/verify_exist_fact.rs:698` | exist fact | none | `pending` |
-| B0630 | rule | `legacy_custom` | exist!: unique Euclidean quotient for an integer and positive divisor | `src/verify/verify_exist_fact.rs:725` | exist fact | none | `pending` |
-| B0631 | rule | `legacy_custom` | exist: zero remainder gives an integer multiple of a nonzero modulus | `src/verify/verify_exist_fact.rs:781` | exist fact | none | `pending` |
-| B0632 | rule | `legacy_custom` | exist: Archimedean reciprocal bound | `src/verify/verify_exist_fact.rs:812` | exist fact | none | `pending` |
-| B0633 | rule | `legacy_custom` | exist: rational density in the real line | `src/verify/verify_exist_fact.rs:839` | exist fact | none | `pending` |
-| B0634 | rule | `legacy_custom` | exist: real density by the midpoint principle | `src/verify/verify_exist_fact.rs:867` | exist fact | none | `pending` |
-| B0635 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_exist_fact.rs:908` | exist fact | none | `pending` |
-| B0636 | rule | `legacy_custom` | finite nonempty natural set has a greatest member | `src/verify/verify_exist_fact.rs:1064` | exist fact | none | `pending` |
-| B0637 | rule | `legacy_custom` | fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x)) | `src/verify/verify_fn_equal_in_builtin.rs:56` | fn equal in | none | `pending` |
-| B0638 | rule | `legacy_custom` | fn_eq: exact known pointwise forall over alpha-equivalent function carriers | `src/verify/verify_fn_equal_in_builtin.rs:108` | fn equal in | none | `pending` |
-| B0639 | rule | `legacy_custom` | fn_eq: mutual function-space membership and pointwise equality (forall+dom) | `src/verify/verify_fn_equal_in_builtin.rs:167` | fn equal in | none | `pending` |
-| B0640 | rule | `definition` | dynamic: format!( "anonymous fn satisfies a declared return set through an equal {}", representative_kind ) | `src/verify/verify_fn_membership_by_definition.rs:65` | fn membership by definition | none | `pending` |
-| B0641 | rule | `definition` | indexed result inherits its carrier from a symbolic Cartesian projection | `src/verify/verify_fn_membership_by_definition.rs:156` | fn membership by definition | none | `pending` |
-| B0642 | rule | `definition` | fn membership: same input domain and pointwise values lie in the target return set | `src/verify/verify_fn_membership_by_definition.rs:204` | fn membership by definition | none | `pending` |
-| B0643 | rule | `legacy_custom` | fnset equality: mutual implication of param sets, dom facts, and ret set | `src/verify/verify_fn_set_equality_builtin_rule.rs:34` | fn set equality builtin rule | none | `pending` |
-| B0644 | rule | `quantified` | forall over empty parameter set | `src/verify/verify_forall_fact.rs:197` | forall fact | none | `pending` |
-| B0645 | rule | `quantified` | forall iff: then=>iff and iff=>then verified | `src/verify/verify_forall_fact_with_iff.rs:38` | forall fact with iff | none | `pending` |
-| B0646 | rule | `definition` | dynamic: format!( "{} by its builtin function-property definition", fact.predicate ) | `src/verify/verify_function_properties_builtin.rs:26` | function properties | none | `pending` |
-| B0647 | rule | `legacy_custom` | restricted builtin premise: each conjunct verified | `src/verify/verify_helper.rs:263` | helper | none | `pending` |
-| B0648 | rule | `legacy_custom` | restricted builtin premise: one branch verified | `src/verify/verify_helper.rs:301` | helper | none | `pending` |
-| B0649 | rule | `legacy_custom` | registered reflexive prop | `src/verify/verify_non_equational_atomic_fact.rs:145` | non equational atomic fact | none | `pending` |
-| B0650 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_or_fact.rs:456` | or fact | none | `pending` |
-| B0651 | rule | `legacy_custom` | or: complementary atomic facts | `src/verify/verify_or_fact.rs:475` | or fact | none | `pending` |
-| B0652 | rule | `legacy_custom` | or: complementary order relations (strict vs non-strict) on the same real terms | `src/verify/verify_or_fact.rs:494` | or fact | none | `pending` |
-| B0653 | rule | `legacy_custom` | or: equality plus strict order covers a known weak order | `src/verify/verify_or_fact.rs:515` | or fact | none | `pending` |
-| B0654 | rule | `legacy_custom` | or: abs(x) is x or -x | `src/verify/verify_or_fact.rs:529` | or fact | none | `pending` |
-| B0655 | rule | `legacy_custom` | or: complete residue classes modulo a positive integer | `src/verify/verify_or_fact.rs:542` | or fact | none | `pending` |
-| B0656 | rule | `legacy_custom` | dynamic: format!( "or: classical implication packaging; '{}' follows under '{}'", conclusion, assumed_opposite ) | `src/verify/verify_or_fact.rs:641` | or fact | none | `pending` |
-| B0657 | rule | `legacy_custom` | or: integer lower bound split into finite successors and strict tail | `src/verify/verify_or_fact.rs:688` | or fact | none | `pending` |
-| B0658 | rule | `legacy_custom` | zero_product_split: a * b = 0 gives a = 0 or b = 0 | `src/verify/verify_or_fact.rs:747` | or fact | none | `pending` |
-| B0659 | rule | `legacy_custom` | or: square sum nonzero implies one component nonzero | `src/verify/verify_or_fact.rs:811` | or fact | none | `pending` |
-| B0660 | rule | `definition` | dynamic: format!( "{} by its builtin proper-set-relation definition", atomic_fact.key() ) | `src/verify/verify_proper_set_relations_builtin.rs:25` | proper set relations | none | `pending` |
+| B0233 | rule | `local_schema` | fn application in its exact instantiated declared return set | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:321` | membership | exact source-layer elimination of retained function membership | `implemented` |
+| B0234 | rule | `legacy_custom` | fn application in declared return set or standard numeric superset (well-defined under typing) | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:339` | membership | none | `pending` |
+| B0235 | rule | `legacy_custom` | N: a + b from a in N and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:377` | membership | none | `pending` |
+| B0236 | rule | `legacy_custom` | N: n - 1 from n in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:414` | membership | none | `pending` |
+| B0237 | rule | `legacy_custom` | N: n - 1 from n in N and n > 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:431` | membership | none | `pending` |
+| B0238 | rule | `legacy_custom` | N: a - b from a,b in Z and b <= a | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:464` | membership | none | `pending` |
+| B0239 | rule | `legacy_custom` | N: a - b from a,b in Z and known nonnegative difference | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:486` | membership | none | `pending` |
+| B0240 | rule | `legacy_custom` | N: a * b from a in N and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:528` | membership | none | `pending` |
+| B0241 | rule | `legacy_custom` | R+: a^x from 0 < a and x in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:608` | membership | none | `pending` |
+| B0242 | rule | `legacy_custom` | N+: n - 1 from n in N+ and n > 1 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:655` | membership | none | `pending` |
+| B0243 | rule | `legacy_custom` | N+: a + b from a in N+ and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:694` | membership | none | `pending` |
+| B0244 | rule | `legacy_custom` | N+: a + b from a in N+ and b in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:711` | membership | none | `pending` |
+| B0245 | rule | `legacy_custom` | N+: a + b from a in N and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:734` | membership | none | `pending` |
+| B0246 | rule | `legacy_custom` | N+: a * b from a in N+ and b in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:772` | membership | none | `pending` |
+| B0247 | rule | `legacy_custom` | N+: x in N and x != 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:799` | membership | none | `pending` |
+| B0248 | rule | `legacy_custom` | N+: 0 < x and x in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:819` | membership | none | `pending` |
+| B0249 | rule | `legacy_custom` | N+: 0 < x and x in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:830` | membership | none | `pending` |
+| B0250 | rule | `legacy_custom` | N: x in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:890` | membership | none | `pending` |
+| B0251 | rule | `legacy_custom` | N: x in Z and x >= 0 or x > 0 | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:915` | membership | none | `pending` |
+| B0252 | rule | `legacy_custom` | in closed_range: a <= i and i <= b | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:955` | membership | none | `pending` |
+| B0253 | rule | `legacy_custom` | in range: a <= i and i < b | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:987` | membership | none | `pending` |
+| B0254 | rule | `legacy_custom` | in real interval: x in R and endpoint bounds | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1037` | membership | none | `pending` |
+| B0255 | rule | `legacy_custom` | in half-infinite real interval: x in R and endpoint bound | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1086` | membership | none | `pending` |
+| B0256 | rule | `legacy_custom` | complex scalar arithmetic is closed in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1256` | membership | none | `pending` |
+| B0257 | rule | `legacy_custom` | real arithmetic has real operands and result | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1306` | membership | none | `pending` |
+| B0258 | rule | `local_schema` | integer expression closure under +, -, and * | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1389` | membership | native `ℤ` membership with checked ordered operand proofs | `implemented` |
+| B0259 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1435` | membership | none | `pending` |
+| B0260 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1505` | membership | none | `pending` |
+| B0261 | rule | `local_schema` | Z closure: binary integer arithmetic | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1682` | membership | native `ℤ` membership with checked ordered operand proofs | `implemented` |
+| B0262 | rule | `legacy_custom` | Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N+ and exponent in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1693` | membership | none | `pending` |
+| B0263 | rule | `legacy_custom` | Q closure: +-*/ operands in Q; pow base in Q and exponent in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1751` | membership | none | `pending` |
+| B0264 | rule | `legacy_custom` | negation maps a positive scalar into the matching negative carrier | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1803` | membership | none | `pending` |
+| B0265 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_reals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1838` | membership | none | `pending` |
+| B0266 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_rationals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1857` | membership | none | `pending` |
+| B0267 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_integers | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1880` | membership | none | `pending` |
+| B0268 | rule | `reflection` | number in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:49` | membership | none | `not_this_round` |
+| B0269 | rule | `reflection` | number in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:52` | membership | none | `not_this_round` |
+| B0270 | rule | `reflection` | number in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:57` | membership | none | `not_this_round` |
+| B0271 | rule | `reflection` | number in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:60` | membership | none | `not_this_round` |
+| B0272 | rule | `reflection` | number in R- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:67` | membership | none | `not_this_round` |
+| B0273 | rule | `reflection` | number in R* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:74` | membership | none | `not_this_round` |
+| B0274 | rule | `reflection` | number in Q | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:79` | membership | none | `not_this_round` |
+| B0275 | rule | `reflection` | number in Q+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:82` | membership | none | `not_this_round` |
+| B0276 | rule | `reflection` | number in Q- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:89` | membership | none | `not_this_round` |
+| B0277 | rule | `reflection` | number in Q* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:96` | membership | none | `not_this_round` |
+| B0278 | rule | `reflection` | number in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:103` | membership | none | `not_this_round` |
+| B0279 | rule | `reflection` | number in Z- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:110` | membership | none | `not_this_round` |
+| B0280 | rule | `reflection` | number in Z* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:117` | membership | none | `not_this_round` |
+| B0281 | rule | `reflection` | number in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:124` | membership | none | `not_this_round` |
+| B0282 | rule | `reflection` | number in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:131` | membership | none | `not_this_round` |
+| B0283 | rule | `reflection` | number not in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:148` | membership | none | `not_this_round` |
+| B0284 | rule | `reflection` | number not in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:155` | membership | none | `not_this_round` |
+| B0285 | rule | `reflection` | number not in R- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:162` | membership | none | `not_this_round` |
+| B0286 | rule | `reflection` | number not in R* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:169` | membership | none | `not_this_round` |
+| B0287 | rule | `reflection` | number not in Q+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:176` | membership | none | `not_this_round` |
+| B0288 | rule | `reflection` | number not in Q- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:183` | membership | none | `not_this_round` |
+| B0289 | rule | `reflection` | number not in Q* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:190` | membership | none | `not_this_round` |
+| B0290 | rule | `reflection` | number not in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:197` | membership | none | `not_this_round` |
+| B0291 | rule | `reflection` | number not in Z- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:204` | membership | none | `not_this_round` |
+| B0292 | rule | `reflection` | number not in Z* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:211` | membership | none | `not_this_round` |
+| B0293 | rule | `reflection` | number not in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:218` | membership | none | `not_this_round` |
+| B0294 | rule | `reflection` | number not in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:225` | membership | none | `not_this_round` |
+| B0295 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/in_fact_builtin/operator_signature.rs:95` | membership | none | `pending` |
+| B0296 | rule | `definition` | set-builder membership transport through one unfolded definition | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:66` | membership | none | `pending` |
+| B0297 | rule | `definition` | set-builder membership transport from a known universal named-set membership | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:163` | membership | none | `pending` |
+| B0298 | rule | `legacy_custom` | universal set-builder membership eliminates to its defining fact | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:265` | membership | none | `pending` |
+| B0299 | rule | `legacy_custom` | set-builder membership eliminates to its instantiated defining fact | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:344` | membership | none | `pending` |
+| B0300 | rule | `local_schema` | dynamic: format!("union membership: member of the {side_name} side") | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:378` | membership | `Set.mem_union` + `Or.inl`/`Or.inr` | `implemented` |
+| B0301 | rule | `local_schema` | intersection membership: member of both sides | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:429` | membership | `Set.mem_inter_iff` + pair | `implemented` |
+| B0302 | rule | `local_schema` | dynamic: format!("intersection non-membership: non-member of the {side_name} side") | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:461` | membership | `Set.mem_inter_iff` + contradiction | `implemented` |
+| B0303 | rule | `local_schema` | set-minus membership: member of left side and non-member of right side | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:512` | membership | `Set.mem_diff` + pair | `implemented` |
+| B0304 | rule | `legacy_custom` | big_union membership: an element of a member set is in the family union | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:537` | membership | none | `pending` |
+| B0305 | rule | `legacy_custom` | big_union membership: an element of a member set is in the family union | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:572` | membership | none | `pending` |
+| B0306 | rule | `quantified` | replacement membership: a relation witness is in the replacement set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:625` | membership | none | `pending` |
+| B0307 | rule | `quantified` | replacement membership: a relation witness is in the replacement set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:658` | membership | none | `pending` |
+| B0308 | rule | `legacy_custom` | fn_range membership: a well-defined function application is in the function range | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:845` | membership | none | `pending` |
+| B0309 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:884` | membership | none | `pending` |
+| B0310 | rule | `legacy_custom` | fn_range power_set membership: function range is contained in the codomain | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:896` | membership | none | `pending` |
+| B0311 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:931` | membership | none | `pending` |
+| B0312 | rule | `legacy_custom` | power_set membership: a subset of the base set is an element of the power set | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:943` | membership | none | `pending` |
+| B0313 | rule | `legacy_custom` | general_cart membership: function into big_union(family) with pointwise factor membership | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:988` | membership | none | `pending` |
+| B0314 | rule | `legacy_custom` | set builder membership: element is in the base set and satisfies all defining facts | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1055` | membership | none | `pending` |
+| B0315 | rule | `legacy_custom` | membership in a set-valued definition: unfold one function or template definition to a set builder | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1116` | membership | none | `pending` |
+| B0316 | rule | `reflection` | dependent struct constructor: each literal tuple field has its instantiated carrier | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1162` | membership | none | `not_this_round` |
+| B0317 | rule | `legacy_custom` | struct membership: element is in the named structure carrier and satisfies struct equivalent facts | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1219` | membership | none | `pending` |
+| B0318 | rule | `legacy_custom` | finite_set_size of a finite set is a natural number | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1239` | membership | none | `pending` |
+| B0319 | rule | `legacy_custom` | dynamic: rule_name.to_string() | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1268` | membership | none | `pending` |
+| B0320 | rule | `legacy_custom` | finite-set extremum: member of a standard numeric superset | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1296` | membership | none | `pending` |
+| B0321 | rule | `legacy_custom` | membership through a known direct set inclusion | `src/verify/verify_builtin_rules/in_fact_builtin/set_membership.rs:1473` | membership | none | `pending` |
+| B0322 | rule | `reflection` | selected literal tuple component has a real carrier | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:52` | membership | none | `not_this_round` |
+| B0323 | rule | `reflection` | literal tuple projection inherits the selected component carrier | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:65` | membership | none | `not_this_round` |
+| B0324 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:92` | membership | none | `pending` |
+| B0325 | rule | `legacy_custom` | subset reflexivity | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:100` | membership | none | `pending` |
+| B0326 | rule | `legacy_custom` | set_builder in power_set: param_set subset of base implies builder defines a subset of base | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:116` | membership | none | `pending` |
+| B0327 | rule | `legacy_custom` | list_set in power_set: each element is in the base set | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:151` | membership | none | `pending` |
+| B0328 | rule | `legacy_custom` | dynamic: format!( "{} equals one element in list_set {}", in_fact.element, in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:177` | membership | none | `pending` |
+| B0329 | rule | `legacy_custom` | dynamic: format!( "{} is not equal to every element in list_set {}", not_in_fact.element, not_in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:216` | membership | none | `pending` |
+| B0330 | rule | `definition` | fn membership: stored fn signature matches RHS | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:240` | membership | none | `pending` |
+| B0331 | rule | `definition` | fn membership: stored fn signature matches RHS (alpha-renamed parameters) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:262` | membership | none | `pending` |
+| B0332 | rule | `legacy_custom` | anonymous function: signature (params, dom, co-domain) matches 'fn' set | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:301` | membership | none | `pending` |
+| B0333 | rule | `legacy_custom` | anonymous function: signature matches 'fn' set (alpha-renamed parameters) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:324` | membership | none | `pending` |
+| B0334 | rule | `legacy_custom` | anonymous function: signature matches 'fn' set through propositionally equal parameter sets | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:344` | membership | none | `pending` |
+| B0335 | rule | `reflection` | dynamic: format!( "finite sequence literal application is in {}", target_set_obj ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:415` | membership | none | `not_this_round` |
+| B0336 | rule | `legacy_custom` | dynamic: format!( "cart projection list_set elements are all in {}", target_set_obj ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:475` | membership | none | `pending` |
+| B0337 | rule | `transform` | dynamic: format!( "{} in {} implies in {} (standard subset relation)", in_fact.element, source_set_obj, in_fact.set ) | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:514` | membership | native membership projection + checked numeric coercion | `implemented` |
+| B0338 | rule | `legacy_custom` | listed-set member inherits a carrier shared by every listed element | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:585` | membership | none | `pending` |
+| B0339 | rule | `legacy_custom` | numeric division not in Z: resolved numerator % denominator != 0 | `src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs:616` | membership | none | `pending` |
+| B0340 | rule | `legacy_custom` | finite codomain of a surjection from a finite set | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:38` | mapping properties | none | `pending` |
+| B0341 | rule | `legacy_custom` | finite injection has range cardinality equal to its source | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:93` | mapping properties | none | `pending` |
+| B0342 | rule | `legacy_custom` | finite bijection preserves cardinality | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:164` | mapping properties | none | `pending` |
+| B0343 | rule | `legacy_custom` | finite surjection bounds codomain cardinality by source cardinality | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:215` | mapping properties | none | `pending` |
+| B0344 | rule | `reflection` | literal/range finite-set structure | `src/verify/verify_builtin_rules/mapping_properties_builtin.rs:279` | mapping properties | none | `not_this_round` |
+| B0345 | rule | `legacy_custom` | native exp/ln inverse or canonical-base identity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:16` | native exp sign factorial | none | `pending` |
+| B0346 | rule | `legacy_custom` | injectivity of native exp | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:41` | native exp sign factorial | none | `pending` |
+| B0347 | rule | `legacy_custom` | injectivity of native ln | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:68` | native exp sign factorial | none | `pending` |
+| B0348 | rule | `legacy_custom` | sign is zero only at zero | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:99` | native exp sign factorial | none | `pending` |
+| B0349 | rule | `legacy_custom` | sign is nonzero exactly for nonzero arguments | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:142` | native exp sign factorial | none | `pending` |
+| B0350 | rule | `legacy_custom` | native exp/ln algebra identity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:161` | native exp sign factorial | none | `pending` |
+| B0351 | rule | `legacy_custom` | sign value selected from the argument order at zero | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:199` | native exp sign factorial | none | `pending` |
+| B0352 | rule | `legacy_custom` | sign times absolute value restores the argument | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:217` | native exp sign factorial | none | `pending` |
+| B0353 | rule | `legacy_custom` | native sign oddness or multiplicativity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:240` | native exp sign factorial | none | `pending` |
+| B0354 | rule | `legacy_custom` | factorial successor recurrence | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:258` | native exp sign factorial | none | `pending` |
+| B0355 | rule | `legacy_custom` | earlier factorial divides later factorial | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:300` | native exp sign factorial | none | `pending` |
+| B0356 | rule | `legacy_custom` | native exp/sign/factorial characteristic order bound | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:340` | native exp sign factorial | none | `pending` |
+| B0357 | rule | `legacy_custom` | native factorial monotonicity | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:405` | native exp sign factorial | none | `pending` |
+| B0358 | rule | `legacy_custom` | native sign preserves weak order | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:439` | native exp sign factorial | none | `pending` |
+| B0359 | rule | `legacy_custom` | dynamic: format!("native exp/ln reflects {order_kind} order") | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:587` | native exp sign factorial | none | `pending` |
+| B0360 | rule | `legacy_custom` | dynamic: format!("native {function_name} preserves {order_kind} order") | `src/verify/verify_builtin_rules/native_exp_sign_factorial.rs:629` | native exp sign factorial | none | `pending` |
+| B0361 | rule | `legacy_custom` | dynamic: format!("{name} fixes integer inputs") | `src/verify/verify_builtin_rules/native_integer_extrema.rs:34` | native integer extrema | none | `pending` |
+| B0362 | rule | `legacy_custom` | native floor/ceil negation duality | `src/verify/verify_builtin_rules/native_integer_extrema.rs:55` | native integer extrema | none | `pending` |
+| B0363 | rule | `legacy_custom` | native floor/ceil integer translation | `src/verify/verify_builtin_rules/native_integer_extrema.rs:76` | native integer extrema | none | `pending` |
+| B0364 | rule | `legacy_custom` | dynamic: format!("{name} selects the ordered argument: {premise_left} <= {premise_right}") | `src/verify/verify_builtin_rules/native_integer_extrema.rs:125` | native integer extrema | none | `pending` |
+| B0365 | rule | `legacy_custom` | native rounding/extremum characteristic order bound | `src/verify/verify_builtin_rules/native_integer_extrema.rs:166` | native integer extrema | none | `pending` |
+| B0366 | rule | `legacy_custom` | native lcm is bounded by every positive common multiple | `src/verify/verify_builtin_rules/native_integer_extrema.rs:220` | native integer extrema | none | `pending` |
+| B0367 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/native_integer_extrema.rs:306` | native integer extrema | none | `pending` |
+| B0368 | rule | `legacy_custom` | native min/max lattice identity | `src/verify/verify_builtin_rules/native_integer_extrema.rs:328` | native integer extrema | none | `pending` |
+| B0369 | rule | `legacy_custom` | lcm times gcd is the absolute product | `src/verify/verify_builtin_rules/native_integer_extrema.rs:350` | native integer extrema | none | `pending` |
+| B0370 | rule | `legacy_custom` | native lcm symmetry, zero law, or divisibility | `src/verify/verify_builtin_rules/native_integer_extrema.rs:372` | native integer extrema | none | `pending` |
+| B0371 | rule | `legacy_custom` | Every object is a set. | `src/verify/verify_builtin_rules/non_equational_dispatch.rs:52` | non equational dispatch | none | `pending` |
+| B0372 | rule | `local_schema` | not-equality symmetry | `src/verify/verify_builtin_rules/not_equal_builtin.rs:50` | not equal | `Ne.symm` | `implemented` |
+| B0373 | rule | `legacy_custom` | list_set_different_length | `src/verify/verify_builtin_rules/not_equal_builtin.rs:63` | not equal | none | `pending` |
+| B0374 | rule | `legacy_custom` | native real constant distinctness | `src/verify/verify_builtin_rules/not_equal_builtin.rs:207` | not equal | none | `pending` |
+| B0375 | rule | `legacy_custom` | well-defined exp/factorial values are strictly positive | `src/verify/verify_builtin_rules/not_equal_builtin.rs:230` | not equal | none | `pending` |
+| B0376 | rule | `reflection` | not_equal_numeric_resolved_or_equal_class_calculation | `src/verify/verify_builtin_rules/not_equal_builtin.rs:252` | not equal | none | `not_this_round` |
+| B0377 | rule | `legacy_custom` | not_equal_empty_set_from_nonempty | `src/verify/verify_builtin_rules/not_equal_builtin.rs:320` | not equal | none | `pending` |
+| B0378 | rule | `local_schema` | not_equal_from_known_strict_order | `src/verify/verify_builtin_rules/not_equal_builtin.rs:356` | not equal | none | `pending` |
+| B0379 | rule | `legacy_custom` | not_equal_from_known_strict_order | `src/verify/verify_builtin_rules/not_equal_builtin.rs:366` | not equal | none | `pending` |
+| B0380 | rule | `legacy_custom` | not_equal_from_known_positive_lower_bound | `src/verify/verify_builtin_rules/not_equal_builtin.rs:438` | not equal | none | `pending` |
+| B0381 | rule | `legacy_custom` | not_equal_from_membership_contradiction | `src/verify/verify_builtin_rules/not_equal_builtin.rs:479` | not equal | none | `pending` |
+| B0382 | rule | `legacy_custom` | abs_not_equal_zero_from_arg_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:522` | not equal | none | `pending` |
+| B0383 | rule | `legacy_custom` | sqrt(x) != 0 from x > 0 | `src/verify/verify_builtin_rules/not_equal_builtin.rs:564` | not equal | none | `pending` |
+| B0384 | rule | `legacy_custom` | sub_not_equal_zero_from_operand_not_equal | `src/verify/verify_builtin_rules/not_equal_builtin.rs:612` | not equal | none | `pending` |
+| B0385 | rule | `legacy_custom` | add_not_equal_zero_from_operand_not_equal_negation | `src/verify/verify_builtin_rules/not_equal_builtin.rs:673` | not equal | none | `pending` |
+| B0386 | rule | `legacy_custom` | operand_not_equal_from_sub_not_equal_zero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:715` | not equal | none | `pending` |
+| B0387 | rule | `legacy_custom` | operand_not_equal_negation_from_add_not_equal_zero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:783` | not equal | none | `pending` |
+| B0388 | rule | `legacy_custom` | n != 0 from n $in N and 1 <= n | `src/verify/verify_builtin_rules/not_equal_builtin.rs:821` | not equal | none | `pending` |
+| B0389 | rule | `legacy_custom` | n != 0 from n $in N and 1 <= n | `src/verify/verify_builtin_rules/not_equal_builtin.rs:833` | not equal | none | `pending` |
+| B0390 | rule | `legacy_custom` | not_equal_pow_from_base_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:910` | not equal | none | `pending` |
+| B0391 | rule | `legacy_custom` | not_equal_pow_from_positive_base_carrier | `src/verify/verify_builtin_rules/not_equal_builtin.rs:930` | not equal | none | `pending` |
+| B0392 | rule | `local_schema` | div_not_equal_zero_from_numerator_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:996` | not equal | `div_ne_zero` / `Ne.symm` | `implemented` |
+| B0393 | rule | `legacy_custom` | div_not_equal_zero_from_numerator_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1006` | not equal | none | `pending` |
+| B0394 | rule | `legacy_custom` | product_nonzero_component: a * b != 0 gives a != 0 and b != 0 | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1099` | not equal | none | `pending` |
+| B0395 | rule | `legacy_custom` | square_sum_not_equal_zero_from_nonzero_component_or | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1161` | not equal | none | `pending` |
+| B0396 | rule | `legacy_custom` | square_sum_not_equal_zero_from_left_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1175` | not equal | none | `pending` |
+| B0397 | rule | `legacy_custom` | square_sum_not_equal_zero_from_right_nonzero | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1189` | not equal | none | `pending` |
+| B0398 | rule | `legacy_custom` | dynamic: rule_label.to_string() | `src/verify/verify_builtin_rules/not_equal_builtin.rs:1514` | not equal | none | `pending` |
+| B0399 | rule | `legacy_custom` | every positive common divisor is at most the gcd | `src/verify/verify_builtin_rules/number_compare.rs:73` | number compare | none | `pending` |
+| B0400 | rule | `legacy_custom` | less_equal_fact_equal | `src/verify/verify_builtin_rules/number_compare.rs:311` | number compare | none | `pending` |
+| B0401 | rule | `legacy_custom` | less_equal_fact_from_known_equality | `src/verify/verify_builtin_rules/number_compare.rs:325` | number compare | none | `pending` |
+| B0402 | rule | `local_schema` | less_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:342` | number compare | `linarith only` | `implemented` |
+| B0403 | rule | `legacy_custom` | greater_equal_fact_equal | `src/verify/verify_builtin_rules/number_compare.rs:356` | number compare | none | `pending` |
+| B0404 | rule | `legacy_custom` | greater_equal_fact_from_known_equality | `src/verify/verify_builtin_rules/number_compare.rs:370` | number compare | none | `pending` |
+| B0405 | rule | `local_schema` | greater_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:389` | number compare | `linarith only` | `implemented` |
+| B0406 | rule | `legacy_custom` | native mathematical constant positivity bound | `src/verify/verify_builtin_rules/number_compare.rs:502` | number compare | none | `pending` |
+| B0407 | rule | `legacy_custom` | n >= 0 from n $in N | `src/verify/verify_builtin_rules/number_compare.rs:752` | number compare | none | `pending` |
+| B0408 | rule | `legacy_custom` | n >= 1 from n $in N+ | `src/verify/verify_builtin_rules/number_compare.rs:800` | number compare | none | `pending` |
+| B0409 | rule | `legacy_custom` | finite_nonempty_set_size_at_least_one | `src/verify/verify_builtin_rules/number_compare.rs:862` | number compare | none | `pending` |
+| B0410 | rule | `legacy_custom` | finite set cardinality is nonnegative | `src/verify/verify_builtin_rules/number_compare.rs:897` | number compare | none | `pending` |
+| B0411 | rule | `legacy_custom` | finite_set_size_subset_le | `src/verify/verify_builtin_rules/number_compare.rs:946` | number compare | none | `pending` |
+| B0412 | rule | `legacy_custom` | finite_set_size_subset_le | `src/verify/verify_builtin_rules/number_compare.rs:993` | number compare | none | `pending` |
+| B0413 | rule | `legacy_custom` | finite_set_size_union_le_sum | `src/verify/verify_builtin_rules/number_compare.rs:1050` | number compare | none | `pending` |
+| B0414 | rule | `legacy_custom` | 1 <= n from n $in N and n != 0 | `src/verify/verify_builtin_rules/number_compare.rs:1118` | number compare | none | `pending` |
+| B0415 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1192` | number compare | none | `pending` |
+| B0416 | rule | `legacy_custom` | 1 <= n from n $in Z and 0 < n | `src/verify/verify_builtin_rules/number_compare.rs:1246` | number compare | none | `pending` |
+| B0417 | rule | `local_schema` | less_equal_fact_from_known_strict_order | `src/verify/verify_builtin_rules/number_compare.rs:1287` | number compare | `linarith only` | `implemented` |
+| B0418 | rule | `legacy_custom` | weaken numeric lower bound from known lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1299` | number compare | none | `pending` |
+| B0419 | rule | `legacy_custom` | integer weak lower bound from strict predecessor lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1318` | number compare | none | `pending` |
+| B0420 | rule | `legacy_custom` | weaken numeric strict lower bound from known lower bound | `src/verify/verify_builtin_rules/number_compare.rs:1352` | number compare | none | `pending` |
+| B0421 | rule | `legacy_custom` | weaken numeric upper bound from known upper bound | `src/verify/verify_builtin_rules/number_compare.rs:1449` | number compare | none | `pending` |
+| B0422 | rule | `legacy_custom` | 0 <= abs(x) for x in R | `src/verify/verify_builtin_rules/number_compare.rs:1519` | number compare | none | `pending` |
+| B0423 | rule | `legacy_custom` | sqrt: 0 <= sqrt(x) from 0 <= x | `src/verify/verify_builtin_rules/number_compare.rs:1558` | number compare | none | `pending` |
+| B0424 | rule | `legacy_custom` | sqrt: 0 < sqrt(x) from 0 < x | `src/verify/verify_builtin_rules/number_compare.rs:1596` | number compare | none | `pending` |
+| B0425 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1675` | number compare | none | `pending` |
+| B0426 | rule | `legacy_custom` | dynamic: msg.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:1693` | number compare | none | `pending` |
+| B0427 | rule | `legacy_custom` | order_from_known_negated_complement | `src/verify/verify_builtin_rules/number_compare.rs:1938` | number compare | none | `pending` |
+| B0428 | rule | `legacy_custom` | log order: base > 1 preserves strict order | `src/verify/verify_builtin_rules/number_compare.rs:2012` | number compare | none | `pending` |
+| B0429 | rule | `legacy_custom` | log order: 0 < base < 1 reverses strict order | `src/verify/verify_builtin_rules/number_compare.rs:2028` | number compare | none | `pending` |
+| B0430 | rule | `legacy_custom` | log sign: 0 < log(a, x) from 1 < a and 1 < x | `src/verify/verify_builtin_rules/number_compare.rs:2057` | number compare | none | `pending` |
+| B0431 | rule | `legacy_custom` | log sign: log(a, x) < 0 from 1 < a and 0 < x < 1 | `src/verify/verify_builtin_rules/number_compare.rs:2093` | number compare | none | `pending` |
+| B0432 | rule | `legacy_custom` | negated_order_from_known_equivalent_order | `src/verify/verify_builtin_rules/number_compare.rs:2168` | number compare | none | `pending` |
+| B0433 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2212` | number compare | none | `pending` |
+| B0434 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2239` | number compare | none | `pending` |
+| B0435 | rule | `local_schema` | 0 <= u - v from v <= u | `src/verify/verify_builtin_rules/number_compare.rs:2271` | number compare | `linarith only` | `implemented` |
+| B0436 | rule | `local_schema` | 0 < u - v from v < u | `src/verify/verify_builtin_rules/number_compare.rs:2297` | number compare | `linarith only` | `implemented` |
+| B0437 | rule | `local_schema` | 0 <= a + b from known atomic facts 0 <= a and 0 <= b | `src/verify/verify_builtin_rules/number_compare.rs:2358` | number compare | `linarith only` | `implemented` |
+| B0438 | rule | `local_schema` | 0 < a + b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2407` | number compare | `linarith only` | `implemented` |
+| B0439 | rule | `local_schema` | 0 < a + b from (0 < a and 0 <= b) | `src/verify/verify_builtin_rules/number_compare.rs:2443` | number compare | `linarith only` | `implemented` |
+| B0440 | rule | `local_schema` | 0 < a + b from (0 <= a and 0 < b) | `src/verify/verify_builtin_rules/number_compare.rs:2477` | number compare | `linarith only` | `implemented` |
+| B0441 | rule | `legacy_custom` | dynamic: msg | `src/verify/verify_builtin_rules/number_compare.rs:2539` | number compare | none | `pending` |
+| B0442 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/number_compare.rs:2597` | number compare | none | `pending` |
+| B0443 | rule | `legacy_custom` | 0 < a^b from 0 < a and b in R | `src/verify/verify_builtin_rules/number_compare.rs:2642` | number compare | none | `pending` |
+| B0444 | rule | `legacy_custom` | 0 <= a^b from 0 < a and b in R | `src/verify/verify_builtin_rules/number_compare.rs:2688` | number compare | none | `pending` |
+| B0445 | rule | `legacy_custom` | 0 <= a^n from 0 <= a and n in N+ | `src/verify/verify_builtin_rules/number_compare.rs:2735` | number compare | none | `pending` |
+| B0446 | rule | `legacy_custom` | dynamic: msg | `src/verify/verify_builtin_rules/number_compare.rs:2794` | number compare | none | `pending` |
+| B0447 | rule | `local_schema` | 0 <= a * b from 0 <= a and 0 <= b | `src/verify/verify_builtin_rules/number_compare.rs:2846` | number compare | `mul_nonneg` | `implemented` |
+| B0448 | rule | `local_schema` | 0 < a * b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2899` | number compare | `mul_pos` | `implemented` |
+| B0449 | rule | `local_schema` | 0 <= a / b from 0 <= a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:2952` | number compare | `div_nonneg` + `le_of_lt` | `implemented` |
+| B0450 | rule | `local_schema` | 0 < a / b from 0 < a and 0 < b | `src/verify/verify_builtin_rules/number_compare.rs:3005` | number compare | `div_pos` | `implemented` |
+| B0451 | rule | `legacy_custom` | a^n <= b^n from 0 <= a, a <= b, and positive integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:318` | order algebra | none | `pending` |
+| B0452 | rule | `legacy_custom` | a <= b from 0 <= a, 0 <= b, a^n <= b^n, and n in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:428` | order algebra | none | `pending` |
+| B0453 | rule | `legacy_custom` | a <= b from positive bases and exponent, and a^q <= b^q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:474` | order algebra | none | `pending` |
+| B0454 | rule | `legacy_custom` | a^n <= b^n from a <= b and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:517` | order algebra | none | `pending` |
+| B0455 | rule | `legacy_custom` | a^n <= b^n from 0 < b <= a and negative integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:567` | order algebra | none | `pending` |
+| B0456 | rule | `legacy_custom` | a^k <= b^k from abs(a) <= abs(b) and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:608` | order algebra | none | `pending` |
+| B0457 | rule | `legacy_custom` | a^k < b^k from abs(a) < abs(b) and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:648` | order algebra | none | `pending` |
+| B0458 | rule | `legacy_custom` | abs(x) <= abs(y) from x^k <= y^k and even k in N+ | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:707` | order algebra | none | `pending` |
+| B0459 | rule | `legacy_custom` | a^q < b^q from 0 < a, 0 < b, a < b, 0 < q, and q in R or Q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:768` | order algebra | none | `pending` |
+| B0460 | rule | `legacy_custom` | a < b from positive bases and exponent, and a^q < b^q | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:811` | order algebra | none | `pending` |
+| B0461 | rule | `legacy_custom` | a^n < b^n from a < b and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:854` | order algebra | none | `pending` |
+| B0462 | rule | `legacy_custom` | a^n <= 0 from a <= 0 and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:887` | order algebra | none | `pending` |
+| B0463 | rule | `legacy_custom` | a^n < 0 from a < 0 and positive odd integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:920` | order algebra | none | `pending` |
+| B0464 | rule | `legacy_custom` | a^n < b^n from 0 <= a, a < b, and positive integer n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:972` | order algebra | none | `pending` |
+| B0465 | rule | `legacy_custom` | x1 * x2 <= y1 * y2 from 0 <= factors and componentwise <= | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1096` | order algebra | none | `pending` |
+| B0466 | rule | `legacy_custom` | a * b <= 0 from a <= 0 and 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1128` | order algebra | none | `pending` |
+| B0467 | rule | `legacy_custom` | 0 <= a * b from a,b having the same weak sign | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1168` | order algebra | none | `pending` |
+| B0468 | rule | `legacy_custom` | a * b < 0 from opposite strict signs | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1201` | order algebra | none | `pending` |
+| B0469 | rule | `legacy_custom` | 0 < a * b from same strict signs | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1248` | order algebra | none | `pending` |
+| B0470 | rule | `quantified` | finite sum monotonicity from pointwise order on the index range | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1352` | order algebra | none | `pending` |
+| B0471 | rule | `quantified` | finite-set sum monotonicity from pointwise order on the finite set | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1414` | order algebra | none | `pending` |
+| B0472 | rule | `legacy_custom` | finite-set sum: non-negative summand is at most the total | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1484` | order algebra | none | `pending` |
+| B0473 | rule | `legacy_custom` | a / c <= b / c from 0 < c and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1547` | order algebra | none | `pending` |
+| B0474 | rule | `legacy_custom` | b / c <= a / c from c < 0 and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1571` | order algebra | none | `pending` |
+| B0475 | rule | `local_schema` | u + a <= u + b from a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1666` | order algebra | `linarith only` | `implemented` |
+| B0476 | rule | `local_schema` | a - c <= b from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1691` | order algebra | `linarith only` | `implemented` |
+| B0477 | rule | `legacy_custom` | a - c <= b from a <= b + c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1710` | order algebra | none | `pending` |
+| B0478 | rule | `local_schema` | a <= a + b from 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1733` | order algebra | `linarith only` | `implemented` |
+| B0479 | rule | `legacy_custom` | a <= b + c from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1753` | order algebra | none | `pending` |
+| B0480 | rule | `legacy_custom` | a <= b + c from a <= b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1768` | order algebra | none | `pending` |
+| B0481 | rule | `legacy_custom` | a <= b - c from a + c <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1786` | order algebra | none | `pending` |
+| B0482 | rule | `legacy_custom` | a <= x - n from a + n <= x | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1803` | order algebra | none | `pending` |
+| B0483 | rule | `legacy_custom` | a - n <= a for n >= 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1819` | order algebra | none | `pending` |
+| B0484 | rule | `legacy_custom` | a + b <= 0 from a <= 0 and b <= 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1840` | order algebra | none | `pending` |
+| B0485 | rule | `legacy_custom` | a <= b * a from 0 <= a and 1 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1898` | order algebra | none | `pending` |
+| B0486 | rule | `legacy_custom` | k * a <= k * b from 0 <= k and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1920` | order algebra | none | `pending` |
+| B0487 | rule | `legacy_custom` | k * a <= k * b from k <= 0 and b <= a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1920` | order algebra | none | `pending` |
+| B0488 | rule | `legacy_custom` | a * k <= b * k from 0 <= k and a <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1934` | order algebra | none | `pending` |
+| B0489 | rule | `legacy_custom` | a * k <= b * k from k <= 0 and b <= a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1934` | order algebra | none | `pending` |
+| B0490 | rule | `local_schema` | a + c <= b + d from a <= b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:1971` | order algebra | `linarith only` | `implemented` |
+| B0491 | rule | `legacy_custom` | a - d <= b - c from a <= b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2006` | order algebra | none | `pending` |
+| B0492 | rule | `legacy_custom` | a <= b / c from 0 < c and (c * a <= b or a * c <= b) | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2062` | order algebra | none | `pending` |
+| B0493 | rule | `legacy_custom` | a <= b * c from 0 < c and a / c <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2112` | order algebra | none | `pending` |
+| B0494 | rule | `legacy_custom` | a / c < b / c from 0 < c and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2154` | order algebra | none | `pending` |
+| B0495 | rule | `legacy_custom` | b / c < a / c from c < 0 and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2178` | order algebra | none | `pending` |
+| B0496 | rule | `local_schema` | u + a < u + b from a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2245` | order algebra | `linarith only` | `implemented` |
+| B0497 | rule | `legacy_custom` | a - d < b - c from a < b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2277` | order algebra | none | `pending` |
+| B0498 | rule | `legacy_custom` | a - d < b - c from a <= b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2303` | order algebra | none | `pending` |
+| B0499 | rule | `legacy_custom` | abs(x - n) < abs(x) for positive x and nonnegative x - n | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2328` | order algebra | none | `pending` |
+| B0500 | rule | `legacy_custom` | a - c < b from a < b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2353` | order algebra | none | `pending` |
+| B0501 | rule | `legacy_custom` | a - c < b from a <= b and 0 < c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2372` | order algebra | none | `pending` |
+| B0502 | rule | `legacy_custom` | a - c < b from a < b + c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2388` | order algebra | none | `pending` |
+| B0503 | rule | `legacy_custom` | a < a + b from 0 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2411` | order algebra | none | `pending` |
+| B0504 | rule | `legacy_custom` | a < b + c from a < b and 0 <= c | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2428` | order algebra | none | `pending` |
+| B0505 | rule | `legacy_custom` | a < b + c from a < c and 0 <= b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2443` | order algebra | none | `pending` |
+| B0506 | rule | `legacy_custom` | a < b - c from a + c < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2461` | order algebra | none | `pending` |
+| B0507 | rule | `legacy_custom` | a - n < a for n > 0 | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2475` | order algebra | none | `pending` |
+| B0508 | rule | `legacy_custom` | a / b < a from 0 < a and 1 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2500` | order algebra | none | `pending` |
+| B0509 | rule | `legacy_custom` | a + b < 0 from one negative term and one nonpositive term | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2530` | order algebra | none | `pending` |
+| B0510 | rule | `legacy_custom` | a < b * a from 0 < a and 1 < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2590` | order algebra | none | `pending` |
+| B0511 | rule | `legacy_custom` | k * a < k * b from 0 < k and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2601` | order algebra | none | `pending` |
+| B0512 | rule | `legacy_custom` | k * a < k * b from k < 0 and b < a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2601` | order algebra | none | `pending` |
+| B0513 | rule | `legacy_custom` | a * k < b * k from 0 < k and a < b | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2615` | order algebra | none | `pending` |
+| B0514 | rule | `legacy_custom` | a * k < b * k from k < 0 and b < a | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2615` | order algebra | none | `pending` |
+| B0515 | rule | `local_schema` | a + c < b + d from a < b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2647` | order algebra | `linarith only` | `implemented` |
+| B0516 | rule | `local_schema` | a + c < b + d from a < b and c <= d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2673` | order algebra | `linarith only` | `implemented` |
+| B0517 | rule | `local_schema` | a + c < b + d from a <= b and c < d | `src/verify/verify_builtin_rules/order_algebra_builtin.rs:2699` | order algebra | `linarith only` | `implemented` |
+| B0518 | rule | `legacy_custom` | positive even integer is greater than one | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:162` | order semantics | none | `pending` |
+| B0519 | rule | `legacy_custom` | order: transitivity through a shared ordered numeric middle term | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:244` | order semantics | none | `pending` |
+| B0520 | rule | `legacy_custom` | finite_set_max: every member is at most the maximum | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:281` | order semantics | none | `pending` |
+| B0521 | rule | `legacy_custom` | finite_set_max: every member is at most a known-equal maximum | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:310` | order semantics | none | `pending` |
+| B0522 | rule | `legacy_custom` | finite_set_min: the minimum is at most every member | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:331` | order semantics | none | `pending` |
+| B0523 | rule | `legacy_custom` | finite_set_min: a known-equal minimum is at most every member | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:360` | order semantics | none | `pending` |
+| B0524 | rule | `legacy_custom` | membership by concrete finite-set structure | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:388` | order semantics | none | `pending` |
+| B0525 | rule | `legacy_custom` | integer difference: a < b gives b - a >= 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:472` | order semantics | none | `pending` |
+| B0526 | rule | `legacy_custom` | integer adjacency: a < b + 1 gives a <= b | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:500` | order semantics | none | `pending` |
+| B0527 | rule | `legacy_custom` | integer successor: a < b gives a + 1 <= b | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:524` | order semantics | none | `pending` |
+| B0528 | rule | `legacy_custom` | integer predecessor: a < b gives a <= b - 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:548` | order semantics | none | `pending` |
+| B0529 | rule | `legacy_custom` | integer singleton interval: n <= x < n + 1 gives x = n | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:591` | order semantics | none | `pending` |
+| B0530 | rule | `legacy_custom` | integer successor singleton interval: n < x <= n + 1 gives x = n + 1 | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:625` | order semantics | none | `pending` |
+| B0531 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/order_semantics_builtin.rs:680` | order semantics | none | `pending` |
+| B0532 | rule | `reflection` | deterministic primality computation for u64 | `src/verify/verify_builtin_rules/prime_builtin.rs:23` | prime | `Nat.Prime` / `norm_num` | `implemented` |
+| B0533 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rules/set_relation_duality.rs:34` | set relation duality | none | `pending` |
+| B0534 | rule | `legacy_custom` | union subset from both operand subsets | `src/verify/verify_builtin_rules/set_relation_duality.rs:64` | set relation duality | none | `pending` |
+| B0535 | rule | `reflection` | literal finite-set subset from member facts | `src/verify/verify_builtin_rules/set_relation_duality.rs:95` | set relation duality | none | `not_this_round` |
+| B0536 | rule | `legacy_custom` | Cartesian-product subset from componentwise subsets | `src/verify/verify_builtin_rules/set_relation_duality.rs:131` | set relation duality | none | `pending` |
+| B0537 | rule | `legacy_custom` | standard_set_subset | `src/verify/verify_builtin_rules/set_relation_duality.rs:148` | set relation duality | none | `pending` |
+| B0538 | rule | `legacy_custom` | integer range is contained in its standard numeric carrier | `src/verify/verify_builtin_rules/set_relation_duality.rs:192` | set relation duality | none | `pending` |
+| B0539 | rule | `legacy_custom` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:206` | set relation duality | none | `pending` |
+| B0540 | rule | `legacy_custom` | real_interval_subset_R | `src/verify/verify_builtin_rules/set_relation_duality.rs:221` | set relation duality | none | `pending` |
+| B0541 | rule | `legacy_custom` | structural subset | `src/verify/verify_builtin_rules/set_relation_duality.rs:244` | set relation duality | none | `pending` |
+| B0542 | rule | `legacy_custom` | fn_range_subset_codomain | `src/verify/verify_builtin_rules/set_relation_duality.rs:255` | set relation duality | none | `pending` |
+| B0543 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:276` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
+| B0544 | rule | `legacy_custom` | standard_set_superset | `src/verify/verify_builtin_rules/set_relation_duality.rs:303` | set relation duality | none | `pending` |
+| B0545 | rule | `legacy_custom` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:320` | set relation duality | none | `pending` |
+| B0546 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:338` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
+| B0547 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:370` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
+| B0548 | rule | `local_schema` | subset_superset_duality | `src/verify/verify_builtin_rules/set_relation_duality.rs:402` | set relation duality | native subset proposition (one reversed checked premise) | `implemented` |
+| B0549 | rule | `legacy_custom` | dynamic: reason | `src/verify/verify_builtin_rules/trigonometry.rs:155` | trigonometry | none | `pending` |
+| B0550 | rule | `legacy_custom` | dynamic: format!( "trigonometry layer {}: {} derived from the unit-circle identity", TrigLemma::Bounds.level(), TrigLemma::Bounds.name() ) | `src/verify/verify_builtin_rules/trigonometry.rs:197` | trigonometry | none | `pending` |
+| B0551 | rule | `legacy_custom` | trigonometry: -1 <= sin/cos <= 1 from the unit-circle square bound | `src/verify/verify_builtin_rules/trigonometry.rs:225` | trigonometry | none | `pending` |
+| B0552 | rule | `legacy_custom` | dynamic: format!("trigonometry: {reason}") | `src/verify/verify_builtin_rules/trigonometry.rs:561` | trigonometry | none | `pending` |
+| B0553 | rule | `legacy_custom` | trigonometry: sine/cosine is nonzero on a canonical sign interval | `src/verify/verify_builtin_rules/trigonometry.rs:669` | trigonometry | none | `pending` |
+| B0554 | rule | `legacy_custom` | trigonometry: pi shift changes only sign, preserving non-zero | `src/verify/verify_builtin_rules/trigonometry.rs:689` | trigonometry | none | `pending` |
+| B0555 | rule | `legacy_custom` | trigonometry: non-zero transfer through canonical expansion | `src/verify/verify_builtin_rules/trigonometry.rs:712` | trigonometry | none | `pending` |
+| B0556 | rule | `definition` | trigonometry core: tan/cot quotient definition | `src/verify/verify_builtin_rules/trigonometry.rs:1072` | trigonometry | none | `pending` |
+| B0557 | rule | `legacy_custom` | trigonometry core: sin(x)^2 + cos(x)^2 = 1 | `src/verify/verify_builtin_rules/trigonometry.rs:1092` | trigonometry | none | `pending` |
+| B0558 | rule | `legacy_custom` | trigonometry core: sine addition formula | `src/verify/verify_builtin_rules/trigonometry.rs:1194` | trigonometry | none | `pending` |
+| B0559 | rule | `legacy_custom` | nonempty_set_from_not_equal_empty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:22` | type predicates | none | `pending` |
+| B0560 | rule | `legacy_custom` | standard_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:41` | type predicates | existential witness `0` over `N/Z/Q/R/C` | `implemented` |
+| B0561 | rule | `legacy_custom` | list_set_nonempty_has_member_in_syntax | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:53` | type predicates | none | `pending` |
+| B0562 | rule | `legacy_custom` | power_set_is_nonempty_because_empty_set_is_subset | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:65` | type predicates | none | `pending` |
+| B0563 | rule | `legacy_custom` | closed_range_nonempty_when_start_le_end | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:87` | type predicates | none | `pending` |
+| B0564 | rule | `legacy_custom` | range_nonempty_when_start_lt_end | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:109` | type predicates | none | `pending` |
+| B0565 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:154` | type predicates | none | `pending` |
+| B0566 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:180` | type predicates | none | `pending` |
+| B0567 | rule | `legacy_custom` | union_is_nonempty_set_when_left_side_is_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:200` | type predicates | none | `pending` |
+| B0568 | rule | `legacy_custom` | union_is_nonempty_set_when_right_side_is_nonempty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:218` | type predicates | none | `pending` |
+| B0569 | rule | `legacy_custom` | dynamic: format!( "sets '{}' in '{}' are nonempty sets", cart.args .iter() .map(\|arg\| arg.as_ref().to_string()) .collect::<Vec<String>>() .join(", "), cart.to_string() ) | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:246` | type predicates | none | `pending` |
+| B0570 | rule | `legacy_custom` | fn_set_is_nonempty_when_ret_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:272` | type predicates | none | `pending` |
+| B0571 | rule | `legacy_custom` | fn_set_is_nonempty_when_ret_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:293` | type predicates | none | `pending` |
+| B0572 | rule | `legacy_custom` | finite_seq_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:315` | type predicates | none | `pending` |
+| B0573 | rule | `legacy_custom` | seq_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:336` | type predicates | none | `pending` |
+| B0574 | rule | `legacy_custom` | matrix_set_is_nonempty_when_codomain_set_is_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:357` | type predicates | none | `pending` |
+| B0575 | rule | `legacy_custom` | nonempty_set_from_equal_structural_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:387` | type predicates | none | `pending` |
+| B0576 | rule | `legacy_custom` | nonempty_finite_set_from_positive_finite_set_size | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:432` | type predicates | none | `pending` |
+| B0577 | rule | `legacy_custom` | list_set_finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:454` | type predicates | none | `pending` |
+| B0578 | rule | `legacy_custom` | closed_range_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:462` | type predicates | none | `pending` |
+| B0579 | rule | `legacy_custom` | range_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:470` | type predicates | none | `pending` |
+| B0580 | rule | `legacy_custom` | set-builder over a finite base is finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:491` | type predicates | none | `pending` |
+| B0581 | rule | `legacy_custom` | fn_range_is_finite_set_when_domain_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:520` | type predicates | none | `pending` |
+| B0582 | rule | `legacy_custom` | union_is_finite_set_when_both_sides_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:556` | type predicates | none | `pending` |
+| B0583 | rule | `legacy_custom` | intersect_is_finite_set_when_both_sides_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:589` | type predicates | none | `pending` |
+| B0584 | rule | `legacy_custom` | set_minus_is_finite_set_when_left_side_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:611` | type predicates | none | `pending` |
+| B0585 | rule | `legacy_custom` | power_set_is_finite_set_when_base_is_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:633` | type predicates | none | `pending` |
+| B0586 | rule | `legacy_custom` | cart_is_finite_set_when_all_factors_are_finite_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:660` | type predicates | none | `pending` |
+| B0587 | rule | `legacy_custom` | set_minus_is_infinite_when_left_side_is_infinite_and_right_side_is_finite | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:717` | type predicates | none | `pending` |
+| B0588 | rule | `legacy_custom` | any 'cart' object is a cart | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:735` | type predicates | none | `pending` |
+| B0589 | rule | `legacy_custom` | any 'cart_dim' object is a cart_dim | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:758` | type predicates | none | `pending` |
+| B0590 | rule | `legacy_custom` | it is a known tuple | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:773` | type predicates | none | `pending` |
+| B0591 | rule | `legacy_custom` | list_set_empty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:795` | type predicates | none | `pending` |
+| B0592 | rule | `legacy_custom` | finite_set_size_zero_is_not_nonempty | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:815` | type predicates | none | `pending` |
+| B0593 | rule | `legacy_custom` | not_nonempty_set_from_equal_empty_set | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:831` | type predicates | none | `pending` |
+| B0594 | rule | `legacy_custom` | closed_range_empty_when_end_lt_start | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:852` | type predicates | none | `pending` |
+| B0595 | rule | `legacy_custom` | range_empty_when_end_le_start | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:873` | type predicates | none | `pending` |
+| B0596 | rule | `legacy_custom` | dynamic: label.to_string() | `src/verify/verify_builtin_rules/type_predicates_builtin.rs:914` | type predicates | none | `pending` |
+| B0597 | strategy | `strategy` | finite-set product congruence strategy: prove pointwise factor equality | `src/verify/verify_builtin_strategies/equality.rs:68` | builtin strategy | none | `pending` |
+| B0598 | strategy | `strategy` | finite-extremum equality strategy: prove both weak-order directions | `src/verify/verify_builtin_strategies/equality.rs:119` | builtin strategy | none | `pending` |
+| B0599 | strategy | `strategy` | mod-congruence strategy: reduce immediate binary operands modulo m | `src/verify/verify_builtin_strategies/equality.rs:203` | builtin strategy | none | `pending` |
+| B0600 | strategy | `strategy` | numeric-carrier strategy: cardinality of a structurally finite set | `src/verify/verify_builtin_strategies/numeric_carrier.rs:34` | builtin strategy | none | `pending` |
+| B0601 | strategy | `strategy` | numeric-carrier strategy: finite extremum source is real-valued | `src/verify/verify_builtin_strategies/numeric_carrier.rs:50` | builtin strategy | none | `pending` |
+| B0602 | strategy | `strategy` | dynamic: format!( "numeric-carrier strategy: base carrier and sign conditions for {target}" ) | `src/verify/verify_builtin_strategies/numeric_carrier.rs:65` | builtin strategy | recursive typed arithmetic evidence (`linarith only`) | `implemented` |
+| B0603 | strategy | `strategy` | dynamic: format!("numeric-carrier strategy: structural closure in {target}") | `src/verify/verify_builtin_strategies/numeric_carrier.rs:99` | builtin strategy | none | `pending` |
+| B0604 | strategy | `strategy` | numeric-carrier strategy: structural closure in N+ | `src/verify/verify_builtin_strategies/numeric_carrier.rs:353` | builtin strategy | none | `pending` |
+| B0605 | strategy | `strategy` | additive sign strategy: normalized order goal | `src/verify/verify_builtin_strategies/numeric_sign.rs:21` | builtin strategy | none | `pending` |
+| B0606 | strategy | `strategy` | dynamic: strategy_label | `src/verify/verify_builtin_strategies/numeric_sign.rs:35` | builtin strategy | recursive typed arithmetic evidence (`linarith only`) | `implemented` |
+| B0607 | strategy | `strategy` | dynamic: strategy_label | `src/verify/verify_builtin_strategies/numeric_sign.rs:41` | builtin strategy | none | `pending` |
+| B0608 | strategy | `strategy` | additive sign strategy: nonnegative summands | `src/verify/verify_builtin_strategies/numeric_sign.rs:71` | builtin strategy | none | `pending` |
+| B0609 | strategy | `strategy` | additive sign strategy: one positive and one nonnegative summand | `src/verify/verify_builtin_strategies/numeric_sign.rs:89` | builtin strategy | none | `pending` |
+| B0610 | strategy | `strategy` | set-membership strategy: constructor membership decomposition | `src/verify/verify_builtin_strategies/set_membership.rs:109` | builtin strategy | none | `pending` |
+| B0611 | strategy | `strategy` | set-builder membership strategy: unfold one set definition and verify its atomic obligations | `src/verify/verify_builtin_strategies/set_membership.rs:250` | builtin strategy | recursive typed arithmetic evidence (`linarith only`) | `implemented` |
+| B0612 | strategy | `strategy` | set-builder membership strategy: unfold one set definition and verify its atomic obligations | `src/verify/verify_builtin_strategies/set_membership.rs:267` | builtin strategy | none | `pending` |
+| B0613 | strategy | `strategy` | set-containment strategy: constructor containment decomposition | `src/verify/verify_builtin_strategies/set_membership.rs:328` | builtin strategy | none | `pending` |
+| B0614 | strategy | `strategy` | dynamic: reason.to_string() | `src/verify/verify_builtin_strategies/type_predicates.rs:99` | builtin strategy | none | `pending` |
+| B0615 | strategy | `strategy` | nonempty-set strategy: closed integer range has ordered endpoints | `src/verify/verify_builtin_strategies/type_predicates.rs:142` | builtin strategy | none | `pending` |
+| B0616 | strategy | `strategy` | nonempty-set strategy: half-open integer range has strictly ordered endpoints | `src/verify/verify_builtin_strategies/type_predicates.rs:165` | builtin strategy | none | `pending` |
+| B0617 | strategy | `strategy` | dynamic: reason.to_string() | `src/verify/verify_builtin_strategies/type_predicates.rs:204` | builtin strategy | none | `pending` |
+| B0618 | strategy | `strategy` | nonempty-set strategy: a union has a nonempty side | `src/verify/verify_builtin_strategies/type_predicates.rs:218` | builtin strategy | none | `pending` |
+| B0619 | strategy | `strategy` | nonempty-set strategy: all Cartesian factors are nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:241` | builtin strategy | none | `pending` |
+| B0620 | strategy | `strategy` | nonempty-set strategy: function codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:249` | builtin strategy | none | `pending` |
+| B0621 | strategy | `strategy` | nonempty-set strategy: anonymous-function codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:254` | builtin strategy | none | `pending` |
+| B0622 | strategy | `strategy` | nonempty-set strategy: finite-sequence codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:259` | builtin strategy | none | `pending` |
+| B0623 | strategy | `strategy` | nonempty-set strategy: sequence codomain is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:264` | builtin strategy | none | `pending` |
+| B0624 | strategy | `strategy` | nonempty-set strategy: matrix entry set is nonempty | `src/verify/verify_builtin_strategies/type_predicates.rs:269` | builtin strategy | none | `pending` |
+| B0625 | rule | `legacy_custom` | dynamic: same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right) | `src/verify/verify_equality.rs:45` | equality | none | `pending` |
+| B0626 | rule | `legacy_custom` | builtin rules | `src/verify/verify_equality.rs:560` | equality | none | `pending` |
+| B0627 | rule | `legacy_custom` | dynamic: same_shape_and_equal_args_reason(left_obj, right_obj) | `src/verify/verify_equality.rs:593` | equality | none | `pending` |
+| B0628 | rule | `legacy_custom` | exist: real-line comparison witness | `src/verify/verify_exist_fact.rs:603` | exist fact | none | `pending` |
+| B0629 | rule | `legacy_custom` | exist: member of a nonempty set | `src/verify/verify_exist_fact.rs:622` | exist fact | none | `pending` |
+| B0630 | rule | `legacy_custom` | dynamic: if exist_fact.is_exist_unique() { "exist!: unique rational reduced fraction with positive denominator" .to_string() } else { "exist: rational reduced fraction with positive denominator".to_string() } | `src/verify/verify_exist_fact.rs:643` | exist fact | none | `pending` |
+| B0631 | rule | `legacy_custom` | exist: rational representation with positive integer denominator | `src/verify/verify_exist_fact.rs:673` | exist fact | none | `pending` |
+| B0632 | rule | `legacy_custom` | exist: rational integer ratio representation | `src/verify/verify_exist_fact.rs:698` | exist fact | none | `pending` |
+| B0633 | rule | `legacy_custom` | exist!: unique Euclidean quotient for an integer and positive divisor | `src/verify/verify_exist_fact.rs:725` | exist fact | none | `pending` |
+| B0634 | rule | `legacy_custom` | exist: zero remainder gives an integer multiple of a nonzero modulus | `src/verify/verify_exist_fact.rs:781` | exist fact | none | `pending` |
+| B0635 | rule | `legacy_custom` | exist: Archimedean reciprocal bound | `src/verify/verify_exist_fact.rs:812` | exist fact | none | `pending` |
+| B0636 | rule | `legacy_custom` | exist: rational density in the real line | `src/verify/verify_exist_fact.rs:839` | exist fact | none | `pending` |
+| B0637 | rule | `legacy_custom` | exist: real density by the midpoint principle | `src/verify/verify_exist_fact.rs:867` | exist fact | none | `pending` |
+| B0638 | rule | `legacy_custom` | dynamic: rule.to_string() | `src/verify/verify_exist_fact.rs:908` | exist fact | none | `pending` |
+| B0639 | rule | `legacy_custom` | finite nonempty natural set has a greatest member | `src/verify/verify_exist_fact.rs:1064` | exist fact | none | `pending` |
+| B0640 | rule | `legacy_custom` | fn_eq_in: pointwise equality on the given set (forall x in S, f(x)=g(x)) | `src/verify/verify_fn_equal_in_builtin.rs:56` | fn equal in | none | `pending` |
+| B0641 | rule | `legacy_custom` | fn_eq: exact known pointwise forall over alpha-equivalent function carriers | `src/verify/verify_fn_equal_in_builtin.rs:108` | fn equal in | none | `pending` |
+| B0642 | rule | `legacy_custom` | fn_eq: mutual function-space membership and pointwise equality (forall+dom) | `src/verify/verify_fn_equal_in_builtin.rs:167` | fn equal in | none | `pending` |
+| B0643 | rule | `definition` | dynamic: format!( "anonymous fn satisfies a declared return set through an equal {}", representative_kind ) | `src/verify/verify_fn_membership_by_definition.rs:65` | fn membership by definition | none | `pending` |
+| B0644 | rule | `definition` | indexed result inherits its carrier from a symbolic Cartesian projection | `src/verify/verify_fn_membership_by_definition.rs:156` | fn membership by definition | none | `pending` |
+| B0645 | rule | `definition` | fn membership: same input domain and pointwise values lie in the target return set | `src/verify/verify_fn_membership_by_definition.rs:207` | fn membership by definition | checked pointwise `forall` specialization into a native function-set predicate | `implemented` |
+| B0646 | rule | `legacy_custom` | fnset equality: mutual implication of param sets, dom facts, and ret set | `src/verify/verify_fn_set_equality_builtin_rule.rs:34` | fn set equality builtin rule | none | `pending` |
+| B0647 | rule | `quantified` | forall over empty parameter set | `src/verify/verify_forall_fact.rs:197` | forall fact | none | `pending` |
+| B0648 | rule | `quantified` | forall iff: then=>iff and iff=>then verified | `src/verify/verify_forall_fact_with_iff.rs:38` | forall fact with iff | none | `pending` |
+| B0649 | rule | `definition` | dynamic: format!( "{} by its builtin function-property definition", fact.predicate ) | `src/verify/verify_function_properties_builtin.rs:26` | function properties | none | `pending` |
+| B0650 | rule | `legacy_custom` | restricted builtin premise: each conjunct verified | `src/verify/verify_helper.rs:263` | helper | none | `pending` |
+| B0651 | rule | `legacy_custom` | restricted builtin premise: one branch verified | `src/verify/verify_helper.rs:301` | helper | none | `pending` |
+| B0652 | rule | `legacy_custom` | registered reflexive prop | `src/verify/verify_non_equational_atomic_fact.rs:145` | non equational atomic fact | none | `pending` |
+| B0653 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_or_fact.rs:456` | or fact | none | `pending` |
+| B0654 | rule | `legacy_custom` | or: complementary atomic facts | `src/verify/verify_or_fact.rs:475` | or fact | none | `pending` |
+| B0655 | rule | `legacy_custom` | or: complementary order relations (strict vs non-strict) on the same real terms | `src/verify/verify_or_fact.rs:494` | or fact | none | `pending` |
+| B0656 | rule | `legacy_custom` | or: equality plus strict order covers a known weak order | `src/verify/verify_or_fact.rs:515` | or fact | none | `pending` |
+| B0657 | rule | `legacy_custom` | or: abs(x) is x or -x | `src/verify/verify_or_fact.rs:529` | or fact | none | `pending` |
+| B0658 | rule | `legacy_custom` | or: complete residue classes modulo a positive integer | `src/verify/verify_or_fact.rs:542` | or fact | none | `pending` |
+| B0659 | rule | `legacy_custom` | dynamic: format!( "or: classical implication packaging; '{}' follows under '{}'", conclusion, assumed_opposite ) | `src/verify/verify_or_fact.rs:641` | or fact | none | `pending` |
+| B0660 | rule | `legacy_custom` | or: integer lower bound split into finite successors and strict tail | `src/verify/verify_or_fact.rs:688` | or fact | none | `pending` |
+| B0661 | rule | `legacy_custom` | zero_product_split: a * b = 0 gives a = 0 or b = 0 | `src/verify/verify_or_fact.rs:747` | or fact | none | `pending` |
+| B0662 | rule | `legacy_custom` | or: square sum nonzero implies one component nonzero | `src/verify/verify_or_fact.rs:811` | or fact | none | `pending` |
+| B0663 | rule | `definition` | dynamic: format!( "{} by its builtin proper-set-relation definition", atomic_fact.key() ) | `src/verify/verify_proper_set_relations_builtin.rs:25` | proper set relations | none | `pending` |

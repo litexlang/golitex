@@ -846,7 +846,8 @@ impl Runtime {
             )));
         }
 
-        let param_to_arg_map = self.params_to_arg_map(&definition.params_def_with_type, &fact.body)?;
+        let param_to_arg_map =
+            self.params_to_arg_map(&definition.params_def_with_type, &fact.body)?;
         self.inst_exist_fact(
             definition_exist_fact,
             &param_to_arg_map,
@@ -1532,13 +1533,13 @@ mod capture_avoidance_tests {
         };
         assert!(matches!(
             &equality.left,
-            Obj::Atom(AtomObj::Forall(param)) if param.name == "n"
+            Obj::Atom(AtomObj::Forall(param)) if param.name() == "n"
         ));
         assert!(matches!(
             &equality.right,
             Obj::Add(add)
-                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == fresh_name)
-                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name == "x1")
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name() == fresh_name)
+                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Forall(param)) if param.name() == "x1")
         ));
     }
 
@@ -1592,13 +1593,13 @@ mod capture_avoidance_tests {
         };
         assert!(matches!(
             &equality.left,
-            Obj::Atom(AtomObj::Exist(param)) if param.name == "n"
+            Obj::Atom(AtomObj::Exist(param)) if param.name() == "n"
         ));
         assert!(matches!(
             &equality.right,
             Obj::Add(add)
-                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == fresh_name)
-                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == "x1")
+                if matches!(add.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == fresh_name)
+                    && matches!(add.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == "x1")
         ));
     }
 
@@ -1655,11 +1656,11 @@ mod capture_avoidance_tests {
             .unwrap();
         assert!(matches!(
             &renamed.params_def_with_type.groups[0].param_type,
-            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name == "n"
+            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name() == "n"
         ));
         assert!(matches!(
             &renamed.params_def_with_type.groups[1].param_type,
-            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name == "n_fresh"
+            ParamType::Obj(Obj::Atom(AtomObj::Forall(param))) if param.name() == "n_fresh"
         ));
         assert_eq!(
             renamed.params_def_with_type.groups[0].param_names(),
@@ -1723,11 +1724,11 @@ mod capture_avoidance_tests {
         let renamed = runtime.alpha_rename_exist_fact(&fact, &rename_map).unwrap();
         assert!(matches!(
             &renamed.params_def_with_type().groups[0].param_type,
-            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name == "n"
+            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name() == "n"
         ));
         assert!(matches!(
             &renamed.params_def_with_type().groups[1].param_type,
-            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name == "n_fresh"
+            ParamType::Obj(Obj::Atom(AtomObj::Exist(param))) if param.name() == "n_fresh"
         ));
         assert_eq!(
             renamed.params_def_with_type().groups[0].param_names(),

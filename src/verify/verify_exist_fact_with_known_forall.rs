@@ -218,12 +218,14 @@ impl Runtime {
     }
 
     fn obj_matches_exist_forall_binding_name(obj: &Obj, name: &str) -> bool {
-        matches!(obj, Obj::Atom(AtomObj::Exist(p)) if p.name == name)
+        matches!(obj, Obj::Atom(AtomObj::Exist(p)) if p.name() == name)
     }
 
     pub(crate) fn obj_depends_on_given_exist_param(obj: &Obj, names: &[String]) -> bool {
         match obj {
-            Obj::Atom(AtomObj::Exist(p)) => names.iter().any(|name| name == &p.name),
+            Obj::Atom(AtomObj::Exist(p)) => {
+                names.iter().any(|name| name.as_str() == p.name())
+            }
             Obj::Atom(_)
             | Obj::Number(_)
             | Obj::ImaginaryUnit(_)
@@ -479,7 +481,7 @@ impl Runtime {
 
     fn fn_obj_head_depends_on_given_exist_param(head: &FnObjHead, names: &[String]) -> bool {
         match head {
-            FnObjHead::Exist(p) => names.iter().any(|name| name == &p.name),
+            FnObjHead::Exist(p) => names.iter().any(|name| name.as_str() == p.name()),
             FnObjHead::AnonymousFnLiteral(x) => {
                 Self::fn_set_body_depends_on_given_exist_param(&x.body, names)
                     || Self::obj_depends_on_given_exist_param(x.equal_to.as_ref(), names)

@@ -41,7 +41,7 @@ fn real_line_comparison_exist_fact_non_witness_operands(
     };
 
     let direct_exist_param_name = |obj: &Obj| match obj {
-        Obj::Atom(AtomObj::Exist(param)) => Some(param.name.clone()),
+        Obj::Atom(AtomObj::Exist(param)) => Some(param.name().to_string()),
         _ => None,
     };
 
@@ -110,10 +110,10 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
         Obj::Div(div) => {
             matches!(
                 div.left.as_ref(),
-                Obj::Atom(AtomObj::Exist(param)) if param.name.as_str() == numerator_name.as_str()
+                Obj::Atom(AtomObj::Exist(param)) if param.name() == numerator_name.as_str()
             ) && matches!(
                 div.right.as_ref(),
-                Obj::Atom(AtomObj::Exist(param)) if param.name.as_str() == denominator_name.as_str()
+                Obj::Atom(AtomObj::Exist(param)) if param.name() == denominator_name.as_str()
             )
         }
         _ => false,
@@ -150,8 +150,8 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
         return None;
     };
 
-    let is_numerator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *numerator_name);
-    let is_denominator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *denominator_name);
+    let is_numerator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == numerator_name.as_str());
+    let is_denominator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == denominator_name.as_str());
     let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
     let denominator_is_positive = exist_fact.facts().iter().any(|fact| match fact {
         ExistBodyFact::AtomicFact(AtomicFact::GreaterFact(fact)) => {
@@ -216,7 +216,7 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     };
     if !matches!(
         product.right.as_ref(),
-        Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name
+        Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()
     ) {
         return None;
     }
@@ -254,10 +254,10 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     };
 
     let extract_divisor = |candidate: &Obj| match candidate {
-        Obj::Mul(product) if matches!(product.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name) => {
+        Obj::Mul(product) if matches!(product.left.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()) => {
             Some(product.right.as_ref().clone())
         }
-        Obj::Mul(product) if matches!(product.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name) => {
+        Obj::Mul(product) if matches!(product.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()) => {
             Some(product.left.as_ref().clone())
         }
         _ => None,
@@ -296,7 +296,7 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
         return None;
     };
     if !matches!(div.left.as_ref(), Obj::Number(number) if number.normalized_value == "1")
-        || !matches!(div.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name)
+        || !matches!(div.right.as_ref(), Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str())
         || Runtime::obj_depends_on_given_exist_param(&less_fact.right, &[witness_name.clone()])
     {
         return None;
@@ -337,7 +337,7 @@ fn dense_order_exist_fact_endpoints(
     };
 
     let is_witness =
-        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name);
+        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
     if !is_witness(&left_less.right) || !is_witness(&right_less.left) {
         return None;
     }
@@ -372,7 +372,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
     };
 
     let is_witness =
-        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name);
+        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
     let (left, right, strict) = match (left_bound, right_bound) {
         (AtomicFact::LessFact(left_bound), AtomicFact::LessFact(right_bound))
             if is_witness(&left_bound.right) && is_witness(&right_bound.left) =>
@@ -413,7 +413,7 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
     };
     let witness_is_member = matches!(
         &membership.element,
-        Obj::Atom(AtomObj::Exist(param)) if param.name == *witness_name
+        Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str()
     );
     if !witness_is_member || membership.set.to_string() != witness_set.to_string() {
         return None;
@@ -440,7 +440,7 @@ fn rational_reduced_fraction_exist_fact_non_witness_operand(
         return None;
     };
 
-    let is_named_exist_param = |obj: &Obj, name: &str| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name == name);
+    let is_named_exist_param = |obj: &Obj, name: &str| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == name);
     let is_selected_ratio = |obj: &Obj| match obj {
         Obj::Div(div) => {
             is_named_exist_param(div.left.as_ref(), numerator_name)
@@ -526,7 +526,7 @@ fn rational_reduced_fraction_exist_fact_non_witness_operand(
                 is_named_exist_param(modulo.left.as_ref(), dividend_name)
                     && matches!(
                         modulo.right.as_ref(),
-                        Obj::Atom(AtomObj::Forall(param)) if param.name == *common_divisor_name
+                        Obj::Atom(AtomObj::Forall(param)) if param.name() == common_divisor_name.as_str()
                     )
             }
             _ => false,
@@ -550,7 +550,7 @@ fn rational_reduced_fraction_exist_fact_non_witness_operand(
         return None;
     };
     let common_divisor_is_one = |left: &Obj, right: &Obj| {
-        matches!(left, Obj::Atom(AtomObj::Forall(param)) if param.name == *common_divisor_name)
+        matches!(left, Obj::Atom(AtomObj::Forall(param)) if param.name() == common_divisor_name.as_str())
             && is_one(right)
     };
     if !common_divisor_is_one(&conclusion.left, &conclusion.right)

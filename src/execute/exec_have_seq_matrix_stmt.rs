@@ -11,7 +11,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             &stmt.seq_set.clone().into(),
             anonymous_fn,
@@ -25,7 +25,7 @@ impl Runtime {
         )?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.seq_set.clone().into(),
             shape,
@@ -45,7 +45,7 @@ impl Runtime {
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.seq_set.clone().into(),
             shape,
@@ -63,7 +63,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             &stmt.finite_seq_set.clone().into(),
             anonymous_fn,
@@ -85,7 +85,7 @@ impl Runtime {
         )?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.finite_seq_set.clone().into(),
             shape,
@@ -105,7 +105,7 @@ impl Runtime {
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.finite_seq_set.clone().into(),
             shape,
@@ -123,7 +123,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone().into(), String::new(), Some(e), vec![]))?;
         let shape = self.exec_have_indexed_fn_definition_verify_well_definedness(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             &stmt.matrix_set.clone().into(),
             anonymous_fn,
@@ -152,7 +152,7 @@ impl Runtime {
         )?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.matrix_set.clone().into(),
             shape,
@@ -172,7 +172,7 @@ impl Runtime {
             self.have_indexed_fn_definition_shape_trusted(stmt.clone().into(), anonymous_fn)?;
         let infer_result = self.exec_have_indexed_fn_definition_affect_environment(
             stmt.clone().into(),
-            &stmt.name,
+            stmt.name(),
             &stmt.symbol_binding,
             stmt.matrix_set.clone().into(),
             shape,

@@ -182,6 +182,7 @@ impl Runtime {
         };
 
         let mut children = Vec::with_capacity(set_builder.facts.len() + 1);
+        let mut expected_premises = Vec::with_capacity(set_builder.facts.len() + 1);
         let base: AtomicFact = InFact::new(
             fact.element.clone(),
             set_builder.param_set.as_ref().clone(),
@@ -192,6 +193,7 @@ impl Runtime {
         if !base_result.is_true() {
             return Ok(StmtUnknown::new().into());
         }
+        expected_premises.push(base.clone().into());
         children.push(base_result);
 
         let mut param_to_arg_map = std::collections::HashMap::new();
@@ -238,12 +240,32 @@ impl Runtime {
             if !result.is_true() {
                 return Ok(StmtUnknown::new().into());
             }
+            expected_premises.push(instantiated.clone().to_fact());
             children.push(result);
         }
 
+        let target: Fact = fact.clone().into();
+        if matches!(fact.set, Obj::SetBuilder(_)) {
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
+                    target.clone(),
+                    "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
+                        .to_string(),
+                    BuiltinRuleEvidence::SetBuilderMembership(
+                        SetBuilderMembershipBuiltinRuleEvidence::new(
+                            set_builder,
+                            target,
+                            expected_premises,
+                        ),
+                    ),
+                    children,
+                )
+                .into(),
+            );
+        }
         Ok(
             FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
-                fact.clone().into(),
+                target,
                 "set-builder membership strategy: unfold one set definition and verify its atomic obligations"
                     .to_string(),
                 children,

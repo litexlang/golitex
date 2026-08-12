@@ -46,9 +46,7 @@ impl Runtime {
             (
                 to_prove,
                 base_proof,
-                element_param,
                 element_param_binding,
-                smaller_set_param,
                 smaller_set_param_binding,
                 step_proof,
             ),
@@ -67,18 +65,14 @@ impl Runtime {
                 }
                 let (
                     base_proof,
-                    element_param,
                     element_param_binding,
-                    smaller_set_param,
                     smaller_set_param_binding,
                     step_proof,
                 ) = this.parse_finite_set_induc_proof_blocks(tb, &param, question_goal_count)?;
                 Ok((
                     to_prove,
                     base_proof,
-                    element_param,
                     element_param_binding,
-                    smaller_set_param,
                     smaller_set_param_binding,
                     step_proof,
                 ))
@@ -87,12 +81,9 @@ impl Runtime {
 
         Ok(ByFiniteSetInducStmt::new(
             to_prove,
-            param,
             param_bindings[0].clone(),
             carrier_set,
-            element_param,
             element_param_binding,
-            smaller_set_param,
             smaller_set_param_binding,
             base_proof,
             step_proof,
@@ -106,19 +97,9 @@ impl Runtime {
         tb: &mut TokenBlock,
         param: &str,
         goal_body_skip: usize,
-    ) -> Result<
-        (
-            Vec<Stmt>,
-            String,
-            SymbolBinding,
-            String,
-            SymbolBinding,
-            Vec<Stmt>,
-        ),
-        RuntimeError,
-    > {
+    ) -> Result<(Vec<Stmt>, SymbolBinding, SymbolBinding, Vec<Stmt>), RuntimeError> {
         let mut base_proof: Option<Vec<Stmt>> = None;
-        let mut step: Option<(String, SymbolBinding, String, SymbolBinding, Vec<Stmt>)> = None;
+        let mut step: Option<(SymbolBinding, SymbolBinding, Vec<Stmt>)> = None;
 
         for block in tb.body.iter_mut().skip(goal_body_skip) {
             if Self::is_finite_set_induc_base_proof_block(block) {
@@ -162,13 +143,7 @@ impl Runtime {
                             .collect()
                     },
                 )?;
-                step = Some((
-                    element_param,
-                    bindings[0].clone(),
-                    smaller_set_param,
-                    bindings[1].clone(),
-                    proof,
-                ));
+                step = Some((bindings[0].clone(), bindings[1].clone(), proof));
                 continue;
             }
 
@@ -185,13 +160,7 @@ impl Runtime {
                 tb.line_file.clone(),
             )
         })?;
-        let (
-            element_param,
-            element_param_binding,
-            smaller_set_param,
-            smaller_set_param_binding,
-            step_proof,
-        ) = step.ok_or_else(|| {
+        let (element_param_binding, smaller_set_param_binding, step_proof) = step.ok_or_else(|| {
             Self::finite_set_induc_parse_error(
                 "finite-set induc: missing `? induc x, S` block".to_string(),
                 tb.line_file.clone(),
@@ -199,9 +168,7 @@ impl Runtime {
         })?;
         Ok((
             base_proof,
-            element_param,
             element_param_binding,
-            smaller_set_param,
             smaller_set_param_binding,
             step_proof,
         ))

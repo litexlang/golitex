@@ -80,6 +80,50 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        if definition.iff_facts.len() != 1 {
+            return Err(short_exec_error(
+                witness_stmt,
+                format!(
+                    "atomic fact witness requires `{}` to have exactly one definition clause whose outer form is positive `exist`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
+        let Fact::ExistFact(definition_existential) = &definition.iff_facts[0] else {
+            return Err(short_exec_error(
+                witness_stmt,
+                format!(
+                    "atomic fact witness requires the sole definition clause of `{}` to be positive `exist`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        };
+        if definition_existential.is_exist_unique() {
+            return Err(short_exec_error(
+                witness_stmt,
+                format!(
+                    "atomic fact witness does not support the `exist!` definition of `{}`; use explicit `witness exist! ...` and then `by def`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
+        if !definition_existential.is_plain_exist() {
+            return Err(short_exec_error(
+                witness_stmt,
+                format!(
+                    "atomic fact witness requires the sole definition clause of `{}` to be positive `exist`",
+                    predicate_name
+                ),
+                None,
+                vec![],
+            ));
+        }
         let existential = self
             .instantiate_existential_prop_definition(
                 &stmt.atomic_fact,
@@ -87,20 +131,6 @@ impl Runtime {
                 &stmt.line_file,
             )
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(witness_stmt.clone(), cause))?;
-        match &existential {
-            ExistFactEnum::ExistFact(_) | ExistFactEnum::ExistUniqueFact(_) => {}
-            ExistFactEnum::NotExistFact(_) => {
-                return Err(short_exec_error(
-                    witness_stmt,
-                    format!(
-                        "atomic fact witness requires the sole definition clause of `{}` to be positive `exist` or `exist!`",
-                        predicate_name
-                    ),
-                    None,
-                    vec![],
-                ));
-            }
-        }
         Ok((definition, existential))
     }
 

@@ -37,8 +37,10 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
             let examples = parse_litex_to_lean_markdown_examples(&markdown);
             let mut strict_failures = Vec::new();
             let mut saw_native_carriers = false;
+            let mut saw_named_theorem = false;
             let mut saw_propositions_and_trust = false;
             let mut saw_function_sets_and_well_definedness = false;
+            let mut saw_exact_well_definedness_and_integer_remainder = false;
             let mut saw_carrier_boundaries = false;
             let mut saw_partial_boundary = false;
 
@@ -72,14 +74,14 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                             assert_eq!(generated.matches("\naxiom fact").count(), 4);
                             assert!(
                             generated.contains(
-                                "∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), x ∈ (Set.univ : Set ℝ)"
+                                "∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x ∈ Litex.StandardSets.R"
                             ),
                             "{}",
                             generated
                         );
                             assert!(
                             generated.contains(
-                                "∀ (z : ℤ) (litex_param_fact_1 : z ∈ (Set.univ : Set ℤ)), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)"
+                                "∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), (z / 2 : ℚ) ∈ Litex.StandardSets.Q"
                             ),
                             "{}",
                             generated
@@ -92,10 +94,20 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                             saw_native_carriers = true;
                             assert!(generated.contains("2 = 2"), "{}", generated);
                             assert!(
-                                generated.contains("2 ∈ (Set.univ : Set ℝ)"),
+                                generated.contains("2 ∈ Litex.StandardSets.R"),
                                 "{}",
                                 generated
                             );
+                        }
+                        if example.name == "named_theorem" {
+                            saw_named_theorem = true;
+                            assert!(
+                                generated.contains("theorem real_reflexivity : ∀ (x : ℝ)"),
+                                "{}",
+                                generated
+                            );
+                            assert_eq!(generated.matches("theorem real_reflexivity").count(), 1);
+                            assert!(!generated.contains("-- Litex fact"), "{}", generated);
                         }
                         if example.name == "function_sets_and_well_definedness" {
                             saw_function_sets_and_well_definedness = true;
@@ -109,6 +121,13 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                                 "{}",
                                 generated
                             );
+                        }
+                        if example.name == "exact_well_definedness_and_integer_remainder" {
+                            saw_exact_well_definedness_and_integer_remainder = true;
+                            assert!(generated.contains("f 2 well_defined_fact_"), "{generated}");
+                            assert!(generated.contains("f a litex_param_fact_2"), "{generated}");
+                            assert!(generated.contains("(5 : ℤ) % (2 : ℤ)"), "{generated}");
+                            assert!(!generated.contains("by assumption"), "{generated}");
                         }
 
                         assert_generated_snapshot_matches(example, &generated);
@@ -136,11 +155,11 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
 
                         if example.name == "carrier_boundaries" {
                             saw_carrier_boundaries = true;
-                            assert_eq!(report.unsupported.len(), 11);
+                            assert_eq!(report.unsupported.len(), 7);
                             assert!(report.unsupported[0].statement.contains("n + 1"));
-                            assert!(report.unsupported[10]
+                            assert!(report.unsupported[6]
                                 .statement
-                                .contains("boundary_complex_one"));
+                                .contains("boundary_natural_two"));
                         } else if example.name == "partial_boundary" {
                             saw_partial_boundary = true;
                             assert_eq!(report.unsupported.len(), 1);
@@ -170,6 +189,7 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                 strict_failures.join("\n\n")
             );
             assert!(saw_native_carriers, "native_carriers example is missing");
+            assert!(saw_named_theorem, "named_theorem example is missing");
             assert!(
                 saw_propositions_and_trust,
                 "propositions_and_trust example is missing"
@@ -177,6 +197,10 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
             assert!(
                 saw_function_sets_and_well_definedness,
                 "function_sets_and_well_definedness example is missing"
+            );
+            assert!(
+                saw_exact_well_definedness_and_integer_remainder,
+                "exact_well_definedness_and_integer_remainder example is missing"
             );
             assert!(
                 saw_carrier_boundaries,
@@ -337,6 +361,36 @@ fn assert_common_generated_contract(example: &LitexToLeanMarkdownExample, genera
     assert!(!generated.contains("sorry"), "{}", example.name);
     assert!(!generated.contains("LitexSet"), "{}", example.name);
     assert!(!generated.contains("LitexAddEq"), "{}", example.name);
+    assert_eq!(
+        generated.matches("namespace Litex.StandardSets").count(),
+        1,
+        "{} must declare the standard-set prelude exactly once",
+        example.name
+    );
+    for declaration in [
+        "abbrev N : Set ℕ := Set.univ",
+        "abbrev NPos : Set ℕ := Set.Ioi 0",
+        "abbrev Z : Set ℤ := Set.univ",
+        "abbrev ZNeg : Set ℤ := Set.Iio 0",
+        "abbrev ZStar : Set ℤ := {z | z ≠ 0}",
+        "abbrev Q : Set ℚ := Set.univ",
+        "abbrev QPos : Set ℚ := Set.Ioi 0",
+        "abbrev QNeg : Set ℚ := Set.Iio 0",
+        "abbrev QStar : Set ℚ := {q | q ≠ 0}",
+        "abbrev R : Set ℝ := Set.univ",
+        "abbrev RPos : Set ℝ := Set.Ioi 0",
+        "abbrev RNeg : Set ℝ := Set.Iio 0",
+        "abbrev RStar : Set ℝ := {r | r ≠ 0}",
+        "abbrev C : Set ℂ := Set.univ",
+        "abbrev CStar : Set ℂ := {c | c ≠ 0}",
+    ] {
+        assert!(
+            generated.contains(declaration),
+            "{} is missing `{}`",
+            example.name,
+            declaration
+        );
+    }
 }
 
 fn assert_generated_snapshot_matches(example: &LitexToLeanMarkdownExample, generated: &str) {

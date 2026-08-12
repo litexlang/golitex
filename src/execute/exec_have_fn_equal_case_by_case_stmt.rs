@@ -38,7 +38,7 @@ impl Runtime {
         )?;
 
         let function_identifier_obj =
-            self.declared_identifier_obj(&have_fn_equal_case_by_case_stmt.name);
+            self.declared_identifier_obj(have_fn_equal_case_by_case_stmt.name());
         let function_set_obj = fn_set_stored.clone().into();
         let function_in_function_set_fact = InFact::new(
             function_identifier_obj.clone(),

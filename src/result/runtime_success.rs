@@ -649,11 +649,8 @@ impl FactualStmtSuccess {
         step_results: Vec<StmtResult>,
     ) -> Self {
         let infers = InferResult::new();
-        let verified_by = VerifiedByResult::builtin_rule_with_subgoals(
-            builtin_rule_label,
-            stmt.clone(),
-            step_results,
-        );
+        let verified_by =
+            VerifiedByResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
     }
 
@@ -690,11 +687,8 @@ impl FactualStmtSuccess {
         builtin_rule_label: String,
         step_results: Vec<StmtResult>,
     ) -> Self {
-        let verified_by = VerifiedByResult::builtin_rule_with_subgoals(
-            builtin_rule_label,
-            stmt.clone(),
-            step_results,
-        );
+        let verified_by =
+            VerifiedByResult::builtin_rule_with_subgoals(builtin_rule_label, step_results);
         Self::new_with_verified_by_builtin_rules(stmt, infers, verified_by)
     }
 
@@ -707,7 +701,6 @@ impl FactualStmtSuccess {
     ) -> Self {
         let verified_by = VerifiedByResult::builtin_rule_with_evidence(
             builtin_rule_label,
-            stmt.clone(),
             evidence,
             step_results,
         );
@@ -788,13 +781,12 @@ impl FactualStmtSuccess {
 }
 
 impl VerifiedByResult {
-    pub fn builtin_rule(msg: impl Into<String>, _goal: Fact) -> Self {
-        Self::builtin_rule_with_subgoals(msg, _goal, Vec::new())
+    pub fn builtin_rule(msg: impl Into<String>) -> Self {
+        Self::builtin_rule_with_subgoals(msg, Vec::new())
     }
 
     pub fn builtin_rule_with_subgoals(
         msg: impl Into<String>,
-        _goal: Fact,
         subgoals: Vec<StmtResult>,
     ) -> Self {
         Self::BuiltinRule(VerifiedByBuiltinRuleResult {
@@ -806,7 +798,6 @@ impl VerifiedByResult {
 
     pub fn builtin_rule_with_evidence(
         msg: impl Into<String>,
-        _goal: Fact,
         evidence: BuiltinRuleEvidence,
         subgoals: Vec<StmtResult>,
     ) -> Self {

@@ -417,16 +417,16 @@ impl GraphBuilder {
     fn add_def_obj_stmt(&mut self, stmt: &DefObjStmt, full_stmt: &Stmt) {
         match stmt {
             DefObjStmt::HaveFnEqualStmt(s) => {
-                let node_id = self.add_fn_node(&s.name, &s.line_file, full_stmt);
+                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
                 let mut collector = DepCollector::new();
-                collector.add_local_name(&s.name);
+                collector.add_local_name(s.name());
                 collector.collect_anonymous_fn(&s.equal_to_anonymous_fn);
                 self.add_dependency_edges(&node_id, &collector.deps);
             }
             DefObjStmt::HaveFnEqualCaseByCaseStmt(s) => {
-                let node_id = self.add_fn_node(&s.name, &s.line_file, full_stmt);
+                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
                 let mut collector = DepCollector::new();
-                collector.add_local_name(&s.name);
+                collector.add_local_name(s.name());
                 collector.collect_fn_set_clause(&s.fn_set_clause);
                 for case_fact in s.cases.iter() {
                     collector.collect_and_chain_atomic_fact(case_fact);
@@ -437,9 +437,9 @@ impl GraphBuilder {
                 self.add_dependency_edges(&node_id, &collector.deps);
             }
             DefObjStmt::HaveFnByInducStmt(s) => {
-                let node_id = self.add_fn_node(&s.name, &s.line_file, full_stmt);
+                let node_id = self.add_fn_node(s.name(), &s.line_file, full_stmt);
                 let mut collector = DepCollector::new();
-                collector.add_local_name(&s.name);
+                collector.add_local_name(s.name());
                 collector.collect_fn_set_clause(&s.fn_set_clause);
                 collector.collect_obj(&s.measure);
                 collector.collect_obj(&s.lower_bound);
@@ -449,9 +449,9 @@ impl GraphBuilder {
                 self.add_dependency_edges(&node_id, &collector.deps);
             }
             DefObjStmt::HaveFnByForallExistUniqueStmt(s) => {
-                let node_id = self.add_fn_node(&s.fn_name, &s.line_file, full_stmt);
+                let node_id = self.add_fn_node(s.fn_name(), &s.line_file, full_stmt);
                 let mut collector = DepCollector::new();
-                collector.add_local_name(&s.fn_name);
+                collector.add_local_name(s.fn_name());
                 collector.collect_forall_fact(&s.forall);
                 self.add_dependency_edges(&node_id, &collector.deps);
                 for thm_name in by_thm_names_in_stmts(&s.prove_process) {
@@ -1245,7 +1245,7 @@ impl DepCollector {
             Obj::SetBuilder(x) => {
                 self.collect_obj(&x.param_set);
                 let old = self.local_names.clone();
-                self.add_local_name(&x.param);
+                self.add_local_name(x.param_name());
                 for fact in x.facts.iter() {
                     self.collect_exist_body_fact(fact);
                 }

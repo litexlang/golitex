@@ -27,28 +27,23 @@ impl Runtime {
             }
         }
 
-        for (_, field_type) in def_struct_stmt.fields.iter() {
-            self.verify_obj_well_defined_and_store_cache(field_type, &verify_state)?;
+        for field in def_struct_stmt.fields.iter() {
+            self.verify_obj_well_defined_and_store_cache(&field.field_type, &verify_state)?;
         }
 
         self.run_in_local_env(|rt| {
-            for (field_binding, (_, field_type)) in def_struct_stmt
-                .field_bindings
-                .iter()
-                .zip(def_struct_stmt.fields.iter())
-            {
-                let param_def =
-                    ParamGroupWithSet::new(vec![field_binding.clone()], field_type.clone());
+            for field in def_struct_stmt.fields.iter() {
+                let param_def = ParamGroupWithSet::new(
+                    vec![field.binding.clone()],
+                    field.field_type.clone(),
+                );
                 rt.define_params_with_set_in_scope(&param_def, ParamObjType::DefStructField)?;
             }
 
             for fact in def_struct_stmt.equivalent_facts.iter() {
                 rt.verify_well_defined_and_store_without_infer(
                     fact.clone(),
-                    InferReason::ByDefinition(ByDefinitionReason::new(
-                        None,
-                        Some(def_struct_stmt.name.clone()),
-                    )),
+                    InferReason::ByDefinition,
                 )?;
             }
             Ok::<(), RuntimeError>(())

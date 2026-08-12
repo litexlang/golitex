@@ -249,8 +249,11 @@ impl Runtime {
         mut space: FnSetSpace,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        let source_application: Obj = fn_obj.clone().into();
         for (i, args) in fn_obj.body.iter().enumerate() {
             self.verify_fn_obj_well_defined_against_fn_like_space(
+                &source_application,
+                i,
                 args,
                 space.params(),
                 space.dom(),
@@ -266,6 +269,18 @@ impl Runtime {
 
             let set_where_the_next_fn_obj_is_in =
                 self.fn_set_return_set_after_args(&space, args)?;
+
+            // Ordinary verification exposes a checked application's return
+            // membership as a reusable well-definedness side effect.  During
+            // Litex-to-Lean construction the final membership must instead be
+            // proved by the typed application-return rule below the statement
+            // proof root.  Caching that final goal here gives it a FactId
+            // without a Lean declaration and turns the real proof into a
+            // circular known-fact citation.  Proper prefixes remain available
+            // for the next curried layer.
+            if self.litex_to_lean_ir_mode() && i == fn_obj.body.len() - 1 {
+                break;
+            }
 
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
@@ -322,6 +337,8 @@ impl Runtime {
     /// dependency order, and satisfy every instantiated domain condition.
     pub(in crate::verify) fn verify_fn_obj_well_defined_against_fn_like_space(
         &mut self,
+        source_application: &Obj,
+        layer_index: usize,
         args: &Vec<Box<Obj>>,
         params_def_with_set: &ParamDefWithSet,
         dom_facts: &Vec<OrAndChainAtomicFact>,
@@ -349,6 +366,8 @@ impl Runtime {
         }
 
         self.verify_args_satisfy_fn_param_groups(
+            source_application,
+            layer_index,
             params_def_with_set,
             &args_as_obj,
             param_binding,
@@ -357,7 +376,7 @@ impl Runtime {
 
         let param_to_arg_map =
             params_def_with_set.param_defs_and_args_to_param_to_arg_map(&args_as_obj);
-        for dom_fact in dom_facts.iter() {
+        for (domain_index, dom_fact) in dom_facts.iter().enumerate() {
             let instantiated_dom_fact = self
                 .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, param_binding, None)
                 .map_err(|e| {
@@ -389,6 +408,14 @@ impl Runtime {
                     )),
                 )));
             }
+            self.record_well_definedness_target_requirement(
+                source_application,
+                WellDefinednessRequirementRole::FunctionDomain {
+                    layer_index,
+                    domain_index,
+                },
+                verify_result,
+            );
         }
 
         Ok(())
@@ -399,6 +426,8 @@ impl Runtime {
     /// an equal representative may discharge the same membership obligation.
     pub(in crate::verify) fn verify_args_satisfy_fn_param_groups(
         &mut self,
+        source_application: &Obj,
+        layer_index: usize,
         params_def_with_set: &ParamDefWithSet,
         args_as_obj: &Vec<Obj>,
         param_binding: ParamObjType,
@@ -451,6 +480,14 @@ impl Runtime {
                         )),
                     )));
                 }
+                self.record_well_definedness_target_requirement(
+                    source_application,
+                    WellDefinednessRequirementRole::FunctionArgumentMembership {
+                        layer_index,
+                        parameter_index: arg_index,
+                    },
+                    verify_result,
+                );
                 insert_symbol_substitution(&mut param_to_arg_map, param_name, arg);
                 arg_index += 1;
             }

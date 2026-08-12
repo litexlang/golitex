@@ -280,7 +280,7 @@ impl Runtime {
                 if param_obj_type == ParamObjType::Forall
                     || param_obj_type == ParamObjType::TheoremInstantiation
                 {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -288,7 +288,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::Def(p)) => {
                 if param_obj_type == ParamObjType::DefHeader {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -296,7 +296,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::Exist(p)) => {
                 if param_obj_type == ParamObjType::Exist {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -304,7 +304,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::SetBuilder(p)) => {
                 if param_obj_type == ParamObjType::SetBuilder {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -312,7 +312,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::FnSet(p)) => {
                 if param_obj_type == ParamObjType::FnSet {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -320,7 +320,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::Induc(p)) => {
                 if param_obj_type == ParamObjType::Induc {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -328,7 +328,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::DefAlgo(p)) => {
                 if param_obj_type == ParamObjType::DefAlgo {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -336,7 +336,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::DefStructField(p)) => {
                 if param_obj_type == ParamObjType::DefStructField {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -344,7 +344,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::TupleIndex(p)) => {
                 if param_obj_type == ParamObjType::TupleIndex {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -352,7 +352,7 @@ impl Runtime {
             }
             Obj::Atom(AtomObj::CartIndex(p)) => {
                 if param_obj_type == ParamObjType::CartIndex {
-                    if let Some(obj) = param_to_arg_map.get(&p.name) {
+                    if let Some(obj) = param_to_arg_map.get(p.name()) {
                         return Ok(obj.clone());
                     }
                 }
@@ -1679,16 +1679,16 @@ fn alpha_renamed_atom(atom: &AtomObj, rename_map: &HashMap<String, Obj>) -> Opti
     }
     let name = match atom {
         AtomObj::Identifier(_) | AtomObj::IdentifierWithMod(_) => return None,
-        AtomObj::Forall(param) => &param.name,
-        AtomObj::Def(param) => &param.name,
-        AtomObj::Exist(param) => &param.name,
-        AtomObj::SetBuilder(param) => &param.name,
-        AtomObj::FnSet(param) => &param.name,
-        AtomObj::Induc(param) => &param.name,
-        AtomObj::DefAlgo(param) => &param.name,
-        AtomObj::DefStructField(param) => &param.name,
-        AtomObj::TupleIndex(param) => &param.name,
-        AtomObj::CartIndex(param) => &param.name,
+        AtomObj::Forall(param) => param.name(),
+        AtomObj::Def(param) => param.name(),
+        AtomObj::Exist(param) => param.name(),
+        AtomObj::SetBuilder(param) => param.name(),
+        AtomObj::FnSet(param) => param.name(),
+        AtomObj::Induc(param) => param.name(),
+        AtomObj::DefAlgo(param) => param.name(),
+        AtomObj::DefStructField(param) => param.name(),
+        AtomObj::TupleIndex(param) => param.name(),
+        AtomObj::CartIndex(param) => param.name(),
     };
     let replacement = rename_map.get(name)?;
     let Obj::Atom(replacement_atom) = replacement else {
@@ -1709,11 +1709,11 @@ fn binder_retagged_atom(
         return binding_map.get(&symbol.substitution_key()).cloned();
     }
     let name = match (source, atom) {
-        (BinderRetagSource::Forall, AtomObj::Forall(param)) => &param.name,
-        (BinderRetagSource::Exist, AtomObj::Exist(param)) => &param.name,
-        (BinderRetagSource::FnSet, AtomObj::FnSet(param)) => &param.name,
-        (BinderRetagSource::Induc, AtomObj::Induc(param)) => &param.name,
-        (BinderRetagSource::DefAlgo, AtomObj::DefAlgo(param)) => &param.name,
+        (BinderRetagSource::Forall, AtomObj::Forall(param)) => param.name(),
+        (BinderRetagSource::Exist, AtomObj::Exist(param)) => param.name(),
+        (BinderRetagSource::FnSet, AtomObj::FnSet(param)) => param.name(),
+        (BinderRetagSource::Induc, AtomObj::Induc(param)) => param.name(),
+        (BinderRetagSource::DefAlgo, AtomObj::DefAlgo(param)) => param.name(),
         _ => return None,
     };
     binding_map.get(name).cloned()
@@ -1806,7 +1806,7 @@ mod capture_avoidance_tests {
         let Obj::SetBuilder(instantiated) = instantiated else {
             panic!("expected set builder");
         };
-        assert_ne!(instantiated.param, "n");
+        assert_ne!(instantiated.param_name(), "n");
         assert!(matches!(
             instantiated.param_set.as_ref(),
             Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == "n"
@@ -1817,11 +1817,11 @@ mod capture_avoidance_tests {
         };
         assert!(matches!(
             &equality.left,
-            Obj::Atom(AtomObj::SetBuilder(param)) if param.name == "n"
+            Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == "n"
         ));
         assert!(matches!(
             &equality.right,
-            Obj::Atom(AtomObj::SetBuilder(param)) if param.name == instantiated.param
+            Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == instantiated.param_name()
         ));
     }
 
@@ -1871,7 +1871,7 @@ mod capture_avoidance_tests {
         let Obj::SetBuilder(instantiated) = instantiated else {
             panic!("expected set builder");
         };
-        assert_ne!(instantiated.param, "n");
+        assert_ne!(instantiated.param_name(), "n");
 
         let unused_n = runtime
             .allocate_local_symbol_binding("n".to_string())
@@ -1894,7 +1894,7 @@ mod capture_avoidance_tests {
         let Obj::SetBuilder(restored) = restored else {
             panic!("expected set builder");
         };
-        assert_eq!(restored.param, "n");
+        assert_eq!(restored.param_name(), "n");
     }
 
     #[test]
@@ -1953,11 +1953,11 @@ mod capture_avoidance_tests {
         };
         assert!(matches!(
             &equality.left,
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == "n"
+            Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n"
         ));
         assert!(matches!(
             &equality.right,
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == fresh_name
+            Obj::Atom(AtomObj::FnSet(param)) if param.name() == fresh_name
         ));
     }
 
@@ -2080,10 +2080,10 @@ mod capture_avoidance_tests {
         let Obj::SetBuilder(instantiated) = instantiated else {
             panic!("expected set builder");
         };
-        assert_ne!(instantiated.param, "n");
+        assert_ne!(instantiated.param_name(), "n");
         assert!(matches!(
             instantiated.param_set.as_ref(),
-            Obj::Atom(AtomObj::SetBuilder(param)) if param.name == instantiated.param
+            Obj::Atom(AtomObj::SetBuilder(param)) if param.name() == instantiated.param_name()
         ));
     }
 
@@ -2135,11 +2135,11 @@ mod capture_avoidance_tests {
             .unwrap();
         assert!(matches!(
             renamed.params_def_with_set[0].set_obj(),
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == "n"
+            Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n"
         ));
         assert!(matches!(
             renamed.params_def_with_set[1].set_obj(),
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == "n_fresh"
+            Obj::Atom(AtomObj::FnSet(param)) if param.name() == "n_fresh"
         ));
         assert_eq!(
             renamed.params_def_with_set[0].param_names(),
@@ -2151,7 +2151,7 @@ mod capture_avoidance_tests {
         );
         assert!(matches!(
             renamed.ret_set.as_ref(),
-            Obj::Atom(AtomObj::FnSet(param)) if param.name == "m_fresh"
+            Obj::Atom(AtomObj::FnSet(param)) if param.name() == "m_fresh"
         ));
     }
 }

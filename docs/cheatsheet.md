@@ -129,7 +129,7 @@ conclusion is rejected rather than stored with changed empty-domain semantics.
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
 | `claim` | The claimed fact must be well-defined. | Executes the proof and verifies the claimed target or then-clauses. | Stores the claimed fact and runs inference. |
-| `witness` | Witness count and witness types must match the existential target. The `$P(args)` form requires one concrete positive `exist` or `exist!` definition clause. | Verifies the existential body under the proposed witnesses; `exist!` also verifies the generated uniqueness `forall`. | Stores the direct existential or the named atomic fact and runs inference. |
+| `witness` | Witness count and witness types must match the existential target. The `$P(args)` form requires one concrete positive ordinary `exist` definition clause; use explicit `witness exist! ...` plus `by def` for unique existence. | Verifies the existential body under the proposed witnesses; explicit `exist!` also verifies the generated uniqueness `forall`. | Stores the direct existential or the named atomic fact and runs inference. |
 | `sketch` | Each nested statement performs its own checks in a child environment. | Nested statements verify normally. | No outer environment effect. |
 | `try` | Rejects the `clear` control statement. Module imports are manifest declarations, not source statements. | Every nested statement must succeed and must not be unknown. | Commits the child environment into the parent environment. |
 

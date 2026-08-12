@@ -14,6 +14,9 @@ pub struct LitexToLeanFunctionTypeIr {
     pub semantic_key: String,
     pub parameters: Vec<LitexToLeanFunctionParameterIr>,
     pub domain_facts: Vec<Fact>,
+    /// Exact set-valued codomain.  The native return carrier below controls
+    /// elaboration; this object controls membership in the function-space set.
+    pub return_set: Box<LitexToLeanObjectIr>,
     pub return_carrier: Box<LitexToLeanCarrierIr>,
 }
 
@@ -71,6 +74,8 @@ impl fmt::Debug for LitexToLeanFunctionParameterIr {
 #[derive(Clone)]
 pub struct LitexToLeanFunctionApplicationIr {
     pub head: Box<LitexToLeanObjectIr>,
+    /// Complete source occurrence used to select exact WD certificate slots.
+    pub source_application: Obj,
     /// Exact source groups. A one-layer `f(x, y)` never becomes two Litex
     /// layers merely because Lean prints curried application.
     pub argument_layers: Vec<Vec<LitexToLeanObjectIr>>,
@@ -79,7 +84,10 @@ pub struct LitexToLeanFunctionApplicationIr {
 
 impl PartialEq for LitexToLeanFunctionApplicationIr {
     fn eq(&self, other: &Self) -> bool {
-        self.head == other.head && self.argument_layers == other.argument_layers
+        self.head == other.head
+            && obj_equality_key(&self.source_application)
+                == obj_equality_key(&other.source_application)
+            && self.argument_layers == other.argument_layers
     }
 }
 
@@ -90,6 +98,7 @@ impl fmt::Debug for LitexToLeanFunctionApplicationIr {
         formatter
             .debug_struct("LitexToLeanFunctionApplicationIr")
             .field("head", &self.head)
+            .field("source_application", &self.source_application.to_string())
             .field("argument_layers", &self.argument_layers)
             .field(
                 "source_argument_layers",
@@ -111,6 +120,16 @@ impl LitexToLeanFunctionTypeIr {
         )
     }
 
+    pub fn lower_anonymous(function: &AnonymousFn) -> Result<Self, String> {
+        let signature = FnSet::from_body(function.body.clone()).map_err(|error| {
+            format!(
+                "Litex-to-Lean could not reconstruct anonymous function signature: {}",
+                error.trace_message()
+            )
+        })?;
+        Self::lower_body(&function.body, obj_equality_key(&signature.into()))
+    }
+
     fn lower_body(body: &FnSetBody, semantic_key: String) -> Result<Self, String> {
         let mut parameters = Vec::with_capacity(body.params_def_with_set.number_of_params());
         for group in body.params_def_with_set.groups.iter() {
@@ -130,18 +149,14 @@ impl LitexToLeanFunctionTypeIr {
             }
         }
 
-        let return_set = LitexToLeanObjectIr::lower(body.ret_set.as_ref())?;
-        if !return_set.is_universal_native_set() {
-            return Err(format!(
-                "Litex-to-Lean function sets currently require a universal native numeric or recursively supported function return set; `{}` needs an explicit output-membership representation",
-                body.ret_set
-            ));
-        }
+        let source_return_set = body.ret_set.as_ref().clone();
+        let return_set = LitexToLeanObjectIr::lower(&source_return_set)?;
         let return_carrier = LitexToLeanCarrierIr::for_membership_set(&return_set);
         Ok(Self {
             semantic_key,
             parameters,
             domain_facts: body.dom_facts.iter().cloned().map(Fact::from).collect(),
+            return_set: Box::new(return_set),
             return_carrier: Box::new(return_carrier),
         })
     }
@@ -149,15 +164,18 @@ impl LitexToLeanFunctionTypeIr {
 
 impl LitexToLeanObjectIr {
     pub(crate) fn is_universal_native_set(&self) -> bool {
-        matches!(
-            self,
+        match self {
             LitexToLeanObjectIr::StandardSet(
                 LitexToLeanStandardSetIr::Natural
-                    | LitexToLeanStandardSetIr::Integer
-                    | LitexToLeanStandardSetIr::Rational
-                    | LitexToLeanStandardSetIr::Real
-                    | LitexToLeanStandardSetIr::Complex
-            ) | LitexToLeanObjectIr::FunctionSet { .. }
-        )
+                | LitexToLeanStandardSetIr::Integer
+                | LitexToLeanStandardSetIr::Rational
+                | LitexToLeanStandardSetIr::Real
+                | LitexToLeanStandardSetIr::Complex,
+            ) => true,
+            LitexToLeanObjectIr::FunctionSet { function } => {
+                function.return_set.is_universal_native_set()
+            }
+            _ => false,
+        }
     }
 }

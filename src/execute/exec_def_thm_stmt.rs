@@ -134,6 +134,14 @@ impl Runtime {
                 inside_results.push(result);
             }
 
+            // These premises live only in the theorem's temporary scope. Freeze
+            // their identities before that scope is popped so compiler IR can
+            // replay exact citations rather than recover them by proposition.
+            rt.attach_known_fact_ids_to_infer_result(&mut assumption_infers)?;
+            for result in inside_results.iter_mut() {
+                rt.attach_known_fact_ids_to_stmt_result(result)?;
+            }
+
             let theorem_verification = TheoremVerificationResult::new(
                 stmt.name.clone(),
                 stmt.forall_fact.clone(),

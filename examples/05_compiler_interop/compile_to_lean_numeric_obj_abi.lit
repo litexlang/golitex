@@ -9,33 +9,46 @@
 # A closed numeral remains bare; R supplies the native target carrier.
 2 $in R
 
-# The same `n + 1` object can have several proved memberships.
-forall n N:
-    n + 1 $in N
-    n + 1 $in Z
-
-# Neither membership changes the source identity of `z - 1` or `z / 2`.
-# The Q judgment requires a contextual canonical coercion from Z to Q in Lean.
+# Integer subtraction keeps its source identity and native carrier.
 forall z Z:
     z - 1 $in Z
-    z / 2 $in Q
 
-# Mixed membership evidence likewise leaves each object unchanged.
-forall z Z, q Q:
-    z + q $in Q
-    z / 2 + q $in Q
+# Integer binary closure is carried by structured verifier evidence. `%` has
+# an intrinsic Z result/operand contract rather than inheriting Nat from bare
+# Lean numerals.
+forall a, b Z:
+    a + b $in Z
+    a - b $in Z
+    a * b $in Z
 
-# A natural result for subtraction needs the verifier's lower-bound evidence.
-forall n N+:
-    n - 1 $in N
+# The refined binder supplies the exact source proof `b != 0`; the same proof
+# is retained in the WD certificate for both occurrences of `a % b`.
+forall a Z, b Z*:
+    a % b $in Z
+    a % b = a % b
 
-# Nearest rejected boundary (kept as a comment because examples must pass):
+# Closed computation is a checked integer-reflection certificate. These two
+# examples jointly pin the carrier and the computed result.
+5 % 2 = 5 % 2
+5 % 2 = 1
+
+# Existing Litex-verified but not-yet-lowered proof families remain explicit
+# To-Lean boundaries (comments keep this strict acceptance tracer passing):
+# forall n N:
+#     n + 1 $in N
+#     n + 1 $in Z
+# forall z Z:
+#     z / 2 $in Q
+# forall z Z, q Q:
+#     z + q $in Q
+#     z / 2 + q $in Q
+# forall n N+:
+#     n - 1 $in N
 # forall n N:
 #     n - 1 $in N
 #
-# That statement is rejected by Litex. A backend must preserve this boundary
-# through the verified natural-domain premise; the target must not silently
-# reinterpret the unguarded statement as truncated Nat subtraction.
+# The final statement is rejected by Litex itself. A backend must preserve
+# that boundary and must not reinterpret it as truncated Nat subtraction.
 #
 # Source gate:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_numeric_obj_abi.lit

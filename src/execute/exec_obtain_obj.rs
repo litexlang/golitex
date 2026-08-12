@@ -18,8 +18,7 @@ impl Runtime {
         obtain: &ObtainObjFromAtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         let stmt: Stmt = obtain.clone().into();
-        let (definition, source_exist_fact) =
-            self.resolve_obtain_obj_from_atomic_fact(obtain)?;
+        let (definition, source_exist_fact) = self.resolve_obtain_obj_from_atomic_fact(obtain)?;
         self.verify_obj_from_exist_fact_well_definedness(
             stmt.clone(),
             &obtain.equal_tos,
@@ -292,11 +291,7 @@ impl Runtime {
                 )
             })?;
         let existential = self
-            .instantiate_existential_prop_definition(
-                &stmt.fact,
-                &definition,
-                &stmt.line_file,
-            )
+            .instantiate_existential_prop_definition(&stmt.fact, &definition, &stmt.line_file)
             .map_err(|cause| exec_stmt_error_with_stmt_and_cause(source_stmt, cause))?;
         Ok((definition, existential))
     }
@@ -373,7 +368,7 @@ impl Runtime {
     fn existential_elimination_verification_result(
         &self,
         stmt: &Stmt,
-        equal_to_bindings: &[SymbolBinding],
+        equal_tos: &[SymbolBinding],
         exist_fact: &ExistFactEnum,
         inside_results: &[StmtResult],
         line_file: LineFile,
@@ -387,7 +382,7 @@ impl Runtime {
             ));
         }
 
-        let witnesses = equal_to_bindings
+        let witnesses = equal_tos
             .iter()
             .map(|binding| {
                 Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into()

@@ -100,8 +100,8 @@ impl LeanRationalExpression {
 fn lean_atom_name(atom: &AtomObj) -> Result<String, RuntimeError> {
     let name = match atom {
         AtomObj::Identifier(identifier) => identifier.name.as_str(),
-        AtomObj::Forall(parameter) => parameter.name.as_str(),
-        AtomObj::Def(parameter) => parameter.name.as_str(),
+        AtomObj::Forall(parameter) => parameter.name(),
+        AtomObj::Def(parameter) => parameter.name(),
         other => {
             return Err(rational_expression_error(format!(
                 "Litex-to-Lean rational experiment does not support atom `{}`",

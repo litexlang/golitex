@@ -62,10 +62,17 @@ impl Runtime {
                 return Ok(StmtUnknown::new().into());
             };
             return Ok(
-                FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(
+                FactualStmtSuccess::new_with_verified_by_builtin_strategy_evidence_recording_stmt(
                     fact.clone().into(),
                     format!(
                         "numeric-carrier strategy: base carrier and sign conditions for {target}"
+                    ),
+                    BuiltinRuleEvidence::RefinedNumericMembership(
+                        RefinedNumericMembershipBuiltinRuleEvidence::new(
+                            target.clone(),
+                            fact.clone().into(),
+                            required.iter().cloned().map(Fact::from).collect(),
+                        ),
                     ),
                     children,
                 )

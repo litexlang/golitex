@@ -4,11 +4,11 @@ use std::path::Path;
 
 use super::helper::{
     lean_generic_carrier_name, lean_generic_object_binder, TO_LEAN_IS_FINITE_SET,
-    TO_LEAN_IS_NONEMPTY_SET, TO_LEAN_IS_SET,
+    TO_LEAN_IS_NONEMPTY_SET, TO_LEAN_IS_SET, TO_LEAN_OBJECT_CLASS,
 };
 use super::local_builtin_adapters::{linked_local_builtin_adapter_module, local_builtin_adapter};
 use super::rational_expression::{lean_name, LeanRationalExpression};
-use super::set_prelude::lean_object_prelude;
+use super::set_prelude::{lean_object_prelude, lean_standard_set_name};
 use super::type_context::LeanTypeContext;
 use super::{
     LitexToLeanCompilationPhase, LitexToLeanCompilationReport, LitexToLeanCompilationStatus,
@@ -263,7 +263,8 @@ fn emit_lean_from_litex_to_lean_ir_with_namespace(
 struct LeanEmitter {
     namespace: Option<String>,
     declarations: Vec<String>,
-    emitted_fact_ids: HashSet<FactId>,
+    emitted_fact_names: HashMap<FactId, String>,
+    emitted_declaration_names: HashSet<String>,
     emitted_function_definition_equalities: HashMap<FactId, String>,
     generalized_scoped_well_definedness: HashMap<String, (String, Vec<(SymbolId, String)>)>,
     next_local_space_id: usize,
@@ -386,6 +387,125 @@ fn well_definedness_certificate_object_carriers(
     result
 }
 
+fn validate_well_definedness_object_contract(
+    certificate: &LitexToLeanWellDefinednessCertificateIr,
+) -> Result<(), RuntimeError> {
+    let facts_by_id = certificate
+        .facts
+        .iter()
+        .map(|evidence| (evidence.certificate_id, &evidence.expected_proposition))
+        .collect::<HashMap<_, _>>();
+    let mut objects_by_id = HashMap::new();
+    let mut referenced_fact_ids = HashSet::new();
+    for object in certificate.objects.iter() {
+        if objects_by_id.insert(object.occurrence_id, object).is_some() {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "well-definedness object occurrence IDs are duplicated",
+            ));
+        }
+        for certificate_id in object.fact_ids.iter() {
+            if !facts_by_id.contains_key(certificate_id) {
+                return Err(litex_to_lean_error(
+                    &default_line_file(),
+                    "well-definedness object occurrence references a missing fact certificate",
+                ));
+            }
+            referenced_fact_ids.insert(*certificate_id);
+        }
+        if matches!(object.source_object, Obj::Mod(_))
+            && object.intrinsic_result_carrier != Some(LitexToLeanCarrierIr::Integer)
+        {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                "integer remainder object occurrence lost its intrinsic result carrier",
+            ));
+        }
+    }
+    if !certificate.objects.is_empty()
+        && certificate
+            .facts
+            .iter()
+            .any(|evidence| !referenced_fact_ids.contains(&evidence.certificate_id))
+    {
+        return Err(litex_to_lean_error(
+            &default_line_file(),
+            "well-definedness fact certificate is not owned by any checked object occurrence",
+        ));
+    }
+    for requirement in certificate.target_requirements.iter() {
+        if requirement.role == WellDefinednessRequirementRole::SourceObjectRequirement {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement has an audit-only role",
+            ));
+        }
+        let Some(expected_proposition) = facts_by_id.get(&requirement.certificate_id) else {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement references a missing fact certificate",
+            ));
+        };
+        if expected_proposition.to_string() != requirement.expected_proposition.to_string() {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement changed its frozen proposition",
+            ));
+        }
+        let Some(object) = objects_by_id.get(&requirement.object_occurrence_id) else {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement references a missing object occurrence",
+            ));
+        };
+        if obj_equality_key(&object.source_object) != obj_equality_key(&requirement.source_object)
+            || !object.fact_ids.contains(&requirement.certificate_id)
+            || !matches!(requirement.source_object, Obj::FnObj(_))
+        {
+            return Err(litex_to_lean_error(
+                &requirement.expected_proposition.line_file(),
+                "target well-definedness requirement does not belong to its function application occurrence",
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// Source checks beneath an object-owned binder cannot be replayed as global
+/// Lean theorems: their free-looking symbols denote the SetBuilder/FnSet/
+/// anonymous-function parameters that only exist inside the emitted term.
+///
+/// Object occurrences retain the exact verifier certificate IDs observed
+/// while their constructor was active, including child occurrences.  Use that
+/// ownership record rather than attempting to rediscover binders from the
+/// printed proposition.
+fn binder_owned_well_definedness_fact_ids(
+    certificate: &LitexToLeanWellDefinednessCertificateIr,
+) -> HashSet<WellDefinednessCertificateId> {
+    certificate
+        .objects
+        .iter()
+        .filter(|object| {
+            matches!(
+                object.source_object,
+                Obj::SetBuilder(_) | Obj::FnSet(_) | Obj::AnonymousFn(_)
+            ) || !object
+                .source_object
+                .collect_param_obj_names(ParamObjType::SetBuilder)
+                .is_empty()
+                || !object
+                    .source_object
+                    .collect_param_obj_names(ParamObjType::FnSet)
+                    .is_empty()
+                || !object
+                    .source_object
+                    .collect_param_obj_names(ParamObjType::Forall)
+                    .is_empty()
+        })
+        .flat_map(|object| object.fact_ids.iter().copied())
+        .collect()
+}
+
 fn collect_obj_ir_symbols(object: &LitexToLeanObjectIr, symbols: &mut Vec<(SymbolId, String)>) {
     match object {
         LitexToLeanObjectIr::Symbol { symbol_id, name } => symbols.push((*symbol_id, name.clone())),
@@ -411,6 +531,35 @@ fn collect_obj_ir_symbols(object: &LitexToLeanObjectIr, symbols: &mut Vec<(Symbo
             for parameter in function.parameters.iter() {
                 collect_obj_ir_symbols(&parameter.set, symbols);
             }
+            collect_obj_ir_symbols(&function.return_set, symbols);
+        }
+        LitexToLeanObjectIr::SetBuilder(builder) => {
+            collect_obj_ir_symbols(&builder.set, symbols);
+            for fact in builder.facts.iter() {
+                if let Ok(mut local_symbols) = fact_ir_symbols(fact) {
+                    local_symbols.retain(|(symbol_id, _)| *symbol_id != builder.symbol_id);
+                    symbols.extend(local_symbols);
+                }
+            }
+        }
+        LitexToLeanObjectIr::AnonymousFunction(function) => {
+            let bound_ids = function
+                .function
+                .parameters
+                .iter()
+                .map(|parameter| parameter.symbol_id)
+                .collect::<HashSet<_>>();
+            for parameter in function.function.parameters.iter() {
+                let mut local_symbols = Vec::new();
+                collect_obj_ir_symbols(&parameter.set, &mut local_symbols);
+                local_symbols.retain(|(symbol_id, _)| !bound_ids.contains(symbol_id));
+                symbols.extend(local_symbols);
+            }
+            let mut local_symbols = Vec::new();
+            collect_obj_ir_symbols(&function.function.return_set, &mut local_symbols);
+            collect_obj_ir_symbols(&function.body, &mut local_symbols);
+            local_symbols.retain(|(symbol_id, _)| !bound_ids.contains(symbol_id));
+            symbols.extend(local_symbols);
         }
         LitexToLeanObjectIr::Number { .. }
         | LitexToLeanObjectIr::Constant(_)
@@ -451,7 +600,13 @@ impl LeanEmitter {
         LeanEmitter {
             namespace,
             declarations: Vec::new(),
-            emitted_fact_ids: HashSet::new(),
+            emitted_fact_names: HashMap::new(),
+            emitted_declaration_names: HashSet::from([
+                TO_LEAN_OBJECT_CLASS.to_string(),
+                TO_LEAN_IS_SET.to_string(),
+                TO_LEAN_IS_NONEMPTY_SET.to_string(),
+                TO_LEAN_IS_FINITE_SET.to_string(),
+            ]),
             emitted_function_definition_equalities: HashMap::new(),
             generalized_scoped_well_definedness: HashMap::new(),
             next_local_space_id: 1,
@@ -531,10 +686,17 @@ impl LeanEmitter {
     fn emit_statement(&mut self, statement: &LitexToLeanStatementIr) -> Result<(), RuntimeError> {
         match statement {
             LitexToLeanStatementIr::AbstractProp(ir) => {
+                self.reserve_declaration_name(&lean_name(&ir.name), &default_line_file())?;
                 self.declarations.push(lean_abstract_prop(ir));
                 Ok(())
             }
             LitexToLeanStatementIr::Prop(ir) => {
+                let line_file = ir
+                    .iff_facts
+                    .first()
+                    .map(Fact::line_file)
+                    .unwrap_or_else(default_line_file);
+                self.reserve_declaration_name(&lean_name(&ir.name), &line_file)?;
                 self.declarations.push(lean_prop(ir)?);
                 Ok(())
             }
@@ -545,6 +707,12 @@ impl LeanEmitter {
             LitexToLeanStatementIr::HaveFnEqual(ir) => self.emit_function_definition(ir),
             LitexToLeanStatementIr::HaveObjEqual(ir) => {
                 for definition in ir.definitions.iter() {
+                    let line_file = ir
+                        .facts
+                        .first()
+                        .map(|fact| fact.proposition.line_file())
+                        .unwrap_or_else(default_line_file);
+                    self.reserve_declaration_name(&lean_name(&definition.name), &line_file)?;
                     let lean_type = lean_ir_param_type(&definition.param_type, &self.type_context)?;
                     let expected = param_type_object_carrier(&definition.param_type)?;
                     self.declarations.push(format!(
@@ -565,6 +733,14 @@ impl LeanEmitter {
                     self.emit_proved_fact(fact)?;
                 }
                 Ok(())
+            }
+            LitexToLeanStatementIr::NamedTheorem(ir) => {
+                let previous = self
+                    .type_context
+                    .replace_well_definedness_context(Default::default());
+                let result = self.emit_named_theorem(ir);
+                self.type_context.replace_well_definedness_context(previous);
+                result
             }
             LitexToLeanStatementIr::Proof(ir) => {
                 for fact in ir.facts.iter() {
@@ -587,20 +763,111 @@ impl LeanEmitter {
             LitexToLeanStatementIr::Fact(ir) => {
                 let previous = self
                     .type_context
-                    .replace_well_definedness_proofs(HashMap::new());
+                    .replace_well_definedness_context(Default::default());
                 let result = self.emit_fact_statement_with_well_definedness(ir);
-                self.type_context.replace_well_definedness_proofs(previous);
+                self.type_context.replace_well_definedness_context(previous);
                 result
             }
             LitexToLeanStatementIr::ProjectedForall(ir) => {
                 let previous = self
                     .type_context
-                    .replace_well_definedness_proofs(HashMap::new());
+                    .replace_well_definedness_context(Default::default());
                 let result = self.emit_projected_forall_with_well_definedness(ir);
-                self.type_context.replace_well_definedness_proofs(previous);
+                self.type_context.replace_well_definedness_context(previous);
                 result
             }
         }
+    }
+
+    fn emit_named_theorem(&mut self, ir: &LitexToLeanNamedTheoremIr) -> Result<(), RuntimeError> {
+        validate_named_theorem_ir(ir)?;
+        let line_file = ir.theorem.proposition.line_file();
+        let theorem_name = lean_name(&ir.name);
+        self.reserve_declaration_name(&theorem_name, &line_file)?;
+        if let Some(fact_id) = ir.theorem.fact_id {
+            if self.emitted_fact_names.contains_key(&fact_id) {
+                return Err(litex_to_lean_error(
+                    &line_file,
+                    "named theorem primary FactId was emitted before its declaration",
+                ));
+            }
+        }
+        self.emit_scoped_certificate_type_witnesses(&ir.well_definedness, &ir.theorem.proposition)?;
+        let mut proof_context = self.root_proof_context();
+        proof_context.scoped_well_definedness = ir.well_definedness.facts.clone();
+        apply_fact_proof_type_hints(&ir.theorem, &mut proof_context.type_context)?;
+        let LitexToLeanFactProofIr::ForallIntroduction {
+            parameter_premises,
+            premises,
+            inferred_premises,
+            conclusions,
+        } = &ir.theorem.proof
+        else {
+            return Err(litex_to_lean_error(
+                &line_file,
+                "named theorem does not retain a direct forall-introduction proof",
+            ));
+        };
+        let mut current_context = proof_context.new_proof_space();
+        let proof_steps = ir
+            .proof_steps
+            .iter()
+            .map(|step| step.statement.clone())
+            .collect::<Vec<_>>();
+        let proof = self.lean_forall_introduction_with_steps(
+            &ir.theorem.proposition,
+            parameter_premises,
+            premises,
+            inferred_premises,
+            &proof_steps,
+            conclusions,
+            &mut current_context,
+        )?;
+        let proposition =
+            lean_fact_with_context(&ir.theorem.proposition, &proof_context.type_context)?;
+        if let Some(fact_id) = ir.theorem.fact_id {
+            self.emitted_fact_names
+                .insert(fact_id, theorem_name.clone());
+        }
+        self.declarations.push(format!(
+            "-- Litex theorem `{}`\ntheorem {} : {} := {}",
+            lean_comment_text(&ir.name),
+            theorem_name,
+            proposition,
+            proof
+        ));
+
+        for projection in ir.stored_projections.iter() {
+            self.emit_proved_fact_with_scoped_well_definedness(projection, &ir.well_definedness)?;
+        }
+        for fact in ir.inferred_facts.iter() {
+            self.emit_proved_fact(fact)?;
+        }
+        Ok(())
+    }
+
+    fn reserve_declaration_name(
+        &mut self,
+        name: &str,
+        line_file: &LineFile,
+    ) -> Result<(), RuntimeError> {
+        if self.emitted_declaration_names.insert(name.to_string()) {
+            return Ok(());
+        }
+        Err(litex_to_lean_error(
+            line_file,
+            format!("Lean declaration name `{name}` is already reserved"),
+        ))
+    }
+
+    fn next_well_definedness_helper_name(
+        &mut self,
+        line_file: &LineFile,
+    ) -> Result<String, RuntimeError> {
+        let name = format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
+        self.next_well_definedness_helper_id += 1;
+        self.reserve_declaration_name(&name, line_file)?;
+        Ok(name)
     }
 
     fn emit_fact_statement_with_well_definedness(
@@ -637,6 +904,10 @@ impl LeanEmitter {
         &mut self,
         certificate: &LitexToLeanWellDefinednessCertificateIr,
     ) -> Result<(), RuntimeError> {
+        validate_well_definedness_object_contract(certificate)?;
+        self.type_context
+            .install_well_definedness_certificate_metadata(certificate);
+        let binder_owned_fact_ids = binder_owned_well_definedness_fact_ids(certificate);
         let mut seen_ids = HashSet::new();
         let certificate_symbol_carriers = well_definedness_certificate_symbol_carriers(certificate);
         let certificate_object_carriers = well_definedness_certificate_object_carriers(certificate);
@@ -671,12 +942,20 @@ impl LeanEmitter {
                     "well-definedness certificate cannot introduce trusted evidence",
                 ));
             }
+            if binder_owned_fact_ids.contains(&evidence.certificate_id) {
+                // The exact certificate metadata remains installed above.  A
+                // proof argument consumed by a nested application is linked
+                // when its owning function/set binder enters Lean scope.
+                continue;
+            }
             if let Some(fact_id) = evidence.fact.fact_id {
-                if self.emitted_fact_ids.contains(&fact_id) {
-                    self.type_context.insert_well_definedness_proof(
-                        &evidence.fact.proposition,
-                        lean_stored_fact_name(fact_id),
-                    );
+                if let Some(name) = self.emitted_fact_names.get(&fact_id) {
+                    self.type_context
+                        .insert_well_definedness_proof_by_certificate_id(
+                            evidence.certificate_id,
+                            &evidence.fact.proposition,
+                            name.clone(),
+                        );
                 }
                 // A not-yet-emitted FactId belongs to the statement's local
                 // verifier scope. Its proposition is already replayed by the
@@ -685,11 +964,13 @@ impl LeanEmitter {
                 continue;
             }
             if let Some(source_fact_id) = direct_citation_fact_id(&evidence.fact.proof) {
-                if self.emitted_fact_ids.contains(&source_fact_id) {
-                    self.type_context.insert_well_definedness_proof(
-                        &evidence.fact.proposition,
-                        lean_stored_fact_name(source_fact_id),
-                    );
+                if let Some(name) = self.emitted_fact_names.get(&source_fact_id) {
+                    self.type_context
+                        .insert_well_definedness_proof_by_certificate_id(
+                            evidence.certificate_id,
+                            &evidence.fact.proposition,
+                            name.clone(),
+                        );
                 }
                 // A direct citation to a not-yet-emitted fact is a local
                 // binder assumption, not a newly proved WD obligation. The
@@ -703,8 +984,7 @@ impl LeanEmitter {
                 .lean_standard_membership_well_definedness(evidence, &certificate_symbol_carriers)?
             {
                 let helper_name =
-                    format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-                self.next_well_definedness_helper_id += 1;
+                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -714,7 +994,11 @@ impl LeanEmitter {
                 ));
                 if is_closed {
                     self.type_context
-                        .insert_well_definedness_proof(&evidence.fact.proposition, helper_name);
+                        .insert_well_definedness_proof_by_certificate_id(
+                            evidence.certificate_id,
+                            &evidence.fact.proposition,
+                            helper_name,
+                        );
                 }
                 continue;
             }
@@ -722,8 +1006,7 @@ impl LeanEmitter {
                 self.lean_closed_numeric_well_definedness(evidence, &certificate_object_carriers)?
             {
                 let helper_name =
-                    format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-                self.next_well_definedness_helper_id += 1;
+                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -732,7 +1015,11 @@ impl LeanEmitter {
                     proof
                 ));
                 self.type_context
-                    .insert_well_definedness_proof(&evidence.fact.proposition, helper_name);
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        helper_name,
+                    );
                 continue;
             }
             if let Some((proposition, proof)) = self.lean_generalized_comparison_well_definedness(
@@ -740,8 +1027,7 @@ impl LeanEmitter {
                 &certificate_symbol_carriers,
             )? {
                 let helper_name =
-                    format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-                self.next_well_definedness_helper_id += 1;
+                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {} (generalized local premise)\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -758,8 +1044,7 @@ impl LeanEmitter {
                 )?
             {
                 let helper_name =
-                    format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-                self.next_well_definedness_helper_id += 1;
+                    self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
                 self.declarations.push(format!(
                     "-- Litex well-definedness certificate {} (generalized strict-order premise)\ntheorem {} : {} := {}",
                     evidence.certificate_id.value(),
@@ -788,8 +1073,8 @@ impl LeanEmitter {
                         ),
                     )
                 })?;
-            let helper_name = format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-            self.next_well_definedness_helper_id += 1;
+            let helper_name =
+                self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
             self.declarations.push(format!(
                 "-- Litex well-definedness certificate {}\ntheorem {} : {} := {}",
                 evidence.certificate_id.value(),
@@ -798,7 +1083,11 @@ impl LeanEmitter {
                 proof
             ));
             self.type_context
-                .insert_well_definedness_proof(&evidence.fact.proposition, helper_name);
+                .insert_well_definedness_proof_by_certificate_id(
+                    evidence.certificate_id,
+                    &evidence.fact.proposition,
+                    helper_name,
+                );
         }
         Ok(())
     }
@@ -815,6 +1104,9 @@ impl LeanEmitter {
         certificate: &LitexToLeanWellDefinednessCertificateIr,
         proposition: &Fact,
     ) -> Result<(), RuntimeError> {
+        validate_well_definedness_object_contract(certificate)?;
+        self.type_context
+            .install_well_definedness_certificate_metadata(certificate);
         let forall_bound_symbol_ids = match proposition {
             Fact::ForallFact(forall) => forall
                 .params_def_with_type
@@ -853,20 +1145,24 @@ impl LeanEmitter {
                 continue;
             }
             if let Some(fact_id) = evidence.fact.fact_id {
-                if self.emitted_fact_ids.contains(&fact_id) {
-                    self.type_context.insert_well_definedness_proof(
-                        &evidence.fact.proposition,
-                        lean_stored_fact_name(fact_id),
-                    );
+                if let Some(name) = self.emitted_fact_names.get(&fact_id) {
+                    self.type_context
+                        .insert_well_definedness_proof_by_certificate_id(
+                            evidence.certificate_id,
+                            &evidence.fact.proposition,
+                            name.clone(),
+                        );
                     continue;
                 }
             }
             if let Some(source_fact_id) = direct_citation_fact_id(&evidence.fact.proof) {
-                if self.emitted_fact_ids.contains(&source_fact_id) {
-                    self.type_context.insert_well_definedness_proof(
-                        &evidence.fact.proposition,
-                        lean_stored_fact_name(source_fact_id),
-                    );
+                if let Some(name) = self.emitted_fact_names.get(&source_fact_id) {
+                    self.type_context
+                        .insert_well_definedness_proof_by_certificate_id(
+                            evidence.certificate_id,
+                            &evidence.fact.proposition,
+                            name.clone(),
+                        );
                     continue;
                 }
             }
@@ -885,8 +1181,8 @@ impl LeanEmitter {
                 } else {
                     continue;
                 };
-            let helper_name = format!("well_defined_fact_{}", self.next_well_definedness_helper_id);
-            self.next_well_definedness_helper_id += 1;
+            let helper_name =
+                self.next_well_definedness_helper_name(&evidence.fact.proposition.line_file())?;
             self.declarations.push(format!(
                 "-- Litex well-definedness certificate {} (forall type witness)\ntheorem {} : {} := {}",
                 evidence.certificate_id.value(),
@@ -896,7 +1192,11 @@ impl LeanEmitter {
             ));
             if is_closed {
                 self.type_context
-                    .insert_well_definedness_proof(&evidence.fact.proposition, helper_name);
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        helper_name,
+                    );
             } else {
                 let Fact::AtomicFact(AtomicFact::InFact(membership)) = &evidence.fact.proposition
                 else {
@@ -1248,6 +1548,7 @@ impl LeanEmitter {
             )
         })?;
         let source_name = lean_exist_source_name(first_witness.symbol_id);
+        self.reserve_declaration_name(&source_name, &ir.source.proposition.line_file())?;
         let source_proof = self.lean_proof(
             &ir.source.proposition,
             &ir.source.proof,
@@ -1262,6 +1563,10 @@ impl LeanEmitter {
         ));
 
         for (witness, value_term) in ir.witnesses.iter().zip(layout.witness_terms.iter()) {
+            self.reserve_declaration_name(
+                &lean_name(&witness.name),
+                &ir.source.proposition.line_file(),
+            )?;
             let lean_type = lean_ir_param_type(&witness.param_type, &self.type_context)?;
             self.declarations.push(format!(
                 "noncomputable def {} : {} := {}",
@@ -1274,17 +1579,20 @@ impl LeanEmitter {
         }
         for (projection, proof_term) in ir.projections.iter().zip(layout.proof_terms.iter()) {
             let fact_id = required_fact_id(projection)?;
-            if !self.emitted_fact_ids.insert(fact_id) {
+            if self.emitted_fact_names.contains_key(&fact_id) {
                 return Err(litex_to_lean_error(
                     &projection.proposition.line_file(),
                     "existential projection FactId was emitted before its witness definition",
                 ));
             }
+            let fact_name = lean_stored_fact_name(fact_id);
+            self.reserve_declaration_name(&fact_name, &projection.proposition.line_file())?;
+            self.emitted_fact_names.insert(fact_id, fact_name.clone());
             let proof_term = proof_term.replace(EXIST_SOURCE_PLACEHOLDER, &source_name);
             self.declarations.push(format!(
                 "-- Litex fact {}\ntheorem {} : {} := by\n  exact {}",
                 fact_id,
-                lean_stored_fact_name(fact_id),
+                fact_name,
                 lean_fact_with_context(&projection.proposition, &self.type_context)?,
                 proof_term
             ));
@@ -1304,13 +1612,17 @@ impl LeanEmitter {
         }
         for choice in ir.choices.iter() {
             let membership_fact_id = validate_object_choice(choice)?;
-            if self.emitted_fact_ids.contains(&membership_fact_id) {
+            if self.emitted_fact_names.contains_key(&membership_fact_id) {
                 return Err(litex_to_lean_error(
                     &choice.membership.proposition.line_file(),
                     "object-choice membership FactId was emitted before its definition",
                 ));
             }
             let source_name = lean_choice_source_name(choice.symbol_id);
+            self.reserve_declaration_name(
+                &source_name,
+                &choice.membership.proposition.line_file(),
+            )?;
             let source_proof = self.lean_proof(
                 &choice.nonempty_proof.proposition,
                 &choice.nonempty_proof.proof,
@@ -1329,6 +1641,10 @@ impl LeanEmitter {
                 .map_err(|message| {
                     litex_to_lean_error(&choice.membership.proposition.line_file(), message)
                 })?;
+            self.reserve_declaration_name(
+                &lean_name(&choice.name),
+                &choice.membership.proposition.line_file(),
+            )?;
             self.declarations.push(format!(
                 "noncomputable def {} : {} := Exists.choose {}",
                 lean_name(&choice.name),
@@ -1341,11 +1657,17 @@ impl LeanEmitter {
                 source_name
             ));
             self.type_context.insert(choice.symbol_id, element_carrier);
-            self.emitted_fact_ids.insert(membership_fact_id);
+            let membership_fact_name = lean_stored_fact_name(membership_fact_id);
+            self.reserve_declaration_name(
+                &membership_fact_name,
+                &choice.membership.proposition.line_file(),
+            )?;
+            self.emitted_fact_names
+                .insert(membership_fact_id, membership_fact_name.clone());
             self.declarations.push(format!(
                 "-- Litex fact {}\ntheorem {} : {} := by\n  exact Exists.choose_spec {}",
                 membership_fact_id,
-                lean_stored_fact_name(membership_fact_id),
+                membership_fact_name,
                 lean_fact_with_context(&choice.membership.proposition, &self.type_context)?,
                 source_name
             ));
@@ -1358,6 +1680,7 @@ impl LeanEmitter {
         ir: &LitexToLeanHaveFunctionEqualIr,
     ) -> Result<(), RuntimeError> {
         let line_file = ir.return_check.proposition.line_file();
+        self.reserve_declaration_name(&lean_name(&ir.name), &line_file)?;
         if ir.membership.proposition.to_string() != ir.membership.expected_proposition.to_string()
             || ir.defining_equality.proposition.to_string()
                 != ir.defining_equality.expected_proposition.to_string()
@@ -1368,10 +1691,10 @@ impl LeanEmitter {
             ));
         }
         if ir.membership.fact_id == ir.defining_equality.fact_id
-            || self.emitted_fact_ids.contains(&ir.membership.fact_id)
+            || self.emitted_fact_names.contains_key(&ir.membership.fact_id)
             || self
-                .emitted_fact_ids
-                .contains(&ir.defining_equality.fact_id)
+                .emitted_fact_names
+                .contains_key(&ir.defining_equality.fact_id)
         {
             return Err(litex_to_lean_error(
                 &line_file,
@@ -1492,15 +1815,18 @@ impl LeanEmitter {
         }
 
         let mut binders = Vec::new();
+        let mut binder_names = Vec::new();
         for parameter in ir.function.parameters.iter() {
+            let parameter_name = lean_name(&parameter.name);
             binders.push(format!(
                 "({} : {})",
-                lean_name(&parameter.name),
+                parameter_name,
                 context
                     .type_context
                     .lean_type(&parameter.element_carrier)
                     .map_err(|message| litex_to_lean_error(&line_file, message))?
             ));
+            binder_names.push(parameter_name);
         }
 
         let mut body_lines = Vec::new();
@@ -1515,6 +1841,7 @@ impl LeanEmitter {
             let proposition = lean_fact_with_context(&premise.fact, &context.type_context)?;
             if parameter.requires_membership_proof {
                 binders.push(format!("({proof_name} : {proposition})"));
+                binder_names.push(proof_name.clone());
             } else {
                 body_lines.push(format!("  have {proof_name} : {proposition} := by"));
                 body_lines.push("    change True".to_string());
@@ -1523,7 +1850,7 @@ impl LeanEmitter {
             register_local_fact(premise.fact_id, &premise.fact, &proof_name, &mut context);
             context
                 .type_context
-                .insert_well_definedness_proof(&premise.fact, proof_name);
+                .insert_parameter_well_definedness_proof(&premise.fact, proof_name);
         }
         for (index, premise) in ir.domain_premises.iter().enumerate() {
             let proof_name = lean_forall_domain_proof_name(index + 1);
@@ -1531,6 +1858,7 @@ impl LeanEmitter {
                 "({proof_name} : {})",
                 lean_fact_with_context(&premise.fact, &context.type_context)?
             ));
+            binder_names.push(proof_name.clone());
             register_local_fact(premise.fact_id, &premise.fact, &proof_name, &mut context);
             context
                 .type_context
@@ -1556,11 +1884,27 @@ impl LeanEmitter {
         let return_check_name = format!("litex_function_return_check_{}", ir.symbol_id.value());
         let return_proposition =
             lean_fact_with_context(&ir.return_check.proposition, &context.type_context)?;
+        let return_proof = if ir.function.return_set.is_universal_native_set() {
+            // Universal native carriers lower to `Set.univ`, so their checked
+            // return-membership fact is definitionally `True`.  Refined
+            // return sets keep and replay the verifier's exact proof below.
+            "by\n  change True\n  trivial".to_string()
+        } else {
+            self.lean_proof(
+                &ir.return_check.proposition,
+                &ir.return_check.proof,
+                &context,
+            )?
+        };
+        let mut return_proof_lines = return_proof.lines();
+        let first_return_proof_line = return_proof_lines.next().ok_or_else(|| {
+            litex_to_lean_error(&line_file, "function-definition return proof is empty")
+        })?;
         body_lines.push(format!(
-            "  have {return_check_name} : {return_proposition} := by"
+            "  have {return_check_name} : {return_proposition} := {first_return_proof_line}"
         ));
-        body_lines.push("    change True".to_string());
-        body_lines.push("    trivial".to_string());
+        body_lines.extend(return_proof_lines.map(|line| format!("  {line}")));
+        let membership_body_lines = body_lines.clone();
 
         let rendered_body = lean_obj_ir_with_expected(
             &ir.body,
@@ -1589,14 +1933,37 @@ impl LeanEmitter {
                 function: Box::new(ir.function.clone()),
             },
         );
-        self.emitted_fact_ids.insert(ir.membership.fact_id);
+        let membership_fact_name = lean_stored_fact_name(ir.membership.fact_id);
+        self.reserve_declaration_name(&membership_fact_name, &line_file)?;
+        self.emitted_fact_names
+            .insert(ir.membership.fact_id, membership_fact_name.clone());
+        let membership_proof = if ir.function.return_set.is_universal_native_set() {
+            "by\n  change True\n  trivial".to_string()
+        } else {
+            let mut lines = vec!["by".to_string()];
+            if !binder_names.is_empty() {
+                lines.push(format!("  intro {}", binder_names.join(" ")));
+            }
+            lines.extend(membership_body_lines);
+            lines.push(format!(
+                "  simpa only [{}] using {return_check_name}",
+                lean_name(&ir.name)
+            ));
+            lines.join("\n")
+        };
         self.declarations.push(format!(
-            "-- Litex fact {}\ntheorem {} : {} := by\n  change True\n  trivial",
+            "-- Litex fact {}\ntheorem {} : {} := {}",
             ir.membership.fact_id,
-            lean_stored_fact_name(ir.membership.fact_id),
-            lean_fact_with_context(&ir.membership.proposition, &self.type_context)?
+            membership_fact_name,
+            lean_fact_with_context(&ir.membership.proposition, &self.type_context)?,
+            membership_proof
         ));
-        self.emitted_fact_ids.insert(ir.defining_equality.fact_id);
+        let defining_equality_fact_name = lean_stored_fact_name(ir.defining_equality.fact_id);
+        self.reserve_declaration_name(&defining_equality_fact_name, &line_file)?;
+        self.emitted_fact_names.insert(
+            ir.defining_equality.fact_id,
+            defining_equality_fact_name.clone(),
+        );
         self.emitted_function_definition_equalities.insert(
             ir.defining_equality.fact_id,
             ir.defining_equality.proposition.to_string(),
@@ -1605,7 +1972,7 @@ impl LeanEmitter {
             "-- Litex checked defining equality: {}\n-- Litex fact {}\ntheorem {} : {} = ({}) := by\n  rfl",
             lean_comment_text(&ir.defining_equality.proposition.to_string()),
             ir.defining_equality.fact_id,
-            lean_stored_fact_name(ir.defining_equality.fact_id),
+            defining_equality_fact_name,
             lean_name(&ir.name),
             lambda
         ));
@@ -1618,6 +1985,10 @@ impl LeanEmitter {
         function_symbol_id: SymbolId,
         context: &mut LeanProofContext,
     ) -> Result<Vec<String>, RuntimeError> {
+        validate_well_definedness_object_contract(certificate)?;
+        context
+            .type_context
+            .install_well_definedness_certificate_metadata(certificate);
         self.lean_scoped_well_definedness_lines(
             &certificate.facts,
             &format!("litex_function_wd_{}", function_symbol_id.value()),
@@ -1679,7 +2050,11 @@ impl LeanEmitter {
                 ));
                 context
                     .type_context
-                    .insert_well_definedness_proof(&evidence.fact.proposition, reusable);
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        reusable,
+                    );
                 continue;
             }
 
@@ -1719,7 +2094,11 @@ impl LeanEmitter {
                 lines.push(format!("    exact {helper_application}"));
                 context
                     .type_context
-                    .insert_well_definedness_proof(&evidence.fact.proposition, local_name.clone());
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        local_name.clone(),
+                    );
                 if let Some(fact_id) = evidence.fact.fact_id {
                     register_local_fact(fact_id, &evidence.fact.proposition, &local_name, context);
                 }
@@ -1754,10 +2133,13 @@ impl LeanEmitter {
                         )
                     })?;
                 lines.extend(generated_lines);
-                context.type_context.insert_well_definedness_proof(
-                    &evidence.fact.proposition,
-                    generated_name.clone(),
-                );
+                context
+                    .type_context
+                    .insert_well_definedness_proof_by_certificate_id(
+                        evidence.certificate_id,
+                        &evidence.fact.proposition,
+                        generated_name.clone(),
+                    );
                 if let Some(fact_id) = evidence.fact.fact_id {
                     register_local_fact(
                         fact_id,
@@ -1770,7 +2152,11 @@ impl LeanEmitter {
             }
             context
                 .type_context
-                .insert_well_definedness_proof(&evidence.fact.proposition, local_name.clone());
+                .insert_well_definedness_proof_by_certificate_id(
+                    evidence.certificate_id,
+                    &evidence.fact.proposition,
+                    local_name.clone(),
+                );
             if let Some(fact_id) = evidence.fact.fact_id {
                 register_local_fact(fact_id, &evidence.fact.proposition, &local_name, context);
             }
@@ -1786,13 +2172,16 @@ impl LeanEmitter {
             ));
         }
         let fact_id = required_fact_id(fact)?;
-        if !self.emitted_fact_ids.insert(fact_id) {
+        if self.emitted_fact_names.contains_key(&fact_id) {
             return Ok(());
         }
+        let fact_name = lean_stored_fact_name(fact_id);
+        self.reserve_declaration_name(&fact_name, &fact.proposition.line_file())?;
+        self.emitted_fact_names.insert(fact_id, fact_name.clone());
         self.declarations.push(format!(
             "-- Litex trust boundary: {}\naxiom {} : {}",
             fact_id,
-            lean_stored_fact_name(fact_id),
+            fact_name,
             lean_fact_with_context(&fact.proposition, &self.type_context)?
         ));
         Ok(())
@@ -1800,7 +2189,7 @@ impl LeanEmitter {
 
     fn emit_proved_fact(&mut self, fact: &LitexToLeanFactIr) -> Result<(), RuntimeError> {
         let fact_id = required_fact_id(fact)?;
-        if self.emitted_fact_ids.contains(&fact_id) {
+        if self.emitted_fact_names.contains_key(&fact_id) {
             return Ok(());
         }
         if matches!(fact.proof, LitexToLeanFactProofIr::Trusted) {
@@ -1812,11 +2201,13 @@ impl LeanEmitter {
         let mut proof_context = self.root_proof_context();
         apply_fact_proof_type_hints(fact, &mut proof_context.type_context)?;
         let proof = self.lean_proof(&fact.proposition, &fact.proof, &proof_context)?;
-        self.emitted_fact_ids.insert(fact_id);
+        let fact_name = lean_stored_fact_name(fact_id);
+        self.reserve_declaration_name(&fact_name, &fact.proposition.line_file())?;
+        self.emitted_fact_names.insert(fact_id, fact_name.clone());
         self.declarations.push(format!(
             "-- Litex fact {}\ntheorem {} : {} := {}",
             fact_id,
-            lean_stored_fact_name(fact_id),
+            fact_name,
             lean_fact_with_context(&fact.proposition, &proof_context.type_context)?,
             proof
         ));
@@ -1829,7 +2220,7 @@ impl LeanEmitter {
         certificate: &LitexToLeanWellDefinednessCertificateIr,
     ) -> Result<(), RuntimeError> {
         let fact_id = required_fact_id(fact)?;
-        if self.emitted_fact_ids.contains(&fact_id) {
+        if self.emitted_fact_names.contains_key(&fact_id) {
             return Ok(());
         }
         if !proof_is_forall_introduction(&fact.proof) {
@@ -1843,11 +2234,13 @@ impl LeanEmitter {
         proof_context.scoped_well_definedness = certificate.facts.clone();
         apply_fact_proof_type_hints(fact, &mut proof_context.type_context)?;
         let proof = self.lean_proof(&fact.proposition, &fact.proof, &proof_context)?;
-        self.emitted_fact_ids.insert(fact_id);
+        let fact_name = lean_stored_fact_name(fact_id);
+        self.reserve_declaration_name(&fact_name, &fact.proposition.line_file())?;
+        self.emitted_fact_names.insert(fact_id, fact_name.clone());
         self.declarations.push(format!(
             "-- Litex fact {}\ntheorem {} : {} := {}",
             fact_id,
-            lean_stored_fact_name(fact_id),
+            fact_name,
             lean_fact_with_context(&fact.proposition, &proof_context.type_context)?,
             proof
         ));
@@ -1969,6 +2362,95 @@ impl LeanEmitter {
                 lean_standard_set_nonempty(proposition)
             }
             LitexToLeanFactProofIr::RuleApplication {
+                rule:
+                    LitexToLeanProofRuleIr::FunctionApplicationReturnMembership {
+                        source_application,
+                        function_set,
+                        typed_return_set,
+                        expected_target,
+                        expected_head_membership,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_function_application_return_membership(
+                proposition,
+                source_application,
+                function_set,
+                typed_return_set,
+                expected_target,
+                expected_head_membership,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::ClosedNumericComparison { expected_target },
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty()
+                && premises.is_empty()
+                && proposition.to_string() == expected_target.to_string()
+                && crate::litex_to_lean_ir::is_closed_numeric_relation(proposition) =>
+            {
+                Ok("by\n  norm_num".to_string())
+            }
+            LitexToLeanFactProofIr::RuleApplication {
+                rule:
+                    LitexToLeanProofRuleIr::RefinedNumericMembership {
+                        target_set,
+                        expected_target,
+                        expected_premises,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_refined_numeric_membership(
+                proposition,
+                target_set,
+                expected_target,
+                expected_premises,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanFactProofIr::RuleApplication {
+                rule:
+                    LitexToLeanProofRuleIr::FunctionSetMembership {
+                        element,
+                        function_set,
+                        expected_target,
+                        expected_pointwise,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_function_set_membership(
+                proposition,
+                element,
+                function_set,
+                expected_target,
+                expected_pointwise,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanFactProofIr::RuleApplication {
+                rule:
+                    LitexToLeanProofRuleIr::SetBuilderMembership {
+                        set_builder,
+                        expected_target,
+                        expected_premises,
+                    },
+                parameter_requirements,
+                premises,
+            } => self.lean_set_builder_membership(
+                proposition,
+                set_builder,
+                expected_target,
+                expected_premises,
+                parameter_requirements,
+                premises,
+                context,
+            ),
+            LitexToLeanFactProofIr::RuleApplication {
                 rule: LitexToLeanProofRuleIr::ClassicalExcludedMiddle,
                 parameter_requirements,
                 premises,
@@ -1991,6 +2473,26 @@ impl LeanEmitter {
                 premises,
                 context,
             ),
+            LitexToLeanFactProofIr::RuleApplication {
+                rule:
+                    LitexToLeanProofRuleIr::Normalization {
+                        kind: LitexToLeanNormalizationKindIr::IntegerExpressionSimplification,
+                    },
+                parameter_requirements,
+                premises,
+            } if parameter_requirements.is_empty()
+                && crate::litex_to_lean_ir::is_checked_closed_integer_remainder_equality(
+                    proposition,
+                ) =>
+            {
+                let mut lines = vec!["by".to_string()];
+                for premise in premises {
+                    let (_, premise_lines) = self.lean_named_local_fact(premise, context)?;
+                    lines.extend(premise_lines);
+                }
+                lines.push("  norm_num".to_string());
+                Ok(lines.join("\n"))
+            }
             LitexToLeanFactProofIr::RuleApplication {
                 rule:
                     LitexToLeanProofRuleIr::Normalization {
@@ -2143,8 +2645,8 @@ impl LeanEmitter {
             LitexToLeanFactProofIr::RuleApplication { rule, .. } => Err(litex_to_lean_error(
                 &proposition.line_file(),
                 format!(
-                    "Litex-to-Lean has no checked backend for proof rule {:?}",
-                    rule
+                    "Litex-to-Lean has no checked backend for proof rule {:?} on `{}`",
+                    rule, proposition
                 ),
             )),
             LitexToLeanFactProofIr::ForallIntroduction {
@@ -2321,10 +2823,15 @@ impl LeanEmitter {
                 "a defining object equality must be an equality fact",
             ));
         };
-        if lean_obj_with_context(&equality.left, &context.type_context)? != definition
-            || lean_obj_with_context(&equality.right, &context.type_context)?
-                != lean_obj_ir_with_context(value, &context.type_context)?
-        {
+        let left = LitexToLeanObjectIr::lower(&equality.left)
+            .map_err(|message| litex_to_lean_error(&proposition.line_file(), message))?;
+        let right = LitexToLeanObjectIr::lower(&equality.right)
+            .map_err(|message| litex_to_lean_error(&proposition.line_file(), message))?;
+        let left_matches_definition = matches!(
+            &left,
+            LitexToLeanObjectIr::Symbol { name, .. } if lean_name(name) == definition
+        );
+        if !left_matches_definition || right != *value {
             return Err(litex_to_lean_error(
                 &proposition.line_file(),
                 "a defining object equality does not match its declaration IR",
@@ -2483,6 +2990,10 @@ impl LeanEmitter {
         match statement {
             LitexToLeanStatementIr::Fact(ir) => {
                 if !ir.well_definedness.facts.is_empty() {
+                    validate_well_definedness_object_contract(&ir.well_definedness)?;
+                    context
+                        .type_context
+                        .install_well_definedness_certificate_metadata(&ir.well_definedness);
                     apply_fact_proof_type_hints(&ir.fact, &mut context.type_context)?;
                     let name_prefix = format!("{}_wd", self.next_proof_fact_name(context));
                     lines.extend(self.lean_scoped_well_definedness_lines(
@@ -2920,6 +3431,15 @@ impl LeanEmitter {
                 }
                 self.lean_arithmetic_builtin_rule(proposition, *rule, premises, context)
             }
+            LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule) => {
+                if !parameter_requirements.is_empty() {
+                    return Err(litex_to_lean_error(
+                        &proposition.line_file(),
+                        "integer-membership closure evidence does not accept parameter requirements",
+                    ));
+                }
+                self.lean_integer_membership_closure(proposition, *rule, premises, context)
+            }
             LitexToLeanBuiltinRuleIr::NotEqualSymmetry => {
                 if !parameter_requirements.is_empty() {
                     return Err(litex_to_lean_error(
@@ -2993,6 +3513,84 @@ impl LeanEmitter {
                 self.lean_positive_real_membership(proposition, premises, context)
             }
         }
+    }
+
+    fn lean_integer_membership_closure(
+        &mut self,
+        proposition: &Fact,
+        rule: LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+        premises: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "integer-membership closure evidence requires a membership target",
+            ));
+        };
+        if !matches!(&target.set, Obj::StandardSet(StandardSet::Z)) {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "integer-membership closure evidence requires target set Z",
+            ));
+        }
+        let operands: [&Obj; 2] = match (rule, &target.element) {
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Add, Obj::Add(value)) => {
+                [value.left.as_ref(), value.right.as_ref()]
+            }
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(value)) => {
+                [value.left.as_ref(), value.right.as_ref()]
+            }
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(value)) => {
+                [value.left.as_ref(), value.right.as_ref()]
+            }
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mod, Obj::Mod(value)) => {
+                [value.left.as_ref(), value.right.as_ref()]
+            }
+            _ => {
+                return Err(litex_to_lean_error(
+                    &proposition.line_file(),
+                    "integer-membership closure rule does not match the target operator",
+                ));
+            }
+        };
+        if premises.len() != operands.len() {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                format!(
+                    "integer-membership closure evidence expected 2 premises but received {}",
+                    premises.len()
+                ),
+            ));
+        }
+        for (premise, operand) in premises.iter().zip(operands) {
+            let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premise.proposition else {
+                return Err(litex_to_lean_error(
+                    &premise.proposition.line_file(),
+                    "integer-membership closure premise is not a membership fact",
+                ));
+            };
+            if !matches!(&membership.set, Obj::StandardSet(StandardSet::Z))
+                || obj_equality_key(&membership.element) != obj_equality_key(operand)
+            {
+                return Err(litex_to_lean_error(
+                    &premise.proposition.line_file(),
+                    "integer-membership closure premise does not match its ordered operand in Z",
+                ));
+            }
+        }
+
+        let mut lines = vec!["by".to_string()];
+        for premise in premises {
+            let (_, premise_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(premise_lines);
+        }
+        // Standard Z is emitted as `Litex.StandardSets.Z`; after validating and
+        // replaying both checked source premises, its membership goal reduces
+        // definitionally to True.
+        lines.push("  change True".to_string());
+        lines.push("  trivial".to_string());
+        Ok(lines.join("\n"))
     }
 
     fn lean_standard_set_membership_projection(
@@ -4297,7 +4895,9 @@ impl LeanEmitter {
             ));
         };
         if emitted_source != &defining_equality.to_string()
-            || !self.emitted_fact_ids.contains(&defining_equality_fact_id)
+            || !self
+                .emitted_fact_names
+                .contains_key(&defining_equality_fact_id)
         {
             return Err(litex_to_lean_error(
                 &proposition.line_file(),
@@ -4341,8 +4941,8 @@ impl LeanEmitter {
         if let Some(local_name) = context.proof_fact_names.get(&fact_id) {
             return Ok(local_name.clone());
         }
-        if self.emitted_fact_ids.contains(&fact_id) {
-            return Ok(lean_stored_fact_name(fact_id));
+        if let Some(name) = self.emitted_fact_names.get(&fact_id) {
+            return Ok(name.clone());
         }
         if let Some(local_name) = context.type_context.well_definedness_proof(proposition) {
             // Litex may check a forall once in a preflight scope and again in
@@ -4356,8 +4956,8 @@ impl LeanEmitter {
         Err(litex_to_lean_error(
             &proposition.line_file(),
             format!(
-                "Litex-to-Lean proof references {} before that fact has a Lean declaration",
-                fact_id
+                "Litex-to-Lean proof references {} for `{}` before that fact has a Lean declaration",
+                fact_id, proposition
             ),
         ))
     }
@@ -4445,12 +5045,425 @@ impl LeanEmitter {
         Ok(lines.join("\n"))
     }
 
+    fn lean_set_builder_membership(
+        &mut self,
+        proposition: &Fact,
+        set_builder: &LitexToLeanObjectIr,
+        expected_target: &Fact,
+        expected_premises: &[Fact],
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty()
+            || proposition.to_string() != expected_target.to_string()
+        {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "set-builder membership certificate has target requirements or a retargeted conclusion",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "set-builder membership certificate is attached to a non-membership fact",
+            ));
+        };
+        let Obj::SetBuilder(source_builder) = &membership.set else {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "literal set-builder membership certificate targets a non-builder set",
+            ));
+        };
+        let rebuilt = LitexToLeanObjectIr::lower(&membership.set)
+            .map_err(|message| litex_to_lean_error(&membership.line_file, message))?;
+        if &rebuilt != set_builder {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "set-builder membership certificate does not match the target builder",
+            ));
+        }
+
+        let mut calculated = vec![Fact::from(InFact::new(
+            membership.element.clone(),
+            source_builder.param_set.as_ref().clone(),
+            membership.line_file.clone(),
+        ))];
+        let mut substitutions = HashMap::new();
+        insert_symbol_substitution(
+            &mut substitutions,
+            &source_builder.param_binding,
+            membership.element.clone(),
+        );
+        let instantiator = Runtime::new();
+        for fact in source_builder.facts.iter() {
+            calculated.push(
+                instantiator
+                    .inst_exist_body_fact(
+                        fact,
+                        &substitutions,
+                        ParamObjType::SetBuilder,
+                        Some(&membership.line_file),
+                    )?
+                    .to_fact(),
+            );
+        }
+        if calculated.len() != expected_premises.len()
+            || calculated
+                .iter()
+                .zip(expected_premises.iter())
+                .any(|(actual, expected)| actual.to_string() != expected.to_string())
+            || premises.len() != expected_premises.len()
+            || premises
+                .iter()
+                .zip(expected_premises.iter())
+                .any(|(actual, expected)| actual.proposition.to_string() != expected.to_string())
+        {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "set-builder membership certificate premises do not match the instantiated base and predicates",
+            ));
+        }
+
+        let mut lines = vec!["by".to_string()];
+        let mut names = Vec::with_capacity(premises.len());
+        for premise in premises {
+            let (name, premise_lines) = self.lean_named_local_fact(premise, context)?;
+            lines.extend(premise_lines);
+            names.push(name);
+        }
+        let proof = right_associated_conjunction_proof(&names);
+        lines.push(format!("  exact {proof}"));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_function_set_membership(
+        &mut self,
+        proposition: &Fact,
+        element: &LitexToLeanObjectIr,
+        function_set: &LitexToLeanObjectIr,
+        expected_target: &Fact,
+        expected_pointwise: &Fact,
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty()
+            || proposition.to_string() != expected_target.to_string()
+            || premises.len() != 1
+            || premises[0].proposition.to_string() != expected_pointwise.to_string()
+            || !matches!(expected_pointwise, Fact::ForallFact(_))
+        {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "function-set membership certificate lost its exact target or pointwise forall premise",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "function-set membership certificate is attached to a non-membership fact",
+            ));
+        };
+        let rebuilt_element = LitexToLeanObjectIr::lower(&membership.element)
+            .map_err(|message| litex_to_lean_error(&membership.line_file, message))?;
+        let rebuilt_set = LitexToLeanObjectIr::lower(&membership.set)
+            .map_err(|message| litex_to_lean_error(&membership.line_file, message))?;
+        if &rebuilt_element != element || &rebuilt_set != function_set {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "function-set membership certificate does not match the target objects",
+            ));
+        }
+        let LitexToLeanObjectIr::FunctionSet { function } = function_set else {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "function-set membership certificate targets a non-function-space object",
+            ));
+        };
+
+        // A universal result set contributes no semantic refinement beyond the
+        // native dependent function type. The verifier still retained and
+        // validated the pointwise child above.
+        if function.return_set.is_universal_native_set() {
+            return Ok("by\n  change True\n  trivial".to_string());
+        }
+
+        let (pointwise_name, mut lines) = self.lean_named_local_fact(&premises[0], context)?;
+        let (function_context, _, target_arguments) =
+            lean_function_value_binders_with_context(function, &context.type_context)?;
+        let mut pointwise_arguments = Vec::new();
+        let mut universal_membership_lines = Vec::new();
+        for (index, parameter) in function.parameters.iter().enumerate() {
+            let parameter_name = lean_name(&parameter.name);
+            pointwise_arguments.push(parameter_name.clone());
+            if parameter.requires_membership_proof {
+                pointwise_arguments.push(format!("litex_fn_parameter_membership_{}", index + 1));
+                continue;
+            }
+
+            // Litex forall facts retain a typing premise for every object
+            // parameter. Native Lean function types erase that proof exactly
+            // when the source set lowers to `Set.univ`, so reconstruct the
+            // erased argument before specializing the checked pointwise fact.
+            let proof_name = format!("litex_fn_universal_membership_{}", index + 1);
+            let requirement: Fact = InFact::new(
+                obj_for_bound_param_from_function_parameter(parameter),
+                parameter.source_set.clone(),
+                membership.line_file.clone(),
+            )
+            .into();
+            universal_membership_lines.push(format!(
+                "  have {proof_name} : {} := by",
+                lean_fact_with_context(&requirement, &function_context)?
+            ));
+            universal_membership_lines.push("    change True".to_string());
+            universal_membership_lines.push("    trivial".to_string());
+            pointwise_arguments.push(proof_name);
+        }
+        pointwise_arguments.extend(
+            function
+                .domain_facts
+                .iter()
+                .enumerate()
+                .map(|(index, _)| format!("litex_fn_domain_{}", index + 1)),
+        );
+
+        lines.insert(0, "by".to_string());
+        if !target_arguments.is_empty() {
+            lines.push(format!("  intro {}", target_arguments.join(" ")));
+        }
+        lines.extend(universal_membership_lines);
+        let pointwise_application = if pointwise_arguments.is_empty() {
+            pointwise_name
+        } else {
+            format!("{} {}", pointwise_name, pointwise_arguments.join(" "))
+        };
+        lines.push(format!("  exact {pointwise_application}"));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_refined_numeric_membership(
+        &mut self,
+        proposition: &Fact,
+        target_set: &StandardSet,
+        expected_target: &Fact,
+        expected_premises: &[Fact],
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty()
+            || proposition.to_string() != expected_target.to_string()
+            || premises.len() != 2
+            || expected_premises.len() != 2
+            || premises
+                .iter()
+                .zip(expected_premises.iter())
+                .any(|(actual, expected)| actual.proposition.to_string() != expected.to_string())
+        {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "refined numeric membership certificate lost its exact target or constructor premises",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition else {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "refined numeric membership certificate is attached to a non-membership fact",
+            ));
+        };
+        if !matches!(&membership.set, Obj::StandardSet(actual) if actual == target_set) {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "refined numeric membership certificate changed its target standard set",
+            ));
+        }
+
+        let zero: Obj = Number::new("0".to_string()).into();
+        let element = membership.element.clone();
+        let (base, condition): (StandardSet, Fact) = match target_set {
+            StandardSet::QPos => (
+                StandardSet::Q,
+                LessFact::new(zero, element.clone(), membership.line_file.clone()).into(),
+            ),
+            StandardSet::RPos => (
+                StandardSet::R,
+                LessFact::new(zero, element.clone(), membership.line_file.clone()).into(),
+            ),
+            StandardSet::QNeg => (
+                StandardSet::Q,
+                LessFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::ZNeg => (
+                StandardSet::Z,
+                LessFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::RNeg => (
+                StandardSet::R,
+                LessFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::QStar => (
+                StandardSet::Q,
+                NotEqualFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::ZStar => (
+                StandardSet::Z,
+                NotEqualFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::RStar => (
+                StandardSet::R,
+                NotEqualFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            StandardSet::CStar => (
+                StandardSet::C,
+                NotEqualFact::new(element.clone(), zero, membership.line_file.clone()).into(),
+            ),
+            _ => {
+                return Err(litex_to_lean_error(
+                    &membership.line_file,
+                    "refined numeric membership certificate names a non-refined standard set",
+                ))
+            }
+        };
+        let base: Fact = InFact::new(element, base.into(), membership.line_file.clone()).into();
+        if expected_premises[0].to_string() != base.to_string()
+            || expected_premises[1].to_string() != condition.to_string()
+        {
+            return Err(litex_to_lean_error(
+                &membership.line_file,
+                "refined numeric membership premises do not reconstruct the target set definition",
+            ));
+        }
+
+        // The base-carrier child is represented by the native Lean type and
+        // its universal set membership reduces to True. The second child is
+        // exactly the predicate defining the refined set.
+        let (condition_name, mut lines) = self.lean_named_local_fact(&premises[1], context)?;
+        lines.insert(0, "by".to_string());
+        lines.push(format!("  simpa using {condition_name}"));
+        Ok(lines.join("\n"))
+    }
+
+    fn lean_function_application_return_membership(
+        &mut self,
+        proposition: &Fact,
+        source_application: &LitexToLeanObjectIr,
+        function_set: &LitexToLeanObjectIr,
+        typed_return_set: &LitexToLeanObjectIr,
+        expected_target: &Fact,
+        expected_head_membership: &Fact,
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty()
+            || proposition.to_string() != expected_target.to_string()
+            || premises.len() != 1
+            || premises[0].proposition.to_string() != expected_head_membership.to_string()
+        {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "function-application return certificate lost its target or head-membership premise",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+            return Err(litex_to_lean_error(
+                &proposition.line_file(),
+                "function-application return certificate is attached to a non-membership fact",
+            ));
+        };
+        let rebuilt_application = LitexToLeanObjectIr::lower(&target.element)
+            .map_err(|message| litex_to_lean_error(&target.line_file, message))?;
+        let rebuilt_return_set = LitexToLeanObjectIr::lower(&target.set)
+            .map_err(|message| litex_to_lean_error(&target.line_file, message))?;
+        if &rebuilt_application != source_application || &rebuilt_return_set != typed_return_set {
+            return Err(litex_to_lean_error(
+                &target.line_file,
+                "function-application return certificate does not match its source application or instantiated return set",
+            ));
+        }
+        let LitexToLeanObjectIr::FunctionApplication(application) = source_application else {
+            return Err(litex_to_lean_error(
+                &target.line_file,
+                "function-application return certificate contains a non-application object",
+            ));
+        };
+        let LitexToLeanObjectIr::FunctionSet { function } = function_set else {
+            return Err(litex_to_lean_error(
+                &target.line_file,
+                "function-application return certificate contains a non-function-space signature",
+            ));
+        };
+        let Fact::AtomicFact(AtomicFact::InFact(head_membership)) = expected_head_membership else {
+            return Err(litex_to_lean_error(
+                &expected_head_membership.line_file(),
+                "function-application return certificate head premise is not a membership fact",
+            ));
+        };
+        let rebuilt_head = LitexToLeanObjectIr::lower(&head_membership.element)
+            .map_err(|message| litex_to_lean_error(&head_membership.line_file, message))?;
+        let rebuilt_head_set = LitexToLeanObjectIr::lower(&head_membership.set)
+            .map_err(|message| litex_to_lean_error(&head_membership.line_file, message))?;
+        if rebuilt_head != *application.head || rebuilt_head_set != *function_set {
+            return Err(litex_to_lean_error(
+                &head_membership.line_file,
+                "function-application return certificate head premise does not match the application signature",
+            ));
+        }
+
+        // A universal final carrier has no remaining predicate after native
+        // Lean typing. Refined and nested-refined returns eliminate the exact
+        // head membership proof across every retained source application layer.
+        if typed_return_set.is_universal_native_set() {
+            return Ok("by\n  change True\n  trivial".to_string());
+        }
+        let (head_proof, mut lines) = if let Some(proof) = context
+            .type_context
+            .alpha_equivalent_membership_proof(&head_membership.element, &head_membership.set)
+        {
+            (proof.to_string(), Vec::new())
+        } else {
+            self.lean_named_local_fact(&premises[0], context)?
+        };
+        let eliminated = lean_function_membership_elimination_with_context(
+            &head_proof,
+            application,
+            function,
+            &context.type_context,
+        )?;
+        lines.insert(0, "by".to_string());
+        lines.push(format!("  exact {eliminated}"));
+        Ok(lines.join("\n"))
+    }
+
     fn lean_forall_introduction(
         &mut self,
         proposition: &Fact,
         parameter_premises: &[LitexToLeanLocalPremiseIr],
         premises: &[LitexToLeanLocalPremiseIr],
         inferred_premises: &[LitexToLeanFactIr],
+        conclusions: &[LitexToLeanFactIr],
+        context: &mut LeanProofContext,
+    ) -> Result<String, RuntimeError> {
+        self.lean_forall_introduction_with_steps(
+            proposition,
+            parameter_premises,
+            premises,
+            inferred_premises,
+            &[],
+            conclusions,
+            context,
+        )
+    }
+
+    fn lean_forall_introduction_with_steps(
+        &mut self,
+        proposition: &Fact,
+        parameter_premises: &[LitexToLeanLocalPremiseIr],
+        premises: &[LitexToLeanLocalPremiseIr],
+        inferred_premises: &[LitexToLeanFactIr],
+        proof_steps: &[LitexToLeanStatementIr],
         conclusions: &[LitexToLeanFactIr],
         context: &mut LeanProofContext,
     ) -> Result<String, RuntimeError> {
@@ -4531,7 +5544,7 @@ impl LeanEmitter {
                     .insert(premise.fact_id, local_name.clone());
                 context
                     .type_context
-                    .insert_well_definedness_proof(&premise.fact, local_name.clone());
+                    .insert_parameter_well_definedness_proof(&premise.fact, local_name.clone());
                 intro_names.push(local_name);
             }
         }
@@ -4554,6 +5567,9 @@ impl LeanEmitter {
         // carrier instead of elaborating independently (usually as `ℕ`).
         for fact in inferred_premises.iter().chain(conclusions.iter()) {
             apply_fact_proof_type_hints(fact, &mut context.type_context)?;
+        }
+        for step in proof_steps {
+            apply_statement_type_hints(step, &mut context.type_context)?;
         }
         let mut inferred_lines = Vec::new();
         for inferred in inferred_premises {
@@ -4578,6 +5594,9 @@ impl LeanEmitter {
         ];
         lines.extend(inferred_lines);
         lines.extend(scoped_well_definedness_lines);
+        for step in proof_steps {
+            lines.extend(self.lean_local_statement(step, context)?);
+        }
         if conclusions.len() == 1 {
             let conclusion = &conclusions[0];
             let inner = self.lean_proof_in_current_space(
@@ -4899,22 +5918,26 @@ fn apply_proof_type_hints(
                     type_context,
                 );
             }
+            if matches!(
+                rule,
+                LitexToLeanProofRuleIr::Normalization {
+                    kind: LitexToLeanNormalizationKindIr::IntegerExpressionSimplification,
+                }
+            ) {
+                expect_unconstrained_binary_fact_carrier(
+                    proposition,
+                    &LitexToLeanCarrierIr::Integer,
+                    type_context,
+                );
+            }
             if let LitexToLeanProofRuleIr::ClosedNumericReflection { carrier } = rule {
                 expect_unconstrained_binary_fact_carrier(proposition, carrier, type_context);
             }
-            if matches!(
-                rule,
-                LitexToLeanProofRuleIr::ClosedUniversalNativeMembership
-            ) {
-                if let Fact::AtomicFact(AtomicFact::InFact(membership)) = proposition {
-                    let set = LitexToLeanObjectIr::lower(&membership.set)
-                        .map_err(|message| litex_to_lean_error(&membership.line_file, message))?;
-                    type_context.expect_object(
-                        &membership.element,
-                        LitexToLeanCarrierIr::for_membership_set(&set),
-                    );
-                }
-            }
+            // Universal native membership carries its expectation locally in
+            // the target set.  Do not persist that expectation by object key:
+            // one Litex numeral may legitimately appear in both `R` and `C`
+            // well-definedness certificates, while each Lean occurrence is
+            // typed by its own membership proposition.
             if is_positive_real_membership {
                 expect_unconstrained_binary_fact_carrier(
                     proposition,
@@ -5039,6 +6062,16 @@ fn apply_statement_type_hints(
             }
             Ok(())
         }
+        LitexToLeanStatementIr::NamedTheorem(ir) => {
+            apply_fact_proof_type_hints(&ir.theorem, type_context)?;
+            for step in ir.proof_steps.iter() {
+                apply_statement_type_hints(&step.statement, type_context)?;
+            }
+            for fact in ir.stored_projections.iter().chain(ir.inferred_facts.iter()) {
+                apply_fact_proof_type_hints(fact, type_context)?;
+            }
+            Ok(())
+        }
         LitexToLeanStatementIr::Proof(ir) => {
             for fact in ir.facts.iter().chain(ir.inferred_facts.iter()) {
                 apply_fact_proof_type_hints(fact, type_context)?;
@@ -5158,6 +6191,12 @@ fn known_object_carrier(
     object: &Obj,
     type_context: &LeanTypeContext,
 ) -> Option<LitexToLeanCarrierIr> {
+    if let Some(carrier) = type_context.expected_object(object) {
+        return type_context
+            .resolve_carrier(carrier)
+            .ok()
+            .or_else(|| Some(carrier.clone()));
+    }
     let object = LitexToLeanObjectIr::lower(object).ok()?;
     let carrier = type_context.object_carrier(&object).ok()??;
     type_context
@@ -5295,6 +6334,14 @@ fn lean_right_associated_conjunction(parts: &[String]) -> String {
         [] => "True".to_string(),
         [only] => only.clone(),
         [first, rest @ ..] => format!("({}) ∧ {}", first, lean_right_associated_conjunction(rest)),
+    }
+}
+
+fn right_associated_conjunction_proof(parts: &[String]) -> String {
+    match parts {
+        [] => "True.intro".to_string(),
+        [only] => only.clone(),
+        [first, rest @ ..] => format!("⟨{}, {}⟩", first, right_associated_conjunction_proof(rest)),
     }
 }
 
@@ -5559,13 +6606,14 @@ fn lean_binary_fact_with_context(
         (Some(carrier), _) | (_, Some(carrier)) => Some(carrier),
         (None, None) => None,
     };
-    let inferred = if hinted.is_some() {
-        hinted.clone()
-    } else {
-        type_context
-            .joined_numeric_carrier(&[&left_ir, &right_ir])
-            .map_err(|message| litex_to_lean_error(&default_line_file(), message))?
-    };
+    // A carrier derived from a bound symbol or a typed expression is stronger
+    // than the fallback expectation retained for an otherwise ambiguous
+    // literal. The expectation map is shared across one proof tree, so the
+    // same source literal can legitimately occur in several target types.
+    let inferred = type_context
+        .joined_numeric_carrier(&[&left_ir, &right_ir])
+        .map_err(|message| litex_to_lean_error(&default_line_file(), message))?
+        .or_else(|| hinted.clone());
     if inferred.is_none()
         && (requires_checked_closed_numeric_carrier(left)
             || requires_checked_closed_numeric_carrier(right))
@@ -5657,7 +6705,8 @@ fn lean_forall_fact_with_context(
             if let Some(requirement) = forall_parameter_requirement_fact(binding, &group.param_type)
             {
                 let proof_name = lean_forall_parameter_proof_name(flat_parameter_index);
-                type_context.insert_well_definedness_proof(&requirement, proof_name.clone());
+                type_context
+                    .insert_parameter_well_definedness_proof(&requirement, proof_name.clone());
                 parameter_proof_names.insert(binding.id(), proof_name);
             }
         }
@@ -6073,6 +7122,62 @@ fn ensure_obj_uses_capture_free_lean_names(
                     context,
                 )?;
             }
+            ensure_obj_uses_capture_free_lean_names(
+                &function.return_set,
+                binders_by_id,
+                binders_by_lean_name,
+                line_file,
+                context,
+            )?;
+        }
+        LitexToLeanObjectIr::SetBuilder(builder) => {
+            ensure_obj_uses_capture_free_lean_names(
+                &builder.set,
+                binders_by_id,
+                binders_by_lean_name,
+                line_file,
+                context,
+            )?;
+            for fact in builder.facts.iter() {
+                let mut objects = Vec::new();
+                collect_fact_objects_for_lean_name_check(fact, &mut objects);
+                for object in objects {
+                    let lowered = LitexToLeanObjectIr::lower(object)
+                        .map_err(|message| litex_to_lean_error(line_file, message))?;
+                    ensure_obj_uses_capture_free_lean_names(
+                        &lowered,
+                        binders_by_id,
+                        binders_by_lean_name,
+                        line_file,
+                        context,
+                    )?;
+                }
+            }
+        }
+        LitexToLeanObjectIr::AnonymousFunction(function) => {
+            for parameter in function.function.parameters.iter() {
+                ensure_obj_uses_capture_free_lean_names(
+                    &parameter.set,
+                    binders_by_id,
+                    binders_by_lean_name,
+                    line_file,
+                    context,
+                )?;
+            }
+            ensure_obj_uses_capture_free_lean_names(
+                &function.function.return_set,
+                binders_by_id,
+                binders_by_lean_name,
+                line_file,
+                context,
+            )?;
+            ensure_obj_uses_capture_free_lean_names(
+                &function.body,
+                binders_by_id,
+                binders_by_lean_name,
+                line_file,
+                context,
+            )?;
         }
         LitexToLeanObjectIr::FunctionApplication(application) => {
             ensure_obj_uses_capture_free_lean_names(
@@ -6269,6 +7374,163 @@ pub(super) fn lean_function_type_with_context(
     Ok(tail)
 }
 
+fn lean_function_value_binders_with_context(
+    function: &LitexToLeanFunctionTypeIr,
+    outer_type_context: &LeanTypeContext,
+) -> Result<(LeanTypeContext, Vec<String>, Vec<String>), RuntimeError> {
+    let mut type_context = outer_type_context.clone();
+    for parameter in function.parameters.iter() {
+        type_context.insert(parameter.symbol_id, parameter.element_carrier.clone());
+    }
+
+    let mut binders = Vec::new();
+    let mut arguments = Vec::new();
+    for parameter in function.parameters.iter() {
+        let name = lean_name(&parameter.name);
+        let parameter_type = type_context
+            .lean_type(&parameter.element_carrier)
+            .map_err(|message| litex_to_lean_error(&default_line_file(), message))?;
+        binders.push(format!("({name} : {parameter_type})"));
+        arguments.push(name);
+    }
+    for (index, parameter) in function.parameters.iter().enumerate() {
+        if !parameter.requires_membership_proof {
+            continue;
+        }
+        let proof_name = format!("litex_fn_parameter_membership_{}", index + 1);
+        let parameter_obj = LitexToLeanObjectIr::Symbol {
+            symbol_id: parameter.symbol_id,
+            name: parameter.name.clone(),
+        };
+        let proposition = format!(
+            "{} ∈ {}",
+            lean_obj_ir_with_expected(
+                &parameter_obj,
+                &parameter.element_carrier,
+                &type_context,
+                false,
+            )?,
+            lean_obj_ir_with_context(&parameter.set, &type_context)?,
+        );
+        binders.push(format!("({proof_name} : {proposition})"));
+        arguments.push(proof_name.clone());
+        let source_fact: Fact = InFact::new(
+            obj_for_bound_param_from_function_parameter(parameter),
+            parameter.source_set.clone(),
+            default_line_file(),
+        )
+        .into();
+        type_context.insert_parameter_well_definedness_proof(&source_fact, proof_name);
+    }
+    for (index, fact) in function.domain_facts.iter().enumerate() {
+        let proof_name = format!("litex_fn_domain_{}", index + 1);
+        binders.push(format!(
+            "({proof_name} : {})",
+            lean_fact_with_context(fact, &type_context)?
+        ));
+        arguments.push(proof_name.clone());
+        type_context.insert_well_definedness_proof(fact, proof_name);
+    }
+    Ok((type_context, binders, arguments))
+}
+
+fn obj_for_bound_param_from_function_parameter(parameter: &LitexToLeanFunctionParameterIr) -> Obj {
+    let binding = SymbolBinding::new(
+        parameter.symbol_id,
+        parameter.name.clone(),
+        parameter.name.clone(),
+    );
+    obj_for_bound_param_in_scope(&binding, ParamObjType::FnSet)
+}
+
+fn lean_function_set_with_context(
+    function: &LitexToLeanFunctionTypeIr,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let function_type = lean_function_type_with_context(function, type_context)?;
+    if function.return_set.is_universal_native_set() {
+        return Ok(format!("(Set.univ : Set ({function_type}))"));
+    }
+
+    let function_name = if function
+        .parameters
+        .iter()
+        .any(|parameter| lean_name(&parameter.name) == "litex_function_value")
+    {
+        "litex_function_value_"
+    } else {
+        "litex_function_value"
+    };
+    let (local_context, binders, arguments) =
+        lean_function_value_binders_with_context(function, type_context)?;
+    let application = if arguments.is_empty() {
+        function_name.to_string()
+    } else {
+        format!("{} {}", function_name, arguments.join(" "))
+    };
+    let return_set = lean_obj_ir_with_context(&function.return_set, &local_context)?;
+    let predicate = format!("({application}) ∈ {return_set}");
+    let predicate = if binders.is_empty() {
+        predicate
+    } else {
+        format!("∀ {}, {predicate}", binders.join(" "))
+    };
+    Ok(format!(
+        "{{{function_name} : ({function_type}) | {predicate}}}"
+    ))
+}
+
+fn lean_set_builder_with_context(
+    builder: &LitexToLeanSetBuilderIr,
+    outer_type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let mut type_context = outer_type_context.clone();
+    type_context.insert(builder.symbol_id, builder.element_carrier.clone());
+    let parameter = LitexToLeanObjectIr::Symbol {
+        symbol_id: builder.symbol_id,
+        name: builder.name.clone(),
+    };
+    let parameter_text =
+        lean_obj_ir_with_expected(&parameter, &builder.element_carrier, &type_context, false)?;
+    let set_text = lean_obj_ir_with_context(&builder.set, &type_context)?;
+    let mut predicates = vec![format!("{parameter_text} ∈ {set_text}")];
+    predicates.extend(
+        builder
+            .facts
+            .iter()
+            .map(|fact| lean_fact_with_context(fact, &type_context))
+            .collect::<Result<Vec<_>, RuntimeError>>()?,
+    );
+    let element_type = type_context
+        .lean_type(&builder.element_carrier)
+        .map_err(|message| litex_to_lean_error(&default_line_file(), message))?;
+    Ok(format!(
+        "{{{} : {} | {}}}",
+        lean_name(&builder.name),
+        element_type,
+        lean_right_associated_conjunction(&predicates)
+    ))
+}
+
+fn lean_anonymous_function_with_context(
+    anonymous: &LitexToLeanAnonymousFunctionIr,
+    outer_type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let (type_context, binders, _) =
+        lean_function_value_binders_with_context(&anonymous.function, outer_type_context)?;
+    let body = lean_obj_ir_with_expected(
+        &anonymous.body,
+        &anonymous.function.return_carrier,
+        &type_context,
+        false,
+    )?;
+    if binders.is_empty() {
+        Ok(body)
+    } else {
+        Ok(format!("(fun {} => {})", binders.join(" "), body))
+    }
+}
+
 fn lean_function_application_with_context(
     application: &LitexToLeanFunctionApplicationIr,
     type_context: &LeanTypeContext,
@@ -6342,7 +7604,11 @@ fn lean_function_application_with_context(
             substitutions.insert(parameter.substitution_key.clone(), source_argument.clone());
         }
         let instantiator = Runtime::new();
-        for (parameter, source_argument) in function.parameters.iter().zip(source_arguments.iter())
+        for (parameter_index, (parameter, source_argument)) in function
+            .parameters
+            .iter()
+            .zip(source_arguments.iter())
+            .enumerate()
         {
             if !parameter.requires_membership_proof {
                 continue;
@@ -6364,22 +7630,30 @@ fn lean_function_application_with_context(
                 default_line_file(),
             )
             .into();
-            let proof_name = type_context
-                .well_definedness_proof(&requirement)
-                .ok_or_else(|| {
+            let (_, proof_name) = type_context
+                .function_requirement_proof(
+                    &application.source_application,
+                    WellDefinednessRequirementRole::FunctionArgumentMembership {
+                        layer_index,
+                        parameter_index,
+                    },
+                    &requirement,
+                )
+                .map_err(|message| {
                     litex_to_lean_error(
                         &default_line_file(),
                         format!(
-                            "Litex-to-Lean function application layer {} is missing the retained membership proof `{}`",
+                            "Litex-to-Lean function application layer {} cannot use membership proof `{}`: {}",
                             layer_index + 1,
-                            requirement
+                            requirement,
+                            message,
                         ),
                     )
                 })?;
             rendered.push(' ');
             rendered.push_str(proof_name);
         }
-        for source_domain in function.domain_facts.iter() {
+        for (domain_index, source_domain) in function.domain_facts.iter().enumerate() {
             let requirement = instantiator
                 .inst_fact(source_domain, &substitutions, ParamObjType::FnSet, None)
                 .map_err(|error| {
@@ -6391,15 +7665,23 @@ fn lean_function_application_with_context(
                         ),
                     )
                 })?;
-            let proof_name = type_context
-                .well_definedness_proof(&requirement)
-                .ok_or_else(|| {
+            let (_, proof_name) = type_context
+                .function_requirement_proof(
+                    &application.source_application,
+                    WellDefinednessRequirementRole::FunctionDomain {
+                        layer_index,
+                        domain_index,
+                    },
+                    &requirement,
+                )
+                .map_err(|message| {
                     litex_to_lean_error(
                         &requirement.line_file(),
                         format!(
-                            "Litex-to-Lean function application layer {} is missing the retained domain proof `{}`",
+                            "Litex-to-Lean function application layer {} cannot use domain proof `{}`: {}",
                             layer_index + 1,
-                            requirement
+                            requirement,
+                            message,
                         ),
                     )
                 })?;
@@ -6409,6 +7691,173 @@ fn lean_function_application_with_context(
         carrier = (*function.return_carrier).clone();
     }
     Ok(format!("({})", rendered))
+}
+
+/// Apply an extensional function-space membership proof through the same exact
+/// source layers and WD proof slots used by the corresponding value term.
+/// Values precede membership proofs, which precede domain proofs in every
+/// layer; no currying or argument regrouping is inferred here.
+fn lean_function_membership_elimination_with_context(
+    head_proof: &str,
+    application: &LitexToLeanFunctionApplicationIr,
+    initial_function: &LitexToLeanFunctionTypeIr,
+    type_context: &LeanTypeContext,
+) -> Result<String, RuntimeError> {
+    let mut rendered = head_proof.to_string();
+    let mut current_function = initial_function.clone();
+    let instantiator = Runtime::new();
+
+    for (layer_index, arguments) in application.argument_layers.iter().enumerate() {
+        let function = &current_function;
+        if arguments.len() != function.parameters.len() {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                format!(
+                    "function-membership elimination layer {} has {} arguments but its retained signature requires {}",
+                    layer_index + 1,
+                    arguments.len(),
+                    function.parameters.len()
+                ),
+            ));
+        }
+        let Some(source_arguments) = application.source_argument_layers.get(layer_index) else {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                format!(
+                    "function-membership elimination layer {} lost its source arguments",
+                    layer_index + 1
+                ),
+            ));
+        };
+        if source_arguments.len() != arguments.len() {
+            return Err(litex_to_lean_error(
+                &default_line_file(),
+                format!(
+                    "function-membership elimination layer {} has mismatched source and structural arities",
+                    layer_index + 1
+                ),
+            ));
+        }
+
+        for (argument, parameter) in arguments.iter().zip(function.parameters.iter()) {
+            rendered.push(' ');
+            rendered.push_str(&lean_obj_ir_with_expected(
+                argument,
+                &parameter.element_carrier,
+                type_context,
+                false,
+            )?);
+        }
+
+        let mut substitutions = HashMap::new();
+        for (parameter, source_argument) in function.parameters.iter().zip(source_arguments.iter())
+        {
+            substitutions.insert(parameter.name.clone(), source_argument.clone());
+            substitutions.insert(parameter.substitution_key.clone(), source_argument.clone());
+        }
+        for (parameter_index, (parameter, source_argument)) in function
+            .parameters
+            .iter()
+            .zip(source_arguments.iter())
+            .enumerate()
+        {
+            if !parameter.requires_membership_proof {
+                continue;
+            }
+            let instantiated_set = instantiator
+                .inst_obj(&parameter.source_set, &substitutions, ParamObjType::FnSet)
+                .map_err(|error| {
+                    litex_to_lean_error(
+                        &default_line_file(),
+                        format!(
+                            "failed to instantiate function-membership elimination parameter: {}",
+                            error.trace_message()
+                        ),
+                    )
+                })?;
+            let requirement: Fact = InFact::new(
+                source_argument.clone(),
+                instantiated_set,
+                default_line_file(),
+            )
+            .into();
+            let (_, proof_name) = type_context
+                .function_requirement_proof(
+                    &application.source_application,
+                    WellDefinednessRequirementRole::FunctionArgumentMembership {
+                        layer_index,
+                        parameter_index,
+                    },
+                    &requirement,
+                )
+                .map_err(|message| {
+                    litex_to_lean_error(
+                        &requirement.line_file(),
+                        format!(
+                            "function-membership elimination layer {} cannot use membership proof `{}`: {}",
+                            layer_index + 1,
+                            requirement,
+                            message
+                        ),
+                    )
+                })?;
+            rendered.push(' ');
+            rendered.push_str(proof_name);
+        }
+        for (domain_index, source_domain) in function.domain_facts.iter().enumerate() {
+            let requirement = instantiator
+                .inst_fact(source_domain, &substitutions, ParamObjType::FnSet, None)
+                .map_err(|error| {
+                    litex_to_lean_error(
+                        &source_domain.line_file(),
+                        format!(
+                            "failed to instantiate function-membership elimination domain: {}",
+                            error.trace_message()
+                        ),
+                    )
+                })?;
+            let (_, proof_name) = type_context
+                .function_requirement_proof(
+                    &application.source_application,
+                    WellDefinednessRequirementRole::FunctionDomain {
+                        layer_index,
+                        domain_index,
+                    },
+                    &requirement,
+                )
+                .map_err(|message| {
+                    litex_to_lean_error(
+                        &requirement.line_file(),
+                        format!(
+                            "function-membership elimination layer {} cannot use domain proof `{}`: {}",
+                            layer_index + 1,
+                            requirement,
+                            message
+                        ),
+                    )
+                })?;
+            rendered.push(' ');
+            rendered.push_str(proof_name);
+        }
+
+        if layer_index + 1 < application.argument_layers.len() {
+            let resolved = type_context
+                .resolve_carrier(function.return_carrier.as_ref())
+                .map_err(|message| litex_to_lean_error(&default_line_file(), message))?;
+            let LitexToLeanCarrierIr::Function { function: next } = resolved else {
+                return Err(litex_to_lean_error(
+                    &default_line_file(),
+                    format!(
+                        "function-membership elimination layer {} has a non-function intermediate return carrier",
+                        layer_index + 1
+                    ),
+                ));
+            };
+            current_function = (*next).clone();
+        }
+    }
+
+    Ok(format!("({rendered})"))
 }
 
 pub(super) fn lean_obj_ir_with_context(
@@ -6435,28 +7884,16 @@ pub(super) fn lean_obj_ir_with_context(
             LitexToLeanConstantObjectIr::Pi => "Real.pi",
         }
         .to_string()),
-        LitexToLeanObjectIr::StandardSet(set) => Ok(match set {
-            LitexToLeanStandardSetIr::PositiveNatural => "{n : ℕ | 0 < n}",
-            LitexToLeanStandardSetIr::Natural => "(Set.univ : Set ℕ)",
-            LitexToLeanStandardSetIr::Rational => "(Set.univ : Set ℚ)",
-            LitexToLeanStandardSetIr::Integer => "(Set.univ : Set ℤ)",
-            LitexToLeanStandardSetIr::Real => "(Set.univ : Set ℝ)",
-            LitexToLeanStandardSetIr::Complex => "(Set.univ : Set ℂ)",
-            LitexToLeanStandardSetIr::PositiveRational => "{q : ℚ | 0 < q}",
-            LitexToLeanStandardSetIr::PositiveReal => "{r : ℝ | 0 < r}",
-            LitexToLeanStandardSetIr::NegativeRational => "{q : ℚ | q < 0}",
-            LitexToLeanStandardSetIr::NegativeInteger => "{z : ℤ | z < 0}",
-            LitexToLeanStandardSetIr::NegativeReal => "{r : ℝ | r < 0}",
-            LitexToLeanStandardSetIr::NonzeroRational => "{q : ℚ | q ≠ 0}",
-            LitexToLeanStandardSetIr::NonzeroInteger => "{z : ℤ | z ≠ 0}",
-            LitexToLeanStandardSetIr::NonzeroReal => "{r : ℝ | r ≠ 0}",
-            LitexToLeanStandardSetIr::NonzeroComplex => "{c : ℂ | c ≠ 0}",
+        LitexToLeanObjectIr::StandardSet(set) => Ok(lean_standard_set_name(*set).to_string()),
+        LitexToLeanObjectIr::FunctionSet { function } => {
+            lean_function_set_with_context(function, type_context)
         }
-        .to_string()),
-        LitexToLeanObjectIr::FunctionSet { function } => Ok(format!(
-            "(Set.univ : Set ({}))",
-            lean_function_type_with_context(function, type_context)?
-        )),
+        LitexToLeanObjectIr::SetBuilder(builder) => {
+            lean_set_builder_with_context(builder, type_context)
+        }
+        LitexToLeanObjectIr::AnonymousFunction(function) => {
+            lean_anonymous_function_with_context(function, type_context)
+        }
         LitexToLeanObjectIr::FunctionApplication(application) => {
             lean_function_application_with_context(application, type_context)
         }
@@ -6511,7 +7948,18 @@ fn lean_builtin_obj_application(
 ) -> Result<String, RuntimeError> {
     let rendered = arguments
         .iter()
-        .map(|argument| lean_obj_ir_with_context(argument, type_context))
+        .enumerate()
+        .map(|(argument_index, argument)| {
+            if let Some(carrier) = operator.intrinsic_argument_carrier(argument_index) {
+                // This expectation is part of the Litex operator contract, not
+                // merely a coercion hint. In particular, bare numerals in `%`
+                // must elaborate as integers even when the surrounding fact
+                // supplies no carrier information.
+                lean_obj_ir_with_expected(argument, &carrier, type_context, true)
+            } else {
+                lean_obj_ir_with_context(argument, type_context)
+            }
+        })
         .collect::<Result<Vec<_>, RuntimeError>>()?;
     let expected_arity = match operator {
         LitexToLeanBuiltinObjectOperatorIr::Floor
@@ -7453,6 +8901,72 @@ fn validate_projected_forall_ir(ir: &LitexToLeanProjectedForallIr) -> Result<(),
     Ok(())
 }
 
+fn validate_named_theorem_ir(ir: &LitexToLeanNamedTheoremIr) -> Result<(), RuntimeError> {
+    let Fact::ForallFact(source) = &ir.theorem.proposition else {
+        return Err(litex_to_lean_error(
+            &ir.theorem.proposition.line_file(),
+            "named-theorem IR proposition is not a forall fact",
+        ));
+    };
+    if ir.name.trim().is_empty() {
+        return Err(litex_to_lean_error(
+            &source.line_file,
+            "named-theorem IR has an empty source name",
+        ));
+    }
+    if !matches!(
+        ir.theorem.proof,
+        LitexToLeanFactProofIr::ForallIntroduction { .. }
+    ) {
+        return Err(litex_to_lean_error(
+            &source.line_file,
+            "named-theorem IR has no forall-introduction proof",
+        ));
+    }
+    if ir.theorem.fact_id.is_none() && ir.stored_projections.is_empty() {
+        return Err(litex_to_lean_error(
+            &source.line_file,
+            "named-theorem IR has neither a primary FactId nor a stored projection",
+        ));
+    }
+    if ir.proof_steps.len() != ir.expected_proof_step_count {
+        return Err(litex_to_lean_error(
+            &source.line_file,
+            "named-theorem IR is missing retained proof steps",
+        ));
+    }
+    for (index, step) in ir.proof_steps.iter().enumerate() {
+        if step.position != index + 1 {
+            return Err(litex_to_lean_error(
+                &statement_ir_line_file(&step.statement),
+                "named-theorem proof steps are out of verifier order",
+            ));
+        }
+    }
+    if !ir.stored_projections.is_empty() {
+        validate_projected_forall_ir(&LitexToLeanProjectedForallIr {
+            source: ir.theorem.proposition.clone(),
+            facts: ir.stored_projections.clone(),
+            inferred_facts: Vec::new(),
+            well_definedness: ir.well_definedness.clone(),
+        })?;
+    }
+    let mut fact_ids = HashSet::new();
+    if let Some(fact_id) = ir.theorem.fact_id {
+        fact_ids.insert(fact_id);
+    }
+    for fact in ir.stored_projections.iter().chain(ir.inferred_facts.iter()) {
+        let fact_id = required_fact_id(fact)?;
+        if !fact_ids.insert(fact_id) {
+            return Err(litex_to_lean_error(
+                &fact.proposition.line_file(),
+                "named-theorem IR repeats a stored FactId",
+            ));
+        }
+    }
+    Ok(())
+}
+
 fn required_fact_id(fact: &LitexToLeanFactIr) -> Result<FactId, RuntimeError> {
     fact.fact_id.ok_or_else(|| {
         litex_to_lean_error(
@@ -7635,6 +9149,9 @@ fn statement_ir_display(statement: &LitexToLeanStatementIr) -> String {
             None => "trust <empty>".to_string(),
         },
         LitexToLeanStatementIr::Fact(ir) => ir.fact.proposition.to_string(),
+        LitexToLeanStatementIr::NamedTheorem(ir) => {
+            format!("thm {}: ? {}", ir.name, ir.theorem.proposition)
+        }
         LitexToLeanStatementIr::ProjectedForall(ir) => ir.source.to_string(),
     }
 }
@@ -7670,6 +9187,7 @@ fn statement_ir_line_file(statement: &LitexToLeanStatementIr) -> LineFile {
             .map(|fact| fact.proposition.line_file())
             .unwrap_or_else(default_line_file),
         LitexToLeanStatementIr::Fact(ir) => ir.fact.proposition.line_file(),
+        LitexToLeanStatementIr::NamedTheorem(ir) => ir.theorem.proposition.line_file(),
         LitexToLeanStatementIr::ProjectedForall(ir) => ir.source.line_file(),
     }
 }
@@ -8003,33 +9521,33 @@ mod tests {
     }
 
     #[test]
-    fn function_return_sets_without_output_evidence_fail_closed() {
+    fn refined_function_return_sets_keep_output_membership_contracts() {
         run_with_large_stack(
-            "function_return_sets_without_output_evidence_fail_closed",
+            "refined_function_return_sets_keep_output_membership_contracts",
             || {
-                let error = compile_to_lean_from_source(
+                let flat = compile_to_lean_from_source(
                     "forall f fn(x R) R+:\n    f(1) = f(1)",
                     "refined-function-return.lit",
                 )
-                .expect_err("a refined return set must not be erased to its ambient Lean carrier")
-                .trace_message();
+                .expect("a refined return must lower to a raw function plus pointwise membership");
                 assert!(
-                    error.contains("output-membership representation"),
-                    "{error}"
+                    flat.contains("litex_function_value x")
+                        && flat.contains("Litex.StandardSets.RPos"),
+                    "{flat}"
                 );
+                assert!(!flat.contains("sorry"), "{flat}");
 
-                let nested_error = compile_to_lean_from_source(
+                let nested = compile_to_lean_from_source(
                     "forall f fn(x R) fn(y R) R+:\n    f(1)(2) = f(1)(2)",
                     "nested-refined-function-return.lit",
                 )
-                .expect_err(
-                    "a nested refined return set must fail at the recursive function boundary",
-                )
-                .trace_message();
+                .expect("a nested refined return must preserve both source application layers");
                 assert!(
-                    nested_error.contains("output-membership representation"),
-                    "{nested_error}"
+                    nested.contains("litex_function_value x")
+                        && nested.contains("Litex.StandardSets.RPos"),
+                    "{nested}"
                 );
+                assert!(!nested.contains("sorry"), "{nested}");
             },
         );
     }
@@ -8097,7 +9615,9 @@ mod tests {
                 assert!(
                     missing_error.contains("missing or out of verifier order")
                         || missing_error.contains("missing the retained domain proof")
-                        || missing_error.contains("duplicated, missing, or out of verifier order"),
+                        || missing_error.contains("duplicated, missing, or out of verifier order")
+                        || missing_error
+                            .contains("object occurrence references a missing fact certificate"),
                     "{missing_error}"
                 );
 
@@ -8135,8 +9655,26 @@ mod tests {
                     .unwrap_err()
                     .trace_message();
                 assert!(
-                    mismatch_error.contains("does not match its frozen verifier target"),
+                    mismatch_error.contains("does not match its frozen verifier target")
+                        || mismatch_error.contains(
+                            "target well-definedness requirement changed its frozen proposition"
+                        ),
                     "{mismatch_error}"
+                );
+
+                let mut missing_reference =
+                    test_litex_to_lean_ir(source, "missing-function-wd-reference.lit");
+                let LitexToLeanStatementIr::Fact(statement) = &mut missing_reference[0] else {
+                    panic!("expected one fact statement")
+                };
+                statement.well_definedness.target_requirements.clear();
+                let missing_reference_error = emit_lean_from_litex_to_lean_ir(&missing_reference)
+                    .unwrap_err()
+                    .trace_message();
+                assert!(
+                    missing_reference_error
+                        .contains("missing an exact retained WD requirement reference"),
+                    "{missing_reference_error}"
                 );
             },
         );
@@ -8196,6 +9734,42 @@ mod tests {
                 assert!(lean.contains("Litex checked defining equality"), "{lean}");
                 assert!(lean.contains("reciprocal x litex_domain_fact_1"), "{lean}");
                 assert!(lean.contains("simpa only [reciprocal]"), "{lean}");
+                assert!(!lean.contains("sorry"), "{lean}");
+                assert!(!lean.contains("axiom"), "{lean}");
+            },
+        );
+    }
+
+    #[test]
+    fn named_function_definition_replays_refined_return_membership() {
+        run_with_large_stack(
+            "named_function_definition_replays_refined_return_membership",
+            || {
+                let source = "have fn positive_successor(x R: x > 0) R+ = x + 1\n\nforall x R:\n    x > 0\n    =>:\n        positive_successor(x) $in R+";
+                let ir = test_litex_to_lean_ir(source, "named-refined-function-output.lit");
+                let LitexToLeanStatementIr::HaveFnEqual(definition) = &ir[0] else {
+                    panic!("the first statement should retain a checked function definition")
+                };
+                assert!(matches!(
+                    underlying_test_proof(&definition.return_check.proof),
+                    LitexToLeanFactProofIr::RuleApplication {
+                        rule: LitexToLeanProofRuleIr::RefinedNumericMembership { .. },
+                        ..
+                    }
+                ));
+                let lean = emit_lean_from_litex_to_lean_ir(&ir)
+                    .expect("the retained return check should prove pointwise R+ membership");
+                assert!(
+                    lean.contains("def positive_successor : (x : ℝ) → x > 0 → ℝ"),
+                    "{lean}"
+                );
+                assert!(lean.contains("Litex.StandardSets.RPos"), "{lean}");
+                assert!(lean.contains("litex_function_return_check_"), "{lean}");
+                assert!(lean.contains("simpa only [positive_successor]"), "{lean}");
+                assert!(
+                    !lean.contains("change True\n    trivial\n  exact (x + 1)"),
+                    "{lean}"
+                );
                 assert!(!lean.contains("sorry"), "{lean}");
                 assert!(!lean.contains("axiom"), "{lean}");
             },
@@ -8265,6 +9839,10 @@ mod tests {
             let standalone =
                 compile_to_lean("abstract_prop marked(x)", &mut standalone_runtime).unwrap();
             assert!(standalone.contains("\nnamespace chapter01_introduction\n\n"));
+            assert_eq!(
+                standalone.matches("namespace Litex.StandardSets").count(),
+                1
+            );
             assert!(standalone.ends_with("\nend chapter01_introduction\n"));
 
             let mut registered_runtime = Runtime::new();
@@ -8293,6 +9871,11 @@ mod tests {
             assert!(registered.contains("\nnamespace A.chap2\n\n"));
             assert!(registered.ends_with("\nend A.chap2\n"));
             assert!(!registered.contains("namespace chapter02"));
+            assert_eq!(
+                registered.matches("namespace Litex.StandardSets").count(),
+                1
+            );
+            assert!(registered.contains("x ∈ Litex.StandardSets.R"));
             assert!(registered.contains("def is_one (x : ℝ) : Prop :="));
             assert!(registered.contains("simp [is_one]"));
 
@@ -8955,9 +10538,9 @@ by contra:
     }
 
     #[test]
-    fn compile_to_lean_atomic_fact_witness_keeps_exist_unique_as_an_explicit_boundary() {
+    fn compile_to_lean_atomic_fact_witness_rejects_exist_unique_before_lowering() {
         run_with_large_stack(
-            "compile_to_lean_atomic_fact_witness_keeps_exist_unique_as_an_explicit_boundary",
+            "compile_to_lean_atomic_fact_witness_rejects_exist_unique_before_lowering",
             || {
                 let source = r#"
 prop unique_value(a R):
@@ -8972,17 +10555,17 @@ trust forall u, v R:
 witness $unique_value(2) from 2:
     2 = 2
 "#;
-                let report = compile_to_lean_from_source_with_report(
+                let error = compile_to_lean_from_source_with_report(
                     source,
                     "witness-atomic-exist-unique-boundary.lit",
                 )
-                .expect("report mode should retain the unsupported atomic-fact witness");
+                .expect_err("runtime must reject unique-existence atomic-fact witnesses");
+                let message = error.trace_message();
                 assert!(
-                    report.unsupported.iter().any(|item| item.reason.contains(
-                        "atomic fact witness currently supports positive `exist`, not `exist!` or `not exist`"
-                    )),
-                    "{:?}",
-                    report.unsupported
+                    message.contains(
+                        "atomic fact witness does not support the `exist!` definition of `unique_value`"
+                    ),
+                    "{message}"
                 );
             },
         );
@@ -9897,12 +11480,30 @@ forall z Z-:
                 }
 
                 let output = emit_lean_from_litex_to_lean_ir(&statement_irs).unwrap();
-                assert!(output.contains("(n : ℤ) ∈ (Set.univ : Set ℤ)"), "{output}");
-                assert!(output.contains("(z : ℚ) ∈ (Set.univ : Set ℚ)"), "{output}");
-                assert!(output.contains("(q : ℝ) ∈ (Set.univ : Set ℝ)"), "{output}");
-                assert!(output.contains("(r : ℂ) ∈ (Set.univ : Set ℂ)"), "{output}");
-                assert!(output.contains("(q : ℝ) ∈ {r : ℝ | 0 < r}"), "{output}");
-                assert!(output.contains("(z : ℂ) ∈ {c : ℂ | c ≠ 0}"), "{output}");
+                assert!(
+                    output.contains("(n : ℤ) ∈ Litex.StandardSets.Z"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("(z : ℚ) ∈ Litex.StandardSets.Q"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("(q : ℝ) ∈ Litex.StandardSets.R"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("(r : ℂ) ∈ Litex.StandardSets.C"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("(q : ℝ) ∈ Litex.StandardSets.RPos"),
+                    "{output}"
+                );
+                assert!(
+                    output.contains("(z : ℂ) ∈ Litex.StandardSets.CStar"),
+                    "{output}"
+                );
                 assert!(output.contains("exact_mod_cast"), "{output}");
                 assert!(output.contains("ne_of_gt"), "{output}");
                 assert!(output.contains("ne_of_lt"), "{output}");
@@ -10039,12 +11640,16 @@ forall x, y R:
         let output =
             compile_to_lean_from_source("2 $in R\n", "native-standard-membership").unwrap();
         assert!(
-            output.contains("theorem fact") && output.contains(": 2 ∈ (Set.univ : Set ℝ) := by"),
+            output.contains("theorem fact") && output.contains(": 2 ∈ Litex.StandardSets.R := by"),
             "{output}"
         );
         assert!(!output.contains("LitexSet"), "{output}");
         assert!(!output.contains("litexR"), "{output}");
         assert!(!output.contains("LitexAddEq"), "{output}");
+        assert!(
+            !output.contains(": 2 ∈ (Set.univ : Set ℝ) := by"),
+            "{output}"
+        );
     }
 
     #[test]
@@ -10086,17 +11691,17 @@ forall c C*:
             compile_to_lean_from_source(source, "compact-standard-numeric-subsets").unwrap();
 
         for expected in [
-            "∀ (n : ℕ) (litex_param_fact_1 : n ∈ {n : ℕ | 0 < n}), n ∈ {n : ℕ | 0 < n}",
-            "{n : ℕ | 0 < n} = {n : ℕ | 0 < n}",
-            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | 0 < q}), q ∈ {q : ℚ | 0 < q}",
-            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | 0 < r}), r ∈ {r : ℝ | 0 < r}",
-            "∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z < 0}), z ∈ {z : ℤ | z < 0}",
-            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q < 0}), q ∈ {q : ℚ | q < 0}",
-            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r < 0}), r ∈ {r : ℝ | r < 0}",
-            "∀ (z : ℤ) (litex_param_fact_1 : z ∈ {z : ℤ | z ≠ 0}), z ∈ {z : ℤ | z ≠ 0}",
-            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ {q : ℚ | q ≠ 0}), q ∈ {q : ℚ | q ≠ 0}",
-            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ {r : ℝ | r ≠ 0}), r ∈ {r : ℝ | r ≠ 0}",
-            "∀ (c : ℂ) (litex_param_fact_1 : c ∈ {c : ℂ | c ≠ 0}), c ∈ {c : ℂ | c ≠ 0}",
+            "∀ (n : ℕ) (litex_param_fact_1 : n ∈ Litex.StandardSets.NPos), n ∈ Litex.StandardSets.NPos",
+            "Litex.StandardSets.NPos = Litex.StandardSets.NPos",
+            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QPos), q ∈ Litex.StandardSets.QPos",
+            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RPos), r ∈ Litex.StandardSets.RPos",
+            "∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZNeg), z ∈ Litex.StandardSets.ZNeg",
+            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QNeg), q ∈ Litex.StandardSets.QNeg",
+            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RNeg), r ∈ Litex.StandardSets.RNeg",
+            "∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.ZStar), z ∈ Litex.StandardSets.ZStar",
+            "∀ (q : ℚ) (litex_param_fact_1 : q ∈ Litex.StandardSets.QStar), q ∈ Litex.StandardSets.QStar",
+            "∀ (r : ℝ) (litex_param_fact_1 : r ∈ Litex.StandardSets.RStar), r ∈ Litex.StandardSets.RStar",
+            "∀ (c : ℂ) (litex_param_fact_1 : c ∈ Litex.StandardSets.CStar), c ∈ Litex.StandardSets.CStar",
         ] {
             assert!(
                 output.contains(expected),
@@ -10111,7 +11716,7 @@ forall c C*:
                 .unwrap();
         assert!(
             positive_integer_alias.contains(
-                "∀ (z : ℕ) (litex_param_fact_1 : z ∈ {n : ℕ | 0 < n}), z ∈ {n : ℕ | 0 < n}"
+                "∀ (z : ℕ) (litex_param_fact_1 : z ∈ Litex.StandardSets.NPos), z ∈ Litex.StandardSets.NPos"
             ),
             "{positive_integer_alias}"
         );
@@ -10145,26 +11750,26 @@ not 0 $in C*
             compile_to_lean_from_source(source, "closed-compact-numeric-memberships").unwrap();
 
         for expected in [
-            "1 ∈ {n : ℕ | 0 < n}",
-            "1 ∈ {q : ℚ | 0 < q}",
-            "2 ∈ {r : ℝ | 0 < r}",
-            "(0 - 1) ∈ {z : ℤ | z < 0}",
-            "(0 - 1) ∈ {q : ℚ | q < 0}",
-            "(0 - 1) ∈ {r : ℝ | r < 0}",
-            "1 ∈ {z : ℤ | z ≠ 0}",
-            "1 ∈ {q : ℚ | q ≠ 0}",
-            "1 ∈ {r : ℝ | r ≠ 0}",
-            "1 ∈ {c : ℂ | c ≠ 0}",
-            "0 ∉ {n : ℕ | 0 < n}",
-            "0 ∉ {q : ℚ | 0 < q}",
-            "0 ∉ {r : ℝ | 0 < r}",
-            "0 ∉ {z : ℤ | z < 0}",
-            "0 ∉ {q : ℚ | q < 0}",
-            "0 ∉ {r : ℝ | r < 0}",
-            "0 ∉ {z : ℤ | z ≠ 0}",
-            "0 ∉ {q : ℚ | q ≠ 0}",
-            "0 ∉ {r : ℝ | r ≠ 0}",
-            "0 ∉ {c : ℂ | c ≠ 0}",
+            "1 ∈ Litex.StandardSets.NPos",
+            "1 ∈ Litex.StandardSets.QPos",
+            "2 ∈ Litex.StandardSets.RPos",
+            "(0 - 1) ∈ Litex.StandardSets.ZNeg",
+            "(0 - 1) ∈ Litex.StandardSets.QNeg",
+            "(0 - 1) ∈ Litex.StandardSets.RNeg",
+            "1 ∈ Litex.StandardSets.ZStar",
+            "1 ∈ Litex.StandardSets.QStar",
+            "1 ∈ Litex.StandardSets.RStar",
+            "1 ∈ Litex.StandardSets.CStar",
+            "0 ∉ Litex.StandardSets.NPos",
+            "0 ∉ Litex.StandardSets.QPos",
+            "0 ∉ Litex.StandardSets.RPos",
+            "0 ∉ Litex.StandardSets.ZNeg",
+            "0 ∉ Litex.StandardSets.QNeg",
+            "0 ∉ Litex.StandardSets.RNeg",
+            "0 ∉ Litex.StandardSets.ZStar",
+            "0 ∉ Litex.StandardSets.QStar",
+            "0 ∉ Litex.StandardSets.RStar",
+            "0 ∉ Litex.StandardSets.CStar",
         ] {
             assert!(
                 output.contains(expected),
@@ -10378,17 +11983,243 @@ trust forall z Z:
         let output = compile_to_lean_from_source(source, "native-bounded-binders").unwrap();
         assert!(
             output.contains(
-                "∀ (x : ℝ) (litex_param_fact_1 : x ∈ (Set.univ : Set ℝ)), x ∈ (Set.univ : Set ℝ)"
+                "∀ (x : ℝ) (litex_param_fact_1 : x ∈ Litex.StandardSets.R), x ∈ Litex.StandardSets.R"
             ),
             "{output}"
         );
         assert!(
             output.contains(
-                "∀ (z : ℤ) (litex_param_fact_1 : z ∈ (Set.univ : Set ℤ)), (z / 2 : ℚ) ∈ (Set.univ : Set ℚ)"
+                "∀ (z : ℤ) (litex_param_fact_1 : z ∈ Litex.StandardSets.Z), (z / 2 : ℚ) ∈ Litex.StandardSets.Q"
             ),
             "{output}"
         );
         assert!(!output.contains("(z : ℚ)"), "{output}");
+    }
+
+    #[test]
+    fn named_theorem_preserves_source_name_and_local_proof_scope() {
+        run_with_large_stack(
+            "named_theorem_preserves_source_name_and_local_proof_scope",
+            || {
+                let source = r#"thm real_reflexivity:
+    ? forall x R:
+        x = x
+    x = x
+"#;
+                let ir = test_litex_to_lean_ir(source, "named-theorem-ir.lit");
+                let [LitexToLeanStatementIr::NamedTheorem(theorem)] = ir.as_slice() else {
+                    panic!("source theorem should lower to named-theorem IR");
+                };
+                assert_eq!(theorem.name, "real_reflexivity");
+                assert_eq!(theorem.proof_steps.len(), 1);
+                assert!(theorem.theorem.fact_id.is_some());
+                assert!(theorem.stored_projections.is_empty());
+                let LitexToLeanFactProofIr::ForallIntroduction {
+                    parameter_premises,
+                    conclusions,
+                    ..
+                } = &theorem.theorem.proof
+                else {
+                    panic!("named theorem should retain forall-introduction evidence");
+                };
+                assert_eq!(parameter_premises.len(), 1);
+                assert_eq!(conclusions.len(), 1);
+
+                let primary_id = theorem.theorem.fact_id.unwrap();
+                let output = emit_lean_from_litex_to_lean_ir(&ir).unwrap();
+                assert!(
+                    output.contains("theorem real_reflexivity : ∀ (x : ℝ)"),
+                    "{output}"
+                );
+                assert!(output.contains("have proof_fact_"), "{output}");
+                assert!(
+                    !output.contains(&format!("theorem {} :", lean_stored_fact_name(primary_id))),
+                    "{output}"
+                );
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn named_theorem_preserves_domain_premises_and_ordered_conclusions() {
+        run_with_large_stack(
+            "named_theorem_preserves_domain_premises_and_ordered_conclusions",
+            || {
+                let source = r#"thm nonzero_self_and_reflexive:
+    ? forall x R:
+        x != 0
+        =>:
+            x != 0
+            x = x
+"#;
+                let ir = test_litex_to_lean_ir(source, "named-theorem-conjunction.lit");
+                let [LitexToLeanStatementIr::NamedTheorem(theorem)] = ir.as_slice() else {
+                    unreachable!();
+                };
+                let LitexToLeanFactProofIr::ForallIntroduction {
+                    premises,
+                    conclusions,
+                    ..
+                } = &theorem.theorem.proof
+                else {
+                    unreachable!();
+                };
+                assert_eq!(premises.len(), 1);
+                assert_eq!(conclusions.len(), 2);
+
+                let output = emit_lean_from_litex_to_lean_ir(&ir).unwrap();
+                assert!(output.contains("theorem nonzero_self_and_reflexive"));
+                assert!(output.contains("(litex_domain_fact_1 : x ≠ 0)"));
+                assert!(output.contains("(x ≠ 0 ∧ x = x)"), "{output}");
+                assert!(output.contains("exact ⟨proof_fact_"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn malformed_named_theorem_evidence_fails_transactionally() {
+        run_with_large_stack(
+            "malformed_named_theorem_evidence_fails_transactionally",
+            || {
+                let source = r#"thm real_reflexivity:
+    ? forall x R:
+        x = x
+    x = x
+"#;
+                let mut missing_conclusion = test_litex_to_lean_ir(source, "named-theorem-bad.lit");
+                let [LitexToLeanStatementIr::NamedTheorem(theorem)] =
+                    missing_conclusion.as_mut_slice()
+                else {
+                    unreachable!();
+                };
+                let LitexToLeanFactProofIr::ForallIntroduction { conclusions, .. } =
+                    &mut theorem.theorem.proof
+                else {
+                    unreachable!();
+                };
+                conclusions.clear();
+                let report = emit_lean_from_litex_to_lean_ir_with_report(&missing_conclusion);
+                assert!(!report.is_complete());
+                assert!(!report.lean_code.contains("theorem real_reflexivity"));
+                assert!(report.unsupported[0]
+                    .reason
+                    .contains("source has 1 conclusions"));
+
+                let mut reordered_step =
+                    test_litex_to_lean_ir(source, "named-theorem-step-order.lit");
+                let [LitexToLeanStatementIr::NamedTheorem(theorem)] = reordered_step.as_mut_slice()
+                else {
+                    unreachable!();
+                };
+                theorem.proof_steps[0].position = 2;
+                let error = emit_lean_from_litex_to_lean_ir(&reordered_step)
+                    .expect_err("out-of-order theorem proof evidence must fail")
+                    .trace_message();
+                assert!(
+                    error.contains("proof steps are out of verifier order"),
+                    "{error}"
+                );
+
+                let mut unsupported_step =
+                    test_litex_to_lean_ir(source, "named-theorem-local-boundary.lit");
+                let [LitexToLeanStatementIr::NamedTheorem(theorem)] =
+                    unsupported_step.as_mut_slice()
+                else {
+                    unreachable!();
+                };
+                theorem.proof_steps[0].statement =
+                    LitexToLeanStatementIr::Trust(LitexToLeanTrustIr {
+                        facts: Vec::new(),
+                        inferred_facts: Vec::new(),
+                    });
+                let report = emit_lean_from_litex_to_lean_ir_with_report(&unsupported_step);
+                assert!(!report.is_complete());
+                assert!(!report.lean_code.contains("theorem real_reflexivity"));
+                assert!(report.unsupported[0]
+                    .reason
+                    .contains("does not support local statement"));
+            },
+        );
+    }
+
+    #[test]
+    fn named_theorem_target_name_collision_fails_closed() {
+        run_with_large_stack("named_theorem_target_name_collision_fails_closed", || {
+            let source = r#"trust 1 = 1
+
+thm collision_probe:
+    ? forall x R:
+        x = x
+"#;
+            let mut ir = test_litex_to_lean_ir(source, "named-theorem-name-collision.lit");
+            let LitexToLeanStatementIr::Trust(trusted) = &ir[0] else {
+                unreachable!();
+            };
+            let collision_name =
+                lean_stored_fact_name(trusted.facts[0].fact_id.expect("trusted fact ID"));
+            let LitexToLeanStatementIr::NamedTheorem(theorem) = &mut ir[1] else {
+                unreachable!();
+            };
+            theorem.name = collision_name.clone();
+            let report = emit_lean_from_litex_to_lean_ir_with_report(&ir);
+            assert!(!report.is_complete());
+            assert!(
+                report
+                    .lean_code
+                    .contains(&format!("axiom {collision_name}")),
+                "{}",
+                report.lean_code
+            );
+            assert!(!report
+                .lean_code
+                .contains(&format!("theorem {collision_name} : ∀")));
+            assert!(report.unsupported[0].reason.contains(&format!(
+                "declaration name `{collision_name}` is already reserved"
+            )));
+        });
+    }
+
+    #[test]
+    fn axiom_and_by_theorem_steps_remain_explicit_named_theorem_boundaries() {
+        run_with_large_stack(
+            "axiom_and_by_theorem_steps_remain_explicit_named_theorem_boundaries",
+            || {
+                let axiom = compile_to_lean_from_source_with_report(
+                    "axiom assumed_reflexivity:\n    ? forall x R:\n        x = x\n",
+                    "named-theorem-axiom-boundary.lit",
+                )
+                .unwrap();
+                assert!(!axiom.is_complete());
+                assert_eq!(axiom.unsupported.len(), 1);
+                assert!(axiom.unsupported[0]
+                    .reason
+                    .contains("does not compile explicit `axiom`"));
+                assert!(!axiom.lean_code.contains("\naxiom assumed_reflexivity :"));
+
+                let by_theorem = compile_to_lean_from_source_with_report(
+                    r#"thm base_reflexivity:
+    ? forall x R:
+        x = x
+
+thm replay_reflexivity:
+    ? forall x R:
+        x = x
+    by thm base_reflexivity(x)
+"#,
+                    "named-theorem-by-thm-boundary.lit",
+                )
+                .unwrap();
+                assert!(!by_theorem.is_complete());
+                assert_eq!(by_theorem.unsupported.len(), 1);
+                assert_eq!(by_theorem.unsupported[0].statement_index, 2);
+                assert!(by_theorem.lean_code.contains("theorem base_reflexivity"));
+                assert!(!by_theorem.lean_code.contains("theorem replay_reflexivity"));
+                assert!(by_theorem.unsupported[0]
+                    .reason
+                    .contains("does not support statement kind"));
+            },
+        );
     }
 
     #[test]
@@ -10411,7 +12242,7 @@ trust forall z Z:
 
             let output = compile_to_lean_from_source(&source, &path.to_string_lossy()).unwrap();
             assert!(
-                output.contains("∀ (a : ℝ) (litex_param_fact_1 : a ∈ (Set.univ : Set ℝ)), a = a"),
+                output.contains("∀ (a : ℝ) (litex_param_fact_1 : a ∈ Litex.StandardSets.R), a = a"),
                 "{output}"
             );
             assert!(output.contains("∀ (b : Set"), "{output}");
@@ -11269,7 +13100,7 @@ forall x R:
                 assert!(output.contains("let proof_arg_1_1 : ℝ := x"), "{output}");
                 assert!(
                     output.contains(
-                        "have proof_fact_1_2 : x ∈ (Set.univ : Set ℝ) := litex_param_fact_1"
+                        "have proof_fact_1_2 : x ∈ Litex.StandardSets.R := litex_param_fact_1"
                     ),
                     "{output}"
                 );
@@ -11365,7 +13196,7 @@ $marked2(1, 2)
                     "{output}"
                 );
                 assert!(
-                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by"),
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ Litex.StandardSets.R := by"),
                     "{output}"
                 );
                 assert!(output.contains("have proof_fact_2_3 : marked2"), "{output}");
@@ -11400,7 +13231,7 @@ $marked2(1, 2)
                     compile_to_lean_from_source(source, "closed-membership-citation").unwrap();
 
                 assert!(
-                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ (Set.univ : Set ℝ) := by"),
+                    output.contains("have proof_fact_2_2 : (2 - 1) ∈ Litex.StandardSets.R := by"),
                     "{output}"
                 );
                 assert!(output.contains("change True"), "{output}");
@@ -11459,25 +13290,220 @@ $marked2(1, 2)
     }
 
     #[test]
-    fn compile_to_lean_set_builder_fails_during_obj_ir_construction() {
+    fn binder_owning_object_probe_compiles_structural_terms_and_membership() {
         run_with_large_stack(
-            "compile_to_lean_set_builder_fails_during_obj_ir_construction",
+            "binder_owning_object_probe_compiles_structural_terms_and_membership",
+            || {
+                for (label, source) in [
+                    (
+                        "set-builder-membership",
+                        "forall x R:\n    x > 0\n    =>:\n        x $in {y R: y > 0}\n",
+                    ),
+                    (
+                        "anonymous-function-membership",
+                        "fn(x R: x > 0) R+ {x + 1} $in fn(x R: x > 0) R+\n",
+                    ),
+                    (
+                        "refined-function-output",
+                        "forall f fn(x R: x > 0) R+, x R:\n    x > 0\n    =>:\n        f(x) $in R+\n",
+                    ),
+                    (
+                        "nested-refined-function-output",
+                        "forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:\n    x > 0\n    y > 0\n    =>:\n        f(x)(y) $in R+\n",
+                    ),
+                ] {
+                    let output = compile_to_lean_from_source(source, label).unwrap_or_else(|error| {
+                        panic!("{label} should compile: {}", error.trace_message())
+                    });
+                    if label == "anonymous-function-membership" {
+                        assert!(
+                            output.contains(
+                                "have litex_fn_universal_membership_1 : x ∈ Litex.StandardSets.R"
+                            ),
+                            "the pointwise Litex forall proof must receive the native function binder's erased universal membership:\n{output}"
+                        );
+                        assert!(output.contains("intro x litex_fn_domain_1"), "{output}");
+                    }
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn compile_to_lean_set_builder_is_a_native_predicate_set() {
+        run_with_large_stack(
+            "compile_to_lean_set_builder_is_a_native_predicate_set",
             || {
                 let source = "{x R: x = x} = {x R: x = x}";
-                let report =
-                    compile_to_lean_from_source_with_report(source, "set-builder-boundary")
-                        .unwrap();
+                let output = compile_to_lean_from_source(source, "set-builder-structural")
+                    .expect("a set builder must lower with its own local binder");
 
-                assert_eq!(report.status, LitexToLeanCompilationStatus::Incomplete);
-                assert_eq!(report.unsupported.len(), 1);
-                assert_eq!(
-                    report.unsupported[0].phase,
-                    LitexToLeanCompilationPhase::IrConstruction
+                assert!(output.contains("{x : ℝ |"), "{output}");
+                assert!(
+                    output.contains("(x ∈ Litex.StandardSets.R) ∧ x = x"),
+                    "{output}"
                 );
-                assert!(report.unsupported[0].reason.contains("SetBuilder"));
-                assert!(!report.lean_code.contains("theorem fact"));
-                assert!(!report.lean_code.contains("axiom fact"));
-                assert!(!report.lean_code.contains("sorry"));
+                assert!(output.contains("rfl"), "{output}");
+                assert!(!output.contains("axiom fact"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
+            },
+        );
+    }
+
+    #[test]
+    fn malformed_binder_owning_membership_evidence_fails_closed() {
+        run_with_large_stack(
+            "malformed_binder_owning_membership_evidence_fails_closed",
+            || {
+                let mut builder = test_litex_to_lean_ir(
+                    "forall x R:\n    x > 0\n    =>:\n        x $in {y R: y > 0}",
+                    "malformed-set-builder-membership",
+                );
+                let LitexToLeanStatementIr::Fact(statement) = &mut builder[0] else {
+                    panic!("set-builder membership should retain one forall statement")
+                };
+                let LitexToLeanFactProofIr::ForallIntroduction { conclusions, .. } =
+                    &mut statement.fact.proof
+                else {
+                    panic!("set-builder membership should retain forall introduction")
+                };
+                let LitexToLeanFactProofIr::RuleApplication {
+                    rule:
+                        LitexToLeanProofRuleIr::SetBuilderMembership {
+                            expected_premises, ..
+                        },
+                    ..
+                } = underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("set-builder membership should retain constructor evidence")
+                };
+                expected_premises.pop();
+                let error = emit_lean_from_litex_to_lean_ir(&builder)
+                    .expect_err("a missing set-builder predicate premise must stop emission")
+                    .trace_message();
+                assert!(error.contains("premises do not match"), "{error}");
+
+                let mut anonymous = test_litex_to_lean_ir(
+                    "fn(x R: x > 0) R+ {x + 1} $in fn(x R: x > 0) R+",
+                    "malformed-anonymous-function-membership",
+                );
+                let LitexToLeanStatementIr::Fact(statement) = &mut anonymous[0] else {
+                    panic!("anonymous membership should retain one fact")
+                };
+                let LitexToLeanFactProofIr::RuleApplication {
+                    rule:
+                        LitexToLeanProofRuleIr::FunctionSetMembership {
+                            expected_target,
+                            expected_pointwise,
+                            ..
+                        },
+                    ..
+                } = underlying_test_proof_mut(&mut statement.fact.proof)
+                else {
+                    panic!("anonymous membership should retain pointwise evidence")
+                };
+                *expected_pointwise = expected_target.clone();
+                let error = emit_lean_from_litex_to_lean_ir(&anonymous)
+                    .expect_err("a non-forall pointwise certificate must stop emission")
+                    .trace_message();
+                assert!(error.contains("pointwise forall premise"), "{error}");
+
+                let mut application = test_litex_to_lean_ir(
+                    "forall f fn(x R: x > 0) R+, x R:\n    x > 0\n    =>:\n        f(x) $in R+",
+                    "malformed-refined-application-membership",
+                );
+                let LitexToLeanStatementIr::Fact(statement) = &mut application[0] else {
+                    panic!("refined application membership should retain one forall statement")
+                };
+                let LitexToLeanFactProofIr::ForallIntroduction { conclusions, .. } =
+                    &mut statement.fact.proof
+                else {
+                    panic!("refined application membership should retain forall introduction")
+                };
+                let LitexToLeanFactProofIr::RuleApplication {
+                    rule:
+                        LitexToLeanProofRuleIr::FunctionApplicationReturnMembership {
+                            function_set,
+                            typed_return_set,
+                            ..
+                        },
+                    ..
+                } = underlying_test_proof_mut(&mut conclusions[0].proof)
+                else {
+                    panic!("refined application should retain exact return membership evidence")
+                };
+                *typed_return_set = function_set.clone();
+                let error = emit_lean_from_litex_to_lean_ir(&application)
+                    .expect_err("a retargeted application return set must stop emission")
+                    .trace_message();
+                assert!(
+                    error.contains("does not match its source application"),
+                    "{error}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn closed_remainder_keeps_the_integer_operator_contract() {
+        run_with_large_stack(
+            "closed_remainder_keeps_the_integer_operator_contract",
+            || {
+                let output = compile_to_lean_from_source("5 % 2 = 5 % 2\n", "closed-remainder")
+                    .expect("closed integer remainder should compile");
+
+                assert!(
+                    output.contains("(5 : ℤ) % (2 : ℤ)"),
+                    "remainder literals must not elaborate as Nat:\n{output}"
+                );
+            },
+        );
+    }
+
+    #[test]
+    fn refined_numeric_binders_replay_source_well_definedness() {
+        run_with_large_stack(
+            "refined_numeric_binders_replay_source_well_definedness",
+            || {
+                for (label, source) in [
+                    (
+                        "nonzero-integer-remainder",
+                        "forall a Z, b Z*:\n    a % b = a % b\n",
+                    ),
+                    (
+                        "nonzero-real-function-domain",
+                        "forall f fn(x R: x != 0) R, a R*:\n    f(a) = f(a)\n",
+                    ),
+                    (
+                        "positive-real-function-domain",
+                        "forall f fn(x R: x > 0) R, a R+:\n    f(a) = f(a)\n",
+                    ),
+                ] {
+                    compile_to_lean_from_source(source, label).unwrap_or_else(|error| {
+                        panic!("{label} should compile: {}", error.trace_message())
+                    });
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn integer_closure_and_closed_remainder_computation_have_checked_lowering() {
+        run_with_large_stack(
+            "integer_closure_and_closed_remainder_computation_have_checked_lowering",
+            || {
+                let source = r#"
+forall a, b Z:
+    a + b $in Z
+    a - b $in Z
+    a * b $in Z
+
+5 % 2 = 1
+"#;
+                let output = compile_to_lean_from_source(source, "integer-closure-and-remainder")
+                    .expect("integer closure and closed remainder computation should compile");
+                assert!(output.contains("%"), "{output}");
+                assert!(!output.contains("sorry"), "{output}");
             },
         );
     }
@@ -11862,15 +13888,16 @@ $marked(1)
             let project = std::env::var("LITEX_LEAN_PROJECT")
                 .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
             let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
-            let source = r#"
-trust forall x R:
-    x $in R
-
-trust forall z Z:
-    z / 2 $in Q
-"#;
-            let generated =
-                compile_to_lean_from_source(source, "native-numeric-abi-kernel").unwrap();
+            let source_path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("examples/05_compiler_interop/compile_to_lean_numeric_obj_abi.lit");
+            let source = fs::read_to_string(&source_path).unwrap();
+            let generated = compile_to_lean_from_source(
+                &source,
+                source_path.to_str().expect("example path must be UTF-8"),
+            )
+            .unwrap();
+            assert!(generated.contains("(5 : ℤ) % (2 : ℤ)"), "{generated}");
+            assert!(!generated.contains("sorry"), "{generated}");
             let lean_file = private_tmp_lean_file("litex_to_lean_native_numeric_abi");
             fs::write(&lean_file, &generated).unwrap();
             let output = Command::new(lake)
@@ -12195,23 +14222,23 @@ $is_nonempty_set(C)
                 assert!(output.contains("exact abs_of_nonneg"), "{output}");
                 assert!(output.contains("exact abs_pos.mpr"), "{output}");
                 assert!(
-                    output.contains("litexIsNonemptySet (Set.univ : Set ℕ)"),
+                    output.contains("litexIsNonemptySet Litex.StandardSets.N"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("litexIsNonemptySet (Set.univ : Set ℤ)"),
+                    output.contains("litexIsNonemptySet Litex.StandardSets.Z"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("litexIsNonemptySet (Set.univ : Set ℚ)"),
+                    output.contains("litexIsNonemptySet Litex.StandardSets.Q"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("litexIsNonemptySet (Set.univ : Set ℝ)"),
+                    output.contains("litexIsNonemptySet Litex.StandardSets.R"),
                     "{output}"
                 );
                 assert!(
-                    output.contains("litexIsNonemptySet (Set.univ : Set ℂ)"),
+                    output.contains("litexIsNonemptySet Litex.StandardSets.C"),
                     "{output}"
                 );
                 assert!(!output.contains("axiom"), "{output}");

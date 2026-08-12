@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit",
+  "session_command": "target/release/litex -compact -isolated -session",
+  "session_note": "One literal outermost try block replayed all six binder-owning probes in source order in one release Runtime. The block returned ok=true; artifacts reported direct_trust=0, axioms=0, trusted_object_assumptions=0, and no unverified imports.",
+  "proof_spine": [
+    "Lower SetBuilder as a native predicate set while keeping its parameter local",
+    "Lower an anonymous function as a native lambda plus pointwise return-membership evidence",
+    "Eliminate function-set membership through each exact Litex application layer",
+    "Replay a checked named function body's refined return proof to export pointwise membership"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "accepted_litex": "forall x R:\n    x > 0\n    =>:\n        x $in {y R: y > 0}",
+      "result": "accepted_and_materialized",
+      "lean_route": "SetBuilder membership constructor: base membership and instantiated predicate"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "accepted_litex": "fn(x R: x > 0) R+ {x + 1} $in fn(x R: x > 0) R+",
+      "result": "accepted_and_materialized",
+      "lean_route": "anonymous lambda with a retained pointwise forall proof"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "accepted_litex": "forall f fn(x R: x > 0) R+, x R:\n    x > 0\n    =>:\n        f(x) $in R+",
+      "result": "accepted_and_materialized",
+      "lean_route": "head function-set membership applied to x and the exact domain proof"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "accepted_litex": "forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:\n    x > 0\n    y > 0\n    =>:\n        f(x)(y) $in R+",
+      "result": "accepted_and_materialized",
+      "lean_route": "head membership eliminated through two retained source application layers"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "accepted_litex": "have fn positive_successor(x R: x > 0) R+ = x + 1",
+      "result": "accepted_and_materialized",
+      "lean_route": "checked body-in-R+ proof generalized into the stored function membership theorem"
+    },
+    {
+      "id": "B006",
+      "source_order": 6,
+      "accepted_litex": "forall x R:\n    x > 0\n    =>:\n        positive_successor(x) $in R+",
+      "result": "accepted_and_materialized",
+      "lean_route": "named head membership elimination at the checked argument"
+    }
+  ],
+  "materialization": {
+    "session_result": "binder-owning-001 returned ok=true; artifacts longest fact chain had 6 nodes",
+    "file_gate": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit",
+    "focused_test": "cargo test --release binder_owning_object_probe_compiles_structural_terms_and_membership -- --nocapture",
+    "named_refined_test": "cargo test --release named_function_definition_replays_refined_return_membership -- --nocapture",
+    "mathlib_gate": "passed with Lean 4.31.0 and a fetched Mathlib project: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_restricted_function_well_definedness_compiles_with_lean -- --ignored --nocapture"
+  }
+}

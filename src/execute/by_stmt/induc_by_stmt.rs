@@ -100,7 +100,7 @@ impl Runtime {
             ParamObjType::Forall,
         );
         let inner = inner_names[0].clone();
-        let y_obj = inner_map[&stmt.param].clone();
+        let y_obj = inner_map[stmt.param()].clone();
         let n_induc = obj_for_bound_param_in_scope(&stmt.param_binding, ParamObjType::Induc);
         let p_y = self.inst_exist_or_and_chain_atomic_fact(
             fact,
@@ -140,8 +140,8 @@ impl Runtime {
         );
         let outer = outer_names[0].clone();
         let inner = inner_names[0].clone();
-        let n_forall = outer_map[&stmt.param].clone();
-        let y_obj = inner_map[&stmt.param].clone();
+        let n_forall = outer_map[stmt.param()].clone();
+        let y_obj = inner_map[stmt.param()].clone();
         let p_y = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &inner_map,
@@ -165,7 +165,7 @@ impl Runtime {
         let param_plus_one_obj =
             Add::new(n_forall.clone(), Number::new("1".to_string()).into()).into();
         let mut n_to_n1 = outer_map;
-        n_to_n1.insert(stmt.param.clone(), param_plus_one_obj);
+        n_to_n1.insert(stmt.param().to_string(), param_plus_one_obj);
         let p_n1 = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &n_to_n1,
@@ -384,7 +384,7 @@ impl Runtime {
             ParamObjType::Forall,
         );
         let forall_name = forall_names[0].clone();
-        let forall_obj = forall_map[&stmt.param].clone();
+        let forall_obj = forall_map[stmt.param()].clone();
         let mut then_facts: Vec<ExistOrAndChainAtomicFact> =
             Vec::with_capacity(stmt.to_prove.len());
         for fact in stmt.to_prove.iter() {
@@ -507,7 +507,7 @@ impl Runtime {
             stmt.strong,
             false,
             structured,
-            stmt.param.clone(),
+            stmt.param().to_string(),
             stmt.induc_from.to_string(),
             stmt.to_prove.iter().map(|fact| fact.to_string()).collect(),
             generated_forall.to_string(),
@@ -584,7 +584,7 @@ impl Runtime {
             std::slice::from_ref(&stmt.param_binding),
             ParamObjType::Forall,
         );
-        let forall_bound_param = forall_map[&stmt.param].clone();
+        let forall_bound_param = forall_map[stmt.param()].clone();
         let dom_p_fact = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             &forall_map,

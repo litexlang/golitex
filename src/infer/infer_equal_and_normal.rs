@@ -521,17 +521,9 @@ impl Runtime {
         };
         if let Some(definition_facts) = builtin_definition_facts {
             let mut infer_result = InferResult::new();
-            let source_fact: Fact = normal_atomic_fact.clone().into();
-            let reason = InferReason::ByDefinition(ByDefinitionReason::new(
-                Some(source_fact.clone()),
-                Some(predicate_name.clone()),
-            ));
+            let reason = InferReason::ByDefinition;
             for fact in definition_facts {
-                infer_result.add_fact_by_definition(
-                    Some(source_fact.clone()),
-                    Some(predicate_name.clone()),
-                    &fact,
-                );
+                infer_result.add_fact_by_definition(&fact);
                 infer_result.new_infer_result_inside(
                     self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
                         fact,
@@ -547,11 +539,7 @@ impl Runtime {
             None => return Ok(InferResult::new()),
         };
         let mut infer_result = InferResult::new();
-        let source_fact: Fact = normal_atomic_fact.clone().into();
-        let by_definition_reason = InferReason::ByDefinition(ByDefinitionReason::new(
-            Some(source_fact.clone()),
-            Some(predicate_name.clone()),
-        ));
+        let by_definition_reason = InferReason::ByDefinition;
 
         let param_type_infer = self
             .store_args_satisfy_param_type_when_not_defining_new_identifiers_with_reason(
@@ -601,11 +589,7 @@ impl Runtime {
                     )))
                 })?;
             let fact_to_store = instantiated_iff_fact;
-            infer_result.add_fact_by_definition(
-                Some(source_fact.clone()),
-                Some(predicate_name.clone()),
-                &fact_to_store,
-            );
+            infer_result.add_fact_by_definition(&fact_to_store);
             // A positive user prop recursively exposes positive user props in
             // its definition. Example: `Outer(x) := Inner(x)` and
             // `Inner(x) := x >= 0`, so `Outer(x)` infers `x >= 0`.

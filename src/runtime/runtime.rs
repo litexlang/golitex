@@ -23,6 +23,36 @@ pub struct UnverifiedImport {
     pub line_file: LineFile,
 }
 
+pub(crate) struct WellDefinednessObjectCaptureFrame {
+    pub occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub object: Obj,
+    pub fact_ids: Vec<WellDefinednessCertificateId>,
+    pub statement_capture_depth: usize,
+}
+
+impl WellDefinednessObjectCaptureFrame {
+    pub(crate) fn new(
+        occurrence_id: WellDefinednessObjectOccurrenceId,
+        object: Obj,
+        statement_capture_depth: usize,
+    ) -> Self {
+        Self {
+            occurrence_id,
+            object,
+            fact_ids: Vec::new(),
+            statement_capture_depth,
+        }
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct WellDefinednessCaptureCheckpoint {
+    fact_count: usize,
+    object_count: usize,
+    target_requirement_count: usize,
+    active_object_fact_counts: Vec<usize>,
+}
+
 impl OutputStyle {
     pub fn is_detailed(self) -> bool {
         self == OutputStyle::Detailed
@@ -45,6 +75,8 @@ pub struct Runtime {
     pub(crate) well_definedness_capture_depth: usize,
     /// One isolated collector per (possibly nested) executed statement.
     pub(crate) well_definedness_capture_stack: Vec<WellDefinednessCertificate>,
+    /// Object occurrences whose constructor-specific WD checks are active.
+    pub(crate) well_definedness_object_capture_stack: Vec<WellDefinednessObjectCaptureFrame>,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
     /// a fact ID is never reused during the run.
     pub(crate) next_fact_id: u64,
@@ -95,6 +127,7 @@ impl Runtime {
             litex_to_lean_well_definedness_mode: false,
             well_definedness_capture_depth: 0,
             well_definedness_capture_stack: Vec::new(),
+            well_definedness_object_capture_stack: Vec::new(),
             next_fact_id: 1,
             active_arg_match_bindings: vec![],
             active_atomic_fact_inferences: HashSet::new(),
@@ -149,19 +182,43 @@ impl Runtime {
             .unwrap_or_default()
     }
 
-    pub(crate) fn well_definedness_capture_checkpoint(&self) -> Option<usize> {
-        self.well_definedness_capture_stack
-            .last()
-            .map(|certificate| certificate.facts.len())
+    pub(crate) fn well_definedness_capture_checkpoint(
+        &self,
+    ) -> Option<WellDefinednessCaptureCheckpoint> {
+        let certificate = self.well_definedness_capture_stack.last()?;
+        Some(WellDefinednessCaptureCheckpoint {
+            fact_count: certificate.facts.len(),
+            object_count: certificate.objects.len(),
+            target_requirement_count: certificate.target_requirements.len(),
+            active_object_fact_counts: self
+                .well_definedness_object_capture_stack
+                .iter()
+                .map(|frame| frame.fact_ids.len())
+                .collect(),
+        })
     }
 
-    pub(crate) fn rollback_well_definedness_capture(&mut self, checkpoint: Option<usize>) {
+    pub(crate) fn rollback_well_definedness_capture(
+        &mut self,
+        checkpoint: Option<WellDefinednessCaptureCheckpoint>,
+    ) {
         let (Some(checkpoint), Some(certificate)) =
             (checkpoint, self.well_definedness_capture_stack.last_mut())
         else {
             return;
         };
-        certificate.facts.truncate(checkpoint);
+        certificate.facts.truncate(checkpoint.fact_count);
+        certificate.objects.truncate(checkpoint.object_count);
+        certificate
+            .target_requirements
+            .truncate(checkpoint.target_requirement_count);
+        for (frame, fact_count) in self
+            .well_definedness_object_capture_stack
+            .iter_mut()
+            .zip(checkpoint.active_object_fact_counts)
+        {
+            frame.fact_ids.truncate(fact_count);
+        }
     }
 
     pub(crate) fn allocate_fact_id(&mut self) -> Result<FactId, RuntimeError> {

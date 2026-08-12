@@ -226,11 +226,7 @@ impl Runtime {
             predicate_name
         );
         let fact_by_definition: Fact = normal_atomic_fact.clone().into();
-        infer_result.add_fact_by_definition(
-            Some(fact_by_definition.clone()),
-            Some(predicate_name),
-            &fact_by_definition,
-        );
+        infer_result.add_fact_by_definition(&fact_by_definition);
         Ok(Some(
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),

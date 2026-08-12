@@ -1781,7 +1781,7 @@ fn statement_environment_effects(stmt: &Stmt, trace: &StatementExecutionTrace) -
                 ),
                 (
                     "name".to_string(),
-                    JsonValue::JsonString(let_stmt.name.clone()),
+                    JsonValue::JsonString(let_stmt.name().to_string()),
                 ),
                 (
                     "value".to_string(),

@@ -461,18 +461,19 @@ impl PythonExtractor {
         )?;
 
         let expected_params = ParamGroupWithSet::collect_param_names(&fn_set.params_def_with_set);
-        if stmt.params.len() != expected_params.len() {
+        let params = stmt.param_names().collect::<Vec<_>>();
+        if params.len() != expected_params.len() {
             return Err(python_extract_error(
                 &stmt.line_file,
                 format!(
                     "python extractor v1 found {} algorithm parameters for `{}`, but its function declaration has {}",
-                    stmt.params.len(),
+                    params.len(),
                     stmt.name,
                     expected_params.len()
                 ),
             ));
         }
-        for param in stmt.params.iter() {
+        for param in params.iter() {
             validate_python_name(param, &stmt.line_file)?;
         }
         if stmt.cases.is_empty() && stmt.default_return.is_none() {
@@ -485,11 +486,12 @@ impl PythonExtractor {
             ));
         }
 
-        let params_in_scope: HashSet<String> = stmt.params.iter().cloned().collect();
+        let params_in_scope: HashSet<String> =
+            params.iter().map(|param| (*param).to_string()).collect();
         self.functions.insert(stmt.name.clone());
         self.push_blank_line_before_function();
         self.lines
-            .push(format!("def {}({}):", stmt.name, stmt.params.join(", ")));
+            .push(format!("def {}({}):", stmt.name, params.join(", ")));
 
         for (index, case) in stmt.cases.iter().enumerate() {
             let condition = self.python_atomic_condition(&case.condition, &params_in_scope)?;
@@ -733,8 +735,8 @@ impl PythonExtractor {
     ) -> Result<String, RuntimeError> {
         let name = match atom {
             AtomObj::Identifier(i) => i.name.as_str(),
-            AtomObj::FnSet(p) => p.name.as_str(),
-            AtomObj::DefAlgo(p) => p.name.as_str(),
+            AtomObj::FnSet(p) => p.name(),
+            AtomObj::DefAlgo(p) => p.name(),
             _ => {
                 return Err(python_extract_error(
                     line_file,

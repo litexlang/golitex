@@ -789,7 +789,6 @@ pub struct ListSet {
 
 #[derive(Clone)]
 pub struct SetBuilder {
-    pub param: String,
     pub param_binding: SymbolBinding,
     pub param_set: Box<Obj>,
     pub facts: Vec<ExistBodyFact>,
@@ -1110,13 +1109,16 @@ impl SetBuilder {
         facts: Vec<ExistBodyFact>,
     ) -> Result<Self, RuntimeError> {
         let set_builder = SetBuilder {
-            param: param_binding.name().to_string(),
             param_binding,
             param_set: Box::new(param_set),
             facts,
         };
         check_set_builder_has_no_duplicate_set_builder_free_parameter(&set_builder)?;
         Ok(set_builder)
+    }
+
+    pub fn param_name(&self) -> &str {
+        self.param_binding.name()
     }
 }
 
@@ -1942,7 +1944,7 @@ impl Obj {
             )
             .into(),
             Obj::SetBuilder(sb) => {
-                let param_binding = if sb.param == from {
+                let param_binding = if sb.param_name() == from {
                     sb.param_binding.with_local_name(to.to_string())
                 } else {
                     sb.param_binding
@@ -2311,7 +2313,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             .expect("name replace preserves fn head shape")
         }
         FnObjHead::Forall(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2319,7 +2321,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             ForallFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefHeader(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2327,7 +2329,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             DefHeaderFreeParamObj::new(symbol).into()
         }
         FnObjHead::Exist(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2335,7 +2337,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             ExistFreeParamObj::new(symbol).into()
         }
         FnObjHead::SetBuilder(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2343,7 +2345,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             SetBuilderFreeParamObj::new(symbol).into()
         }
         FnObjHead::FnSet(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2351,7 +2353,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             FnSetFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefStructField(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2389,7 +2391,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             FnObjHead::ObjAsStructInstanceWithFieldAccess(new_v)
         }
         FnObjHead::Induc(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2397,7 +2399,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             ByInducFreeParamObj::new(symbol).into()
         }
         FnObjHead::DefAlgo(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2405,7 +2407,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             DefAlgoFreeParamObj::new(symbol).into()
         }
         FnObjHead::TupleIndex(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol
@@ -2413,7 +2415,7 @@ fn replace_bound_identifier_in_fn_obj_head(head: FnObjHead, from: &str, to: &str
             TupleIndexFreeParamObj::new(symbol).into()
         }
         FnObjHead::CartIndex(p) => {
-            let symbol = if p.name == from {
+            let symbol = if p.name() == from {
                 p.symbol.with_display_name(to.to_string())
             } else {
                 p.symbol

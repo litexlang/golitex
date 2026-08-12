@@ -105,9 +105,11 @@ impl Runtime {
         fn_set_with_dom: &FnSetBody,
         algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Result<(Vec<Fact>, ParamDefWithType), RuntimeError> {
-        let mut args_for_algo_params: Vec<Obj> = Vec::with_capacity(def_algo_stmt.params.len());
-        for param_name in def_algo_stmt.params.iter() {
-            args_for_algo_params.push(algo_param_to_forall_obj[param_name].clone());
+        let mut args_for_algo_params: Vec<Obj> =
+            Vec::with_capacity(def_algo_stmt.param_bindings.len());
+        for param_binding in def_algo_stmt.param_bindings.iter() {
+            args_for_algo_params
+                .push(algo_param_to_forall_obj[param_binding.name()].clone());
         }
 
         let param_satisfy_fn_param_set_facts_atomic =
@@ -167,10 +169,10 @@ impl Runtime {
                         mapped_param_names.push(identifier.name.clone());
                     }
                     Some(Obj::Atom(AtomObj::FnSet(p))) => {
-                        mapped_param_names.push(p.name.clone());
+                        mapped_param_names.push(p.name().to_string());
                     }
                     Some(Obj::Atom(AtomObj::Forall(p))) => {
-                        mapped_param_names.push(p.name.clone());
+                        mapped_param_names.push(p.name().to_string());
                     }
                     _ => {
                         return Err(
@@ -242,9 +244,12 @@ impl Runtime {
         def_algo_stmt: &DefAlgoStmt,
         algo_param_to_forall_obj: &HashMap<String, Obj>,
     ) -> Obj {
-        let mut fn_call_arg_boxes: Vec<Box<Obj>> = Vec::with_capacity(def_algo_stmt.params.len());
-        for algo_param_name in def_algo_stmt.params.iter() {
-            fn_call_arg_boxes.push(Box::new(algo_param_to_forall_obj[algo_param_name].clone()));
+        let mut fn_call_arg_boxes: Vec<Box<Obj>> =
+            Vec::with_capacity(def_algo_stmt.param_bindings.len());
+        for param_binding in def_algo_stmt.param_bindings.iter() {
+            fn_call_arg_boxes.push(Box::new(
+                algo_param_to_forall_obj[param_binding.name()].clone(),
+            ));
         }
         let function_head = FnObjHead::given_an_atom_return_a_fn_obj_head(
             self.declared_identifier_obj(&def_algo_stmt.name),
