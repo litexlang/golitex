@@ -253,7 +253,6 @@ impl Runtime {
                         .to_string(),
                     BuiltinRuleEvidence::SetBuilderMembership(
                         SetBuilderMembershipBuiltinRuleEvidence::new(
-                            set_builder,
                             target,
                             expected_premises,
                         ),

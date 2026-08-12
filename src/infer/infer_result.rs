@@ -179,19 +179,11 @@ impl InferResult {
         self.add_fact_with_reason(InferReason::ByDefinition, fact);
     }
 
-    pub fn add_builtin_inference(
-        &mut self,
-        rule: impl Into<String>,
-        fact: &Fact,
-    ) {
+    pub fn add_builtin_inference(&mut self, rule: impl Into<String>, fact: &Fact) {
         self.add_fact_with_reason(InferReason::BuiltinInference(rule.into()), fact);
     }
 
-    pub fn add_infer_rule(
-        &mut self,
-        rule: impl Into<String>,
-        fact: &Fact,
-    ) {
+    pub fn add_infer_rule(&mut self, rule: impl Into<String>, fact: &Fact) {
         self.add_fact_with_reason(InferReason::InferRule(rule.into()), fact);
     }
 

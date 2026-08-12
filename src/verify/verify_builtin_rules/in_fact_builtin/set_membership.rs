@@ -1234,10 +1234,13 @@ impl Runtime {
             IsFiniteSetFact::new((*finite_set_size.set).clone(), in_fact.line_file.clone());
         let finite_result = self.verify_builtin_rule_premise(&finite_fact.into(), builtin_state)?;
         if finite_result.is_true() {
-            return Ok(number_in_set_verified_by_builtin_rules_result(
-                in_fact,
-                "finite_set_size of a finite set is a natural number",
-            ));
+            return Ok(
+                number_in_set_verified_by_builtin_rules_result_with_subgoals(
+                    in_fact,
+                    "finite_set_size of a finite set is a natural number",
+                    vec![finite_result],
+                ),
+            );
         }
         Ok((StmtUnknown::new()).into())
     }

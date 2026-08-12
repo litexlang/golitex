@@ -78,7 +78,12 @@ impl fmt::Display for ByFiniteSetInducStmt {
             add_four_spaces_at_beginning(
                 format!(
                     "{} {} {} {} {}{}",
-                    QUESTION_GOAL, FROM, self.param(), EQUAL, "{}", base_colon
+                    QUESTION_GOAL,
+                    FROM,
+                    self.param(),
+                    EQUAL,
+                    "{}",
+                    base_colon
                 ),
                 1,
             ),

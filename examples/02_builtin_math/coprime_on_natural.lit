@@ -1,0 +1,28 @@
+# Tracer: native coprime follows the natural-number domain used by Lean's Nat.Coprime.
+#
+# Before (did not work without a local or imported predicate):
+# $coprime(14, 25)
+# Former behavior: the bare fact failed because `coprime` was not defined.
+#
+# Now (verified without importing std/basics):
+$coprime(14, 25)
+$coprime(0, 1)
+not $coprime(14, 21)
+not $coprime(0, 0)
+
+thm natural_coprime_means_gcd_one:
+    ? forall a, b N:
+        $coprime(a, b)
+        =>:
+            a != 0 or b != 0
+            gcd(a, b) = 1
+    by def $coprime(a, b)
+# Current behavior: `$coprime(a, b)` is the native gcd-one predicate on N x N;
+# a positive fact exposes the non-all-zero condition needed by native `gcd` and
+# the equation `gcd(a, b) = 1`.
+#
+# Boundary: arguments known only to belong to Z or R remain ill-defined, and
+# negative integer literals remain rejected; executable Rust regressions check
+# those boundaries.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/coprime_on_natural.lit
+# Implementation: src/verify/verify_builtin_rules/coprime_builtin.rs

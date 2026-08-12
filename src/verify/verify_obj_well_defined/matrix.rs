@@ -29,7 +29,7 @@ impl Runtime {
     }
 
     /// Mathematical contract: `finite_seq_set(S,n)` requires a well-defined
-    /// set carrier `S` and a positive-integer length `n`.
+    /// set carrier `S` and a natural-number length `n`, including zero.
     pub(in crate::verify) fn verify_finite_seq_set_well_defined(
         &mut self,
         x: &FiniteSeqSet,
@@ -47,17 +47,12 @@ impl Runtime {
                 )),
             )));
         }
-        let n_in_n_pos = InFact::new(
-            (*x.n).clone(),
-            StandardSet::NPos.into(),
-            default_line_file(),
-        )
-        .into();
-        let n_ok = self.verify_atomic_fact(&n_in_n_pos, verify_state)?;
+        let n_in_n = InFact::new((*x.n).clone(), StandardSet::N.into(), default_line_file()).into();
+        let n_ok = self.verify_atomic_fact(&n_in_n, verify_state)?;
         if n_ok.is_unknown() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
-                    "finite_seq_set: length argument {} is not verified in N+",
+                    "finite_seq_set: length argument {} is not verified in N",
                     x.n
                 )),
             )));
@@ -86,20 +81,13 @@ impl Runtime {
         Ok(())
     }
 
-    /// Mathematical contract: a finite sequence literal is nonempty and every
-    /// listed value is a well-defined object.
+    /// Mathematical contract: every value in a finite sequence literal is a
+    /// well-defined object; the empty literal is the sequence of length zero.
     pub(in crate::verify) fn verify_finite_seq_list_obj_well_defined(
         &mut self,
         x: &FiniteSeqListObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        if x.objs.is_empty() {
-            return Err(RuntimeError::from(WellDefinedRuntimeError(
-                RuntimeErrorStruct::new_with_just_msg(
-                    "finite sequence literal must have at least one element".to_string(),
-                ),
-            )));
-        }
         for o in x.objs.iter() {
             self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
         }

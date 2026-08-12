@@ -177,6 +177,7 @@ pub fn builtin_symbol_ref(name: &str) -> Option<SymbolRef> {
         SIGN => 57,
         FACTORIAL => 58,
         C_NOT_ZERO => 59,
+        COPRIME => 60,
         _ => return None,
     };
     Some(SymbolRef::new(

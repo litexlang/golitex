@@ -188,6 +188,11 @@ impl Runtime {
                     self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
                     self.verify_prime_fact_by_definition(&atomic, verify_state)
                 }
+                COPRIME => {
+                    let atomic: AtomicFact = fact.clone().into();
+                    self.verify_atomic_fact_well_defined(&atomic, verify_state)?;
+                    self.verify_coprime_fact_by_definition(&atomic, verify_state)
+                }
                 INJECTIVE | SURJECTIVE | BIJECTIVE => {
                     self.verify_atomic_fact_well_defined(&fact.clone().into(), verify_state)?;
                     self.verify_builtin_function_property_by_definition(fact, verify_state)

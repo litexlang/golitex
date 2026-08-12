@@ -9,8 +9,9 @@ import std basics
 
 Use its public names with the explicit `basics::` namespace, for example
 `basics::divides(a, b)` and `by thm basics::bezout_identity(a, b)`. The
-ordinary `gcd(a, b)` object and `$prime(p)` predicate are native and need no
-import.
+ordinary `gcd(a, b)` object and the `$prime(p)` and `$coprime(a, b)` predicates
+are native and need no import. Like Mathlib's elementary interfaces, `$prime`
+is on `N` and `$coprime` is on `N x N`.
 
 ## Status labels
 
@@ -58,11 +59,17 @@ ordinary existence is needed.
 
 | Theorem | Conclusion | Status |
 | --- | --- | --- |
-| `subset_of_finite_set_is_finite(A, B)` | a subset of a finite set is finite | Checked |
-| `finite_set_has_bijective_index(s)` | there is `idx : range(0, finite_set_size(s)) -> s` satisfying the kernel predicate `$bijective(range(0, finite_set_size(s)), s, idx)` | Checked |
+| bare kernel `subset_of_finite_set_is_finite(A, B)` | if `A` is a set, `B` is finite, and `A $subset B`, then `A` is finite | Builtin |
+| bare kernel `finite_set_has_bijective_index(s)` | there is `idx : finite_seq(s, finite_set_size(s))` satisfying `$bijective(closed_range(1, finite_set_size(s)), s, idx)` | Builtin |
 
-The module does not define `zero_index`, `zero_index_set`, or a local
-bijection predicate. Function properties are kernel vocabulary:
+These two names are reserved bare kernel interfaces and are not exported from
+`std/basics`; do not qualify them with `basics::`. The subset theorem is
+explicit rather than an automatic subset-chain rule. The indexing theorem is
+existential and noncanonical, and `finite_seq(S, n)` accepts `n : N`, including
+the empty sequence at `n = 0`.
+
+The module does not define a local enumeration or bijection predicate.
+Function properties are kernel vocabulary:
 `$injective(A, B, f)`, `$surjective(A, B, f)`, and `$bijective(A, B, f)`, with
 `f : fn(x A) B`. This keeps the theorem's public result usable without a
 `std/basics`-specific wrapper.
@@ -97,6 +104,11 @@ These theorems use the native gcd contract directly. The teaching example
 [`gcd_from_finite_divisors.lit`](../../examples/04_case_studies/gcd_from_finite_divisors.lit)
 separately constructs gcd as the largest positive common divisor and proves
 that construction equal to native `gcd`.
+
+`$coprime(a, b)` is the native natural-number gcd-one predicate. It is total
+on `N x N`: `(0,0)` is not coprime, while `(0,1)` is coprime. Positive facts
+expose `a != 0 or b != 0` and `gcd(a,b)=1`; no source-level duplicate belongs
+in this module.
 
 `prime_implies_prime_by_trial_division` and
 `prime_by_trial_division_implies_prime` connect the source and native prime

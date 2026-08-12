@@ -336,8 +336,7 @@ fn dense_order_exist_fact_endpoints(
         return None;
     };
 
-    let is_witness =
-        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
+    let is_witness = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
     if !is_witness(&left_less.right) || !is_witness(&right_less.left) {
         return None;
     }
@@ -371,8 +370,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
         return None;
     };
 
-    let is_witness =
-        |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
+    let is_witness = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == witness_name.as_str());
     let (left, right, strict) = match (left_bound, right_bound) {
         (AtomicFact::LessFact(left_bound), AtomicFact::LessFact(right_bound))
             if is_witness(&left_bound.right) && is_witness(&right_bound.left) =>

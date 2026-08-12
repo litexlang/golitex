@@ -210,8 +210,6 @@ impl Runtime {
                     .to_string(),
                 BuiltinRuleEvidence::FunctionSetMembership(
                     FunctionSetMembershipBuiltinRuleEvidence::new(
-                        flow.in_fact.element.clone(),
-                        expected_fn_set.clone(),
                         target,
                         pointwise,
                     ),

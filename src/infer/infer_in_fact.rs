@@ -46,18 +46,19 @@ impl Runtime {
     fn upsert_known_fn_info_for_key(
         map: &mut HashMap<ObjString, KnownFnInfo>,
         key: ObjString,
-        body: Option<(FnSetBody, LineFile)>,
+        body: Option<(FnSetBody, LineFile, Option<FactId>)>,
         equal_to: Option<(Obj, LineFile)>,
     ) {
         match map.entry(key) {
             Entry::Occupied(mut o) => {
                 let info = o.get_mut();
-                if let Some((b, lf)) = body {
+                if let Some((b, lf, membership_fact_id)) = body {
                     // Once a defining RHS is paired with a signature, later
                     // registrations must not replace only that signature: its
                     // parameter bindings are the substitution keys used by the RHS.
                     if info.equal_to.is_none() || info.fn_set.is_none() {
                         info.fn_set = Some((b, lf));
+                        info.fn_set_membership_fact_id = membership_fact_id;
                     }
                 }
                 if let Some((eq, lf)) = equal_to {
@@ -68,7 +69,15 @@ impl Runtime {
                 if body.is_none() && equal_to.is_none() {
                     return;
                 }
-                v.insert(KnownFnInfo::merge_fn_set_equal_to(body, equal_to));
+                let (fn_set, fn_set_membership_fact_id) = match body {
+                    Some((body, line_file, membership_fact_id)) => {
+                        (Some((body, line_file)), membership_fact_id)
+                    }
+                    None => (None, None),
+                };
+                let mut info = KnownFnInfo::merge_fn_set_equal_to(fn_set, equal_to);
+                info.fn_set_membership_fact_id = fn_set_membership_fact_id;
+                v.insert(info);
             }
         }
     }
@@ -79,6 +88,7 @@ impl Runtime {
         &mut self,
         element: &Obj,
         body: FnSetBody,
+        membership_fact_id: Option<FactId>,
         equal_to: Option<Obj>,
         fn_signature_line_file: LineFile,
         defining_expr_line_file: LineFile,
@@ -88,7 +98,11 @@ impl Runtime {
         }
         let key = element.to_string();
         let env = self.top_level_env();
-        let body_opt = Some((body.clone(), fn_signature_line_file.clone()));
+        let body_opt = Some((
+            body.clone(),
+            fn_signature_line_file.clone(),
+            membership_fact_id,
+        ));
         let equal_opt = equal_to
             .clone()
             .map(|eq| (eq, defining_expr_line_file.clone()));
@@ -103,7 +117,11 @@ impl Runtime {
                 Self::upsert_known_fn_info_for_key(
                     &mut env.known_objs_in_fn_sets,
                     alternate_key,
-                    Some((body.clone(), fn_signature_line_file.clone())),
+                    Some((
+                        body.clone(),
+                        fn_signature_line_file.clone(),
+                        membership_fact_id,
+                    )),
                     equal_opt.clone(),
                 );
             }
@@ -121,9 +139,11 @@ impl Runtime {
         }
 
         let lf = in_fact.line_file.clone();
+        let membership_fact_id = self.known_fact_id_for_fact(&in_fact.clone().into())?;
         self.register_known_objs_in_fn_sets_for_element_body(
             &in_fact.element,
             fn_set_with_dom.body.clone(),
+            membership_fact_id,
             None,
             lf.clone(),
             lf,

@@ -785,10 +785,7 @@ impl VerifiedByResult {
         Self::builtin_rule_with_subgoals(msg, Vec::new())
     }
 
-    pub fn builtin_rule_with_subgoals(
-        msg: impl Into<String>,
-        subgoals: Vec<StmtResult>,
-    ) -> Self {
+    pub fn builtin_rule_with_subgoals(msg: impl Into<String>, subgoals: Vec<StmtResult>) -> Self {
         Self::BuiltinRule(VerifiedByBuiltinRuleResult {
             msg: msg.into(),
             evidence: None,

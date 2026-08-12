@@ -360,6 +360,11 @@ pub use crate::result::{
     WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
     WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
 };
+pub use crate::result::{
+    CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,
+    WellDefinedFunctionContract, WellDefinedObjProof, WellDefinedObjProofId,
+    WellDefinedTargetRequirementProof,
+};
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
     resolve_litex_file_path, run_runner_for_code, run_runner_for_code_strict,
@@ -455,12 +460,12 @@ pub use crate::stmt::DefObjStmt;
 pub use crate::stmt::DefPredicateStmt;
 pub use crate::stmt::DefStrategyStmt;
 pub use crate::stmt::DefStructStmt;
-pub use crate::stmt::StructFieldDef;
 pub use crate::stmt::DefThmKind;
 pub use crate::stmt::DefThmStmt;
 pub use crate::stmt::ProofBlockStmt;
 pub use crate::stmt::Stmt;
 pub use crate::stmt::StopStrategyStmt;
+pub use crate::stmt::StructFieldDef;
 pub use crate::stmt::UnsafeStmt;
 pub use crate::stmt::UseStrategyStmt;
 pub use crate::stmt::WitnessStmt;
@@ -526,6 +531,7 @@ pub use crate::common::keywords::CLOSED_RANGE;
 pub use crate::common::keywords::COLON;
 pub use crate::common::keywords::COMMA;
 pub use crate::common::keywords::CONTRA;
+pub use crate::common::keywords::COPRIME;
 pub use crate::common::keywords::COS;
 pub use crate::common::keywords::COT;
 pub use crate::common::keywords::C_ABS;

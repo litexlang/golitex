@@ -709,21 +709,26 @@ mod tests {
         let first_id = WellDefinednessCertificateId::new(1);
         let second_id = WellDefinednessCertificateId::new(2);
         let certificate = LitexToLeanWellDefinednessCertificateIr {
+            root_proof_ids: Vec::new(),
             facts: Vec::new(),
             objects: Vec::new(),
             target_requirements: vec![
                 LitexToLeanWellDefinednessTargetRequirementIr {
                     object_occurrence_id: WellDefinednessObjectOccurrenceId::new(1),
+                    well_defined_obj_proof_id: WellDefinedObjProofId::new(1),
                     source_object: source_application.clone(),
                     role,
                     certificate_id: first_id,
+                    well_defined_fact_id: WellDefinedFactId::new(1),
                     expected_proposition: proposition.clone(),
                 },
                 LitexToLeanWellDefinednessTargetRequirementIr {
                     object_occurrence_id: WellDefinednessObjectOccurrenceId::new(2),
+                    well_defined_obj_proof_id: WellDefinedObjProofId::new(2),
                     source_object: source_application.clone(),
                     role,
                     certificate_id: second_id,
+                    well_defined_fact_id: WellDefinedFactId::new(2),
                     expected_proposition: proposition.clone(),
                 },
             ],

@@ -7,51 +7,41 @@ nodes that determine the module's current shape.
 
 ## Finite subsets
 
-Mathematically, every subset of a finite set is finite. This fact is needed to
-construct bounded sets such as the positive common divisors of two integers.
-Its current Litex form is a named checked standard-library theorem:
+Mathematically, every subset of a finite set is finite. This foundational fact
+is now a reserved bare kernel theorem rather than a `std/basics` declaration:
 
 <!-- litex:skip-test -->
 ```litex
-thm subset_of_finite_set_is_finite:
-    ? forall A set, B finite_set:
-        A $subset B
-        =>:
-            $is_finite_set(A)
-    A = set_minus(B, set_minus(B, A))
-    $is_finite_set(set_minus(B, set_minus(B, A)))
-    $is_finite_set(A)
+by thm subset_of_finite_set_is_finite(A, B)
 ```
 
-The nearest rejected form is a dedicated finite-subset builtin rule. The theorem
-instead uses the narrower builtin identity that recovers a subset as a double
-relative complement, together with finite set difference. It depends only on
-builtin set membership, subset, equality, and finite-set predicates; downstream
-users include the finite common-divisor set used to define `gcd`.
+The call requires `A` to be a set, `B` to be finite, and the explicit premise
+`A $subset B`; it stores `$is_finite_set(A)`. The rejected design is automatic
+subset-chain search: knowing only `A $subset B` and `B $subset C` does not
+silently derive finiteness. Downstream clients such as the finite common-divisor
+construction call the theorem at the exact mathematical step where it is used.
 
-## Zero-based indexing of finite sets
+## One-based indexing of finite sets
 
 A finite set `s` of size `n` admits an enumeration by a bijection from
-`range(0, n)`. The public interface is existential because clients need an
-indexing function, not the induction machinery that constructs one:
+`closed_range(1, n)`. The reserved bare kernel interface is existential because
+clients need an indexing function, not a canonical choice:
 
 <!-- litex:skip-test -->
 ```litex
-thm finite_set_has_bijective_index:
-    ? forall s finite_set:
-        exist idx fn(i1 range(0, finite_set_size(s))) s st {
-            $bijective(range(0, finite_set_size(s)), s, idx)
-        }
+by thm finite_set_has_bijective_index(s)
+# stores:
+exist idx finite_seq(s, finite_set_size(s)) st {
+    $bijective(closed_range(1, finite_set_size(s)), s, idx)
+}
 ```
 
-The nearest rejected design introduces module-local predicates such as
-`zero_index`, `zero_index_set`, or another spelling of bijectivity. Those
-wrappers obscure the standard mathematical interface and force clients to
-unfold a `std/basics`-specific definition. The theorem instead depends on the
-kernel predicates `$injective`, `$surjective`, and `$bijective`, builtin
-finite-set cardinality, and finite-set induction. It is used by constructions
-that need a concrete enumeration of an arbitrary finite set. The theorem is
-checked; no existence or uniqueness debt remains in its public statement.
+`finite_seq(S,n)` accepts `n : N`, including `[] : finite_seq({},0)`. For
+function-property checks, exactly its internal type `fn(i N+: i <= n) S`
+bridges to `closed_range(1,n)`; nearby ranges do not. An arbitrary member of a
+finite-sequence space is not automatically bijective—the theorem supplies one
+chosen witness. The rejected designs are module-local indexing predicates,
+zero-based source wrappers, and any uniqueness claim for the enumeration.
 
 ## Function mapping properties
 
@@ -94,10 +84,13 @@ locally when that better preserves its dependency structure.
 
 ## Divisibility, primality, and greatest common divisors
 
-`divides(a, b)` means that `b = a * k` for some integer `k`. Native `$prime(p)`
-and `gcd(a, b)` are the directly usable interfaces. The module retains the
-transparent trial-division predicate, but does not expose a second gcd
-function:
+`divides(a, b)` means that `b = a * k` for some integer `k`. Native `$prime(p)`,
+`$coprime(a, b)`, and `gcd(a, b)` are the directly usable interfaces. Following
+Mathlib's elementary-number-theory layer, `$prime` has carrier `N` and
+`$coprime` has carrier `N x N`; the latter is the total gcd-one predicate, so
+`(0,0)` is false and `(0,1)` is true. The module retains the transparent
+trial-division predicate, but does not expose a second gcd function or a
+source-level duplicate of coprimality:
 
 <!-- litex:skip-test -->
 ```litex
@@ -119,9 +112,11 @@ shows that the set of positive common divisors is finite and nonempty, selects
 its greatest member with `finite_set_max`, and proves the result equal to native
 `gcd`. Keeping that construction outside the module preserves its explanatory
 value without making it a competing public interface. Checked bridge theorems
-still identify trial-division primality with `$prime`. This node supports the
-divisor laws, Euclidean reduction, Bezout's identity, reduced fractions, and
-the prime-divisor dichotomy.
+still identify trial-division primality with `$prime`. Positive `$coprime`
+facts expose the non-all-zero condition required by the native partial `gcd`
+object and then `gcd(a,b)=1`. This node supports the divisor laws, Euclidean
+reduction, Bezout's identity, reduced fractions, and the prime-divisor
+dichotomy.
 
 Native `lcm` follows the dual public pattern: the object and its primitive
 remainder/minimality rules remain in the kernel, while checked source theorems

@@ -228,6 +228,9 @@ impl Environment {
             known_reflexive_props,
             known_antisymmetric_props,
             cache_well_defined_obj,
+            well_defined_obj_proofs,
+            well_defined_fact_proofs,
+            well_defined_fact_order,
             cache_known_fact,
             cache_infer_rule_firing,
             statement_verified_atomic_facts: _,
@@ -367,8 +370,19 @@ impl Environment {
             self.known_antisymmetric_props.insert(name, ());
         }
 
-        for (key, _) in cache_well_defined_obj {
-            self.cache_well_defined_obj.insert(key, ());
+        for (proof_id, proof) in well_defined_obj_proofs {
+            self.well_defined_obj_proofs.insert(proof_id, proof);
+        }
+        for (fact_id, proof) in well_defined_fact_proofs {
+            self.well_defined_fact_proofs.insert(fact_id, proof);
+        }
+        for fact_id in well_defined_fact_order {
+            if !self.well_defined_fact_order.contains(&fact_id) {
+                self.well_defined_fact_order.push(fact_id);
+            }
+        }
+        for (key, cached) in cache_well_defined_obj {
+            self.cache_well_defined_obj.insert(key, cached);
         }
         for (key, cached_fact) in cache_known_fact {
             self.cache_known_fact.insert(key, cached_fact);
@@ -611,6 +625,7 @@ fn merge_known_fn_info_map_entry(
     let parent_info = map.entry(name).or_default();
     if let Some(fn_set) = child_info.fn_set {
         parent_info.fn_set = Some(fn_set);
+        parent_info.fn_set_membership_fact_id = child_info.fn_set_membership_fact_id;
     }
     if let Some(equal_to) = child_info.equal_to {
         parent_info.equal_to = Some(equal_to);

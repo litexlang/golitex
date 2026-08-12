@@ -207,6 +207,11 @@ atomic target
   -> true or unknown
 ```
 
+Closed `$prime(n)` and `$coprime(a,b)` goals use dedicated computation leaves
+after their natural-number domains are checked. Symbolic positive facts use
+their explicit definitions: trial division for prime, and the non-all-zero
+condition plus `gcd(a,b)=1` for coprime.
+
 Within one statement, Litex reuses an exact successful atomic subgoal if that
 same subgoal is requested again. This memo follows the ordinary environment
 scope: a proof from a parent scope is valid inside a child, while a proof that
@@ -216,6 +221,35 @@ reuses the original proof evidence only; it does not store the temporary fact,
 rerun inference, or make the fact available to the next statement. The
 statement's explicit commit and ordinary forward inference remain the only
 ways its documented facts enter the continuing context.
+
+### Goal-directed search and cache neutrality
+
+Every automatic rule with a closed, finite premise family must derive its
+candidate premises from the target fact family and the target object's
+structure. It must not derive those semantic alternatives by scanning
+whichever related facts happen to have been stored for the subject. For
+example, to prove `e $in C`, standard-carrier widening checks the fixed proper
+standard subcarriers of `C`; it does not enumerate the sets currently indexed
+as containing `e`.
+
+This gives three kernel-wide invariants:
+
+- **Cache neutrality.** A cache hit may accelerate an existing proof route, but
+  a cache miss is never evidence that a premise is unavailable. Every cached
+  route must have an equivalent uncached, goal-directed route.
+- **Closed-route materialization independence.** When a rule advertises a
+  target-determined premise family, explicitly committing one of those
+  already-derivable premises must not be required for the rule to find it.
+- **Target-owned candidate generation.** Finite semantic alternatives are
+  enumerated from the goal's closed rule table or constructor, never from a
+  reverse index of facts previously observed about the subject.
+
+Any change to a cache, reverse index, memo, or builtin dispatcher therefore
+requires paired cold- and warm-context regressions with the same success or
+failure result. Their evidence may differ only by a documented cache wrapper
+that preserves the original proof certificate. This does not remove Litex's
+deliberately bounded proof model: an explicit user lemma outside a rule's
+advertised premise family may still enable a later proof.
 
 **Builtin mathematical patterns.** The target shape is matched against
 implemented arithmetic, equality, order, membership, set, function, and
@@ -463,7 +497,7 @@ retain an explicit final `impossible` statement.
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | `by def fact` | No persistent child scope. | The single target must be a concrete positive prop or supported positive builtin definition. The older goal-block spelling remains parser-compatible. | Verify every defining requirement with the full verifier, even if the target is already known. | Store the target and infer only after all requirements succeed. | Checked use of a definition. |
-| `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and target shape. The arity-one `rational_has_unique_reduced_fraction(q)` additionally requires `q $in Q`. | Verify theorem domains or explicit builtin requirements with the full verifier. The rational interface constructs its fixed `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}` conclusion and sends it through the ordinary reduced-fraction existential verifier. | Store conclusions and infer only after all checks succeed. Builtin conclusions are normally atomic; the rational interface stores its supported existential through the compound-fact store path. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
+| `by thm name(args)` | The instantiation is checked against the current scope. | A user theorem must exist and match its arguments; a reserved builtin theorem checks fixed arity and requirements. The reduced-fraction theorem requires `q $in Q`; finite-subset closure requires an explicit subset premise and finite superset; finite-set indexing requires a finite set. | Verify theorem domains or explicit builtin requirements with the full verifier. Fixed compound conclusions use the ordinary existential verifier; `finite_set_has_bijective_index(s)` constructs a noncanonical `idx : finite_seq(s, finite_set_size(s))` bijective from `closed_range(1, finite_set_size(s))`. | Store conclusions and infer only after all checks succeed. The finite-subset theorem is explicit and does not turn subset chains into automatic search; arbitrary finite sequences are not inferred bijective. | Builtin names remain bare and globally reserved; detailed output identifies `builtin_rule` source and any provenance. |
 | `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The ordinary theorem application and its inferred consequences live in a disposable child scope. | The selected atomic fact must be well-defined in the parent; theorem lookup, arguments, domains, and builtin shapes use the legacy checks. The goal-block spelling accepts no proof body. | Apply the theorem in the child, then use the full atomic verifier on the selected fact. | Discard the child and transactionally store only the selected fact as the parent seed; ordinary inference from that seed remains enabled. | Detailed output separates `temporary_then_facts`, `target_check`, and `parent_stored_facts`; strict/trusted execution follows the existing theorem and file trust boundaries. |
 | `by cases` | One child scope per case. | Target, cases, and branch shapes must be well-defined. `case fact` denotes a zero-statement proof branch; branches with statements use `case fact:`. | Prove the cases are exhaustive, then prove every target in every branch, including after zero proof steps in a bodyless branch. | Store the common target facts and infer. | Checked case analysis. |
 | `by contra` | A child scope assumes the logical negation of the target. | The target must support logical negation and be well-defined. | Execute the proof and verify both a stated impossible fact and its negation. | Store the original target and infer. | Checked contradiction proof. |

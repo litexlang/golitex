@@ -197,11 +197,7 @@ impl Runtime {
             forall_fact.error_messages_if_forall_param_missing_in_some_then_clause();
         let mut projected_forall_facts = Vec::new();
         if !coverage_error_detail_lines.is_empty()
-            && forall_fact
-                .params_def_with_type
-                .param_type_cited_param_indices
-                .iter()
-                .all(|indices| indices.is_empty())
+            && !forall_fact.params_def_with_type.has_dependent_param_type()
         {
             for (then_index, _) in coverage_error_detail_lines.iter() {
                 let then_fact = &forall_fact.then_facts[*then_index];

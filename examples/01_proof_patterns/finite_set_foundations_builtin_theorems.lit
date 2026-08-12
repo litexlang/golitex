@@ -1,0 +1,33 @@
+# Finite-set foundations are reserved bare builtin theorem interfaces.
+# No `import std basics` and no `basics::` qualification is needed.
+
+# Before this kernel interface, clients reconstructed subset finiteness through
+# a source theorem in std/basics. Now the checked subset premise is consumed by
+# one explicit theorem call; subset chains are not searched automatically.
+by def {1} $subset {1, 2}
+by thm subset_of_finite_set_is_finite({1}, {1, 2})
+$is_finite_set({1})
+
+# finite_seq has a natural-number length, so its zero-length member is the
+# empty sequence even when the codomain is empty.
+[] $in finite_seq({}, 0)
+$is_nonempty_set(finite_seq({}, 0))
+
+# Every finite set has some one-based bijective index. The witness is
+# intentionally existential and noncanonical.
+by thm finite_set_has_bijective_index({})
+obtain empty_index from exist empty_index finite_seq({}, finite_set_size({})) st {$bijective(closed_range(1, finite_set_size({})), {}, empty_index)}
+empty_index $in finite_seq({}, finite_set_size({}))
+$bijective(closed_range(1, finite_set_size({})), {}, empty_index)
+
+by thm finite_set_has_bijective_index({1, 2})
+obtain index from exist index finite_seq({1, 2}, finite_set_size({1, 2})) st {$bijective(closed_range(1, finite_set_size({1, 2})), {1, 2}, index)}
+index $in finite_seq({1, 2}, finite_set_size({1, 2}))
+$bijective(closed_range(1, finite_set_size({1, 2})), {1, 2}, index)
+
+# Boundary: ordinary finite_seq membership alone does not establish
+# bijectivity, and arbitrary subset chains do not establish finiteness unless
+# the corresponding builtin theorem is called explicitly.
+#
+# Evidence:
+# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/finite_set_foundations_builtin_theorems.lit

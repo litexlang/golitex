@@ -208,9 +208,11 @@ impl Runtime {
         let mut last_error: Option<RuntimeError> = None;
         for space in candidate_spaces.iter() {
             let certificate_checkpoint = self.well_definedness_capture_checkpoint();
-            let trial = self.run_in_local_env(|rt| {
-                rt.verify_fn_obj_well_defined_against_space(fn_obj, space.clone(), verify_state)
-            });
+            let trial = self
+                .run_in_local_env_and_take(|rt| {
+                    rt.verify_fn_obj_well_defined_against_space(fn_obj, space.clone(), verify_state)
+                })
+                .map(|(value, _discarded_search_environment)| value);
             // Candidate trials are search scopes, not selected proof scopes.
             // The accepted candidate is rerun below in the real environment.
             self.rollback_well_definedness_capture(certificate_checkpoint);
@@ -436,16 +438,18 @@ impl Runtime {
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         let mut arg_index: usize = 0;
         for (group_index, param_def) in params_def_with_set.groups.iter().enumerate() {
-            let param_type =
-                if !params_def_with_set.param_set_cited_param_indices[group_index].is_empty() {
-                    ParamType::Obj(self.inst_obj(
-                        param_def.set_obj(),
-                        &param_to_arg_map,
-                        param_binding,
-                    )?)
-                } else {
-                    ParamType::Obj(param_def.set_obj().clone())
-                };
+            let param_type = if !params_def_with_set
+                .cited_param_indices_for_group(group_index)
+                .is_empty()
+            {
+                ParamType::Obj(self.inst_obj(
+                    param_def.set_obj(),
+                    &param_to_arg_map,
+                    param_binding,
+                )?)
+            } else {
+                ParamType::Obj(param_def.set_obj().clone())
+            };
 
             for param_name in param_def.params.iter() {
                 let arg = args_as_obj[arg_index].clone();

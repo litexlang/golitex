@@ -16,7 +16,7 @@ pub enum ParamType {
 pub struct ParamDefWithType {
     pub groups: Vec<ParamGroupWithParamType>,
     /// For each parameter group, the flat indices of earlier parameters cited by that group's type.
-    pub param_type_cited_param_indices: Vec<Vec<usize>>,
+    param_type_cited_param_indices: Vec<Vec<usize>>,
 }
 
 impl ParamDefWithType {
@@ -46,6 +46,16 @@ impl ParamDefWithType {
 
     pub fn as_slice(&self) -> &[ParamGroupWithParamType] {
         self.groups.as_slice()
+    }
+
+    pub(crate) fn cited_param_indices_for_group(&self, group_index: usize) -> &[usize] {
+        &self.param_type_cited_param_indices[group_index]
+    }
+
+    pub(crate) fn has_dependent_param_type(&self) -> bool {
+        self.param_type_cited_param_indices
+            .iter()
+            .any(|indices| !indices.is_empty())
     }
 
     pub fn number_of_params(&self) -> usize {
@@ -185,7 +195,7 @@ pub struct ParamDefWithSet {
     /// `fn(n N+, x closed_range(1, n)) R`. A function return set is stored on
     /// the containing function-set node rather than in this per-domain index;
     /// it may cite function parameters and is instantiated at application.
-    pub param_set_cited_param_indices: Vec<Vec<usize>>,
+    param_set_cited_param_indices: Vec<Vec<usize>>,
 }
 
 impl ParamDefWithSet {
@@ -211,6 +221,10 @@ impl ParamDefWithSet {
 
     pub fn as_slice(&self) -> &[ParamGroupWithSet] {
         self.groups.as_slice()
+    }
+
+    pub(crate) fn cited_param_indices_for_group(&self, group_index: usize) -> &[usize] {
+        &self.param_set_cited_param_indices[group_index]
     }
 
     pub fn number_of_params(&self) -> usize {
@@ -1501,11 +1515,8 @@ mod tests {
                 .unwrap(),
         ]);
 
-        assert_eq!(
-            param_def.param_type_cited_param_indices[0],
-            Vec::<usize>::new()
-        );
-        assert_eq!(param_def.param_type_cited_param_indices[1], vec![0, 1]);
+        assert_eq!(param_def.cited_param_indices_for_group(0), []);
+        assert_eq!(param_def.cited_param_indices_for_group(1), [0, 1]);
     }
 
     #[test]
@@ -1526,11 +1537,8 @@ mod tests {
                 .unwrap(),
         ]);
 
-        assert_eq!(
-            param_def.param_set_cited_param_indices[0],
-            Vec::<usize>::new()
-        );
-        assert_eq!(param_def.param_set_cited_param_indices[1], vec![0]);
+        assert_eq!(param_def.cited_param_indices_for_group(0), []);
+        assert_eq!(param_def.cited_param_indices_for_group(1), [0]);
     }
 
     #[test]

@@ -371,6 +371,12 @@ negation, the target is revalidated as one literal `u64`, and Lean checks the
 result with `norm_num`. This is proof-producing reflection, not a default type
 assigned to bare numerals and not an ordinary local-rule schema.
 
+Closed `$coprime(a,b)` and its negation use the parallel
+`CoprimeNaturalReflection` identity. Both argument occurrences are fixed to
+`ℕ`, the proposition lowers to `Nat.Coprime a b`, and Lean checks the exact
+gcd computation with `norm_num [Nat.Coprime]`. The reflection certificate
+accepts natural literals only; it does not widen the Litex predicate to `ℤ`.
+
 Equality-class lookup retains more than the final equivalent object: it now
 returns an ordered path of original equality facts with an orientation for each
 edge. A successful atomic-fact transport becomes an `EqualityRewrite` rule;
@@ -539,6 +545,8 @@ reverses only the containment. The four negated comparisons become native
 negations of `<`, `≤`, `>`, and `≥`. `$prime(n)` alone fixes the
 argument judgment to `ℕ` and becomes `Nat.Prime n`; it does not give an
 intrinsic type to the numeral or symbol outside that occurrence.
+Likewise, `$coprime(a,b)` fixes both argument occurrences to `ℕ` and becomes
+`Nat.Coprime a b`.
 
 The anonymous `noncomputable section` encloses both the shared prelude and all
 generated declarations. In particular, polymorphic theorems remain in scope of
@@ -611,6 +619,8 @@ The current lowering is intentionally small:
   premise and emits the same native `⊆` proposition;
 - closed-u64 prime evidence emits native `Nat.Prime` and is checked by
   `norm_num` without emitting the inferred trial-division internals;
+- closed natural coprime evidence emits native `Nat.Coprime` and is checked by
+  `norm_num [Nat.Coprime]` without lowering through Litex's partial gcd object;
 - arithmetic/order builtin evidence checks the target and ordered premise fact
   families, recursively materializes those premise proofs, and applies one of
   `linarith only`, `mul_nonneg`, `mul_pos`, `div_nonneg`, or `div_pos`;
@@ -622,7 +632,7 @@ The current lowering is intentionally small:
   by `ring`;
 - context-free object lowering preserves symbols, bare normalized numerals,
   standard sets, scalar applications, native bound function sets and exact
-  function-application layers, and the simple set constructors
+function-application layers, and the simple set constructors
   `union`, `intersect`, `set_minus`, `big_union`, `big_intersect`,
   `power_set`, and list sets;
 - binder-owning `SetBuilder` retains its local symbol, base set, carrier, and
@@ -637,7 +647,10 @@ set uses a set predicate requiring pointwise membership. Within each Litex
 application layer all value arguments precede the layer's domain-proof
 arguments; a nested returned function begins the next layer. This target
 currying does not make additional Litex spellings legal. The verifier freezes
-every successful WD proof in a statement-local certificate. Target-consumed
+every successful WD proof into an environment-owned DAG. `WellDefinedObjProofId`
+names object nodes and `WellDefinedFactId` names the exact factual proofs they
+cite. A statement retains root IDs plus a frozen projection for later IR/report
+lowering; it does not make those proofs ordinary Litex facts. Target-consumed
 requirements are inserted as function arguments, while source-only obligations
 are still emitted as checked audit facts. The emitter never substitutes
 `by assumption` or reruns proof search for a missing certificate.
@@ -649,6 +662,25 @@ scope before dependent WD proofs are emitted; a binder belonging only to a
 function signature is generalized in its helper, while a closed witness may
 be emitted globally. Failed function-space candidates roll back their trial
 evidence, and an evidence-free boolean object-cache hit cannot certify output.
+Nested objects cite direct child proof IDs, so `f(g(h(x)))` is retained as a
+DAG rather than a flattened bag of propositions.
+
+WD visibility follows the ordinary Litex environment stack. A child can cite a
+parent proof. Popping an uncommitted child discards its store and cache; only
+nodes still referenced by an enclosing active capture are projected upward so
+that the outer result can be frozen. Committing a child merges both its store
+and its cache. Imported modules do not contribute reusable WD cache entries.
+Cache identity is the object plus every callable contract actually used by its
+AST. For a stored function membership that contract is the exact `FactId` that
+installed the current `fn(...)` slot, so replacing a function's current return
+contract cannot reuse a stale application proof.
+
+Runtime-wide IDs are never recycled, but environment visibility remains the
+authority for citation. Closed/file-scope proofs use deterministic Lean names
+`well_defined_fact_<WellDefinedFactId>` and are emitted once. Scoped proofs use
+`well_defined_fact_<proof-space>_<local-index>` and may be reused only inside
+that Lean proof context. The recursion guard for an object currently under WD
+checking is transient cycle control, not proof evidence.
 
 The checked named-definition slice lowers a checked numeric-return
 `have fn ... = ...` to a native dependent `def`, its membership theorem, and
@@ -716,6 +748,12 @@ occurrences retain all audited WD facts, while target-consumed function
 requirements point to exact certificate IDs. Its commented cases record the
 remaining wrong-layer, signature-switching, unsupported-constructor, and
 untyped-proof boundaries.
+
+[`examples/09_compile_to_lean/compile_to_lean_examples.md#environment_well_definedness_cache`](../../examples/09_compile_to_lean/compile_to_lean_examples.md#environment_well_definedness_cache)
+is the environment-identity tracer. Two global statements apply the same
+restricted named function; the second cites the first application's exact
+environment-owned object/fact IDs, and the generated module declares the
+closed domain helper once under its stable `WellDefinedFactId` name.
 
 [`examples/05_compiler_interop/compile_to_lean_builtin_rule_ir.lit`](../../examples/05_compiler_interop/compile_to_lean_builtin_rule_ir.lit)
 is the builtin-rule tracer. It follows one quotient-nonzero proof from matched

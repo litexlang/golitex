@@ -255,7 +255,7 @@ impl Runtime {
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
 
         let function_identifier_obj = self.declared_identifier_obj(name);
-        let surface_membership_fact: AtomicFact = InFact::new(
+        let surface_membership_fact: Fact = InFact::new(
             function_identifier_obj.clone(),
             surface_set,
             line_file.clone(),
@@ -264,14 +264,16 @@ impl Runtime {
 
         let mut infer_result = self
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
-                surface_membership_fact.into(),
+                surface_membership_fact.clone(),
             )
             .map_err(|e| short_exec_error(stmt.clone(), String::new(), Some(e), vec![]))?;
         infer_result.relabel_all_added_facts_with_store_reason(store_reason);
 
+        let membership_fact_id = self.known_fact_id_for_fact(&surface_membership_fact)?;
         self.register_known_objs_in_fn_sets_for_element_body(
             &function_identifier_obj,
             shape.fn_set.body.clone(),
+            membership_fact_id,
             Some((*shape.anonymous_fn.equal_to).clone()),
             line_file.clone(),
             line_file.clone(),

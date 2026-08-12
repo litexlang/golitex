@@ -389,6 +389,20 @@ The emitter rechecks that the source target has exactly one literal `u64`.
 Symbolic prime definitions and their inferred trial-division facts remain
 outside this reflection slice.
 
+Closed natural coprimality is a parallel reflection node:
+
+```text
+CoprimeNaturalReflection
+target = $coprime(14, 25) | not $coprime(14, 21)
+premises = []
+```
+
+Both argument occurrences are `ℕ`, and the proposition becomes
+`Nat.Coprime 14 25` or its negation. `norm_num [Nat.Coprime]` checks the
+gcd-one computation. The nearest rejected form is an argument known only in
+`Z`; neither source verification nor target lowering silently inserts
+`natAbs`.
+
 The nearest rejected form is `a / b != z` when Litex resolved `z` to zero from
 its environment. The verifier can prove it, but the current builtin evidence
 does not carry the equality path from `z` to `0`. Supporting that target should
@@ -803,14 +817,18 @@ f(2)(3)
   -> f 2 wd₁ 3
 ```
 
-Every proof comes from the successful Litex well-definedness pass. The
-verifier freezes a statement-local certificate before its temporary scopes and
-memoized proof trees disappear. Runtime-to-IR validates and converts that
-certificate; it never repeats proof search. Requirements consumed by a native
-function type become application proof arguments. Requirements which Lean's
-total operation does not consume—for example the source proof that the
-denominator of `1 / 2` is nonzero—are still materialized and kernel-checked as
-source-only audit facts.
+Every proof comes from the successful Litex well-definedness pass. The verifier
+stores its proof graph in the active Litex environment: a
+`WellDefinedObjProofId` names one checked object node, and a
+`WellDefinedFactId` names one exact factual verifier result used by that node.
+The statement result keeps root IDs and a frozen projection before temporary
+scopes disappear. Runtime-to-IR validates and converts that projection; it
+never repeats proof search and it never inserts compiler-only WD facts into the
+ordinary Litex known-fact indexes. Requirements consumed by a native function
+type become application proof arguments. Requirements which Lean's total
+operation does not consume—for example the source proof that the denominator
+of `1 / 2` is nonzero—are still materialized and kernel-checked as source-only
+audit facts.
 
 This preserves Litex's two-phase order for a proposition such as
 `$p(f(a), 1 / 2, t(x, y))`: the compiler first replays the complete retained WD
@@ -820,12 +838,29 @@ well-defined marker. Outer theorem binders, function-signature-only binders,
 and closed witnesses have different Lean scopes; their certificate helpers are
 respectively local, generalized, or file-scoped.
 
-The certificate is occurrence- and scope-aware. A boolean object-cache hit
-without compatible statement-local evidence cannot certify compiler output; a
-failed overload candidate cannot leak its trial proofs; and missing, reordered,
+The proof store is occurrence-, contract-, and scope-aware. Nested checks keep
+direct DAG edges, so the proof for `f(g(h(x)))` cites `g(h(x))`, which cites
+`h(x)`. A child environment sees parent nodes. Popping an uncommitted child
+discards the child's store and cache, except that a node still cited by an
+enclosing active capture is projected upward before the outer statement is
+frozen. An explicit environment commit merges both store and cache. Imported
+module environments do not supply reusable WD cache entries.
+
+An object's cache key contains its structural identity and the exact callable
+contracts selected while walking that object. For an ordinary named function,
+the canonical contract is the `FactId` of the current `f $in fn(...)`
+membership. Thus two applications can share one proof only while they use the
+same installed membership; replacing `f $in fn(x R) R` by a checked current
+membership in `fn(x R) R+` invalidates the old application cache even though
+the parameter list is unchanged. Binder-owning objects whose hidden facts can
+contain callables remain deliberately noncacheable.
+
+A boolean object-cache hit without a proof ID cannot certify compiler output;
+the active-recursion set is cycle control rather than evidence; a failed
+function-space candidate cannot leak its trial proofs; and missing, reordered,
 out-of-scope, or proposition-mismatched evidence makes the statement
-unsupported. A real Lean probe also fixes one important surface constraint:
-an unnamed implication premise is not available while Lean elaborates a proof
+unsupported. A real Lean probe also fixes one important surface constraint: an
+unnamed implication premise is not available while Lean elaborates a proof
 argument in its consequent type. Any consumed WD premise therefore receives a
 deterministic binder/helper name, or is rendered as its exact inline proof
 term. The emitter must not recover it with `by assumption`.
@@ -936,15 +971,21 @@ not the missing choice between natural and rational division.
 
 Litex checks every source object before it invokes the fact verifier. The
 compiler now preserves that phase boundary instead of reconstructing it from
-the final proposition. A statement certificate contains three linked views:
+the final proposition. A statement projection contains the roots of one
+environment-owned proof DAG and three linked views:
 
 ```text
-checked object occurrence
-  -> ordered certificate IDs for every WD fact observed in its traversal
+statement use
+  -> [WellDefinedObjProofId root]
+
+checked object proof
+  -> WellDefinedObjProofId
+  -> [direct child WellDefinedObjProofId]
+  -> [direct WellDefinedFactId]
 
 target requirement (application layer, parameter/domain position)
-  -> exact checked object occurrence
-  -> exact WD certificate ID
+  -> exact WellDefinedObjProofId
+  -> exact WellDefinedFactId
   -> frozen proposition
 ```
 
@@ -952,14 +993,15 @@ All observed WD facts remain source-audit evidence. Only an explicit target
 requirement becomes a dependent Lean argument. Thus a checked application of
 `f $in fn(x R: x > 0) R` is emitted as `f a wd_proof`, while a divisor's
 nonzero certificate is replayed and audited without becoming an invented
-argument to Lean division. Missing object IDs, fact IDs, target references, or
-changed propositions fail before Lean text is returned. The emitter resolves
-the retained certificate ID to its already emitted local/global proof name; it
-does not search by proposition or use `assumption`. If structurally identical
-application occurrences expose distinct replayed proof terms before occurrence
-identity reaches the emitted term, compilation fails as ambiguous instead of
-silently choosing either proof. Distinct occurrence certificates may share one
-proof term when statement memoization or a common local binder proves both.
+argument to Lean division. Missing object IDs, child edges, root IDs, fact IDs,
+target references, or changed propositions fail before Lean text is returned.
+The emitter resolves the retained stable ID to its already emitted proof name;
+it does not search by proposition or use `assumption`. Closed/file-scope facts
+use `well_defined_fact_<WellDefinedFactId>` and are emitted once, while scoped
+facts use `well_defined_fact_<proof-space>_<local-index>` and never escape that
+Lean context. Distinct statement projections may cite the same environment
+proof term, which is how a second global `f(2)` application reuses the first
+one without replaying Litex verification.
 
 Refined parameter sets preserve the same source proof. For example, the binder
 proof `b $in Z*` reduces definitionally to `b != 0` in the selected native Lean
@@ -1048,3 +1090,6 @@ implemented structural set-object tracer is
 it is the migration target for native `union`, `intersect`, and `set_minus`.
 The binder-owned set/function terms and refined output proofs are fixed by
 [`compile_to_lean_function_well_definedness.lit`](../../examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit).
+Cross-statement proof identity, environment cache reuse, and single-emission
+Lean helper naming are fixed by
+[`environment_well_definedness_cache`](../../examples/09_compile_to_lean/compile_to_lean_examples.md#environment_well_definedness_cache).

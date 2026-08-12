@@ -1,0 +1,19 @@
+# Tracer: the empty finite-sequence literal has length zero.
+#
+# Before (did not work):
+# [] = []
+# Former behavior: the parser constructed an empty finite-sequence literal,
+# but well-definedness rejected it for having no elements.
+#
+# Now (verified):
+[] = []
+have no_terms finite_seq(R, 0) = []
+[] $in finite_seq(R, 0)
+$is_nonempty_set(finite_seq({}, 0))
+[1, 2, 3] $in finite_seq(N+, 3)
+# Current behavior: [] is the length-zero finite sequence; nonempty literals
+# retain their ordinary length-and-entry checks.
+# Boundary: [] $in finite_seq(R, 1) remains rejected by the executable Rust
+# regression in runtime_regression_tests/sequence_semantics.rs.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/empty_finite_sequence.lit
+# Implementation: src/parse/parse_obj.rs and src/verify/verify_obj_well_defined/matrix.rs

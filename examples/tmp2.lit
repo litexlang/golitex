@@ -28,104 +28,128 @@ def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
 def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
 def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
 
+namespace Litex.StandardSets
+
+abbrev N : Set ℕ := Set.univ
+abbrev NPos : Set ℕ := Set.Ioi 0
+
+abbrev Z : Set ℤ := Set.univ
+abbrev ZNeg : Set ℤ := Set.Iio 0
+abbrev ZStar : Set ℤ := {z | z ≠ 0}
+
+abbrev Q : Set ℚ := Set.univ
+abbrev QPos : Set ℚ := Set.Ioi 0
+abbrev QNeg : Set ℚ := Set.Iio 0
+abbrev QStar : Set ℚ := {q | q ≠ 0}
+
+abbrev R : Set ℝ := Set.univ
+abbrev RPos : Set ℝ := Set.Ioi 0
+abbrev RNeg : Set ℝ := Set.Iio 0
+abbrev RStar : Set ℝ := {r | r ≠ 0}
+
+abbrev C : Set ℂ := Set.univ
+abbrev CStar : Set ℂ := {c | c ≠ 0}
+
+end Litex.StandardSets
+
 -- Litex well-definedness certificate 1 (forall type witness)
-theorem well_defined_fact_1 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_1 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 2 (forall type witness)
-theorem well_defined_fact_2 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_2 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 3 (forall type witness)
-theorem well_defined_fact_3 : 1 ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_3 : 1 ∈ Litex.StandardSets.C := by
   change True
   trivial
 
 -- Litex well-definedness certificate 4 (forall type witness)
-theorem well_defined_fact_4 : 1 ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_4 : 1 ∈ Litex.StandardSets.R := by
   change True
   trivial
 
 -- Litex well-definedness certificate 5 (forall type witness)
-theorem well_defined_fact_5 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_5 : ∀ (y : ℝ), (y - 1) ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 6 (forall type witness)
-theorem well_defined_fact_6 : 2 ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_6 : 2 ∈ Litex.StandardSets.R := by
   change True
   trivial
 
 -- Litex well-definedness certificate 8 (forall type witness)
-theorem well_defined_fact_7 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_8 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 9 (forall type witness)
-theorem well_defined_fact_8 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_9 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 12 (forall type witness)
-theorem well_defined_fact_9 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_12 : ∀ (y : ℝ), (y - 1) ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 16 (forall type witness)
-theorem well_defined_fact_10 : ∀ (y : ℝ), y ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_16 : ∀ (y : ℝ), y ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 17 (forall type witness)
-theorem well_defined_fact_11 : ∀ (y : ℝ), (y : ℂ) ∈ (Set.univ : Set ℂ) := by
+theorem well_defined_fact_17 : ∀ (y : ℝ), (y : ℂ) ∈ Litex.StandardSets.C := by
   intro y
   change True
   trivial
 
 -- Litex well-definedness certificate 20 (forall type witness)
-theorem well_defined_fact_12 : ∀ (y : ℝ), (y - 1) ∈ (Set.univ : Set ℝ) := by
+theorem well_defined_fact_20 : ∀ (y : ℝ), (y - 1) ∈ Litex.StandardSets.R := by
   intro y
   change True
   trivial
 
--- Litex fact f34
-theorem fact34 : ∀ (f : (x : ℝ) → ℝ) (litex_param_fact_1 : f ∈ (Set.univ : Set ((x : ℝ) → ℝ))), ∀ (litex_domain_fact_1 : ∀ (y : ℝ) (litex_param_fact_1 : y ∈ (Set.univ : Set ℝ)), (f y) = (f (y - 1))), (f 2) = (f 1) := by
+-- Litex fact f22
+theorem fact22 : ∀ (f : (x : ℝ) → ℝ) (litex_param_fact_1 : f ∈ (Set.univ : Set ((x : ℝ) → ℝ))), ∀ (litex_domain_fact_1 : ∀ (y : ℝ) (litex_param_fact_1 : y ∈ Litex.StandardSets.R), (f y) = (f (y - 1))), (f 2) = (f 1) := by
   intro f litex_param_fact_1 litex_domain_fact_1
-  -- Litex well-definedness certificate 1 replayed by generalized helper well_defined_fact_10
-  -- Litex well-definedness certificate 2 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 1 replayed by generalized helper well_defined_fact_1
+  -- Litex well-definedness certificate 2 replayed by generalized helper well_defined_fact_2
   -- Litex well-definedness certificate 3 reuses well_defined_fact_3
   -- Litex well-definedness certificate 4 reuses well_defined_fact_4
-  -- Litex well-definedness certificate 5 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 5 replayed by generalized helper well_defined_fact_5
   -- Litex well-definedness certificate 6 reuses well_defined_fact_6
   -- Litex well-definedness certificate 7 reuses well_defined_fact_4
-  -- Litex well-definedness certificate 8 replayed by generalized helper well_defined_fact_10
-  -- Litex well-definedness certificate 9 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 8 replayed by generalized helper well_defined_fact_8
+  -- Litex well-definedness certificate 9 replayed by generalized helper well_defined_fact_9
   -- Litex well-definedness certificate 10 reuses well_defined_fact_3
   -- Litex well-definedness certificate 11 reuses well_defined_fact_4
   -- Litex well-definedness certificate 12 replayed by generalized helper well_defined_fact_12
   -- Litex well-definedness certificate 13 reuses well_defined_fact_6
   -- Litex well-definedness certificate 14 reuses well_defined_fact_4
   -- Litex well-definedness certificate 15 reuses well_defined_fact_3
-  -- Litex well-definedness certificate 16 replayed by generalized helper well_defined_fact_10
-  -- Litex well-definedness certificate 17 replayed by generalized helper well_defined_fact_11
+  -- Litex well-definedness certificate 16 replayed by generalized helper well_defined_fact_16
+  -- Litex well-definedness certificate 17 replayed by generalized helper well_defined_fact_17
   -- Litex well-definedness certificate 18 reuses well_defined_fact_3
   -- Litex well-definedness certificate 19 reuses well_defined_fact_4
-  -- Litex well-definedness certificate 20 replayed by generalized helper well_defined_fact_12
+  -- Litex well-definedness certificate 20 replayed by generalized helper well_defined_fact_20
   -- Litex well-definedness certificate 21 reuses well_defined_fact_6
   -- Litex well-definedness certificate 22 reuses well_defined_fact_4
   have proof_fact_1_1 : (f (1 + 1)) = (f ((1 + 1) - 1)) := by
     -- Litex parameter requirement for `y`: (1 + 1) : ℝ
     let proof_arg_2_1 : ℝ := (1 + 1)
-    have proof_fact_2_2 : (1 + 1) ∈ (Set.univ : Set ℝ) := by
+    have proof_fact_2_2 : (1 + 1) ∈ Litex.StandardSets.R := by
       change True
       trivial
     have proof_fact_2_3 : (f (1 + 1)) = (f ((1 + 1) - 1)) := litex_domain_fact_1 proof_arg_2_1 proof_fact_2_2

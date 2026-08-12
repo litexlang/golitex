@@ -1,11 +1,21 @@
 use super::*;
 
 #[test]
-fn standard_set_membership_lifting_uses_known_membership_only_forward() {
-    let source_code = "forall a Z:\n    a $in R";
+fn standard_set_membership_lifting_is_target_driven_and_forward_only() {
+    let source_code = r#"
+forall x, y N:
+    (x, y)[1] $in C
+
+forall x, y N:
+    (x, y)[1] $in N
+    (x, y)[1] $in C
+
+forall a Z:
+    a $in R
+"#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "standard_set_membership_lifting_uses_known_membership_only_forward",
+        "standard_set_membership_lifting_is_target_driven_and_forward_only",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -14,6 +24,34 @@ fn standard_set_membership_lifting_uses_known_membership_only_forward() {
         run_succeeded,
         "known integer membership should lift to real membership:\n{run_output}"
     );
+
+    for (stmt_index, conclusion_index) in [(0, 0), (1, 1)] {
+        let forall_success = stmt_results[stmt_index]
+            .factual_success()
+            .expect("each cold/warm tracer should have a factual result");
+        let VerifiedByResult::ForallProof(forall_proof) = forall_success.underlying_verified_by()
+        else {
+            panic!("each cold/warm tracer should retain its forall proof: {forall_success:?}");
+        };
+        let conclusion = forall_proof.proves[conclusion_index]
+            .result
+            .factual_success()
+            .expect("each complex-membership conclusion should have a factual result");
+        let VerifiedByResult::BuiltinRule(rule) = conclusion.underlying_verified_by() else {
+            panic!("each complex-membership conclusion should use a builtin rule: {conclusion:?}");
+        };
+        assert_eq!(rule.subgoals.len(), 1);
+        let source_membership = rule.subgoals[0]
+            .factual_success()
+            .expect("each projection should retain its source membership");
+        let Fact::AtomicFact(AtomicFact::InFact(source_in_fact)) = &source_membership.stmt else {
+            panic!("each projection subgoal should be a membership fact: {source_membership:?}");
+        };
+        assert!(matches!(
+            &source_in_fact.set,
+            Obj::StandardSet(StandardSet::N)
+        ));
+    }
 
     let forall_success = stmt_results
         .last()
@@ -58,6 +96,27 @@ fn standard_set_membership_lifting_uses_known_membership_only_forward() {
     assert!(
         !boundary_succeeded,
         "complex membership must not lift backward to real membership:\n{boundary_output}"
+    );
+}
+
+#[test]
+fn standard_set_membership_lifting_does_not_enumerate_stored_owner_sets() {
+    let source = include_str!(
+        "../../../verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs"
+    );
+    let implementation = source
+        .split("fn verify_in_fact_by_standard_subset_membership(")
+        .nth(1)
+        .expect("the target-driven standard-set membership rule must exist")
+        .split("pub(super) fn verify_in_fact_by_known_list_set_carrier(")
+        .next()
+        .expect("the following membership rule must delimit the implementation");
+
+    assert!(implementation.contains("proper_subsets_in_membership_proof_order"));
+    assert!(implementation.contains("verify_builtin_rule_premise"));
+    assert!(
+        !implementation.contains("known_sets_containing_obj"),
+        "standard-set proof candidates must come from the target hierarchy, not stored owner-set enumeration"
     );
 }
 
@@ -3211,9 +3270,9 @@ forall a, b N:
 }
 
 #[test]
-fn finite_subset_uses_axiom_matching_and_cyclic_subsets_terminate() {
+fn finite_subset_requires_explicit_builtin_theorem_and_cyclic_subsets_terminate() {
     run_with_large_stack(
-        "finite_subset_uses_axiom_matching_and_cyclic_subsets_terminate",
+        "finite_subset_requires_explicit_builtin_theorem_and_cyclic_subsets_terminate",
         || {
             let builtin_only_source = r#"
 forall A set, B finite_set:
@@ -3243,12 +3302,6 @@ forall A set, B finite_set:
             );
 
             let finite_chain_source = r#"
-axiom subset_of_finite_set_is_finite:
-    ? forall A set, B finite_set:
-        A $subset B
-        =>:
-            $is_finite_set(A)
-
 thm finite_subset_chain:
     ? forall A, B set, c finite_set:
         A $subset B
@@ -3261,7 +3314,8 @@ thm finite_subset_chain:
     $is_finite_set(A)
 "#;
             let mut finite_chain_runtime = Runtime::new();
-            finite_chain_runtime.new_file_path_new_env_new_name_scope("finite_subset_axiom_chain");
+            finite_chain_runtime
+                .new_file_path_new_env_new_name_scope("finite_subset_builtin_theorem_chain");
             let (finite_chain_results, finite_chain_error) =
                 run_source_code(finite_chain_source, &mut finite_chain_runtime);
             let (finite_chain_succeeded, finite_chain_output) = render_run_source_code_output(
@@ -3273,20 +3327,15 @@ thm finite_subset_chain:
 
             assert!(
                 finite_chain_succeeded,
-                "explicit axiom matching should follow a finite subset chain:\n{finite_chain_output}"
+                "explicit builtin theorem calls should follow a finite subset chain:\n{finite_chain_output}"
             );
+            assert!(finite_chain_output.contains("subset_of_finite_set_is_finite"));
             assert!(
                 !finite_chain_output.contains("finite set subset is finite"),
-                "the finite chain must not use removed builtin provenance:\n{finite_chain_output}"
+                "the finite chain must not use automatic subset-finiteness provenance:\n{finite_chain_output}"
             );
 
             let cyclic_source = r#"
-axiom subset_of_finite_set_is_finite:
-    ? forall A set, B finite_set:
-        A $subset B
-        =>:
-            $is_finite_set(A)
-
 forall A, B set:
     A $subset B
     B $subset A
@@ -3294,7 +3343,7 @@ forall A, B set:
         $is_finite_set(A)
 "#;
             let mut cyclic_runtime = Runtime::new();
-            cyclic_runtime.new_file_path_new_env_new_name_scope("cyclic_finite_subset_axiom");
+            cyclic_runtime.new_file_path_new_env_new_name_scope("cyclic_finite_subset_builtin");
             let (cyclic_results, cyclic_error) =
                 run_source_code(cyclic_source, &mut cyclic_runtime);
             let (cyclic_succeeded, cyclic_output) = render_run_source_code_output(

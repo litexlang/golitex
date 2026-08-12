@@ -558,6 +558,9 @@ impl Runtime {
     }
 
     pub(crate) fn known_sets_containing_obj(&self, obj: &Obj) -> Vec<Obj> {
+        // This is an index of materialized facts, not the proof closure for
+        // `obj`. A proof rule must not use this history to replace a finite
+        // target-driven premise search; cache warmth cannot change semantics.
         let probe: AtomicFact = InFact::new(obj.clone(), obj.clone(), default_line_file()).into();
         let module_names = self.atomic_fact_referenced_module_names(&probe);
         let obj_strings = self.all_objs_equal_to_arg_for_known_atomic_fact(obj, &module_names);

@@ -1603,6 +1603,13 @@ impl NormalAtomicFact {
                     self.body[0].to_latex_string()
                 );
             }
+            if name == COPRIME && self.body.len() == 2 {
+                return format!(
+                    r"\operatorname{{coprime}}\left( {}, {} \right)",
+                    self.body[0].to_latex_string(),
+                    self.body[1].to_latex_string()
+                );
+            }
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {
                 let operator = if name == PROPER_SUBSET {
                     r"\subsetneq"
@@ -1745,6 +1752,13 @@ impl NotNormalAtomicFact {
                 return format!(
                     r"\neg \operatorname{{prime}}\left( {} \right)",
                     self.body[0].to_latex_string()
+                );
+            }
+            if name == COPRIME && self.body.len() == 2 {
+                return format!(
+                    r"\neg \operatorname{{coprime}}\left( {}, {} \right)",
+                    self.body[0].to_latex_string(),
+                    self.body[1].to_latex_string()
                 );
             }
             if self.body.len() == 2 && matches!(name.as_str(), PROPER_SUBSET | PROPER_SUPERSET) {

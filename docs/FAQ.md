@@ -421,6 +421,15 @@ The canonical rational interface is
 stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. The name is bare and
 reserved, accepts exactly one argument, and reuses the kernel's direct
 reduced-fraction existential rule rather than a trusted `std/basics` theorem.
+Finite-set foundations use the same explicit style. After checking
+`A $subset B` with finite `B`, call
+`by thm subset_of_finite_set_is_finite(A, B)`; Litex deliberately does not
+search arbitrary subset chains. For finite `s`,
+`by thm finite_set_has_bijective_index(s)` stores a noncanonical existential
+index in `finite_seq(s, finite_set_size(s))`, bijective from
+`closed_range(1, finite_set_size(s))`. These are bare kernel names, not
+`basics::` declarations, and an arbitrary finite sequence is not thereby
+declared bijective.
 When only one atomic consequence should escape, use the preview form
 `by thm name(args) => atomic_fact`, or the equivalent bodyless goal block
 `by thm name(args):` followed by one `? atomic_fact`. Litex applies the ordinary
@@ -717,6 +726,9 @@ For example:
   named source function such as `gcd_by_finite_divisors`, prove its
   specification, and bridge it to native `gcd`; see
   [`gcd_from_finite_divisors.lit`](../examples/04_case_studies/gcd_from_finite_divisors.lit).
+- Native `$coprime(a, b)` follows the elementary `Nat.Coprime` surface and is
+  available for all natural pairs without importing `std/basics`; it is false
+  at `(0,0)`. Integer and general-ring coprimality remain distinct interfaces.
 - The bound `|S union T| <= |S| + |T|` can require a cardinality interface:
   a decomposition into disjoint pieces, or an injection/bijection argument
   that makes overlap visible.
@@ -1072,6 +1084,32 @@ asks about `trace(q)(row)`, Litex reports the unmatched outer application and
 that nearest prefix. This is guidance to project or rewrite the prefix before
 applying the remaining argument; it does not perform new congruence or accept
 the failed goal.
+
+## Can a cache change a closed automatic proof route?
+
+No. An internal cache or reverse index is an accelerator, not a mathematical
+premise. When an automatic rule has a closed premise family, its alternatives
+are generated from the current target, so the cold form
+
+```litex
+forall x, y N:
+    (x, y)[1] $in C
+```
+
+and the same goal after explicitly materializing its derivable intermediate
+carrier
+
+```litex
+forall x, y N:
+    (x, y)[1] $in N
+    (x, y)[1] $in C
+```
+
+must have the same result. Here the target `C` determines which fixed proper
+standard subcarriers are checked; the verifier does not ask which sets have
+already been stored for `(x, y)[1]`. This invariant does not make automatic
+proof search unbounded. An explicit user lemma outside a rule's documented
+premise family may still enable a later proof.
 
 ## Why does Litex check well-definedness before truth?
 

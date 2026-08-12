@@ -144,31 +144,29 @@ pub struct DefinitionProjectionBuiltinRuleEvidence {
 
 /// Exact constructor certificate for membership in a literal set builder.
 /// Child results are ordered as base membership followed by the instantiated
-/// defining facts in source order.
+/// defining facts in source order. The builder is recovered from
+/// `expected_target`.
 #[derive(Clone)]
 pub struct SetBuilderMembershipBuiltinRuleEvidence {
-    pub set_builder: SetBuilder,
     pub expected_target: Fact,
     pub expected_premises: Vec<Fact>,
 }
 
 /// Exact extensional certificate for membership in a Litex function space.
 /// The enclosing result has exactly one child: the checked pointwise `forall`
-/// proposition retained in `expected_pointwise`.
+/// proposition retained in `expected_pointwise`. The element and function
+/// space are recovered from `expected_target`.
 #[derive(Clone)]
 pub struct FunctionSetMembershipBuiltinRuleEvidence {
-    pub element: Obj,
-    pub function_set: FnSet,
     pub expected_target: Fact,
     pub expected_pointwise: Fact,
 }
 
 /// Exact constructor certificate for a refined standard numeric set. Children
 /// are ordered as the native base-carrier membership followed by the defining
-/// sign/nonzero predicate.
+/// sign/nonzero predicate. The numeric set is recovered from `expected_target`.
 #[derive(Clone)]
 pub struct RefinedNumericMembershipBuiltinRuleEvidence {
-    pub target_set: StandardSet,
     pub expected_target: Fact,
     pub expected_premises: Vec<Fact>,
 }
@@ -184,22 +182,33 @@ pub struct ClosedNumericComparisonBuiltinRuleEvidence {
 
 /// Exact dependent-elimination certificate for membership of a checked
 /// function application in its instantiated declared return set. The sole
-/// child proves that the application head belongs to `function_set`.
+/// child proves that the application head belongs to the function space frozen
+/// in `expected_head_membership`.
 #[derive(Clone)]
 pub struct FunctionApplicationReturnMembershipBuiltinRuleEvidence {
-    pub source_application: Obj,
-    pub function_set: FnSet,
     pub typed_return_set: Obj,
     pub expected_target: Fact,
     pub expected_head_membership: Fact,
+}
+
+impl FunctionApplicationReturnMembershipBuiltinRuleEvidence {
+    pub fn new(
+        typed_return_set: Obj,
+        expected_target: Fact,
+        expected_head_membership: Fact,
+    ) -> Self {
+        Self {
+            typed_return_set,
+            expected_target,
+            expected_head_membership,
+        }
+    }
 }
 
 impl fmt::Debug for FunctionApplicationReturnMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
             .debug_struct("FunctionApplicationReturnMembershipBuiltinRuleEvidence")
-            .field("source_application", &self.source_application.to_string())
-            .field("function_set", &self.function_set.to_string())
             .field("typed_return_set", &self.typed_return_set.to_string())
             .field("expected_target", &self.expected_target.to_string())
             .field(
@@ -226,13 +235,8 @@ impl fmt::Debug for ClosedNumericComparisonBuiltinRuleEvidence {
 }
 
 impl RefinedNumericMembershipBuiltinRuleEvidence {
-    pub fn new(
-        target_set: StandardSet,
-        expected_target: Fact,
-        expected_premises: Vec<Fact>,
-    ) -> Self {
+    pub fn new(expected_target: Fact, expected_premises: Vec<Fact>) -> Self {
         Self {
-            target_set,
             expected_target,
             expected_premises,
         }
@@ -243,7 +247,6 @@ impl fmt::Debug for RefinedNumericMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
             .debug_struct("RefinedNumericMembershipBuiltinRuleEvidence")
-            .field("target_set", &self.target_set.to_string())
             .field("expected_target", &self.expected_target.to_string())
             .field(
                 "expected_premises",
@@ -258,15 +261,8 @@ impl fmt::Debug for RefinedNumericMembershipBuiltinRuleEvidence {
 }
 
 impl FunctionSetMembershipBuiltinRuleEvidence {
-    pub fn new(
-        element: Obj,
-        function_set: FnSet,
-        expected_target: Fact,
-        expected_pointwise: Fact,
-    ) -> Self {
+    pub fn new(expected_target: Fact, expected_pointwise: Fact) -> Self {
         Self {
-            element,
-            function_set,
             expected_target,
             expected_pointwise,
         }
@@ -277,8 +273,6 @@ impl fmt::Debug for FunctionSetMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
             .debug_struct("FunctionSetMembershipBuiltinRuleEvidence")
-            .field("element", &self.element.to_string())
-            .field("function_set", &self.function_set.to_string())
             .field("expected_target", &self.expected_target.to_string())
             .field("expected_pointwise", &self.expected_pointwise.to_string())
             .finish()
@@ -286,13 +280,8 @@ impl fmt::Debug for FunctionSetMembershipBuiltinRuleEvidence {
 }
 
 impl SetBuilderMembershipBuiltinRuleEvidence {
-    pub fn new(
-        set_builder: SetBuilder,
-        expected_target: Fact,
-        expected_premises: Vec<Fact>,
-    ) -> Self {
+    pub fn new(expected_target: Fact, expected_premises: Vec<Fact>) -> Self {
         Self {
-            set_builder,
             expected_target,
             expected_premises,
         }
@@ -303,7 +292,6 @@ impl fmt::Debug for SetBuilderMembershipBuiltinRuleEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
             .debug_struct("SetBuilderMembershipBuiltinRuleEvidence")
-            .field("set_builder", &self.set_builder.to_string())
             .field("expected_target", &self.expected_target.to_string())
             .field(
                 "expected_premises",
@@ -352,6 +340,7 @@ pub enum BuiltinRuleEvidence {
     Set(SetBuiltinRule),
     AbsoluteValue(AbsoluteValueBuiltinRule),
     PrimeU64Reflection,
+    CoprimeNaturalReflection,
     /// Membership in one standard numeric set is projected through Litex's
     /// centralized standard-set hierarchy. The enclosing result has exactly
     /// one child: the checked source membership fact.
@@ -408,6 +397,9 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 f.debug_tuple("AbsoluteValue").field(rule).finish()
             }
             BuiltinRuleEvidence::PrimeU64Reflection => f.write_str("PrimeU64Reflection"),
+            BuiltinRuleEvidence::CoprimeNaturalReflection => {
+                f.write_str("CoprimeNaturalReflection")
+            }
             BuiltinRuleEvidence::StandardSetMembershipProjection => {
                 f.write_str("StandardSetMembershipProjection")
             }

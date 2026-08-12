@@ -101,6 +101,33 @@ impl StandardSet {
                 | (StandardSet::R, StandardSet::R)
         )
     }
+
+    /// Proper standard subcarriers to try when proving membership in `self`.
+    ///
+    /// The candidates come from the target carrier, never from sets previously
+    /// stored for the element. Example: proving `x $in C` may ask for
+    /// `x $in N`, `x $in Z`, `x $in Q`, or `x $in R` even on a cold query.
+    pub(crate) fn proper_subsets_in_membership_proof_order(&self) -> Vec<Self> {
+        [
+            Self::N,
+            Self::Z,
+            Self::Q,
+            Self::R,
+            Self::NPos,
+            Self::ZNeg,
+            Self::ZStar,
+            Self::QPos,
+            Self::QNeg,
+            Self::QStar,
+            Self::RPos,
+            Self::RNeg,
+            Self::RStar,
+            Self::CStar,
+        ]
+        .into_iter()
+        .filter(|source| source != self && source.is_subset_eq(self))
+        .collect()
+    }
 }
 
 impl fmt::Display for StandardSet {
@@ -121,6 +148,58 @@ impl fmt::Display for StandardSet {
             StandardSet::ZStar => write!(f, "{}", Z_NOT_ZERO),
             StandardSet::RStar => write!(f, "{}", R_NOT_ZERO),
             StandardSet::CStar => write!(f, "{}", C_NOT_ZERO),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn membership_projection_candidates_are_proper_and_target_driven() {
+        let complex_sources = StandardSet::C.proper_subsets_in_membership_proof_order();
+        assert!(complex_sources.contains(&StandardSet::N));
+        assert!(complex_sources.contains(&StandardSet::Z));
+        assert!(complex_sources.contains(&StandardSet::Q));
+        assert!(complex_sources.contains(&StandardSet::R));
+        assert!(complex_sources.contains(&StandardSet::CStar));
+        assert!(!complex_sources.contains(&StandardSet::C));
+        assert_eq!(
+            &complex_sources[..4],
+            &[
+                StandardSet::N,
+                StandardSet::Z,
+                StandardSet::Q,
+                StandardSet::R,
+            ]
+        );
+
+        let real_sources = StandardSet::R.proper_subsets_in_membership_proof_order();
+        assert!(!real_sources.contains(&StandardSet::C));
+        assert!(!real_sources.contains(&StandardSet::CStar));
+
+        for target in [
+            StandardSet::NPos,
+            StandardSet::N,
+            StandardSet::ZNeg,
+            StandardSet::ZStar,
+            StandardSet::Z,
+            StandardSet::QPos,
+            StandardSet::QNeg,
+            StandardSet::QStar,
+            StandardSet::Q,
+            StandardSet::RPos,
+            StandardSet::RNeg,
+            StandardSet::RStar,
+            StandardSet::R,
+            StandardSet::CStar,
+            StandardSet::C,
+        ] {
+            for source in target.proper_subsets_in_membership_proof_order() {
+                assert_ne!(source, target);
+                assert!(source.is_subset_eq(&target));
+            }
         }
     }
 }

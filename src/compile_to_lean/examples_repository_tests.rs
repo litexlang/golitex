@@ -41,6 +41,7 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
             let mut saw_propositions_and_trust = false;
             let mut saw_function_sets_and_well_definedness = false;
             let mut saw_exact_well_definedness_and_integer_remainder = false;
+            let mut saw_environment_well_definedness_cache = false;
             let mut saw_carrier_boundaries = false;
             let mut saw_partial_boundary = false;
 
@@ -129,6 +130,31 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                             assert!(generated.contains("(5 : ℤ) % (2 : ℤ)"), "{generated}");
                             assert!(!generated.contains("by assumption"), "{generated}");
                         }
+                        if example.name == "environment_well_definedness_cache" {
+                            saw_environment_well_definedness_cache = true;
+                            let helper_name = generated
+                                .lines()
+                                .find(|line| {
+                                    line.starts_with("theorem well_defined_fact_")
+                                        && line.ends_with(": (2 : ℝ) > 0 := by")
+                                })
+                                .and_then(|line| line.split_whitespace().nth(1))
+                                .expect("the tracer should emit one stable closed domain helper");
+                            assert_eq!(
+                                generated
+                                    .matches(&format!("theorem {helper_name} :"))
+                                    .count(),
+                                1,
+                                "{generated}"
+                            );
+                            assert!(
+                                generated
+                                    .matches(&format!("positive_identity 2 {helper_name}"))
+                                    .count()
+                                    >= 3,
+                                "{generated}"
+                            );
+                        }
 
                         assert_generated_snapshot_matches(example, &generated);
                         println!(
@@ -146,6 +172,7 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
 
                         assert_eq!(report.status, LitexToLeanCompilationStatus::Incomplete);
                         assert!(!report.unsupported.is_empty(), "{}", example.name);
+                        assert_common_generated_contract(example, &report.lean_code);
                         assert!(!report.lean_code.contains("sorry"), "{}", example.name);
                         assert!(
                             !report.lean_code.contains("\naxiom fact"),
@@ -203,6 +230,10 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                 "exact_well_definedness_and_integer_remainder example is missing"
             );
             assert!(
+                saw_environment_well_definedness_cache,
+                "environment_well_definedness_cache example is missing"
+            );
+            assert!(
                 saw_carrier_boundaries,
                 "carrier_boundaries partial example is missing"
             );
@@ -210,6 +241,57 @@ fn compile_to_lean_examples_markdown_emits_checked_source() {
                 saw_partial_boundary,
                 "partial_boundary partial example is missing"
             );
+        },
+    );
+}
+
+#[test]
+fn coprime_natural_builtin_markdown_emits_checked_source() {
+    run_with_large_stack(
+        "coprime_natural_builtin_markdown_emits_checked_source",
+        || {
+            let markdown = fs::read_to_string(example_markdown_path()).unwrap();
+            let examples = parse_litex_to_lean_markdown_examples(&markdown);
+            let example = examples
+                .iter()
+                .find(|example| example.name == "coprime_natural_builtin")
+                .expect("coprime_natural_builtin example is missing");
+            assert_eq!(example.mode, LitexToLeanExampleMode::Strict);
+            let generated = compile_to_lean_from_source(
+                &example.litex_source,
+                &example_entry_label(&example.name),
+            )
+            .unwrap();
+            assert!(generated.contains("Nat.Coprime 14 25"), "{generated}");
+            assert!(generated.contains("¬ Nat.Coprime 14 21"), "{generated}");
+            assert!(generated.contains("¬ Nat.Coprime 0 0"), "{generated}");
+            assert!(!generated.contains("$coprime"), "{generated}");
+            assert_generated_snapshot_matches(example, &generated);
+        },
+    );
+}
+
+#[test]
+#[ignore = "requires LITEX_LEAN_PROJECT pointing at a Mathlib Lake project"]
+fn coprime_natural_builtin_markdown_compiles_with_mathlib() {
+    run_with_large_stack(
+        "coprime_natural_builtin_markdown_compiles_with_mathlib",
+        || {
+            let project = std::env::var("LITEX_LEAN_PROJECT")
+                .expect("LITEX_LEAN_PROJECT must point at a Mathlib Lake project");
+            let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+            let markdown = fs::read_to_string(example_markdown_path()).unwrap();
+            let examples = parse_litex_to_lean_markdown_examples(&markdown);
+            let example = examples
+                .iter()
+                .find(|example| example.name == "coprime_natural_builtin")
+                .expect("coprime_natural_builtin example is missing");
+            let generated = compile_to_lean_from_source(
+                &example.litex_source,
+                &example_entry_label(&example.name),
+            )
+            .unwrap();
+            compile_generated_with_mathlib(&example.name, &generated, &project, &lake).unwrap();
         },
     );
 }
@@ -384,9 +466,10 @@ fn assert_common_generated_contract(example: &LitexToLeanMarkdownExample, genera
         "abbrev C : Set ℂ := Set.univ",
         "abbrev CStar : Set ℂ := {c | c ≠ 0}",
     ] {
-        assert!(
-            generated.contains(declaration),
-            "{} is missing `{}`",
+        assert_eq!(
+            generated.matches(declaration).count(),
+            1,
+            "{} must contain one `{}` declaration",
             example.name,
             declaration
         );

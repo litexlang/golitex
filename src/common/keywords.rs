@@ -198,6 +198,7 @@ pub const INJECTIVE: &str = "injective";
 pub const SURJECTIVE: &str = "surjective";
 pub const BIJECTIVE: &str = "bijective";
 pub const PRIME: &str = "prime";
+pub const COPRIME: &str = "coprime";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -380,6 +381,7 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         SURJECTIVE,
         BIJECTIVE,
         PRIME,
+        COPRIME,
         PROPER_SUBSET,
         PROPER_SUPERSET,
     ];
@@ -428,6 +430,8 @@ pub fn is_builtin_theorem_name(name: &str) -> bool {
             | "finite_set_sum_substitution"
             | "sum_over_bijective_finite_set_enumerations"
             | "rational_has_unique_reduced_fraction"
+            | "subset_of_finite_set_is_finite"
+            | "finite_set_has_bijective_index"
     )
 }
 
@@ -471,6 +475,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == SURJECTIVE
         || atom_name == BIJECTIVE
         || atom_name == PRIME
+        || atom_name == COPRIME
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

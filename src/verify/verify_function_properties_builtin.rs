@@ -108,23 +108,68 @@ impl Runtime {
         let Some(function_body) = self.get_fn_range_function_body(&function) else {
             return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
         };
-        if ParamGroupWithSet::number_of_params(&function_body.params_def_with_set) != 1
-            || !function_body.dom_facts.is_empty()
-        {
+        if ParamGroupWithSet::number_of_params(&function_body.params_def_with_set) != 1 {
             return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
         }
         let Some(param_group) = function_body.params_def_with_set.first() else {
             return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
         };
-        let domain_result = self.verify_objs_are_equal_by_known_equality(
-            param_group.set_obj(),
-            &domain,
-            fact.line_file(),
-        );
-        if domain_result.is_unknown() {
-            return Ok(Some(domain_result));
+
+        if function_body.dom_facts.is_empty() {
+            let domain_result = self.verify_objs_are_equal_by_known_equality(
+                param_group.set_obj(),
+                &domain,
+                fact.line_file(),
+            );
+            if domain_result.is_unknown() {
+                return Ok(Some(domain_result));
+            }
+            infer_result.new_infer_result_inside(domain_result.infer_result());
+        } else {
+            // `fn(i N+: i <= n) S` is a unary function on the one-based prefix
+            // `closed_range(1, n)`. This admits finite sequences to the standard
+            // injective/surjective/bijective predicates without accepting other
+            // restricted function domains.
+            let Obj::ClosedRange(closed_range) = &domain else {
+                return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
+            };
+            if param_group.params.len() != 1
+                || !matches!(param_group.set_obj(), Obj::StandardSet(StandardSet::NPos))
+            {
+                return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
+            }
+            let [OrAndChainAtomicFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
+                function_body.dom_facts.as_slice()
+            else {
+                return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
+            };
+            let bound_param =
+                obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::FnSet);
+            if !objs_equal_with_nested_binder_alpha_equivalence(&bound.left, &bound_param) {
+                return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
+            }
+
+            let one: Obj = Number::new("1".to_string()).into();
+            let start_result = self.verify_objs_are_equal_by_known_equality(
+                closed_range.start.as_ref(),
+                &one,
+                fact.line_file(),
+            );
+            if start_result.is_unknown() {
+                return Ok(Some(start_result));
+            }
+            infer_result.new_infer_result_inside(start_result.infer_result());
+
+            let end_result = self.verify_objs_are_equal_by_known_equality(
+                closed_range.end.as_ref(),
+                &bound.right,
+                fact.line_file(),
+            );
+            if end_result.is_unknown() {
+                return Ok(Some(end_result));
+            }
+            infer_result.new_infer_result_inside(end_result.infer_result());
         }
-        infer_result.new_infer_result_inside(domain_result.infer_result());
 
         let codomain_result = self.verify_objs_are_equal_by_known_equality(
             function_body.ret_set.as_ref(),
