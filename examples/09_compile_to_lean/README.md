@@ -58,7 +58,7 @@ that marker to hide a strict compiler regression.
 | `existentials` | Existential introduction, extraction, projections, and multiple witnesses |
 | `obtain_from_existential_prop_definition` | Checked unfolding of one verified concrete prop into the exact existential eliminated by `obtain` |
 | `proof_scopes` | Object definitions, `by cases`, and `by contra` proof scopes |
-| `function_sets_and_well_definedness` | Native dependent function sets, checked body/application WD certificates, and exact named-function evaluation |
+| `function_sets_and_well_definedness` | Native dependent function sets over numeric or user-defined sets, multiple memberships without retyping, checked body/application WD certificates, and exact named-function evaluation |
 | `environment_well_definedness_cache` | Environment-owned WD proof IDs/DAGs, exact function-contract cache keys, and one reused Lean helper across statements |
 | `carrier_boundaries` | Partial report for carrier facts without complete strict backends |
 | `partial_boundary` | Partial report around one unsupported trigonometric proof |

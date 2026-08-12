@@ -70,17 +70,7 @@ impl Runtime {
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
                 None,
             )?;
-            let Some(forall_conjunct) =
-                exist_body_fact_as_or_and_chain_atomic_fact(forall_conjunct)
-            else {
-                return Err(RuntimeError::from(NewFactRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "not exist: an inline `forall` in the body cannot be negated here"
-                            .to_string(),
-                        conjunct.line_file(),
-                    ),
-                )));
-            };
+            let forall_conjunct = exist_body_fact_as_or_and_chain_atomic_fact(forall_conjunct);
             let mut part = Self::demorgan_negate_exist_body_conjunct(&forall_conjunct)?;
             disjuncts.append(&mut part);
         }
@@ -167,14 +157,11 @@ impl Runtime {
     }
 }
 
-fn exist_body_fact_as_or_and_chain_atomic_fact(
-    fact: ExistBodyFact,
-) -> Option<OrAndChainAtomicFact> {
+fn exist_body_fact_as_or_and_chain_atomic_fact(fact: ExistBodyFact) -> OrAndChainAtomicFact {
     match fact {
-        ExistBodyFact::AtomicFact(f) => Some(OrAndChainAtomicFact::AtomicFact(f)),
-        ExistBodyFact::AndFact(f) => Some(OrAndChainAtomicFact::AndFact(f)),
-        ExistBodyFact::ChainFact(f) => Some(OrAndChainAtomicFact::ChainFact(f)),
-        ExistBodyFact::OrFact(f) => Some(OrAndChainAtomicFact::OrFact(f)),
-        ExistBodyFact::InlineForall(_) => None,
+        ExistBodyFact::AtomicFact(f) => OrAndChainAtomicFact::AtomicFact(f),
+        ExistBodyFact::AndFact(f) => OrAndChainAtomicFact::AndFact(f),
+        ExistBodyFact::ChainFact(f) => OrAndChainAtomicFact::ChainFact(f),
+        ExistBodyFact::OrFact(f) => OrAndChainAtomicFact::OrFact(f),
     }
 }

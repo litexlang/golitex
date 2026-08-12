@@ -9076,10 +9076,6 @@ fn validate_existential_alpha_rename(source: &Fact, target: &Fact) -> Result<(),
                         | (ExistBodyFact::AndFact(_), ExistBodyFact::AndFact(_))
                         | (ExistBodyFact::ChainFact(_), ExistBodyFact::ChainFact(_))
                         | (ExistBodyFact::OrFact(_), ExistBodyFact::OrFact(_))
-                        | (
-                            ExistBodyFact::InlineForall(_),
-                            ExistBodyFact::InlineForall(_)
-                        )
                 )
             },
         );
@@ -13171,6 +13167,8 @@ forall a, b set:
                 );
                 assert!(!output.contains("axiom"));
                 assert!(!output.contains("sorry"));
+                assert!(output.contains("related"), "{output}");
+                assert!(output.contains("f (a + b)"), "{output}");
             },
         );
     }
@@ -13882,6 +13880,11 @@ $marked2(1, 2)
                 assert!(output.contains("(A ∩ B) = (A ∩ B)"), "{output}");
                 assert!(output.contains("(A \\ B) = (A \\ B)"), "{output}");
                 assert_eq!(output.matches("intro _ _ A B\n  rfl").count(), 3);
+                assert!(output.contains("{x : ℝ |"), "{output}");
+                assert!(
+                    output.contains("(x ∈ Litex.StandardSets.R) ∧ x = x"),
+                    "{output}"
+                );
                 assert!(!output.contains("LitexSet"));
                 assert!(!output.contains("inductive LitexSet"));
                 assert!(!output.contains("Type uLitex"));

@@ -233,6 +233,7 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(d)) => {
                 self.exec_obtain_obj_from_atomic_fact(d)
             }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(d)) => self.exec_obtain_obj_from_thm(d),
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(d)) => {
                 self.exec_have_by_preimage_stmt(d)
             }
@@ -352,6 +353,9 @@ impl Runtime {
             }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(s)) => {
                 self.exec_obtain_obj_from_atomic_fact_affect_environment_only(s)
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => {
+                self.exec_obtain_obj_from_thm_affect_environment_only(s)
             }
             Stmt::DefObjStmt(DefObjStmt::HaveByPreimageStmt(s)) => {
                 self.exec_have_by_preimage_stmt_affect_environment_only(s)

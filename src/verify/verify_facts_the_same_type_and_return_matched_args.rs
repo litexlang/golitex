@@ -220,7 +220,7 @@ impl Runtime {
         &self,
         fact: &ExistBodyFact,
         other: &ExistBodyFact,
-        next_forall_scope_id: &mut usize,
+        _next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match (fact, other) {
             (ExistBodyFact::AtomicFact(a), ExistBodyFact::AtomicFact(b)) => {
@@ -235,12 +235,6 @@ impl Runtime {
             (ExistBodyFact::OrFact(a), ExistBodyFact::OrFact(b)) => {
                 Self::_verify_or_fact_the_same_type_and_return_matched_args(a, b)
             }
-            (ExistBodyFact::InlineForall(a), ExistBodyFact::InlineForall(b)) => self
-                ._verify_forall_fact_the_same_type_and_return_matched_args(
-                    a,
-                    b,
-                    next_forall_scope_id,
-                ),
             _ => Ok(None),
         }
     }

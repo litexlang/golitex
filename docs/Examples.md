@@ -170,20 +170,19 @@ forall a, b, c, d, e1, f R:
         $p(d, e1, f)
 ```
 
-### 3. Choice Functions From Nonempty Sets
+### 3. Choice-Backed General Cartesian Products
 
 - Category: `proof pattern`
-- Purpose: Shows the choice-function proof form over a set of nonempty sets.
+- Purpose: Uses the explicit choice-backed theorem interface.
 
 ```litex
-claim:
-    ? forall S set:
-        forall A S:
-            $is_nonempty_set(A)
-        =>:
-            exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
+have I set
+have S nonempty_set
+have g fn(alpha I) S
+trust forall X S:
+    $is_nonempty_set(X)
 
-    by axiom_of_choice: set S
+by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
 ```
 
 ### 3.1. General Cartesian Products As Choice Functions
@@ -201,7 +200,6 @@ trust forall X s:
     $is_nonempty_set(X)
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
-general_cart(I, s, g) = {f fn(t I)big_union(s): forall alpha I => {f(alpha) $in g(alpha)}}
 
 have c general_cart(I, s, g)
 c $in fn(t I)big_union(s)
@@ -700,19 +698,26 @@ forall:
         exist b R st {b > 0, b < 1}
 ```
 
-### 18. Existentials Whose Body Contains A Universal Fact
+### 18. Existentials With A Named Quantified Property
 
 - Category: `fact`
-- Purpose: Shows extracting an existential whose witness carries a universal fact.
+- Purpose: Names a quantified condition before using it in an existential body.
 
 ```litex
 abstract_prop p(x)
 abstract_prop q(x, y)
 
+prop carries_p_and_q(a R):
+    forall b R:
+        $p(b)
+        =>:
+            $q(a, b)
+    $p(a)
+
 forall:
-    exist a R st {forall b R: $p(b) => {$q(a, b)}, $p(a)}
+    exist a R st {$carries_p_and_q(a)}
     =>:
-        exist a R st {forall b R: $p(b) => {$q(a, b)}, $p(a)}
+        exist a R st {$carries_p_and_q(a)}
 ```
 
 ### 19. Nested Universal Facts

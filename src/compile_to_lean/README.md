@@ -735,8 +735,8 @@ reuse, equality transport, forall introduction, and rational builtin proof.
 is the recursive-resolution tracer. It records the verifier's goal-to-source
 search as a source-to-goal `Normalization` followed by `EqualityRewrite`, with
 both equality `FactId`s preserved. A focused nested-function regression proves
-that the object walk descends through application arguments while retaining the
-current explicit function-object ABI boundary.
+that the object walk descends through application arguments; the runnable
+tracer now carries the same transport through a typed function application.
 
 [`examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit`](../../examples/05_compiler_interop/compile_to_lean_function_well_definedness.lit)
 is the native function and WD-certificate tracer. It covers closed and local

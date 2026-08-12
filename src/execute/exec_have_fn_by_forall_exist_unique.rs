@@ -324,15 +324,6 @@ impl Runtime {
             dom_facts.push(Self::fn_set_dom_fact_from_fact(stmt, &rebound_dom_fact)?);
         }
 
-        for body_fact in exist_body.facts.iter() {
-            if matches!(body_fact, ExistBodyFact::InlineForall(_)) {
-                return Err(Self::have_fn_by_forall_exist_unique_msg(
-                    stmt,
-                    "exist! body cannot contain inline forall when defining a function".to_string(),
-                ));
-            }
-        }
-
         Ok(HaveFnByForallExistUniqueShape {
             fn_set_clause: FnSetClause::new(params_def_with_set, dom_facts, ret_set)?,
             witness_name,
@@ -374,7 +365,7 @@ impl Runtime {
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
-            then_facts.push(Self::then_fact_from_exist_body_fact(stmt, inst_body_fact)?);
+            then_facts.push(Self::then_fact_from_exist_body_fact(inst_body_fact));
         }
 
         ForallFact::new_canonical_forall(
@@ -520,19 +511,12 @@ impl Runtime {
         }
     }
 
-    fn then_fact_from_exist_body_fact(
-        stmt: &HaveFnByForallExistUniqueStmt,
-        fact: ExistBodyFact,
-    ) -> Result<ExistOrAndChainAtomicFact, RuntimeError> {
+    fn then_fact_from_exist_body_fact(fact: ExistBodyFact) -> ExistOrAndChainAtomicFact {
         match fact {
-            ExistBodyFact::AtomicFact(a) => Ok(ExistOrAndChainAtomicFact::AtomicFact(a)),
-            ExistBodyFact::AndFact(a) => Ok(ExistOrAndChainAtomicFact::AndFact(a)),
-            ExistBodyFact::ChainFact(c) => Ok(ExistOrAndChainAtomicFact::ChainFact(c)),
-            ExistBodyFact::OrFact(o) => Ok(ExistOrAndChainAtomicFact::OrFact(o)),
-            ExistBodyFact::InlineForall(_) => Err(Self::have_fn_by_forall_exist_unique_msg(
-                stmt,
-                "exist! body cannot contain inline forall when defining a function".to_string(),
-            )),
+            ExistBodyFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+            ExistBodyFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+            ExistBodyFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+            ExistBodyFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
 

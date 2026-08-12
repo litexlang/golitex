@@ -30,6 +30,7 @@ pub enum DefObjStmt {
     HaveObjByExistFactsStmt(HaveObjByExistFactsStmt),
     ObtainObjFromExistFact(ObtainObjFromExistFact),
     ObtainObjFromAtomicFact(ObtainObjFromAtomicFact),
+    ObtainObjFromThm(ObtainObjFromThm),
     HaveByPreimageStmt(HaveByPreimageStmt),
     HaveFnEqualStmt(HaveFnEqualStmt),
     HaveFnEqualCaseByCaseStmt(HaveFnEqualCaseByCaseStmt),

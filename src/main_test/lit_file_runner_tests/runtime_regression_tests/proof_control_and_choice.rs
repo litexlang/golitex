@@ -1060,7 +1060,9 @@ trust exist y R st {y = y}
 #[test]
 fn parser_scope_rejects_active_cross_kind_reuse_and_releases_finished_scopes() {
     let invalid_source_code = r#"
-trust exist x R st {forall x R => {x = x}}
+trust:
+    forall x R:
+        exist x R st {x = x}
 "#;
 
     let mut invalid_runtime = Runtime::new();
@@ -1546,348 +1548,47 @@ forall X power_set(R), x0 X:
 }
 
 #[test]
-fn by_zorn_lemma_stores_maximal_element_exist_fact() {
+fn by_zorn_lemma_requires_a_named_property_result_interface() {
     let source_code = r#"
 have s set
 abstract_prop leq(x, y)
-
-by zorn_lemma: set s, prop leq:
-    trust $is_nonempty_set(s)
-    trust:
-        forall x s:
-            $leq(x, x)
-        forall x, y, z s:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y s:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-        forall c power_set(s):
-            forall x, y c:
-                $leq(x, y) or $leq(y, x)
-            =>:
-                exist u s st {forall x c => {$leq(x, u)}}
-
-exist m s st {forall x s: $leq(m, x) => {x = m}}
-"#;
-
-    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
-        source_code,
-        "by_zorn_lemma_stores_maximal_element_exist_fact",
-    );
-
-    assert!(
-        run_succeeded,
-        "by_zorn_lemma_stores_maximal_element_exist_fact failed:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_zorn_lemma_without_trailing_colon_reaches_obligation_check() {
-    let source_code = r#"
-have s set
-abstract_prop leq(x, y)
-
 by zorn_lemma: set s, prop leq
 "#;
 
-    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
-        source_code,
-        "by_zorn_lemma_without_trailing_colon_reaches_obligation_check",
-    );
-
-    assert!(
-        !run_succeeded,
-        "missing zorn obligations should still fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("nonempty obligation"),
-        "no-trailing-colon zorn syntax should reach obligation checking:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_zorn_lemma_rejects_non_binary_prop() {
-    let source_code = r#"
-have s set
-abstract_prop leq(x)
-
-by zorn_lemma: set s, prop leq:
-    trust $is_nonempty_set(s)
-"#;
-
-    let (run_succeeded, run_output) =
-        run_zorn_lemma_regression_source(source_code, "by_zorn_lemma_rejects_non_binary_prop");
-
-    assert!(
-        !run_succeeded,
-        "unary prop should make by zorn_lemma fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("must be a binary user-defined prop"),
-        "failure should mention binary prop arity:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_zorn_lemma_reports_missing_chain_upper_bound() {
-    let source_code = r#"
-have s set
-abstract_prop leq(x, y)
-
-by zorn_lemma: set s, prop leq:
-    trust $is_nonempty_set(s)
-    trust:
-        forall x s:
-            $leq(x, x)
-        forall x, y, z s:
-            $leq(x, y)
-            $leq(y, z)
-            =>:
-                $leq(x, z)
-        forall x, y s:
-            $leq(x, y)
-            $leq(y, x)
-            =>:
-                x = y
-"#;
-
-    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
-        source_code,
-        "by_zorn_lemma_reports_missing_chain_upper_bound",
-    );
-
-    assert!(
-        !run_succeeded,
-        "missing chain upper-bound should make by zorn_lemma fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("chain_upper_bound obligation"),
-        "failure should name the missing chain upper-bound obligation:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_zorn_lemma_failed_body_stmt_does_not_continue() {
-    let source_code = r#"
-have s set
-abstract_prop leq(x, y)
-
-by zorn_lemma: set s, prop leq:
-    1 = 2
-"#;
-
-    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
-        source_code,
-        "by_zorn_lemma_failed_body_stmt_does_not_continue",
-    );
-
-    assert!(
-        !run_succeeded,
-        "failed body statement should make by zorn_lemma fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("failed to execute proof stmt"),
-        "failure should mention the body statement:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_zorn_lemma_rejects_old_from_syntax() {
-    let source_code = r#"
-have s set
-abstract_prop leq(x, y)
-
-by zorn_lemma s from leq:
-    trust $is_nonempty_set(s)
-"#;
-
-    let (run_succeeded, run_output) =
-        run_zorn_lemma_regression_source(source_code, "by_zorn_lemma_rejects_old_from_syntax");
-
-    assert!(
-        !run_succeeded,
-        "old by_zorn_lemma syntax should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("expected `by zorn_lemma: set S, prop P:`"),
-        "failure should mention the new syntax:\n{}",
-        run_output
-    );
-}
-
-fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(file_label);
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
-}
-
-#[test]
-fn by_axiom_of_choice_stores_choice_function_exist_fact() {
-    let source_code = r#"
-have S set
-
-by axiom_of_choice: set S:
-    trust forall A S:
-        $is_nonempty_set(A)
-
-exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
-"#;
-
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
         source_code,
-        "by_axiom_of_choice_stores_choice_function_exist_fact",
+        "by_zorn_lemma_requires_a_named_property_result_interface",
     );
-
     assert!(
-        run_succeeded,
-        "by_axiom_of_choice_stores_choice_function_exist_fact failed:\n{}",
-        run_output
+        !run_succeeded,
+        "the legacy Zorn interface must fail:\n{run_output}"
+    );
+    assert!(
+        run_output.contains(
+            "by zorn_lemma is unavailable: its former conclusion used an anonymous `forall`"
+        ),
+        "the migration diagnostic should explain the named-property boundary:\n{run_output}"
     );
 }
 
 #[test]
-fn by_axiom_of_choice_keeps_outer_same_spelling_family_rigid() {
-    let source_code = r#"
-claim:
-    ? forall A set:
-        forall member A:
-            $is_nonempty_set(member)
-        =>:
-            exist f fn(member A) big_union(A) st {forall member A => {f(member) $in member}}
-    by axiom_of_choice: set A:
-        forall member A:
-            $is_nonempty_set(member)
-    exist f fn(member A) big_union(A) st {forall member A => {f(member) $in member}}
-"#;
-
-    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
-        source_code,
-        "by_axiom_of_choice_keeps_outer_same_spelling_family_rigid",
-    );
-
-    assert!(
-        run_succeeded,
-        "generated choice binders must not capture the outer family `A`:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_axiom_of_choice_allows_empty_proof_without_trailing_colon() {
+fn by_axiom_of_choice_requires_the_general_cart_theorem_interface() {
     let source_code = r#"
 have S set
-trust forall A S:
-    $is_nonempty_set(A)
-
 by axiom_of_choice: set S
-
-exist f fn(A S) big_union(S) st {forall A S => {f(A) $in A}}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
         source_code,
-        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon",
+        "by_axiom_of_choice_requires_the_general_cart_theorem_interface",
     );
-
-    assert!(
-        run_succeeded,
-        "by_axiom_of_choice_allows_empty_proof_without_trailing_colon failed:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_axiom_of_choice_reports_missing_members_nonempty() {
-    let source_code = r#"
-have S set
-
-by axiom_of_choice: set S:
-    do_nothing
-"#;
-
-    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
-        source_code,
-        "by_axiom_of_choice_reports_missing_members_nonempty",
-    );
-
     assert!(
         !run_succeeded,
-        "missing members-nonempty obligation should make by axiom_of_choice fail:\n{}",
-        run_output
+        "the legacy choice interface must fail:\n{run_output}"
     );
     assert!(
-        run_output.contains("members_nonempty obligation"),
-        "failure should name the missing members-nonempty obligation:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_axiom_of_choice_failed_body_stmt_does_not_continue() {
-    let source_code = r#"
-have S set
-
-by axiom_of_choice: set S:
-    1 = 2
-"#;
-
-    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
-        source_code,
-        "by_axiom_of_choice_failed_body_stmt_does_not_continue",
-    );
-
-    assert!(
-        !run_succeeded,
-        "failed body statement should make by axiom_of_choice fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("failed to execute proof stmt"),
-        "failure should mention the body statement:\n{}",
-        run_output
-    );
-}
-
-#[test]
-fn by_axiom_of_choice_rejects_old_set_syntax() {
-    let source_code = r#"
-have S set
-
-by axiom_of_choice S:
-    trust forall A S:
-        $is_nonempty_set(A)
-"#;
-
-    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
-        source_code,
-        "by_axiom_of_choice_rejects_old_set_syntax",
-    );
-
-    assert!(
-        !run_succeeded,
-        "old by_axiom_of_choice syntax should fail:\n{}",
-        run_output
-    );
-    assert!(
-        run_output.contains("expected `by axiom_of_choice: set S:`"),
-        "failure should mention the new syntax:\n{}",
-        run_output
+        run_output.contains("use the explicit `general_cart_nonempty_by_choice_*` theorem"),
+        "the migration diagnostic should name the replacement theorem:\n{run_output}"
     );
 }
 

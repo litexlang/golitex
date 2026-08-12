@@ -1,3 +1,4 @@
-# Every rational number has a reduced integer fraction with a positive denominator.
-forall a Q:
-    exist! p Z, q N+ st {a = p / q, forall z N+: p % z = 0 and q % z = 0 => {z = 1}}
+# Every rational number has a unique reduced integer fraction with a positive denominator.
+# This mathematical result is exposed through an explicit theorem interface.
+have a Q
+by thm rational_has_unique_reduced_fraction(a)

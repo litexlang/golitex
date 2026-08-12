@@ -35,12 +35,17 @@ forall a, b R:
 # nested RuleApplication nodes and emits a checked `convert` followed by
 # `simpa only` over the two named equality proofs. It does not rerun resolve.
 #
-# Recursive boundary check: the same verifier evidence builder descends through
-# every supported Obj shape. The focused Rust regression confirms that
-# `$p(f(14), c)` becomes `$p(f(13 + 1), c)` and then `$p(f(a + b), c)`.
-# General function objects still lack a Litex-to-Lean Obj ABI, so compiling that
-# second source remains an explicit `FnSet object` boundary rather than an
-# axiom, `sorry`, or flattened citation.
+# Recursive object check: the same verifier evidence builder descends through
+# function applications nested inside predicate arguments. This used to stop
+# at the `FnSet object` boundary; it is now executable in this tracer.
+abstract_prop related(x, y)
+
+forall f fn(x R) R, a, b, c R:
+    a = 13
+    b = 1
+    $related(f(14), c)
+    =>:
+        $related(f(a + b), c)
 #
 # Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_resolved_atomic_fact.lit
 # Compiler evidence: cargo test --release resolved_atomic_fact -- --nocapture

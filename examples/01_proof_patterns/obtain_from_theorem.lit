@@ -1,0 +1,40 @@
+import std basics
+
+# Tracer: apply one named theorem and eliminate its sole existential conclusion.
+#
+# Before (verified, but required an intermediate existential in the parent scope):
+# by thm self_exists(2)
+# obtain copy from exist x R st {x = 2}
+#
+# Now (verified): the theorem application is scoped inside `obtain`; only the
+# witness, its type, and the instantiated existential body enter the parent.
+
+thm self_exists:
+    ? forall a R:
+        exist x R st {x = a}
+    witness exist x R st {x = a} from a
+
+obtain copy from thm self_exists(2)
+copy $in R
+copy = 2
+
+# Module-qualified imported theorems use the same call-resolution path.
+have q Q
+obtain imported_p, imported_d from thm basics::rational_has_reduced_fraction(q)
+imported_p $in Z
+imported_d $in N+
+q = imported_p / imported_d
+gcd(imported_p, imported_d) = 1
+
+# Reserved builtin theorem interfaces are also valid sources. This `exist!`
+# additionally installs the generated uniqueness theorem for the witnesses.
+obtain canonical_p, canonical_d from thm rational_has_unique_reduced_fraction(q)
+canonical_p $in Z
+canonical_d $in N+
+q = canonical_p / canonical_d
+gcd(canonical_p, canonical_d) = 1
+
+# Boundary: the named theorem call must have exactly one direct positive
+# `exist` or `exist!` conclusion, and the number of obtained names must match
+# its witnesses. Argument and domain checks are the same checks as `by thm`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_theorem.lit

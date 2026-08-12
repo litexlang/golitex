@@ -141,9 +141,6 @@ impl Runtime {
                 to_inst_param_type,
                 inst_lf,
             )?),
-            ExistBodyFact::InlineForall(forall_fact) => ExistBodyFact::InlineForall(
-                self.inst_forall_fact(forall_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
         })
     }
 
@@ -1414,12 +1411,7 @@ pub(crate) fn collect_param_obj_names_in_exist_fact(
         names,
     );
     for fact in exist_fact.facts().iter() {
-        match fact {
-            ExistBodyFact::InlineForall(forall_fact) => {
-                collect_param_obj_names_in_forall_fact(forall_fact, kind, names)
-            }
-            _ => collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names),
-        }
+        collect_param_obj_names_in_args(fact.get_args_from_fact_ref(), kind, names);
     }
 }
 

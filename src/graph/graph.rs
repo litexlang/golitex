@@ -1020,7 +1020,6 @@ impl DepCollector {
             ExistBodyFact::AndFact(a) => self.collect_and_fact(a),
             ExistBodyFact::ChainFact(c) => self.collect_chain_fact(c),
             ExistBodyFact::OrFact(o) => self.collect_or_fact(o),
-            ExistBodyFact::InlineForall(f) => self.collect_forall_fact(f),
         }
     }
 
@@ -1350,6 +1349,7 @@ pub(crate) fn by_thm_names_in_stmts(stmts: &[Stmt]) -> Vec<String> {
 fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
     match stmt {
         Stmt::By(ByStmt::ByThmStmt(s)) => out.push(s.name.to_string()),
+        Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(s)) => out.push(s.thm_name.to_string()),
         Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
             for stmt in s.proof.iter() {
                 collect_by_thm_names_in_stmt(stmt, out);

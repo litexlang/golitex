@@ -218,6 +218,10 @@ pub struct ByTheoremVerificationResult {
     pub arguments: Vec<String>,
     pub domain_facts: Vec<String>,
     pub requirement_roles: Vec<String>,
+    /// Exact instantiated direct conclusions returned by theorem execution.
+    /// Consumers must use these structured facts rather than rediscovering a
+    /// conclusion among inference outputs with string matching.
+    pub direct_conclusions: Vec<Fact>,
     pub stored_then_facts: Vec<String>,
     pub temporary_then_facts: Vec<String>,
     pub selected_fact: Option<String>,
@@ -333,7 +337,9 @@ impl WitnessExistVerificationResult {
 
 #[derive(Clone)]
 pub struct ExistentialEliminationVerificationResult {
-    /// Index of the checked source existential in `inside_results`.
+    /// Index of the checked source proof in `inside_results`. This may be a
+    /// factual existential/projection or a scoped theorem application whose
+    /// exact direct conclusion is retained in theorem verification evidence.
     pub source_result_index: usize,
     /// Exact existential eliminated after any definition projection.
     pub source_exist_fact: ExistFactEnum,
@@ -1509,6 +1515,7 @@ impl ByTheoremVerificationResult {
         theorem: String,
         arguments: Vec<String>,
         domain_facts: Vec<String>,
+        direct_conclusions: Vec<Fact>,
         stored_then_facts: Vec<String>,
     ) -> Self {
         let parent_stored_facts = stored_then_facts.clone();
@@ -1519,6 +1526,7 @@ impl ByTheoremVerificationResult {
             arguments,
             domain_facts,
             requirement_roles: vec![],
+            direct_conclusions,
             stored_then_facts,
             temporary_then_facts: vec![],
             selected_fact: None,
@@ -1532,6 +1540,7 @@ impl ByTheoremVerificationResult {
         arguments: Vec<String>,
         requirement_facts: Vec<String>,
         requirement_roles: Vec<String>,
+        direct_conclusions: Vec<Fact>,
         stored_then_facts: Vec<String>,
         provenance: Option<String>,
     ) -> Self {
@@ -1543,6 +1552,7 @@ impl ByTheoremVerificationResult {
             arguments,
             domain_facts: requirement_facts,
             requirement_roles,
+            direct_conclusions,
             stored_then_facts,
             temporary_then_facts: vec![],
             selected_fact: None,

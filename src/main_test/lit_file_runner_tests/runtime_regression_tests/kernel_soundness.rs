@@ -311,15 +311,6 @@ claim:
 "#,
         ),
         (
-            "nested_forall_scopes_keep_distinct_binder_identities",
-            r#"
-trust:
-    forall S nonempty_set:
-        exist w S st {w = w, forall a R => {exist z R st {z = z, forall b R => {b = b}}}}
-exist v N st {v = v, forall c R => {exist z R st {z = z, forall d R => {d = c}}}}
-"#,
-        ),
-        (
             "ordinary_induction_does_not_capture_outer_forall_in_start_bound",
             r#"
 claim:
@@ -478,15 +469,6 @@ fn(a X) R = fn(b X) R
 have X set = N
 have fn f(Y X) R by cases:
     case Y = Y: 0
-"#,
-        ),
-        (
-            "known_forall_exist_alpha_key_handles_inline_dependent_forall",
-            r#"
-trust:
-    forall S set:
-        exist x S st {forall u x => {u = u}}
-exist y N st {forall v y => {v = v}}
 "#,
         ),
         (

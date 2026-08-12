@@ -44,6 +44,7 @@ impl fmt::Display for DefObjStmt {
             DefObjStmt::HaveObjByExistFactsStmt(x) => write!(f, "{}", x),
             DefObjStmt::ObtainObjFromExistFact(x) => write!(f, "{}", x),
             DefObjStmt::ObtainObjFromAtomicFact(x) => write!(f, "{}", x),
+            DefObjStmt::ObtainObjFromThm(x) => write!(f, "{}", x),
             DefObjStmt::HaveByPreimageStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnEqualStmt(x) => write!(f, "{}", x),
             DefObjStmt::HaveFnEqualCaseByCaseStmt(x) => write!(f, "{}", x),

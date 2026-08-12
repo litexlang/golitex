@@ -60,6 +60,12 @@ impl From<ObtainObjFromAtomicFact> for Stmt {
     }
 }
 
+impl From<ObtainObjFromThm> for Stmt {
+    fn from(v: ObtainObjFromThm) -> Self {
+        DefObjStmt::ObtainObjFromThm(v).into()
+    }
+}
+
 impl From<HaveByPreimageStmt> for Stmt {
     fn from(v: HaveByPreimageStmt) -> Self {
         DefObjStmt::HaveByPreimageStmt(v).into()

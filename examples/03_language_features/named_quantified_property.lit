@@ -1,0 +1,20 @@
+# Quantified conditions in existential and set-builder bodies must be named.
+#
+# Before (now rejected):
+# trust exist x R st {forall y R => {x = x}}
+# trust {x R: forall y R => {x = x}} = {x R: x = x}
+#
+# `forall` remains an ordinary fact form and is valid inside a `prop`
+# definition. The existential body below contains only the atomic prop fact.
+#
+# Run this acceptance example with:
+# target/release/litex -compact -isolated -runner -f examples/03_language_features/named_quantified_property.lit
+
+prop has_universal_self_equality(x R):
+    forall y R:
+        x = x
+
+have universally_self_equal_reals set = {x R: $has_universal_self_equality(x)}
+
+witness exist x R st {$has_universal_self_equality(x)} from 0:
+    by def $has_universal_self_equality(0)

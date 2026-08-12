@@ -109,6 +109,18 @@ proof that any two values satisfying the body are equal.
 are ways to establish a fact; they do not replace the central question of what
 mathematical fact should hold next.
 
+When a named theorem has exactly one direct `exist` or `exist!` conclusion,
+apply it and name its witnesses in one checked step:
+
+```litex
+have a Q
+obtain p, q from thm rational_has_unique_reduced_fraction(a)
+```
+
+The theorem's argument and premise checks still run. Its existential stays in
+a temporary scope; only the witness names, their types, body facts, and any
+`exist!` uniqueness interface enter the surrounding context.
+
 ## Name concepts, then reuse them
 
 The same context can hold definitions as well as facts. A named predicate and

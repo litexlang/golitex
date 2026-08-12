@@ -419,8 +419,10 @@ requirements with the full verifier and commit no conclusion on failure.
 The canonical rational interface is
 `by thm rational_has_unique_reduced_fraction(q)`. For a known `q $in Q`, it
 stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. The name is bare and
-reserved, accepts exactly one argument, and reuses the kernel's direct
-reduced-fraction existential rule rather than a trusted `std/basics` theorem.
+reserved and accepts exactly one argument. This conclusion is available only
+through the explicit theorem handler; writing the existential directly does
+not trigger an implicit reduced-fraction rule, and no trusted `std/basics`
+theorem is required.
 Finite-set foundations use the same explicit style. After checking
 `A $subset B` with finite `B`, call
 `by thm subset_of_finite_set_is_finite(A, B)`; Litex deliberately does not
@@ -1161,6 +1163,32 @@ guarded inference path; recursive definitions are cycle-protected,
 `abstract_prop` supplies no clauses, and all temporary consequences disappear
 when the quantified check ends.
 
+## Why can't an existential or set-builder body contain `forall`?
+
+Those bodies intentionally use a small property grammar: atomic facts, flat
+conjunctions, chains, and disjunctions. An anonymous universal creates another
+binder scope inside a body that is also reused for witnesses, matching,
+set-builder membership, substitution, and inference. Keeping that extra scope
+out makes the body representation and every consumer unambiguous.
+
+Name the quantified condition instead:
+
+```litex
+prop is_reduced_fraction(p Z, q N+):
+    forall z N+:
+        p % z = 0
+        q % z = 0
+        =>:
+            z = 1
+
+have a Q
+trust exist p Z, q N+ st {a = p / q, $is_reduced_fraction(p, q)}
+```
+
+`forall` remains a normal fact and remains valid inside the `prop` definition.
+Only its anonymous use as an entry of an existential or set-builder body is
+rejected.
+
 ## Why does Litex have both `claim` and `thm`?
 
 `claim` and `thm` both prove facts, but they have different proof-interface
@@ -1274,6 +1302,20 @@ w > 0
 The first block proves an existential fact. The `obtain` line introduces
 the witness name `w` for a matching existential statement. After that, the
 witness properties are available in the context.
+
+If a named theorem's only direct conclusion is positive `exist` or `exist!`,
+the explicit call and elimination can be combined:
+
+```litex
+have q Q
+obtain p, d from thm rational_has_unique_reduced_fraction(q)
+```
+
+This runs the same argument and premise checks as `by thm`. The theorem call is
+temporary, so its existential does not leak into the surrounding context; the
+named witnesses, their types and body facts, and the `exist!` uniqueness
+interface do. Multiple conclusions, a nonexistential or negated existential
+conclusion, and a mismatched number of names are rejected.
 
 A concrete prop can serve as a named wrapper around that existential:
 

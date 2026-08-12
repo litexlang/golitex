@@ -115,31 +115,10 @@ by antisymmetric_prop:
             x = y
     x = y
 
-# Trusted preview: obligations are checked before the trusted conclusion.
-have tmp_family set
-by axiom_of_choice: set tmp_family:
-    trust forall A tmp_family:
-        $is_nonempty_set(A)
-
-have tmp_ordered_set set
-abstract_prop tmp_leq(x, y)
-by zorn_lemma: set tmp_ordered_set, prop tmp_leq:
-    trust $is_nonempty_set(tmp_ordered_set)
-    trust:
-        forall x tmp_ordered_set:
-            $tmp_leq(x, x)
-        forall x, y, z tmp_ordered_set:
-            $tmp_leq(x, y)
-            $tmp_leq(y, z)
-            =>:
-                $tmp_leq(x, z)
-        forall x, y tmp_ordered_set:
-            $tmp_leq(x, y)
-            $tmp_leq(y, x)
-            =>:
-                x = y
-        forall c power_set(tmp_ordered_set):
-            forall x, y c:
-                $tmp_leq(x, y) or $tmp_leq(y, x)
-            =>:
-                exist u tmp_ordered_set st {forall x c => {$tmp_leq(x, u)}}
+# Explicit choice-backed theorem interface.
+have tmp_index set
+have tmp_factors nonempty_set
+have tmp_family fn(tmp_coordinate tmp_index) tmp_factors
+trust forall X tmp_factors:
+    $is_nonempty_set(X)
+by thm general_cart_nonempty_by_choice_from_family(general_cart(tmp_index, tmp_factors, tmp_family))

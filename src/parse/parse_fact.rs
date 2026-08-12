@@ -704,7 +704,13 @@ impl Runtime {
             Fact::AndFact(fact) => Ok(ExistBodyFact::AndFact(fact)),
             Fact::ChainFact(fact) => Ok(ExistBodyFact::ChainFact(fact)),
             Fact::OrFact(fact) => Ok(ExistBodyFact::OrFact(fact)),
-            Fact::ForallFact(fact) => Ok(ExistBodyFact::InlineForall(fact)),
+            Fact::ForallFact(_) => Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "inline `forall` is not allowed in existential or set-builder bodies; define a named `prop` and use `$P(...)`"
+                        .to_string(),
+                    tb.line_file.clone(),
+                ),
+            ))),
             Fact::ExistFact(_) | Fact::ForallFactWithIff(_) | Fact::NotForall(_) => {
                 Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -1096,6 +1102,26 @@ mod inline_forall_parse_tests {
         assert_eq!(forall_fact.params_def_with_type.number_of_params(), 2);
         assert_eq!(forall_fact.dom_facts.len(), 2);
         assert_eq!(forall_fact.then_facts.len(), 1);
+    }
+
+    #[test]
+    fn existential_body_rejects_inline_forall() {
+        let msg = parse_error_msg("exist x R st {forall y R => {y = y}}");
+        assert!(
+            msg.contains("inline `forall` is not allowed in existential or set-builder bodies"),
+            "{}",
+            msg
+        );
+    }
+
+    #[test]
+    fn set_builder_body_rejects_inline_forall() {
+        let msg = parse_error_msg("{x R: forall y R => {y = y}} = {x R: x = x}");
+        assert!(
+            msg.contains("inline `forall` is not allowed in existential or set-builder bodies"),
+            "{}",
+            msg
+        );
     }
 
     #[test]

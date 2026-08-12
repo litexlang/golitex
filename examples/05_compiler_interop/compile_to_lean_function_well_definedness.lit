@@ -64,6 +64,14 @@ forall f fn(x R: x > 0) fn(y R: y > 0) R+, x, y R:
     =>:
         f(x)(y) $in R+
 
+# User-defined sets remain native set values, not replacement Lean types. The
+# same object may have memberships in both A and B, while f keeps exactly its
+# declared A-domain and consumes the retained proof that a belongs to A.
+forall A, B set, f fn(x A) A, a A:
+    a $in B
+    =>:
+        f(a) $in A
+
 # A checked named definition retains its body, return check, stored membership,
 # defining equality, and the exact definition source used by later evaluation.
 have fn reciprocal(x R: x != 0) R = 1 / x
