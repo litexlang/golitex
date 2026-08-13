@@ -4157,7 +4157,7 @@ thm limit_point_has_convergent_subsequence:
             n $in F(k, s)
             n $in A
             witness $is_nonempty_set(A) from n
-    obtain choice_index from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {forall A fn_range(F) => {f(A) $in A}}
+    obtain choice_index from exist f fn(A fn_range(F)) big_union(fn_range(F)) st {$is_choice_function_for(fn_range(F), fn_range(F), fn(A fn_range(F)) fn_range(F) {A}, f)}
     forall A fn_range(F):
         choice_index(A) $in A
         A $subset N+

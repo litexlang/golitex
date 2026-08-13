@@ -13,7 +13,7 @@ fn universal_examples_compile_to_the_new_abi() {
         let examples = ledger_examples();
         assert_eq!(
             examples.len(),
-            7,
+            8,
             "the universal-object ledger changed shape"
         );
         for (label, source) in examples {
@@ -37,6 +37,7 @@ fn universal_showcase_compiles_to_the_new_abi() {
             "membership_wd",
             "known_forall",
             "builtin_theorem",
+            "known_equality_path",
             "exact_application_layers",
             "arithmetic_forall_wd",
         ] {
@@ -160,6 +161,14 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "{generated}"
             );
             assert!(!generated.contains("axiom notEqualSymmetry"), "{generated}");
+        }
+        "known_equality_path" => {
+            assert!(generated.contains("Eq.symm"), "{generated}");
+            assert!(generated.contains("Eq.trans"), "{generated}");
+            assert!(
+                !generated.contains("same known equality class"),
+                "{generated}"
+            );
         }
         "exact_application_layers" => {
             assert!(generated.contains("f [1, 2, 3]"), "{generated}");

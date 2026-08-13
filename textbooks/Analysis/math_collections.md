@@ -258,8 +258,8 @@ lemma.
 | Countable-set series terms | Formula-defined function, hence `template` plus `have fn` | Applies `f` after an enumeration; feeds Chapter 7 convergence and sum predicates. |
 | At-most-countable convergence and sum | Finite/enumerated alternatives, hence paired `prop` interfaces | Finite carriers use `finite_set_sum`; countably infinite carriers use a bijection `N+ -> X`. |
 | Absolute summability and set-series sum | Properties of a displayed family and candidate sum, hence `prop` | Finite absolute subsum bounds and countable support; used by Fubini and rearrangement results. |
-| Infinite Cartesian product | Set of choice functions, hence a `template`-generated set with a membership `prop` | Coordinate membership; supplies the statement of the axiom of choice. |
-| Choice function | Displayed function satisfying a relation, hence `prop` | Pointwise existence plus the explicit choice axiom; used for selections and right inverses. |
+| Infinite Cartesian product | Builtin set of choice functions | `general_cart(I,S,X)` has canonical builder form `{f ...: $is_choice_function_for(I,S,X,f)}`. |
+| Choice function | Displayed function satisfying the builtin named `prop` `$is_choice_function_for` | Its definition is pointwise membership; the explicit choice axiom yields an existential whose body stays atomic. |
 | Partial, total, and well order | Relations and properties, hence `prop` | Pair membership in an order relation; used by minima, induction, chains, and Zorn. |
 | Minimal elements and upper bounds | Properties of displayed elements, hence `prop` | Order plus subset membership; used in strong induction and maximal-element arguments. |
 
@@ -277,7 +277,7 @@ The ideal dependency structure of Section 8.1 is:
 ~~~text
 chap3::is_bijective_fn --definition--> is_countably_infinite
 chap3::has_finite_cardinality --definition--> is_at_most_countable
-chap3::subset_of_finite_set_is_finite --proof--> finite subfamilies in Chapter 8
+subset_of_finite_set_is_finite --builtin theorem--> finite subfamilies in Chapter 8
 is_at_most_countable --negation--> is_uncountable
 
 is_at_most_countable + injective map --proof--> injection transfer
@@ -400,12 +400,24 @@ least differing digit + geometric tail bound
 
 For a family `X(alpha)` of subsets of one ambient carrier, membership in the
 infinite product means exactly that a function chooses a value in every
-factor. `axiom_of_choice_for_subsets` is therefore an explicit axiom from a
+factor. This quantified condition is named
+`$is_choice_function_for(I,S,X,f)`; existential and set-builder bodies use the
+atomic prop call, while `by def` exposes its pointwise `forall` when a proof
+needs coordinates. The canonical builtin equality is
+`general_cart(I,S,X) = {f fn(alpha I)big_union(S): $is_choice_function_for(I,S,X,f)}`.
+`axiom_of_choice_for_subsets` is therefore an explicit axiom from a
 nonempty-family property to existence of such a function. The finite-product
 comparison theorems are checked representation results and do not depend on
 that axiom. The generic `choice_property` is an external relation parameter
 used only to state the pointwise-choice formulation; it must not become a
 catch-all replacement for concrete source predicates.
+
+Finite-set numbering uses the reserved theorem
+`finite_set_has_bijective_index(X)`. Its witness carrier is
+`finite_seq(X, finite_set_size(X))` and its atomic certificate is
+`$bijective(closed_range(1, finite_set_size(X)), X, idx)`. The earlier
+induction proof remains in Chapter 7 under the educational name
+`finite_set_index_exists_by_induction`; consumers use the builtin interface.
 
 The order layer is built in this order:
 

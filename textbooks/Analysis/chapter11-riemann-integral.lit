@@ -3550,7 +3550,7 @@ thm refinement_fiber_exists:
             J $in Pfine
         by def:
             ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
-    by thm chap3::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    by thm subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
     claim:
         ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
         $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
@@ -3640,7 +3640,7 @@ thm refinement_fiber_has_finite_representative:
             J $in Pfine
         by def:
             ? {J Pfine: $is_nonempty_set(J), J $subset K} $subset Pfine
-    by thm chap3::subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
+    by thm subset_of_finite_set_is_finite({J Pfine: $is_nonempty_set(J), J $subset K}, Pfine)
     claim:
         ? $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
         $is_finite_set({J Pfine: $is_nonempty_set(J), J $subset K})
@@ -3906,7 +3906,7 @@ thm nonempty_refinement_support_is_finite:
             J $in Pfine
         by def:
             ? nonempty_refinement_support(Pfine) $subset Pfine
-    by thm chap3::subset_of_finite_set_is_finite(nonempty_refinement_support(Pfine), Pfine)
+    by thm subset_of_finite_set_is_finite(nonempty_refinement_support(Pfine), Pfine)
 
 # Generic finite-family vocabulary for the later regrouping theorem.  The
 # family S lives in the common carrier U, while T indexes its finite fibers.
@@ -3967,9 +3967,9 @@ thm finite_unique_cover_residual_after_removing_index:
         S0 $subset S
         S $subset U
         S0 $subset U
-        by thm chap3::subset_of_finite_set_is_finite(S0, S)
+        by thm subset_of_finite_set_is_finite(S0, S)
         T0 $subset T
-        by thm chap3::subset_of_finite_set_is_finite(T0, T)
+        by thm subset_of_finite_set_is_finite(T0, T)
         claim:
             ? forall L T0:
                 $is_finite_set(F0(L))
@@ -4381,13 +4381,13 @@ thm finite_set_sum_ignores_zero_outside_subset:
     # family-valued carrier.
     trust finite_set_sum(S, fn(x S) R {h(x)}) = finite_set_sum(T, fn(x T) R {h(x)})
     """
-    by thm chap3::subset_of_finite_set_is_finite(T, S)
+    by thm subset_of_finite_set_is_finite(T, S)
     $is_finite_set(T)
     T $subset U
     have R0 power_set(power_set(R)) = set_minus(S, T)
     R0 $subset S
     R0 $subset U
-    by thm chap3::subset_of_finite_set_is_finite(R0, S)
+    by thm subset_of_finite_set_is_finite(R0, S)
     $is_finite_set(R0)
     claim:
         ? S = union(T, R0)
@@ -9280,9 +9280,9 @@ thm piecewise_constant_partition_has_constant_selector:
         witness $is_nonempty_set(A) from c:
             c $in A
     claim:
-        ? exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {forall A fn_range(constant_value_set) => {f(A) $in A}}
+        ? exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(constant_value_set)
-    obtain choose_constant from exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {forall A fn_range(constant_value_set) => {f(A) $in A}}
+    obtain choose_constant from exist f fn(A fn_range(constant_value_set)) big_union(fn_range(constant_value_set)) st {$is_choice_function_for(fn_range(constant_value_set), fn_range(constant_value_set), fn(A fn_range(constant_value_set)) fn_range(constant_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_constant(constant_value_set(J)) $in R
@@ -10845,9 +10845,9 @@ thm upper_riemann_sum_exists:
         witness $is_nonempty_set(A) from t:
             t $in A
     claim:
-        ? exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {forall A fn_range(upper_piece_value_set) => {f(A) $in A}}
+        ? exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(upper_piece_value_set)
-    obtain choose_upper from exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {forall A fn_range(upper_piece_value_set) => {f(A) $in A}}
+    obtain choose_upper from exist f fn(A fn_range(upper_piece_value_set)) big_union(fn_range(upper_piece_value_set)) st {$is_choice_function_for(fn_range(upper_piece_value_set), fn_range(upper_piece_value_set), fn(A fn_range(upper_piece_value_set)) fn_range(upper_piece_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_upper(upper_piece_value_set(J)) $in R
@@ -10896,9 +10896,9 @@ thm lower_riemann_sum_exists:
         witness $is_nonempty_set(A) from t:
             t $in A
     claim:
-        ? exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {forall A fn_range(lower_piece_value_set) => {f(A) $in A}}
+        ? exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
         by axiom_of_choice: set fn_range(lower_piece_value_set)
-    obtain choose_lower from exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {forall A fn_range(lower_piece_value_set) => {f(A) $in A}}
+    obtain choose_lower from exist f fn(A fn_range(lower_piece_value_set)) big_union(fn_range(lower_piece_value_set)) st {$is_choice_function_for(fn_range(lower_piece_value_set), fn_range(lower_piece_value_set), fn(A fn_range(lower_piece_value_set)) fn_range(lower_piece_value_set) {A}, f)}
     claim:
         ? forall J P:
             choose_lower(lower_piece_value_set(J)) $in R

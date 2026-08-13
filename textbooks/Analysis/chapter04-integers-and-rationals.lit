@@ -558,10 +558,38 @@ Definition 4.2.6. Positive and negative rationals.
 forall a, b N+:
     a / b > 0
 
-forall x Q:
-    x > 0
-    =>:
-        exist a N+, b N+ st {x = a / b}
+claim:
+    ? forall x Q:
+        x > 0
+        =>:
+            exist a0 N+, b0 N+ st {x = a0 / b0}
+    obtain a, b from exist a Z, b Z* st {x = a / b}
+    b > 0 or b = 0 or b < 0
+    by cases:
+        ? exist a0 N+, b0 N+ st {x = a0 / b0}
+        case b > 0:
+            a / b > 0
+            a = a / b * b > 0 * b = 0
+            a $in N
+            a $in N+
+            b $in Z
+            b $in N
+            b $in N+
+            witness exist a0 N+, b0 N+ st {x = a0 / b0} from a,b
+        case b = 0:
+            impossible b != 0
+        case b < 0:
+            have b0 Z = -b
+            b0 = -b = 0 - b > 0
+            b0 $in N
+            b0 $in N+
+            have a0 Z = -a
+            a / b = (-a) / (-b) = a0 / b0
+            a0 / b0 > 0
+            a0 = a0 / b0 * b0 > 0 * b0 = 0
+            a0 $in N
+            a0 $in N+
+            witness exist a1 N+, b1 N+ st {x = a1 / b1} from a0,b0
 
 # Definition 4.2.6, negative part: a negative rational is the additive inverse
 # of a positive rational.
@@ -1473,8 +1501,8 @@ thm integer_square_multiple_of_two_has_even_base:
 thm rational_reduced_fraction_parity_witness:
     ? forall x Q:
         exist p Z, q N+ st {x = p / q, p % 2 != 0 or q % 2 != 0}
-    exist p Z, q N+ st {x = p / q, forall k N+: p % k = 0 and q % k = 0 => {k = 1}}
-    obtain p, q from exist p Z, q N+ st {x = p / q, forall k N+: p % k = 0 and q % k = 0 => {k = 1}}
+    by thm rational_has_unique_reduced_fraction(x)
+    obtain p, q from exist! p Z, q N+ st {x = p / q, gcd(p, q) = 1}
     claim:
         ? p % 2 != 0 or q % 2 != 0
         p % 2 = 0 or p % 2 = 1
@@ -1485,8 +1513,8 @@ thm rational_reduced_fraction_parity_witness:
                 by cases:
                     ? p % 2 != 0 or q % 2 != 0
                     case q % 2 = 0:
-                        2 = 1
-                        impossible 2 = 1
+                        2 <= gcd(p, q) = 1
+                        impossible 2 <= 1
                     case q % 2 = 1:
                         q % 2 != 0
             case p % 2 = 1:

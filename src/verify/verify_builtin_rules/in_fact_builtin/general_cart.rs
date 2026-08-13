@@ -35,10 +35,20 @@ pub(crate) fn general_cart_member_pointwise_fact(
         ParamType::Obj(general_cart.index_set.as_ref().clone()),
     )?;
     let param_obj = obj_for_bound_param_in_scope(&param_group.params[0], ParamObjType::Forall);
-    let member_at_param: Obj =
+    let member_at_param_raw: Obj =
         FnObj::new(member_head, vec![vec![Box::new(param_obj.clone())]]).into();
-    let family_at_param: Obj =
+    let family_at_param_raw: Obj =
         FnObj::new(family_head, vec![vec![Box::new(param_obj.clone())]]).into();
+    // Preserve the directly usable pointwise surface when either callable is
+    // an anonymous function. This is essential for the axiom-of-choice identity
+    // family: `fn(A S) S {A}(A)` must expose `A`, so downstream code recovers
+    // the same `chooser(A) $in A` fact that the removed inline-forall rule gave.
+    let member_at_param = runtime
+        .beta_reduce_complete_anonymous_application_once(&member_at_param_raw)?
+        .unwrap_or(member_at_param_raw);
+    let family_at_param = runtime
+        .beta_reduce_complete_anonymous_application_once(&family_at_param_raw)?
+        .unwrap_or(family_at_param_raw);
     Ok(Some(
         ForallFact::new_canonical_forall(
             ParamDefWithType::new(vec![param_group]),

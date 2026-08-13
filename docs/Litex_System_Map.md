@@ -345,6 +345,13 @@ concrete props and appear in these bodies as atomic `$P(args)` facts. This
 keeps witness instantiation, alpha matching, set-builder membership, free-name
 collection, and Lean lowering on one body representation.
 
+The kernel-owned choice interface follows the same rule:
+`$is_choice_function_for(I,S,g,f)` names
+`forall alpha I: f(alpha) $in g(alpha)`. Therefore the canonical
+`general_cart` set builder, the chooser produced by `by axiom_of_choice`, and
+the upper-bound/maximal witnesses produced by `by zorn_lemma` all retain only
+atomic facts in existential or builder bodies.
+
 Definition-facing structural strategies are also bounded: dependent tuple
 constructors are checked field by field; a one-field struct uses its sole
 field carrier directly and projects that field by identity; callable fields

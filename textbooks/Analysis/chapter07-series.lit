@@ -424,7 +424,7 @@ thm finite_set_size_has_index_for_all:
                 ? $finite_set_size_has_index(n + 1)
             $finite_set_size_has_index(n + 1)
 
-thm finite_set_has_bijective_index:
+thm finite_set_index_exists_by_induction:
     ? forall s finite_set:
         finite_set_size(s) >= 1
         =>:
@@ -468,20 +468,13 @@ enumerations of the same finite set give the same finite sum.
 # Tao's construction.
 
 thm finite_set_sum_enumeration_well_defined:
-    ? forall X finite_set, f fn(x X) R, g fn(i_index closed_range(1, finite_set_size(X))) X, h fn(i_index closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g finite_seq(X, finite_set_size(X)), h finite_seq(X, finite_set_size(X)):
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
-        $is_bijection_from_index_range_to_finite_set(X, h)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, h)
         =>:
             sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(h(i_index))})
-    by def:
-        ? $is_bijection_from_index_range_to_finite_set(X, g)
-    by def:
-        ? $is_bijection_from_index_range_to_finite_set(X, h)
-    forall x X:
-        exist! i_index closed_range(1, finite_set_size(X)) st {g(i_index) = x}
-    forall x X:
-        exist! i_index closed_range(1, finite_set_size(X)) st {h(i_index) = x}
+    by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}), sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(h(i_index))}))
 
 # The predicate says that `l` is the common value of all bijective-enumeration
 # sums.  We keep Tao's finite real-set hypothesis visible, and we keep the
@@ -491,15 +484,15 @@ thm finite_set_sum_enumeration_well_defined:
 prop is_finite_set_sum(X finite_set, f fn(x X) R, l R):
     X $subset R
     finite_set_size(X) >= 1
-    forall g fn(i_index closed_range(1, finite_set_size(X))) X:
-        $is_bijection_from_index_range_to_finite_set(X, g)
+    forall g finite_seq(X, finite_set_size(X)):
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
         =>:
             sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l
 
 thm finite_set_sum_matches_bijective_enumeration:
-    ? forall X finite_set, f fn(x X) R, g fn(i_index closed_range(1, finite_set_size(X))) X:
+    ? forall X finite_set, f fn(x X) R, g finite_seq(X, finite_set_size(X)):
         finite_set_size(X) >= 1
-        $is_bijection_from_index_range_to_finite_set(X, g)
+        $bijective(closed_range(1, finite_set_size(X)), X, g)
         =>:
             sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = finite_set_sum(X, f)
     by thm finite_set_sum_substitution(finite_set_sum(X, f), finite_set_sum(closed_range(1, finite_set_size(X)), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}))
@@ -513,8 +506,8 @@ thm finite_set_sum_satisfies_self_definition:
         =>:
             $is_finite_set_sum(X, f, finite_set_sum(X, f))
     claim:
-        ? forall g fn(i_index closed_range(1, finite_set_size(X))) X:
-            $is_bijection_from_index_range_to_finite_set(X, g)
+        ? forall g finite_seq(X, finite_set_size(X)):
+            $bijective(closed_range(1, finite_set_size(X)), X, g)
             =>:
                 sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = finite_set_sum(X, f)
         by thm finite_set_sum_matches_bijective_enumeration(X, f, g)
@@ -558,7 +551,7 @@ thm finite_set_sum_value_unique:
             l1 = l2
     finite_set_size(X) >= 1
     by thm finite_set_has_bijective_index(X)
-    obtain g from exist g fn(i_index closed_range(1, finite_set_size(X))) X st {$is_bijection_from_index_range_to_finite_set(X, g)}
+    obtain g from exist g finite_seq(X, finite_set_size(X)) st {$bijective(closed_range(1, finite_set_size(X)), X, g)}
     sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l1
     sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l2
     l1 = sum(1, finite_set_size(X), fn(i_index closed_range(1, finite_set_size(X))) R {f(g(i_index))}) = l2

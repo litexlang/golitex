@@ -1,3 +1,4 @@
+use crate::common::keywords::IS_CHOICE_FUNCTION_FOR;
 use crate::prelude::*;
 use crate::verify::rule_schema::{canonical_atomic_facts_equal, MatchLimits};
 use std::collections::{HashMap, HashSet};
@@ -128,6 +129,7 @@ struct FunctionBinding {
 struct RenderContext {
     symbol_names: HashMap<SymbolId, String>,
     local_fact_names: HashMap<FactId, String>,
+    local_fact_propositions: HashMap<FactId, Fact>,
     local_forall_facts: HashMap<FactId, Fact>,
     well_defined_fact_names: HashMap<WellDefinedFactId, String>,
     function_bindings: HashMap<SymbolId, FunctionBinding>,
@@ -503,6 +505,9 @@ impl UniversalEmitter {
                 context
                     .local_fact_names
                     .insert(premise.fact_id, proof_name.clone());
+                context
+                    .local_fact_propositions
+                    .insert(premise.fact_id, premise.fact.clone());
                 parameter_fact_ids.push(premise.fact_id);
 
                 if let ParamType::Obj(Obj::FnSet(function_set)) = &group.param_type {
@@ -534,6 +539,9 @@ impl UniversalEmitter {
             binder_names.push(proof_name.clone());
             binder_types.push(proof_type);
             context.local_fact_names.insert(premise.fact_id, proof_name);
+            context
+                .local_fact_propositions
+                .insert(premise.fact_id, premise.fact.clone());
             if matches!(premise.fact, Fact::ForallFact(_)) {
                 context
                     .local_forall_facts
@@ -912,6 +920,9 @@ impl UniversalEmitter {
                     nested
                         .local_fact_names
                         .insert(evidence.fact_id, proof_name.clone());
+                    nested
+                        .local_fact_propositions
+                        .insert(evidence.fact_id, evidence.proposition.clone());
                 }
 
                 if let ParamType::Obj(Obj::FnSet(function_set)) = &group.param_type {
@@ -1016,6 +1027,13 @@ impl UniversalEmitter {
                         equalities.join(", ")
                     ))
                 }
+                LitexToLeanProofRuleIr::KnownEqualityPath(path) => self.render_known_equality_path(
+                    proposition,
+                    path,
+                    parameter_requirements,
+                    premises,
+                    context,
+                ),
                 LitexToLeanProofRuleIr::KnownForallInstantiation {
                     source_fact_id,
                     arguments,
@@ -1262,6 +1280,129 @@ impl UniversalEmitter {
         Ok(format!("({theorem} ({left_proof}) ({right_proof}))"))
     }
 
+    fn render_known_equality_path(
+        &self,
+        proposition: &Fact,
+        path: &LitexToLeanKnownEqualityPathIr,
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &RenderContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty()
+            || path.steps.is_empty()
+            || premises.len() != path.steps.len()
+        {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "known-equality path has invalid premise arity",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::EqualFact(target)) = proposition else {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "known-equality path targets a non-equality proposition",
+            ));
+        };
+
+        let mut current_key = obj_equality_key(&target.left);
+        let target_key = obj_equality_key(&target.right);
+        let mut accumulated = None;
+        for (step, premise) in path.steps.iter().zip(premises.iter()) {
+            if premise.fact_id != Some(step.source_fact_id)
+                || !matches!(
+                    &premise.proof,
+                    LitexToLeanFactProofIr::KnownFactCitation { source_fact_id }
+                        if *source_fact_id == step.source_fact_id
+                )
+            {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "known-equality path changed an exact FactId citation",
+                ));
+            }
+            let stored_proposition = context
+                .local_fact_propositions
+                .get(&step.source_fact_id)
+                .or_else(|| {
+                    self.global_facts
+                        .get(&step.source_fact_id)
+                        .map(|binding| &binding.proposition)
+                })
+                .ok_or_else(|| {
+                    universal_error(
+                        &proposition.line_file(),
+                        format!(
+                            "known-equality path cites unavailable FactId {}",
+                            step.source_fact_id.value()
+                        ),
+                    )
+                })?;
+            if stored_proposition.to_string() != premise.proposition.to_string() {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    format!(
+                        "known-equality FactId {} does not match its retained proposition",
+                        step.source_fact_id.value()
+                    ),
+                ));
+            }
+
+            let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = &premise.proposition else {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "known-equality path retained a non-equality premise",
+                ));
+            };
+            let from_key = obj_equality_key(&step.from);
+            let to_key = obj_equality_key(&step.to);
+            if from_key != current_key {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "known-equality path contains disconnected steps",
+                ));
+            }
+            let left_key = obj_equality_key(&equality.left);
+            let right_key = obj_equality_key(&equality.right);
+            let direction_matches = match step.direction {
+                LitexToLeanEqualityRewriteDirectionIr::Forward => {
+                    from_key == left_key && to_key == right_key
+                }
+                LitexToLeanEqualityRewriteDirectionIr::Backward => {
+                    from_key == right_key && to_key == left_key
+                }
+            };
+            if !direction_matches {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "known-equality path contains a wrongly oriented premise",
+                ));
+            }
+
+            let proof = self.render_proof_term(premise, context)?;
+            let oriented = match step.direction {
+                LitexToLeanEqualityRewriteDirectionIr::Forward => format!("({proof})"),
+                LitexToLeanEqualityRewriteDirectionIr::Backward => {
+                    format!("Eq.symm ({proof})")
+                }
+            };
+            accumulated = Some(match accumulated {
+                None => oriented,
+                Some(previous) => format!("Eq.trans ({previous}) ({oriented})"),
+            });
+            current_key = to_key;
+        }
+        if current_key != target_key {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "known-equality path does not end at the target right-hand side",
+            ));
+        }
+        Ok(format!(
+            "({})",
+            accumulated.expect("nonempty known-equality path was checked above")
+        ))
+    }
+
     fn resolve_fact_id(
         &self,
         fact_id: FactId,
@@ -1402,7 +1543,7 @@ impl UniversalEmitter {
                 self.render_obj(&fact.set, context)?
             )),
             AtomicFact::NormalAtomicFact(fact) => {
-                let mut text = lean_name(&fact.predicate.to_string());
+                let mut text = render_normal_predicate_name(&fact.predicate);
                 for argument in fact.body.iter() {
                     text.push(' ');
                     text.push_str(&self.render_obj(argument, context)?);
@@ -1906,6 +2047,14 @@ fn lean_name(name: &str) -> String {
     output
 }
 
+fn render_normal_predicate_name(name: &AtomicName) -> String {
+    if name.to_string() == IS_CHOICE_FUNCTION_FOR {
+        "Litex.IsChoiceFunctionFor".to_string()
+    } else {
+        lean_name(&name.to_string())
+    }
+}
+
 fn statement_label(statement: &LitexToLeanStatementIr) -> &'static str {
     match statement {
         LitexToLeanStatementIr::AbstractProp(_) => "abstract_prop",
@@ -1969,6 +2118,19 @@ fn universal_error(line_file: &LineFile, message: impl Into<String>) -> RuntimeE
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn named_choice_predicate_uses_the_semantic_prelude_definition() {
+        let name = AtomicName::WithoutMod(IS_CHOICE_FUNCTION_FOR.to_string());
+        assert_eq!(
+            render_normal_predicate_name(&name),
+            "Litex.IsChoiceFunctionFor"
+        );
+        assert_eq!(
+            render_normal_predicate_name(&AtomicName::WithoutMod("marked".to_string())),
+            "marked"
+        );
+    }
 
     #[test]
     fn universal_object_tracer_uses_membership_facts_without_retyping() {
@@ -2097,6 +2259,91 @@ forall a R:
                 "{output}"
             );
             assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
+        });
+    }
+
+    #[test]
+    fn known_equality_path_replays_symmetry_and_transitivity_by_fact_id() {
+        run_with_large_stack(|| {
+            let source = r#"forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+"#;
+            let output = compile_to_lean_from_source(source, "known-equality-path.lit")
+                .expect("known equality symmetry and transitivity should compile");
+            assert!(output.contains("Eq.symm (litex_domain_fact_1)"), "{output}");
+            assert!(output.contains("Eq.trans"), "{output}");
+            assert!(!output.contains("same known equality class"), "{output}");
+        });
+    }
+
+    #[test]
+    fn unavailable_known_equality_fact_id_is_rejected() {
+        run_with_large_stack(|| {
+            let source = r#"forall a, b set:
+    a = b
+    =>:
+        b = a
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("bad-known-equality-fact-id.lit");
+            runtime.replace_litex_to_lean_ir_mode(true);
+            let tokenizer = Tokenizer::new();
+            let blocks = tokenizer
+                .parse_blocks(source, runtime.current_file_path_rc())
+                .expect("parse known-equality malformed-certificate source");
+            let mut ir = Vec::new();
+            for mut block in blocks {
+                let statement = runtime.parse_stmt(&mut block).expect("parse statement");
+                let result = run_stmt_at_global_env(&statement, &mut runtime)
+                    .expect("verify known-equality malformed-certificate baseline");
+                ir.push(
+                    result
+                        .litex_to_lean_ir()
+                        .expect("baseline statement should retain To-Lean IR")
+                        .clone(),
+                );
+            }
+            let LitexToLeanStatementIr::Fact(statement) = &mut ir[0] else {
+                panic!("expected one fact statement")
+            };
+            let LitexToLeanFactProofIr::ForallIntroduction { conclusions, .. } =
+                &mut statement.fact.proof
+            else {
+                panic!("expected forall-introduction proof")
+            };
+            let conclusion_proof = match &mut conclusions[0].proof {
+                LitexToLeanFactProofIr::Memo { proof } => proof.as_mut(),
+                proof => proof,
+            };
+            let LitexToLeanFactProofIr::RuleApplication { rule, premises, .. } = conclusion_proof
+            else {
+                panic!("expected known-equality rule application")
+            };
+            let LitexToLeanProofRuleIr::KnownEqualityPath(path) = rule else {
+                panic!("expected a known-equality path")
+            };
+            let unavailable = FactId::new(u64::MAX);
+            path.steps[0].source_fact_id = unavailable;
+            premises[0].fact_id = Some(unavailable);
+            premises[0].proof = LitexToLeanFactProofIr::KnownFactCitation {
+                source_fact_id: unavailable,
+            };
+
+            let error = emit_lean_from_litex_to_lean_ir(&ir)
+                .expect_err("an unavailable equality FactId must fail closed");
+            assert!(
+                error.trace_message().contains("unavailable FactId"),
+                "unexpected strict rejection: {}",
+                error.trace_message()
+            );
         });
     }
 
@@ -2278,6 +2525,25 @@ forall a R:
         b != a
 "#;
             assert_source_compiles_with_mathlib(source, "builtin-not-equal-symmetry");
+        });
+    }
+
+    #[test]
+    #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+    fn known_equality_path_compiles_with_mathlib() {
+        run_with_large_stack(|| {
+            let source = r#"forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+"#;
+            assert_source_compiles_with_mathlib(source, "known-equality-path");
         });
     }
 

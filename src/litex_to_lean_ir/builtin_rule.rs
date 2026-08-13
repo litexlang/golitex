@@ -148,7 +148,8 @@ impl LitexToLeanBuiltinRuleIr {
             | BuiltinRuleEvidence::FunctionSetMembership(_)
             | BuiltinRuleEvidence::RefinedNumericMembership(_)
             | BuiltinRuleEvidence::ClosedNumericComparison(_)
-            | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_) => return None,
+            | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
+            | BuiltinRuleEvidence::KnownEqualityPath(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
                 let orientation = match evidence.orientation {
                     NonzeroExpressionOrientation::ExpressionOnLeft => {

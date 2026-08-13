@@ -265,7 +265,7 @@ thm natural_subset_has_unique_minimum:
             n <= a
             n >= 0
         S $subset closed_range(0, a)
-        by thm chap3::subset_of_finite_set_is_finite(S, closed_range(0, a))
+        by thm subset_of_finite_set_is_finite(S, closed_range(0, a))
     claim:
         ? $is_nonempty_set(S)
         witness $is_nonempty_set(S) from a:
@@ -399,8 +399,8 @@ thm positive_count_finite_set_has_cardinality:
         finite_set_size(s) >= 1
         =>:
             $chap3::has_cardinality(s, finite_set_size(s))
-    by thm chap7::finite_set_has_bijective_index(s)
-    obtain idx from exist idx fn(index closed_range(1, finite_set_size(s))) s st {$chap7::is_bijection_from_index_range_to_finite_set(s, idx)}
+    by thm finite_set_has_bijective_index(s)
+    obtain idx from exist idx finite_seq(s, finite_set_size(s)) st {$bijective(closed_range(1, finite_set_size(s)), s, idx)}
     have fn shift_up by exist!:
         ? forall t range(0, finite_set_size(s)):
             exist! j closed_range(1, finite_set_size(s)) st {j = t + 1}
@@ -1153,7 +1153,7 @@ thm proposition_3_6_14_N_embedding_implies_infinite:
             finite_set_size(closed_range(0, n)) = n - 0 + 1 = n + 1
             by def:
                 ? fn_range(c) $subset range(0, n)
-            by thm chap3::subset_of_finite_set_is_finite(fn_range(c), range(0, n))
+            by thm subset_of_finite_set_is_finite(fn_range(c), range(0, n))
             $is_finite_set(fn_range(c))
             $is_finite_set(range(0, n))
             finite_set_size(fn_range(c)) <= finite_set_size(range(0, n))
@@ -1358,7 +1358,9 @@ thm union_of_two_countable_sets_is_countable:
                             union_code(z1) = 2 * codeX(z1)
                             union_code(z2) = 2 * extended_codeY(z2) + 1 = 2 * codeY(z2) + 1
                             2 * codeX(z1) = 2 * codeY(z2) + 1
-                            impossible 2 * codeX(z1) = 2 * codeY(z2) + 1
+                            (2 * codeX(z1)) % 2 = 0
+                            (2 * codeY(z2) + 1) % 2 = 1
+                            impossible 0 = 1
                 case not z1 $in X:
                     z1 $in X or z1 $in Y
                     by cases:
@@ -1375,7 +1377,9 @@ thm union_of_two_countable_sets_is_countable:
                             union_code(z1) = 2 * extended_codeY(z1) + 1 = 2 * codeY(z1) + 1
                             union_code(z2) = 2 * codeX(z2)
                             2 * codeY(z1) + 1 = 2 * codeX(z2)
-                            impossible 2 * codeY(z1) + 1 = 2 * codeX(z2)
+                            (2 * codeY(z1) + 1) % 2 = 1
+                            (2 * codeX(z2)) % 2 = 0
+                            impossible 1 = 0
                         case not z2 $in X:
                             z2 $in X or z2 $in Y
                             by cases:
@@ -2109,7 +2113,7 @@ thm countable_union_of_at_most_countable_sets:
     by axiom_of_choice: set fn_range(code_graph_family):
         forall S fn_range(code_graph_family):
             $is_nonempty_set(S)
-    obtain graph_choice from exist c fn(S fn_range(code_graph_family)) big_union(fn_range(code_graph_family)) st {forall S fn_range(code_graph_family) => {c(S) $in S}}
+    obtain graph_choice from exist c fn(S fn_range(code_graph_family)) big_union(fn_range(code_graph_family)) st {$is_choice_function_for(fn_range(code_graph_family), fn_range(code_graph_family), fn(S fn_range(code_graph_family)) fn_range(code_graph_family) {S}, c)}
     claim:
         ? forall i I:
             graph_choice(code_graph_family(i)) $in power_set(cart(U, N))
@@ -3685,7 +3689,7 @@ thm nonfinite_set_has_finite_subset_of_prescribed_size:
                                 impossible x $in {}
                         by def:
                             ? X $subset A
-                    by thm chap3::subset_of_finite_set_is_finite(X, A)
+                    by thm subset_of_finite_set_is_finite(X, A)
                     impossible not $is_finite_set(X)
             have x set_minus(X, A)
             x $in X
@@ -3796,7 +3800,7 @@ thm finite_set_sum_ignores_zero_outside_subset:
                 f(x) = 0
         =>:
             finite_set_sum(S, fn(x S) R {f(x)}) = finite_set_sum(T, fn(x T) R {f(x)})
-    by thm chap3::subset_of_finite_set_is_finite(T, S)
+    by thm subset_of_finite_set_is_finite(T, S)
     $is_finite_set(T)
     by def:
         ? T $subset U
@@ -3808,7 +3812,7 @@ thm finite_set_sum_ignores_zero_outside_subset:
     by def:
         ? R0 $subset U
     R0 $subset U
-    by thm chap3::subset_of_finite_set_is_finite(R0, S)
+    by thm subset_of_finite_set_is_finite(R0, S)
     $is_finite_set(R0)
     claim:
         ? S = union(T, R0)
@@ -3951,9 +3955,11 @@ thm nonnegative_finite_subsum_below_some_partial_sum:
     finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M)
     witness exist M0 N+ st {finite_set_sum(A, fn(x A) R {f(x)}) <= chap7::partial_sum(\countable_set_series_terms<X, f, g>, M0)} from M
 
-thm nonnegative_countable_zero_extension_has_cofinal_partial_sums:
-    ? forall S, T set, f fn(x T) R, g fn(n N+) S, h fn(n N+) T:
+thm nonnegative_countable_zero_extension_aliases_have_cofinal_partial_sums:
+    ? forall S, T set, f fn(x T) R, g fn(n N+) S, h fn(n N+) T, source_terms, target_terms seq(R):
         S $subset T
+        source_terms = \countable_set_series_terms<S, fn(x S) R {f(x)}, g>
+        target_terms = \countable_set_series_terms<T, f, h>
         $is_countable_enumeration(S, g)
         $is_countable_enumeration(T, h)
         forall x T:
@@ -3963,9 +3969,7 @@ thm nonnegative_countable_zero_extension_has_cofinal_partial_sums:
             =>:
                 f(x) = 0
         =>:
-            $chap7::has_mutually_cofinal_partial_sums(\countable_set_series_terms<S, fn(x S) R {f(x)}, g>, \countable_set_series_terms<T, f, h>)
-    have source_terms seq(R) = \countable_set_series_terms<S, fn(x S) R {f(x)}, g>
-    have target_terms seq(R) = \countable_set_series_terms<T, f, h>
+            $chap7::has_mutually_cofinal_partial_sums(source_terms, target_terms)
     claim:
         ? forall n N+:
             exist m N+ st {chap7::partial_sum(source_terms, n) <= chap7::partial_sum(target_terms, m)}
@@ -4003,7 +4007,7 @@ thm nonnegative_countable_zero_extension_has_cofinal_partial_sums:
         by def:
             ? B $subset S
         B $subset S
-        by thm chap3::subset_of_finite_set_is_finite(B, A)
+        by thm subset_of_finite_set_is_finite(B, A)
         claim:
             ? forall x A:
                 not x $in B
@@ -4065,7 +4069,7 @@ thm nonnegative_countable_zero_extension_preserves_sum:
     claim:
         ? $chap7::is_nonnegative_sequence(target_terms)
         trust $chap7::is_nonnegative_sequence(target_terms)
-    by thm nonnegative_countable_zero_extension_has_cofinal_partial_sums(S, T, f, g, h)
+    by thm nonnegative_countable_zero_extension_aliases_have_cofinal_partial_sums(S, T, f, g, h, source_terms, target_terms)
     by thm chap7::nonnegative_series_same_sum_from_cofinal_partial_sums(source_terms, target_terms, L)
 
 thm countable_zero_extension_preserves_absolute_sum:
@@ -4242,7 +4246,7 @@ thm at_most_countable_zero_extension_preserves_sum:
     by cases:
         ? $has_at_most_countable_set_series_sum(T, f, L)
         case $is_finite_set(T):
-            by thm chap3::subset_of_finite_set_is_finite(S, T)
+            by thm subset_of_finite_set_is_finite(S, T)
             by cases:
                 ? $has_at_most_countable_set_series_sum(T, f, L)
                 case $has_finite_set_series_sum(S, fn(x S) R {f(x)}, L):
@@ -5594,7 +5598,7 @@ template<I set, S nonempty_set, X fn(alpha I) S>:
 
 thm builtin_general_cart_unfolds_to_choice_function_set:
     ? forall I set, S nonempty_set, X fn(alpha I) S:
-        general_cart(I, S, X) = {f fn(t I)big_union(S): forall alpha I => {f(alpha) $in X(alpha)}}
+        general_cart(I, S, X) = {f fn(t I)big_union(S): $is_choice_function_for(I, S, X, f)}
 
 thm builtin_general_cart_member_has_function_type:
     ? forall I set, S nonempty_set, X fn(alpha I) S, c general_cart(I, S, X):

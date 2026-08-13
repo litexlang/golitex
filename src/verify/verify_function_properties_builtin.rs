@@ -246,6 +246,48 @@ impl Runtime {
         )?
         .into())
     }
+
+    // A bijection has exactly one preimage for every codomain element.
+    // This is a derived builtin consequence (injectivity + surjectivity), not
+    // an additional clause in the definition of `$bijective`.
+    pub(crate) fn bijective_unique_preimage_fact(
+        &mut self,
+        fact: &NormalAtomicFact,
+    ) -> Result<Option<Fact>, RuntimeError> {
+        if fact.predicate.to_string() != BIJECTIVE || fact.body.len() != 3 {
+            return Ok(None);
+        }
+        let domain = fact.body[0].clone();
+        let codomain = fact.body[1].clone();
+        let function = fact.body[2].clone();
+        let names = self.generate_random_unused_names(2);
+        let y_group =
+            self.fresh_param_group_with_type(vec![names[0].clone()], ParamType::Obj(codomain))?;
+        let x_group =
+            self.fresh_param_group_with_type(vec![names[1].clone()], ParamType::Obj(domain))?;
+        let y = obj_for_bound_param_in_scope(&y_group.params[0], ParamObjType::Forall);
+        let x = obj_for_bound_param_in_scope(&x_group.params[0], ParamObjType::Exist);
+        let Some(fx) = function_applied_to_one_arg(&function, x) else {
+            return Err(function_property_application_error(
+                &function,
+                fact.line_file.clone(),
+            ));
+        };
+        let exist_body = ExistFactBody::new(
+            ParamDefWithType::new(vec![x_group]),
+            vec![EqualFact::new(fx, y, fact.line_file.clone()).into()],
+            fact.line_file.clone(),
+        )?;
+        Ok(Some(
+            ForallFact::new_canonical_forall(
+                ParamDefWithType::new(vec![y_group]),
+                vec![],
+                vec![ExistFactEnum::ExistUniqueFact(exist_body).into()],
+                fact.line_file.clone(),
+            )?
+            .into(),
+        ))
+    }
 }
 
 fn builtin_function_property_name_and_args(fact: &AtomicFact) -> Option<(&str, Vec<Obj>)> {

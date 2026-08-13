@@ -298,32 +298,25 @@ impl Runtime {
                 default_line_file(),
             );
             let intermediate_atomic_fact = AtomicFact::InFact(intermediate_in_fact);
-            let intermediate_fact: Fact = intermediate_atomic_fact.clone().into();
-            self.top_level_env()
-                .store_atomic_fact(intermediate_atomic_fact)
-                .map_err(|store_fact_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to store intermediate fn-obj membership fact while verifying `{}`",
-                                fn_obj.to_string()
-                            ),
-                            store_fact_error,
-                        ),
-                    ))
-                })?;
-            self.store_fact_cache_keys_with_nested_obj_binders(&intermediate_fact)
-                .map_err(|store_fact_error| {
-                    RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
+            // A checked application carries every consequence of its declared
+            // return set, not merely the raw membership spelling.  In
+            // particular, a value returned in `closed_range(1, n)` is in N+
+            // and is at most n; finite-sequence applications need both facts
+            // when that value is used as their next index.
+            self.store_atomic_fact_without_well_defined_verified_and_infer(
+                intermediate_atomic_fact,
+            )
+            .map_err(|store_fact_error| {
+                RuntimeError::from(WellDefinedRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_cause(
+                        format!(
                         "failed to store intermediate fn-obj membership fact while verifying `{}`",
                         fn_obj.to_string()
                     ),
-                            store_fact_error,
-                        ),
-                    ))
-                })?;
+                        store_fact_error,
+                    ),
+                ))
+            })?;
 
             if i == fn_obj.body.len() - 1 {
                 break;

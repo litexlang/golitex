@@ -1,10 +1,6 @@
-/// The logical bridge shared by universal-object generated Lean sources.
-///
-/// `LitexObject` is intentionally one target type. Standard-set membership is
-/// represented by `Litex.In`; it never retypes an object. Concrete builtin
-/// rules are theorems below this semantic boundary rather than new axioms.
-pub(super) fn universal_object_prelude() -> &'static str {
-    r#"axiom LitexObject : Type
+import Mathlib
+
+axiom LitexObject : Type
 
 namespace Litex
 
@@ -171,53 +167,5 @@ theorem realDivClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
 
 end BuiltinRules
 end
-end Litex"#
-}
+end Litex
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn universal_prelude_has_one_object_type_and_membership_relation() {
-        let prelude = universal_object_prelude();
-        assert!(prelude.contains("axiom LitexObject : Type"));
-        assert!(prelude.contains("axiom In : LitexObject → LitexObject → Prop"));
-        assert!(prelude.contains("axiom IsSet : LitexObject → Prop"));
-        assert!(!prelude.contains("def IsSet"));
-        assert!(prelude.contains("def IsNonemptySet (s : LitexObject) : Prop :="));
-        assert!(prelude.contains("IsSet s ∧ ∃ x : LitexObject, In x s"));
-        assert!(prelude.contains("def IsFiniteSet (s : LitexObject) : Prop :="));
-        assert!(prelude.contains("IsSet s ∧ Set.Finite {x : LitexObject | In x s}"));
-        assert!(!prelude.contains("axiom IsNonemptySet"));
-        assert!(!prelude.contains("axiom IsFiniteSet"));
-        assert!(prelude.contains("axiom Applicable : LitexObject → List LitexObject → Prop"));
-        assert!(prelude.contains("def IsChoiceFunctionFor"));
-        assert!(prelude.contains("In (apply chooser [alpha] chooserApplicable)"));
-        assert!(!prelude.contains("axiom IsChoiceFunctionFor"));
-        assert!(prelude.contains("axiom add : LitexObject → LitexObject → LitexObject"));
-        assert!(prelude.contains("theorem realSubClosure"));
-        assert!(!prelude.contains("class LitexObject"));
-        assert!(!prelude.contains("Set ℝ"));
-        assert!(!prelude.contains("Set ℂ"));
-    }
-
-    #[test]
-    fn checked_in_generated_file_header_matches_the_emitter() {
-        let expected = format!("import Mathlib\n\n{}", universal_object_prelude());
-        assert_eq!(
-            include_str!("current_generated_file_header.lean").trim_end(),
-            expected
-        );
-    }
-
-    #[test]
-    fn litex_object_design_has_exactly_ten_representative_examples() {
-        let design = include_str!("litex_object_design.md");
-        let example_count = design
-            .lines()
-            .filter(|line| line.starts_with("### Example "))
-            .count();
-        assert_eq!(example_count, 10);
-    }
-}

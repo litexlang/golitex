@@ -18,3 +18,38 @@ have universally_self_equal_reals set = {x R: $has_universal_self_equality(x)}
 
 witness exist x R st {$has_universal_self_equality(x)} from 0:
     by def $has_universal_self_equality(0)
+
+# Before (now rejected):
+# general_cart(I, S, g) = {f fn(alpha I)big_union(S): forall alpha I => {f(alpha) $in g(alpha)}}
+#
+# The builtin predicate names exactly that pointwise condition. It is usable
+# as one atomic set-builder filter and still unfolds in both proof directions.
+have I set
+have S nonempty_set
+have g fn(g_index I) S
+
+general_cart(I, S, g) = {f fn(f_index I)big_union(S): $is_choice_function_for(I, S, g, f)}
+
+claim:
+    ? forall f fn(f_index I)big_union(S):
+        forall alpha I:
+            f(alpha) $in g(alpha)
+        =>:
+            $is_choice_function_for(I, S, g, f)
+    $is_choice_function_for(I, S, g, f)
+
+claim:
+    ? forall f fn(f_index I)big_union(S):
+        $is_choice_function_for(I, S, g, f)
+        =>:
+            forall alpha I:
+                f(alpha) $in g(alpha)
+    forall selected_index I:
+        f(selected_index) $in g(selected_index)
+
+claim:
+    ? forall f fn(f_index I)big_union(S):
+        $is_choice_function_for(I, S, g, f)
+        =>:
+            f $in general_cart(I, S, g)
+    f $in general_cart(I, S, g)

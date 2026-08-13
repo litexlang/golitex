@@ -394,6 +394,11 @@ def mechanism_class(entry) -> str:
 
 def lean_mapping(entry) -> tuple[str, str]:
     text = entry["label"] or entry["expression"]
+    if (
+        text == "known-only equality: same known equality class"
+        and entry["sink"] in TYPED_LOCAL_RULE_SINKS
+    ):
+        return "`Eq.symm` / `Eq.trans` over exact equality `FactId` citations", "implemented"
     if text == "not-equality symmetry":
         return "`Litex.BuiltinRules.notEqualSymmetry`", "implemented"
     standard_numeral_theorems = {

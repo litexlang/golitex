@@ -48,13 +48,16 @@ Membership is an independent proposition:
 
 ```lean
 axiom Litex.In : LitexObject → LitexObject → Prop
-axiom Litex.IsSet : LitexObject → Prop
+def Litex.IsSet (_ : LitexObject) : Prop := True
 ```
 
 A source declaration `x S` binds both `x : LitexObject` and an exact proof
 `Litex.In x S`. It does not make `S` a Lean type. If the runtime later
 proves `Litex.In x T`, both membership facts remain available and refer to
-the same `x`.
+the same `x`. Every `LitexObject` is a set in this model, including values,
+standard numeric domains, and function objects. A source `x set` fact may
+still be retained by `FactId`; being definitionally trivial in Lean is not a
+reason to erase verifier evidence.
 
 This is the central application rule:
 
@@ -86,16 +89,18 @@ axiom boundary:
 
 ```lean
 def Litex.IsNonemptySet (s : LitexObject) : Prop :=
-  Litex.IsSet s ∧ ∃ x : LitexObject, Litex.In x s
+  ∃ x : LitexObject, Litex.In x s
 
 def Litex.IsFiniteSet (s : LitexObject) : Prop :=
-  Litex.IsSet s ∧ Set.Finite {x : LitexObject | Litex.In x s}
+  Set.Finite {x : LitexObject | Litex.In x s}
 ```
 
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
-`IsSet` conjunct prevents finite extensions of non-set objects from being
-misclassified, while still allowing the empty set to be finite.
+always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
+it is not an independent classifier. The current emitted prelude has not yet
+migrated from opaque `IsSet` and redundant derived-predicate conjuncts; that
+implementation drift is recorded in `current_generated_file_header.lean`.
 
 ## Standard numeric sets and numerals
 
@@ -243,10 +248,24 @@ only that ID. A known-forall use retains:
 Forall introduction binds every value as `LitexObject`, then its parameter
 fact, then domain facts. It never derives a Lean binder type from a set.
 
+Known equality has one mathematical representation plus an identity join.
+`KnownEquality` keeps both the union-find classes used by ordinary verification
+and the direct proof forest behind those classes. The existing fact cache maps
+each selected direct equality to its stable `FactId`. When a goal such as
+`b = a` or `a = c` succeeds by class membership, the verifier reads one
+connected `KnownEquality::proof_path`, joins every edge to its cached identity,
+and freezes that path before the local scope closes. Lean then replays it with
+`Eq.symm` and `Eq.trans`.
+
+The nearest rejected representation stores the transitive closure without its
+direct sources, or lets the emitter rediscover an equality by proposition
+text. Either representation loses which local proof is in scope.
+
 The nearest rejected implementation uses `assumption`, proposition-string
 matching, or target proof search.
 
-Dependencies: stable runtime `FactId` values and projected-forall proof IR.
+Dependencies: `KnownEquality` direct proof paths, stable runtime `FactId`
+values, environment scope/merge semantics, and projected-forall proof IR.
 
 Downstream uses: modular theorem replay and WD facts proved from earlier
 theorems.
@@ -292,9 +311,10 @@ must roll back one unsupported source statement and report it without
 ## Implementation order
 
 The current executable slice covers the universal ABI, primary membership/WD
-tracer, exact FactId replay, known forall, ordinary builtin theorems, exact
-named-application layers, source occurrence identity, nested forall, and basic
-universal arithmetic. The next implementation order is:
+tracer, exact FactId replay including known-equality paths, known forall,
+ordinary builtin theorems, exact named-application layers, source occurrence
+identity, nested forall, and basic universal arithmetic. The next
+implementation order is:
 
 1. inferred forall;
 2. remaining arithmetic operations and numeric hierarchy theorems;

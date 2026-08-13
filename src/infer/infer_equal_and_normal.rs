@@ -544,6 +544,21 @@ impl Runtime {
                     )?,
                 );
             }
+            // Injectivity and surjectivity together give a unique preimage.
+            // Keep this as an explicitly named builtin inference instead of
+            // strengthening the definitional clauses of `$bijective`.
+            if let Some(unique_preimage) =
+                self.bijective_unique_preimage_fact(normal_atomic_fact)?
+            {
+                let rule = "bijective functions have unique preimages";
+                infer_result.add_builtin_inference(rule, &unique_preimage);
+                infer_result.new_infer_result_inside(
+                    self.store_with_well_defined_verification_and_infer_with_default_verify_state_and_reason(
+                        unique_preimage,
+                        InferReason::BuiltinInference(rule.to_string()),
+                    )?,
+                );
+            }
             self.store_infer_rule_firing(firing_key);
             return Ok(infer_result);
         }
