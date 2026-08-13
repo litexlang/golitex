@@ -64,13 +64,12 @@ impl Runtime {
 
         let mut disjuncts: Vec<AndChainAtomicFact> = Vec::new();
         for conjunct in facts.iter() {
-            let forall_conjunct = self.inst_exist_body_fact(
+            let forall_conjunct = self.inst_quantifier_free_fact(
                 conjunct,
                 &param_to_forall_obj,
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
                 None,
             )?;
-            let forall_conjunct = exist_body_fact_as_or_and_chain_atomic_fact(forall_conjunct);
             let mut part = Self::demorgan_negate_exist_body_conjunct(&forall_conjunct)?;
             disjuncts.append(&mut part);
         }
@@ -89,14 +88,14 @@ impl Runtime {
     }
 
     pub(crate) fn demorgan_negate_exist_body_conjunct(
-        conjunct: &OrAndChainAtomicFact,
+        conjunct: &QuantifierFreeFact,
     ) -> Result<Vec<AndChainAtomicFact>, RuntimeError> {
         let lf = conjunct.line_file();
         match conjunct {
-            OrAndChainAtomicFact::AtomicFact(a) => Ok(vec![AndChainAtomicFact::AtomicFact(
+            QuantifierFreeFact::AtomicFact(a) => Ok(vec![AndChainAtomicFact::AtomicFact(
                 Self::demorgan_negate_atomic_or_err(a)?,
             )]),
-            OrAndChainAtomicFact::AndFact(af) => {
+            QuantifierFreeFact::AndFact(af) => {
                 if af.facts.is_empty() {
                     return Err(RuntimeError::from(NewFactRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -113,7 +112,7 @@ impl Runtime {
                 }
                 Ok(out)
             }
-            OrAndChainAtomicFact::ChainFact(cf) => {
+            QuantifierFreeFact::ChainFact(cf) => {
                 let atomics = cf
                     .facts()
                     .map_err(RuntimeError::wrap_new_fact_as_store_conflict)?;
@@ -133,7 +132,7 @@ impl Runtime {
                 }
                 Ok(out)
             }
-            OrAndChainAtomicFact::OrFact(_) => Err(RuntimeError::from(NewFactRuntimeError(
+            QuantifierFreeFact::OrFact(_) => Err(RuntimeError::from(NewFactRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "not exist: automatic forall derivation does not support `or` inside a body conjunct"
                         .to_string(),
@@ -154,14 +153,5 @@ impl Runtime {
                 vec![],
             )))
         })
-    }
-}
-
-fn exist_body_fact_as_or_and_chain_atomic_fact(fact: ExistBodyFact) -> OrAndChainAtomicFact {
-    match fact {
-        ExistBodyFact::AtomicFact(f) => OrAndChainAtomicFact::AtomicFact(f),
-        ExistBodyFact::AndFact(f) => OrAndChainAtomicFact::AndFact(f),
-        ExistBodyFact::ChainFact(f) => OrAndChainAtomicFact::ChainFact(f),
-        ExistBodyFact::OrFact(f) => OrAndChainAtomicFact::OrFact(f),
     }
 }

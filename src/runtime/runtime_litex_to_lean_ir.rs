@@ -136,6 +136,9 @@ impl Runtime {
             Stmt::By(ByStmt::ByContraStmt(stmt)) => {
                 self.build_litex_to_lean_ir_by_contra_statement(stmt, success)
             }
+            Stmt::By(ByStmt::ByDefStmt(stmt)) => {
+                self.build_litex_to_lean_ir_by_definition_statement(stmt, success)
+            }
             Stmt::DefThmStmt(stmt) => {
                 self.build_litex_to_lean_ir_named_theorem_statement(stmt, success)
             }
@@ -539,7 +542,7 @@ impl Runtime {
                 ));
             }
             let expected = self
-                .inst_exist_body_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
+                .inst_quantifier_free_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
                 .to_fact();
             let mut premise = self.build_litex_to_lean_ir_fact_from_result(
                 inside_results.get(*result_index).ok_or_else(|| {
@@ -885,7 +888,7 @@ impl Runtime {
             .enumerate()
         {
             let calculated = self
-                .inst_exist_body_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
+                .inst_quantifier_free_fact(body, &param_to_obj_map, ParamObjType::Exist, None)?
                 .to_fact();
             if calculated.to_string() != expected.to_string() {
                 return Err(litex_to_lean_ir_error(
@@ -1191,6 +1194,84 @@ impl Runtime {
         Ok(LitexToLeanStatementIr::HaveObjEqual(
             LitexToLeanHaveObjectEqualIr { definitions, facts },
         ))
+    }
+
+    fn build_litex_to_lean_ir_by_definition_statement(
+        &self,
+        stmt: &ByDefStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<LitexToLeanStatementIr, RuntimeError> {
+        let Some(ByVerificationResult::Definition(verification)) = success.by_verification.as_ref()
+        else {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "by-definition statement has no structured verification result",
+            ));
+        };
+        if !verification.concrete_user_prop {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "Litex-to-Lean first statement tranche supports user `prop` reduction, not this builtin definition",
+            ));
+        }
+        let definition = self
+            .get_active_prop_definition_by_name(&verification.prop)
+            .ok_or_else(|| {
+                litex_to_lean_ir_error(
+                    &stmt.line_file,
+                    "by-definition result no longer resolves its concrete prop definition",
+                )
+            })?;
+        if definition.iff_facts.is_empty() {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "Litex-to-Lean rejects a bodyless concrete `prop`",
+            ));
+        }
+        let target: Fact = stmt.fact.clone().into();
+        if verification.stored_fact != target.to_string()
+            || verification.definition_clause_facts.len() != definition.iff_facts.len()
+            || success.inside_results.len() != verification.definition_clause_facts.len() + 1
+        {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "by-definition retained statement, clause, or result counts do not match",
+            ));
+        }
+        let parameter_wrapper = success
+            .inside_results
+            .first()
+            .and_then(StmtResult::non_factual_success)
+            .ok_or_else(|| {
+                litex_to_lean_ir_error(
+                    &stmt.line_file,
+                    "by-definition parameter checks were not retained as a grouped result",
+                )
+            })?;
+        let proof = self.build_litex_to_lean_ir_definition_reduction(
+            &target,
+            &definition,
+            &parameter_wrapper.inside_results,
+            &verification.definition_clause_facts,
+            &success.inside_results[1..],
+            &LitexToLeanIrConstructionContext::default(),
+        )?;
+        let fact_id = stored_fact_id_from_infer_result(
+            &success.infers,
+            &target,
+            "by-definition target fact",
+        )?;
+        let fact = LitexToLeanFactIr {
+            fact_id: Some(fact_id),
+            proposition: target.clone(),
+            proof,
+        };
+        let excluded = HashSet::from([target.to_string()]);
+        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
+            facts: vec![fact],
+            inferred_facts: self
+                .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+        }))
     }
 
     fn build_litex_to_lean_ir_by_cases_statement(
@@ -1873,6 +1954,15 @@ impl Runtime {
             .iter()
             .map(|evidence| (evidence.certificate_id, &evidence.expected_proposition))
             .collect::<HashMap<_, _>>();
+        let facts_by_well_defined_id = facts
+            .iter()
+            .map(|evidence| {
+                (
+                    evidence.well_defined_fact_id,
+                    &evidence.expected_proposition,
+                )
+            })
+            .collect::<HashMap<_, _>>();
         let mut objects = Vec::with_capacity(certificate.objects.len());
         let mut objects_by_id = HashMap::new();
         for evidence in certificate.objects.iter() {
@@ -1903,14 +1993,46 @@ impl Runtime {
                         .map_err(|message| litex_to_lean_ir_error(&default_line_file(), message))
                 })
                 .transpose()?;
+            let target_requirements = evidence
+                .target_requirements
+                .iter()
+                .map(|requirement| {
+                    let Some(expected) = facts_by_well_defined_id.get(&requirement.fact_id) else {
+                        return Err(litex_to_lean_ir_error(
+                            &requirement.expected_proposition.line_file(),
+                            "well-defined object target requirement references a missing fact",
+                        ));
+                    };
+                    if expected.to_string() != requirement.expected_proposition.to_string() {
+                        return Err(litex_to_lean_ir_error(
+                            &requirement.expected_proposition.line_file(),
+                            "well-defined object target requirement changed its proposition",
+                        ));
+                    }
+                    Ok(LitexToLeanWellDefinednessObjectRequirementIr {
+                        role: requirement.role,
+                        well_defined_fact_id: requirement.fact_id,
+                        expected_proposition: requirement.expected_proposition.clone(),
+                    })
+                })
+                .collect::<Result<Vec<_>, RuntimeError>>()?;
             objects.push(LitexToLeanWellDefinednessObjectIr {
                 well_defined_obj_proof_id: evidence.well_defined_obj_proof_id,
                 source_object: evidence.object.clone(),
                 intrinsic_result_set,
                 child_proof_ids: evidence.child_proof_ids.clone(),
                 well_defined_fact_ids: evidence.well_defined_fact_ids.clone(),
+                target_requirements,
                 fact_ids: evidence.fact_ids.clone(),
             });
+        }
+        for root_use in certificate.root_proof_uses.iter() {
+            if !objects_by_id.contains_key(&root_use.well_defined_obj_proof_id) {
+                return Err(litex_to_lean_ir_error(
+                    &default_line_file(),
+                    "well-definedness root use references a missing object proof",
+                ));
+            }
         }
         let mut target_requirements = Vec::with_capacity(certificate.target_requirements.len());
         for requirement in certificate.target_requirements.iter() {
@@ -1957,6 +2079,7 @@ impl Runtime {
         }
         Ok(LitexToLeanWellDefinednessCertificateIr {
             root_proof_ids: certificate.root_proof_ids.clone(),
+            root_proof_uses: certificate.root_proof_uses.clone(),
             facts,
             objects,
             target_requirements,
@@ -2097,6 +2220,151 @@ impl Runtime {
         })
     }
 
+    fn build_litex_to_lean_ir_definition_reduction(
+        &self,
+        goal: &Fact,
+        definition: &DefPropStmt,
+        parameter_checks: &[StmtResult],
+        clause_facts: &[Fact],
+        clause_checks: &[StmtResult],
+        context: &LitexToLeanIrConstructionContext,
+    ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+        let (expected_parameter_requirements, expected_clauses) =
+            self.instantiated_prop_definition_components(definition, goal)?;
+        if parameter_checks.len() != expected_parameter_requirements.len()
+            || clause_facts.len() != expected_clauses.len()
+            || clause_checks.len() != expected_clauses.len()
+        {
+            return Err(litex_to_lean_ir_error(
+                &goal.line_file(),
+                "concrete prop reduction retained the wrong number of parameter or clause checks",
+            ));
+        }
+
+        let mut parameter_requirements = Vec::with_capacity(parameter_checks.len());
+        for (result, expected) in parameter_checks
+            .iter()
+            .zip(expected_parameter_requirements.iter())
+        {
+            let mut requirement = self.build_litex_to_lean_ir_fact_from_result(
+                result,
+                "concrete prop parameter requirement",
+                context,
+            )?;
+            if requirement.proposition.to_string() != expected.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    format!(
+                        "concrete prop parameter check `{}` does not match expected `{}`",
+                        requirement.proposition, expected
+                    ),
+                ));
+            }
+            requirement.fact_id = None;
+            parameter_requirements.push(requirement);
+        }
+
+        let mut premises = Vec::with_capacity(clause_checks.len());
+        for ((retained, result), expected) in clause_facts
+            .iter()
+            .zip(clause_checks.iter())
+            .zip(expected_clauses.iter())
+        {
+            if retained.to_string() != expected.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    format!(
+                        "concrete prop retained clause `{}` does not match expected `{}`",
+                        retained, expected
+                    ),
+                ));
+            }
+            let mut premise = self.build_litex_to_lean_ir_fact_from_result(
+                result,
+                "concrete prop definition clause",
+                context,
+            )?;
+            if premise.proposition.to_string() != expected.to_string() {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    format!(
+                        "concrete prop clause proof `{}` does not match expected `{}`",
+                        premise.proposition, expected
+                    ),
+                ));
+            }
+            premise.fact_id = None;
+            premises.push(premise);
+        }
+
+        Ok(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::DefinitionReduction {
+                definition: definition.name.clone(),
+                expected_parameter_requirements,
+                expected_clauses,
+            },
+            parameter_requirements,
+            premises,
+        })
+    }
+
+    fn instantiated_prop_definition_components(
+        &self,
+        definition: &DefPropStmt,
+        target: &Fact,
+    ) -> Result<(Vec<Fact>, Vec<Fact>), RuntimeError> {
+        let Fact::AtomicFact(AtomicFact::NormalAtomicFact(target)) = target else {
+            return Err(litex_to_lean_ir_error(
+                &target.line_file(),
+                "concrete prop reduction targets a non-predicate fact",
+            ));
+        };
+        if target.predicate.to_string() != definition.name
+            || target.body.len() != definition.params_def_with_type.number_of_params()
+        {
+            return Err(litex_to_lean_ir_error(
+                &target.line_file,
+                "concrete prop reduction target does not match its retained definition",
+            ));
+        }
+        let instantiated_types = self.inst_param_def_with_type_one_by_one(
+            &definition.params_def_with_type,
+            &target.body,
+            ParamObjType::DefHeader,
+        )?;
+        let flat_types = definition
+            .params_def_with_type
+            .flat_instantiated_types_for_args(&instantiated_types);
+        let parameter_requirements = target
+            .body
+            .iter()
+            .zip(flat_types.iter())
+            .map(|(argument, param_type)| {
+                object_type_fact_for_litex_to_lean(
+                    argument.clone(),
+                    param_type,
+                    target.line_file.clone(),
+                )
+            })
+            .collect::<Vec<_>>();
+        let param_to_arg_map = definition
+            .params_def_with_type
+            .param_defs_and_args_to_param_to_arg_map(target.body.as_slice());
+        let clauses = definition
+            .iff_facts
+            .iter()
+            .map(|clause| {
+                self.inst_fact(
+                    clause,
+                    &param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(target.line_file.clone()),
+                )
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        Ok((parameter_requirements, clauses))
+    }
+
     fn build_litex_to_lean_ir_verified_by(
         &self,
         goal: &Fact,
@@ -2125,6 +2393,24 @@ impl Runtime {
                 if let Some(replay) = result.checked_definition_replay.as_ref() {
                     return self.build_litex_to_lean_ir_checked_definition_replay(goal, replay);
                 }
+                if let Some(evidence) = result.definition_reduction.as_ref() {
+                    let Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) =
+                        result.cite_what.as_ref()
+                    else {
+                        return Err(litex_to_lean_ir_error(
+                            &goal.line_file(),
+                            "concrete prop reduction evidence cites a non-prop statement",
+                        ));
+                    };
+                    return self.build_litex_to_lean_ir_definition_reduction(
+                        goal,
+                        definition,
+                        &evidence.parameter_checks,
+                        &evidence.clause_facts,
+                        &evidence.clause_checks,
+                        context,
+                    );
+                }
                 match result.cite_what.as_ref() {
                     Stmt::Fact(source_fact) => self.build_litex_to_lean_ir_fact_citation(
                         goal,
@@ -2135,13 +2421,11 @@ impl Runtime {
                         result.fact_transformation.as_ref(),
                         context,
                     ),
-                    Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
-                        Ok(LitexToLeanFactProofIr::RuleApplication {
-                            rule: LitexToLeanProofRuleIr::DefinitionReduction {
-                                definition: definition.name.clone(),
-                            },
-                            parameter_requirements: Vec::new(),
-                            premises: Vec::new(),
+                    Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(_)) => {
+                        Ok(LitexToLeanFactProofIr::Unsupported {
+                            reason:
+                                "concrete prop citation has no retained parameter and clause checks"
+                                    .to_string(),
                         })
                     }
                     Stmt::DefStrategyStmt(strategy) => Ok(LitexToLeanFactProofIr::UserStrategy {
@@ -3340,7 +3624,25 @@ impl Runtime {
                 )?,
             }),
             VerifiedBysEnum::ByFact(result) => {
-                let proof = match result.cite_what.as_ref() {
+                let proof = if let Some(evidence) = result.definition_reduction.as_ref() {
+                    let Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) =
+                        result.cite_what.as_ref()
+                    else {
+                        return Err(litex_to_lean_ir_error(
+                            &result.verify_what.line_file(),
+                            "composite concrete prop reduction cites a non-prop statement",
+                        ));
+                    };
+                    self.build_litex_to_lean_ir_definition_reduction(
+                        &result.verify_what,
+                        definition,
+                        &evidence.parameter_checks,
+                        &evidence.clause_facts,
+                        &evidence.clause_checks,
+                        context,
+                    )?
+                } else {
+                    match result.cite_what.as_ref() {
                     Stmt::Fact(source) => self.build_litex_to_lean_ir_fact_citation(
                         &result.verify_what,
                         step_fact_id(&result.verify_what)?,
@@ -3350,18 +3652,16 @@ impl Runtime {
                         result.fact_transformation.as_ref(),
                         context,
                     )?,
-                    Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) => {
-                        LitexToLeanFactProofIr::RuleApplication {
-                            rule: LitexToLeanProofRuleIr::DefinitionReduction {
-                                definition: definition.name.clone(),
-                            },
-                            parameter_requirements: Vec::new(),
-                            premises: Vec::new(),
+                    Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(_)) => {
+                        LitexToLeanFactProofIr::Unsupported {
+                            reason: "concrete prop citation has no retained parameter and clause checks"
+                                .to_string(),
                         }
                     }
                     cited => LitexToLeanFactProofIr::Unsupported {
                         reason: format!("unsupported composite citation `{}`", cited),
                     },
+                }
                 };
                 Ok(LitexToLeanFactIr {
                     fact_id: step_fact_id(&result.verify_what)?,
@@ -3445,11 +3745,12 @@ impl Runtime {
                     continue;
                 }
                 let proof = build_litex_to_lean_ir_inferred_fact_proof(
+                    self,
                     source_fact,
                     source_id,
                     fact,
                     &output.itself_and_why_itself_is_stored.1,
-                );
+                )?;
                 if matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
                     continue;
                 }
@@ -3489,11 +3790,12 @@ impl Runtime {
                     continue;
                 }
                 let proof = build_litex_to_lean_ir_inferred_fact_proof(
+                    self,
                     source_fact,
                     Some(source_fact_id),
                     fact,
                     &output.itself_and_why_itself_is_stored.1,
-                );
+                )?;
                 if matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
                     continue;
                 }
@@ -3515,14 +3817,44 @@ impl Runtime {
 }
 
 fn build_litex_to_lean_ir_inferred_fact_proof(
+    runtime: &Runtime,
     source_fact: &Fact,
     source_fact_id: Option<FactId>,
     inferred_fact: &Fact,
     reason: &str,
-) -> LitexToLeanFactProofIr {
+) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+    if let (Fact::AtomicFact(AtomicFact::NormalAtomicFact(source)), Some(source_fact_id)) =
+        (source_fact, source_fact_id)
+    {
+        if let Some(definition) =
+            runtime.get_active_prop_definition_by_name(&source.predicate.to_string())
+        {
+            let (parameter_requirements, clauses) =
+                runtime.instantiated_prop_definition_components(&definition, source_fact)?;
+            if parameter_requirements
+                .iter()
+                .chain(clauses.iter())
+                .any(|component| component.to_string() == inferred_fact.to_string())
+            {
+                return Ok(LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::DefinitionProjection {
+                        definition: definition.name.clone(),
+                        expected_source: source_fact.clone(),
+                        expected_target: inferred_fact.clone(),
+                    },
+                    parameter_requirements: Vec::new(),
+                    premises: vec![LitexToLeanFactIr {
+                        fact_id: Some(source_fact_id),
+                        proposition: source_fact.clone(),
+                        proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
+                    }],
+                });
+            }
+        }
+    }
     if positive_real_membership_infers_strict_positivity(source_fact, inferred_fact) {
         if let Some(source_fact_id) = source_fact_id {
-            return LitexToLeanFactProofIr::RuleApplication {
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
                 rule: LitexToLeanProofRuleIr::Builtin(
                     LitexToLeanBuiltinRuleIr::PositiveRealMembership,
                 ),
@@ -3532,24 +3864,24 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
                     proposition: source_fact.clone(),
                     proof: LitexToLeanFactProofIr::KnownFactCitation { source_fact_id },
                 }],
-            };
+            });
         }
     }
     if crate::litex_to_lean_ir::is_closed_numeric_relation(inferred_fact) {
         if let Some(target_set) =
             crate::litex_to_lean_ir::closed_compact_numeric_set_fact(source_fact)
         {
-            return LitexToLeanFactProofIr::RuleApplication {
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
                 rule: LitexToLeanProofRuleIr::ClosedNumericReflection { target_set },
                 parameter_requirements: Vec::new(),
                 premises: Vec::new(),
-            };
+            });
         }
     }
-    LitexToLeanFactProofIr::Inference {
+    Ok(LitexToLeanFactProofIr::Inference {
         source_fact_id,
         reason: reason.to_string(),
-    }
+    })
 }
 
 fn positive_real_membership_infers_strict_positivity(

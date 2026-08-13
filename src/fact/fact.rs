@@ -193,13 +193,13 @@ impl From<AndChainAtomicFact> for Fact {
     }
 }
 
-impl From<OrAndChainAtomicFact> for Fact {
-    fn from(f: OrAndChainAtomicFact) -> Self {
+impl From<QuantifierFreeFact> for Fact {
+    fn from(f: QuantifierFreeFact) -> Self {
         match f {
-            OrAndChainAtomicFact::AtomicFact(a) => a.into(),
-            OrAndChainAtomicFact::AndFact(a) => a.into(),
-            OrAndChainAtomicFact::ChainFact(c) => c.into(),
-            OrAndChainAtomicFact::OrFact(o) => o.into(),
+            QuantifierFreeFact::AtomicFact(a) => a.into(),
+            QuantifierFreeFact::AndFact(a) => a.into(),
+            QuantifierFreeFact::ChainFact(c) => c.into(),
+            QuantifierFreeFact::OrFact(o) => o.into(),
         }
     }
 }

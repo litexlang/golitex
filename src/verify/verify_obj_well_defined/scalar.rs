@@ -6,7 +6,7 @@ impl Runtime {
         &mut self,
         obj: &Obj,
         verify_state: &UseContextVerifyState,
-    ) -> Result<(), RuntimeError> {
+    ) -> Result<StmtResult, RuntimeError> {
         let c_obj = StandardSet::C.into();
         let in_fact = InFact::new(obj.clone(), c_obj, default_line_file());
         let result = self.verify_atomic_fact(&in_fact.into(), verify_state)?;
@@ -15,7 +15,7 @@ impl Runtime {
                 RuntimeErrorStruct::new_with_just_msg(format!("obj {} is not in C", obj)),
             )));
         }
-        Ok(())
+        Ok(result)
     }
 
     /// Mathematical contract: require the object to be provably real; the
@@ -120,8 +120,19 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
-        self.require_obj_in_c(&add.left, verify_state)?;
-        self.require_obj_in_c(&add.right, verify_state)?;
+        let parent: Obj = add.clone().into();
+        let left = self.require_obj_in_c(&add.left, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
+            left,
+        );
+        let right = self.require_obj_in_c(&add.right, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
+            right,
+        );
         Ok(())
     }
 
@@ -134,8 +145,19 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
-        self.require_obj_in_c(&sub.left, verify_state)?;
-        self.require_obj_in_c(&sub.right, verify_state)?;
+        let parent: Obj = sub.clone().into();
+        let left = self.require_obj_in_c(&sub.left, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
+            left,
+        );
+        let right = self.require_obj_in_c(&sub.right, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
+            right,
+        );
         Ok(())
     }
 
@@ -148,8 +170,19 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
         self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
-        self.require_obj_in_c(&mul.left, verify_state)?;
-        self.require_obj_in_c(&mul.right, verify_state)?;
+        let parent: Obj = mul.clone().into();
+        let left = self.require_obj_in_c(&mul.left, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
+            left,
+        );
+        let right = self.require_obj_in_c(&mul.right, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
+            right,
+        );
         Ok(())
     }
 

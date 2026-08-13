@@ -1883,28 +1883,15 @@ impl Runtime {
         }
     }
 
-    fn match_arg_or_and_chain_atomic_fact_in_known_forall(
+    fn match_arg_quantifier_free_fact_in_known_forall(
         &mut self,
-        left: &OrAndChainAtomicFact,
-        given: &OrAndChainAtomicFact,
+        left: &QuantifierFreeFact,
+        given: &QuantifierFreeFact,
     ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !Self::_verify_or_and_chain_atomic_facts_the_same_type_ref(left, given)? {
+        if !Self::_verify_quantifier_free_facts_the_same_type_ref(left, given)? {
             return Ok(None);
         }
 
-        let left_args = left.get_args_from_fact_ref();
-        let given_args = given.get_args_from_fact_ref();
-        self.match_args_in_active_binding_scope(&left_args, &given_args)
-    }
-
-    fn match_arg_exist_body_fact_in_known_forall(
-        &mut self,
-        left: &ExistBodyFact,
-        given: &ExistBodyFact,
-    ) -> Result<Option<HashMap<String, Obj>>, RuntimeError> {
-        if !exist_body_facts_have_same_shape(left, given)? {
-            return Ok(None);
-        }
         let left_args = left.get_args_from_fact_ref();
         let given_args = given.get_args_from_fact_ref();
         self.match_args_in_active_binding_scope(&left_args, &given_args)
@@ -1955,7 +1942,8 @@ impl Runtime {
             return Ok(None);
         }
         for (lf, gf) in left.facts.iter().zip(given.facts.iter()) {
-            let Some(fact_map) = self.match_arg_exist_body_fact_in_known_forall(lf, gf)? else {
+            let Some(fact_map) = self.match_arg_quantifier_free_fact_in_known_forall(lf, gf)?
+            else {
                 return Ok(None);
             };
             if !self.merge_arg_match_map_into(&mut merged, fact_map) {
@@ -2053,7 +2041,7 @@ impl Runtime {
             return Ok(None);
         }
         for (lf, gf) in left.body.dom_facts.iter().zip(given.body.dom_facts.iter()) {
-            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
+            let Some(fact_map) = self.match_arg_quantifier_free_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
             };
@@ -2138,7 +2126,7 @@ impl Runtime {
             return Ok(None);
         }
         for (lf, gf) in left.body.dom_facts.iter().zip(given.body.dom_facts.iter()) {
-            let Some(fact_map) = self.match_arg_or_and_chain_atomic_fact_in_known_forall(lf, gf)?
+            let Some(fact_map) = self.match_arg_quantifier_free_fact_in_known_forall(lf, gf)?
             else {
                 return Ok(None);
             };
@@ -3176,26 +3164,5 @@ fn push_atomic_fact_in_forall_arg_shape_key_if_new(
 ) {
     if !keys.contains(&key) {
         keys.push(key);
-    }
-}
-
-fn exist_body_facts_have_same_shape(
-    left: &ExistBodyFact,
-    right: &ExistBodyFact,
-) -> Result<bool, RuntimeError> {
-    match (left, right) {
-        (ExistBodyFact::AtomicFact(left), ExistBodyFact::AtomicFact(right)) => {
-            Runtime::_verify_atomic_fact_the_same_type_ref(left, right)
-        }
-        (ExistBodyFact::AndFact(left), ExistBodyFact::AndFact(right)) => {
-            Runtime::_verify_and_fact_the_same_type_ref(left, right)
-        }
-        (ExistBodyFact::ChainFact(left), ExistBodyFact::ChainFact(right)) => {
-            Runtime::_verify_chain_fact_the_same_type_ref(left, right)
-        }
-        (ExistBodyFact::OrFact(left), ExistBodyFact::OrFact(right)) => {
-            Runtime::_verify_or_fact_the_same_type_ref(left, right)
-        }
-        _ => Ok(false),
     }
 }

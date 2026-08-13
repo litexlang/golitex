@@ -54,10 +54,10 @@ impl Runtime {
             exist_groups.push(ParamGroupWithParamType::new(group_exist_names, param_type));
         }
 
-        let mut body_facts: Vec<ExistBodyFact> = Vec::new();
+        let mut body_facts: Vec<QuantifierFreeFact> = Vec::new();
         for dom_fact in forall.dom_facts.iter() {
             let Some(dom_body_fact) =
-                self.fact_to_exist_body_fact(dom_fact, &param_to_exist_obj)?
+                self.fact_to_quantifier_free_fact(dom_fact, &param_to_exist_obj)?
             else {
                 return Ok(None);
             };
@@ -67,7 +67,7 @@ impl Runtime {
         let mut negated_then_branches: Vec<AndChainAtomicFact> = Vec::new();
         for then_fact in forall.then_facts.iter() {
             let Some(then_body_fact) =
-                self.then_fact_to_exist_body_fact(then_fact, &param_to_exist_obj)?
+                self.then_fact_to_quantifier_free_fact(then_fact, &param_to_exist_obj)?
             else {
                 return Ok(None);
             };
@@ -84,25 +84,22 @@ impl Runtime {
         body_facts.push(if negated_then_branches.len() == 1 {
             and_chain_atomic_to_or_and_chain_atomic(negated_then_branches.remove(0)).into()
         } else {
-            OrAndChainAtomicFact::OrFact(OrFact::new(
-                negated_then_branches,
-                forall.line_file.clone(),
-            ))
-            .into()
+            QuantifierFreeFact::OrFact(OrFact::new(negated_then_branches, forall.line_file.clone()))
+                .into()
         });
 
-        Ok(Some(ExistFactEnum::ExistFact(ExistFactBody::new(
+        Ok(Some(ExistFactEnum::ExistFact(ExistentialSpec::new(
             ParamDefWithType::new(exist_groups),
             body_facts,
             forall.line_file.clone(),
         )?)))
     }
 
-    fn fact_to_exist_body_fact(
+    fn fact_to_quantifier_free_fact(
         &self,
         fact: &Fact,
         param_to_exist_obj: &HashMap<String, Obj>,
-    ) -> Result<Option<OrAndChainAtomicFact>, RuntimeError> {
+    ) -> Result<Option<QuantifierFreeFact>, RuntimeError> {
         let instantiated = self.inst_fact(
             fact,
             param_to_exist_obj,
@@ -110,10 +107,10 @@ impl Runtime {
             None,
         )?;
         Ok(match instantiated {
-            Fact::AtomicFact(f) => Some(OrAndChainAtomicFact::AtomicFact(f)),
-            Fact::AndFact(f) => Some(OrAndChainAtomicFact::AndFact(f)),
-            Fact::ChainFact(f) => Some(OrAndChainAtomicFact::ChainFact(f)),
-            Fact::OrFact(f) => Some(OrAndChainAtomicFact::OrFact(f)),
+            Fact::AtomicFact(f) => Some(QuantifierFreeFact::AtomicFact(f)),
+            Fact::AndFact(f) => Some(QuantifierFreeFact::AndFact(f)),
+            Fact::ChainFact(f) => Some(QuantifierFreeFact::ChainFact(f)),
+            Fact::OrFact(f) => Some(QuantifierFreeFact::OrFact(f)),
             Fact::ExistFact(_)
             | Fact::ForallFact(_)
             | Fact::ForallFactWithIff(_)
@@ -121,11 +118,11 @@ impl Runtime {
         })
     }
 
-    fn then_fact_to_exist_body_fact(
+    fn then_fact_to_quantifier_free_fact(
         &self,
         fact: &ExistOrAndChainAtomicFact,
         param_to_exist_obj: &HashMap<String, Obj>,
-    ) -> Result<Option<OrAndChainAtomicFact>, RuntimeError> {
+    ) -> Result<Option<QuantifierFreeFact>, RuntimeError> {
         let instantiated = self.inst_exist_or_and_chain_atomic_fact(
             fact,
             param_to_exist_obj,
@@ -133,19 +130,19 @@ impl Runtime {
             None,
         )?;
         Ok(match instantiated {
-            ExistOrAndChainAtomicFact::AtomicFact(f) => Some(OrAndChainAtomicFact::AtomicFact(f)),
-            ExistOrAndChainAtomicFact::AndFact(f) => Some(OrAndChainAtomicFact::AndFact(f)),
-            ExistOrAndChainAtomicFact::ChainFact(f) => Some(OrAndChainAtomicFact::ChainFact(f)),
-            ExistOrAndChainAtomicFact::OrFact(f) => Some(OrAndChainAtomicFact::OrFact(f)),
+            ExistOrAndChainAtomicFact::AtomicFact(f) => Some(QuantifierFreeFact::AtomicFact(f)),
+            ExistOrAndChainAtomicFact::AndFact(f) => Some(QuantifierFreeFact::AndFact(f)),
+            ExistOrAndChainAtomicFact::ChainFact(f) => Some(QuantifierFreeFact::ChainFact(f)),
+            ExistOrAndChainAtomicFact::OrFact(f) => Some(QuantifierFreeFact::OrFact(f)),
             ExistOrAndChainAtomicFact::ExistFact(_) => None,
         })
     }
 }
 
-fn and_chain_atomic_to_or_and_chain_atomic(fact: AndChainAtomicFact) -> OrAndChainAtomicFact {
+fn and_chain_atomic_to_or_and_chain_atomic(fact: AndChainAtomicFact) -> QuantifierFreeFact {
     match fact {
-        AndChainAtomicFact::AtomicFact(f) => OrAndChainAtomicFact::AtomicFact(f),
-        AndChainAtomicFact::AndFact(f) => OrAndChainAtomicFact::AndFact(f),
-        AndChainAtomicFact::ChainFact(f) => OrAndChainAtomicFact::ChainFact(f),
+        AndChainAtomicFact::AtomicFact(f) => QuantifierFreeFact::AtomicFact(f),
+        AndChainAtomicFact::AndFact(f) => QuantifierFreeFact::AndFact(f),
+        AndChainAtomicFact::ChainFact(f) => QuantifierFreeFact::ChainFact(f),
     }
 }

@@ -267,7 +267,7 @@ For this equality-rewrite route supported by the current MVP, the compiler gener
 ```lean
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 1 := rfl
+example : Litex.abiVersion = 2 := rfl
 
 theorem fact19 :
     ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)
@@ -282,7 +282,7 @@ theorem fact19 :
     simpa only [litex_domain_fact_2] using litex_domain_fact_1
 ```
 
-This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.BuiltinRules` Lake module supplies the one `Litex.Object` universe and checks ABI version 1; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.BuiltinRules` Lake module supplies the one `Litex.Object` universe and checks ABI version 2; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
 
 Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 

@@ -269,7 +269,7 @@ impl Runtime {
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact_in_set_builder = self
-                .inst_exist_body_fact(
+                .inst_quantifier_free_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,
@@ -1122,7 +1122,7 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(&preimage_objs);
         let mut facts = Vec::with_capacity(body.dom_facts.len() + 1);
         for dom_fact in body.dom_facts.iter() {
-            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+            let instantiated_dom_fact = self.inst_quantifier_free_fact(
                 dom_fact,
                 &param_to_obj_map,
                 ParamObjType::FnSet,
@@ -1144,7 +1144,7 @@ impl Runtime {
             .into(),
         );
 
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(param_groups),
             facts,
             in_fact.line_file.clone(),
@@ -1169,7 +1169,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
@@ -1203,7 +1203,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),

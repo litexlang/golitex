@@ -44,12 +44,12 @@ impl Runtime {
     /// Mathematical contract: before assuming an atomic/conjunctive/chain/or
     /// fact, verify all of its mathematical objects and subfacts, then store
     /// the checked fact and its consequences.
-    pub fn store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+    pub fn store_quantifier_free_fact_with_well_defined_verification_and_infer(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
+        self.store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
             fact,
             verify_state,
             InferReason::VerifiedStatement,
@@ -58,21 +58,21 @@ impl Runtime {
 
     /// Mathematical contract: identical to the restricted compound-fact check
     /// above; the supplied reason records provenance without weakening it.
-    pub fn store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer_with_reason(
+    pub fn store_quantifier_free_fact_with_well_defined_verification_and_infer_with_reason(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
         reason: InferReason,
     ) -> Result<InferResult, RuntimeError> {
         let stmt_for_fact_errors: Stmt = fact.clone().to_fact().into();
-        self.verify_or_and_chain_atomic_fact_well_defined(fact, verify_state)
+        self.verify_quantifier_free_fact_well_defined(fact, verify_state)
             .map_err(|well_defined_error| {
                 exec_stmt_error_with_stmt_and_cause(
                     stmt_for_fact_errors.clone(),
                     well_defined_error,
                 )
             })?;
-        self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        self.store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason(
             fact.clone(),
             reason.store_reason(),
         )

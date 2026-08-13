@@ -138,7 +138,7 @@ impl Runtime {
             {
                 return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
             }
-            let [OrAndChainAtomicFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
+            let [QuantifierFreeFact::AtomicFact(AtomicFact::LessEqualFact(bound))] =
                 function_body.dom_facts.as_slice()
             else {
                 return Ok(Some(StmtResult::Unknown(StmtUnknown::new())));
@@ -233,7 +233,7 @@ impl Runtime {
         let Some(fx) = function_applied_to_one_arg(&function, x) else {
             return Err(function_property_application_error(&function, line_file));
         };
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![x_group]),
             vec![EqualFact::new(y, fx, line_file.clone()).into()],
             line_file.clone(),
@@ -273,7 +273,7 @@ impl Runtime {
                 fact.line_file.clone(),
             ));
         };
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![x_group]),
             vec![EqualFact::new(fx, y, fact.line_file.clone()).into()],
             fact.line_file.clone(),

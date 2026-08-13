@@ -83,6 +83,23 @@ The `arithmetic_forall_wd` example keeps `y` as `Litex.Object`, represents
 Its nested parameter membership retains the exact temporary `FactId` and is
 replayed as a Lean binder proof.
 
+## Statement definitions
+
+The `statement_definitions_and_trust` example separates four target roles:
+
+- `abstract_prop` introduces an uninterpreted `Litex.Object → Prop`;
+- a bodyful `prop` is a Lean definition whose body contains parameter
+  requirements and source clauses;
+- `have name S = value` introduces one `noncomputable def` plus checked
+  membership and defining-equality theorems;
+- `by def` constructs or projects the definition conjunction from exact child
+  proofs and `FactId` citations.
+
+Only the example's explicit `trust` fact is an axiom. Its later repetition and
+all inferred definition consequences reuse or derive named theorems. Bodyless
+concrete `prop`, `trust have`, and function-valued `have fn` are deliberately
+outside this collection.
+
 ## Trust boundary
 
 The semantic core introduces the universal object universe, membership,

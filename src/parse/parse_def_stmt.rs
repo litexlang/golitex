@@ -133,7 +133,7 @@ impl Runtime {
             if header_block.current_token_is_equal_to(COLON) {
                 header_block.skip_token(COLON)?;
                 loop {
-                    template_arg_dom.push(this.parse_or_and_chain_atomic_fact(&mut header_block)?);
+                    template_arg_dom.push(this.parse_quantifier_free_fact(&mut header_block)?);
                     if header_block.current_token_is_equal_to(COMMA) {
                         header_block.skip_token(COMMA)?;
                     } else {
@@ -576,7 +576,7 @@ impl Runtime {
         let have_param_names = param_defs.collect_param_names();
 
         if has_fact_body {
-            let facts_result = (|| -> Result<Vec<ExistBodyFact>, RuntimeError> {
+            let facts_result = (|| -> Result<Vec<QuantifierFreeFact>, RuntimeError> {
                 tb.skip_token(COLON)?;
                 if !tb.exceed_end_of_head() {
                     return Err(RuntimeError::from(ParseRuntimeError(
@@ -586,7 +586,7 @@ impl Runtime {
                         ),
                     )));
                 }
-                self.parse_exist_body_facts_in_body(tb)
+                self.parse_quantifier_free_facts_in_body(tb)
             })();
             if !have_param_names.is_empty() {
                 self.end_parsing_scope(ParamObjType::Exist, &have_param_names);

@@ -95,6 +95,13 @@ outside this slice. Unsupported statements remain explicit instead of becoming
 `sorry` or implicit axioms, so reliability claims must stay grounded in
 inspectable rules, tests, verifier output, and trust reporting.
 
+Within the universal-`Litex.Object` backend, the first statement-definition
+tranche compiles `abstract_prop`, bodyful `prop`, explicit-value
+`have name S = value`, ordinary `trust fact`, and concrete `by def`. Only the
+explicit trusted proposition becomes a target axiom; definition consequences
+are checked theorems. Bodyless concrete `prop`, `trust have`, and `have fn`
+remain outside that backend slice and fail closed.
+
 ---
 
 ## Objects

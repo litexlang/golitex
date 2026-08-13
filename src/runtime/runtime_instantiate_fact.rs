@@ -115,55 +115,29 @@ impl Runtime {
         })
     }
 
-    pub fn inst_exist_body_fact(
+    pub fn inst_quantifier_free_fact(
         &self,
-        fact: &ExistBodyFact,
+        fact: &QuantifierFreeFact,
         param_to_arg_map: &HashMap<String, Obj>,
         to_inst_param_type: ParamObjType,
         inst_lf: Option<&LineFile>,
-    ) -> Result<ExistBodyFact, RuntimeError> {
+    ) -> Result<QuantifierFreeFact, RuntimeError> {
         Ok(match fact {
-            ExistBodyFact::AtomicFact(atomic_fact) => ExistBodyFact::AtomicFact(
+            QuantifierFreeFact::AtomicFact(atomic_fact) => QuantifierFreeFact::AtomicFact(
                 self.inst_atomic_fact(atomic_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            ExistBodyFact::AndFact(and_fact) => ExistBodyFact::AndFact(self.inst_and_fact(
-                and_fact,
-                param_to_arg_map,
-                to_inst_param_type,
-                inst_lf,
-            )?),
-            ExistBodyFact::ChainFact(chain_fact) => ExistBodyFact::ChainFact(
+            QuantifierFreeFact::AndFact(and_fact) => QuantifierFreeFact::AndFact(
+                self.inst_and_fact(and_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
+            ),
+            QuantifierFreeFact::ChainFact(chain_fact) => QuantifierFreeFact::ChainFact(
                 self.inst_chain_fact(chain_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
             ),
-            ExistBodyFact::OrFact(or_fact) => ExistBodyFact::OrFact(self.inst_or_fact(
+            QuantifierFreeFact::OrFact(or_fact) => QuantifierFreeFact::OrFact(self.inst_or_fact(
                 or_fact,
                 param_to_arg_map,
                 to_inst_param_type,
                 inst_lf,
             )?),
-        })
-    }
-
-    pub fn inst_or_and_chain_atomic_fact(
-        &self,
-        fact: &OrAndChainAtomicFact,
-        param_to_arg_map: &HashMap<String, Obj>,
-        to_inst_param_type: ParamObjType,
-        inst_lf: Option<&LineFile>,
-    ) -> Result<OrAndChainAtomicFact, RuntimeError> {
-        Ok(match fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => OrAndChainAtomicFact::AtomicFact(
-                self.inst_atomic_fact(atomic_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
-            OrAndChainAtomicFact::AndFact(and_fact) => OrAndChainAtomicFact::AndFact(
-                self.inst_and_fact(and_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
-            OrAndChainAtomicFact::ChainFact(chain_fact) => OrAndChainAtomicFact::ChainFact(
-                self.inst_chain_fact(chain_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
-            OrAndChainAtomicFact::OrFact(or_fact) => OrAndChainAtomicFact::OrFact(
-                self.inst_or_fact(or_fact, param_to_arg_map, to_inst_param_type, inst_lf)?,
-            ),
         })
     }
 
@@ -891,17 +865,17 @@ impl Runtime {
         let params_def_with_type = ParamDefWithType::new(groups);
         let mut facts = Vec::with_capacity(exist_fact.facts().len());
         for fact in exist_fact.facts().iter() {
-            facts.push(self.inst_exist_body_fact(
+            facts.push(self.inst_quantifier_free_fact(
                 fact,
                 param_to_arg_map,
                 to_inst_param_type,
                 inst_lf,
             )?);
         }
-        let body = ExistFactBody::new(
+        let body = ExistentialSpec::new(
             params_def_with_type,
             facts,
-            Self::line_file_after_inst(&exist_fact.body().line_file, inst_lf),
+            Self::line_file_after_inst(&exist_fact.spec().line_file, inst_lf),
         )?;
         Ok(match exist_fact {
             ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
@@ -990,17 +964,17 @@ impl Runtime {
 
         let mut facts = Vec::with_capacity(exist_fact.facts().len());
         for fact in exist_fact.facts().iter() {
-            facts.push(self.inst_exist_body_fact(
+            facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
                 ParamObjType::AlphaRename,
                 None,
             )?);
         }
-        let body = ExistFactBody::new(
+        let body = ExistentialSpec::new(
             ParamDefWithType::new(groups),
             facts,
-            exist_fact.body().line_file.clone(),
+            exist_fact.spec().line_file.clone(),
         )?;
         Ok(match exist_fact {
             ExistFactEnum::ExistFact(_) => ExistFactEnum::ExistFact(body),
@@ -1559,7 +1533,7 @@ mod capture_avoidance_tests {
         )
         .into();
         let fact = ExistFactEnum::ExistFact(
-            ExistFactBody::new(
+            ExistentialSpec::new(
                 ParamDefWithType::new(vec![n_group.clone()]),
                 vec![body.into()],
                 default_line_file(),
@@ -1579,7 +1553,8 @@ mod capture_avoidance_tests {
         let fresh_name = instantiated.params_def_with_type().groups[0].params[0].name();
         assert_ne!(fresh_name, "n");
         assert_ne!(fresh_name, "x1");
-        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equality)) = &instantiated.facts()[0]
+        let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equality)) =
+            &instantiated.facts()[0]
         else {
             panic!("expected equality body");
         };
@@ -1683,7 +1658,7 @@ mod capture_avoidance_tests {
             )
             .unwrap();
         let fact = ExistFactEnum::ExistFact(
-            ExistFactBody::new(
+            ExistentialSpec::new(
                 ParamDefWithType::new(vec![first_group.clone(), second_group.clone()]),
                 vec![AtomicFact::from(EqualFact::new(
                     ExistFreeParamObj::new(&first_group.params[0]).into(),

@@ -216,7 +216,7 @@ impl Runtime {
         }
         for dom_fact in fn_set_with_dom.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(
+                .inst_quantifier_free_fact(
                     dom_fact,
                     &fn_set_param_name_to_algo_arg_obj,
                     ParamObjType::BinderRetag(BinderRetagSource::FnSet),

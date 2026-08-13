@@ -31,7 +31,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
     for d in clause.dom_facts.iter() {
         dom_facts.push(
             runtime
-                .inst_or_and_chain_atomic_fact(
+                .inst_quantifier_free_fact(
                     d,
                     &fn_set_param_to_forall_param,
                     ParamObjType::BinderRetag(BinderRetagSource::FnSet),
@@ -54,7 +54,7 @@ pub(crate) fn forall_binders_dom_and_curried_layers_from_fn_set_clause(
         for d in inner.body.dom_facts.iter() {
             dom_facts.push(
                 runtime
-                    .inst_or_and_chain_atomic_fact(
+                    .inst_quantifier_free_fact(
                         d,
                         &fn_set_param_to_forall_param,
                         ParamObjType::BinderRetag(BinderRetagSource::FnSet),
@@ -205,7 +205,7 @@ pub(crate) fn forall_param_defs_dom_and_map_from_have_fn_clause(
     for dom_fact in clause.dom_facts.iter() {
         dom_facts.push(
             runtime
-                .inst_or_and_chain_atomic_fact(
+                .inst_quantifier_free_fact(
                     dom_fact,
                     &fn_set_param_to_forall_param,
                     ParamObjType::BinderRetag(BinderRetagSource::FnSet),

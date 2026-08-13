@@ -141,7 +141,7 @@ impl FactUnknown {
                 body: exist_fact
                     .facts()
                     .iter()
-                    .map(ExistBodyFact::from_ref_to_cloned_fact)
+                    .map(QuantifierFreeFact::from_ref_to_cloned_fact)
                     .collect(),
                 detail,
             })),

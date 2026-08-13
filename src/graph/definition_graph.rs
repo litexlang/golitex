@@ -666,7 +666,7 @@ impl DefinitionGraphBuilder {
 
                 well_definedness.add_param_def_with_set(&fn_set.params_def_with_set);
                 for fact in fn_set.dom_facts.iter() {
-                    well_definedness.collect_or_and_chain_atomic_fact(fact);
+                    well_definedness.collect_quantifier_free_fact(fact);
                 }
             }
             self.add_dependency_edges(&node_id, signature, "signature");
@@ -731,7 +731,7 @@ impl DefinitionGraphBuilder {
                 signature.add_param_def_with_type(params);
                 well_definedness.add_param_def_with_type(params);
                 for fact in dom_facts {
-                    well_definedness.collect_or_and_chain_atomic_fact(fact);
+                    well_definedness.collect_quantifier_free_fact(fact);
                 }
             }
             for field in &definition.fields {
@@ -772,7 +772,7 @@ impl DefinitionGraphBuilder {
             let mut well_definedness = DepCollector::new();
             well_definedness.add_param_def_with_type(&definition.template_arg_def);
             for fact in &definition.template_arg_dom {
-                well_definedness.collect_or_and_chain_atomic_fact(fact);
+                well_definedness.collect_quantifier_free_fact(fact);
             }
             self.add_dependency_edges(&node_id, well_definedness, "well_definedness");
 
@@ -1905,7 +1905,7 @@ fn collect_template_definition_dependencies(
             collector.collect_param_def_with_type_deps(&statement.param_def);
             collector.add_param_def_with_type(&statement.param_def);
             for fact in &statement.facts {
-                collector.collect_exist_body_fact(fact);
+                collector.collect_quantifier_free_fact(fact);
             }
         }
         TemplateDefEnum::TrustHaveStmt(statement) => {

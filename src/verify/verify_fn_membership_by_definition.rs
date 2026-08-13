@@ -285,7 +285,7 @@ impl Runtime {
         let mut forall_dom_facts = Vec::with_capacity(expected_fn_set.body.dom_facts.len());
         for fact in expected_fn_set.body.dom_facts.iter() {
             forall_dom_facts.push(
-                self.inst_or_and_chain_atomic_fact(
+                self.inst_quantifier_free_fact(
                     fact,
                     &full_param_to_forall_obj,
                     ParamObjType::BinderRetag(BinderRetagSource::FnSet),

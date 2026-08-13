@@ -582,7 +582,7 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            let body = ExistFactBody::new(
+            let body = ExistentialSpec::new(
                 ParamDefWithType::new(vec![index_group]),
                 vec![bijective.into()],
                 stmt.line_file.clone(),
@@ -671,7 +671,7 @@ impl Runtime {
                 stmt.line_file.clone(),
             )
             .into();
-            let body = ExistFactBody::new(
+            let body = ExistentialSpec::new(
                 ParamDefWithType::new(vec![numerator_group, denominator_group]),
                 vec![ratio_fact.into(), coprime_fact.into()],
                 stmt.line_file.clone(),

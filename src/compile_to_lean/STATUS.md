@@ -10,7 +10,7 @@ native-carrier backend and its snapshots were deleted.
 - [x] One `Litex.Object` target type for values, sets, and functions.
 - [x] The target ABI lives once in the shared `Litex.Core` Lake module;
   generated files import it through `Litex.BuiltinRules` and check ABI version
-  1 instead of repeating the core.
+  2 instead of repeating the core.
 - [x] `Litex.In x S` is independent membership evidence; it never retypes `x`.
 - [x] `Litex.IsSet x` is represented as a proposition rather than a target
   type, and set parameters retain their exact source proof.
@@ -35,6 +35,9 @@ native-carrier backend and its snapshots were deleted.
   `WellDefinedFactId` values and exact target requirement links.
 - [x] WD facts needed in theorem types are emitted first as generalized helper
   theorems and cited by stable ID.
+- [x] Root object uses retain their exact preflight/proof/store phase. Equal
+  source arithmetic nodes select the proof-phase root and then follow exact
+  child edges; the emitter never chooses among WD nodes by proposition text.
 - [x] Every parsed function application has a `SourceObjectOccurrenceId`.
   Structurally equal occurrences remain distinct, while WD cache hits cite the
   same environment-owned `WellDefinedObjProofId` and `WellDefinedFactId`.
@@ -45,16 +48,32 @@ native-carrier backend and its snapshots were deleted.
   embedding core and stored in the shared builtin library.
 - [x] The first ordinary builtin adapter (`NotEqualSymmetry`) calls a real Lean
   theorem from the shared builtin library, with malformed shape rejected.
-- [x] Universal `Litex.add/sub/mul/div` operations, real-closure certificates,
-  and rational normalization cover the arithmetic nested-forall tracer.
+- [x] `Litex.add/sub/mul` are proof-carrying constructors: each term consumes
+  the verifier's two ordered `In operand C` facts. Complex and real closure are
+  shared Lean theorems, and nested operations cite earlier
+  `well_defined_fact_<id>` helpers. `Litex.div` remains the explicit boundary.
+- [x] Universal arithmetic and rational normalization continue to cover the
+  arithmetic nested-forall tracer under the proof-carrying ABI.
 - [x] Nested forall premises retain their temporary parameter `FactId`s and
   replay them as exact Lean binder proofs.
+- [x] `abstract_prop` emits one uninterpreted predicate declaration; bodyful
+  `prop` emits one universal-object `def` whose conjunction includes ordered
+  parameter requirements and definition clauses.
+- [x] Explicit-value object `have name S = value` emits one
+  `noncomputable def`, then checked membership and defining-equality theorems
+  under their retained `FactId`s.
+- [x] Concrete `by def` retains exact parameter and clause child proofs.
+  Definition consequences are projected from that theorem rather than
+  re-proved by target search.
+- [x] Only an explicit `trust fact` becomes an axiom. Inferred consequences
+  and later citations emit or reuse theorems; duplicate `FactId`s are reused
+  only when their propositions agree exactly.
 - [x] Primary positive and missing-membership boundary tests.
 - [x] Universal-object tracer, known-forall tracer, and ordinary builtin tracer
   compile as complete generated sources under real Mathlib.
 - [x] One nonempty source argument group becomes one list application; nested
   groups use `Litex.fnSetResult`, and split arity remains rejected by Litex.
-- [x] The eight-entry universal-object ledger compiles with the shared
+- [x] The ten-entry universal-object ledger compiles with the shared
   `Litex.Core`/`Litex.BuiltinRules` modules under real Mathlib.
 
 ## Required next coverage
@@ -67,6 +86,8 @@ native-carrier backend and its snapshots were deleted.
   replacement, and anonymous functions. Their Lean terms must consume the
   verifier-owned WD certificates instead of retaining those facts only as
   detached audit declarations.
+- [ ] Migrate `Litex.div` after freezing its three ordered target obligations:
+  numerator in `C`, denominator in `C`, and denominator nonzero.
 - [ ] Preserve and emit supported inferred forall premises.
 - [ ] Add dependent/refined non-function return-set coverage beyond the current
   nested function-set result path.
@@ -76,8 +97,9 @@ native-carrier backend and its snapshots were deleted.
   arithmetic/order, refined membership, set operators, reflection, and
   registered rules. Each checked certificate must call one theorem schema in
   `Litex.BuiltinRules`; no per-use tactic expansion or builtin axiom fallback.
-- [ ] Lower user proposition definitions, set builders, anonymous functions,
-  named function definitions, object definitions/choice, existentials,
+- [ ] Lower the remaining definition and statement families: bodyless
+  concrete-proposition semantics, set builders, anonymous and named function
+  definitions, object choice, `trust have`, existentials,
   cases/contradiction, named theorems, and namespaces.
 - [ ] Restore transactional incomplete-report mode on the new emitter.
 - [ ] Rebuild the consolidated exact-output ledger and repository-wide real

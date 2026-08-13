@@ -257,13 +257,13 @@ impl Runtime {
                 }
             }
             for dom_fact in fn_set_body.dom_facts.iter() {
-                let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+                let instantiated_dom_fact = self.inst_quantifier_free_fact(
                     dom_fact,
                     &param_to_arg_map,
                     ParamObjType::FnSet,
                     None,
                 )?;
-                let result = self.verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+                let result = self.verify_quantifier_free_fact_by_known_atomic_or_builtin_only(
                     &instantiated_dom_fact,
                     verify_state,
                 )?;
@@ -1243,7 +1243,7 @@ fn collect_module_names_from_obj(obj: &Obj, module_names: &mut Vec<String>) {
         Obj::SetBuilder(x) => {
             collect_module_names_from_obj(&x.param_set, module_names);
             for fact in x.facts.iter() {
-                collect_module_names_from_exist_body_fact(fact, module_names);
+                collect_module_names_from_quantifier_free_fact(fact, module_names);
             }
         }
         Obj::FnSet(x) => collect_module_names_from_fn_set_body(&x.body, module_names),
@@ -1333,25 +1333,25 @@ fn collect_module_names_from_fn_set_body(body: &FnSetBody, module_names: &mut Ve
         collect_module_names_from_obj(group.set_obj(), module_names);
     }
     for fact in body.dom_facts.iter() {
-        collect_module_names_from_or_and_chain_atomic_fact(fact, module_names);
+        collect_module_names_from_quantifier_free_fact(fact, module_names);
     }
     collect_module_names_from_obj(&body.ret_set, module_names);
 }
 
-fn collect_module_names_from_or_and_chain_atomic_fact(
-    fact: &OrAndChainAtomicFact,
+fn collect_module_names_from_quantifier_free_fact(
+    fact: &QuantifierFreeFact,
     module_names: &mut Vec<String>,
 ) {
     match fact {
-        OrAndChainAtomicFact::AtomicFact(fact) => {
+        QuantifierFreeFact::AtomicFact(fact) => {
             collect_module_names_from_atomic_fact(fact, module_names);
         }
-        OrAndChainAtomicFact::AndFact(fact) => {
+        QuantifierFreeFact::AndFact(fact) => {
             for atomic_fact in fact.facts.iter() {
                 collect_module_names_from_atomic_fact(atomic_fact, module_names);
             }
         }
-        OrAndChainAtomicFact::ChainFact(fact) => {
+        QuantifierFreeFact::ChainFact(fact) => {
             for name in fact.prop_names.iter() {
                 collect_module_name_from_atomic_name(name, module_names);
             }
@@ -1359,33 +1359,7 @@ fn collect_module_names_from_or_and_chain_atomic_fact(
                 collect_module_names_from_obj(obj, module_names);
             }
         }
-        OrAndChainAtomicFact::OrFact(fact) => {
-            for branch in fact.facts.iter() {
-                collect_module_names_from_and_chain_atomic_fact(branch, module_names);
-            }
-        }
-    }
-}
-
-fn collect_module_names_from_exist_body_fact(fact: &ExistBodyFact, module_names: &mut Vec<String>) {
-    match fact {
-        ExistBodyFact::AtomicFact(fact) => {
-            collect_module_names_from_atomic_fact(fact, module_names);
-        }
-        ExistBodyFact::AndFact(fact) => {
-            for atomic_fact in fact.facts.iter() {
-                collect_module_names_from_atomic_fact(atomic_fact, module_names);
-            }
-        }
-        ExistBodyFact::ChainFact(fact) => {
-            for name in fact.prop_names.iter() {
-                collect_module_name_from_atomic_name(name, module_names);
-            }
-            for obj in fact.objs.iter() {
-                collect_module_names_from_obj(obj, module_names);
-            }
-        }
-        ExistBodyFact::OrFact(fact) => {
+        QuantifierFreeFact::OrFact(fact) => {
             for branch in fact.facts.iter() {
                 collect_module_names_from_and_chain_atomic_fact(branch, module_names);
             }

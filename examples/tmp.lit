@@ -6,11 +6,17 @@ forall a, b set:
 1 $in N
 1 $in C
 
+forall a, b, c C:
+    (a + b) + c = (a + b) + c
+
+forall a, b, c C:
+    ((a - b) * c) + a = ((a - b) * c) + a
+
 
 """
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 1 := rfl
+example : Litex.abiVersion = 2 := rfl
 
 theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a ≠ b), b ≠ a :=
 by
@@ -22,4 +28,64 @@ theorem fact14 : Litex.In 1 Litex.N := by
 
 theorem fact17 : Litex.In 1 Litex.C := by
   exact Litex.BuiltinRules.numeralInC 1
+
+theorem well_defined_fact_5 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_1
+
+theorem well_defined_fact_6 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In b Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_2
+
+theorem well_defined_fact_7 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.add a b (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact (Litex.BuiltinRules.complexAddClosure ((well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
+
+theorem well_defined_fact_8 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In c Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_3
+
+theorem fact30 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), (Litex.add (Litex.add a b (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) = (Litex.add (Litex.add a b (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact rfl
+
+theorem well_defined_fact_19 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_1
+
+theorem well_defined_fact_20 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In b Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_2
+
+theorem well_defined_fact_21 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact (Litex.BuiltinRules.complexSubClosure ((well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
+
+theorem well_defined_fact_22 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In c Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_3
+
+theorem well_defined_fact_23 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.mul (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact (Litex.BuiltinRules.complexMulClosure ((well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
+
+theorem well_defined_fact_24 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact litex_param_fact_1
+
+theorem fact43 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), (Litex.add (Litex.mul (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) a (well_defined_fact_23 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_24 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) = (Litex.add (Litex.mul (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) a (well_defined_fact_23 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_24 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) :=
+by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  exact rfl
 """

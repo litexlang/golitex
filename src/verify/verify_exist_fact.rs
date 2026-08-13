@@ -27,7 +27,7 @@ fn real_line_comparison_exist_fact_non_witness_operands(
         return None;
     }
 
-    let ExistBodyFact::AtomicFact(atomic_fact) = &exist_fact.facts()[0] else {
+    let QuantifierFreeFact::AtomicFact(atomic_fact) = &exist_fact.facts()[0] else {
         return None;
     };
     let (left, right) = match atomic_fact {
@@ -101,7 +101,7 @@ fn rational_integer_ratio_exist_fact_non_witness_operand(
         return None;
     }
 
-    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
     else {
         return None;
     };
@@ -154,10 +154,10 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     let is_denominator = |obj: &Obj| matches!(obj, Obj::Atom(AtomObj::Exist(param)) if param.name() == denominator_name.as_str());
     let is_zero = |obj: &Obj| matches!(obj, Obj::Number(number) if number.normalized_value == "0");
     let denominator_is_positive = exist_fact.facts().iter().any(|fact| match fact {
-        ExistBodyFact::AtomicFact(AtomicFact::GreaterFact(fact)) => {
+        QuantifierFreeFact::AtomicFact(AtomicFact::GreaterFact(fact)) => {
             is_denominator(&fact.left) && is_zero(&fact.right)
         }
-        ExistBodyFact::AtomicFact(AtomicFact::LessFact(fact)) => {
+        QuantifierFreeFact::AtomicFact(AtomicFact::LessFact(fact)) => {
             is_zero(&fact.left) && is_denominator(&fact.right)
         }
         _ => false,
@@ -167,7 +167,7 @@ fn rational_positive_denominator_exist_fact_non_witness_operand(
     }
 
     let ratio_other = exist_fact.facts().iter().find_map(|fact| {
-        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
+        let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = fact else {
             return None;
         };
         let is_selected_ratio = |obj: &Obj| match obj {
@@ -203,7 +203,7 @@ fn euclidean_quotient_exist_unique_operands(exist_fact: &ExistFactEnum) -> Optio
     else {
         return None;
     };
-    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
     else {
         return None;
     };
@@ -248,7 +248,7 @@ fn integer_divisibility_exist_fact_operands(exist_fact: &ExistFactEnum) -> Optio
     else {
         return None;
     };
-    let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
+    let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equal_fact)) = &exist_fact.facts()[0]
     else {
         return None;
     };
@@ -289,7 +289,8 @@ fn archimedean_reciprocal_bound_non_witness_operand(exist_fact: &ExistFactEnum) 
     else {
         return None;
     };
-    let ExistBodyFact::AtomicFact(AtomicFact::LessFact(less_fact)) = &exist_fact.facts()[0] else {
+    let QuantifierFreeFact::AtomicFact(AtomicFact::LessFact(less_fact)) = &exist_fact.facts()[0]
+    else {
         return None;
     };
     let Obj::Div(div) = &less_fact.left else {
@@ -326,7 +327,7 @@ fn dense_order_exist_fact_endpoints(
         return None;
     }
 
-    let ExistBodyFact::ChainFact(chain) = &exist_fact.facts()[0] else {
+    let QuantifierFreeFact::ChainFact(chain) = &exist_fact.facts()[0] else {
         return None;
     };
     let chain_facts = chain.facts().ok()?;
@@ -362,7 +363,7 @@ fn integer_interval_exist_fact_endpoints(exist_fact: &ExistFactEnum) -> Option<(
         return None;
     };
 
-    let ExistBodyFact::ChainFact(chain) = &exist_fact.facts()[0] else {
+    let QuantifierFreeFact::ChainFact(chain) = &exist_fact.facts()[0] else {
         return None;
     };
     let chain_facts = chain.facts().ok()?;
@@ -406,7 +407,8 @@ fn nonempty_set_exist_fact_set(exist_fact: &ExistFactEnum) -> Option<Obj> {
         return None;
     };
 
-    let ExistBodyFact::AtomicFact(AtomicFact::InFact(membership)) = &exist_fact.facts()[0] else {
+    let QuantifierFreeFact::AtomicFact(AtomicFact::InFact(membership)) = &exist_fact.facts()[0]
+    else {
         return None;
     };
     let witness_is_member = matches!(
@@ -801,7 +803,7 @@ impl Runtime {
             return Ok(None);
         }
         let witness = obj_for_bound_param_in_scope(&groups[0].params[0], ParamObjType::Exist);
-        let [ExistBodyFact::AtomicFact(AtomicFact::NormalAtomicFact(maximum_prop))] =
+        let [QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(maximum_prop))] =
             body.facts.as_slice()
         else {
             return Ok(None);
@@ -1018,7 +1020,7 @@ impl Runtime {
         // with the same spelling are captured from the surrounding environment and stay rigid.
         let mut dom_facts: Vec<Fact> = Vec::new();
         for inner in exist_fact.facts().iter() {
-            let f_a = self.inst_exist_body_fact(
+            let f_a = self.inst_quantifier_free_fact(
                 inner,
                 &map_a,
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
@@ -1027,7 +1029,7 @@ impl Runtime {
             dom_facts.push(f_a.to_fact());
         }
         for inner in exist_fact.facts().iter() {
-            let f_b = self.inst_exist_body_fact(
+            let f_b = self.inst_quantifier_free_fact(
                 inner,
                 &map_b,
                 ParamObjType::BinderRetag(BinderRetagSource::Exist),
@@ -1092,7 +1094,7 @@ impl Runtime {
         if exist_fact.params_def_with_type().number_of_params() == 0 {
             return Ok(None);
         }
-        let plain = ExistFactEnum::ExistFact(ExistFactBody::new(
+        let plain = ExistFactEnum::ExistFact(ExistentialSpec::new(
             exist_fact.params_def_with_type().clone(),
             exist_fact.facts().clone(),
             exist_fact.line_file(),

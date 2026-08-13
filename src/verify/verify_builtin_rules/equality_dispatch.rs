@@ -2904,7 +2904,7 @@ impl Runtime {
             return Ok(None);
         }
 
-        let ExistBodyFact::AtomicFact(AtomicFact::NormalAtomicFact(choice_fact)) =
+        let QuantifierFreeFact::AtomicFact(AtomicFact::NormalAtomicFact(choice_fact)) =
             &set_builder.facts[0]
         else {
             return Ok(None);
@@ -2972,7 +2972,7 @@ impl Runtime {
             {
                 continue;
             }
-            let ExistBodyFact::ChainFact(chain) = &set_builder.facts[0] else {
+            let QuantifierFreeFact::ChainFact(chain) = &set_builder.facts[0] else {
                 continue;
             };
             let Ok(chain_facts) = chain.facts() else {

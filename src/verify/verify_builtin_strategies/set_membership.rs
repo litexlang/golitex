@@ -203,7 +203,7 @@ impl Runtime {
             fact.element.clone(),
         );
         for defining_fact in &set_builder.facts {
-            let instantiated = self.inst_exist_body_fact(
+            let instantiated = self.inst_quantifier_free_fact(
                 defining_fact,
                 &param_to_arg_map,
                 ParamObjType::SetBuilder,
@@ -211,9 +211,9 @@ impl Runtime {
             )?;
             if !matches!(
                 instantiated,
-                ExistBodyFact::AtomicFact(_)
-                    | ExistBodyFact::AndFact(_)
-                    | ExistBodyFact::ChainFact(_)
+                QuantifierFreeFact::AtomicFact(_)
+                    | QuantifierFreeFact::AndFact(_)
+                    | QuantifierFreeFact::ChainFact(_)
             ) {
                 return Ok(StmtUnknown::new().into());
             }
@@ -224,7 +224,7 @@ impl Runtime {
             let mut result =
                 self.verify_fact_full(&instantiated.clone().to_fact(), &final_state)?;
             if !result.is_true() {
-                if let ExistBodyFact::AtomicFact(atomic_fact) = &instantiated {
+                if let QuantifierFreeFact::AtomicFact(atomic_fact) = &instantiated {
                     if matches!(atomic_fact, AtomicFact::NormalAtomicFact(_)) {
                         if let Some(definition_result) = self
                             .verify_atomic_fact_using_builtin_or_prop_definition(

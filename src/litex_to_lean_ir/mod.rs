@@ -10,7 +10,8 @@ use crate::obj::{Obj, SourceObjectOccurrenceId, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use crate::result::{
     WellDefinedFactId, WellDefinedObjProofId, WellDefinednessCertificateId,
-    WellDefinednessRequirementRole, WellDefinednessTargetRequirementPhase,
+    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
+    WellDefinednessTargetRequirementPhase,
 };
 use crate::symbol::SymbolId;
 use std::fmt;
@@ -23,8 +24,9 @@ mod registered_rule;
 
 pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
-    LitexToLeanBuiltinRuleIr, LitexToLeanDivNotEqualZeroIr,
-    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanDivNotEqualZeroIr, LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+    LitexToLeanNonzeroExpressionOrientationIr,
     LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
     LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
@@ -229,6 +231,7 @@ pub struct LitexToLeanProjectedForallIr {
 #[derive(Clone, Debug, Default)]
 pub struct LitexToLeanWellDefinednessCertificateIr {
     pub root_proof_ids: Vec<WellDefinedObjProofId>,
+    pub root_proof_uses: Vec<WellDefinednessRootObjectProofUse>,
     pub facts: Vec<LitexToLeanWellDefinednessFactIr>,
     pub objects: Vec<LitexToLeanWellDefinednessObjectIr>,
     pub target_requirements: Vec<LitexToLeanWellDefinednessTargetRequirementIr>,
@@ -262,7 +265,15 @@ pub struct LitexToLeanWellDefinednessObjectIr {
     pub intrinsic_result_set: Option<LitexToLeanObjectIr>,
     pub child_proof_ids: Vec<WellDefinedObjProofId>,
     pub well_defined_fact_ids: Vec<WellDefinedFactId>,
+    pub target_requirements: Vec<LitexToLeanWellDefinednessObjectRequirementIr>,
     pub fact_ids: Vec<WellDefinednessCertificateId>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanWellDefinednessObjectRequirementIr {
+    pub role: WellDefinednessRequirementRole,
+    pub well_defined_fact_id: WellDefinedFactId,
+    pub expected_proposition: Fact,
 }
 
 impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
@@ -274,6 +285,7 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
             .field("intrinsic_result_set", &self.intrinsic_result_set)
             .field("child_proof_ids", &self.child_proof_ids)
             .field("well_defined_fact_ids", &self.well_defined_fact_ids)
+            .field("target_requirements", &self.target_requirements)
             .field("fact_ids", &self.fact_ids)
             .finish()
     }
@@ -488,6 +500,8 @@ pub enum LitexToLeanProofRuleIr {
     },
     DefinitionReduction {
         definition: String,
+        expected_parameter_requirements: Vec<Fact>,
+        expected_clauses: Vec<Fact>,
     },
     /// Equality obtained by unfolding one verifier-selected named function
     /// whose defining equality was already stored. The exact source and
@@ -716,7 +730,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .field("expected_source", &expected_source.to_string())
                 .field("expected_target", &expected_target.to_string())
                 .finish(),
-            LitexToLeanProofRuleIr::DefinitionReduction { definition } => f
+            LitexToLeanProofRuleIr::DefinitionReduction { definition, .. } => f
                 .debug_struct("DefinitionReduction")
                 .field("definition", definition)
                 .finish(),

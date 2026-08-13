@@ -514,7 +514,7 @@ fn check_set_builder_has_no_duplicate_free_parameter(
     )?;
 
     for fact in set_builder.facts.iter() {
-        check_exist_body_fact_has_no_duplicate_free_parameter(
+        check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,
@@ -552,7 +552,7 @@ fn check_fn_set_body_has_no_duplicate_free_parameter(
     }
 
     for fact in body.dom_facts.iter() {
-        check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
+        check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,
@@ -591,7 +591,7 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
     }
 
     for fact in anonymous_fn.body.dom_facts.iter() {
-        check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
+        check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,
@@ -614,8 +614,8 @@ fn check_anonymous_fn_has_no_duplicate_free_parameter(
     Ok(())
 }
 
-fn check_or_and_chain_atomic_fact_has_no_duplicate_free_parameter(
-    fact: &OrAndChainAtomicFact,
+fn check_objs_in_quantifier_free_fact_have_no_duplicate_free_parameter(
+    fact: &QuantifierFreeFact,
     free_param_type: ParamObjType,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {

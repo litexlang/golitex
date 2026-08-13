@@ -939,7 +939,7 @@ impl DepCollector {
         self.collect_param_def_with_set_deps(&clause.params_def_with_set);
         self.add_param_def_with_set(&clause.params_def_with_set);
         for fact in clause.dom_facts.iter() {
-            self.collect_or_and_chain_atomic_fact(fact);
+            self.collect_quantifier_free_fact(fact);
         }
         self.collect_obj(&clause.ret_set);
     }
@@ -948,7 +948,7 @@ impl DepCollector {
         self.collect_param_def_with_set_deps(&body.params_def_with_set);
         self.add_param_def_with_set(&body.params_def_with_set);
         for fact in body.dom_facts.iter() {
-            self.collect_or_and_chain_atomic_fact(fact);
+            self.collect_quantifier_free_fact(fact);
         }
         self.collect_obj(&body.ret_set);
     }
@@ -1004,31 +1004,22 @@ impl DepCollector {
     }
 
     pub(crate) fn collect_exist_fact(&mut self, fact: &ExistFactEnum) {
-        let body = fact.body();
+        let body = fact.spec();
         let old = self.local_names.clone();
         self.collect_param_def_with_type_deps(&body.params_def_with_type);
         self.add_param_def_with_type(&body.params_def_with_type);
         for body_fact in body.facts.iter() {
-            self.collect_exist_body_fact(body_fact);
+            self.collect_quantifier_free_fact(body_fact);
         }
         self.local_names = old;
     }
 
-    pub(crate) fn collect_exist_body_fact(&mut self, fact: &ExistBodyFact) {
+    pub(crate) fn collect_quantifier_free_fact(&mut self, fact: &QuantifierFreeFact) {
         match fact {
-            ExistBodyFact::AtomicFact(a) => self.collect_atomic_fact(a),
-            ExistBodyFact::AndFact(a) => self.collect_and_fact(a),
-            ExistBodyFact::ChainFact(c) => self.collect_chain_fact(c),
-            ExistBodyFact::OrFact(o) => self.collect_or_fact(o),
-        }
-    }
-
-    pub(crate) fn collect_or_and_chain_atomic_fact(&mut self, fact: &OrAndChainAtomicFact) {
-        match fact {
-            OrAndChainAtomicFact::AtomicFact(a) => self.collect_atomic_fact(a),
-            OrAndChainAtomicFact::AndFact(a) => self.collect_and_fact(a),
-            OrAndChainAtomicFact::ChainFact(c) => self.collect_chain_fact(c),
-            OrAndChainAtomicFact::OrFact(o) => self.collect_or_fact(o),
+            QuantifierFreeFact::AtomicFact(a) => self.collect_atomic_fact(a),
+            QuantifierFreeFact::AndFact(a) => self.collect_and_fact(a),
+            QuantifierFreeFact::ChainFact(c) => self.collect_chain_fact(c),
+            QuantifierFreeFact::OrFact(o) => self.collect_or_fact(o),
         }
     }
 
@@ -1246,7 +1237,7 @@ impl DepCollector {
                 let old = self.local_names.clone();
                 self.add_local_name(x.param_name());
                 for fact in x.facts.iter() {
-                    self.collect_exist_body_fact(fact);
+                    self.collect_quantifier_free_fact(fact);
                 }
                 self.local_names = old;
             }

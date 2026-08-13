@@ -22,6 +22,8 @@ impl Runtime {
             return self.finish_by_def_stmt(
                 stmt,
                 stmt.fact.key(),
+                false,
+                Vec::new(),
                 vec![checked_definition],
                 vec![result],
             );
@@ -126,6 +128,7 @@ impl Runtime {
         }
 
         let mut instantiated_clauses = Vec::with_capacity(clause_checks.len());
+        let mut instantiated_clause_facts = Vec::with_capacity(clause_checks.len());
         let mut inside_results = Vec::with_capacity(clause_checks.len() + 1);
         inside_results.push(parameter_type_check);
         for (clause_index, (instantiated_clause, clause_result)) in
@@ -145,17 +148,25 @@ impl Runtime {
                 ));
             }
             instantiated_clauses.push(instantiated_clause.to_string());
+            instantiated_clause_facts.push(instantiated_clause);
             inside_results.push(clause_result);
         }
 
-        self.finish_by_def_stmt(stmt, predicate_name, instantiated_clauses, inside_results)
+        self.finish_by_def_stmt(
+            stmt,
+            predicate_name,
+            true,
+            instantiated_clause_facts,
+            instantiated_clauses,
+            inside_results,
+        )
     }
 
     pub(crate) fn exec_by_def_stmt_affect_environment_only(
         &mut self,
         stmt: &ByDefStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        self.finish_by_def_stmt(stmt, stmt.fact.key(), vec![], vec![])
+        self.finish_by_def_stmt(stmt, stmt.fact.key(), false, vec![], vec![], vec![])
     }
 
     fn verify_explicit_builtin_definition(
@@ -212,6 +223,8 @@ impl Runtime {
         &mut self,
         stmt: &ByDefStmt,
         definition_name: String,
+        concrete_user_prop: bool,
+        definition_clause_facts: Vec<Fact>,
         definition_clauses: Vec<String>,
         inside_results: Vec<StmtResult>,
     ) -> Result<StmtResult, RuntimeError> {
@@ -227,6 +240,8 @@ impl Runtime {
             stmt.fact.args().iter().map(|arg| arg.to_string()).collect(),
             definition_clauses,
             target_fact.to_string(),
+            concrete_user_prop,
+            definition_clause_facts,
         );
         Ok(NonFactualStmtSuccess::new_with_by_verification(
             stmt.clone().into(),

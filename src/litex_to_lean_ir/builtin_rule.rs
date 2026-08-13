@@ -71,6 +71,13 @@ pub enum LitexToLeanIntegerMembershipClosureBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr {
+    Add,
+    Sub,
+    Mul,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr {
     Add,
     Sub,
@@ -116,6 +123,7 @@ pub enum LitexToLeanBuiltinRuleIr {
     DivNotEqualZero(LitexToLeanDivNotEqualZeroIr),
     Arithmetic(LitexToLeanArithmeticBuiltinRuleIr),
     IntegerMembershipClosure(LitexToLeanIntegerMembershipClosureBuiltinRuleIr),
+    ComplexArithmeticMembershipClosure(LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr),
     RealArithmeticMembershipClosure(LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr),
     /// Not-equality is symmetric. Example: `a != b` proves `b != a`.
     NotEqualSymmetry,
@@ -245,6 +253,19 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                 })
             }
+            BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule) => {
+                LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(match rule {
+                    ComplexArithmeticMembershipClosureBuiltinRule::Add => {
+                        LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Add
+                    }
+                    ComplexArithmeticMembershipClosureBuiltinRule::Sub => {
+                        LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Sub
+                    }
+                    ComplexArithmeticMembershipClosureBuiltinRule::Mul => {
+                        LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul
+                    }
+                })
+            }
             BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule) => {
                 LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(match rule {
                     RealArithmeticMembershipClosureBuiltinRule::Add => {
@@ -354,6 +375,10 @@ impl fmt::Debug for LitexToLeanBuiltinRuleIr {
             }
             LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule) => f
                 .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
+            LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule) => f
+                .debug_tuple("ComplexArithmeticMembershipClosure")
                 .field(rule)
                 .finish(),
             LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(rule) => f

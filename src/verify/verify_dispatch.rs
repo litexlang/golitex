@@ -148,20 +148,20 @@ impl Runtime {
         }
     }
 
-    pub fn verify_or_and_chain_atomic_fact(
+    pub fn verify_quantifier_free_fact(
         &mut self,
-        or_and_chain_atomic_fact: &OrAndChainAtomicFact,
+        quantifier_free_fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        match or_and_chain_atomic_fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+        match quantifier_free_fact {
+            QuantifierFreeFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact(atomic_fact, verify_state)
             }
-            OrAndChainAtomicFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
-            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+            QuantifierFreeFact::AndFact(and_fact) => self.verify_and_fact(and_fact, verify_state),
+            QuantifierFreeFact::ChainFact(chain_fact) => {
                 self.verify_chain_fact(chain_fact, verify_state)
             }
-            OrAndChainAtomicFact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
+            QuantifierFreeFact::OrFact(or_fact) => self.verify_or_fact(or_fact, verify_state),
         }
     }
 

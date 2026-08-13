@@ -290,8 +290,22 @@ impl Runtime {
             return Ok(None);
         }
 
+        let parameter_checks = args_param_types
+            .into_non_factual_success()
+            .ok_or_else(|| {
+                VerifyRuntimeError(RuntimeErrorStruct::new(
+                    Some(Fact::from(normal_atomic_fact.clone()).into_stmt()),
+                    "concrete prop parameter verification did not retain its checked results"
+                        .to_string(),
+                    normal_atomic_fact.line_file.clone(),
+                    None,
+                    vec![],
+                ))
+            })?
+            .inside_results;
+
         let mut infer_result = InferResult::new();
-        for (_, clause_result) in clause_checks {
+        for (_, clause_result) in clause_checks.iter() {
             if clause_result.is_unknown() {
                 return Ok(None);
             }
@@ -308,9 +322,11 @@ impl Runtime {
             (FactualStmtSuccess::new_with_verified_by_known_fact_and_infer(
                 normal_atomic_fact.clone().into(),
                 infer_result,
-                VerifiedByResult::cited_stmt(
+                VerifiedByResult::cited_definition(
                     normal_atomic_fact.clone().into(),
-                    definition.clone().into(),
+                    definition,
+                    parameter_checks,
+                    clause_checks,
                     Some(verified_by_text),
                 ),
                 Vec::new(),

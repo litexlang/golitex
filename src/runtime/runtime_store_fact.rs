@@ -450,43 +450,43 @@ impl Runtime {
         Ok(infer_result)
     }
 
-    pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+    pub fn store_quantifier_free_fact_without_well_defined_verified_and_infer(
         &mut self,
-        fact: OrAndChainAtomicFact,
+        fact: QuantifierFreeFact,
     ) -> Result<InferResult, RuntimeError> {
-        self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+        self.store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason(
             fact,
             InferReason::StoredFact.store_reason(),
         )
     }
 
-    pub fn store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer_with_reason(
+    pub fn store_quantifier_free_fact_without_well_defined_verified_and_infer_with_reason(
         &mut self,
-        fact: OrAndChainAtomicFact,
+        fact: QuantifierFreeFact,
         reason: impl Into<String>,
     ) -> Result<InferResult, RuntimeError> {
         let reason_text = reason.into();
         let fact_for_infer = fact.clone();
         let chain_atomic_facts = match &fact {
-            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+            QuantifierFreeFact::ChainFact(chain_fact) => {
                 chain_fact.facts_with_order_transitive_closure()?
             }
             _ => Vec::new(),
         };
         let transitive_chain_facts = match &fact {
-            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+            QuantifierFreeFact::ChainFact(chain_fact) => {
                 self.transitive_prop_chain_closure_facts(chain_fact)?
             }
             _ => Vec::new(),
         };
-        self.top_level_env().store_or_and_chain_atomic_fact(fact)?;
+        self.top_level_env().store_quantifier_free_fact(fact)?;
         self.store_chain_atomic_facts_to_cache(chain_atomic_facts)?;
         self.store_transitive_prop_chain_atomic_facts(transitive_chain_facts)?;
 
         let output_fact = fact_for_infer.clone().to_fact();
         self.store_fact_cache_keys_with_nested_obj_binders(&output_fact)?;
         let inferred_facts = self
-            .infer_or_and_chain_atomic_fact(&fact_for_infer)?
+            .infer_quantifier_free_fact(&fact_for_infer)?
             .inferred_facts();
         let mut infer_result = InferResult::new();
         infer_result.add_store_fact_output(&output_fact, reason_text, inferred_facts);

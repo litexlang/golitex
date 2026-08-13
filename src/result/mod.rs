@@ -18,8 +18,9 @@ mod witness_stmt_result;
 
 pub use builtin_rule_evidence::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    ClosedNumericComparisonBuiltinRuleEvidence, DefinitionProjectionBuiltinRuleEvidence,
-    DivNotEqualZeroBuiltinRuleEvidence, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
+    DefinitionProjectionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
+    FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep, NonzeroExpressionOrientation,
     RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
@@ -49,10 +50,10 @@ pub use runtime_success::{
     ByExtensionVerificationResult, ByForVerificationResult, ByInducVerificationResult,
     ByPropRegistrationVerificationResult, ByTheoremVerificationResult, ByVerificationResult,
     CheckedDefinitionReplayEvidence, ClaimFactVerificationResult, ClaimForallVerificationResult,
-    ClaimVerificationResult, EqualityTransportEvidence, EqualityTransportStep,
-    ExistentialEliminationVerificationResult, FactTransformationEvidence, FactTransformationRule,
-    FactTransformationStep, FactualStmtSuccess, ForallProofResult, ForallProvedFactResult,
-    FunctionDefinitionVerificationResult, KnownForallInstantiationItem,
+    ClaimVerificationResult, DefinitionReductionVerificationEvidence, EqualityTransportEvidence,
+    EqualityTransportStep, ExistentialEliminationVerificationResult, FactTransformationEvidence,
+    FactTransformationRule, FactTransformationStep, FactualStmtSuccess, ForallProofResult,
+    ForallProvedFactResult, FunctionDefinitionVerificationResult, KnownForallInstantiationItem,
     KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
     NonFactualStmtSuccess, ObjectChoiceVerificationResult, ObjectIntroductionItem,
     TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
@@ -64,7 +65,8 @@ pub use unsafe_stmt_result::UnsafeStmtResult;
 pub use well_definedness_certificate::{
     WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
     WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
-    WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
+    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
+    WellDefinednessTargetRequirementEvidence,
 };
 pub use well_definedness_proof::{
     CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,

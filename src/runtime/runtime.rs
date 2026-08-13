@@ -55,6 +55,7 @@ impl WellDefinednessObjectCaptureFrame {
 #[derive(Clone)]
 pub(crate) struct WellDefinednessCaptureCheckpoint {
     root_proof_count: usize,
+    root_proof_use_count: usize,
     target_requirement_use_count: usize,
     active_object_child_counts: Vec<usize>,
     active_object_fact_counts: Vec<usize>,
@@ -232,6 +233,7 @@ impl Runtime {
         let certificate = self.well_definedness_capture_stack.last()?;
         Some(WellDefinednessCaptureCheckpoint {
             root_proof_count: certificate.root_proof_ids.len(),
+            root_proof_use_count: certificate.root_proof_uses.len(),
             target_requirement_use_count: certificate.target_requirement_uses.len(),
             active_object_child_counts: self
                 .well_definedness_object_capture_stack
@@ -263,6 +265,9 @@ impl Runtime {
         certificate
             .root_proof_ids
             .truncate(checkpoint.root_proof_count);
+        certificate
+            .root_proof_uses
+            .truncate(checkpoint.root_proof_use_count);
         certificate
             .target_requirement_uses
             .truncate(checkpoint.target_requirement_use_count);
@@ -1334,7 +1339,7 @@ impl Runtime {
             vec![surface_dom_param.to_string()],
             StandardSet::NPos.into(),
         )?];
-        let dom_facts: Vec<OrAndChainAtomicFact> = vec![OrAndChainAtomicFact::AtomicFact(
+        let dom_facts: Vec<QuantifierFreeFact> = vec![QuantifierFreeFact::AtomicFact(
             LessEqualFact::new(
                 obj_for_bound_param_in_scope(&params[0].params[0], ParamObjType::FnSet),
                 (*fs.n).clone(),
@@ -1368,13 +1373,13 @@ impl Runtime {
     pub fn new_fn_set(
         &self,
         params_and_their_sets: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<FnSet, RuntimeError> {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(
+            dom_stored.push(self.inst_quantifier_free_fact(
                 d,
                 &empty,
                 ParamObjType::FnSet,
@@ -1388,14 +1393,14 @@ impl Runtime {
     pub fn new_anonymous_fn(
         &self,
         params_and_their_sets: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
         equal_to: Obj,
     ) -> Result<AnonymousFn, RuntimeError> {
         let empty: HashMap<String, Obj> = HashMap::new();
         let mut dom_stored = Vec::with_capacity(dom_facts.len());
         for d in &dom_facts {
-            dom_stored.push(self.inst_or_and_chain_atomic_fact(
+            dom_stored.push(self.inst_quantifier_free_fact(
                 d,
                 &empty,
                 ParamObjType::FnSet,

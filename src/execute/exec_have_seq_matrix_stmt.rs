@@ -359,10 +359,9 @@ impl Runtime {
                     rt.define_params_with_set(param_def_with_set)?;
                 }
                 for dom_fact in anonymous_fn.body.dom_facts.iter() {
-                    let _ = rt
-                        .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                            dom_fact.clone(),
-                        )?;
+                    let _ = rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
+                        dom_fact.clone(),
+                    )?;
                 }
                 let value_membership: AtomicFact = InFact::new(
                     (*anonymous_fn.equal_to).clone(),

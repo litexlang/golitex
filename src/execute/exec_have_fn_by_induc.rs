@@ -100,7 +100,7 @@ impl Runtime {
         }
 
         for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
-            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                 dom_fact.clone(),
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
@@ -213,7 +213,7 @@ impl Runtime {
                 ParamObjType::AlphaRename,
             )
             .map_err(|e| Self::have_fn_by_induc_err(stmt, e))?;
-        recursive_dom_facts.push(OrAndChainAtomicFact::AtomicFact(
+        recursive_dom_facts.push(QuantifierFreeFact::AtomicFact(
             LessFact::new(
                 generated_measure.clone(),
                 stmt.measure.clone(),
@@ -221,7 +221,7 @@ impl Runtime {
             )
             .into(),
         ));
-        recursive_dom_facts.push(OrAndChainAtomicFact::AtomicFact(
+        recursive_dom_facts.push(QuantifierFreeFact::AtomicFact(
             GreaterEqualFact::new(
                 generated_measure,
                 stmt.lower_bound.clone(),

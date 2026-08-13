@@ -340,7 +340,7 @@ impl Runtime {
         layer_index: usize,
         args: &Vec<Box<Obj>>,
         params_def_with_set: &ParamDefWithSet,
-        dom_facts: &Vec<OrAndChainAtomicFact>,
+        dom_facts: &Vec<QuantifierFreeFact>,
         param_binding: ParamObjType,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
@@ -377,7 +377,7 @@ impl Runtime {
             params_def_with_set.param_defs_and_args_to_param_to_arg_map(&args_as_obj);
         for (domain_index, dom_fact) in dom_facts.iter().enumerate() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(dom_fact, &param_to_arg_map, param_binding, None)
+                .inst_quantifier_free_fact(dom_fact, &param_to_arg_map, param_binding, None)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -387,7 +387,7 @@ impl Runtime {
                     ))
                 })?;
             let verify_result = self
-                .verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)
+                .verify_quantifier_free_fact(&instantiated_dom_fact, verify_state)
                 .map_err(|verify_error| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(

@@ -235,6 +235,8 @@ pub struct ByDefinitionVerificationResult {
     pub arguments: Vec<String>,
     pub definition_clauses: Vec<String>,
     pub stored_fact: String,
+    pub concrete_user_prop: bool,
+    pub definition_clause_facts: Vec<Fact>,
 }
 
 #[derive(Clone, Debug)]
@@ -485,6 +487,18 @@ pub struct VerifiedByFactResult {
     /// named function definition. This is distinct from an ordinary citation:
     /// the goal itself may only exist in a temporary forall scope.
     pub checked_definition_replay: Option<CheckedDefinitionReplayEvidence>,
+    /// Exact parameter and clause checks used when a concrete `prop` was
+    /// folded. Keeping the successful child results here lets compiler
+    /// backends replay the verifier-selected route instead of proving the
+    /// definition body again in the target.
+    pub definition_reduction: Option<Rc<DefinitionReductionVerificationEvidence>>,
+}
+
+#[derive(Debug)]
+pub struct DefinitionReductionVerificationEvidence {
+    pub parameter_checks: Vec<StmtResult>,
+    pub clause_facts: Vec<Fact>,
+    pub clause_checks: Vec<StmtResult>,
 }
 
 #[derive(Clone)]
@@ -589,6 +603,7 @@ pub struct FactVerifiedByFactInVerifiedBys {
     pub source_fact_id: Option<FactId>,
     pub equality_transport: Option<EqualityTransportEvidence>,
     pub fact_transformation: Option<FactTransformationEvidence>,
+    pub definition_reduction: Option<Rc<DefinitionReductionVerificationEvidence>>,
 }
 
 #[derive(Debug)]
@@ -823,6 +838,30 @@ impl VerifiedByResult {
             equality_transport: None,
             fact_transformation: None,
             checked_definition_replay: None,
+            definition_reduction: None,
+        })
+    }
+
+    pub fn cited_definition(
+        _goal: Fact,
+        definition: DefPropStmt,
+        parameter_checks: Vec<StmtResult>,
+        clause_checks: Vec<(Fact, StmtResult)>,
+        detail: Option<String>,
+    ) -> Self {
+        let (clause_facts, clause_checks) = clause_checks.into_iter().unzip();
+        Self::Fact(VerifiedByFactResult {
+            detail,
+            cite_what: Box::new(definition.clone().into()),
+            source_fact_id: None,
+            equality_transport: None,
+            fact_transformation: None,
+            checked_definition_replay: None,
+            definition_reduction: Some(Rc::new(DefinitionReductionVerificationEvidence {
+                parameter_checks,
+                clause_facts,
+                clause_checks,
+            })),
         })
     }
 
@@ -841,6 +880,7 @@ impl VerifiedByResult {
             equality_transport,
             fact_transformation,
             checked_definition_replay: None,
+            definition_reduction: None,
         })
     }
 
@@ -877,6 +917,7 @@ impl VerifiedByResult {
             equality_transport: None,
             fact_transformation: None,
             checked_definition_replay: Some(evidence),
+            definition_reduction: None,
         })
     }
 
@@ -889,6 +930,7 @@ impl VerifiedByResult {
             equality_transport: None,
             fact_transformation: None,
             checked_definition_replay: None,
+            definition_reduction: None,
         })
     }
 
@@ -984,6 +1026,7 @@ impl VerifiedBysEnum {
             source_fact_id: None,
             equality_transport: None,
             fact_transformation: None,
+            definition_reduction: None,
         })
     }
 
@@ -1028,6 +1071,7 @@ impl VerifiedBysEnum {
                     source_fact_id: r.source_fact_id,
                     equality_transport: r.equality_transport,
                     fact_transformation: r.fact_transformation,
+                    definition_reduction: r.definition_reduction,
                 })]
             }
             VerifiedByResult::KnownForallInstantiation(r) => {
@@ -1576,12 +1620,16 @@ impl ByDefinitionVerificationResult {
         arguments: Vec<String>,
         definition_clauses: Vec<String>,
         stored_fact: String,
+        concrete_user_prop: bool,
+        definition_clause_facts: Vec<Fact>,
     ) -> Self {
         ByDefinitionVerificationResult {
             prop,
             arguments,
             definition_clauses,
             stored_fact,
+            concrete_user_prop,
+            definition_clause_facts,
         }
     }
 }

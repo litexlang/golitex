@@ -318,11 +318,11 @@ impl Runtime {
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
-                let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                let cur = this.parse_quantifier_free_fact(tb)?;
                 dom_facts.push(cur);
                 while tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
-                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                    let cur = this.parse_quantifier_free_fact(tb)?;
                     dom_facts.push(cur);
                 }
             }
@@ -397,11 +397,11 @@ impl Runtime {
             let mut dom_facts = vec![];
             if tb.current_token_is_equal_to(COLON) {
                 tb.skip_token(COLON)?;
-                let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                let cur = this.parse_quantifier_free_fact(tb)?;
                 dom_facts.push(cur);
                 while tb.current_token_is_equal_to(COMMA) {
                     tb.skip_token(COMMA)?;
-                    let cur = this.parse_or_and_chain_atomic_fact(tb)?;
+                    let cur = this.parse_quantifier_free_fact(tb)?;
                     dom_facts.push(cur);
                 }
             }
@@ -1923,8 +1923,8 @@ impl Runtime {
 
                     let mut facts_inst = Vec::new();
                     loop {
-                        let f = this.parse_inline_exist_body_fact(tb)?;
-                        facts_inst.push(this.inst_exist_body_fact(
+                        let f = this.parse_inline_quantifier_free_fact(tb)?;
+                        facts_inst.push(this.inst_quantifier_free_fact(
                             &f,
                             &empty,
                             ParamObjType::SetBuilder,

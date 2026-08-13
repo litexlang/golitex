@@ -1,0 +1,26 @@
+# Tracer: proof-carrying complex arithmetic follows the Litex WD DAG.
+#
+# Before (Litex verified, but the Lean ABI admitted unchecked operands):
+# forall a, b, c C:
+#     (a + b) + c = (a + b) + c
+# Former target shape: `Litex.add (Litex.add a b) c` could be constructed
+# without the verifier's `a $in C`, `b $in C`, or inner-sum membership facts.
+#
+# Now (verified and compiled by the focused Rust/Mathlib gates):
+forall a, b, c C:
+    (a + b) + c = (a + b) + c
+
+forall a, b, c C:
+    ((a - b) * c) + a = ((a - b) * c) + a
+# Current target shape: every `Litex.add/sub/mul` consumes the exact
+# `WellDefinedFactId` proofs recorded for its two complex operands. The inner
+# result-membership helper is emitted before the outer object that cites it.
+#
+# Boundary: `/` is not migrated in this slice; its final target constructor
+# must additionally consume the verifier's nonzero-divisor fact.
+# Source gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit
+# Focused compiler gate:
+# cargo test --release proof_carrying_arithmetic_replays_well_defined_fact_ids -- --nocapture
+# Real Lean gate:
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release proof_carrying_arithmetic_compiles_with_mathlib -- --ignored --nocapture

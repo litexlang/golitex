@@ -96,7 +96,7 @@ fn builtin_rules_do_not_add_unreviewed_full_verifier_calls() {
         "verify_atomic_fact(",
         "verify_forall_fact(",
         "verify_exist_or_and_chain_atomic_fact(",
-        "verify_or_and_chain_atomic_fact(",
+        "verify_quantifier_free_fact(",
         "verify_atomic_fact_with_known_forall(",
         "verify_atomic_fact_using_builtin_or_prop_definition(",
         "verify_atomic_fact_with_strategy(",

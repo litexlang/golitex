@@ -74,13 +74,13 @@ impl From<InFact> for ExistOrAndChainAtomicFact {
     }
 }
 
-impl From<OrAndChainAtomicFact> for ExistOrAndChainAtomicFact {
-    fn from(f: OrAndChainAtomicFact) -> Self {
+impl From<QuantifierFreeFact> for ExistOrAndChainAtomicFact {
+    fn from(f: QuantifierFreeFact) -> Self {
         match f {
-            OrAndChainAtomicFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
-            OrAndChainAtomicFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
-            OrAndChainAtomicFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
-            OrAndChainAtomicFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
+            QuantifierFreeFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+            QuantifierFreeFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+            QuantifierFreeFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+            QuantifierFreeFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
 }

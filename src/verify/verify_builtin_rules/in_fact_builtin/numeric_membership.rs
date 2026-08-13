@@ -1251,10 +1251,27 @@ impl Runtime {
         in_fact: &InFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        Ok(number_in_set_verified_by_builtin_rules_result(
-            in_fact,
-            "complex scalar arithmetic is closed in C",
-        ))
+        let rule = match &in_fact.element {
+            Obj::Add(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Add),
+            Obj::Sub(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Sub),
+            Obj::Mul(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Mul),
+            _ => None,
+        };
+        let Some(rule) = rule else {
+            return Ok(number_in_set_verified_by_builtin_rules_result(
+                in_fact,
+                "complex scalar arithmetic is closed in C",
+            ));
+        };
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                in_fact.clone().into(),
+                "complex scalar arithmetic is closed in C".to_string(),
+                BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule),
+                Vec::new(),
+            )
+            .into(),
+        )
     }
 
     // Real closure requires real operands. This deliberately does not infer that every
