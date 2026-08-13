@@ -31,7 +31,7 @@ theorem realAddClosure {a b : Object} (ha : In a R) (hb : In b R) :
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
   refine ⟨a + b, ?_⟩
-  simpa using (add_embedComplex (a : ℂ) (b : ℂ)).symm
+  simp
 
 theorem realSubClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (sub a b) R := by
@@ -39,7 +39,7 @@ theorem realSubClosure {a b : Object} (ha : In a R) (hb : In b R) :
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
   refine ⟨a - b, ?_⟩
-  simpa using (sub_embedComplex (a : ℂ) (b : ℂ)).symm
+  simp
 
 theorem realMulClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (mul a b) R := by
@@ -47,7 +47,7 @@ theorem realMulClosure {a b : Object} (ha : In a R) (hb : In b R) :
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
   refine ⟨a * b, ?_⟩
-  simpa using (mul_embedComplex (a : ℂ) (b : ℂ)).symm
+  simp
 
 theorem realDivClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (div a b) R := by
@@ -55,6 +55,6 @@ theorem realDivClosure {a b : Object} (ha : In a R) (hb : In b R) :
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
   refine ⟨a / b, ?_⟩
-  simpa using (div_embedComplex (a : ℂ) (b : ℂ)).symm
+  simp
 
 end Litex.BuiltinRules

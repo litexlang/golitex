@@ -29,7 +29,8 @@ conservative and source-derived; it does not claim one Rust site equals one
 mathematical theorem schema.
 
 A Lean mapping is recorded only when the universal-`Litex.Object` backend
-currently emits and the Lean kernel checks that theorem call. `partial` means
+calls a theorem from the shared `Litex.BuiltinRules` module and the Lean kernel
+checks that call. Generated files never repeat the theorem body. `partial` means
 the source site recognizes more cases than the current target theorem; `none`
 means no checked mapping exists yet. The deleted native-carrier adapter catalog
 does not count as implementation. This table inventories source sites, not

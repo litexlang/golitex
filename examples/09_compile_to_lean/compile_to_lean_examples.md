@@ -21,8 +21,7 @@ forall a C, f fn(x R) R:
         f(a) = f(a)
 ```
 
-The definitions live in the imported `Litex.Core` module; generated files use
-them without repeating their bodies. Required library and generated shapes:
+Required generated shape:
 
 ```lean
 (a : Litex.Object)
@@ -69,7 +68,8 @@ forall s nonempty_set, t finite_set:
     t = t
 ```
 
-Required generated shape:
+The definitions live in the imported `Litex.Core` module; generated files use
+them without repeating their bodies. Required library and generated shapes:
 
 ```lean
 namespace Litex

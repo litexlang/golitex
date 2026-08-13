@@ -58,6 +58,25 @@ impl SharedLeanTestLibrary {
         assert_lean_success(label, &output, generated);
     }
 
+    pub(crate) fn reject_generated(&mut self, label: &str, generated: &str) {
+        let path = self
+            .output_root
+            .join(format!("{}.lean", safe_path_component(label)));
+        fs::write(&path, generated).expect("write rejected Lean test source");
+        self.generated_files.push(path.clone());
+
+        let output = run_lean(
+            &self.lake,
+            &self.project,
+            Some(&self.output_root),
+            vec![path.as_os_str().to_owned()],
+        );
+        assert!(
+            !output.status.success(),
+            "Lean source {label} unexpectedly compiled\nsource:\n{generated}"
+        );
+    }
+
     fn compile_shared_module(&self, module: &str) {
         let root = Path::new(env!("CARGO_MANIFEST_DIR"));
         let source_root = root.join("lean");
