@@ -1,11 +1,32 @@
-# Tracer: one target `LitexObject` may carry several independent memberships.
+# Tracer: the one target object type lives at `Litex.Object`.
+#
+# Before this namespace migration, each generated Lean file began with:
+#
+#   axiom LitexObject : Type
+#
+#   namespace Litex
+#
+# Now the shared `Litex.Core` module owns:
+#
+#   namespace Litex
+#
+#   axiom Object : Type
+#
+# while every generated target begins with:
+#
+#   import Litex.BuiltinRules
+#
+#   example : Litex.abiVersion = 1 := rfl
+#
+# Source declarations bind `(a : Litex.Object)` supplied by that import. No
+# global `LitexObject` compatibility alias or repeated core is emitted.
 #
 # Before this ABI rewrite, To-Lean bound `a` to the native Lean type `Complex`
 # because the source parameter was `a C`. After the proof derived `a $in R`,
 # the old emitter still rejected `f(a)` as a Complex-to-Real downcast.
 #
 # Current contract: `a`, `f`, every set, and every function-space object have
-# Lean type `LitexObject`. The source binders retain these independent facts:
+# Lean type `Litex.Object`. The source binders retain these independent facts:
 #
 #   Litex.In a Litex.C
 #   Litex.In f (Litex.FnSet ...)
@@ -28,7 +49,9 @@ forall a C, f fn(x R) R:
 #
 # The second program has no proof that `a $in R`. To-Lean must not manufacture
 # an application certificate merely because both objects have target type
-# `LitexObject`.
+# `Litex.Object`.
+# Namespace boundary: this migration does not change Litex source syntax,
+# membership semantics, or the missing-domain rejection above.
 #
 # Source gate:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit

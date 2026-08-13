@@ -4,8 +4,10 @@ The compiler replays verifier-produced proof IR over one universal Lean object
 type. It does not translate Litex set membership into Lean typing.
 
 The consolidated target design and its ten representative examples are in
-[`litex_object_design.md`](litex_object_design.md). The exact prefix emitted by
-the implementation today is checked in as
+[`litex_object_design.md`](litex_object_design.md). The shared ABI is owned by
+[`Litex.Core`](../../lean/Litex/Core.lean), concrete builtin theorems by
+[`Litex.BuiltinRules`](../../lean/Litex/BuiltinRules.lean), and the exact import
+plus ABI check emitted today is checked in as
 [`current_generated_file_header.lean`](current_generated_file_header.lean).
 The design ledger explicitly marks decisions that the current emitter has not
 implemented yet.
@@ -13,25 +15,29 @@ implemented yet.
 ## Target ABI
 
 Every Litex value, set, standard numeric set, function-space object, and
-function value has target type `LitexObject`:
+function value has target type `Litex.Object`:
 
 ```lean
-axiom LitexObject : Type
-axiom Litex.In : LitexObject → LitexObject → Prop
-def Litex.IsSet (_ : LitexObject) : Prop := True
+namespace Litex
 
-def Litex.IsNonemptySet (s : LitexObject) : Prop :=
-  ∃ x : LitexObject, Litex.In x s
+axiom Object : Type
+axiom In : Object → Object → Prop
+def IsSet (_ : Object) : Prop := True
 
-def Litex.IsFiniteSet (s : LitexObject) : Prop :=
-  Set.Finite {x : LitexObject | Litex.In x s}
+def IsNonemptySet (s : Object) : Prop :=
+  ∃ x : Object, In x s
+
+def IsFiniteSet (s : Object) : Prop :=
+  Set.Finite {x : Object | In x s}
+
+end Litex
 ```
 
 For example, source `a C` contributes both an object binder and a membership
 proof:
 
 ```lean
-(a : LitexObject)
+(a : Litex.Object)
 (haC : Litex.In a Litex.C)
 ```
 
@@ -39,13 +45,12 @@ If Litex later proves `a $in R`, the target retains a second proposition
 `Litex.In a Litex.R`. The object is not converted from `ℂ` to `ℝ`; neither of
 those native types is its Lean type.
 
-Every `LitexObject` is a set in the decided target model. `IsNonemptySet` and
+Every `Litex.Object` is a set in the decided target model. `IsNonemptySet` and
 `IsFiniteSet` are not separate axioms; they classify the object's membership
 extension. The `Set.Finite` expression is only a Mathlib view of that
-extension; source sets remain `LitexObject` values. The implementation snapshot
-still emits opaque `IsSet` plus redundant conjuncts; see
-[`current_generated_file_header.lean`](current_generated_file_header.lean) for
-that explicit migration debt.
+extension; source sets remain `Litex.Object` values. The shared `Litex.Core`
+implementation still defines opaque `IsSet` plus redundant conjuncts; see
+[`Litex.Core`](../../lean/Litex/Core.lean) for that explicit migration debt.
 
 The builtin `$is_choice_function_for(I,S,g,f)` is likewise emitted as the
 defined proposition `Litex.IsChoiceFunctionFor I S g f`, quantified over
@@ -59,7 +64,7 @@ They are not a compatibility backend.
 
 ## Function objects
 
-`fn(...) ...` is a `LitexObject` constructed from a restricted `Litex.FnSpec`.
+`fn(...) ...` is a `Litex.Object` constructed from a restricted `Litex.FnSpec`.
 The source application layers are preserved exactly:
 
 ```text
@@ -93,14 +98,15 @@ rendered propositions or rerun proof search.
   store rechecks explicitly; the final target edge uses the proof scope when
   it exists and otherwise the preflight scope. The emitter never selects a
   candidate by whether Lean happens to prove it.
-- A builtin certificate calls a real theorem under `Litex.BuiltinRules`.
-  Concrete builtin rules are not axioms.
+- A builtin certificate calls a real theorem imported from the shared
+  `Litex.BuiltinRules` module. Concrete builtin rules are not axioms.
 - Only explicit source `trust` may emit an axiom for the trusted proposition.
 
-The small semantic core may declare the universal object universe,
+The shared `Litex.Core` module declares the universal object universe,
 membership, numeric embedding/coherence, restricted function application, and
 primitive object constructors. This boundary interprets Litex. Ordinary
-verifier rules are proved once from that core and Mathlib.
+verifier rules are proved once in `Litex.BuiltinRules` from that core and
+Mathlib; generated files import the module and never repeat those proof bodies.
 
 ## Current strict slice
 
@@ -135,6 +141,8 @@ IR and theorem routes before complete choice examples can compile.
 
 The primary acceptance source is
 [`compile_to_lean_litex_object_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit).
+The shared-builtin-library tracer is
+[`compile_to_lean_shared_builtin_rules.lit`](../../examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit).
 The nested-forall/arithmetic/occurrence tracer is
 [`compile_to_lean_arithmetic_forall_wd.lit`](../../examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit).
 The derived-set-predicate tracer is
@@ -145,5 +153,6 @@ The consolidated examples are in
 [`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
 
 Focused Rust tests live beside `universal_pipeline.rs`. Ignored real-kernel
-tests use `LITEX_LEAN_PROJECT` and optional `LITEX_LAKE` to compile the complete
-generated source with Mathlib.
+tests use `LITEX_LEAN_PROJECT` and optional `LITEX_LAKE` to compile
+`Litex.Core`, `Litex.BuiltinRules`, and the complete generated source with
+Mathlib.

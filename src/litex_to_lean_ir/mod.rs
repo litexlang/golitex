@@ -866,7 +866,7 @@ pub struct LitexToLeanKnownForallArgumentIr {
     pub param: String,
     pub argument: Obj,
     /// Records the exact membership or set-property requirement retained from
-    /// Litex. The object argument itself always lowers to `LitexObject`.
+    /// Litex. The object argument itself always lowers to `Litex.Object`.
     pub param_type: LitexToLeanParameterTypeIr,
 }
 

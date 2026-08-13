@@ -5,55 +5,55 @@
 """
 import Mathlib
 
-axiom LitexObject : Type
-
 namespace Litex
+
+axiom Object : Type
 
 noncomputable section
 
-axiom In : LitexObject → LitexObject → Prop
-axiom IsSet : LitexObject → Prop
+axiom In : Object → Object → Prop
+axiom IsSet : Object → Prop
 
-def IsNonemptySet (s : LitexObject) : Prop :=
-  IsSet s ∧ ∃ x : LitexObject, In x s
+def IsNonemptySet (s : Object) : Prop :=
+  IsSet s ∧ ∃ x : Object, In x s
 
-def IsFiniteSet (s : LitexObject) : Prop :=
-  IsSet s ∧ Set.Finite {x : LitexObject | In x s}
+def IsFiniteSet (s : Object) : Prop :=
+  IsSet s ∧ Set.Finite {x : Object | In x s}
 
-axiom embedComplex : ℂ → LitexObject
+axiom embedComplex : ℂ → Object
 axiom embedComplex_injective : Function.Injective embedComplex
 
-axiom N : LitexObject
-axiom Z : LitexObject
-axiom Q : LitexObject
-axiom R : LitexObject
-axiom C : LitexObject
-axiom NPos : LitexObject
-axiom ZNeg : LitexObject
-axiom ZStar : LitexObject
-axiom QPos : LitexObject
-axiom QNeg : LitexObject
-axiom QStar : LitexObject
-axiom RPos : LitexObject
-axiom RNeg : LitexObject
-axiom RStar : LitexObject
-axiom CStar : LitexObject
+axiom N : Object
+axiom Z : Object
+axiom Q : Object
+axiom R : Object
+axiom C : Object
+axiom NPos : Object
+axiom ZNeg : Object
+axiom ZStar : Object
+axiom QPos : Object
+axiom QNeg : Object
+axiom QStar : Object
+axiom RPos : Object
+axiom RNeg : Object
+axiom RStar : Object
+axiom CStar : Object
 
-axiom inN_iff {x : LitexObject} :
+axiom inN_iff {x : Object} :
   In x N ↔ ∃ n : ℕ, embedComplex (n : ℂ) = x
-axiom inZ_iff {x : LitexObject} :
+axiom inZ_iff {x : Object} :
   In x Z ↔ ∃ z : ℤ, embedComplex (z : ℂ) = x
-axiom inQ_iff {x : LitexObject} :
+axiom inQ_iff {x : Object} :
   In x Q ↔ ∃ q : ℚ, embedComplex (q : ℂ) = x
-axiom inR_iff {x : LitexObject} :
+axiom inR_iff {x : Object} :
   In x R ↔ ∃ r : ℝ, embedComplex (r : ℂ) = x
-axiom inC_iff {x : LitexObject} :
+axiom inC_iff {x : Object} :
   In x C ↔ ∃ z : ℂ, embedComplex z = x
 
-axiom add : LitexObject → LitexObject → LitexObject
-axiom sub : LitexObject → LitexObject → LitexObject
-axiom mul : LitexObject → LitexObject → LitexObject
-axiom div : LitexObject → LitexObject → LitexObject
+axiom add : Object → Object → Object
+axiom sub : Object → Object → Object
+axiom mul : Object → Object → Object
+axiom div : Object → Object → Object
 
 @[simp] axiom add_embedComplex (a b : ℂ) :
   add (embedComplex a) (embedComplex b) = embedComplex (a + b)
@@ -64,42 +64,50 @@ axiom div : LitexObject → LitexObject → LitexObject
 @[simp] axiom div_embedComplex (a b : ℂ) :
   div (embedComplex a) (embedComplex b) = embedComplex (a / b)
 
-instance (n : Nat) : OfNat LitexObject n where
+instance (n : Nat) : OfNat Object n where
   ofNat := embedComplex (n : ℂ)
 
-def arg (args : List LitexObject) (index : Nat) : LitexObject :=
+def arg (args : List Object) (index : Nat) : Object :=
   args.getD index 0
 
 structure FnSpec where
   arity : Nat
-  requirements : List LitexObject → Prop
-  range : List LitexObject → LitexObject
+  requirements : List Object → Prop
+  range : List Object → Object
 
-axiom FnSet : FnSpec → LitexObject
-axiom Applicable : LitexObject → List LitexObject → Prop
+axiom FnSet : FnSpec → Object
+axiom Applicable : Object → List Object → Prop
 axiom apply :
-  (f : LitexObject) →
-  (args : List LitexObject) →
+  (f : Object) →
+  (args : List Object) →
   Applicable f args →
-  LitexObject
+  Object
 
-instance : CoeFun LitexObject fun f =>
-    (args : List LitexObject) → Applicable f args → LitexObject where
+def IsChoiceFunctionFor
+    (indexSet _familySet family chooser : Object) : Prop :=
+  ∀ (alpha : Object), In alpha indexSet →
+    ∀ (chooserApplicable : Applicable chooser [alpha])
+      (familyApplicable : Applicable family [alpha]),
+      In (apply chooser [alpha] chooserApplicable)
+        (apply family [alpha] familyApplicable)
+
+instance : CoeFun Object fun f =>
+    (args : List Object) → Applicable f args → Object where
   coe := apply
 
 axiom fnSetApplicable
-    {f : LitexObject}
+    {f : Object}
     {spec : FnSpec}
-    {args : List LitexObject} :
+    {args : List Object} :
     In f (FnSet spec) →
     args.length = spec.arity →
     spec.requirements args →
     Applicable f args
 
 axiom fnSetResult
-    {f : LitexObject}
+    {f : Object}
     {spec : FnSpec}
-    {args : List LitexObject}
+    {args : List Object}
     (hf : In f (FnSet spec))
     (hLength : args.length = spec.arity)
     (hRequirements : spec.requirements args) :
@@ -107,30 +115,30 @@ axiom fnSetResult
 
 namespace BuiltinRules
 
-theorem notEqualSymmetry {a b : LitexObject} (h : a ≠ b) : b ≠ a := by
+theorem notEqualSymmetry {a b : Object} (h : a ≠ b) : b ≠ a := by
   exact Ne.symm h
 
-theorem numeralInN (n : Nat) : In (OfNat.ofNat n : LitexObject) N := by
+theorem numeralInN (n : Nat) : In (OfNat.ofNat n : Object) N := by
   apply inN_iff.mpr
   exact ⟨n, rfl⟩
 
-theorem numeralInZ (n : Nat) : In (OfNat.ofNat n : LitexObject) Z := by
+theorem numeralInZ (n : Nat) : In (OfNat.ofNat n : Object) Z := by
   apply inZ_iff.mpr
   exact ⟨n, rfl⟩
 
-theorem numeralInQ (n : Nat) : In (OfNat.ofNat n : LitexObject) Q := by
+theorem numeralInQ (n : Nat) : In (OfNat.ofNat n : Object) Q := by
   apply inQ_iff.mpr
   exact ⟨n, rfl⟩
 
-theorem numeralInR (n : Nat) : In (OfNat.ofNat n : LitexObject) R := by
+theorem numeralInR (n : Nat) : In (OfNat.ofNat n : Object) R := by
   apply inR_iff.mpr
   exact ⟨n, rfl⟩
 
-theorem numeralInC (n : Nat) : In (OfNat.ofNat n : LitexObject) C := by
+theorem numeralInC (n : Nat) : In (OfNat.ofNat n : Object) C := by
   apply inC_iff.mpr
   exact ⟨n, rfl⟩
 
-theorem realAddClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+theorem realAddClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (add a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
@@ -138,7 +146,7 @@ theorem realAddClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
   refine ⟨a + b, ?_⟩
   simpa using (add_embedComplex (a : ℂ) (b : ℂ)).symm
 
-theorem realSubClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+theorem realSubClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (sub a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
@@ -146,7 +154,7 @@ theorem realSubClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
   refine ⟨a - b, ?_⟩
   simpa using (sub_embedComplex (a : ℂ) (b : ℂ)).symm
 
-theorem realMulClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+theorem realMulClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (mul a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
@@ -154,7 +162,7 @@ theorem realMulClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
   refine ⟨a * b, ?_⟩
   simpa using (mul_embedComplex (a : ℂ) (b : ℂ)).symm
 
-theorem realDivClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+theorem realDivClosure {a b : Object} (ha : In a R) (hb : In b R) :
     In (div a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩

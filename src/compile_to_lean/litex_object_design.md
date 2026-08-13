@@ -1,4 +1,4 @@
-# Universal `LitexObject` design
+# Universal `Litex.Object` design
 
 Last reviewed: 2026-08-13
 
@@ -16,17 +16,23 @@ document:
 - **Open spelling** means the semantic obligation is fixed while the final Lean
   declaration name or packaging has not been frozen.
 
-The exact prefix emitted by the compiler today is checked in as
-[`current_generated_file_header.lean`](current_generated_file_header.lean).
-`universal_prelude.rs` remains the implementation source of truth, and a Rust
-test requires the checked-in header to match it exactly.
+The shared ABI and builtin proofs live in
+[`lean/Litex/Core.lean`](../../lean/Litex/Core.lean) and
+[`lean/Litex/BuiltinRules.lean`](../../lean/Litex/BuiltinRules.lean). The exact
+import plus ABI-version check emitted today is checked in as
+[`current_generated_file_header.lean`](current_generated_file_header.lean), and
+Rust tests require the compiler, shared core, and checked-in header to agree.
 
 ## 1. One universe of objects
 
 Every Litex object lowers to one Lean type:
 
 ```lean
-axiom LitexObject : Type
+namespace Litex
+
+axiom Object : Type
+
+end Litex
 ```
 
 This includes:
@@ -39,24 +45,28 @@ This includes:
 - objects produced by function calls;
 - list sets, replacement sets, and other set constructors.
 
-There is no `LitexObject α`, carrier inference, native binder such as
+There is no `Litex.Object α`, carrier inference, native binder such as
 `x : ℝ`, widening, downcast, or conversion between memberships. Lean equality
-on `LitexObject` is Litex object equality.
+on `Litex.Object` is Litex object equality.
 
 ## 2. Every object is a set; membership is independent
 
 The decided set foundation is:
 
 ```lean
-axiom Litex.In : LitexObject → LitexObject → Prop
+namespace Litex
 
-def Litex.IsSet (_ : LitexObject) : Prop := True
+axiom In : Object → Object → Prop
 
-def Litex.IsNonemptySet (s : LitexObject) : Prop :=
-  ∃ x : LitexObject, Litex.In x s
+def IsSet (_ : Object) : Prop := True
 
-def Litex.IsFiniteSet (s : LitexObject) : Prop :=
-  Set.Finite {x : LitexObject | Litex.In x s}
+def IsNonemptySet (s : Object) : Prop :=
+  ∃ x : Object, In x s
+
+def IsFiniteSet (s : Object) : Prop :=
+  Set.Finite {x : Object | In x s}
+
+end Litex
 ```
 
 `Litex.In x S` is a proposition about two objects. It never changes the Lean
@@ -71,8 +81,8 @@ merely because Lean can prove the proposition with `True.intro`.
 Because every object is a set, equality is extensional in the decided model:
 
 ```lean
-axiom Litex.ext {A B : LitexObject} :
-  (∀ x : LitexObject, Litex.In x A ↔ Litex.In x B) → A = B
+axiom Litex.ext {A B : Litex.Object} :
+  (∀ x : Litex.Object, Litex.In x A ↔ Litex.In x B) → A = B
 ```
 
 This does not license unrestricted comprehension. There must be no constructor
@@ -80,7 +90,7 @@ of the form
 
 ```lean
 -- forbidden
-setOf : (LitexObject → Prop) → LitexObject
+setOf : (Litex.Object → Prop) → Litex.Object
 ```
 
 with an unrestricted membership equivalence. Source set builders must use a
@@ -89,27 +99,31 @@ well-definedness certificate.
 
 ### Current implementation drift
 
-The current generated header still contains:
+The current shared `Litex.Core` module still contains:
 
 ```lean
-axiom Litex.IsSet : LitexObject → Prop
+namespace Litex
+
+axiom IsSet : Object → Prop
+
+end Litex
 ```
 
 and derives nonemptiness and finiteness with an `IsSet` conjunct. Replacing
 that declaration with the always-true definition above is decided but not yet
-implemented. The exact current header is preserved separately so this debt is
-visible instead of silently rewritten in documentation.
+implemented. The exact current core source is preserved separately so this
+debt is visible instead of silently rewritten in documentation.
 
 ## 3. Standard numeric sets and one numeral object
 
-Every standard numeric domain is a `LitexObject`:
+Every standard numeric domain is a `Litex.Object`:
 
 ```lean
-axiom Litex.N : LitexObject
-axiom Litex.Z : LitexObject
-axiom Litex.Q : LitexObject
-axiom Litex.R : LitexObject
-axiom Litex.C : LitexObject
+axiom Litex.N : Litex.Object
+axiom Litex.Z : Litex.Object
+axiom Litex.Q : Litex.Object
+axiom Litex.R : Litex.Object
+axiom Litex.C : Litex.Object
 ```
 
 Refined domains such as `N+`, `Z*`, `R+`, and `R*` are additional set objects,
@@ -120,9 +134,9 @@ An Arabic numeral denotes one object. The current bridge embeds Mathlib
 complex numbers:
 
 ```lean
-axiom Litex.embedComplex : ℂ → LitexObject
+axiom Litex.embedComplex : ℂ → Litex.Object
 
-instance (n : Nat) : OfNat LitexObject n where
+instance (n : Nat) : OfNat Litex.Object n where
   ofNat := Litex.embedComplex (n : ℂ)
 ```
 
@@ -145,10 +159,10 @@ One source function layer is described by a restricted specification:
 ```lean
 structure Litex.FnSpec where
   arity : Nat
-  requirements : List LitexObject → Prop
-  range : List LitexObject → LitexObject
+  requirements : List Litex.Object → Prop
+  range : List Litex.Object → Litex.Object
 
-axiom Litex.FnSet : Litex.FnSpec → LitexObject
+axiom Litex.FnSet : Litex.FnSpec → Litex.Object
 ```
 
 For example, `fn(x R : x > 0) R` is one `FnSet` object whose requirement for
@@ -172,13 +186,13 @@ Application is proof-carrying:
 
 ```lean
 axiom Litex.Applicable :
-  LitexObject → List LitexObject → Prop
+  Litex.Object → List Litex.Object → Prop
 
 axiom Litex.apply :
-  (f : LitexObject) →
-  (args : List LitexObject) →
+  (f : Litex.Object) →
+  (args : List Litex.Object) →
   Litex.Applicable f args →
-  LitexObject
+  Litex.Object
 ```
 
 Generated Lean uses direct list syntax through the current `CoeFun` instance;
@@ -201,16 +215,16 @@ membership:
 
 ```lean
 axiom Litex.fnSetApplicable
-    {f : LitexObject} {spec : Litex.FnSpec}
-    {args : List LitexObject} :
+    {f : Litex.Object} {spec : Litex.FnSpec}
+    {args : List Litex.Object} :
   Litex.In f (Litex.FnSet spec) →
   args.length = spec.arity →
   spec.requirements args →
   Litex.Applicable f args
 
 axiom Litex.fnSetResult
-    {f : LitexObject} {spec : Litex.FnSpec}
-    {args : List LitexObject}
+    {f : Litex.Object} {spec : Litex.FnSpec}
+    {args : List Litex.Object}
     (hf : Litex.In f (Litex.FnSet spec))
     (hLength : args.length = spec.arity)
     (hRequirements : spec.requirements args) :
@@ -241,29 +255,29 @@ The proof is not merely a detached audit comment. Examples include:
 Constructor-specific propositions make the boundary explicit:
 
 ```lean
-def Litex.ListSetWellDefined (xs : List LitexObject) : Prop :=
+def Litex.ListSetWellDefined (xs : List Litex.Object) : Prop :=
   xs.Pairwise (· ≠ ·)
 
 axiom Litex.listSet :
-  (xs : List LitexObject) →
+  (xs : List Litex.Object) →
   Litex.ListSetWellDefined xs →
-  LitexObject
+  Litex.Object
 
 def Litex.ReplacementWellDefined
-    (P : LitexObject → LitexObject → Prop)
-    (A : LitexObject) : Prop :=
+    (P : Litex.Object → Litex.Object → Prop)
+    (A : Litex.Object) : Prop :=
   ∀ x, Litex.In x A →
     ∀ y₁ y₂, P x y₁ → P x y₂ → y₁ = y₂
 
 axiom Litex.replacement :
-  (P : LitexObject → LitexObject → Prop) →
-  (A : LitexObject) →
+  (P : Litex.Object → Litex.Object → Prop) →
+  (A : Litex.Object) →
   Litex.ReplacementWellDefined P A →
-  LitexObject
+  Litex.Object
 ```
 
 These declarations are **decided semantic shapes**, but their exact names are
-not implemented in the current prelude yet.
+not implemented in the current shared core yet.
 
 All certificates inhabit `Prop`. Lean proof irrelevance therefore prevents
 the chosen proof route from becoming mathematical data. For example, two
@@ -287,7 +301,7 @@ equivalent to:
 ```lean
 def Litex.AnonymousFnWellDefined
     (spec : Litex.FnSpec)
-    (body : List LitexObject → LitexObject) : Prop :=
+    (body : List Litex.Object → Litex.Object) : Prop :=
   ∀ args,
     args.length = spec.arity →
     spec.requirements args →
@@ -295,9 +309,9 @@ def Litex.AnonymousFnWellDefined
 
 axiom Litex.anonymousFn :
   (spec : Litex.FnSpec) →
-  (body : List LitexObject → LitexObject) →
+  (body : List Litex.Object → Litex.Object) →
   Litex.AnonymousFnWellDefined spec body →
-  LitexObject
+  Litex.Object
 ```
 
 If constructing `body args` itself needs the requirement proof, the final Lean
@@ -309,23 +323,23 @@ undefined source body merely to fit the simpler sketch above.
 Total primitive set operations may be ordinary object constructors:
 
 ```lean
-axiom Litex.empty : LitexObject
-axiom Litex.union : LitexObject → LitexObject → LitexObject
-axiom Litex.intersect : LitexObject → LitexObject → LitexObject
-axiom Litex.setMinus : LitexObject → LitexObject → LitexObject
-axiom Litex.powerSet : LitexObject → LitexObject
+axiom Litex.empty : Litex.Object
+axiom Litex.union : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.intersect : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.setMinus : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.powerSet : Litex.Object → Litex.Object
 ```
 
 Their membership meanings belong to the small semantic core:
 
 ```lean
-axiom Litex.inEmpty_iff {x : LitexObject} :
+axiom Litex.inEmpty_iff {x : Litex.Object} :
   ¬ Litex.In x Litex.empty
 
-axiom Litex.inUnion_iff {x A B : LitexObject} :
+axiom Litex.inUnion_iff {x A B : Litex.Object} :
   Litex.In x (Litex.union A B) ↔ Litex.In x A ∨ Litex.In x B
 
-axiom Litex.inIntersect_iff {x A B : LitexObject} :
+axiom Litex.inIntersect_iff {x A B : Litex.Object} :
   Litex.In x (Litex.intersect A B) ↔
     Litex.In x A ∧ Litex.In x B
 ```
@@ -340,7 +354,7 @@ proof-carrying object:
 
 ```lean
 axiom Litex.inListSet_iff
-    {x : LitexObject} {xs : List LitexObject}
+    {x : Litex.Object} {xs : List Litex.Object}
     {h : Litex.ListSetWellDefined xs} :
   Litex.In x (Litex.listSet xs h) ↔ x ∈ xs
 ```
@@ -377,9 +391,11 @@ membership, restricted object constructors, numeric embedding, and the exact
 function/application boundary.
 
 Each concrete verifier builtin rule is a real Lean theorem under
-`Litex.BuiltinRules`, proved once from that core and Mathlib. A compiler
-certificate validates the rule shape and calls that theorem. It does not turn
-the successful builtin use into another axiom.
+`Litex.BuiltinRules`, proved once in the shared Lake library from that core and
+Mathlib. A compiler certificate validates the rule ID, target, ordered child
+facts, and substitution shape before calling that theorem. It does not repeat
+the theorem proof at the use site or turn the successful builtin use into
+another axiom.
 
 Only explicit source `trust` may produce a target axiom for the trusted
 proposition. Unsupported statements, missing WD IDs, stale function contracts,
@@ -391,18 +407,19 @@ search, or implicit axioms.
 Every successful generated source currently has this shape:
 
 ```text
-import Mathlib
+import Litex.BuiltinRules
 
-<the exact contents returned by universal_object_prelude()>
+example : Litex.abiVersion = 1 := rfl
 
 <WD helper declarations and translated source declarations>
 ```
 
-The complete checked-in prefix, including all current numeric and function
-declarations and builtin theorems, is
+The checked-in generated header is
 [`current_generated_file_header.lean`](current_generated_file_header.lean).
-It is intentionally an implementation snapshot, so it still shows the
-`IsSet` and constructor-WD implementation debts described above.
+The complete numeric/function declarations and builtin theorem bodies live
+only in the shared library. `lean/Litex/Core.lean` is therefore the snapshot
+that exposes the `IsSet` and constructor-WD implementation debts described
+above.
 
 ## Ten representative examples
 
@@ -412,7 +429,7 @@ selected by the verifier-owned ID.
 
 ### Example 1 — standard set, user set, and set parameter
 
-Status: **Current**, except that `IsSet` is still opaque in the emitted header.
+Status: **Current**, except that `IsSet` is still opaque in the shared core.
 
 ```litex
 forall S set, a R, b S:
@@ -423,11 +440,11 @@ forall S set, a R, b S:
 Required target binder shape:
 
 ```lean
-∀ (S : LitexObject)
+∀ (S : Litex.Object)
   (hS : Litex.IsSet S)
-  (a : LitexObject)
+  (a : Litex.Object)
   (haR : Litex.In a Litex.R)
-  (b : LitexObject)
+  (b : Litex.Object)
   (hbS : Litex.In b S),
   a = a ∧ b = b
 ```
@@ -450,7 +467,7 @@ forall a C, f fn(x R) R:
 Required target facts and call:
 
 ```lean
-(a : LitexObject)
+(a : Litex.Object)
 (haC : Litex.In a Litex.C)
 (haR : Litex.In a Litex.R)
 (hf : Litex.In f (Litex.FnSet spec))
@@ -524,8 +541,8 @@ forall f fn(x R: x > 0) R:
 The applicability proof contains every ordered requirement:
 
 ```lean
-have h2R : Litex.In (2 : LitexObject) Litex.R := ...
-have h2Pos : Litex.gt (2 : LitexObject) 0 := ...
+have h2R : Litex.In (2 : Litex.Object) Litex.R := ...
+have h2Pos : Litex.gt (2 : Litex.Object) 0 := ...
 have happ : Litex.Applicable f [2] :=
   Litex.fnSetApplicable hf rfl ⟨h2R, h2Pos⟩
 
@@ -661,8 +678,8 @@ not introduce new mathematical data.
 
 The design is implemented only when all of the following are true:
 
-1. the generated header defines `IsSet` as always true and updates the derived
-   set predicates consistently;
+1. the shared core defines `IsSet` as always true and updates the derived set
+   predicates consistently;
 2. set extensionality and restricted primitive set constructors have explicit
    semantic laws;
 3. every partial object constructor and application consumes its retained WD
@@ -671,4 +688,5 @@ The design is implemented only when all of the following are true:
 5. all ten examples have executable positive coverage when their source syntax
    is supported, with the nearest invalid domain/application boundary kept as
    a negative regression;
-6. the exact generated header snapshot and real Mathlib gate pass.
+6. the exact generated import header, shared Lake modules, and real Mathlib
+   gate pass.

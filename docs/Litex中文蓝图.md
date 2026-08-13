@@ -286,31 +286,24 @@ forall a, b, c set:
 对于当前 MVP（最小可用原型）已支持的这条等式改写路径，编译器会生成下面的 Lean 代码（具体的 fact ID 由运行时决定）：
 
 ```lean
-import Mathlib
+import Litex.BuiltinRules
 
-namespace tmp
+example : Litex.abiVersion = 1 := rfl
 
-noncomputable section
-
-universe u
-
--- 此处省略共享的 LitexObject 声明。
-
--- Litex fact f19
-theorem fact19 : ∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α), ∀ (c : Set α), a ≠ c → a = b → b ≠ c := by
-  intro _ _ a b c proof_fact_1_1 proof_fact_1_2
-  have proof_fact_1_3 : a ≠ c := proof_fact_1_1
-  have proof_fact_1_4 : a = b := proof_fact_1_2
-  have proof_fact_1_5 : b ≠ c := by
-    simpa only [proof_fact_1_4] using proof_fact_1_3
-  exact proof_fact_1_5
-
-end
-
-end tmp
+theorem fact19 :
+    ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)
+      (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b)
+      (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c)
+      (litex_domain_fact_1 : a ≠ c)
+      (litex_domain_fact_2 : a = b),
+      b ≠ c := by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+    litex_domain_fact_1 litex_domain_fact_2
+  exact by
+    simpa only [litex_domain_fact_2] using litex_domain_fact_1
 ```
 
-这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`fact19` 携带当前运行环境 `env` 中存储的 Litex `FactId`。在 `fact19` 的证明内，`intro` 依次引入隐式 carrier、对象标记、三个 `forall` 参数以及证明空间 1 中的前两个事实；`proof_fact_1_3` 复读待运输的已知事实 `a ≠ c`；`proof_fact_1_4` 复读用于替换的等式 `a = b`；最后，`proof_fact_1_5` 由 `simpa only [proof_fact_1_4] using proof_fact_1_3` 检查，沿该等式把 `a ≠ c` 改写成 `b ≠ c`。如果再进入嵌套证明块，该嵌套块会继承外层可见事实；当该块再引入有名事实时，该块会获得新的空间号，并把自己的局部事实编号重新从 1 开始。相应的 proof IR 记录了 `forall` 参数引入、两个局部事实的编号、一次正向等式改写，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
+这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`fact19` 携带当前运行环境 `env` 中存储的 Litex `FactId`。共享的 `Litex.BuiltinRules` Lake 模块提供唯一的 `Litex.Object` 宇宙，生成文件检查 ABI 版本 1，不再重复 semantic core。每个源参数都是 `Litex.Object` 的值，后面紧跟它精确保留的 `Litex.IsSet` 参数事实。两个 domain 事实按源码顺序引入，最后的 `simpa only` 沿已保留的等式 `a = b` 把 `a ≠ c` 运输成 `b ≠ c`。相应的 proof IR 记录了 `forall` 引入、每个参数与 domain 的 `FactId`、一次正向等式改写，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
 
 使用已知 `forall` 时也会按同样的方式展开。IR 会保留每个绑定参数实际选中的 Litex 对象、该对象的参数类型检查、每个命题形式的前提，以及直接代入后得到的结论。Lean 会把选中的对象具名化为 `proof_arg_2_1` 这样带类型的局部名字，把命题前提复读成 `proof_fact`，再给直接的定理应用取名。如果这个直接实例与目标并非逐字相同、而只是在有理表达式层面上相等，外层的 normalization 节点会再单独命名最终结果并检查这次转换。因此，一次代入不会被压成一行看不出过程的 `factN ...`，匹配器判定的相等也不会被默认成 Lean 里的定义相等（仅靠展开定义和计算即可相同）。
 

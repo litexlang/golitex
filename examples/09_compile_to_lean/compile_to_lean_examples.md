@@ -1,9 +1,10 @@
 # Litex-to-Lean universal-object examples
 
 This is the consolidated executable input ledger for the replacement compiler.
-Each `litex` fence is compiled independently. Generated output must use one
-`LitexObject` ABI and must not contain native numeric binders, `Set ℝ`, carrier
-unification, widening, or downcast logic.
+Each `litex` fence is compiled independently. Generated output imports the
+shared `Litex.BuiltinRules` Lake library, checks ABI version 1, uses one
+`Litex.Object` ABI, and must not contain native numeric binders, `Set ℝ`,
+carrier unification, widening, or downcast logic.
 
 ## membership_wd
 
@@ -20,10 +21,11 @@ forall a C, f fn(x R) R:
         f(a) = f(a)
 ```
 
-Required generated shape:
+The definitions live in the imported `Litex.Core` module; generated files use
+them without repeating their bodies. Required library and generated shapes:
 
 ```lean
-(a : LitexObject)
+(a : Litex.Object)
 (litex_param_fact_1 : Litex.In a Litex.C)
 theorem well_defined_fact_3 ... : Litex.In a Litex.R := ...
 f [a] (Litex.fnSetApplicable ... (well_defined_fact_3 ...))
@@ -35,7 +37,7 @@ must be rejected before Lean emission.
 ## set_parameter
 
 Both a standard-domain parameter and a set parameter are ordinary
-`LitexObject` values. Their declarations contribute different propositions;
+`Litex.Object` values. Their declarations contribute different propositions;
 neither declaration changes the object's Lean type.
 
 ```litex
@@ -47,9 +49,9 @@ forall a R, b set:
 Required generated shape:
 
 ```lean
-(a : LitexObject)
+(a : Litex.Object)
 (litex_param_fact_1 : Litex.In a Litex.R)
-(b : LitexObject)
+(b : Litex.Object)
 (litex_param_fact_2 : Litex.IsSet b)
 ```
 
@@ -72,17 +74,17 @@ Required generated shape:
 ```lean
 namespace Litex
 
-def IsNonemptySet (s : LitexObject) : Prop :=
-  IsSet s ∧ ∃ x : LitexObject, In x s
+def IsNonemptySet (s : Object) : Prop :=
+  IsSet s ∧ ∃ x : Object, In x s
 
-def IsFiniteSet (s : LitexObject) : Prop :=
-  IsSet s ∧ Set.Finite {x : LitexObject | In x s}
+def IsFiniteSet (s : Object) : Prop :=
+  IsSet s ∧ Set.Finite {x : Object | In x s}
 
 end Litex
 
-(s : LitexObject)
+(s : Litex.Object)
 (litex_param_fact_1 : Litex.IsNonemptySet s)
-(t : LitexObject)
+(t : Litex.Object)
 (litex_param_fact_2 : Litex.IsFiniteSet t)
 ```
 
@@ -114,30 +116,42 @@ forall a R:
 Required generated shape:
 
 ```lean
-axiom marked : LitexObject → Prop
-axiom fact... : ∀ (x : LitexObject) (_ : Litex.In x Litex.R) (_ : x = 1), marked x
-theorem fact... : ∀ (a : LitexObject) ... , marked a := by
+axiom marked : Litex.Object → Prop
+axiom fact... : ∀ (x : Litex.Object) (_ : Litex.In x Litex.R) (_ : x = 1), marked x
+theorem fact... : ∀ (a : Litex.Object) ... , marked a := by
   ... exact fact... a litex_param_fact_1 litex_domain_fact_1
 ```
 
 ## builtin_theorem
 
-The verifier's not-equality-symmetry certificate calls a real theorem in the
-builtin library. The concrete rule is not an axiom.
+The verifier's not-equality-symmetry and closed-numeral-membership certificates
+call real theorems in the shared builtin library. Concrete rules are neither
+axioms nor theorem bodies repeated in every generated file.
 
 ```litex
-forall a, b C:
+forall a, b set:
     a != b
     =>:
         b != a
+
+1 $in N
+1 $in C
 ```
 
 Required generated shape:
 
 ```lean
-theorem Litex.BuiltinRules.notEqualSymmetry ... := by ...
+import Litex.BuiltinRules
+
+example : Litex.abiVersion = 1 := rfl
+
 ... exact Litex.BuiltinRules.notEqualSymmetry litex_domain_fact_1
+... exact Litex.BuiltinRules.numeralInN 1
+... exact Litex.BuiltinRules.numeralInC 1
 ```
+
+The bodies of `notEqualSymmetry`, `numeralInN`, and `numeralInC` occur once in
+`lean/Litex/BuiltinRules.lean`, not in this generated source.
 
 ## known_equality_path
 
@@ -195,7 +209,7 @@ declared in the single-layer set `fn(x, y, z R) R`.
 
 ## arithmetic_forall_wd
 
-A nested source `forall` remains a proposition over `LitexObject`. Its body
+A nested source `forall` remains a proposition over `Litex.Object`. Its body
 uses universal-object subtraction, and each application cites the WD fact
 attached to that exact source occurrence. The concluding instance then replays
 the verifier's retained rational-normalization certificate.
@@ -211,7 +225,7 @@ forall f fn(x R) R:
 Required generated shape:
 
 ```lean
-(y : LitexObject)
+(y : Litex.Object)
 (litex_nested_param_fact_... : Litex.In y Litex.R)
 Litex.sub y 1
 Litex.BuiltinRules.realSubClosure ...
@@ -227,6 +241,7 @@ equal application.
 ```text
 cargo test --release universal_examples_ -- --nocapture
 LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release universal_examples_compile_with_mathlib -- --ignored --nocapture
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_known_equality_path.lit

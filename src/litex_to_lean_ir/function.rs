@@ -7,7 +7,7 @@ use super::LitexToLeanObjectIr;
 ///
 /// Litex application layers remain explicit in `LitexToLeanFunctionApplicationIr`;
 /// this type describes exactly one declared source layer. Every value, set,
-/// and function has target type `LitexObject`; parameter sets and domain facts
+/// and function has target type `Litex.Object`; parameter sets and domain facts
 /// remain propositional requirements of that layer.
 #[derive(Clone, Debug)]
 pub struct LitexToLeanFunctionTypeIr {

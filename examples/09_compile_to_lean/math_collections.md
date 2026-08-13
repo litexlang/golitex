@@ -1,7 +1,7 @@
 # Mathematical collections
 
 The compiler ledger exercises one target model: all Litex objects have Lean
-type `LitexObject`, while membership is an independent proposition
+type `Litex.Object`, while membership is an independent proposition
 `Litex.In object set`.
 
 ## Object identity and multiple memberships
@@ -20,11 +20,11 @@ before the compiler runs.
 finiteness are derived:
 
 ```lean
-def Litex.IsNonemptySet (s : LitexObject) : Prop :=
-  Litex.IsSet s ∧ ∃ x : LitexObject, Litex.In x s
+def Litex.IsNonemptySet (s : Litex.Object) : Prop :=
+  Litex.IsSet s ∧ ∃ x : Litex.Object, Litex.In x s
 
-def Litex.IsFiniteSet (s : LitexObject) : Prop :=
-  Litex.IsSet s ∧ Set.Finite {x : LitexObject | Litex.In x s}
+def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
+  Litex.IsSet s ∧ Set.Finite {x : Litex.Object | Litex.In x s}
 ```
 
 The set comprehension here is a Mathlib view of one Litex object's extension,
@@ -34,7 +34,7 @@ extension from being accepted as a finite set. A finite set may still be empty.
 
 ## Function spaces and application layers
 
-A function space is a `LitexObject` built from `Litex.FnSpec`. One source
+A function space is a `Litex.Object` built from `Litex.FnSpec`. One source
 argument group becomes one target list application:
 
 ```text
@@ -55,9 +55,11 @@ the collection.
 
 ## Builtin theorems
 
-The `builtin_theorem` example uses a checked not-equality-symmetry
-certificate. The generated proof calls the real theorem
-`Litex.BuiltinRules.notEqualSymmetry`; the concrete rule is not an axiom.
+The `builtin_theorem` example uses checked not-equality-symmetry and numeral
+membership certificates. The generated proof imports the shared Lake module
+and calls `Litex.BuiltinRules.notEqualSymmetry`, `numeralInN`, and
+`numeralInC`. Concrete rules are neither axioms nor theorem bodies repeated in
+generated files.
 
 ## Well-definedness identities
 
@@ -75,7 +77,7 @@ without structural fallback.
 
 ## Universal arithmetic and nested forall
 
-The `arithmetic_forall_wd` example keeps `y` as `LitexObject`, represents
+The `arithmetic_forall_wd` example keeps `y` as `Litex.Object`, represents
 `y - 1` as `Litex.sub y 1`, and calls the proved
 `Litex.BuiltinRules.realSubClosure` theorem from structured verifier evidence.
 Its nested parameter membership retains the exact temporary `FactId` and is

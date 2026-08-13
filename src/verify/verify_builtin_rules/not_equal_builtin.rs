@@ -1526,11 +1526,9 @@ impl Runtime {
 #[cfg(test)]
 mod tests {
     use crate::compile_to_lean::compile_to_lean_from_source;
+    use crate::compile_to_lean::lean_test_support::SharedLeanTestLibrary;
     use crate::pipeline::{render_run_source_code_output, run_source_code};
     use crate::prelude::*;
-    use std::fs;
-    use std::path::Path;
-    use std::process::Command;
 
     const SYMMETRY_SOURCE: &str = r#"
 forall a set, b set:
@@ -1602,11 +1600,11 @@ y != x
         let output =
             compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-compile-to-lean")
                 .expect("the builtin symmetry proof should lower to Lean");
-        assert!(output.contains("(a : LitexObject)"), "{output}");
-        assert!(output.contains("(b : LitexObject)"), "{output}");
+        assert!(output.contains("(a : Litex.Object)"), "{output}");
+        assert!(output.contains("(b : Litex.Object)"), "{output}");
         assert!(output.contains("Litex.IsSet a"), "{output}");
         assert!(output.contains("Litex.IsSet b"), "{output}");
-        assert!(output.contains("theorem notEqualSymmetry"), "{output}");
+        assert!(!output.contains("theorem notEqualSymmetry"), "{output}");
         assert!(
             output.contains("Litex.BuiltinRules.notEqualSymmetry"),
             "{output}"
@@ -1619,32 +1617,10 @@ y != x
     #[test]
     #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
     fn generated_not_equal_symmetry_compiles_with_lean() {
-        let project = std::env::var("LITEX_LEAN_PROJECT")
-            .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
-        let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
         let generated =
             compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-kernel")
                 .expect("the builtin symmetry proof should lower to Lean");
-        let private_dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("private");
-        fs::create_dir_all(&private_dir).unwrap();
-        let lean_file = private_dir.join(format!(
-            "litex_to_lean_not_equal_symmetry_{}.lean",
-            std::process::id()
-        ));
-        fs::write(&lean_file, &generated).unwrap();
-        let output = Command::new(lake)
-            .args(["env", "lean"])
-            .arg(&lean_file)
-            .current_dir(project)
-            .output();
-        fs::remove_file(&lean_file).expect("remove generated Lean test file");
-        let output = output.unwrap();
-        assert!(
-            output.status.success(),
-            "not-equality symmetry generated Lean failed\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
-            String::from_utf8_lossy(&output.stdout),
-            String::from_utf8_lossy(&output.stderr),
-            generated
-        );
+        let mut library = SharedLeanTestLibrary::new("not-equality-symmetry-kernel");
+        library.compile_generated("not-equality-symmetry-kernel", &generated);
     }
 }

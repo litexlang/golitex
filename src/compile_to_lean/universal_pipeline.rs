@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::verify::rule_schema::{canonical_atomic_facts_equal, MatchLimits};
 use std::collections::{HashMap, HashSet};
 
-use super::universal_prelude::universal_object_prelude;
+use super::shared_lean_library::generated_import_header;
 use super::{
     LitexToLeanCompilationPhase, LitexToLeanCompilationReport, LitexToLeanUnsupportedStatement,
 };
@@ -62,14 +62,14 @@ pub fn emit_lean_from_litex_to_lean_ir_with_report(
             let line_file = default_line_file();
             let diagnostic = LitexToLeanUnsupportedStatement::new(
                 1,
-                "universal LitexObject IR emission".to_string(),
+                "universal-object IR emission".to_string(),
                 &line_file,
                 LitexToLeanCompilationPhase::LeanEmission,
                 error.trace_message(),
             );
             let lean_code = format!(
-                "import Mathlib\n\n{}\n\n-- Litex-to-Lean incomplete: {}\n",
-                universal_object_prelude(),
+                "{}\n\n-- Litex-to-Lean incomplete: {}\n",
+                generated_import_header(),
                 diagnostic.reason.replace('\n', " ")
             );
             LitexToLeanCompilationReport::new(lean_code, vec![diagnostic])
@@ -178,7 +178,7 @@ impl UniversalEmitter {
     }
 
     fn finish(self) -> String {
-        let mut output = format!("import Mathlib\n\n{}", universal_object_prelude());
+        let mut output = generated_import_header().to_string();
         if !self.declarations.is_empty() {
             output.push_str("\n\n");
             output.push_str(&self.declarations.join("\n\n"));
@@ -198,7 +198,7 @@ impl UniversalEmitter {
             other => Err(universal_error(
                 &statement_line_file(other),
                 format!(
-                    "the universal LitexObject MVP does not yet emit statement `{}`",
+                    "the universal-object MVP does not yet emit statement `{}`",
                     statement_label(other)
                 ),
             )),
@@ -210,7 +210,7 @@ impl UniversalEmitter {
         let declaration_type = if ir.params.is_empty() {
             "Prop".to_string()
         } else {
-            let mut parts = vec!["LitexObject"; ir.params.len()];
+            let mut parts = vec!["Litex.Object"; ir.params.len()];
             parts.push("Prop");
             parts.join(" → ")
         };
@@ -260,7 +260,7 @@ impl UniversalEmitter {
                     for binding in group.params.iter() {
                         let name = lean_name(binding.name());
                         context.symbol_names.insert(binding.id(), name.clone());
-                        binders.push(format!("({name} : LitexObject)"));
+                        binders.push(format!("({name} : Litex.Object)"));
                         parameter_index += 1;
                         binders.push(format!(
                             "(litex_param_fact_{} : {})",
@@ -330,7 +330,7 @@ impl UniversalEmitter {
         if !ir.inferred_facts.is_empty() {
             return Err(universal_error(
                 &ir.source.line_file(),
-                "the universal LitexObject MVP does not yet emit projected-forall inferred facts",
+                "the universal-object MVP does not yet emit projected-forall inferred facts",
             ));
         }
         Ok(())
@@ -469,7 +469,7 @@ impl UniversalEmitter {
         if !inferred_premises.is_empty() {
             return Err(universal_error(
                 &forall.line_file,
-                "the universal LitexObject MVP does not yet emit inferred forall premises",
+                "the universal-object MVP does not yet emit inferred forall premises",
             ));
         }
         let parameter_count = forall.params_def_with_type.number_of_params();
@@ -494,7 +494,7 @@ impl UniversalEmitter {
                 let name = lean_name(binding.name());
                 context.symbol_names.insert(binding.id(), name.clone());
                 binder_names.push(name.clone());
-                binder_types.push("LitexObject".to_string());
+                binder_types.push("Litex.Object".to_string());
                 parameter_symbol_ids.push(binding.id());
 
                 let premise = &parameter_premises[parameter_index];
@@ -788,7 +788,7 @@ impl UniversalEmitter {
             _ => Err(universal_error(
                 &fact.line_file(),
                 format!(
-                    "the universal LitexObject MVP does not collect application scopes from fact kind `{}`",
+                    "the universal-object MVP does not collect application scopes from fact kind `{}`",
                     fact.fact_type_string()
                 ),
             )),
@@ -893,7 +893,7 @@ impl UniversalEmitter {
                 let name = lean_name(binding.name());
                 nested.symbol_names.insert(binding.id(), name.clone());
                 names.push(name.clone());
-                types.push("LitexObject".to_string());
+                types.push("Litex.Object".to_string());
 
                 let proof_name = format!("litex_nested_param_fact_{}", binding.id().value());
                 let proof_type =
@@ -1061,9 +1061,7 @@ impl UniversalEmitter {
                 }
                 other => Err(universal_error(
                     &proposition.line_file(),
-                    format!(
-                        "the universal LitexObject MVP does not yet emit proof rule `{other:?}`"
-                    ),
+                    format!("the universal-object MVP does not yet emit proof rule `{other:?}`"),
                 )),
             },
             LitexToLeanFactProofIr::Composite { steps } if steps.len() == 1 => {
@@ -1075,7 +1073,7 @@ impl UniversalEmitter {
             )),
             other => Err(universal_error(
                 &proposition.line_file(),
-                format!("the universal LitexObject MVP does not yet emit proof `{other:?}`"),
+                format!("the universal-object MVP does not yet emit proof `{other:?}`"),
             )),
         }
     }
@@ -1468,7 +1466,7 @@ impl UniversalEmitter {
             _ => Err(universal_error(
                 &fact.line_file(),
                 format!(
-                    "the universal LitexObject MVP does not yet render fact kind `{}`",
+                    "the universal-object MVP does not yet render fact kind `{}`",
                     fact.fact_type_string()
                 ),
             )),
@@ -1552,7 +1550,7 @@ impl UniversalEmitter {
             }
             other => Err(universal_error(
                 &other.line_file(),
-                format!("the universal LitexObject MVP does not yet render atomic fact `{other}`"),
+                format!("the universal-object MVP does not yet render atomic fact `{other}`"),
             )),
         }
     }
@@ -1585,7 +1583,7 @@ impl UniversalEmitter {
             LitexToLeanObjectIr::Number { normalized_value } => Err(universal_error(
                 &default_line_file(),
                 format!(
-                    "the universal LitexObject MVP currently supports natural numerals, not `{normalized_value}`"
+                    "the universal-object MVP currently supports natural numerals, not `{normalized_value}`"
                 ),
             )),
             LitexToLeanObjectIr::StandardSet(set) => Ok(standard_set_name(*set).to_string()),
@@ -1601,7 +1599,7 @@ impl UniversalEmitter {
             } => self.render_builtin_application(*operator, arguments, context),
             other => Err(universal_error(
                 &default_line_file(),
-                format!("the universal LitexObject MVP does not yet render object `{other:?}`"),
+                format!("the universal-object MVP does not yet render object `{other:?}`"),
             )),
         }
     }
@@ -1621,7 +1619,7 @@ impl UniversalEmitter {
                 return Err(universal_error(
                     &default_line_file(),
                     format!(
-                        "the universal LitexObject arithmetic slice does not yet render operator `{operator:?}`"
+                        "the universal-object arithmetic slice does not yet render operator `{operator:?}`"
                     ),
                 ))
             }
@@ -2120,7 +2118,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn named_choice_predicate_uses_the_semantic_prelude_definition() {
+    fn named_choice_predicate_uses_the_shared_core_definition() {
         let name = AtomicName::WithoutMod(IS_CHOICE_FUNCTION_FOR.to_string());
         assert_eq!(
             render_normal_predicate_name(&name),
@@ -2144,9 +2142,17 @@ mod tests {
 "#;
             let output = compile_to_lean_from_source(source, "universal-object-tracer.lit")
                 .expect("the universal-object tracer should compile");
-            assert!(output.contains("axiom LitexObject : Type"), "{output}");
             assert!(
-                output.contains("(a : LitexObject)")
+                output.starts_with(
+                    "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n"
+                ),
+                "{output}"
+            );
+            assert!(!output.contains("import Mathlib"), "{output}");
+            assert!(!output.contains("axiom Object : Type"), "{output}");
+            assert!(!output.contains("LitexObject"), "{output}");
+            assert!(
+                output.contains("(a : Litex.Object)")
                     && output.contains("Litex.In a Litex.C")
                     && output.contains("Litex.In a Litex.R"),
                 "{output}"
@@ -2159,11 +2165,7 @@ mod tests {
                 "{output}"
             );
             assert!(!output.contains("Set ℝ"), "{output}");
-            let source_declarations = output
-                .rsplit_once("end Litex\n")
-                .expect("generated prelude should close the Litex namespace")
-                .1;
-            assert!(!source_declarations.contains("(a : ℂ)"), "{output}");
+            assert!(!output.contains("(a : ℂ)"), "{output}");
             assert!(!output.contains("downcast"), "{output}");
         });
     }
@@ -2195,21 +2197,11 @@ mod tests {
 "#;
             let output = compile_to_lean_from_source(source, "derived-set-predicates.lit")
                 .expect("nonempty-set and finite-set parameters should compile");
-            assert!(
-                output.contains("def IsNonemptySet (s : LitexObject) : Prop :=")
-                    && output.contains("IsSet s ∧ ∃ x : LitexObject, In x s"),
-                "{output}"
-            );
-            assert!(
-                output.contains("def IsFiniteSet (s : LitexObject) : Prop :=")
-                    && output.contains("IsSet s ∧ Set.Finite {x : LitexObject | In x s}"),
-                "{output}"
-            );
-            assert!(!output.contains("axiom IsNonemptySet"), "{output}");
-            assert!(!output.contains("axiom IsFiniteSet"), "{output}");
-            assert!(output.contains("(s : LitexObject)"), "{output}");
+            assert!(!output.contains("def IsNonemptySet"), "{output}");
+            assert!(!output.contains("def IsFiniteSet"), "{output}");
+            assert!(output.contains("(s : Litex.Object)"), "{output}");
             assert!(output.contains("Litex.IsNonemptySet s"), "{output}");
-            assert!(output.contains("(t : LitexObject)"), "{output}");
+            assert!(output.contains("(t : Litex.Object)"), "{output}");
             assert!(output.contains("Litex.IsFiniteSet t"), "{output}");
         });
     }
@@ -2233,7 +2225,7 @@ forall a R:
             let output = compile_to_lean_from_source(source, "known-forall-universal-object.lit")
                 .expect("known forall should replay through its retained FactId");
             assert!(
-                output.contains("axiom marked : LitexObject → Prop"),
+                output.contains("axiom marked : Litex.Object → Prop"),
                 "{output}"
             );
             assert!(output.contains("axiom fact"), "{output}");
@@ -2254,10 +2246,10 @@ forall a R:
             let output = compile_to_lean_from_source(source, "builtin-not-equal-symmetry.lit")
                 .expect("the checked builtin certificate should compile");
             assert!(
-                output.contains("theorem notEqualSymmetry")
-                    && output.contains("Litex.BuiltinRules.notEqualSymmetry"),
+                output.contains("Litex.BuiltinRules.notEqualSymmetry"),
                 "{output}"
             );
+            assert!(!output.contains("theorem notEqualSymmetry"), "{output}");
             assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
         });
     }
@@ -2574,39 +2566,12 @@ forall a, b, c set:
     }
 
     fn assert_source_compiles_with_mathlib(source: &str, label: &str) {
+        use crate::compile_to_lean::lean_test_support::SharedLeanTestLibrary;
+
         let generated = compile_to_lean_from_source(source, &format!("{label}.lit"))
             .expect("the universal-object source should compile");
-        let project = std::env::var("LITEX_LEAN_PROJECT")
-            .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
-        let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
-        let nonce = std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock should be after the Unix epoch")
-            .as_nanos();
-        let lean_file = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("private")
-            .join(format!("litex-{label}-{}-{nonce}.lean", std::process::id()));
-        std::fs::create_dir_all(
-            lean_file
-                .parent()
-                .expect("generated Lean file should have a parent"),
-        )
-        .expect("create workspace-local private directory");
-        std::fs::write(&lean_file, &generated).expect("write generated Lean source");
-        let result = std::process::Command::new(&lake)
-            .args(["env", "lean"])
-            .arg(&lean_file)
-            .current_dir(&project)
-            .output()
-            .expect("run Lean through the configured Lake project");
-        let _ = std::fs::remove_file(&lean_file);
-        assert!(
-            result.status.success(),
-            "generated universal-object Lean did not compile\nstdout:\n{}\nstderr:\n{}\nsource:\n{}",
-            String::from_utf8_lossy(&result.stdout),
-            String::from_utf8_lossy(&result.stderr),
-            generated
-        );
+        let mut library = SharedLeanTestLibrary::new(label);
+        library.compile_generated(label, &generated);
     }
 
     fn run_with_large_stack(action: impl FnOnce() + Send + 'static) {
