@@ -862,7 +862,7 @@ impl Runtime {
             witnesses.push(LitexToLeanExistentialWitnessIr {
                 symbol_id: binding.id(),
                 name: binding.name().to_string(),
-                param_type: build_litex_to_lean_ir_parameter_type(param_type, binding.id())?,
+                param_type: build_litex_to_lean_ir_parameter_type(param_type)?,
             });
             projections.push(LitexToLeanFactIr {
                 fact_id: Some(fact_id),
@@ -1154,7 +1154,7 @@ impl Runtime {
             definitions.push(LitexToLeanObjectDefinitionIr {
                 symbol_id: binding.id(),
                 name: definition_name.clone(),
-                param_type: build_litex_to_lean_ir_parameter_type(param_type, binding.id())?,
+                param_type: build_litex_to_lean_ir_parameter_type(param_type)?,
                 value: value_ir.clone(),
             });
             facts.push(LitexToLeanFactIr {
@@ -1883,32 +1883,30 @@ impl Runtime {
             {
                 return Err(litex_to_lean_ir_error(
                     &default_line_file(),
-                    "well-definedness object occurrence references a missing fact certificate",
+                    "well-definedness object proof references a missing fact certificate",
                 ));
             }
             if objects_by_id
-                .insert(evidence.occurrence_id, evidence.object.clone())
+                .insert(evidence.well_defined_obj_proof_id, evidence.object.clone())
                 .is_some()
             {
                 return Err(litex_to_lean_ir_error(
                     &default_line_file(),
-                    "well-definedness object occurrence ID is duplicated",
+                    "well-definedness object proof ID is duplicated",
                 ));
             }
-            let intrinsic_result_carrier = evidence
+            let intrinsic_result_set = evidence
                 .intrinsic_result_set
                 .as_ref()
                 .map(|set| {
                     LitexToLeanObjectIr::lower(set)
-                        .map(|set| LitexToLeanCarrierIr::for_membership_set(&set))
                         .map_err(|message| litex_to_lean_ir_error(&default_line_file(), message))
                 })
                 .transpose()?;
             objects.push(LitexToLeanWellDefinednessObjectIr {
-                occurrence_id: evidence.occurrence_id,
                 well_defined_obj_proof_id: evidence.well_defined_obj_proof_id,
                 source_object: evidence.object.clone(),
-                intrinsic_result_carrier,
+                intrinsic_result_set,
                 child_proof_ids: evidence.child_proof_ids.clone(),
                 well_defined_fact_ids: evidence.well_defined_fact_ids.clone(),
                 fact_ids: evidence.fact_ids.clone(),
@@ -1934,22 +1932,23 @@ impl Runtime {
                     "target well-definedness requirement changed its verifier proposition",
                 ));
             }
-            let Some(source_object) = objects_by_id.get(&requirement.object_occurrence_id) else {
+            let Some(source_object) = objects_by_id.get(&requirement.well_defined_obj_proof_id)
+            else {
                 return Err(litex_to_lean_ir_error(
                     &requirement.expected_proposition.line_file(),
-                    "target well-definedness requirement references a missing object occurrence",
+                    "target well-definedness requirement references a missing object proof",
                 ));
             };
-            if obj_equality_key(source_object) != obj_equality_key(&requirement.source_object) {
+            let Obj::FnObj(_) = source_object else {
                 return Err(litex_to_lean_ir_error(
                     &requirement.expected_proposition.line_file(),
-                    "target well-definedness requirement changed its source object occurrence",
+                    "target well-definedness requirement is not owned by a function application",
                 ));
-            }
+            };
             target_requirements.push(LitexToLeanWellDefinednessTargetRequirementIr {
-                object_occurrence_id: requirement.object_occurrence_id,
+                source_occurrence_id: requirement.source_occurrence_id,
                 well_defined_obj_proof_id: requirement.well_defined_obj_proof_id,
-                source_object: requirement.source_object.clone(),
+                phase: requirement.phase,
                 role: requirement.role,
                 certificate_id: requirement.certificate_id,
                 well_defined_fact_id: requirement.well_defined_fact_id,
@@ -1961,6 +1960,15 @@ impl Runtime {
             facts,
             objects,
             target_requirements,
+            parameter_facts: certificate
+                .parameter_facts
+                .iter()
+                .map(|evidence| LitexToLeanWellDefinednessParameterFactIr {
+                    symbol_id: evidence.symbol_id,
+                    fact_id: evidence.fact_id,
+                    proposition: evidence.proposition.clone(),
+                })
+                .collect(),
         })
     }
 
@@ -2274,17 +2282,15 @@ impl Runtime {
         // more precise than replaying an incidental citation route.
         if source_fact.to_string() != goal.to_string()
             && (crate::litex_to_lean_ir::is_closed_real_membership(goal)
-                || crate::litex_to_lean_ir::closed_compact_numeric_set_fact_carrier(goal).is_some())
+                || crate::litex_to_lean_ir::closed_compact_numeric_set_fact(goal).is_some())
         {
             return Ok(LitexToLeanFactProofIr::RuleApplication {
                 rule: if crate::litex_to_lean_ir::is_closed_real_membership(goal) {
                     LitexToLeanProofRuleIr::ClosedRealMembership
                 } else {
                     LitexToLeanProofRuleIr::ClosedNumericReflection {
-                        carrier: crate::litex_to_lean_ir::closed_compact_numeric_set_fact_carrier(
-                            goal,
-                        )
-                        .unwrap(),
+                        target_set: crate::litex_to_lean_ir::closed_compact_numeric_set_fact(goal)
+                            .unwrap(),
                     }
                 },
                 parameter_requirements: Vec::new(),
@@ -2562,12 +2568,12 @@ impl Runtime {
 
         let mut param_types = Vec::new();
         for group in source_forall.params_def_with_type.groups.iter() {
-            let Some(anchor) = group.params.first().map(|binding| binding.id()) else {
+            if group.params.is_empty() {
                 return Ok(LitexToLeanFactProofIr::Unsupported {
                     reason: "known forall contains an empty parameter group".to_string(),
                 });
-            };
-            let param_type = build_litex_to_lean_ir_parameter_type(&group.param_type, anchor)?;
+            }
+            let param_type = build_litex_to_lean_ir_parameter_type(&group.param_type)?;
             for _ in group.params.iter() {
                 param_types.push(param_type.clone());
             }
@@ -3159,20 +3165,9 @@ impl Runtime {
                 &param_to_arg_map,
                 ParamObjType::Forall,
             )?;
-            // This is an occurrence-local carrier view, not a typed Fact IR.
-            // A generic set parameter must use the target binding's SymbolId,
-            // while a dependent parameter such as `x A` must mention the
-            // instantiated target `A`, never the catalog template's symbol.
-            let generic_anchor = match &object {
-                LitexToLeanObjectIr::Symbol { symbol_id, .. } => *symbol_id,
-                _ => variable.binding.id(),
-            };
             bindings.push(LitexToLeanTypedBoundObjectIr {
                 object,
-                param_type: build_litex_to_lean_ir_parameter_type(
-                    &instantiated_param_type,
-                    generic_anchor,
-                )?,
+                param_type: build_litex_to_lean_ir_parameter_type(&instantiated_param_type)?,
             });
         }
         let premises = children.split_at(evidence.parameter_requirement_count);
@@ -3307,11 +3302,11 @@ impl Runtime {
             let source_id = output.fact_id.or(self.known_fact_id_for_fact(source_fact)?);
             let source_key = source_fact.to_string();
             if seen.insert(source_key) {
-                let proof = if let Some(carrier) =
-                    crate::litex_to_lean_ir::closed_compact_numeric_set_fact_carrier(source_fact)
+                let proof = if let Some(target_set) =
+                    crate::litex_to_lean_ir::closed_compact_numeric_set_fact(source_fact)
                 {
                     LitexToLeanFactProofIr::RuleApplication {
-                        rule: LitexToLeanProofRuleIr::ClosedNumericReflection { carrier },
+                        rule: LitexToLeanProofRuleIr::ClosedNumericReflection { target_set },
                         parameter_requirements: Vec::new(),
                         premises: Vec::new(),
                     }
@@ -3438,11 +3433,11 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
         }
     }
     if crate::litex_to_lean_ir::is_closed_numeric_relation(inferred_fact) {
-        if let Some(carrier) =
-            crate::litex_to_lean_ir::closed_compact_numeric_set_fact_carrier(source_fact)
+        if let Some(target_set) =
+            crate::litex_to_lean_ir::closed_compact_numeric_set_fact(source_fact)
         {
             return LitexToLeanFactProofIr::RuleApplication {
-                rule: LitexToLeanProofRuleIr::ClosedNumericReflection { carrier },
+                rule: LitexToLeanProofRuleIr::ClosedNumericReflection { target_set },
                 parameter_requirements: Vec::new(),
                 premises: Vec::new(),
             };
@@ -3587,7 +3582,7 @@ fn build_litex_to_lean_ir_contradiction_results(
 fn build_litex_to_lean_ir_parameter_group(
     group: &ParamGroupWithParamType,
 ) -> Result<LitexToLeanParameterGroupIr, RuntimeError> {
-    let Some(anchor) = group.params.first().map(|binding| binding.id()) else {
+    let Some(_) = group.params.first() else {
         return Err(litex_to_lean_ir_error(
             &default_line_file(),
             "Litex-to-Lean cannot lower an empty parameter group",
@@ -3600,35 +3595,21 @@ fn build_litex_to_lean_ir_parameter_group(
             .iter()
             .map(|binding| binding.name().to_string())
             .collect(),
-        param_type: build_litex_to_lean_ir_parameter_type(&group.param_type, anchor)?,
+        param_type: build_litex_to_lean_ir_parameter_type(&group.param_type)?,
     })
 }
 
 fn build_litex_to_lean_ir_parameter_type(
     param_type: &ParamType,
-    generic_anchor: SymbolId,
 ) -> Result<LitexToLeanParameterTypeIr, RuntimeError> {
-    let generic_element_carrier = || LitexToLeanCarrierIr::Generic {
-        anchor: generic_anchor,
-    };
     match param_type {
-        ParamType::Set(_) => Ok(LitexToLeanParameterTypeIr::Set {
-            element_carrier: generic_element_carrier(),
-        }),
-        ParamType::NonemptySet(_) => Ok(LitexToLeanParameterTypeIr::NonemptySet {
-            element_carrier: generic_element_carrier(),
-        }),
-        ParamType::FiniteSet(_) => Ok(LitexToLeanParameterTypeIr::FiniteSet {
-            element_carrier: generic_element_carrier(),
-        }),
+        ParamType::Set(_) => Ok(LitexToLeanParameterTypeIr::Set),
+        ParamType::NonemptySet(_) => Ok(LitexToLeanParameterTypeIr::NonemptySet),
+        ParamType::FiniteSet(_) => Ok(LitexToLeanParameterTypeIr::FiniteSet),
         ParamType::Obj(obj) => {
             let set = LitexToLeanObjectIr::lower(obj)
                 .map_err(|message| litex_to_lean_ir_error(&default_line_file(), message))?;
-            let element_carrier = LitexToLeanCarrierIr::for_membership_set(&set);
-            Ok(LitexToLeanParameterTypeIr::MemberOf {
-                set,
-                element_carrier,
-            })
+            Ok(LitexToLeanParameterTypeIr::MemberOf { set })
         }
     }
 }

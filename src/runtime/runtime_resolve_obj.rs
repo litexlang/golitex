@@ -362,7 +362,12 @@ impl Runtime {
                                 .collect()
                         })
                         .collect();
-                    FnObj::new(*fn_obj.head.clone(), resolved_body).into()
+                    FnObj::new_with_source_occurrence_id(
+                        *fn_obj.head.clone(),
+                        resolved_body,
+                        fn_obj.source_occurrence_id,
+                    )
+                    .into()
                 }
             }
             Obj::Atom(AtomObj::Identifier(_))

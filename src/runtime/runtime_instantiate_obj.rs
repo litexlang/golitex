@@ -473,7 +473,12 @@ impl Runtime {
             }
         }
 
-        Ok(FnObj::new(final_head, merged_body).into())
+        Ok(FnObj::new_with_source_occurrence_id(
+            final_head,
+            merged_body,
+            fn_obj.source_occurrence_id,
+        )
+        .into())
     }
 
     pub fn inst_number(

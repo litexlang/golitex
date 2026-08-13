@@ -315,17 +315,14 @@ impl Runtime {
         infer_result.new_fact(&fn_set_fact);
         self.store_with_well_defined_verification_and_infer_with_default_verify_state(fn_set_fact)?;
 
-        if let Some(pointwise_fact) = general_cart_member_pointwise_fact(
-            self,
+        let choice_fact: Fact = crate::verify::general_cart_member_choice_fact(
             general_cart,
-            &in_fact.element,
-            &in_fact.line_file,
-        )? {
-            infer_result.new_fact(&pointwise_fact);
-            self.store_with_well_defined_verification_and_infer_with_default_verify_state(
-                pointwise_fact,
-            )?;
-        }
+            in_fact.element.clone(),
+            in_fact.line_file.clone(),
+        )
+        .into();
+        infer_result.new_fact(&choice_fact);
+        self.store_with_well_defined_verification_and_infer_with_default_verify_state(choice_fact)?;
 
         Ok(infer_result)
     }

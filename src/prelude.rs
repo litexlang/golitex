@@ -110,9 +110,9 @@ pub use crate::infer::{InferReason, InferResult, StoreFactOutput};
 pub use crate::litex_to_lean_ir::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAbstractPropIr,
     LitexToLeanAnonymousFunctionIr, LitexToLeanArithmeticBuiltinRuleIr,
-    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanCarrierIr,
-    LitexToLeanCaseBranchExitIr, LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr,
-    LitexToLeanConstantObjectIr, LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
+    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanCaseBranchExitIr,
+    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
+    LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
     LitexToLeanEqualityRewriteDirectionIr, LitexToLeanEqualityRewriteIr,
     LitexToLeanEqualityRewriteStepIr, LitexToLeanExistentialProjectionRoleIr,
     LitexToLeanExistentialWitnessIr, LitexToLeanFactIr, LitexToLeanFactProofIr,
@@ -125,10 +125,11 @@ pub use crate::litex_to_lean_ir::{
     LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
     LitexToLeanParameterGroupIr, LitexToLeanParameterTypeIr, LitexToLeanProjectedForallIr,
     LitexToLeanProofRuleIr, LitexToLeanProofStatementIr, LitexToLeanPropIr,
-    LitexToLeanSetBuilderIr, LitexToLeanSetBuiltinRuleIr,
-    LitexToLeanSetRelationDualityBuiltinRuleIr, LitexToLeanStandardSetIr, LitexToLeanStatementIr,
-    LitexToLeanStoredFunctionFactIr, LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr,
-    LitexToLeanWellDefinednessFactIr, LitexToLeanWellDefinednessObjectIr,
+    LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuilderIr,
+    LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
+    LitexToLeanStandardSetIr, LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr,
+    LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
+    LitexToLeanWellDefinednessObjectIr, LitexToLeanWellDefinednessParameterFactIr,
     LitexToLeanWellDefinednessTargetRequirementIr,
 };
 pub use crate::module_manager::{
@@ -233,6 +234,7 @@ pub use crate::obj::SetBuilderFreeParamObj;
 pub use crate::obj::SetMinus;
 pub use crate::obj::Sign;
 pub use crate::obj::Sin;
+pub use crate::obj::SourceObjectOccurrenceId;
 pub use crate::obj::Sqrt;
 pub use crate::obj::StandardSet;
 pub use crate::obj::StructObj;
@@ -354,16 +356,18 @@ pub use crate::result::{
     ClosedNumericComparisonBuiltinRuleEvidence,
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
-    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
-    WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
-    WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
-    WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
+    RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
+    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
+    SetRelationDualityBuiltinRule, WellDefinednessCertificate, WellDefinednessCertificateId,
+    WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
+    WellDefinednessParameterFactEvidence, WellDefinednessRequirementRole,
+    WellDefinednessTargetRequirementEvidence,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,
     WellDefinedFunctionContract, WellDefinedObjProof, WellDefinedObjProofId,
-    WellDefinedTargetRequirementProof,
+    WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
+    WellDefinednessTargetRequirementPhase,
 };
 pub use crate::result::{KnownForallInstantiationItem, KnownForallRequirementKind};
 pub use crate::runner::{
@@ -475,7 +479,6 @@ pub use crate::symbol::{
     SymbolId, SymbolIdAllocator, SymbolRef, SymbolRole, SymbolTable,
 };
 pub(crate) use crate::verify::general_cart_member_fn_set;
-pub(crate) use crate::verify::general_cart_member_pointwise_fact;
 pub(crate) use crate::verify::nested_obj_binder_normalized_fact_key;
 pub use crate::verify::{UseBuiltinRuleVerifyState, UseContextVerifyState};
 

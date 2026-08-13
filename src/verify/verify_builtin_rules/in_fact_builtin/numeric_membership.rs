@@ -1267,26 +1267,39 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let real: Obj = StandardSet::R.into();
         let lf = in_fact.line_file.clone();
-        let required = match &in_fact.element {
-            Obj::Add(add) => vec![
-                InFact::new(add.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(add.right.as_ref().clone(), real.clone(), lf.clone()).into(),
-            ],
-            Obj::Sub(sub) => vec![
-                InFact::new(sub.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(sub.right.as_ref().clone(), real.clone(), lf.clone()).into(),
-            ],
-            Obj::Mul(mul) => vec![
-                InFact::new(mul.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(mul.right.as_ref().clone(), real.clone(), lf.clone()).into(),
-            ],
-            Obj::Div(div) => vec![
-                InFact::new(div.left.as_ref().clone(), real.clone(), lf.clone()).into(),
-                InFact::new(div.right.as_ref().clone(), real.clone(), lf.clone()).into(),
-            ],
-            Obj::Pow(pow) => {
-                vec![InFact::new(pow.base.as_ref().clone(), real.clone(), lf.clone()).into()]
-            }
+        let (required, evidence) = match &in_fact.element {
+            Obj::Add(add) => (
+                vec![
+                    InFact::new(add.left.as_ref().clone(), real.clone(), lf.clone()).into(),
+                    InFact::new(add.right.as_ref().clone(), real.clone(), lf.clone()).into(),
+                ],
+                Some(RealArithmeticMembershipClosureBuiltinRule::Add),
+            ),
+            Obj::Sub(sub) => (
+                vec![
+                    InFact::new(sub.left.as_ref().clone(), real.clone(), lf.clone()).into(),
+                    InFact::new(sub.right.as_ref().clone(), real.clone(), lf.clone()).into(),
+                ],
+                Some(RealArithmeticMembershipClosureBuiltinRule::Sub),
+            ),
+            Obj::Mul(mul) => (
+                vec![
+                    InFact::new(mul.left.as_ref().clone(), real.clone(), lf.clone()).into(),
+                    InFact::new(mul.right.as_ref().clone(), real.clone(), lf.clone()).into(),
+                ],
+                Some(RealArithmeticMembershipClosureBuiltinRule::Mul),
+            ),
+            Obj::Div(div) => (
+                vec![
+                    InFact::new(div.left.as_ref().clone(), real.clone(), lf.clone()).into(),
+                    InFact::new(div.right.as_ref().clone(), real.clone(), lf.clone()).into(),
+                ],
+                Some(RealArithmeticMembershipClosureBuiltinRule::Div),
+            ),
+            Obj::Pow(pow) => (
+                vec![InFact::new(pow.base.as_ref().clone(), real.clone(), lf.clone()).into()],
+                Some(RealArithmeticMembershipClosureBuiltinRule::Pow),
+            ),
             Obj::Mod(_)
             | Obj::Abs(_)
             | Obj::Sin(_)
@@ -1294,19 +1307,28 @@ impl Runtime {
             | Obj::Tan(_)
             | Obj::Cot(_)
             | Obj::Sqrt(_)
-            | Obj::Log(_) => Vec::new(),
+            | Obj::Log(_) => (Vec::new(), None),
             _ => return Ok(StmtUnknown::new().into()),
         };
         let Some(subgoals) = self.verify_builtin_rule_premises(&required, builtin_state)? else {
             return Ok(StmtUnknown::new().into());
         };
-        Ok(
-            number_in_set_verified_by_builtin_rules_result_with_subgoals(
+        Ok(match evidence {
+            Some(rule) => {
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "real arithmetic has real operands and result".to_string(),
+                    BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule),
+                    subgoals,
+                )
+                .into()
+            }
+            None => number_in_set_verified_by_builtin_rules_result_with_subgoals(
                 in_fact,
                 "real arithmetic has real operands and result",
                 subgoals,
             ),
-        )
+        })
     }
 
     pub(crate) fn verify_objects_are_known_reals_in_builtin(

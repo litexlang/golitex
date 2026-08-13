@@ -71,6 +71,15 @@ pub enum LitexToLeanIntegerMembershipClosureBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanSetRelationDualityBuiltinRuleIr {
     SubsetFromSuperset,
     SupersetFromSubset,
@@ -107,6 +116,7 @@ pub enum LitexToLeanBuiltinRuleIr {
     DivNotEqualZero(LitexToLeanDivNotEqualZeroIr),
     Arithmetic(LitexToLeanArithmeticBuiltinRuleIr),
     IntegerMembershipClosure(LitexToLeanIntegerMembershipClosureBuiltinRuleIr),
+    RealArithmeticMembershipClosure(LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr),
     /// Not-equality is symmetric. Example: `a != b` proves `b != a`.
     NotEqualSymmetry,
     /// A strict order between two checked real objects proves they differ.
@@ -234,6 +244,25 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                 })
             }
+            BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule) => {
+                LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(match rule {
+                    RealArithmeticMembershipClosureBuiltinRule::Add => {
+                        LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add
+                    }
+                    RealArithmeticMembershipClosureBuiltinRule::Sub => {
+                        LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub
+                    }
+                    RealArithmeticMembershipClosureBuiltinRule::Mul => {
+                        LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul
+                    }
+                    RealArithmeticMembershipClosureBuiltinRule::Div => {
+                        LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div
+                    }
+                    RealArithmeticMembershipClosureBuiltinRule::Pow => {
+                        LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Pow
+                    }
+                })
+            }
             BuiltinRuleEvidence::NotEqualSymmetry => LitexToLeanBuiltinRuleIr::NotEqualSymmetry,
             BuiltinRuleEvidence::NotEqualFromStrictOrder => {
                 LitexToLeanBuiltinRuleIr::NotEqualFromStrictOrder
@@ -324,6 +353,10 @@ impl fmt::Debug for LitexToLeanBuiltinRuleIr {
             }
             LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule) => f
                 .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
+            LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(rule) => f
+                .debug_tuple("RealArithmeticMembershipClosure")
                 .field(rule)
                 .finish(),
             LitexToLeanBuiltinRuleIr::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),

@@ -1,0 +1,25 @@
+# Tracer: nonempty-set and finite-set facts are derived target predicates.
+#
+# Before this correction, the generated semantic core contained these opaque
+# declarations:
+#
+#   axiom IsNonemptySet : LitexObject → Prop
+#   axiom IsFiniteSet : LitexObject → Prop
+#
+# Now the generated Lean defines nonemptiness from IsSet plus one member, and
+# finiteness from IsSet plus Mathlib finiteness of the In-extension. The source
+# objects themselves remain ordinary LitexObject values:
+forall s nonempty_set, t finite_set:
+    s = s
+    t = t
+#
+# Boundary: finite extension alone is not enough. IsFiniteSet includes IsSet,
+# so an arbitrary non-set object with an empty In-extension is not silently
+# classified as a finite set. Finiteness still does not imply nonemptiness.
+#
+# Source gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
+# Focused compiler gate:
+# cargo test --release set_parameter_predicates_are_derived_from_membership_and_sethood -- --nocapture
+# Real Lean gate:
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release set_parameter_predicates_compile_with_mathlib -- --ignored --nocapture

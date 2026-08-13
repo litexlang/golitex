@@ -1602,14 +1602,17 @@ y != x
         let output =
             compile_to_lean_from_source(SYMMETRY_SOURCE, "not-equality-symmetry-compile-to-lean")
                 .expect("the builtin symmetry proof should lower to Lean");
+        assert!(output.contains("(a : LitexObject)"), "{output}");
+        assert!(output.contains("(b : LitexObject)"), "{output}");
+        assert!(output.contains("Litex.IsSet a"), "{output}");
+        assert!(output.contains("Litex.IsSet b"), "{output}");
+        assert!(output.contains("theorem notEqualSymmetry"), "{output}");
         assert!(
-            output.contains("∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α)"),
+            output.contains("Litex.BuiltinRules.notEqualSymmetry"),
             "{output}"
         );
-        assert!(output.contains("Ne.symm proof_fact_"), "{output}");
-        assert!(!output.contains("alpha0"), "{output}");
-        assert!(!output.contains("alpha1"), "{output}");
-        assert!(!output.contains("axiom"), "{output}");
+        assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
+        assert!(!output.contains("Set α"), "{output}");
         assert!(!output.contains("sorry"), "{output}");
     }
 
@@ -1634,7 +1637,7 @@ y != x
             .arg(&lean_file)
             .current_dir(project)
             .output();
-        let _ = fs::remove_file(&lean_file);
+        fs::remove_file(&lean_file).expect("remove generated Lean test file");
         let output = output.unwrap();
         assert!(
             output.status.success(),

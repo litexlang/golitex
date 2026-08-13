@@ -286,8 +286,12 @@ impl Runtime {
 
             let fn_obj_prefix_body: Vec<Vec<Box<Obj>>> =
                 fn_obj.body[..=i].iter().cloned().collect();
-            let fn_obj_prefix_as_obj: Obj =
-                FnObj::new(*fn_obj.head.clone(), fn_obj_prefix_body).into();
+            let fn_obj_prefix_as_obj: Obj = FnObj::new_with_source_occurrence_id(
+                *fn_obj.head.clone(),
+                fn_obj_prefix_body,
+                fn_obj.source_occurrence_id,
+            )
+            .into();
             let intermediate_in_fact = InFact::new(
                 fn_obj_prefix_as_obj,
                 set_where_the_next_fn_obj_is_in.clone(),

@@ -951,9 +951,9 @@ impl Runtime {
     }
 
     // General Cartesian product membership: a member is a function on `I` into `big_union(s)`
-    // whose value at every index lies in the indexed factor.
+    // satisfying the named pointwise choice-function property.
     // Example: `f $in general_cart(I, s, g)` follows from
-    // `f $in fn(t I)big_union(s)` and `forall t I => {f(t) $in g(t)}`.
+    // `f $in fn(t I)big_union(s)` and `$is_choice_function_for(I, s, g, f)`.
     pub(crate) fn verify_in_fact_in_general_cart_by_defining_facts(
         &mut self,
         in_fact: &InFact,
@@ -971,27 +971,25 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let Some(pointwise_fact) = general_cart_member_pointwise_fact(
-            self,
+        let choice_fact = general_cart_member_choice_fact(
             general_cart,
-            &in_fact.element,
-            &in_fact.line_file,
-        )?
-        else {
-            return Ok((StmtUnknown::new()).into());
-        };
-        let pointwise_result = self.verify_fact_full(&pointwise_fact, verify_state)?;
-        if !pointwise_result.is_true() {
+            in_fact.element.clone(),
+            in_fact.line_file.clone(),
+        );
+        let choice_result = self.verify_atomic_fact(&choice_fact, verify_state)?;
+        if !choice_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
 
-        Ok(FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            in_fact.clone().into(),
-            "general_cart membership: function into big_union(family) with pointwise factor membership"
-                .to_string(),
-            vec![fn_set_result, pointwise_result],
+        Ok(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                in_fact.clone().into(),
+                "general_cart membership: function carrier and named pointwise choice property"
+                    .to_string(),
+                vec![fn_set_result, choice_result],
+            )
+            .into(),
         )
-        .into())
     }
 
     pub(crate) fn verify_in_fact_in_set_builder_by_defining_facts(

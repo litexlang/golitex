@@ -8,6 +8,7 @@ mod helper;
 mod obj;
 mod obj_alpha_key;
 mod obj_contrain_free_params;
+mod source_object_occurrence_id;
 mod standard_set;
 pub use atom::{
     identifier_to_string, identifier_with_mod_to_string, Identifier, IdentifierWithMod,
@@ -39,4 +40,5 @@ pub use obj_alpha_key::{
     nested_obj_binder_normalized_key, obj_equality_key,
     objs_equal_with_nested_binder_alpha_equivalence,
 };
+pub use source_object_occurrence_id::SourceObjectOccurrenceId;
 pub use standard_set::StandardSet;

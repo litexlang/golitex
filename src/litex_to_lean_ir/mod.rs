@@ -6,16 +6,16 @@
 
 use crate::common::fact_id::FactId;
 use crate::fact::{AtomicFact, Fact};
-use crate::obj::{Obj, StandardSet};
+use crate::obj::{Obj, SourceObjectOccurrenceId, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use crate::result::{
     WellDefinedFactId, WellDefinedObjProofId, WellDefinednessCertificateId,
-    WellDefinednessObjectOccurrenceId, WellDefinednessRequirementRole,
+    WellDefinednessRequirementRole, WellDefinednessTargetRequirementPhase,
 };
+use crate::symbol::SymbolId;
 use std::fmt;
 
 mod builtin_rule;
-mod carrier;
 mod function;
 mod named_theorem;
 mod object;
@@ -25,9 +25,9 @@ pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanDivNotEqualZeroIr,
     LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
-    LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
+    LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
+    LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
-pub use carrier::LitexToLeanCarrierIr;
 pub use function::{
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
 };
@@ -192,21 +192,14 @@ pub struct LitexToLeanParameterGroupIr {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LitexToLeanParameterTypeIr {
-    /// A native Lean set whose element carrier is retained explicitly.
-    Set {
-        element_carrier: LitexToLeanCarrierIr,
-    },
-    /// A binder plus the source membership proposition that constrains it.
+    /// A binder constrained by Litex's set predicate.
+    Set,
+    /// A binder plus the exact source membership proposition that constrains it.
     MemberOf {
         set: LitexToLeanObjectIr,
-        element_carrier: LitexToLeanCarrierIr,
     },
-    NonemptySet {
-        element_carrier: LitexToLeanCarrierIr,
-    },
-    FiniteSet {
-        element_carrier: LitexToLeanCarrierIr,
-    },
+    NonemptySet,
+    FiniteSet,
     Unsupported(String),
 }
 
@@ -239,6 +232,14 @@ pub struct LitexToLeanWellDefinednessCertificateIr {
     pub facts: Vec<LitexToLeanWellDefinednessFactIr>,
     pub objects: Vec<LitexToLeanWellDefinednessObjectIr>,
     pub target_requirements: Vec<LitexToLeanWellDefinednessTargetRequirementIr>,
+    pub parameter_facts: Vec<LitexToLeanWellDefinednessParameterFactIr>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanWellDefinednessParameterFactIr {
+    pub symbol_id: SymbolId,
+    pub fact_id: FactId,
+    pub proposition: Fact,
 }
 
 #[derive(Clone, Debug)]
@@ -254,10 +255,11 @@ pub struct LitexToLeanWellDefinednessFactIr {
 
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessObjectIr {
-    pub occurrence_id: WellDefinednessObjectOccurrenceId,
     pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub source_object: Obj,
-    pub intrinsic_result_carrier: Option<LitexToLeanCarrierIr>,
+    /// A source builtin may establish membership in this exact result set.
+    /// This is a set object, never a Lean type or native carrier.
+    pub intrinsic_result_set: Option<LitexToLeanObjectIr>,
     pub child_proof_ids: Vec<WellDefinedObjProofId>,
     pub well_defined_fact_ids: Vec<WellDefinedFactId>,
     pub fact_ids: Vec<WellDefinednessCertificateId>,
@@ -267,10 +269,9 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LitexToLeanWellDefinednessObjectIr")
-            .field("occurrence_id", &self.occurrence_id)
             .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("source_object", &self.source_object.to_string())
-            .field("intrinsic_result_carrier", &self.intrinsic_result_carrier)
+            .field("intrinsic_result_set", &self.intrinsic_result_set)
             .field("child_proof_ids", &self.child_proof_ids)
             .field("well_defined_fact_ids", &self.well_defined_fact_ids)
             .field("fact_ids", &self.fact_ids)
@@ -280,9 +281,9 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
 
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessTargetRequirementIr {
-    pub object_occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub source_occurrence_id: SourceObjectOccurrenceId,
     pub well_defined_obj_proof_id: WellDefinedObjProofId,
-    pub source_object: Obj,
+    pub phase: WellDefinednessTargetRequirementPhase,
     pub role: WellDefinednessRequirementRole,
     pub certificate_id: WellDefinednessCertificateId,
     pub well_defined_fact_id: WellDefinedFactId,
@@ -293,9 +294,9 @@ impl fmt::Debug for LitexToLeanWellDefinednessTargetRequirementIr {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LitexToLeanWellDefinednessTargetRequirementIr")
-            .field("object_occurrence_id", &self.object_occurrence_id)
+            .field("source_occurrence_id", &self.source_occurrence_id)
             .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
-            .field("source_object", &self.source_object.to_string())
+            .field("phase", &self.phase)
             .field("role", &self.role)
             .field("certificate_id", &self.certificate_id)
             .field("well_defined_fact_id", &self.well_defined_fact_id)
@@ -436,9 +437,9 @@ pub enum LitexToLeanProofRuleIr {
     RegisteredRule(LitexToLeanRegisteredRuleApplicationIr),
     ObjectReflexivity,
     ClosedRealMembership,
-    ClosedUniversalNativeMembership,
+    ClosedStandardMembership,
     ClosedNumericReflection {
-        carrier: LitexToLeanCarrierIr,
+        target_set: LitexToLeanStandardSetIr,
     },
     RealSetNonempty,
     StandardSetNonempty,
@@ -595,12 +596,12 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
             }
             LitexToLeanProofRuleIr::ObjectReflexivity => f.write_str("ObjectReflexivity"),
             LitexToLeanProofRuleIr::ClosedRealMembership => f.write_str("ClosedRealMembership"),
-            LitexToLeanProofRuleIr::ClosedUniversalNativeMembership => {
-                f.write_str("ClosedUniversalNativeMembership")
+            LitexToLeanProofRuleIr::ClosedStandardMembership => {
+                f.write_str("ClosedStandardMembership")
             }
-            LitexToLeanProofRuleIr::ClosedNumericReflection { carrier } => f
+            LitexToLeanProofRuleIr::ClosedNumericReflection { target_set } => f
                 .debug_struct("ClosedNumericReflection")
-                .field("carrier", carrier)
+                .field("target_set", target_set)
                 .finish(),
             LitexToLeanProofRuleIr::RealSetNonempty => f.write_str("RealSetNonempty"),
             LitexToLeanProofRuleIr::StandardSetNonempty => f.write_str("StandardSetNonempty"),
@@ -833,8 +834,8 @@ pub fn facts_are_comparison_notation_duals(source: &Fact, target: &Fact) -> bool
 pub struct LitexToLeanKnownForallArgumentIr {
     pub param: String,
     pub argument: Obj,
-    /// Records both the native Lean binder carrier and any separate membership
-    /// or set-property requirement retained from Litex.
+    /// Records the exact membership or set-property requirement retained from
+    /// Litex. The object argument itself always lowers to `LitexObject`.
     pub param_type: LitexToLeanParameterTypeIr,
 }
 
@@ -850,11 +851,11 @@ impl fmt::Debug for LitexToLeanKnownForallArgumentIr {
 
 impl LitexToLeanProofRuleIr {
     pub fn from_verified_builtin_label(label: &str, goal: &Fact) -> Self {
-        if let Some(carrier) = closed_compact_numeric_set_fact_carrier(goal) {
-            return LitexToLeanProofRuleIr::ClosedNumericReflection { carrier };
+        if let Some(target_set) = closed_compact_numeric_set_fact(goal) {
+            return LitexToLeanProofRuleIr::ClosedNumericReflection { target_set };
         }
-        if is_closed_universal_native_membership(goal) {
-            return LitexToLeanProofRuleIr::ClosedUniversalNativeMembership;
+        if is_closed_standard_membership(goal) {
+            return LitexToLeanProofRuleIr::ClosedStandardMembership;
         }
         if is_checked_closed_integer_remainder_equality(goal) {
             return LitexToLeanProofRuleIr::Normalization {
@@ -994,7 +995,7 @@ pub(crate) fn is_closed_real_membership(goal: &Fact) -> bool {
     )
 }
 
-pub(crate) fn is_closed_universal_native_membership(goal: &Fact) -> bool {
+pub(crate) fn is_closed_standard_membership(goal: &Fact) -> bool {
     matches!(
         goal,
         Fact::AtomicFact(crate::fact::AtomicFact::InFact(membership))
@@ -1011,7 +1012,7 @@ pub(crate) fn is_closed_universal_native_membership(goal: &Fact) -> bool {
     )
 }
 
-pub(crate) fn closed_compact_numeric_set_fact_carrier(goal: &Fact) -> Option<LitexToLeanCarrierIr> {
+pub(crate) fn closed_compact_numeric_set_fact(goal: &Fact) -> Option<LitexToLeanStandardSetIr> {
     let Fact::AtomicFact(atomic) = goal else {
         return None;
     };
@@ -1041,7 +1042,7 @@ pub(crate) fn closed_compact_numeric_set_fact_carrier(goal: &Fact) -> Option<Lit
     ) {
         return None;
     }
-    Some(LitexToLeanStandardSetIr::from(standard).element_carrier())
+    Some(LitexToLeanStandardSetIr::from(standard))
 }
 
 pub(crate) fn is_closed_numeric_relation(goal: &Fact) -> bool {

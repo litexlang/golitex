@@ -45,7 +45,7 @@ impl Runtime {
                 return Ok(());
             }
             if let Some(proof_id) = cached.proof_id {
-                self.record_well_defined_obj_proof_use(proof_id);
+                self.record_well_defined_obj_proof_use(obj, proof_id)?;
                 return Ok(());
             }
         }

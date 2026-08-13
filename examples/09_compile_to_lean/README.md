@@ -1,98 +1,62 @@
-# Litex-to-Lean Example Ledger
+# Litex-to-Lean example ledger
 
-[`compile_to_lean_examples.md`](compile_to_lean_examples.md) is the default
-reader-facing and machine-checked home for small, self-contained Litex-to-Lean
-examples. Adding a compiler example means appending one H2 section with one
-`litex` input fence and its complete generated `lean` fence. It does not mean
-creating another `.lit` file.
+[`compile_to_lean_examples.md`](compile_to_lean_examples.md) is the
+reader-facing and executable ledger for the replacement universal-object
+compiler. Every `litex` fence is compiled independently.
 
-The harness verifies every Litex block in isolation, runs strict Litex-to-Lean or
-explicit partial report mode, and compares the adjacent Lean fence byte for
-byte with current compiler output. Explicit Litex `trust` appears only in the
-`propositions_and_trust` section; those statements deliberately become
-visible Lean axioms.
+The harness checks that generated source:
 
-Standalone `.lit` files remain appropriate for module imports, registered
-project order, CLI/file-path behavior, or durable acceptance artifacts whose
-meaning depends on a real file. None of the current ledger examples needs
-those semantics.
+- declares one `LitexObject` universe and `Litex.In`;
+- contains the expected proof route for that section;
+- contains no old native-carrier fragments such as `Set ℝ`, native numeric
+  binders, widening, downcast, or `LeanCarrier`;
+- compiles as a complete file in a real Mathlib Lake project when the ignored
+  kernel gate is enabled.
 
-## Ledger format
+The ledger intentionally records required generated shapes rather than
+copying hundreds of lines of prelude into adjacent snapshots.
 
-Use a lowercase snake-case H2 identifier. Strict compilation is the default:
-
-````markdown
-## example_name
-
-```litex
-<self-contained Litex source>
-```
-
-```lean
-<complete generated Lean source>
-```
-````
-
-For an intentionally incomplete report-mode example, put
-`<!-- to-lean: partial -->` between the heading and Litex fence. Do not use
-that marker to hide a strict compiler regression.
-
-## Current examples
+## Current sections
 
 | Section | Demonstrates |
 | --- | --- |
-| `native_carriers` | Primary tracer: bare equality and `2 $in R` on native `ℝ` |
-| `coprime_natural_builtin` | Native `$coprime` on `N x N` lowered to Mathlib `Nat.Coprime` with checked reflection |
-| `mixed_projected_forall` | Mixed real/set binders whose independently covered conclusions retain separate stored FactIds |
-| `bounded_facts` | Bounded `forall`, retained membership premises, rational normalization |
-| `propositions_and_trust` | Proposition interfaces, known-forall use, explicit trust provenance |
-| `object_definitions` | A checked real `have x R = value` definition and generated facts |
-| `equality_transport` | Unary/binary predicate transport and resolved arithmetic arguments |
-| `builtin_arithmetic` | Twenty registered arithmetic/order rules with paired Mathlib adapters |
-| `recursive_arithmetic` | A recursively structured positive-addition proof tree |
-| `native_sets` | Polymorphic `Set α`, union, intersection, and set difference |
-| `native_set_builtins` | Checked paired adapters for set equalities, membership, predicates, absolute value, and min/max |
-| `standard_numeric_subsets` | Native predicates plus one checked membership projection across the standard numeric-set hierarchy |
-| `builtin_predicates` | Native prime/coprime, superset, proper-relation, and negated-comparison propositions with checked reflection and duality routes |
-| `choice` | Checked choice from a nonempty native carrier, globally and locally |
-| `existentials` | Existential introduction, extraction, projections, and multiple witnesses |
-| `obtain_from_existential_prop_definition` | Checked unfolding of one verified concrete prop into the exact existential eliminated by `obtain` |
-| `proof_scopes` | Object definitions, `by cases`, and `by contra` proof scopes |
-| `function_sets_and_well_definedness` | Native dependent function sets over numeric or user-defined sets, multiple memberships without retyping, checked body/application WD certificates, and exact named-function evaluation |
-| `environment_well_definedness_cache` | Environment-owned WD proof IDs/DAGs, exact function-contract cache keys, and one reused Lean helper across statements |
-| `carrier_boundaries` | Partial report for carrier facts without complete strict backends |
-| `partial_boundary` | Partial report around one unsupported trigonometric proof |
+| `membership_wd` | One object keeps both `C` and `R` memberships; an exact named WD fact justifies `f [a]` |
+| `set_parameter` | Standard-domain and set parameters share the `LitexObject` type while retaining distinct propositions |
+| `derived_set_predicates` | Nonempty and finite sethood are definitions over `IsSet` and the `In`-extension, not opaque axioms |
+| `known_forall` | Exact theorem `FactId` replay with ordered object, membership, and domain proofs |
+| `builtin_theorem` | A concrete builtin certificate calls a real theorem rather than an axiom |
+| `exact_application_layers` | One list per source application group and `fnSetResult` between nested groups |
+| `arithmetic_forall_wd` | Nested forall, universal subtraction, real-closure replay, and exact source-occurrence WD links |
+
+## Adding an example
+
+Add one lowercase snake-case H2 section and one self-contained `litex` fence.
+Then register its exact invariant in
+`src/compile_to_lean/universal_examples_tests.rs` and update the expected
+section count. Add a negative Rust regression for the nearest rejected
+boundary when semantics widen.
+
+Standalone `.lit` files are reserved for durable acceptance artifacts whose
+meaning depends on a real path or CLI run. The primary artifacts are
+`examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit`,
+`examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit`,
+and `examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit`.
 
 ## Verification
 
-Check every pair and fail on a stale Lean fence:
-
 ```text
-cargo test --release compile_to_lean_examples_markdown_emits_checked_source -- --nocapture
+cargo test --release universal_examples_compile_to_the_new_abi -- --nocapture
+
+LITEX_LEAN_PROJECT=/absolute/path/to/mathlib \
+LITEX_LAKE=/absolute/path/to/lake \
+cargo test --release universal_examples_compile_with_mathlib -- --ignored --nocapture
+
+target/release/litex -compact -isolated -runner -f \
+  examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit
+
+target/release/litex -compact -isolated -runner -f \
+  examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
 ```
 
-Refresh all Lean fences after an intentional compiler-output change:
-
-```text
-cargo test --release refresh_compile_to_lean_examples_markdown_snapshots -- --ignored --nocapture
-```
-
-Run the general examples harness, which also executes every Litex fence in
-this ledger:
-
-```text
-cargo test --release run_examples -- --nocapture
-```
-
-Compile every generated result against an existing Mathlib Lake project:
-
-```text
-LITEX_LEAN_PROJECT=/path/to/mathlib4 \
-LITEX_LAKE=/path/to/lake \
-cargo test --release compile_to_lean_examples_markdown_compiles_with_mathlib -- --ignored --nocapture
-```
-
-The strict pipeline remains fail-closed. Unsupported proof routes never
-silently become `sorry`, opaque declarations, or compiler-invented axioms.
-The two partial sections emit only independently checked statements and mark
-their reports `Incomplete`.
+Strict compilation remains fail-closed. Unsupported proof routes never become
+`sorry`, compiler-invented axioms, or calls into the deleted native backend.

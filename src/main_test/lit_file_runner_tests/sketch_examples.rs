@@ -183,6 +183,7 @@ fn compile_tmp_to_lean(index: usize) {
 }
 
 #[test]
+#[ignore = "developer scratch command that rewrites examples/tmp.lit and an external Lean file"]
 fn compile_tmp0_to_lean() {
     run_with_large_stack("compile_tmp0_to_lean_large_stack", || {
         compile_tmp_to_lean(0)
@@ -190,6 +191,7 @@ fn compile_tmp0_to_lean() {
 }
 
 #[test]
+#[ignore = "developer scratch command that rewrites examples/tmp1.lit and an external Lean file"]
 fn compile_tmp1_to_lean() {
     run_with_large_stack("compile_tmp1_to_lean_large_stack", || {
         compile_tmp_to_lean(1)
@@ -197,6 +199,7 @@ fn compile_tmp1_to_lean() {
 }
 
 #[test]
+#[ignore = "developer scratch command that rewrites examples/tmp2.lit and an external Lean file"]
 fn compile_tmp2_to_lean() {
     run_with_large_stack("compile_tmp2_to_lean_large_stack", || {
         compile_tmp_to_lean(2)
@@ -211,6 +214,7 @@ fn compile_empty_to_lean() {
 }
 
 #[test]
+#[ignore = "developer snapshot command that rewrites the showcase source"]
 fn compile_to_lean_showcase() {
     run_with_large_stack("compile_to_lean_showcase_large_stack", || {
         compile_example_lit_file_to_lean("_internal/compile_to_lean/showcase.lit");

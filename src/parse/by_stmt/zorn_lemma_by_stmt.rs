@@ -6,7 +6,7 @@ impl Runtime {
         if !tb.current_token_is_equal_to(COLON) {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "by zorn_lemma: expected `by zorn_lemma: set S, prop P:` or `by zorn_lemma: set S, prop P`"
+                    "by zorn_lemma: expected `by zorn_lemma: set S, prop P, prop U, prop M:` or the same form without a proof body"
                         .to_string(),
                     tb.line_file.clone(),
                 ),
@@ -18,6 +18,12 @@ impl Runtime {
         tb.skip_token(COMMA)?;
         tb.skip_token(PROP)?;
         let prop_name = self.parse_atomic_name(tb)?;
+        tb.skip_token(COMMA)?;
+        tb.skip_token(PROP)?;
+        let upper_bound_prop_name = self.parse_atomic_name(tb)?;
+        tb.skip_token(COMMA)?;
+        tb.skip_token(PROP)?;
+        let maximal_prop_name = self.parse_atomic_name(tb)?;
         let has_proof_body = self.parse_optional_trailing_proof_colon(tb, "by zorn_lemma")?;
 
         let proof = if has_proof_body {
@@ -29,6 +35,14 @@ impl Runtime {
             vec![]
         };
 
-        Ok(ByZornLemmaStmt::new(set, prop_name, proof, tb.line_file.clone()).into())
+        Ok(ByZornLemmaStmt::new(
+            set,
+            prop_name,
+            upper_bound_prop_name,
+            maximal_prop_name,
+            proof,
+            tb.line_file.clone(),
+        )
+        .into())
     }
 }

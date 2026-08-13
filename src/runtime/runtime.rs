@@ -55,6 +55,7 @@ impl WellDefinednessObjectCaptureFrame {
 #[derive(Clone)]
 pub(crate) struct WellDefinednessCaptureCheckpoint {
     root_proof_count: usize,
+    target_requirement_use_count: usize,
     active_object_child_counts: Vec<usize>,
     active_object_fact_counts: Vec<usize>,
     active_object_target_requirement_counts: Vec<usize>,
@@ -82,6 +83,9 @@ pub struct Runtime {
     pub(crate) well_definedness_capture_depth: usize,
     /// One isolated collector per (possibly nested) executed statement.
     pub(crate) well_definedness_capture_stack: Vec<WellDefinednessCertificate>,
+    /// Current execution phase for each statement-local WD collector.
+    pub(crate) well_definedness_target_requirement_phase_stack:
+        Vec<WellDefinednessTargetRequirementPhase>,
     /// Object occurrences whose constructor-specific WD checks are active.
     pub(crate) well_definedness_object_capture_stack: Vec<WellDefinednessObjectCaptureFrame>,
     /// Monotone runtime-wide allocator. Local environments may disappear, but
@@ -139,6 +143,7 @@ impl Runtime {
             litex_to_lean_well_definedness_mode: false,
             well_definedness_capture_depth: 0,
             well_definedness_capture_stack: Vec::new(),
+            well_definedness_target_requirement_phase_stack: Vec::new(),
             well_definedness_object_capture_stack: Vec::new(),
             next_fact_id: 1,
             next_well_defined_obj_proof_id: 1,
@@ -177,6 +182,7 @@ impl Runtime {
         std::mem::replace(&mut self.litex_to_lean_ir_mode, enabled)
     }
 
+    #[cfg(test)]
     pub(crate) fn replace_litex_to_lean_well_definedness_mode(&mut self, enabled: bool) -> bool {
         std::mem::replace(&mut self.litex_to_lean_well_definedness_mode, enabled)
     }
@@ -188,6 +194,20 @@ impl Runtime {
     pub(crate) fn begin_statement_well_definedness_capture(&mut self) {
         self.well_definedness_capture_stack
             .push(WellDefinednessCertificate::default());
+        self.well_definedness_target_requirement_phase_stack
+            .push(WellDefinednessTargetRequirementPhase::Preflight);
+    }
+
+    pub(crate) fn set_well_definedness_target_requirement_phase(
+        &mut self,
+        phase: WellDefinednessTargetRequirementPhase,
+    ) {
+        if let Some(current) = self
+            .well_definedness_target_requirement_phase_stack
+            .last_mut()
+        {
+            *current = phase;
+        }
     }
 
     pub(crate) fn end_statement_well_definedness_capture(
@@ -197,11 +217,13 @@ impl Runtime {
             .well_definedness_capture_stack
             .pop()
             .unwrap_or_default();
+        let _ = self.well_definedness_target_requirement_phase_stack.pop();
         self.freeze_well_definedness_certificate(certificate)
     }
 
     pub(crate) fn discard_statement_well_definedness_capture(&mut self) {
         let _ = self.well_definedness_capture_stack.pop();
+        let _ = self.well_definedness_target_requirement_phase_stack.pop();
     }
 
     pub(crate) fn well_definedness_capture_checkpoint(
@@ -210,6 +232,7 @@ impl Runtime {
         let certificate = self.well_definedness_capture_stack.last()?;
         Some(WellDefinednessCaptureCheckpoint {
             root_proof_count: certificate.root_proof_ids.len(),
+            target_requirement_use_count: certificate.target_requirement_uses.len(),
             active_object_child_counts: self
                 .well_definedness_object_capture_stack
                 .iter()
@@ -240,6 +263,9 @@ impl Runtime {
         certificate
             .root_proof_ids
             .truncate(checkpoint.root_proof_count);
+        certificate
+            .target_requirement_uses
+            .truncate(checkpoint.target_requirement_use_count);
         for (frame, child_count) in self
             .well_definedness_object_capture_stack
             .iter_mut()
@@ -794,12 +820,23 @@ impl Runtime {
     /// the child environment. A certificate that was already frozen into a
     /// `StmtResult` owns its own snapshot and therefore needs no promotion.
     fn promote_referenced_well_definedness_from_child(&mut self, child: &mut Environment) {
-        let mut pending_object_ids = self
-            .well_definedness_capture_stack
-            .iter()
-            .flat_map(|certificate| certificate.root_proof_ids.iter().copied())
-            .collect::<Vec<_>>();
+        let mut pending_object_ids = Vec::new();
         let mut retained_fact_ids = HashSet::new();
+        for certificate in &self.well_definedness_capture_stack {
+            pending_object_ids.extend(certificate.root_proof_ids.iter().copied());
+            pending_object_ids.extend(
+                certificate
+                    .target_requirement_uses
+                    .iter()
+                    .map(|requirement| requirement.well_defined_obj_proof_id),
+            );
+            retained_fact_ids.extend(
+                certificate
+                    .target_requirement_uses
+                    .iter()
+                    .map(|requirement| requirement.fact_id),
+            );
+        }
         for frame in &self.well_definedness_object_capture_stack {
             pending_object_ids.extend(frame.child_proof_ids.iter().copied());
             retained_fact_ids.extend(frame.fact_ids.iter().copied());

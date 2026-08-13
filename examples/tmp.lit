@@ -1,61 +1,174 @@
-forall a Z => {a $in R}
+1 $in C
+1 $in Q
 
 
 """
 import Mathlib
 
-namespace tmp
+axiom LitexObject : Type
+
+namespace Litex
 
 noncomputable section
 
-universe u
+axiom In : LitexObject → LitexObject → Prop
+axiom IsSet : LitexObject → Prop
 
-class LitexObject (α : Type u) : Prop where
-  valid : True
+def IsNonemptySet (s : LitexObject) : Prop :=
+  IsSet s ∧ ∃ x : LitexObject, In x s
 
-instance : LitexObject ℕ := ⟨True.intro⟩
-instance : LitexObject ℤ := ⟨True.intro⟩
-instance : LitexObject ℚ := ⟨True.intro⟩
-instance : LitexObject ℝ := ⟨True.intro⟩
-instance : LitexObject ℂ := ⟨True.intro⟩
-instance {α : Type u} [LitexObject α] : LitexObject (Set α) := ⟨True.intro⟩
+def IsFiniteSet (s : LitexObject) : Prop :=
+  IsSet s ∧ Set.Finite {x : LitexObject | In x s}
 
-def litexIsSet {α : Type u} [LitexObject α] (_ : α) : Prop := True
-def litexIsNonemptySet {α : Type u} (set : Set α) : Prop := set.Nonempty
-def litexIsFiniteSet {α : Type u} (set : Set α) : Prop := set.Finite
+axiom embedComplex : ℂ → LitexObject
+axiom embedComplex_injective : Function.Injective embedComplex
 
-namespace Litex.StandardSets
+axiom N : LitexObject
+axiom Z : LitexObject
+axiom Q : LitexObject
+axiom R : LitexObject
+axiom C : LitexObject
+axiom NPos : LitexObject
+axiom ZNeg : LitexObject
+axiom ZStar : LitexObject
+axiom QPos : LitexObject
+axiom QNeg : LitexObject
+axiom QStar : LitexObject
+axiom RPos : LitexObject
+axiom RNeg : LitexObject
+axiom RStar : LitexObject
+axiom CStar : LitexObject
 
-abbrev N : Set ℕ := Set.univ
-abbrev NPos : Set ℕ := Set.Ioi 0
+axiom inN_iff {x : LitexObject} :
+  In x N ↔ ∃ n : ℕ, embedComplex (n : ℂ) = x
+axiom inZ_iff {x : LitexObject} :
+  In x Z ↔ ∃ z : ℤ, embedComplex (z : ℂ) = x
+axiom inQ_iff {x : LitexObject} :
+  In x Q ↔ ∃ q : ℚ, embedComplex (q : ℂ) = x
+axiom inR_iff {x : LitexObject} :
+  In x R ↔ ∃ r : ℝ, embedComplex (r : ℂ) = x
+axiom inC_iff {x : LitexObject} :
+  In x C ↔ ∃ z : ℂ, embedComplex z = x
 
-abbrev Z : Set ℤ := Set.univ
-abbrev ZNeg : Set ℤ := Set.Iio 0
-abbrev ZStar : Set ℤ := {z | z ≠ 0}
+axiom add : LitexObject → LitexObject → LitexObject
+axiom sub : LitexObject → LitexObject → LitexObject
+axiom mul : LitexObject → LitexObject → LitexObject
+axiom div : LitexObject → LitexObject → LitexObject
 
-abbrev Q : Set ℚ := Set.univ
-abbrev QPos : Set ℚ := Set.Ioi 0
-abbrev QNeg : Set ℚ := Set.Iio 0
-abbrev QStar : Set ℚ := {q | q ≠ 0}
+@[simp] axiom add_embedComplex (a b : ℂ) :
+  add (embedComplex a) (embedComplex b) = embedComplex (a + b)
+@[simp] axiom sub_embedComplex (a b : ℂ) :
+  sub (embedComplex a) (embedComplex b) = embedComplex (a - b)
+@[simp] axiom mul_embedComplex (a b : ℂ) :
+  mul (embedComplex a) (embedComplex b) = embedComplex (a * b)
+@[simp] axiom div_embedComplex (a b : ℂ) :
+  div (embedComplex a) (embedComplex b) = embedComplex (a / b)
 
-abbrev R : Set ℝ := Set.univ
-abbrev RPos : Set ℝ := Set.Ioi 0
-abbrev RNeg : Set ℝ := Set.Iio 0
-abbrev RStar : Set ℝ := {r | r ≠ 0}
+instance (n : Nat) : OfNat LitexObject n where
+  ofNat := embedComplex (n : ℂ)
 
-abbrev C : Set ℂ := Set.univ
-abbrev CStar : Set ℂ := {c | c ≠ 0}
+def arg (args : List LitexObject) (index : Nat) : LitexObject :=
+  args.getD index 0
 
-end Litex.StandardSets
+structure FnSpec where
+  arity : Nat
+  requirements : List LitexObject → Prop
+  range : List LitexObject → LitexObject
 
--- Litex fact f7
-theorem fact7 : ∀ (a : ℤ) (litex_param_fact_1 : a ∈ Litex.StandardSets.Z), (a : ℝ) ∈ Litex.StandardSets.R := by
-  intro a litex_param_fact_1
-  have proof_fact_1_1 : a ∈ Litex.StandardSets.Z := by
-    exact litex_param_fact_1
-  exact Set.mem_univ _
+axiom FnSet : FnSpec → LitexObject
+axiom Applicable : LitexObject → List LitexObject → Prop
+axiom apply :
+  (f : LitexObject) →
+  (args : List LitexObject) →
+  Applicable f args →
+  LitexObject
 
+instance : CoeFun LitexObject fun f =>
+    (args : List LitexObject) → Applicable f args → LitexObject where
+  coe := apply
+
+axiom fnSetApplicable
+    {f : LitexObject}
+    {spec : FnSpec}
+    {args : List LitexObject} :
+    In f (FnSet spec) →
+    args.length = spec.arity →
+    spec.requirements args →
+    Applicable f args
+
+axiom fnSetResult
+    {f : LitexObject}
+    {spec : FnSpec}
+    {args : List LitexObject}
+    (hf : In f (FnSet spec))
+    (hLength : args.length = spec.arity)
+    (hRequirements : spec.requirements args) :
+    In (f args (fnSetApplicable hf hLength hRequirements)) (spec.range args)
+
+namespace BuiltinRules
+
+theorem notEqualSymmetry {a b : LitexObject} (h : a ≠ b) : b ≠ a := by
+  exact Ne.symm h
+
+theorem numeralInN (n : Nat) : In (OfNat.ofNat n : LitexObject) N := by
+  apply inN_iff.mpr
+  exact ⟨n, rfl⟩
+
+theorem numeralInZ (n : Nat) : In (OfNat.ofNat n : LitexObject) Z := by
+  apply inZ_iff.mpr
+  exact ⟨n, rfl⟩
+
+theorem numeralInQ (n : Nat) : In (OfNat.ofNat n : LitexObject) Q := by
+  apply inQ_iff.mpr
+  exact ⟨n, rfl⟩
+
+theorem numeralInR (n : Nat) : In (OfNat.ofNat n : LitexObject) R := by
+  apply inR_iff.mpr
+  exact ⟨n, rfl⟩
+
+theorem numeralInC (n : Nat) : In (OfNat.ofNat n : LitexObject) C := by
+  apply inC_iff.mpr
+  exact ⟨n, rfl⟩
+
+theorem realAddClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+    In (add a b) R := by
+  rcases inR_iff.mp ha with ⟨a, rfl⟩
+  rcases inR_iff.mp hb with ⟨b, rfl⟩
+  apply inR_iff.mpr
+  refine ⟨a + b, ?_⟩
+  simpa using (add_embedComplex (a : ℂ) (b : ℂ)).symm
+
+theorem realSubClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+    In (sub a b) R := by
+  rcases inR_iff.mp ha with ⟨a, rfl⟩
+  rcases inR_iff.mp hb with ⟨b, rfl⟩
+  apply inR_iff.mpr
+  refine ⟨a - b, ?_⟩
+  simpa using (sub_embedComplex (a : ℂ) (b : ℂ)).symm
+
+theorem realMulClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+    In (mul a b) R := by
+  rcases inR_iff.mp ha with ⟨a, rfl⟩
+  rcases inR_iff.mp hb with ⟨b, rfl⟩
+  apply inR_iff.mpr
+  refine ⟨a * b, ?_⟩
+  simpa using (mul_embedComplex (a : ℂ) (b : ℂ)).symm
+
+theorem realDivClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
+    In (div a b) R := by
+  rcases inR_iff.mp ha with ⟨a, rfl⟩
+  rcases inR_iff.mp hb with ⟨b, rfl⟩
+  apply inR_iff.mpr
+  refine ⟨a / b, ?_⟩
+  simpa using (div_embedComplex (a : ℂ) (b : ℂ)).symm
+
+end BuiltinRules
 end
+end Litex
 
-end tmp
+theorem fact1 : Litex.In 1 Litex.C := by
+  exact Litex.BuiltinRules.numeralInC 1
+
+theorem fact2 : Litex.In 1 Litex.Q := by
+  exact Litex.BuiltinRules.numeralInQ 1
 """

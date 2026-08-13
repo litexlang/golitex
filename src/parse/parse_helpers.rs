@@ -1,5 +1,20 @@
 use crate::prelude::*;
 
+impl Runtime {
+    pub(super) fn new_parsed_fn_obj(
+        &self,
+        head: FnObjHead,
+        body: Vec<Vec<Box<Obj>>>,
+    ) -> Result<Obj, RuntimeError> {
+        Ok(FnObj::new_with_source_occurrence_id(
+            head,
+            body,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
+}
+
 pub(crate) fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {
     let mut bindings = Vec::new();
     for fact in facts {
