@@ -203,9 +203,12 @@ by thm general_cart_nonempty_by_choice_from_family(general_cart(I, s, g))
 
 have c general_cart(I, s, g)
 c $in fn(t I)big_union(s)
+$is_choice_function_for(I, s, g, c)
 
 forall alpha I:
     c(alpha) $in g(alpha)
+
+general_cart(I, s, g) = {f fn(index I)big_union(s): $is_choice_function_for(I, s, g, f)}
 ```
 
 ### 4. Case Splits With `by cases`

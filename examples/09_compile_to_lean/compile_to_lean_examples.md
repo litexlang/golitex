@@ -139,6 +139,35 @@ theorem Litex.BuiltinRules.notEqualSymmetry ... := by ...
 ... exact Litex.BuiltinRules.notEqualSymmetry litex_domain_fact_1
 ```
 
+## known_equality_path
+
+Known equality remains an equivalence class for fast Litex lookup, while the
+compiler certificate retains the exact direct `FactId` edges selected for the
+proof. Reversing one edge emits `Eq.symm`; joining two edges emits `Eq.trans`.
+
+```litex
+forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+```
+
+Required generated shape:
+
+```lean
+... exact (Eq.symm (litex_domain_fact_1))
+... exact (Eq.trans (litex_domain_fact_1) (litex_domain_fact_2))
+```
+
+The malformed-certificate regression replaces the retained equality `FactId`
+with an unavailable identity and requires strict emission to fail before Lean.
+
 ## exact_application_layers
 
 A comma-separated source group remains one list application. A function-valued
@@ -200,4 +229,5 @@ cargo test --release universal_examples_ -- --nocapture
 LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release universal_examples_compile_with_mathlib -- --ignored --nocapture
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_known_equality_path.lit
 ```

@@ -112,7 +112,7 @@ thm total_inverse_exists:
     by axiom_of_choice: set \inverse_fiber_family<S, T, default, f>:
         forall A \inverse_fiber_family<S, T, default, f>:
             $is_nonempty_set(A)
-    obtain chooser from exist c fn(A \inverse_fiber_family<S, T, default, f>) big_union(\inverse_fiber_family<S, T, default, f>) st {forall A \inverse_fiber_family<S, T, default, f> => {c(A) $in A}}
+    obtain chooser from exist c fn(A \inverse_fiber_family<S, T, default, f>) big_union(\inverse_fiber_family<S, T, default, f>) st {$is_choice_function_for(\inverse_fiber_family<S, T, default, f>, \inverse_fiber_family<S, T, default, f>, fn(A \inverse_fiber_family<S, T, default, f>) \inverse_fiber_family<S, T, default, f> {A}, c)}
     thm chooser_mem:
         ? forall A \inverse_fiber_family<S, T, default, f>:
             chooser(A) $in A

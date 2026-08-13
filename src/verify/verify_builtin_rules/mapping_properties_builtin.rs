@@ -227,38 +227,47 @@ impl Runtime {
     // Consumers that need a bijection may match the builtin fact directly.
     // Example: `$bijective(I, X, g)` justifies reindexing a finite sum along `g`.
     pub(super) fn has_known_builtin_bijection(
-        &self,
+        &mut self,
         domain: &Obj,
         codomain: &Obj,
         function: &Obj,
         line_file: LineFile,
-    ) -> bool {
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<bool, RuntimeError> {
         for property in self.known_function_property_facts(&[BIJECTIVE]) {
             let Some((candidate_domain, candidate_codomain, candidate_function)) =
                 function_property_parts(&property)
             else {
                 continue;
             };
-            let domain_match = self.verify_objs_are_equal_by_known_equality(
+            // A finite-sequence function retains a restricted function carrier,
+            // while the public bijection fact names its extension as a closed
+            // range. Use the ordinary checked equality dispatcher here, just as
+            // the enumeration-shape recognizer does, so a builtin theorem's
+            // witness can feed a builtin sum/product consumer directly.
+            let domain_match = self.verify_objs_are_equal_in_equality_builtin(
                 &candidate_domain,
                 domain,
                 line_file.clone(),
-            );
-            let codomain_match = self.verify_objs_are_equal_by_known_equality(
+                builtin_state,
+            )?;
+            let codomain_match = self.verify_objs_are_equal_in_equality_builtin(
                 &candidate_codomain,
                 codomain,
                 line_file.clone(),
-            );
-            let function_match = self.verify_objs_are_equal_by_known_equality(
+                builtin_state,
+            )?;
+            let function_match = self.verify_objs_are_equal_in_equality_builtin(
                 &candidate_function,
                 function,
                 line_file.clone(),
-            );
+                builtin_state,
+            )?;
             if domain_match.is_true() && codomain_match.is_true() && function_match.is_true() {
-                return true;
+                return Ok(true);
             }
         }
-        false
+        Ok(false)
     }
 
     fn verify_known_or_structurally_finite_set(

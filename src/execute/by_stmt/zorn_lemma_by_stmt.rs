@@ -98,10 +98,7 @@ impl Runtime {
             "by zorn_lemma proof".to_string(),
             format!(
                 "set {}, prop {}, prop {}, prop {}",
-                stmt.set,
-                stmt.prop_name,
-                stmt.upper_bound_prop_name,
-                stmt.maximal_prop_name
+                stmt.set, stmt.prop_name, stmt.upper_bound_prop_name, stmt.maximal_prop_name
             ),
             stmt.proof.len(),
             obligations_for_output,
@@ -210,10 +207,7 @@ fn validate_zorn_upper_bound_prop(
         runtime,
         &definition,
         &args,
-        &[
-            PowerSet::new(stmt.set.clone()).into(),
-            stmt.set.clone(),
-        ],
+        &[PowerSet::new(stmt.set.clone()).into(), stmt.set.clone()],
     )? {
         return Err(zorn_interface_error(
             stmt,
@@ -387,13 +381,7 @@ fn zorn_lemma_obligations(
         ),
         (
             "chain_upper_bound".to_string(),
-            zorn_chain_upper_bound_fact(
-                runtime,
-                set,
-                prop_name,
-                upper_bound_prop_name,
-                line_file,
-            )?,
+            zorn_chain_upper_bound_fact(runtime, set, prop_name, upper_bound_prop_name, line_file)?,
         ),
     ])
 }
@@ -476,12 +464,7 @@ fn zorn_antisymmetric_fact(
                 line_file.clone(),
             )
             .into(),
-            normal_prop_fact(
-                prop_name,
-                vec![y.clone(), x.clone()],
-                line_file.clone(),
-            )
-            .into(),
+            normal_prop_fact(prop_name, vec![y.clone(), x.clone()], line_file.clone()).into(),
         ],
         vec![EqualFact::new(x, y, line_file.clone()).into()],
         line_file,
@@ -501,15 +484,9 @@ fn zorn_chain_upper_bound_fact(
         ParamType::Obj(PowerSet::new(set.clone()).into()),
     )?;
     let c = obj_for_bound_param_in_scope(&c_group.params[0], ParamObjType::Forall);
-    let chain_total_fact =
-        zorn_chain_total_fact(runtime, c.clone(), prop_name, line_file.clone())?;
-    let upper_bound_fact = zorn_upper_bound_exist_fact(
-        runtime,
-        set,
-        c,
-        upper_bound_prop_name,
-        line_file.clone(),
-    )?;
+    let chain_total_fact = zorn_chain_total_fact(runtime, c.clone(), prop_name, line_file.clone())?;
+    let upper_bound_fact =
+        zorn_upper_bound_exist_fact(runtime, set, c, upper_bound_prop_name, line_file.clone())?;
 
     Ok(ForallFact::new_canonical_forall(
         ParamDefWithType::new(vec![c_group]),

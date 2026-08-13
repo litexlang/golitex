@@ -1577,7 +1577,7 @@ thm adherent_integer_point_is_integer:
     by axiom_of_choice: set fn_range(integer_near_witness_set):
         forall A fn_range(integer_near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) big_union(fn_range(integer_near_witness_set)) st {forall A fn_range(integer_near_witness_set) => {f(A) $in A}}
+    obtain choose_integer from exist f fn(A fn_range(integer_near_witness_set)) big_union(fn_range(integer_near_witness_set)) st {$is_choice_function_for(fn_range(integer_near_witness_set), fn_range(integer_near_witness_set), fn(A fn_range(integer_near_witness_set)) fn_range(integer_near_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(integer_near_witness_set):
             choose_integer(A) $in Z
@@ -1776,7 +1776,7 @@ thm adherent_point_sequence_characterization_forward:
     by axiom_of_choice: set fn_range(near_witness_set):
         forall A fn_range(near_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(near_witness_set)) big_union(fn_range(near_witness_set)) st {forall A fn_range(near_witness_set) => {f(A) $in A}}
+    obtain choose_point from exist f fn(A fn_range(near_witness_set)) big_union(fn_range(near_witness_set)) st {$is_choice_function_for(fn_range(near_witness_set), fn_range(near_witness_set), fn(A fn_range(near_witness_set)) fn_range(near_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(near_witness_set):
             choose_point(A) $in R
@@ -2838,7 +2838,7 @@ thm unbounded_real_set_has_escaping_sequence:
     by axiom_of_choice: set fn_range(escaping_witness_set):
         forall A fn_range(escaping_witness_set):
             $is_nonempty_set(A)
-    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) big_union(fn_range(escaping_witness_set)) st {forall A fn_range(escaping_witness_set) => {f(A) $in A}}
+    obtain choose_point from exist f fn(A fn_range(escaping_witness_set)) big_union(fn_range(escaping_witness_set)) st {$is_choice_function_for(fn_range(escaping_witness_set), fn_range(escaping_witness_set), fn(A fn_range(escaping_witness_set)) fn_range(escaping_witness_set) {A}, f)}
     claim:
         ? forall A fn_range(escaping_witness_set):
             choose_point(A) $in R
@@ -3584,7 +3584,7 @@ thm sequence_limit_preservation_implies_function_limit:
             by axiom_of_choice: set fn_range(bad_witness_set):
                 forall A fn_range(bad_witness_set):
                     $is_nonempty_set(A)
-            obtain choose_point from exist choice_fn fn(A fn_range(bad_witness_set)) big_union(fn_range(bad_witness_set)) st {forall A fn_range(bad_witness_set) => {choice_fn(A) $in A}}
+            obtain choose_point from exist choice_fn fn(A fn_range(bad_witness_set)) big_union(fn_range(bad_witness_set)) st {$is_choice_function_for(fn_range(bad_witness_set), fn_range(bad_witness_set), fn(A fn_range(bad_witness_set)) fn_range(bad_witness_set) {A}, choice_fn)}
             claim:
                 ? forall A fn_range(bad_witness_set):
                     choose_point(A) $in R
@@ -6106,7 +6106,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         by axiom_of_choice: set fn_range(preimage_fiber):
             forall A fn_range(preimage_fiber):
                 $is_nonempty_set(A)
-        obtain choose_preimage from exist choice_fn fn(A fn_range(preimage_fiber)) big_union(fn_range(preimage_fiber)) st {forall A fn_range(preimage_fiber) => {choice_fn(A) $in A}}
+        obtain choose_preimage from exist choice_fn fn(A fn_range(preimage_fiber)) big_union(fn_range(preimage_fiber)) st {$is_choice_function_for(fn_range(preimage_fiber), fn_range(preimage_fiber), fn(A fn_range(preimage_fiber)) fn_range(preimage_fiber) {A}, choice_fn)}
         claim:
             ? forall A fn_range(preimage_fiber):
                 choose_preimage(A) $in X
@@ -9232,7 +9232,7 @@ thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
     by axiom_of_choice: set fn_range(F):
         forall A fn_range(F):
             $is_nonempty_set(A)
-    obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {forall A fn_range(F) => {choice_fn(A) $in A}}
+    obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {$is_choice_function_for(fn_range(F), fn_range(F), fn(A fn_range(F)) fn_range(F) {A}, choice_fn)}
     claim:
         ? forall A fn_range(F):
             choose_pair(A) $in cart(R, R)
@@ -9245,11 +9245,16 @@ thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
     claim:
         ? forall n N+:
             $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-        pick_bad_pair(n) = choose_pair(F(n))
+        F(n) $in fn_range(F)
         choose_pair(F(n)) $in F(n)
-        pick_bad_pair(n) $in F(n)
         F(n) = bad_uniform_pair_family(X, f, epsilon0, n)
+        choose_pair(F(n)) $in bad_uniform_pair_family(X, f, epsilon0, n)
+        choose_pair(F(n)) $in cart(R, R)
+        pick_bad_pair(n) = choose_pair(F(n))
+        pick_bad_pair(n) $in cart(R, R)
+        pick_bad_pair(n) $in F(n)
         pick_bad_pair(n) $in bad_uniform_pair_family(X, f, epsilon0, n)
+        $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
     claim:
         ? $is_sequence_in_real_set(bad_left, X)
         claim:
@@ -9362,7 +9367,7 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
         by axiom_of_choice: set fn_range(F):
             forall A fn_range(F):
                 $is_nonempty_set(A)
-        obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {forall A fn_range(F) => {choice_fn(A) $in A}}
+        obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {$is_choice_function_for(fn_range(F), fn_range(F), fn(A fn_range(F)) fn_range(F) {A}, choice_fn)}
         claim:
             ? forall A fn_range(F):
                 choose_pair(A) $in cart(R, R)
@@ -9375,11 +9380,16 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
         claim:
             ? forall n N+:
                 $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-            pick_bad_pair(n) = choose_pair(F(n))
+            F(n) $in fn_range(F)
             choose_pair(F(n)) $in F(n)
-            pick_bad_pair(n) $in F(n)
             F(n) = bad_uniform_pair_family(X, f, epsilon0, n)
+            choose_pair(F(n)) $in bad_uniform_pair_family(X, f, epsilon0, n)
+            choose_pair(F(n)) $in cart(R, R)
+            pick_bad_pair(n) = choose_pair(F(n))
+            pick_bad_pair(n) $in cart(R, R)
+            pick_bad_pair(n) $in F(n)
             pick_bad_pair(n) $in bad_uniform_pair_family(X, f, epsilon0, n)
+            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
         claim:
             ? $is_sequence_in_real_set(bad_left, X)
             claim:

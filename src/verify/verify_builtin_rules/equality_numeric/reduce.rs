@@ -1151,7 +1151,8 @@ impl Runtime {
                 source.set.as_ref(),
                 &map,
                 line_file.clone(),
-            ) {
+                builtin_state,
+            )? {
                 continue;
             }
             let mut subgoals = Vec::new();

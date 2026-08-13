@@ -11,6 +11,41 @@ impl Runtime {
             .contains(&right_key)
     }
 
+    pub(crate) fn compiler_known_equality_path(
+        &self,
+        left: &Obj,
+        right: &Obj,
+    ) -> Option<Vec<KnownEqualityBuiltinRuleStep>> {
+        let mut equalities = KnownEquality::new();
+        for environment in self.iter_environments_from_top() {
+            for equality in environment.known_equality.direct_equalities() {
+                let equality_fact: Fact = AtomicFact::EqualFact(equality.clone()).into();
+                if self
+                    .known_fact_id_for_fact(&equality_fact)
+                    .ok()
+                    .flatten()
+                    .is_some()
+                {
+                    equalities.store(&equality);
+                }
+            }
+        }
+        equalities
+            .proof_path(left, right)?
+            .into_iter()
+            .map(|step| {
+                let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
+                let source_fact_id = self.known_fact_id_for_fact(&equality_fact).ok().flatten()?;
+                Some(KnownEqualityBuiltinRuleStep::new(
+                    step.from,
+                    step.to,
+                    step.equality,
+                    source_fact_id,
+                ))
+            })
+            .collect()
+    }
+
     pub fn verify_objs_are_equal_by_known_equality(
         &self,
         left: &Obj,
@@ -48,6 +83,23 @@ impl Runtime {
         }
 
         if self.objs_have_same_known_equality_rc_in_some_env(left, right) {
+            if self.litex_to_lean_ir_mode() {
+                if let Some(path) = self.compiler_known_equality_path(left, right) {
+                    if !path.is_empty() {
+                        let target: Fact =
+                            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
+                        return FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            target.clone(),
+                            "known-only equality: same known equality class".to_string(),
+                            BuiltinRuleEvidence::KnownEqualityPath(
+                                KnownEqualityBuiltinRuleEvidence::new(target, path),
+                            ),
+                            Vec::new(),
+                        )
+                        .into();
+                    }
+                }
+            }
             return factual_equal_success_by_builtin_reason(
                 left,
                 right,
@@ -544,6 +596,18 @@ impl Runtime {
 mod tests {
     use super::*;
 
+    fn store_compiler_equality(runtime: &mut Runtime, left: Obj, right: Obj, fact_id: FactId) {
+        let equality = EqualFact::new(left, right, default_line_file());
+        runtime
+            .top_level_env()
+            .store_equality(&equality)
+            .expect("store equality proof edge");
+        runtime
+            .top_level_env()
+            .store_fact_to_cache_known_fact(equality.to_string(), default_line_file(), fact_id)
+            .expect("store equality FactId");
+    }
+
     fn matcher_accepts_with_one_known_leaf(left: &Obj, right: &Obj, x: &Obj, y: &Obj) -> bool {
         Runtime::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
             Ok::<bool, ()>(
@@ -614,5 +678,60 @@ mod tests {
         assert!(!sqrt_rules.contains("try_verify_sqrt_equal_args_identity"));
         assert!(!abs_rules.contains("try_verify_abs_sign_invariance"));
         assert!(!numeric_modules.contains("mod algebra_context"));
+    }
+
+    #[test]
+    fn compiler_equality_evidence_does_not_leak_from_discarded_child() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("compiler-equality-discarded-child");
+        let a: Obj = Identifier::new("a".to_string()).into();
+        let b: Obj = Identifier::new("b".to_string()).into();
+        let c: Obj = Identifier::new("c".to_string()).into();
+        store_compiler_equality(&mut runtime, a.clone(), b.clone(), FactId::new(1));
+
+        let result: Result<(), RuntimeError> = runtime.run_in_local_env(|runtime| {
+            store_compiler_equality(runtime, b.clone(), c.clone(), FactId::new(2));
+            assert!(runtime.compiler_known_equality_path(&a, &c).is_some());
+            Ok(())
+        });
+        result.expect("discarded-child evidence probe should run");
+        assert!(runtime.compiler_known_equality_path(&a, &c).is_none());
+    }
+
+    #[test]
+    fn compiler_equality_evidence_requires_a_cached_fact_id() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("compiler-equality-missing-fact-id");
+        let a: Obj = Identifier::new("a".to_string()).into();
+        let b: Obj = Identifier::new("b".to_string()).into();
+        runtime
+            .top_level_env()
+            .store_equality(&EqualFact::new(a.clone(), b.clone(), default_line_file()))
+            .expect("store semantic equality without compiler identity");
+
+        assert!(runtime.compiler_known_equality_path(&a, &b).is_none());
+    }
+
+    #[test]
+    fn compiler_equality_evidence_merges_from_committed_child() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("compiler-equality-committed-child");
+        let a: Obj = Identifier::new("a".to_string()).into();
+        let b: Obj = Identifier::new("b".to_string()).into();
+        let c: Obj = Identifier::new("c".to_string()).into();
+        store_compiler_equality(&mut runtime, a.clone(), b.clone(), FactId::new(1));
+
+        runtime
+            .run_in_local_env_and_commit(|runtime| {
+                store_compiler_equality(runtime, b.clone(), c.clone(), FactId::new(2));
+                Ok(())
+            })
+            .expect("committed-child evidence probe should run");
+        let path = runtime
+            .compiler_known_equality_path(&a, &c)
+            .expect("committed child equality should remain visible");
+        assert_eq!(path.len(), 2);
+        assert_eq!(path[0].source_fact_id, FactId::new(1));
+        assert_eq!(path[1].source_fact_id, FactId::new(2));
     }
 }

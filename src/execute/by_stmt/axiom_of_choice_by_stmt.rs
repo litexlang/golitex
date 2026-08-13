@@ -160,10 +160,8 @@ fn axiom_of_choice_exist_fact(
     line_file: LineFile,
 ) -> Result<Fact, RuntimeError> {
     let choice_index_name = runtime.generate_internal_binder_name();
-    let choice_index_group = runtime.fresh_param_group_with_set(
-        vec![choice_index_name],
-        family.clone(),
-    )?;
+    let choice_index_group =
+        runtime.fresh_param_group_with_set(vec![choice_index_name], family.clone())?;
     let choice_fn_set = FnSet::new(
         vec![choice_index_group],
         vec![],
@@ -171,17 +169,13 @@ fn axiom_of_choice_exist_fact(
     )?;
 
     let f_name = runtime.generate_internal_binder_name();
-    let f_group = runtime.fresh_param_group_with_type(
-        vec![f_name],
-        ParamType::Obj(choice_fn_set.into()),
-    )?;
+    let f_group =
+        runtime.fresh_param_group_with_type(vec![f_name], ParamType::Obj(choice_fn_set.into()))?;
     let f = obj_for_bound_param_in_scope(&f_group.params[0], ParamObjType::Exist);
 
     let identity_index_name = runtime.generate_internal_binder_name();
-    let identity_index_group = runtime.fresh_param_group_with_set(
-        vec![identity_index_name],
-        family.clone(),
-    )?;
+    let identity_index_group =
+        runtime.fresh_param_group_with_set(vec![identity_index_name], family.clone())?;
     let identity_value =
         obj_for_bound_param_in_scope(&identity_index_group.params[0], ParamObjType::FnSet);
     let identity_family: Obj = AnonymousFn::new(

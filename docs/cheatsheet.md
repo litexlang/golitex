@@ -220,8 +220,8 @@ cannot admit an unproved target. Required structural arms remain, and
 | `by symmetric_prop` | The prop must exist and have arity matching the `forall`. | Proves the required symmetry `forall`. | Registers the symmetric permutation. |
 | `by reflexive_prop` | The prop must exist and be binary. | Proves the required reflexivity `forall`. | Registers the prop as reflexive. |
 | `by antisymmetric_prop` | The prop must exist and be binary. | Proves the required antisymmetry `forall`. | Registers the prop as antisymmetric. |
-| `by axiom_of_choice` | Legacy syntax is recognized, but its former conclusion used an anonymous `forall` in an existential body. | Rejected with a migration diagnostic. | Stores nothing; use `general_cart_nonempty_by_choice_*`. |
-| `by zorn_lemma` | Legacy syntax is recognized, but its former conclusion used an anonymous `forall` in an existential body. | Rejected with a migration diagnostic. | Stores nothing pending an explicit named-maximality theorem interface. |
+| `by axiom_of_choice: set S: ...` | `S` is a set. | Proves every `A $in S` is nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. |
+| `by zorn_lemma: set S, prop P, prop U, prop M: ...` | `P` is binary; `U(c power_set(S),u S)` and `M(m S)` are concrete props with the exact upper-bound and maximality definitions. | Proves nonemptiness, partial-order laws, and a named upper-bound witness for every chain. | Stores `exist m S st {$M(m)}`; no existential body contains an anonymous `forall`. |
 | `by regularity_axiom` | The set object must be well-defined. | Verifies the set is nonempty. | Stores the regularity/foundation conclusion. |
 
 ## Commands And Tools

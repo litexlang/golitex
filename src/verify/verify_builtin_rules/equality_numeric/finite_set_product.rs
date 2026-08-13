@@ -634,7 +634,8 @@ impl Runtime {
                         source.set.as_ref(),
                         &map,
                         line_file.clone(),
-                    )
+                        builtin_state,
+                    )?
                 }
                 _ => false,
             };
@@ -947,25 +948,39 @@ impl Runtime {
         ) else {
             return Ok(None);
         };
-        if !self
+        let return_set_matches = self
+            .verify_objs_are_equal_in_equality_builtin(
+                enumerator_body.ret_set.as_ref(),
+                &target_set,
+                line_file.clone(),
+                builtin_state,
+            )?
+            .is_true();
+        if !return_set_matches {
+            return Ok(None);
+        }
+
+        let declared_domain_matches = self
             .verify_objs_are_equal_in_equality_builtin(
                 &enumerator_index_set,
                 &index_set,
                 line_file.clone(),
                 builtin_state,
             )?
-            .is_true()
-        {
-            return Ok(None);
-        }
-        if !self
-            .verify_objs_are_equal_in_equality_builtin(
-                enumerator_body.ret_set.as_ref(),
+            .is_true();
+        // `finite_seq(X, n)` records its callable carrier as
+        // `fn(i N+: i <= n) X`, while enumeration syntax uses
+        // `closed_range(1, n)`.  An explicit bijection over that exact range
+        // is the public certificate that these are the same usable domain.
+        // Accept it here instead of requiring the internal carrier spelling.
+        if !declared_domain_matches
+            && !self.has_known_builtin_bijection(
+                &index_set,
                 &target_set,
+                &enumerator,
                 line_file,
                 builtin_state,
             )?
-            .is_true()
         {
             return Ok(None);
         }
@@ -990,7 +1005,8 @@ impl Runtime {
             &shape.target_set,
             &enumerator,
             line_file.clone(),
-        ) {
+            builtin_state,
+        )? {
             return Ok(true);
         }
 

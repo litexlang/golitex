@@ -2631,7 +2631,7 @@ are finite with the expected cardinality bounds or formulas.
 # For finiteness itself, write a subset as the finite set with its complement
 # in the ambient finite set removed.
 
-thm subset_of_finite_set_is_finite:
+thm finite_subset_is_finite_by_double_difference:
     ? forall A set, B finite_set:
         A $subset B
         =>:

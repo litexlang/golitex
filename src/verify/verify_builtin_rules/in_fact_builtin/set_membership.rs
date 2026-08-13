@@ -639,8 +639,23 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let preimage_result =
+            let mut preimage_result =
                 self.verify_builtin_rule_premise(&preimage_in_source, builtin_state)?;
+            // Literal source membership is a bounded structural leaf, so it
+            // may discharge the witness carrier without consuming a second
+            // recursive builtin-rule layer. Example: `$P(1,z)` introduces
+            // `z $in replacement(P,{1,2})`.
+            if !preimage_result.is_true() {
+                if let (AtomicFact::InFact(preimage_in_fact), Obj::ListSet(source_elements)) =
+                    (&preimage_in_source, replacement.source_set.as_ref())
+                {
+                    preimage_result = self.verify_in_fact_by_equal_to_one_element_in_list_set(
+                        preimage_in_fact,
+                        source_elements,
+                        builtin_state,
+                    )?;
+                }
+            }
             if !preimage_result.is_true() {
                 continue;
             }

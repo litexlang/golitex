@@ -383,7 +383,8 @@ impl Runtime {
                         source_sum.set.as_ref(),
                         &map,
                         line_file.clone(),
-                    ) {
+                        builtin_state,
+                    )? {
                         true
                     } else {
                         let shape = FiniteSetEnumerationSummand {

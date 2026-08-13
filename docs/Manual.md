@@ -547,14 +547,31 @@ have g fn(alpha I) S
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
 have f general_cart(I, S, g)
+$is_choice_function_for(I, S, g, f)
 forall alpha I:
     f(alpha) $in g(alpha)
 ```
 
 The `trust` line makes the required factor-nonemptiness background explicit,
 and the named builtin theorem makes the axiom-of-choice step explicit.
-Membership in `general_cart` exposes the pointwise selection facts directly;
-there is no anonymous-`forall` set-builder equality.
+The quantified selection condition has the named builtin interface
+`$is_choice_function_for(I, S, g, f)`. Its definition is
+`forall alpha I: f(alpha) $in g(alpha)`, and `general_cart` has the canonical
+atomic-filter expansion
+
+```litex
+have I set
+have S nonempty_set
+trust forall A S => {$is_nonempty_set(A)}
+have g fn(alpha I) S
+
+general_cart(I, S, g) = {f fn(f_index I)big_union(S): $is_choice_function_for(I, S, g, f)}
+```
+
+General-cart membership exposes both the named predicate and its pointwise
+definition. Conversely, a function with the named predicate is admitted into
+the general Cartesian product. No existential or set-builder body stores an
+anonymous `forall`.
 
 The family operators and replacement have different proof interfaces; their
 similar set-valued syntax does not make them interchangeable:
@@ -1601,6 +1618,7 @@ Mapping predicates describe standard function properties:
 |---|---|
 | `$fn_eq_in(f, g, S)` | `f` and `g` agree on `S` |
 | `$fn_eq(f, g)` | Globally equal compatible functions |
+| `$is_choice_function_for(I, S, g, f)` | `f` selects one member of `g(alpha)` for every `alpha` in `I` |
 | `$injective(A, B, f)` | `f : A -> B` is injective |
 | `$surjective(A, B, f)` | `f : A -> B` is surjective |
 | `$bijective(A, B, f)` | `f : A -> B` is bijective |
@@ -2270,7 +2288,8 @@ tuple/cart/sequence/matrix introductions.
 | `by def` | One positive concrete/builtin definitional target and every defining clause. | The target with explicit definition provenance. |
 | Predicate-property registrations | The proof has the exact reflexive/symmetric/transitive/antisymmetric predicate shape. | A reusable property route; antisymmetry may later close equality. |
 | `by regularity_axiom` | Its displayed set/nonemptiness obligations. | An explicitly trusted set-theoretic conclusion; strict mode rejects the step. |
-| `by zorn_lemma`, `by axiom_of_choice` | These legacy forms are currently unavailable because their old conclusions embedded anonymous `forall` facts inside existential bodies. | No conclusion is stored; use an explicit named-property theorem interface. Choice-backed general products already expose `general_cart_nonempty_by_choice_*`. |
+| `by axiom_of_choice` | The family is a set and every member is proved nonempty. | Stores `exist f fn(A S)big_union(S) st {$is_choice_function_for(S,S,fn(A S)S {A},f)}`. The existential body is atomic. |
+| `by zorn_lemma` | The set, binary relation, exact named upper-bound/maximality definitions, nonemptiness, partial-order laws, and chain-upper-bound obligation. | Stores `exist m S st {$M(m)}` using the supplied named maximality prop. The chain witness likewise uses the supplied atomic upper-bound prop. |
 | `import` | Only the isolated-session import grammar and module constraints. | A qualified imported environment; maintained modules use manifests instead. |
 | `eval` | The expression belongs to the supported executable subset. | Evaluation output, not a new mathematical proof fact. |
 | `clear` | No proof obligation. | Resets the current user environment. |
@@ -2877,12 +2896,64 @@ This form is not an ordinary derived proof. Its statement form and output keep
 the direct boundary visible; `-strict` rejects it. Litex does not taint later
 theorems or facts with transitive trust metadata.
 
-The legacy `by axiom_of_choice` and `by zorn_lemma` statements are currently
-unavailable: their former conclusions put anonymous universal facts inside
-existential bodies. Choice-backed general Cartesian products use the explicit
-`general_cart_nonempty_by_choice_from_family` or
-`general_cart_nonempty_by_choice_from_pointwise` theorem interfaces. A future
-Zorn interface must likewise name its maximality property explicitly.
+`by axiom_of_choice` now stores its chooser through the builtin named property:
+
+```litex
+have F set
+trust forall A F:
+    $is_nonempty_set(A)
+by axiom_of_choice: set F:
+    forall A F:
+        $is_nonempty_set(A)
+
+obtain chooser from exist f fn(A F)big_union(F) st {$is_choice_function_for(F, F, fn(A F) F {A}, f)}
+forall A F:
+    chooser(A) $in A
+```
+
+`by zorn_lemma` requires the two quantified conditions that occur below
+existentials to be named concrete props. Their signatures and definitions are
+checked exactly before any obligation is accepted:
+
+```litex
+have S set
+abstract_prop leq(x, y)
+prop upper_bound(c power_set(S), u S):
+    forall x c:
+        $leq(x, u)
+prop maximal(m S):
+    forall x S:
+        $leq(m, x)
+        =>:
+            x = m
+
+by zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+    trust $is_nonempty_set(S)
+    trust:
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
+
+obtain m from exist m S st {$maximal(m)}
+```
+
+The choice-backed `general_cart_nonempty_by_choice_from_family` and
+`general_cart_nonempty_by_choice_from_pointwise` theorem interfaces remain
+available when only nonemptiness of a general Cartesian product is needed.
 
 ### Reading verifier output
 
@@ -3893,7 +3964,7 @@ Main families are:
 | `y $in fn_range(f)` | Membership in the declared codomain plus an existential preimage carrying every instantiated domain condition and `y=f(args)` |
 | `A $in power_set(B)` | `A $subset B` |
 | `x $in cart(A, B, ...)` | Tuple shape, dimension, and coordinate memberships |
-| `f $in general_cart(I,S,g)` | `f $in fn(index I) big_union(S)` and the pointwise factor-membership universal |
+| `f $in general_cart(I,S,g)` | `f $in fn(index I) big_union(S)`, `$is_choice_function_for(I,S,g,f)`, and its pointwise factor-membership universal |
 | `x $in range(a, b)` | Integer membership and half-open bounds |
 | `x $in closed_range(a, b)` | Integer membership and closed bounds |
 | `x` in a real interval | Real membership and endpoint bounds |

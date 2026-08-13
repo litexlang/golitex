@@ -82,6 +82,14 @@ axiom apply :
   Applicable f args →
   LitexObject
 
+def IsChoiceFunctionFor
+    (indexSet _familySet family chooser : LitexObject) : Prop :=
+  ∀ (alpha : LitexObject), In alpha indexSet →
+    ∀ (chooserApplicable : Applicable chooser [alpha])
+      (familyApplicable : Applicable family [alpha]),
+      In (apply chooser [alpha] chooserApplicable)
+        (apply family [alpha] familyApplicable)
+
 instance : CoeFun LitexObject fun f =>
     (args : List LitexObject) → Applicable f args → LitexObject where
   coe := apply
@@ -184,10 +192,32 @@ mod tests {
         assert!(!prelude.contains("axiom IsNonemptySet"));
         assert!(!prelude.contains("axiom IsFiniteSet"));
         assert!(prelude.contains("axiom Applicable : LitexObject → List LitexObject → Prop"));
+        assert!(prelude.contains("def IsChoiceFunctionFor"));
+        assert!(prelude.contains("In (apply chooser [alpha] chooserApplicable)"));
+        assert!(!prelude.contains("axiom IsChoiceFunctionFor"));
         assert!(prelude.contains("axiom add : LitexObject → LitexObject → LitexObject"));
         assert!(prelude.contains("theorem realSubClosure"));
         assert!(!prelude.contains("class LitexObject"));
         assert!(!prelude.contains("Set ℝ"));
         assert!(!prelude.contains("Set ℂ"));
+    }
+
+    #[test]
+    fn checked_in_generated_file_header_matches_the_emitter() {
+        let expected = format!("import Mathlib\n\n{}", universal_object_prelude());
+        assert_eq!(
+            include_str!("current_generated_file_header.lean").trim_end(),
+            expected
+        );
+    }
+
+    #[test]
+    fn litex_object_design_has_exactly_ten_representative_examples() {
+        let design = include_str!("litex_object_design.md");
+        let example_count = design
+            .lines()
+            .filter(|line| line.starts_with("### Example "))
+            .count();
+        assert_eq!(example_count, 10);
     }
 }

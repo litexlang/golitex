@@ -2698,6 +2698,10 @@ impl Runtime {
         subgoals: &[StmtResult],
         context: &LitexToLeanIrConstructionContext,
     ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+        if let Some(BuiltinRuleEvidence::KnownEqualityPath(evidence)) = evidence {
+            return self
+                .build_litex_to_lean_ir_known_equality_path(goal, evidence, subgoals, context);
+        }
         if let Some(BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence)) = evidence {
             if evidence.expected_target.to_string() != goal.to_string() {
                 return Err(litex_to_lean_ir_error(
@@ -2980,6 +2984,105 @@ impl Runtime {
         };
         Ok(LitexToLeanFactProofIr::RuleApplication {
             rule,
+            parameter_requirements: Vec::new(),
+            premises,
+        })
+    }
+
+    fn build_litex_to_lean_ir_known_equality_path(
+        &self,
+        goal: &Fact,
+        evidence: &KnownEqualityBuiltinRuleEvidence,
+        subgoals: &[StmtResult],
+        context: &LitexToLeanIrConstructionContext,
+    ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+        if evidence.expected_target.to_string() != goal.to_string() || !subgoals.is_empty() {
+            return Err(litex_to_lean_ir_error(
+                &goal.line_file(),
+                "known-equality evidence changed its target or gained verifier subgoals",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::EqualFact(target)) = &evidence.expected_target else {
+            return Err(litex_to_lean_ir_error(
+                &goal.line_file(),
+                "known-equality evidence retained a non-equality target",
+            ));
+        };
+        if evidence.steps.is_empty() {
+            return Err(litex_to_lean_ir_error(
+                &goal.line_file(),
+                "known-equality evidence retained an empty non-reflexive path",
+            ));
+        }
+
+        let mut current_key = obj_equality_key(&target.left);
+        let target_key = obj_equality_key(&target.right);
+        let mut premises = Vec::with_capacity(evidence.steps.len());
+        let mut steps = Vec::with_capacity(evidence.steps.len());
+        for step in evidence.steps.iter() {
+            let from_key = obj_equality_key(&step.from);
+            let to_key = obj_equality_key(&step.to);
+            if current_key != from_key {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "known-equality evidence contains a disconnected path",
+                ));
+            }
+
+            let left_key = obj_equality_key(&step.equality.left);
+            let right_key = obj_equality_key(&step.equality.right);
+            let direction = if from_key == left_key && to_key == right_key {
+                LitexToLeanEqualityRewriteDirectionIr::Forward
+            } else if from_key == right_key && to_key == left_key {
+                LitexToLeanEqualityRewriteDirectionIr::Backward
+            } else {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    "known-equality evidence contains an edge with invalid orientation",
+                ));
+            };
+
+            let equality_fact: Fact = AtomicFact::EqualFact(step.equality.clone()).into();
+            let available_fact_id = context
+                .local_fact_ids
+                .get(&equality_fact.to_string())
+                .copied()
+                .or(self.known_fact_id_for_fact(&equality_fact)?);
+            if available_fact_id != Some(step.source_fact_id) {
+                return Err(litex_to_lean_ir_error(
+                    &goal.line_file(),
+                    format!(
+                        "known-equality edge `{equality_fact}` cites unavailable or mismatched FactId {}",
+                        step.source_fact_id.value()
+                    ),
+                ));
+            }
+            premises.push(LitexToLeanFactIr {
+                fact_id: Some(step.source_fact_id),
+                proposition: equality_fact,
+                proof: LitexToLeanFactProofIr::KnownFactCitation {
+                    source_fact_id: step.source_fact_id,
+                },
+            });
+            steps.push(LitexToLeanKnownEqualityStepIr {
+                from: step.from.clone(),
+                to: step.to.clone(),
+                source_fact_id: step.source_fact_id,
+                direction,
+            });
+            current_key = to_key;
+        }
+        if current_key != target_key {
+            return Err(litex_to_lean_ir_error(
+                &goal.line_file(),
+                "known-equality evidence does not end at the target right-hand side",
+            ));
+        }
+
+        Ok(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::KnownEqualityPath(LitexToLeanKnownEqualityPathIr {
+                steps,
+            }),
             parameter_requirements: Vec::new(),
             premises,
         })

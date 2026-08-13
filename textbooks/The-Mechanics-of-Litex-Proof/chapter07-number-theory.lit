@@ -493,25 +493,13 @@ sketch:
             a > 0
             =>:
                 exist p, q N+ st {a = p / q, gcd(p, q) = 1}
-        by thm basics::rational_has_unique_reduced_fraction(a)
-        obtain p, q from exist! p Z, q N+ st {a = p / q, $basics::is_reduced_fraction(p, q)}
+        by thm rational_has_unique_reduced_fraction(a)
+        obtain p, q from exist! p Z, q N+ st {a = p / q, gcd(p, q) = 1}
         q > 0
         a * q = (p / q) * q = p
         a * q > 0
         p > 0
         p $in N+
-        by thm citation::gcd_positive(p, q)
-        by thm citation::gcd_divides_left(p, q)
-        by thm citation::gcd_divides_right(p, q)
-        obtain x from exist x Z st {p = gcd(p, q) * x}
-        obtain y from exist y Z st {q = gcd(p, q) * y}
-        gcd(p, q) * x = gcd(p, q) * x + 0
-        gcd(p, q) * y = gcd(p, q) * y + 0
-        p = gcd(p, q) * x + 0
-        q = gcd(p, q) * y + 0
-        p % gcd(p, q) = 0
-        q % gcd(p, q) = 0
-        $basics::is_reduced_fraction(p, q)
         gcd(p, q) = 1
         witness exist r, s N+ st {a = r / s, gcd(r, s) = 1} from p, q:
             a = p / q

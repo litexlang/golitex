@@ -9,8 +9,8 @@ native-carrier backend and its snapshots were deleted.
 
 - [x] One `LitexObject` target type for values, sets, and functions.
 - [x] `Litex.In x S` is independent membership evidence; it never retypes `x`.
-- [x] `Litex.IsSet x` is an opaque proposition, not a target type and not an
-  always-true definition; set parameters retain their exact source proof.
+- [x] `Litex.IsSet x` is represented as a proposition rather than a target
+  type, and set parameters retain their exact source proof.
 - [x] `Litex.IsNonemptySet x` and `Litex.IsFiniteSet x` are derived definitions
   over `IsSet` and the `In`-extension, not independent axioms.
 - [x] Standard numeric sets are `LitexObject` constants.
@@ -22,6 +22,10 @@ native-carrier backend and its snapshots were deleted.
 - [x] Forall introduction binds every object as `LitexObject` and retains every
   parameter membership or set-property fact.
 - [x] Known facts resolve by exact `FactId`.
+- [x] Known equality classes expose their existing direct proof paths; every
+  selected edge is joined to its exact cached `FactId`, symmetry and multi-edge
+  transitivity emit `Eq.symm`/`Eq.trans`, and discarded child environments do
+  not leak evidence.
 - [x] Known forall instances call the exact source `FactId` with ordered object,
   parameter-requirement, and domain arguments.
 - [x] WD evidence retains runtime-owned `WellDefinedObjProofId` and
@@ -47,10 +51,18 @@ native-carrier backend and its snapshots were deleted.
   compile as complete generated sources under real Mathlib.
 - [x] One nonempty source argument group becomes one list application; nested
   groups use `Litex.fnSetResult`, and split arity remains rejected by Litex.
-- [x] The seven-entry universal-object ledger compiles under real Mathlib.
+- [x] The eight-entry universal-object ledger compiles under real Mathlib.
 
 ## Required next coverage
 
+- [ ] Implement the decided all-objects-are-sets ABI: replace the currently
+  emitted opaque `Litex.IsSet` with `def IsSet (_ : LitexObject) := True`, and
+  simplify the derived nonempty/finite predicates. The exact current drift is
+  preserved in `current_generated_file_header.lean`.
+- [ ] Add proof-carrying partial object constructors, beginning with list sets,
+  replacement, and anonymous functions. Their Lean terms must consume the
+  verifier-owned WD certificates instead of retaining those facts only as
+  detached audit declarations.
 - [ ] Preserve and emit supported inferred forall premises.
 - [ ] Add dependent/refined non-function return-set coverage beyond the current
   nested function-set result path.

@@ -21,9 +21,10 @@ pub use builtin_rule_evidence::{
     ClosedNumericComparisonBuiltinRuleEvidence, DefinitionProjectionBuiltinRuleEvidence,
     DivNotEqualZeroBuiltinRuleEvidence, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    NonzeroExpressionOrientation, RealArithmeticMembershipClosureBuiltinRule,
-    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
-    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep, NonzeroExpressionOrientation,
+    RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
+    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
+    SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;

@@ -1696,6 +1696,9 @@ by axiom_of_choice: set S:
         $is_nonempty_set(A)
 
 exist f fn(A S) big_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
+obtain chooser from exist f fn(A S) big_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
+forall A S:
+    chooser(A) $in A
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(

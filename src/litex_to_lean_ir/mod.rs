@@ -476,6 +476,7 @@ pub enum LitexToLeanProofRuleIr {
         expected_head_membership: Fact,
     },
     EqualityRewrite(LitexToLeanEqualityRewriteIr),
+    KnownEqualityPath(LitexToLeanKnownEqualityPathIr),
     IffRewrite {
         direction: LitexToLeanIffDirectionIr,
     },
@@ -577,6 +578,33 @@ pub struct LitexToLeanEqualityRewriteStepIr {
     pub direction: LitexToLeanEqualityRewriteDirectionIr,
 }
 
+/// A direct equality proof path. In its enclosing `RuleApplication`, premise
+/// `n` is the exact stored equality cited by `steps[n].source_fact_id`.
+#[derive(Clone, Debug)]
+pub struct LitexToLeanKnownEqualityPathIr {
+    pub steps: Vec<LitexToLeanKnownEqualityStepIr>,
+}
+
+#[derive(Clone)]
+pub struct LitexToLeanKnownEqualityStepIr {
+    pub from: Obj,
+    pub to: Obj,
+    pub source_fact_id: FactId,
+    pub direction: LitexToLeanEqualityRewriteDirectionIr,
+}
+
+impl fmt::Debug for LitexToLeanKnownEqualityStepIr {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LitexToLeanKnownEqualityStepIr")
+            .field("from", &self.from.to_string())
+            .field("to", &self.to.to_string())
+            .field("source_fact_id", &self.source_fact_id)
+            .field("direction", &self.direction)
+            .finish()
+    }
+}
+
 impl fmt::Debug for LitexToLeanEqualityRewriteStepIr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("LitexToLeanEqualityRewriteStepIr")
@@ -672,6 +700,9 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .finish(),
             LitexToLeanProofRuleIr::EqualityRewrite(rewrite) => {
                 f.debug_tuple("EqualityRewrite").field(rewrite).finish()
+            }
+            LitexToLeanProofRuleIr::KnownEqualityPath(path) => {
+                f.debug_tuple("KnownEqualityPath").field(path).finish()
             }
             LitexToLeanProofRuleIr::IffRewrite { direction } => f
                 .debug_struct("IffRewrite")

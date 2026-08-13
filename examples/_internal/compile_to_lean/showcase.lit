@@ -42,6 +42,19 @@ forall a, b C:
     =>:
         b != a
 
+# Known equality certificates retain their exact direct FactId path. Lean
+# replays a reversed edge with Eq.symm and connected edges with Eq.trans.
+forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+
 # Source application groups remain exact target list-application layers.
 forall f fn(x, y, z R) R:
     f(1, 2, 3) = f(1, 2, 3)

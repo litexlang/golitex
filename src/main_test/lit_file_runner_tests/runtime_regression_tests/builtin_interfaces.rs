@@ -72,6 +72,14 @@ have fn enum(k closed_range(1, finite_set_size({1}))) {1} = 1
 trust finite_set_size({1}) >= 1
 trust $bijective(closed_range(1, finite_set_size({1})), {1}, enum)
 by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(enum(k))}))
+
+by thm finite_set_has_bijective_index({1})
+obtain builtin_enum from exist builtin_enum finite_seq({1}, finite_set_size({1})) st {$bijective(closed_range(1, finite_set_size({1})), {1}, builtin_enum)}
+have indexed_value {1}
+exist! indexed_position closed_range(1, finite_set_size({1})) st {builtin_enum(indexed_position) = indexed_value}
+have fn range_index(zero_index {0}) closed_range(1, finite_set_size({1})) = 1
+builtin_enum(range_index(0)) $in {1}
+by thm sum_over_bijective_finite_set_enumerations(sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}), sum(1, finite_set_size({1}), fn(k closed_range(1, finite_set_size({1}))) R {literal_value(builtin_enum(k))}))
 "#;
         let (_, succeeded, output) = run_source(source, "builtin_theorem_interfaces", true);
         assert!(
