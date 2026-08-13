@@ -23,7 +23,8 @@ forall a, b set:
 #
 # Boundary: a verifier builtin without a checked shared-theorem adapter remains
 # rejected by strict To-Lean; neither an inline tactic script nor an axiom is
-# generated as a fallback.
+# generated as a fallback. The real Lean gate also confirms that a generated
+# ABI-version-2 assertion is rejected by the current ABI-version-1 library.
 # Source gate:
 # target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit
 # Focused compiler gate:

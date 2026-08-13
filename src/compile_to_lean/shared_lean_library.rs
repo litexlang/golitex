@@ -1,8 +1,10 @@
 pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 1;
 
 /// Imports the shared target ABI and pins generated output to its ABI version.
-pub(super) fn generated_import_header() -> &'static str {
-    "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl"
+pub(super) fn generated_import_header() -> String {
+    format!(
+        "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = {LITEX_LEAN_ABI_VERSION} := rfl"
+    )
 }
 
 #[cfg(test)]
@@ -11,6 +13,7 @@ mod tests {
 
     const CORE_SOURCE: &str = include_str!("../../lean/Litex/Core.lean");
     const BUILTIN_RULES_SOURCE: &str = include_str!("../../lean/Litex/BuiltinRules.lean");
+    const LAKEFILE: &str = include_str!("../../lean/lakefile.toml");
 
     #[test]
     fn shared_library_owns_one_object_abi_and_real_builtin_theorems() {
@@ -56,6 +59,11 @@ mod tests {
         assert!(CORE_SOURCE.contains(&format!("def abiVersion : Nat := {LITEX_LEAN_ABI_VERSION}")));
         assert!(generated_import_header()
             .contains(&format!("Litex.abiVersion = {LITEX_LEAN_ABI_VERSION}")));
+    }
+
+    #[test]
+    fn rust_and_lean_packages_share_a_release_version() {
+        assert!(LAKEFILE.contains(&format!("version = \"{}\"", env!("CARGO_PKG_VERSION"))));
     }
 
     #[test]

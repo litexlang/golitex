@@ -105,6 +105,10 @@ fn shared_builtin_rule_tracer_compiles_with_mathlib() {
             .expect("the shared builtin-rule tracer should compile");
         let mut library = SharedLeanTestLibrary::new("shared-builtin-tracer");
         library.compile_generated("shared-builtin-tracer", &generated);
+        library.reject_generated(
+            "wrong-abi-version",
+            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n",
+        );
     });
 }
 

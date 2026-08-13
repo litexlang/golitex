@@ -1,5 +1,6 @@
 # Rust build (crate root is repo root; was litex/target/)
 /target/
+/lean/.lake/
 
 # From former litex/.gitignore (paths now at root)
 binary/
