@@ -5,6 +5,12 @@ impl Runtime {
         self.symbol_id_allocator.allocate()
     }
 
+    pub(crate) fn allocate_source_object_occurrence_id(
+        &self,
+    ) -> Result<SourceObjectOccurrenceId, RuntimeError> {
+        Ok(SourceObjectOccurrenceId::new(self.allocate_symbol_id()?))
+    }
+
     pub(crate) fn allocate_local_symbol_binding(
         &self,
         name: String,

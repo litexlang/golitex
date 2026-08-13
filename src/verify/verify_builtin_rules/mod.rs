@@ -25,8 +25,10 @@ mod type_predicates_builtin;
 
 pub(crate) use in_fact_builtin::{
     builtin_in_fact_result_for_evaluated_number_in_standard_set,
-    builtin_not_in_fact_result_for_evaluated_number_in_standard_set, general_cart_member_fn_set,
-    general_cart_member_pointwise_fact,
+    builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
+    choice_function_for_definition_facts, choice_function_for_fact,
+    general_cart_member_choice_fact, general_cart_member_fn_set,
+    verify_choice_function_for_arg_types,
 };
 pub(crate) use number_compare::normalized_decimal_string_is_even_integer;
 pub use number_compare::{compare_normalized_number_str_to_zero, NumberCompareResult};

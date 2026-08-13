@@ -11,8 +11,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT = ROOT / "src/compile_to_lean/builtin_rule_inventory.md"
 SOURCE_ROOTS = [ROOT / "src/verify", ROOT / "src/execute"]
-LOCAL_BUILTIN_CATALOG_ROOT = ROOT / "src/verify/local_builtin_catalog"
-LOCAL_BUILTIN_RULE_COUNT = len(tuple(LOCAL_BUILTIN_CATALOG_ROOT.rglob("*.lit")))
 
 # Function name -> (label argument index, provenance kind).
 INITIAL_SINKS = {
@@ -22,44 +20,6 @@ INITIAL_SINKS = {
     "new_with_verified_by_builtin_rule_evidence_recording_stmt": [(1, "rule")],
     "new_with_verified_by_builtin_strategy_recording_stmt": [(1, "strategy")],
     "new_with_verified_by_builtin_strategy_evidence_recording_stmt": [(1, "strategy")],
-}
-
-ARITHMETIC_LEAN_MAPPINGS = {
-    "less_equal_fact_from_known_strict_order": "`linarith only`",
-    "greater_equal_fact_from_known_strict_order": "`linarith only`",
-    "0 <= u - v from v <= u": "`linarith only`",
-    "0 < u - v from v < u": "`linarith only`",
-    "0 <= a + b from known atomic facts 0 <= a and 0 <= b": "`linarith only`",
-    "0 < a + b from 0 < a and 0 < b": "`linarith only`",
-    "0 < a + b from (0 < a and 0 <= b)": "`linarith only`",
-    "0 < a + b from (0 <= a and 0 < b)": "`linarith only`",
-    "0 <= a * b from 0 <= a and 0 <= b": "`mul_nonneg`",
-    "0 < a * b from 0 < a and 0 < b": "`mul_pos`",
-    "0 <= a / b from 0 <= a and 0 < b": "`div_nonneg` + `le_of_lt`",
-    "0 < a / b from 0 < a and 0 < b": "`div_pos`",
-    "u + a <= u + b from a <= b": "`linarith only`",
-    "a - c <= b from a <= b and 0 <= c": "`linarith only`",
-    "a <= a + b from 0 <= b": "`linarith only`",
-    "a + c <= b + d from a <= b and c <= d": "`linarith only`",
-    "u + a < u + b from a < b": "`linarith only`",
-    "a + c < b + d from a < b and c < d": "`linarith only`",
-    "a + c < b + d from a < b and c <= d": "`linarith only`",
-    "a + c < b + d from a <= b and c < d": "`linarith only`",
-}
-
-SET_AND_ABSOLUTE_VALUE_LEAN_MAPPINGS = {
-    "union_commutative": "`ext x; simp [or_comm]`",
-    "union_associative": "`ext x; simp [or_assoc]`",
-    "union_idempotent": "`ext x; simp`",
-    "union_empty_identity": "`ext x; simp`",
-    "intersect_commutative": "`ext x; simp [and_comm]`",
-    "intersect_associative": "`ext x; simp [and_assoc]`",
-    "intersection membership: member of both sides": "`Set.mem_inter_iff` + pair",
-    "set-minus membership: member of left side and non-member of right side": "`Set.mem_diff` + pair",
-    "abs: abs(x) = x from 0 <= x": "`abs_of_nonneg`",
-    "abs: abs(x) = -x from x <= 0": "`abs_of_nonpos`",
-    "abs: abs(x * y) = abs(x) * abs(y)": "`abs_mul`",
-    "abs: 0 < abs(x) from x != 0": "`abs_pos.mpr`",
 }
 
 EVALUATION_MARKERS = (
@@ -434,74 +394,29 @@ def mechanism_class(entry) -> str:
 
 def lean_mapping(entry) -> tuple[str, str]:
     text = entry["label"] or entry["expression"]
-    if entry["path"].endswith("verify/local_builtin_catalog/verify.rs"):
+    if text == "not-equality symmetry":
+        return "`Litex.BuiltinRules.notEqualSymmetry`", "implemented"
+    standard_numeral_theorems = {
+        "number in N": "numeralInN",
+        "number in Z": "numeralInZ",
+        "number in Q": "numeralInQ",
+        "number in R": "numeralInR",
+        "number in C": "numeralInC",
+    }
+    if theorem := standard_numeral_theorems.get(text):
         return (
-            f"paired Litex schema + checked Lean adapter ({LOCAL_BUILTIN_RULE_COUNT} RuleIds)",
-            "implemented",
+            f"`Litex.BuiltinRules.{theorem}` for natural numeral targets only",
+            "partial",
         )
-    direct_mapping = SET_AND_ABSOLUTE_VALUE_LEAN_MAPPINGS.get(text)
-    if direct_mapping is not None:
-        return direct_mapping, "implemented"
-    if entry["path"].endswith("in_fact_builtin/set_membership.rs"):
-        if "union membership: member of the" in text:
-            return "`Set.mem_union` + `Or.inl`/`Or.inr`", "implemented"
-        if "intersection non-membership: non-member of the" in text:
-            return "`Set.mem_inter_iff` + contradiction", "implemented"
     if (
-        entry["sink"] == "new_with_verified_by_builtin_rule_evidence_and_steps"
-        and text == "div_not_equal_zero_from_numerator_nonzero"
+        text == "real arithmetic has real operands and result"
+        and entry["sink"] in TYPED_LOCAL_RULE_SINKS
     ):
-        return "`div_ne_zero` / `Ne.symm`", "implemented"
-    if entry["sink"] == "new_with_verified_by_builtin_rule_evidence_recording_stmt":
-        if text == "fn application in its exact instantiated declared return set":
-            return (
-                "exact source-layer elimination of retained function membership",
-                "implemented",
-            )
-        if (
-            text
-            == "fn membership: same input domain and pointwise values lie in the target return set"
-        ):
-            return (
-                "checked pointwise `forall` specialization into a native function-set predicate",
-                "implemented",
-            )
-        if entry.get("function") == "verify_in_fact_by_standard_subset_membership":
-            return (
-                "native membership projection + checked numeric coercion",
-                "implemented",
-            )
-        if text == "not-equality symmetry":
-            return "`Ne.symm`", "implemented"
-        if text == "subset_superset_duality":
-            return "native subset proposition (one reversed checked premise)", "implemented"
-        if text == "deterministic primality computation for u64":
-            return "`Nat.Prime` / `norm_num`", "implemented"
-        if text == "deterministic natural coprimality computation":
-            return "`Nat.Coprime` / `norm_num`", "implemented"
-        if text in (
-            "integer expression closure under +, -, and *",
-            "Z closure: binary integer arithmetic",
-        ):
-            return (
-                "native `ℤ` membership with checked ordered operand proofs",
-                "implemented",
-            )
-        mapping = ARITHMETIC_LEAN_MAPPINGS.get(text)
-        if mapping is not None:
-            return mapping, "implemented"
-    if (
-        entry["sink"]
-        == "new_with_verified_by_builtin_strategy_evidence_recording_stmt"
-    ):
-        return "recursive typed arithmetic evidence (`linarith only`)", "implemented"
-    if text in (
-        "bounded symbolic normalization",
-        "calculation and rational expression simplification",
-    ):
-        return "`norm_num` / `ring` / `field_simp; ring`", "implemented"
-    if text == "standard_nonempty_set":
-        return "existential witness `0` over `N/Z/Q/R/C`", "implemented"
+        return (
+            "`Litex.BuiltinRules.realAddClosure/realSubClosure/realMulClosure/realDivClosure`; "
+            "power and other operators remain unsupported",
+            "partial",
+        )
     if is_evaluation(entry):
         return "none", "not_this_round"
     return "none", "pending"
@@ -517,6 +432,7 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
     )
     evaluation_count = sum(is_evaluation(item) for item in entries)
     implemented_count = sum(lean_mapping(item)[1] == "implemented" for item in entries)
+    partial_count = sum(lean_mapping(item)[1] == "partial" for item in entries)
     mechanism_counts = {
         name: sum(mechanism_class(item) == name for item in entries)
         for name in (
@@ -560,16 +476,12 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         "conservative and source-derived; it does not claim one Rust site equals one",
         "mathematical theorem schema.",
         "",
-        "A Lean mapping is recorded only when the current backend actually emits and the",
-        "Lean kernel checks that tactic or lemma. `none` means no checked mapping exists",
-        "yet for that individual local rule schema, not that Lean lacks the mathematics.",
-        f"The generic local-schema site currently represents {LOCAL_BUILTIN_RULE_COUNT} paired RuleIds;",
-        "the implemented summary still counts source sites, not catalog entries.",
-        "Closed numeric membership results may instead use the backend's generic,",
-        "carrier-bearing `norm_num` reflection path. The closed-u64 `$prime` and",
-        "closed-natural `$coprime` routes are listed as implemented because they carry",
-        "explicit structured reflection evidence; other evaluation sites remain",
-        "`not_this_round`.",
+        "A Lean mapping is recorded only when the universal-`LitexObject` backend",
+        "currently emits and the Lean kernel checks that theorem call. `partial` means",
+        "the source site recognizes more cases than the current target theorem; `none`",
+        "means no checked mapping exists yet. The deleted native-carrier adapter catalog",
+        "does not count as implementation. This table inventories source sites, not",
+        "mathematical theorem schemas.",
         "",
         "Regenerate or audit drift with:",
         "",
@@ -591,6 +503,7 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         f"| Dynamic label expressions | {dynamic_count} |",
         f"| Evaluation/computation (`not_this_round`) | {evaluation_count} |",
         f"| Checked Lean mappings currently implemented | {implemented_count} |",
+        f"| Partially mapped Lean source sites | {partial_count} |",
         f"| Forwarding sink functions discovered | {len(sinks)} |",
         *(
             f"| Mechanism: `{name}` | {count} |"

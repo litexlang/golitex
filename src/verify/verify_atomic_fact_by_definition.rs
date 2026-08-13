@@ -94,6 +94,37 @@ impl Runtime {
         ))
     }
 
+    pub(crate) fn verify_choice_function_for_fact_by_definition(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        let AtomicFact::NormalAtomicFact(normal_fact) = atomic_fact else {
+            return Ok(None);
+        };
+        let Some(definition_facts) =
+            crate::verify::choice_function_for_definition_facts(self, normal_fact)?
+        else {
+            return Ok(None);
+        };
+        let mut subgoals = Vec::new();
+        for definition_fact in definition_facts {
+            let result = self.verify_fact_full(&definition_fact, verify_state)?;
+            if result.is_unknown() {
+                return Ok(None);
+            }
+            subgoals.push(result);
+        }
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                atomic_fact.clone().into(),
+                "choice function by pointwise membership definition".to_string(),
+                subgoals,
+            )
+            .into(),
+        ))
+    }
+
     // Built-in subset/superset definitions first, then user `prop` iff-clauses.
     pub(crate) fn verify_atomic_fact_using_builtin_or_prop_definition(
         &mut self,
@@ -104,6 +135,11 @@ impl Runtime {
             return Ok(Some(result));
         }
         if let Some(result) = self.verify_coprime_fact_by_definition(atomic_fact, verify_state)? {
+            return Ok(Some(result));
+        }
+        if let Some(result) =
+            self.verify_choice_function_for_fact_by_definition(atomic_fact, verify_state)?
+        {
             return Ok(Some(result));
         }
         if let Some(result) =
@@ -120,7 +156,10 @@ impl Runtime {
             // A builtin definition that is not yet provable is an unknown goal, not a missing
             // user `prop`. This matters when a theorem proof (for example induction) is expected
             // to establish a symbolic `$prime` or `$coprime` target later.
-            if matches!(n.predicate.to_string().as_str(), PRIME | COPRIME) {
+            if matches!(
+                n.predicate.to_string().as_str(),
+                PRIME | COPRIME | crate::common::keywords::IS_CHOICE_FUNCTION_FOR
+            ) {
                 return Ok(None);
             }
             return self.verify_normal_atomic_fact_using_its_definition(n, verify_state);

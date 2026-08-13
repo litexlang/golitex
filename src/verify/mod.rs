@@ -30,10 +30,12 @@ pub(crate) use verify_helper::nested_obj_binder_normalized_fact_key;
 mod verify_known_atomic_facts;
 mod verify_non_equational_atomic_fact;
 mod verify_not_forall_fact;
-pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
 pub(crate) use verify_builtin_rules::{
-    general_cart_member_fn_set, general_cart_member_pointwise_fact,
+    choice_function_for_definition_facts, choice_function_for_fact,
+    general_cart_member_choice_fact, general_cart_member_fn_set,
+    verify_choice_function_for_arg_types,
 };
+pub use verify_builtin_rules::{compare_normalized_number_str_to_zero, NumberCompareResult};
 mod use_context_verify_state;
 mod verify_arg_satisfy_param_def;
 mod verify_fn_membership_by_definition;

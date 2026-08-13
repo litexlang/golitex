@@ -199,6 +199,7 @@ pub const SURJECTIVE: &str = "surjective";
 pub const BIJECTIVE: &str = "bijective";
 pub const PRIME: &str = "prime";
 pub const COPRIME: &str = "coprime";
+pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
 
 fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
     let mut m = HashMap::new();
@@ -476,6 +477,7 @@ pub fn is_builtin_predicate(atom_name: &str) -> bool {
         || atom_name == BIJECTIVE
         || atom_name == PRIME
         || atom_name == COPRIME
+        || atom_name == IS_CHOICE_FUNCTION_FOR
 }
 
 pub fn is_builtin_identifier_name(atom_name: &str) -> bool {

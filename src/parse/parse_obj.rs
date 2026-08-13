@@ -116,7 +116,7 @@ impl Runtime {
                 let group: Vec<Box<Obj>> = args.into_iter().map(Box::new).collect();
                 body_vectors.push(group);
             }
-            left = FnObj::new(head, body_vectors).into();
+            left = self.new_parsed_fn_obj(head, body_vectors)?;
         }
         if !tb.exceed_end_of_head() && tb.current_token_is_equal_to(DOT_AKA_FIELD_ACCESS_SIGN) {
             return Err(RuntimeError::from(ParseRuntimeError(
@@ -198,7 +198,7 @@ impl Runtime {
                     body_vectors.push(group);
                 }
                 if !body_vectors.is_empty() {
-                    result = FnObj::new(head, body_vectors).into();
+                    result = self.new_parsed_fn_obj(head, body_vectors)?;
                 }
                 Ok(result)
             } else {
@@ -218,7 +218,7 @@ impl Runtime {
                     body_vectors.push(group);
                 }
                 if !body_vectors.is_empty() {
-                    result = FnObj::new(head, body_vectors).into();
+                    result = self.new_parsed_fn_obj(head, body_vectors)?;
                 }
                 Ok(result)
             }
@@ -259,7 +259,7 @@ impl Runtime {
                 }
                 if !body_vectors.is_empty() {
                     let head = FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()));
-                    result = FnObj::new(head, body_vectors).into();
+                    result = self.new_parsed_fn_obj(head, body_vectors)?;
                 }
             }
             Ok(result)
@@ -478,7 +478,7 @@ impl Runtime {
                 if body_vectors.is_empty() {
                     return Ok(obj);
                 }
-                return Ok(FnObj::new(head, body_vectors).into());
+                return self.new_parsed_fn_obj(head, body_vectors);
             }
         }
 
@@ -571,7 +571,7 @@ impl Runtime {
             body_vectors.push(group);
         }
         if !body_vectors.is_empty() {
-            result = FnObj::new(head, body_vectors).into();
+            result = self.new_parsed_fn_obj(head, body_vectors)?;
         }
         Ok(result)
     }

@@ -398,9 +398,11 @@ impl ByAntisymmetricPropStmt {
 impl ByZornLemmaStmt {
     pub fn to_latex_string(&self) -> String {
         let mut rows = vec![format!(
-            r"\text{{\textbf{{by zorn_lemma:}}}} \text{{set }} {}, \text{{prop }} {}",
+            r"\text{{\textbf{{by zorn_lemma:}}}} \text{{set }} {}, \text{{prop }} {}, \text{{prop }} {}, \text{{prop }} {}",
             self.set.to_latex_string(),
-            latex_texttt_escape(&self.prop_name.to_string())
+            latex_texttt_escape(&self.prop_name.to_string()),
+            latex_texttt_escape(&self.upper_bound_prop_name.to_string()),
+            latex_texttt_escape(&self.maximal_prop_name.to_string())
         )];
         for st in &self.proof {
             rows.push(format!(r"& \quad {}", st.to_latex_string()));

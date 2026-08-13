@@ -138,6 +138,7 @@ impl Runtime {
             return Ok(None);
         }
         let proof_id = self.allocate_well_defined_obj_proof_id()?;
+        let source_object = frame.object.clone();
         let proof = Rc::new(WellDefinedObjProof::new(
             proof_id,
             frame.object,
@@ -154,15 +155,42 @@ impl Runtime {
                 .cache_well_defined_obj
                 .insert(frame.cache_key, CachedWellDefinedObj::with_proof(proof_id));
         }
-        self.record_well_defined_obj_proof_use(proof_id);
+        self.record_well_defined_obj_proof_use(&source_object, proof_id)?;
         Ok(Some(proof_id))
     }
 
-    pub(crate) fn record_well_defined_obj_proof_use(&mut self, proof_id: WellDefinedObjProofId) {
+    pub(crate) fn record_well_defined_obj_proof_use(
+        &mut self,
+        source_object: &Obj,
+        proof_id: WellDefinedObjProofId,
+    ) -> Result<(), RuntimeError> {
         let statement_capture_depth = self.well_definedness_capture_stack.len();
         if statement_capture_depth == 0 {
-            return;
+            return Ok(());
         }
+        let phase = self
+            .well_definedness_target_requirement_phase_stack
+            .last()
+            .copied()
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(
+                    "WD target-requirement phase stack is missing its statement frame".to_string(),
+                )
+            })?;
+        let target_requirement_use = match source_object {
+            Obj::FnObj(application) => application.source_occurrence_id.map(|occurrence_id| {
+                self.well_defined_obj_proof(proof_id)
+                    .map(|proof| (occurrence_id, proof.target_requirements.clone()))
+                    .ok_or_else(|| {
+                        missing_well_definedness_proof_error(format!(
+                            "well-defined object proof {} is outside the active environment chain",
+                            proof_id.value()
+                        ))
+                    })
+            }),
+            _ => None,
+        }
+        .transpose()?;
         if let Some(parent) = self
             .well_definedness_object_capture_stack
             .iter_mut()
@@ -172,15 +200,45 @@ impl Runtime {
             if !parent.child_proof_ids.contains(&proof_id) {
                 parent.child_proof_ids.push(proof_id);
             }
-            return;
+        } else {
+            let certificate = self
+                .well_definedness_capture_stack
+                .last_mut()
+                .expect("checked nonempty WD capture stack");
+            if !certificate.root_proof_ids.contains(&proof_id) {
+                certificate.root_proof_ids.push(proof_id);
+            }
         }
-        let certificate = self
-            .well_definedness_capture_stack
-            .last_mut()
-            .expect("checked nonempty WD capture stack");
-        if !certificate.root_proof_ids.contains(&proof_id) {
-            certificate.root_proof_ids.push(proof_id);
+
+        if let Some((source_occurrence_id, requirements)) = target_requirement_use {
+            let certificate = self
+                .well_definedness_capture_stack
+                .last_mut()
+                .expect("checked nonempty WD capture stack");
+            for requirement in requirements {
+                // Rechecks in one phase cite the first successful edge. The
+                // frozen certificate later selects the final proof phase when
+                // it exists, while retaining every proof node for audit.
+                if certificate.target_requirement_uses.iter().any(|existing| {
+                    existing.source_occurrence_id == source_occurrence_id
+                        && existing.role == requirement.role
+                        && existing.phase == phase
+                }) {
+                    continue;
+                }
+                certificate
+                    .target_requirement_uses
+                    .push(WellDefinedTargetRequirementUse::new(
+                        source_occurrence_id,
+                        proof_id,
+                        phase,
+                        requirement.role,
+                        requirement.fact_id,
+                        requirement.expected_proposition,
+                    ));
+            }
         }
+        Ok(())
     }
 
     pub(crate) fn record_well_definedness_target_requirement(
@@ -239,6 +297,59 @@ impl Runtime {
             ));
     }
 
+    pub(crate) fn record_well_definedness_parameter_facts(
+        &mut self,
+        params: &ParamDefWithType,
+        infer_result: &InferResult,
+    ) -> Result<(), RuntimeError> {
+        if !self.captures_litex_to_lean_well_definedness()
+            || self.well_definedness_capture_stack.is_empty()
+        {
+            return Ok(());
+        }
+        let parameter_reason = InferReason::ParameterDefinition.store_reason();
+        let outputs = infer_result
+            .store_fact_outputs
+            .iter()
+            .filter(|output| output.itself_and_why_itself_is_stored.1 == parameter_reason)
+            .collect::<Vec<_>>();
+        let bindings = params.collect_param_bindings();
+        if outputs.len() != bindings.len() {
+            return Err(missing_well_definedness_proof_error(format!(
+                "nested forall retained {} parameter facts for {} bindings",
+                outputs.len(),
+                bindings.len()
+            )));
+        }
+
+        let mut additions = Vec::with_capacity(bindings.len());
+        for (binding, output) in bindings.iter().zip(outputs) {
+            let proposition = output.itself_and_why_itself_is_stored.0.clone();
+            let fact_id = self.known_fact_id_for_fact(&proposition)?.ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "nested forall parameter fact `{proposition}` has no FactId"
+                ))
+            })?;
+            additions.push(WellDefinednessParameterFactEvidence::new(
+                binding.id(),
+                fact_id,
+                proposition,
+            ));
+        }
+        let certificate = self
+            .well_definedness_capture_stack
+            .last_mut()
+            .expect("checked nonempty WD capture stack");
+        for evidence in additions {
+            if !certificate.parameter_facts.iter().any(|existing| {
+                existing.symbol_id == evidence.symbol_id && existing.fact_id == evidence.fact_id
+            }) {
+                certificate.parameter_facts.push(evidence);
+            }
+        }
+        Ok(())
+    }
+
     pub(crate) fn freeze_well_definedness_certificate(
         &self,
         mut certificate: WellDefinednessCertificate,
@@ -261,17 +372,6 @@ impl Runtime {
 
         let mut ordered_object_ids = object_proofs.keys().copied().collect::<Vec<_>>();
         ordered_object_ids.sort_by_key(|proof_id| proof_id.value());
-        let object_occurrence_ids = ordered_object_ids
-            .iter()
-            .enumerate()
-            .map(|(index, proof_id)| {
-                (
-                    *proof_id,
-                    WellDefinednessObjectOccurrenceId::new(index as u64 + 1),
-                )
-            })
-            .collect::<std::collections::HashMap<_, _>>();
-
         let mut referenced_fact_ids = std::collections::HashSet::new();
         for proof in object_proofs.values() {
             referenced_fact_ids.extend(proof.fact_ids.iter().copied());
@@ -282,6 +382,12 @@ impl Runtime {
                     .map(|requirement| requirement.fact_id),
             );
         }
+        referenced_fact_ids.extend(
+            certificate
+                .target_requirement_uses
+                .iter()
+                .map(|requirement| requirement.fact_id),
+        );
         let mut ordered_fact_ids = referenced_fact_ids.into_iter().collect::<Vec<_>>();
         ordered_fact_ids.sort_by_key(|fact_id| fact_id.value());
         let certificate_fact_ids = ordered_fact_ids
@@ -327,7 +433,6 @@ impl Runtime {
                     .filter_map(|fact_id| certificate_fact_ids.get(fact_id).copied())
                     .collect();
                 WellDefinednessObjectEvidence::new(
-                    object_occurrence_ids[proof_id],
                     *proof_id,
                     proof.object.clone(),
                     proof.intrinsic_result_set.clone(),
@@ -338,23 +443,60 @@ impl Runtime {
             })
             .collect();
 
-        certificate.target_requirements = ordered_object_ids
-            .iter()
-            .flat_map(|proof_id| {
-                let proof = &object_proofs[proof_id];
-                proof.target_requirements.iter().map(|requirement| {
-                    WellDefinednessTargetRequirementEvidence::new(
-                        object_occurrence_ids[proof_id],
-                        *proof_id,
-                        requirement.source_object.clone(),
-                        requirement.role,
-                        certificate_fact_ids[&requirement.fact_id],
-                        requirement.fact_id,
-                        requirement.expected_proposition.clone(),
+        let target_requirement_uses = std::mem::take(&mut certificate.target_requirement_uses);
+        let mut selected_target_requirement_uses: Vec<WellDefinedTargetRequirementUse> = Vec::new();
+        let mut selected_indices: std::collections::HashMap<
+            (SourceObjectOccurrenceId, WellDefinednessRequirementRole),
+            usize,
+        > = std::collections::HashMap::new();
+        for requirement in target_requirement_uses {
+            let key = (requirement.source_occurrence_id, requirement.role);
+            if let Some(index) = selected_indices.get(&key).copied() {
+                if target_requirement_phase_priority(requirement.phase)
+                    > target_requirement_phase_priority(
+                        selected_target_requirement_uses[index].phase,
                     )
-                })
+                {
+                    selected_target_requirement_uses[index] = requirement;
+                }
+            } else {
+                selected_indices.insert(key, selected_target_requirement_uses.len());
+                selected_target_requirement_uses.push(requirement);
+            }
+        }
+        certificate.target_requirements = selected_target_requirement_uses
+            .into_iter()
+            .map(|requirement| {
+                let proof = object_proofs
+                    .get(&requirement.well_defined_obj_proof_id)
+                    .ok_or_else(|| {
+                        missing_well_definedness_proof_error(format!(
+                            "target requirement cites missing well-defined object proof {}",
+                            requirement.well_defined_obj_proof_id.value()
+                        ))
+                    })?;
+                if !proof.target_requirements.iter().any(|retained| {
+                    retained.role == requirement.role
+                        && retained.fact_id == requirement.fact_id
+                        && retained.expected_proposition.to_string()
+                            == requirement.expected_proposition.to_string()
+                }) {
+                    return Err(missing_well_definedness_proof_error(format!(
+                        "target requirement is not an edge of well-defined object proof {}",
+                        requirement.well_defined_obj_proof_id.value()
+                    )));
+                }
+                Ok(WellDefinednessTargetRequirementEvidence::new(
+                    requirement.source_occurrence_id,
+                    requirement.well_defined_obj_proof_id,
+                    requirement.phase,
+                    requirement.role,
+                    certificate_fact_ids[&requirement.fact_id],
+                    requirement.fact_id,
+                    requirement.expected_proposition,
+                ))
             })
-            .collect();
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
         Ok(certificate)
     }
 
@@ -409,6 +551,14 @@ fn transitive_well_defined_fact_ids(
 
 fn missing_well_definedness_proof_error(message: String) -> RuntimeError {
     UnknownRuntimeError(RuntimeErrorStruct::new_with_just_msg(message)).into()
+}
+
+fn target_requirement_phase_priority(phase: WellDefinednessTargetRequirementPhase) -> u8 {
+    match phase {
+        WellDefinednessTargetRequirementPhase::Store => 0,
+        WellDefinednessTargetRequirementPhase::Preflight => 1,
+        WellDefinednessTargetRequirementPhase::Proof => 2,
+    }
 }
 
 #[cfg(test)]
@@ -606,10 +756,10 @@ mod tests {
                 .map(|evidence| evidence.proof.stmt.to_string())
                 .collect::<Vec<_>>()
         );
-        let requirement = certificate
+        let requirements = certificate
             .target_requirements
             .iter()
-            .find(|requirement| {
+            .filter(|requirement| {
                 requirement.expected_proposition.to_string() == "2 > 0"
                     && requirement.role
                         == WellDefinednessRequirementRole::FunctionDomain {
@@ -617,12 +767,38 @@ mod tests {
                             domain_index: 0,
                         }
             })
-            .expect("the application must retain its exact domain-proof reference");
+            .collect::<Vec<_>>();
+        assert_eq!(
+            requirements.len(),
+            2,
+            "each source application must retain an exact target-use edge"
+        );
+        assert_ne!(
+            requirements[0].source_occurrence_id, requirements[1].source_occurrence_id,
+            "equal source expressions still have distinct parser-owned occurrences"
+        );
+        assert_eq!(
+            requirements[0].well_defined_obj_proof_id, requirements[1].well_defined_obj_proof_id,
+            "the second occurrence should cite the first occurrence's cached proof"
+        );
+        assert_eq!(
+            requirements[0].well_defined_fact_id, requirements[1].well_defined_fact_id,
+            "both cached uses should cite the same checked domain fact"
+        );
+        assert!(
+            requirements.iter().all(
+                |requirement| requirement.phase == WellDefinednessTargetRequirementPhase::Proof
+            ),
+            "the final target edge must come from the statement's proof scope"
+        );
+        let requirement = requirements[0];
         let object = certificate
             .objects
             .iter()
-            .find(|object| object.occurrence_id == requirement.object_occurrence_id)
-            .expect("the domain-proof reference must point to a checked object occurrence");
+            .find(|object| {
+                object.well_defined_obj_proof_id == requirement.well_defined_obj_proof_id
+            })
+            .expect("the domain-proof reference must point to a checked object proof");
         assert!(object.object.to_string().ends_with("f(2)"));
         assert!(object.fact_ids.contains(&requirement.certificate_id));
     }

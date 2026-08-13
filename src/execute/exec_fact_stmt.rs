@@ -4,7 +4,13 @@ use std::result::Result;
 impl Runtime {
     pub fn exec_fact(&mut self, fact: &Fact) -> Result<StmtResult, RuntimeError> {
         self.exec_fact_stmt_verify_well_definedness(fact)?;
+        self.set_well_definedness_target_requirement_phase(
+            WellDefinednessTargetRequirementPhase::Proof,
+        );
         let result = self.exec_fact_stmt_verify_process(fact)?;
+        self.set_well_definedness_target_requirement_phase(
+            WellDefinednessTargetRequirementPhase::Store,
+        );
         let infer_result = self.exec_fact_stmt_affect_environment(fact, &result)?;
 
         Ok(result.with_infers(infer_result))

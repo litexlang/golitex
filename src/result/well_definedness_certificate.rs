@@ -15,20 +15,6 @@ impl WellDefinednessCertificateId {
     }
 }
 
-/// Stable only within one executed source statement.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct WellDefinednessObjectOccurrenceId(u64);
-
-impl WellDefinednessObjectOccurrenceId {
-    pub fn new(value: u64) -> Self {
-        Self(value)
-    }
-
-    pub fn value(self) -> u64 {
-        self.0
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum WellDefinednessRequirementRole {
     /// The verifier consumed this proof while checking an object. Whether a
@@ -65,7 +51,6 @@ pub struct WellDefinednessFactEvidence {
 /// transitive compatibility view used by the current Lean ownership checks.
 #[derive(Clone)]
 pub struct WellDefinednessObjectEvidence {
-    pub occurrence_id: WellDefinednessObjectOccurrenceId,
     /// Runtime-wide identity of the environment-owned DAG node.
     pub well_defined_obj_proof_id: WellDefinedObjProofId,
     pub object: Obj,
@@ -82,7 +67,6 @@ impl std::fmt::Debug for WellDefinednessObjectEvidence {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("WellDefinednessObjectEvidence")
-            .field("occurrence_id", &self.occurrence_id)
             .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
             .field("object", &self.object.to_string())
             .field(
@@ -98,7 +82,6 @@ impl std::fmt::Debug for WellDefinednessObjectEvidence {
 
 impl WellDefinednessObjectEvidence {
     pub fn new(
-        occurrence_id: WellDefinednessObjectOccurrenceId,
         well_defined_obj_proof_id: WellDefinedObjProofId,
         object: Obj,
         intrinsic_result_set: Option<Obj>,
@@ -107,7 +90,6 @@ impl WellDefinednessObjectEvidence {
         fact_ids: Vec<WellDefinednessCertificateId>,
     ) -> Self {
         Self {
-            occurrence_id,
             well_defined_obj_proof_id,
             object,
             intrinsic_result_set,
@@ -123,22 +105,43 @@ impl WellDefinednessObjectEvidence {
 /// deliberately have no target-use entry.
 #[derive(Clone)]
 pub struct WellDefinednessTargetRequirementEvidence {
-    pub object_occurrence_id: WellDefinednessObjectOccurrenceId,
+    pub source_occurrence_id: SourceObjectOccurrenceId,
     pub well_defined_obj_proof_id: WellDefinedObjProofId,
-    pub source_object: Obj,
+    pub phase: WellDefinednessTargetRequirementPhase,
     pub role: WellDefinednessRequirementRole,
     pub certificate_id: WellDefinednessCertificateId,
     pub well_defined_fact_id: WellDefinedFactId,
     pub expected_proposition: Fact,
 }
 
+/// Exact ordinary FactId assigned to a parameter premise while checking a
+/// nested source quantifier. The child environment may later disappear, but
+/// the compiler still has to map citations of this ID to the corresponding
+/// Lean binder.
+#[derive(Clone, Debug)]
+pub struct WellDefinednessParameterFactEvidence {
+    pub symbol_id: SymbolId,
+    pub fact_id: FactId,
+    pub proposition: Fact,
+}
+
+impl WellDefinednessParameterFactEvidence {
+    pub fn new(symbol_id: SymbolId, fact_id: FactId, proposition: Fact) -> Self {
+        Self {
+            symbol_id,
+            fact_id,
+            proposition,
+        }
+    }
+}
+
 impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("WellDefinednessTargetRequirementEvidence")
-            .field("object_occurrence_id", &self.object_occurrence_id)
+            .field("source_occurrence_id", &self.source_occurrence_id)
             .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
-            .field("source_object", &self.source_object.to_string())
+            .field("phase", &self.phase)
             .field("role", &self.role)
             .field("certificate_id", &self.certificate_id)
             .field("well_defined_fact_id", &self.well_defined_fact_id)
@@ -152,18 +155,18 @@ impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
 
 impl WellDefinednessTargetRequirementEvidence {
     pub fn new(
-        object_occurrence_id: WellDefinednessObjectOccurrenceId,
+        source_occurrence_id: SourceObjectOccurrenceId,
         well_defined_obj_proof_id: WellDefinedObjProofId,
-        source_object: Obj,
+        phase: WellDefinednessTargetRequirementPhase,
         role: WellDefinednessRequirementRole,
         certificate_id: WellDefinednessCertificateId,
         well_defined_fact_id: WellDefinedFactId,
         expected_proposition: Fact,
     ) -> Self {
         Self {
-            object_occurrence_id,
+            source_occurrence_id,
             well_defined_obj_proof_id,
-            source_object,
+            phase,
             role,
             certificate_id,
             well_defined_fact_id,
@@ -178,13 +181,22 @@ pub struct WellDefinednessCertificate {
     /// their Litex environments; the remaining fields are a frozen projection
     /// used after a local environment has left runtime scope.
     pub root_proof_ids: Vec<WellDefinedObjProofId>,
+    /// Live-capture links from exact source applications to reusable proof
+    /// nodes. `freeze_well_definedness_certificate` validates and projects
+    /// these into `target_requirements`.
+    pub(crate) target_requirement_uses: Vec<WellDefinedTargetRequirementUse>,
     pub facts: Vec<WellDefinednessFactEvidence>,
     pub objects: Vec<WellDefinednessObjectEvidence>,
     pub target_requirements: Vec<WellDefinednessTargetRequirementEvidence>,
+    pub parameter_facts: Vec<WellDefinednessParameterFactEvidence>,
 }
 
 impl WellDefinednessCertificate {
     pub fn is_empty(&self) -> bool {
-        self.facts.is_empty() && self.objects.is_empty() && self.target_requirements.is_empty()
+        self.facts.is_empty()
+            && self.objects.is_empty()
+            && self.target_requirement_uses.is_empty()
+            && self.target_requirements.is_empty()
+            && self.parameter_facts.is_empty()
     }
 }

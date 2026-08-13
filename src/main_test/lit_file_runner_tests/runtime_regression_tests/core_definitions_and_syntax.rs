@@ -1654,10 +1654,19 @@ have X nonempty_set
 trust forall x X => {$is_nonempty_set(x)}
 have g fn(alpha I) X
 
+general_cart(I, X, g) = {c fn(t I)big_union(X): $is_choice_function_for(I, X, g, c)}
+
+trust have d fn(t I)big_union(X)
+trust forall alpha I:
+    d(alpha) $in g(alpha)
+$is_choice_function_for(I, X, g, d)
+d $in general_cart(I, X, g)
+
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, X, g))
 $is_nonempty_set(general_cart(I, X, g))
 have c general_cart(I, X, g)
 c $in fn(t I)big_union(X)
+$is_choice_function_for(I, X, g, c)
 forall alpha I:
     c(alpha) $in g(alpha)
 
@@ -1683,6 +1692,31 @@ $is_nonempty_set(general_cart(J, X, h))
                 run_output
             );
         },
+    );
+}
+
+#[test]
+fn general_cart_named_set_builder_definition_rejects_a_different_family() {
+    let source_code = r#"
+have I set
+have X nonempty_set
+have g fn(alpha I) X
+have h fn(alpha I) X
+
+general_cart(I, X, g) = {c fn(t I)big_union(X): $is_choice_function_for(I, X, h, c)}
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "general_cart_named_set_builder_definition_rejects_a_different_family",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "a different family must not match the general_cart definition:\n{}",
+        run_output
     );
 }
 

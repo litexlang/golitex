@@ -597,6 +597,7 @@ pub struct Proj {
 pub struct FnObj {
     pub head: Box<FnObjHead>,
     pub body: Vec<Vec<Box<Obj>>>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -820,6 +821,19 @@ impl FnObj {
         FnObj {
             head: Box::new(head),
             body,
+            source_occurrence_id: None,
+        }
+    }
+
+    pub fn new_with_source_occurrence_id(
+        head: FnObjHead,
+        body: Vec<Vec<Box<Obj>>>,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
+        FnObj {
+            head: Box::new(head),
+            body,
+            source_occurrence_id,
         }
     }
 
@@ -828,9 +842,10 @@ impl FnObj {
             return self.head.as_ref().clone().into();
         }
 
-        FnObj::new(
+        FnObj::new_with_source_occurrence_id(
             self.head.as_ref().clone(),
             self.body[..number_of_body_groups_to_keep].to_vec(),
+            self.source_occurrence_id,
         )
         .into()
     }
@@ -1811,6 +1826,7 @@ impl Obj {
         match self {
             Obj::Atom(a) => Obj::Atom(a.replace_bound_identifier(from, to)),
             Obj::FnObj(inner) => {
+                let source_occurrence_id = inner.source_occurrence_id;
                 let head = replace_bound_identifier_in_fn_obj_head(*inner.head, from, to);
                 let body = inner
                     .body
@@ -1822,7 +1838,7 @@ impl Obj {
                             .collect()
                     })
                     .collect();
-                FnObj::new(head, body).into()
+                FnObj::new_with_source_occurrence_id(head, body, source_occurrence_id).into()
             }
             Obj::Number(n) => n.into(),
             Obj::ImaginaryUnit(i) => i.into(),

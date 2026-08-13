@@ -5,15 +5,26 @@ use std::fmt;
 pub struct ByZornLemmaStmt {
     pub set: Obj,
     pub prop_name: AtomicName,
+    pub upper_bound_prop_name: AtomicName,
+    pub maximal_prop_name: AtomicName,
     pub proof: Vec<Stmt>,
     pub line_file: LineFile,
 }
 
 impl ByZornLemmaStmt {
-    pub fn new(set: Obj, prop_name: AtomicName, proof: Vec<Stmt>, line_file: LineFile) -> Self {
+    pub fn new(
+        set: Obj,
+        prop_name: AtomicName,
+        upper_bound_prop_name: AtomicName,
+        maximal_prop_name: AtomicName,
+        proof: Vec<Stmt>,
+        line_file: LineFile,
+    ) -> Self {
         ByZornLemmaStmt {
             set,
             prop_name,
+            upper_bound_prop_name,
+            maximal_prop_name,
             proof,
             line_file,
         }
@@ -25,14 +36,35 @@ impl fmt::Display for ByZornLemmaStmt {
         if self.proof.is_empty() {
             return write!(
                 f,
-                "{} {}{} {} {}, {} {}",
-                BY, ZORN_LEMMA, COLON, SET, self.set, PROP, self.prop_name
+                "{} {}{} {} {}, {} {}, {} {}, {} {}",
+                BY,
+                ZORN_LEMMA,
+                COLON,
+                SET,
+                self.set,
+                PROP,
+                self.prop_name,
+                PROP,
+                self.upper_bound_prop_name,
+                PROP,
+                self.maximal_prop_name
             );
         }
         write!(
             f,
-            "{} {}{} {} {}, {} {}{}",
-            BY, ZORN_LEMMA, COLON, SET, self.set, PROP, self.prop_name, COLON
+            "{} {}{} {} {}, {} {}, {} {}, {} {}{}",
+            BY,
+            ZORN_LEMMA,
+            COLON,
+            SET,
+            self.set,
+            PROP,
+            self.prop_name,
+            PROP,
+            self.upper_bound_prop_name,
+            PROP,
+            self.maximal_prop_name,
+            COLON
         )?;
         if !self.proof.is_empty() {
             write!(

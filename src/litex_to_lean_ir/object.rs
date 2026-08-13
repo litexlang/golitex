@@ -2,10 +2,9 @@ use crate::prelude::*;
 
 /// A structural compiler representation of one Litex object.
 ///
-/// The tree preserves source object syntax and symbol identity. Its native Lean
-/// carrier is supplied separately by `LitexToLeanCarrierIr` constraints, so the
-/// same numeral or arithmetic tree can elaborate in `ℕ`, `ℤ`, `ℚ`, `ℝ`, or
-/// `ℂ` without attaching a guessed type to the object itself.
+/// The tree preserves source object syntax and symbol identity. Every node
+/// lowers to the one target type `LitexObject`; membership in numeric, user,
+/// and function sets is retained separately as `Litex.In` evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LitexToLeanObjectIr {
     Symbol {
@@ -17,17 +16,16 @@ pub enum LitexToLeanObjectIr {
     },
     Constant(LitexToLeanConstantObjectIr),
     StandardSet(LitexToLeanStandardSetIr),
-    /// A Litex function set is a set over this native function carrier.
-    /// Universal returns use `Set.univ`; refined returns add a pointwise
-    /// membership predicate.
+    /// A Litex function set is itself one `LitexObject`, carrying a restricted
+    /// source application contract.
     FunctionSet {
         function: Box<LitexToLeanFunctionTypeIr>,
     },
-    /// A native Lean set comprehension. The binder stays owned by this node;
-    /// its identity must not leak into the surrounding type context.
+    /// A source set-builder object. The binder stays owned by this node; its
+    /// identity must not leak into the surrounding context.
     SetBuilder(Box<LitexToLeanSetBuilderIr>),
-    /// A raw native Lean function value. Its output-membership certificate is
-    /// carried by the enclosing factual proof, not packed into a subtype.
+    /// An anonymous source function object. Its application contract and
+    /// output-membership certificate remain explicit proof evidence.
     AnonymousFunction(Box<LitexToLeanAnonymousFunctionIr>),
     /// Exact Litex application layers; target currying must not erase them.
     FunctionApplication(LitexToLeanFunctionApplicationIr),
@@ -47,7 +45,6 @@ pub struct LitexToLeanSetBuilderIr {
     pub symbol_id: SymbolId,
     pub name: String,
     pub set: Box<LitexToLeanObjectIr>,
-    pub element_carrier: LitexToLeanCarrierIr,
     pub facts: Vec<Fact>,
 }
 
@@ -67,7 +64,6 @@ impl std::fmt::Debug for LitexToLeanSetBuilderIr {
             .field("symbol_id", &self.symbol_id)
             .field("name", &self.name)
             .field("set", &self.set)
-            .field("element_carrier", &self.element_carrier)
             .field(
                 "facts",
                 &self
@@ -153,28 +149,6 @@ pub enum LitexToLeanCollectionObjectIr {
     ListSet,
 }
 
-impl LitexToLeanBuiltinObjectOperatorIr {
-    /// Carrier fixed by the source operator itself rather than by a target
-    /// judgment. Litex remainder is always integer-valued.
-    pub(crate) fn intrinsic_result_carrier(self) -> Option<LitexToLeanCarrierIr> {
-        match self {
-            Self::Mod => Some(LitexToLeanCarrierIr::Integer),
-            _ => None,
-        }
-    }
-
-    /// Per-argument source carrier fixed by the operator contract.
-    pub(crate) fn intrinsic_argument_carrier(
-        self,
-        argument_index: usize,
-    ) -> Option<LitexToLeanCarrierIr> {
-        match (self, argument_index) {
-            (Self::Mod, 0 | 1) => Some(LitexToLeanCarrierIr::Integer),
-            _ => None,
-        }
-    }
-}
-
 impl LitexToLeanObjectIr {
     pub fn lower(obj: &Obj) -> Result<Self, String> {
         match obj {
@@ -202,7 +176,6 @@ impl LitexToLeanObjectIr {
                         semantic_key: obj_equality_key(&set_builder.clone().into()),
                         symbol_id: set_builder.param_binding.id(),
                         name: set_builder.param_binding.name().to_string(),
-                        element_carrier: LitexToLeanCarrierIr::for_membership_set(&set),
                         set: Box::new(set),
                         facts: set_builder
                             .facts
@@ -349,6 +322,12 @@ impl LitexToLeanObjectIr {
 }
 
 fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr, String> {
+    let source_occurrence_id = application.source_occurrence_id.ok_or_else(|| {
+        format!(
+            "Litex-to-Lean requires parser-owned occurrence identity for application `{}`",
+            application
+        )
+    })?;
     let head_obj: Obj = (*application.head).clone().into();
     let head = LitexToLeanObjectIr::lower(&head_obj)?;
     let argument_layers = application
@@ -374,6 +353,7 @@ fn lower_function_application(application: &FnObj) -> Result<LitexToLeanObjectIr
     Ok(LitexToLeanObjectIr::FunctionApplication(
         LitexToLeanFunctionApplicationIr {
             head: Box::new(head),
+            source_occurrence_id,
             source_application: application.clone().into(),
             argument_layers,
             source_argument_layers,
@@ -512,7 +492,18 @@ mod tests {
         .expect("test set-builder should be well formed")
         .into();
 
-        let error = LitexToLeanObjectIr::lower(&builder).unwrap_err();
-        assert!(error.contains("SetBuilder"));
+        let lowered = LitexToLeanObjectIr::lower(&builder)
+            .expect("a set-builder has no target carrier to resolve");
+        let LitexToLeanObjectIr::SetBuilder(lowered) = lowered else {
+            panic!("expected an explicit set-builder IR node")
+        };
+        assert_eq!(lowered.symbol_id, binding.id());
+        assert_eq!(lowered.name, "x");
+        assert_eq!(
+            lowered.set.as_ref(),
+            &LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Real)
+        );
+        assert_eq!(lowered.facts.len(), 1);
+        assert_eq!(lowered.facts[0].to_string(), "#7#x = #7#x");
     }
 }

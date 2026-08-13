@@ -1,11 +1,10 @@
-1 $in C
-1 $in Q
-
-
-"""
-import Mathlib
-
-axiom LitexObject : Type
+/// The logical bridge shared by universal-object generated Lean sources.
+///
+/// `LitexObject` is intentionally one target type. Standard-set membership is
+/// represented by `Litex.In`; it never retypes an object. Concrete builtin
+/// rules are theorems below this semantic boundary rather than new axioms.
+pub(super) fn universal_object_prelude() -> &'static str {
+    r#"axiom LitexObject : Type
 
 namespace Litex
 
@@ -164,11 +163,31 @@ theorem realDivClosure {a b : LitexObject} (ha : In a R) (hb : In b R) :
 
 end BuiltinRules
 end
-end Litex
+end Litex"#
+}
 
-theorem fact1 : Litex.In 1 Litex.C := by
-  exact Litex.BuiltinRules.numeralInC 1
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-theorem fact2 : Litex.In 1 Litex.Q := by
-  exact Litex.BuiltinRules.numeralInQ 1
-"""
+    #[test]
+    fn universal_prelude_has_one_object_type_and_membership_relation() {
+        let prelude = universal_object_prelude();
+        assert!(prelude.contains("axiom LitexObject : Type"));
+        assert!(prelude.contains("axiom In : LitexObject → LitexObject → Prop"));
+        assert!(prelude.contains("axiom IsSet : LitexObject → Prop"));
+        assert!(!prelude.contains("def IsSet"));
+        assert!(prelude.contains("def IsNonemptySet (s : LitexObject) : Prop :="));
+        assert!(prelude.contains("IsSet s ∧ ∃ x : LitexObject, In x s"));
+        assert!(prelude.contains("def IsFiniteSet (s : LitexObject) : Prop :="));
+        assert!(prelude.contains("IsSet s ∧ Set.Finite {x : LitexObject | In x s}"));
+        assert!(!prelude.contains("axiom IsNonemptySet"));
+        assert!(!prelude.contains("axiom IsFiniteSet"));
+        assert!(prelude.contains("axiom Applicable : LitexObject → List LitexObject → Prop"));
+        assert!(prelude.contains("axiom add : LitexObject → LitexObject → LitexObject"));
+        assert!(prelude.contains("theorem realSubClosure"));
+        assert!(!prelude.contains("class LitexObject"));
+        assert!(!prelude.contains("Set ℝ"));
+        assert!(!prelude.contains("Set ℂ"));
+    }
+}

@@ -33,6 +33,7 @@ impl Runtime {
                 let prefix: Obj = FnObj {
                     head: application.head.clone(),
                     body: prefix_body,
+                    source_occurrence_id: application.source_occurrence_id,
                 }
                 .into();
                 let representative = self

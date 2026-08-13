@@ -12,15 +12,6 @@ pub enum LitexToLeanCompilationPhase {
     LeanEmission,
 }
 
-impl LitexToLeanCompilationPhase {
-    pub(crate) fn label(self) -> &'static str {
-        match self {
-            LitexToLeanCompilationPhase::IrConstruction => "IR construction",
-            LitexToLeanCompilationPhase::LeanEmission => "Lean emission",
-        }
-    }
-}
-
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LitexToLeanUnsupportedStatement {
     pub statement_index: usize,

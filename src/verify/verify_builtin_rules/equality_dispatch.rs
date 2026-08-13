@@ -1,6 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
-    factual_equal_success_by_builtin_reason, verify_equality_by_they_are_the_same,
+    factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
+    verify_equality_by_they_are_the_same,
 };
 use std::rc::Rc;
 
@@ -222,6 +223,15 @@ impl Runtime {
         if let Some(done) =
             self.try_verify_matrix_power_definition(left, right, right, left, line_file.clone())
         {
+            return Ok(done);
+        }
+
+        if let Some(done) = self.try_verify_general_cart_set_builder_equality(
+            left,
+            right,
+            line_file.clone(),
+            builtin_state,
+        )? {
             return Ok(done);
         }
 
@@ -2818,6 +2828,123 @@ impl Runtime {
         )
         .into();
         self.verify_builtin_rule_premise(&fact, builtin_state)
+    }
+
+    // General Cartesian product definition with a named quantified condition.
+    // Example: `general_cart(I, S, g) =
+    // {f fn(alpha I)big_union(S): $is_choice_function_for(I, S, g, f)}`.
+    fn try_verify_general_cart_set_builder_equality(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        for (general_cart_side, set_builder_side) in [(left, right), (right, left)] {
+            let Obj::GeneralCart(general_cart) = general_cart_side else {
+                continue;
+            };
+            let Obj::SetBuilder(set_builder) = set_builder_side else {
+                continue;
+            };
+            let Some(steps) = self.general_cart_named_set_builder_canonical_steps(
+                general_cart,
+                set_builder,
+                line_file.clone(),
+                builtin_state,
+            )?
+            else {
+                continue;
+            };
+            return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
+                left,
+                right,
+                line_file,
+                "general_cart equals its named-property set-builder definition",
+                steps,
+            )));
+        }
+        Ok(None)
+    }
+
+    fn general_cart_named_set_builder_canonical_steps(
+        &mut self,
+        general_cart: &GeneralCart,
+        set_builder: &SetBuilder,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
+        let Obj::FnSet(fn_set) = set_builder.param_set.as_ref() else {
+            return Ok(None);
+        };
+        if ParamGroupWithSet::number_of_params(&fn_set.body.params_def_with_set) != 1
+            || !fn_set.body.dom_facts.is_empty()
+            || set_builder.facts.len() != 1
+        {
+            return Ok(None);
+        }
+
+        let domain_result = self.verify_objs_are_equal_in_equality_builtin(
+            fn_set.body.params_def_with_set[0].set_obj(),
+            general_cart.index_set.as_ref(),
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if !domain_result.is_true() {
+            return Ok(None);
+        }
+        let expected_ret_set: Obj = BigUnion::new(general_cart.family_set.as_ref().clone()).into();
+        let ret_result = self.verify_objs_are_equal_in_equality_builtin(
+            fn_set.body.ret_set.as_ref(),
+            &expected_ret_set,
+            line_file.clone(),
+            builtin_state,
+        )?;
+        if !ret_result.is_true() {
+            return Ok(None);
+        }
+
+        let ExistBodyFact::AtomicFact(AtomicFact::NormalAtomicFact(choice_fact)) =
+            &set_builder.facts[0]
+        else {
+            return Ok(None);
+        };
+        if !matches!(
+            &choice_fact.predicate,
+            AtomicName::WithoutMod(name)
+                if name == crate::common::keywords::IS_CHOICE_FUNCTION_FOR
+        ) {
+            return Ok(None);
+        }
+        let [choice_index, choice_family_set, choice_family_fn, choice_member] =
+            choice_fact.body.as_slice()
+        else {
+            return Ok(None);
+        };
+        let expected_member =
+            obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
+        if !verify_equality_by_they_are_the_same(choice_member, &expected_member) {
+            return Ok(None);
+        }
+
+        let mut steps = vec![domain_result, ret_result];
+        for (actual, expected) in [
+            (choice_index, general_cart.index_set.as_ref()),
+            (choice_family_set, general_cart.family_set.as_ref()),
+            (choice_family_fn, general_cart.family_fn.as_ref()),
+        ] {
+            let result = self.verify_objs_are_equal_in_equality_builtin(
+                actual,
+                expected,
+                line_file.clone(),
+                builtin_state,
+            )?;
+            if !result.is_true() {
+                return Ok(None);
+            }
+            steps.push(result);
+        }
+        Ok(Some(steps))
     }
 
     // Integer ranges are the canonical sets of integer points between their endpoints.

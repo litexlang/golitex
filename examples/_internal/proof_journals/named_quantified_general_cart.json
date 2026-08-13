@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "target": "examples/03_language_features/named_quantified_property.lit",
+  "session_command": "target/release/litex -compact -session",
+  "proof_spine": [
+    "Keep anonymous forall rejected inside existential and set-builder bodies.",
+    "Name the pointwise choice condition with the builtin predicate is_choice_function_for.",
+    "Expose the general Cartesian product as a set-builder whose sole filter is that atomic predicate.",
+    "Verify both definition directions and use the named condition to introduce general-cart membership."
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Replace the removed anonymous-forall general_cart equality with a stable named-property interface.",
+      "dependencies": [
+        "builtin predicate well-definedness",
+        "positive builtin definition inference",
+        "general_cart membership introduction",
+        "general_cart set-builder equality"
+      ],
+      "attempts": [
+        {
+          "candidate": "prop has_universal_self_equality(x R):\n    forall y R:\n        x = x\n\nhave universally_self_equal_reals set = {x R: $has_universal_self_equality(x)}\n\nwitness exist x R st {$has_universal_self_equality(x)} from 0:\n    by def $has_universal_self_equality(0)\n\nhave I set\nhave S nonempty_set\nhave g fn(alpha I) S\n\ngeneral_cart(I, S, g) = {f fn(alpha I)big_union(S): $is_choice_function_for(I, S, g, f)}\n\nclaim:\n    ? forall f fn(alpha I)big_union(S):\n        forall alpha I:\n            f(alpha) $in g(alpha)\n        =>:\n            $is_choice_function_for(I, S, g, f)\n    forall alpha I:\n        f(alpha) $in g(alpha)\n    $is_choice_function_for(I, S, g, f)\n\nclaim:\n    ? forall f fn(alpha I)big_union(S):\n        $is_choice_function_for(I, S, g, f)\n        =>:\n            forall alpha I:\n                f(alpha) $in g(alpha)\n    $is_choice_function_for(I, S, g, f)\n    forall alpha I:\n        f(alpha) $in g(alpha)\n\nclaim:\n    ? forall f fn(alpha I)big_union(S):\n        $is_choice_function_for(I, S, g, f)\n        =>:\n            f $in general_cart(I, S, g)\n    $is_choice_function_for(I, S, g, f)\n    f $in general_cart(I, S, g)",
+          "result": "failed",
+          "verifier_evidence": "release persistent session block named-general-cart-001 returned ParseError at the second claim: name `alpha` is already active in this scope and cannot be rebound",
+          "failed_phase": "parse",
+          "failure_mechanism": "The function-set binder in the quantified parameter type `f fn(alpha I)...` remains active through the forall header, so the nested pointwise forall cannot reuse the same spelling.",
+          "diagnosis": "The named-property migration is intact; the acceptance proof must give function-type binders and pointwise fact binders distinct names.",
+          "next_change": "Retry in the same session with `fn(f_index I)` and `forall alpha I`."
+        },
+        {
+          "candidate": "Use distinct `g_index`, `f_index`, and pointwise `alpha` binders in the same source while retaining the exact named-property statements.",
+          "result": "planned",
+          "verifier_evidence": "Pending corrected literal outer try in the same release persistent session.",
+          "diagnosis": "This is the smallest parser-corrected form; no mathematical interface changes.",
+          "next_change": "Submit the corrected block without restarting the session."
+        }
+      ],
+      "status": "planned"
+    }
+  ],
+  "materialization": {
+    "status": "pending"
+  }
+}

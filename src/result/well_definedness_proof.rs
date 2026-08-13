@@ -117,6 +117,46 @@ pub struct WellDefinedTargetRequirementProof {
     pub expected_proposition: Fact,
 }
 
+/// One source application occurrence that consumes requirements from an
+/// environment-owned object proof. Repeated source expressions keep distinct
+/// occurrence IDs even when the WD cache lets them cite the same proof node.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum WellDefinednessTargetRequirementPhase {
+    Preflight,
+    Proof,
+    Store,
+}
+
+#[derive(Clone, Debug)]
+pub struct WellDefinedTargetRequirementUse {
+    pub source_occurrence_id: SourceObjectOccurrenceId,
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub phase: WellDefinednessTargetRequirementPhase,
+    pub role: WellDefinednessRequirementRole,
+    pub fact_id: WellDefinedFactId,
+    pub expected_proposition: Fact,
+}
+
+impl WellDefinedTargetRequirementUse {
+    pub fn new(
+        source_occurrence_id: SourceObjectOccurrenceId,
+        well_defined_obj_proof_id: WellDefinedObjProofId,
+        phase: WellDefinednessTargetRequirementPhase,
+        role: WellDefinednessRequirementRole,
+        fact_id: WellDefinedFactId,
+        expected_proposition: Fact,
+    ) -> Self {
+        Self {
+            source_occurrence_id,
+            well_defined_obj_proof_id,
+            phase,
+            role,
+            fact_id,
+            expected_proposition,
+        }
+    }
+}
+
 impl std::fmt::Debug for WellDefinedTargetRequirementProof {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter

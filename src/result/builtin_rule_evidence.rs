@@ -76,6 +76,17 @@ pub enum IntegerMembershipClosureBuiltinRule {
     Mod,
 }
 
+/// Stable identities for closure of the real carrier under arithmetic. The
+/// enclosing result retains the checked operand memberships in source order.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RealArithmeticMembershipClosureBuiltinRule {
+    Add,
+    Sub,
+    Mul,
+    Div,
+    Pow,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SetRelationDualityBuiltinRule {
     SubsetFromSuperset,
@@ -332,6 +343,7 @@ pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     IntegerMembershipClosure(IntegerMembershipClosureBuiltinRule),
+    RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
     NotEqualSymmetry,
     /// Two checked real-carrier premises followed by one strict comparison
     /// between the target operands prove their inequality.
@@ -385,6 +397,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::IntegerMembershipClosure(rule) => f
                 .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule) => f
+                .debug_tuple("RealArithmeticMembershipClosure")
                 .field(rule)
                 .finish(),
             BuiltinRuleEvidence::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),

@@ -134,6 +134,10 @@ impl Runtime {
             self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
         }
 
+        if crate::verify::verify_choice_function_for_arg_types(self, atomic_fact, verify_state)? {
+            return Ok(());
+        }
+
         if name_string == PRIME {
             let arg = atomic_fact.args_ref()[0];
             let in_n: AtomicFact =
@@ -457,20 +461,27 @@ impl Runtime {
         forall_fact: &ForallFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        if let Err(e) = self.define_params_with_type(
+        let parameter_infers = match self.define_params_with_type(
             &forall_fact.params_def_with_type,
             false,
             ParamObjType::Forall,
         ) {
-            return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
-                None,
-                "failed to define parameters in forall fact".to_string(),
-                forall_fact.line_file.clone(),
-                Some(e),
-                vec![],
-            ))
-            .into());
-        }
+            Ok(infers) => infers,
+            Err(e) => {
+                return Err(WellDefinedRuntimeError(RuntimeErrorStruct::new(
+                    None,
+                    "failed to define parameters in forall fact".to_string(),
+                    forall_fact.line_file.clone(),
+                    Some(e),
+                    vec![],
+                ))
+                .into())
+            }
+        };
+        self.record_well_definedness_parameter_facts(
+            &forall_fact.params_def_with_type,
+            &parameter_infers,
+        )?;
 
         for dom_fact in forall_fact.dom_facts.iter() {
             let store_result = self.store_fact_with_well_defined_verification_and_infer(

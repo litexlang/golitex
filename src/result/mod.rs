@@ -21,9 +21,9 @@ pub use builtin_rule_evidence::{
     ClosedNumericComparisonBuiltinRuleEvidence, DefinitionProjectionBuiltinRuleEvidence,
     DivNotEqualZeroBuiltinRuleEvidence, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    NonzeroExpressionOrientation, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule,
+    NonzeroExpressionOrientation, RealArithmeticMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;
@@ -62,12 +62,13 @@ pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;
 pub use well_definedness_certificate::{
     WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
-    WellDefinednessObjectEvidence, WellDefinednessObjectOccurrenceId,
+    WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
     WellDefinednessRequirementRole, WellDefinednessTargetRequirementEvidence,
 };
 pub use well_definedness_proof::{
     CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,
     WellDefinedFunctionContract, WellDefinedObjProof, WellDefinedObjProofId,
-    WellDefinedTargetRequirementProof,
+    WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
+    WellDefinednessTargetRequirementPhase,
 };
 pub use witness_stmt_result::WitnessStmtResult;

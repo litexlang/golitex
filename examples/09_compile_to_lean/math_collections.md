@@ -1,177 +1,89 @@
-# Mathematical Collections
+# Mathematical collections
 
-The consolidated example ledger is an executable map of the current
-Litex-to-Lean interface rather than a new mathematical theory. Its central
-collection is the set of source judgments whose verifier evidence has a
-checked native Mathlib interpretation.
+The compiler ledger exercises one target model: all Litex objects have Lean
+type `LitexObject`, while membership is an independent proposition
+`Litex.In object set`.
 
-## Native numeric carriers
+## Object identity and multiple memberships
 
-Litex standard-set objects `N`, `Z`, `Q`, `R`, and `C` denote universal sets
-over Mathlib's `ℕ`, `ℤ`, `ℚ`, `ℝ`, and `ℂ`. A numeral has no intrinsic source
-carrier. Membership, a bounded parameter, or another checked judgment supplies
-the target expectation only where needed.
+The `membership_wd` example is the primary collection. Its object `a` is
+introduced with `Litex.In a Litex.C`, later gains
+`Litex.In a Litex.R`, and is passed unchanged to an `R`-domain function.
+The two proofs coexist; neither changes the Lean type of `a`.
 
-The representative interface is:
+The nearest rejected example omits `a $in R`. Litex rejects the application
+before the compiler runs.
 
-```litex
-2 $in R
+## Derived set predicates
 
-forall z Z:
-    z / 2 $in Q
+`Litex.In` and `Litex.IsSet` form the primitive set boundary. Nonemptiness and
+finiteness are derived:
+
+```lean
+def Litex.IsNonemptySet (s : LitexObject) : Prop :=
+  Litex.IsSet s ∧ ∃ x : LitexObject, Litex.In x s
+
+def Litex.IsFiniteSet (s : LitexObject) : Prop :=
+  Litex.IsSet s ∧ Set.Finite {x : LitexObject | Litex.In x s}
 ```
 
-The intended Lean shapes are `2 ∈ Litex.StandardSets.R` and
-`(z / 2 : ℚ) ∈ Litex.StandardSets.Q`. These transparent aliases unfold to
-Mathlib's native universal sets. The nearest rejected shape is a
-closed ambiguous division admitted only by `trust`; proof provenance must not
-select its carrier.
+The set comprehension here is a Mathlib view of one Litex object's extension,
+not a source-level set constructor or a change to the universal-object ABI.
+Keeping `Litex.IsSet s` as a conjunct prevents a non-set object with a finite
+extension from being accepted as a finite set. A finite set may still be empty.
 
-Compact numeric subsets keep the same native carrier and compile to predicate
-sets rather than new target types:
+## Function spaces and application layers
 
-```litex
-forall r R+:
-    r $in R+
+A function space is a `LitexObject` built from `Litex.FnSpec`. One source
+argument group becomes one target list application:
+
+```text
+f(1, 2, 3) -> f [1, 2, 3] proof
+g(1)(2)    -> (g [1] proof1) [2] proof2
 ```
 
-Here `R+` becomes `Litex.StandardSets.RPos`, a transparent alias of
-`Set.Ioi 0`. The same checked interface covers
-`N+`/`Z+` (positive naturals), `Q+`, `Z-`/`Q-`/`R-`, and
-`Z*`/`Q*`/`R*`/`C*`. Membership remains an ordinary proposition in every
-case. Litex has no ordered `C+` standard set, so the compiler does not invent
-one. Closed numeric facts such as `2 $in R+`, `0 - 1 $in Z-`, and
-`not 0 $in C*` are discharged by checked numeric reflection in Lean rather
-than by a generated axiom.
+The second layer uses `Litex.fnSetResult` to obtain the first result's exact
+function-set membership. The nearest rejected form,
+`f(1)(2, 3)` for a single three-argument layer, remains a Litex arity error.
 
-Standard numeric membership projections use one explicit builtin certificate,
-not target-type inference shortcuts. For example, `forall n N: n $in Z`
-retains the source premise `n $in N`, validates `N -> Z` against the centralized
-Litex hierarchy, and emits the target occurrence as `(n : ℤ)`. The same rule
-covers same-carrier refinement erasure and the supported
-`N -> Z -> Q -> R -> C` widening paths. It does not assign an intrinsic type to
-`n`. Direct heterogeneous set propositions such as `N $subset Z` remain a
-separate, deliberately unsupported semantic choice.
+## Stored facts and forall replay
 
-## Facts and proof evidence
+The `known_forall` example records an explicit source theorem `FactId`.
+Its later use calls that declaration with the ordered object, membership, and
+domain proofs. Target-side `assumption` and proposition search are outside
+the collection.
 
-Facts remain propositions rather than objects. Bounded universal facts retain
-both the native binder carrier and their membership premises. Native equality,
-arithmetic, order, and supported set operations are emitted directly. An
-explicit Litex `trust` is the only source construct in this repository that may
-become a Lean axiom.
+## Builtin theorems
 
-The examples cover direct facts, definition reduction, known-forall
-instantiation, equality transport, rational normalization, typed builtin
-rules, recursive additive evidence, checked choice, existential introduction
-and elimination, named-prop definition introduction and projection, case
-splitting, and contradiction scopes.
+The `builtin_theorem` example uses a checked not-equality-symmetry
+certificate. The generated proof calls the real theorem
+`Litex.BuiltinRules.notEqualSymmetry`; the concrete rule is not an axiom.
 
-The
-[`atomic_fact_witness`](compile_to_lean_examples.md#atomic_fact_witness)
-section keeps `$divides(6, 2)` as the stored proposition while its proof builds
-the sole instantiated existential from `3`. The generated Lean uses checked
-`DefinitionIntroduction` and `DefinitionProjection` edges around the ordinary
-`Exists` proof; the compiler never re-queries the definition.
+## Well-definedness identities
 
-The
-[`obtain_from_existential_prop_definition`](compile_to_lean_examples.md#obtain_from_existential_prop_definition)
-section retains the verified prop fact as the sole premise of a checked
-definition-projection node. Its Lean snapshot unfolds that definition with
-`simpa only`, then feeds the resulting existential to the ordinary
-`Exists.choose` and `choose_spec` elimination path.
+Needed application facts are named by `WellDefinedFactId` and emitted before
+any theorem whose type contains the proof-carrying application. The primary
+example therefore contains a helper proving `Litex.In a Litex.R`, and
+`f [a]` cites that helper directly.
 
-The [`mixed_projected_forall`](compile_to_lean_examples.md#mixed_projected_forall)
-section records the clause-coverage boundary. Its one source universal becomes
-the two universal facts actually stored by the runtime, so the real symbol and
-the polymorphic set symbol keep independent native carriers and reusable
-FactIds. The nearby rejected form is a heterogeneous equality between those
-symbols; separate reflexive conclusions do not authorize carrier unification.
+Every parsed application also has a `SourceObjectOccurrenceId`. Repeated
+textually equal applications retain different source IDs, while a WD cache hit
+lets both use edges cite the same `WellDefinedObjProofId` and
+`WellDefinedFactId`. Parent/child proof visibility follows the Litex
+environment lifetime; malformed or missing occurrence links are rejected
+without structural fallback.
 
-The [`builtin_predicates`](compile_to_lean_examples.md#builtin_predicates)
-section fixes the first native builtin-proposition tranche. Closed prime and
-natural-coprime facts become `Nat.Prime` and `Nat.Coprime`, respectively, and
-use checked `norm_num` reflection. Superset reverses the
-arguments of native `⊆`; its duality proof retains the exact subset premise.
-Proper subset/superset become containment plus inequality, while their negative
-forms use Litex's direct `not containment OR equality` definition. Negated
-comparisons remain logical negations of native order relations.
+## Universal arithmetic and nested forall
 
-The dedicated
-[`coprime_natural_builtin`](compile_to_lean_examples.md#coprime_natural_builtin)
-section fixes the domain decision independently: both source arguments require
-`N`, both target occurrences are `ℕ`, and the proposition is Mathlib's
-`Nat.Coprime`. No `natAbs` adapter is emitted for integer arguments.
+The `arithmetic_forall_wd` example keeps `y` as `LitexObject`, represents
+`y - 1` as `Litex.sub y 1`, and calls the proved
+`Litex.BuiltinRules.realSubClosure` theorem from structured verifier evidence.
+Its nested parameter membership retains the exact temporary `FactId` and is
+replayed as a Lean binder proof.
 
-This section intentionally separates proposition coverage from proof-route
-coverage. It does not claim compilation of explicit proper-relation `by def`
-proof statements, function predicates, or cartesian/tuple predicates.
+## Trust boundary
 
-The [`carrier_boundaries`](compile_to_lean_examples.md#carrier_boundaries)
-section keeps source facts that Litex verifies but whose current proof route is
-not fully represented by the strict backend. This includes several numeric
-membership-closure facts and `have` value checks over `N`, `Z`, `Q`, and `C`.
-Their native target carriers are settled; their missing proof backends are
-reported rather than replaced.
-
-The strict `object_definitions` example uses a real numeral. A real division
-definition is left as a commented boundary because Mathlib requires that
-generated declaration to be `noncomputable`; accepting the Litex source alone
-is not counted as successful backend coverage.
-
-## Native sets
-
-A general Litex set parameter becomes `Set α` for one implicit element
-carrier. `union`, `intersect`, and `set_minus` map to native Mathlib set
-operations. This avoids a monomorphic `LitexSet` universe while preserving the
-source claim that all Litex objects satisfy `$is_set` through a polymorphic
-object marker.
-
-The `native_set_builtins` and `builtin_arithmetic` ledger sections also check
-the generic paired-rule path. Rule schemas keep `$is_set(A)`, `x $in A`, and
-numeric carrier membership as ordinary proof requirements. Checked adapters
-receive native `Set α`/`ℝ` values and those exact proofs. A dependent binder
-such as `x A` carries only an occurrence-local view of `A`'s element carrier,
-not a global type annotation on Litex objects.
-
-Binder-owning set builders are part of the executable collection: they lower to
-native predicate sets with their base membership and ordered defining facts.
-Malformed or underconstrained builders and several richer object families
-remain explicit boundaries; they are not approximated by axioms or custom
-equality.
-
-## Native functions and well-definedness
-
-The
-[`function_sets_and_well_definedness`](compile_to_lean_examples.md#function_sets_and_well_definedness)
-section fixes the first executable native-function interface. A Litex function
-set is `Set.univ` over a dependent Lean function type, restricted-domain proofs
-are explicit arguments after the values in their source application layer, and
-every source-only WD obligation is still emitted and kernel-checked before the
-containing fact. The named reciprocal example also retains the exact checked
-defining equality used by its later evaluation. Anonymous values and refined
-return sets use explicit binder-owned and pointwise proof contracts rather than
-inferred target laws.
-
-The same section also fixes the generic-set case. For `f $in fn(x A) A`, Lean
-uses one inferred element carrier, an ordinary set value `A : Set α`, and a
-function shape `(x : α) -> x ∈ A -> α` plus pointwise output membership. If the
-same source object is also proved to lie in another set `B`, that proof remains
-an additional proposition; it neither changes `f`'s domain nor retypes the
-object.
-
-The
-[`environment_well_definedness_cache`](compile_to_lean_examples.md#environment_well_definedness_cache)
-section fixes proof lifetime and identity across statements. Its second
-restricted application cites the same environment-owned object DAG and domain
-`WellDefinedFactId` as the first; generated Lean declares the closed domain
-helper once and reuses that exact name. The ledger's Rust checks also keep this
-independent of the concrete numeric value allocated to the stable ID.
-
-## Honest incomplete output
-
-The two partial sections record the distinction between source verification
-and backend coverage. In particular, report-mode Litex-to-Lean omits the currently
-unsupported `sin(0) = 0`, emits both surrounding rational facts, and reports
-`Incomplete`. These boundaries are intentional and have no proof, existence,
-uniqueness, or hidden-trust workaround.
+The semantic core introduces the universal object universe, membership,
+numeric embedding, and restricted application. Concrete builtin rules are
+theorems. Only an explicit Litex `trust` statement may become an axiom for a
+source proposition. Unsupported proof routes fail closed.

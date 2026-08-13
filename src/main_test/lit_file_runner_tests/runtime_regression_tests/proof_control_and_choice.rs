@@ -1548,47 +1548,208 @@ forall X power_set(R), x0 X:
 }
 
 #[test]
-fn by_zorn_lemma_requires_a_named_property_result_interface() {
+fn by_zorn_lemma_stores_named_maximal_element_exist_fact() {
     let source_code = r#"
 have s set
 abstract_prop leq(x, y)
-by zorn_lemma: set s, prop leq
+prop is_upper_bound(c power_set(s), u s):
+    forall x c:
+        $leq(x, u)
+prop is_maximal(m s):
+    forall x s:
+        $leq(m, x)
+        =>:
+            x = m
+
+by zorn_lemma: set s, prop leq, prop is_upper_bound, prop is_maximal:
+    trust $is_nonempty_set(s)
+    trust:
+        forall x s:
+            $leq(x, x)
+        forall x, y, z s:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y s:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(s):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u s st {$is_upper_bound(c, u)}
+
+exist m s st {$is_maximal(m)}
 "#;
 
-    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
         source_code,
-        "by_zorn_lemma_requires_a_named_property_result_interface",
+        "by_zorn_lemma_stores_named_maximal_element_exist_fact",
     );
     assert!(
-        !run_succeeded,
-        "the legacy Zorn interface must fail:\n{run_output}"
-    );
-    assert!(
-        run_output.contains(
-            "by zorn_lemma is unavailable: its former conclusion used an anonymous `forall`"
-        ),
-        "the migration diagnostic should explain the named-property boundary:\n{run_output}"
+        run_succeeded,
+        "named-property Zorn interface should store its conclusion:\n{run_output}"
     );
 }
 
 #[test]
-fn by_axiom_of_choice_requires_the_general_cart_theorem_interface() {
+fn by_zorn_lemma_rejects_wrong_upper_bound_definition() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+prop wrong_upper_bound(c power_set(s), u s):
+    forall x c:
+        $leq(u, x)
+prop is_maximal(m s):
+    forall x s:
+        $leq(m, x)
+        =>:
+            x = m
+
+by zorn_lemma: set s, prop leq, prop wrong_upper_bound, prop is_maximal
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_rejects_wrong_upper_bound_definition",
+    );
+    assert!(!run_succeeded, "wrong upper-bound meaning must fail");
+    assert!(
+        run_output.contains("must have exactly the definition"),
+        "failure should identify the required upper-bound definition:\n{run_output}"
+    );
+}
+
+#[test]
+fn by_zorn_lemma_rejects_wrong_maximality_definition() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+prop is_upper_bound(c power_set(s), u s):
+    forall x c:
+        $leq(x, u)
+prop wrong_maximal(m s):
+    forall x s:
+        $leq(x, m)
+        =>:
+            x = m
+
+by zorn_lemma: set s, prop leq, prop is_upper_bound, prop wrong_maximal
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_rejects_wrong_maximality_definition",
+    );
+    assert!(!run_succeeded, "wrong maximality meaning must fail");
+    assert!(
+        run_output.contains("must have exactly the definition"),
+        "failure should identify the required maximality definition:\n{run_output}"
+    );
+}
+
+#[test]
+fn by_zorn_lemma_without_trailing_colon_checks_obligations() {
+    let source_code = r#"
+have s set
+abstract_prop leq(x, y)
+prop is_upper_bound(c power_set(s), u s):
+    forall x c:
+        $leq(x, u)
+prop is_maximal(m s):
+    forall x s:
+        $leq(m, x)
+        =>:
+            x = m
+
+by zorn_lemma: set s, prop leq, prop is_upper_bound, prop is_maximal
+"#;
+
+    let (run_succeeded, run_output) = run_zorn_lemma_regression_source(
+        source_code,
+        "by_zorn_lemma_without_trailing_colon_checks_obligations",
+    );
+    assert!(!run_succeeded, "missing Zorn obligations must fail");
+    assert!(
+        run_output.contains("nonempty obligation"),
+        "the syntax should reach obligation checking:\n{run_output}"
+    );
+}
+
+fn run_zorn_lemma_regression_source(source_code: &str, file_label: &str) -> (bool, String) {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(file_label);
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false)
+}
+
+#[test]
+fn by_axiom_of_choice_stores_named_choice_function_exist_fact() {
     let source_code = r#"
 have S set
-by axiom_of_choice: set S
+
+by axiom_of_choice: set S:
+    trust forall A S:
+        $is_nonempty_set(A)
+
+exist f fn(A S) big_union(S) st {$is_choice_function_for(S, S, fn(A S) S {A}, f)}
 "#;
 
     let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
         source_code,
-        "by_axiom_of_choice_requires_the_general_cart_theorem_interface",
+        "by_axiom_of_choice_stores_named_choice_function_exist_fact",
     );
     assert!(
-        !run_succeeded,
-        "the legacy choice interface must fail:\n{run_output}"
+        run_succeeded,
+        "choice should store an atomic named-property existential:\n{run_output}"
+    );
+}
+
+#[test]
+fn by_axiom_of_choice_named_property_keeps_outer_family_rigid() {
+    let source_code = r#"
+claim:
+    ? forall A set:
+        forall member A:
+            $is_nonempty_set(member)
+        =>:
+            exist f fn(member A) big_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
+    by axiom_of_choice: set A:
+        forall member A:
+            $is_nonempty_set(member)
+    exist f fn(member A) big_union(A) st {$is_choice_function_for(A, A, fn(member A) A {member}, f)}
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_named_property_keeps_outer_family_rigid",
     );
     assert!(
-        run_output.contains("use the explicit `general_cart_nonempty_by_choice_*` theorem"),
-        "the migration diagnostic should name the replacement theorem:\n{run_output}"
+        run_succeeded,
+        "generated choice binders must not capture outer `A`:\n{run_output}"
+    );
+}
+
+#[test]
+fn by_axiom_of_choice_reports_missing_members_nonempty() {
+    let source_code = r#"
+have S set
+
+by axiom_of_choice: set S:
+    do_nothing
+"#;
+
+    let (run_succeeded, run_output) = run_axiom_of_choice_regression_source(
+        source_code,
+        "by_axiom_of_choice_reports_missing_members_nonempty",
+    );
+    assert!(!run_succeeded, "missing choice obligation must fail");
+    assert!(
+        run_output.contains("members_nonempty obligation"),
+        "failure should name the missing obligation:\n{run_output}"
     );
 }
 

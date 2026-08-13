@@ -1,0 +1,30 @@
+# Tracer: nested forall, arithmetic, and exact WD occurrence replay.
+#
+# Before (Litex verified, To-Lean did not compile):
+# forall f fn(x R) R:
+#     forall y R:
+#         f(y) = f(y - 1)
+#     =>:
+#         f(2) = f(1)
+# Former To-Lean behavior: nested `forall` facts were not rendered, `y - 1`
+# had no universal-object operation, and applications selected WD evidence by
+# structural object text rather than one exact source occurrence.
+#
+# Now (verified and compiled by the focused Rust/Mathlib gates):
+forall f fn(x R) R:
+    forall y R:
+        f(y) = f(y - 1)
+    =>:
+        f(2) = f(1)
+# Current behavior: `y` remains a LitexObject, `Litex.sub` models subtraction,
+# `realSubClosure` replays the verifier's operand-membership certificate, and
+# every `f(...)` consumes the WD fact attached to its source occurrence ID.
+#
+# Boundary: a target requirement whose occurrence ID is missing or changed is
+# rejected; the emitter does not fall back to proposition or object-text search.
+# Source gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit
+# Focused compiler gate:
+# cargo test --release arithmetic_forall_tracer_replays_subtraction_and_well_definedness -- --nocapture
+# Real Lean gate:
+# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release arithmetic_forall_tracer_compiles_with_mathlib -- --ignored --nocapture
