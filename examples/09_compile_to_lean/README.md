@@ -6,7 +6,7 @@ compiler. Every `litex` fence is compiled independently.
 
 The harness checks that generated source:
 
-- declares one `LitexObject` universe and `Litex.In`;
+- imports the shared `Litex.Object` universe and `Litex.In` ABI;
 - contains the expected proof route for that section;
 - contains no old native-carrier fragments such as `Set ℝ`, native numeric
   binders, widening, downcast, or `LeanCarrier`;
@@ -14,17 +14,17 @@ The harness checks that generated source:
   kernel gate is enabled.
 
 The ledger intentionally records required generated shapes rather than
-copying hundreds of lines of prelude into adjacent snapshots.
+copying the shared core and theorem bodies into adjacent snapshots.
 
 ## Current sections
 
 | Section | Demonstrates |
 | --- | --- |
 | `membership_wd` | One object keeps both `C` and `R` memberships; an exact named WD fact justifies `f [a]` |
-| `set_parameter` | Standard-domain and set parameters share the `LitexObject` type while retaining distinct propositions |
+| `set_parameter` | Standard-domain and set parameters share the `Litex.Object` type while retaining distinct propositions |
 | `derived_set_predicates` | Nonempty and finite sethood are definitions over `IsSet` and the `In`-extension, not opaque axioms |
 | `known_forall` | Exact theorem `FactId` replay with ordered object, membership, and domain proofs |
-| `builtin_theorem` | A concrete builtin certificate calls a real theorem rather than an axiom |
+| `builtin_theorem` | Three concrete builtin certificates call imported shared theorems rather than repeated bodies or axioms |
 | `exact_application_layers` | One list per source application group and `fnSetResult` between nested groups |
 | `arithmetic_forall_wd` | Nested forall, universal subtraction, real-closure replay, and exact source-occurrence WD links |
 

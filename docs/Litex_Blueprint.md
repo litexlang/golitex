@@ -265,31 +265,24 @@ forall a, b, c set:
 For this equality-rewrite route supported by the current MVP, the compiler generates the following Lean code (the concrete fact ID is assigned at runtime):
 
 ```lean
-import Mathlib
+import Litex.BuiltinRules
 
-namespace tmp
+example : Litex.abiVersion = 1 := rfl
 
-noncomputable section
-
-universe u
-
--- The shared LitexObject declarations are omitted here.
-
--- Litex fact f19
-theorem fact19 : ∀ {α : Type u} [LitexObject α], ∀ (a : Set α), ∀ (b : Set α), ∀ (c : Set α), a ≠ c → a = b → b ≠ c := by
-  intro _ _ a b c proof_fact_1_1 proof_fact_1_2
-  have proof_fact_1_3 : a ≠ c := proof_fact_1_1
-  have proof_fact_1_4 : a = b := proof_fact_1_2
-  have proof_fact_1_5 : b ≠ c := by
-    simpa only [proof_fact_1_4] using proof_fact_1_3
-  exact proof_fact_1_5
-
-end
-
-end tmp
+theorem fact19 :
+    ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)
+      (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b)
+      (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c)
+      (litex_domain_fact_1 : a ≠ c)
+      (litex_domain_fact_2 : a = b),
+      b ≠ c := by
+  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+    litex_domain_fact_1 litex_domain_fact_2
+  exact by
+    simpa only [litex_domain_fact_2] using litex_domain_fact_1
 ```
 
-This Lean code expands the verification route found automatically by Litex, one layer at a time. `fact19` carries the environment-stored Litex `FactId`. Inside its proof, `intro` introduces the implicit carrier and object marker, the three `forall` parameters, and the first two facts in proof space 1. `proof_fact_1_3` replays the known source `a ≠ c`, while `proof_fact_1_4` replays the equality `a = b` used for rewriting. Finally, `proof_fact_1_5` is checked by `simpa only [proof_fact_1_4] using proof_fact_1_3`, which transports `a ≠ c` along that equality to obtain `b ≠ c`. A nested proof block would inherit visible outer facts; if it introduced additional named facts, it would receive a fresh space number and restart its local fact index at one. The corresponding proof IR records the `forall` introduction, the IDs of both local facts, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.BuiltinRules` Lake module supplies the one `Litex.Object` universe and checks ABI version 1; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
 
 Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 

@@ -1,11 +1,12 @@
 use super::compile_to_lean_from_source;
+use super::lean_test_support::SharedLeanTestLibrary;
 use std::fs;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::path::Path;
 
 const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
 const SHOWCASE: &str = "examples/_internal/compile_to_lean/showcase.lit";
+const SHARED_BUILTIN_TRACER: &str =
+    "examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit";
 
 #[test]
 fn universal_examples_compile_to_the_new_abi() {
@@ -47,17 +48,36 @@ fn universal_showcase_compiles_to_the_new_abi() {
 }
 
 #[test]
+fn shared_builtin_rule_tracer_imports_theorems() {
+    run_with_large_stack(|| {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(SHARED_BUILTIN_TRACER);
+        let source = fs::read_to_string(path).expect("read shared builtin-rule tracer");
+        let generated = compile_to_lean_from_source(&source, SHARED_BUILTIN_TRACER)
+            .expect("the shared builtin-rule tracer should compile");
+        assert_new_shared_library_header("shared_builtin_rules", &generated);
+        for theorem in ["notEqualSymmetry", "numeralInN", "numeralInC"] {
+            assert!(
+                generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                "{generated}"
+            );
+            assert!(
+                !generated.contains(&format!("theorem {theorem}")),
+                "{generated}"
+            );
+        }
+    });
+}
+
+#[test]
 #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
 fn universal_showcase_compiles_with_mathlib() {
     run_with_large_stack(|| {
-        let project = std::env::var("LITEX_LEAN_PROJECT")
-            .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
-        let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(SHOWCASE);
         let source = fs::read_to_string(path).expect("read universal-object showcase");
         let generated = compile_to_lean_from_source(&source, SHOWCASE)
             .expect("the combined universal-object showcase should compile");
-        compile_generated("showcase", &generated, &project, &lake);
+        let mut library = SharedLeanTestLibrary::new("showcase");
+        library.compile_generated("showcase", &generated);
     });
 }
 
@@ -65,41 +85,40 @@ fn universal_showcase_compiles_with_mathlib() {
 #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
 fn universal_examples_compile_with_mathlib() {
     run_with_large_stack(|| {
-        let project = std::env::var("LITEX_LEAN_PROJECT")
-            .expect("set LITEX_LEAN_PROJECT to a Mathlib Lake project");
-        let lake = std::env::var("LITEX_LAKE").unwrap_or_else(|_| "lake".to_string());
+        let mut library = SharedLeanTestLibrary::new("ledger");
         for (label, source) in ledger_examples() {
             let generated = compile_to_lean_from_source(&source, &format!("{label}.lit"))
                 .unwrap_or_else(|error| panic!("ledger example {label} failed: {error:?}"));
             assert_new_abi(&label, &generated);
-            compile_generated(&label, &generated, &project, &lake);
+            library.compile_generated(&label, &generated);
         }
     });
 }
 
+#[test]
+#[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
+fn shared_builtin_rule_tracer_compiles_with_mathlib() {
+    run_with_large_stack(|| {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(SHARED_BUILTIN_TRACER);
+        let source = fs::read_to_string(path).expect("read shared builtin-rule tracer");
+        let generated = compile_to_lean_from_source(&source, SHARED_BUILTIN_TRACER)
+            .expect("the shared builtin-rule tracer should compile");
+        let mut library = SharedLeanTestLibrary::new("shared-builtin-tracer");
+        library.compile_generated("shared-builtin-tracer", &generated);
+    });
+}
+
 fn assert_new_abi(label: &str, generated: &str) {
-    assert!(
-        generated.contains("axiom LitexObject : Type"),
-        "{label}\n{generated}"
-    );
-    assert!(
-        generated.contains("axiom In : LitexObject → LitexObject → Prop"),
-        "{label}\n{generated}"
-    );
-    assert!(
-        generated.contains("def IsNonemptySet (s : LitexObject) : Prop :=")
-            && generated.contains("IsSet s ∧ ∃ x : LitexObject, In x s"),
-        "{label}\n{generated}"
-    );
-    assert!(
-        generated.contains("def IsFiniteSet (s : LitexObject) : Prop :=")
-            && generated.contains("IsSet s ∧ Set.Finite {x : LitexObject | In x s}"),
-        "{label}\n{generated}"
-    );
-    assert!(!generated.contains("axiom IsNonemptySet"), "{generated}");
-    assert!(!generated.contains("axiom IsFiniteSet"), "{generated}");
+    assert_new_shared_library_header(label, generated);
     for forbidden in [
-        "class LitexObject",
+        "LitexObject",
+        "import Mathlib",
+        "axiom Object : Type",
+        "axiom In : Object",
+        "theorem notEqualSymmetry",
+        "theorem numeralInN",
+        "theorem numeralInC",
+        "theorem realSubClosure",
         "Set ℝ",
         "Set ℂ",
         "downcast",
@@ -112,9 +131,8 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     let source_declarations = generated
-        .rsplit_once("end Litex\n")
-        .expect("generated prelude should close the Litex namespace")
-        .1;
+        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n")
+        .expect("generated source should begin after the shared-library header");
     for forbidden in ["(a : ℝ)", "(a : ℂ)", "(b : ℝ)", "(b : ℂ)"] {
         assert!(
             !source_declarations.contains(forbidden),
@@ -133,29 +151,25 @@ fn assert_new_abi(label: &str, generated: &str) {
             );
         }
         "set_parameter" => {
-            assert!(generated.contains("(a : LitexObject)"), "{generated}");
+            assert!(generated.contains("(a : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.In a Litex.R"), "{generated}");
-            assert!(generated.contains("(b : LitexObject)"), "{generated}");
+            assert!(generated.contains("(b : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.IsSet b"), "{generated}");
         }
         "derived_set_predicates" => {
-            assert!(generated.contains("(s : LitexObject)"), "{generated}");
+            assert!(generated.contains("(s : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.IsNonemptySet s"), "{generated}");
-            assert!(generated.contains("(t : LitexObject)"), "{generated}");
+            assert!(generated.contains("(t : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.IsFiniteSet t"), "{generated}");
         }
         "known_forall" => {
             assert!(
-                generated.contains("axiom marked : LitexObject → Prop"),
+                generated.contains("axiom marked : Litex.Object → Prop"),
                 "{generated}"
             );
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "builtin_theorem" => {
-            assert!(
-                generated.contains("theorem notEqualSymmetry"),
-                "{generated}"
-            );
             assert!(
                 generated.contains("Litex.BuiltinRules.notEqualSymmetry"),
                 "{generated}"
@@ -208,6 +222,14 @@ fn assert_new_abi(label: &str, generated: &str) {
     }
 }
 
+fn assert_new_shared_library_header(label: &str, generated: &str) {
+    assert!(
+        generated
+            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n"),
+        "{label}\n{generated}"
+    );
+}
+
 fn ledger_examples() -> Vec<(String, String)> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(LEDGER);
     let markdown = fs::read_to_string(&path).expect("read universal-object compiler ledger");
@@ -241,35 +263,6 @@ fn ledger_examples() -> Vec<(String, String)> {
     }
     assert!(!in_litex, "unterminated Litex fence in compiler ledger");
     examples
-}
-
-fn compile_generated(label: &str, generated: &str, project: &str, lake: &str) {
-    let nonce = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("system clock should be after Unix epoch")
-        .as_nanos();
-    let path: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("private")
-        .join(format!(
-            "litex-universal-ledger-{label}-{}-{nonce}.lean",
-            std::process::id()
-        ));
-    fs::create_dir_all(path.parent().expect("generated file should have a parent"))
-        .expect("create workspace-local private directory");
-    fs::write(&path, generated).expect("write generated Lean ledger entry");
-    let result = Command::new(lake)
-        .args(["env", "lean"])
-        .arg(&path)
-        .current_dir(project)
-        .output();
-    fs::remove_file(&path).expect("remove workspace-local generated Lean file");
-    let result = result.expect("run Lean through configured Lake project");
-    assert!(
-        result.status.success(),
-        "universal ledger example {label} failed Lean\nstdout:\n{}\nstderr:\n{}\nsource:\n{generated}",
-        String::from_utf8_lossy(&result.stdout),
-        String::from_utf8_lossy(&result.stderr)
-    );
 }
 
 fn run_with_large_stack(action: impl FnOnce() + Send + 'static) {

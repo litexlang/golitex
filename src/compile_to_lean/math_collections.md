@@ -10,12 +10,16 @@ Every source-level value, set, standard number domain, function-space object,
 and function value is represented by one Lean type:
 
 ```lean
-axiom LitexObject : Type
+namespace Litex
+
+axiom Object : Type
+
+end Litex
 ```
 
 This type represents Litex object identity. It is not a wrapper around a
 hidden per-object Lean carrier, and it has no parameter such as
-`LitexObject α`.
+`Litex.Object α`.
 
 Representative source:
 
@@ -27,7 +31,7 @@ forall x C:
 Representative target interface:
 
 ```lean
-∀ (x : LitexObject) (hxC : Litex.In x Litex.C), x = x
+∀ (x : Litex.Object) (hxC : Litex.In x Litex.C), x = x
 ```
 
 The nearest rejected design is a native binder such as `x : ℂ`. That design
@@ -42,19 +46,28 @@ numeric embeddings, and every emitted fact.
 Current hole: many source object constructors still lack universal-object
 lowering. Unsupported constructors fail closed.
 
+The ABI is packaged once in `lean/Litex/Core.lean`; generated files obtain it
+through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 1`. The
+nearest rejected packaging repeats this declaration block in every generated
+file, allowing theorem bodies and semantic primitives to drift independently.
+
 ## Membership and sethood
 
 Membership is an independent proposition:
 
 ```lean
-axiom Litex.In : LitexObject → LitexObject → Prop
-def Litex.IsSet (_ : LitexObject) : Prop := True
+namespace Litex
+
+axiom In : Object → Object → Prop
+def IsSet (_ : Object) : Prop := True
+
+end Litex
 ```
 
-A source declaration `x S` binds both `x : LitexObject` and an exact proof
+A source declaration `x S` binds both `x : Litex.Object` and an exact proof
 `Litex.In x S`. It does not make `S` a Lean type. If the runtime later
 proves `Litex.In x T`, both membership facts remain available and refer to
-the same `x`. Every `LitexObject` is a set in this model, including values,
+the same `x`. Every `Litex.Object` is a set in this model, including values,
 standard numeric domains, and function objects. A source `x set` fact may
 still be retained by `FactId`; being definitionally trivial in Lean is not a
 reason to erase verifier evidence.
@@ -88,31 +101,31 @@ Nonemptiness and finiteness are derived rather than added to the semantic
 axiom boundary:
 
 ```lean
-def Litex.IsNonemptySet (s : LitexObject) : Prop :=
-  ∃ x : LitexObject, Litex.In x s
+def Litex.IsNonemptySet (s : Litex.Object) : Prop :=
+  ∃ x : Litex.Object, Litex.In x s
 
-def Litex.IsFiniteSet (s : LitexObject) : Prop :=
-  Set.Finite {x : LitexObject | Litex.In x s}
+def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
+  Set.Finite {x : Litex.Object | Litex.In x s}
 ```
 
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
 always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
-it is not an independent classifier. The current emitted prelude has not yet
+it is not an independent classifier. The current shared core has not yet
 migrated from opaque `IsSet` and redundant derived-predicate conjuncts; that
-implementation drift is recorded in `current_generated_file_header.lean`.
+implementation drift is recorded in `lean/Litex/Core.lean`.
 
 ## Standard numeric sets and numerals
 
 `N`, `Z`, `Q`, `R`, `C`, and their supported refinements are
-`LitexObject` constants. A numeral is one `LitexObject`, not five unrelated
+`Litex.Object` constants. A numeral is one `Litex.Object`, not five unrelated
 native values. The semantic core embeds Mathlib complex values and
 characterizes standard-set membership with witnesses.
 
 ```lean
-axiom Litex.embedComplex : ℂ → LitexObject
-axiom Litex.R : LitexObject
-axiom Litex.inR_iff {x : LitexObject} :
+axiom Litex.embedComplex : ℂ → Litex.Object
+axiom Litex.R : Litex.Object
+axiom Litex.inR_iff {x : Litex.Object} :
   Litex.In x Litex.R ↔ ∃ r : ℝ, Litex.embedComplex (r : ℂ) = x
 ```
 
@@ -140,10 +153,10 @@ One source function layer is a restricted specification:
 ```lean
 structure Litex.FnSpec where
   arity : Nat
-  requirements : List LitexObject → Prop
-  range : List LitexObject → LitexObject
+  requirements : List Litex.Object → Prop
+  range : List Litex.Object → Litex.Object
 
-axiom Litex.FnSet : Litex.FnSpec → LitexObject
+axiom Litex.FnSet : Litex.FnSpec → Litex.Object
 ```
 
 Each parameter-set membership and each declared domain condition contributes
@@ -168,10 +181,10 @@ yet emitted.
 Application consumes an explicit proof:
 
 ```lean
-axiom Litex.Applicable : LitexObject → List LitexObject → Prop
+axiom Litex.Applicable : Litex.Object → List Litex.Object → Prop
 axiom Litex.apply :
-  (f : LitexObject) → (args : List LitexObject) →
-  Litex.Applicable f args → LitexObject
+  (f : Litex.Object) → (args : List Litex.Object) →
+  Litex.Applicable f args → Litex.Object
 ```
 
 Generated source uses direct list syntax:
@@ -245,7 +258,7 @@ only that ID. A known-forall use retains:
 4. ordered domain proofs;
 5. the selected conclusion.
 
-Forall introduction binds every value as `LitexObject`, then its parameter
+Forall introduction binds every value as `Litex.Object`, then its parameter
 fact, then domain facts. It never derives a Lean binder type from a set.
 
 Known equality has one mathematical representation plus an identity join.
@@ -274,21 +287,24 @@ Current hole: supported inferred-forall premises are not yet emitted.
 
 ## Builtin rules
 
-The prelude contains a small semantic core. Each concrete verifier builtin is
-then represented by a real Lean theorem under `Litex.BuiltinRules`. The
-checked certificate validates its target and ordered children before emitting
-a call to that theorem.
+`Litex.Core` contains the small semantic boundary. Each concrete verifier
+builtin is represented once by a real Lean theorem in the shared
+`Litex.BuiltinRules` module. Generated files import that module. The checked
+certificate validates its stable rule identity, target, ordered children, and
+substitution shape before emitting a call to the theorem.
 
 The first ordinary rule is inequality symmetry:
 
 ```lean
 theorem Litex.BuiltinRules.notEqualSymmetry
-    {a b : LitexObject} (h : a ≠ b) : b ≠ a := by
+    {a b : Litex.Object} (h : a ≠ b) : b ≠ a := by
   exact Ne.symm h
 ```
 
 The nearest rejected design declares every concrete builtin rule as an axiom.
-Only semantic primitives may cross the axiom boundary.
+Only semantic primitives may cross the axiom boundary. Another rejected design
+expands the theorem's tactic proof at every use site; Litex has applied one
+logical rule, so Lean should check one theorem application there.
 
 Dependencies: structured builtin certificates and the small semantic core.
 

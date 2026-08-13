@@ -2,24 +2,27 @@
 
 Last updated: 2026-08-13
 
-This ledger describes only the universal-`LitexObject` compiler. The former
+This ledger describes only the universal-`Litex.Object` compiler. The former
 native-carrier backend and its snapshots were deleted.
 
 ## Completed architecture checkpoint
 
-- [x] One `LitexObject` target type for values, sets, and functions.
+- [x] One `Litex.Object` target type for values, sets, and functions.
+- [x] The target ABI lives once in the shared `Litex.Core` Lake module;
+  generated files import it through `Litex.BuiltinRules` and check ABI version
+  1 instead of repeating the core.
 - [x] `Litex.In x S` is independent membership evidence; it never retypes `x`.
 - [x] `Litex.IsSet x` is represented as a proposition rather than a target
   type, and set parameters retain their exact source proof.
 - [x] `Litex.IsNonemptySet x` and `Litex.IsFiniteSet x` are derived definitions
   over `IsSet` and the `In`-extension, not independent axioms.
-- [x] Standard numeric sets are `LitexObject` constants.
+- [x] Standard numeric sets are `Litex.Object` constants.
 - [x] Restricted `FnSpec`, proof-carrying `Applicable`, and list application.
 - [x] Exact source application layers retained by object IR.
 - [x] Native carrier IR, type unification, widening/downcast logic, and native
   set/function prelude removed.
 - [x] Public compiler entry points select only the new emitter.
-- [x] Forall introduction binds every object as `LitexObject` and retains every
+- [x] Forall introduction binds every object as `Litex.Object` and retains every
   parameter membership or set-property fact.
 - [x] Known facts resolve by exact `FactId`.
 - [x] Known equality classes expose their existing direct proof paths; every
@@ -39,9 +42,9 @@ native-carrier backend and its snapshots were deleted.
   runtime's visibility and lifetime rules; proofless boolean cache entries are
   never compiler evidence.
 - [x] Closed numeral membership is a Lean theorem derived from the numeric
-  embedding core.
+  embedding core and stored in the shared builtin library.
 - [x] The first ordinary builtin adapter (`NotEqualSymmetry`) calls a real Lean
-  theorem, with malformed shape rejected.
+  theorem from the shared builtin library, with malformed shape rejected.
 - [x] Universal `Litex.add/sub/mul/div` operations, real-closure certificates,
   and rational normalization cover the arithmetic nested-forall tracer.
 - [x] Nested forall premises retain their temporary parameter `FactId`s and
@@ -51,14 +54,15 @@ native-carrier backend and its snapshots were deleted.
   compile as complete generated sources under real Mathlib.
 - [x] One nonempty source argument group becomes one list application; nested
   groups use `Litex.fnSetResult`, and split arity remains rejected by Litex.
-- [x] The eight-entry universal-object ledger compiles under real Mathlib.
+- [x] The eight-entry universal-object ledger compiles with the shared
+  `Litex.Core`/`Litex.BuiltinRules` modules under real Mathlib.
 
 ## Required next coverage
 
 - [ ] Implement the decided all-objects-are-sets ABI: replace the currently
-  emitted opaque `Litex.IsSet` with `def IsSet (_ : LitexObject) := True`, and
+  shared opaque `Litex.IsSet` with `def IsSet (_ : Litex.Object) := True`, and
   simplify the derived nonempty/finite predicates. The exact current drift is
-  preserved in `current_generated_file_header.lean`.
+  preserved in `lean/Litex/Core.lean`.
 - [ ] Add proof-carrying partial object constructors, beginning with list sets,
   replacement, and anonymous functions. Their Lean terms must consume the
   verifier-owned WD certificates instead of retaining those facts only as
@@ -68,9 +72,10 @@ native-carrier backend and its snapshots were deleted.
   nested function-set result path.
 - [ ] Add the remaining unified object operations and closure theorems,
   including power, transcendental functions, and refined numeric sets.
-- [ ] Port builtin families over `LitexObject`: standard-set hierarchy,
+- [ ] Port builtin families over `Litex.Object`: standard-set hierarchy,
   arithmetic/order, refined membership, set operators, reflection, and
-  registered rules.
+  registered rules. Each checked certificate must call one theorem schema in
+  `Litex.BuiltinRules`; no per-use tactic expansion or builtin axiom fallback.
 - [ ] Lower user proposition definitions, set builders, anonymous functions,
   named function definitions, object definitions/choice, existentials,
   cases/contradiction, named theorems, and namespaces.

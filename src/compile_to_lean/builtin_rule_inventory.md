@@ -28,7 +28,7 @@ are explicitly marked `not_this_round`. The classification is intentionally
 conservative and source-derived; it does not claim one Rust site equals one
 mathematical theorem schema.
 
-A Lean mapping is recorded only when the universal-`LitexObject` backend
+A Lean mapping is recorded only when the universal-`Litex.Object` backend
 currently emits and the Lean kernel checks that theorem call. `partial` means
 the source site recognizes more cases than the current target theorem; `none`
 means no checked mapping exists yet. The deleted native-carrier adapter catalog

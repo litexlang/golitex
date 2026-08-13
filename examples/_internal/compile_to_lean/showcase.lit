@@ -1,12 +1,12 @@
 # Current strict Litex-to-Lean universal-object showcase.
 
-# Standard-domain and set parameters are both LitexObject values. Their
+# Standard-domain and set parameters are both Litex.Object values. Their
 # declarations retain separate membership and sethood propositions.
 forall a R, b set:
     a = a
     b = b
 
-# Nonempty-set and finite-set parameters remain LitexObject values. Their
+# Nonempty-set and finite-set parameters remain Litex.Object values. Their
 # predicates are derived in Lean from IsSet and the extension given by In.
 forall s nonempty_set, t finite_set:
     s = s
@@ -35,12 +35,15 @@ forall a R:
     =>:
         $marked(a)
 
-# One ordinary builtin certificate calls a real theorem in the semantic
-# prelude, not an invented axiom.
-forall a, b C:
+# Ordinary builtin certificates call real theorems from the shared Lean
+# library, not repeated theorem bodies or invented axioms.
+forall a, b set:
     a != b
     =>:
         b != a
+
+1 $in N
+1 $in C
 
 # Known equality certificates retain their exact direct FactId path. Lean
 # replays a reversed edge with Eq.symm and connected edges with Eq.trans.

@@ -2,9 +2,11 @@
 
 mod compilation_report;
 #[cfg(test)]
+pub(crate) mod lean_test_support;
+mod shared_lean_library;
+#[cfg(test)]
 mod universal_examples_tests;
 mod universal_pipeline;
-mod universal_prelude;
 
 pub use compilation_report::{
     LitexToLeanCompilationPhase, LitexToLeanCompilationReport, LitexToLeanCompilationStatus,
