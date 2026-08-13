@@ -529,7 +529,7 @@ impl PythonExtractor {
         &self,
         name: &str,
         params_def: &ParamDefWithSet,
-        dom_facts: &[OrAndChainAtomicFact],
+        dom_facts: &[QuantifierFreeFact],
         ret_set: &Obj,
         line_file: &LineFile,
     ) -> Result<(), RuntimeError> {

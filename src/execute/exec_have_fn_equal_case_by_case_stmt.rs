@@ -312,7 +312,7 @@ impl Runtime {
         }
 
         for dom_fact in stmt.fn_set_clause.dom_facts.iter() {
-            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                 dom_fact.clone(),
             )
             .map_err(|store_fact_error| {

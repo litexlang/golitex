@@ -21,6 +21,9 @@ pub enum WellDefinednessRequirementRole {
     /// target term also consumes it is decided only by a typed application
     /// certificate, never by dropping this audit entry.
     SourceObjectRequirement,
+    /// One ordered operand-membership proof consumed by a proof-carrying
+    /// builtin object constructor such as complex addition.
+    BuiltinArgumentMembership { argument_index: usize },
     /// A checked membership is passed after the ordinary value arguments of
     /// one exact Litex application layer.
     FunctionArgumentMembership {
@@ -33,6 +36,27 @@ pub enum WellDefinednessRequirementRole {
         layer_index: usize,
         domain_index: usize,
     },
+}
+
+/// One top-level object proof use in an exact statement execution phase.
+/// Keeping the phase prevents the backend from guessing between structurally
+/// equal cache nodes produced by preflight, proof, and store passes.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct WellDefinednessRootObjectProofUse {
+    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub phase: WellDefinednessTargetRequirementPhase,
+}
+
+impl WellDefinednessRootObjectProofUse {
+    pub fn new(
+        well_defined_obj_proof_id: WellDefinedObjProofId,
+        phase: WellDefinednessTargetRequirementPhase,
+    ) -> Self {
+        Self {
+            well_defined_obj_proof_id,
+            phase,
+        }
+    }
 }
 
 /// One exact successful factual proof retained while an object
@@ -57,6 +81,7 @@ pub struct WellDefinednessObjectEvidence {
     pub intrinsic_result_set: Option<Obj>,
     pub child_proof_ids: Vec<WellDefinedObjProofId>,
     pub well_defined_fact_ids: Vec<WellDefinedFactId>,
+    pub target_requirements: Vec<WellDefinedTargetRequirementProof>,
     /// Statement-local projection retained for compatibility with the Lean
     /// certificate validator. The authoritative edges are the stable IDs
     /// above.
@@ -75,6 +100,7 @@ impl std::fmt::Debug for WellDefinednessObjectEvidence {
             )
             .field("child_proof_ids", &self.child_proof_ids)
             .field("well_defined_fact_ids", &self.well_defined_fact_ids)
+            .field("target_requirements", &self.target_requirements)
             .field("fact_ids", &self.fact_ids)
             .finish()
     }
@@ -87,6 +113,7 @@ impl WellDefinednessObjectEvidence {
         intrinsic_result_set: Option<Obj>,
         child_proof_ids: Vec<WellDefinedObjProofId>,
         well_defined_fact_ids: Vec<WellDefinedFactId>,
+        target_requirements: Vec<WellDefinedTargetRequirementProof>,
         fact_ids: Vec<WellDefinednessCertificateId>,
     ) -> Self {
         Self {
@@ -95,6 +122,7 @@ impl WellDefinednessObjectEvidence {
             intrinsic_result_set,
             child_proof_ids,
             well_defined_fact_ids,
+            target_requirements,
             fact_ids,
         }
     }
@@ -181,6 +209,7 @@ pub struct WellDefinednessCertificate {
     /// their Litex environments; the remaining fields are a frozen projection
     /// used after a local environment has left runtime scope.
     pub root_proof_ids: Vec<WellDefinedObjProofId>,
+    pub root_proof_uses: Vec<WellDefinednessRootObjectProofUse>,
     /// Live-capture links from exact source applications to reusable proof
     /// nodes. `freeze_well_definedness_certificate` validates and projects
     /// these into `target_requirements`.
@@ -195,6 +224,7 @@ impl WellDefinednessCertificate {
     pub fn is_empty(&self) -> bool {
         self.facts.is_empty()
             && self.objects.is_empty()
+            && self.root_proof_uses.is_empty()
             && self.target_requirement_uses.is_empty()
             && self.target_requirements.is_empty()
             && self.parameter_facts.is_empty()

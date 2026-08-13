@@ -191,33 +191,33 @@ impl Runtime {
         self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
     }
 
-    pub(crate) fn verify_or_and_chain_atomic_fact_restricted_known_builtin(
+    pub(crate) fn verify_quantifier_free_fact_restricted_known_builtin(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+            QuantifierFreeFact::AtomicFact(atomic_fact) => {
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
-            OrAndChainAtomicFact::AndFact(and_fact) => {
+            QuantifierFreeFact::AndFact(and_fact) => {
                 self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
             }
-            OrAndChainAtomicFact::ChainFact(chain_fact) => {
+            QuantifierFreeFact::ChainFact(chain_fact) => {
                 self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
             }
-            OrAndChainAtomicFact::OrFact(or_fact) => {
+            QuantifierFreeFact::OrFact(or_fact) => {
                 self.verify_or_fact_known_then_builtin_rules_only(or_fact, verify_state)
             }
         }
     }
 
-    pub(crate) fn verify_or_and_chain_atomic_fact_by_known_atomic_or_builtin_only(
+    pub(crate) fn verify_quantifier_free_fact_by_known_atomic_or_builtin_only(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        self.verify_or_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
+        self.verify_quantifier_free_fact_restricted_known_builtin(fact, verify_state)
     }
 
     pub(crate) fn verify_and_chain_atomic_fact_restricted_known_builtin(

@@ -3,7 +3,7 @@ import Mathlib
 namespace Litex
 
 /-- Version of the shared target ABI expected by generated Litex proofs. -/
-def abiVersion : Nat := 1
+def abiVersion : Nat := 2
 
 axiom Object : Type
 
@@ -48,17 +48,20 @@ axiom inR_iff {x : Object} :
 axiom inC_iff {x : Object} :
   In x C ↔ ∃ z : ℂ, embedComplex z = x
 
-axiom add : Object → Object → Object
-axiom sub : Object → Object → Object
-axiom mul : Object → Object → Object
+axiom add (a b : Object) : In a C → In b C → Object
+axiom sub (a b : Object) : In a C → In b C → Object
+axiom mul (a b : Object) : In a C → In b C → Object
 axiom div : Object → Object → Object
 
-@[simp] axiom add_embedComplex (a b : ℂ) :
-  add (embedComplex a) (embedComplex b) = embedComplex (a + b)
-@[simp] axiom sub_embedComplex (a b : ℂ) :
-  sub (embedComplex a) (embedComplex b) = embedComplex (a - b)
-@[simp] axiom mul_embedComplex (a b : ℂ) :
-  mul (embedComplex a) (embedComplex b) = embedComplex (a * b)
+@[simp] axiom add_embedComplex (a b : ℂ)
+    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
+  add (embedComplex a) (embedComplex b) ha hb = embedComplex (a + b)
+@[simp] axiom sub_embedComplex (a b : ℂ)
+    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
+  sub (embedComplex a) (embedComplex b) ha hb = embedComplex (a - b)
+@[simp] axiom mul_embedComplex (a b : ℂ)
+    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
+  mul (embedComplex a) (embedComplex b) ha hb = embedComplex (a * b)
 @[simp] axiom div_embedComplex (a b : ℂ) :
   div (embedComplex a) (embedComplex b) = embedComplex (a / b)
 

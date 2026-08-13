@@ -1,4 +1,4 @@
-// `exist` / `exist!` / `not exist`: same [`ExistFactBody`]; the outer variant selects the keyword.
+// `exist` / `exist!` / `not exist`: same [`ExistentialSpec`]; the outer variant selects the keyword.
 // For `exist!`, verification may also discharge a companion uniqueness `forall`.
 
 use crate::prelude::*;
@@ -6,41 +6,33 @@ use std::fmt;
 
 #[derive(Clone)]
 pub enum ExistFactEnum {
-    ExistFact(ExistFactBody),
-    ExistUniqueFact(ExistFactBody),
-    NotExistFact(ExistFactBody),
+    ExistFact(ExistentialSpec),
+    ExistUniqueFact(ExistentialSpec),
+    NotExistFact(ExistentialSpec),
 }
 
 #[derive(Clone)]
-pub struct ExistFactBody {
+pub struct ExistentialSpec {
     pub params_def_with_type: ParamDefWithType,
-    pub facts: Vec<ExistBodyFact>,
+    pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
 }
 
-#[derive(Clone)]
-pub enum ExistBodyFact {
-    AtomicFact(AtomicFact),
-    AndFact(AndFact),
-    ChainFact(ChainFact),
-    OrFact(OrFact),
-}
-
-impl ExistFactBody {
+impl ExistentialSpec {
     pub fn new(
         params_def_with_type: ParamDefWithType,
-        facts: Vec<ExistBodyFact>,
+        facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,
     ) -> Result<Self, RuntimeError> {
-        let body = ExistFactBody {
+        let spec = ExistentialSpec {
             params_def_with_type,
             facts,
             line_file,
         };
         check_exist_fact_has_no_duplicate_exist_free_parameter(&ExistFactEnum::ExistFact(
-            body.clone(),
+            spec.clone(),
         ))?;
-        Ok(body)
+        Ok(spec)
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
@@ -80,123 +72,8 @@ impl ExistFactBody {
     }
 }
 
-impl ExistBodyFact {
-    pub fn key(&self) -> String {
-        match self {
-            ExistBodyFact::AtomicFact(a) => a.key(),
-            ExistBodyFact::AndFact(a) => a.key(),
-            ExistBodyFact::ChainFact(c) => c.key(),
-            ExistBodyFact::OrFact(o) => o.key(),
-        }
-    }
-
-    pub fn line_file(&self) -> LineFile {
-        match self {
-            ExistBodyFact::AtomicFact(a) => a.line_file(),
-            ExistBodyFact::AndFact(a) => a.line_file(),
-            ExistBodyFact::ChainFact(c) => c.line_file(),
-            ExistBodyFact::OrFact(o) => o.line_file.clone(),
-        }
-    }
-
-    pub fn get_args_from_fact(&self) -> Vec<Obj> {
-        match self {
-            ExistBodyFact::AtomicFact(a) => a.get_args_from_fact(),
-            ExistBodyFact::AndFact(a) => a.get_args_from_fact(),
-            ExistBodyFact::ChainFact(c) => c.get_args_from_fact(),
-            ExistBodyFact::OrFact(o) => o.get_args_from_fact(),
-        }
-    }
-
-    pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
-        match self {
-            ExistBodyFact::AtomicFact(a) => a.get_args_from_fact_ref(),
-            ExistBodyFact::AndFact(a) => a.get_args_from_fact_ref(),
-            ExistBodyFact::ChainFact(c) => c.get_args_from_fact_ref(),
-            ExistBodyFact::OrFact(o) => o.get_args_from_fact_ref(),
-        }
-    }
-
-    pub fn to_fact(self) -> Fact {
-        match self {
-            ExistBodyFact::AtomicFact(a) => a.into(),
-            ExistBodyFact::AndFact(a) => a.into(),
-            ExistBodyFact::ChainFact(c) => c.into(),
-            ExistBodyFact::OrFact(o) => o.into(),
-        }
-    }
-
-    pub fn from_ref_to_cloned_fact(&self) -> Fact {
-        self.clone().to_fact()
-    }
-
-    pub fn replace_bound_identifier(self, from: &str, to: &str) -> Self {
-        match self {
-            ExistBodyFact::AtomicFact(a) => {
-                ExistBodyFact::AtomicFact(a.replace_bound_identifier(from, to))
-            }
-            ExistBodyFact::AndFact(a) => ExistBodyFact::AndFact(AndFact::new(
-                a.facts
-                    .into_iter()
-                    .map(|x| x.replace_bound_identifier(from, to))
-                    .collect(),
-                a.line_file,
-            )),
-            ExistBodyFact::ChainFact(c) => ExistBodyFact::ChainFact(ChainFact::new(
-                c.objs
-                    .into_iter()
-                    .map(|o| Obj::replace_bound_identifier(o, from, to))
-                    .collect(),
-                c.prop_names,
-                c.line_file,
-            )),
-            ExistBodyFact::OrFact(o) => ExistBodyFact::OrFact(OrFact::new(
-                o.facts
-                    .into_iter()
-                    .map(|x| x.replace_bound_identifier(from, to))
-                    .collect(),
-                o.line_file,
-            )),
-        }
-    }
-}
-
-impl fmt::Display for ExistBodyFact {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        match self {
-            ExistBodyFact::AtomicFact(a) => write!(f, "{}", a),
-            ExistBodyFact::AndFact(a) => write!(f, "{}", a),
-            ExistBodyFact::ChainFact(c) => write!(f, "{}", c),
-            ExistBodyFact::OrFact(o) => write!(f, "{}", o),
-        }
-    }
-}
-
-impl From<OrAndChainAtomicFact> for ExistBodyFact {
-    fn from(fact: OrAndChainAtomicFact) -> Self {
-        match fact {
-            OrAndChainAtomicFact::AtomicFact(a) => ExistBodyFact::AtomicFact(a),
-            OrAndChainAtomicFact::AndFact(a) => ExistBodyFact::AndFact(a),
-            OrAndChainAtomicFact::ChainFact(c) => ExistBodyFact::ChainFact(c),
-            OrAndChainAtomicFact::OrFact(o) => ExistBodyFact::OrFact(o),
-        }
-    }
-}
-
-impl From<AtomicFact> for ExistBodyFact {
-    fn from(atomic_fact: AtomicFact) -> Self {
-        ExistBodyFact::AtomicFact(atomic_fact)
-    }
-}
-
-impl From<EqualFact> for ExistBodyFact {
-    fn from(equal_fact: EqualFact) -> Self {
-        ExistBodyFact::AtomicFact(equal_fact.into())
-    }
-}
-
 impl ExistFactEnum {
-    pub fn body(&self) -> &ExistFactBody {
+    pub fn spec(&self) -> &ExistentialSpec {
         match self {
             ExistFactEnum::ExistFact(b)
             | ExistFactEnum::ExistUniqueFact(b)
@@ -237,12 +114,12 @@ impl ExistFactEnum {
     }
 
     pub fn exist_fact_string_without_exist_as_prefix(&self) -> String {
-        self.body().exist_fact_string_without_exist_as_prefix()
+        self.spec().exist_fact_string_without_exist_as_prefix()
     }
 
     pub fn key(&self) -> String {
         let head = self.keyword_prefix();
-        let b = self.body();
+        let b = self.spec();
         format!(
             "{} {}{}{}",
             head,
@@ -261,15 +138,15 @@ impl ExistFactEnum {
     /// Exact typed matching is still required after lookup; this key intentionally contains no
     /// object names, so captured identifiers can never be rewritten as witness binders here.
     pub fn alpha_normalized_key(&self) -> String {
-        let b = self.body();
+        let b = self.spec();
         let fact_shape = b
             .facts
             .iter()
             .map(|fact| match fact {
-                ExistBodyFact::AtomicFact(_) => "atomic",
-                ExistBodyFact::AndFact(_) => "and",
-                ExistBodyFact::ChainFact(_) => "chain",
-                ExistBodyFact::OrFact(_) => "or",
+                QuantifierFreeFact::AtomicFact(_) => "atomic",
+                QuantifierFreeFact::AndFact(_) => "and",
+                QuantifierFreeFact::ChainFact(_) => "chain",
+                QuantifierFreeFact::OrFact(_) => "or",
             })
             .collect::<Vec<&str>>()
             .join(",");
@@ -282,29 +159,29 @@ impl ExistFactEnum {
     }
 
     pub fn line_file(&self) -> LineFile {
-        self.body().line_file.clone()
+        self.spec().line_file.clone()
     }
 
     pub fn params_def_with_type(&self) -> &ParamDefWithType {
-        &self.body().params_def_with_type
+        &self.spec().params_def_with_type
     }
 
-    pub fn facts(&self) -> &Vec<ExistBodyFact> {
-        &self.body().facts
+    pub fn facts(&self) -> &Vec<QuantifierFreeFact> {
+        &self.spec().facts
     }
 
     pub fn get_args_from_fact(&self) -> Vec<Obj> {
-        self.body().get_args_from_fact()
+        self.spec().get_args_from_fact()
     }
 
     pub fn get_args_from_fact_ref(&self) -> Vec<&Obj> {
-        self.body().get_args_from_fact_ref()
+        self.spec().get_args_from_fact_ref()
     }
 }
 
 fn exist_fact_string_without_exist_as_prefix(
     param_defs: &ParamDefWithType,
-    facts: &Vec<ExistBodyFact>,
+    facts: &Vec<QuantifierFreeFact>,
 ) -> String {
     format!(
         "{} {} {}",

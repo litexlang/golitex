@@ -2,7 +2,7 @@
 
 This is the consolidated executable input ledger for the replacement compiler.
 Each `litex` fence is compiled independently. Generated output imports the
-shared `Litex.BuiltinRules` Lake library, checks ABI version 1, uses one
+shared `Litex.BuiltinRules` Lake library, checks ABI version 2, uses one
 `Litex.Object` ABI, and must not contain native numeric binders, `Set ℝ`,
 carrier unification, widening, or downcast logic.
 
@@ -122,6 +122,50 @@ theorem fact... : ∀ (a : Litex.Object) ... , marked a := by
   ... exact fact... a litex_param_fact_1 litex_domain_fact_1
 ```
 
+## statement_definitions_and_trust
+
+The first statement-definition tranche keeps declarations and their proof
+effects separate. A concrete proposition becomes a definition over universal
+objects, an explicit-value object becomes one `noncomputable def`, and every
+stored consequence is named by its retained `FactId`. Definition folding
+replays the exact parameter and clause proofs. Only the explicitly trusted
+source proposition becomes an axiom.
+
+```litex
+abstract_prop highlighted(x)
+
+prop is_zero(x R):
+    x = 0
+
+have named_zero R = 0
+by def $is_zero(named_zero)
+
+trust $highlighted(named_zero)
+$highlighted(named_zero)
+```
+
+Required generated shape:
+
+```lean
+axiom highlighted : Litex.Object → Prop
+
+def is_zero (x : Litex.Object) : Prop :=
+  Litex.In x Litex.R ∧ (x = 0)
+
+noncomputable def named_zero : Litex.Object := 0
+theorem fact... : Litex.In named_zero Litex.R := by ...
+theorem fact... : named_zero = 0 := by rfl
+theorem fact... : is_zero named_zero := by
+  ... exact And.intro ...
+
+axiom fact... : highlighted named_zero
+```
+
+If definition inference returns a `FactId` already emitted by the object or
+proof statement, the emitter reuses that declaration and rejects any
+same-ID/different-proposition mismatch. Bodyless concrete `prop`, `trust have`,
+and function-valued `have fn` remain strict compilation errors in this tranche.
+
 ## builtin_theorem
 
 The verifier's not-equality-symmetry and closed-numeral-membership certificates
@@ -143,7 +187,7 @@ Required generated shape:
 ```lean
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 1 := rfl
+example : Litex.abiVersion = 2 := rfl
 
 ... exact Litex.BuiltinRules.notEqualSymmetry litex_domain_fact_1
 ... exact Litex.BuiltinRules.numeralInN 1
@@ -227,14 +271,50 @@ Required generated shape:
 ```lean
 (y : Litex.Object)
 (litex_nested_param_fact_... : Litex.In y Litex.R)
-Litex.sub y 1
+Litex.sub y 1 well_defined_fact_... well_defined_fact_...
 Litex.BuiltinRules.realSubClosure ...
-litex_domain_fact_... (Litex.add 1 1) ...
+litex_domain_fact_... (Litex.add 1 1 well_defined_fact_... well_defined_fact_...) ...
 ```
 
 The malformed-certificate regression changes a retained source occurrence ID
 and requires strict emission to fail instead of selecting another textually
 equal application.
+
+## proof_carrying_arithmetic
+
+Addition, subtraction, and multiplication are partial target constructors.
+Each exact source node consumes the two ordered complex-membership facts from
+its verifier-owned WD proof. An inner result-membership fact is emitted and
+checked before an outer operation cites it.
+
+```litex
+forall a, b, c C:
+    (a + b) + c = (a + b) + c
+
+forall a, b, c C:
+    ((a - b) * c) + a = ((a - b) * c) + a
+```
+
+Required generated shape:
+
+```lean
+theorem well_defined_fact_... :
+    Litex.In (Litex.add a b well_defined_fact_... well_defined_fact_...) Litex.C := by
+  exact Litex.BuiltinRules.complexAddClosure ...
+
+Litex.add
+  (Litex.add a b well_defined_fact_... well_defined_fact_...)
+  c
+  well_defined_fact_...
+  well_defined_fact_...
+```
+
+The same chain calls `complexSubClosure` and `complexMulClosure` for the nested
+second statement. A malformed-IR regression removes the right-operand WD role
+and must fail before Lean. A real Lean negative gate also verifies that
+`Litex.add a b` without two proofs no longer elaborates. Division is excluded
+from this example until its denominator-nonzero proof becomes a target
+argument.
 
 ## Gates
 
@@ -245,4 +325,6 @@ target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
 target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_known_equality_path.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit
+target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit
 ```

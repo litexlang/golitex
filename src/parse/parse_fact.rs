@@ -661,9 +661,9 @@ impl Runtime {
 
                     tb.skip_token(LEFT_CURLY_BRACE)?;
 
-                    let mut facts: Vec<ExistBodyFact> = vec![];
+                    let mut facts: Vec<QuantifierFreeFact> = vec![];
                     loop {
-                        facts.push(inner.parse_inline_exist_body_fact(tb)?);
+                        facts.push(inner.parse_inline_quantifier_free_fact(tb)?);
                         if tb.current()? != RIGHT_CURLY_BRACE {
                             tb.skip_token(COMMA)?;
                         } else {
@@ -673,7 +673,7 @@ impl Runtime {
                     tb.skip_token(RIGHT_CURLY_BRACE)?;
 
                     let line_file = tb.line_file.clone();
-                    let body = ExistFactBody::new(param_def, facts, line_file)?;
+                    let body = ExistentialSpec::new(param_def, facts, line_file)?;
                     Ok(if is_exist_unique {
                         ExistFactEnum::ExistUniqueFact(body)
                     } else {
@@ -686,24 +686,24 @@ impl Runtime {
         })
     }
 
-    pub(crate) fn parse_inline_exist_body_fact(
+    pub(crate) fn parse_inline_quantifier_free_fact(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<ExistBodyFact, RuntimeError> {
+    ) -> Result<QuantifierFreeFact, RuntimeError> {
         let fact = self.parse_inline_fact(tb, true)?;
-        self.parsed_fact_to_exist_body_fact(fact, tb)
+        self.parsed_fact_to_quantifier_free_fact(fact, tb)
     }
 
-    fn parsed_fact_to_exist_body_fact(
+    fn parsed_fact_to_quantifier_free_fact(
         &self,
         fact: Fact,
         tb: &TokenBlock,
-    ) -> Result<ExistBodyFact, RuntimeError> {
+    ) -> Result<QuantifierFreeFact, RuntimeError> {
         match fact {
-            Fact::AtomicFact(fact) => Ok(ExistBodyFact::AtomicFact(fact)),
-            Fact::AndFact(fact) => Ok(ExistBodyFact::AndFact(fact)),
-            Fact::ChainFact(fact) => Ok(ExistBodyFact::ChainFact(fact)),
-            Fact::OrFact(fact) => Ok(ExistBodyFact::OrFact(fact)),
+            Fact::AtomicFact(fact) => Ok(QuantifierFreeFact::AtomicFact(fact)),
+            Fact::AndFact(fact) => Ok(QuantifierFreeFact::AndFact(fact)),
+            Fact::ChainFact(fact) => Ok(QuantifierFreeFact::ChainFact(fact)),
+            Fact::OrFact(fact) => Ok(QuantifierFreeFact::OrFact(fact)),
             Fact::ForallFact(_) => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     "inline `forall` is not allowed in existential or set-builder bodies; define a named `prop` and use `$P(...)`"
@@ -723,10 +723,10 @@ impl Runtime {
         }
     }
 
-    pub fn parse_exist_body_facts_in_body(
+    pub fn parse_quantifier_free_facts_in_body(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<Vec<ExistBodyFact>, RuntimeError> {
+    ) -> Result<Vec<QuantifierFreeFact>, RuntimeError> {
         if tb.body.is_empty() {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -736,10 +736,10 @@ impl Runtime {
             )));
         }
 
-        let mut facts: Vec<ExistBodyFact> = vec![];
+        let mut facts: Vec<QuantifierFreeFact> = vec![];
         for block in tb.body.iter_mut() {
             let fact = self.parse_fact(block)?;
-            facts.push(self.parsed_fact_to_exist_body_fact(fact, block)?);
+            facts.push(self.parsed_fact_to_quantifier_free_fact(fact, block)?);
         }
         Ok(facts)
     }
@@ -808,7 +808,7 @@ impl Runtime {
                     ),
                 )));
             }
-            _ => Ok(self.parse_or_and_chain_atomic_fact(tb)?.into()),
+            _ => Ok(self.parse_quantifier_free_fact(tb)?.into()),
         }
     }
 
@@ -898,10 +898,10 @@ impl Runtime {
         self.parse_and_chain_atomic_fact(tb)
     }
 
-    pub fn parse_or_and_chain_atomic_fact(
+    pub fn parse_quantifier_free_fact(
         &mut self,
         tb: &mut TokenBlock,
-    ) -> Result<OrAndChainAtomicFact, RuntimeError> {
+    ) -> Result<QuantifierFreeFact, RuntimeError> {
         let first = self.parse_and_chain_atomic_fact_allow_leading_not(tb)?;
         let mut list: Vec<AndChainAtomicFact> = vec![first];
         while !tb.exceed_end_of_head() && tb.current()? == OR {
@@ -910,12 +910,12 @@ impl Runtime {
         }
         if list.len() == 1 {
             return Ok(match list.remove(0) {
-                AndChainAtomicFact::AtomicFact(a) => OrAndChainAtomicFact::AtomicFact(a),
-                AndChainAtomicFact::AndFact(a) => OrAndChainAtomicFact::AndFact(a),
-                AndChainAtomicFact::ChainFact(c) => OrAndChainAtomicFact::ChainFact(c),
+                AndChainAtomicFact::AtomicFact(a) => QuantifierFreeFact::AtomicFact(a),
+                AndChainAtomicFact::AndFact(a) => QuantifierFreeFact::AndFact(a),
+                AndChainAtomicFact::ChainFact(c) => QuantifierFreeFact::ChainFact(c),
             });
         }
-        Ok(OrAndChainAtomicFact::OrFact(OrFact::new(
+        Ok(QuantifierFreeFact::OrFact(OrFact::new(
             list,
             tb.line_file.clone(),
         )))

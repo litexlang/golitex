@@ -5,7 +5,7 @@ use crate::prelude::*;
 #[derive(Clone)]
 pub struct FnSetBody {
     pub params_def_with_set: ParamDefWithSet,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
+    pub dom_facts: Vec<QuantifierFreeFact>,
     /// The return set may depend on the function's parameters and is instantiated at application.
     pub ret_set: Box<Obj>,
 }
@@ -13,7 +13,7 @@ pub struct FnSetBody {
 impl FnSetBody {
     pub fn new(
         params_def_with_set: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Self {
         Self {
@@ -51,7 +51,7 @@ pub struct FnSet {
 impl FnSet {
     pub fn new(
         params_and_their_sets: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
         let params_and_their_sets = params_and_their_sets.into();
@@ -87,7 +87,7 @@ pub struct AnonymousFn {
 impl AnonymousFn {
     pub fn new(
         params_and_their_sets: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
         equal_to: Obj,
     ) -> Result<Self, RuntimeError> {
@@ -116,7 +116,7 @@ impl FnSetSpace {
         }
     }
 
-    pub fn dom(&self) -> &Vec<OrAndChainAtomicFact> {
+    pub fn dom(&self) -> &Vec<QuantifierFreeFact> {
         match self {
             FnSetSpace::Set(f) => &f.body.dom_facts,
             FnSetSpace::Anon(a) => &a.body.dom_facts,

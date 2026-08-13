@@ -103,7 +103,7 @@ fn regularity_axiom_exist_fact(
         empty_set,
         line_file.clone(),
     );
-    let body = ExistFactBody::new(
+    let body = ExistentialSpec::new(
         ParamDefWithType::new(vec![x_group]),
         vec![disjoint_fact.into()],
         line_file,

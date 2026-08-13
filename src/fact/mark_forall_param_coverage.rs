@@ -273,7 +273,10 @@ fn mark_forall_param_coverage_in_obj(
                 coverage_by_forall_param,
             );
             for inner_fact in set_builder.facts.iter() {
-                mark_forall_param_coverage_in_exist_body_fact(inner_fact, coverage_by_forall_param);
+                mark_forall_param_coverage_in_quantifier_free_fact(
+                    inner_fact,
+                    coverage_by_forall_param,
+                );
             }
         }
         Obj::FnSet(fn_set) => {
@@ -284,7 +287,7 @@ fn mark_forall_param_coverage_in_obj(
                 );
             }
             for dom_fact in fn_set.body.dom_facts.iter() {
-                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+                mark_forall_param_coverage_in_quantifier_free_fact(
                     dom_fact,
                     coverage_by_forall_param,
                 );
@@ -302,7 +305,7 @@ fn mark_forall_param_coverage_in_obj(
                 );
             }
             for dom_fact in anon.body.dom_facts.iter() {
-                mark_forall_param_coverage_in_or_and_chain_atomic_fact(
+                mark_forall_param_coverage_in_quantifier_free_fact(
                     dom_fact,
                     coverage_by_forall_param,
                 );
@@ -619,54 +622,25 @@ fn mark_forall_param_coverage_in_and_chain_atomic_fact(
     }
 }
 
-fn mark_forall_param_coverage_in_or_and_chain_atomic_fact(
-    parent_fact: &OrAndChainAtomicFact,
+fn mark_forall_param_coverage_in_quantifier_free_fact(
+    parent_fact: &QuantifierFreeFact,
     coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
 ) {
     match parent_fact {
-        OrAndChainAtomicFact::AtomicFact(atomic_fact) => {
+        QuantifierFreeFact::AtomicFact(atomic_fact) => {
             mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
         }
-        OrAndChainAtomicFact::AndFact(and_fact) => {
+        QuantifierFreeFact::AndFact(and_fact) => {
             for inner_atomic in and_fact.facts.iter() {
                 mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
             }
         }
-        OrAndChainAtomicFact::ChainFact(chain_fact) => {
+        QuantifierFreeFact::ChainFact(chain_fact) => {
             for chain_obj in chain_fact.objs.iter() {
                 mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
             }
         }
-        OrAndChainAtomicFact::OrFact(or_fact) => {
-            for branch in or_fact.facts.iter() {
-                mark_forall_param_coverage_in_and_chain_atomic_fact(
-                    branch,
-                    coverage_by_forall_param,
-                );
-            }
-        }
-    }
-}
-
-fn mark_forall_param_coverage_in_exist_body_fact(
-    parent_fact: &ExistBodyFact,
-    coverage_by_forall_param: &mut HashMap<IdentifierName, bool>,
-) {
-    match parent_fact {
-        ExistBodyFact::AtomicFact(atomic_fact) => {
-            mark_forall_param_coverage_in_atomic_fact(atomic_fact, coverage_by_forall_param);
-        }
-        ExistBodyFact::AndFact(and_fact) => {
-            for inner_atomic in and_fact.facts.iter() {
-                mark_forall_param_coverage_in_atomic_fact(inner_atomic, coverage_by_forall_param);
-            }
-        }
-        ExistBodyFact::ChainFact(chain_fact) => {
-            for chain_obj in chain_fact.objs.iter() {
-                mark_forall_param_coverage_in_obj(chain_obj, coverage_by_forall_param);
-            }
-        }
-        ExistBodyFact::OrFact(or_fact) => {
+        QuantifierFreeFact::OrFact(or_fact) => {
             for branch in or_fact.facts.iter() {
                 mark_forall_param_coverage_in_and_chain_atomic_fact(
                     branch,
@@ -732,7 +706,7 @@ fn mark_forall_param_coverage_in_exist_fact(
         );
     }
     for inner_fact in exist_fact.facts().iter() {
-        mark_forall_param_coverage_in_exist_body_fact(inner_fact, coverage_by_forall_param);
+        mark_forall_param_coverage_in_quantifier_free_fact(inner_fact, coverage_by_forall_param);
     }
 }
 

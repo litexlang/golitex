@@ -29,7 +29,7 @@ impl Runtime {
         )?;
 
         for dom_fact in def_template_stmt.template_arg_dom.iter() {
-            self.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+            self.store_quantifier_free_fact_with_well_defined_verification_and_infer(
                 dom_fact,
                 &verify_state,
             )?;
@@ -96,14 +96,14 @@ impl Runtime {
             .param_defs_and_args_to_param_to_arg_map(&template_obj.args);
 
         for dom_fact in def.template_arg_dom.iter() {
-            let instantiated_dom_fact = self.inst_or_and_chain_atomic_fact(
+            let instantiated_dom_fact = self.inst_quantifier_free_fact(
                 dom_fact,
                 &param_to_arg_map,
                 ParamObjType::DefHeader,
                 None,
             )?;
             let verify_result =
-                self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+                self.verify_quantifier_free_fact(&instantiated_dom_fact, verify_state)?;
             if verify_result.is_unknown() {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_just_msg(format!(
@@ -112,7 +112,7 @@ impl Runtime {
                     )),
                 )));
             }
-            self.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+            self.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                 instantiated_dom_fact,
             )?;
         }
@@ -203,8 +203,11 @@ impl Runtime {
                 Ok(HaveObjEqualStmt::new(param_def, objs_equal_to, line_file.clone()).into())
             }
             TemplateDefEnum::HaveObjByExistFactsStmt(s) => {
-                let body =
-                    ExistFactBody::new(s.param_def.clone(), s.facts.clone(), s.line_file.clone())?;
+                let body = ExistentialSpec::new(
+                    s.param_def.clone(),
+                    s.facts.clone(),
+                    s.line_file.clone(),
+                )?;
                 let exist_fact = self.inst_exist_fact(
                     &ExistFactEnum::ExistFact(body),
                     param_to_arg_map,
@@ -907,7 +910,7 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(clause.dom_facts.len());
         for fact in clause.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+            dom_facts.push(self.inst_quantifier_free_fact(
                 fact,
                 &body_map,
                 ParamObjType::DefHeader,

@@ -836,7 +836,7 @@ fn collect_cited_param_indices_from_obj(
             );
             shadowed_names.push(x.param_name().to_string());
             for fact in x.facts.iter() {
-                collect_cited_param_indices_from_exist_body_fact(
+                collect_cited_param_indices_from_quantifier_free_fact(
                     fact,
                     previous_param_indices,
                     shadowed_names,
@@ -1430,7 +1430,7 @@ fn collect_cited_param_indices_from_fn_set_body(
 }
 
 fn collect_cited_param_indices_from_or_and_chain(
-    fact: &OrAndChainAtomicFact,
+    fact: &QuantifierFreeFact,
     previous_param_indices: &HashMap<String, usize>,
     shadowed_names: &mut Vec<String>,
     out: &mut Vec<usize>,
@@ -1440,8 +1440,8 @@ fn collect_cited_param_indices_from_or_and_chain(
     }
 }
 
-fn collect_cited_param_indices_from_exist_body_fact(
-    fact: &ExistBodyFact,
+fn collect_cited_param_indices_from_quantifier_free_fact(
+    fact: &QuantifierFreeFact,
     previous_param_indices: &HashMap<String, usize>,
     shadowed_names: &mut Vec<String>,
     out: &mut Vec<usize>,

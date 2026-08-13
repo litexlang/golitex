@@ -288,7 +288,7 @@ forall a, b, c set:
 ```lean
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 1 := rfl
+example : Litex.abiVersion = 2 := rfl
 
 theorem fact19 :
     ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)

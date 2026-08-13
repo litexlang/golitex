@@ -2,31 +2,31 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl Runtime {
-    pub fn _verify_or_and_chain_atomic_facts_the_same_type_and_return_matched_args(
-        fact: &OrAndChainAtomicFact,
-        other: &OrAndChainAtomicFact,
+    pub fn _verify_quantifier_free_facts_the_same_type_and_return_matched_args(
+        fact: &QuantifierFreeFact,
+        other: &QuantifierFreeFact,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         match fact {
-            OrAndChainAtomicFact::AndFact(f) => match other {
-                OrAndChainAtomicFact::AndFact(other) => {
+            QuantifierFreeFact::AndFact(f) => match other {
+                QuantifierFreeFact::AndFact(other) => {
                     Self::_verify_and_fact_the_same_type_and_return_matched_args(f, other)
                 }
                 _ => Ok(None),
             },
-            OrAndChainAtomicFact::OrFact(f) => match other {
-                OrAndChainAtomicFact::OrFact(other) => {
+            QuantifierFreeFact::OrFact(f) => match other {
+                QuantifierFreeFact::OrFact(other) => {
                     Self::_verify_or_fact_the_same_type_and_return_matched_args(f, other)
                 }
                 _ => Ok(None),
             },
-            OrAndChainAtomicFact::AtomicFact(f) => match other {
-                OrAndChainAtomicFact::AtomicFact(other) => {
+            QuantifierFreeFact::AtomicFact(f) => match other {
+                QuantifierFreeFact::AtomicFact(other) => {
                     Self::_verify_atomic_fact_the_same_type_and_return_matched_args(f, other)
                 }
                 _ => Ok(None),
             },
-            OrAndChainAtomicFact::ChainFact(f) => match other {
-                OrAndChainAtomicFact::ChainFact(other) => {
+            QuantifierFreeFact::ChainFact(f) => match other {
+                QuantifierFreeFact::ChainFact(other) => {
                     Self::_verify_chain_fact_the_same_type_and_return_matched_args(f, other)
                 }
                 _ => Ok(None),
@@ -153,7 +153,7 @@ impl Runtime {
         &self,
         fact: &ExistFactEnum,
         other: &ExistFactEnum,
-        next_forall_scope_id: &mut usize,
+        _next_forall_scope_id: &mut usize,
     ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
         if fact.is_not_exist() != other.is_not_exist() {
             return Ok(None);
@@ -199,44 +199,19 @@ impl Runtime {
             }
         }
         for (fact_item, other_item) in fact.facts().iter().zip(other.facts().iter()) {
-            let sub_matched_args = match self
-                ._verify_exist_body_facts_the_same_type_and_return_matched_args(
-                    fact_item,
-                    other_item,
-                    next_forall_scope_id,
+            let sub_matched_args =
+                match Self::_verify_quantifier_free_facts_the_same_type_and_return_matched_args(
+                    fact_item, other_item,
                 )? {
-                Some(value) => value,
-                None => return Ok(None),
-            };
+                    Some(value) => value,
+                    None => return Ok(None),
+                };
             for matched_arg in sub_matched_args {
                 matched_args.push(matched_arg);
             }
         }
 
         Ok(Some(matched_args))
-    }
-
-    fn _verify_exist_body_facts_the_same_type_and_return_matched_args(
-        &self,
-        fact: &ExistBodyFact,
-        other: &ExistBodyFact,
-        _next_forall_scope_id: &mut usize,
-    ) -> Result<Option<Vec<(Obj, Obj)>>, RuntimeError> {
-        match (fact, other) {
-            (ExistBodyFact::AtomicFact(a), ExistBodyFact::AtomicFact(b)) => {
-                Self::_verify_atomic_fact_the_same_type_and_return_matched_args(a, b)
-            }
-            (ExistBodyFact::AndFact(a), ExistBodyFact::AndFact(b)) => {
-                Self::_verify_and_fact_the_same_type_and_return_matched_args(a, b)
-            }
-            (ExistBodyFact::ChainFact(a), ExistBodyFact::ChainFact(b)) => {
-                Self::_verify_chain_fact_the_same_type_and_return_matched_args(a, b)
-            }
-            (ExistBodyFact::OrFact(a), ExistBodyFact::OrFact(b)) => {
-                Self::_verify_or_fact_the_same_type_and_return_matched_args(a, b)
-            }
-            _ => Ok(None),
-        }
     }
 
     fn _verify_forall_fact_the_same_type_and_return_matched_args(
@@ -763,31 +738,31 @@ impl Runtime {
         }
     }
 
-    pub fn _verify_or_and_chain_atomic_facts_the_same_type_ref(
-        fact: &OrAndChainAtomicFact,
-        other: &OrAndChainAtomicFact,
+    pub fn _verify_quantifier_free_facts_the_same_type_ref(
+        fact: &QuantifierFreeFact,
+        other: &QuantifierFreeFact,
     ) -> Result<bool, RuntimeError> {
         match fact {
-            OrAndChainAtomicFact::AndFact(f) => match other {
-                OrAndChainAtomicFact::AndFact(other) => {
+            QuantifierFreeFact::AndFact(f) => match other {
+                QuantifierFreeFact::AndFact(other) => {
                     Self::_verify_and_fact_the_same_type_ref(f, other)
                 }
                 _ => Ok(false),
             },
-            OrAndChainAtomicFact::OrFact(f) => match other {
-                OrAndChainAtomicFact::OrFact(other) => {
+            QuantifierFreeFact::OrFact(f) => match other {
+                QuantifierFreeFact::OrFact(other) => {
                     Self::_verify_or_fact_the_same_type_ref(f, other)
                 }
                 _ => Ok(false),
             },
-            OrAndChainAtomicFact::AtomicFact(f) => match other {
-                OrAndChainAtomicFact::AtomicFact(other) => {
+            QuantifierFreeFact::AtomicFact(f) => match other {
+                QuantifierFreeFact::AtomicFact(other) => {
                     Self::_verify_atomic_fact_the_same_type_ref(f, other)
                 }
                 _ => Ok(false),
             },
-            OrAndChainAtomicFact::ChainFact(f) => match other {
-                OrAndChainAtomicFact::ChainFact(other) => {
+            QuantifierFreeFact::ChainFact(f) => match other {
+                QuantifierFreeFact::ChainFact(other) => {
                     Self::_verify_chain_fact_the_same_type_ref(f, other)
                 }
                 _ => Ok(false),

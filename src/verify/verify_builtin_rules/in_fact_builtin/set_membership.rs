@@ -221,13 +221,14 @@ impl Runtime {
                     membership_pattern.element.clone(),
                 );
                 for defining_fact in &set_builder.facts {
-                    let instantiated_pattern = self.inst_exist_body_fact(
+                    let instantiated_pattern = self.inst_quantifier_free_fact(
                         defining_fact,
                         &element_substitution,
                         ParamObjType::SetBuilder,
                         Some(&goal.line_file()),
                     )?;
-                    let ExistBodyFact::AtomicFact(atomic_pattern) = instantiated_pattern else {
+                    let QuantifierFreeFact::AtomicFact(atomic_pattern) = instantiated_pattern
+                    else {
                         continue;
                     };
                     let Some(arg_map) = self
@@ -322,13 +323,13 @@ impl Runtime {
                 membership.element.clone(),
             );
             for defining_fact in &set_builder.facts {
-                let instantiated = self.inst_exist_body_fact(
+                let instantiated = self.inst_quantifier_free_fact(
                     defining_fact,
                     &substitutions,
                     ParamObjType::SetBuilder,
                     Some(&goal.line_file()),
                 )?;
-                let ExistBodyFact::AtomicFact(instantiated_atomic) = instantiated else {
+                let QuantifierFreeFact::AtomicFact(instantiated_atomic) = instantiated else {
                     continue;
                 };
                 if instantiated_atomic.to_string() != goal.to_string() {
@@ -600,7 +601,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![member_group]),
             vec![element_in_member.into()],
             in_fact.line_file.clone(),
@@ -702,7 +703,7 @@ impl Runtime {
             in_fact.line_file.clone(),
         )
         .into();
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![preimage_group]),
             vec![relation_fact.into()],
             in_fact.line_file.clone(),
@@ -1037,7 +1038,7 @@ impl Runtime {
 
         for fact_in_set_builder in set_builder.facts.iter() {
             let instantiated_fact = self
-                .inst_exist_body_fact(
+                .inst_quantifier_free_fact(
                     fact_in_set_builder,
                     &param_to_arg_map,
                     ParamObjType::SetBuilder,

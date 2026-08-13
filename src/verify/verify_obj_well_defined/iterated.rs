@@ -645,7 +645,7 @@ impl Runtime {
                 rt.define_params_with_set_in_scope(param, ParamObjType::FnSet)?;
             }
             for domain_fact in body.dom_facts.iter() {
-                rt.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+                rt.store_quantifier_free_fact_with_well_defined_verification_and_infer(
                     domain_fact,
                     verify_state,
                 )?;
@@ -1102,13 +1102,13 @@ impl Runtime {
                     })?;
             }
             let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
-            let le_lo = OrAndChainAtomicFact::AtomicFact(
+            let le_lo = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(start_c.clone(), k.clone(), default_line_file()).into(),
             );
-            let le_hi = OrAndChainAtomicFact::AtomicFact(
+            let le_hi = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(k, end_c.clone(), default_line_file()).into(),
             );
-            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+            rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(le_lo)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -1117,7 +1117,7 @@ impl Runtime {
                         ),
                     ))
                 })?;
-            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+            rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(le_hi)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -1128,7 +1128,7 @@ impl Runtime {
                 })?;
             for df in fs_body.dom_facts.iter() {
                 let result = rt
-                    .verify_or_and_chain_atomic_fact(df, verify_state)
+                    .verify_quantifier_free_fact(df, verify_state)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -1144,7 +1144,7 @@ impl Runtime {
                         )),
                     )));
                 }
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                     df.clone(),
                 )
                 .map_err(|e| {
@@ -1292,23 +1292,23 @@ impl Runtime {
                     })?;
             }
             let k = obj_for_bound_param_in_scope(param_binding, ParamObjType::FnSet);
-            let le_lo = OrAndChainAtomicFact::AtomicFact(
+            let le_lo = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(start.clone(), k.clone(), default_line_file()).into(),
             );
-            let le_hi = OrAndChainAtomicFact::AtomicFact(
+            let le_hi = QuantifierFreeFact::AtomicFact(
                 LessEqualFact::new(k, end.clone(), default_line_file()).into(),
             );
-            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_lo)
+            rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(le_lo)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add lower bound in local check"), e)))
                 })?;
-            rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(le_hi)
+            rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(le_hi)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: could not add upper bound in local check"), e)))
                 })?;
             for df in af.body.dom_facts.iter() {
                 let result = rt
-                    .verify_or_and_chain_atomic_fact(df, verify_state)
+                    .verify_quantifier_free_fact(df, verify_state)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -1324,7 +1324,7 @@ impl Runtime {
                         )),
                     )));
                 }
-                rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                     df.clone(),
                 )
                 .map_err(|e| {

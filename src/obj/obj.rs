@@ -792,7 +792,7 @@ pub struct ListSet {
 pub struct SetBuilder {
     pub param_binding: SymbolBinding,
     pub param_set: Box<Obj>,
-    pub facts: Vec<ExistBodyFact>,
+    pub facts: Vec<QuantifierFreeFact>,
 }
 
 #[derive(Clone)]
@@ -1121,7 +1121,7 @@ impl SetBuilder {
     pub fn new(
         param_binding: SymbolBinding,
         param_set: Obj,
-        facts: Vec<ExistBodyFact>,
+        facts: Vec<QuantifierFreeFact>,
     ) -> Result<Self, RuntimeError> {
         let set_builder = SetBuilder {
             param_binding,

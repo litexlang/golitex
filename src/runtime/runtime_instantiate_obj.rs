@@ -783,7 +783,7 @@ impl Runtime {
         };
         let mut facts = Vec::with_capacity(set_builder.facts.len());
         for fact in set_builder.facts.iter() {
-            facts.push(self.inst_exist_body_fact(
+            facts.push(self.inst_quantifier_free_fact(
                 fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
@@ -884,7 +884,7 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(fn_set_with_params.body.dom_facts.len());
         for dom_fact in fn_set_with_params.body.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+            dom_facts.push(self.inst_quantifier_free_fact(
                 dom_fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
@@ -967,7 +967,7 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(af.body.dom_facts.len());
         for dom_fact in af.body.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+            dom_facts.push(self.inst_quantifier_free_fact(
                 dom_fact,
                 &filtered_param_to_arg_map,
                 param_obj_type,
@@ -1034,7 +1034,7 @@ impl Runtime {
         }
         let mut facts = Vec::with_capacity(set_builder.facts.len());
         for fact in set_builder.facts.iter() {
-            facts.push(self.inst_exist_body_fact(
+            facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
                 ParamObjType::AlphaRename,
@@ -1145,7 +1145,7 @@ impl Runtime {
         }
         let mut dom_facts = Vec::with_capacity(body.dom_facts.len());
         for fact in body.dom_facts.iter() {
-            dom_facts.push(self.inst_or_and_chain_atomic_fact(
+            dom_facts.push(self.inst_quantifier_free_fact(
                 fact,
                 rename_map,
                 ParamObjType::AlphaRename,
@@ -1821,7 +1821,8 @@ mod capture_avoidance_tests {
             instantiated.param_set.as_ref(),
             Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == "n"
         ));
-        let ExistBodyFact::AtomicFact(AtomicFact::EqualFact(equality)) = &instantiated.facts[0]
+        let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equality)) =
+            &instantiated.facts[0]
         else {
             panic!("expected equality body");
         };
@@ -1956,7 +1957,7 @@ mod capture_avoidance_tests {
             instantiated.body.params_def_with_set[0].set_obj(),
             Obj::Atom(AtomObj::Identifier(identifier)) if identifier.name == "n"
         ));
-        let OrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equality)) =
+        let QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(equality)) =
             &instantiated.body.dom_facts[0]
         else {
             panic!("expected equality domain fact");

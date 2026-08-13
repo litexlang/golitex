@@ -14,7 +14,7 @@ fn universal_examples_compile_to_the_new_abi() {
         let examples = ledger_examples();
         assert_eq!(
             examples.len(),
-            8,
+            10,
             "the universal-object ledger changed shape"
         );
         for (label, source) in examples {
@@ -37,10 +37,12 @@ fn universal_showcase_compiles_to_the_new_abi() {
             "derived_set_predicates",
             "membership_wd",
             "known_forall",
+            "statement_definitions_and_trust",
             "builtin_theorem",
             "known_equality_path",
             "exact_application_layers",
             "arithmetic_forall_wd",
+            "proof_carrying_arithmetic",
         ] {
             assert_new_abi(label, &generated);
         }
@@ -107,7 +109,7 @@ fn shared_builtin_rule_tracer_compiles_with_mathlib() {
         library.compile_generated("shared-builtin-tracer", &generated);
         library.reject_generated(
             "wrong-abi-version",
-            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n",
+            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n",
         );
     });
 }
@@ -135,7 +137,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     let source_declarations = generated
-        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n")
+        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n")
         .expect("generated source should begin after the shared-library header");
     for forbidden in ["(a : ℝ)", "(a : ℂ)", "(b : ℝ)", "(b : ℂ)"] {
         assert!(
@@ -172,6 +174,25 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "{generated}"
             );
             assert!(!generated.contains("assumption"), "{generated}");
+        }
+        "statement_definitions_and_trust" => {
+            assert!(
+                generated.contains("axiom highlighted : Litex.Object → Prop"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("def is_zero (x : Litex.Object) : Prop :=")
+                    && generated.contains("Litex.In x Litex.R ∧ (x = 0)"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("noncomputable def named_zero : Litex.Object := 0"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("change Litex.In named_zero Litex.R ∧ (named_zero = 0)"),
+                "{generated}"
+            );
         }
         "builtin_theorem" => {
             assert!(
@@ -222,6 +243,23 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "one WellDefinedFactId must emit one helper declaration\n{generated}"
             );
         }
+        "proof_carrying_arithmetic" => {
+            for theorem in [
+                "complexAddClosure",
+                "complexSubClosure",
+                "complexMulClosure",
+            ] {
+                assert!(
+                    generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                    "{generated}"
+                );
+            }
+            assert!(
+                generated.contains("theorem well_defined_fact_"),
+                "{generated}"
+            );
+            assert!(generated.contains("(Litex.add (Litex.add"), "{generated}");
+        }
         other => panic!("unregistered universal-object ledger example `{other}`"),
     }
 }
@@ -229,7 +267,7 @@ fn assert_new_abi(label: &str, generated: &str) {
 fn assert_new_shared_library_header(label: &str, generated: &str) {
     assert!(
         generated
-            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n"),
+            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n"),
         "{label}\n{generated}"
     );
 }

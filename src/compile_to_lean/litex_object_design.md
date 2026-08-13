@@ -145,12 +145,18 @@ Separate theorems establish memberships such as `1 ∈ N`, `1 ∈ R`, and
 
 Litex does not overload source `+`. Every source occurrence denotes the one
 Litex complex addition operation. Real or integer closure is justified by
-ordinary builtin-rule theorems using retained membership proofs. The current
-header exposes total `Litex.add/sub/mul/div` primitives. Under the decided WD
-rule, a future final ABI must also prevent the compiler from constructing a
-source arithmetic object without its required domain certificate. Whether
-builtins use generic `Applicable` or constructor-specific applicability
-predicates is still **open spelling**; erasing the certificate is not open.
+ordinary builtin-rule theorems using retained membership proofs. ABI version 2
+makes addition, subtraction, and multiplication proof-carrying:
+
+```lean
+axiom Litex.add (a b : Litex.Object) :
+  Litex.In a Litex.C → Litex.In b Litex.C → Litex.Object
+```
+
+`Litex.sub` and `Litex.mul` have the same ordered contract. `Litex.div` remains
+temporarily total because its final contract also needs the denominator's
+nonzero proof; that migration is not silently approximated by the two-proof
+shape.
 
 ## 4. Function spaces are set objects
 
@@ -368,21 +374,25 @@ target proof. The verifier freezes:
 - `FactId` for every environment-stored fact;
 - `WellDefinedObjProofId` for each node of the object-WD DAG;
 - `WellDefinedFactId` for each factual obligation used by that DAG;
-- direct child edges, target requirement roles, source scope, and the exact
-  function-space membership contract.
+- direct child edges, target requirement roles, source scope, root execution
+  phase, and the exact function-space membership contract.
 
 Lean declarations use stable names such as:
 
 ```lean
-theorem well_defined_fact_17 ... : Litex.In a Litex.R := ...
+theorem well_defined_fact_17 ... :
+    Litex.In (Litex.add a b a_in_C b_in_C) Litex.C := by
+  exact Litex.BuiltinRules.complexAddClosure a_in_C b_in_C
 ```
 
 Children are emitted before parents. If the proof is needed in another
 theorem's type, its helper is emitted before that theorem and generalized over
-the visible Litex environment. A WD cache hit cites the original accessible
-ID; it does not become a proofless boolean. Child environments see parent
-facts, discarded child facts do not leak, and committed scopes follow the
-runtime's real merge rules.
+the visible Litex environment. An outer term then passes
+`well_defined_fact_17` to its proof-carrying constructor. A WD cache hit cites
+the original accessible ID; it does not become a proofless boolean. Root uses
+retain preflight/proof/store phase so equal source objects do not force a
+structural guess. Child environments see parent facts, discarded child facts
+do not leak, and committed scopes follow the runtime's real merge rules.
 
 ## 10. Semantic core, ordinary theorems, and trust
 
@@ -409,7 +419,7 @@ Every successful generated source currently has this shape:
 ```text
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 1 := rfl
+example : Litex.abiVersion = 2 := rfl
 
 <WD helper declarations and translated source declarations>
 ```
@@ -481,24 +491,25 @@ rejects `f(a)` and To-Lean emits no call.
 
 ### Example 3 — one numeral and the one complex addition
 
-Status: **Current** for the numeral object and current total arithmetic
-primitive; **Decided** that final partial-operation terms retain WD.
+Status: **Current** for the numeral object and proof-carrying addition.
 
 ```litex
 forall a, b R:
     a + b $in R
 ```
 
-Current target core uses one operation and proves real closure:
+The target constructor and real-closure theorem both consume the exact complex
+membership proofs selected from the WD DAG:
 
 ```lean
-Litex.BuiltinRules.realAddClosure haR hbR :
-  Litex.In (Litex.add a b) Litex.R
+Litex.add a b haC hbC
+
+Litex.BuiltinRules.realAddClosure haC hbC haR hbR :
+  Litex.In (Litex.add a b haC hbC) Litex.R
 ```
 
 There is no separate real `+`. Both operands are also known to be in `C`, and
-the source `+` denotes the single complex addition. The final proof-carrying
-operation spelling is still to be frozen.
+the source `+` denotes the single complex addition.
 
 ### Example 4 — a unary function-space membership
 

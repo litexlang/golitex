@@ -193,9 +193,9 @@ fn axiom_of_choice_exist_fact(
         f,
         line_file.clone(),
     );
-    let body = ExistFactBody::new(
+    let body = ExistentialSpec::new(
         ParamDefWithType::new(vec![f_group]),
-        vec![ExistBodyFact::AtomicFact(named_choice_fact)],
+        vec![QuantifierFreeFact::AtomicFact(named_choice_fact)],
         line_file,
     )?;
     Ok(ExistFactEnum::ExistFact(body).into())

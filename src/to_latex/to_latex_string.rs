@@ -100,13 +100,13 @@ impl AndChainAtomicFact {
     }
 }
 
-impl OrAndChainAtomicFact {
+impl QuantifierFreeFact {
     pub fn to_latex_string(&self) -> String {
         match self {
-            OrAndChainAtomicFact::AtomicFact(x) => x.to_latex_string(),
-            OrAndChainAtomicFact::AndFact(x) => x.to_latex_string(),
-            OrAndChainAtomicFact::ChainFact(x) => x.to_latex_string(),
-            OrAndChainAtomicFact::OrFact(x) => x.to_latex_string(),
+            QuantifierFreeFact::AtomicFact(x) => x.to_latex_string(),
+            QuantifierFreeFact::AndFact(x) => x.to_latex_string(),
+            QuantifierFreeFact::ChainFact(x) => x.to_latex_string(),
+            QuantifierFreeFact::OrFact(x) => x.to_latex_string(),
         }
     }
 }
@@ -844,17 +844,6 @@ impl ExistFactEnum {
             r"{}\, \left( {}\right)\, \mathrm{{st}}\, \left\{{ {} \right\}}",
             head, params, facts
         )
-    }
-}
-
-impl ExistBodyFact {
-    pub fn to_latex_string(&self) -> String {
-        match self {
-            ExistBodyFact::AtomicFact(x) => x.to_latex_string(),
-            ExistBodyFact::AndFact(x) => x.to_latex_string(),
-            ExistBodyFact::ChainFact(x) => x.to_latex_string(),
-            ExistBodyFact::OrFact(x) => x.to_latex_string(),
-        }
     }
 }
 

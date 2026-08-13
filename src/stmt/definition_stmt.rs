@@ -51,14 +51,14 @@ impl DefAbstractPropStmt {
 #[derive(Clone)]
 pub struct FnSetClause {
     pub params_def_with_set: ParamDefWithSet,
-    pub dom_facts: Vec<OrAndChainAtomicFact>,
+    pub dom_facts: Vec<QuantifierFreeFact>,
     pub ret_set: Obj,
 }
 
 impl FnSetClause {
     pub fn new(
         params_def_with_set: impl Into<ParamDefWithSet>,
-        dom_facts: Vec<OrAndChainAtomicFact>,
+        dom_facts: Vec<QuantifierFreeFact>,
         ret_set: Obj,
     ) -> Result<Self, RuntimeError> {
         let params_def_with_set = params_def_with_set.into();
@@ -157,7 +157,7 @@ pub struct HaveMatrixStmt {
 pub struct DefTemplateStmt {
     pub template_name: String,
     pub template_arg_def: ParamDefWithType,
-    pub template_arg_dom: Vec<OrAndChainAtomicFact>,
+    pub template_arg_dom: Vec<QuantifierFreeFact>,
     pub template_def_stmt: TemplateDefEnum,
     pub line_file: LineFile,
 }
@@ -279,7 +279,7 @@ pub struct HaveObjInNonemptySetOrParamTypeStmt {
 #[derive(Clone)]
 pub struct HaveObjByExistFactsStmt {
     pub param_def: ParamDefWithType,
-    pub facts: Vec<ExistBodyFact>,
+    pub facts: Vec<QuantifierFreeFact>,
     pub line_file: LineFile,
 }
 
@@ -408,7 +408,7 @@ impl fmt::Display for HaveObjInNonemptySetOrParamTypeStmt {
 impl HaveObjByExistFactsStmt {
     pub fn new(
         param_def: ParamDefWithType,
-        facts: Vec<ExistBodyFact>,
+        facts: Vec<QuantifierFreeFact>,
         line_file: LineFile,
     ) -> Self {
         HaveObjByExistFactsStmt {
@@ -1038,7 +1038,7 @@ impl DefTemplateStmt {
     pub fn new(
         template_name: String,
         template_arg_def: ParamDefWithType,
-        template_arg_dom: Vec<OrAndChainAtomicFact>,
+        template_arg_dom: Vec<QuantifierFreeFact>,
         template_def_stmt: TemplateDefEnum,
         line_file: LineFile,
     ) -> Self {

@@ -281,7 +281,7 @@ impl Runtime {
         let mut infer_result = InferResult::new();
         for dom_fact in fn_body.dom_facts.iter() {
             let instantiated_dom_fact = self
-                .inst_or_and_chain_atomic_fact(
+                .inst_quantifier_free_fact(
                     dom_fact,
                     &param_to_obj_map,
                     ParamObjType::FnSet,

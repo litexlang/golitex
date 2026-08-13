@@ -162,7 +162,7 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
         push_exist_scope_if_needed(exist_fact, free_param_type, params_already_used)?;
 
     for fact in exist_fact.facts().iter() {
-        check_exist_body_fact_has_no_duplicate_free_parameter(
+        check_quantifier_free_fact_has_no_duplicate_free_parameter(
             fact,
             free_param_type,
             params_already_used,
@@ -175,16 +175,16 @@ fn check_exist_fact_has_no_duplicate_free_parameter(
     Ok(())
 }
 
-pub fn check_exist_body_fact_has_no_duplicate_free_parameter(
-    fact: &ExistBodyFact,
+pub fn check_quantifier_free_fact_has_no_duplicate_free_parameter(
+    fact: &QuantifierFreeFact,
     free_param_type: ParamObjType,
     params_already_used: &mut Vec<Vec<String>>,
 ) -> Result<(), RuntimeError> {
     match fact {
-        ExistBodyFact::AtomicFact(_) => Ok(()),
-        ExistBodyFact::AndFact(_) => Ok(()),
-        ExistBodyFact::ChainFact(_) => Ok(()),
-        ExistBodyFact::OrFact(or_fact) => check_or_fact_has_no_duplicate_free_parameter(
+        QuantifierFreeFact::AtomicFact(_) => Ok(()),
+        QuantifierFreeFact::AndFact(_) => Ok(()),
+        QuantifierFreeFact::ChainFact(_) => Ok(()),
+        QuantifierFreeFact::OrFact(or_fact) => check_or_fact_has_no_duplicate_free_parameter(
             or_fact,
             free_param_type,
             params_already_used,
@@ -201,7 +201,7 @@ fn push_exist_scope_if_needed(
         return Ok(false);
     }
 
-    let body = exist_fact.body();
+    let body = exist_fact.spec();
     push_param_def_scope_or_error(
         body.params_def_with_type.collect_param_names(),
         free_param_type,

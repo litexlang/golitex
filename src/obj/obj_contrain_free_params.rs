@@ -144,7 +144,7 @@ impl Obj {
             Obj::SetBuilder(x) => {
                 collector.insert_binder(ParamObjType::SetBuilder, x.param_name());
                 x.param_set.collect_free_param_names_into(collector);
-                collect_forall_free_param_names_in_exist_body_facts(&x.facts, collector);
+                collect_forall_free_param_names_in_quantifier_free_facts(&x.facts, collector);
             }
             Obj::FnSet(x) => collect_forall_free_param_names_in_fn_set_body(&x.body, collector),
             Obj::AnonymousFn(x) => {
@@ -342,7 +342,7 @@ fn collect_forall_free_param_names_in_fn_set_body(
 }
 
 fn collect_forall_free_param_names_in_or_and_chain_facts(
-    facts: &[OrAndChainAtomicFact],
+    facts: &[QuantifierFreeFact],
     collector: &mut FreeParamNameCollector,
 ) {
     for fact in facts {
@@ -350,25 +350,25 @@ fn collect_forall_free_param_names_in_or_and_chain_facts(
     }
 }
 
-fn collect_forall_free_param_names_in_exist_body_facts(
-    facts: &[ExistBodyFact],
+fn collect_forall_free_param_names_in_quantifier_free_facts(
+    facts: &[QuantifierFreeFact],
     collector: &mut FreeParamNameCollector,
 ) {
     for fact in facts {
         match fact {
-            ExistBodyFact::AtomicFact(fact) => collect_forall_free_param_names_in_obj_refs(
+            QuantifierFreeFact::AtomicFact(fact) => collect_forall_free_param_names_in_obj_refs(
                 &fact.get_args_from_fact_ref(),
                 collector,
             ),
-            ExistBodyFact::AndFact(fact) => collect_forall_free_param_names_in_obj_refs(
+            QuantifierFreeFact::AndFact(fact) => collect_forall_free_param_names_in_obj_refs(
                 &fact.get_args_from_fact_ref(),
                 collector,
             ),
-            ExistBodyFact::ChainFact(fact) => collect_forall_free_param_names_in_obj_refs(
+            QuantifierFreeFact::ChainFact(fact) => collect_forall_free_param_names_in_obj_refs(
                 &fact.get_args_from_fact_ref(),
                 collector,
             ),
-            ExistBodyFact::OrFact(fact) => collect_forall_free_param_names_in_obj_refs(
+            QuantifierFreeFact::OrFact(fact) => collect_forall_free_param_names_in_obj_refs(
                 &fact.get_args_from_fact_ref(),
                 collector,
             ),

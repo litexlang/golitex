@@ -33,15 +33,15 @@ impl Runtime {
         }
     }
 
-    pub fn infer_or_and_chain_atomic_fact(
+    pub fn infer_quantifier_free_fact(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
     ) -> Result<InferResult, RuntimeError> {
         match fact {
-            OrAndChainAtomicFact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),
-            OrAndChainAtomicFact::AndFact(and_fact) => self.infer_and_fact(and_fact),
-            OrAndChainAtomicFact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
-            OrAndChainAtomicFact::OrFact(or_fact) => self.infer_or_fact(or_fact),
+            QuantifierFreeFact::AtomicFact(atomic_fact) => self.infer_atomic_fact(atomic_fact),
+            QuantifierFreeFact::AndFact(and_fact) => self.infer_and_fact(and_fact),
+            QuantifierFreeFact::ChainFact(chain_fact) => self.infer_chain_fact(chain_fact),
+            QuantifierFreeFact::OrFact(or_fact) => self.infer_or_fact(or_fact),
         }
     }
 

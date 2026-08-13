@@ -47,7 +47,7 @@ Current hole: many source object constructors still lack universal-object
 lowering. Unsupported constructors fail closed.
 
 The ABI is packaged once in `lean/Litex/Core.lean`; generated files obtain it
-through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 1`. The
+through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 2`. The
 nearest rejected packaging repeats this declaration block in every generated
 file, allowing theorem bodies and semantic primitives to drift independently.
 
@@ -141,10 +141,13 @@ boundary.
 
 Downstream uses: closed numeral membership and arithmetic/order theorems.
 
-Current implementation includes unified `Litex.add/sub/mul/div`, their numeric
-embedding bridges, real-closure theorems, and rational normalization. Current
-holes include power semantics, transcendental operations, refined numeric-set
-laws, and most arithmetic builtin certificates.
+Current implementation includes proof-carrying `Litex.add/sub/mul`, total
+`Litex.div`, numeric embedding bridges, complex/real closure theorems, adjacent
+`N → Z → Q → R → C` projection theorems, and rational normalization. Every
+`add/sub/mul` term consumes two ordered verifier-owned `In operand C` proofs.
+Current holes include proof-carrying division, power semantics,
+transcendental operations, refined numeric-set laws, and most arithmetic
+builtin certificates.
 
 ## Function-set objects
 
@@ -219,6 +222,7 @@ parser/runtime retain:
 - `SourceObjectOccurrenceId` for every parsed application occurrence;
 - `WellDefinedObjProofId` for object-proof DAG nodes;
 - `WellDefinedFactId` for factual WD obligations;
+- phase-labelled root object uses for preflight/proof/store disambiguation;
 - child edges, exact target-requirement roles, and source scope.
 
 The emitter names replayable WD facts as `well_defined_fact_<id>`. If an
@@ -285,6 +289,55 @@ theorems.
 
 Current hole: supported inferred-forall premises are not yet emitted.
 
+## Statement definitions and definition replay
+
+An `abstract_prop P(x)` introduces an uninterpreted target predicate
+`P : Litex.Object → Prop`. A bodyful concrete proposition is different: its
+parameter requirements and clauses determine one target definition. For
+example,
+
+```litex
+prop is_zero(x R):
+    x = 0
+```
+
+has the target meaning
+
+```lean
+def is_zero (x : Litex.Object) : Prop :=
+  Litex.In x Litex.R ∧ x = 0
+```
+
+The parameter carrier remains a proposition in the definition body; it never
+changes the Lean type of `x`. `by def $is_zero(a)` must carry the exact checked
+proofs of `a $in R` and `a = 0`. The emitter validates their order and shapes,
+then constructs the conjunction. Conversely, an inferred parameter or clause
+fact is projected from the exact source proposition `FactId`; the emitter does
+not search for a proposition that happens to match.
+
+An explicit-value object definition such as `have a R = 0` becomes one
+`noncomputable def a : Litex.Object := 0`. Its stored type and defining
+equality remain separate theorems with stable `FactId`s. The type theorem uses
+the verifier-retained check that the value belongs to `R`; the equality is
+definitionally proved by `rfl`.
+
+Only an explicit ordinary `trust fact` crosses the source trust boundary and
+becomes an axiom. Definition inference, a later repetition of that trusted
+fact, and all other stored consequences are theorem declarations or exact
+reuses. A repeated `FactId` is accepted only when it denotes the identical
+source proposition.
+
+The nearest rejected forms are bodyless concrete `prop`, `trust have`, and
+function-valued `have fn`. Their intended target ownership and witness
+semantics are not inferred from the supported object-definition case, so they
+fail closed.
+
+Dependencies: stable definition lookup, parameter and clause verification
+results, `FactId` identity, and the universal-object target.
+
+Downstream uses: reusable named predicates, named explicit values, and checked
+definition folding without target proof search.
+
 ## Builtin rules
 
 `Litex.Core` contains the small semantic boundary. Each concrete verifier
@@ -310,9 +363,11 @@ Dependencies: structured builtin certificates and the small semantic core.
 
 Downstream uses: replay of verifier automation without target proof search.
 
-Real addition, subtraction, multiplication, and division closure now also use
-structured certificates and real Lean theorems. Current holes include power
-closure and most remaining builtin families.
+Complex and real addition, subtraction, and multiplication closure now use
+structured certificates and real Lean theorems over proof-carrying target
+terms. Real division closure still targets the temporary total division
+constructor. Current holes include proof-carrying division, power closure, and
+most remaining builtin families.
 
 ## Trust and incomplete output
 
@@ -329,11 +384,11 @@ must roll back one unsupported source statement and report it without
 The current executable slice covers the universal ABI, primary membership/WD
 tracer, exact FactId replay including known-equality paths, known forall,
 ordinary builtin theorems, exact named-application layers, source occurrence
-identity, nested forall, and basic universal arithmetic. The next
-implementation order is:
+identity, nested forall, basic universal arithmetic, and the first
+statement-definition tranche. The next implementation order is:
 
 1. inferred forall;
 2. remaining arithmetic operations and numeric hierarchy theorems;
 3. user sets and set operators;
-4. definitions, anonymous functions, existentials, and proof scopes;
+4. remaining definitions, anonymous functions, existentials, and proof scopes;
 5. transactional report mode and broader real-Mathlib gates.

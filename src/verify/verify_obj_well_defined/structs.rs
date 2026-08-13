@@ -75,7 +75,7 @@ impl Runtime {
 
             for dom_fact in dom_facts.iter() {
                 let instantiated_dom_fact = self
-                    .inst_or_and_chain_atomic_fact(
+                    .inst_quantifier_free_fact(
                         dom_fact,
                         &param_to_arg_map,
                         ParamObjType::DefHeader,
@@ -93,7 +93,7 @@ impl Runtime {
                         ))
                     })?;
                 let verify_result =
-                    self.verify_or_and_chain_atomic_fact(&instantiated_dom_fact, verify_state)?;
+                    self.verify_quantifier_free_fact(&instantiated_dom_fact, verify_state)?;
                 if verify_result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(

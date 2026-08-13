@@ -30,6 +30,9 @@ pub enum LitexToLeanObjectIr {
     /// Exact Litex application layers; target currying must not erase them.
     FunctionApplication(LitexToLeanFunctionApplicationIr),
     BuiltinApp {
+        /// Stable source-object identity used to join this syntax node back to
+        /// the verifier-owned well-definedness proof DAG.
+        semantic_key: String,
         operator: LitexToLeanBuiltinObjectOperatorIr,
         arguments: Vec<LitexToLeanObjectIr>,
     },
@@ -180,7 +183,7 @@ impl LitexToLeanObjectIr {
                         facts: set_builder
                             .facts
                             .iter()
-                            .map(ExistBodyFact::from_ref_to_cloned_fact)
+                            .map(QuantifierFreeFact::from_ref_to_cloned_fact)
                             .collect(),
                     },
                 )))
@@ -193,114 +196,176 @@ impl LitexToLeanObjectIr {
             ))),
             Obj::FnObj(application) => lower_function_application(application),
             Obj::Add(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Add,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Sub(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Sub,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Mul(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Mul,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Div(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Div,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Mod(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Mod,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Gcd(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Gcd,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Lcm(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Lcm,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Floor(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Floor,
                 value.arg.as_ref(),
             ),
-            Obj::Ceil(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Ceil, value.arg.as_ref()),
+            Obj::Ceil(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Ceil,
+                value.arg.as_ref(),
+            ),
             Obj::Min(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Min,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Max(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Max,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
-            Obj::Exp(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Exp, value.arg.as_ref()),
-            Obj::Ln(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Ln, value.arg.as_ref()),
-            Obj::Sign(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sign, value.arg.as_ref()),
+            Obj::Exp(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Exp,
+                value.arg.as_ref(),
+            ),
+            Obj::Ln(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Ln,
+                value.arg.as_ref(),
+            ),
+            Obj::Sign(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Sign,
+                value.arg.as_ref(),
+            ),
             Obj::Factorial(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Factorial,
                 value.arg.as_ref(),
             ),
             Obj::Pow(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Pow,
                 value.base.as_ref(),
                 value.exponent.as_ref(),
             ),
-            Obj::Abs(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Abs, value.arg.as_ref()),
-            Obj::Sin(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sin, value.arg.as_ref()),
-            Obj::Cos(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Cos, value.arg.as_ref()),
-            Obj::Tan(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Tan, value.arg.as_ref()),
-            Obj::Cot(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Cot, value.arg.as_ref()),
+            Obj::Abs(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Abs,
+                value.arg.as_ref(),
+            ),
+            Obj::Sin(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Sin,
+                value.arg.as_ref(),
+            ),
+            Obj::Cos(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Cos,
+                value.arg.as_ref(),
+            ),
+            Obj::Tan(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Tan,
+                value.arg.as_ref(),
+            ),
+            Obj::Cot(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Cot,
+                value.arg.as_ref(),
+            ),
             Obj::RealPart(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::RealPart,
                 value.arg.as_ref(),
             ),
             Obj::ImaginaryPart(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::ImaginaryPart,
                 value.arg.as_ref(),
             ),
             Obj::ComplexAbs(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::ComplexAbs,
                 value.arg.as_ref(),
             ),
-            Obj::Sqrt(value) => unary(LitexToLeanBuiltinObjectOperatorIr::Sqrt, value.arg.as_ref()),
+            Obj::Sqrt(value) => unary(
+                obj,
+                LitexToLeanBuiltinObjectOperatorIr::Sqrt,
+                value.arg.as_ref(),
+            ),
             Obj::Log(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Log,
                 value.base.as_ref(),
                 value.arg.as_ref(),
             ),
             Obj::Union(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Union,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::Intersect(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::Intersect,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::SetMinus(value) => binary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::SetMinus,
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
             Obj::BigUnion(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::BigUnion,
                 value.left.as_ref(),
             ),
             Obj::BigIntersect(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::BigIntersect,
                 value.left.as_ref(),
             ),
             Obj::PowerSet(value) => unary(
+                obj,
                 LitexToLeanBuiltinObjectOperatorIr::PowerSet,
                 value.set.as_ref(),
             ),
@@ -375,21 +440,25 @@ fn lower_atom(atom: &AtomObj) -> Result<LitexToLeanObjectIr, String> {
 }
 
 fn unary(
+    source: &Obj,
     operator: LitexToLeanBuiltinObjectOperatorIr,
     argument: &Obj,
 ) -> Result<LitexToLeanObjectIr, String> {
     Ok(LitexToLeanObjectIr::BuiltinApp {
+        semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![LitexToLeanObjectIr::lower(argument)?],
     })
 }
 
 fn binary(
+    source: &Obj,
     operator: LitexToLeanBuiltinObjectOperatorIr,
     left: &Obj,
     right: &Obj,
 ) -> Result<LitexToLeanObjectIr, String> {
     Ok(LitexToLeanObjectIr::BuiltinApp {
+        semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![
             LitexToLeanObjectIr::lower(left)?,
@@ -437,6 +506,7 @@ mod tests {
         assert_eq!(
             LitexToLeanObjectIr::lower(&union).unwrap(),
             LitexToLeanObjectIr::BuiltinApp {
+                semantic_key: obj_equality_key(&union),
                 operator: LitexToLeanBuiltinObjectOperatorIr::Union,
                 arguments: vec![
                     LitexToLeanObjectIr::Symbol {

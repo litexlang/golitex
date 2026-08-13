@@ -186,7 +186,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = ExistFactBody::new(
+        let body = ExistentialSpec::new(
             stmt.param_def.clone(),
             stmt.facts.clone(),
             stmt.line_file.clone(),
@@ -206,7 +206,7 @@ impl Runtime {
         &mut self,
         stmt: &HaveObjByExistFactsStmt,
     ) -> Result<StmtResult, RuntimeError> {
-        let body = ExistFactBody::new(
+        let body = ExistentialSpec::new(
             stmt.param_def.clone(),
             stmt.facts.clone(),
             stmt.line_file.clone(),
@@ -447,7 +447,7 @@ impl Runtime {
         let body_fact_verify_state = UseContextVerifyState::new(0, false);
         for fact in source_exist_fact.facts().iter() {
             let instantiated_fact = self
-                .inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
+                .inst_quantifier_free_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
                 .map_err(|runtime_error| {
                     exec_stmt_error_with_stmt_and_cause(stmt.clone(), runtime_error)
                 })?
@@ -535,8 +535,8 @@ impl Runtime {
             .facts()
             .iter()
             .map(|fact| {
-                self.inst_exist_body_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
-                    .map(ExistBodyFact::to_fact)
+                self.inst_quantifier_free_fact(fact, &param_to_obj_map, ParamObjType::Exist, None)
+                    .map(QuantifierFreeFact::to_fact)
             })
             .collect::<Result<Vec<_>, RuntimeError>>()?;
 

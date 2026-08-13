@@ -141,7 +141,7 @@ fn fn_set_has_nonzero_second_parameter_condition(fn_set: &FnSet) -> bool {
     let Some(second_param) = params.get(1) else {
         return false;
     };
-    let [OrAndChainAtomicFact::AtomicFact(AtomicFact::NotEqualFact(not_equal))] =
+    let [QuantifierFreeFact::AtomicFact(AtomicFact::NotEqualFact(not_equal))] =
         fn_set.body.dom_facts.as_slice()
     else {
         return false;
@@ -155,7 +155,7 @@ fn fn_set_has_nonzero_first_parameter_condition(fn_set: &FnSet) -> bool {
     let Some(first_param) = params.first() else {
         return false;
     };
-    let [OrAndChainAtomicFact::AtomicFact(AtomicFact::NotEqualFact(not_equal))] =
+    let [QuantifierFreeFact::AtomicFact(AtomicFact::NotEqualFact(not_equal))] =
         fn_set.body.dom_facts.as_slice()
     else {
         return false;
@@ -176,7 +176,7 @@ fn fn_set_has_real_power_domain_condition(fn_set: &FnSet) -> bool {
     let [base, exponent] = params.as_slice() else {
         return false;
     };
-    let [OrAndChainAtomicFact::OrFact(domain_fact)] = fn_set.body.dom_facts.as_slice() else {
+    let [QuantifierFreeFact::OrFact(domain_fact)] = fn_set.body.dom_facts.as_slice() else {
         return false;
     };
     let [positive_base, zero_base_positive_exponent, nonzero_integer_exponent, natural_exponent] =

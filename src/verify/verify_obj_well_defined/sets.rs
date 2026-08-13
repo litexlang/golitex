@@ -173,24 +173,24 @@ impl Runtime {
 
             for fact in x.facts.iter() {
                 let result = match fact {
-                    ExistBodyFact::AtomicFact(f) => rt
-                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
-                            &OrAndChainAtomicFact::AtomicFact(f.clone()),
+                    QuantifierFreeFact::AtomicFact(f) => rt
+                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                            &QuantifierFreeFact::AtomicFact(f.clone()),
                             verify_state,
                         ),
-                    ExistBodyFact::AndFact(f) => rt
-                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
-                            &OrAndChainAtomicFact::AndFact(f.clone()),
+                    QuantifierFreeFact::AndFact(f) => rt
+                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                            &QuantifierFreeFact::AndFact(f.clone()),
                             verify_state,
                         ),
-                    ExistBodyFact::ChainFact(f) => rt
-                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
-                            &OrAndChainAtomicFact::ChainFact(f.clone()),
+                    QuantifierFreeFact::ChainFact(f) => rt
+                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                            &QuantifierFreeFact::ChainFact(f.clone()),
                             verify_state,
                         ),
-                    ExistBodyFact::OrFact(f) => rt
-                        .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
-                            &OrAndChainAtomicFact::OrFact(f.clone()),
+                    QuantifierFreeFact::OrFact(f) => rt
+                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                            &QuantifierFreeFact::OrFact(f.clone()),
                             verify_state,
                         ),
                 };
@@ -244,7 +244,7 @@ impl Runtime {
 
         for fact in x.body.dom_facts.iter() {
             if let Err(e) = self
-                .store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+                .store_quantifier_free_fact_with_well_defined_verification_and_infer(
                     fact,
                     verify_state,
                 )
@@ -312,7 +312,7 @@ impl Runtime {
             }
 
             for fact in x.body.dom_facts.iter() {
-                if let Err(e) = rt.store_or_and_chain_atomic_fact_with_well_defined_verification_and_infer(
+                if let Err(e) = rt.store_quantifier_free_fact_with_well_defined_verification_and_infer(
                     fact,
                     verify_state,
                 ) {

@@ -245,7 +245,7 @@ impl Runtime {
                 .iter()
             {
                 let mut dom_infers = rt
-                    .store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    .store_quantifier_free_fact_without_well_defined_verified_and_infer(
                         dom_fact.clone(),
                     )?;
                 dom_infers

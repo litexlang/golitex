@@ -76,6 +76,15 @@ pub enum IntegerMembershipClosureBuiltinRule {
     Mod,
 }
 
+/// Stable identities for closure of the complex carrier under the migrated
+/// proof-carrying binary arithmetic constructors.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ComplexArithmeticMembershipClosureBuiltinRule {
+    Add,
+    Sub,
+    Mul,
+}
+
 /// Stable identities for closure of the real carrier under arithmetic. The
 /// enclosing result retains the checked operand memberships in source order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -402,6 +411,7 @@ pub enum BuiltinRuleEvidence {
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
     Arithmetic(ArithmeticBuiltinRule),
     IntegerMembershipClosure(IntegerMembershipClosureBuiltinRule),
+    ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
     RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
     NotEqualSymmetry,
     /// Two checked real-carrier premises followed by one strict comparison
@@ -459,6 +469,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
             }
             BuiltinRuleEvidence::IntegerMembershipClosure(rule) => f
                 .debug_tuple("IntegerMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::ComplexArithmeticMembershipClosure(rule) => f
+                .debug_tuple("ComplexArithmeticMembershipClosure")
                 .field(rule)
                 .finish(),
             BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule) => f

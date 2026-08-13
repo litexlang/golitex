@@ -8,7 +8,7 @@ struct HaveFnByForallExistUniqueShape {
     witness_name: String,
     witness_binding: SymbolBinding,
     witness_param_type: ParamType,
-    exist_body_facts: Vec<ExistBodyFact>,
+    quantifier_free_facts: Vec<QuantifierFreeFact>,
 }
 
 impl Runtime {
@@ -329,7 +329,7 @@ impl Runtime {
             witness_name,
             witness_binding,
             witness_param_type,
-            exist_body_facts: exist_body.facts.clone(),
+            quantifier_free_facts: exist_body.facts.clone(),
         })
     }
 
@@ -355,17 +355,17 @@ impl Runtime {
         let mut witness_map = HashMap::new();
         insert_symbol_substitution(&mut witness_map, &shape.witness_binding, function_obj);
 
-        let mut then_facts = Vec::with_capacity(shape.exist_body_facts.len());
-        for body_fact in shape.exist_body_facts.iter() {
+        let mut then_facts = Vec::with_capacity(shape.quantifier_free_facts.len());
+        for body_fact in shape.quantifier_free_facts.iter() {
             let inst_body_fact = self
-                .inst_exist_body_fact(
+                .inst_quantifier_free_fact(
                     body_fact,
                     &witness_map,
                     ParamObjType::BinderRetag(BinderRetagSource::Exist),
                     Some(&stmt.line_file),
                 )
                 .map_err(|e| Self::have_fn_by_forall_exist_unique_err(stmt, e))?;
-            then_facts.push(Self::then_fact_from_exist_body_fact(inst_body_fact));
+            then_facts.push(Self::then_fact_from_quantifier_free_fact(inst_body_fact));
         }
 
         ForallFact::new_canonical_forall(
@@ -426,9 +426,9 @@ impl Runtime {
         ));
 
         let mut dom_facts = stmt.forall.dom_facts.clone();
-        for body_fact in shape.exist_body_facts.iter() {
+        for body_fact in shape.quantifier_free_facts.iter() {
             let inst_body_fact = self
-                .inst_exist_body_fact(
+                .inst_quantifier_free_fact(
                     body_fact,
                     &witness_map,
                     ParamObjType::BinderRetag(BinderRetagSource::Exist),
@@ -498,12 +498,12 @@ impl Runtime {
     fn fn_set_dom_fact_from_fact(
         stmt: &HaveFnByForallExistUniqueStmt,
         fact: &Fact,
-    ) -> Result<OrAndChainAtomicFact, RuntimeError> {
+    ) -> Result<QuantifierFreeFact, RuntimeError> {
         match fact {
-            Fact::AtomicFact(a) => Ok(OrAndChainAtomicFact::AtomicFact(a.clone())),
-            Fact::AndFact(a) => Ok(OrAndChainAtomicFact::AndFact(a.clone())),
-            Fact::ChainFact(c) => Ok(OrAndChainAtomicFact::ChainFact(c.clone())),
-            Fact::OrFact(o) => Ok(OrAndChainAtomicFact::OrFact(o.clone())),
+            Fact::AtomicFact(a) => Ok(QuantifierFreeFact::AtomicFact(a.clone())),
+            Fact::AndFact(a) => Ok(QuantifierFreeFact::AndFact(a.clone())),
+            Fact::ChainFact(c) => Ok(QuantifierFreeFact::ChainFact(c.clone())),
+            Fact::OrFact(o) => Ok(QuantifierFreeFact::OrFact(o.clone())),
             _ => Err(Self::have_fn_by_forall_exist_unique_msg(
                 stmt,
                 "forall domain facts must be usable as fn domain facts".to_string(),
@@ -511,12 +511,12 @@ impl Runtime {
         }
     }
 
-    fn then_fact_from_exist_body_fact(fact: ExistBodyFact) -> ExistOrAndChainAtomicFact {
+    fn then_fact_from_quantifier_free_fact(fact: QuantifierFreeFact) -> ExistOrAndChainAtomicFact {
         match fact {
-            ExistBodyFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
-            ExistBodyFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
-            ExistBodyFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
-            ExistBodyFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
+            QuantifierFreeFact::AtomicFact(a) => ExistOrAndChainAtomicFact::AtomicFact(a),
+            QuantifierFreeFact::AndFact(a) => ExistOrAndChainAtomicFact::AndFact(a),
+            QuantifierFreeFact::ChainFact(c) => ExistOrAndChainAtomicFact::ChainFact(c),
+            QuantifierFreeFact::OrFact(o) => ExistOrAndChainAtomicFact::OrFact(o),
         }
     }
 

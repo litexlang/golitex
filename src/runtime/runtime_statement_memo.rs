@@ -208,6 +208,10 @@ impl Runtime {
             if !certificate.root_proof_ids.contains(&proof_id) {
                 certificate.root_proof_ids.push(proof_id);
             }
+            let root_use = WellDefinednessRootObjectProofUse::new(proof_id, phase);
+            if !certificate.root_proof_uses.contains(&root_use) {
+                certificate.root_proof_uses.push(root_use);
+            }
         }
 
         if let Some((source_occurrence_id, requirements)) = target_requirement_use {
@@ -438,6 +442,7 @@ impl Runtime {
                     proof.intrinsic_result_set.clone(),
                     proof.child_proof_ids.clone(),
                     proof.fact_ids.clone(),
+                    proof.target_requirements.clone(),
                     local_fact_ids,
                 )
             })
@@ -937,6 +942,43 @@ mod tests {
                 .map(|evidence| evidence.well_defined_fact_id)
                 .collect::<Vec<_>>()
         );
+    }
+
+    #[test]
+    fn root_object_proof_use_retains_each_execution_phase() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let object = equality_left_obj(&mut runtime, "1 = 1");
+        runtime.begin_statement_well_definedness_capture();
+        runtime
+            .verify_obj_well_defined_and_store_cache(
+                &object,
+                &UseContextVerifyState::new_with_final_round(false),
+            )
+            .expect("preflight numeral should be well-defined");
+        runtime.set_well_definedness_target_requirement_phase(
+            WellDefinednessTargetRequirementPhase::Proof,
+        );
+        runtime
+            .verify_obj_well_defined_and_store_cache(
+                &object,
+                &UseContextVerifyState::new_with_final_round(false),
+            )
+            .expect("proof-phase numeral should reuse its WD cache node");
+        let certificate = runtime
+            .end_statement_well_definedness_capture()
+            .expect("phase-labelled root uses should freeze");
+
+        assert_eq!(certificate.root_proof_ids.len(), 1);
+        assert_eq!(certificate.root_proof_uses.len(), 2);
+        assert!(certificate.root_proof_uses.iter().any(|root_use| {
+            root_use.phase == WellDefinednessTargetRequirementPhase::Preflight
+                && root_use.well_defined_obj_proof_id == certificate.root_proof_ids[0]
+        }));
+        assert!(certificate.root_proof_uses.iter().any(|root_use| {
+            root_use.phase == WellDefinednessTargetRequirementPhase::Proof
+                && root_use.well_defined_obj_proof_id == certificate.root_proof_ids[0]
+        }));
     }
 
     #[test]

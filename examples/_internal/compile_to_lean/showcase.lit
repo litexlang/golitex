@@ -35,6 +35,20 @@ forall a R:
     =>:
         $marked(a)
 
+# Concrete proposition and explicit-value object definitions retain exact
+# parameter/clause and type/equality facts. Only this explicit trust is an
+# additional target axiom; its later citation is a theorem reuse.
+abstract_prop highlighted(x)
+
+prop is_zero(x R):
+    x = 0
+
+have named_zero R = 0
+by def $is_zero(named_zero)
+
+trust $highlighted(named_zero)
+$highlighted(named_zero)
+
 # Ordinary builtin certificates call real theorems from the shared Lean
 # library, not repeated theorem bodies or invented axioms.
 forall a, b set:
@@ -71,3 +85,11 @@ forall h fn(x R) R:
         h(y) = h(y - 1)
     =>:
         h(2) = h(1)
+
+# Arithmetic constructors consume the exact complex-membership WD facts;
+# nested result membership is named before the outer constructor cites it.
+forall u, v, w C:
+    (u + v) + w = (u + v) + w
+
+forall u, v, w C:
+    ((u - v) * w) + u = ((u - v) * w) + u

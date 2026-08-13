@@ -36,11 +36,11 @@ pub use crate::error::UnknownRuntimeError;
 pub use crate::error::VerifyRuntimeError;
 pub use crate::error::WellDefinedRuntimeError;
 pub use crate::fact::check_anonymous_fn_has_no_duplicate_fn_set_free_parameter;
-pub use crate::fact::check_exist_body_fact_has_no_duplicate_free_parameter;
 pub use crate::fact::check_exist_fact_has_no_duplicate_exist_free_parameter;
 pub use crate::fact::check_fn_set_has_no_duplicate_fn_set_free_parameter;
 pub use crate::fact::check_forall_fact_has_no_duplicate_forall_free_parameter;
 pub use crate::fact::check_forall_fact_with_iff_has_no_duplicate_forall_free_parameter;
+pub use crate::fact::check_quantifier_free_fact_has_no_duplicate_free_parameter;
 pub use crate::fact::check_set_builder_has_no_duplicate_set_builder_free_parameter;
 pub use crate::fact::AndChainAtomicFact;
 pub use crate::fact::AndFact;
@@ -80,11 +80,11 @@ pub use crate::fact::NotLessFact;
 pub use crate::fact::NotNormalAtomicFact;
 pub use crate::fact::NotSubsetFact;
 pub use crate::fact::NotSupersetFact;
-pub use crate::fact::OrAndChainAtomicFact;
 pub use crate::fact::OrFact;
+pub use crate::fact::QuantifierFreeFact;
 pub use crate::fact::SubsetFact;
 pub use crate::fact::SupersetFact;
-pub use crate::fact::{ExistBodyFact, ExistFactBody, ExistFactEnum};
+pub use crate::fact::{ExistFactEnum, ExistentialSpec};
 pub use crate::graph::{
     render_definition_graph_from_stmt_results, render_fact_graph_from_stmt_results,
     render_graph_from_stmt_results, run_definition_graph_for_code,
@@ -111,7 +111,8 @@ pub use crate::litex_to_lean_ir::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanAbstractPropIr,
     LitexToLeanAnonymousFunctionIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinObjectOperatorIr, LitexToLeanBuiltinRuleIr, LitexToLeanCaseBranchExitIr,
-    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
+    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr,
+    LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanConstantObjectIr,
     LitexToLeanContradictionIr, LitexToLeanDivNotEqualZeroIr,
     LitexToLeanEqualityRewriteDirectionIr, LitexToLeanEqualityRewriteIr,
     LitexToLeanEqualityRewriteStepIr, LitexToLeanExistentialProjectionRoleIr,
@@ -130,8 +131,8 @@ pub use crate::litex_to_lean_ir::{
     LitexToLeanSetBuiltinRuleIr, LitexToLeanSetRelationDualityBuiltinRuleIr,
     LitexToLeanStandardSetIr, LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr,
     LitexToLeanTrustIr, LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
-    LitexToLeanWellDefinednessObjectIr, LitexToLeanWellDefinednessParameterFactIr,
-    LitexToLeanWellDefinednessTargetRequirementIr,
+    LitexToLeanWellDefinednessObjectIr, LitexToLeanWellDefinednessObjectRequirementIr,
+    LitexToLeanWellDefinednessParameterFactIr, LitexToLeanWellDefinednessTargetRequirementIr,
 };
 pub use crate::module_manager::{
     discover_isolated_module_import, discover_isolated_std_import, discover_repository,
@@ -308,6 +309,7 @@ pub use crate::result::DefInterfaceStmtResult;
 pub use crate::result::DefObjStmtResult;
 pub use crate::result::DefPredicateStmtResult;
 pub use crate::result::DefinitionProjectionBuiltinRuleEvidence;
+pub use crate::result::DefinitionReductionVerificationEvidence;
 pub use crate::result::DivNotEqualZeroBuiltinRuleEvidence;
 pub use crate::result::EqualityTransportEvidence;
 pub use crate::result::EqualityTransportStep;
@@ -354,7 +356,7 @@ pub use crate::result::WitnessExistVerificationResult;
 pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
-    ClosedNumericComparisonBuiltinRuleEvidence,
+    ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
@@ -363,7 +365,7 @@ pub use crate::result::{
     SetRelationDualityBuiltinRule, WellDefinednessCertificate, WellDefinednessCertificateId,
     WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
     WellDefinednessParameterFactEvidence, WellDefinednessRequirementRole,
-    WellDefinednessTargetRequirementEvidence,
+    WellDefinednessRootObjectProofUse, WellDefinednessTargetRequirementEvidence,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,

@@ -321,31 +321,31 @@ impl Runtime {
 
             for fact in exist_fact.facts() {
                 match fact {
-                    ExistBodyFact::AtomicFact(f) => {
-                        let body_fact = OrAndChainAtomicFact::AtomicFact(f.clone());
-                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    QuantifierFreeFact::AtomicFact(f) => {
+                        let body_fact = QuantifierFreeFact::AtomicFact(f.clone());
+                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                             body_fact,
                         )?;
                     }
-                    ExistBodyFact::AndFact(f) => {
-                        let body_fact = OrAndChainAtomicFact::AndFact(f.clone());
-                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    QuantifierFreeFact::AndFact(f) => {
+                        let body_fact = QuantifierFreeFact::AndFact(f.clone());
+                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                             body_fact,
                         )?;
                     }
-                    ExistBodyFact::ChainFact(f) => {
-                        let body_fact = OrAndChainAtomicFact::ChainFact(f.clone());
-                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    QuantifierFreeFact::ChainFact(f) => {
+                        let body_fact = QuantifierFreeFact::ChainFact(f.clone());
+                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                             body_fact,
                         )?;
                     }
-                    ExistBodyFact::OrFact(f) => {
-                        let body_fact = OrAndChainAtomicFact::OrFact(f.clone());
-                        rt.verify_or_and_chain_atomic_fact_well_defined(&body_fact, verify_state)?;
-                        rt.store_or_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    QuantifierFreeFact::OrFact(f) => {
+                        let body_fact = QuantifierFreeFact::OrFact(f.clone());
+                        rt.verify_quantifier_free_fact_well_defined(&body_fact, verify_state)?;
+                        rt.store_quantifier_free_fact_without_well_defined_verified_and_infer(
                             body_fact,
                         )?;
                     }
@@ -532,22 +532,20 @@ impl Runtime {
 
     /// Mathematical contract: this non-quantified compound fact is
     /// well-defined exactly when its selected atomic/and/chain/or form is.
-    pub fn verify_or_and_chain_atomic_fact_well_defined(
+    pub fn verify_quantifier_free_fact_well_defined(
         &mut self,
-        fact: &OrAndChainAtomicFact,
+        fact: &QuantifierFreeFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
         match fact {
-            OrAndChainAtomicFact::AtomicFact(a) => {
+            QuantifierFreeFact::AtomicFact(a) => {
                 self.verify_atomic_fact_well_defined(a, verify_state)?
             }
-            OrAndChainAtomicFact::AndFact(a) => {
-                self.verify_and_fact_well_defined(a, verify_state)?
-            }
-            OrAndChainAtomicFact::ChainFact(c) => {
+            QuantifierFreeFact::AndFact(a) => self.verify_and_fact_well_defined(a, verify_state)?,
+            QuantifierFreeFact::ChainFact(c) => {
                 self.verify_chain_fact_well_defined(c, verify_state)?
             }
-            OrAndChainAtomicFact::OrFact(o) => self.verify_or_fact_well_defined(o, verify_state)?,
+            QuantifierFreeFact::OrFact(o) => self.verify_or_fact_well_defined(o, verify_state)?,
         }
         Ok(())
     }

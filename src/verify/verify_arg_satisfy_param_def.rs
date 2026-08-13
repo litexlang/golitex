@@ -59,6 +59,7 @@ impl Runtime {
             self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = InferResult::new();
+        let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let result = self.verify_obj_satisfies_param_type_known_or_builtin_only(
                 arg.clone(),
@@ -69,11 +70,12 @@ impl Runtime {
                 return Ok(result);
             }
             infer_result.new_infer_result_inside(result.infer_result());
+            check_results.push(result);
         }
         Ok(NonFactualStmtSuccess::new(
             DoNothingStmt::new(default_line_file()).into(),
             infer_result,
-            Vec::new(),
+            check_results,
         )
         .into())
     }
@@ -158,6 +160,7 @@ impl Runtime {
             self.inst_param_def_with_type_one_by_one(param_defs, args, to_inst_param_type)?;
         let flat_types = param_defs.flat_instantiated_types_for_args(&instantiated_types);
         let mut infer_result = InferResult::new();
+        let mut check_results = Vec::with_capacity(args.len());
         for (arg, param_type) in args.iter().zip(flat_types.iter()) {
             let verify_result =
                 self.verify_obj_satisfies_param_type(arg.clone(), param_type, verify_state)?;
@@ -165,11 +168,12 @@ impl Runtime {
                 return Ok(verify_result);
             }
             infer_result.new_infer_result_inside(verify_result.infer_result());
+            check_results.push(verify_result);
         }
         Ok(NonFactualStmtSuccess::new(
             DoNothingStmt::new(default_line_file()).into(),
             infer_result,
-            Vec::new(),
+            check_results,
         )
         .into())
     }

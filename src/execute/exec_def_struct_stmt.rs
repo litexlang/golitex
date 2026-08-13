@@ -23,7 +23,7 @@ impl Runtime {
         if let Some((param_def_with_type, dom_facts)) = &def_struct_stmt.param_def_with_dom {
             self.define_params_with_type(param_def_with_type, false, ParamObjType::DefHeader)?;
             for dom_fact in dom_facts.iter() {
-                self.verify_or_and_chain_atomic_fact_well_defined(dom_fact, &verify_state)?;
+                self.verify_quantifier_free_fact_well_defined(dom_fact, &verify_state)?;
             }
         }
 

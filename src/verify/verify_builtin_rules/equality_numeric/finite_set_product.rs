@@ -1022,9 +1022,9 @@ impl Runtime {
             FnObj::new(shape.enumerator_head.clone(), vec![vec![Box::new(i_obj)]]).into();
         let body_fact: AtomicFact =
             EqualFact::new(enumerator_at_i, x_obj, line_file.clone()).into();
-        let exist_body = ExistFactBody::new(
+        let exist_body = ExistentialSpec::new(
             ParamDefWithType::new(vec![i_group]),
-            vec![ExistBodyFact::AtomicFact(body_fact)],
+            vec![QuantifierFreeFact::AtomicFact(body_fact)],
             line_file.clone(),
         )?;
         let forall_fact = ForallFact::new_canonical_forall(

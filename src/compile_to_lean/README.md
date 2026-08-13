@@ -114,6 +114,11 @@ The replacement emitter currently covers the architecture tracer and its
 supporting routes:
 
 - abstract proposition declarations and explicit trusted facts;
+- bodyful concrete proposition definitions, including parameter constraints;
+- explicit-value object definitions with checked membership and defining
+  equality facts;
+- `by def` proposition folding and definition-clause projection through exact
+  retained child proofs and `FactId`s;
 - atomic equality, inequality, membership, and basic set predicates;
 - standard sets and natural numerals;
 - forall introduction and exact projected-forall `FactId`s;
@@ -136,6 +141,8 @@ In particular, the current strict slice does not yet replay the
 lower every `general_cart`/`big_union` object. The named choice predicate has a
 target meaning now; those larger constructors still require their own checked
 IR and theorem routes before complete choice examples can compile.
+Bodyless concrete `prop`, `trust have`, and function-valued `have fn` also
+remain explicit errors; they are not treated as definitions or target axioms.
 
 ## Evidence
 
@@ -149,6 +156,8 @@ The derived-set-predicate tracer is
 [`compile_to_lean_set_predicate_definitions.lit`](../../examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit).
 The known-equality path tracer is
 [`compile_to_lean_known_equality_path.lit`](../../examples/05_compiler_interop/compile_to_lean_known_equality_path.lit).
+The first statement-definition tracer is
+[`compile_to_lean_first_statement_tranche.lit`](../../examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit).
 The consolidated examples are in
 [`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
 

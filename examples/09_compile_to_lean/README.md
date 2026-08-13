@@ -24,9 +24,12 @@ copying the shared core and theorem bodies into adjacent snapshots.
 | `set_parameter` | Standard-domain and set parameters share the `Litex.Object` type while retaining distinct propositions |
 | `derived_set_predicates` | Nonempty and finite sethood are definitions over `IsSet` and the `In`-extension, not opaque axioms |
 | `known_forall` | Exact theorem `FactId` replay with ordered object, membership, and domain proofs |
+| `statement_definitions_and_trust` | `abstract_prop`, bodyful `prop`, explicit-value object `have`, exact `by def`, and an explicit-only trust axiom boundary |
 | `builtin_theorem` | Three concrete builtin certificates call imported shared theorems rather than repeated bodies or axioms |
+| `known_equality_path` | Known equality replays exact `FactId` edges through `Eq.symm` and `Eq.trans` |
 | `exact_application_layers` | One list per source application group and `fnSetResult` between nested groups |
 | `arithmetic_forall_wd` | Nested forall, universal subtraction, real-closure replay, and exact source-occurrence WD links |
+| `proof_carrying_arithmetic` | Addition, subtraction, and multiplication consume ordered verifier-owned complex-membership proofs |
 
 ## Adding an example
 
@@ -40,7 +43,8 @@ Standalone `.lit` files are reserved for durable acceptance artifacts whose
 meaning depends on a real path or CLI run. The primary artifacts are
 `examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit`,
 `examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit`,
-and `examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit`.
+`examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit`, and
+`examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit`.
 
 ## Verification
 
@@ -56,6 +60,9 @@ target/release/litex -compact -isolated -runner -f \
 
 target/release/litex -compact -isolated -runner -f \
   examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit
+
+target/release/litex -compact -isolated -runner -f \
+  examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit
 ```
 
 Strict compilation remains fail-closed. Unsupported proof routes never become
