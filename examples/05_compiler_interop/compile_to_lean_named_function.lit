@@ -1,0 +1,8 @@
+# Before: HaveFnEqual retained body, range proof, membership, equality, and
+# later replay, but the emitter lacked a proof-carrying function object.
+# Now: one checked functionObject and its exact definition replay are emitted.
+have fn id(x R) R = x
+id(1) = 1
+# Boundary: an unavailable defining-equality FactId cannot be reconstructed by
+# target-side unfolding or proposition search.
+# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

@@ -12,14 +12,27 @@ const SHARED_BUILTIN_TRACER: &str =
 fn universal_examples_compile_to_the_new_abi() {
     run_with_large_stack(|| {
         let examples = ledger_examples();
+        let snapshots = ledger_generated_snapshots();
         assert_eq!(
             examples.len(),
-            10,
-            "the universal-object ledger changed shape"
+            15,
+            "the append-only feature ledger changed shape"
         );
-        for (label, source) in examples {
+        assert_eq!(
+            snapshots.len(),
+            examples.len(),
+            "every Litex ledger program must have one actual generated Lean snapshot"
+        );
+        for ((label, source), (snapshot_label, snapshot)) in
+            examples.into_iter().zip(snapshots)
+        {
+            assert_eq!(snapshot_label, label, "ledger snapshot order drifted");
             let generated = compile_to_lean_from_source(&source, &format!("{label}.lit"))
                 .unwrap_or_else(|error| panic!("ledger example {label} failed: {error:?}"));
+            assert_eq!(
+                snapshot, generated,
+                "ledger example {label} has a stale or hand-written generated Lean snapshot"
+            );
             assert_new_abi(&label, &generated);
         }
     });
@@ -43,6 +56,7 @@ fn universal_showcase_compiles_to_the_new_abi() {
             "exact_application_layers",
             "arithmetic_forall_wd",
             "proof_carrying_arithmetic",
+            "proof_carrying_list_set",
         ] {
             assert_new_abi(label, &generated);
         }
@@ -137,7 +151,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     let source_declarations = generated
-        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n")
+        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl\n")
         .expect("generated source should begin after the shared-library header");
     for forbidden in ["(a : ℝ)", "(a : ℂ)", "(b : ℝ)", "(b : ℂ)"] {
         assert!(
@@ -146,13 +160,37 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     match label {
+        "well_defined_object_dag" => {
+            assert!(
+                generated.matches("noncomputable def obj_").count() >= 3,
+                "{generated}"
+            );
+            assert!(
+                generated.contains("_applicable : ∀") && generated.contains("Litex.Applicable"),
+                "{generated}"
+            );
+            assert!(!generated.contains("well_defined_object_"), "{generated}");
+        }
+        "trusted_forall_atomic_fact" => {
+            assert!(
+                generated.contains("axiom p : Litex.Object → Prop"),
+                "{generated}"
+            );
+            assert_eq!(generated.matches("axiom fact").count(), 1, "{generated}");
+            assert!(generated.contains(": p 1 := by"), "{generated}");
+            assert!(
+                generated.contains(" 1 (Litex.BuiltinRules.numeralInR 1)"),
+                "{generated}"
+            );
+            assert!(!generated.contains("assumption"), "{generated}");
+        }
         "membership_wd" => {
             assert!(
                 generated.contains("theorem well_defined_fact_3"),
                 "{generated}"
             );
             assert!(
-                generated.contains("f [a] (Litex.fnSetApplicable"),
+                generated.contains("noncomputable def obj_") && generated.contains("_applicable"),
                 "{generated}"
             );
         }
@@ -190,6 +228,10 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "{generated}"
             );
             assert!(
+                generated.contains("change Litex.In 0 Litex.R ∧ ((0 : Litex.Object) = 0)"),
+                "{generated}"
+            );
+            assert!(
                 generated.contains("change Litex.In named_zero Litex.R ∧ (named_zero = 0)"),
                 "{generated}"
             );
@@ -210,9 +252,9 @@ fn assert_new_abi(label: &str, generated: &str) {
             );
         }
         "exact_application_layers" => {
-            assert!(generated.contains("f [1, 2, 3]"), "{generated}");
-            assert!(generated.contains("g [1]"), "{generated}");
-            assert!(generated.contains(") [2]"), "{generated}");
+            assert!(generated.contains("f [obj_"), "{generated}");
+            assert!(generated.contains("g [obj_"), "{generated}");
+            assert!(generated.contains(") [obj_"), "{generated}");
             assert!(generated.contains("Litex.fnSetResult"), "{generated}");
         }
         "arithmetic_forall_wd" => {
@@ -248,6 +290,7 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "complexAddClosure",
                 "complexSubClosure",
                 "complexMulClosure",
+                "complexDivClosure",
             ] {
                 assert!(
                     generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
@@ -258,7 +301,88 @@ fn assert_new_abi(label: &str, generated: &str) {
                 generated.contains("theorem well_defined_fact_"),
                 "{generated}"
             );
-            assert!(generated.contains("(Litex.add (Litex.add"), "{generated}");
+            assert!(generated.contains("Litex.add (obj_"), "{generated}");
+            assert!(generated.contains("Litex.div (obj_"), "{generated}");
+        }
+        "inferred_forall_premise" => {
+            assert!(
+                generated.contains("have litex_inferred_fact_1 : Litex.Lt 0 x :="),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("Litex.BuiltinRules.positiveRealMembership litex_param_fact_1"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("exact litex_inferred_fact_1"),
+                "{generated}"
+            );
+            assert!(!generated.contains("assumption"), "{generated}");
+        }
+        "proof_carrying_list_set" => {
+            assert!(generated.contains("Litex.listSet [(obj_"), "{generated}");
+            assert!(generated.contains("List.Pairwise.cons"), "{generated}");
+            assert!(
+                generated.contains("exact (well_defined_fact_"),
+                "{generated}"
+            );
+            assert!(!generated.contains("sorry"), "{generated}");
+        }
+        "object_choice" => {
+            assert!(generated.contains("Classical.choose"), "{generated}");
+            assert!(generated.contains("Classical.choose_spec"), "{generated}");
+        }
+        "existential_intro_elim" => {
+            assert!(generated.contains("∃ (x : Litex.Object)"), "{generated}");
+            assert!(generated.contains("Classical.choose_spec"), "{generated}");
+        }
+        "case_and_contradiction_scopes" => {
+            assert!(generated.contains("have litex_case_1"), "{generated}");
+            assert!(
+                generated.contains("by_contra litex_reverse_assumption"),
+                "{generated}"
+            );
+        }
+        "named_theorem" => {
+            assert!(generated.contains("theorem one_eq_one :"), "{generated}");
+            assert!(!generated.contains("axiom one_eq_one"), "{generated}");
+        }
+        "total_object_constructors" => {
+            assert!(generated.contains("Litex.pi"), "{generated}");
+            assert!(generated.contains("Litex.union"), "{generated}");
+        }
+        "proof_carrying_division" => {
+            assert!(generated.contains("Litex.div (obj_"), "{generated}");
+            assert!(
+                generated.contains("Litex.BuiltinRules.realDivClosure"),
+                "{generated}"
+            );
+        }
+        "set_builder_scope" => {
+            assert!(generated.contains("Litex.setBuilder"), "{generated}");
+            assert!(generated.contains("fun litex_set_builder_"), "{generated}");
+        }
+        "named_function" => {
+            assert!(generated.contains("Litex.functionObject"), "{generated}");
+            assert!(
+                generated.contains("Litex.functionObject_apply"),
+                "{generated}"
+            );
+        }
+        "indexed_aggregate" => {
+            assert!(generated.contains("Litex.tupleObject"), "{generated}");
+            assert!(generated.contains("Litex.tupleObject_at"), "{generated}");
+        }
+        "statement_object_interactions" => {
+            assert!(generated.contains("noncomputable def y"), "{generated}");
+            assert!(
+                generated.contains("theorem one_eq_one_by_cases"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("Litex.inSetBuilder_iff.mpr"),
+                "{generated}"
+            );
         }
         other => panic!("unregistered universal-object ledger example `{other}`"),
     }
@@ -267,7 +391,7 @@ fn assert_new_abi(label: &str, generated: &str) {
 fn assert_new_shared_library_header(label: &str, generated: &str) {
     assert!(
         generated
-            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl\n"),
+            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl\n"),
         "{label}\n{generated}"
     );
 }
@@ -305,6 +429,59 @@ fn ledger_examples() -> Vec<(String, String)> {
     }
     assert!(!in_litex, "unterminated Litex fence in compiler ledger");
     examples
+}
+
+fn ledger_generated_snapshots() -> Vec<(String, String)> {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(LEDGER);
+    let markdown = fs::read_to_string(&path).expect("read universal-object compiler ledger");
+    let mut heading = None;
+    let mut active_label = None;
+    let mut in_lean = false;
+    let mut current = String::new();
+    let mut snapshots = Vec::new();
+    for line in markdown.lines() {
+        if let Some(value) = line.strip_prefix("## ") {
+            heading = Some(value.trim().to_string());
+            continue;
+        }
+        if let Some(value) = line
+            .strip_prefix("<!-- BEGIN ACTUAL GENERATED LEAN: ")
+            .and_then(|value| value.strip_suffix(" -->"))
+        {
+            assert!(active_label.is_none(), "nested generated Lean snapshot");
+            let label = value.to_string();
+            assert_eq!(heading.as_deref(), Some(label.as_str()));
+            active_label = Some(label);
+            current.clear();
+            continue;
+        }
+        if active_label.is_some() && line.trim() == "```lean" {
+            assert!(!in_lean, "nested generated Lean fence");
+            in_lean = true;
+            continue;
+        }
+        if in_lean && line.trim() == "```" {
+            in_lean = false;
+            continue;
+        }
+        if let Some(value) = line
+            .strip_prefix("<!-- END ACTUAL GENERATED LEAN: ")
+            .and_then(|value| value.strip_suffix(" -->"))
+        {
+            assert!(!in_lean, "unterminated generated Lean fence");
+            let label = active_label.take().expect("generated Lean end marker");
+            assert_eq!(value, label);
+            snapshots.push((label, current.clone()));
+            continue;
+        }
+        if in_lean {
+            current.push_str(line);
+            current.push('\n');
+        }
+    }
+    assert!(active_label.is_none(), "unterminated generated Lean snapshot");
+    assert!(!in_lean, "unterminated generated Lean fence");
+    snapshots
 }
 
 fn run_with_large_stack(action: impl FnOnce() + Send + 'static) {

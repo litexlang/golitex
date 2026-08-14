@@ -1063,6 +1063,11 @@ Litex names that sanitize to one Lean binder name are rejected with a rename
 diagnostic, preventing accidental capture. `exist!`, `not exist`, and preimage
 extraction still have separate explicit boundaries.
 
+When the exact existential is already a known fact, the verifier records that
+direct `FactId` citation before considering specialized builtin existential
+routes. This keeps the compiler's source provenance stable; it does not widen
+ordinary existential proof search.
+
 ## Why does Litex distinguish `true`, `unknown`, and `error`?
 
 The three statuses separate three different situations that are easy to

@@ -1,0 +1,154 @@
+# Scratch tracer: divisibility exposes a witness that composes transitively.
+
+prop divides_by(d, n Z):
+    exist k Z st {n = d * k}
+
+thm divisibility_is_transitive:
+    ? forall a, b, c Z:
+        $divides_by(a, b)
+        $divides_by(b, c)
+        =>:
+            $divides_by(a, c)
+    obtain k from $divides_by(a, b)
+    obtain m from $divides_by(b, c)
+    b = a * k
+    c = b * m = (a * k) * m = a * (k * m)
+    witness $divides_by(a, c) from k * m:
+        c = a * (k * m)
+
+witness $divides_by(3, 12) from 4:
+    12 = 3 * 4
+witness $divides_by(12, 60) from 5:
+    60 = 12 * 5
+by thm divisibility_is_transitive(3, 12, 60)
+$divides_by(3, 60)
+
+# A common divisor divides every integer linear combination. The proof is
+# witness arithmetic rather than a hidden divisibility tactic.
+thm common_divisor_divides_linear_combination:
+    ? forall d, a, b, x, y Z:
+        $divides_by(d, a)
+        $divides_by(d, b)
+        =>:
+            $divides_by(d, a * x + b * y)
+    obtain p from $divides_by(d, a)
+    obtain q from $divides_by(d, b)
+    a = d * p
+    b = d * q
+    a * x + b * y = (d * p) * x + (d * q) * y = d * (p * x + q * y)
+    witness $divides_by(d, a * x + b * y) from p * x + q * y:
+        a * x + b * y = d * (p * x + q * y)
+
+# The certificate exposes exactly what later proofs consume: positivity,
+# divisor laws, greatestness among positive common divisors, and Bezout.
+prop is_gcd_certificate(a, b, d Z):
+    d > 0
+    $divides_by(d, a)
+    $divides_by(d, b)
+    forall common Z:
+        common > 0
+        $divides_by(common, a)
+        $divides_by(common, b)
+        =>:
+            $divides_by(common, d)
+    exist x, y Z st {d = a * x + b * y}
+
+prop linear_diophantine_soluble(a, b, c Z):
+    exist x, y Z st {a * x + b * y = c}
+
+thm six_is_gcd_certificate_for_84_and_30:
+    ? forall:
+        $is_gcd_certificate(84, 30, 6)
+    6 > 0
+    witness $divides_by(6, 84) from 14:
+        84 = 6 * 14
+    witness $divides_by(6, 30) from 5:
+        30 = 6 * 5
+    claim:
+        ? forall common Z:
+            common > 0
+            $divides_by(common, 84)
+            $divides_by(common, 30)
+            =>:
+                $divides_by(common, 6)
+        by thm common_divisor_divides_linear_combination(common, 84, 30, -1, 3)
+        84 * (-1) + 30 * 3 = 6
+        $divides_by(common, 6)
+    witness exist x, y Z st {6 = 84 * x + 30 * y} from -1, 3:
+        6 = 84 * (-1) + 30 * 3
+    by def:
+        ? $is_gcd_certificate(84, 30, 6)
+
+thm diophantine_solution_implies_gcd_divides_target:
+    ? forall a, b, c, d Z:
+        $is_gcd_certificate(a, b, d)
+        $linear_diophantine_soluble(a, b, c)
+        =>:
+            $divides_by(d, c)
+    by def:
+        ? $is_gcd_certificate(a, b, d)
+    by def:
+        ? $linear_diophantine_soluble(a, b, c)
+    obtain x, y from exist x, y Z st {a * x + b * y = c}
+    by thm common_divisor_divides_linear_combination(d, a, b, x, y)
+    a * x + b * y = c
+    $divides_by(d, c)
+
+thm gcd_divides_target_implies_diophantine_solution:
+    ? forall a, b, c, d Z:
+        $is_gcd_certificate(a, b, d)
+        $divides_by(d, c)
+        =>:
+            $linear_diophantine_soluble(a, b, c)
+    by def:
+        ? $is_gcd_certificate(a, b, d)
+    obtain u, v from exist u, v Z st {d = a * u + b * v}
+    obtain k from $divides_by(d, c)
+    d = a * u + b * v
+    c = d * k = (a * u + b * v) * k = a * (u * k) + b * (v * k)
+    witness $linear_diophantine_soluble(a, b, c) from u * k, v * k:
+        a * (u * k) + b * (v * k) = c
+
+# Euclidean remainders locate 6; Bezout then scales to an explicit solution.
+84 = 30 * 2 + 24
+30 = 24 * 1 + 6
+24 = 6 * 4
+
+by thm six_is_gcd_certificate_for_84_and_30()
+witness $divides_by(6, 18) from 3:
+    18 = 6 * 3
+by thm gcd_divides_target_implies_diophantine_solution(84, 30, 18, 6)
+$linear_diophantine_soluble(84, 30, 18)
+witness $linear_diophantine_soluble(84, 30, 18) from -3, 9:
+    84 * (-3) + 30 * 9 = 18
+
+# Congruence is another consumer of the same divisibility interface.
+prop congruent_mod(a, b, modulus Z):
+    modulus > 0
+    $divides_by(modulus, a - b)
+
+thm congruence_is_compatible_with_addition:
+    ? forall a, b, c, d, modulus Z:
+        $congruent_mod(a, b, modulus)
+        $congruent_mod(c, d, modulus)
+        =>:
+            $congruent_mod(a + c, b + d, modulus)
+    by def:
+        ? $congruent_mod(a, b, modulus)
+    by def:
+        ? $congruent_mod(c, d, modulus)
+    obtain k from $divides_by(modulus, a - b)
+    obtain m from $divides_by(modulus, c - d)
+    a - b = modulus * k
+    c - d = modulus * m
+    (a + c) - (b + d) = (a - b) + (c - d) = modulus * k + modulus * m = modulus * (k + m)
+    witness $divides_by(modulus, (a + c) - (b + d)) from k + m:
+        (a + c) - (b + d) = modulus * (k + m)
+    by def:
+        ? $congruent_mod(a + c, b + d, modulus)
+
+witness $divides_by(5, 17 - 2) from 3:
+    17 - 2 = 5 * 3
+by def:
+    ? $congruent_mod(17, 2, 5)
+$congruent_mod(17, 2, 5)

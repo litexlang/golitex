@@ -49,8 +49,8 @@ Every `Litex.Object` is a set in the decided target model. `IsNonemptySet` and
 `IsFiniteSet` are not separate axioms; they classify the object's membership
 extension. The `Set.Finite` expression is only a Mathlib view of that
 extension; source sets remain `Litex.Object` values. The shared `Litex.Core`
-implementation still defines opaque `IsSet` plus redundant conjuncts; see
-[`Litex.Core`](../../lean/Litex/Core.lean) for that explicit migration debt.
+implements this boundary definitionally, while generated source still retains
+the exact source sethood binders and `FactId`s.
 
 The builtin `$is_choice_function_for(I,S,g,f)` is likewise emitted as the
 defined proposition `Litex.IsChoiceFunctionFor I S g f`, quantified over
@@ -78,10 +78,17 @@ an invalid Litex application valid.
 
 ## Proof evidence
 
+`LitexToLeanStatementIr` mirrors `Stmt` recursively: top-level variants such
+as `DefObjStmt` retain their source child enum, and payload IR types keep the
+corresponding source statement names. Backend normalization lives inside those
+payloads and shared emitter functions; it does not rename statements into
+effect-shaped public variants.
+
 The parser and runtime assign stable `SourceObjectOccurrenceId`, `FactId`,
-`WellDefinedFactId`, and `WellDefinedObjProofId` values while the successful
-Litex scopes still exist. The backend consumes those IDs; it does not match
-rendered propositions or rerun proof search.
+`WellDefinedFactId`, and `WellDefinedObjId` values while the successful
+Litex scopes still exist. Every source application, proof-carrying arithmetic
+node, and proof-carrying list set has an occurrence ID. The backend consumes
+those IDs; it does not match rendered propositions or rerun proof search.
 
 - A known fact cites its exact `FactId`.
 - A known equality-class proof freezes an ordered path of direct equality
@@ -92,12 +99,21 @@ rendered propositions or rerun proof search.
 - A WD application argument cites a named helper derived from its exact
   `WellDefinedFactId`. If the proof occurs in a target theorem type, the helper
   is emitted first and generalized over the visible Litex environment.
+- Every selected WD object and transitive child emits one `obj_N` declaration
+  in dependency order. A layered application additionally connects its
+  independently named prefix through `obj_N_result`; rolled-back verifier
+  search nodes are not part of the statement certificate and emit nothing.
 - Equal source applications retain different occurrence IDs. If the second
   occurrence hits Litex's WD cache, both occurrence-use edges cite the same
-  object proof and factual proof. The runtime labels preflight, proof, and
-  store rechecks explicitly; the final target edge uses the proof scope when
-  it exists and otherwise the preflight scope. The emitter never selects a
-  candidate by whether Lean happens to prove it.
+  object proof and factual proof. Its unvisited nested occurrences are mapped
+  to cached child IDs by the verifier-owned positional child recipe. The
+  runtime labels preflight, proof, and store rechecks explicitly and freezes
+  one exact occurrence-to-object edge; the emitter never selects a candidate
+  by semantic key, execution phase, or whether Lean happens to prove it.
+- Closed arithmetic manufactured by a verifier proof is not a source
+  occurrence. The supported numeral-only case is replayed by the shared
+  numeral and arithmetic-closure theorem schema with every constructor proof
+  explicit; it does not manufacture a fake occurrence ID.
 - A builtin certificate calls a real theorem imported from the shared
   `Litex.BuiltinRules` module. Concrete builtin rules are not axioms.
 - Only explicit source `trust` may emit an axiom for the trusted proposition.
@@ -152,13 +168,15 @@ The shared-builtin-library tracer is
 [`compile_to_lean_shared_builtin_rules.lit`](../../examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit).
 The nested-forall/arithmetic/occurrence tracer is
 [`compile_to_lean_arithmetic_forall_wd.lit`](../../examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit).
+The named well-defined-object DAG tracer is
+[`compile_to_lean_well_defined_object_dag.lit`](../../examples/05_compiler_interop/compile_to_lean_well_defined_object_dag.lit).
 The derived-set-predicate tracer is
 [`compile_to_lean_set_predicate_definitions.lit`](../../examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit).
 The known-equality path tracer is
 [`compile_to_lean_known_equality_path.lit`](../../examples/05_compiler_interop/compile_to_lean_known_equality_path.lit).
 The first statement-definition tracer is
 [`compile_to_lean_first_statement_tranche.lit`](../../examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit).
-The consolidated examples are in
+The append-only executable feature history is in
 [`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
 
 Focused Rust tests live beside `universal_pipeline.rs`. Ignored real-kernel

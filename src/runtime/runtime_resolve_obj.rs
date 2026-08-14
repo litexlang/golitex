@@ -72,18 +72,30 @@ impl Runtime {
                 self.resolve_obj(&local_obj)
             }
             Obj::Add(add) => {
-                let result: Obj =
-                    Add::new(self.resolve_obj(&add.left), self.resolve_obj(&add.right)).into();
+                let result: Obj = Add::new_with_source_occurrence_id(
+                    self.resolve_obj(&add.left),
+                    self.resolve_obj(&add.right),
+                    add.source_occurrence_id,
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Sub(sub) => {
-                let result: Obj =
-                    Sub::new(self.resolve_obj(&sub.left), self.resolve_obj(&sub.right)).into();
+                let result: Obj = Sub::new_with_source_occurrence_id(
+                    self.resolve_obj(&sub.left),
+                    self.resolve_obj(&sub.right),
+                    sub.source_occurrence_id,
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Mul(mul) => {
-                let result: Obj =
-                    Mul::new(self.resolve_obj(&mul.left), self.resolve_obj(&mul.right)).into();
+                let result: Obj = Mul::new_with_source_occurrence_id(
+                    self.resolve_obj(&mul.left),
+                    self.resolve_obj(&mul.right),
+                    mul.source_occurrence_id,
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Mod(mod_obj) => {
@@ -153,7 +165,12 @@ impl Runtime {
                 {
                     return cancelled;
                 }
-                let result: Obj = Div::new(resolved_left, resolved_right).into();
+                let result: Obj = Div::new_with_source_occurrence_id(
+                    resolved_left,
+                    resolved_right,
+                    div.source_occurrence_id,
+                )
+                .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
             Obj::Abs(a) => {

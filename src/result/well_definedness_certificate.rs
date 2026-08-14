@@ -1,29 +1,20 @@
 use crate::prelude::*;
 use std::rc::Rc;
 
-/// Stable only within one executed source statement.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
-pub struct WellDefinednessCertificateId(u64);
-
-impl WellDefinednessCertificateId {
-    pub fn new(value: u64) -> Self {
-        Self(value)
-    }
-
-    pub fn value(self) -> u64 {
-        self.0
-    }
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum WellDefinednessRequirementRole {
-    /// The verifier consumed this proof while checking an object. Whether a
-    /// target term also consumes it is decided only by a typed application
-    /// certificate, never by dropping this audit entry.
-    SourceObjectRequirement,
     /// One ordered operand-membership proof consumed by a proof-carrying
     /// builtin object constructor such as complex addition.
     BuiltinArgumentMembership { argument_index: usize },
+    /// One ordered nonzero proof consumed by a partial builtin object
+    /// constructor such as complex division.
+    BuiltinArgumentNonzero { argument_index: usize },
+    /// One ordered pairwise-distinctness proof consumed by a constructor
+    /// whose source invariant compares entries at exact list positions.
+    ConstructorPairwiseDistinct {
+        left_index: usize,
+        right_index: usize,
+    },
     /// A checked membership is passed after the ordinary value arguments of
     /// one exact Litex application layer.
     FunctionArgumentMembership {
@@ -36,6 +27,15 @@ pub enum WellDefinednessRequirementRole {
         layer_index: usize,
         domain_index: usize,
     },
+    /// Direct proof that an anonymous-function body belongs to its declared
+    /// return carrier under the function's binder assumptions.
+    AnonymousFunctionBodyMembership,
+    /// Alternative return proof used when the body is one exact bound
+    /// parameter and its parameter carrier is a subset of the return carrier.
+    AnonymousFunctionBoundParameterSubset {
+        parameter_group_index: usize,
+        parameter_index: usize,
+    },
 }
 
 /// One top-level object proof use in an exact statement execution phase.
@@ -43,17 +43,57 @@ pub enum WellDefinednessRequirementRole {
 /// equal cache nodes produced by preflight, proof, and store passes.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub struct WellDefinednessRootObjectProofUse {
-    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub well_defined_obj_id: WellDefinedObjId,
     pub phase: WellDefinednessTargetRequirementPhase,
 }
 
 impl WellDefinednessRootObjectProofUse {
     pub fn new(
-        well_defined_obj_proof_id: WellDefinedObjProofId,
+        well_defined_obj_id: WellDefinedObjId,
         phase: WellDefinednessTargetRequirementPhase,
     ) -> Self {
         Self {
-            well_defined_obj_proof_id,
+            well_defined_obj_id,
+            phase,
+        }
+    }
+}
+
+/// Exact verifier-owned join from one parser occurrence to the fixed WD
+/// object it consumed. Live capture may observe the same occurrence in
+/// several execution phases; freezing selects one canonical phase before this
+/// edge reaches To-Lean.
+#[derive(Clone)]
+pub struct WellDefinednessSourceObjectUse {
+    pub source_occurrence_id: SourceObjectOccurrenceId,
+    pub source_object: Obj,
+    pub well_defined_obj_id: WellDefinedObjId,
+    pub phase: WellDefinednessTargetRequirementPhase,
+}
+
+impl std::fmt::Debug for WellDefinednessSourceObjectUse {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter
+            .debug_struct("WellDefinednessSourceObjectUse")
+            .field("source_occurrence_id", &self.source_occurrence_id)
+            .field("source_object", &self.source_object.to_string())
+            .field("well_defined_obj_id", &self.well_defined_obj_id)
+            .field("phase", &self.phase)
+            .finish()
+    }
+}
+
+impl WellDefinednessSourceObjectUse {
+    pub fn new(
+        source_occurrence_id: SourceObjectOccurrenceId,
+        source_object: Obj,
+        well_defined_obj_id: WellDefinedObjId,
+        phase: WellDefinednessTargetRequirementPhase,
+    ) -> Self {
+        Self {
+            source_occurrence_id,
+            source_object,
+            well_defined_obj_id,
             phase,
         }
     }
@@ -63,67 +103,76 @@ impl WellDefinednessRootObjectProofUse {
 /// well-definedness scope is still alive.
 #[derive(Clone, Debug)]
 pub struct WellDefinednessFactEvidence {
-    pub certificate_id: WellDefinednessCertificateId,
     /// Runtime-wide identity of the environment-owned proof fact.
     pub well_defined_fact_id: WellDefinedFactId,
-    pub role: WellDefinednessRequirementRole,
     pub proof: Rc<FactualStmtSuccess>,
+    pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
+}
+
+#[derive(Clone, Debug)]
+pub struct WellDefinednessBinderScopeEvidence {
+    pub scope: WellDefinedBinderScopeProof,
 }
 
 /// Frozen statement projection of one environment-owned object-proof node.
-/// `well_defined_fact_ids` are its direct edges; `fact_ids` also includes the
-/// transitive compatibility view used by the current Lean ownership checks.
+/// `well_defined_fact_ids` are its direct proof edges. Transitive evidence is
+/// recovered by following `child_uses`; it is never duplicated here.
 #[derive(Clone)]
 pub struct WellDefinednessObjectEvidence {
     /// Runtime-wide identity of the environment-owned DAG node.
-    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub well_defined_obj_id: WellDefinedObjId,
     pub object: Obj,
+    pub function_contracts: Vec<WellDefinedFunctionContract>,
     pub intrinsic_result_set: Option<Obj>,
-    pub child_proof_ids: Vec<WellDefinedObjProofId>,
+    pub child_uses: Vec<WellDefinedObjChildUse>,
     pub well_defined_fact_ids: Vec<WellDefinedFactId>,
     pub target_requirements: Vec<WellDefinedTargetRequirementProof>,
-    /// Statement-local projection retained for compatibility with the Lean
-    /// certificate validator. The authoritative edges are the stable IDs
-    /// above.
-    pub fact_ids: Vec<WellDefinednessCertificateId>,
+    pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
+    pub owned_binder_scope_id: Option<WellDefinedBinderScopeId>,
 }
 
 impl std::fmt::Debug for WellDefinednessObjectEvidence {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter
             .debug_struct("WellDefinednessObjectEvidence")
-            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
+            .field("well_defined_obj_id", &self.well_defined_obj_id)
             .field("object", &self.object.to_string())
+            .field("function_contracts", &self.function_contracts)
             .field(
                 "intrinsic_result_set",
                 &self.intrinsic_result_set.as_ref().map(ToString::to_string),
             )
-            .field("child_proof_ids", &self.child_proof_ids)
+            .field("child_uses", &self.child_uses)
             .field("well_defined_fact_ids", &self.well_defined_fact_ids)
             .field("target_requirements", &self.target_requirements)
-            .field("fact_ids", &self.fact_ids)
+            .field("ambient_binder_scope_ids", &self.ambient_binder_scope_ids)
+            .field("owned_binder_scope_id", &self.owned_binder_scope_id)
             .finish()
     }
 }
 
 impl WellDefinednessObjectEvidence {
     pub fn new(
-        well_defined_obj_proof_id: WellDefinedObjProofId,
+        well_defined_obj_id: WellDefinedObjId,
         object: Obj,
+        function_contracts: Vec<WellDefinedFunctionContract>,
         intrinsic_result_set: Option<Obj>,
-        child_proof_ids: Vec<WellDefinedObjProofId>,
+        child_uses: Vec<WellDefinedObjChildUse>,
         well_defined_fact_ids: Vec<WellDefinedFactId>,
         target_requirements: Vec<WellDefinedTargetRequirementProof>,
-        fact_ids: Vec<WellDefinednessCertificateId>,
+        ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
+        owned_binder_scope_id: Option<WellDefinedBinderScopeId>,
     ) -> Self {
         Self {
-            well_defined_obj_proof_id,
+            well_defined_obj_id,
             object,
+            function_contracts,
             intrinsic_result_set,
-            child_proof_ids,
+            child_uses,
             well_defined_fact_ids,
             target_requirements,
-            fact_ids,
+            ambient_binder_scope_ids,
+            owned_binder_scope_id,
         }
     }
 }
@@ -134,10 +183,9 @@ impl WellDefinednessObjectEvidence {
 #[derive(Clone)]
 pub struct WellDefinednessTargetRequirementEvidence {
     pub source_occurrence_id: SourceObjectOccurrenceId,
-    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub well_defined_obj_id: WellDefinedObjId,
     pub phase: WellDefinednessTargetRequirementPhase,
     pub role: WellDefinednessRequirementRole,
-    pub certificate_id: WellDefinednessCertificateId,
     pub well_defined_fact_id: WellDefinedFactId,
     pub expected_proposition: Fact,
 }
@@ -168,10 +216,9 @@ impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
         formatter
             .debug_struct("WellDefinednessTargetRequirementEvidence")
             .field("source_occurrence_id", &self.source_occurrence_id)
-            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
+            .field("well_defined_obj_id", &self.well_defined_obj_id)
             .field("phase", &self.phase)
             .field("role", &self.role)
-            .field("certificate_id", &self.certificate_id)
             .field("well_defined_fact_id", &self.well_defined_fact_id)
             .field(
                 "expected_proposition",
@@ -184,19 +231,17 @@ impl std::fmt::Debug for WellDefinednessTargetRequirementEvidence {
 impl WellDefinednessTargetRequirementEvidence {
     pub fn new(
         source_occurrence_id: SourceObjectOccurrenceId,
-        well_defined_obj_proof_id: WellDefinedObjProofId,
+        well_defined_obj_id: WellDefinedObjId,
         phase: WellDefinednessTargetRequirementPhase,
         role: WellDefinednessRequirementRole,
-        certificate_id: WellDefinednessCertificateId,
         well_defined_fact_id: WellDefinedFactId,
         expected_proposition: Fact,
     ) -> Self {
         Self {
             source_occurrence_id,
-            well_defined_obj_proof_id,
+            well_defined_obj_id,
             phase,
             role,
-            certificate_id,
             well_defined_fact_id,
             expected_proposition,
         }
@@ -208,14 +253,19 @@ pub struct WellDefinednessCertificate {
     /// Roots used by this statement. All proof/fact bodies remain owned by
     /// their Litex environments; the remaining fields are a frozen projection
     /// used after a local environment has left runtime scope.
-    pub root_proof_ids: Vec<WellDefinedObjProofId>,
+    pub root_obj_ids: Vec<WellDefinedObjId>,
     pub root_proof_uses: Vec<WellDefinednessRootObjectProofUse>,
+    /// Exact source-occurrence uses. During live capture this can contain one
+    /// entry per execution phase; `freeze_well_definedness_certificate`
+    /// reduces it to one canonical edge per occurrence.
+    pub source_object_uses: Vec<WellDefinednessSourceObjectUse>,
     /// Live-capture links from exact source applications to reusable proof
     /// nodes. `freeze_well_definedness_certificate` validates and projects
     /// these into `target_requirements`.
     pub(crate) target_requirement_uses: Vec<WellDefinedTargetRequirementUse>,
     pub facts: Vec<WellDefinednessFactEvidence>,
     pub objects: Vec<WellDefinednessObjectEvidence>,
+    pub binder_scopes: Vec<WellDefinednessBinderScopeEvidence>,
     pub target_requirements: Vec<WellDefinednessTargetRequirementEvidence>,
     pub parameter_facts: Vec<WellDefinednessParameterFactEvidence>,
 }
@@ -225,8 +275,10 @@ impl WellDefinednessCertificate {
         self.facts.is_empty()
             && self.objects.is_empty()
             && self.root_proof_uses.is_empty()
+            && self.source_object_uses.is_empty()
             && self.target_requirement_uses.is_empty()
             && self.target_requirements.is_empty()
             && self.parameter_facts.is_empty()
+            && self.binder_scopes.is_empty()
     }
 }

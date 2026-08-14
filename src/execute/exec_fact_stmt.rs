@@ -37,7 +37,12 @@ impl Runtime {
             .store_with_well_defined_verification_and_infer_with_default_verify_state(
                 fact.clone(),
             )?;
-        if verification_store_facts.contains_added_fact(fact) {
+        // Ordinary output suppresses the duplicate primary store record.  In
+        // To-Lean mode that record also owns the source-to-inferred-fact
+        // edges (for example, concrete-prop definition projections), so keep
+        // it as compiler evidence; IR construction still de-duplicates the
+        // primary proposition itself.
+        if verification_store_facts.contains_added_fact(fact) && !self.litex_to_lean_ir_mode {
             infer_result.remove_first_verified_statement_for_fact(fact);
         }
 

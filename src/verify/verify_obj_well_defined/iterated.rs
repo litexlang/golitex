@@ -10,13 +10,33 @@ impl Runtime {
         x: &Reduce,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.start,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.end,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.op, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.seed, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.op,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 3 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.seed,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 4 },
+        )?;
 
         let carrier = self.verify_reduce_operation_signature(x.op.as_ref(), "reduce")?;
         self.verify_reduce_iterand_return_carrier(x.func.as_ref(), &carrier, "reduce")?;
@@ -54,7 +74,11 @@ impl Runtime {
         x: &FiniteSetReduce,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         let finite_fact: AtomicFact =
             IsFiniteSetFact::new(x.set.as_ref().clone(), default_line_file()).into();
         if self
@@ -69,9 +93,21 @@ impl Runtime {
             )));
         }
 
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.op, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.seed, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.op,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.seed,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 3 },
+        )?;
         let carrier = self.verify_reduce_operation_signature(x.op.as_ref(), "finite_set_reduce")?;
         self.verify_reduce_iterand_return_carrier(x.func.as_ref(), &carrier, "finite_set_reduce")?;
         self.require_reduce_seed_in_carrier(
@@ -107,7 +143,7 @@ impl Runtime {
                     &[element.as_ref().clone()],
                     "finite_set_reduce",
                 )?;
-                self.verify_obj_well_defined_and_store_cache(&application, verify_state)
+                self.verify_obj_well_defined_as_verification_dependency(&application, verify_state)
                     .map_err(|e| {
                         RuntimeError::from(WellDefinedRuntimeError(
                             RuntimeErrorStruct::new_with_msg_and_cause(
@@ -476,8 +512,16 @@ impl Runtime {
         x: &Sum,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.start,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.end,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         // A finite range sum is only well-defined on a nonempty integer interval.
@@ -488,7 +532,11 @@ impl Runtime {
             verify_state,
             "sum: cannot verify start <= end for the summation range".to_string(),
         )?;
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
         self.verify_iterated_function_has_scalar_return_set("sum", &x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -507,7 +555,11 @@ impl Runtime {
         x: &SumOfFiniteSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let finite_result = self.verify_atomic_fact(&finite_fact, verify_state)?;
         if finite_result.is_unknown() {
@@ -518,7 +570,11 @@ impl Runtime {
                 )),
             )));
         }
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.verify_iterated_function_has_scalar_return_set(
             "finite_set_sum",
             &x.func,
@@ -650,7 +706,7 @@ impl Runtime {
                     verify_state,
                 )?;
             }
-            rt.verify_obj_well_defined_and_store_cache(&body.ret_set, verify_state)?;
+            rt.verify_obj_well_defined_as_verification_dependency(&body.ret_set, verify_state)?;
 
             let scalar_return_fact: AtomicFact = SubsetFact::new(
                 (*body.ret_set).clone(),
@@ -730,7 +786,7 @@ impl Runtime {
         )?;
         for element in list_set.list.iter() {
             let application = self.finite_set_sum_application_obj(func, element.as_ref())?;
-            self.verify_obj_well_defined_and_store_cache(&application, verify_state)
+            self.verify_obj_well_defined_as_verification_dependency(&application, verify_state)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -781,7 +837,11 @@ impl Runtime {
         x: &ProductOfFiniteSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         let finite_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let finite_result = self.verify_atomic_fact(&finite_fact, verify_state)?;
         if finite_result.is_unknown() {
@@ -792,7 +852,11 @@ impl Runtime {
                 )),
             )));
         }
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.verify_iterated_function_has_scalar_return_set(
             "finite_set_product",
             &x.func,
@@ -875,7 +939,7 @@ impl Runtime {
         )?;
         for element in list_set.list.iter() {
             let application = self.finite_set_product_application_obj(func, element.as_ref())?;
-            self.verify_obj_well_defined_and_store_cache(&application, verify_state)
+            self.verify_obj_well_defined_as_verification_dependency(&application, verify_state)
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -926,8 +990,16 @@ impl Runtime {
         x: &Product,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.start,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.end,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         // A finite range product is only well-defined on a nonempty integer interval.
@@ -938,7 +1010,11 @@ impl Runtime {
             verify_state,
             "product: cannot verify start <= end for the product range".to_string(),
         )?;
-        self.verify_obj_well_defined_and_store_cache(&x.func, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.func,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
         self.verify_iterated_function_has_scalar_return_set("product", &x.func, verify_state)?;
         self.verify_iterated_op_summand_under_integer_index_interval(
             &x.func,
@@ -1156,7 +1232,10 @@ impl Runtime {
                     ))
                 })?;
             }
-            rt.verify_obj_well_defined_and_store_cache(&fs_body.ret_set, verify_state)
+            rt.verify_obj_well_defined_as_verification_dependency(
+                &fs_body.ret_set,
+                verify_state,
+            )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
@@ -1331,11 +1410,17 @@ impl Runtime {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: local dom of anonymous summand in integer range check failed"), e)))
                 })?;
             }
-            rt.verify_obj_well_defined_and_store_cache(&af.body.ret_set, verify_state)
+            rt.verify_obj_well_defined_as_verification_dependency(
+                &af.body.ret_set,
+                verify_state,
+            )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: return set not well-defined on the integer range"), e)))
                 })?;
-            rt.verify_obj_well_defined_and_store_cache(&af.equal_to, verify_state)
+            rt.verify_obj_well_defined_as_verification_dependency(
+                &af.equal_to,
+                verify_state,
+            )
                 .map_err(|e| {
                     RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!("{op}: expression body not well-defined on the integer range"), e)))
                 })?;
@@ -1365,8 +1450,16 @@ impl Runtime {
         x: &Range,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.start,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.end,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         Ok(())
@@ -1379,8 +1472,16 @@ impl Runtime {
         x: &ClosedRange,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.start, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.end, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.start,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.end,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&x.start, verify_state)?;
         self.require_obj_in_z(&x.end, verify_state)?;
         Ok(())
@@ -1476,7 +1577,10 @@ impl Runtime {
                     }
                 }
             }
-            rt.verify_obj_well_defined_and_store_cache(&anonymous.equal_to, verify_state)?;
+            rt.verify_obj_well_defined_as_verification_dependency(
+                &anonymous.equal_to,
+                verify_state,
+            )?;
             let return_membership: AtomicFact = InFact::new(
                 (*anonymous.equal_to).clone(),
                 (*anonymous.body.ret_set).clone(),

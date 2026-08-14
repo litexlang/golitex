@@ -83,6 +83,7 @@ pub enum ComplexArithmeticMembershipClosureBuiltinRule {
     Add,
     Sub,
     Mul,
+    Div,
 }
 
 /// Stable identities for closure of the real carrier under arithmetic. The

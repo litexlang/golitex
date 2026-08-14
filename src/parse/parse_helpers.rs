@@ -13,6 +13,49 @@ impl Runtime {
         )
         .into())
     }
+
+    pub(super) fn new_parsed_add(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
+        Ok(Add::new_with_source_occurrence_id(
+            left,
+            right,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
+
+    pub(super) fn new_parsed_sub(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
+        Ok(Sub::new_with_source_occurrence_id(
+            left,
+            right,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
+
+    pub(super) fn new_parsed_mul(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
+        Ok(Mul::new_with_source_occurrence_id(
+            left,
+            right,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
+
+    pub(super) fn new_parsed_div(&self, left: Obj, right: Obj) -> Result<Obj, RuntimeError> {
+        Ok(Div::new_with_source_occurrence_id(
+            left,
+            right,
+            Some(self.allocate_source_object_occurrence_id()?),
+        )
+        .into())
+    }
+
+    pub(super) fn new_parsed_list_set(&self, list: Vec<Obj>) -> Result<ListSet, RuntimeError> {
+        Ok(ListSet::new_with_source_occurrence_id(
+            list,
+            Some(self.allocate_source_object_occurrence_id()?),
+        ))
+    }
 }
 
 pub(crate) fn collect_forall_param_bindings_from_facts(facts: &[Fact]) -> Vec<SymbolBinding> {

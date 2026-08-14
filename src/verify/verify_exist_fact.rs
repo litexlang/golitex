@@ -449,6 +449,11 @@ impl Runtime {
             }
         }
 
+        let result = self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
+        if result.is_true() {
+            return Ok(result);
+        }
+
         // The real line has witnesses above, below, equal to, and distinct from every real.
         // Example: `have x R:` followed by `x > 100`.
         if let Some(non_witness_operands) =
@@ -748,11 +753,6 @@ impl Runtime {
                     );
                 }
             }
-        }
-
-        let result = self.verify_exist_fact_with_known_exist_fact(exist_fact, exist_fact)?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         if verify_state.is_round_0() {

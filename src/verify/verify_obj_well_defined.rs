@@ -21,6 +21,37 @@ impl Runtime {
         obj: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, None)
+            .map(|_| ())
+    }
+
+    pub(crate) fn verify_child_obj_well_defined_and_store_cache(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+        role: WellDefinedObjChildRole,
+    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, Some(role))
+    }
+
+    /// Verify an object visited only while discharging another object's
+    /// contract. When compiler evidence is active this becomes an ordered
+    /// `VerificationDependency`, never a target-constructor value slot.
+    pub(crate) fn verify_obj_well_defined_as_verification_dependency(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_obj_well_defined_and_store_cache_with_role(obj, verify_state, None)
+            .map(|_| ())
+    }
+
+    fn verify_obj_well_defined_and_store_cache_with_role(
+        &mut self,
+        obj: &Obj,
+        verify_state: &UseContextVerifyState,
+        child_role: Option<WellDefinedObjChildRole>,
+    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
         let verify_state = verify_state.without_known_forall_for_equality();
         let verify_state = &verify_state;
         let compiler_reusable_cache_key = self.well_defined_cache_key_for_obj(obj);
@@ -42,19 +73,30 @@ impl Runtime {
         };
         if let Some(cached) = cached {
             if !captures_evidence {
-                return Ok(());
+                return Ok(None);
             }
-            if let Some(proof_id) = cached.proof_id {
-                self.record_well_defined_obj_proof_use(obj, proof_id)?;
-                return Ok(());
+            if let Some(proof_id) = cached.obj_id {
+                self.record_well_defined_obj_proof_use(obj, proof_id, child_role)?;
+                return Ok(Some(proof_id));
             }
         }
 
         let active_key = obj_equality_key(obj);
         // A nested parameter check can return to the same alpha-equivalent
-        // object before the outer check has completed. Do not cache this edge.
+        // object before the outer check has completed. Ordinary Litex
+        // verification historically suppresses that recursive recheck. A
+        // To-Lean capture cannot do the same: success without a completed
+        // WellDefinedObjId would leave the frozen construction graph with no
+        // evidence edge for this use.
         if !self.active_well_defined_objects.insert(active_key.clone()) {
-            return Ok(());
+            if captures_evidence {
+                return Err(RuntimeError::from(UnknownRuntimeError(
+                    RuntimeErrorStruct::new_with_just_msg(format!(
+                        "cannot freeze recursive well-definedness re-entry for `{obj}` before its active WellDefinedObjId is complete"
+                    )),
+                )));
+            }
+            return Ok(None);
         }
 
         if captures_evidence {
@@ -201,16 +243,21 @@ impl Runtime {
         if captures_evidence {
             self.well_definedness_capture_depth =
                 self.well_definedness_capture_depth.saturating_sub(1);
-            let capture_result = self.end_well_definedness_object_capture(
+            let captured_obj_id = self.end_well_definedness_object_capture(
                 result.is_ok(),
                 intrinsic_well_definedness_result_set(obj),
             );
             self.active_well_defined_objects.remove(&active_key);
-            capture_result?;
+            let captured_obj_id = captured_obj_id?;
+            result?;
+            if let Some(obj_id) = captured_obj_id {
+                self.record_well_defined_obj_proof_use(obj, obj_id, child_role)?;
+                return Ok(Some(obj_id));
+            }
         } else {
             self.active_well_defined_objects.remove(&active_key);
+            result?;
         }
-        result?;
 
         if !captures_evidence {
             self.top_level_env()
@@ -219,7 +266,49 @@ impl Runtime {
                 .or_insert_with(CachedWellDefinedObj::ordinary);
         }
 
-        Ok(())
+        Ok(None)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ordinary_well_definedness_keeps_historical_active_reentry_suppression() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("ordinary-active-wd-reentry.lit");
+        let object: Obj = Number::new("1".to_string()).into();
+        runtime
+            .active_well_defined_objects
+            .insert(obj_equality_key(&object));
+
+        runtime
+            .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))
+            .expect("ordinary Litex verification should retain active-object suppression");
+    }
+
+    #[test]
+    fn to_lean_capture_rejects_active_reentry_without_a_frozen_edge() {
+        let mut runtime = Runtime::new();
+        runtime.new_file_path_new_env_new_name_scope("to-lean-active-wd-reentry.lit");
+        runtime.replace_litex_to_lean_ir_mode(true);
+        runtime.begin_statement_well_definedness_capture();
+        let object: Obj = Number::new("1".to_string()).into();
+        runtime
+            .active_well_defined_objects
+            .insert(obj_equality_key(&object));
+
+        let error = runtime
+            .verify_obj_well_defined_and_store_cache(&object, &UseContextVerifyState::new(0, false))
+            .expect_err("To-Lean must not accept recursive WD success without an object edge");
+        assert!(
+            error
+                .trace_message()
+                .contains("cannot freeze recursive well-definedness re-entry"),
+            "unexpected active-reentry rejection: {}",
+            error.trace_message()
+        );
     }
 }
 

@@ -75,6 +75,7 @@ pub enum LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr {
     Add,
     Sub,
     Mul,
+    Div,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -263,6 +264,9 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                     ComplexArithmeticMembershipClosureBuiltinRule::Mul => {
                         LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul
+                    }
+                    ComplexArithmeticMembershipClosureBuiltinRule::Div => {
+                        LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Div
                     }
                 })
             }

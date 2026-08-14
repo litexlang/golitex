@@ -88,7 +88,9 @@ includes selected declarations, recursive proof certificates, explicit-value
 `have`, checked real-carrier selection such as `have x R`, binary `by cases`,
 atomic `by contra`, positive `witness exist`, and positive existential
 extraction through `obtain` or body-style `have`, alongside a limited set of
-object and builtin-rule backends. Selection and extraction consume retained
+object and builtin-rule backends. It also includes source-named theorems,
+checked `have fn name(args) range = body` definitions, set builders, and one
+tuple-construction recipe. Selection and extraction consume retained
 existential certificates and emit `Exists.choose` plus `choose_spec`; they do
 not invent opaque values. `exist!`, `not exist`, and preimage extraction remain
 outside this slice. Unsupported statements remain explicit instead of becoming
@@ -99,8 +101,9 @@ Within the universal-`Litex.Object` backend, the first statement-definition
 tranche compiles `abstract_prop`, bodyful `prop`, explicit-value
 `have name S = value`, ordinary `trust fact`, and concrete `by def`. Only the
 explicit trusted proposition becomes a target axiom; definition consequences
-are checked theorems. Bodyless concrete `prop`, `trust have`, and `have fn`
-remain outside that backend slice and fail closed.
+are checked theorems. The later named-function slice supports only a checked
+body equality with a replayable domain/range recipe; bodyless concrete `prop`,
+`trust have`, and unsupported function declaration forms still fail closed.
 
 ---
 
@@ -108,6 +111,44 @@ remain outside that backend slice and fail closed.
 
 An **object** is a mathematical value or expression. Objects do not assert
 facts by themselves; a predicate or relation turns them into facts.
+
+### Pure-set object model
+
+Litex uses one universe of mathematical objects and chooses a pure-set
+foundation: every well-defined Litex object satisfies `$is_set`. Thus a
+numeral, a function value, a user-defined set, a function space, and each of
+`N`, `Z`, `Q`, `R`, and `C` are all objects. They keep different mathematical
+interfaces, but they are not different runtime carrier types.
+
+Membership is a fact between two objects. For example, `1`, `N`, and `R` are
+objects; `1 $in N` and `1 $in R` are separate facts about the same `1`.
+Likewise, `forall x R` introduces an object `x` together with the fact
+`x $in R`; it does not retype `x` as a host-language real number. A function
+space `fn(x R) R` and a function belonging to it are also objects, while the
+function-space membership records the callable contract.
+
+This is Litex's explicit choice within the pure/impure distinction described
+in Tao's *Analysis I*: the book remains agnostic about whether primitive
+objects are themselves sets, while Litex adopts the pure interpretation. The
+choice is foundational rather than notational. Surface concepts still retain
+their ordinary roles: a number is used arithmetically, a function is applied,
+and a set is inspected through membership. Set equality is extensional:
+`by extension` proves equality from the two membership directions. In the pure
+model this is the common object equality principle, not a separate equality
+for a host-language `Set` type.
+
+The object universe is not an internal universal set. `Object` is the
+meta-level carrier used to implement the language, not an object that can be
+written on either side of `$in`. Litex also does not provide unrestricted
+comprehension. A set builder has the bounded form `{x S: facts}` over an
+already available `S`; replacement and other partial constructors have their
+own well-definedness obligations. These restrictions are what separate
+"every object is set-coded" from the inconsistent claim that every predicate
+defines a set of all objects.
+
+The detailed Litex-to-Lean consequences and current implementation drift are
+recorded in the
+[universal object design](../src/compile_to_lean/litex_object_design.md).
 
 ### Names, numbers, and arithmetic
 

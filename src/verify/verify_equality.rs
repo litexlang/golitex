@@ -312,6 +312,7 @@ impl Runtime {
         let anonymous_function = AnonymousFn {
             body,
             equal_to: Box::new(equal_to),
+            source_occurrence_id: None,
         };
         let defining_equality: Fact = EqualFact::new(
             definition_object.clone(),

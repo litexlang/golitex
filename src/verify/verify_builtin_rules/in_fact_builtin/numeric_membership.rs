@@ -1255,6 +1255,7 @@ impl Runtime {
             Obj::Add(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Add),
             Obj::Sub(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Sub),
             Obj::Mul(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Mul),
+            Obj::Div(_) => Some(ComplexArithmeticMembershipClosureBuiltinRule::Div),
             _ => None,
         };
         let Some(rule) = rule else {

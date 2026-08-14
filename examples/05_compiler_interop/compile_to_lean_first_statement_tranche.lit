@@ -5,6 +5,7 @@
 # abstract_prop marked(x)
 # prop is_zero(x R):
 #     x = 0
+# $is_zero(0)
 # have named_zero R = 0
 # by def $is_zero(named_zero)
 # trust $marked(named_zero)
@@ -18,6 +19,8 @@ abstract_prop marked(x)
 prop is_zero(x R):
     x = 0
 
+$is_zero(0)
+
 have named_zero R = 0
 by def $is_zero(named_zero)
 
@@ -25,7 +28,8 @@ trust $marked(named_zero)
 $marked(named_zero)
 
 # Current behavior: `is_zero` is a Lean definition containing the `R`
-# parameter requirement and equality clause; `named_zero` is one
+# parameter requirement and equality clause. Both an ordinary prop fact and
+# explicit `by def` replay checked definition children; `named_zero` is one
 # `Litex.Object`; only `$marked(named_zero)` introduces a target axiom.
 #
 # Boundary: bodyless `prop P(x R)` and `trust have ...` remain rejected by

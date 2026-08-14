@@ -18,11 +18,11 @@ impl Runtime {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
 
-                left = Add::new(left, right).into();
+                left = self.new_parsed_add(left, right)?;
             } else if tb.current_token_is_equal_to(SUB) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy2(tb)?;
-                left = Sub::new(left, right).into();
+                left = self.new_parsed_sub(left, right)?;
             } else {
                 return Ok(left);
             }
@@ -39,11 +39,11 @@ impl Runtime {
             if tb.current_token_is_equal_to(MUL) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                left = Mul::new(left, right).into();
+                left = self.new_parsed_mul(left, right)?;
             } else if tb.current_token_is_equal_to(DIV) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
-                left = Div::new(left, right).into();
+                left = self.new_parsed_div(left, right)?;
             } else if tb.current_token_is_equal_to(MOD) {
                 tb.skip()?;
                 let right = self.parse_obj_hierarchy3(tb)?;
@@ -438,7 +438,7 @@ impl Runtime {
             }
             tb.skip()?;
             let obj = self.parse_number_or_primary_obj_or_fn_obj(tb)?;
-            Ok(Mul::new(Number::new("-1".to_string()).into(), obj).into())
+            self.new_parsed_mul(Number::new("-1".to_string()).into(), obj)
         } else {
             self.parse_number_or_primary_obj_or_fn_obj(tb)
         }
@@ -1833,7 +1833,7 @@ impl Runtime {
         tb.skip_token(LEFT_CURLY_BRACE)?;
         if tb.current_token_is_equal_to(RIGHT_CURLY_BRACE) {
             tb.skip_token(RIGHT_CURLY_BRACE)?;
-            return Ok(ListSet::new(vec![]).into());
+            return Ok(self.new_parsed_list_set(vec![])?.into());
         }
 
         let left = self.parse_obj(tb)?;
@@ -1966,7 +1966,7 @@ impl Runtime {
             objs.push(self.parse_obj(tb)?);
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(ListSet::new(objs).into())
+        Ok(self.new_parsed_list_set(objs)?.into())
     }
 
     pub fn parse_list_set_obj(&mut self, tb: &mut TokenBlock) -> Result<ListSet, RuntimeError> {
@@ -1979,7 +1979,7 @@ impl Runtime {
             }
         }
         tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(ListSet::new(objs))
+        self.new_parsed_list_set(objs)
     }
 
     pub fn parse_identifier(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {

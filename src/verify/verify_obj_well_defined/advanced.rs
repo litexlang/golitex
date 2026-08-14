@@ -8,7 +8,11 @@ impl Runtime {
         x: &PowerSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         Ok(())
     }
 
@@ -20,9 +24,21 @@ impl Runtime {
         x: &GeneralCart,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.index_set, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.family_set, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.family_fn, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.index_set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.family_set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.family_fn,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
 
         let index_is_set: Fact = IsSetFact::new((*x.index_set).clone(), default_line_file()).into();
         self.verify_fact_return_err_if_not_true(&index_is_set, verify_state)
@@ -77,8 +93,16 @@ impl Runtime {
         x: &ObjAtIndex,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.obj, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.index, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.obj,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.index,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
 
         let index_calculated_obj: Obj =
             if let Some(index_calculated_number) = self.resolve_obj_to_number(&x.index) {

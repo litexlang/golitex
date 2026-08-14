@@ -49,6 +49,37 @@ There is no `Litex.Object α`, carrier inference, native binder such as
 `x : ℝ`, widening, downcast, or conversion between memberships. Lean equality
 on `Litex.Object` is Litex object equality.
 
+### Why this is source semantics, not target-side type erasure
+
+The universal carrier follows Litex itself. The runtime represents numbers,
+functions, standard numeric sets, function spaces, and set constructors in the
+same [`Obj`](../obj/obj.rs) syntax tree. Its builtin rule for
+[`$is_set(x)`](../verify/verify_builtin_rules/non_equational_dispatch.rs)
+accepts every well-defined object with the explanation "Every object is a
+set." Set operations consequently check that their operands are well-defined
+objects, while set builders remain bounded by an existing ambient object; see
+the [set-constructor WD rules](../verify/verify_obj_well_defined/sets.rs).
+
+This is the pure-set specialization of the working foundation used in Tao's
+*Analysis I*. Definition 3.1.1 and Axiom 3.1 first treat sets as objects, while
+Remark 3.1.3 explicitly leaves the choice between pure and impure set theories
+open. Litex chooses the pure branch: numbers and functions retain their
+ordinary public interfaces, but at the foundational level they are set-coded
+objects. The compiler-facing consequence is exercised by the tracked
+[universal-object tracer](../../examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit).
+
+`Object : Type` is the Lean meta-level carrier of this object language; it is
+not itself a term of type `Object`. The declaration therefore does not create
+an internal universal set, does not assert `Object ∈ Object`, and does not claim
+to contain every Lean type or function. It says only that every source-level
+Litex object has one target representation.
+
+This ontology does not by itself establish a full model of ZF or ZFC. The
+semantic core still needs an auditable model or relative-consistency argument
+as its set-constructor laws grow. The compiler claim is narrower: its target
+ABI must faithfully replay the object, membership, extensionality, and
+well-definedness judgments that Litex actually accepted.
+
 ## 2. Every object is a set; membership is independent
 
 The decided set foundation is:
@@ -97,22 +128,21 @@ with an unrestricted membership equivalence. Source set builders must use a
 restricted source contract, and partial constructors must carry their Litex
 well-definedness certificate.
 
-### Current implementation drift
+### Implemented pure-set boundary
 
-The current shared `Litex.Core` module still contains:
+The shared `Litex.Core` module now contains:
 
 ```lean
 namespace Litex
 
-axiom IsSet : Object → Prop
+def IsSet (_ : Object) : Prop := True
 
 end Litex
 ```
 
-and derives nonemptiness and finiteness with an `IsSet` conjunct. Replacing
-that declaration with the always-true definition above is decided but not yet
-implemented. The exact current core source is preserved separately so this
-debt is visible instead of silently rewritten in documentation.
+and derives nonemptiness and finiteness directly from the membership extension.
+Source `$is_set` proofs still retain their own `FactId`; definitional truth is
+not used as a reason to erase verifier evidence.
 
 ## 3. Standard numeric sets and one numeral object
 
@@ -145,18 +175,21 @@ Separate theorems establish memberships such as `1 ∈ N`, `1 ∈ R`, and
 
 Litex does not overload source `+`. Every source occurrence denotes the one
 Litex complex addition operation. Real or integer closure is justified by
-ordinary builtin-rule theorems using retained membership proofs. ABI version 2
-makes addition, subtraction, and multiplication proof-carrying:
+ordinary builtin-rule theorems using retained membership proofs. ABI version 7
+makes addition, subtraction, multiplication, and division proof-carrying:
 
 ```lean
 axiom Litex.add (a b : Litex.Object) :
   Litex.In a Litex.C → Litex.In b Litex.C → Litex.Object
 ```
 
-`Litex.sub` and `Litex.mul` have the same ordered contract. `Litex.div` remains
-temporarily total because its final contract also needs the denominator's
-nonzero proof; that migration is not silently approximated by the two-proof
-shape.
+`Litex.sub` and `Litex.mul` have the same ordered contract. `Litex.div` has the
+additional exact denominator-nonzero slot:
+
+```lean
+axiom Litex.div (a b : Litex.Object) :
+  Litex.In a Litex.C → Litex.In b Litex.C → b ≠ 0 → Litex.Object
+```
 
 ## 4. Function spaces are set objects
 
@@ -282,8 +315,9 @@ axiom Litex.replacement :
   Litex.Object
 ```
 
-These declarations are **decided semantic shapes**, but their exact names are
-not implemented in the current shared core yet.
+`ListSetWellDefined`, `listSet`, and `inListSet_iff` are implemented in ABI
+version 5. The replacement declarations remain a decided semantic shape whose
+exact target spelling is not implemented yet.
 
 All certificates inhabit `Prop`. Lean proof irrelevance therefore prevents
 the chosen proof route from becoming mathematical data. For example, two
@@ -365,14 +399,14 @@ axiom Litex.inListSet_iff
   Litex.In x (Litex.listSet xs h) ↔ x ∈ xs
 ```
 
-## 9. Verifier-owned identities and replay order
+## 9. Verifier-owned object identities and replay order
 
 The Lean emitter does not re-run Litex verification or search for an equivalent
 target proof. The verifier freezes:
 
 - `SourceObjectOccurrenceId` for each source occurrence;
 - `FactId` for every environment-stored fact;
-- `WellDefinedObjProofId` for each node of the object-WD DAG;
+- `WellDefinedObjId` for each fixed object created after a successful WD check;
 - `WellDefinedFactId` for each factual obligation used by that DAG;
 - direct child edges, target requirement roles, source scope, root execution
   phase, and the exact function-space membership contract.
@@ -393,6 +427,77 @@ the original accessible ID; it does not become a proofless boolean. Root uses
 retain preflight/proof/store phase so equal source objects do not force a
 structural guess. Child environments see parent facts, discarded child facts
 do not leak, and committed scopes follow the runtime's real merge rules.
+
+`WellDefinedObjId` is deliberately not named `WellDefinedObjProofId`. The
+identity denotes the fixed object that becomes available after WD succeeds;
+its construction happens to be justified by a proof DAG. Runtime cache
+entries, frozen statement certificates, To-Lean IR, and Lean emission all use
+that same identity. The stable target spelling is:
+
+```text
+WellDefinedObjId(12)  -> obj_12
+WellDefinedFactId(17) -> well_defined_fact_17
+```
+
+When Lean's proof-carrying application ABI needs a target-only
+`Litex.Applicable` bridge, its stable helper name is derived from the object
+identity rather than consuming a second verifier fact identity:
+
+```text
+WellDefinedObjId(12) -> obj_12_applicable
+```
+
+If that application is a callable prefix, its checked return membership is
+also exposed under the same identity:
+
+```text
+WellDefinedObjId(12) -> obj_12_result
+```
+
+The shorter object spelling is unambiguous beside the deliberately explicit
+`well_defined_fact_N` audit names.
+
+One source occurrence and one fixed object are different identities. Every
+compound-object occurrence records the exact `WellDefinedObjId` it used. A
+cache miss creates a new object identity after all child objects and direct WD
+facts succeed. A cache hit records another occurrence use of the existing
+identity and must not create or re-render the object.
+
+The object DAG retains typed child roles such as function prefix, function
+argument, left operand, and right operand. Thus `g(1)(2)` first fixes `g(1)`
+as its own `obj_K`; the outer object cites `obj_K` through a `FunctionPrefix`
+edge and uses `obj_K_result` as the second-layer function-space membership.
+An unordered vector of child IDs is insufficient:
+the Lean emitter must never guess construction positions from source text.
+Object and fact nodes form one dependency DAG because their dependencies can
+alternate:
+
+```text
+argument membership
+  -> applicable proof
+  -> fixed application object
+  -> result membership
+  -> outer applicable proof
+  -> fixed outer application object
+```
+
+The emitter owns one cross-statement registry from `WellDefinedObjId` to its
+already emitted Lean declaration. In a parameterized Lean theorem, that
+declaration is generalized over exactly the visible binders needed by the
+compiled object and is applied back to the current fixed arguments. A later
+use of the same accessible Litex cache identity cites that declaration; it
+does not reconstruct the application from rendered text.
+
+This guarantee applies to object nodes retained in the successful statement's
+frozen certificate (and their transitive children). Speculative candidate
+search environments that Litex rolls back are deliberately absent and emit
+nothing.
+
+Visibility follows Litex environments. Children see parent objects; discarded
+child objects do not leak; committed child identities merge under the same
+rules as the runtime cache. Cache identity includes the exact callable
+contract `FactId`, so reinstalling a function-space membership creates a new
+`WellDefinedObjId` even when the printed application text is unchanged.
 
 ## 10. Semantic core, ordinary theorems, and trust
 
@@ -419,7 +524,7 @@ Every successful generated source currently has this shape:
 ```text
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 2 := rfl
+example : Litex.abiVersion = 7 := rfl
 
 <WD helper declarations and translated source declarations>
 ```
@@ -575,7 +680,11 @@ forall f fn(x, y, z R) R:
 Required target shape:
 
 ```lean
-f [1, 2, 3] well_defined_fact_31
+noncomputable def obj_1 : Litex.Object := 1
+noncomputable def obj_2 : Litex.Object := 2
+noncomputable def obj_3 : Litex.Object := 3
+noncomputable def obj_4 : Litex.Object :=
+  f [obj_1, obj_2, obj_3] obj_4_applicable
 ```
 
 The one source group remains one list. A split expression such as
@@ -594,10 +703,11 @@ forall g fn(x R) fn(y R) R:
 Required target shape:
 
 ```lean
-let first := g [1] well_defined_fact_40
-have hFirstFn : Litex.In first innerFnSet :=
+noncomputable def obj_40 : Litex.Object := g [obj_1] obj_40_applicable
+theorem obj_40_result : Litex.In obj_40 innerFnSet :=
   Litex.fnSetResult hf rfl first_requirements
-let result := first [2] well_defined_fact_41
+noncomputable def obj_41 : Litex.Object :=
+  obj_40 [obj_2] obj_41_applicable
 ```
 
 The two `Applicable` proofs are distinct. This is not identified with one call
@@ -660,7 +770,8 @@ Lean lambda that is meaningful outside the source domain.
 
 ### Example 10 — proof-carrying list set and replacement
 
-Status: **Decided**, not emitted yet.
+Status: list sets are **current in ABI version 7**; replacement remains
+**decided, not emitted yet**.
 
 ```litex
 {a, b}
@@ -670,13 +781,17 @@ replacement(P, A)
 Required target shape:
 
 ```lean
-have hDistinct : Litex.ListSetWellDefined [a, b] :=
-  well_defined_fact_52
+noncomputable def obj_54 : Litex.Object :=
+  Litex.listSet [obj_51, obj_52] (by
+    apply List.Pairwise.cons
+    · intro x hx
+      ...
+      exact well_defined_fact_53
+    · ...)
 
 have hUnique : Litex.ReplacementWellDefined P A :=
   well_defined_fact_53
 
-let pairSet := Litex.listSet [a, b] hDistinct
 let imageSet := Litex.replacement P A hUnique
 ```
 

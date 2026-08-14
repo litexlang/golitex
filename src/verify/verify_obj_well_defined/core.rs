@@ -69,7 +69,12 @@ impl Runtime {
     ) -> Result<(), RuntimeError> {
         let candidate_spaces = match fn_obj.head.as_ref() {
             FnObjHead::AnonymousFnLiteral(a) => {
-                self.verify_anonymous_fn_well_defined(a.as_ref(), verify_state)
+                let head: Obj = a.as_ref().clone().into();
+                self.verify_child_obj_well_defined_and_store_cache(
+                    &head,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )
                     .map_err(|well_defined_error| {
                         RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_msg_and_cause(format!(
                                 "object {} is not well-defined: anonymous function head is not well-defined",
@@ -79,9 +84,12 @@ impl Runtime {
                 vec![FnSetSpace::Anon((**a).clone())]
             }
             FnObjHead::FiniteSeqListObj(list) => {
-                for obj in list.objs.iter() {
-                    self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
-                }
+                let head: Obj = list.clone().into();
+                self.verify_child_obj_well_defined_and_store_cache(
+                    &head,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?;
                 if fn_obj.body.len() != 1 || fn_obj.body[0].len() != 1 {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_just_msg(format!(
@@ -91,7 +99,14 @@ impl Runtime {
                     )));
                 }
                 let index_obj = fn_obj.body[0][0].as_ref().clone();
-                self.verify_obj_well_defined_and_store_cache(&index_obj, verify_state)?;
+                self.verify_child_obj_well_defined_and_store_cache(
+                    &index_obj,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionArgument {
+                        layer_index: 0,
+                        argument_index: 0,
+                    },
+                )?;
                 let index_in_n_pos: AtomicFact = InFact::new(
                     index_obj.clone(),
                     StandardSet::NPos.into(),
@@ -128,7 +143,11 @@ impl Runtime {
                 return Ok(());
             }
             FnObjHead::MatrixOperator(matrix) => {
-                self.verify_obj_well_defined_and_store_cache(matrix, verify_state)?;
+                self.verify_child_obj_well_defined_and_store_cache(
+                    matrix,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?;
                 let matrix_set = self.real_matrix_type(matrix, verify_state, "entry access")?;
                 vec![FnSetSpace::Set(
                     self.matrix_set_to_fn_set(&matrix_set, default_line_file()),
@@ -136,7 +155,11 @@ impl Runtime {
             }
             FnObjHead::ObjAsStructInstanceWithFieldAccess(field_access) => {
                 let field_access_obj: Obj = field_access.clone().into();
-                self.verify_obj_well_defined_and_store_cache(&field_access_obj, verify_state)?;
+                self.verify_child_obj_well_defined_and_store_cache(
+                    &field_access_obj,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?;
                 let field_index = self
                     .struct_field_index(&field_access.struct_obj, &field_access.field_name)?
                     - 1;
@@ -162,7 +185,11 @@ impl Runtime {
             }
             FnObjHead::InstantiatedTemplateObj(template_obj) => {
                 let function_name_obj: Obj = template_obj.clone().into();
-                self.verify_obj_well_defined_and_store_cache(&function_name_obj, verify_state)?;
+                self.verify_child_obj_well_defined_and_store_cache(
+                    &function_name_obj,
+                    verify_state,
+                    WellDefinedObjChildRole::FunctionHead,
+                )?;
                 let bodies = self.get_cloned_object_in_fn_set_candidates(&function_name_obj);
                 if bodies.is_empty() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(
@@ -202,6 +229,7 @@ impl Runtime {
                 fn_obj,
                 candidate_spaces[0].clone(),
                 verify_state,
+                true,
             );
         }
 
@@ -210,7 +238,12 @@ impl Runtime {
             let certificate_checkpoint = self.well_definedness_capture_checkpoint();
             let trial = self
                 .run_in_local_env_and_take(|rt| {
-                    rt.verify_fn_obj_well_defined_against_space(fn_obj, space.clone(), verify_state)
+                    rt.verify_fn_obj_well_defined_against_space(
+                        fn_obj,
+                        space.clone(),
+                        verify_state,
+                        false,
+                    )
                 })
                 .map(|(value, _discarded_search_environment)| value);
             // Candidate trials are search scopes, not selected proof scopes.
@@ -222,6 +255,7 @@ impl Runtime {
                         fn_obj,
                         space.clone(),
                         verify_state,
+                        true,
                     );
                 }
                 Err(e) => last_error = Some(e),
@@ -250,6 +284,7 @@ impl Runtime {
         fn_obj: &FnObj,
         mut space: FnSetSpace,
         verify_state: &UseContextVerifyState,
+        capture_application_prefixes: bool,
     ) -> Result<(), RuntimeError> {
         let source_application: Obj = fn_obj.clone().into();
         for (i, args) in fn_obj.body.iter().enumerate() {
@@ -293,7 +328,7 @@ impl Runtime {
             )
             .into();
             let intermediate_in_fact = InFact::new(
-                fn_obj_prefix_as_obj,
+                fn_obj_prefix_as_obj.clone(),
                 set_where_the_next_fn_obj_is_in.clone(),
                 default_line_file(),
             );
@@ -317,6 +352,14 @@ impl Runtime {
                     ),
                 ))
             })?;
+
+            if capture_application_prefixes && i + 1 < fn_obj.body.len() {
+                self.freeze_active_fn_application_prefix(
+                    &fn_obj_prefix_as_obj,
+                    set_where_the_next_fn_obj_is_in.clone(),
+                    i,
+                )?;
+            }
 
             if i == fn_obj.body.len() - 1 {
                 break;
@@ -355,8 +398,15 @@ impl Runtime {
             )));
         }
 
-        for arg in args.iter() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+        for (argument_index, arg) in args.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                arg,
+                verify_state,
+                WellDefinedObjChildRole::FunctionArgument {
+                    layer_index,
+                    argument_index,
+                },
+            )?;
         }
 
         let mut args_as_obj: Vec<Obj> = Vec::with_capacity(args.len());
@@ -414,7 +464,7 @@ impl Runtime {
                     domain_index,
                 },
                 verify_result,
-            );
+            )?;
         }
 
         Ok(())
@@ -488,7 +538,7 @@ impl Runtime {
                         parameter_index: arg_index,
                     },
                     verify_result,
-                );
+                )?;
                 insert_symbol_substitution(&mut param_to_arg_map, param_name, arg);
                 arg_index += 1;
             }

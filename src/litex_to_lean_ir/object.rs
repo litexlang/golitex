@@ -29,14 +29,31 @@ pub enum LitexToLeanObjectIr {
     AnonymousFunction(Box<LitexToLeanAnonymousFunctionIr>),
     /// Exact Litex application layers; target currying must not erase them.
     FunctionApplication(LitexToLeanFunctionApplicationIr),
+    ClosedRange {
+        start: Box<LitexToLeanObjectIr>,
+        end: Box<LitexToLeanObjectIr>,
+    },
+    TupleDimension(Box<LitexToLeanObjectIr>),
+    IndexedAccess {
+        object: Box<LitexToLeanObjectIr>,
+        index: Box<LitexToLeanObjectIr>,
+    },
     BuiltinApp {
-        /// Stable source-object identity used to join this syntax node back to
-        /// the verifier-owned well-definedness proof DAG.
+        /// Parser-owned identity used to join a proof-carrying syntax node to
+        /// its exact verifier-owned WD use. Non-proof-carrying or synthetic
+        /// builtin nodes may leave this absent.
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+        /// Structural identity used only to validate that the cited WD node
+        /// still represents the same object; it is not used for selection.
         semantic_key: String,
         operator: LitexToLeanBuiltinObjectOperatorIr,
         arguments: Vec<LitexToLeanObjectIr>,
     },
     Collection {
+        /// Parser-owned identity used to select the exact constructor WD use.
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+        /// Structural identity used only for post-selection validation.
+        semantic_key: String,
         constructor: LitexToLeanCollectionObjectIr,
         items: Vec<LitexToLeanObjectIr>,
     },
@@ -81,6 +98,10 @@ impl std::fmt::Debug for LitexToLeanSetBuilderIr {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LitexToLeanAnonymousFunctionIr {
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    /// Structural identity used only after occurrence selection to detect a
+    /// retargeted IR node; it is never a certificate-selection key.
+    pub semantic_key: String,
     pub function: LitexToLeanFunctionTypeIr,
     pub body: Box<LitexToLeanObjectIr>,
 }
@@ -190,11 +211,24 @@ impl LitexToLeanObjectIr {
             }
             Obj::AnonymousFn(function) => Ok(LitexToLeanObjectIr::AnonymousFunction(Box::new(
                 LitexToLeanAnonymousFunctionIr {
+                    source_occurrence_id: function.source_occurrence_id,
+                    semantic_key: obj_equality_key(obj),
                     function: LitexToLeanFunctionTypeIr::lower_anonymous(function)?,
                     body: Box::new(LitexToLeanObjectIr::lower(function.equal_to.as_ref())?),
                 },
             ))),
             Obj::FnObj(application) => lower_function_application(application),
+            Obj::ClosedRange(range) => Ok(LitexToLeanObjectIr::ClosedRange {
+                start: Box::new(LitexToLeanObjectIr::lower(range.start.as_ref())?),
+                end: Box::new(LitexToLeanObjectIr::lower(range.end.as_ref())?),
+            }),
+            Obj::TupleDim(dimension) => Ok(LitexToLeanObjectIr::TupleDimension(Box::new(
+                LitexToLeanObjectIr::lower(dimension.arg.as_ref())?,
+            ))),
+            Obj::ObjAtIndex(access) => Ok(LitexToLeanObjectIr::IndexedAccess {
+                object: Box::new(LitexToLeanObjectIr::lower(access.obj.as_ref())?),
+                index: Box::new(LitexToLeanObjectIr::lower(access.index.as_ref())?),
+            }),
             Obj::Add(value) => binary(
                 obj,
                 LitexToLeanBuiltinObjectOperatorIr::Add,
@@ -370,6 +404,8 @@ impl LitexToLeanObjectIr {
                 value.set.as_ref(),
             ),
             Obj::ListSet(value) => Ok(LitexToLeanObjectIr::Collection {
+                source_occurrence_id: value.source_occurrence_id,
+                semantic_key: obj_equality_key(obj),
                 constructor: LitexToLeanCollectionObjectIr::ListSet,
                 items: value
                     .list
@@ -445,6 +481,7 @@ fn unary(
     argument: &Obj,
 ) -> Result<LitexToLeanObjectIr, String> {
     Ok(LitexToLeanObjectIr::BuiltinApp {
+        source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![LitexToLeanObjectIr::lower(argument)?],
@@ -458,6 +495,7 @@ fn binary(
     right: &Obj,
 ) -> Result<LitexToLeanObjectIr, String> {
     Ok(LitexToLeanObjectIr::BuiltinApp {
+        source_occurrence_id: source.source_occurrence_id(),
         semantic_key: obj_equality_key(source),
         operator,
         arguments: vec![
@@ -506,6 +544,7 @@ mod tests {
         assert_eq!(
             LitexToLeanObjectIr::lower(&union).unwrap(),
             LitexToLeanObjectIr::BuiltinApp {
+                source_occurrence_id: None,
                 semantic_key: obj_equality_key(&union),
                 operator: LitexToLeanBuiltinObjectOperatorIr::Union,
                 arguments: vec![
@@ -525,6 +564,8 @@ mod tests {
         assert_eq!(
             LitexToLeanObjectIr::lower(&list).unwrap(),
             LitexToLeanObjectIr::Collection {
+                source_occurrence_id: None,
+                semantic_key: obj_equality_key(&list),
                 constructor: LitexToLeanCollectionObjectIr::ListSet,
                 items: vec![
                     LitexToLeanObjectIr::Symbol {
