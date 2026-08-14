@@ -25,5 +25,3 @@ forall f, g fn(x R) R, a R:
 # multiplication congruence closes its two leaves from the stored equalities.
 # Boundary: beta reduction does not instantiate the known forall or invent a
 # missing factor equality; the executable Rust regression omits g(a) = g(b).
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/anonymous_function_beta_structural_equality.lit
-# Implementation: src/runtime/runtime_known_object_properties.rs and src/verify/verify_builtin_rules/equality_structural.rs

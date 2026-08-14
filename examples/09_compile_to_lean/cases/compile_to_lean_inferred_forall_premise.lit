@@ -15,6 +15,3 @@ forall x R+:
 # Boundary: `forall x N+: x > 0` remains rejected until its distinct inference
 # chain has complete checked To-Lean adapters; the emitter never uses target
 # proof search to fill the gap.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_inferred_forall_premise.lit
-# Rust: cargo test --release inferred_forall_premise_replays_its_exact_fact_id -- --nocapture
-# Lean: LITEX_LEAN_PROJECT=lean cargo test --release inferred_forall_premise_compiles_with_mathlib -- --ignored --nocapture

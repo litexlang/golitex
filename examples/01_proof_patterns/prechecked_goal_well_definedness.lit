@@ -97,10 +97,8 @@ thm prechecked_example_selected_pair_projection:
 # the header binds only `f set`, even if the proof later trusts a function type.
 # Materialized case equations also retain their branch premises; preflight does
 # not turn either branch into an unconditional equation.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prechecked_goal_well_definedness.lit
 # Negative regression: proof_local_facts_cannot_repair_an_ill_defined_theorem_or_claim_goal
 # Soundness regression: prechecked_goal_certificate_never_stores_the_goal_itself
 # Case-boundary regression: prechecked_goal_certificate_keeps_materialized_case_rule_premises
 # Template-rule regression: prechecked_goal_certificate_replays_materialized_template_atomic_forall_rules
 # Lifecycle regression: prechecked_goal_keeps_template_instantiations_alive_during_preflight
-# Implementation: src/verify/verify_fact_well_defined.rs, src/execute/exec_def_thm_stmt.rs, and src/execute/exec_claim_stmt.rs

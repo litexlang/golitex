@@ -25,4 +25,3 @@ forall a, b C*:
 # Boundary: `0 $in C*`, `C $subset C*`, and unconditional additive closure
 # remain rejected by executable Rust regressions; `N*` remains unsupported
 # because `N+` is the canonical nonzero natural carrier.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/complex_star_standard_set.lit

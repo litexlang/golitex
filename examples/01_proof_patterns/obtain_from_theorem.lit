@@ -37,4 +37,3 @@ gcd(canonical_p, canonical_d) = 1
 # Boundary: the named theorem call must have exactly one direct positive
 # `exist` or `exist!` conclusion, and the number of obtained names must match
 # its witnesses. Argument and domain checks are the same checks as `by thm`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/obtain_from_theorem.lit

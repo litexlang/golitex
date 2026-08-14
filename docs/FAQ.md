@@ -1,6 +1,6 @@
 # Litex FAQ
 
-Jiachen Shen and The Litex Team, 2026-06-03. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/FAQ.md
 

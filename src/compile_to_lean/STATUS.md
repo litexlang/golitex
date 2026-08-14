@@ -210,9 +210,14 @@ migration scaffolding, not the final object-construction ABI.
 - [x] Reject an active-object recursive re-entry during To-Lean capture unless
   it already resolves to a completed reusable `WellDefinedObjId`; ordinary
   Litex verification retains its historical suppression behavior.
-- [ ] Upgrade `FnSpec`/`functionObject` to a dependent proof-evidence telescope
-  before compiling compound or proof-dependent anonymous bodies. The current
-  identity-body slice remains checked, but is not evidence for the wider ABI.
+- [x] Upgrade `FnSpec`/`functionObject` to a proof-aware ABI: ordered
+  requirements are a dependent existential telescope in `Prop`, and both the
+  body and range consume exact arity/requirements evidence. Named functions
+  now replay proof-carrying arithmetic and partial bodies through their frozen
+  `WellDefinedObjId`/`WellDefinedFactId` DAGs.
+- [ ] Connect compound anonymous bodies to that proof-aware ABI. The current
+  anonymous identity-body slice remains checked and ABI-compatible, but its
+  binder-owned compound DAG is intentionally still rejected.
 - [ ] Add the remaining proof-carrying partial object constructors, beginning
   with replacement. Their Lean terms must consume the verifier-owned WD
   construction recipe instead of retaining semantic conditions only as

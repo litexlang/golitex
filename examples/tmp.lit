@@ -1,0 +1,4 @@
+forall a set, b set:
+    a != b
+    =>:
+        b != a

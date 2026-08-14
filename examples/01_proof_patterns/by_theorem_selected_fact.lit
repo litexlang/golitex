@@ -28,5 +28,3 @@ by thm expose_zero_sides(2) => 2 + 0 = 0 + 2
 #
 # Boundary: `=>` accepts exactly one atomic fact; compound `and`, `or`,
 # `forall`, `exist`, and chain targets remain rejected by parser regressions.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/by_theorem_selected_fact.lit
-# Implementation: src/parse/by_stmt/thm_by_stmt.rs and src/execute/by_stmt/thm_by_stmt.rs

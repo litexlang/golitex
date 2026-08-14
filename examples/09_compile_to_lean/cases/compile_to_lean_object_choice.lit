@@ -7,4 +7,3 @@ have x R
 x $in R
 # Boundary: choosing from a carrier without verifier-owned nonemptiness remains
 # rejected; compiler IR may not invent a witness.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

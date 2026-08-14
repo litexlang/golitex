@@ -5,4 +5,3 @@ thm one_eq_one:
     ? forall:
         1 = 1
 # Boundary: changed proof-step count/order fails before emission.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

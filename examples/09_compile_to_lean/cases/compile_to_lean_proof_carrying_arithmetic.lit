@@ -6,7 +6,7 @@
 # Former target shape: `Litex.add (Litex.add a b) c` could be constructed
 # without the verifier's `a $in C`, `b $in C`, or inner-sum membership facts.
 #
-# Now (verified and compiled by the focused Rust/Mathlib gates):
+# Now:
 forall a, b, c C:
     (a + b) + c = (a + b) + c
 
@@ -21,7 +21,7 @@ forall a, b, c C:
 # Former target shape: `Litex.div a b` discarded the verifier's `a $in C`,
 # `b $in C`, and `b != 0` facts.
 #
-# Now (verified and compiled with three exact division obligations):
+
 forall a, b C:
     b != 0
     =>:
@@ -44,9 +44,3 @@ forall a, b R:
 # Boundary: malformed compiler IR that deletes, duplicates, misindexes, or
 # retargets any division proof slot is rejected before Lean emission; Lean also
 # rejects a direct unchecked `Litex.div a b` application.
-# Source gate:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit
-# Focused compiler gate:
-# cargo test --release proof_carrying_arithmetic_replays_well_defined_fact_ids -- --nocapture
-# Real Lean gate:
-# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release proof_carrying_arithmetic_compiles_with_mathlib -- --ignored --nocapture

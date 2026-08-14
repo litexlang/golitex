@@ -93,8 +93,6 @@ forall s finite_set, t N:
 #
 # Boundary: without already-established finiteness, the restricted integer
 # leaf remains unknown; it cannot invoke the closed-range finiteness rule.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/order_semantics_builtin_rules.lit
-# Rust boundary: cargo test --release integer_leaf_reuses_known_finiteness_without_opening_a_direct_rule -- --nocapture
 
 forall x, n Z:
     x <= n or x >= n + 1

@@ -10,7 +10,7 @@
 # had no universal-object operation, and applications selected WD evidence by
 # structural object text rather than one exact source occurrence.
 #
-# Now (verified and compiled by the focused Rust/Mathlib gates):
+# Now:
 forall f fn(x R) R:
     forall y R:
         f(y) = f(y - 1)
@@ -22,9 +22,3 @@ forall f fn(x R) R:
 #
 # Boundary: a target requirement whose occurrence ID is missing or changed is
 # rejected; the emitter does not fall back to proposition or object-text search.
-# Source gate:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit
-# Focused compiler gate:
-# cargo test --release arithmetic_forall_tracer_replays_subtraction_and_well_definedness -- --nocapture
-# Real Lean gate:
-# LITEX_LEAN_PROJECT=/absolute/path/to/mathlib LITEX_LAKE=/absolute/path/to/lake cargo test --release arithmetic_forall_tracer_compiles_with_mathlib -- --ignored --nocapture

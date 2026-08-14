@@ -15,5 +15,3 @@ $is_nonempty_set(finite_seq({}, 0))
 # retain their ordinary length-and-entry checks.
 # Boundary: [] $in finite_seq(R, 1) remains rejected by the executable Rust
 # regression in runtime_regression_tests/sequence_semantics.rs.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/empty_finite_sequence.lit
-# Implementation: src/parse/parse_obj.rs and src/verify/verify_obj_well_defined/matrix.rs

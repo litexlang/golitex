@@ -1,4 +1,4 @@
-pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 7;
+pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 8;
 
 /// Imports the shared target ABI and pins generated output to its ABI version.
 pub(super) fn generated_import_header() -> String {
@@ -17,7 +17,7 @@ mod tests {
 
     #[test]
     fn shared_library_owns_one_object_abi_and_real_builtin_theorems() {
-        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 7"));
+        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 8"));
         assert!(CORE_SOURCE.contains("axiom Object : Type"));
         assert!(CORE_SOURCE.contains("axiom In : Object → Object → Prop"));
         assert!(CORE_SOURCE.contains("def IsSet (_ : Object) : Prop := True"));
@@ -26,6 +26,9 @@ mod tests {
         assert!(CORE_SOURCE.contains("def IsNonemptySet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("def IsFiniteSet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("axiom Applicable : Object → List Object → Prop"));
+        assert!(CORE_SOURCE.contains("requirements args →\n    Object"));
+        assert!(CORE_SOURCE.contains("axiom functionObjectApplicableLength"));
+        assert!(CORE_SOURCE.contains("axiom functionObjectApplicableRequirements"));
         assert!(CORE_SOURCE.contains("axiom add (a b : Object) : In a C → In b C → Object"));
         assert!(CORE_SOURCE.contains("axiom inRPos_iff"));
         assert!(CORE_SOURCE.contains("axiom inNPos_iff"));
@@ -56,7 +59,7 @@ mod tests {
         let header = generated_import_header();
         assert_eq!(
             header,
-            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl"
+            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl"
         );
         assert!(!header.contains("import Mathlib"));
         assert!(!header.contains("axiom Object"));

@@ -1,6 +1,4 @@
 # Object-definition carrier diagnostics.
-# Focused gate:
-# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/object_definition_carrier_diagnostic.lit
 
 # Before the diagnostic named only "q * x % p is not in type N":
 # template<p, q, x N+>:

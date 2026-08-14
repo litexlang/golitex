@@ -8,7 +8,7 @@
 # the checked x-in-R binder premise and return-closure fact never reached a
 # Litex.functionObject constructor.
 #
-# Now (verified and compiled by the focused Rust/Mathlib gates):
+# Now:
 fn(x R) R {x} = fn(y R) R {y}
 
 forall a R:
@@ -21,7 +21,3 @@ forall a R:
 # body whose target Object term itself needs local WD proofs, such as x + 1,
 # still requires the proof-aware function-body ABI decision recorded in the
 # To-Lean status ledger.
-# Evidence:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_anonymous_function.lit
-# cargo test --release anonymous_function_emits_checked_constructor_and_head_application -- --nocapture
-# LITEX_LEAN_PROJECT=lean cargo test --release anonymous_function_compiles_with_mathlib -- --ignored --nocapture

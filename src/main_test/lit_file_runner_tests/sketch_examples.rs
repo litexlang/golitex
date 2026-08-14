@@ -1,4 +1,5 @@
 use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -157,22 +158,25 @@ fn run_tmp0() {
 }
 
 fn compile_tmp_to_lean(index: usize) {
-    let relative_path = if index == 0 {
-        "tmp.lit".to_string()
+    let (source_path, lit_path) = if index == 0 {
+        let source_path = "examples/tmp.lit".to_string();
+        (source_path, example_lit_path("tmp.lit"))
     } else {
-        format!("tmp{}.lit", index)
+        let source_path = format!("private/tmp{}.lit", index);
+        let lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&source_path);
+        (source_path, lit_path)
     };
-    let lit_path = example_lit_path(&relative_path);
     let lit_content = fs::read_to_string(&lit_path)
         .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", lit_path, read_error));
     let lit_source = source_without_trailing_triple_quoted_block(&lit_content).trim();
     if lit_source.is_empty() {
-        println!(
-            "\n=== LITEX -> LEAN: examples/{} is empty ===\n\
+        let output = format!(
+            "\n=== LITEX -> LEAN: {} is empty ===\n\
              Put Litex source in that file and rerun:\n  \
-             cargo test --release tmp{}_to_lean -- --nocapture\n",
-            relative_path, index
+             cargo test --release tmp{}_to_lean\n",
+            source_path, index
         );
+        write_scratch_command_output(&output);
         return;
     }
 
@@ -192,10 +196,8 @@ fn compile_tmp_to_lean(index: usize) {
             )
         });
 
-    println!(
-        "{}",
-        render_tmp_translation(&relative_path, lit_source, &generated_lean)
-    );
+    let output = render_tmp_translation(&source_path, lit_source, &generated_lean);
+    write_scratch_command_output(&output);
 }
 
 #[test]
@@ -272,6 +274,23 @@ fn renders_tmp_translation_as_one_clean_source_target_pair() {
 }
 
 #[test]
+fn renders_not_equal_symmetry_source_with_its_generated_lean() {
+    let source = "forall a set, b set:\n    a != b\n    =>:\n        b != a";
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("tmp-not-equal-symmetry.lit");
+    let generated_lean = compile_to_lean(source, &mut runtime).expect("compile tracer to Lean");
+    let output = render_tmp_translation("tmp.lit", source, &generated_lean);
+
+    assert!(output.contains(source));
+    assert!(output.contains("theorem fact"));
+    assert!(output.contains("Litex.IsSet a"));
+    assert!(output.contains("Litex.IsSet b"));
+    assert!(output.contains("a ≠ b"));
+    assert!(output.contains("b ≠ a"));
+    assert!(output.contains("Litex.BuiltinRules.notEqualSymmetry"));
+}
+
+#[test]
 fn run_comparison_rules_draft() {
     run_with_large_stack("run_comparison_rules_draft_large_stack", || {
         run_example_lit_file("_internal/drafts/comparison_rules_draft.lit")
@@ -337,10 +356,10 @@ fn source_without_trailing_triple_quoted_block(source: &str) -> &str {
     source
 }
 
-fn render_tmp_translation(relative_path: &str, litex_source: &str, generated_lean: &str) -> String {
+fn render_tmp_translation(source_path: &str, litex_source: &str, generated_lean: &str) -> String {
     format!(
         "\n==================== LITEX -> LEAN ====================\n\
-         source: examples/{relative_path}\n\
+         source: {source_path}\n\
          \n\
          ----- LITEX SOURCE -----------------------------------\n\
          {}\n\
@@ -351,4 +370,14 @@ fn render_tmp_translation(relative_path: &str, litex_source: &str, generated_lea
         litex_source.trim(),
         generated_lean.trim()
     )
+}
+
+fn write_scratch_command_output(output: &str) {
+    // `tmp0_to_lean` is a display command. Write directly so plain `cargo test`
+    // shows the mapping without requiring the libtest `--nocapture` flag.
+    let mut stdout = std::io::stdout().lock();
+    stdout
+        .write_all(output.as_bytes())
+        .expect("write Litex-to-Lean scratch output");
+    stdout.flush().expect("flush Litex-to-Lean scratch output");
 }

@@ -17,5 +17,3 @@ finite_set_product(3...1, fn(k Z) Z {1}) = 1
 # because it is not provably a subset of C.
 # A reversed closed range is a provably empty finite set, so its aggregate is
 # still well-defined as long as the scalar iterand has a unary signature.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/_internal/regression/iterated_scalar_return_set_validation.lit
-# Implementation: src/verify/verify_obj_well_defined/iterated.rs

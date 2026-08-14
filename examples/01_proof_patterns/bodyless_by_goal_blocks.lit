@@ -88,5 +88,3 @@ by contra:
 # An empty proof is not an admission: an unclosed target still fails. Executable
 # negative regressions cover that rule and the missing-`impossible` rejection in
 # `proof_control_and_choice.rs`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bodyless_by_goal_blocks.lit
-# Implementation: src/parse/by_stmt/thm_by_stmt.rs

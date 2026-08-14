@@ -101,116 +101,34 @@ all inferred definition consequences reuse or derive named theorems. Bodyless
 concrete `prop`, `trust have`, and function-valued `have fn` are deliberately
 outside this collection.
 
-## Statement-object harness basis
+## Statement and object coverage
 
-The next compiler interfaces should be discovered from a small basis of
-executable programs, not from the full Cartesian product of every statement
-and object form. Use these rules when extending the feature ledger:
+The ledger currently covers the following statement and object interactions:
 
-1. Test each statement family first with the cheapest objects: symbols,
-   natural numerals, and standard sets.
-2. Test each object family first in the cheapest containing statement: a
-   reflexive fact or `have name set = object`.
-3. Add a cross-family example only when ownership or scope actually interacts,
-   such as a named function body, an obtained witness used as an application
-   argument, or a set builder used as a return set.
-4. Keep candidates here until their complete generated Lean compiles. Move a
-   candidate to `compile_to_lean_examples.md` only after its focused positive,
-   negative-boundary, malformed-evidence, and real-Mathlib gates pass.
+| Capability | Current target representation | Current boundary |
+| --- | --- | --- |
+| Inferred universal premise | A local theorem registered by its exact `FactId` | Unsupported inference chains fail closed |
+| Object choice | `Classical.choose` plus its exact membership theorem | Choice requires retained nonemptiness evidence |
+| Existential introduction and elimination | One existential theorem followed by ordered witness projections | Wider projection shapes remain explicit boundaries |
+| Cases and contradiction | Local Lean binders scoped to the source proof branch | Branch-local facts cannot escape their scope |
+| Named theorem | The source theorem name owns the complete universal fact | Missing child facts are not reconstructed by target search |
+| Total constructors | Closed `pi` and binary `union` object terms | Partial constructors use separate proof-carrying recipes |
+| Division | Two numeric memberships plus denominator nonzero evidence | A missing or retargeted proof slot is rejected |
+| Finite set literal | Ordered child objects and the full pairwise-distinctness matrix | Missing, reversed, or duplicated pairs are rejected |
+| Set builder | A `SymbolId`-owned predicate binder | The binder cannot leak outside the builder |
+| Named function | Checked body, range closure, function-set membership, definition equality, and later application | Unsupported body evidence fails closed |
+| Indexed tuple | A checked dimension and coordinate recipe | Other aggregate families are not implied by this representation |
+| Anonymous function | A scoped `functionObject` with checked return membership | A body outside the declared result set is rejected |
+| Known equality path | Direct `Eq.symm` and `Eq.trans` calls from stored equality facts | The compiler does not search for a replacement path |
 
-This gives a recommended implementation order. The current result column was
-re-audited after implementation on 2026-08-14; it records the established
-target recipe and any intentionally narrower boundary.
-
-| Order | Candidate harness | Main pressure | Current result |
-| ---: | --- | --- | --- |
-| 1 | `inferred_forall_premise` | Rebuild a supported inferred premise inside an existing forall scope | Implemented and recorded in the executable ledger |
-| 2 | `object_choice` | One noncomputable object declaration plus its exact stored membership `FactId` | Implemented with `Classical.choose` and exact membership replay |
-| 3 | `existential_intro_elim` | Existential binder rendering, witness construction, local names, and ordered projections | Implemented for one positive witness and one body fact; wider forms fail closed |
-| 4 | `case_and_contradiction_scopes` | Branch-local and contradiction-local `FactId` scopes without new object constructors | Implemented with local Lean binders and wrong-slot rejection |
-| 5 | `named_theorem` | A source name, nested proof steps, the complete forall, and separately stored projections | Implemented with the source theorem name owning its `FactId` |
-| 6 | `total_object_constructors` | One uniform renderer path for opaque constants and total set constructors | `pi` and binary `union` implemented as total target objects |
-| 7 | `proof_carrying_division` | Two operand memberships plus exact denominator-nonzero evidence | Implemented as a partial Lean constructor consuming all three slots |
-| 8 | `proof_carrying_list_set` | Ordered child objects plus a pairwise-distinct construction proof | Implemented in ABI 7 and materialized in the executable ledger with two- and three-entry real-Lean gates |
-| 9 | `set_builder_scope` | A binder-owned object, base-set requirement, defining facts, and non-leaking local identity | Implemented with a SymbolId-derived target binder |
-| 10 | `named_function` | `HaveFnEqual`, body construction, return membership, definition facts, later application, and definition replay | Implemented with a proof-carrying `functionObject` recipe |
-| 11 | `indexed_aggregate` | One representative indexed constructor and projection route before considering sequences and matrices | Implemented for `HaveTupleStmt`; other aggregate families remain explicit boundaries |
-
-The corresponding minimal programs are:
-
-```text
-# inferred_forall_premise
-forall x R+:
-    x > 0
-
-# object_choice
-have x R
-x $in R
-
-# existential_intro_elim
-witness exist x R st {x = 1} from 1:
-    1 = 1
-obtain y from exist x R st {x = 1}
-y = 1
-
-# case_and_contradiction_scopes
-by cases:
-    ? 1 = 1
-    case 1 = 1
-by contra:
-    ? 2 = 2
-    impossible 2 != 2
-
-# named_theorem
-thm one_eq_one:
-    ? forall:
-        1 = 1
-
-# total_object_constructors
-pi = pi
-forall A, B set:
-    union(A, B) = union(A, B)
-
-# proof_carrying_division
-forall a, b C:
-    b != 0
-    =>:
-        a / b = a / b
-
-# proof_carrying_list_set
-have S set = {1, 2}
-S = S
-
-# set_builder_scope
-have S set = {x R: x = x}
-S = S
-
-# named_function -- the primary integrating tracer
-have fn id(x R) R = x
-id(1) = 1
-
-# indexed_aggregate
-have tuple q for i1 <= 2, q[i1] = 0
-q = q
-```
-
-The named-function program is the primary integration tracer because it
-touches nearly every important boundary, but it should not be the first
-implementation. The preceding entries establish forall reconstruction,
-declaration ownership, proof scopes, total construction, and proof-carrying
-construction separately, so the named-function emitter can reuse evidence
-instead of forcing a large speculative interface.
-
-After those basis programs work, add only three deliberate interaction probes:
+The combined interaction entry contains three cross-family compositions:
 
 - an obtained witness used as a named-function argument;
-- a `by cases` proof step inside a named theorem;
+- a case proof inside a named theorem;
 - a set builder used as a named function's declared return set.
 
-Do not add separate pipeline abstractions for tuples, finite sequences,
-matrices, structs, templates, and namespaces yet. First make one indexed
-aggregate pass end to end. The remaining forms should either reuse that recipe
-or provide concrete evidence that a distinct recipe is necessary.
+These interactions reuse the same object, scope, and proof-evidence interfaces
+as the individual entries; they do not introduce interaction-specific axioms.
 
 ## Trust boundary
 

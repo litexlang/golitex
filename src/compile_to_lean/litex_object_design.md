@@ -66,7 +66,7 @@ Remark 3.1.3 explicitly leaves the choice between pure and impure set theories
 open. Litex chooses the pure branch: numbers and functions retain their
 ordinary public interfaces, but at the foundational level they are set-coded
 objects. The compiler-facing consequence is exercised by the tracked
-[universal-object tracer](../../examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit).
+[universal-object tracer](../../examples/09_compile_to_lean/cases/compile_to_lean_litex_object_abi.lit).
 
 `Object : Type` is the Lean meta-level carrier of this object language; it is
 not itself a term of type `Object`. The declaration therefore does not create
@@ -175,7 +175,7 @@ Separate theorems establish memberships such as `1 ∈ N`, `1 ∈ R`, and
 
 Litex does not overload source `+`. Every source occurrence denotes the one
 Litex complex addition operation. Real or integer closure is justified by
-ordinary builtin-rule theorems using retained membership proofs. ABI version 7
+ordinary builtin-rule theorems using retained membership proofs. ABI version 8
 makes addition, subtraction, multiplication, and division proof-carrying:
 
 ```lean
@@ -199,13 +199,19 @@ One source function layer is described by a restricted specification:
 structure Litex.FnSpec where
   arity : Nat
   requirements : List Litex.Object → Prop
-  range : List Litex.Object → Litex.Object
+  range :
+    (args : List Litex.Object) →
+    args.length = arity →
+    requirements args →
+    Litex.Object
 
 axiom Litex.FnSet : Litex.FnSpec → Litex.Object
 ```
 
 For example, `fn(x R : x > 0) R` is one `FnSet` object whose requirement for
-`[x]` contains both `Litex.In x Litex.R` and the translated `x > 0` fact. A
+`[x]` contains both `Litex.In x Litex.R` and the translated `x > 0` fact. The
+compiler encodes those ordered facts as a dependent existential telescope in
+`Prop`, so later facts and the range may consume earlier proof fields. A
 function value is not assigned a native Lean function type. Its contract is a
 membership fact:
 
@@ -270,7 +276,7 @@ axiom Litex.fnSetResult
   Litex.In
     (Litex.apply f args
       (Litex.fnSetApplicable hf hLength hRequirements))
-    (spec.range args)
+    (spec.range args hLength hRequirements)
 ```
 
 If the range is another `FnSet`, `fnSetResult` supplies the membership needed
@@ -325,38 +331,36 @@ proofs `h₁ h₂ : ListSetWellDefined xs` are equal, so the two applications of
 `listSet xs` can be proved equal. The compiler still records which proof route
 Litex actually used.
 
-## 7. Anonymous functions carry construction WD
+## 7. Function objects carry construction WD
 
-An anonymous function is a function object, not a native Lean lambda exported
-as the source value. Its target construction must retain at least:
+A named or anonymous Litex function is a function object, not a native Lean
+lambda exported as the source value. Its target construction must retain at
+least:
 
 1. its `FnSpec`;
 2. a body available under the exact ordered argument requirements;
 3. the WD proof DAG for the body;
 4. a proof that every legal body result belongs to the declared range.
 
-The exact Lean packaging is **open spelling**, but the required shape is
-equivalent to:
+ABI version 8 fixes the shared packaging as:
 
 ```lean
-def Litex.AnonymousFnWellDefined
+axiom Litex.functionObject
     (spec : Litex.FnSpec)
-    (body : List Litex.Object → Litex.Object) : Prop :=
-  ∀ args,
-    args.length = spec.arity →
-    spec.requirements args →
-    Litex.In (body args) (spec.range args)
-
-axiom Litex.anonymousFn :
-  (spec : Litex.FnSpec) →
-  (body : List Litex.Object → Litex.Object) →
-  Litex.AnonymousFnWellDefined spec body →
+    (body : (args : List Litex.Object) →
+      (hLength : args.length = spec.arity) →
+      spec.requirements args → Litex.Object)
+    (closed : ∀ args hLength hRequirements,
+      Litex.In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements)) :
   Litex.Object
 ```
 
-If constructing `body args` itself needs the requirement proof, the final Lean
-field must take that proof as an argument. The compiler may not totalize an
-undefined source body merely to fit the simpler sketch above.
+Named functions now emit their full body WD DAG under this telescope, including
+proof-carrying arithmetic and domain-dependent division. The current anonymous
+emitter deliberately remains at the proof-independent identity-body slice;
+compound anonymous bodies still fail closed until their binder-owned DAG is
+connected to the same ABI.
 
 ## 8. Set constructors and semantic laws
 
@@ -524,7 +528,7 @@ Every successful generated source currently has this shape:
 ```text
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 7 := rfl
+example : Litex.abiVersion = 8 := rfl
 
 <WD helper declarations and translated source declarations>
 ```
@@ -732,10 +736,11 @@ forall S set, f fn(x R, y S: x > 0, $p(x, y)) R:
 The `FnSpec` requirement for `[a, b]` is ordered and contains all four facts:
 
 ```lean
-Litex.In a Litex.R ∧
-Litex.In b S ∧
-Litex.gt a 0 ∧
-p a b
+∃ hA : Litex.In a Litex.R,
+∃ hB : Litex.In b S,
+∃ hPositive : Litex.gt a 0,
+∃ hP : p a b,
+True
 ```
 
 The call cites those exact facts. Proving later that `b` belongs to another set
@@ -744,7 +749,8 @@ uses.
 
 ### Example 9 — an anonymous function carries body and range WD
 
-Status: **Decided**, not emitted yet; exact constructor spelling is open.
+Status: the proof-aware shared ABI is **current**; compound anonymous-function
+emission is deliberately deferred.
 
 ```litex
 fn(x, y R: x < y) R {x + y}
@@ -754,14 +760,13 @@ The target object must carry a certificate equivalent to:
 
 ```lean
 have hBody :
-    ∀ args,
-      args.length = 2 →
-      spec.requirements args →
-      Litex.In (body args) Litex.R := by
+    ∀ args hLength hRequirements,
+      Litex.In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements) := by
   -- Replays the retained WD DAG for x + y and real closure.
   ...
 
-Litex.anonymousFn spec body hBody
+Litex.functionObject spec body hBody
 ```
 
 The domain facts justify construction of the body, and `hBody` proves that the
@@ -770,7 +775,7 @@ Lean lambda that is meaningful outside the source domain.
 
 ### Example 10 — proof-carrying list set and replacement
 
-Status: list sets are **current in ABI version 7**; replacement remains
+Status: list sets are **current in ABI version 8**; replacement remains
 **decided, not emitted yet**.
 
 ```litex

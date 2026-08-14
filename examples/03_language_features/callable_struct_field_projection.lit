@@ -1,6 +1,5 @@
 # Regression: a function-typed field remains callable after explicit struct selection.
 # Focused release check:
-# target/release/litex -compact -isolated -f examples/03_language_features/callable_struct_field_projection.lit
 
 struct CallableBox:
     entries fn(k N+) N

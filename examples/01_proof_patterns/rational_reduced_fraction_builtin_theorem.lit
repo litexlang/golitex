@@ -20,4 +20,3 @@ gcd(p, d) = 1
 # be module-qualified. Writing the fixed existential directly does not invoke
 # this handler. Its conclusion uses an integer numerator, a positive-natural
 # denominator, and gcd exactly 1.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/rational_reduced_fraction_builtin_theorem.lit

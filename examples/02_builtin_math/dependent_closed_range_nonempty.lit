@@ -41,6 +41,3 @@ forall b R:
 # `'(b, b)` remain empty. Executable positive and negative regressions live in
 # finite_endpoint_nonempty_strategies_use_order_children, while the real caller
 # is covered by template_can_define_symbolic_tuple_and_cart.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/dependent_closed_range_nonempty.lit
-# Implementation: src/verify/verify_builtin_strategies/type_predicates.rs and
-# src/verify/verify_helper.rs

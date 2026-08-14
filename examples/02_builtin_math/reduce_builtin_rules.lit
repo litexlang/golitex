@@ -145,8 +145,4 @@ finite_set_reduce(union({3}, {1, 2}), reduce_identity_z, reduce_add_z, 0) = 3 + 
 # have fn reduce_decimal_append_z(x, y Z) Z = 10 * x + y
 # reduce(1, 2, reduce_identity_z, reduce_decimal_append_z, 0) = reduce(1, 2, fn(k Z) Z {reduce_identity_z(3 - k)}, reduce_decimal_append_z, 0)
 
-# Evidence:
-# target/release/litex -compact -isolated -runner -f examples/02_builtin_math/reduce_builtin_rules.lit
-# Implementation: src/verify/verify_builtin_rules/equality_numeric/reduce.rs
 # Rust boundary regression:
-# cargo test --release reduce_and_finite_set_reduce_obey_order_empty_and_operation_law_contracts -- --nocapture

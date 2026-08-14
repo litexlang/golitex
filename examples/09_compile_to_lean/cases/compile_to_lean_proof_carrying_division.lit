@@ -9,4 +9,3 @@ forall a, b R:
     =>:
         a / b $in R
 # Boundary: deleting or misindexing the nonzero role fails closed.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

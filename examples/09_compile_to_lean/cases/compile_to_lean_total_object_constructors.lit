@@ -4,4 +4,3 @@ pi = pi
 forall A, B set:
     union(A, B) = union(A, B)
 # Boundary: constants i/e and non-binary union IR remain explicit failures.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

@@ -1,6 +1,5 @@
 # One-field structures are named views of their sole field carrier.
 # Focused check:
-# target/release/litex -compact -isolated -runner -f examples/03_language_features/single_field_struct.lit
 
 # Before this feature, the parser rejected this declaration with
 # `struct definition expects at least two fields`:

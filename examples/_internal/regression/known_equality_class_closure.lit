@@ -44,5 +44,3 @@ rep_000 < 2
 #
 # Boundary: this does not remove cross-environment closure or the upper-level
 # known-fact candidate search.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/_internal/regression/known_equality_class_closure.lit
-# Implementation: src/environment/known_equality.rs and src/runtime/runtime_known_object_properties.rs

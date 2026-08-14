@@ -1,6 +1,4 @@
 # Dependent application diagnostics.
-# Focused gate:
-# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/dependent_application_diagnostic.lit
 
 template<n N+>:
     have fn diagnostic_base(k closed_range(0, n)) fn(j N+: j <= n) N = fn(t N+: t <= n) N {t}

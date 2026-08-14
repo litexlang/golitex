@@ -1,6 +1,6 @@
 # Manual
 
-Jiachen Shen and The Litex Team, 2026-07-28. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Run the examples in a browser: https://litexlang.com/doc/Manual
 

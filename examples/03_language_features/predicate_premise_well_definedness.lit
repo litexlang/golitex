@@ -28,7 +28,3 @@ forall E power_set(R), f, g fn(x E) R:
 #
 # Boundary: omitting `$nonzero_on(E, g)` still makes the division ill-defined.
 # Executable positive and negative regressions live in
-# src/main_test/lit_file_runner_tests/runtime_regression_tests/proof_control_and_choice.rs.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/predicate_premise_well_definedness.lit
-# Implementation: src/verify/verify_fact_well_defined.rs and
-# src/verify/verify_non_equational_atomic_fact.rs

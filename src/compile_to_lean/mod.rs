@@ -3,6 +3,7 @@
 mod compilation_report;
 #[cfg(test)]
 pub(crate) mod lean_test_support;
+mod ledger;
 mod shared_lean_library;
 #[cfg(test)]
 mod universal_examples_tests;
@@ -12,6 +13,7 @@ pub use compilation_report::{
     LitexToLeanCompilationPhase, LitexToLeanCompilationReport, LitexToLeanCompilationStatus,
     LitexToLeanUnsupportedStatement,
 };
+pub(crate) use ledger::compile_markdown_ledger_file_to_lean;
 pub use universal_pipeline::{
     compile_to_lean, compile_to_lean_from_source, compile_to_lean_from_source_with_report,
     compile_to_lean_with_report, emit_lean_from_litex_to_lean_ir,

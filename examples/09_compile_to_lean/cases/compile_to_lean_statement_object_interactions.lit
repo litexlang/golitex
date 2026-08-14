@@ -18,4 +18,3 @@ have fn into_builder(x R) {z R: z = z} = x
 into_builder(1) = 1
 # Boundary: these interactions reuse the basis interfaces; no special
 # witness-function, theorem-case, or function-builder escape hatch exists.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

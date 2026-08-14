@@ -5,4 +5,3 @@ have S set = {x R: x = x}
 S = S
 # Boundary: changing the binder identity changes the retained value/check and
 # is rejected; the local x never enters the outer context.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

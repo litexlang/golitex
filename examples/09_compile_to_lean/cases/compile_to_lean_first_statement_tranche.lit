@@ -13,7 +13,7 @@
 # Former To-Lean behavior: `prop` was present in statement IR but the
 # universal-object emitter rejected it before reaching `have` or `by def`.
 #
-# Now (verified and compiled by the focused Rust + real Lean gates):
+# Now:
 abstract_prop marked(x)
 
 prop is_zero(x R):
@@ -34,7 +34,3 @@ $marked(named_zero)
 #
 # Boundary: bodyless `prop P(x R)` and `trust have ...` remain rejected by
 # strict To-Lean. Function-valued `have fn ... = ...` is a later tranche.
-# Focused Litex gate:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit
-# Focused To-Lean + real Lean gate:
-# LITEX_LEAN_PROJECT=lean cargo test --release first_statement_tranche_compiles_with_mathlib -- --ignored --nocapture

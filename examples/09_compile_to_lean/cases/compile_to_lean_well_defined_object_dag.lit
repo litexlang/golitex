@@ -28,11 +28,3 @@ forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
 # environment may see parent WD entries, but a closed environment's cache does
 # not escape its scope. Function-valued bodyless `have`/`trust have` remains a
 # separate To-Lean statement tranche and is not silently treated as this case.
-#
-# Source gate:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_well_defined_object_dag.lit
-# Focused runtime/compiler gates:
-# cargo test --release scoped_nested_applications_emit_stable_object_aliases
-# cargo test --release proof_carrying_occurrence_edges_fail_closed_when_missing_duplicated_or_retargeted
-# Real Lean gate:
-# LITEX_LEAN_PROJECT=lean cargo test --release scoped_nested_object_aliases_compile_with_mathlib -- --ignored

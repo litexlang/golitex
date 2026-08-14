@@ -74,7 +74,16 @@ f(a)(b) -> f [a] first_proof [b] second_proof
 
 `Litex.Applicable f args` is constructed from the exact retained function-set
 membership, argument memberships, and domain facts. Lean currying never makes
-an invalid Litex application valid.
+an invalid Litex application valid. `FnSpec.requirements` packages those facts
+as an ordered dependent existential telescope in `Prop`; both `FnSpec.range`
+and `functionObject`'s body consume the same arity and requirements evidence.
+
+Named `have fn` definitions emit their verifier-owned body DAG before the
+function object. Thus `x + 1` consumes the retained complex-membership facts,
+and `1 / x` consumes the exact domain `FactId` for `x != 0`. Later definition
+replay unfolds only the cited defining equality and the exact `obj_N` aliases.
+Proof-independent anonymous identity bodies use the same ABI; compound
+anonymous bodies remain an explicit fail-closed boundary for now.
 
 ## Proof evidence
 
@@ -146,6 +155,9 @@ supporting routes:
 - ordinary not-equality symmetry through a proved builtin theorem;
 - named function spaces and exact one-layer or nested applications with named
   WD helpers and `Litex.fnSetResult` between layers;
+- named function definitions with proof-carrying `+`, `-`, `*`, `/` bodies,
+  ordered parameter/domain evidence, exact return membership, and checked
+  definition replay;
 - nested forall replay with retained temporary parameter `FactId`s;
 - `Litex.add/sub/mul/div`, real arithmetic closure theorems, and rational
   normalization for the arithmetic tracer.
@@ -160,22 +172,46 @@ IR and theorem routes before complete choice examples can compile.
 Bodyless concrete `prop`, `trust have`, and function-valued `have fn` also
 remain explicit errors; they are not treated as definitions or target axioms.
 
+## Inspecting the complete ledger output
+
+The CLI can freshly compile every `litex` fence under a level-two heading in
+the compiler ledger and collect the results in one Lean file:
+
+```text
+target/release/litex -lean-ledger \
+  examples/09_compile_to_lean/compile_to_lean_examples.md \
+  private/09-generated.lean
+```
+
+The equivalent Cargo test entrypoint is deliberately ignored by the ordinary
+test suite because it leaves the inspection file in `private/`:
+
+```text
+cargo test --release dump_09_compile_to_lean_ledger -- --ignored --nocapture
+```
+
+The output hoists shared imports once and places each ledger entry in its own
+numbered namespace, so the combined file can be inspected or compiled without
+declaration-name collisions. Markdown Lean snapshots and required-shape blocks
+are ignored: every output section comes from a fresh Litex compilation. The
+output path is replaced only after every Litex entry compiles successfully.
+
 ## Evidence
 
 The primary acceptance source is
-[`compile_to_lean_litex_object_abi.lit`](../../examples/05_compiler_interop/compile_to_lean_litex_object_abi.lit).
+[`compile_to_lean_litex_object_abi.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_litex_object_abi.lit).
 The shared-builtin-library tracer is
-[`compile_to_lean_shared_builtin_rules.lit`](../../examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit).
+[`compile_to_lean_shared_builtin_rules.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_shared_builtin_rules.lit).
 The nested-forall/arithmetic/occurrence tracer is
-[`compile_to_lean_arithmetic_forall_wd.lit`](../../examples/05_compiler_interop/compile_to_lean_arithmetic_forall_wd.lit).
+[`compile_to_lean_arithmetic_forall_wd.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_arithmetic_forall_wd.lit).
 The named well-defined-object DAG tracer is
-[`compile_to_lean_well_defined_object_dag.lit`](../../examples/05_compiler_interop/compile_to_lean_well_defined_object_dag.lit).
+[`compile_to_lean_well_defined_object_dag.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_well_defined_object_dag.lit).
 The derived-set-predicate tracer is
-[`compile_to_lean_set_predicate_definitions.lit`](../../examples/05_compiler_interop/compile_to_lean_set_predicate_definitions.lit).
+[`compile_to_lean_set_predicate_definitions.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_set_predicate_definitions.lit).
 The known-equality path tracer is
-[`compile_to_lean_known_equality_path.lit`](../../examples/05_compiler_interop/compile_to_lean_known_equality_path.lit).
+[`compile_to_lean_known_equality_path.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_known_equality_path.lit).
 The first statement-definition tracer is
-[`compile_to_lean_first_statement_tranche.lit`](../../examples/05_compiler_interop/compile_to_lean_first_statement_tranche.lit).
+[`compile_to_lean_first_statement_tranche.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_first_statement_tranche.lit).
 The append-only executable feature history is in
 [`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
 

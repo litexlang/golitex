@@ -28,9 +28,3 @@ $p(1)
 # $q(1)
 # Without a stored forall FactId, To-Lean must not invent an axiom or proof.
 #
-# Focused Litex gate:
-# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_trusted_forall_instantiation.lit
-# Focused compiler gate:
-# cargo test --release trusted_forall_atomic_fact_replays_exact_fact_id -- --nocapture
-# Real Lean gate:
-# LITEX_LEAN_PROJECT=lean cargo test --release trusted_forall_atomic_fact_compiles_with_mathlib -- --ignored --nocapture

@@ -19,6 +19,3 @@ cart_dim(gf::main::ProductSet) = 2
 # equal surface names from different exports remain distinct.
 #
 # Boundary: gf::main::missing remains undefined and is rejected by the focused Rust regression.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/import_alias_qualified_arithmetic.lit
-# Implementation: src/symbol/symbol.rs, src/obj/obj.rs, and
-# src/runtime/runtime_known_object_properties.rs

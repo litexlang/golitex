@@ -6,7 +6,9 @@
 
 # Litex: The Formal Language Where Math Verifies Itself
 
-*by Jiachen Shen and The Litex Team, version 0.9.110-beta*
+*Created and maintained by Jiachen Shen.*
+
+*Version 0.9.110-beta*
 
 [![Website](https://img.shields.io/badge/Official%20Website-blue?logo=website)](https://litexlang.com)
 [![Github](https://img.shields.io/badge/Github-grey?logo=github)](https://github.com/litexlang/golitex)
@@ -326,6 +328,8 @@ so that failures can guide the next audit or implementation step.
 
 Hi, I am Jiachen Shen, a math PhD student in Fudan university, who loves both math and programming. Since the day when I first notice the language, Lean 4, which connects these two worlds, I am fascinated by the finding that math can be encoded into computer programs. However, it takes huge effort to be good at Lean and the mental flow of writing Lean is very different from the flow that I am very used to when I solve math problems (The challenge has always been that with great type-system power comes great proof effort. Certainly I sometimes have to spend an entire day proving really quite simple things. ). I wonder whether there is a way code math more naturally. After all, we humans learn to reason almost instinctively from a very young age — so the underlying mechanism can't be all that complicated. If it comes naturally to a child, the core principles might be simple enough to grasp? And Litex is the result of this intellectual exploration.
 
-Litex is built by Jiachen Shen and the Litex team, with support and advice from
-many friends and collaborators. Thanks especially to Wei Lin, Siqi Sun, Peng
+Created and maintained by Jiachen Shen.
+
+The project has received support and advice from many friends and
+collaborators. Thanks especially to Wei Lin, Siqi Sun, Peng
 Sun, Yi Wang, Chenxuan Huang, Yan Lu, Sheng Xu, and Zhaoxuan Hong.

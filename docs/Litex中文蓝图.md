@@ -1,6 +1,6 @@
 # Litex：让数学自我验证的形式化语言
 
-Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 官网页面: https://litexlang.com/doc/Litex中文蓝图
 
@@ -143,6 +143,12 @@ thm converges_to_mul_const:
 
 这两个比喻描述的是默认接口的重心，而不是绝对的能力边界。Lean 的机制提供了非常灵活、通用的 proof-programming（把证明对象作为程序构造）环境；Litex 则有意选择范围更窄的默认交互，希望让初学者更容易开始写证明，也让源码更接近日常教科书的数学写法。Lean 也支持向前推理，Litex 也提供显式的目标导向（goal-directed）证明形式。后文的对照和五个设计目标，会继续展开这两种工作流的异同及各自的取舍。
 
+> **比较说明。** 下文仍以 Lean 为贯穿全文的主对照，因为它能最具体地
+> 显示 Goal-first 与 fact-first 的差异。文中对 Mizar、Isabelle/Isar、Rocq、
+> ACL2 和 Naproche 的引用，是回顾性的设计空间定位：Litex 是独立设计的，
+> 并非从这些系统派生而来。引用它们是为了说明邻近思路和最终形成的差异，
+> 不表示直接的思想影响关系。
+
 ## 一个完整的小对照：群的单位元唯一性
 
 群的单位元唯一性例子把上面两个工作流差异具体化：谁声明结果，谁补出证明路径，以及证明是从最终 Goal 向下分解，还是从已验证事实向上生长。这个对照例子还展示了定义和证明如何按数学顺序出现，以及结构和载体如何以显式的集合论对象呈现。
@@ -268,6 +274,29 @@ Litex 目前把数百条这类小而具体的数学模式放在内置验证规�
 
 除此之外，Litex 会把已经验证的事实放进当前上下文，并尝试用这些事实进行匹配和替换。已知的 `forall` 事实在参数条件满足时可以被实例化；已知等式也可以帮助较大的表达式匹配。这不是“猜测证明”：每个最终被接受的结果仍须通过规则和上下文检查。对于结论规模较大、检查成本较高，或需要读者明确看见依赖的结果，Litex 仍保留具名 theorem 和显式 `by thm` 调用。
 
+#### 在数学被书写的层级完成验证
+
+实际数学工作中的大量推理，都在当前抽象层级上使用已经建立的事实。
+在 `Group` 例子中，`identity = G.mul(G.one, identity)` 这一步就在单位律
+所在的同一数学层级上接受检查。在常规验证路径中，Litex 不会先要求把这个局部步骤
+降为基础层的 proof term；它直接尝试相关事实的实例、等式替换、定义和有界的
+数学规则。
+
+这与 Lean 的最终接受路径不同，尽管 Lean 源码同样可以写在很高的层级。Lean 的
+elaboration 会把面向用户的语法和 tactic 结果转换为
+[core type theory 中的 term](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)，
+再由 kernel 检查。Lean core term 可以保留 defined constant 和 opaque constant，所以这并不意味着
+Lean 每次使用一个数学概念时，都会完全展开它的全部历史。更准确的差异是：
+只要一条可信的高层路径已经接受当前事实，Litex 的常规验证就可以结束，不需要先为这个
+具体实例构造一份完整的 kernel proof term。
+
+因此，这里的性能假设针对的是 *foundational depth*（与基础逻辑相隔的层数），
+而不是声称验证时间恒定。Litex 的目标是让常规交互成本更多取决于局部证明邻域的宽度——
+相关事实和规则的数量、大小与歧义程度——而不是这条事实距离数学基础有多少层。
+搜索分支、上下文规模、表达式大小、计算和规则前提的递归验证，仍然可能让检查变得昂贵。
+所以，这套架构是否会在某类数学上形成相对 Lean 的显著速度优势，是一个需要 benchmark
+回答的问题，而不是仅凭语言设计就已经得到的结论。
+
 在编译器的设计模型中，每次成功验证都对应一条带有递归结构的证明路径，而且这条路径原则上应能被完整记录；Litex-to-Lean 编译器的目标，是把这条路径翻译成 Lean proof term，再交给 Lean kernel 独立检查。
 
 <details>
@@ -320,6 +349,18 @@ theorem fact19 :
 在 `Group` 例子中，运算规律直接写在 `<=>:` 里，唯一性证明则直接写成 `identity = G.mul(G.one, identity) = G.one`。
 此时，checker 寻找相应的单位律实例和等式方向，因此源码负责声明“什么成立”，验证路径负责说明“为什么成立”。
 
+> **回顾性比较。** 寻找局部证明依据并非 Litex 独有：
+> [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/)、
+> [Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
+> 和 [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) 通过显式 tactic 或
+> proof method 提供局部自动化；[Mizar](https://mizar.uwb.edu.pl/project/mizman.pdf)
+> 有 empty justification；
+> [ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM) 可以在没有 hints 时
+> 尝试证明 theorem event；[Naproche](https://naproche.github.io/) 则用自动定理证明器
+> 检查受控自然语言中的证明步骤。Litex 更具体的假设是：能否让有界的、
+> 由事实触发的 local justification 成为普通数学陈述的默认语义，并在成功后
+> 把事实写回上下文、显示它的验证来源。
+
 ### 2. 以集合论式对象为表面，而不是要求用户先学习类型宇宙
 
 明确了用户与 checker 的分工后，下一个问题是用户在源码中直接面对什么样的数学对象。
@@ -330,6 +371,15 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 
 `Group` 例子把这种集合论式表面具体展示出来：`s nonempty_set` 引入载体，`identity s` 表示成员关系，`G &Group<s>` 表示定义在该集合上的结构。
 载体约束仍然明确，只是不先把它呈现为需要用户操作的 universe 层级。
+
+> **回顾性比较。** 集合论式的表述并非 Litex 首创：
+> [Mizar 的数学库](https://wiki.mizar.org/library/) 基于 Tarski–Grothendieck 集合论；
+> [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
+> [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
+> [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
+> 使用多态高阶逻辑。Litex 的问题更具体地落在面向用户的对象接口上：
+> 一套小型、以成员关系为中心的集合论式表层，能否在不要求用户先管理类型
+> universe 的前提下，覆盖有实质内容的数学？
 
 ### 3. 语法面向数学推理，而非函数式程序构造
 
@@ -342,6 +392,11 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 在 `Group` 声明中，乘法写成二元函数 `mul fn(x, y s) s`，使用时写成 `G.mul(x, y)`。
 这种写法直接呈现数学上的二元运算，而不要求面向用户的表层语法先把它表示成一串柯里化的一元函数，也就是先固定一个参数、返回一个继续等待其余参数的函数。
 
+> **回顾性比较。** 可读、声明式的数学语法同样有重要先例：Mizar 把形式化文章
+> 组织成数学陈述与证明依据的序列，Isabelle/Isar 提供结构化的声明式证明，
+> Naproche 检查受控自然语言。Litex 更具体的尝试是：能否用一套紧凑的 object–fact
+> 语法，让一条有数学意义的陈述同时成为它自身的常规验证请求。
+
 ### 4. 既保证严格性，又有可读性和低门槛
 
 更接近日常数学的对象表示和证明语法，只有在不牺牲严格性的前提下才有意义。
@@ -352,6 +407,19 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 
 `Group` 片段只有在 runner 检查了字段、载体成员关系、结构规律的实例以及等式链的两段之后才会通过。
 该片段不含 `trust`；如果显式加入 `trust`，这条未经证明的假设就会和 checker、builtin/infer rules 一样成为可信边界的一部分。
+
+这条预期的快速路径与可信边界，其实是同一项选择的两面。Litex 能在高层验证路径
+接受事实后直接结束，是因为这条路径上的规则实现属于可信边界。把记录的路径降为
+Lean proof term，再由 Lean kernel 检查，会重新引入一条更慢、但更独立的审计路径。
+这套架构让低延迟的局部检查变得可期，但它本身并不证明当前 Litex 在所有情况下都更快。
+
+> **回顾性比较。**
+> [Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) 和
+> [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html)
+> 把复杂的证明构造与负责检查最终 proof term 的 kernel 清楚分开。Litex 当前则把
+> 许多数学 builtin/infer rules 放在自身的可信边界中，所以可读性本身不能成为
+> 正确性论据。记录验证路径、审计规则、回归测试，以及逐步完善 Litex-to-Lean，
+> 是这套接口寻求更强独立检查的途径。
 
 ### 5. 以事实为中心，自下而上建立证明
 
@@ -467,11 +535,47 @@ no goals
 回到 `Group`：结构规律在概念定义时先被验证并保存；候选单位元的规律随后扩展上下文；最后才检查单位元唯一性的等式链。
 这个顺序正是上面计算链和集合包含例子共同展示的自下而上模式。
 
+> **回顾性比较。** Mizar 和 Isar 已经支持向前展开的声明式证明文本，ACL2 会累积
+> 可复用的定理数据库，Naproche 会逐步检查数学陈述。因此，“自下而上生长”本身并不是
+> Litex 的差异化主张。Litex 真正检验的是这样一套组合：普通 fact 是能够扩展上下文的
+> 可执行单元；local justification 不需要另行调用 proof method 就会启动；只有当
+> 常规重建到达边界时，显式证明结构才出现。
+
 ## 总结
 
 Litex 的设计承诺不应是“省略证明”，而是更严格也更朴素的一件事：让用户先写自己真正想说的数学事实，再让机器把验证、来源和边界清楚地摆出来。
 
-从这个承诺出发，可以把两种取向之间的张力说得更尖锐一些。
+这个承诺在运行层面有一个准确的含义：
+
+> **在 Litex 中，local justification（局部证明依据的重建）不是用户需要调用的 tactic，
+> 而是一条普通数学事实的默认执行语义。**
+
+当用户写下一条不附带证明指令的事实时，这一行同时承担两个角色：它既是作者想保留下来的数学陈述，
+也是要求 checker 从当前已检查上下文中重建常规依据的验证请求。这种双重角色会展开成一条完整链条：
+
+1. **在语言表层，**普通事实直接触发验证，不要求用户先写 tactic 名、定理引用或 proof term。
+2. **在 checker 内部，**相关的已知事实、等式、定义和适用的全称事实，会经过有界且理解数学对象的路径接受检查。
+3. **验证成功后，**这条事实及其常规推论立即扩展后续上下文。
+4. **在系统输出中，**checker 可以重新展示简洁源码中隐去的具体验证路径和来源。
+5. **在常规重建的边界上，**见证、分类、反证、归纳和指定路径等显式数学证明过程仍然存在。
+
+合起来看，这五点不是五项彼此独立的便利功能，而是一套默认的人机分工：作者写出证明的数学主干，
+checker 补出其中常规的局部联系；只有当数学本身确实需要时，显式证明结构才进入源码。
+
+Litex 所主张的接口差异是这套分工，而不是孤立地拥有局部自动化。前文的回顾性比较
+也表明，其中的单项机制各有先例。Litex 因而提出一个更窄、也更偏向整体架构的
+研究假设：这个由事实触发的完整循环——而不只是
+一个可选 tactic、一套引用约定或一个定理级证明器——能否成为一套小型 object–fact 语言在有实质内容且
+可读的数学中的统一默认语义？
+
+同一套分工也指向一种双路径验证架构：常规交互路径可以保留被提交事实所在的抽象层级，
+主要为局部证明邻域付出成本；另一条审计路径则可以把记录下来的验证路线降为基础层 proof term，
+交给更独立的内核检查。第一条路径目前是一项架构上的性能假设，而不是已有 benchmark 支持的
+“在所有情况下都更快”的结论。
+
+这样看，Litex 与常见 Lean tactic 工作流的差异就不是“有自动化”和“没有自动化”，而是自动化在默认源码
+契约中的位置：Lean tactic 证明先声明 Goal，再调用证明方法；Litex 的普通事实只要被写下，就会启动常规的
+局部依据重建。把这种人机分工说得更尖锐一些，就是：
 
 > **说得尖锐一点：Lean 常见的 tactic 工作流，就像强制要求你读一本数学书时从最后一页开始读，写一篇论文时从最后一页开始写——先固定最终 Goal，再向后反推前面必须补出什么。**
 
@@ -483,7 +587,10 @@ Litex 的设计承诺不应是“省略证明”，而是更严格也更朴素�
 
 *Litex 正在构建并完善 Litex-to-Lean 编译器，欢迎通过 GitHub 或邮件 litexlang@outlook.com 联系我进行深入交流。*
 
-上面的编译目标回应的是可信性问题；回到用户界面，全文反复比较的核心区别仍然是：**Litex 用户声明 *what*：“什么应当成立”；Lean tactic 用户声明 *how*：“应当怎样证明 Goal”。** Litex checker 寻找能与结果匹配的证明依据，并解释找到的验证路径。Lean 的 elaboration 过程按照用户的 tactic 指令构造对应的 proof term，Infoview 显示变化后的 Goal，kernel 检查该 term。
+上面的编译目标回应可信性问题，但不需要放弃这种接口选择。更成熟的路径应当让 Litex 用户继续声明
+*what*：“什么应当成立”，由 checker 重建局部验证路径；与此同时，导出的 Lean proof term 独立地重放并
+检查这条路径。因此，接口主张和可信性策略必须放在一起：local justification 可以在源码中保持隐含，
+前提是它所吸收的证明工作仍然可检查，并且越来越多地能够在 Litex 当前可信边界之外被重放。
 
 随着人类与 AI 的协作逐步创造和积累更多数学知识，形式化系统也应当探索不止一种书写和验证这些知识的方式。仅从默认交互方向来看，Litex 在有限意义上可以被看作“相反的 Lean”：Lean tactic 通常从最终 Goal 出发，让用户描述如何构造证明；Litex 通常从已建立的事实出发，让用户描述下一个应当得到什么，再由 checker 寻找并解释依据。这条设计路线不是要取代 Lean，而是为人和 AI 如何编写形式化数学代码，提供另一条值得实践和检验的思路。
 
