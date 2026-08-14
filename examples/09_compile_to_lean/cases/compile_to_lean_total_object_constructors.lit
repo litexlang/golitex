@@ -1,0 +1,6 @@
+# Before: pi and union lowered structurally but had no target constructors.
+# Now: both are total Litex.Object constructors with no proof arguments.
+pi = pi
+forall A, B set:
+    union(A, B) = union(A, B)
+# Boundary: constants i/e and non-binary union IR remain explicit failures.

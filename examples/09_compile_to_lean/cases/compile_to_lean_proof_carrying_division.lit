@@ -1,0 +1,11 @@
+# Before: division discarded its checked denominator-nonzero condition.
+# Now: Litex.div consumes both C-membership proofs and exact b != 0 evidence.
+forall a, b C:
+    b != 0
+    =>:
+        a / b = a / b
+forall a, b R:
+    b != 0
+    =>:
+        a / b $in R
+# Boundary: deleting or misindexing the nonzero role fails closed.

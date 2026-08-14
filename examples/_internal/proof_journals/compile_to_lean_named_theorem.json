@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "target": "examples/05_compiler_interop/compile_to_lean_named_theorem.lit",
-  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_named_theorem.lit",
-  "proof_spine": ["preserve the source theorem name", "emit ordered nested steps", "bind the complete forall and its projections"],
-  "blocks": [{"id":"B001","source_order":1,"intent":"emit one named theorem","dependencies":[],"attempts":[{"candidate":"thm one_eq_one:\n    ? forall:\n        1 = 1","result":"passed","verifier_evidence":"name, step count, complete forall and projections retained","diagnosis":"statement emitter was missing","next_change":"materialize named theorem"}],"accepted_litex":"thm one_eq_one:\n    ? forall:\n        1 = 1","reusable_lesson":"The source theorem name owns the global FactId; a duplicate fact_N theorem is unnecessary.","status":"materialized"}],
-  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release named_theorem_emits_its_source_name_and_fact_id_binding -- --nocapture","file_gate_result":"focused shape and changed-step-count gates pass; the complete 15-entry ledger compiles against real Mathlib"}
-}

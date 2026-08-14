@@ -1,9 +1,0 @@
-# Before: positive existential proof IR existed, but existential facts and
-# ordered witness projections could not be emitted.
-# Now: introduction and Classical.choose elimination replay exact FactIds.
-witness exist x R st {x = 1} from 1:
-    1 = 1
-obtain y from exist x R st {x = 1}
-y = 1
-# Boundary: exist!, negated existentials, or changed projection roles fail.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

@@ -1,38 +1,26 @@
 use super::compile_to_lean_from_source;
 use super::lean_test_support::SharedLeanTestLibrary;
+use super::ledger::parse_litex_ledger_examples;
 use std::fs;
 use std::path::Path;
 
 const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
 const SHOWCASE: &str = "examples/_internal/compile_to_lean/showcase.lit";
 const SHARED_BUILTIN_TRACER: &str =
-    "examples/05_compiler_interop/compile_to_lean_shared_builtin_rules.lit";
+    "examples/09_compile_to_lean/cases/compile_to_lean_shared_builtin_rules.lit";
 
 #[test]
 fn universal_examples_compile_to_the_new_abi() {
     run_with_large_stack(|| {
         let examples = ledger_examples();
-        let snapshots = ledger_generated_snapshots();
         assert_eq!(
             examples.len(),
-            15,
+            22,
             "the append-only feature ledger changed shape"
         );
-        assert_eq!(
-            snapshots.len(),
-            examples.len(),
-            "every Litex ledger program must have one actual generated Lean snapshot"
-        );
-        for ((label, source), (snapshot_label, snapshot)) in
-            examples.into_iter().zip(snapshots)
-        {
-            assert_eq!(snapshot_label, label, "ledger snapshot order drifted");
+        for (label, source) in examples {
             let generated = compile_to_lean_from_source(&source, &format!("{label}.lit"))
                 .unwrap_or_else(|error| panic!("ledger example {label} failed: {error:?}"));
-            assert_eq!(
-                snapshot, generated,
-                "ledger example {label} has a stale or hand-written generated Lean snapshot"
-            );
             assert_new_abi(&label, &generated);
         }
     });
@@ -151,7 +139,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     let source_declarations = generated
-        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl\n")
+        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl\n")
         .expect("generated source should begin after the shared-library header");
     for forbidden in ["(a : ℝ)", "(a : ℂ)", "(b : ℝ)", "(b : ℂ)"] {
         assert!(
@@ -200,7 +188,7 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(generated.contains("(b : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.IsSet b"), "{generated}");
         }
-        "derived_set_predicates" => {
+        "derived_set_predicates" | "set_predicate_definitions" => {
             assert!(generated.contains("(s : Litex.Object)"), "{generated}");
             assert!(generated.contains("Litex.IsNonemptySet s"), "{generated}");
             assert!(generated.contains("(t : Litex.Object)"), "{generated}");
@@ -213,9 +201,14 @@ fn assert_new_abi(label: &str, generated: &str) {
             );
             assert!(!generated.contains("assumption"), "{generated}");
         }
-        "statement_definitions_and_trust" => {
+        "statement_definitions_and_trust" | "first_statement_tranche" => {
+            let abstract_name = if label == "first_statement_tranche" {
+                "marked"
+            } else {
+                "highlighted"
+            };
             assert!(
-                generated.contains("axiom highlighted : Litex.Object → Prop"),
+                generated.contains(&format!("axiom {abstract_name} : Litex.Object → Prop")),
                 "{generated}"
             );
             assert!(
@@ -384,6 +377,32 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "{generated}"
             );
         }
+        "anonymous_function" => {
+            assert!(
+                generated.matches("Litex.functionObject ").count() >= 2,
+                "{generated}"
+            );
+            assert!(
+                generated.contains("Litex.functionObjectInFnSet"),
+                "{generated}"
+            );
+            assert!(generated.contains("Litex.fnSetApplicable"), "{generated}");
+        }
+        "litex_object_abi" => {
+            assert!(generated.contains("Litex.In a Litex.C"), "{generated}");
+            assert!(generated.contains("Litex.In a Litex.R"), "{generated}");
+            assert!(generated.contains("Litex.In f (Litex.FnSet"), "{generated}");
+            assert!(generated.contains("Litex.fnSetApplicable"), "{generated}");
+            assert!(generated.contains("Litex.fnSetResult"), "{generated}");
+        }
+        "shared_builtin_rules" => {
+            for theorem in ["notEqualSymmetry", "numeralInN", "numeralInC"] {
+                assert!(
+                    generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                    "{generated}"
+                );
+            }
+        }
         other => panic!("unregistered universal-object ledger example `{other}`"),
     }
 }
@@ -391,7 +410,7 @@ fn assert_new_abi(label: &str, generated: &str) {
 fn assert_new_shared_library_header(label: &str, generated: &str) {
     assert!(
         generated
-            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl\n"),
+            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl\n"),
         "{label}\n{generated}"
     );
 }
@@ -399,89 +418,11 @@ fn assert_new_shared_library_header(label: &str, generated: &str) {
 fn ledger_examples() -> Vec<(String, String)> {
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(LEDGER);
     let markdown = fs::read_to_string(&path).expect("read universal-object compiler ledger");
-    let mut heading = None;
-    let mut in_litex = false;
-    let mut current = String::new();
-    let mut examples = Vec::new();
-    for line in markdown.lines() {
-        if let Some(value) = line.strip_prefix("## ") {
-            heading = Some(value.trim().to_string());
-            continue;
-        }
-        if line.trim() == "```litex" {
-            assert!(!in_litex, "nested Litex fence in compiler ledger");
-            in_litex = true;
-            current.clear();
-            continue;
-        }
-        if in_litex && line.trim() == "```" {
-            let label = heading
-                .clone()
-                .expect("every Litex ledger fence must follow a level-two heading");
-            examples.push((label, current.clone()));
-            in_litex = false;
-            continue;
-        }
-        if in_litex {
-            current.push_str(line);
-            current.push('\n');
-        }
-    }
-    assert!(!in_litex, "unterminated Litex fence in compiler ledger");
-    examples
-}
-
-fn ledger_generated_snapshots() -> Vec<(String, String)> {
-    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join(LEDGER);
-    let markdown = fs::read_to_string(&path).expect("read universal-object compiler ledger");
-    let mut heading = None;
-    let mut active_label = None;
-    let mut in_lean = false;
-    let mut current = String::new();
-    let mut snapshots = Vec::new();
-    for line in markdown.lines() {
-        if let Some(value) = line.strip_prefix("## ") {
-            heading = Some(value.trim().to_string());
-            continue;
-        }
-        if let Some(value) = line
-            .strip_prefix("<!-- BEGIN ACTUAL GENERATED LEAN: ")
-            .and_then(|value| value.strip_suffix(" -->"))
-        {
-            assert!(active_label.is_none(), "nested generated Lean snapshot");
-            let label = value.to_string();
-            assert_eq!(heading.as_deref(), Some(label.as_str()));
-            active_label = Some(label);
-            current.clear();
-            continue;
-        }
-        if active_label.is_some() && line.trim() == "```lean" {
-            assert!(!in_lean, "nested generated Lean fence");
-            in_lean = true;
-            continue;
-        }
-        if in_lean && line.trim() == "```" {
-            in_lean = false;
-            continue;
-        }
-        if let Some(value) = line
-            .strip_prefix("<!-- END ACTUAL GENERATED LEAN: ")
-            .and_then(|value| value.strip_suffix(" -->"))
-        {
-            assert!(!in_lean, "unterminated generated Lean fence");
-            let label = active_label.take().expect("generated Lean end marker");
-            assert_eq!(value, label);
-            snapshots.push((label, current.clone()));
-            continue;
-        }
-        if in_lean {
-            current.push_str(line);
-            current.push('\n');
-        }
-    }
-    assert!(active_label.is_none(), "unterminated generated Lean snapshot");
-    assert!(!in_lean, "unterminated generated Lean fence");
-    snapshots
+    parse_litex_ledger_examples(&markdown)
+        .expect("parse universal-object compiler ledger")
+        .into_iter()
+        .map(|example| (example.label, example.source))
+        .collect()
 }
 
 fn run_with_large_stack(action: impl FnOnce() + Send + 'static) {

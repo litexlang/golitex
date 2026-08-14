@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_division.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_division.lit",
+  "proof_spine": ["retain two complex membership roles", "retain denominator nonzero role", "consume all three in Litex.div", "replay real closure when requested"],
+  "blocks": [{"id":"B001","source_order":1,"intent":"compile partial division","dependencies":[],"attempts":[{"candidate":"forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b","result":"passed","verifier_evidence":"three exact WD requirements retained","diagnosis":"old target division was total","next_change":"materialize proof-carrying division"}],"accepted_litex":"forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R","reusable_lesson":"Partiality evidence belongs in the target object constructor, not only in an audit theorem.","status":"materialized"}],
+  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release proof_carrying_arithmetic_replays_well_defined_fact_ids -- --nocapture","file_gate_result":"division shape, missing-role, and unchecked-Lean gates pass; the complete 15-entry ledger compiles against real Mathlib"}
+}

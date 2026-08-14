@@ -1,6 +1,6 @@
 # Install Litex
 
-Jiachen Shen and The Litex Team, updated 2026-07-24. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Try the examples in browser: https://litexlang.com/doc/Setup
 

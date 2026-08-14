@@ -29,5 +29,3 @@ forall z C, n N:
     img(z ^ (n + 1)) = re(z ^ n) * img(z) + img(z ^ n) * re(z)
 # Current behavior: modulus connects to products, sums, nonzero facts, quotient coordinates, and natural-power coordinate recurrences.
 # Boundary: ordered comparisons remain invalid on complex values themselves.
-# Evidence: target/release/litex -compact -isolated -f examples/02_builtin_math/native_complex_modulus.lit
-# Implementation: src/verify/verify_builtin_rules/complex_builtin.rs

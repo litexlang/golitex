@@ -24,8 +24,3 @@ forall a set, b set:
 #
 # Boundary: without either orientation of a non-equality fact, the rule remains
 # unknown; the executable negative boundary lives in not_equal_builtin.rs.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/not_equal_symmetry.lit
-# Compiler evidence: cargo test --release not_equal_symmetry -- --nocapture
-# Lean kernel evidence: LITEX_LEAN_PROJECT=<mathlib-project> LITEX_LAKE=<lake-path> cargo test --release generated_not_equal_symmetry_compiles_with_lean -- --ignored --nocapture
-# Implementation: src/compile_to_lean/type_context.rs, src/compile_to_lean/set_prelude.rs,
-# src/compile_to_lean/pipeline.rs, and src/verify/verify_builtin_rules/not_equal_builtin.rs

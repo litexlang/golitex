@@ -14,6 +14,4 @@ by def {1} $subset {1}
 # Boundary: the older goal block remains parser-compatible, but new source uses
 # the inline form. Only positive concrete props and supported positive builtin
 # definitions are accepted; `by def 1 = 1` remains a negative Rust regression.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/inline_by_definition.lit
-# Implementation: src/parse/by_stmt/definition_by_stmt.rs
 # and src/stmt/by_stmt/definition.rs

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/cases/compile_to_lean_anonymous_function.lit",
+  "session_command": "target/release/litex -compact -session -before examples/09_compile_to_lean/cases/compile_to_lean_anonymous_function.lit (standalone examples have no litex.config, so isolated release runner is the source gate)",
+  "proof_spine": [
+    "Freeze the parser-owned anonymous-function occurrence",
+    "Open one verifier-owned binder scope after checking parameter carriers",
+    "Retain ordered parameter and domain FactIds",
+    "Retain the body and return-carrier child IDs",
+    "Replay exactly one body-membership or parameter-subset closure route",
+    "Construct Litex.functionObject and its FnSet membership",
+    "Use that membership when the anonymous object is an application head"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Compile an identity anonymous function and a direct anonymous-head application",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "fn(x R) R {x} = fn(y R) R {y}\nforall a R:\n    fn(x R) R {x}(a) = fn(x R) R {x}(a)",
+          "result": "passed",
+          "verifier_evidence": "the source verifies; focused IR tests retain exact occurrence, binder scope and closure roles; complete generated Lean compiles against the locked Mathlib project",
+          "diagnosis": "the verifier certificate was present, but occurrence selection skipped the anonymous object and the emitter accepted only named function contracts",
+          "next_change": "retain the proof-aware body ABI boundary before freezing compound anonymous bodies"
+        }
+      ],
+      "accepted_litex": "fn(x R) R {x} = fn(y R) R {y}\n\nforall a R:\n    fn(x R) R {x}(a) = fn(x R) R {x}(a)",
+      "reusable_lesson": "An anonymous function is a proof-carrying object in its own right. Its body is not collected in the surrounding lexical scope; the owned binder scope is instantiated only inside the checked function constructor.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_anonymous_function.lit; cargo test --release anonymous_function_emits_checked_constructor_and_head_application -- --nocapture; LITEX_LEAN_PROJECT=lean cargo test --release anonymous_function_compiles_with_mathlib -- --ignored --nocapture",
+    "file_gate_result": "focused generated-shape and real-Mathlib gates passed; release source and examples gates pending"
+  }
+}

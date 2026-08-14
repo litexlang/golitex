@@ -1,3 +1,3 @@
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 7 := rfl
+example : Litex.abiVersion = 8 := rfl

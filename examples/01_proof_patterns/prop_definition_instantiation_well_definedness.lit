@@ -28,6 +28,4 @@ $traced_nonnegative(2)
 # Boundary: ordinary proof still cannot establish `$natural_only(-1)` for
 # `natural_only(n N)`. An explicit `trust` may assume that false proposition,
 # just as it could before this internal optimization.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/prop_definition_instantiation_well_definedness.lit
 # Negative regression: ordinary_prop_proof_still_requires_parameter_constraints
-# Implementation: src/infer/infer_equal_and_normal.rs

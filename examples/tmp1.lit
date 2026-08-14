@@ -1,3 +1,0 @@
-# Scratch slot for `cargo test --release compile_tmp1_to_lean -- --nocapture`.
-
-abstract_prop scratch(x)

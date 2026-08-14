@@ -1,9 +1,8 @@
 # Litex Examples
 
-This directory separates reader-facing examples from developer-only fixtures,
-regressions, drafts, and proof journals. For the complete tutorial, start with
-[`docs/Examples.md`](../docs/Examples.md); use this page when you want a runnable
-file for a particular kind of behavior.
+This directory is a catalog of Litex language, proof, mathematics, module, and
+Litex-to-Lean examples. Each public entry states the behavior it demonstrates
+and keeps the corresponding Litex source close to that description.
 
 ## Public Reading Path
 
@@ -18,46 +17,11 @@ file for a particular kind of behavior.
    [empty finite-sequence literal](03_language_features/empty_finite_sequence.lit).
 4. [`04_case_studies/`](04_case_studies/) contains larger worked proofs built
    from several interfaces.
-5. [`05_compiler_interop/`](05_compiler_interop/) records Litex-to-Lean
-   compiler acceptance examples and current boundaries.
-6. [`08_module_repository/`](08_module_repository/) is a configured module
+5. [`08_module_repository/`](08_module_repository/) is a configured module
    project that demonstrates ordered exports and submodules.
-7. [`09_compile_to_lean/`](09_compile_to_lean/) is a configured, reader-facing repository of
-   source files that exercise the current checked Litex-to-Lean slice.
+6. [`09_compile_to_lean/`](09_compile_to_lean/) pairs Litex programs with the
+   complete Lean currently emitted for the checked Litex-to-Lean slice.
 
 The numbering is a reading order, not a requirement that every number exist.
-Public `.lit` files should have descriptive names and remain independently
-runnable unless their purpose is specifically to demonstrate a configured
-module or import.
-
-## Developer Material
-
-[`_internal/`](_internal/) contains named regression fixtures, imported module
-fixtures, exploratory drafts, generated Litex-to-Lean work, and historical proof
-journals. These files may be useful to maintainers, but they are not the
-recommended reader entry point.
-
-`tmp.lit` is the single repository scratch entrypoint retained for quick local
-experiments. Do not add `tmp1.lit`, `tmp2.lit`, or other unnamed root examples;
-graduate useful work into a descriptive public or `_internal/` path. The main
-examples harness deliberately excludes `tmp.lit`.
-
-## Verification
-
-Run one standalone file with the release runner:
-
-```text
-target/release/litex -compact -isolated -runner -f examples/02_builtin_math/fundamental_comparison_builtin_rules.lit
-```
-
-Run the configured module example with:
-
-```text
-target/release/litex -compact -runner -r examples/08_module_repository
-```
-
-Run the examples and executable documentation harness with:
-
-```text
-cargo test --release run_examples -- --nocapture
-```
+Public `.lit` files have descriptive names and are self-contained unless their
+subject is specifically a configured module or import relationship.

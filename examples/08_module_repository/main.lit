@@ -9,4 +9,3 @@ have answer R = 1
 # Boundary: a file before A in [export] still cannot see z, and a local symbol
 # named z would conflict while A's bare symbols are active. Explicit A::... use
 # always bypasses the bare index.
-# Evidence: target/release/litex -compact -runner -f examples/08_module_repository/main.lit

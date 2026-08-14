@@ -16,5 +16,3 @@ by cases:
 #
 # Boundary: an empty case whose assumption does not prove every goal still fails;
 # the executable negative regression lives in `proof_control_and_choice.rs`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bodyless_by_cases.lit
-# Implementation: src/parse/by_stmt/cases_by_stmt.rs

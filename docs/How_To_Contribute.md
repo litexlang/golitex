@@ -1,6 +1,6 @@
 # How to Contribute to Litex
 
-Jiachen Shen and The Litex Team, 2026-06-02. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Markdown source: https://github.com/litexlang/golitex/blob/main/docs/How_To_Contribute.md
 

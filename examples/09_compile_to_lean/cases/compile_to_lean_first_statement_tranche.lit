@@ -1,0 +1,36 @@
+# Tracer: the first statement tranche compiles declarations, a concrete prop,
+# an object equality definition, definition folding, and explicit trust.
+#
+# Before (Litex verified, but strict To-Lean emission stopped):
+# abstract_prop marked(x)
+# prop is_zero(x R):
+#     x = 0
+# $is_zero(0)
+# have named_zero R = 0
+# by def $is_zero(named_zero)
+# trust $marked(named_zero)
+# $marked(named_zero)
+# Former To-Lean behavior: `prop` was present in statement IR but the
+# universal-object emitter rejected it before reaching `have` or `by def`.
+#
+# Now:
+abstract_prop marked(x)
+
+prop is_zero(x R):
+    x = 0
+
+$is_zero(0)
+
+have named_zero R = 0
+by def $is_zero(named_zero)
+
+trust $marked(named_zero)
+$marked(named_zero)
+
+# Current behavior: `is_zero` is a Lean definition containing the `R`
+# parameter requirement and equality clause. Both an ordinary prop fact and
+# explicit `by def` replay checked definition children; `named_zero` is one
+# `Litex.Object`; only `$marked(named_zero)` introduces a target axiom.
+#
+# Boundary: bodyless `prop P(x R)` and `trust have ...` remain rejected by
+# strict To-Lean. Function-valued `have fn ... = ...` is a later tranche.

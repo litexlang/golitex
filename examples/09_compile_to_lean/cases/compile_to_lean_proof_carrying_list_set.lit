@@ -1,0 +1,16 @@
+# Before: finite set literals retained checked child and pairwise WD evidence,
+# but the target constructor did not consume the exact indexed matrix.
+# Now: `Litex.listSet` receives source-ordered children and every pair proof.
+# Boundary: missing, duplicated, reversed, or retargeted pair roles fail closed.
+
+forall a, b set:
+    a != b
+    =>:
+        {a, b} = {a, b}
+
+forall a, b, c set:
+    a != b
+    a != c
+    b != c
+    =>:
+        {a, b, c} = {a, b, c}

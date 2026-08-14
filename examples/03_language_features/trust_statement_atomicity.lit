@@ -28,7 +28,3 @@ trust have denominator R:
 # current source run. A persistent REPL may continue with its unchanged parent
 # environment, and an earlier, separately successful statement remains committed.
 # The executable failure and rollback checks live in
-# src/main_test/lit_file_runner_tests/runtime_regression_tests/proof_control_and_choice.rs.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/trust_statement_atomicity.lit
-# Implementation: src/execute/exec_trust_stmt.rs and
-# src/execute/exec_trust_have_stmt.rs

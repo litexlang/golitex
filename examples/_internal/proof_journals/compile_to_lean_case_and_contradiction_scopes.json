@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "target": "examples/05_compiler_interop/compile_to_lean_case_and_contradiction_scopes.lit",
-  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_case_and_contradiction_scopes.lit",
-  "proof_spine": ["emit coverage", "bind each case FactId locally", "bind the reverse assumption locally", "close with the retained contradiction pair"],
-  "blocks": [{"id":"B001","source_order":1,"intent":"replay branch and contradiction scopes","dependencies":[],"attempts":[{"candidate":"by cases:\n    ? 1 = 1\n    case 1 = 1\nby contra:\n    ? 2 = 2\n    impossible 2 != 2","result":"passed","verifier_evidence":"case and reverse-assumption FactIds retained","diagnosis":"proof emitter lacked local scopes","next_change":"materialize both scope forms"}],"accepted_litex":"by cases:\n    ? 1 = 1\n    case 1 = 1\nby contra:\n    ? 2 = 2\n    impossible 2 != 2","reusable_lesson":"Proof-local FactIds must never be registered in the surrounding environment.","status":"materialized"}],
-  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release case_and_contradiction_scopes_replay_local_fact_ids -- --nocapture","file_gate_result":"focused scope and wrong-slot gates pass; the complete 15-entry ledger compiles against real Mathlib"}
-}

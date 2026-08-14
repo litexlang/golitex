@@ -9,10 +9,6 @@ reading path.
 - `drafts/` contains exploratory Litex developments whose names state the
   mathematical or diagnostic topic instead of using `tmp*` names.
 - `compile_to_lean/` contains inputs used while developing generated Lean output.
-- `proof_journals/` preserves proof-attempt evidence associated with example
-  work; it is not input to the Litex runner.
 
-The release examples harness still syntax- and verification-checks `.lit`
-files under this directory unless a more specific runner owns the artifact.
-Public documentation should link to a reader-facing example whenever one
-exists.
+These files support implementation and regression coverage; they are not part
+of the public reading path.

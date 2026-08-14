@@ -1,6 +1,6 @@
 # Litex: The Formal Language Where Math Verifies Itself
 
-Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Website: https://litexlang.com/doc/Litex_Blueprint
 
@@ -121,6 +121,13 @@ Along these two axes, Litex's default interaction runs in the opposite direction
    > A complete LEGO instruction manual contains two kinds of information: first, how to perform the next step; and second, what the entire partially assembled model should look like after that step. Lean tactic source primarily records the first kind—how to manipulate the proof state next (continuing the previous analogy, it records how we take the model apart at this step). Litex source primarily records the second—what mathematical fact has been established by that step of reasoning (in the same analogy, it records what we have assembled at this step).
 
 These two analogies describe the center of gravity of the default interfaces, not an absolute capability boundary. Lean's mechanism provides a highly flexible and general proof-programming environment. Litex deliberately chooses a narrower default interaction, aiming to make it easier for newcomers to begin a proof while keeping the source closer to ordinary textbook mathematics. Lean also supports forward reasoning, and Litex also provides explicitly goal-directed proof forms. The comparison and five design goals below develop the similarities, differences, and tradeoffs between these two workflows.
+
+> **Comparison note.** Lean remains the running comparison because it makes
+> the Goal-first/fact-first contrast especially concrete. References below to
+> Mizar, Isabelle/Isar, Rocq, ACL2, and Naproche are retrospective design-space
+> comparisons: Litex was designed independently rather than derived from these
+> systems. They locate neighboring ideas and the resulting differences; they
+> are not claims of direct intellectual influence.
 
 ## A Small but Complete Comparison: Uniqueness of the Identity in a Group
 
@@ -251,6 +258,37 @@ When doing mathematics, people often begin by recognizing a pattern: the current
 
 Litex therefore places verified facts in the current context and tries to match and substitute them. A known `forall` fact can be instantiated when its parameter conditions are satisfied, and a known equality can help match a larger expression. This is not “guessing a proof”: every accepted result must still pass the rule and context checks. Litex retains named theorems and explicit `by thm` invocations when a result is large, when checking it would be expensive, or when its dependencies should remain visible to the reader.
 
+#### Verification at the Level Where Mathematics Is Written
+
+Much of working mathematics proceeds by using established facts at the
+current level of abstraction. In the `Group` example, the step
+`identity = G.mul(G.one, identity)` is checked against the identity laws at
+that same mathematical level. On its ordinary verification path, Litex does
+not first require that local step to be lowered into a foundational proof
+term: it tries the relevant fact instances, equality replacements,
+definitions, and bounded mathematical rules directly.
+
+This differs from Lean's acceptance path, even though Lean source can also be
+high-level. Lean elaboration translates user-facing syntax and tactic results
+into [terms in its core type
+theory](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/),
+and the kernel checks those terms. Lean core terms can retain defined and
+opaque constants, so this does not mean that Lean fully unfolds the entire
+history of every mathematical concept on each use. The narrower contrast is
+that routine Litex verification can finish once a trusted high-level route has
+accepted the fact, without first materializing a complete kernel proof term
+for that instance.
+
+The resulting performance hypothesis concerns *foundational depth*, not
+constant-time verification. Litex is intended to make routine interactive
+cost track the breadth of the local proof neighborhood—the number, size, and
+ambiguity of relevant facts and rules—more than the fact's distance from the
+foundations. Search branching, context size, expression size, computation,
+and recursive rule premises can still make verification expensive. Whether
+this architecture yields a substantial speed advantage over Lean for a given
+class of mathematics is therefore a benchmark question, not a conclusion
+established by the language design alone.
+
 In the compiler's design model, every successful verification corresponds to a recursively structured proof route that should, in principle, be recordable in full. The Litex-to-Lean compiler aims to translate that route into a Lean proof term and submit it to the Lean kernel for an independent check.
 
 <details>
@@ -305,6 +343,20 @@ argument is stated as `identity = G.mul(G.one, identity) = G.one`. The checker
 finds the relevant identity-law instances and equality direction, so the
 source records what should hold while the verification route supplies why.
 
+> **Retrospective comparison.** Local support search is not unique to Litex:
+> [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/),
+> [Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html),
+> and [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) expose it
+> through explicit tactics or proof methods;
+> [Mizar](https://mizar.uwb.edu.pl/project/mizman.pdf) has empty
+> justifications; [ACL2](https://acl2.org/doc/index-seo.php?xkey=ACL2____DEFTHM)
+> can attempt theorem events without hints; and
+> [Naproche](https://naproche.github.io/) checks controlled-natural-language
+> proof steps with automated theorem provers. Litex's narrower hypothesis is
+> that bounded, fact-triggered local justification can be the ordinary default
+> semantics of mathematical statements, with accepted facts committed back to
+> the context and their provenance exposed.
+
 ### 2. Present Set-Theoretic Objects at the Surface Instead of Requiring Users to Learn Type Universes First
 
 Once the division of labor between the user and the checker is clear, the next question is what kinds of mathematical objects users encounter directly in the source.
@@ -317,6 +369,18 @@ The `Group` example makes this set-theoretic surface concrete: `s nonempty_set` 
 the carrier, `identity s` states membership, and `G &Group<s>` places the
 structure on that set. The carrier constraints remain explicit without first
 presenting them as a user-managed universe hierarchy.
+
+> **Retrospective comparison.** A set-theoretic presentation is not a Litex
+> novelty: [Mizar's library](https://wiki.mizar.org/library/) is based on
+> Tarski–Grothendieck set theory, while
+> [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) and
+> [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html)
+> expose dependent type-theoretic cores, and
+> [Isabelle/HOL](https://isabelle.in.tum.de/website-Isabelle2024/dist/library/Doc/Isar_Ref/HOL_Specific.html)
+> uses polymorphic higher-order logic. Litex's question is specifically about
+> the user-facing object interface: can a small, membership-centered,
+> set-theoretic surface cover substantial mathematics without requiring users
+> to manage type universes first?
 
 ### 3. Shape the Syntax Around Mathematical Reasoning, Not Functional Programming
 
@@ -331,6 +395,14 @@ In the `Group` declaration, multiplication is written as the binary function
 the familiar mathematical arity instead of requiring the user-facing syntax
 to present multiplication as a curried chain of unary functions.
 
+> **Retrospective comparison.** Readable, declarative mathematical syntax also
+> has important predecessors: Mizar organizes formal articles as sequences of
+> mathematical statements and justifications, Isabelle/Isar provides
+> structured declarative proofs, and Naproche checks controlled natural
+> language. Litex's more specific bet is that one compact object–fact syntax
+> can let a meaningful mathematical statement double as its routine
+> verification request.
+
 ### 4. Preserve Rigor While Remaining Readable and Accessible
 
 A more natural surface for objects and proofs matters only if it does not weaken rigor.
@@ -343,6 +415,24 @@ The `Group` snippet passes only after the runner checks its fields, carrier
 memberships, law instances, and both links of the equality chain. It contains
 no `trust`; any such statement would instead be an explicit addition to the
 trusted boundary, alongside the checker and its builtin and inference rules.
+
+The intended fast path and this trusted boundary are two sides of the same
+choice. Litex can stop after a high-level verification route is accepted
+because the implementations of the rules on that route are trusted. Lowering
+the recorded route into a Lean proof term and checking it with the Lean kernel
+reintroduces a slower but more independent audit path. This architecture makes
+low-latency local checking plausible; it does not by itself establish that
+current Litex is universally faster.
+
+> **Retrospective comparison.**
+> [Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
+> and [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html)
+> sharply separate sophisticated proof construction from kernels that check
+> the resulting terms. Litex currently places many mathematical builtin and
+> inference rules inside its trusted boundary, so readability alone is not a
+> correctness argument. Recorded proof routes, rule audits, regression tests,
+> and the Litex-to-Lean path are how this interface can seek stronger
+> independent checking.
 
 ### 5. Build Proofs Bottom-Up from Verified Facts
 
@@ -465,11 +555,65 @@ concept is defined; the candidate identity laws later enlarge the context;
 only then is the uniqueness chain checked. That sequence is the same
 bottom-up pattern illustrated by the calculation and inclusion examples.
 
+> **Retrospective comparison.** Mizar and Isar already support forward,
+> declarative proof text; ACL2 grows a reusable theorem database; and Naproche
+> checks successive mathematical steps. Bottom-up growth alone is therefore
+> not the claim. Litex tests the combination in which an ordinary fact is the
+> context-growing executable unit, local justification begins without a
+> separate method invocation, and explicit proof structure appears when
+> routine reconstruction reaches its boundary.
+
 ## Conclusions
 
 Litex should not promise to “omit proof.” Its intended promise is both stricter and more modest: let users first write the mathematical facts they actually mean, then let the machine expose the verification, provenance, and boundaries clearly.
 
-From that promise, the tension between the two approaches can be stated more sharply.
+In operational terms, that promise has a precise meaning:
+
+> **In Litex, local justification is not a tactic that users invoke; it is the
+> default operational meaning of an ordinary mathematical fact.**
+
+When a user writes a bare fact, that line serves two roles at once: it is the
+mathematical statement the author wants to retain, and it is a request for the
+checker to reconstruct routine support from the current checked context. That
+double role unfolds into one complete cycle:
+
+1. **At the surface,** an ordinary fact triggers verification without first
+   requiring a named tactic, theorem citation, or proof term.
+2. **Inside the checker,** relevant known facts, equalities, definitions, and
+   applicable universal facts are considered through bounded,
+   mathematics-aware routes.
+3. **On success,** the fact and its ordinary inferred consequences immediately
+   enlarge the context for what follows.
+4. **In the output,** the checker can expose the concrete route and provenance
+   that the concise source leaves implicit.
+5. **At the boundary of routine reconstruction,** explicit mathematical
+   processes such as witnesses, cases, contradiction, induction, and named
+   routes remain available.
+
+Read together, these are not five independent conveniences. They define one
+default division of labor: the author supplies the mathematical proof spine;
+the checker supplies its routine local connections; and explicit proof
+structure appears when the mathematics actually demands it. That division of
+labor—not local automation in isolation—is the intended interface distinction.
+The retrospective comparisons above show that the individual mechanisms have
+precedents. Litex therefore advances a narrower, more architectural
+hypothesis: can the entire fact-triggered cycle—not merely an optional tactic,
+a citation convention, or a theorem-level prover—serve as the uniform default
+semantics of a small object-and-fact language across substantial, readable
+mathematics?
+
+The same division of labor suggests a two-path validation architecture. The
+routine interactive path can preserve the abstraction level of the submitted
+fact and pay primarily for its local proof neighborhood; a separate audit path
+can lower the recorded route into a foundational proof term for independent
+checking. The first path is an architectural performance hypothesis, not yet
+a benchmark-backed claim of universal speed superiority.
+
+Seen this way, the contrast with the familiar Lean tactic workflow is not
+automation versus no automation. It is where automation sits in the default
+source contract: a Lean tactic proof states a Goal and invokes a proof method;
+an ordinary Litex fact triggers routine local justification without a separate
+invocation. That difference in the division of labor can be put more sharply.
 
 > **Put sharply: the familiar Lean tactic workflow can feel like being forced to read a mathematics book from its last page, or to write a paper from its last page—first fix the final Goal, then work backward to reconstruct everything that must come before it.**
 
@@ -483,12 +627,13 @@ When Litex moves concrete proof operations into the checker, however, the pressu
 
 For this reason, Litex needs to accumulate experience toward a compilation path to Lean. The current repository has a deliberately partial compiler: it retains stable fact identities and recursive proof evidence, supports a selected object and builtin-rule subset, and now preserves the declaration and temporary-premise scopes of explicit-value `have`, checked bare selection such as `have x R`, positive `witness exist` plus `obtain`/body-style existential extraction, binary `by cases`, atomic `by contra`, source-named theorems, checked named-function definitions, set builders, and one tuple-construction recipe. Selection and extraction consume the verifier's exact existential certificates through Lean's `Exists.choose` and `choose_spec`; they do not become invented opaque constants. Unsupported verified statements are reported and omitted transactionally instead of becoming `sorry` or implicit axioms. It is still far from a compiler for general Litex statements or builtin rules. The long-term target remains to check source with Litex, generate an equivalent Lean statement and proof, and have Lean check that result independently.
 
-The compilation target above addresses the question of trust. Returning to the user interface, the core distinction repeated throughout this document remains that **Litex users state *what* should hold, while
-Lean tactic users state *how* the Goal should be proved.** The Litex checker
-searches for proof support that matches the result and explains the verification
-route it found. Lean tactic elaboration follows the user's proof instructions to
-construct the corresponding proof term; the server displays the resulting
-Goals, and the kernel checks the term.
+The compilation target above addresses trust without giving up the interface
+choice. A mature path would let Litex users continue to state *what* should
+hold and let the checker reconstruct the local route, while an exported Lean
+proof term independently replays and checks that route. The interface thesis
+and the trust strategy therefore belong together: local justification can
+remain implicit in the source only if the work it absorbs remains inspectable
+and becomes increasingly replayable outside Litex's present trusted boundary.
 
 As collaboration between humans and AI gradually creates and accumulates more
 mathematical knowledge, formal systems should explore more

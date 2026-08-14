@@ -24,5 +24,3 @@ thm exp_injective_without_then_echo:
 # then-clause. This also covers a premise-free `? forall`, where source omits
 # `=>:` but the single indented fact is still the sole then-clause. Keep
 # distinct bridge facts and proof steps used by later goals.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/single_then_echo_elision.lit
-# Implementation: src/execute/exec_def_thm_stmt.rs

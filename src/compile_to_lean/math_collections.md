@@ -47,7 +47,7 @@ Current hole: many source object constructors still lack universal-object
 lowering. Unsupported constructors fail closed.
 
 The ABI is packaged once in `lean/Litex/Core.lean`; generated files obtain it
-through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 7`. The
+through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 8`. The
 nearest rejected packaging repeats this declaration block in every generated
 file, allowing theorem bodies and semantic primitives to drift independently.
 
@@ -111,7 +111,7 @@ def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
 always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
-it is not an independent classifier. ABI version 7 implements this definition
+it is not an independent classifier. ABI version 8 implements this definition
 directly and removes the redundant sethood conjuncts from the two derived
 predicates.
 

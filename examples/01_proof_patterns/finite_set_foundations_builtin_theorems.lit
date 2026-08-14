@@ -29,5 +29,3 @@ $bijective(closed_range(1, finite_set_size({1, 2})), {1, 2}, index)
 # bijectivity, and arbitrary subset chains do not establish finiteness unless
 # the corresponding builtin theorem is called explicitly.
 #
-# Evidence:
-# target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/finite_set_foundations_builtin_theorems.lit

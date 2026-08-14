@@ -9,5 +9,3 @@ fn(x R) R {x}(1 / 2) = 1 / 2
 # Current behavior: a body that belongs to its declared return set remains well-defined.
 #
 # Boundary: fn(x R) N {x} is rejected before application because x $in N is not verified.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/_internal/regression/anonymous_fn_return_set_validation.lit
-# Implementation: src/verify/verify_obj_well_defined/sets.rs

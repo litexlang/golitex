@@ -24,5 +24,3 @@ thm natural_coprime_means_gcd_one:
 # Boundary: arguments known only to belong to Z or R remain ill-defined, and
 # negative integer literals remain rejected; executable Rust regressions check
 # those boundaries.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/coprime_on_natural.lit
-# Implementation: src/verify/verify_builtin_rules/coprime_builtin.rs

@@ -12,7 +12,7 @@ answers four questions for every declaration currently exposed by
 4. Is it a settled semantic boundary, a target representation device, an
    extension beyond the book, or known implementation drift?
 
-The reference covers ABI version 7. At this version, `Litex.Core` contains 59
+The reference covers ABI version 8. At this version, `Litex.Core` contains 61
 Lean `axiom` declarations and `Litex.BuiltinRules` contains 24 ordinary Lean
 theorems. The number of declarations is not a measure of foundational
 minimality: several declarations are fields of one intended model that have
@@ -50,7 +50,7 @@ The correspondence labels used below have precise meanings:
 - **Engineering:** the declaration versions or packages the compiler ABI and
   has no mathematical source claim.
 - **Current drift:** the declaration is a known temporary mismatch between the
-  decided source semantics and ABI version 7.
+  decided source semantics and ABI version 8.
 
 These labels prevent a citation from doing more work than it really does.
 *Analysis I* motivates the mathematical interfaces; it does not prove that
@@ -108,7 +108,7 @@ book arithmetic concept
 ```
 
 This tracer does not show that every Litex arithmetic rule has been ported.
-ABI version 7 retains the proof-carrying `div` pattern, with an
+ABI version 8 retains the proof-carrying `div` pattern, with an
 additional denominator-nonzero proof. Power, transcendental operations, and
 many arithmetic certificates remain outside the current target coverage.
 
@@ -170,7 +170,7 @@ positive-natural reflection and `positiveRealMembership` theorems, while
 bridges for source order and carrier predicates, not a claim that all ordered
 number-system laws have been ported.
 
-ABI version 7 declares the refined numeric objects but does not yet include
+ABI version 8 declares the refined numeric objects but does not yet include
 their full membership-characterization laws. They should therefore be read as
 opaque ABI placeholders whose intended source meanings are listed above, not
 as a completed Lean development of every refined carrier.
@@ -222,17 +222,19 @@ definitions and proofs without changing their public mathematical contract.
 | Declaration | Lean form | Analysis I anchor | Exact role and boundary |
 | --- | --- | --- | --- |
 | `arg` | `def` | None; compiler machinery. | Reads a zero-based argument from the target list. Its default value is irrelevant only when the emitted arity proof guarantees the requested position exists. |
-| `FnSpec` with `arity`, `requirements`, and `range` | `structure` | Definition 3.3.1 (vertical-line/function contract). | Packages one exact Litex application layer: number of arguments, their factual requirements, and the result-set object. The list representation is target machinery, not Tao's definition. |
+| `FnSpec` with `arity`, `requirements`, and proof-dependent `range` | `structure` | Definition 3.3.1 (vertical-line/function contract). | Packages one exact Litex application layer. `range args hLength hRequirements` may consume the same ordered WD evidence as the body, so a partial source range is never totalized merely to fit Lean. The list and proof telescope are target machinery, not Tao's definition. |
 | `FnSet` | `axiom` | Axiom 3.10, the set `Y^X` of functions from `X` to `Y`. | Turns a target function specification into a source-level function-space object. |
 | `Applicable` | `axiom` | Definition 3.3.1 requires an input to be in the function's domain; exact proposition is a representation bridge. | Records that one function object can be applied to one exact argument list. |
 | `apply` | `axiom` | Definition 3.3.1 and the notation `f(x)`. | Produces the application object only after receiving `Applicable` evidence. Nested Litex applications remain separate target layers. |
 | `IsChoiceFunctionFor` | `def` | Definition 8.4.1 (infinite products as choice functions) and Axiom 8.1 (choice). | Defines the pointwise condition that a chooser selects a member of each family value. The retained `_familySet` argument preserves the source predicate's public arity; its carrier obligations are checked by Litex well-definedness rather than repeated in this proposition. This definition is not itself the axiom of choice. |
 | `CoeFun Object` | `instance` | Function-application notation in Section 3.3. | Lets Lean print and elaborate `f args proof` using `apply`; it is syntax support, not an assertion that every object is callable. |
 | `fnSetApplicable` | `axiom` | Definition 3.3.1 and Axiom 3.10. | From exact function-space membership, arity, and requirements, constructs the applicability certificate consumed by `apply`. |
-| `fnSetResult` | `axiom` | Definition 3.3.1: a function sends each domain input to its declared codomain. | Proves that a certified application belongs to the specification's result-set object. |
-| `functionObject` | `axiom` | Definition 3.3.1. | Constructs a named source function only from its exact `FnSpec`, body, and pointwise checked range proof. |
+| `fnSetResult` | `axiom` | Definition 3.3.1: a function sends each domain input to its declared codomain. | Proves that a certified application belongs to `range args hLength hRequirements`, preserving the exact arity and requirements evidence. |
+| `functionObject` | `axiom` | Definition 3.3.1. | Constructs a source function only from its exact `FnSpec`, a body that consumes arity/requirements evidence, and the pointwise checked range proof. |
 | `functionObjectInFnSet` | `axiom` | Axiom 3.10. | Exposes the constructed function's exact function-space membership as the stored source fact. |
-| `functionObject_apply` | `axiom` | Definition 3.3.1 and function evaluation. | Replays the source defining equality for an applicable argument list; unavailable defining `FactId`s remain compiler errors. |
+| `functionObjectApplicableLength` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact arity certificate from an already named `Applicable` proof so definition replay can call the proof-dependent body. |
+| `functionObjectApplicableRequirements` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact ordered requirements certificate from an already named `Applicable` proof. |
+| `functionObject_apply` | `axiom` | Definition 3.3.1 and function evaluation. | Replays the source defining equality using the two applicability projections; unavailable defining `FactId`s remain compiler errors. |
 
 `IsChoiceFunctionFor` should not be confused with a proof of Axiom 8.1. It
 only defines what a displayed chooser must satisfy. A source use of the axiom

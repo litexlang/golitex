@@ -14,4 +14,3 @@ by for forall i1 range(0, 3) => {i1 < 3}
 #
 # Boundary: an inline goal cannot also own an indented proof body; use the existing
 # `by extension:`, `by enumerate finite_set:`, or `by for:` goal-block form instead.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/inline_by_proof_methods.lit

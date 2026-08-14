@@ -1,8 +1,0 @@
-# Before: SetBuilder lowered with a binder SymbolId, but no Lean constructor
-# protected that identity from capture.
-# Now: the target predicate uses a SymbolId-derived local binder.
-have S set = {x R: x = x}
-S = S
-# Boundary: changing the binder identity changes the retained value/check and
-# is rejected; the local x never enters the outer context.
-# Evidence: focused Rust and ignored real-Mathlib gates are recorded in the ledger.

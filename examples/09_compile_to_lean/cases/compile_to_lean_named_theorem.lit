@@ -1,0 +1,7 @@
+# Before: NamedTheorem IR retained its source name and proof-step order but
+# statement emission was absent.
+# Now: the named Lean theorem owns the complete forall FactId.
+thm one_eq_one:
+    ? forall:
+        1 = 1
+# Boundary: changed proof-step count/order fails before emission.

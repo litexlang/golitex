@@ -1,0 +1,30 @@
+# Tracer: a trusted forall proves a later atomic fact by exact FactId replay.
+#
+# Before (Litex verified, but generated Lean failed):
+# abstract_prop p(x)
+# trust forall x R:
+#     $p(x)
+# $p(1)
+# Former generated proof:
+# exact (fact3 1 Litex.BuiltinRules.numeralInR 1)
+# Former rejection: Lean treated `numeralInR` itself as the membership proof
+# and rejected it before its numeral argument could be applied.
+#
+# Now (verified and compiled):
+abstract_prop p(x)
+
+trust forall x R:
+    $p(x)
+
+$p(1)
+
+# Current behavior: `p` is one uninterpreted Lean predicate, the explicit
+# trusted forall is one target axiom, and `$p(1)` is a theorem obtained by
+# applying that axiom to `1` and the parenthesized verifier-owned proof
+# `(Litex.BuiltinRules.numeralInR 1)` of `1 $in R`.
+#
+# Rejected boundary, executed separately by the focused Rust regression:
+# abstract_prop q(x)
+# $q(1)
+# Without a stored forall FactId, To-Lean must not invent an axiom or proof.
+#

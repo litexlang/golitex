@@ -1,0 +1,55 @@
+# Tracer: the one target object type lives at `Litex.Object`.
+#
+# Before this namespace migration, each generated Lean file began with:
+#
+#   axiom LitexObject : Type
+#
+#   namespace Litex
+#
+# Now the shared `Litex.Core` module owns:
+#
+#   namespace Litex
+#
+#   axiom Object : Type
+#
+# while every generated target begins with:
+#
+#   import Litex.BuiltinRules
+#
+#   example : Litex.abiVersion = 5 := rfl
+#
+# Source declarations bind `(a : Litex.Object)` supplied by that import. No
+# global `LitexObject` compatibility alias or repeated core is emitted.
+#
+# Before this ABI rewrite, To-Lean bound `a` to the native Lean type `Complex`
+# because the source parameter was `a C`. After the proof derived `a $in R`,
+# the old emitter still rejected `f(a)` as a Complex-to-Real downcast.
+#
+# Current contract: `a`, `f`, every set, and every function-space object have
+# Lean type `Litex.Object`. The source binders retain these independent facts:
+#
+#   Litex.In a Litex.C
+#   Litex.In f (Litex.FnSet ...)
+#   Litex.In a Litex.R
+#
+# Equality transport proves the third fact from `a = 1` and `1 $in R`. The
+# exact retained proof of `a $in R` is then used to build `Applicable f [a]`;
+# no Lean retyping, widening, downcast, or inferred membership is involved.
+forall a C, f fn(x R) R:
+    a = 1
+    =>:
+        1 $in R
+        a $in R
+        f(a) = f(a)
+
+# Rejected boundary (kept as a comment so this positive tracer verifies):
+#
+# forall a C, f fn(x R) R:
+#     f(a) = f(a)
+#
+# The second program has no proof that `a $in R`. To-Lean must not manufacture
+# an application certificate merely because both objects have target type
+# `Litex.Object`.
+# Namespace boundary: this migration does not change Litex source syntax,
+# membership semantics, or the missing-domain rejection above.
+#

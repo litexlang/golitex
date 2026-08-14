@@ -19,5 +19,3 @@ forall x R:
 #
 # Boundary: omitting the shared x != 0 premise is rejected; the executable
 # negative regression is forall_iff_well_definedness_checks_both_directions_independently.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/forall_iff_well_definedness.lit
-# Implementation: src/verify/verify_fact_well_defined.rs

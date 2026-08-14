@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "target": "examples/05_compiler_interop/compile_to_lean_proof_carrying_list_set.lit",
-  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_proof_carrying_list_set.lit",
-  "proof_spine": ["retain ordered child objects", "retain one inequality for each i < j", "assemble List.Pairwise", "construct Litex.listSet"],
-  "blocks": [{"id":"B001","source_order":1,"intent":"compile proof-carrying finite set literals","dependencies":[],"attempts":[{"candidate":"forall a, b set:\n    a != b\n    =>:\n        {a, b} = {a, b}","result":"passed","verifier_evidence":"ordered constructor children and pairwise roles retained","diagnosis":"target list-set constructor previously omitted canonical distinctness","next_change":"materialize proof-carrying list set"}],"accepted_litex":"forall a, b set:\n    a != b\n    =>:\n        {a, b} = {a, b}","reusable_lesson":"Indexed constructor obligations must preserve source positions even when child objects are equal or cached.","status":"materialized"}],
-  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release proof_carrying_list_set_replays_indexed_well_definedness -- --nocapture","file_gate_result":"focused shape, missing-role, and unchecked-Lean gates pass; the complete 15-entry ledger compiles against real Mathlib"}
-}

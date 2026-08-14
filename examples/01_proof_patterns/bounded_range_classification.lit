@@ -54,4 +54,3 @@ claim:
 # range. It does not enumerate arbitrary or unbounded sets. Case equality does
 # not always rewrite through a compound expression automatically, so rejected
 # residues retain the smallest explicit substituted calculation.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/bounded_range_classification.lit

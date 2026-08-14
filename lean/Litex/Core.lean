@@ -22,7 +22,7 @@ extensions beyond the book, trust boundaries, and known implementation drift.
 namespace Litex
 
 /-- Version of the shared target ABI expected by generated Litex proofs. -/
-def abiVersion : Nat := 7
+def abiVersion : Nat := 8
 
 axiom Object : Type
 
@@ -187,7 +187,13 @@ def arg (args : List Object) (index : Nat) : Object :=
 structure FnSpec where
   arity : Nat
   requirements : List Object → Prop
-  range : List Object → Object
+  /-- The result carrier may itself require the exact ordered evidence that
+  made the source application well-defined. -/
+  range :
+    (args : List Object) →
+    args.length = arity →
+    requirements args →
+    Object
 
 axiom FnSet : FnSpec → Object
 axiom Applicable : Object → List Object → Prop
@@ -225,31 +231,83 @@ axiom fnSetResult
     (hf : In f (FnSet spec))
     (hLength : args.length = spec.arity)
     (hRequirements : spec.requirements args) :
-    In (f args (fnSetApplicable hf hLength hRequirements)) (spec.range args)
+    In (f args (fnSetApplicable hf hLength hRequirements))
+      (spec.range args hLength hRequirements)
 
 /-- A checked source function object. The constructor consumes the exact
 pointwise range proof retained by the Litex verifier. -/
 axiom functionObject
     (spec : FnSpec)
-    (body : List Object → Object)
-    (closed : ∀ args, args.length = spec.arity → spec.requirements args →
-      In (body args) (spec.range args)) : Object
+    (body :
+      (args : List Object) →
+      args.length = spec.arity →
+      spec.requirements args →
+      Object)
+    (closed : ∀ args hLength hRequirements,
+      In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements)) : Object
 
 axiom functionObjectInFnSet
     (spec : FnSpec)
-    (body : List Object → Object)
-    (closed : ∀ args, args.length = spec.arity → spec.requirements args →
-      In (body args) (spec.range args)) :
+    (body :
+      (args : List Object) →
+      args.length = spec.arity →
+      spec.requirements args →
+      Object)
+    (closed : ∀ args hLength hRequirements,
+      In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements)) :
   In (functionObject spec body closed) (FnSet spec)
+
+/-- Applicability of a checked function object retains the source arity
+certificate. These projections let definition replay consume the same proof
+telescope even when the caller cites an already named `Applicable` fact. -/
+axiom functionObjectApplicableLength
+    (spec : FnSpec)
+    (body :
+      (args : List Object) →
+      args.length = spec.arity →
+      spec.requirements args →
+      Object)
+    (closed : ∀ args hLength hRequirements,
+      In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements))
+    (args : List Object)
+    (_applicable : Applicable (functionObject spec body closed) args) :
+  args.length = spec.arity
+
+/-- Applicability of a checked function object retains the exact ordered
+requirements certificate used by its proof-carrying body and range. -/
+axiom functionObjectApplicableRequirements
+    (spec : FnSpec)
+    (body :
+      (args : List Object) →
+      args.length = spec.arity →
+      spec.requirements args →
+      Object)
+    (closed : ∀ args hLength hRequirements,
+      In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements))
+    (args : List Object)
+    (_applicable : Applicable (functionObject spec body closed) args) :
+  spec.requirements args
 
 @[simp] axiom functionObject_apply
     (spec : FnSpec)
-    (body : List Object → Object)
-    (closed : ∀ args, args.length = spec.arity → spec.requirements args →
-      In (body args) (spec.range args))
+    (body :
+      (args : List Object) →
+      args.length = spec.arity →
+      spec.requirements args →
+      Object)
+    (closed : ∀ args hLength hRequirements,
+      In (body args hLength hRequirements)
+        (spec.range args hLength hRequirements))
     (args : List Object)
     (applicable : Applicable (functionObject spec body closed) args) :
-  apply (functionObject spec body closed) args applicable = body args
+  apply (functionObject spec body closed) args applicable =
+    body args
+      (functionObjectApplicableLength spec body closed args applicable)
+      (functionObjectApplicableRequirements spec body closed args applicable)
 
 end
 

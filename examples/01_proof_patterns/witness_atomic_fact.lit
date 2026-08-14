@@ -22,4 +22,3 @@ obtain divisor_witness from $divides(6, 2)
 # `witness_atomic_exist_unique_fact.lit`.
 # `not exist`, abstract props, nonexistential definitions, and definitions with
 # multiple clauses remain rejected.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/witness_atomic_fact.lit

@@ -7,8 +7,6 @@
 # `forall` remains an ordinary fact form and is valid inside a `prop`
 # definition. The existential body below contains only the atomic prop fact.
 #
-# Run this acceptance example with:
-# target/release/litex -compact -isolated -runner -f examples/03_language_features/named_quantified_property.lit
 
 prop has_universal_self_equality(x R):
     forall y R:

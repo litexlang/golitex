@@ -1,0 +1,46 @@
+# Tracer: proof-carrying complex arithmetic follows the Litex WD DAG.
+#
+# Before (Litex verified, but the Lean ABI admitted unchecked operands):
+# forall a, b, c C:
+#     (a + b) + c = (a + b) + c
+# Former target shape: `Litex.add (Litex.add a b) c` could be constructed
+# without the verifier's `a $in C`, `b $in C`, or inner-sum membership facts.
+#
+# Now:
+forall a, b, c C:
+    (a + b) + c = (a + b) + c
+
+forall a, b, c C:
+    ((a - b) * c) + a = ((a - b) * c) + a
+#
+# Before division migration (Litex verified, but Lean construction was total):
+# forall a, b C:
+#     b != 0
+#     =>:
+#         a / b = a / b
+# Former target shape: `Litex.div a b` discarded the verifier's `a $in C`,
+# `b $in C`, and `b != 0` facts.
+#
+
+forall a, b C:
+    b != 0
+    =>:
+        a / b = a / b
+
+forall a, b C:
+    b != 0
+    =>:
+        (a / b) + a = (a / b) + a
+
+forall a, b R:
+    b != 0
+    =>:
+        a / b $in R
+# Current target shape: every `Litex.add/sub/mul` consumes the exact two
+# complex-membership `WellDefinedFactId`s. `Litex.div` additionally consumes
+# the exact denominator-nonzero fact. Inner result-membership helpers are
+# emitted before outer objects that cite them.
+#
+# Boundary: malformed compiler IR that deletes, duplicates, misindexes, or
+# retargets any division proof slot is rejected before Lean emission; Lean also
+# rejects a direct unchecked `Litex.div a b` application.

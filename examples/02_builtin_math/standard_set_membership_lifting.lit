@@ -26,5 +26,3 @@ forall a Z:
 # regressions are in
 # `standard_set_membership_lifting_is_target_driven_and_forward_only` and
 # `standard_set_membership_lifting_does_not_enumerate_stored_owner_sets`.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/standard_set_membership_lifting.lit
-# Implementation: src/verify/verify_builtin_rules/in_fact_builtin/structured_membership.rs

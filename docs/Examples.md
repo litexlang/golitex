@@ -26,12 +26,13 @@ experiments. It is deliberately excluded from the main examples harness.
 To inspect the exact Lean file produced for the current scratch program, run:
 
 ```bash
-cargo test --release tmp0_to_lean -- --nocapture
+cargo test --release tmp0_to_lean
 ```
 
 The command is read-only. It prints one `LITEX SOURCE` block followed by one
 `GENERATED LEAN` block; it does not append generated code to `tmp.lit` and does
-not write to an external checkout. If `tmp.lit` still contains a trailing
+not require libtest's `--nocapture` flag, and does not write to an external
+checkout. If `tmp.lit` still contains a trailing
 triple-quoted Lean snapshot from the old workflow, the command ignores that
 snapshot and compiles only the Litex source above it.
 

@@ -1,6 +1,6 @@
 # Representative Lean–Litex Example Comparisons
 
-Jiachen Shen and The Litex Team, 2026-08-06. Email: litexlang@outlook.com
+Created and maintained by Jiachen Shen.
 
 Try the examples in browser:
 https://litexlang.com/doc/Representative_Lean_Litex_Example_Comparisons

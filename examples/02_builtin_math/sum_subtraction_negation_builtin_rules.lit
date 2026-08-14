@@ -30,4 +30,3 @@ forall m, n Z:
 # must already be verified in one common additive carrier among Z, Q, R, and C.
 # Natural-valued subtraction is not totalized by this rule. Executable negative
 # regressions live in runtime_regression_tests/numeric_and_set_rules.rs.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/sum_subtraction_negation_builtin_rules.lit

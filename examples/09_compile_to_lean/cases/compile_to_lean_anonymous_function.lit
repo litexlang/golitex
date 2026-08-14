@@ -1,0 +1,23 @@
+# Tracer: anonymous functions retain and consume their verifier-owned WD scope.
+#
+# Before (Litex verified, but To-Lean did not work):
+# fn(x R) R {x} = fn(y R) R {y}
+# forall a R:
+#     fn(x R) R {x}(a) = fn(x R) R {x}(a)
+# Former behavior: emission stopped at an unsupported AnonymousFunction object;
+# the checked x-in-R binder premise and return-closure fact never reached a
+# Litex.functionObject constructor.
+#
+# Now:
+fn(x R) R {x} = fn(y R) R {y}
+
+forall a R:
+    fn(x R) R {x}(a) = fn(x R) R {x}(a)
+# Current behavior: each anonymous occurrence owns one binder scope, one exact
+# return-closure route, one functionObject, and one checked FnSet membership;
+# an applied anonymous head reuses that membership to construct Applicable.
+#
+# Boundary: fn(x R) N {x} remains rejected because x-in-N is not proved. A
+# body whose target Object term itself needs local WD proofs, such as x + 1,
+# still requires the proof-aware function-body ABI decision recorded in the
+# To-Lean status ledger.

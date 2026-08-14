@@ -1,0 +1,26 @@
+# Tracer: replay known equality symmetry and transitivity by exact FactId.
+#
+# Before (Litex verified, To-Lean did not compile):
+# forall a, b set:
+#     a = b
+#     =>:
+#         b = a
+# Former behavior: the verifier returned only `same known equality class`, so
+# To-Lean could not identify the stored equality proof behind that class.
+#
+# Now:
+forall a, b set:
+    a = b
+    =>:
+        b = a
+
+forall a, b, c set:
+    a = b
+    b = c
+    =>:
+        a = c
+# Current behavior: the compiler freezes the direct equality FactIds and emits
+# `Eq.symm` for the first theorem and `Eq.trans` for the second.
+#
+# Boundary: a missing, changed, disconnected, or child-scope-inaccessible
+# equality FactId is rejected; the emitter never rebuilds a path by text.
