@@ -400,7 +400,7 @@ def lean_mapping(entry) -> tuple[str, str]:
     ):
         return "`Eq.symm` / `Eq.trans` over exact equality `FactId` citations", "implemented"
     if text == "not-equality symmetry":
-        return "`Litex.BuiltinRules.notEqualSymmetry`", "implemented"
+        return "`Litex.Rules.notEqualSymmetry`", "implemented"
     standard_numeral_theorems = {
         "number in N": "numeralInN",
         "number in Z": "numeralInZ",
@@ -410,7 +410,7 @@ def lean_mapping(entry) -> tuple[str, str]:
     }
     if theorem := standard_numeral_theorems.get(text):
         return (
-            f"`Litex.BuiltinRules.{theorem}` for natural numeral targets only",
+            f"`Litex.Rules.{theorem}` for natural numeral targets only",
             "partial",
         )
     if (
@@ -418,7 +418,7 @@ def lean_mapping(entry) -> tuple[str, str]:
         and entry["sink"] in TYPED_LOCAL_RULE_SINKS
     ):
         return (
-            "`Litex.BuiltinRules.realAddClosure/realSubClosure/realMulClosure/realDivClosure`; "
+            "`Litex.Rules.realAddClosure/realSubClosure/realMulClosure/realDivClosure`; "
             "power and other operators remain unsupported",
             "partial",
         )
@@ -482,7 +482,7 @@ def markdown(entries, sinks, raw_constructor_count: int) -> str:
         "mathematical theorem schema.",
         "",
         "A Lean mapping is recorded only when the universal-`Litex.Object` backend",
-        "calls a theorem from the shared `Litex.BuiltinRules` module and the Lean kernel",
+        "calls a theorem from the shared `Litex.Rules` module and the Lean kernel",
         "checks that call. Generated files never repeat the theorem body. `partial` means",
         "the source site recognizes more cases than the current target theorem; `none`",
         "means no checked mapping exists yet. The deleted native-carrier adapter catalog",

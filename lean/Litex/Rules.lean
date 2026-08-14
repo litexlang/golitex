@@ -1,7 +1,7 @@
 import Litex.Core
 
 /-!
-# Checked Litex builtin rules
+# Checked Litex verifier rules
 
 This module proves concrete verifier rules from the shared `Litex.Core`
 interpretation and Mathlib. Its declarations are ordinary Lean theorems, not
@@ -9,7 +9,7 @@ additional semantic axioms. See `lean/SEMANTIC_REFERENCE.md` for their
 source-concept correspondence and exact trust boundary.
 -/
 
-namespace Litex.BuiltinRules
+namespace Litex.Rules
 
 theorem notEqualSymmetry {a b : Object} (h : a ≠ b) : b ≠ a := by
   exact Ne.symm h
@@ -95,7 +95,7 @@ theorem realInComplex {x : Object} (h : In x R) : In x C := by
   exact ⟨r, rfl⟩
 
 theorem complexAddClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.add a b ha hb) C := by
+    In (Litex.add a b) C := by
   rcases inC_iff.mp ha with ⟨a, rfl⟩
   rcases inC_iff.mp hb with ⟨b, rfl⟩
   apply inC_iff.mpr
@@ -103,7 +103,7 @@ theorem complexAddClosure {a b : Object} (ha : In a C) (hb : In b C) :
   simp
 
 theorem complexSubClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.sub a b ha hb) C := by
+    In (Litex.sub a b) C := by
   rcases inC_iff.mp ha with ⟨a, rfl⟩
   rcases inC_iff.mp hb with ⟨b, rfl⟩
   apply inC_iff.mpr
@@ -111,7 +111,7 @@ theorem complexSubClosure {a b : Object} (ha : In a C) (hb : In b C) :
   simp
 
 theorem complexMulClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.mul a b ha hb) C := by
+    In (Litex.mul a b) C := by
   rcases inC_iff.mp ha with ⟨a, rfl⟩
   rcases inC_iff.mp hb with ⟨b, rfl⟩
   apply inC_iff.mpr
@@ -120,7 +120,7 @@ theorem complexMulClosure {a b : Object} (ha : In a C) (hb : In b C) :
 
 theorem complexDivClosure {a b : Object}
     (ha : In a C) (hb : In b C) (hb0 : b ≠ 0) :
-    In (Litex.div a b ha hb hb0) C := by
+    In (Litex.div a b) C := by
   rcases inC_iff.mp ha with ⟨a, rfl⟩
   rcases inC_iff.mp hb with ⟨b, rfl⟩
   apply inC_iff.mpr
@@ -129,7 +129,7 @@ theorem complexDivClosure {a b : Object}
 
 theorem realAddClosure {a b : Object}
     (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.add a b haC hbC) R := by
+    In (Litex.add a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
@@ -138,7 +138,7 @@ theorem realAddClosure {a b : Object}
 
 theorem realSubClosure {a b : Object}
     (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.sub a b haC hbC) R := by
+    In (Litex.sub a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
@@ -147,7 +147,7 @@ theorem realSubClosure {a b : Object}
 
 theorem realMulClosure {a b : Object}
     (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.mul a b haC hbC) R := by
+    In (Litex.mul a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
@@ -157,11 +157,11 @@ theorem realMulClosure {a b : Object}
 theorem realDivClosure {a b : Object}
     (haC : In a C) (hbC : In b C) (hb0 : b ≠ 0)
     (ha : In a R) (hb : In b R) :
-    In (div a b haC hbC hb0) R := by
+    In (div a b) R := by
   rcases inR_iff.mp ha with ⟨a, rfl⟩
   rcases inR_iff.mp hb with ⟨b, rfl⟩
   apply inR_iff.mpr
   refine ⟨a / b, ?_⟩
   simp
 
-end Litex.BuiltinRules
+end Litex.Rules

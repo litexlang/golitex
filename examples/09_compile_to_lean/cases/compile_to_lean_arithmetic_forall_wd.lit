@@ -18,7 +18,8 @@ forall f fn(x R) R:
         f(2) = f(1)
 # Current behavior: `y` remains a Litex.Object, `Litex.sub` models subtraction,
 # `realSubClosure` replays the verifier's operand-membership certificate, and
-# every `f(...)` consumes the WD fact attached to its source occurrence ID.
+# every `f(...)` stays proof-free while a theorem-local parameterized WD bundle
+# retains the evidence attached to its exact source occurrence ID.
 #
 # Boundary: a target requirement whose occurrence ID is missing or changed is
 # rejected; the emitter does not fall back to proposition or object-text search.

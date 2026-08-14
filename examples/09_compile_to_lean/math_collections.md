@@ -38,8 +38,8 @@ A function space is a `Litex.Object` built from `Litex.FnSpec`. One source
 argument group becomes one target list application:
 
 ```text
-f(1, 2, 3) -> f [obj_1, obj_2, obj_3] proof
-g(1)(2)    -> obj_4 [obj_5] proof2, where obj_4 := g [obj_1] proof1
+f(1, 2, 3) -> f [1, 2, 3]
+g(1)(2)    -> (g [1]) [2]
 ```
 
 The second layer uses `Litex.fnSetResult` to obtain the first result's exact
@@ -57,17 +57,18 @@ Target-side `assumption` and proposition search are outside the collection.
 
 The shared-builtin tracer uses checked not-equality-symmetry and numeral
 membership certificates. The generated proof imports the shared Lake module
-and calls `Litex.BuiltinRules.notEqualSymmetry`, `numeralInN`, and `numeralInC`.
+and calls `Litex.Rules.notEqualSymmetry`, `numeralInN`, and `numeralInC`.
 Concrete rules are neither axioms nor theorem bodies repeated in generated
 files.
 
 ## Well-definedness identities
 
-Needed application facts are named by `WellDefinedFactId` and emitted before
-any theorem whose type contains the proof-carrying application. The feature
-ledger's WD DAG entry additionally retains stable `WellDefinedObjId` nodes for
-`g(a)`, `t(b)`, and their outer `f` application, with children emitted before
-the parent and equal outer occurrences reusing one frozen node.
+Needed application facts are named by `WellDefinedFactId` after the binders of
+the theorem that owns them. The feature ledger's WD DAG entry additionally
+retains stable `WellDefinedObjId` nodes for `g(a)`, `t(b)`, and their outer `f`
+application. Local WD, applicability, and result-membership steps are replayed
+child-before-parent, while the theorem type contains only proof-free object
+terms; equal outer occurrences reuse one frozen node.
 
 Every parsed application also has a `SourceObjectOccurrenceId`. Repeated
 textually equal applications retain different source IDs, while a WD cache hit
@@ -80,7 +81,7 @@ without structural fallback.
 
 The combined showcase's arithmetic-forall route keeps `y` as `Litex.Object`,
 represents `y - 1` as `Litex.sub y 1`, and calls the proved
-`Litex.BuiltinRules.realSubClosure` theorem from structured verifier evidence.
+`Litex.Rules.realSubClosure` theorem from structured verifier evidence.
 Its nested parameter membership retains the exact temporary `FactId` and is
 replayed as a Lean binder proof.
 
@@ -112,7 +113,7 @@ The ledger currently covers the following statement and object interactions:
 | Existential introduction and elimination | One existential theorem followed by ordered witness projections | Wider projection shapes remain explicit boundaries |
 | Cases and contradiction | Local Lean binders scoped to the source proof branch | Branch-local facts cannot escape their scope |
 | Named theorem | The source theorem name owns the complete universal fact | Missing child facts are not reconstructed by target search |
-| Total constructors | Closed `pi` and binary `union` object terms | Partial constructors use separate proof-carrying recipes |
+| Total constructors | Closed `pi` and binary `union` object terms | Partial source constructions use proof-free terms plus separate WD recipes |
 | Division | Two numeric memberships plus denominator nonzero evidence | A missing or retargeted proof slot is rejected |
 | Finite set literal | Ordered child objects and the full pairwise-distinctness matrix | Missing, reversed, or duplicated pairs are rejected |
 | Set builder | A `SymbolId`-owned predicate binder | The binder cannot leak outside the builder |

@@ -221,7 +221,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "expected `{}` and `{{...}}` after inline `{}` header",
+                        "expected `{}` and one fact after inline `{}` header",
                         RIGHT_ARROW, FORALL
                     ),
                     tb.line_file.clone(),
@@ -233,7 +233,7 @@ impl Runtime {
                 return Err(RuntimeError::from(ParseRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_line_file(
                         format!(
-                            "inline `{}` without a domain must use `{}` followed by a braced then-list",
+                            "inline `{}` without a domain must use `{}` followed by one fact",
                             FORALL, RIGHT_ARROW
                         ),
                         tb.line_file.clone(),
@@ -262,7 +262,7 @@ impl Runtime {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
                     format!(
-                        "inline `{}` with a domain must use exactly one domain fact followed by `{}` and a braced then-list",
+                        "inline `{}` with a domain must use exactly one domain fact followed by `{}` and one consequent fact",
                         FORALL, RIGHT_ARROW
                     ),
                     tb.line_file.clone(),
@@ -310,38 +310,14 @@ impl Runtime {
             )));
         }
         if tb.current()? == LEFT_CURLY_BRACE {
-            return self.parse_inline_forall_braced_then_list(tb);
-        }
-        Err(RuntimeError::from(ParseRuntimeError(
-            RuntimeErrorStruct::new_with_msg_and_line_file(
-                format!(
-                    "inline `{}` then-part must be a braced list after `{}`",
-                    FORALL, RIGHT_ARROW
-                ),
-                tb.line_file.clone(),
-            ),
-        )))
-    }
-
-    fn parse_inline_forall_braced_then_list(
-        &mut self,
-        tb: &mut TokenBlock,
-    ) -> Result<Vec<Fact>, RuntimeError> {
-        tb.skip_token(LEFT_CURLY_BRACE)?;
-        let fact = self.parse_inline_fact(tb, true)?;
-        if tb.current()? != RIGHT_CURLY_BRACE {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    format!(
-                        "inline `{}` then braces must contain exactly one fact",
-                        FORALL
-                    ),
+                    "inline `forall` consequent must not use braces; write `=> <fact>`".to_string(),
                     tb.line_file.clone(),
                 ),
             )));
         }
-        tb.skip_token(RIGHT_CURLY_BRACE)?;
-        Ok(vec![fact])
+        Ok(vec![self.parse_inline_fact(tb, true)?])
     }
 
     // fact_hierarchy 1
@@ -851,12 +827,15 @@ impl Runtime {
             )));
         }
         let tok = tb.current()?.to_string();
-        let prop = if is_comparison_str(&tok) {
+        let (prop, atomic_is_true) = if tok == UNICODE_NOT_IN {
             tb.advance()?;
-            AtomicName::WithoutMod(tok.clone())
+            (AtomicName::WithoutMod(IN.to_string()), !is_true)
+        } else if is_comparison_str(&tok) {
+            tb.advance()?;
+            (AtomicName::WithoutMod(tok.clone()), is_true)
         } else if tok == FACT_PREFIX {
             tb.skip_token(FACT_PREFIX)?;
-            self.parse_predicate(tb)?
+            (self.parse_predicate(tb)?, is_true)
         } else {
             return Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
@@ -867,7 +846,7 @@ impl Runtime {
         };
         let next_obj = self.parse_obj(tb)?;
         let args = vec![first_obj, next_obj];
-        let atomic = AtomicFact::to_atomic_fact(prop, is_true, args, line_file).map_err(
+        let atomic = AtomicFact::to_atomic_fact(prop, atomic_is_true, args, line_file).map_err(
             |e: RuntimeError| {
                 let msg = match &e {
                     RuntimeError::NewFactError(s) => s.msg.clone(),
@@ -950,6 +929,46 @@ impl Runtime {
         let mut prop_names: Vec<AtomicName> = vec![];
         while !tb.exceed_end_of_head() {
             let tok = tb.current()?.to_string();
+            if tok == UNICODE_NOT_IN {
+                if !prop_names.is_empty() {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "negated membership cannot be part of a fact chain".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                tb.advance()?;
+                let next_obj = self.parse_obj(tb)?;
+                if !tb.exceed_end_of_head()
+                    && (is_comparison_str(tb.current()?)
+                        || tb.current_token_is_equal_to(FACT_PREFIX)
+                        || tb.current_token_is_equal_to(UNICODE_NOT_IN))
+                {
+                    return Err(RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(
+                            "negated membership cannot be part of a fact chain".to_string(),
+                            tb.line_file.clone(),
+                        ),
+                    )));
+                }
+                let atomic = AtomicFact::to_atomic_fact(
+                    AtomicName::WithoutMod(IN.to_string()),
+                    !is_true,
+                    vec![objs.remove(0), next_obj],
+                    line_file,
+                )
+                .map_err(|e: RuntimeError| {
+                    let msg = match &e {
+                        RuntimeError::NewFactError(s) => s.msg.clone(),
+                        _ => "parse atomic fact".to_string(),
+                    };
+                    RuntimeError::from(ParseRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_line_file(msg, tb.line_file.clone()),
+                    ))
+                })?;
+                return Ok(ChainAtomicFact::AtomicFact(atomic));
+            }
             let prop = if is_comparison_str(&tok) {
                 tb.advance()?;
                 AtomicName::WithoutMod(tok.clone())
@@ -1025,7 +1044,7 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn inline_forall_no_colon_before_arrow_when_no_dom() {
-        let f = parse_one_fact_line("forall x R => { x > 0 }").unwrap();
+        let f = parse_one_fact_line("forall x R => x > 0").unwrap();
         let Fact::ForallFact(ff) = f else {
             panic!("expected ForallFact");
         };
@@ -1035,7 +1054,7 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn inline_forall_dom_arrow_then() {
-        let f = parse_one_fact_line("forall x R: x > 0 => { x >= 0 }").unwrap();
+        let f = parse_one_fact_line("forall x R: x > 0 => x >= 0").unwrap();
         let Fact::ForallFact(ff) = f else {
             panic!("expected ForallFact");
         };
@@ -1057,45 +1076,87 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn inline_forall_rejects_empty_dom_arrow() {
-        let msg = parse_error_msg("forall x R: => { x > 0 }");
+        let msg = parse_error_msg("forall x R: => x > 0");
         assert!(msg.contains("exactly one domain fact"), "{}", msg);
     }
 
     #[test]
     fn inline_forall_rejects_nested_in_dom() {
-        let msg = parse_error_msg("forall x R: forall y R => { y > 0 } => { x > 0 }");
+        let msg = parse_error_msg("forall x R: forall y R => y > 0 => x > 0");
         assert!(msg.contains("nested `forall`"), "{}", msg);
     }
 
     #[test]
     fn inline_forall_rejects_multiple_domain_facts() {
-        let msg = parse_error_msg("forall x R: x > 0, x < 1 => { x >= 0 }");
+        let msg = parse_error_msg("forall x R: x > 0, x < 1 => x >= 0");
         assert!(msg.contains("exactly one domain fact"), "{}", msg);
     }
 
     #[test]
-    fn inline_forall_rejects_unbraced_then() {
-        let msg = parse_error_msg("forall x R: x > 0 => x >= 0");
-        assert!(msg.contains("braced list"), "{}", msg);
+    fn inline_forall_rejects_braced_then() {
+        let msg = parse_error_msg("forall x R: x > 0 => {x >= 0}");
+        assert!(msg.contains("must not use braces"), "{}", msg);
     }
 
     #[test]
     fn inline_forall_rejects_multiple_then_facts() {
-        let msg = parse_error_msg("forall x R: x > 0 => { x >= 0, x + 1 > 0 }");
-        assert!(msg.contains("exactly one fact"), "{}", msg);
+        let msg = parse_error_msg("forall x R: x > 0 => x >= 0, x + 1 > 0");
+        assert!(msg.contains("unexpected token"), "{}", msg);
     }
 
     #[test]
     fn not_inline_forall_parses_as_not_forall() {
-        let f = parse_one_fact_line("not forall x R: x > 0 => { x + 1 > 1 }").unwrap();
+        let f = parse_one_fact_line("not forall x R: x > 0 => x + 1 > 1").unwrap();
         assert!(matches!(f, Fact::NotForall(_)));
+    }
+
+    #[test]
+    fn unicode_and_ascii_facts_share_one_canonical_representation() {
+        let cases = [
+            ("forall x R => x != pi", "∀ x ℝ → x ≠ π"),
+            ("exist x N st {x $in {}}", "∃ x ℕ st {x ∈ ∅}"),
+            ("exist! x N st {x = 0}", "∃! x ℕ st {x = 0}"),
+            ("0 <= 1 and 1 >= 0", "0 ≤ 1 ∧ 1 ≥ 0"),
+            ("not 0 = 1 or 1 $in Z", "¬ 0 = 1 ∨ 1 ∈ ℤ"),
+            ("N $subset Z", "ℕ ⊆ ℤ"),
+            ("Z $superset N", "ℤ ⊇ ℕ"),
+            ("{0} $proper_subset {0, 1}", "{0} ⊊ {0, 1}"),
+            ("{0} $proper_subset {0, 1}", "{0} ⊂ {0, 1}"),
+            ("{0, 1} $proper_superset {0}", "{0, 1} ⊋ {0}"),
+            ("not x $in union(intersect(A, B), C)", "x ∉ A ∩ B ∪ C"),
+            ("cart(A, B, C) = cart(A, B, C)", "A × B × C = cart(A, B, C)"),
+        ];
+
+        for (ascii, unicode) in cases {
+            let ascii_fact = parse_one_fact_line(ascii).unwrap();
+            let unicode_fact = parse_one_fact_line(unicode).unwrap();
+            assert_eq!(
+                ascii_fact.to_string(),
+                unicode_fact.to_string(),
+                "{unicode}"
+            );
+        }
+    }
+
+    #[test]
+    fn unicode_not_in_is_a_negated_membership_operator() {
+        assert_eq!(
+            parse_one_fact_line("x ∉ A").unwrap().to_string(),
+            "not x $in A"
+        );
+        assert_eq!(
+            parse_one_fact_line("not x ∉ A").unwrap().to_string(),
+            "x $in A"
+        );
+
+        let msg = parse_error_msg("x ∉ A $subset B");
+        assert!(msg.contains("cannot be part of a fact chain"), "{msg}");
     }
 
     #[test]
     fn inline_forall_then_flattens_inline_forall() {
         let fact =
-            parse_one_fact_line("forall x R: x > 0 => { forall y R: y > 0 => { x + y > 0 } }")
-                .unwrap();
+            parse_one_fact_line("forall x R: x > 0 => forall y R: y > 0 => x + y > 0").unwrap();
         let Fact::ForallFact(forall_fact) = fact else {
             panic!("expected a flattened forall fact");
         };
@@ -1106,7 +1167,7 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn existential_body_rejects_inline_forall() {
-        let msg = parse_error_msg("exist x R st {forall y R => {y = y}}");
+        let msg = parse_error_msg("exist x R st {forall y R => y = y}");
         assert!(
             msg.contains("inline `forall` is not allowed in existential or set-builder bodies"),
             "{}",
@@ -1116,7 +1177,7 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn set_builder_body_rejects_inline_forall() {
-        let msg = parse_error_msg("{x R: forall y R => {y = y}} = {x R: x = x}");
+        let msg = parse_error_msg("{x R: forall y R => y = y} = {x R: x = x}");
         assert!(
             msg.contains("inline `forall` is not allowed in existential or set-builder bodies"),
             "{}",
@@ -1126,10 +1187,9 @@ mod inline_forall_parse_tests {
 
     #[test]
     fn nested_forall_flattening_recomputes_dependent_parameter_indices() {
-        let fact = parse_one_fact_line(
-            "forall S nonempty_set => { forall x S => { forall y S => { x = y } } }",
-        )
-        .unwrap();
+        let fact =
+            parse_one_fact_line("forall S nonempty_set => forall x S => forall y S => x = y")
+                .unwrap();
         let Fact::ForallFact(forall_fact) = fact else {
             panic!("expected a recursively flattened forall fact");
         };

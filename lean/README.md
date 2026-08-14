@@ -4,14 +4,14 @@ This Lake package owns the shared target ABI used by Litex-to-Lean output.
 
 - `Litex.Core` defines the universal `Litex.Object` ABI and its small semantic
   boundary.
-- `Litex.BuiltinRules` proves concrete verifier rules once and re-exports the
+- `Litex.Rules` proves concrete verifier rules once and re-exports the
   core by importing it.
-- `Litex` is the package root and re-exports `Litex.BuiltinRules`.
+- `Litex` is the package root and re-exports `Litex.Rules`.
 - [`SEMANTIC_REFERENCE.md`](SEMANTIC_REFERENCE.md) audits every current core
   declaration and builtin theorem against Tao's *Analysis I*, or explicitly
   classifies it as a target representation device, extension, or known drift.
 
-Generated files import only `Litex.BuiltinRules`. A generated ABI-version
+Generated files import only `Litex.Rules`. A generated ABI-version
 check fails if the file is compiled against an incompatible shared library.
 
 ## Why the ABI has one object type
@@ -25,10 +25,12 @@ carrier types, and one numeral object may have membership proofs for all three.
 
 `Litex.Object : Type` is a Lean meta-level carrier, not an internal Litex
 universal set. The ABI does not provide unrestricted comprehension, and
-partial source constructions consume the well-definedness evidence retained by
-the verifier. The source semantics decide that `IsSet` is always true; the
-current opaque declaration in `Litex.Core` is documented implementation drift,
-not a second object ontology.
+partial source constructions are accepted only after the Litex verifier has
+retained their exact well-definedness evidence. Object denotation is
+proof-free; generated theorems replay that evidence as local propositions in
+the Lean scope corresponding to the owning Litex environment. The source
+semantics decide that `IsSet` is always true, definitionally, rather than
+introducing a second object ontology.
 
 See the [language-level explanation](../docs/Manual.md#pure-set-object-model)
 and the
@@ -36,9 +38,8 @@ and the
 
 The package is stable within a matching Litex release, not immutable forever.
 An incompatible source-semantic or Lean-signature change must be coordinated
-with the compiler and reviewed for an `abiVersion` update. Generated files pin
-that version so they fail rather than silently compiling against a different
-interpretation.
+with the compiler and reviewed for an `abiVersion` update. Generated files only
+import `Litex.Rules`; they do not add a per-file ABI assertion.
 
 Add this package as a Lake dependency before compiling generated output:
 

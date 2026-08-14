@@ -1,8 +1,8 @@
 # Quantified conditions in existential and set-builder bodies must be named.
 #
 # Before (now rejected):
-# trust exist x R st {forall y R => {x = x}}
-# trust {x R: forall y R => {x = x}} = {x R: x = x}
+# trust exist x R st {forall y R => x = x}
+# trust {x R: forall y R => x = x} = {x R: x = x}
 #
 # `forall` remains an ordinary fact form and is valid inside a `prop`
 # definition. The existential body below contains only the atomic prop fact.
@@ -18,7 +18,7 @@ witness exist x R st {$has_universal_self_equality(x)} from 0:
     by def $has_universal_self_equality(0)
 
 # Before (now rejected):
-# general_cart(I, S, g) = {f fn(alpha I)big_union(S): forall alpha I => {f(alpha) $in g(alpha)}}
+# general_cart(I, S, g) = {f fn(alpha I)big_union(S): forall alpha I => f(alpha) $in g(alpha)}
 #
 # The builtin predicate names exactly that pointwise condition. It is usable
 # as one atomic set-builder filter and still unfolds in both proof directions.

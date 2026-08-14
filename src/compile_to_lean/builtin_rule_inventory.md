@@ -29,7 +29,7 @@ conservative and source-derived; it does not claim one Rust site equals one
 mathematical theorem schema.
 
 A Lean mapping is recorded only when the universal-`Litex.Object` backend
-calls a theorem from the shared `Litex.BuiltinRules` module and the Lean kernel
+calls a theorem from the shared `Litex.Rules` module and the Lean kernel
 checks that call. Generated files never repeat the theorem body. `partial` means
 the source site recognizes more cases than the current target theorem; `none`
 means no checked mapping exists yet. The deleted native-carrier adapter catalog
@@ -330,7 +330,7 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0258 | rule | `legacy_custom` | in real interval: x in R and endpoint bounds | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1035` | membership | none | `pending` |
 | B0259 | rule | `legacy_custom` | in half-infinite real interval: x in R and endpoint bound | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1084` | membership | none | `pending` |
 | B0260 | rule | `legacy_custom` | complex scalar arithmetic is closed in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1254` | membership | none | `pending` |
-| B0261 | rule | `local_schema` | real arithmetic has real operands and result | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1318` | membership | `Litex.BuiltinRules.realAddClosure/realSubClosure/realMulClosure/realDivClosure`; power and other operators remain unsupported | `partial` |
+| B0261 | rule | `local_schema` | real arithmetic has real operands and result | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1318` | membership | `Litex.Rules.realAddClosure/realSubClosure/realMulClosure/realDivClosure`; power and other operators remain unsupported | `partial` |
 | B0262 | rule | `legacy_custom` | real arithmetic has real operands and result | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1326` | membership | none | `pending` |
 | B0263 | rule | `local_schema` | integer expression closure under +, -, and * | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1409` | membership | none | `pending` |
 | B0264 | rule | `legacy_custom` | finite_set_size of a known finite set is a natural number | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1433` | membership | none | `pending` |
@@ -343,20 +343,20 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0271 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_reals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1863` | membership | none | `pending` |
 | B0272 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_rationals | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1882` | membership | none | `pending` |
 | B0273 | rule | `legacy_custom` | mul_opposite_signs_product_in_negative_integers | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_membership.rs:1905` | membership | none | `pending` |
-| B0274 | rule | `reflection` | number in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:49` | membership | `Litex.BuiltinRules.numeralInC` for natural numeral targets only | `partial` |
+| B0274 | rule | `reflection` | number in C | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:49` | membership | `Litex.Rules.numeralInC` for natural numeral targets only | `partial` |
 | B0275 | rule | `reflection` | number in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:52` | membership | none | `not_this_round` |
-| B0276 | rule | `reflection` | number in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:57` | membership | `Litex.BuiltinRules.numeralInR` for natural numeral targets only | `partial` |
+| B0276 | rule | `reflection` | number in R | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:57` | membership | `Litex.Rules.numeralInR` for natural numeral targets only | `partial` |
 | B0277 | rule | `reflection` | number in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:60` | membership | none | `not_this_round` |
 | B0278 | rule | `reflection` | number in R- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:67` | membership | none | `not_this_round` |
 | B0279 | rule | `reflection` | number in R* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:74` | membership | none | `not_this_round` |
-| B0280 | rule | `reflection` | number in Q | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:79` | membership | `Litex.BuiltinRules.numeralInQ` for natural numeral targets only | `partial` |
+| B0280 | rule | `reflection` | number in Q | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:79` | membership | `Litex.Rules.numeralInQ` for natural numeral targets only | `partial` |
 | B0281 | rule | `reflection` | number in Q+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:82` | membership | none | `not_this_round` |
 | B0282 | rule | `reflection` | number in Q- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:89` | membership | none | `not_this_round` |
 | B0283 | rule | `reflection` | number in Q* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:96` | membership | none | `not_this_round` |
-| B0284 | rule | `reflection` | number in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:103` | membership | `Litex.BuiltinRules.numeralInZ` for natural numeral targets only | `partial` |
+| B0284 | rule | `reflection` | number in Z | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:103` | membership | `Litex.Rules.numeralInZ` for natural numeral targets only | `partial` |
 | B0285 | rule | `reflection` | number in Z- | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:110` | membership | none | `not_this_round` |
 | B0286 | rule | `reflection` | number in Z* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:117` | membership | none | `not_this_round` |
-| B0287 | rule | `reflection` | number in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:124` | membership | `Litex.BuiltinRules.numeralInN` for natural numeral targets only | `partial` |
+| B0287 | rule | `reflection` | number in N | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:124` | membership | `Litex.Rules.numeralInN` for natural numeral targets only | `partial` |
 | B0288 | rule | `reflection` | number in N+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:131` | membership | none | `not_this_round` |
 | B0289 | rule | `reflection` | number not in C* | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:148` | membership | none | `not_this_round` |
 | B0290 | rule | `reflection` | number not in R+ | `src/verify/verify_builtin_rules/in_fact_builtin/numeric_values.rs:155` | membership | none | `not_this_round` |
@@ -447,7 +447,7 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0375 | rule | `legacy_custom` | lcm times gcd is the absolute product | `src/verify/verify_builtin_rules/native_integer_extrema.rs:350` | native integer extrema | none | `pending` |
 | B0376 | rule | `legacy_custom` | native lcm symmetry, zero law, or divisibility | `src/verify/verify_builtin_rules/native_integer_extrema.rs:372` | native integer extrema | none | `pending` |
 | B0377 | rule | `legacy_custom` | Every object is a set. | `src/verify/verify_builtin_rules/non_equational_dispatch.rs:52` | non equational dispatch | none | `pending` |
-| B0378 | rule | `local_schema` | not-equality symmetry | `src/verify/verify_builtin_rules/not_equal_builtin.rs:50` | not equal | `Litex.BuiltinRules.notEqualSymmetry` | `implemented` |
+| B0378 | rule | `local_schema` | not-equality symmetry | `src/verify/verify_builtin_rules/not_equal_builtin.rs:50` | not equal | `Litex.Rules.notEqualSymmetry` | `implemented` |
 | B0379 | rule | `legacy_custom` | list_set_different_length | `src/verify/verify_builtin_rules/not_equal_builtin.rs:63` | not equal | none | `pending` |
 | B0380 | rule | `legacy_custom` | native real constant distinctness | `src/verify/verify_builtin_rules/not_equal_builtin.rs:207` | not equal | none | `pending` |
 | B0381 | rule | `legacy_custom` | well-defined exp/factorial values are strictly positive | `src/verify/verify_builtin_rules/not_equal_builtin.rs:230` | not equal | none | `pending` |

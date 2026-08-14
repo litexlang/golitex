@@ -590,7 +590,7 @@ the set of choice functions selecting an element of each `g(alpha)`:
 ```litex
 have I set
 have S nonempty_set
-trust forall A S => {$is_nonempty_set(A)}
+trust forall A S => $is_nonempty_set(A)
 have g fn(alpha I) S
 
 by thm general_cart_nonempty_by_choice_from_family(general_cart(I, S, g))
@@ -610,7 +610,7 @@ atomic-filter expansion
 ```litex
 have I set
 have S nonempty_set
-trust forall A S => {$is_nonempty_set(A)}
+trust forall A S => $is_nonempty_set(A)
 have g fn(alpha I) S
 
 general_cart(I, S, g) = {f fn(f_index I)big_union(S): $is_choice_function_for(I, S, g, f)}
@@ -1499,7 +1499,7 @@ setting EqualPair:
 forall [EqualPair], z X:
     z = z
 
-forall [EqualPair] => {x = y}
+forall [EqualPair] => x = y
 ```
 
 This elaborates to the ordinary fact:
@@ -1518,19 +1518,24 @@ fresh binders, even when the same setting is used several times. Extra
 parameters require a comma after the closing bracket.
 
 Settings are supported in block `forall [Name]` headers and in the inline form
-`forall [Name] => {...}`. The inline form uses exactly the parameters and
+`forall [Name] => fact`. The inline form uses exactly the parameters and
 shared assumptions stored by the setting; add extra parameters with block
 syntax. Goal and negated universal positions use the same expansion paths. A
 module-qualified setting may be referenced as `forall [Module::Name]:` or
-`forall [Module::Name] => {...}`. Settings do not expand in definition
+`forall [Module::Name] => fact`. Settings do not expand in definition
 headers, template headers, or object expressions.
 
-Inside braced fact bodies, `forall` is forced into its one-line form because
-that syntactic position cannot own an indented body:
+An ordinary universal fact may use a one-line form when it has exactly one
+premise and one conclusion, or no premise. The conclusion is a bare fact; it
+is not wrapped in braces:
 
 ```litex
-forall x R => {x = x}
+forall x R: x > 0 => x != 0
 ```
+
+Existential and set-builder property bodies do not admit either block or
+one-line `forall`; name the quantified condition with `prop` and use its atomic
+`$P(...)` fact there.
 
 ### Universal equivalence and negated universals
 
@@ -1584,9 +1589,9 @@ This is a parse `error`; write `not forall ...` on one header.
 | Universal implication | `forall params: assumptions =>: conclusions` |
 | Nested universal conclusion (preview; flattened before storage) | `forall outer: assumptions =>: forall inner: assumptions =>: conclusions` |
 | Universal equivalence | `forall params: =>: left <=>: right` |
-| Inline universal | `forall params => {facts}` |
+| Inline universal | `forall params: assumption => conclusion` |
 | Negated universal | `not forall params: facts` |
-| Inline negated universal | `not forall params => {facts}` |
+| Inline negated universal | `not forall params: assumption => conclusion` |
 
 ---
 
@@ -2002,7 +2007,8 @@ function.
 `claim` proves one target and commits that target to the surrounding context.
 Temporary proof steps remain local. `sketch` checks a local block and commits
 nothing. `try` checks a candidate block atomically and commits it only if every
-step succeeds.
+step succeeds. A claim target always appears under `claim:` as an indented
+`? fact`; the former `claim fact:` header form is not accepted.
 
 ```litex
 claim:
@@ -2362,7 +2368,7 @@ explanation; this index does not repeat its examples.
 | Multiple names in one domain | `x, y R` | [Universal facts](#universal-facts) |
 | Domain condition | `x R: x != 0` | [Domain obligations](#domain-obligations) |
 | Parameterized definition | `template<S set, x S>:` | [Templates](#templates) |
-| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` or `forall [Name] => {...}` | [Named universal settings](#named-universal-settings) |
+| Named universal prefix | `setting Name: ...`, then `forall [Name], ...:` or `forall [Name] => fact` | [Named universal settings](#named-universal-settings) |
 | Struct parameter | `struct Group<S nonempty_set>:` | [Struct objects](#struct-objects-and-explicit-or-default-view-field-access-preview) |
 
 ### Object syntax index
@@ -2407,6 +2413,54 @@ explanation; this index does not repeat its examples.
   `prop` before using it there. The same restriction applies to set builders.
 - `#` starts a line comment. Indentation defines block structure.
 - Matrix operators contain an apostrophe: `'+`, `'-`, `'*`, `*'`, and `'^`.
+
+### Unicode mathematical input aliases (preview)
+
+Litex accepts the following Unicode mathematical input. Simple aliases are
+canonicalized during tokenization; infix set forms are lowered by the parser to
+the existing set-object and fact nodes. Stored facts, diagnostics, and verifier
+semantics continue to use canonical ASCII Litex syntax.
+
+| Unicode input | Canonical Litex syntax |
+|---|---|
+| `∀`, `∃`, `∃!` | `forall`, `exist`, `exist!` |
+| `≤`, `≥`, `≠` | `<=`, `>=`, `!=` |
+| `→`, `↔` | `=>`, `<=>` |
+| `∧`, `∨`, `¬` | `and`, `or`, `not` |
+| `∈` | `$in` |
+| `∉` | `not ... $in ...` |
+| `⊆`, `⊇` | `$subset`, `$superset` |
+| `⊂`, `⊊`, `⊋` | `$proper_subset`, `$proper_subset`, `$proper_superset` |
+| `A ∪ B`, `A ∩ B` | `union(A, B)`, `intersect(A, B)` |
+| `A × B` | `cart(A, B)` |
+| `ℕ`, `ℤ`, `ℚ`, `ℝ`, `ℂ` | `N`, `Z`, `Q`, `R`, `C` |
+| `π`, `∅` | `pi`, `{}` |
+
+For example, this is the same universal fact as its ASCII spelling:
+
+```litex
+∀ x ℝ:
+    x ≠ 0
+    →:
+        x ∈ ℂ
+        x ≤ x ∧ x ≥ x
+```
+
+Aliases are recognized only as complete tokens and are not rewritten inside
+quoted module paths. `⊂` deliberately means strict/proper subset, the same as
+`⊊`; non-strict subset remains `⊆`.
+
+`∃!` has exactly the existing unique-existence semantics of `exist!`. In
+particular, `witness ∃! ...` must prove both that the supplied witness satisfies
+the body and that any two witnesses satisfying the body are equal.
+
+The infix precedence from lower to higher is `∪`, `∩`, `×`, then the existing
+arithmetic object operators. Union and intersection associate to the left. A
+direct product chain is flattened, so `A × B × C` becomes `cart(A, B, C)`;
+parentheses can request nesting. `×` never means numeric multiplication:
+`2 × 3` is parsed as `cart(2, 3)` and is rejected because the factors are not
+sets. Write `2 * 3` for arithmetic multiplication. The word forms remain
+constructor calls such as `union(A, B)`; this preview does not add `A union B`.
 
 ---
 
@@ -2769,16 +2823,15 @@ by enumerate finite_set:
     ? forall x P:
         x = 1 or x = 2 or x = 3
 
-by enumerate finite_set forall y {1, 2, 3} => {y = 1 or y = 2 or y = 3}
+by enumerate finite_set:
+    ? forall y {1, 2, 3} => y = 1 or y = 2 or y = 3
 
 have i1 closed_range(1, 3)
 by closed_range as cases: i1 $in 1...3
 ```
 
-The inline form is available when enumeration needs no user-written proof
-statements. It accepts exactly one inline `forall` target and constructs the
-same finite-set enumeration proof as the block form. If helper statements are
-needed, keep the target in the indented `? forall ...` block.
+Finite-set enumeration always takes its target from the first indented
+`? forall ...` goal. Proof statements after that goal remain optional.
 
 Enumeration is not an unbounded decision procedure:
 
@@ -2852,21 +2905,19 @@ by induc P:
 Cartesian products. `by extension` proves set equality through mutual
 membership.
 
-When the generated obligations close without helper statements, put the
-complete target on the same line:
-
-```litex
-by for forall i1 range(0, 3) => {i1 < 3}
-by extension {1} = {1}
-```
-
-These inline forms do not accept an indented body. Use the goal-block forms
-when the proof needs additional statements:
+`by for` always takes an indented `? forall ...` goal. Proof statements after
+that goal are optional. `by extension` alone also keeps its bodyless one-line
+form:
 
 ```litex
 by for:
-    ? forall i1 range(0, 3) => {i1 < 3}
+    ? forall i1 range(0, 3) => i1 < 3
+by extension {1} = {1}
+```
 
+Use the block extension form when its proof needs additional statements:
+
+```litex
 by extension:
     ? {1, 2} = {2, 1}
     by enumerate finite_set:
@@ -3726,7 +3777,7 @@ reduces to compatible function interfaces and pointwise equality.
 | Interface | Definition or derived builtin consequence |
 |---|---|
 | `A $subset B` / `B $superset A` | Dual spellings of the same inclusion. Reflexivity, structural constructor containment, one-edge membership lifting, and subset chains are supported. Componentwise Cartesian inclusions, integer range into its numeric carrier, real interval into `R`, `fn_range(f)` into its codomain, and union containment from both operands have dedicated shapes. Proper relations unfold to ordinary inclusion plus inequality. |
-| `$fn_eq_in(f,g,S)` | Pointwise equality `forall x S => {f(x)=g(x)}` on exactly `S`. Aggregate congruence can consume this registered interface. |
+| `$fn_eq_in(f,g,S)` | Pointwise equality `forall x S => f(x)=g(x)` on exactly `S`. Aggregate congruence can consume this registered interface. |
 | `$fn_eq(f,g)` | Exact pointwise equality over compatible function carriers. It may use the stored pointwise universal plus matching domains/signatures, or mutual function-space membership with pointwise equality. |
 | `$injective(A,B,f)` | Definition route: members of `A` with equal images are equal. For finite `A`, injectivity gives `finite_set_size(fn_range(f)) = finite_set_size(A)`. |
 | `$surjective(A,B,f)` | Definition route: each member of `B` has a preimage in `A`. A finite source makes the codomain finite and gives `finite_set_size(B) <= finite_set_size(A)`. |
@@ -4102,6 +4153,9 @@ change:
 - reduced rational fraction verification;
 - positive nested-`forall` conclusion normalization;
 - trusted Zorn, choice, and regularity proof steps.
+- Unicode mathematical input for quantifiers, logic, comparisons, set
+  relations and operations, Cartesian products, standard number sets, `pi`,
+  and the empty set.
 
 ### Trust and strict mode
 

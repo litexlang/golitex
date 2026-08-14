@@ -317,6 +317,7 @@ mod tests {
 /// integer operation even when both operands are closed numerals.
 fn intrinsic_well_definedness_result_set(obj: &Obj) -> Option<Obj> {
     match obj {
+        Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) => Some(StandardSet::C.into()),
         Obj::Mod(_) => Some(StandardSet::Z.into()),
         _ => None,
     }

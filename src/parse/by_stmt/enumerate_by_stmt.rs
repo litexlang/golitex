@@ -6,65 +6,13 @@ impl Runtime {
         if tb.current_token_is_equal_to(FINITE_SET) {
             tb.skip_token(FINITE_SET)?;
             if !tb.current_token_is_equal_to(COLON) {
-                if !tb.body.is_empty() {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "inline by enumerate finite_set does not accept an indented body; use `by enumerate finite_set:` followed by `? forall ...` and proof statements"
-                                .to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                let fact = self.parse_fact(tb)?;
-                if !tb.exceed_end_of_head() {
-                    return Err(RuntimeError::from(ParseRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_line_file(
-                            "inline by enumerate finite_set expects exactly one forall fact"
-                                .to_string(),
-                            tb.line_file.clone(),
-                        ),
-                    )));
-                }
-                let forall_fact = match fact {
-                    Fact::ForallFact(forall_fact) => forall_fact,
-                    Fact::ForallFactWithIff(_) => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by enumerate finite_set: forall with `<=>` is not allowed here"
-                                    .to_string(),
-                                tb.line_file.clone(),
-                            ),
-                        )));
-                    }
-                    _ => {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "inline by enumerate finite_set expects a single forall fact"
-                                    .to_string(),
-                                tb.line_file.clone(),
-                            ),
-                        )));
-                    }
-                };
-
-                for group in forall_fact.params_def_with_type.groups.iter() {
-                    if !matches!(&group.param_type, ParamType::Obj(_)) {
-                        return Err(RuntimeError::from(ParseRuntimeError(
-                            RuntimeErrorStruct::new_with_msg_and_line_file(
-                                "by enumerate finite_set: each forall parameter type must be a displayed finite set or a named finite-set definition"
-                                    .to_string(),
-                                forall_fact.line_file.clone(),
-                            ),
-                        )));
-                    }
-                }
-
-                return Ok(ByEnumerateFiniteSetStmt::new(
-                    forall_fact,
-                    Vec::new(),
-                    tb.line_file.clone(),
-                )
-                .into());
+                return Err(RuntimeError::from(ParseRuntimeError(
+                    RuntimeErrorStruct::new_with_msg_and_line_file(
+                        "by enumerate finite_set requires `by enumerate finite_set:` followed by an indented `? forall ...` goal"
+                            .to_string(),
+                        tb.line_file.clone(),
+                    ),
+                )));
             }
             tb.skip_token(COLON)?;
             return self.parse_by_enumerate_finite_set_stmt_forall_in_question_goal(tb);
@@ -81,7 +29,6 @@ impl Runtime {
         )))
     }
 
-    /// Block form for finite-set enumeration. The bodyless inline form is parsed above.
     fn parse_by_enumerate_finite_set_stmt_forall_in_question_goal(
         &mut self,
         tb: &mut TokenBlock,

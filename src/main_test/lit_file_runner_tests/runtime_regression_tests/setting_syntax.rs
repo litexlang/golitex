@@ -36,9 +36,9 @@ setting EqualPair:
     x, y X
     x = y
 
-forall [EqualPair] => {x = y}
+forall [EqualPair] => x = y
 
-trust not forall [EqualPair] => {x != y}
+trust not forall [EqualPair] => x != y
 "#;
     let (succeeded, output) = run_setting_source(source, "setting_inline_expansion");
     assert!(succeeded, "inline setting fixture failed:\n{}", output);
@@ -51,11 +51,11 @@ fn existential_and_set_builder_bodies_reject_forall() {
     let cases = [
         (
             "exist_inline_forall",
-            "trust exist x R st {forall y R => {y = y}}",
+            "trust exist x R st {forall y R => y = y}",
         ),
         (
             "set_builder_inline_forall",
-            "trust {x R: forall y R => {y = y}} = {x R: x = x}",
+            "trust {x R: forall y R => y = y} = {x R: x = x}",
         ),
         (
             "exist_block_forall",
@@ -167,9 +167,9 @@ forall [UntypedPoint]:
 fn setting_reports_unknown_collision_order_and_duplicate_errors() {
     let cases = [
         ("forall [Missing]:\n    1 = 1", "unknown setting `Missing`"),
-        ("forall [Missing] => {1 = 1}", "unknown setting `Missing`"),
+        ("forall [Missing] => 1 = 1", "unknown setting `Missing`"),
         (
-            "setting S:\n    X nonempty_set\nforall [S], x X => {x = x}",
+            "setting S:\n    X nonempty_set\nforall [S], x X => x = x",
             "must be followed by `=>`",
         ),
         (

@@ -21,7 +21,7 @@ $p(1)
 # Current behavior: `p` is one uninterpreted Lean predicate, the explicit
 # trusted forall is one target axiom, and `$p(1)` is a theorem obtained by
 # applying that axiom to `1` and the parenthesized verifier-owned proof
-# `(Litex.BuiltinRules.numeralInR 1)` of `1 $in R`.
+# `(Litex.Rules.numeralInR 1)` of `1 $in R`.
 #
 # Rejected boundary, executed separately by the focused Rust regression:
 # abstract_prop q(x)

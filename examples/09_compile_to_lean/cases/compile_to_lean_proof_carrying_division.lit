@@ -1,5 +1,7 @@
-# Before: division discarded its checked denominator-nonzero condition.
-# Now: Litex.div consumes both C-membership proofs and exact b != 0 evidence.
+# Before: the target quotient either discarded its checked conditions or made
+# them proof arguments of the object term.
+# Now: `Litex.div a b` is proof-free; both C-memberships and exact `b != 0`
+# evidence are replayed locally after the owning theorem's `intro`.
 forall a, b C:
     b != 0
     =>:

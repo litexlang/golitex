@@ -7,34 +7,12 @@ impl Runtime {
         if tb.current()? == COLON {
             Ok(self.parse_multiline_fact_claim(tb)?.into())
         } else {
-            let fact = self.parse_header_fact_before_trailing_colon(
-                tb,
-                "claim",
-                "claim => <fact>:",
-                "claim <fact>:",
-            )?;
-            if matches!(&fact, Fact::ForallFactWithIff(_)) {
-                return Err(RuntimeError::from(ParseRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_line_file(
-                        "claim multiline fact cannot be iff".to_string(),
-                        tb.line_file.clone(),
-                    ),
-                )));
-            }
-            let bindings = collect_forall_param_bindings_from_facts(std::slice::from_ref(&fact));
-            let lf = tb.line_file.clone();
-            let proof: Vec<Stmt> = self.parse_stmts_with_existing_free_param_bindings(
-                ParamObjType::Forall,
-                &bindings,
-                lf,
-                |this| {
-                    tb.body
-                        .iter_mut()
-                        .map(|b| this.parse_stmt(b))
-                        .collect::<Result<_, _>>()
-                },
-            )?;
-            Ok(ClaimStmt::new(fact, proof, tb.line_file.clone()).into())
+            Err(RuntimeError::from(ParseRuntimeError(
+                RuntimeErrorStruct::new_with_msg_and_line_file(
+                    "claim requires `claim:` followed by an indented `? <fact>` goal".to_string(),
+                    tb.line_file.clone(),
+                ),
+            )))
         }
     }
 

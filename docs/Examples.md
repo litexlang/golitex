@@ -349,7 +349,7 @@ by enumerate finite_set:
             b = 4
 
 by enumerate finite_set:
-    ? forall a {1, 2}, b {3, 4}: a $in R and b $in R and a > 1 and b > 3 => {(a, b) = (2, 4)}
+    ? forall a {1, 2}, b {3, 4}: a $in R and b $in R and a > 1 and b > 3 => (a, b) = (2, 4)
     do_nothing
 ```
 
@@ -417,7 +417,7 @@ by for:
     do_nothing
 
 by for:
-    ? forall n range(0, 3) => {n < 3}
+    ? forall n range(0, 3) => n < 3
     do_nothing
 
 by for:
@@ -628,7 +628,8 @@ claim:
         a $in R
     a $in R
 
-claim 1 = 1:
+claim:
+    ? 1 = 1
     do_nothing
 ```
 
@@ -804,15 +805,15 @@ forall:
         $q(1, 2)
 ```
 
-### 20. Inline Universal Facts
+### 20. Single-Line Universal Facts
 
 - Category: `stmt`
 - Purpose: Shows inline universal facts inside proposition bodies.
 
 ```litex
-forall a R: a > 0 => { a + 1 > 1 }
+forall a R: a > 0 => a + 1 > 1
 
-forall a R: a > 0 => {a + 1 > 1 and a + 2 > 2}
+forall a R: a > 0 => a + 1 > 1 and a + 2 > 2
 ```
 
 ### 21. Basic Logic Patterns

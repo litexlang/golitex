@@ -145,7 +145,7 @@ thm converges_to_mul_const:
 
 > **比较说明。** 下文仍以 Lean 为贯穿全文的主对照，因为它能最具体地
 > 显示 Goal-first 与 fact-first 的差异。文中对 Mizar、Isabelle/Isar、Rocq、
-> ACL2 和 Naproche 的引用，是回顾性的设计空间定位：Litex 是独立设计的，
+> ACL2 和 Naproche 的引用，用于说明 Litex 在现有设计空间中的位置：Litex 是独立设计的，
 > 并非从这些系统派生而来。引用它们是为了说明邻近思路和最终形成的差异，
 > 不表示直接的思想影响关系。
 
@@ -319,24 +319,21 @@ forall a, b, c set:
 对于当前 MVP（最小可用原型）已支持的这条等式改写路径，编译器会生成下面的 Lean 代码（具体的 fact ID 由运行时决定）：
 
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 7 := rfl
+import Litex.Rules
 
 theorem fact19 :
-    ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)
-      (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b)
-      (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c)
-      (litex_domain_fact_1 : a ≠ c)
-      (litex_domain_fact_2 : a = b),
+    ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a)
+      (b : Litex.Object) (h_0_2 : Litex.IsSet b)
+      (c : Litex.Object) (h_0_3 : Litex.IsSet c)
+      (h_0_4 : a ≠ c)
+      (h_0_5 : a = b),
       b ≠ c := by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-    litex_domain_fact_1 litex_domain_fact_2
+  intro a h_0_1 b h_0_2 c h_0_3 h_0_4 h_0_5
   exact by
-    simpa only [litex_domain_fact_2] using litex_domain_fact_1
+    simpa only [h_0_5] using h_0_4
 ```
 
-这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`fact19` 携带当前运行环境 `env` 中存储的 Litex `FactId`。共享的 `Litex.BuiltinRules` Lake 模块提供唯一的 `Litex.Object` 宇宙，生成文件检查 ABI 版本 1，不再重复 semantic core。每个源参数都是 `Litex.Object` 的值，后面紧跟它精确保留的 `Litex.IsSet` 参数事实。两个 domain 事实按源码顺序引入，最后的 `simpa only` 沿已保留的等式 `a = b` 把 `a ≠ c` 运输成 `b ≠ c`。相应的 proof IR 记录了 `forall` 引入、每个参数与 domain 的 `FactId`、一次正向等式改写，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
+这段 Lean 代码把 Litex 自动找到的验证路径逐层展开了出来：`fact19` 携带当前运行环境 `env` 中存储的 Litex `FactId`。共享的 `Litex.Rules` Lake 模块提供唯一的 `Litex.Object` 宇宙，生成文件检查 ABI 版本 8，不再重复 semantic core。每个源参数都是 `Litex.Object` 的值，后面紧跟它精确保留的 `Litex.IsSet` 参数事实。生成的 assumption 统一命名为 `h_<forall-层深>_<层内顺序>`；每层 `forall` 里的参数事实和 domain 前提按源码顺序共用一个计数器。两个 domain 事实按源码顺序引入，最后的 `simpa only` 沿已保留的等式 `a = b` 把 `a ≠ c` 运输成 `b ≠ c`。相应的 proof IR 记录了 `forall` 引入、每个参数与 domain 的 `FactId`、一次正向等式改写，以及这些节点之间的递归依赖。因此，这不是编译器事后偶然猜中了一段 Lean tactic，而是 checker 已选中的验证依据被显式地重新表达成了 Lean 证明。
 
 使用已知 `forall` 时也会按同样的方式展开。IR 会保留每个绑定参数实际选中的 Litex 对象、该对象的参数类型检查、每个命题形式的前提，以及直接代入后得到的结论。Lean 会把选中的对象具名化为 `proof_arg_2_1` 这样带类型的局部名字，把命题前提复读成 `proof_fact`，再给直接的定理应用取名。如果这个直接实例与目标并非逐字相同、而只是在有理表达式层面上相等，外层的 normalization 节点会再单独命名最终结果并检查这次转换。因此，一次代入不会被压成一行看不出过程的 `factN ...`，匹配器判定的相等也不会被默认成 Lean 里的定义相等（仅靠展开定义和计算即可相同）。
 
@@ -349,7 +346,7 @@ theorem fact19 :
 在 `Group` 例子中，运算规律直接写在 `<=>:` 里，唯一性证明则直接写成 `identity = G.mul(G.one, identity) = G.one`。
 此时，checker 寻找相应的单位律实例和等式方向，因此源码负责声明“什么成立”，验证路径负责说明“为什么成立”。
 
-> **回顾性比较。** 寻找局部证明依据并非 Litex 独有：
+> **设计空间中的位置。** 寻找局部证明依据并非 Litex 独有：
 > [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/)、
 > [Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html)
 > 和 [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) 通过显式 tactic 或
@@ -372,7 +369,7 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 `Group` 例子把这种集合论式表面具体展示出来：`s nonempty_set` 引入载体，`identity s` 表示成员关系，`G &Group<s>` 表示定义在该集合上的结构。
 载体约束仍然明确，只是不先把它呈现为需要用户操作的 universe 层级。
 
-> **回顾性比较。** 集合论式的表述并非 Litex 首创：
+> **设计空间中的位置。** 集合论式的表述并非 Litex 首创：
 > [Mizar 的数学库](https://wiki.mizar.org/library/) 基于 Tarski–Grothendieck 集合论；
 > [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) 和
 > [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html) 向用户展示依赖类型论内核；
@@ -392,7 +389,7 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 在 `Group` 声明中，乘法写成二元函数 `mul fn(x, y s) s`，使用时写成 `G.mul(x, y)`。
 这种写法直接呈现数学上的二元运算，而不要求面向用户的表层语法先把它表示成一串柯里化的一元函数，也就是先固定一个参数、返回一个继续等待其余参数的函数。
 
-> **回顾性比较。** 可读、声明式的数学语法同样有重要先例：Mizar 把形式化文章
+> **设计空间中的位置。** 可读、声明式的数学语法同样有重要先例：Mizar 把形式化文章
 > 组织成数学陈述与证明依据的序列，Isabelle/Isar 提供结构化的声明式证明，
 > Naproche 检查受控自然语言。Litex 更具体的尝试是：能否用一套紧凑的 object–fact
 > 语法，让一条有数学意义的陈述同时成为它自身的常规验证请求。
@@ -413,7 +410,7 @@ Litex 的表面语言把对象、集合、成员关系、函数和结构都作�
 Lean proof term，再由 Lean kernel 检查，会重新引入一条更慢、但更独立的审计路径。
 这套架构让低延迟的局部检查变得可期，但它本身并不证明当前 Litex 在所有情况下都更快。
 
-> **回顾性比较。**
+> **设计空间中的位置。**
 > [Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/) 和
 > [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html)
 > 把复杂的证明构造与负责检查最终 proof term 的 kernel 清楚分开。Litex 当前则把
@@ -535,7 +532,7 @@ no goals
 回到 `Group`：结构规律在概念定义时先被验证并保存；候选单位元的规律随后扩展上下文；最后才检查单位元唯一性的等式链。
 这个顺序正是上面计算链和集合包含例子共同展示的自下而上模式。
 
-> **回顾性比较。** Mizar 和 Isar 已经支持向前展开的声明式证明文本，ACL2 会累积
+> **设计空间中的位置。** Mizar 和 Isar 已经支持向前展开的声明式证明文本，ACL2 会累积
 > 可复用的定理数据库，Naproche 会逐步检查数学陈述。因此，“自下而上生长”本身并不是
 > Litex 的差异化主张。Litex 真正检验的是这样一套组合：普通 fact 是能够扩展上下文的
 > 可执行单元；local justification 不需要另行调用 proof method 就会启动；只有当
@@ -562,7 +559,7 @@ Litex 的设计承诺不应是“省略证明”，而是更严格也更朴素�
 合起来看，这五点不是五项彼此独立的便利功能，而是一套默认的人机分工：作者写出证明的数学主干，
 checker 补出其中常规的局部联系；只有当数学本身确实需要时，显式证明结构才进入源码。
 
-Litex 所主张的接口差异是这套分工，而不是孤立地拥有局部自动化。前文的回顾性比较
+Litex 所主张的接口差异是这套分工，而不是孤立地拥有局部自动化。前文对相关系统的梳理
 也表明，其中的单项机制各有先例。Litex 因而提出一个更窄、也更偏向整体架构的
 研究假设：这个由事实触发的完整循环——而不只是
 一个可选 tactic、一套引用约定或一个定理级证明器——能否成为一套小型 object–fact 语言在有实质内容且

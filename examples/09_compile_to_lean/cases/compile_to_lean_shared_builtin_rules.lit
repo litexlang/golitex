@@ -1,15 +1,12 @@
-# Tracer: generated Lean imports shared builtin theorems instead of repeating them.
+# Tracer: generated Lean imports shared verifier rules through `Litex.Rules`.
 #
-# Before (the generated file repeated the semantic core and theorem bodies):
-#   import Mathlib
+# Before (the public module and namespace name were longer):
+#   import Litex.BuiltinRules
+#   exact Litex.BuiltinRules.notEqualSymmetry fact_a_ne_b
+# Former behavior: generated proofs exposed the `BuiltinRules` name at every
+# checked verifier-rule call site.
 #
-#   namespace Litex
-#   axiom Object : Type
-#   ...
-#   theorem BuiltinRules.notEqualSymmetry ... := by
-#     exact Ne.symm h
-#
-# Now (the three facts below remain ordinary verified Litex source):
+# Now (these facts exercise the renamed shared rule module):
 forall a, b set:
     a != b
     =>:
@@ -17,11 +14,13 @@ forall a, b set:
 
 1 $in N
 1 $in C
-# Current To-Lean behavior: the generated file imports `Litex.BuiltinRules`,
-# checks `Litex.abiVersion`, and calls `notEqualSymmetry`, `numeralInN`, and
-# `numeralInC`. It does not repeat the semantic core or theorem bodies.
+# Current To-Lean behavior: the generated file imports `Litex.Rules` and calls
+# `Litex.Rules.notEqualSymmetry`, `Litex.Rules.numeralInN`, and
+# `Litex.Rules.numeralInC`. It does not emit the former module name, repeat the
+# semantic core, or repeat theorem bodies.
 #
 # Boundary: a verifier builtin without a checked shared-theorem adapter remains
 # rejected by strict To-Lean; neither an inline tactic script nor an axiom is
-# generated as a fallback. An incompatible generated ABI assertion is rejected
-# by the current shared library.
+# generated as a fallback.
+# Evidence: `cargo test --release shared_builtin_rule_tracer_imports_theorems
+# -- --nocapture` and `(cd lean && lake build)`.

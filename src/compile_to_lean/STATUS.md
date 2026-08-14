@@ -9,8 +9,8 @@ native-carrier backend and its snapshots were deleted.
 
 - [x] One `Litex.Object` target type for values, sets, and functions.
 - [x] The target ABI lives once in the shared `Litex.Core` Lake module;
-  generated files import it through `Litex.BuiltinRules` and check ABI version
-  7 instead of repeating the core.
+  generated files import it through `Litex.Rules` and check ABI version
+  9 instead of repeating the core.
 - [x] `Litex.In x S` is independent membership evidence; it never retypes `x`.
 - [x] `Litex.IsSet x` is the definitionally true pure-set proposition rather
   than a target type or classifier axiom, while set parameters retain their
@@ -18,7 +18,8 @@ native-carrier backend and its snapshots were deleted.
 - [x] `Litex.IsNonemptySet x` and `Litex.IsFiniteSet x` are derived definitions
   over the `In`-extension under the pure-set boundary, not independent axioms.
 - [x] Standard numeric sets are `Litex.Object` constants.
-- [x] Restricted `FnSpec`, proof-carrying `Applicable`, and list application.
+- [x] Restricted `FnSpec`, separate `Applicable` evidence, and proof-free list
+  application.
 - [x] Exact source application layers retained by object IR.
 - [x] Native carrier IR, type unification, widening/downcast logic, and native
   set/function prelude removed.
@@ -44,16 +45,19 @@ native-carrier backend and its snapshots were deleted.
   certificate: IDs are unique, roots and children exist, the object graph is
   acyclic and root-reachable, fact propositions are unchanged, target uses are
   owned by the cited object, and every frozen fact is attached to an object.
-- [x] WD facts needed in theorem types are emitted first as generalized helper
-  theorems and cited by stable ID.
-- [x] Every WD object node selected by the current target-demand traversal
-  closes over its direct children and emits exactly one stable `obj_N`
-  declaration in child-before-parent order. Function applications also emit
-  `obj_N_applicable`; proper prefixes of layered calls are independent nodes,
-  and `obj_N_result` supplies their checked return membership to the next
-  layer. This does not yet claim that every frozen audit root is selected.
+- [x] Object denotation is proof-free for arithmetic, division, list sets,
+  application, and function objects. WD facts are replayed after `intro` as
+  local `have wd_<environment-depth>_<id>` steps in the owning theorem or
+  function-closure proof.
+- [x] Every WD object node selected by the current theorem-local traversal
+  closes over its direct children in child-before-parent order. Function
+  applications additionally emit local `obj_N_applicable`; proper prefixes of
+  layered calls are independent nodes, and local `obj_N_result` supplies their
+  checked return membership to the next layer. Ordinary local object terms do
+  not become top-level `obj_N` declarations. This does not yet claim that
+  every frozen audit root is selected.
 - [x] Root object uses retain their exact preflight/proof/store phase for
-  audit. Every current proof-carrying source family—function application,
+  audit. Every current certificate-bearing source family—function application,
   `+`/`-`/`*`/`/`, and list set—also has a parser-owned
   `SourceObjectOccurrenceId` and one frozen source-object-use edge. The emitter
   selects by that edge only; it no longer reconstructs an object ID from a
@@ -72,17 +76,20 @@ native-carrier backend and its snapshots were deleted.
   or manufactures a generated axiom.
 - [x] The first ordinary builtin adapter (`NotEqualSymmetry`) calls a real Lean
   theorem from the shared builtin library, with malformed shape rejected.
-- [x] `Litex.add/sub/mul/div` are proof-carrying constructors. Addition,
-  subtraction, and multiplication consume the verifier's two ordered
-  `In operand C` facts; division additionally consumes the exact
-  denominator-nonzero fact. Complex and real closure are shared Lean theorems,
-  and nested operations cite earlier `well_defined_fact_<id>` helpers.
-- [x] `Litex.listSet` consumes the verifier's exact ordered element children
-  and complete indexed `i < j` distinctness matrix. Two- and three-entry
-  tracers compile under real Lean; missing, duplicated, misindexed, reversed,
-  or retargeted slots fail closed before emission.
+- [x] `Litex.add/sub/mul/div` are proof-free object constructors. Their source
+  certificates still retain the verifier's two ordered `In operand C` facts;
+  division additionally retains the exact denominator-nonzero fact. Complex
+  and real closure are shared Lean theorems. Nested operations cite local
+  `wd_<environment-depth>_<id>` steps, and each selected outer arithmetic
+  object replays its frozen intrinsic `C` result as a local `obj_N_result`.
+- [x] `Litex.listSet` is proof-free. Its source certificate retains the exact
+  ordered element children and complete indexed `i < j` distinctness matrix,
+  replayed locally. Two- and three-entry tracers compile under real Lean;
+  missing, duplicated, misindexed, reversed, or retargeted slots fail closed
+  before emission.
 - [x] Universal arithmetic and rational normalization continue to cover the
-  arithmetic nested-forall tracer under the proof-carrying ABI.
+  arithmetic nested-forall tracer under the proof-free denotation/local-WD
+  ABI.
 - [x] Nested forall premises retain their temporary parameter `FactId`s and
   replay them as exact Lean binder proofs.
 - [x] `abstract_prop` emits one uninterpreted predicate declaration; bodyful
@@ -110,7 +117,7 @@ native-carrier backend and its snapshots were deleted.
   groups use `Litex.fnSetResult`, and split arity remains rejected by Litex.
 - [x] The executable feature ledger begins with the WD object DAG and trusted
   forall-to-atomic milestones; every entry compiles with the shared
-  `Litex.Core`/`Litex.BuiltinRules` modules under real Mathlib. Earlier
+  `Litex.Core`/`Litex.Rules` modules under real Mathlib. Earlier
   scenarios remain covered by the combined showcase and focused regressions.
 
 ## WD freeze boundary
@@ -130,7 +137,7 @@ The identity/lifetime kernel is ready to stabilize as an internal contract:
 - Every frozen node stores direct child roles and direct fact edges only.
   Statement certificates are immutable, self-contained projections of the
   referenced environment closure.
-- Every current proof-carrying source occurrence freezes an exact
+- Every current certificate-bearing source occurrence freezes an exact
   occurrence-to-`WellDefinedObjId` edge plus its source-object snapshot.
   Missing, duplicated, or retargeted edges fail closed. This source-use
   contract is stable; the numeric occurrence values are not serialized ABI.
@@ -161,19 +168,19 @@ The remaining gaps are proof and resolution gaps rather than child-edge gaps:
   not yet a typed construction-resolution record. Intrinsic checks such as a
   nonempty rectangular matrix can be revalidated from the source snapshot;
   selected environment results cannot be reconstructed after scope exit.
-- Anonymous functions now own one exact binder scope and compile for
-  proof-independent bodies such as `{x}`. The current
-  `body : List Object -> Object` and `FnSpec.range : List Object -> Object`
-  cannot construct a body, dependent parameter carrier, or return carrier
-  whose object term itself consumes local WD proofs. The accepted Litex source
-  `fn(x R) R {x + 1}` therefore still fails closed at the proof-telescope ABI
-  boundary.
+- Anonymous functions own one exact binder scope and compile for
+  proof-independent bodies such as `{x}`. `functionObject` denotation is now
+  proof-free, but the anonymous-function emitter still materializes its
+  generalized spec/body/closure helpers outside the theorem that mentions the
+  literal. Its binder-owned compound WD DAG is therefore not yet replayed as
+  local steps, and the accepted Litex source `fn(x R) R {x + 1}` still fails
+  closed at this emitter-scope boundary.
 - Function sets and set builders need the same dependent owned-scope recipe
-  rather than unrelated statement-level renderers. This is semantically
-  necessary for a set builder such as `{x R: x != 0, 1 / x > 0}`: constructing
-  the second predicate object consumes the preceding nonzero proof. A real
-  Lean probe confirmed that one generated dependent `Prop` evidence structure
-  supports both this case and the anonymous `x + 1` body.
+  rather than unrelated statement-level renderers. This is necessary for a
+  set builder such as `{x R: x != 0, 1 / x > 0}`: the second predicate's WD
+  proof depends on the preceding local nonzero fact. A generated dependent
+  `Prop` evidence structure can support both this case and the anonymous
+  `x + 1` body without putting proof arguments into object denotation.
 - Active-object recursion suppression remains an ordinary Litex runtime
   optimization, but To-Lean capture now fails closed if the same active object
   is re-entered before its `WellDefinedObjId` is complete. A future accepted
@@ -183,7 +190,7 @@ The remaining gaps are proof and resolution gaps rather than child-edge gaps:
   verifier-only edge for the same object immediately after recording their
   real construction child. This removes audit noise without removing a Litex
   check or proof condition.
-- The emitter remains demand-driven and only proof-carrying source families
+- The emitter remains demand-driven and only certificate-bearing source families
   have parser-owned occurrence IDs. Emitting every auditable WD root requires
   a general occurrence/selection contract and renderable construction recipes.
 
@@ -197,8 +204,8 @@ migration scaffolding, not the final object-construction ABI.
 - [x] Implement the decided all-objects-are-sets ABI: `IsSet` is
   definitionally `True`, and nonempty/finite predicates contain only their
   membership content.
-- [x] Add the proof-carrying list-set constructor with ordered child and
-  pairwise-distinct proof slots.
+- [x] Add proof-free list-set denotation with an ordered child and
+  pairwise-distinct source certificate replayed locally.
 - [ ] Replace the target-named proof-slot layer with a verifier-owned,
   target-neutral construction recipe: ordered value children, indexed semantic
   condition proofs, owned binder scopes, and typed environment-resolution
@@ -212,16 +219,17 @@ migration scaffolding, not the final object-construction ABI.
   Litex verification retains its historical suppression behavior.
 - [x] Upgrade `FnSpec`/`functionObject` to a proof-aware ABI: ordered
   requirements are a dependent existential telescope in `Prop`, and both the
-  body and range consume exact arity/requirements evidence. Named functions
-  now replay proof-carrying arithmetic and partial bodies through their frozen
+  body and range may use exact arity/requirements evidence. `functionObject`
+  itself no longer consumes its closure proof. Named functions replay
+  arithmetic and partial-body WD locally through their frozen
   `WellDefinedObjId`/`WellDefinedFactId` DAGs.
-- [ ] Connect compound anonymous bodies to that proof-aware ABI. The current
+- [ ] Connect compound anonymous bodies to theorem-local replay. The current
   anonymous identity-body slice remains checked and ABI-compatible, but its
   binder-owned compound DAG is intentionally still rejected.
-- [ ] Add the remaining proof-carrying partial object constructors, beginning
-  with replacement. Their Lean terms must consume the verifier-owned WD
-  construction recipe instead of retaining semantic conditions only as
-  detached audit declarations.
+- [ ] Add the remaining partial object constructors, beginning with
+  replacement. Their Lean terms must remain proof-free while the
+  verifier-owned WD construction recipe is replayed in the corresponding Lean
+  proof environment rather than as detached top-level declarations.
 - [x] Preserve and emit the supported positive-real inferred forall premise.
 - [ ] Add dependent/refined non-function return-set coverage beyond the current
   nested function-set result path.
@@ -230,7 +238,7 @@ migration scaffolding, not the final object-construction ABI.
 - [ ] Port builtin families over `Litex.Object`: standard-set hierarchy,
   arithmetic/order, refined membership, set operators, reflection, and
   registered rules. Each checked certificate must call one theorem schema in
-  `Litex.BuiltinRules`; no per-use tactic expansion or builtin axiom fallback.
+  `Litex.Rules`; no per-use tactic expansion or builtin axiom fallback.
 - [ ] Lower the remaining definition and statement boundaries. Object choice,
   positive one-witness existentials, cases/contradiction, named theorems, set
   builders, named functions, and proof-independent anonymous functions have

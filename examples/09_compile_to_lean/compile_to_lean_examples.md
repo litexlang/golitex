@@ -6,15 +6,16 @@ emitted by the current compiler, a compact required shape, and the nearest
 rejected boundary. The required shape summarizes the output; it is not a
 substitute for the complete generated file.
 
-Generated output uses ABI version 8 and one `Litex.Object` universe. No entry
+Generated output uses ABI version 9 and one `Litex.Object` universe. No entry
 may reintroduce native numeric binders, `Set ℝ`, carrier unification, widening,
 downcasts, target-side proof search, `sorry`, or a compiler-invented axiom.
 
 ## well_defined_object_dag
 
 This first entry records verifier-owned well-defined object identities. The two
-inner applications must be emitted before the outer application, and the two
-equal source occurrences must reuse the same frozen outer object identity.
+inner applications' WD evidence must be replayed before the outer application
+evidence inside the theorem proof, and the two equal source occurrences must
+reuse the same frozen outer object identity.
 
 ```litex
 forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
@@ -25,111 +26,51 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: well_defined_object_dag -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_7 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In a Litex.R :=
+theorem fact43 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (b : Litex.Object) (h_0_2 : Litex.In b Litex.R) (g : Litex.Object) (h_0_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (h_0_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (h_0_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), (f [(g [a]), (t [b])]) = (f [(g [a]), (t [b])]) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact litex_param_fact_1
-
-noncomputable def obj_25 (a : Litex.Object) : Litex.Object :=
-  a
-
-theorem obj_44_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.Applicable g [(obj_25 a)] :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact Litex.fnSetApplicable litex_param_fact_3 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_25 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro))
-
-noncomputable def obj_44 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) : Litex.Object :=
-  g [(obj_25 a)] ((obj_44_applicable a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5))
-
-theorem obj_44_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In (obj_44 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  simpa [obj_44] using (Litex.fnSetResult litex_param_fact_3 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_25 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro)))
-
-theorem well_defined_fact_8 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In b Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact litex_param_fact_2
-
-noncomputable def obj_26 (b : Litex.Object) : Litex.Object :=
-  b
-
-theorem obj_45_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.Applicable t [(obj_26 b)] :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact Litex.fnSetApplicable litex_param_fact_4 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_26 b)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro))
-
-noncomputable def obj_45 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) : Litex.Object :=
-  t [(obj_26 b)] ((obj_45_applicable a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5))
-
-theorem obj_45_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In (obj_45 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  simpa [obj_45] using (Litex.fnSetResult litex_param_fact_4 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_26 b)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro)))
-
-theorem well_defined_fact_9 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact litex_param_fact_3
-
-theorem well_defined_fact_10 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In (g [a] (Litex.fnSetApplicable litex_param_fact_3 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
-  exact Exists.intro ((well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro)))) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact (by simpa using (Litex.fnSetResult litex_param_fact_3 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
-  exact Exists.intro ((well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro))))
-
-theorem well_defined_fact_11 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact litex_param_fact_4
-
-theorem well_defined_fact_12 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In (t [b] (Litex.fnSetApplicable litex_param_fact_4 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (b) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro)))) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact (by simpa using (Litex.fnSetResult litex_param_fact_4 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (b) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro))))
-
-noncomputable def obj_24 : Litex.Object :=
-  Litex.R
-
-theorem obj_46_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.Applicable f [(obj_44 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5), (obj_45 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)] :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  exact Litex.fnSetApplicable litex_param_fact_5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_44 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) Litex.R, ∃ litex_application_requirement_2 : Litex.In ((obj_45 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_10 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (Exists.intro ((well_defined_fact_12 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro)))
-
-noncomputable def obj_46 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) : Litex.Object :=
-  f [(obj_44 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5), (obj_45 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)] ((obj_46_applicable a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5))
-
-theorem obj_46_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), Litex.In (obj_46 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
-  simpa [obj_46] using (Litex.fnSetResult litex_param_fact_5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_44 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) Litex.R, ∃ litex_application_requirement_2 : Litex.In ((obj_45 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_10 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (Exists.intro ((well_defined_fact_12 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5)) (True.intro))))
-
-theorem fact43 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (g : Litex.Object) (litex_param_fact_3 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (t : Litex.Object) (litex_param_fact_4 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (f : Litex.Object) (litex_param_fact_5 : Litex.In f (Litex.FnSet ({ arity := 2, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, ∃ litex_requirement_2 : Litex.In (Litex.arg litex_args_0 1) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))), (obj_46 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5) = (obj_46 a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 g litex_param_fact_3 t litex_param_fact_4 f litex_param_fact_5
+  intro a h_0_1 b h_0_2 g h_0_3 t h_0_4 f h_0_5
+  have wd_0_7 : Litex.In a Litex.R := by
+    exact (h_0_1)
+  have obj_44_applicable : Litex.Applicable (g) [a] := by
+    exact (Litex.fnSetApplicable h_0_3 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
+      exact Exists.intro (wd_0_7) (True.intro)))
+  have obj_44_result : Litex.In (g [a]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_3 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
+      exact Exists.intro (wd_0_7) (True.intro))))
+  have wd_0_8 : Litex.In b Litex.R := by
+    exact (h_0_2)
+  have obj_45_applicable : Litex.Applicable (t) [b] := by
+    exact (Litex.fnSetApplicable h_0_4 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (b) Litex.R, True
+      exact Exists.intro (wd_0_8) (True.intro)))
+  have obj_45_result : Litex.In (t [b]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_4 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (b) Litex.R, True
+      exact Exists.intro (wd_0_8) (True.intro))))
+  have wd_0_9 : Litex.In g (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)) := by
+    exact (h_0_3)
+  have wd_0_10 : Litex.In (g [a]) Litex.R := by
+    exact ((by simpa using (Litex.fnSetResult h_0_3 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
+      exact Exists.intro (wd_0_7) (True.intro)))))
+  have wd_0_11 : Litex.In t (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)) := by
+    exact (h_0_4)
+  have wd_0_12 : Litex.In (t [b]) Litex.R := by
+    exact ((by simpa using (Litex.fnSetResult h_0_4 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (b) Litex.R, True
+      exact Exists.intro (wd_0_8) (True.intro)))))
+  have obj_46_applicable : Litex.Applicable (f) [(g [a]), (t [b])] := by
+    exact (Litex.fnSetApplicable h_0_5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In ((g [a])) Litex.R, ∃ litex_application_requirement_2 : Litex.In ((t [b])) Litex.R, True
+      exact Exists.intro (wd_0_10) (Exists.intro (wd_0_12) (True.intro))))
+  have obj_46_result : Litex.In (f [(g [a]), (t [b])]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In ((g [a])) Litex.R, ∃ litex_application_requirement_2 : Litex.In ((t [b])) Litex.R, True
+      exact Exists.intro (wd_0_10) (Exists.intro (wd_0_12) (True.intro)))))
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: well_defined_object_dag -->
@@ -137,18 +78,21 @@ by
 Required generated shape:
 
 ```lean
-noncomputable def obj_<g> ... := g [a] ...
-noncomputable def obj_<t> ... := t [b] ...
-noncomputable def obj_<outer> ... := f [obj_<g>, obj_<t>] ...
-
-theorem fact... : obj_<outer> ... = obj_<outer> ... := by
-  rfl
+theorem fact... : f [g [a], t [b]] = f [g [a], t [b]] := by
+  intro a h_a b h_b g h_g t h_t f h_f
+  have obj_<g>_applicable : Litex.Applicable g [a] := ...
+  have obj_<g>_result : Litex.In (g [a]) Litex.R := ...
+  have obj_<t>_applicable : Litex.Applicable t [b] := ...
+  have obj_<t>_result : Litex.In (t [b]) Litex.R := ...
+  have obj_<outer>_applicable : Litex.Applicable f [g [a], t [b]] := ...
+  exact rfl
 ```
 
-Each selected `WellDefinedObjId` owns one `obj_N`, application applicability is
-named by `obj_N_applicable`, and verifier propositions remain separately named
-by `well_defined_fact_N`. The emitter follows the retained child roles and
-order; it does not reconstruct the application DAG from rendered source text.
+Each selected `WellDefinedObjId` owns stable local applicability/result names,
+and verifier propositions remain separately named by
+`wd_<environment-depth>_<WellDefinedFactId>`. The emitter follows the retained
+child roles and order; it does not reconstruct the application DAG from
+rendered source text or emit generalized WD declarations above the theorem.
 
 Boundary: this entry covers one lexical `forall` environment. A child may see
 parent WD evidence, but evidence from a closed child environment must not leak
@@ -175,16 +119,14 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: trusted_forall_atomic_fact -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 axiom p : Litex.Object → Prop
 
-axiom fact3 : ∀ (x : Litex.Object) (litex_param_fact_1 : Litex.In x Litex.R), p x
+axiom fact3 : ∀ (x : Litex.Object) (h_0_1 : Litex.In x Litex.R), p x
 
 theorem fact4 : p 1 := by
-  exact (fact3 1 (Litex.BuiltinRules.numeralInR 1))
+  exact (fact3 1 (Litex.Rules.numeralInR 1))
 ```
 <!-- END ACTUAL GENERATED LEAN: trusted_forall_atomic_fact -->
 
@@ -196,12 +138,12 @@ axiom fact... :
   ∀ (x : Litex.Object) (_ : Litex.In x Litex.R), p x
 
 theorem fact... : p 1 := by
-  exact (fact... 1 (Litex.BuiltinRules.numeralInR 1))
+  exact (fact... 1 (Litex.Rules.numeralInR 1))
 ```
 
 The parentheses around the membership proof are semantically required: the
 Lean elaborator must receive the applied theorem
-`Litex.BuiltinRules.numeralInR 1`, not the unapplied theorem family. An
+`Litex.Rules.numeralInR 1`, not the unapplied theorem family. An
 unavailable or changed source `FactId` fails emission rather than falling back
 to proposition matching or `assumption`.
 
@@ -222,7 +164,6 @@ forall a, b, c C:
 
 forall a, b, c C:
     ((a - b) * c) + a = ((a - b) * c) + a
-
 forall a, b C:
     b != 0
     =>:
@@ -243,248 +184,110 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: proof_carrying_arithmetic -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_5 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
+theorem fact13 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (b : Litex.Object) (h_0_2 : Litex.In b Litex.C) (c : Litex.Object) (h_0_3 : Litex.In c Litex.C), (Litex.add (Litex.add a b) c) = (Litex.add (Litex.add a b) c) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_1
-
-theorem well_defined_fact_6 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_2
-
-theorem well_defined_fact_7 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.add a b (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact (Litex.BuiltinRules.complexAddClosure ((well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
-
-theorem well_defined_fact_8 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In c Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_3
-
-noncomputable def obj_7 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_8 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_9 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_10 (c : Litex.Object) : Litex.Object :=
-  c
-
-noncomputable def obj_11 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C) : Litex.Object :=
-  (Litex.add (obj_8 a) (obj_9 b) (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3))
-
-noncomputable def obj_12 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C) : Litex.Object :=
-  (Litex.add (obj_11 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (obj_10 c) (well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3))
-
-theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), (obj_12 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) = (obj_12 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  intro a h_0_1 b h_0_2 c h_0_3
+  have wd_0_5 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have wd_0_6 : Litex.In b Litex.C := by
+    exact (h_0_2)
+  have wd_0_7 : Litex.In (Litex.add a b) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_5) (wd_0_6)))
+  have wd_0_8 : Litex.In c Litex.C := by
+    exact (h_0_3)
+  have obj_12_result : Litex.In (Litex.add (Litex.add a b) c) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_7) (wd_0_8)))
   exact rfl
 
-theorem well_defined_fact_19 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
+theorem fact26 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (b : Litex.Object) (h_0_2 : Litex.In b Litex.C) (c : Litex.Object) (h_0_3 : Litex.In c Litex.C), (Litex.add (Litex.mul (Litex.sub a b) c) a) = (Litex.add (Litex.mul (Litex.sub a b) c) a) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_1
-
-theorem well_defined_fact_20 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_2
-
-theorem well_defined_fact_21 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact (Litex.BuiltinRules.complexSubClosure ((well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
-
-theorem well_defined_fact_22 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In c Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_3
-
-theorem well_defined_fact_23 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In (Litex.mul (Litex.sub a b (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) c (well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact (Litex.BuiltinRules.complexMulClosure ((well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)) ((well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3)))
-
-theorem well_defined_fact_24 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-  exact litex_param_fact_1
-
-noncomputable def obj_26 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_27 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_28 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_29 (c : Litex.Object) : Litex.Object :=
-  c
-
-noncomputable def obj_30 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C) : Litex.Object :=
-  (Litex.sub (obj_27 a) (obj_28 b) (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_20 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3))
-
-noncomputable def obj_31 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C) : Litex.Object :=
-  (Litex.mul (obj_30 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (obj_29 c) (well_defined_fact_21 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_22 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3))
-
-noncomputable def obj_32 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C) : Litex.Object :=
-  (Litex.add (obj_31 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (obj_27 a) (well_defined_fact_23 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) (well_defined_fact_24 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3))
-
-theorem fact26 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (c : Litex.Object) (litex_param_fact_3 : Litex.In c Litex.C), (obj_32 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) = (obj_32 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
+  intro a h_0_1 b h_0_2 c h_0_3
+  have wd_0_19 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have wd_0_20 : Litex.In b Litex.C := by
+    exact (h_0_2)
+  have wd_0_21 : Litex.In (Litex.sub a b) Litex.C := by
+    exact ((Litex.Rules.complexSubClosure (wd_0_19) (wd_0_20)))
+  have wd_0_22 : Litex.In c Litex.C := by
+    exact (h_0_3)
+  have wd_0_23 : Litex.In (Litex.mul (Litex.sub a b) c) Litex.C := by
+    exact ((Litex.Rules.complexMulClosure (wd_0_21) (wd_0_22)))
+  have wd_0_24 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have obj_32_result : Litex.In (Litex.add (Litex.mul (Litex.sub a b) c) a) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_23) (wd_0_24)))
   exact rfl
 
-theorem well_defined_fact_34 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), b ≠ 0 :=
+theorem fact39 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (b : Litex.Object) (h_0_2 : Litex.In b Litex.C) (h_0_3 : b ≠ 0), (Litex.div a b) = (Litex.div a b) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_35 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_36 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_2
-
-noncomputable def obj_46 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_47 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_49 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.div (obj_46 a) (obj_47 b) (well_defined_fact_35 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_36 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_34 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-theorem fact39 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), (obj_49 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) = (obj_49 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_34 : b ≠ 0 := by
+    exact (h_0_3)
+  have wd_0_35 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have wd_0_36 : Litex.In b Litex.C := by
+    exact (h_0_2)
+  have obj_49_result : Litex.In (Litex.div a b) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_35) (wd_0_36) (wd_0_34)))
   exact rfl
 
-theorem well_defined_fact_45 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), b ≠ 0 :=
+theorem fact52 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (b : Litex.Object) (h_0_2 : Litex.In b Litex.C) (h_0_3 : b ≠ 0), (Litex.add (Litex.div a b) a) = (Litex.add (Litex.div a b) a) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_46 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_47 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_2
-
-theorem well_defined_fact_48 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In (Litex.div a b (well_defined_fact_46 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_47 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_45 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.complexDivClosure ((well_defined_fact_46 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_47 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_45 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)))
-
-theorem well_defined_fact_49 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-noncomputable def obj_61 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_62 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_63 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_65 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.div (obj_62 a) (obj_63 b) (well_defined_fact_46 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_47 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_45 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-noncomputable def obj_66 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.add (obj_65 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (obj_62 a) (well_defined_fact_48 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_49 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-theorem fact52 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), (obj_66 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) = (obj_66 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_45 : b ≠ 0 := by
+    exact (h_0_3)
+  have wd_0_46 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have wd_0_47 : Litex.In b Litex.C := by
+    exact (h_0_2)
+  have wd_0_48 : Litex.In (Litex.div a b) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_46) (wd_0_47) (wd_0_45)))
+  have wd_0_49 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have obj_66_result : Litex.In (Litex.add (Litex.div a b) a) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_48) (wd_0_49)))
   exact rfl
 
-theorem well_defined_fact_60 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), b ≠ 0 :=
+theorem fact65 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (b : Litex.Object) (h_0_2 : Litex.In b Litex.R) (h_0_3 : b ≠ 0), Litex.In (Litex.div a b) Litex.R :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_61 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_62 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realInComplex (litex_param_fact_1))
-
-theorem well_defined_fact_63 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_2
-
-theorem well_defined_fact_64 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realInComplex (litex_param_fact_2))
-
-noncomputable def obj_80 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_81 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_83 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_84 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.div (obj_80 a) (obj_81 b) (well_defined_fact_62 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_64 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_60 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-theorem fact65 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In (obj_84 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realDivClosure ((well_defined_fact_62 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_64 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_60 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) (litex_param_fact_1) (litex_param_fact_2))
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_60 : b ≠ 0 := by
+    exact (h_0_3)
+  have wd_0_61 : Litex.In a Litex.R := by
+    exact (h_0_1)
+  have wd_0_62 : Litex.In a Litex.C := by
+    exact ((Litex.Rules.realInComplex (h_0_1)))
+  have wd_0_63 : Litex.In b Litex.R := by
+    exact (h_0_2)
+  have wd_0_64 : Litex.In b Litex.C := by
+    exact ((Litex.Rules.realInComplex (h_0_2)))
+  have obj_84_result : Litex.In (Litex.div a b) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_62) (wd_0_64) (wd_0_60)))
+  exact (Litex.Rules.realDivClosure (wd_0_62) (wd_0_64) (wd_0_60) (h_0_1) (h_0_2))
 ```
 <!-- END ACTUAL GENERATED LEAN: proof_carrying_arithmetic -->
 
 Required generated shape:
 
 ```lean
-noncomputable def obj_<quotient> ... :=
-  Litex.div obj_<a> obj_<b>
-    well_defined_fact_<a_in_C>
-    well_defined_fact_<b_in_C>
-    well_defined_fact_<b_ne_zero>
-
-theorem well_defined_fact_<quotient_in_C> ... :
-    Litex.In obj_<quotient> Litex.C := by
-  exact Litex.BuiltinRules.complexDivClosure ...
-
-noncomputable def obj_<outer> ... :=
-  Litex.add obj_<quotient> obj_<a>
-    well_defined_fact_<quotient_in_C> ...
+theorem fact... : Litex.add (Litex.div a b) a =
+    Litex.add (Litex.div a b) a := by
+  intro a h_a b h_b h_nonzero
+  have wd_0_<a_in_C> : Litex.In a Litex.C := by exact h_a
+  have wd_0_<b_in_C> : Litex.In b Litex.C := by exact h_b
+  have wd_0_<b_ne_zero> : b ≠ 0 := by exact h_nonzero
+  have wd_0_<quotient_in_C> : Litex.In (Litex.div a b) Litex.C := by
+    exact Litex.Rules.complexDivClosure
+      wd_0_<a_in_C> wd_0_<b_in_C> wd_0_<b_ne_zero>
+  exact rfl
 ```
 
 Boundary: deleting, duplicating, misindexing, or retargeting any of the three
-division requirements fails before Lean emission. The shared ABI also makes
-`Litex.div a b ha hb` ill-typed because the nonzero proof is missing.
+division requirements fails before Lean emission. The proof-free target term
+`Litex.div a b` does not authorize source emission without those three exact
+certificate slots.
 
 ## inferred_forall_premise
 
@@ -502,15 +305,13 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: inferred_forall_premise -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem fact16 : ∀ (x : Litex.Object) (litex_param_fact_1 : Litex.In x Litex.RPos), Litex.Lt 0 x :=
+theorem fact16 : ∀ (x : Litex.Object) (h_0_1 : Litex.In x Litex.RPos), Litex.Lt 0 x :=
 by
-  intro x litex_param_fact_1
+  intro x h_0_1
   have litex_inferred_fact_1 : Litex.Lt 0 x := by
-    exact (Litex.BuiltinRules.positiveRealMembership litex_param_fact_1)
+    exact (Litex.Rules.positiveRealMembership h_0_1)
   exact litex_inferred_fact_1
 ```
 <!-- END ACTUAL GENERATED LEAN: inferred_forall_premise -->
@@ -519,10 +320,10 @@ Required generated shape:
 
 ```lean
 theorem fact... :
-    ∀ (x : Litex.Object) (_ : Litex.In x Litex.RPos), Litex.Lt 0 x := by
-  intro x litex_param_fact_1
+    ∀ (x : Litex.Object) (h_0_1 : Litex.In x Litex.RPos), Litex.Lt 0 x := by
+  intro x h_0_1
   have litex_inferred_fact_1 : Litex.Lt 0 x := by
-    exact Litex.BuiltinRules.positiveRealMembership litex_param_fact_1
+    exact Litex.Rules.positiveRealMembership h_0_1
   exact litex_inferred_fact_1
 ```
 
@@ -560,104 +361,47 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: proof_carrying_list_set -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_2 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a ≠ b), a ≠ b :=
+theorem fact13 : ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a) (b : Litex.Object) (h_0_2 : Litex.IsSet b) (h_0_3 : a ≠ b), (Litex.listSet [a, b]) = (Litex.listSet [a, b]) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-noncomputable def obj_4 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_5 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_6 (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a ≠ b) : Litex.Object :=
-  (Litex.listSet [(obj_4 a), (obj_5 b)] (by
-  apply List.Pairwise.cons
-  · intro x hx
-    simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
-    subst x
-    exact (well_defined_fact_2 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)
-  · apply List.Pairwise.cons
-    · intro x hx
-      simp only [List.not_mem_nil] at hx
-    · exact List.Pairwise.nil))
-
-theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a ≠ b), (obj_6 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) = (obj_6 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_2 : a ≠ b := by
+    exact (h_0_3)
   exact rfl
 
-theorem well_defined_fact_7 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a ≠ b) (litex_domain_fact_2 : a ≠ c) (litex_domain_fact_3 : b ≠ c), a ≠ b :=
+theorem fact35 : ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a) (b : Litex.Object) (h_0_2 : Litex.IsSet b) (c : Litex.Object) (h_0_3 : Litex.IsSet c) (h_0_4 : a ≠ b) (h_0_5 : a ≠ c) (h_0_6 : b ≠ c), (Litex.listSet [a, b, c]) = (Litex.listSet [a, b, c]) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_8 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a ≠ b) (litex_domain_fact_2 : a ≠ c) (litex_domain_fact_3 : b ≠ c), a ≠ c :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3
-  exact litex_domain_fact_2
-
-theorem well_defined_fact_9 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a ≠ b) (litex_domain_fact_2 : a ≠ c) (litex_domain_fact_3 : b ≠ c), b ≠ c :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3
-  exact litex_domain_fact_3
-
-noncomputable def obj_14 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_15 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_16 (c : Litex.Object) : Litex.Object :=
-  c
-
-noncomputable def obj_17 (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a ≠ b) (litex_domain_fact_2 : a ≠ c) (litex_domain_fact_3 : b ≠ c) : Litex.Object :=
-  (Litex.listSet [(obj_14 a), (obj_15 b), (obj_16 c)] (by
-  apply List.Pairwise.cons
-  · intro x hx
-    simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
-    rcases hx with (hx_0 | hx_1)
-    · subst x
-      exact (well_defined_fact_7 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3)
-    · subst x
-      exact (well_defined_fact_8 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3)
-  · apply List.Pairwise.cons
-    · intro x hx
-      simp only [List.mem_cons, List.not_mem_nil, or_false] at hx
-      subst x
-      exact (well_defined_fact_9 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3)
-    · apply List.Pairwise.cons
-      · intro x hx
-        simp only [List.not_mem_nil] at hx
-      · exact List.Pairwise.nil))
-
-theorem fact35 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a ≠ b) (litex_domain_fact_2 : a ≠ c) (litex_domain_fact_3 : b ≠ c), (obj_17 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3) = (obj_17 a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2 litex_domain_fact_3
+  intro a h_0_1 b h_0_2 c h_0_3 h_0_4 h_0_5 h_0_6
+  have wd_0_7 : a ≠ b := by
+    exact (h_0_4)
+  have wd_0_8 : a ≠ c := by
+    exact (h_0_5)
+  have wd_0_9 : b ≠ c := by
+    exact (h_0_6)
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: proof_carrying_list_set -->
 
+Lean status: **checked** — the theorem type uses proof-free `Litex.listSet`
+terms and its pairwise WD evidence is introduced locally after `intro`.
+
 Required generated shape:
 
 ```lean
-noncomputable def obj_<set> ... : Litex.Object :=
-  Litex.listSet [obj_<a>, obj_<b>, obj_<c>] (by
-    apply List.Pairwise.cons
-    · ...
-      exact well_defined_fact_<a_ne_b>
-    · ...)
+theorem fact... : Litex.listSet [a, b, c] = Litex.listSet [a, b, c] := by
+  intro a h_a b h_b c h_c h_ab h_ac h_bc
+  have wd_0_<a_ne_b> : a ≠ b := by exact h_ab
+  have wd_0_<a_ne_c> : a ≠ c := by exact h_ac
+  have wd_0_<b_ne_c> : b ≠ c := by exact h_bc
+  exact rfl
 ```
 
 The source-order matrix is exact: `(0,1)` cites `a ≠ b`, `(0,2)` cites
 `a ≠ c`, and `(1,2)` cites `b ≠ c`. Missing, duplicated, reversed,
-out-of-range, or retargeted roles fail before Lean emission. The shared ABI
-also rejects `Litex.listSet [a]` when its WD proof argument is omitted.
+out-of-range, or retargeted roles fail before Lean emission. Proof-free target
+denotation does not make a list literal with a missing source WD certificate
+valid Litex.
 
 ## object_choice
 
@@ -673,15 +417,13 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: object_choice -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-noncomputable def x : Litex.Object := Classical.choose (Litex.BuiltinRules.realSetNonempty)
+noncomputable def x : Litex.Object := Classical.choose (Litex.Rules.realSetNonempty)
 
 theorem fact3 : Litex.In x Litex.R := by
   unfold x
-  exact Classical.choose_spec (Litex.BuiltinRules.realSetNonempty)
+  exact Classical.choose_spec (Litex.Rules.realSetNonempty)
 ```
 <!-- END ACTUAL GENERATED LEAN: object_choice -->
 
@@ -709,15 +451,13 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: existential_intro_elim -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 theorem fact8 : ∃ (x : Litex.Object), Litex.In x Litex.R ∧ x = 1 := by
   exact (by
   have litex_exist_step_1 : (1 : Litex.Object) = 1 := by
     exact rfl
-  exact ⟨1, (Litex.BuiltinRules.numeralInR 1), (litex_exist_step_1)⟩)
+  exact ⟨1, (Litex.Rules.numeralInR 1), (litex_exist_step_1)⟩)
 
 noncomputable def y : Litex.Object := Classical.choose (fact8)
 
@@ -758,9 +498,7 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: case_and_contradiction_scopes -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 theorem fact2 : (1 : Litex.Object) = 1 := by
   exact (by
@@ -795,9 +533,7 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: named_theorem -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 theorem one_eq_one : (1 : Litex.Object) = 1 :=
 by
@@ -827,16 +563,14 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: total_object_constructors -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 theorem fact1 : Litex.pi = Litex.pi := by
   exact rfl
 
-theorem fact11 : ∀ (A : Litex.Object) (litex_param_fact_1 : Litex.IsSet A) (B : Litex.Object) (litex_param_fact_2 : Litex.IsSet B), (Litex.union A B) = (Litex.union A B) :=
+theorem fact11 : ∀ (A : Litex.Object) (h_0_1 : Litex.IsSet A) (B : Litex.Object) (h_0_2 : Litex.IsSet B), (Litex.union A B) = (Litex.union A B) :=
 by
-  intro A litex_param_fact_1 B litex_param_fact_2
+  intro A h_0_1 B h_0_2
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: total_object_constructors -->
@@ -868,89 +602,51 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: proof_carrying_division -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_4 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), b ≠ 0 :=
+theorem fact13 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (b : Litex.Object) (h_0_2 : Litex.In b Litex.C) (h_0_3 : b ≠ 0), (Litex.div a b) = (Litex.div a b) :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_5 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_6 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_2
-
-noncomputable def obj_7 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_8 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_10 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.div (obj_7 a) (obj_8 b) (well_defined_fact_5 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_6 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_4 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.C) (litex_domain_fact_1 : b ≠ 0), (obj_10 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) = (obj_10 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_4 : b ≠ 0 := by
+    exact (h_0_3)
+  have wd_0_5 : Litex.In a Litex.C := by
+    exact (h_0_1)
+  have wd_0_6 : Litex.In b Litex.C := by
+    exact (h_0_2)
+  have obj_10_result : Litex.In (Litex.div a b) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_5) (wd_0_6) (wd_0_4)))
   exact rfl
 
-theorem well_defined_fact_15 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), b ≠ 0 :=
+theorem fact26 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (b : Litex.Object) (h_0_2 : Litex.In b Litex.R) (h_0_3 : b ≠ 0), Litex.In (Litex.div a b) Litex.R :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_16 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_17 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realInComplex (litex_param_fact_1))
-
-theorem well_defined_fact_18 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact litex_param_fact_2
-
-theorem well_defined_fact_19 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In b Litex.C :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realInComplex (litex_param_fact_2))
-
-noncomputable def obj_23 (a : Litex.Object) : Litex.Object :=
-  a
-
-noncomputable def obj_24 (b : Litex.Object) : Litex.Object :=
-  b
-
-noncomputable def obj_26 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_27 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0) : Litex.Object :=
-  (Litex.div (obj_23 a) (obj_24 b) (well_defined_fact_17 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) (well_defined_fact_15 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1))
-
-theorem fact26 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (b : Litex.Object) (litex_param_fact_2 : Litex.In b Litex.R) (litex_domain_fact_1 : b ≠ 0), Litex.In (obj_27 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1) Litex.R :=
-by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realDivClosure ((well_defined_fact_17 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_19 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) ((well_defined_fact_15 a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1)) (litex_param_fact_1) (litex_param_fact_2))
+  intro a h_0_1 b h_0_2 h_0_3
+  have wd_0_15 : b ≠ 0 := by
+    exact (h_0_3)
+  have wd_0_16 : Litex.In a Litex.R := by
+    exact (h_0_1)
+  have wd_0_17 : Litex.In a Litex.C := by
+    exact ((Litex.Rules.realInComplex (h_0_1)))
+  have wd_0_18 : Litex.In b Litex.R := by
+    exact (h_0_2)
+  have wd_0_19 : Litex.In b Litex.C := by
+    exact ((Litex.Rules.realInComplex (h_0_2)))
+  have obj_27_result : Litex.In (Litex.div a b) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_17) (wd_0_19) (wd_0_15)))
+  exact (Litex.Rules.realDivClosure (wd_0_17) (wd_0_19) (wd_0_15) (h_0_1) (h_0_2))
 ```
 <!-- END ACTUAL GENERATED LEAN: proof_carrying_division -->
 
-`Litex.div` consumes two `C` memberships and the exact nonzero proof; none of
-the three slots can be deleted, moved, or reconstructed by target search.
+The Litex source certificate retains two `C` memberships and the exact nonzero
+proof; none of the three slots can be deleted, moved, or reconstructed by
+target search. The quotient term itself is proof-free.
 
 ```lean
-noncomputable def obj_<quotient> :=
-  Litex.div a b fact_<a_in_C> fact_<b_in_C> fact_<b_ne_zero>
+theorem fact... : Litex.div a b = Litex.div a b := by
+  intro a h_a b h_b h_nonzero
+  have wd_<a_in_C> : Litex.In a Litex.C := ...
+  have wd_<b_in_C> : Litex.In b Litex.C := ...
+  have wd_<b_ne_zero> : b ≠ 0 := by exact h_nonzero
+  exact rfl
 ```
 
 ## set_builder_scope
@@ -966,14 +662,12 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: set_builder_scope -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 noncomputable def S : Litex.Object := (Litex.setBuilder Litex.R (fun litex_set_builder_2 => litex_set_builder_2 = litex_set_builder_2))
 
 theorem fact4 : Litex.IsSet S := by
-  simpa only [S] using (Litex.BuiltinRules.objectIsSet (Litex.setBuilder Litex.R (fun litex_set_builder_2 => litex_set_builder_2 = litex_set_builder_2)))
+  simpa only [S] using (Litex.Rules.objectIsSet (Litex.setBuilder Litex.R (fun litex_set_builder_2 => litex_set_builder_2 = litex_set_builder_2)))
 
 theorem fact5 : S = (Litex.setBuilder Litex.R (fun litex_set_builder_2 => litex_set_builder_2 = litex_set_builder_2)) := by
   rfl
@@ -995,9 +689,10 @@ noncomputable def S : Litex.Object :=
 ## named_function
 
 A named function emits a dependent requirements telescope, verifier-owned
-`well_defined_fact_N`/`obj_N` body DAG, range proof, membership, definition,
-and exact replay. `inc` exercises proof-carrying addition; `reciprocal` passes
-its retained domain fact directly to division.
+local `wd_<environment-depth>_<WellDefinedFactId>` body DAG inside its closure
+proof, range membership, definition, and exact replay. `inc` exercises
+proof-free addition with local WD; `reciprocal` reuses its retained domain fact
+beside proof-free division.
 
 ```litex
 have fn id(x R) R = x
@@ -1017,9 +712,7 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: named_function -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 noncomputable def litex_id_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_function_args => ∃ litex_function_premise_1 : Litex.In (Litex.arg litex_function_args 0) Litex.R, True, range := fun litex_function_args litex_function_length litex_function_requirements => Litex.R } : Litex.FnSpec)
@@ -1040,7 +733,7 @@ theorem litex_id_closed :
   exact Exists.choose (litex_function_requirements)
 
 noncomputable def litex_id_implementation : Litex.Object :=
-  Litex.functionObject litex_id_spec litex_id_body litex_id_closed
+  Litex.functionObject litex_id_spec litex_id_body
 
 noncomputable def litex_id : Litex.Object := litex_id_implementation
 
@@ -1051,59 +744,24 @@ theorem fact5 : Litex.In litex_id (Litex.FnSet ({ arity := 1, requirements := fu
 theorem fact6 : litex_id = litex_id_implementation := by
   rfl
 
-theorem well_defined_fact_2 : Litex.In 1 Litex.R :=
-by
-  exact Litex.BuiltinRules.numeralInR 1
-
-noncomputable def obj_13 : Litex.Object :=
-  1
-
-noncomputable def obj_14 : Litex.Object :=
-  Litex.R
-
-theorem obj_15_applicable : Litex.Applicable litex_id [obj_13] :=
-by
-  exact Litex.fnSetApplicable fact5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_13) Litex.R, True
-  exact Exists.intro (well_defined_fact_2) (True.intro))
-
-noncomputable def obj_15 : Litex.Object :=
-  litex_id [obj_13] (obj_15_applicable)
-
-theorem obj_15_result : Litex.In obj_15 Litex.R :=
-by
-  simpa [obj_15] using (Litex.fnSetResult fact5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_13) Litex.R, True
-  exact Exists.intro (well_defined_fact_2) (True.intro)))
-
-theorem fact7 : obj_15 = 1 := by
+theorem fact7 : (litex_id [1]) = 1 := by
+  have wd_0_2 : Litex.In 1 Litex.R := by
+    exact (Litex.Rules.numeralInR 1)
+  have obj_15_applicable : Litex.Applicable (litex_id) [1] := by
+    exact (Litex.fnSetApplicable fact5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_2) (True.intro)))
+  have obj_15_result : Litex.In (litex_id [1]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult fact5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_2) (True.intro))))
   exact (by
-  change (litex_id [1] (obj_15_applicable)) = 1
-  simp only [fact6, litex_id_implementation, litex_id_body, obj_13, obj_14, obj_15, Litex.functionObject_apply, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
-
-theorem well_defined_fact_8 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R), Litex.In litex_function_arg_1 Litex.R :=
-by
-  intro litex_function_arg_1 litex_function_premise_1
-  exact litex_function_premise_1
-
-theorem well_defined_fact_9 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R), Litex.In litex_function_arg_1 Litex.C :=
-by
-  intro litex_function_arg_1 litex_function_premise_1
-  exact (Litex.BuiltinRules.realInComplex (litex_function_premise_1))
-
-theorem well_defined_fact_10 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R), Litex.In 1 Litex.C :=
-by
-  intro litex_function_arg_1 litex_function_premise_1
-  exact Litex.BuiltinRules.numeralInC 1
-
-noncomputable def obj_22 (litex_function_arg_1 : Litex.Object) : Litex.Object :=
-  litex_function_arg_1
-
-noncomputable def obj_23 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_24 (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) : Litex.Object :=
-  (Litex.add (obj_22 litex_function_arg_1) obj_13 (well_defined_fact_9 litex_function_arg_1 litex_function_premise_1) (well_defined_fact_10 litex_function_arg_1 litex_function_premise_1))
+  change ((litex_id) [1]) = 1
+  rw [fact6]
+  unfold litex_id_implementation
+  rw [Litex.functionObject_apply _ _ _ (by
+    simpa only [fact6, litex_id_implementation] using obj_15_applicable)]
+  simp only [litex_id_body, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
 
 noncomputable def inc_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_function_args => ∃ litex_function_premise_1 : Litex.In (Litex.arg litex_function_args 0) Litex.R, True, range := fun litex_function_args litex_function_length litex_function_requirements => Litex.R } : Litex.FnSpec)
@@ -1112,7 +770,7 @@ noncomputable def inc_body
     (litex_function_args : List Litex.Object)
     (litex_function_length : litex_function_args.length = inc_spec.arity)
     (litex_function_requirements : inc_spec.requirements litex_function_args) : Litex.Object :=
-  (obj_24 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)))
+  (Litex.add (Litex.arg litex_function_args 0) 1)
 
 theorem inc_closed :
     ∀ litex_function_args litex_function_length litex_function_requirements,
@@ -1120,11 +778,19 @@ theorem inc_closed :
         (inc_body litex_function_args litex_function_length litex_function_requirements)
         (inc_spec.range litex_function_args litex_function_length litex_function_requirements) := by
   intro litex_function_args litex_function_length litex_function_requirements
-  change Litex.In (obj_24 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements))) Litex.R
-  exact (Litex.BuiltinRules.realAddClosure ((well_defined_fact_9 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)))) ((well_defined_fact_10 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)))) (Exists.choose (litex_function_requirements)) (Litex.BuiltinRules.numeralInR 1))
+  have wd_0_8 : Litex.In (Litex.arg litex_function_args 0) Litex.R := by
+    exact (Exists.choose (litex_function_requirements))
+  have wd_0_9 : Litex.In (Litex.arg litex_function_args 0) Litex.C := by
+    exact ((Litex.Rules.realInComplex (Exists.choose (litex_function_requirements))))
+  have wd_0_10 : Litex.In 1 Litex.C := by
+    exact (Litex.Rules.numeralInC 1)
+  have obj_24_result : Litex.In (Litex.add (Litex.arg litex_function_args 0) 1) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_9) (wd_0_10)))
+  change Litex.In (Litex.add (Litex.arg litex_function_args 0) 1) Litex.R
+  exact (Litex.Rules.realAddClosure (wd_0_9) (wd_0_10) (Exists.choose (litex_function_requirements)) (Litex.Rules.numeralInR 1))
 
 noncomputable def inc_implementation : Litex.Object :=
-  Litex.functionObject inc_spec inc_body inc_closed
+  Litex.functionObject inc_spec inc_body
 
 noncomputable def inc : Litex.Object := inc_implementation
 
@@ -1135,65 +801,28 @@ theorem fact12 : Litex.In inc (Litex.FnSet ({ arity := 1, requirements := fun li
 theorem fact13 : inc = inc_implementation := by
   rfl
 
-theorem well_defined_fact_11 : Litex.In 1 Litex.R :=
-by
-  exact Litex.BuiltinRules.numeralInR 1
-
-theorem obj_28_applicable : Litex.Applicable inc [obj_13] :=
-by
-  exact Litex.fnSetApplicable fact12 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_13) Litex.R, True
-  exact Exists.intro (well_defined_fact_11) (True.intro))
-
-noncomputable def obj_28 : Litex.Object :=
-  inc [obj_13] (obj_28_applicable)
-
-theorem obj_28_result : Litex.In obj_28 Litex.R :=
-by
-  simpa [obj_28] using (Litex.fnSetResult fact12 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_13) Litex.R, True
-  exact Exists.intro (well_defined_fact_11) (True.intro)))
-
-theorem well_defined_fact_12 : Litex.In 1 Litex.C :=
-by
-  exact Litex.BuiltinRules.numeralInC 1
-
-noncomputable def obj_29 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_30 : Litex.Object :=
-  (Litex.add obj_13 obj_13 well_defined_fact_12 well_defined_fact_12)
-
-theorem fact14 : obj_28 = obj_30 := by
+theorem fact14 : (inc [1]) = (Litex.add 1 1) := by
+  have wd_0_11 : Litex.In 1 Litex.R := by
+    exact (Litex.Rules.numeralInR 1)
+  have obj_28_applicable : Litex.Applicable (inc) [1] := by
+    exact (Litex.fnSetApplicable fact12 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_11) (True.intro)))
+  have obj_28_result : Litex.In (inc [1]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult fact12 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_11) (True.intro))))
+  have wd_0_12 : Litex.In 1 Litex.C := by
+    exact (Litex.Rules.numeralInC 1)
+  have obj_30_result : Litex.In (Litex.add 1 1) Litex.C := by
+    exact ((Litex.Rules.complexAddClosure (wd_0_12) (wd_0_12)))
   exact (by
-  change (inc [1] (obj_28_applicable)) = obj_30
-  simp only [fact13, inc_implementation, inc_body, obj_13, obj_14, obj_22, obj_23, obj_24, obj_28, obj_29, obj_30, Litex.functionObject_apply, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
-
-theorem well_defined_fact_19 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) (litex_function_premise_2 : litex_function_arg_1 ≠ 0), litex_function_arg_1 ≠ 0 :=
-by
-  intro litex_function_arg_1 litex_function_premise_1 litex_function_premise_2
-  exact litex_function_premise_2
-
-theorem well_defined_fact_20 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) (litex_function_premise_2 : litex_function_arg_1 ≠ 0), Litex.In 1 Litex.C :=
-by
-  intro litex_function_arg_1 litex_function_premise_1 litex_function_premise_2
-  exact Litex.BuiltinRules.numeralInC 1
-
-theorem well_defined_fact_21 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) (litex_function_premise_2 : litex_function_arg_1 ≠ 0), Litex.In litex_function_arg_1 Litex.R :=
-by
-  intro litex_function_arg_1 litex_function_premise_1 litex_function_premise_2
-  exact litex_function_premise_1
-
-theorem well_defined_fact_22 : ∀ (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) (litex_function_premise_2 : litex_function_arg_1 ≠ 0), Litex.In litex_function_arg_1 Litex.C :=
-by
-  intro litex_function_arg_1 litex_function_premise_1 litex_function_premise_2
-  exact (Litex.BuiltinRules.realInComplex (litex_function_premise_1))
-
-noncomputable def obj_38 (litex_function_arg_1 : Litex.Object) : Litex.Object :=
-  litex_function_arg_1
-
-noncomputable def obj_39 (litex_function_arg_1 : Litex.Object) (litex_function_premise_1 : Litex.In litex_function_arg_1 Litex.R) (litex_function_premise_2 : litex_function_arg_1 ≠ 0) : Litex.Object :=
-  (Litex.div obj_13 (obj_38 litex_function_arg_1) (well_defined_fact_20 litex_function_arg_1 litex_function_premise_1 litex_function_premise_2) (well_defined_fact_22 litex_function_arg_1 litex_function_premise_1 litex_function_premise_2) (well_defined_fact_19 litex_function_arg_1 litex_function_premise_1 litex_function_premise_2))
+  change ((inc) [1]) = (Litex.add 1 1)
+  rw [fact13]
+  unfold inc_implementation
+  rw [Litex.functionObject_apply _ _ _ (by
+    simpa only [fact13, inc_implementation] using obj_28_applicable)]
+  simp only [inc_body, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
 
 noncomputable def reciprocal_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_function_args => ∃ litex_function_premise_1 : Litex.In (Litex.arg litex_function_args 0) Litex.R, ∃ litex_function_premise_2 : (Litex.arg litex_function_args 0) ≠ 0, True, range := fun litex_function_args litex_function_length litex_function_requirements => Litex.R } : Litex.FnSpec)
@@ -1202,7 +831,7 @@ noncomputable def reciprocal_body
     (litex_function_args : List Litex.Object)
     (litex_function_length : litex_function_args.length = reciprocal_spec.arity)
     (litex_function_requirements : reciprocal_spec.requirements litex_function_args) : Litex.Object :=
-  (obj_39 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)) (Exists.choose (Exists.choose_spec (litex_function_requirements))))
+  (Litex.div 1 (Litex.arg litex_function_args 0))
 
 theorem reciprocal_closed :
     ∀ litex_function_args litex_function_length litex_function_requirements,
@@ -1210,11 +839,21 @@ theorem reciprocal_closed :
         (reciprocal_body litex_function_args litex_function_length litex_function_requirements)
         (reciprocal_spec.range litex_function_args litex_function_length litex_function_requirements) := by
   intro litex_function_args litex_function_length litex_function_requirements
-  change Litex.In (obj_39 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)) (Exists.choose (Exists.choose_spec (litex_function_requirements)))) Litex.R
-  exact (Litex.BuiltinRules.realDivClosure ((well_defined_fact_20 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)) (Exists.choose (Exists.choose_spec (litex_function_requirements))))) ((well_defined_fact_22 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)) (Exists.choose (Exists.choose_spec (litex_function_requirements))))) ((well_defined_fact_19 ((Litex.arg litex_function_args 0)) (Exists.choose (litex_function_requirements)) (Exists.choose (Exists.choose_spec (litex_function_requirements))))) (Litex.BuiltinRules.numeralInR 1) (Exists.choose (litex_function_requirements)))
+  have wd_0_19 : (Litex.arg litex_function_args 0) ≠ 0 := by
+    exact (Exists.choose (Exists.choose_spec (litex_function_requirements)))
+  have wd_0_20 : Litex.In 1 Litex.C := by
+    exact (Litex.Rules.numeralInC 1)
+  have wd_0_21 : Litex.In (Litex.arg litex_function_args 0) Litex.R := by
+    exact (Exists.choose (litex_function_requirements))
+  have wd_0_22 : Litex.In (Litex.arg litex_function_args 0) Litex.C := by
+    exact ((Litex.Rules.realInComplex (Exists.choose (litex_function_requirements))))
+  have obj_39_result : Litex.In (Litex.div 1 (Litex.arg litex_function_args 0)) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_20) (wd_0_22) (wd_0_19)))
+  change Litex.In (Litex.div 1 (Litex.arg litex_function_args 0)) Litex.R
+  exact (Litex.Rules.realDivClosure (wd_0_20) (wd_0_22) (wd_0_19) (Litex.Rules.numeralInR 1) (Exists.choose (litex_function_requirements)))
 
 noncomputable def reciprocal_implementation : Litex.Object :=
-  Litex.functionObject reciprocal_spec reciprocal_body reciprocal_closed
+  Litex.functionObject reciprocal_spec reciprocal_body
 
 noncomputable def reciprocal : Litex.Object := reciprocal_implementation
 
@@ -1225,62 +864,41 @@ theorem fact23 : Litex.In reciprocal (Litex.FnSet ({ arity := 1, requirements :=
 theorem fact24 : reciprocal = reciprocal_implementation := by
   rfl
 
-theorem well_defined_fact_28 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), Litex.In a Litex.R :=
+theorem fact34 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (h_0_2 : a ≠ 0), (reciprocal [a]) = (Litex.div 1 a) :=
 by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact litex_param_fact_1
-
-theorem well_defined_fact_29 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), a ≠ 0 :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-noncomputable def obj_48 (a : Litex.Object) : Litex.Object :=
-  a
-
-theorem obj_50_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), Litex.Applicable reciprocal [(obj_48 a)] :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact Litex.fnSetApplicable fact23 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_48 a)) Litex.R, ∃ litex_application_requirement_2 : ((obj_48 a)) ≠ 0, True
-  exact Exists.intro ((well_defined_fact_28 a litex_param_fact_1 litex_domain_fact_1)) (Exists.intro ((well_defined_fact_29 a litex_param_fact_1 litex_domain_fact_1)) (True.intro)))
-
-noncomputable def obj_50 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0) : Litex.Object :=
-  reciprocal [(obj_48 a)] ((obj_50_applicable a litex_param_fact_1 litex_domain_fact_1))
-
-theorem obj_50_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), Litex.In (obj_50 a litex_param_fact_1 litex_domain_fact_1) Litex.R :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  simpa [obj_50] using (Litex.fnSetResult fact23 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_48 a)) Litex.R, ∃ litex_application_requirement_2 : ((obj_48 a)) ≠ 0, True
-  exact Exists.intro ((well_defined_fact_28 a litex_param_fact_1 litex_domain_fact_1)) (Exists.intro ((well_defined_fact_29 a litex_param_fact_1 litex_domain_fact_1)) (True.intro))))
-
-theorem well_defined_fact_30 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), a ≠ 0 :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact litex_domain_fact_1
-
-theorem well_defined_fact_31 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), Litex.In 1 Litex.C :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact Litex.BuiltinRules.numeralInC 1
-
-theorem well_defined_fact_32 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), Litex.In a Litex.C :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact (Litex.BuiltinRules.realInComplex (litex_param_fact_1))
-
-noncomputable def obj_51 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0) : Litex.Object :=
-  (Litex.div obj_13 (obj_48 a) (well_defined_fact_31 a litex_param_fact_1 litex_domain_fact_1) (well_defined_fact_32 a litex_param_fact_1 litex_domain_fact_1) (well_defined_fact_30 a litex_param_fact_1 litex_domain_fact_1))
-
-theorem fact34 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_domain_fact_1 : a ≠ 0), (obj_50 a litex_param_fact_1 litex_domain_fact_1) = (obj_51 a litex_param_fact_1 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 litex_domain_fact_1
+  intro a h_0_1 h_0_2
+  have wd_0_28 : Litex.In a Litex.R := by
+    exact (h_0_1)
+  have wd_0_29 : a ≠ 0 := by
+    exact (h_0_2)
+  have obj_50_applicable : Litex.Applicable (reciprocal) [a] := by
+    exact (Litex.fnSetApplicable fact23 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, ∃ litex_application_requirement_2 : (a) ≠ 0, True
+      exact Exists.intro (wd_0_28) (Exists.intro (wd_0_29) (True.intro))))
+  have obj_50_result : Litex.In (reciprocal [a]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult fact23 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, ∃ litex_application_requirement_2 : (a) ≠ 0, True
+      exact Exists.intro (wd_0_28) (Exists.intro (wd_0_29) (True.intro)))))
+  have wd_0_30 : a ≠ 0 := by
+    exact (h_0_2)
+  have wd_0_31 : Litex.In 1 Litex.C := by
+    exact (Litex.Rules.numeralInC 1)
+  have wd_0_32 : Litex.In a Litex.C := by
+    exact ((Litex.Rules.realInComplex (h_0_1)))
+  have obj_51_result : Litex.In (Litex.div 1 a) Litex.C := by
+    exact ((Litex.Rules.complexDivClosure (wd_0_31) (wd_0_32) (wd_0_30)))
   exact (by
-  change (reciprocal [a] ((obj_50_applicable a litex_param_fact_1 litex_domain_fact_1))) = (obj_51 a litex_param_fact_1 litex_domain_fact_1)
-  simp only [fact24, reciprocal_implementation, reciprocal_body, obj_13, obj_29, obj_38, obj_39, obj_48, obj_50, obj_51, Litex.functionObject_apply, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
+  change ((reciprocal) [a]) = (Litex.div 1 a)
+  rw [fact24]
+  unfold reciprocal_implementation
+  rw [Litex.functionObject_apply _ _ _ (by
+    simpa only [fact24, reciprocal_implementation] using obj_50_applicable)]
+  simp only [reciprocal_body, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
 ```
 <!-- END ACTUAL GENERATED LEAN: named_function -->
+
+Lean status: **checked** — generated named-function replay uses the exact local
+application certificate with `Litex.functionObject_apply`.
 
 Lean uses `Litex.functionObject`, `functionObjectInFnSet`, and
 `functionObject_apply`. Body and range both receive the arity and ordered
@@ -1295,7 +913,9 @@ def id_body
     (hRequirements : id_spec.requirements args) : Litex.Object :=
   Litex.arg args 0
 theorem id_closed : ... := by ...
-noncomputable def id := Litex.functionObject id_spec id_body id_closed
+noncomputable def id := Litex.functionObject id_spec id_body
+theorem id_in_fn_set : Litex.In id (Litex.FnSet id_spec) := by
+  exact Litex.functionObjectInFnSet id_spec id_body id_closed
 ```
 
 ## indexed_aggregate
@@ -1311,16 +931,14 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: indexed_aggregate -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 theorem q_dimension_positive : Litex.In 2 Litex.NPos := by
-  exact (Litex.BuiltinRules.numeralInNPos 2 (by norm_num))
+  exact (Litex.Rules.numeralInNPos 2 (by norm_num))
 
 theorem q_dimension_at_least_two : Litex.Le 2 2 := by
   exact (by
-  exact (Litex.BuiltinRules.numeralLe 2 2).2 (by norm_num))
+  exact (Litex.Rules.numeralLe 2 2).2 (by norm_num))
 
 noncomputable def q_value (litex_tuple_index_1 : Litex.Object) : Litex.Object :=
   0
@@ -1338,7 +956,7 @@ by
   simpa only [q] using
     (Litex.tupleObject_dim 2 q_value q_dimension_positive q_dimension_at_least_two)
 
-theorem fact14 : ∀ (_binder_2 : Litex.Object) (litex_nested_param_fact_2 : Litex.In _binder_2 (Litex.closedRange 1 2)), (Litex.atIndex q _binder_2) = 0 :=
+theorem fact14 : ∀ (_binder_2 : Litex.Object) (h_0_1 : Litex.In _binder_2 (Litex.closedRange 1 2)), (Litex.atIndex q _binder_2) = 0 :=
 by
   intro litex_coordinate litex_coordinate_in_range
   simpa only [q, q_value] using
@@ -1385,9 +1003,7 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: statement_object_interactions -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 noncomputable def litex_id_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_function_args => ∃ litex_function_premise_1 : Litex.In (Litex.arg litex_function_args 0) Litex.R, True, range := fun litex_function_args litex_function_length litex_function_requirements => Litex.R } : Litex.FnSpec)
@@ -1408,7 +1024,7 @@ theorem litex_id_closed :
   exact Exists.choose (litex_function_requirements)
 
 noncomputable def litex_id_implementation : Litex.Object :=
-  Litex.functionObject litex_id_spec litex_id_body litex_id_closed
+  Litex.functionObject litex_id_spec litex_id_body
 
 noncomputable def litex_id : Litex.Object := litex_id_implementation
 
@@ -1423,7 +1039,7 @@ theorem fact14 : ∃ (x : Litex.Object), Litex.In x Litex.R ∧ x = 1 := by
   exact (by
   have litex_exist_step_1 : (1 : Litex.Object) = 1 := by
     exact rfl
-  exact ⟨1, (Litex.BuiltinRules.numeralInR 1), (litex_exist_step_1)⟩)
+  exact ⟨1, (Litex.Rules.numeralInR 1), (litex_exist_step_1)⟩)
 
 noncomputable def y : Litex.Object := Classical.choose (fact14)
 
@@ -1435,32 +1051,24 @@ theorem fact20 : y = 1 := by
   unfold y
   exact (Classical.choose_spec (fact14)).2
 
-theorem well_defined_fact_2 : Litex.In y Litex.R :=
-by
-  exact fact19
-
-noncomputable def obj_30 : Litex.Object :=
-  y
-
-theorem obj_33_applicable : Litex.Applicable litex_id [obj_30] :=
-by
-  exact Litex.fnSetApplicable fact5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_30) Litex.R, True
-  exact Exists.intro (well_defined_fact_2) (True.intro))
-
-noncomputable def obj_33 : Litex.Object :=
-  litex_id [obj_30] (obj_33_applicable)
-
-theorem obj_33_result : Litex.In obj_33 Litex.R :=
-by
-  simpa [obj_33] using (Litex.fnSetResult fact5 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_30) Litex.R, True
-  exact Exists.intro (well_defined_fact_2) (True.intro)))
-
-theorem fact21 : obj_33 = y := by
+theorem fact21 : (litex_id [y]) = y := by
+  have wd_0_2 : Litex.In y Litex.R := by
+    exact (fact19)
+  have obj_33_applicable : Litex.Applicable (litex_id) [y] := by
+    exact (Litex.fnSetApplicable fact5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (y) Litex.R, True
+      exact Exists.intro (wd_0_2) (True.intro)))
+  have obj_33_result : Litex.In (litex_id [y]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult fact5 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (y) Litex.R, True
+      exact Exists.intro (wd_0_2) (True.intro))))
   exact (by
-  change (litex_id [y] (obj_33_applicable)) = y
-  simp only [fact6, litex_id_implementation, litex_id_body, obj_30, obj_33, Litex.functionObject_apply, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
+  change ((litex_id) [y]) = y
+  rw [fact6]
+  unfold litex_id_implementation
+  rw [Litex.functionObject_apply _ _ _ (by
+    simpa only [fact6, litex_id_implementation] using obj_33_applicable)]
+  simp only [litex_id_body, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
 
 theorem one_eq_one_by_cases : (1 : Litex.Object) = 1 :=
 by
@@ -1489,7 +1097,7 @@ theorem into_builder_closed :
   exact (Litex.inSetBuilder_iff.mpr (And.intro (Exists.choose (litex_function_requirements)) ((rfl))))
 
 noncomputable def into_builder_implementation : Litex.Object :=
-  Litex.functionObject into_builder_spec into_builder_body into_builder_closed
+  Litex.functionObject into_builder_spec into_builder_body
 
 noncomputable def into_builder : Litex.Object := into_builder_implementation
 
@@ -1500,37 +1108,29 @@ theorem fact40 : Litex.In into_builder (Litex.FnSet ({ arity := 1, requirements 
 theorem fact41 : into_builder = into_builder_implementation := by
   rfl
 
-theorem well_defined_fact_6 : Litex.In 1 Litex.R :=
-by
-  exact Litex.BuiltinRules.numeralInR 1
-
-noncomputable def obj_31 : Litex.Object :=
-  Litex.R
-
-noncomputable def obj_32 : Litex.Object :=
-  1
-
-theorem obj_52_applicable : Litex.Applicable into_builder [obj_32] :=
-by
-  exact Litex.fnSetApplicable fact40 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_32) Litex.R, True
-  exact Exists.intro (well_defined_fact_6) (True.intro))
-
-noncomputable def obj_52 : Litex.Object :=
-  into_builder [obj_32] (obj_52_applicable)
-
-theorem obj_52_result : Litex.In obj_52 (Litex.setBuilder Litex.R (fun litex_set_builder_9 => litex_set_builder_9 = litex_set_builder_9)) :=
-by
-  simpa [obj_52] using (Litex.fnSetResult fact40 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_32) Litex.R, True
-  exact Exists.intro (well_defined_fact_6) (True.intro)))
-
-theorem fact42 : obj_52 = 1 := by
+theorem fact42 : (into_builder [1]) = 1 := by
+  have wd_0_6 : Litex.In 1 Litex.R := by
+    exact (Litex.Rules.numeralInR 1)
+  have obj_52_applicable : Litex.Applicable (into_builder) [1] := by
+    exact (Litex.fnSetApplicable fact40 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_6) (True.intro)))
+  have obj_52_result : Litex.In (into_builder [1]) (Litex.setBuilder Litex.R (fun litex_set_builder_9 => litex_set_builder_9 = litex_set_builder_9)) := by
+    exact (by simpa using (Litex.fnSetResult fact40 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_6) (True.intro))))
   exact (by
-  change (into_builder [1] (obj_52_applicable)) = 1
-  simp only [fact41, into_builder_implementation, into_builder_body, obj_31, obj_32, obj_52, Litex.functionObject_apply, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
+  change ((into_builder) [1]) = 1
+  rw [fact41]
+  unfold into_builder_implementation
+  rw [Litex.functionObject_apply _ _ _ (by
+    simpa only [fact41, into_builder_implementation] using obj_52_applicable)]
+  simp only [into_builder_body, Litex.arg, List.getD_cons_zero, List.getD_cons_succ, List.getD_nil])
 ```
 <!-- END ACTUAL GENERATED LEAN: statement_object_interactions -->
+
+Lean status: **TODO** — the generated statement/function interaction replay
+still leaves `Litex.functionObject` application equalities unsolved.
 
 These reuse the basis interfaces; no interaction-specific axiom or escape
 hatch is introduced.
@@ -1557,16 +1157,14 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: anonymous_function -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_3 : ∀ (litex_wd_scope_3_arg_1 : Litex.Object) (litex_wd_scope_3_premise_1 : Litex.In litex_wd_scope_3_arg_1 Litex.R), Litex.In litex_wd_scope_3_arg_1 Litex.R :=
+theorem wd_0_3 : ∀ (litex_wd_scope_3_arg_1 : Litex.Object) (litex_wd_scope_3_premise_1 : Litex.In litex_wd_scope_3_arg_1 Litex.R), Litex.In litex_wd_scope_3_arg_1 Litex.R :=
 by
   intro litex_wd_scope_3_arg_1 litex_wd_scope_3_premise_1
   exact litex_wd_scope_3_premise_1
 
-theorem well_defined_fact_4 : ∀ (litex_wd_scope_4_arg_1 : Litex.Object) (litex_wd_scope_4_premise_1 : Litex.In litex_wd_scope_4_arg_1 Litex.R), Litex.In litex_wd_scope_4_arg_1 Litex.R :=
+theorem wd_0_4 : ∀ (litex_wd_scope_4_arg_1 : Litex.Object) (litex_wd_scope_4_premise_1 : Litex.In litex_wd_scope_4_arg_1 Litex.R), Litex.In litex_wd_scope_4_arg_1 Litex.R :=
 by
   intro litex_wd_scope_4_arg_1 litex_wd_scope_4_premise_1
   exact litex_wd_scope_4_premise_1
@@ -1591,10 +1189,10 @@ theorem obj_9_closed :
 by
   intro litex_obj_9_args litex_obj_9_length litex_obj_9_requirements
   change Litex.In (Litex.arg litex_obj_9_args 0) Litex.R
-  exact (well_defined_fact_3 (Litex.arg litex_obj_9_args 0) (Exists.choose (litex_obj_9_requirements)))
+  exact (wd_0_3 (Litex.arg litex_obj_9_args 0) (Exists.choose (litex_obj_9_requirements)))
 
 noncomputable def obj_9 : Litex.Object :=
-  Litex.functionObject obj_9_spec obj_9_body obj_9_closed
+  Litex.functionObject obj_9_spec obj_9_body
 
 theorem obj_9_in_fn_set :
     Litex.In obj_9 (Litex.FnSet obj_9_spec) := by
@@ -1621,10 +1219,10 @@ theorem obj_12_closed :
 by
   intro litex_obj_12_args litex_obj_12_length litex_obj_12_requirements
   change Litex.In (Litex.arg litex_obj_12_args 0) Litex.R
-  exact (well_defined_fact_4 (Litex.arg litex_obj_12_args 0) (Exists.choose (litex_obj_12_requirements)))
+  exact (wd_0_4 (Litex.arg litex_obj_12_args 0) (Exists.choose (litex_obj_12_requirements)))
 
 noncomputable def obj_12 : Litex.Object :=
-  Litex.functionObject obj_12_spec obj_12_body obj_12_closed
+  Litex.functionObject obj_12_spec obj_12_body
 
 theorem obj_12_in_fn_set :
     Litex.In obj_12 (Litex.FnSet obj_12_spec) := by
@@ -1634,15 +1232,15 @@ theorem obj_12_in_fn_set :
 theorem fact7 : obj_9 = obj_12 := by
   exact rfl
 
-theorem well_defined_fact_11 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_wd_scope_9_arg_1 : Litex.Object) (litex_wd_scope_9_premise_1 : Litex.In litex_wd_scope_9_arg_1 Litex.R), Litex.In litex_wd_scope_9_arg_1 Litex.R :=
+theorem wd_0_11 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (litex_wd_scope_9_arg_1 : Litex.Object) (litex_wd_scope_9_premise_1 : Litex.In litex_wd_scope_9_arg_1 Litex.R), Litex.In litex_wd_scope_9_arg_1 Litex.R :=
 by
-  intro a litex_param_fact_1 litex_wd_scope_9_arg_1 litex_wd_scope_9_premise_1
+  intro a h_0_1 litex_wd_scope_9_arg_1 litex_wd_scope_9_premise_1
   exact litex_wd_scope_9_premise_1
 
-theorem well_defined_fact_12 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.In a Litex.R :=
+theorem wd_0_12 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.In a Litex.R :=
 by
-  intro a litex_param_fact_1
-  exact litex_param_fact_1
+  intro a h_0_1
+  exact h_0_1
 
 noncomputable def obj_27 : Litex.Object :=
   Litex.R
@@ -1653,104 +1251,104 @@ noncomputable def obj_28 (a : Litex.Object) : Litex.Object :=
 noncomputable def obj_29 (litex_wd_scope_9_arg_1 : Litex.Object) : Litex.Object :=
   litex_wd_scope_9_arg_1
 
-noncomputable def obj_30_spec (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.FnSpec :=
+noncomputable def obj_30_spec (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)
 
-noncomputable def obj_30_body (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_obj_30_args : List Litex.Object) (_litex_length : litex_obj_30_args.length = ((obj_30_spec a litex_param_fact_1)).arity) (_litex_requirements : ((obj_30_spec a litex_param_fact_1)).requirements litex_obj_30_args) : Litex.Object :=
+noncomputable def obj_30_body (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (litex_obj_30_args : List Litex.Object) (_litex_length : litex_obj_30_args.length = ((obj_30_spec a h_0_1)).arity) (_litex_requirements : ((obj_30_spec a h_0_1)).requirements litex_obj_30_args) : Litex.Object :=
   (obj_29 (Litex.arg litex_obj_30_args 0))
 
-theorem obj_30_closed (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) :
+theorem obj_30_closed (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) :
     ∀ (litex_obj_30_args : List Litex.Object)
-      (litex_obj_30_length : litex_obj_30_args.length = ((obj_30_spec a litex_param_fact_1)).arity)
-      (litex_obj_30_requirements : ((obj_30_spec a litex_param_fact_1)).requirements litex_obj_30_args),
-      Litex.In ((obj_30_body a litex_param_fact_1) litex_obj_30_args litex_obj_30_length litex_obj_30_requirements) (((obj_30_spec a litex_param_fact_1)).range litex_obj_30_args litex_obj_30_length litex_obj_30_requirements) :=
+      (litex_obj_30_length : litex_obj_30_args.length = ((obj_30_spec a h_0_1)).arity)
+      (litex_obj_30_requirements : ((obj_30_spec a h_0_1)).requirements litex_obj_30_args),
+      Litex.In ((obj_30_body a h_0_1) litex_obj_30_args litex_obj_30_length litex_obj_30_requirements) (((obj_30_spec a h_0_1)).range litex_obj_30_args litex_obj_30_length litex_obj_30_requirements) :=
 by
   intro litex_obj_30_args litex_obj_30_length litex_obj_30_requirements
   change Litex.In (Litex.arg litex_obj_30_args 0) Litex.R
-  exact (well_defined_fact_11 (a) (litex_param_fact_1) (Litex.arg litex_obj_30_args 0) (Exists.choose (litex_obj_30_requirements)))
+  exact (wd_0_11 (a) (h_0_1) (Litex.arg litex_obj_30_args 0) (Exists.choose (litex_obj_30_requirements)))
 
-noncomputable def obj_30 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.Object :=
-  Litex.functionObject (obj_30_spec a litex_param_fact_1) (obj_30_body a litex_param_fact_1) (obj_30_closed a litex_param_fact_1)
+noncomputable def obj_30 (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.Object :=
+  Litex.functionObject (obj_30_spec a h_0_1) (obj_30_body a h_0_1)
 
-theorem obj_30_in_fn_set (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) :
-    Litex.In (obj_30 a litex_param_fact_1) (Litex.FnSet (obj_30_spec a litex_param_fact_1)) := by
+theorem obj_30_in_fn_set (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) :
+    Litex.In (obj_30 a h_0_1) (Litex.FnSet (obj_30_spec a h_0_1)) := by
   unfold obj_30
-  exact Litex.functionObjectInFnSet (obj_30_spec a litex_param_fact_1) (obj_30_body a litex_param_fact_1) (obj_30_closed a litex_param_fact_1)
+  exact Litex.functionObjectInFnSet (obj_30_spec a h_0_1) (obj_30_body a h_0_1) (obj_30_closed a h_0_1)
 
-theorem obj_31_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.Applicable (obj_30 a litex_param_fact_1) [(obj_28 a)] :=
+theorem obj_31_applicable : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.Applicable (obj_30 a h_0_1) [(obj_28 a)] :=
 by
-  intro a litex_param_fact_1
-  exact Litex.fnSetApplicable (obj_30_in_fn_set a litex_param_fact_1) rfl (by
+  intro a h_0_1
+  exact Litex.fnSetApplicable (obj_30_in_fn_set a h_0_1) rfl (by
   change ∃ litex_application_requirement_1 : Litex.In ((obj_28 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_12 a litex_param_fact_1)) (True.intro))
+  exact Exists.intro ((wd_0_12 a h_0_1)) (True.intro))
 
-noncomputable def obj_31 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.Object :=
-  (obj_30 a litex_param_fact_1) [(obj_28 a)] ((obj_31_applicable a litex_param_fact_1))
+noncomputable def obj_31 (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.Object :=
+  (obj_30 a h_0_1) [(obj_28 a)]
 
-theorem obj_31_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.In (obj_31 a litex_param_fact_1) Litex.R :=
+theorem obj_31_result : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.In (obj_31 a h_0_1) Litex.R :=
 by
-  intro a litex_param_fact_1
-  simpa [obj_31] using (Litex.fnSetResult (obj_30_in_fn_set a litex_param_fact_1) rfl (by
+  intro a h_0_1
+  simpa [obj_31] using (Litex.fnSetResult (obj_30_in_fn_set a h_0_1) rfl (by
   change ∃ litex_application_requirement_1 : Litex.In ((obj_28 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_12 a litex_param_fact_1)) (True.intro)))
+  exact Exists.intro ((wd_0_12 a h_0_1)) (True.intro)))
 
-theorem well_defined_fact_13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_wd_scope_10_arg_1 : Litex.Object) (litex_wd_scope_10_premise_1 : Litex.In litex_wd_scope_10_arg_1 Litex.R), Litex.In litex_wd_scope_10_arg_1 Litex.R :=
+theorem wd_0_13 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (litex_wd_scope_10_arg_1 : Litex.Object) (litex_wd_scope_10_premise_1 : Litex.In litex_wd_scope_10_arg_1 Litex.R), Litex.In litex_wd_scope_10_arg_1 Litex.R :=
 by
-  intro a litex_param_fact_1 litex_wd_scope_10_arg_1 litex_wd_scope_10_premise_1
+  intro a h_0_1 litex_wd_scope_10_arg_1 litex_wd_scope_10_premise_1
   exact litex_wd_scope_10_premise_1
 
-theorem well_defined_fact_14 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.In a Litex.R :=
+theorem wd_0_14 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.In a Litex.R :=
 by
-  intro a litex_param_fact_1
-  exact litex_param_fact_1
+  intro a h_0_1
+  exact h_0_1
 
 noncomputable def obj_32 (litex_wd_scope_10_arg_1 : Litex.Object) : Litex.Object :=
   litex_wd_scope_10_arg_1
 
-noncomputable def obj_33_spec (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.FnSpec :=
+noncomputable def obj_33_spec (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.FnSpec :=
   ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec)
 
-noncomputable def obj_33_body (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) (litex_obj_33_args : List Litex.Object) (_litex_length : litex_obj_33_args.length = ((obj_33_spec a litex_param_fact_1)).arity) (_litex_requirements : ((obj_33_spec a litex_param_fact_1)).requirements litex_obj_33_args) : Litex.Object :=
+noncomputable def obj_33_body (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) (litex_obj_33_args : List Litex.Object) (_litex_length : litex_obj_33_args.length = ((obj_33_spec a h_0_1)).arity) (_litex_requirements : ((obj_33_spec a h_0_1)).requirements litex_obj_33_args) : Litex.Object :=
   (obj_32 (Litex.arg litex_obj_33_args 0))
 
-theorem obj_33_closed (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) :
+theorem obj_33_closed (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) :
     ∀ (litex_obj_33_args : List Litex.Object)
-      (litex_obj_33_length : litex_obj_33_args.length = ((obj_33_spec a litex_param_fact_1)).arity)
-      (litex_obj_33_requirements : ((obj_33_spec a litex_param_fact_1)).requirements litex_obj_33_args),
-      Litex.In ((obj_33_body a litex_param_fact_1) litex_obj_33_args litex_obj_33_length litex_obj_33_requirements) (((obj_33_spec a litex_param_fact_1)).range litex_obj_33_args litex_obj_33_length litex_obj_33_requirements) :=
+      (litex_obj_33_length : litex_obj_33_args.length = ((obj_33_spec a h_0_1)).arity)
+      (litex_obj_33_requirements : ((obj_33_spec a h_0_1)).requirements litex_obj_33_args),
+      Litex.In ((obj_33_body a h_0_1) litex_obj_33_args litex_obj_33_length litex_obj_33_requirements) (((obj_33_spec a h_0_1)).range litex_obj_33_args litex_obj_33_length litex_obj_33_requirements) :=
 by
   intro litex_obj_33_args litex_obj_33_length litex_obj_33_requirements
   change Litex.In (Litex.arg litex_obj_33_args 0) Litex.R
-  exact (well_defined_fact_13 (a) (litex_param_fact_1) (Litex.arg litex_obj_33_args 0) (Exists.choose (litex_obj_33_requirements)))
+  exact (wd_0_13 (a) (h_0_1) (Litex.arg litex_obj_33_args 0) (Exists.choose (litex_obj_33_requirements)))
 
-noncomputable def obj_33 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.Object :=
-  Litex.functionObject (obj_33_spec a litex_param_fact_1) (obj_33_body a litex_param_fact_1) (obj_33_closed a litex_param_fact_1)
+noncomputable def obj_33 (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.Object :=
+  Litex.functionObject (obj_33_spec a h_0_1) (obj_33_body a h_0_1)
 
-theorem obj_33_in_fn_set (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) :
-    Litex.In (obj_33 a litex_param_fact_1) (Litex.FnSet (obj_33_spec a litex_param_fact_1)) := by
+theorem obj_33_in_fn_set (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) :
+    Litex.In (obj_33 a h_0_1) (Litex.FnSet (obj_33_spec a h_0_1)) := by
   unfold obj_33
-  exact Litex.functionObjectInFnSet (obj_33_spec a litex_param_fact_1) (obj_33_body a litex_param_fact_1) (obj_33_closed a litex_param_fact_1)
+  exact Litex.functionObjectInFnSet (obj_33_spec a h_0_1) (obj_33_body a h_0_1) (obj_33_closed a h_0_1)
 
-theorem obj_34_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.Applicable (obj_33 a litex_param_fact_1) [(obj_28 a)] :=
+theorem obj_34_applicable : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.Applicable (obj_33 a h_0_1) [(obj_28 a)] :=
 by
-  intro a litex_param_fact_1
-  exact Litex.fnSetApplicable (obj_33_in_fn_set a litex_param_fact_1) rfl (by
+  intro a h_0_1
+  exact Litex.fnSetApplicable (obj_33_in_fn_set a h_0_1) rfl (by
   change ∃ litex_application_requirement_1 : Litex.In ((obj_28 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_14 a litex_param_fact_1)) (True.intro))
+  exact Exists.intro ((wd_0_14 a h_0_1)) (True.intro))
 
-noncomputable def obj_34 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R) : Litex.Object :=
-  (obj_33 a litex_param_fact_1) [(obj_28 a)] ((obj_34_applicable a litex_param_fact_1))
+noncomputable def obj_34 (a : Litex.Object) (h_0_1 : Litex.In a Litex.R) : Litex.Object :=
+  (obj_33 a h_0_1) [(obj_28 a)]
 
-theorem obj_34_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), Litex.In (obj_34 a litex_param_fact_1) Litex.R :=
+theorem obj_34_result : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), Litex.In (obj_34 a h_0_1) Litex.R :=
 by
-  intro a litex_param_fact_1
-  simpa [obj_34] using (Litex.fnSetResult (obj_33_in_fn_set a litex_param_fact_1) rfl (by
+  intro a h_0_1
+  simpa [obj_34] using (Litex.fnSetResult (obj_33_in_fn_set a h_0_1) rfl (by
   change ∃ litex_application_requirement_1 : Litex.In ((obj_28 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_14 a litex_param_fact_1)) (True.intro)))
+  exact Exists.intro ((wd_0_14 a h_0_1)) (True.intro)))
 
-theorem fact20 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.R), (obj_31 a litex_param_fact_1) = (obj_34 a litex_param_fact_1) :=
+theorem fact20 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.R), (obj_31 a h_0_1) = (obj_34 a h_0_1) :=
 by
-  intro a litex_param_fact_1
+  intro a h_0_1
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: anonymous_function -->
@@ -1760,21 +1358,23 @@ Required generated shape:
 ```lean
 noncomputable def anonymous_fn_<id> : Litex.Object :=
   Litex.functionObject anonymous_fn_<id>_spec anonymous_fn_<id>_body
-    anonymous_fn_<id>_closed
 
 theorem anonymous_fn_<id>_applicable :
     Litex.Applicable anonymous_fn_<id> [a] := by ...
 ```
 
 Boundary: `fn(x R) N {x}` remains rejected because the body has no proof that
-an arbitrary real parameter belongs to `N`.
+an arbitrary real parameter belongs to `N`. Compound anonymous bodies such as
+`fn(x R) R {x + 1}` remain a fail-closed emitter-scope boundary until their
+binder-owned WD DAG is replayed inside the closure proof instead of through
+generalized top-level helpers.
 
 ## arithmetic_forall_wd
 
 Nested universal facts, subtraction, and function applications retain the
 well-definedness evidence selected for each source occurrence. The object `y`
-stays in the universal object type while its real membership is passed to the
-subtraction and application constructors.
+stays in the universal object type. Its real membership is replayed in a local
+parameterized WD bundle; subtraction and application terms remain proof-free.
 
 ```litex
 forall f fn(x R) R:
@@ -1788,143 +1388,70 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: arithmetic_forall_wd -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem well_defined_fact_8 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In y Litex.R :=
+theorem fact22 : ∀ (f : Litex.Object) (h_0_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (h_0_2 : ∀ (y : Litex.Object) (h_1_1 : Litex.In y Litex.R), (f [y]) = (f [(Litex.sub y 1)])), (f [2]) = (f [1]) :=
 by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact litex_nested_param_fact_2
-
-noncomputable def obj_28 (y : Litex.Object) : Litex.Object :=
-  y
-
-theorem obj_29_applicable : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.Applicable f [(obj_28 y)] :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact Litex.fnSetApplicable litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_28 y)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 f litex_param_fact_1 y litex_nested_param_fact_2)) (True.intro))
-
-noncomputable def obj_29 (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R) : Litex.Object :=
-  f [(obj_28 y)] ((obj_29_applicable f litex_param_fact_1 y litex_nested_param_fact_2))
-
-theorem obj_29_result : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) Litex.R :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  simpa [obj_29] using (Litex.fnSetResult litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_28 y)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_8 f litex_param_fact_1 y litex_nested_param_fact_2)) (True.intro)))
-
-theorem well_defined_fact_9 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In y Litex.C :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact (Litex.BuiltinRules.realInComplex (litex_nested_param_fact_2))
-
-theorem well_defined_fact_10 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In 1 Litex.C :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact Litex.BuiltinRules.numeralInC 1
-
-theorem well_defined_fact_11 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In 1 Litex.R :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact Litex.BuiltinRules.numeralInR 1
-
-theorem well_defined_fact_12 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In (Litex.sub y 1 (well_defined_fact_9 f litex_param_fact_1 y litex_nested_param_fact_2) (well_defined_fact_10 f litex_param_fact_1 y litex_nested_param_fact_2)) Litex.R :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact (Litex.BuiltinRules.realSubClosure ((well_defined_fact_9 f litex_param_fact_1 y litex_nested_param_fact_2)) ((well_defined_fact_10 f litex_param_fact_1 y litex_nested_param_fact_2)) (litex_nested_param_fact_2) (Litex.BuiltinRules.numeralInR 1))
-
-noncomputable def obj_27 : Litex.Object :=
-  Litex.R
-
-noncomputable def obj_30 : Litex.Object :=
-  1
-
-noncomputable def obj_31 : Litex.Object :=
-  Litex.C
-
-noncomputable def obj_32 (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R) : Litex.Object :=
-  (Litex.sub (obj_28 y) obj_30 (well_defined_fact_9 f litex_param_fact_1 y litex_nested_param_fact_2) (well_defined_fact_10 f litex_param_fact_1 y litex_nested_param_fact_2))
-
-theorem obj_33_applicable : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.Applicable f [(obj_32 f litex_param_fact_1 y litex_nested_param_fact_2)] :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  exact Litex.fnSetApplicable litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_32 f litex_param_fact_1 y litex_nested_param_fact_2)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_12 f litex_param_fact_1 y litex_nested_param_fact_2)) (True.intro))
-
-noncomputable def obj_33 (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R) : Litex.Object :=
-  f [(obj_32 f litex_param_fact_1 y litex_nested_param_fact_2)] ((obj_33_applicable f litex_param_fact_1 y litex_nested_param_fact_2))
-
-theorem obj_33_result : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), Litex.In (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2) Litex.R :=
-by
-  intro f litex_param_fact_1 y litex_nested_param_fact_2
-  simpa [obj_33] using (Litex.fnSetResult litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_32 f litex_param_fact_1 y litex_nested_param_fact_2)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_12 f litex_param_fact_1 y litex_nested_param_fact_2)) (True.intro)))
-
-theorem well_defined_fact_13 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.In 2 Litex.R :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  exact Litex.BuiltinRules.numeralInR 2
-
-noncomputable def obj_34 : Litex.Object :=
-  2
-
-noncomputable def obj_35 : Litex.Object :=
-  Litex.R
-
-theorem obj_36_applicable : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.Applicable f [obj_34] :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  exact Litex.fnSetApplicable litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_34) Litex.R, True
-  exact Exists.intro ((well_defined_fact_13 f litex_param_fact_1 litex_domain_fact_1)) (True.intro))
-
-noncomputable def obj_36 (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)) : Litex.Object :=
-  f [obj_34] ((obj_36_applicable f litex_param_fact_1 litex_domain_fact_1))
-
-theorem obj_36_result : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.In (obj_36 f litex_param_fact_1 litex_domain_fact_1) Litex.R :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  simpa [obj_36] using (Litex.fnSetResult litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_34) Litex.R, True
-  exact Exists.intro ((well_defined_fact_13 f litex_param_fact_1 litex_domain_fact_1)) (True.intro)))
-
-theorem well_defined_fact_14 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.In 1 Litex.R :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  exact Litex.BuiltinRules.numeralInR 1
-
-noncomputable def obj_37 : Litex.Object :=
-  1
-
-theorem obj_38_applicable : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.Applicable f [obj_37] :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  exact Litex.fnSetApplicable litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_37) Litex.R, True
-  exact Exists.intro ((well_defined_fact_14 f litex_param_fact_1 litex_domain_fact_1)) (True.intro))
-
-noncomputable def obj_38 (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)) : Litex.Object :=
-  f [obj_37] ((obj_38_applicable f litex_param_fact_1 litex_domain_fact_1))
-
-theorem obj_38_result : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), Litex.In (obj_38 f litex_param_fact_1 litex_domain_fact_1) Litex.R :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
-  simpa [obj_38] using (Litex.fnSetResult litex_param_fact_1 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In (obj_37) Litex.R, True
-  exact Exists.intro ((well_defined_fact_14 f litex_param_fact_1 litex_domain_fact_1)) (True.intro)))
-
-theorem fact22 : ∀ (f : Litex.Object) (litex_param_fact_1 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : ∀ (y : Litex.Object) (litex_nested_param_fact_2 : Litex.In y Litex.R), (obj_29 f litex_param_fact_1 y litex_nested_param_fact_2) = (obj_33 f litex_param_fact_1 y litex_nested_param_fact_2)), (obj_36 f litex_param_fact_1 litex_domain_fact_1) = (obj_38 f litex_param_fact_1 litex_domain_fact_1) :=
-by
-  intro f litex_param_fact_1 litex_domain_fact_1
+  intro f h_0_1 h_0_2
+  have litex_scope_wd_1_8_obj_29_result : ∀ (y : Litex.Object) (h_1_1 : Litex.In y Litex.R), Litex.In y Litex.R ∧ (Litex.Applicable (f) [y] ∧ (Litex.In (f [y]) Litex.R)) := by
+    exact (by
+      intro y h_1_1
+      have wd_1_8 : Litex.In y Litex.R := by
+        exact (h_1_1)
+      have obj_29_applicable : Litex.Applicable (f) [y] := by
+        exact (Litex.fnSetApplicable h_0_1 rfl (by
+          change ∃ litex_application_requirement_1 : Litex.In (y) Litex.R, True
+          exact Exists.intro (wd_1_8) (True.intro)))
+      have obj_29_result : Litex.In (f [y]) Litex.R := by
+        exact (by simpa using (Litex.fnSetResult h_0_1 rfl (by
+          change ∃ litex_application_requirement_1 : Litex.In (y) Litex.R, True
+          exact Exists.intro (wd_1_8) (True.intro))))
+      exact And.intro (wd_1_8) (And.intro (obj_29_applicable) ((obj_29_result))))
+  have litex_scope_wd_1_9_obj_33_result : ∀ (y : Litex.Object) (h_1_1 : Litex.In y Litex.R), Litex.In y Litex.C ∧ (Litex.In 1 Litex.C ∧ (Litex.In 1 Litex.R ∧ (Litex.In (Litex.sub y 1) Litex.R ∧ (Litex.In (Litex.sub y 1) Litex.C ∧ (Litex.Applicable (f) [(Litex.sub y 1)] ∧ (Litex.In (f [(Litex.sub y 1)]) Litex.R)))))) := by
+    exact (by
+      intro y h_1_1
+      have wd_1_9 : Litex.In y Litex.C := by
+        exact ((Litex.Rules.realInComplex (h_1_1)))
+      have wd_1_10 : Litex.In 1 Litex.C := by
+        exact (Litex.Rules.numeralInC 1)
+      have wd_1_11 : Litex.In 1 Litex.R := by
+        exact (Litex.Rules.numeralInR 1)
+      have wd_1_12 : Litex.In (Litex.sub y 1) Litex.R := by
+        exact ((Litex.Rules.realSubClosure (wd_1_9) (wd_1_10) (h_1_1) (Litex.Rules.numeralInR 1)))
+      have obj_32_result : Litex.In (Litex.sub y 1) Litex.C := by
+        exact ((Litex.Rules.complexSubClosure (wd_1_9) (wd_1_10)))
+      have obj_33_applicable : Litex.Applicable (f) [(Litex.sub y 1)] := by
+        exact (Litex.fnSetApplicable h_0_1 rfl (by
+          change ∃ litex_application_requirement_1 : Litex.In ((Litex.sub y 1)) Litex.R, True
+          exact Exists.intro (wd_1_12) (True.intro)))
+      have obj_33_result : Litex.In (f [(Litex.sub y 1)]) Litex.R := by
+        exact (by simpa using (Litex.fnSetResult h_0_1 rfl (by
+          change ∃ litex_application_requirement_1 : Litex.In ((Litex.sub y 1)) Litex.R, True
+          exact Exists.intro (wd_1_12) (True.intro))))
+      exact And.intro (wd_1_9) (And.intro (wd_1_10) (And.intro (wd_1_11) (And.intro (wd_1_12) (And.intro (obj_32_result) (And.intro (obj_33_applicable) ((obj_33_result))))))))
+  have wd_0_13 : Litex.In 2 Litex.R := by
+    exact (Litex.Rules.numeralInR 2)
+  have obj_36_applicable : Litex.Applicable (f) [2] := by
+    exact (Litex.fnSetApplicable h_0_1 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (2) Litex.R, True
+      exact Exists.intro (wd_0_13) (True.intro)))
+  have obj_36_result : Litex.In (f [2]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_1 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (2) Litex.R, True
+      exact Exists.intro (wd_0_13) (True.intro))))
+  have wd_0_14 : Litex.In 1 Litex.R := by
+    exact (Litex.Rules.numeralInR 1)
+  have obj_38_applicable : Litex.Applicable (f) [1] := by
+    exact (Litex.fnSetApplicable h_0_1 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_14) (True.intro)))
+  have obj_38_result : Litex.In (f [1]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_1 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (1) Litex.R, True
+      exact Exists.intro (wd_0_14) (True.intro))))
   exact (by
-  have litex_normalization_source := ((litex_domain_fact_1 (Litex.add 1 1 (Litex.BuiltinRules.numeralInC 1) (Litex.BuiltinRules.numeralInC 1)) ((Litex.BuiltinRules.realAddClosure ((Litex.BuiltinRules.numeralInC 1)) ((Litex.BuiltinRules.numeralInC 1)) (Litex.BuiltinRules.numeralInR 1) (Litex.BuiltinRules.numeralInR 1)))))
-  simp only [OfNat.ofNat, Litex.add_embedComplex, Litex.sub_embedComplex, Litex.mul_embedComplex, Litex.div_embedComplex, obj_27, obj_28, obj_29, obj_30, obj_31, obj_32, obj_33, obj_34, obj_35, obj_36, obj_37, obj_38] at litex_normalization_source ⊢
+  have litex_normalization_source := ((h_0_2 (Litex.add 1 1) ((Litex.Rules.realAddClosure ((Litex.Rules.numeralInC 1)) ((Litex.Rules.numeralInC 1)) (Litex.Rules.numeralInR 1) (Litex.Rules.numeralInR 1)))))
+  simp only [OfNat.ofNat, Litex.add_embedComplex, Litex.sub_embedComplex, Litex.mul_embedComplex, Litex.div_embedComplex] at litex_normalization_source ⊢
   norm_num at litex_normalization_source ⊢
   exact litex_normalization_source)
 ```
@@ -1933,10 +1460,14 @@ by
 Required generated shape:
 
 ```lean
-theorem well_defined_fact_<sub> : Litex.In (Litex.sub y 1) Litex.R := by
-  exact Litex.BuiltinRules.realSubClosure y 1 y_in_R one_in_R
-
-theorem fact_<forall> : ∀ (f : Litex.Object), ... := by ...
+theorem fact_<forall> : ∀ (f : Litex.Object), ... := by
+  intro f h_f h_nested
+  have litex_scope_... : ∀ y h_y, ... := by
+    intro y h_y
+    have wd_1_<sub> : Litex.In (Litex.sub y 1) Litex.R := by
+      exact Litex.Rules.realSubClosure ...
+    ...
+  ...
 ```
 
 Boundary: missing or retargeted occurrence evidence fails emission; the
@@ -1967,9 +1498,7 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: first_statement_tranche -->
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 axiom marked : Litex.Object → Prop
 
@@ -1979,7 +1508,7 @@ def is_zero (x : Litex.Object) : Prop :=
 theorem fact3 : is_zero 0 := by
   exact (by
   change Litex.In 0 Litex.R ∧ ((0 : Litex.Object) = 0)
-  exact And.intro (Litex.BuiltinRules.numeralInR 0) ((rfl)))
+  exact And.intro (Litex.Rules.numeralInR 0) ((rfl)))
 
 theorem fact4 : Litex.In 0 Litex.R := by
   exact (by
@@ -2045,19 +1574,17 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: known_equality_path -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a = b), b = a :=
+theorem fact13 : ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a) (b : Litex.Object) (h_0_2 : Litex.IsSet b) (h_0_3 : a = b), b = a :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Eq.symm (litex_domain_fact_1))
+  intro a h_0_1 b h_0_2 h_0_3
+  exact (Eq.symm (h_0_3))
 
-theorem fact32 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c) (litex_domain_fact_1 : a = b) (litex_domain_fact_2 : b = c), a = c :=
+theorem fact32 : ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a) (b : Litex.Object) (h_0_2 : Litex.IsSet b) (c : Litex.Object) (h_0_3 : Litex.IsSet c) (h_0_4 : a = b) (h_0_5 : b = c), a = c :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3 litex_domain_fact_1 litex_domain_fact_2
-  exact (Eq.trans ((litex_domain_fact_1)) ((litex_domain_fact_2)))
+  intro a h_0_1 b h_0_2 c h_0_3 h_0_4 h_0_5
+  exact (Eq.trans ((h_0_4)) ((h_0_5)))
 ```
 <!-- END ACTUAL GENERATED LEAN: known_equality_path -->
 
@@ -2093,53 +1620,33 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: litex_object_abi -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem fact27 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (litex_domain_fact_1 : a = 1), Litex.In 1 Litex.R :=
+theorem fact27 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (h_0_2 : a = 1), Litex.In 1 Litex.R :=
 by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact Litex.BuiltinRules.numeralInR 1
+  intro a h_0_1 h_0_2
+  exact Litex.Rules.numeralInR 1
 
-theorem fact28 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (litex_domain_fact_1 : a = 1), Litex.In a Litex.R :=
+theorem fact28 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (h_0_2 : a = 1), Litex.In a Litex.R :=
 by
-  intro a litex_param_fact_1 litex_domain_fact_1
-  exact by simpa only [litex_domain_fact_1] using (fact27 a litex_param_fact_1 litex_domain_fact_1)
+  intro a h_0_1 h_0_2
+  exact by simpa only [h_0_2] using (fact27 a h_0_1 h_0_2)
 
-theorem well_defined_fact_2 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1), Litex.In a Litex.R :=
+theorem fact26 : ∀ (a : Litex.Object) (h_0_1 : Litex.In a Litex.C) (f : Litex.Object) (h_0_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (h_0_3 : a = 1), (f [a]) = (f [a]) :=
 by
-  intro a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1
-  exact by simpa only [litex_domain_fact_1] using (fact27 a litex_param_fact_1 litex_domain_fact_1)
-
-theorem well_defined_fact_3 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1), Litex.In a Litex.R :=
-by
-  intro a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1
-  exact fact28 a litex_param_fact_1 litex_domain_fact_1
-
-noncomputable def obj_14 (a : Litex.Object) : Litex.Object :=
-  a
-
-theorem obj_24_applicable : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1), Litex.Applicable f [(obj_14 a)] :=
-by
-  intro a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1
-  exact Litex.fnSetApplicable litex_param_fact_2 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_14 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_3 a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1)) (True.intro))
-
-noncomputable def obj_24 (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1) : Litex.Object :=
-  f [(obj_14 a)] ((obj_24_applicable a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1))
-
-theorem obj_24_result : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1), Litex.In (obj_24 a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1) Litex.R :=
-by
-  intro a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1
-  simpa [obj_24] using (Litex.fnSetResult litex_param_fact_2 rfl (by
-  change ∃ litex_application_requirement_1 : Litex.In ((obj_14 a)) Litex.R, True
-  exact Exists.intro ((well_defined_fact_3 a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1)) (True.intro)))
-
-theorem fact26 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.In a Litex.C) (f : Litex.Object) (litex_param_fact_2 : Litex.In f (Litex.FnSet ({ arity := 1, requirements := fun litex_args_0 => ∃ litex_requirement_1 : Litex.In (Litex.arg litex_args_0 0) Litex.R, True, range := fun litex_args_0 _ _ => Litex.R } : Litex.FnSpec))) (litex_domain_fact_1 : a = 1), (obj_24 a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1) = (obj_24 a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1) :=
-by
-  intro a litex_param_fact_1 f litex_param_fact_2 litex_domain_fact_1
+  intro a h_0_1 f h_0_2 h_0_3
+  have wd_0_2 : Litex.In a Litex.R := by
+    exact (by simpa only [h_0_3] using (fact27 a h_0_1 h_0_3))
+  have wd_0_3 : Litex.In a Litex.R := by
+    exact (fact28 a h_0_1 h_0_3)
+  have obj_24_applicable : Litex.Applicable (f) [a] := by
+    exact (Litex.fnSetApplicable h_0_2 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
+      exact Exists.intro (wd_0_3) (True.intro)))
+  have obj_24_result : Litex.In (f [a]) Litex.R := by
+    exact (by simpa using (Litex.fnSetResult h_0_2 rfl (by
+      change ∃ litex_application_requirement_1 : Litex.In (a) Litex.R, True
+      exact Exists.intro (wd_0_3) (True.intro))))
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: litex_object_abi -->
@@ -2171,18 +1678,16 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: set_predicate_definitions -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem fact13 : ∀ (s : Litex.Object) (litex_param_fact_1 : Litex.IsNonemptySet s), s = s :=
+theorem fact13 : ∀ (s : Litex.Object) (h_0_1 : Litex.IsNonemptySet s), s = s :=
 by
-  intro s litex_param_fact_1
+  intro s h_0_1
   exact rfl
 
-theorem fact14 : ∀ (t : Litex.Object) (litex_param_fact_1 : Litex.IsFiniteSet t), t = t :=
+theorem fact14 : ∀ (t : Litex.Object) (h_0_1 : Litex.IsFiniteSet t), t = t :=
 by
-  intro t litex_param_fact_1
+  intro t h_0_1
   exact rfl
 ```
 <!-- END ACTUAL GENERATED LEAN: set_predicate_definitions -->
@@ -2219,35 +1724,33 @@ Actual generated Lean (current compiler snapshot):
 
 <!-- BEGIN ACTUAL GENERATED LEAN: shared_builtin_rules -->
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-example : Litex.abiVersion = 8 := rfl
-
-theorem fact13 : ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a) (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b) (litex_domain_fact_1 : a ≠ b), b ≠ a :=
+theorem fact13 : ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a) (b : Litex.Object) (h_0_2 : Litex.IsSet b) (h_0_3 : a ≠ b), b ≠ a :=
 by
-  intro a litex_param_fact_1 b litex_param_fact_2 litex_domain_fact_1
-  exact (Litex.BuiltinRules.notEqualSymmetry (litex_domain_fact_1))
+  intro a h_0_1 b h_0_2 h_0_3
+  exact (Litex.Rules.notEqualSymmetry (h_0_3))
 
 theorem fact14 : Litex.In 1 Litex.N := by
-  exact Litex.BuiltinRules.numeralInN 1
+  exact Litex.Rules.numeralInN 1
 
 theorem fact15 : Litex.Le 0 1 := by
   exact (by
-  exact (Litex.BuiltinRules.numeralLe 0 1).2 (by norm_num))
+  exact (Litex.Rules.numeralLe 0 1).2 (by norm_num))
 
 theorem fact17 : Litex.In 1 Litex.C := by
-  exact Litex.BuiltinRules.numeralInC 1
+  exact Litex.Rules.numeralInC 1
 ```
 <!-- END ACTUAL GENERATED LEAN: shared_builtin_rules -->
 
 Required generated shape:
 
 ```lean
-import Litex.BuiltinRules
+import Litex.Rules
 
-exact Litex.BuiltinRules.notEqualSymmetry fact_<a_ne_b>
-exact Litex.BuiltinRules.numeralInN 1
-exact Litex.BuiltinRules.numeralInC 1
+exact Litex.Rules.notEqualSymmetry fact_<a_ne_b>
+exact Litex.Rules.numeralInN 1
+exact Litex.Rules.numeralInC 1
 ```
 
 Boundary: a verifier builtin without a checked shared-theorem adapter remains

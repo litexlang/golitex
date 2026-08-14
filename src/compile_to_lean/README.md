@@ -6,7 +6,7 @@ type. It does not translate Litex set membership into Lean typing.
 The consolidated target design and its ten representative examples are in
 [`litex_object_design.md`](litex_object_design.md). The shared ABI is owned by
 [`Litex.Core`](../../lean/Litex/Core.lean), concrete builtin theorems by
-[`Litex.BuiltinRules`](../../lean/Litex/BuiltinRules.lean), and the exact import
+[`Litex.Rules`](../../lean/Litex/Rules.lean), and the exact import
 plus ABI check emitted today is checked in as
 [`current_generated_file_header.lean`](current_generated_file_header.lean).
 The design ledger explicitly marks decisions that the current emitter has not
@@ -68,20 +68,24 @@ They are not a compatibility backend.
 The source application layers are preserved exactly:
 
 ```text
-f(a, b) -> f [a, b] applicable_proof
-f(a)(b) -> f [a] first_proof [b] second_proof
+f(a, b) -> f [a, b]
+f(a)(b) -> (f [a]) [b]
 ```
 
-`Litex.Applicable f args` is constructed from the exact retained function-set
-membership, argument memberships, and domain facts. Lean currying never makes
-an invalid Litex application valid. `FnSpec.requirements` packages those facts
-as an ordered dependent existential telescope in `Prop`; both `FnSpec.range`
-and `functionObject`'s body consume the same arity and requirements evidence.
+`Litex.Applicable f args` is constructed separately from the exact retained
+function-set membership, argument memberships, and domain facts. Lean currying
+never makes an invalid Litex application valid. `FnSpec.requirements` packages
+those facts as an ordered dependent existential telescope in `Prop`; both
+`FnSpec.range` and `functionObject`'s body may use the same arity and
+requirements evidence, while `apply` and `functionObject` denotations do not
+take the selected WD proofs as object arguments.
 
-Named `have fn` definitions emit their verifier-owned body DAG before the
-function object. Thus `x + 1` consumes the retained complex-membership facts,
-and `1 / x` consumes the exact domain `FactId` for `x != 0`. Later definition
-replay unfolds only the cited defining equality and the exact `obj_N` aliases.
+Named `have fn` definitions render a proof-free body. Their `closed` theorem
+introduces the function telescope and then replays the verifier-owned body WD
+DAG locally: `x + 1` cites the retained complex-membership facts, and `1 / x`
+cites the exact domain `FactId` for `x != 0`. Later definition replay unfolds
+only the cited defining equality and uses the exact locally named application
+certificate.
 Proof-independent anonymous identity bodies use the same ABI; compound
 anonymous bodies remain an explicit fail-closed boundary for now.
 
@@ -95,8 +99,8 @@ effect-shaped public variants.
 
 The parser and runtime assign stable `SourceObjectOccurrenceId`, `FactId`,
 `WellDefinedFactId`, and `WellDefinedObjId` values while the successful
-Litex scopes still exist. Every source application, proof-carrying arithmetic
-node, and proof-carrying list set has an occurrence ID. The backend consumes
+Litex scopes still exist. Every source application, checked arithmetic node,
+and checked list set has an occurrence ID. The backend consumes
 those IDs; it does not match rendered propositions or rerun proof search.
 
 - A known fact cites its exact `FactId`.
@@ -105,13 +109,15 @@ those IDs; it does not match rendered propositions or rerun proof search.
   `Eq.trans`; it never searches the equivalence class again.
 - A known forall cites its theorem `FactId`, explicit object arguments,
   parameter membership/set-property proofs, and domain proofs.
-- A WD application argument cites a named helper derived from its exact
-  `WellDefinedFactId`. If the proof occurs in a target theorem type, the helper
-  is emitted first and generalized over the visible Litex environment.
-- Every selected WD object and transitive child emits one `obj_N` declaration
-  in dependency order. A layered application additionally connects its
-  independently named prefix through `obj_N_result`; rolled-back verifier
-  search nodes are not part of the statement certificate and emit nothing.
+- A WD fact is named from its exact `WellDefinedFactId` and replayed as a local
+  `have` after the binders of its owning theorem or function-closure proof.
+- Selected WD objects and transitive children are traversed in dependency
+  order. Their denotations remain proof-free; applications additionally get
+  local `obj_N_applicable` and `obj_N_result` proof bindings. Arithmetic
+  objects retain `C` as an intrinsic result carrier and likewise get a local
+  `obj_N_result` when no already-named `WellDefinedFactId` proves that exact
+  membership. Rolled-back verifier search nodes are not part of the statement
+  certificate and emit nothing.
 - Equal source applications retain different occurrence IDs. If the second
   occurrence hits Litex's WD cache, both occurrence-use edges cite the same
   object proof and factual proof. Its unvisited nested occurrences are mapped
@@ -121,16 +127,16 @@ those IDs; it does not match rendered propositions or rerun proof search.
   by semantic key, execution phase, or whether Lean happens to prove it.
 - Closed arithmetic manufactured by a verifier proof is not a source
   occurrence. The supported numeral-only case is replayed by the shared
-  numeral and arithmetic-closure theorem schema with every constructor proof
+  numeral and arithmetic-closure theorem schema with every WD premise
   explicit; it does not manufacture a fake occurrence ID.
 - A builtin certificate calls a real theorem imported from the shared
-  `Litex.BuiltinRules` module. Concrete builtin rules are not axioms.
+  `Litex.Rules` module. Concrete builtin rules are not axioms.
 - Only explicit source `trust` may emit an axiom for the trusted proposition.
 
 The shared `Litex.Core` module declares the universal object universe,
 membership, numeric embedding/coherence, restricted function application, and
 primitive object constructors. This boundary interprets Litex. Ordinary
-verifier rules are proved once in `Litex.BuiltinRules` from that core and
+verifier rules are proved once in `Litex.Rules` from that core and
 Mathlib; generated files import the module and never repeat those proof bodies.
 
 ## Current strict slice
@@ -153,9 +159,9 @@ supporting routes:
   paths;
 - closed numeral membership through proved builtin theorems;
 - ordinary not-equality symmetry through a proved builtin theorem;
-- named function spaces and exact one-layer or nested applications with named
-  WD helpers and `Litex.fnSetResult` between layers;
-- named function definitions with proof-carrying `+`, `-`, `*`, `/` bodies,
+- named function spaces and exact one-layer or nested proof-free applications
+  with local WD helpers and `Litex.fnSetResult` between layers;
+- named function definitions with proof-free `+`, `-`, `*`, `/` bodies, local
   ordered parameter/domain evidence, exact return membership, and checked
   definition replay;
 - nested forall replay with retained temporary parameter `FactId`s;
@@ -217,5 +223,5 @@ The append-only executable feature history is in
 
 Focused Rust tests live beside `universal_pipeline.rs`. Ignored real-kernel
 tests use `LITEX_LEAN_PROJECT` and optional `LITEX_LAKE` to compile
-`Litex.Core`, `Litex.BuiltinRules`, and the complete generated source with
+`Litex.Core`, `Litex.Rules`, and the complete generated source with
 Mathlib.

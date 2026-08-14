@@ -1,10 +1,16 @@
-pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 8;
+pub(super) const RULES_NAMESPACE_NAME: &str = "Rules";
 
-/// Imports the shared target ABI and pins generated output to its ABI version.
+pub(super) fn rules_namespace() -> String {
+    format!("Litex.{RULES_NAMESPACE_NAME}")
+}
+
+pub(super) fn rule_theorem_name(theorem_name: &str) -> String {
+    format!("{}.{theorem_name}", rules_namespace())
+}
+
+/// Imports the shared target ABI without adding declarations to generated files.
 pub(super) fn generated_import_header() -> String {
-    format!(
-        "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = {LITEX_LEAN_ABI_VERSION} := rfl"
-    )
+    format!("import {}", rules_namespace())
 }
 
 #[cfg(test)]
@@ -12,12 +18,12 @@ mod tests {
     use super::*;
 
     const CORE_SOURCE: &str = include_str!("../../lean/Litex/Core.lean");
-    const BUILTIN_RULES_SOURCE: &str = include_str!("../../lean/Litex/BuiltinRules.lean");
+    const RULES_SOURCE: &str = include_str!("../../lean/Litex/Rules.lean");
     const LAKEFILE: &str = include_str!("../../lean/lakefile.toml");
 
     #[test]
     fn shared_library_owns_one_object_abi_and_real_builtin_theorems() {
-        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 8"));
+        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 9"));
         assert!(CORE_SOURCE.contains("axiom Object : Type"));
         assert!(CORE_SOURCE.contains("axiom In : Object → Object → Prop"));
         assert!(CORE_SOURCE.contains("def IsSet (_ : Object) : Prop := True"));
@@ -26,41 +32,44 @@ mod tests {
         assert!(CORE_SOURCE.contains("def IsNonemptySet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("def IsFiniteSet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("axiom Applicable : Object → List Object → Prop"));
-        assert!(CORE_SOURCE.contains("requirements args →\n    Object"));
+        assert!(CORE_SOURCE.contains("axiom apply : Object → List Object → Object"));
         assert!(CORE_SOURCE.contains("axiom functionObjectApplicableLength"));
         assert!(CORE_SOURCE.contains("axiom functionObjectApplicableRequirements"));
-        assert!(CORE_SOURCE.contains("axiom add (a b : Object) : In a C → In b C → Object"));
+        assert!(CORE_SOURCE.contains("In (functionObject spec body) (FnSet spec)"));
+        assert!(!CORE_SOURCE.contains("functionObject spec body closed"));
+        assert!(CORE_SOURCE.contains("axiom add : Object → Object → Object"));
         assert!(CORE_SOURCE.contains("axiom inRPos_iff"));
         assert!(CORE_SOURCE.contains("axiom inNPos_iff"));
         assert!(CORE_SOURCE.contains("theorem isSetR : IsSet R"));
-        assert!(!CORE_SOURCE.contains("axiom add : Object → Object → Object"));
-        assert!(CORE_SOURCE.contains("axiom div (a b : Object) : In a C → In b C → b ≠ 0 → Object"));
-        assert!(!CORE_SOURCE.contains("axiom div : Object → Object → Object"));
-        assert!(!CORE_SOURCE.contains("namespace BuiltinRules"));
+        assert!(CORE_SOURCE.contains("axiom div : Object → Object → Object"));
+        assert!(CORE_SOURCE.contains("axiom listSet : List Object → Object"));
+        assert!(!CORE_SOURCE.contains(&format!("namespace {RULES_NAMESPACE_NAME}")));
 
-        assert!(BUILTIN_RULES_SOURCE.starts_with("import Litex.Core"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem notEqualSymmetry"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInN"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInNPos"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInC"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem positiveRealMembership"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem realSetNonempty"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem complexAddClosure"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem complexSubClosure"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem complexMulClosure"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem complexDivClosure"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem realSubClosure"));
-        assert!(BUILTIN_RULES_SOURCE.contains("theorem realDivClosure"));
-        assert!(!BUILTIN_RULES_SOURCE.contains("axiom notEqualSymmetry"));
+        assert!(RULES_SOURCE.starts_with("import Litex.Core"));
+        assert!(RULES_SOURCE.contains("namespace Litex.Rules"));
+        assert!(RULES_SOURCE.contains("theorem notEqualSymmetry"));
+        assert!(RULES_SOURCE.contains("theorem numeralInN"));
+        assert!(RULES_SOURCE.contains("theorem numeralInNPos"));
+        assert!(RULES_SOURCE.contains("theorem numeralInC"));
+        assert!(RULES_SOURCE.contains("theorem positiveRealMembership"));
+        assert!(RULES_SOURCE.contains("theorem realSetNonempty"));
+        assert!(RULES_SOURCE.contains("theorem complexAddClosure"));
+        assert!(RULES_SOURCE.contains("theorem complexSubClosure"));
+        assert!(RULES_SOURCE.contains("theorem complexMulClosure"));
+        assert!(RULES_SOURCE.contains("theorem complexDivClosure"));
+        assert!(RULES_SOURCE.contains("theorem realSubClosure"));
+        assert!(RULES_SOURCE.contains("theorem realDivClosure"));
+        assert!(!RULES_SOURCE.contains("axiom notEqualSymmetry"));
     }
 
     #[test]
     fn generated_header_imports_shared_library_without_repeating_it() {
         let header = generated_import_header();
-        assert_eq!(
-            header,
-            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl"
-        );
+        assert_eq!(RULES_NAMESPACE_NAME, "Rules");
+        assert_eq!(rules_namespace(), "Litex.Rules");
+        assert_eq!(rule_theorem_name("numeralInR"), "Litex.Rules.numeralInR");
+        assert_eq!(header, "import Litex.Rules");
+        assert!(!header.contains("abiVersion"));
         assert!(!header.contains("import Mathlib"));
         assert!(!header.contains("axiom Object"));
         assert!(!header.contains("theorem notEqualSymmetry"));
@@ -72,13 +81,6 @@ mod tests {
             include_str!("current_generated_file_header.lean").trim_end(),
             generated_import_header()
         );
-    }
-
-    #[test]
-    fn compiler_and_shared_core_agree_on_abi_version() {
-        assert!(CORE_SOURCE.contains(&format!("def abiVersion : Nat := {LITEX_LEAN_ABI_VERSION}")));
-        assert!(generated_import_header()
-            .contains(&format!("Litex.abiVersion = {LITEX_LEAN_ABI_VERSION}")));
     }
 
     #[test]
