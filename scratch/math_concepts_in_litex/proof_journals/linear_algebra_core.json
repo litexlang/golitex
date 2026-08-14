@@ -1,0 +1,76 @@
+{
+  "schema_version": 1,
+  "target": "scratch/math_concepts_in_litex/linear_algebra_core/main.lit",
+  "date": "2026-08-14",
+  "session_command": "target/release/litex -compact -session -before scratch/math_concepts_in_litex/linear_algebra_core/main.lit",
+  "proof_spine": [
+    "define concrete vector addition, scalar multiplication, and linear maps on R2",
+    "derive preservation of zero",
+    "show kernels satisfy the subspace criterion",
+    "prove both directions of injective iff kernel is zero",
+    "consume the interfaces on coordinate projection"
+  ],
+  "attempts": [
+    {
+      "id": "runner-001",
+      "status": "failed",
+      "summary": "A theorem whose conclusion is a closed prop still requires an explicit forall wrapper.",
+      "evidence": "line 15: thm goal must be a single forall fact"
+    },
+    {
+      "id": "linear-005",
+      "status": "accepted",
+      "summary": "Wrapped the closed linearity proposition in forall and retained the same proof."
+    },
+    {
+      "id": "linear-006",
+      "status": "failed",
+      "summary": "Used unsupported $notin spelling in the kernel nonmember example."
+    },
+    {
+      "id": "linear-007",
+      "status": "accepted",
+      "summary": "Used ordinary negated membership and an explicit contradiction from the kernel set-builder law."
+    },
+    {
+      "id": "L005",
+      "status": "failed",
+      "summary": "Coordinatewise unary negation selected the complex carrier during well-definedness; vector negation was reformulated as scalar multiplication by -1.",
+      "evidence": "obj v is not in C"
+    },
+    {
+      "id": "L005b-L008c",
+      "status": "materialized",
+      "summary": "Added vector subtraction, general kernels, the R2 subspace criterion, zero preservation, kernel closure, and the injective-to-trivial-kernel direction."
+    },
+    {
+      "id": "L009-L009b",
+      "status": "failed",
+      "summary": "The reverse direction first needed an explicit named-function equality chain and then had to avoid unary coordinate negation during well-definedness.",
+      "evidence": "unknown T(vector_neg(v)) equality; then obj v is not in C"
+    },
+    {
+      "id": "L009c",
+      "status": "materialized",
+      "summary": "Proved trivial kernel implies injectivity by sending u-v into the kernel and reading equality from both tuple coordinates."
+    },
+    {
+      "id": "L010-L010b",
+      "status": "materialized",
+      "summary": "Identified the projection kernel as a subspace and proved projection is not injective after exposing tuple projection equations."
+    }
+  ],
+  "accepted_blocks": [
+    "coordinate vector operations and projection",
+    "concrete linear-map predicate",
+    "projection linearity theorem",
+    "kernel member and nonmember examples",
+    "linear maps preserve zero",
+    "kernels are R2 subspaces",
+    "injective implies trivial kernel",
+    "trivial kernel implies injective",
+    "coordinate projection has a nontrivial kernel and is not injective"
+  ],
+  "lesson": "In the concrete R2 interface, scalar multiplication by -1 is a more stable reusable negation bridge than reconstructing coordinatewise unary negatives.",
+  "final_gate": "release file and module runners: ok=true, exit code 0"
+}

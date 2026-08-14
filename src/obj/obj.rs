@@ -618,24 +618,28 @@ pub struct Pi;
 pub struct Add {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Sub {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Mul {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
 pub struct Div {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -786,6 +790,7 @@ pub struct BigIntersect {
 #[derive(Clone)]
 pub struct ListSet {
     pub list: Vec<Box<Obj>>,
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 #[derive(Clone)]
@@ -879,36 +884,72 @@ impl Pi {
 
 impl Add {
     pub fn new(left: Obj, right: Obj) -> Self {
+        Self::new_with_source_occurrence_id(left, right, None)
+    }
+
+    pub fn new_with_source_occurrence_id(
+        left: Obj,
+        right: Obj,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
         Add {
             left: Box::new(left),
             right: Box::new(right),
+            source_occurrence_id,
         }
     }
 }
 
 impl Sub {
     pub fn new(left: Obj, right: Obj) -> Self {
+        Self::new_with_source_occurrence_id(left, right, None)
+    }
+
+    pub fn new_with_source_occurrence_id(
+        left: Obj,
+        right: Obj,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
         Sub {
             left: Box::new(left),
             right: Box::new(right),
+            source_occurrence_id,
         }
     }
 }
 
 impl Mul {
     pub fn new(left: Obj, right: Obj) -> Self {
+        Self::new_with_source_occurrence_id(left, right, None)
+    }
+
+    pub fn new_with_source_occurrence_id(
+        left: Obj,
+        right: Obj,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
         Mul {
             left: Box::new(left),
             right: Box::new(right),
+            source_occurrence_id,
         }
     }
 }
 
 impl Div {
     pub fn new(left: Obj, right: Obj) -> Self {
+        Self::new_with_source_occurrence_id(left, right, None)
+    }
+
+    pub fn new_with_source_occurrence_id(
+        left: Obj,
+        right: Obj,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
         Div {
             left: Box::new(left),
             right: Box::new(right),
+            source_occurrence_id,
         }
     }
 }
@@ -1111,8 +1152,16 @@ impl BigIntersect {
 
 impl ListSet {
     pub fn new(list: Vec<Obj>) -> Self {
+        Self::new_with_source_occurrence_id(list, None)
+    }
+
+    pub fn new_with_source_occurrence_id(
+        list: Vec<Obj>,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Self {
         ListSet {
             list: list.into_iter().map(Box::new).collect(),
+            source_occurrence_id,
         }
     }
 }
@@ -1539,6 +1588,151 @@ impl Obj {
         }
     }
 
+    /// Parser-owned identity of this exact source occurrence when the object
+    /// currently participates in the proof-carrying To-Lean ABI. Synthetic
+    /// kernel objects deliberately return `None`; they cannot be joined to a
+    /// source WD-use edge by rendered text.
+    pub fn source_occurrence_id(&self) -> Option<SourceObjectOccurrenceId> {
+        match self {
+            Obj::FnObj(value) => value.source_occurrence_id,
+            Obj::Add(value) => value.source_occurrence_id,
+            Obj::Sub(value) => value.source_occurrence_id,
+            Obj::Mul(value) => value.source_occurrence_id,
+            Obj::Div(value) => value.source_occurrence_id,
+            Obj::ListSet(value) => value.source_occurrence_id,
+            Obj::AnonymousFn(value) => value.source_occurrence_id,
+            _ => None,
+        }
+    }
+
+    /// Canonical zero-based value-slot ordering used by the verifier-owned WD
+    /// construction recipe. Function application layers, proof-carrying
+    /// scalar builtins, and binder-owned slots have dedicated roles and are
+    /// intentionally excluded from this ordinary constructor projection.
+    pub(crate) fn well_definedness_constructor_argument(&self, index: usize) -> Option<Obj> {
+        fn unary(argument: &Obj, index: usize) -> Option<Obj> {
+            (index == 0).then(|| argument.clone())
+        }
+        fn binary(left: &Obj, right: &Obj, index: usize) -> Option<Obj> {
+            match index {
+                0 => Some(left.clone()),
+                1 => Some(right.clone()),
+                _ => None,
+            }
+        }
+        match self {
+            Obj::Mod(value) => binary(&value.left, &value.right, index),
+            Obj::Gcd(value) => binary(&value.left, &value.right, index),
+            Obj::Lcm(value) => binary(&value.left, &value.right, index),
+            Obj::Min(value) => binary(&value.left, &value.right, index),
+            Obj::Max(value) => binary(&value.left, &value.right, index),
+            Obj::Pow(value) => binary(&value.base, &value.exponent, index),
+            Obj::Log(value) => binary(&value.base, &value.arg, index),
+            Obj::Union(value) => binary(&value.left, &value.right, index),
+            Obj::Intersect(value) => binary(&value.left, &value.right, index),
+            Obj::SetMinus(value) => binary(&value.left, &value.right, index),
+            Obj::Proj(value) => binary(&value.set, &value.dim, index),
+            Obj::ObjAtIndex(value) => binary(&value.obj, &value.index, index),
+            Obj::FiniteSeqSet(value) => binary(&value.set, &value.n, index),
+            Obj::MatrixAdd(value) => binary(&value.left, &value.right, index),
+            Obj::MatrixSub(value) => binary(&value.left, &value.right, index),
+            Obj::MatrixMul(value) => binary(&value.left, &value.right, index),
+            Obj::MatrixScalarMul(value) => binary(&value.scalar, &value.matrix, index),
+            Obj::MatrixPow(value) => binary(&value.base, &value.exponent, index),
+            Obj::IntervalObj(value) => binary(value.start(), value.end(), index),
+            Obj::SumOfFiniteSet(value) => binary(&value.set, &value.func, index),
+            Obj::ProductOfFiniteSet(value) => binary(&value.set, &value.func, index),
+            Obj::Range(value) => binary(&value.start, &value.end, index),
+            Obj::ClosedRange(value) => binary(&value.start, &value.end, index),
+            Obj::Abs(value) => unary(&value.arg, index),
+            Obj::Floor(value) => unary(&value.arg, index),
+            Obj::Ceil(value) => unary(&value.arg, index),
+            Obj::Exp(value) => unary(&value.arg, index),
+            Obj::Ln(value) => unary(&value.arg, index),
+            Obj::Sign(value) => unary(&value.arg, index),
+            Obj::Factorial(value) => unary(&value.arg, index),
+            Obj::Sin(value) => unary(&value.arg, index),
+            Obj::Cos(value) => unary(&value.arg, index),
+            Obj::Tan(value) => unary(&value.arg, index),
+            Obj::Cot(value) => unary(&value.arg, index),
+            Obj::RealPart(value) => unary(&value.arg, index),
+            Obj::ImaginaryPart(value) => unary(&value.arg, index),
+            Obj::ComplexAbs(value) => unary(&value.arg, index),
+            Obj::Sqrt(value) => unary(&value.arg, index),
+            Obj::BigUnion(value) => unary(&value.left, index),
+            Obj::BigIntersect(value) => unary(&value.left, index),
+            Obj::CartDim(value) => unary(&value.set, index),
+            Obj::TupleDim(value) => unary(&value.arg, index),
+            Obj::FiniteSetSize(value) => unary(&value.set, index),
+            Obj::FiniteSetMax(value) => unary(&value.set, index),
+            Obj::FiniteSetMin(value) => unary(&value.set, index),
+            Obj::FnRange(value) => unary(&value.function, index),
+            Obj::Replacement(value) => unary(&value.source_set, index),
+            Obj::PowerSet(value) => unary(&value.set, index),
+            Obj::OneSideInfinityIntervalObj(value) => unary(value.start(), index),
+            Obj::SeqSet(value) => unary(&value.set, index),
+            Obj::ListSet(value) => value.list.get(index).map(|value| value.as_ref().clone()),
+            Obj::Cart(value) => value.args.get(index).map(|value| value.as_ref().clone()),
+            Obj::Tuple(value) => value.args.get(index).map(|value| value.as_ref().clone()),
+            Obj::FiniteSeqListObj(value) => {
+                value.objs.get(index).map(|value| value.as_ref().clone())
+            }
+            Obj::MatrixListObj(value) => value
+                .rows
+                .iter()
+                .flatten()
+                .nth(index)
+                .map(|value| value.as_ref().clone()),
+            Obj::StructObj(value) => value.params.get(index).cloned(),
+            Obj::InstantiatedTemplateObj(value) => value.args.get(index).cloned(),
+            Obj::ObjAsStructInstanceWithFieldAccess(value) => match index {
+                0 => Some(value.struct_obj.as_ref().clone().into()),
+                1 => Some(value.obj.as_ref().clone()),
+                _ => None,
+            },
+            Obj::GeneralCart(value) => match index {
+                0 => Some(value.index_set.as_ref().clone()),
+                1 => Some(value.family_set.as_ref().clone()),
+                2 => Some(value.family_fn.as_ref().clone()),
+                _ => None,
+            },
+            Obj::MatrixSet(value) => match index {
+                0 => Some(value.set.as_ref().clone()),
+                1 => Some(value.row_len.as_ref().clone()),
+                2 => Some(value.col_len.as_ref().clone()),
+                _ => None,
+            },
+            Obj::Sum(value) => match index {
+                0 => Some(value.start.as_ref().clone()),
+                1 => Some(value.end.as_ref().clone()),
+                2 => Some(value.func.as_ref().clone()),
+                _ => None,
+            },
+            Obj::Product(value) => match index {
+                0 => Some(value.start.as_ref().clone()),
+                1 => Some(value.end.as_ref().clone()),
+                2 => Some(value.func.as_ref().clone()),
+                _ => None,
+            },
+            Obj::Reduce(value) => match index {
+                0 => Some(value.start.as_ref().clone()),
+                1 => Some(value.end.as_ref().clone()),
+                2 => Some(value.func.as_ref().clone()),
+                3 => Some(value.op.as_ref().clone()),
+                4 => Some(value.seed.as_ref().clone()),
+                _ => None,
+            },
+            Obj::FiniteSetReduce(value) => match index {
+                0 => Some(value.set.as_ref().clone()),
+                1 => Some(value.func.as_ref().clone()),
+                2 => Some(value.op.as_ref().clone()),
+                3 => Some(value.seed.as_ref().clone()),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
     pub fn kind_id(&self) -> u8 {
         self.kind().as_u8()
     }
@@ -1844,24 +2038,28 @@ impl Obj {
             Obj::ImaginaryUnit(i) => i.into(),
             Obj::EulerNumber(e) => e.into(),
             Obj::Pi(pi) => pi.into(),
-            Obj::Add(x) => Add::new(
+            Obj::Add(x) => Add::new_with_source_occurrence_id(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
+                x.source_occurrence_id,
             )
             .into(),
-            Obj::Sub(x) => Sub::new(
+            Obj::Sub(x) => Sub::new_with_source_occurrence_id(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
+                x.source_occurrence_id,
             )
             .into(),
-            Obj::Mul(x) => Mul::new(
+            Obj::Mul(x) => Mul::new_with_source_occurrence_id(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
+                x.source_occurrence_id,
             )
             .into(),
-            Obj::Div(x) => Div::new(
+            Obj::Div(x) => Div::new_with_source_occurrence_id(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
+                x.source_occurrence_id,
             )
             .into(),
             Obj::Mod(x) => Mod::new(
@@ -1952,11 +2150,12 @@ impl Obj {
                 Obj::replace_bound_identifier(*x.family_fn, from, to),
             )
             .into(),
-            Obj::ListSet(x) => ListSet::new(
+            Obj::ListSet(x) => ListSet::new_with_source_occurrence_id(
                 x.list
                     .into_iter()
                     .map(|b| Obj::replace_bound_identifier(*b, from, to))
                     .collect(),
+                x.source_occurrence_id,
             )
             .into(),
             Obj::SetBuilder(sb) => {
@@ -2013,7 +2212,11 @@ impl Obj {
                     .into()
             }
             Obj::AnonymousFn(af) => {
-                let AnonymousFn { body, equal_to } = af;
+                let AnonymousFn {
+                    body,
+                    equal_to,
+                    source_occurrence_id,
+                } = af;
                 let FnSetBody {
                     params_def_with_set,
                     dom_facts,
@@ -2045,9 +2248,15 @@ impl Obj {
                     .collect();
                 let ret_set = Obj::replace_bound_identifier(*ret_set, from, to);
                 let equal_to = Obj::replace_bound_identifier(*equal_to, from, to);
-                AnonymousFn::new(params_def_with_set, dom_facts, ret_set, equal_to)
-                    .expect("renaming a valid anonymous fn preserves object scope validity")
-                    .into()
+                AnonymousFn::new_with_source_occurrence_id(
+                    params_def_with_set,
+                    dom_facts,
+                    ret_set,
+                    equal_to,
+                    source_occurrence_id,
+                )
+                .expect("renaming a valid anonymous fn preserves object scope validity")
+                .into()
             }
             Obj::Cart(c) => Cart::new(
                 c.args

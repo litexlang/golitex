@@ -20,10 +20,15 @@
 
 </div>
 
-> Litex: a formal language in readable, fact-oriented, set-theory-based
-> checked mathematics—with a minimal vocabulary of ubiquitous
-> mathematical objects, LaTeX-like notation, pattern-matching fact
-> invocation, and one fact-first verification workflow.
+> **Core positioning.** Litex is a set-theory-based, fact-oriented language
+> for readable checked mathematics. Users write the mathematical facts that
+> form the proof spine; Litex reconstructs routine local justification through
+> fact matching, equality replacement, definitions, quantified rules, and
+> bounded mathematical reasoning.
+>
+> **核心定位。** Litex 是一门基于集合论、以事实为导向的形式化语言，用于书写可读且可机器检查的数学。
+> 用户写下构成证明主干的数学事实；Litex 则通过事实匹配、等式替换、定义、量化规则与有界数学推理，
+> 重建常规的局部证明依据。
 
 ## Start with one checked fact
 

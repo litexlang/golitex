@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "target": "scratch/math_concepts_in_litex/calculus/main.lit",
+  "date": "2026-08-14",
+  "session_command": "target/release/litex -compact -session -before scratch/math_concepts_in_litex/calculus/main.lit",
+  "proof_spine": [
+    "state derivative candidates by punctured epsilon-delta control",
+    "cancel the square difference quotient and choose delta=epsilon",
+    "cancel a general affine quotient and choose any positive delta",
+    "package candidate existence as differentiability",
+    "compare x^2 with its tangent line by an exact quadratic error"
+  ],
+  "attempts": [
+    {
+      "id": "calculus-001",
+      "status": "accepted",
+      "summary": "Defined the local epsilon-delta control relation for a derivative candidate."
+    },
+    {
+      "id": "calculus-002",
+      "status": "accepted",
+      "summary": "Defined has_derivative_at_R as existence of a positive delta for every positive epsilon."
+    },
+    {
+      "id": "calculus-003",
+      "status": "accepted",
+      "summary": "Defined the square function."
+    },
+    {
+      "id": "calculus-004",
+      "status": "accepted",
+      "summary": "Proved the punctured difference quotient of x^2 equals x+x0."
+    },
+    {
+      "id": "calculus-005",
+      "status": "failed",
+      "summary": "The verifier did not bridge the cited quotient equality through subtraction in one step.",
+      "evidence": "unknown equality: quotient - 2*x0 = x - x0"
+    },
+    {
+      "id": "calculus-006",
+      "status": "accepted",
+      "summary": "Added the explicit intermediate expression (x+x0)-2*x0, then completed the epsilon-delta proof with delta=epsilon."
+    },
+    {
+      "id": "calculus-007",
+      "status": "accepted",
+      "summary": "Consumed the general theorem at x0=3 to obtain derivative candidate 6."
+    },
+    {
+      "id": "C006-C008",
+      "status": "materialized",
+      "summary": "Added differentiability, a parameterized affine-function family, its exact quotient identity, and its epsilon-delta derivative theorem."
+    },
+    {
+      "id": "C009",
+      "status": "materialized",
+      "summary": "Packaged any derivative candidate as differentiability and applied it to x^2."
+    },
+    {
+      "id": "C010",
+      "status": "materialized",
+      "summary": "Checked the derivative and differentiability of 3x+2 at x=4, then proved the exact quadratic error from the tangent to x^2 at 3."
+    }
+  ],
+  "accepted_blocks": [
+    "derivative delta-control and candidate relations",
+    "square function",
+    "difference-quotient cancellation theorem",
+    "epsilon-delta derivative theorem for x^2",
+    "concrete x0=3 consumption",
+    "parameterized affine functions and their derivative theorem",
+    "candidate-to-differentiability bridge",
+    "square tangent line and exact quadratic error"
+  ],
+  "lesson": "Litex can keep derivatives relational and still support reusable families, existential differentiability, and inspectable tangent-error calculations without a trusted global derivative selector.",
+  "final_gate": "release file and module runners: ok=true, exit code 0"
+}

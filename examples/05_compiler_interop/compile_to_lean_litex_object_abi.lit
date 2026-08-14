@@ -16,7 +16,7 @@
 #
 #   import Litex.BuiltinRules
 #
-#   example : Litex.abiVersion = 2 := rfl
+#   example : Litex.abiVersion = 5 := rfl
 #
 # Source declarations bind `(a : Litex.Object)` supplied by that import. No
 # global `LitexObject` compatibility alias or repeated core is emitted.

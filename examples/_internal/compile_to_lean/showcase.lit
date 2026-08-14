@@ -43,6 +43,8 @@ abstract_prop highlighted(x)
 prop is_zero(x R):
     x = 0
 
+$is_zero(0)
+
 have named_zero R = 0
 by def $is_zero(named_zero)
 
@@ -93,3 +95,24 @@ forall u, v, w C:
 
 forall u, v, w C:
     ((u - v) * w) + u = ((u - v) * w) + u
+
+# Division additionally consumes the exact denominator-nonzero WD fact. Its
+# complex-closure theorem supplies the quotient membership to the outer sum.
+forall u, v C:
+    v != 0
+    =>:
+        (u / v) + u = (u / v) + u
+
+forall u, v R:
+    v != 0
+    =>:
+        u / v $in R
+
+# Finite set literals consume ordered child WD nodes and every indexed
+# pairwise-distinctness fact; Lean does not re-prove the constructor invariant.
+forall a, b, c set:
+    a != b
+    a != c
+    b != c
+    =>:
+        {a, b, c} = {a, b, c}

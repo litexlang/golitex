@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_inferred_forall_premise.lit",
+  "session_command": "standalone compiler-interoperability examples have no litex.config; use target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_inferred_forall_premise.lit",
+  "proof_spine": [
+    "Bind x as one Litex.Object and retain x in RPos as its exact parameter FactId",
+    "Replay the verifier-selected PositiveRealMembership certificate as a local Lean have",
+    "Register the inferred premise only after its proof has rendered, preventing self-citation",
+    "Replay comparison-notation duality from 0 < x to x > 0 without target search"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Compile the inferred positive-real premise inside its forall scope",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "forall x R+:\n    x > 0",
+          "result": "passed_source_blocked_emitter",
+          "verifier_evidence": "Litex retained one parameter premise, one inferred premise, and one conclusion; strict emission rejected inferred forall premises",
+          "diagnosis": "the emitter discarded a verifier-owned local proof node instead of replaying it",
+          "next_change": "emit and register the inferred FactId inside the forall body"
+        },
+        {
+          "candidate": "forall x R+:\n    x > 0",
+          "result": "passed_source_blocked_comparison_duality",
+          "verifier_evidence": "PositiveRealMembership emitted, then x > 0 retained ComparisonNotationDuality from 0 < x",
+          "diagnosis": "the two Litex spellings render to the same Lean proposition but the checked duality adapter was missing",
+          "next_change": "validate the exact source/target pair and replay its FactId"
+        },
+        {
+          "candidate": "forall x R+:\n    x > 0",
+          "result": "passed",
+          "verifier_evidence": "focused Rust positive and malformed-FactId tests pass; real Mathlib gate recorded separately",
+          "diagnosis": "none",
+          "next_change": "append the capability to the executable ledger"
+        }
+      ],
+      "accepted_litex": "forall x R+:\n    x > 0",
+      "reusable_lesson": "Verifier-inferred premises are ordered local proof declarations keyed by FactId, not extra forall binders and not target-search hints.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_inferred_forall_premise.lit",
+    "file_gate_result": "focused gates pass; the complete 15-entry ledger compiles against real Mathlib"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_indexed_aggregate.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_indexed_aggregate.lit",
+  "proof_spine": ["retain positive dimension", "retain dimension at least two", "construct one tuple family", "export is-tuple, dimension and coordinate facts in order"],
+  "blocks": [{"id":"B001","source_order":1,"intent":"compile one representative indexed aggregate","dependencies":[],"attempts":[{"candidate":"have tuple q for i1 <= 2, q[i1] = 0\nq = q","result":"passed","verifier_evidence":"two checks and three stored tuple effects retained","diagnosis":"HaveTuple stopped at statement IR","next_change":"materialize one tuple recipe before generalizing aggregates"}],"accepted_litex":"have tuple q for i1 <= 2, q[i1] = 0\nq = q","reusable_lesson":"An indexed aggregate is a constructor plus ordered interface theorems, not a family of unrelated axioms.","status":"materialized"}],
+  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release indexed_aggregate_emits_one_checked_tuple_recipe -- --nocapture","file_gate_result":"focused shape and changed-role gates pass; the complete 15-entry ledger compiles against real Mathlib"}
+}

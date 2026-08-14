@@ -593,7 +593,7 @@ impl Runtime {
 
     pub(crate) fn well_defined_obj_proof(
         &self,
-        proof_id: WellDefinedObjProofId,
+        proof_id: WellDefinedObjId,
     ) -> Option<Rc<WellDefinedObjProof>> {
         self.iter_environments_from_top()
             .find_map(|env| env.well_defined_obj_proofs.get(&proof_id).cloned())

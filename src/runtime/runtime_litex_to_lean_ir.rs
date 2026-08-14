@@ -53,7 +53,8 @@ impl Runtime {
                     .build_litex_to_lean_ir_projected_forall_statement(success, fact, excluded);
             }
             return Ok(LitexToLeanStatementIr::Fact(LitexToLeanFactStatementIr {
-                fact,
+                source: fact,
+                stored_projections: Vec::new(),
                 inferred_facts: self
                     .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
                 well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
@@ -71,25 +72,31 @@ impl Runtime {
         };
         match &success.stmt {
             Stmt::DefPredicateStmt(DefPredicateStmt::DefAbstractPropStmt(stmt)) => Ok(
-                LitexToLeanStatementIr::AbstractProp(LitexToLeanAbstractPropIr {
-                    name: stmt.name.clone(),
-                    params: stmt.params.clone(),
-                }),
+                LitexToLeanStatementIr::DefPredicateStmt(
+                    LitexToLeanDefPredicateStmtIr::DefAbstractPropStmt(
+                        LitexToLeanDefAbstractPropStmtIr {
+                            name: stmt.name.clone(),
+                            params: stmt.params.clone(),
+                        },
+                    ),
+                ),
             ),
             Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(stmt)) => {
                 for fact in stmt.iff_facts.iter() {
                     ensure_fact_objects_supported_by_litex_to_lean_ir(fact)?;
                 }
-                Ok(LitexToLeanStatementIr::Prop(LitexToLeanPropIr {
-                    name: stmt.name.clone(),
-                    params: stmt
-                        .params_def_with_type
-                        .groups
-                        .iter()
-                        .map(build_litex_to_lean_ir_parameter_group)
-                        .collect::<Result<Vec<_>, RuntimeError>>()?,
-                    iff_facts: stmt.iff_facts.clone(),
-                }))
+                Ok(LitexToLeanStatementIr::DefPredicateStmt(
+                    LitexToLeanDefPredicateStmtIr::DefPropStmt(LitexToLeanDefPropStmtIr {
+                        name: stmt.name.clone(),
+                        params: stmt
+                            .params_def_with_type
+                            .groups
+                            .iter()
+                            .map(build_litex_to_lean_ir_parameter_group)
+                            .collect::<Result<Vec<_>, RuntimeError>>()?,
+                        iff_facts: stmt.iff_facts.clone(),
+                    }),
+                ))
             }
             Stmt::DefObjStmt(DefObjStmt::HaveObjEqualStmt(stmt)) => {
                 self.build_litex_to_lean_ir_have_object_equal_statement(stmt, success)
@@ -97,33 +104,69 @@ impl Runtime {
             Stmt::DefObjStmt(DefObjStmt::HaveFnEqualStmt(stmt)) => {
                 self.build_litex_to_lean_ir_have_function_equal_statement(stmt, success)
             }
+            Stmt::DefObjStmt(DefObjStmt::HaveTupleStmt(stmt)) => {
+                self.build_litex_to_lean_ir_have_tuple_statement(stmt, success)
+            }
             Stmt::DefObjStmt(DefObjStmt::HaveObjInNonemptySetStmt(stmt)) => {
                 self.build_litex_to_lean_ir_have_object_choice_statement(stmt, success)
             }
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) => self
-                .build_litex_to_lean_ir_existential_witness(
-                    &stmt.equal_tos,
-                    &stmt.line_file,
-                    success,
-                ),
-            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => self
-                .build_litex_to_lean_ir_existential_witness(
-                    &stmt.equal_tos,
-                    &stmt.line_file,
-                    success,
-                ),
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromExistFact(stmt)) => {
+                let (source, witnesses, projections) = self
+                    .build_litex_to_lean_ir_existential_witness(
+                        &stmt.equal_tos,
+                        &stmt.line_file,
+                        success,
+                    )?;
+                Ok(LitexToLeanStatementIr::DefObjStmt(
+                    LitexToLeanDefObjStmtIr::ObtainObjFromExistFact(
+                        LitexToLeanObtainObjFromExistFactIr {
+                            source,
+                            witnesses,
+                            projections,
+                        },
+                    ),
+                ))
+            }
+            Stmt::DefObjStmt(DefObjStmt::ObtainObjFromAtomicFact(stmt)) => {
+                let (source, witnesses, projections) = self
+                    .build_litex_to_lean_ir_existential_witness(
+                        &stmt.equal_tos,
+                        &stmt.line_file,
+                        success,
+                    )?;
+                Ok(LitexToLeanStatementIr::DefObjStmt(
+                    LitexToLeanDefObjStmtIr::ObtainObjFromAtomicFact(
+                        LitexToLeanObtainObjFromAtomicFactIr {
+                            source,
+                            witnesses,
+                            projections,
+                        },
+                    ),
+                ))
+            }
             Stmt::DefObjStmt(DefObjStmt::ObtainObjFromThm(stmt)) => Err(
                 litex_to_lean_ir_error(
                     &stmt.line_file,
                     "Litex-to-Lean does not yet support theorem-backed `obtain`; use an explicit theorem application followed by existential elimination",
                 ),
             ),
-            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => self
-                .build_litex_to_lean_ir_existential_witness(
-                    &stmt.param_def.collect_param_bindings(),
-                    &stmt.line_file,
-                    success,
-                ),
+            Stmt::DefObjStmt(DefObjStmt::HaveObjByExistFactsStmt(stmt)) => {
+                let (source, witnesses, projections) = self
+                    .build_litex_to_lean_ir_existential_witness(
+                        &stmt.param_def.collect_param_bindings(),
+                        &stmt.line_file,
+                        success,
+                    )?;
+                Ok(LitexToLeanStatementIr::DefObjStmt(
+                    LitexToLeanDefObjStmtIr::HaveObjByExistFactsStmt(
+                        LitexToLeanHaveObjByExistFactsStmtIr {
+                            source,
+                            witnesses,
+                            projections,
+                        },
+                    ),
+                ))
+            }
             Stmt::Witness(WitnessStmt::WitnessExistFact(stmt)) => {
                 self.build_litex_to_lean_ir_witness_exist_statement(stmt, success)
             }
@@ -157,11 +200,13 @@ impl Runtime {
                         proof: LitexToLeanFactProofIr::Trusted,
                     });
                 }
-                Ok(LitexToLeanStatementIr::Trust(LitexToLeanTrustIr {
-                    facts,
-                    inferred_facts: self
-                        .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
-                }))
+                Ok(LitexToLeanStatementIr::UnsafeStmt(
+                    LitexToLeanUnsafeStmtIr::TrustStmt(LitexToLeanTrustStmtIr {
+                        facts,
+                        inferred_facts: self
+                            .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+                    }),
+                ))
             }
             other => Err(litex_to_lean_ir_error(
                 &other.line_file(),
@@ -336,8 +381,8 @@ impl Runtime {
             "function defining equality",
         )?;
 
-        Ok(LitexToLeanStatementIr::HaveFnEqual(
-            LitexToLeanHaveFunctionEqualIr {
+        Ok(LitexToLeanStatementIr::DefObjStmt(
+            LitexToLeanDefObjStmtIr::HaveFnEqualStmt(LitexToLeanHaveFnEqualStmtIr {
                 symbol_id: stmt.symbol_binding.id(),
                 name: stmt.name().to_string(),
                 function,
@@ -363,7 +408,119 @@ impl Runtime {
                     &success.well_definedness,
                     &assumption_context,
                 )?,
-            },
+            }),
+        ))
+    }
+
+    fn build_litex_to_lean_ir_have_tuple_statement(
+        &self,
+        stmt: &HaveTupleStmt,
+        success: &NonFactualStmtSuccess,
+    ) -> Result<LitexToLeanStatementIr, RuntimeError> {
+        if success.inside_results.len() != 2 {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "indexed tuple must retain its positive-dimension and at-least-two checks",
+            ));
+        }
+        let mut dimension_checks = Vec::with_capacity(2);
+        for result in success.inside_results.iter() {
+            let mut check = self.build_litex_to_lean_ir_fact_from_result(
+                result,
+                "indexed tuple dimension check",
+                &LitexToLeanIrConstructionContext::default(),
+            )?;
+            check.fact_id = None;
+            dimension_checks.push(check);
+        }
+
+        let target = self.declared_identifier_obj(stmt.name());
+        let expected_is_tuple: Fact =
+            IsTupleFact::new(target.clone(), stmt.line_file.clone()).into();
+        let expected_dimension: Fact = EqualFact::new(
+            TupleDim::new(target.clone()).into(),
+            stmt.dimension.clone(),
+            stmt.line_file.clone(),
+        )
+        .into();
+        let mut stored_facts = Vec::with_capacity(3);
+        for (expected, role) in [
+            (
+                &expected_is_tuple,
+                LitexToLeanStoredTupleFactRoleIr::IsTuple,
+            ),
+            (
+                &expected_dimension,
+                LitexToLeanStoredTupleFactRoleIr::Dimension,
+            ),
+        ] {
+            stored_facts.push(LitexToLeanStoredTupleFactIr {
+                fact_id: stored_fact_id_from_infer_result(
+                    &success.infers,
+                    expected,
+                    "indexed tuple stored fact",
+                )?,
+                proposition: expected.clone(),
+                role,
+            });
+        }
+        let coordinate_outputs = success
+            .infers
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                let Fact::ForallFact(forall) = &output.itself_and_why_itself_is_stored.0 else {
+                    return false;
+                };
+                if forall.params_def_with_type.number_of_params() != 1
+                    || !forall.dom_facts.is_empty()
+                    || forall.then_facts.len() != 1
+                {
+                    return false;
+                }
+                let Fact::AtomicFact(AtomicFact::EqualFact(equality)) =
+                    forall.then_facts[0].clone().to_fact()
+                else {
+                    return false;
+                };
+                matches!(
+                    &equality.left,
+                    Obj::ObjAtIndex(access)
+                        if obj_equality_key(access.obj.as_ref()) == obj_equality_key(&target)
+                )
+            })
+            .collect::<Vec<_>>();
+        if coordinate_outputs.len() != 1 {
+            return Err(litex_to_lean_ir_error(
+                &stmt.line_file,
+                "indexed tuple did not retain exactly one coordinate forall effect",
+            ));
+        }
+        let coordinate = coordinate_outputs[0];
+        stored_facts.push(LitexToLeanStoredTupleFactIr {
+            fact_id: coordinate.fact_id.ok_or_else(|| {
+                litex_to_lean_ir_error(
+                    &stmt.line_file,
+                    "indexed tuple coordinate forall has no stable FactId",
+                )
+            })?,
+            proposition: coordinate.itself_and_why_itself_is_stored.0.clone(),
+            role: LitexToLeanStoredTupleFactRoleIr::Coordinate,
+        });
+
+        Ok(LitexToLeanStatementIr::DefObjStmt(
+            LitexToLeanDefObjStmtIr::HaveTupleStmt(LitexToLeanHaveTupleStmtIr {
+                symbol_id: stmt.symbol_binding.id(),
+                name: stmt.name().to_string(),
+                index_symbol_id: stmt.index_binding.id(),
+                index_name: stmt.index_name().to_string(),
+                dimension: LitexToLeanObjectIr::lower(&stmt.dimension)
+                    .map_err(|message| litex_to_lean_ir_error(&stmt.line_file, message))?,
+                value: LitexToLeanObjectIr::lower(&stmt.value)
+                    .map_err(|message| litex_to_lean_ir_error(&stmt.line_file, message))?,
+                dimension_checks,
+                stored_facts,
+            }),
         ))
     }
 
@@ -415,10 +572,12 @@ impl Runtime {
             Some(fact_id),
         )?;
 
-        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
-            facts: vec![fact],
-            inferred_facts: Vec::new(),
-        }))
+        Ok(LitexToLeanStatementIr::Witness(
+            LitexToLeanWitnessStmtIr::WitnessExistFact(LitexToLeanWitnessExistFactIr {
+                facts: vec![fact],
+                inferred_facts: Vec::new(),
+            }),
+        ))
     }
 
     fn build_litex_to_lean_ir_exist_introduction_fact(
@@ -729,10 +888,12 @@ impl Runtime {
         let mut inferred_facts = vec![projected_existential];
         inferred_facts
             .extend(self.build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?);
-        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
-            facts: vec![named_fact],
-            inferred_facts,
-        }))
+        Ok(LitexToLeanStatementIr::Witness(
+            LitexToLeanWitnessStmtIr::WitnessAtomicFact(LitexToLeanWitnessAtomicFactIr {
+                facts: vec![named_fact],
+                inferred_facts,
+            }),
+        ))
     }
 
     fn build_litex_to_lean_ir_existential_witness(
@@ -740,7 +901,14 @@ impl Runtime {
         bindings: &[SymbolBinding],
         line_file: &LineFile,
         success: &NonFactualStmtSuccess,
-    ) -> Result<LitexToLeanStatementIr, RuntimeError> {
+    ) -> Result<
+        (
+            LitexToLeanFactIr,
+            Vec<LitexToLeanExistentialWitnessIr>,
+            Vec<LitexToLeanFactIr>,
+        ),
+        RuntimeError,
+    > {
         let Some(verification) = success.existential_elimination_verification.as_ref() else {
             return Err(litex_to_lean_ir_error(
                 line_file,
@@ -933,13 +1101,7 @@ impl Runtime {
             ));
         }
 
-        Ok(LitexToLeanStatementIr::HaveExistentialWitness(
-            LitexToLeanHaveExistentialWitnessIr {
-                source,
-                witnesses,
-                projections,
-            },
-        ))
+        Ok((source, witnesses, projections))
     }
 
     fn build_litex_to_lean_ir_have_object_choice_statement(
@@ -1066,8 +1228,10 @@ impl Runtime {
             ));
         }
 
-        Ok(LitexToLeanStatementIr::HaveObjChoice(
-            LitexToLeanHaveObjectChoiceIr { choices },
+        Ok(LitexToLeanStatementIr::DefObjStmt(
+            LitexToLeanDefObjStmtIr::HaveObjInNonemptySetStmt(
+                LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr { choices },
+            ),
         ))
     }
 
@@ -1191,8 +1355,11 @@ impl Runtime {
             ));
         }
 
-        Ok(LitexToLeanStatementIr::HaveObjEqual(
-            LitexToLeanHaveObjectEqualIr { definitions, facts },
+        Ok(LitexToLeanStatementIr::DefObjStmt(
+            LitexToLeanDefObjStmtIr::HaveObjEqualStmt(LitexToLeanHaveObjEqualStmtIr {
+                definitions,
+                facts,
+            }),
         ))
     }
 
@@ -1267,11 +1434,13 @@ impl Runtime {
             proof,
         };
         let excluded = HashSet::from([target.to_string()]);
-        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
-            facts: vec![fact],
-            inferred_facts: self
-                .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
-        }))
+        Ok(LitexToLeanStatementIr::By(LitexToLeanByStmtIr::ByDefStmt(
+            LitexToLeanByDefStmtIr {
+                facts: vec![fact],
+                inferred_facts: self
+                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+            },
+        )))
     }
 
     fn build_litex_to_lean_ir_by_cases_statement(
@@ -1433,11 +1602,13 @@ impl Runtime {
             });
         }
 
-        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
-            facts,
-            inferred_facts: self
-                .build_litex_to_lean_ir_inferred_facts(&success.infers, &explicit_keys)?,
-        }))
+        Ok(LitexToLeanStatementIr::By(
+            LitexToLeanByStmtIr::ByCasesStmt(LitexToLeanByCasesStmtIr {
+                facts,
+                inferred_facts: self
+                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &explicit_keys)?,
+            }),
+        ))
     }
 
     fn build_litex_to_lean_ir_by_contra_statement(
@@ -1498,11 +1669,13 @@ impl Runtime {
             },
         };
 
-        Ok(LitexToLeanStatementIr::Proof(LitexToLeanProofStatementIr {
-            facts: vec![fact],
-            inferred_facts: self
-                .build_litex_to_lean_ir_inferred_facts(&success.infers, &explicit_keys)?,
-        }))
+        Ok(LitexToLeanStatementIr::By(
+            LitexToLeanByStmtIr::ByContraStmt(LitexToLeanByContraStmtIr {
+                facts: vec![fact],
+                inferred_facts: self
+                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &explicit_keys)?,
+            }),
+        ))
     }
 
     fn build_litex_to_lean_ir_nested_statement(
@@ -1610,7 +1783,7 @@ impl Runtime {
             .iter()
             .enumerate()
             .map(|(index, result)| {
-                Ok(LitexToLeanNamedTheoremProofStepIr {
+                Ok(LitexToLeanDefThmStmtProofStepIr {
                     position: index + 1,
                     statement: self.build_litex_to_lean_ir_nested_statement(result)?,
                 })
@@ -1648,8 +1821,8 @@ impl Runtime {
             ));
         }
 
-        Ok(LitexToLeanStatementIr::NamedTheorem(
-            LitexToLeanNamedTheoremIr {
+        Ok(LitexToLeanStatementIr::DefThmStmt(
+            LitexToLeanDefThmStmtIr {
                 name: verification.name.clone(),
                 theorem,
                 expected_proof_step_count: verification.proof_step_count,
@@ -1719,18 +1892,16 @@ impl Runtime {
             ));
         }
 
-        Ok(LitexToLeanStatementIr::ProjectedForall(
-            LitexToLeanProjectedForallIr {
-                source: source.proposition,
-                facts,
-                inferred_facts: self
-                    .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
-                well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
-                    &success.well_definedness,
-                    &self.well_definedness_context_for_factual_success(success),
-                )?,
-            },
-        ))
+        Ok(LitexToLeanStatementIr::Fact(LitexToLeanFactStatementIr {
+            source,
+            stored_projections: facts,
+            inferred_facts: self
+                .build_litex_to_lean_ir_inferred_facts(&success.infers, &excluded)?,
+            well_definedness: self.build_litex_to_lean_ir_well_definedness_certificate(
+                &success.well_definedness,
+                &self.well_definedness_context_for_factual_success(success),
+            )?,
+        }))
     }
 
     fn build_litex_to_lean_ir_forall_projections(
@@ -1943,17 +2114,12 @@ impl Runtime {
                 ));
             }
             facts.push(LitexToLeanWellDefinednessFactIr {
-                certificate_id: evidence.certificate_id,
                 well_defined_fact_id: evidence.well_defined_fact_id,
-                role: evidence.role,
                 expected_proposition: evidence.proof.stmt.clone(),
                 fact,
+                ambient_binder_scope_ids: evidence.ambient_binder_scope_ids.clone(),
             });
         }
-        let facts_by_id = facts
-            .iter()
-            .map(|evidence| (evidence.certificate_id, &evidence.expected_proposition))
-            .collect::<HashMap<_, _>>();
         let facts_by_well_defined_id = facts
             .iter()
             .map(|evidence| {
@@ -1966,18 +2132,8 @@ impl Runtime {
         let mut objects = Vec::with_capacity(certificate.objects.len());
         let mut objects_by_id = HashMap::new();
         for evidence in certificate.objects.iter() {
-            if evidence
-                .fact_ids
-                .iter()
-                .any(|certificate_id| !facts_by_id.contains_key(certificate_id))
-            {
-                return Err(litex_to_lean_ir_error(
-                    &default_line_file(),
-                    "well-definedness object proof references a missing fact certificate",
-                ));
-            }
             if objects_by_id
-                .insert(evidence.well_defined_obj_proof_id, evidence.object.clone())
+                .insert(evidence.well_defined_obj_id, evidence.object.clone())
                 .is_some()
             {
                 return Err(litex_to_lean_ir_error(
@@ -2017,35 +2173,63 @@ impl Runtime {
                 })
                 .collect::<Result<Vec<_>, RuntimeError>>()?;
             objects.push(LitexToLeanWellDefinednessObjectIr {
-                well_defined_obj_proof_id: evidence.well_defined_obj_proof_id,
+                well_defined_obj_id: evidence.well_defined_obj_id,
                 source_object: evidence.object.clone(),
+                function_contracts: evidence.function_contracts.clone(),
                 intrinsic_result_set,
-                child_proof_ids: evidence.child_proof_ids.clone(),
+                child_uses: evidence.child_uses.clone(),
                 well_defined_fact_ids: evidence.well_defined_fact_ids.clone(),
                 target_requirements,
-                fact_ids: evidence.fact_ids.clone(),
+                ambient_binder_scope_ids: evidence.ambient_binder_scope_ids.clone(),
+                owned_binder_scope_id: evidence.owned_binder_scope_id,
+            });
+        }
+        let mut binder_scopes = Vec::with_capacity(certificate.binder_scopes.len());
+        for evidence in certificate.binder_scopes.iter() {
+            let scope = &evidence.scope;
+            let inferred_premises =
+                self.build_litex_to_lean_ir_supported_inferred_premises(&scope.assumption_infers)?;
+            binder_scopes.push(LitexToLeanWellDefinednessBinderScopeIr {
+                scope_id: scope.id,
+                owner_object: scope.owner_object.clone(),
+                ambient_scope_ids: scope.ambient_scope_ids.clone(),
+                premises: scope
+                    .premises
+                    .iter()
+                    .map(|premise| LitexToLeanWellDefinednessBinderPremiseIr {
+                        role: premise.role,
+                        symbol_id: premise.symbol_id,
+                        fact_id: premise.fact_id,
+                        proposition: premise.proposition.clone(),
+                    })
+                    .collect(),
+                inferred_premises,
             });
         }
         for root_use in certificate.root_proof_uses.iter() {
-            if !objects_by_id.contains_key(&root_use.well_defined_obj_proof_id) {
+            if !objects_by_id.contains_key(&root_use.well_defined_obj_id) {
                 return Err(litex_to_lean_ir_error(
                     &default_line_file(),
                     "well-definedness root use references a missing object proof",
                 ));
             }
         }
-        let mut target_requirements = Vec::with_capacity(certificate.target_requirements.len());
-        for requirement in certificate.target_requirements.iter() {
-            if requirement.role == WellDefinednessRequirementRole::SourceObjectRequirement {
+        for source_use in certificate.source_object_uses.iter() {
+            if !objects_by_id.contains_key(&source_use.well_defined_obj_id) {
                 return Err(litex_to_lean_ir_error(
-                    &requirement.expected_proposition.line_file(),
-                    "target well-definedness requirement has an audit-only role",
+                    &default_line_file(),
+                    "source-object WD use references a missing object proof",
                 ));
             }
-            let Some(expected_fact) = facts_by_id.get(&requirement.certificate_id) else {
+        }
+        let mut target_requirements = Vec::with_capacity(certificate.target_requirements.len());
+        for requirement in certificate.target_requirements.iter() {
+            let Some(expected_fact) =
+                facts_by_well_defined_id.get(&requirement.well_defined_fact_id)
+            else {
                 return Err(litex_to_lean_ir_error(
                     &requirement.expected_proposition.line_file(),
-                    "target well-definedness requirement references a missing fact certificate",
+                    "target well-definedness requirement references a missing fact",
                 ));
             };
             if expected_fact.to_string() != requirement.expected_proposition.to_string() {
@@ -2054,8 +2238,7 @@ impl Runtime {
                     "target well-definedness requirement changed its verifier proposition",
                 ));
             }
-            let Some(source_object) = objects_by_id.get(&requirement.well_defined_obj_proof_id)
-            else {
+            let Some(source_object) = objects_by_id.get(&requirement.well_defined_obj_id) else {
                 return Err(litex_to_lean_ir_error(
                     &requirement.expected_proposition.line_file(),
                     "target well-definedness requirement references a missing object proof",
@@ -2069,17 +2252,17 @@ impl Runtime {
             };
             target_requirements.push(LitexToLeanWellDefinednessTargetRequirementIr {
                 source_occurrence_id: requirement.source_occurrence_id,
-                well_defined_obj_proof_id: requirement.well_defined_obj_proof_id,
+                well_defined_obj_id: requirement.well_defined_obj_id,
                 phase: requirement.phase,
                 role: requirement.role,
-                certificate_id: requirement.certificate_id,
                 well_defined_fact_id: requirement.well_defined_fact_id,
                 expected_proposition: requirement.expected_proposition.clone(),
             });
         }
-        Ok(LitexToLeanWellDefinednessCertificateIr {
-            root_proof_ids: certificate.root_proof_ids.clone(),
+        let ir = LitexToLeanWellDefinednessCertificateIr {
+            root_obj_ids: certificate.root_obj_ids.clone(),
             root_proof_uses: certificate.root_proof_uses.clone(),
+            source_object_uses: certificate.source_object_uses.clone(),
             facts,
             objects,
             target_requirements,
@@ -2092,7 +2275,11 @@ impl Runtime {
                     proposition: evidence.proposition.clone(),
                 })
                 .collect(),
-        })
+            binder_scopes,
+        };
+        crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(&ir)
+            .map_err(|message| litex_to_lean_ir_error(&default_line_file(), message))?;
+        Ok(ir)
     }
 
     fn build_litex_to_lean_ir_fact_from_success_with_context(
@@ -2559,7 +2746,6 @@ impl Runtime {
                 reason: format!("verified citation `{}` has no stored FactId", source_fact),
             });
         };
-
         // Preserve the existing closed-membership certificate even when the
         // verifier also records how a differently spelled citation resolved
         // to this closed goal. The checked target rule is dependency-free and
@@ -3719,10 +3905,18 @@ impl Runtime {
                         reason: output.itself_and_why_itself_is_stored.1.clone(),
                     }
                 };
-                // Internal inferences are emitted only when this backend has a
-                // checked proof adapter. A later citation still fails closed
-                // because no Lean declaration is registered for an omitted fact.
-                if !matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
+                if matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
+                    if let Some(source_id) = source_id {
+                        return Err(litex_to_lean_ir_error(
+                            &source_fact.line_file(),
+                            format!(
+                                "environment FactId {} for `{}` has no checked Litex-to-Lean proof adapter",
+                                source_id.value(),
+                                source_fact
+                            ),
+                        ));
+                    }
+                } else {
                     inferred.push(LitexToLeanFactIr {
                         fact_id: source_id,
                         proposition: source_fact.clone(),
@@ -3751,11 +3945,22 @@ impl Runtime {
                     fact,
                     &output.itself_and_why_itself_is_stored.1,
                 )?;
+                let fact_id = (*recorded_fact_id).or(self.known_fact_id_for_fact(fact)?);
                 if matches!(proof, LitexToLeanFactProofIr::Inference { .. }) {
+                    if let Some(fact_id) = fact_id {
+                        return Err(litex_to_lean_ir_error(
+                            &fact.line_file(),
+                            format!(
+                                "environment FactId {} for inferred fact `{}` has no checked Litex-to-Lean proof adapter",
+                                fact_id.value(),
+                                fact
+                            ),
+                        ));
+                    }
                     continue;
                 }
                 inferred.push(LitexToLeanFactIr {
-                    fact_id: (*recorded_fact_id).or(self.known_fact_id_for_fact(fact)?),
+                    fact_id,
                     proposition: fact.clone(),
                     proof,
                 });
@@ -3868,15 +4073,13 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
         }
     }
     if crate::litex_to_lean_ir::is_closed_numeric_relation(inferred_fact) {
-        if let Some(target_set) =
-            crate::litex_to_lean_ir::closed_compact_numeric_set_fact(source_fact)
-        {
-            return Ok(LitexToLeanFactProofIr::RuleApplication {
-                rule: LitexToLeanProofRuleIr::ClosedNumericReflection { target_set },
-                parameter_requirements: Vec::new(),
-                premises: Vec::new(),
-            });
-        }
+        return Ok(LitexToLeanFactProofIr::RuleApplication {
+            rule: LitexToLeanProofRuleIr::ClosedNumericComparison {
+                expected_target: inferred_fact.clone(),
+            },
+            parameter_requirements: Vec::new(),
+            premises: Vec::new(),
+        });
     }
     Ok(LitexToLeanFactProofIr::Inference {
         source_fact_id,

@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_object_choice.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_object_choice.lit",
+  "proof_spine": ["retain carrier nonemptiness", "emit Classical.choose once", "export exact membership FactId"],
+  "blocks": [{"id":"B001","source_order":1,"intent":"choose one real object","dependencies":[],"attempts":[{"candidate":"have x R\nx $in R","result":"passed","verifier_evidence":"nonempty carrier and stored membership retained","diagnosis":"statement emitter was missing","next_change":"materialize object choice"}],"accepted_litex":"have x R\nx $in R","reusable_lesson":"A choice declaration and its membership proof share one verifier-owned existential package.","status":"materialized"}],
+  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release object_choice_emits_one_definition_and_exact_membership_fact -- --nocapture","file_gate_result":"focused shape and malformed-evidence gates pass; the complete 15-entry ledger compiles against real Mathlib"}
+}

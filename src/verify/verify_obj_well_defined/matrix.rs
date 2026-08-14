@@ -9,8 +9,16 @@ impl Runtime {
         x: &IntervalObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(x.end(), verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            x.start(),
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            x.end(),
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_r(x.start(), verify_state)?;
         self.require_obj_in_r(x.end(), verify_state)?;
         Ok(())
@@ -23,7 +31,11 @@ impl Runtime {
         x: &OneSideInfinityIntervalObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(x.start(), verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            x.start(),
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(x.start(), verify_state)?;
         Ok(())
     }
@@ -35,8 +47,16 @@ impl Runtime {
         x: &FiniteSeqSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.n, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.n,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
@@ -67,7 +87,11 @@ impl Runtime {
         x: &SeqSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
@@ -88,8 +112,12 @@ impl Runtime {
         x: &FiniteSeqListObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for o in x.objs.iter() {
-            self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
+        for (argument_index, o) in x.objs.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                o,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
         }
         Ok(())
     }
@@ -101,9 +129,21 @@ impl Runtime {
         x: &MatrixSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.row_len, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.col_len, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.row_len,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.col_len,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 2 },
+        )?;
         let is_set_fact = IsSetFact::new((*x.set).clone(), default_line_file()).into();
         let set_ok = self.verify_atomic_fact(&is_set_fact, verify_state)?;
         if set_ok.is_unknown() {
@@ -162,9 +202,15 @@ impl Runtime {
                 }
             }
         }
+        let mut argument_index = 0;
         for row in x.rows.iter() {
             for o in row.iter() {
-                self.verify_obj_well_defined_and_store_cache(o, verify_state)?;
+                self.verify_child_obj_well_defined_and_store_cache(
+                    o,
+                    verify_state,
+                    WellDefinedObjChildRole::ConstructorArgument { argument_index },
+                )?;
+                argument_index += 1;
             }
         }
         Ok(())
@@ -177,8 +223,16 @@ impl Runtime {
         ma: &MatrixAdd,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&ma.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&ma.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ma.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ma.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let left = self.real_matrix_type(&ma.left, verify_state, MATRIX_ADD)?;
         let right = self.real_matrix_type(&ma.right, verify_state, MATRIX_ADD)?;
         self.require_same_matrix_dimension(&left.row_len, &right.row_len, "row", MATRIX_ADD)?;
@@ -193,8 +247,16 @@ impl Runtime {
         ms: &MatrixSub,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&ms.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&ms.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ms.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ms.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let left = self.real_matrix_type(&ms.left, verify_state, MATRIX_SUB)?;
         let right = self.real_matrix_type(&ms.right, verify_state, MATRIX_SUB)?;
         self.require_same_matrix_dimension(&left.row_len, &right.row_len, "row", MATRIX_SUB)?;
@@ -209,8 +271,16 @@ impl Runtime {
         mm: &MatrixMul,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&mm.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&mm.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &mm.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &mm.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let left = self.real_matrix_type(&mm.left, verify_state, MATRIX_MUL)?;
         let right = self.real_matrix_type(&mm.right, verify_state, MATRIX_MUL)?;
         self.require_same_matrix_dimension(&left.col_len, &right.row_len, "inner", MATRIX_MUL)?;
@@ -224,8 +294,16 @@ impl Runtime {
         m: &MatrixScalarMul,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&m.scalar, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&m.matrix, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.scalar,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.matrix,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_r(&m.scalar, verify_state)
             .map_err(|_| {
                 RuntimeError::from(WellDefinedRuntimeError(
@@ -246,8 +324,16 @@ impl Runtime {
         m: &MatrixPow,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&m.base, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&m.exponent, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.base,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.exponent,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let base = self.real_matrix_type(&m.base, verify_state, MATRIX_POW)?;
         self.require_same_matrix_dimension(&base.row_len, &base.col_len, "square", MATRIX_POW)?;
         let exp_in_n_pos = InFact::new(

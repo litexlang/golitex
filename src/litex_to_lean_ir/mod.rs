@@ -9,18 +9,21 @@ use crate::fact::{AtomicFact, Fact};
 use crate::obj::{Obj, SourceObjectOccurrenceId, StandardSet};
 use crate::rational_expression::objs_equal_by_rational_expression_evaluation;
 use crate::result::{
-    WellDefinedFactId, WellDefinedObjProofId, WellDefinednessCertificateId,
+    WellDefinedBinderPremiseRole, WellDefinedBinderScopeId, WellDefinedFactId,
+    WellDefinedFunctionContract, WellDefinedObjChildUse, WellDefinedObjId,
     WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
-    WellDefinednessTargetRequirementPhase,
+    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementPhase,
 };
 use crate::symbol::SymbolId;
 use std::fmt;
 
 mod builtin_rule;
+mod def_thm_stmt;
 mod function;
-mod named_theorem;
 mod object;
 mod registered_rule;
+mod statement;
+mod well_definedness;
 
 pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
@@ -30,101 +33,18 @@ pub use builtin_rule::{
     LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
     LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
+pub use def_thm_stmt::{LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr};
 pub use function::{
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
 };
-pub use named_theorem::{LitexToLeanNamedTheoremIr, LitexToLeanNamedTheoremProofStepIr};
 pub use object::{
     LitexToLeanAnonymousFunctionIr, LitexToLeanBuiltinObjectOperatorIr,
     LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr, LitexToLeanObjectIr,
     LitexToLeanSetBuilderIr, LitexToLeanStandardSetIr,
 };
 pub use registered_rule::{LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr};
-
-#[derive(Clone, Debug)]
-pub enum LitexToLeanStatementIr {
-    AbstractProp(LitexToLeanAbstractPropIr),
-    Prop(LitexToLeanPropIr),
-    HaveObjChoice(LitexToLeanHaveObjectChoiceIr),
-    HaveObjEqual(LitexToLeanHaveObjectEqualIr),
-    HaveFnEqual(LitexToLeanHaveFunctionEqualIr),
-    HaveExistentialWitness(LitexToLeanHaveExistentialWitnessIr),
-    NamedTheorem(LitexToLeanNamedTheoremIr),
-    Proof(LitexToLeanProofStatementIr),
-    Trust(LitexToLeanTrustIr),
-    Fact(LitexToLeanFactStatementIr),
-    ProjectedForall(LitexToLeanProjectedForallIr),
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanAbstractPropIr {
-    pub name: String,
-    pub params: Vec<String>,
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanPropIr {
-    pub name: String,
-    pub params: Vec<LitexToLeanParameterGroupIr>,
-    pub iff_facts: Vec<Fact>,
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanHaveObjectEqualIr {
-    pub definitions: Vec<LitexToLeanObjectDefinitionIr>,
-    pub facts: Vec<LitexToLeanFactIr>,
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanHaveObjectChoiceIr {
-    pub choices: Vec<LitexToLeanObjectChoiceIr>,
-}
-
-/// Checked statement effect of `have fn f(...) ... = body`.
-///
-/// Anonymous functions remain unsupported as context-free objects. This node
-/// is the evidence-bearing boundary at which the verifier retained the body,
-/// the return-membership proof, and both facts installed for the named
-/// function.
-#[derive(Clone)]
-pub struct LitexToLeanHaveFunctionEqualIr {
-    pub symbol_id: crate::symbol::SymbolId,
-    pub name: String,
-    pub function: LitexToLeanFunctionTypeIr,
-    pub source_function_set: Obj,
-    pub body: LitexToLeanObjectIr,
-    pub source_body: Obj,
-    pub source_return_set: Obj,
-    pub parameter_premises: Vec<LitexToLeanLocalPremiseIr>,
-    pub domain_premises: Vec<LitexToLeanLocalPremiseIr>,
-    pub inferred_premises: Vec<LitexToLeanFactIr>,
-    pub return_check: LitexToLeanFactIr,
-    pub membership: LitexToLeanStoredFunctionFactIr,
-    pub defining_equality: LitexToLeanStoredFunctionFactIr,
-    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
-}
-
-impl fmt::Debug for LitexToLeanHaveFunctionEqualIr {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        formatter
-            .debug_struct("LitexToLeanHaveFunctionEqualIr")
-            .field("symbol_id", &self.symbol_id)
-            .field("name", &self.name)
-            .field("function", &self.function)
-            .field("source_function_set", &self.source_function_set.to_string())
-            .field("body", &self.body)
-            .field("source_body", &self.source_body.to_string())
-            .field("source_return_set", &self.source_return_set.to_string())
-            .field("parameter_premises", &self.parameter_premises)
-            .field("domain_premises", &self.domain_premises)
-            .field("inferred_premises", &self.inferred_premises)
-            .field("return_check", &self.return_check)
-            .field("membership", &self.membership)
-            .field("defining_equality", &self.defining_equality)
-            .field("well_definedness", &self.well_definedness)
-            .finish()
-    }
-}
+pub use statement::*;
+pub(crate) use well_definedness::validate_litex_to_lean_well_definedness_certificate;
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanStoredFunctionFactIr {
@@ -136,13 +56,17 @@ pub struct LitexToLeanStoredFunctionFactIr {
 }
 
 #[derive(Clone, Debug)]
-pub struct LitexToLeanHaveExistentialWitnessIr {
-    /// Checked proof of the exact positive existential being eliminated.
-    pub source: LitexToLeanFactIr,
-    /// Fresh names introduced in existential-parameter order.
-    pub witnesses: Vec<LitexToLeanExistentialWitnessIr>,
-    /// Exact type and direct-body facts exported to the Litex environment.
-    pub projections: Vec<LitexToLeanFactIr>,
+pub struct LitexToLeanStoredTupleFactIr {
+    pub fact_id: FactId,
+    pub proposition: Fact,
+    pub role: LitexToLeanStoredTupleFactRoleIr,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanStoredTupleFactRoleIr {
+    IsTuple,
+    Dimension,
+    Coordinate,
 }
 
 #[derive(Clone, Debug)]
@@ -180,12 +104,6 @@ pub struct LitexToLeanObjectDefinitionIr {
 }
 
 #[derive(Clone, Debug)]
-pub struct LitexToLeanProofStatementIr {
-    pub facts: Vec<LitexToLeanFactIr>,
-    pub inferred_facts: Vec<LitexToLeanFactIr>,
-}
-
-#[derive(Clone, Debug)]
 pub struct LitexToLeanParameterGroupIr {
     pub symbol_ids: Vec<crate::symbol::SymbolId>,
     pub names: Vec<String>,
@@ -205,37 +123,46 @@ pub enum LitexToLeanParameterTypeIr {
     Unsupported(String),
 }
 
-#[derive(Clone, Debug)]
-pub struct LitexToLeanTrustIr {
-    pub facts: Vec<LitexToLeanFactIr>,
-    pub inferred_facts: Vec<LitexToLeanFactIr>,
-}
-
-#[derive(Clone, Debug)]
-pub struct LitexToLeanFactStatementIr {
-    pub fact: LitexToLeanFactIr,
-    pub inferred_facts: Vec<LitexToLeanFactIr>,
-    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
-}
-
-/// One source `forall` whose independently covered conclusions are stored as
-/// separate runtime facts rather than as one fact with a single `FactId`.
-#[derive(Clone, Debug)]
-pub struct LitexToLeanProjectedForallIr {
-    pub source: Fact,
-    pub facts: Vec<LitexToLeanFactIr>,
-    pub inferred_facts: Vec<LitexToLeanFactIr>,
-    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct LitexToLeanWellDefinednessCertificateIr {
-    pub root_proof_ids: Vec<WellDefinedObjProofId>,
+    pub root_obj_ids: Vec<WellDefinedObjId>,
     pub root_proof_uses: Vec<WellDefinednessRootObjectProofUse>,
+    pub source_object_uses: Vec<WellDefinednessSourceObjectUse>,
     pub facts: Vec<LitexToLeanWellDefinednessFactIr>,
     pub objects: Vec<LitexToLeanWellDefinednessObjectIr>,
     pub target_requirements: Vec<LitexToLeanWellDefinednessTargetRequirementIr>,
     pub parameter_facts: Vec<LitexToLeanWellDefinednessParameterFactIr>,
+    pub binder_scopes: Vec<LitexToLeanWellDefinednessBinderScopeIr>,
+}
+
+#[derive(Clone)]
+pub struct LitexToLeanWellDefinednessBinderScopeIr {
+    pub scope_id: WellDefinedBinderScopeId,
+    pub owner_object: Obj,
+    pub ambient_scope_ids: Vec<WellDefinedBinderScopeId>,
+    pub premises: Vec<LitexToLeanWellDefinednessBinderPremiseIr>,
+    pub inferred_premises: Vec<LitexToLeanFactIr>,
+}
+
+impl fmt::Debug for LitexToLeanWellDefinednessBinderScopeIr {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter
+            .debug_struct("LitexToLeanWellDefinednessBinderScopeIr")
+            .field("scope_id", &self.scope_id)
+            .field("owner_object", &self.owner_object.to_string())
+            .field("ambient_scope_ids", &self.ambient_scope_ids)
+            .field("premises", &self.premises)
+            .field("inferred_premises", &self.inferred_premises)
+            .finish()
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanWellDefinednessBinderPremiseIr {
+    pub role: WellDefinedBinderPremiseRole,
+    pub symbol_id: Option<SymbolId>,
+    pub fact_id: FactId,
+    pub proposition: Fact,
 }
 
 #[derive(Clone, Debug)]
@@ -247,26 +174,27 @@ pub struct LitexToLeanWellDefinednessParameterFactIr {
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanWellDefinednessFactIr {
-    pub certificate_id: WellDefinednessCertificateId,
     pub well_defined_fact_id: WellDefinedFactId,
-    pub role: WellDefinednessRequirementRole,
     /// Frozen separately from the recursive proof node so malformed IR cannot
     /// retarget a verifier certificate to another proposition.
     pub expected_proposition: Fact,
     pub fact: LitexToLeanFactIr,
+    pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
 }
 
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessObjectIr {
-    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub well_defined_obj_id: WellDefinedObjId,
     pub source_object: Obj,
+    pub function_contracts: Vec<WellDefinedFunctionContract>,
     /// A source builtin may establish membership in this exact result set.
     /// This is a set object, never a Lean type or native carrier.
     pub intrinsic_result_set: Option<LitexToLeanObjectIr>,
-    pub child_proof_ids: Vec<WellDefinedObjProofId>,
+    pub child_uses: Vec<WellDefinedObjChildUse>,
     pub well_defined_fact_ids: Vec<WellDefinedFactId>,
     pub target_requirements: Vec<LitexToLeanWellDefinednessObjectRequirementIr>,
-    pub fact_ids: Vec<WellDefinednessCertificateId>,
+    pub ambient_binder_scope_ids: Vec<WellDefinedBinderScopeId>,
+    pub owned_binder_scope_id: Option<WellDefinedBinderScopeId>,
 }
 
 #[derive(Clone, Debug)]
@@ -280,13 +208,15 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
             .debug_struct("LitexToLeanWellDefinednessObjectIr")
-            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
+            .field("well_defined_obj_id", &self.well_defined_obj_id)
             .field("source_object", &self.source_object.to_string())
+            .field("function_contracts", &self.function_contracts)
             .field("intrinsic_result_set", &self.intrinsic_result_set)
-            .field("child_proof_ids", &self.child_proof_ids)
+            .field("child_uses", &self.child_uses)
             .field("well_defined_fact_ids", &self.well_defined_fact_ids)
             .field("target_requirements", &self.target_requirements)
-            .field("fact_ids", &self.fact_ids)
+            .field("ambient_binder_scope_ids", &self.ambient_binder_scope_ids)
+            .field("owned_binder_scope_id", &self.owned_binder_scope_id)
             .finish()
     }
 }
@@ -294,10 +224,9 @@ impl fmt::Debug for LitexToLeanWellDefinednessObjectIr {
 #[derive(Clone)]
 pub struct LitexToLeanWellDefinednessTargetRequirementIr {
     pub source_occurrence_id: SourceObjectOccurrenceId,
-    pub well_defined_obj_proof_id: WellDefinedObjProofId,
+    pub well_defined_obj_id: WellDefinedObjId,
     pub phase: WellDefinednessTargetRequirementPhase,
     pub role: WellDefinednessRequirementRole,
-    pub certificate_id: WellDefinednessCertificateId,
     pub well_defined_fact_id: WellDefinedFactId,
     pub expected_proposition: Fact,
 }
@@ -307,10 +236,9 @@ impl fmt::Debug for LitexToLeanWellDefinednessTargetRequirementIr {
         formatter
             .debug_struct("LitexToLeanWellDefinednessTargetRequirementIr")
             .field("source_occurrence_id", &self.source_occurrence_id)
-            .field("well_defined_obj_proof_id", &self.well_defined_obj_proof_id)
+            .field("well_defined_obj_id", &self.well_defined_obj_id)
             .field("phase", &self.phase)
             .field("role", &self.role)
-            .field("certificate_id", &self.certificate_id)
             .field("well_defined_fact_id", &self.well_defined_fact_id)
             .field(
                 "expected_proposition",
@@ -455,6 +383,8 @@ pub enum LitexToLeanProofRuleIr {
     },
     RealSetNonempty,
     StandardSetNonempty,
+    /// Litex's explicit verifier rule "Every object is a set."
+    ObjectIsSet,
     /// Literal set-builder membership from the base membership and each
     /// instantiated defining fact, in source order.
     SetBuilderMembership {
@@ -647,6 +577,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .finish(),
             LitexToLeanProofRuleIr::RealSetNonempty => f.write_str("RealSetNonempty"),
             LitexToLeanProofRuleIr::StandardSetNonempty => f.write_str("StandardSetNonempty"),
+            LitexToLeanProofRuleIr::ObjectIsSet => f.write_str("ObjectIsSet"),
             LitexToLeanProofRuleIr::SetBuilderMembership {
                 set_builder,
                 expected_target,
@@ -969,6 +900,14 @@ impl LitexToLeanProofRuleIr {
             }
             "standard_nonempty_set" if is_supported_standard_set_nonempty(goal) => {
                 LitexToLeanProofRuleIr::StandardSetNonempty
+            }
+            "Every object is a set."
+                if matches!(
+                    goal,
+                    Fact::AtomicFact(crate::fact::AtomicFact::IsSetFact(_))
+                ) =>
+            {
+                LitexToLeanProofRuleIr::ObjectIsSet
             }
             _ if is_closed_real_membership(goal) => LitexToLeanProofRuleIr::ClosedRealMembership,
             other => LitexToLeanProofRuleIr::OtherUnsupported {

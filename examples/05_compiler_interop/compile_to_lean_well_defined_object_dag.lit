@@ -1,0 +1,38 @@
+# Tracer: verifier-owned well-defined object identities become short Lean names.
+#
+# Before:
+# - a successful WD cache entry did not expose a stable object identity to the
+#   To-Lean IR;
+# - repeated `f(g(a), t(b))` syntax was rendered by reconstructing the whole
+#   application from text;
+# - the parent did not retain the ordered roles of the already-checked `g(a)`
+#   and `t(b)` children.
+#
+# Now:
+# - every selected `WellDefinedObjId(N)` emits exactly one scoped `obj_N`;
+# - `g(a)` and `t(b)` are emitted before the outer application;
+# - the outer `obj_N` consumes those two child names in argument order;
+# - both equal source occurrences reuse the same outer `obj_N`;
+# - each source occurrence still has its own exact occurrence-to-object edge;
+# - on a parent cache hit, its positional child recipe maps the unvisited new
+#   `g(a)` and `t(b)` occurrences directly to the original child IDs;
+# - `obj_N_applicable` is a target helper owned by the same object ID, while
+#   every verifier proposition remains a separate `well_defined_fact_N`.
+# - for a layered application such as `g(1)(2)`, the proper prefix `g(1)` is a
+#   separate `obj_N`; `obj_N_result` carries its checked function-set
+#   membership into the next application layer.
+forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
+    f(g(a), t(b)) = f(g(a), t(b))
+
+# Boundary: this tracer covers one lexical forall environment. A child/local
+# environment may see parent WD entries, but a closed environment's cache does
+# not escape its scope. Function-valued bodyless `have`/`trust have` remains a
+# separate To-Lean statement tranche and is not silently treated as this case.
+#
+# Source gate:
+# target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_well_defined_object_dag.lit
+# Focused runtime/compiler gates:
+# cargo test --release scoped_nested_applications_emit_stable_object_aliases
+# cargo test --release proof_carrying_occurrence_edges_fail_closed_when_missing_duplicated_or_retargeted
+# Real Lean gate:
+# LITEX_LEAN_PROJECT=lean cargo test --release scoped_nested_object_aliases_compile_with_mathlib -- --ignored

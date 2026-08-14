@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_set_builder_scope.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_set_builder_scope.lit",
+  "proof_spine": ["render the base set", "bind the local symbol by SymbolId", "render defining facts under that binder", "prove outer sethood without leaking the binder"],
+  "blocks": [{"id":"B001","source_order":1,"intent":"emit one scoped set builder","dependencies":[],"attempts":[{"candidate":"have S set = {x R: x = x}\nS = S","result":"passed","verifier_evidence":"SetBuilder IR owns binder SymbolId, base and body","diagnosis":"target binder object was missing","next_change":"materialize set-builder scope"}],"accepted_litex":"have S set = {x R: x = x}\nS = S","reusable_lesson":"Binder identity is structural compiler data, not a printable source name.","status":"materialized"}],
+  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release set_builder_scope_uses_a_nonleaking_symbol_id_binder -- --nocapture","file_gate_result":"focused scope and changed-binder gates pass; the complete 15-entry ledger compiles against real Mathlib"}
+}

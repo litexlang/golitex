@@ -82,7 +82,17 @@ impl Runtime {
                 .allocate_well_defined_fact_id()
                 .expect("runtime-wide WD fact ID allocation should not exhaust");
             let proposition = proof.stmt.clone();
-            let proof = Rc::new(WellDefinedFactProof::new(fact_id, proposition, proof));
+            let ambient_binder_scope_ids = self
+                .well_definedness_binder_scope_capture_stack
+                .iter()
+                .map(|scope| scope.id)
+                .collect();
+            let proof = Rc::new(WellDefinedFactProof::new(
+                fact_id,
+                proposition,
+                proof,
+                ambient_binder_scope_ids,
+            ));
             let environment = self.top_level_env();
             environment.well_defined_fact_proofs.insert(fact_id, proof);
             environment.well_defined_fact_order.push(fact_id);
@@ -113,12 +123,18 @@ impl Runtime {
             return;
         }
         let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let ambient_binder_scope_ids = self
+            .well_definedness_binder_scope_capture_stack
+            .iter()
+            .map(|scope| scope.id)
+            .collect();
         self.well_definedness_object_capture_stack
             .push(WellDefinednessObjectCaptureFrame::new(
                 object.clone(),
                 cache_key,
                 cacheable,
                 statement_capture_depth,
+                ambient_binder_scope_ids,
             ));
     }
 
@@ -126,7 +142,7 @@ impl Runtime {
         &mut self,
         succeeded: bool,
         intrinsic_result_set: Option<Obj>,
-    ) -> Result<Option<WellDefinedObjProofId>, RuntimeError> {
+    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
         if !self.captures_litex_to_lean_well_definedness() {
             return Ok(None);
         }
@@ -137,32 +153,339 @@ impl Runtime {
         if frame.statement_capture_depth != statement_capture_depth || !succeeded {
             return Ok(None);
         }
-        let proof_id = self.allocate_well_defined_obj_proof_id()?;
-        let source_object = frame.object.clone();
+        let proof_id = self.allocate_well_defined_obj_id()?;
         let proof = Rc::new(WellDefinedObjProof::new(
             proof_id,
             frame.object,
             frame.cache_key.clone(),
-            frame.child_proof_ids,
+            frame.child_uses,
             frame.fact_ids,
             frame.target_requirements,
             intrinsic_result_set,
+            frame.ambient_binder_scope_ids,
+            frame.owned_binder_scope,
         ));
         let environment = self.top_level_env();
         environment.well_defined_obj_proofs.insert(proof_id, proof);
         if frame.cacheable {
             environment
                 .cache_well_defined_obj
-                .insert(frame.cache_key, CachedWellDefinedObj::with_proof(proof_id));
+                .insert(frame.cache_key, CachedWellDefinedObj::with_obj(proof_id));
         }
-        self.record_well_defined_obj_proof_use(&source_object, proof_id)?;
         Ok(Some(proof_id))
+    }
+
+    pub(crate) fn begin_well_definedness_binder_scope(
+        &mut self,
+        owner_object: &Obj,
+    ) -> Result<Option<WellDefinedBinderScopeId>, RuntimeError> {
+        if !self.captures_litex_to_lean_well_definedness()
+            || self.well_definedness_capture_stack.is_empty()
+        {
+            return Ok(None);
+        }
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let owner_key = obj_equality_key(owner_object);
+        let owner = self
+            .well_definedness_object_capture_stack
+            .iter()
+            .rev()
+            .find(|frame| {
+                frame.statement_capture_depth == statement_capture_depth
+                    && obj_equality_key(&frame.object) == owner_key
+            })
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "binder scope for `{owner_object}` has no active owner object frame"
+                ))
+            })?;
+        if owner.owned_binder_scope.is_some() {
+            return Err(missing_well_definedness_proof_error(format!(
+                "binder-owning object `{owner_object}` opened more than one WD scope"
+            )));
+        }
+        let id = self.allocate_well_defined_binder_scope_id()?;
+        let ambient_scope_ids = self
+            .well_definedness_binder_scope_capture_stack
+            .iter()
+            .map(|scope| scope.id)
+            .collect();
+        self.well_definedness_binder_scope_capture_stack.push(
+            super::runtime::WellDefinednessBinderScopeCaptureFrame {
+                id,
+                owner_object: owner_object.clone(),
+                ambient_scope_ids,
+                premises: Vec::new(),
+                assumption_infers: InferResult::new(),
+                statement_capture_depth,
+            },
+        );
+        Ok(Some(id))
+    }
+
+    pub(crate) fn record_well_definedness_binder_parameter_group(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        parameter_group_index: usize,
+        group: &ParamGroupWithSet,
+        infer_result: &InferResult,
+    ) -> Result<(), RuntimeError> {
+        let Some(scope_id) = scope_id else {
+            return Ok(());
+        };
+        let scope = self
+            .well_definedness_binder_scope_capture_stack
+            .last_mut()
+            .filter(|scope| scope.id == scope_id)
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} is not active while recording parameter group {parameter_group_index}",
+                    scope_id.value()
+                ))
+            })?;
+        let parameter_reason = InferReason::ParameterDefinition.store_reason();
+        let expected_facts = group.facts_for_binding_scope(ParamObjType::FnSet);
+        if expected_facts.len() != group.params.len() {
+            return Err(missing_well_definedness_proof_error(
+                "binder parameter group produced a mismatched fact list".to_string(),
+            ));
+        }
+        for (parameter_index, (binding, expected)) in
+            group.params.iter().zip(expected_facts.iter()).enumerate()
+        {
+            let matches = infer_result
+                .store_fact_outputs
+                .iter()
+                .filter(|output| {
+                    output.itself_and_why_itself_is_stored.1 == parameter_reason
+                        && output.itself_and_why_itself_is_stored.0.to_string()
+                            == expected.to_string()
+                })
+                .collect::<Vec<_>>();
+            if matches.len() != 1 {
+                return Err(missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} retained {} parameter outputs for `{expected}`; expected exactly one",
+                    scope_id.value(),
+                    matches.len()
+                )));
+            }
+            let fact_id = matches[0].fact_id.ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WD binder parameter premise `{expected}` has no FactId"
+                ))
+            })?;
+            scope.premises.push(WellDefinedBinderPremiseProof::new(
+                WellDefinedBinderPremiseRole::ParameterMembership {
+                    parameter_group_index,
+                    parameter_index,
+                },
+                Some(binding.id()),
+                fact_id,
+                expected.clone(),
+            ));
+        }
+        scope
+            .assumption_infers
+            .new_infer_result_inside(infer_result.clone());
+        Ok(())
+    }
+
+    pub(crate) fn record_well_definedness_binder_domain(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        domain_index: usize,
+        expected: Fact,
+        infer_result: &InferResult,
+    ) -> Result<(), RuntimeError> {
+        let Some(scope_id) = scope_id else {
+            return Ok(());
+        };
+        let scope = self
+            .well_definedness_binder_scope_capture_stack
+            .last_mut()
+            .filter(|scope| scope.id == scope_id)
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} is not active while recording domain {domain_index}",
+                    scope_id.value()
+                ))
+            })?;
+        let matches = infer_result
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.itself_and_why_itself_is_stored.0.to_string() == expected.to_string()
+            })
+            .collect::<Vec<_>>();
+        if matches.len() != 1 {
+            return Err(missing_well_definedness_proof_error(format!(
+                "WD binder scope {} retained {} primary domain outputs for `{expected}`; expected exactly one",
+                scope_id.value(),
+                matches.len()
+            )));
+        }
+        let fact_id = matches[0].fact_id.ok_or_else(|| {
+            missing_well_definedness_proof_error(format!(
+                "WD binder domain premise `{expected}` has no FactId"
+            ))
+        })?;
+        scope.premises.push(WellDefinedBinderPremiseProof::new(
+            WellDefinedBinderPremiseRole::Domain { domain_index },
+            None,
+            fact_id,
+            expected,
+        ));
+        scope
+            .assumption_infers
+            .new_infer_result_inside(infer_result.clone());
+        Ok(())
+    }
+
+    pub(crate) fn end_well_definedness_binder_scope(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        succeeded: bool,
+    ) -> Result<(), RuntimeError> {
+        let Some(scope_id) = scope_id else {
+            return Ok(());
+        };
+        let scope = self
+            .well_definedness_binder_scope_capture_stack
+            .pop()
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} disappeared before completion",
+                    scope_id.value()
+                ))
+            })?;
+        if scope.id != scope_id {
+            return Err(missing_well_definedness_proof_error(format!(
+                "WD binder scopes closed out of order: expected {}, got {}",
+                scope_id.value(),
+                scope.id.value()
+            )));
+        }
+        if !succeeded {
+            return Ok(());
+        }
+        let owner_key = obj_equality_key(&scope.owner_object);
+        let owner = self
+            .well_definedness_object_capture_stack
+            .iter_mut()
+            .rev()
+            .find(|frame| {
+                frame.statement_capture_depth == scope.statement_capture_depth
+                    && obj_equality_key(&frame.object) == owner_key
+            })
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "completed WD binder scope {} has no active owner object",
+                    scope_id.value()
+                ))
+            })?;
+        if owner.owned_binder_scope.is_some() {
+            return Err(missing_well_definedness_proof_error(format!(
+                "WellDefinedObj owner of scope {} already owns another binder scope",
+                scope_id.value()
+            )));
+        }
+        owner.owned_binder_scope = Some(WellDefinedBinderScopeProof {
+            id: scope.id,
+            owner_object: scope.owner_object,
+            ambient_scope_ids: scope.ambient_scope_ids,
+            premises: scope.premises,
+            assumption_infers: scope.assumption_infers,
+        });
+        Ok(())
+    }
+
+    /// Freeze an already-verified proper prefix of a layered application as
+    /// its own cache/DAG node, then make that prefix the direct callable child
+    /// of the still-active outer application.  This mirrors Litex evaluation:
+    /// `g(1)(2)` first establishes the fixed object `g(1)`, and the second
+    /// layer consumes exactly that object rather than replaying layer one.
+    pub(crate) fn freeze_active_fn_application_prefix(
+        &mut self,
+        prefix: &Obj,
+        result_set: Obj,
+        through_layer_index: usize,
+    ) -> Result<Option<WellDefinedObjId>, RuntimeError> {
+        if !self.captures_litex_to_lean_well_definedness()
+            || self.well_definedness_object_capture_stack.is_empty()
+        {
+            return Ok(None);
+        }
+
+        let reusable_cache_key = self.well_defined_cache_key_for_obj(prefix);
+        let cache_key = reusable_cache_key
+            .clone()
+            .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(prefix.to_string()));
+        let cached_id = reusable_cache_key
+            .as_ref()
+            .and_then(|key| self.well_defined_cache_entry(key))
+            .and_then(|entry| entry.obj_id);
+
+        let statement_capture_depth = self.well_definedness_capture_stack.len();
+        let (child_uses, fact_ids, target_requirements) = {
+            let frame = self
+                .well_definedness_object_capture_stack
+                .last_mut()
+                .expect("checked nonempty WD object capture stack");
+            if frame.statement_capture_depth != statement_capture_depth {
+                return Err(missing_well_definedness_proof_error(
+                    "layered application prefix escaped its statement capture".to_string(),
+                ));
+            }
+            (
+                std::mem::take(&mut frame.child_uses),
+                std::mem::take(&mut frame.fact_ids),
+                std::mem::take(&mut frame.target_requirements),
+            )
+        };
+
+        let obj_id = if let Some(obj_id) = cached_id {
+            obj_id
+        } else {
+            let obj_id = self.allocate_well_defined_obj_id()?;
+            let proof = Rc::new(WellDefinedObjProof::new(
+                obj_id,
+                prefix.clone(),
+                cache_key.clone(),
+                child_uses,
+                fact_ids,
+                target_requirements,
+                Some(result_set),
+                self.well_definedness_binder_scope_capture_stack
+                    .iter()
+                    .map(|scope| scope.id)
+                    .collect(),
+                None,
+            ));
+            let environment = self.top_level_env();
+            environment.well_defined_obj_proofs.insert(obj_id, proof);
+            if reusable_cache_key.is_some() {
+                environment
+                    .cache_well_defined_obj
+                    .insert(cache_key, CachedWellDefinedObj::with_obj(obj_id));
+            }
+            obj_id
+        };
+
+        self.record_well_defined_obj_proof_use(
+            prefix,
+            obj_id,
+            Some(WellDefinedObjChildRole::FunctionPrefix {
+                through_layer_index,
+            }),
+        )?;
+        Ok(Some(obj_id))
     }
 
     pub(crate) fn record_well_defined_obj_proof_use(
         &mut self,
         source_object: &Obj,
-        proof_id: WellDefinedObjProofId,
+        proof_id: WellDefinedObjId,
+        child_role: Option<WellDefinedObjChildRole>,
     ) -> Result<(), RuntimeError> {
         let statement_capture_depth = self.well_definedness_capture_stack.len();
         if statement_capture_depth == 0 {
@@ -177,6 +500,16 @@ impl Runtime {
                     "WD target-requirement phase stack is missing its statement frame".to_string(),
                 )
             })?;
+        let record_source_self = !matches!(
+            child_role,
+            Some(WellDefinedObjChildRole::FunctionPrefix { .. })
+        );
+        self.record_well_defined_source_object_use_closure(
+            source_object,
+            proof_id,
+            phase,
+            record_source_self,
+        )?;
         let target_requirement_use = match source_object {
             Obj::FnObj(application) => application.source_occurrence_id.map(|occurrence_id| {
                 self.well_defined_obj_proof(proof_id)
@@ -197,16 +530,31 @@ impl Runtime {
             .rev()
             .find(|frame| frame.statement_capture_depth == statement_capture_depth)
         {
-            if !parent.child_proof_ids.contains(&proof_id) {
-                parent.child_proof_ids.push(proof_id);
-            }
+            let child_role = child_role.unwrap_or_else(|| {
+                let dependency_index = parent
+                    .child_uses
+                    .iter()
+                    .filter(|child| {
+                        matches!(
+                            child.role,
+                            WellDefinedObjChildRole::VerificationDependency { .. }
+                        )
+                    })
+                    .count();
+                WellDefinedObjChildRole::VerificationDependency { dependency_index }
+            });
+            parent.child_uses.push(WellDefinedObjChildUse::new(
+                child_role,
+                proof_id,
+                source_object.clone(),
+            ));
         } else {
             let certificate = self
                 .well_definedness_capture_stack
                 .last_mut()
                 .expect("checked nonempty WD capture stack");
-            if !certificate.root_proof_ids.contains(&proof_id) {
-                certificate.root_proof_ids.push(proof_id);
+            if !certificate.root_obj_ids.contains(&proof_id) {
+                certificate.root_obj_ids.push(proof_id);
             }
             let root_use = WellDefinednessRootObjectProofUse::new(proof_id, phase);
             if !certificate.root_proof_uses.contains(&root_use) {
@@ -220,27 +568,362 @@ impl Runtime {
                 .last_mut()
                 .expect("checked nonempty WD capture stack");
             for requirement in requirements {
-                // Rechecks in one phase cite the first successful edge. The
-                // frozen certificate later selects the final proof phase when
-                // it exists, while retaining every proof node for audit.
-                if certificate.target_requirement_uses.iter().any(|existing| {
+                let target_use = WellDefinedTargetRequirementUse::new(
+                    source_occurrence_id,
+                    proof_id,
+                    phase,
+                    requirement.role,
+                    requirement.fact_id,
+                    requirement.expected_proposition,
+                );
+                if let Some(index) =
+                    certificate
+                        .target_requirement_uses
+                        .iter()
+                        .position(|existing| {
+                            existing.source_occurrence_id == source_occurrence_id
+                                && existing.role == requirement.role
+                                && existing.phase == phase
+                        })
+                {
+                    // Keep the final verifier use in one phase, matching the
+                    // canonical source-object use selected during freezing.
+                    certificate.target_requirement_uses[index] = target_use;
+                } else {
+                    certificate.target_requirement_uses.push(target_use);
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// Record exact source-use edges for a checked object and, on a cache hit,
+    /// project its already-verified constructor recipe onto the new source
+    /// occurrence tree. This is positional: it follows typed child roles and
+    /// never searches for a structurally equal object.
+    fn record_well_defined_source_object_use_closure(
+        &mut self,
+        source_object: &Obj,
+        proof_id: WellDefinedObjId,
+        phase: WellDefinednessTargetRequirementPhase,
+        record_self: bool,
+    ) -> Result<(), RuntimeError> {
+        if record_self {
+            if let Some(source_occurrence_id) = source_object.source_occurrence_id() {
+                let certificate = self
+                    .well_definedness_capture_stack
+                    .last_mut()
+                    .expect("checked nonempty WD capture stack");
+                if let Some(existing) = certificate.source_object_uses.iter().find(|existing| {
                     existing.source_occurrence_id == source_occurrence_id
-                        && existing.role == requirement.role
                         && existing.phase == phase
+                        && existing.well_defined_obj_id == proof_id
                 }) {
+                    if obj_equality_key(&existing.source_object) != obj_equality_key(source_object)
+                    {
+                        return Err(missing_well_definedness_proof_error(format!(
+                            "source occurrence {} changed object in phase {:?}",
+                            source_occurrence_id.value(),
+                            phase,
+                        )));
+                    }
+                } else {
+                    certificate
+                        .source_object_uses
+                        .push(WellDefinednessSourceObjectUse::new(
+                            source_occurrence_id,
+                            source_object.clone(),
+                            proof_id,
+                            phase,
+                        ));
+                }
+            }
+        }
+
+        let proof = self.well_defined_obj_proof(proof_id).ok_or_else(|| {
+            missing_well_definedness_proof_error(format!(
+                "WellDefinedObjId {} is outside the active environment chain while projecting a source occurrence",
+                proof_id.value()
+            ))
+        })?;
+        let child_uses = proof.child_uses.clone();
+        match source_object {
+            Obj::FnObj(application) => {
+                for child in child_uses {
+                    match child.role {
+                        WellDefinedObjChildRole::FunctionPrefix {
+                            through_layer_index,
+                        } => {
+                            let prefix = application.prefix_obj(through_layer_index + 1);
+                            self.record_well_defined_source_object_use_closure(
+                                &prefix,
+                                child.obj_id,
+                                phase,
+                                false,
+                            )?;
+                        }
+                        WellDefinedObjChildRole::FunctionHead => {
+                            let head: Obj = application.head.as_ref().clone().into();
+                            self.record_well_defined_source_object_use_closure(
+                                &head,
+                                child.obj_id,
+                                phase,
+                                true,
+                            )?;
+                        }
+                        WellDefinedObjChildRole::FunctionArgument {
+                            layer_index,
+                            argument_index,
+                        } => {
+                            let argument = application
+                                .body
+                                .get(layer_index)
+                                .and_then(|layer| layer.get(argument_index))
+                                .ok_or_else(|| {
+                                    missing_well_definedness_proof_error(format!(
+                                        "WellDefinedObjId {} has an out-of-range function argument role ({layer_index}, {argument_index})",
+                                        proof_id.value()
+                                    ))
+                                })?;
+                            self.record_well_defined_source_object_use_closure(
+                                argument.as_ref(),
+                                child.obj_id,
+                                phase,
+                                true,
+                            )?;
+                        }
+                        WellDefinedObjChildRole::VerificationDependency { .. } => {
+                            // Audit dependencies are retained in the WD DAG,
+                            // but are not source application value slots and
+                            // therefore never manufacture occurrence edges.
+                        }
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected application child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    }
+                }
+            }
+            Obj::Add(value) => self.record_binary_source_object_uses(
+                value.left.as_ref(),
+                value.right.as_ref(),
+                proof_id,
+                phase,
+                &child_uses,
+            )?,
+            Obj::Sub(value) => self.record_binary_source_object_uses(
+                value.left.as_ref(),
+                value.right.as_ref(),
+                proof_id,
+                phase,
+                &child_uses,
+            )?,
+            Obj::Mul(value) => self.record_binary_source_object_uses(
+                value.left.as_ref(),
+                value.right.as_ref(),
+                proof_id,
+                phase,
+                &child_uses,
+            )?,
+            Obj::Div(value) => self.record_binary_source_object_uses(
+                value.left.as_ref(),
+                value.right.as_ref(),
+                proof_id,
+                phase,
+                &child_uses,
+            )?,
+            Obj::ListSet(value) => {
+                for child in child_uses {
+                    let argument_index = match child.role {
+                        WellDefinedObjChildRole::ConstructorArgument { argument_index } => {
+                            argument_index
+                        }
+                        WellDefinedObjChildRole::VerificationDependency { .. } => continue,
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected list-set child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    };
+                    let argument = value.list.get(argument_index).ok_or_else(|| {
+                        missing_well_definedness_proof_error(format!(
+                            "WellDefinedObjId {} has an out-of-range list-set argument role {argument_index}",
+                            proof_id.value()
+                        ))
+                    })?;
+                    self.record_well_defined_source_object_use_closure(
+                        argument.as_ref(),
+                        child.obj_id,
+                        phase,
+                        true,
+                    )?;
+                }
+            }
+            Obj::FnSet(value) => {
+                for child in child_uses {
+                    let source_child = match child.role {
+                        WellDefinedObjChildRole::BinderParameterCarrier {
+                            parameter_group_index,
+                        } => value
+                            .body
+                            .params_def_with_set
+                            .get(parameter_group_index)
+                            .map(ParamGroupWithSet::set_obj),
+                        WellDefinedObjChildRole::BinderReturnCarrier => {
+                            Some(value.body.ret_set.as_ref())
+                        }
+                        WellDefinedObjChildRole::VerificationDependency { .. } => continue,
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected function-set child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    }
+                    .ok_or_else(|| {
+                        missing_well_definedness_proof_error(format!(
+                            "WellDefinedObjId {} retained an out-of-range function-set binder carrier",
+                            proof_id.value()
+                        ))
+                    })?;
+                    self.record_well_defined_source_object_use_closure(
+                        source_child,
+                        child.obj_id,
+                        phase,
+                        true,
+                    )?;
+                }
+            }
+            Obj::AnonymousFn(value) => {
+                for child in child_uses {
+                    let source_child = match child.role {
+                        WellDefinedObjChildRole::BinderParameterCarrier {
+                            parameter_group_index,
+                        } => value
+                            .body
+                            .params_def_with_set
+                            .get(parameter_group_index)
+                            .map(ParamGroupWithSet::set_obj),
+                        WellDefinedObjChildRole::BinderReturnCarrier => {
+                            Some(value.body.ret_set.as_ref())
+                        }
+                        WellDefinedObjChildRole::BinderBody => Some(value.equal_to.as_ref()),
+                        WellDefinedObjChildRole::VerificationDependency { .. } => continue,
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected anonymous-function child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    }
+                    .ok_or_else(|| {
+                        missing_well_definedness_proof_error(format!(
+                            "WellDefinedObjId {} retained an out-of-range anonymous-function binder carrier",
+                            proof_id.value()
+                        ))
+                    })?;
+                    self.record_well_defined_source_object_use_closure(
+                        source_child,
+                        child.obj_id,
+                        phase,
+                        true,
+                    )?;
+                }
+            }
+            Obj::SetBuilder(value) => {
+                for child in child_uses {
+                    let source_child = match child.role {
+                        WellDefinedObjChildRole::BinderParameterCarrier {
+                            parameter_group_index: 0,
+                        } => value.param_set.as_ref(),
+                        WellDefinedObjChildRole::VerificationDependency { .. } => continue,
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected set-builder child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    };
+                    self.record_well_defined_source_object_use_closure(
+                        source_child,
+                        child.obj_id,
+                        phase,
+                        true,
+                    )?;
+                }
+            }
+            _ => {
+                for child in child_uses {
+                    let argument_index = match child.role {
+                        WellDefinedObjChildRole::ConstructorArgument { argument_index } => {
+                            argument_index
+                        }
+                        WellDefinedObjChildRole::VerificationDependency { .. } => continue,
+                        other => {
+                            return Err(missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} retained unexpected ordinary-constructor child role {other:?}",
+                                proof_id.value()
+                            )));
+                        }
+                    };
+                    let argument = source_object
+                        .well_definedness_constructor_argument(argument_index)
+                        .ok_or_else(|| {
+                            missing_well_definedness_proof_error(format!(
+                                "WellDefinedObjId {} has no constructor argument at index {argument_index}",
+                                proof_id.value()
+                            ))
+                        })?;
+                    self.record_well_defined_source_object_use_closure(
+                        &argument,
+                        child.obj_id,
+                        phase,
+                        true,
+                    )?;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    fn record_binary_source_object_uses(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        proof_id: WellDefinedObjId,
+        phase: WellDefinednessTargetRequirementPhase,
+        child_uses: &[WellDefinedObjChildUse],
+    ) -> Result<(), RuntimeError> {
+        let arguments = [left, right];
+        for child in child_uses {
+            let argument_index = match child.role {
+                WellDefinedObjChildRole::BuiltinArgument { argument_index } => argument_index,
+                WellDefinedObjChildRole::VerificationDependency { .. } => {
+                    // Verifier-only audit dependency, not an operand slot.
                     continue;
                 }
-                certificate
-                    .target_requirement_uses
-                    .push(WellDefinedTargetRequirementUse::new(
-                        source_occurrence_id,
-                        proof_id,
-                        phase,
-                        requirement.role,
-                        requirement.fact_id,
-                        requirement.expected_proposition,
-                    ));
-            }
+                other => {
+                    return Err(missing_well_definedness_proof_error(format!(
+                        "WellDefinedObjId {} retained unexpected builtin child role {other:?}",
+                        proof_id.value()
+                    )));
+                }
+            };
+            let argument = arguments.get(argument_index).ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WellDefinedObjId {} has an out-of-range builtin argument role {argument_index}",
+                    proof_id.value()
+                ))
+            })?;
+            self.record_well_defined_source_object_use_closure(
+                argument,
+                child.obj_id,
+                phase,
+                true,
+            )?;
         }
         Ok(())
     }
@@ -250,15 +933,15 @@ impl Runtime {
         source_object: &Obj,
         role: WellDefinednessRequirementRole,
         result: StmtResult,
-    ) {
-        if role == WellDefinednessRequirementRole::SourceObjectRequirement
-            || !self.captures_litex_to_lean_well_definedness()
-        {
-            return;
+    ) -> Result<(), RuntimeError> {
+        if !self.captures_litex_to_lean_well_definedness() {
+            return Ok(());
         }
-        let Some(success) = result.into_factual_success() else {
-            return;
-        };
+        let success = result.into_factual_success().ok_or_else(|| {
+            missing_well_definedness_proof_error(format!(
+                "target WD requirement {role:?} for `{source_object}` has no factual proof"
+            ))
+        })?;
         let expected_proposition = success.stmt.clone();
         let proof = if let VerifiedByResult::StatementMemo(proof) = &success.verified_by {
             proof.clone()
@@ -268,12 +951,16 @@ impl Runtime {
             // the target proof reference or asking the Lean backend to search.
             Rc::new(success)
         };
-        let Some(fact_id) = self.record_well_definedness_proof_if_active(proof) else {
-            return;
-        };
+        let fact_id = self
+            .record_well_definedness_proof_if_active(proof)
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "target WD requirement {role:?} for `{source_object}` was not captured"
+                ))
+            })?;
         let statement_capture_depth = self.well_definedness_capture_stack.len();
         let source_key = obj_equality_key(source_object);
-        let Some(frame) = self
+        let frame = self
             .well_definedness_object_capture_stack
             .iter_mut()
             .rev()
@@ -281,15 +968,17 @@ impl Runtime {
                 frame.statement_capture_depth == statement_capture_depth
                     && obj_equality_key(&frame.object) == source_key
             })
-        else {
-            return;
-        };
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "target WD requirement {role:?} for `{source_object}` has no active object frame"
+                ))
+            })?;
         if frame
             .target_requirements
             .iter()
             .any(|requirement| requirement.role == role && requirement.fact_id == fact_id)
         {
-            return;
+            return Ok(());
         }
         frame
             .target_requirements
@@ -299,6 +988,7 @@ impl Runtime {
                 fact_id,
                 expected_proposition,
             ));
+        Ok(())
     }
 
     pub(crate) fn record_well_definedness_parameter_facts(
@@ -359,7 +1049,7 @@ impl Runtime {
         mut certificate: WellDefinednessCertificate,
     ) -> Result<WellDefinednessCertificate, RuntimeError> {
         let mut object_proofs = std::collections::HashMap::new();
-        let mut pending = certificate.root_proof_ids.clone();
+        let mut pending = certificate.root_obj_ids.clone();
         while let Some(proof_id) = pending.pop() {
             if object_proofs.contains_key(&proof_id) {
                 continue;
@@ -370,9 +1060,56 @@ impl Runtime {
                     proof_id.value()
                 ))
             })?;
-            pending.extend(proof.child_proof_ids.iter().copied());
+            pending.extend(proof.child_uses.iter().map(|child| child.obj_id));
             object_proofs.insert(proof_id, proof);
         }
+
+        let live_source_object_uses = std::mem::take(&mut certificate.source_object_uses);
+        let mut selected_source_object_uses: Vec<WellDefinednessSourceObjectUse> = Vec::new();
+        let mut selected_source_object_indices =
+            std::collections::HashMap::<SourceObjectOccurrenceId, usize>::new();
+        for source_use in live_source_object_uses {
+            if !object_proofs.contains_key(&source_use.well_defined_obj_id) {
+                return Err(missing_well_definedness_proof_error(format!(
+                    "source occurrence {} cites WellDefinedObjId {} outside the frozen root closure",
+                    source_use.source_occurrence_id.value(),
+                    source_use.well_defined_obj_id.value(),
+                )));
+            }
+            if let Some(index) = selected_source_object_indices
+                .get(&source_use.source_occurrence_id)
+                .copied()
+            {
+                let selected = selected_source_object_uses[index].clone();
+                let source_priority = target_requirement_phase_priority(source_use.phase);
+                let selected_priority = target_requirement_phase_priority(selected.phase);
+                if source_priority == selected_priority
+                    && obj_equality_key(&selected.source_object)
+                        != obj_equality_key(&source_use.source_object)
+                {
+                    return Err(missing_well_definedness_proof_error(format!(
+                        "source occurrence {} changed object within canonical phase {:?}",
+                        source_use.source_occurrence_id.value(),
+                        source_use.phase,
+                    )));
+                }
+                if source_priority >= selected_priority {
+                    // Later verifier use wins within one phase. The frozen
+                    // certificate retains this direct choice, so the emitter
+                    // never repeats the ordering decision.
+                    selected_source_object_uses[index] = source_use;
+                }
+            } else {
+                selected_source_object_indices.insert(
+                    source_use.source_occurrence_id,
+                    selected_source_object_uses.len(),
+                );
+                selected_source_object_uses.push(source_use);
+            }
+        }
+        selected_source_object_uses
+            .sort_by_key(|source_use| source_use.source_occurrence_id.value());
+        certificate.source_object_uses = selected_source_object_uses;
 
         let mut ordered_object_ids = object_proofs.keys().copied().collect::<Vec<_>>();
         ordered_object_ids.sort_by_key(|proof_id| proof_id.value());
@@ -394,17 +1131,6 @@ impl Runtime {
         );
         let mut ordered_fact_ids = referenced_fact_ids.into_iter().collect::<Vec<_>>();
         ordered_fact_ids.sort_by_key(|fact_id| fact_id.value());
-        let certificate_fact_ids = ordered_fact_ids
-            .iter()
-            .enumerate()
-            .map(|(index, fact_id)| {
-                (
-                    *fact_id,
-                    WellDefinednessCertificateId::new(index as u64 + 1),
-                )
-            })
-            .collect::<std::collections::HashMap<_, _>>();
-
         certificate.facts = ordered_fact_ids
             .iter()
             .map(|fact_id| {
@@ -415,10 +1141,9 @@ impl Runtime {
                     ))
                 })?;
                 Ok(WellDefinednessFactEvidence {
-                    certificate_id: certificate_fact_ids[fact_id],
                     well_defined_fact_id: *fact_id,
-                    role: WellDefinednessRequirementRole::SourceObjectRequirement,
                     proof: proof.proof.clone(),
+                    ambient_binder_scope_ids: proof.ambient_binder_scope_ids.clone(),
                 })
             })
             .collect::<Result<Vec<_>, RuntimeError>>()?;
@@ -427,25 +1152,37 @@ impl Runtime {
             .iter()
             .map(|proof_id| {
                 let proof = &object_proofs[proof_id];
-                let transitive_fact_ids = transitive_well_defined_fact_ids(
-                    *proof_id,
-                    &object_proofs,
-                    &mut std::collections::HashSet::new(),
-                );
-                let local_fact_ids = transitive_fact_ids
-                    .iter()
-                    .filter_map(|fact_id| certificate_fact_ids.get(fact_id).copied())
-                    .collect();
                 WellDefinednessObjectEvidence::new(
                     *proof_id,
                     proof.object.clone(),
+                    proof.cache_key.function_contracts.clone(),
                     proof.intrinsic_result_set.clone(),
-                    proof.child_proof_ids.clone(),
+                    proof.child_uses.clone(),
                     proof.fact_ids.clone(),
                     proof.target_requirements.clone(),
-                    local_fact_ids,
+                    proof.ambient_binder_scope_ids.clone(),
+                    proof.owned_binder_scope.as_ref().map(|scope| scope.id),
                 )
             })
+            .collect();
+
+        let mut binder_scopes = object_proofs
+            .values()
+            .filter_map(|proof| proof.owned_binder_scope.clone())
+            .collect::<Vec<_>>();
+        binder_scopes.sort_by_key(|scope| scope.id.value());
+        let mut seen_binder_scope_ids = std::collections::HashSet::new();
+        for scope in binder_scopes.iter() {
+            if !seen_binder_scope_ids.insert(scope.id) {
+                return Err(missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} is owned by more than one frozen object",
+                    scope.id.value()
+                )));
+            }
+        }
+        certificate.binder_scopes = binder_scopes
+            .into_iter()
+            .map(|scope| WellDefinednessBinderScopeEvidence { scope })
             .collect();
 
         let target_requirement_uses = std::mem::take(&mut certificate.target_requirement_uses);
@@ -458,7 +1195,7 @@ impl Runtime {
             let key = (requirement.source_occurrence_id, requirement.role);
             if let Some(index) = selected_indices.get(&key).copied() {
                 if target_requirement_phase_priority(requirement.phase)
-                    > target_requirement_phase_priority(
+                    >= target_requirement_phase_priority(
                         selected_target_requirement_uses[index].phase,
                     )
                 {
@@ -473,11 +1210,11 @@ impl Runtime {
             .into_iter()
             .map(|requirement| {
                 let proof = object_proofs
-                    .get(&requirement.well_defined_obj_proof_id)
+                    .get(&requirement.well_defined_obj_id)
                     .ok_or_else(|| {
                         missing_well_definedness_proof_error(format!(
                             "target requirement cites missing well-defined object proof {}",
-                            requirement.well_defined_obj_proof_id.value()
+                            requirement.well_defined_obj_id.value()
                         ))
                     })?;
                 if !proof.target_requirements.iter().any(|retained| {
@@ -488,15 +1225,14 @@ impl Runtime {
                 }) {
                     return Err(missing_well_definedness_proof_error(format!(
                         "target requirement is not an edge of well-defined object proof {}",
-                        requirement.well_defined_obj_proof_id.value()
+                        requirement.well_defined_obj_id.value()
                     )));
                 }
                 Ok(WellDefinednessTargetRequirementEvidence::new(
                     requirement.source_occurrence_id,
-                    requirement.well_defined_obj_proof_id,
+                    requirement.well_defined_obj_id,
                     requirement.phase,
                     requirement.role,
-                    certificate_fact_ids[&requirement.fact_id],
                     requirement.fact_id,
                     requirement.expected_proposition,
                 ))
@@ -529,29 +1265,6 @@ impl Runtime {
             }
         }
     }
-}
-
-fn transitive_well_defined_fact_ids(
-    proof_id: WellDefinedObjProofId,
-    proofs: &std::collections::HashMap<WellDefinedObjProofId, Rc<WellDefinedObjProof>>,
-    visited: &mut std::collections::HashSet<WellDefinedObjProofId>,
-) -> Vec<WellDefinedFactId> {
-    if !visited.insert(proof_id) {
-        return Vec::new();
-    }
-    let Some(proof) = proofs.get(&proof_id) else {
-        return Vec::new();
-    };
-    let mut result = proof.fact_ids.clone();
-    for child_id in proof.child_proof_ids.iter().copied() {
-        for fact_id in transitive_well_defined_fact_ids(child_id, proofs, visited) {
-            if !result.contains(&fact_id) {
-                result.push(fact_id);
-            }
-        }
-    }
-    result.sort_by_key(|fact_id| fact_id.value());
-    result
 }
 
 fn missing_well_definedness_proof_error(message: String) -> RuntimeError {
@@ -783,7 +1496,7 @@ mod tests {
             "equal source expressions still have distinct parser-owned occurrences"
         );
         assert_eq!(
-            requirements[0].well_defined_obj_proof_id, requirements[1].well_defined_obj_proof_id,
+            requirements[0].well_defined_obj_id, requirements[1].well_defined_obj_id,
             "the second occurrence should cite the first occurrence's cached proof"
         );
         assert_eq!(
@@ -800,12 +1513,144 @@ mod tests {
         let object = certificate
             .objects
             .iter()
-            .find(|object| {
-                object.well_defined_obj_proof_id == requirement.well_defined_obj_proof_id
-            })
+            .find(|object| object.well_defined_obj_id == requirement.well_defined_obj_id)
             .expect("the domain-proof reference must point to a checked object proof");
         assert!(object.object.to_string().ends_with("f(2)"));
-        assert!(object.fact_ids.contains(&requirement.certificate_id));
+        assert!(object
+            .well_defined_fact_ids
+            .contains(&requirement.well_defined_fact_id));
+    }
+
+    #[test]
+    fn compile_to_lean_capture_retains_all_division_target_requirements() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(
+            &mut runtime,
+            "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+        );
+
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("nonzero complex division should verify in Litex");
+        let certificate = &result
+            .factual_success()
+            .expect("forall should return a factual success")
+            .well_definedness;
+        let divisions = certificate
+            .objects
+            .iter()
+            .filter(|object| matches!(&object.object, Obj::Div(_)))
+            .collect::<Vec<_>>();
+        assert!(!divisions.is_empty(), "division must have a frozen WD node");
+        for division in divisions {
+            assert_eq!(
+                division.target_requirements.len(),
+                3,
+                "division must retain two complex memberships and one nonzero proof"
+            );
+            assert!(division.target_requirements.iter().any(|requirement| {
+                requirement.role
+                    == WellDefinednessRequirementRole::BuiltinArgumentMembership {
+                        argument_index: 0,
+                    }
+            }));
+            assert!(division.target_requirements.iter().any(|requirement| {
+                requirement.role
+                    == WellDefinednessRequirementRole::BuiltinArgumentMembership {
+                        argument_index: 1,
+                    }
+            }));
+            assert!(division.target_requirements.iter().any(|requirement| {
+                requirement.role
+                    == WellDefinednessRequirementRole::BuiltinArgumentNonzero { argument_index: 1 }
+            }));
+        }
+    }
+
+    #[test]
+    fn compile_to_lean_capture_retains_list_set_children_and_pairwise_requirements() {
+        fn check() {
+            let mut runtime = new_test_runtime();
+            runtime.replace_litex_to_lean_well_definedness_mode(true);
+            let stmt = parse_stmt(
+                &mut runtime,
+                "forall a, b set:\n    a != b\n    =>:\n        {a, b} = {a, b}",
+            );
+
+            let result = runtime
+                .exec_stmt(&stmt)
+                .expect("a pairwise-distinct finite set literal should verify in Litex");
+            let certificate = &result
+                .factual_success()
+                .expect("forall should return a factual success")
+                .well_definedness;
+            let list_sets = certificate
+                .objects
+                .iter()
+                .filter(|object| matches!(&object.object, Obj::ListSet(_)))
+                .collect::<Vec<_>>();
+            assert!(
+                !list_sets.is_empty(),
+                "the list-set constructor must have a frozen WD node"
+            );
+            for list_set in list_sets {
+                assert_eq!(
+                    list_set.child_uses.len(),
+                    2,
+                    "the constructor must retain one ordered child edge per entry"
+                );
+                for argument_index in 0..2 {
+                    assert!(list_set.child_uses.iter().any(|child| {
+                        child.role
+                            == WellDefinedObjChildRole::ConstructorArgument { argument_index }
+                    }));
+                }
+                assert_eq!(
+                    list_set.target_requirements.len(),
+                    1,
+                    "a two-entry list set must retain one distinctness proof"
+                );
+                let requirement = &list_set.target_requirements[0];
+                assert_eq!(
+                    requirement.role,
+                    WellDefinednessRequirementRole::ConstructorPairwiseDistinct {
+                        left_index: 0,
+                        right_index: 1,
+                    }
+                );
+                let Fact::AtomicFact(AtomicFact::NotEqualFact(pair)) =
+                    &requirement.expected_proposition
+                else {
+                    panic!("the indexed list-set requirement must be an inequality")
+                };
+                let Obj::ListSet(source) = &list_set.object else {
+                    unreachable!("filtered to list-set WD nodes")
+                };
+                assert_eq!(
+                    obj_equality_key(&pair.left),
+                    obj_equality_key(source.list[0].as_ref())
+                );
+                assert_eq!(
+                    obj_equality_key(&pair.right),
+                    obj_equality_key(source.list[1].as_ref())
+                );
+                assert!(
+                    list_set
+                        .well_defined_fact_ids
+                        .contains(&requirement.fact_id),
+                    "the indexed target edge must cite an environment-owned WD fact"
+                );
+            }
+        }
+
+        std::thread::Builder::new()
+            .name("list_set_wd_capture_test".to_string())
+            .stack_size(64 * 1024 * 1024)
+            .spawn(check)
+            .expect("spawn list-set WD capture test")
+            .join()
+            .expect("list-set WD capture test thread panicked");
     }
 
     #[test]
@@ -920,8 +1765,8 @@ mod tests {
         runtime.clear_statement_verified_atomic_facts();
         let second = capture_well_defined_obj(&mut runtime, &application);
 
-        assert_eq!(first.root_proof_ids.len(), 1);
-        assert_eq!(second.root_proof_ids, first.root_proof_ids);
+        assert_eq!(first.root_obj_ids.len(), 1);
+        assert_eq!(second.root_obj_ids, first.root_obj_ids);
         assert_eq!(
             runtime.top_level_env().well_defined_obj_proofs.len(),
             proof_count
@@ -969,15 +1814,15 @@ mod tests {
             .end_statement_well_definedness_capture()
             .expect("phase-labelled root uses should freeze");
 
-        assert_eq!(certificate.root_proof_ids.len(), 1);
+        assert_eq!(certificate.root_obj_ids.len(), 1);
         assert_eq!(certificate.root_proof_uses.len(), 2);
         assert!(certificate.root_proof_uses.iter().any(|root_use| {
             root_use.phase == WellDefinednessTargetRequirementPhase::Preflight
-                && root_use.well_defined_obj_proof_id == certificate.root_proof_ids[0]
+                && root_use.well_defined_obj_id == certificate.root_obj_ids[0]
         }));
         assert!(certificate.root_proof_uses.iter().any(|root_use| {
             root_use.phase == WellDefinednessTargetRequirementPhase::Proof
-                && root_use.well_defined_obj_proof_id == certificate.root_proof_ids[0]
+                && root_use.well_defined_obj_id == certificate.root_obj_ids[0]
         }));
     }
 
@@ -1007,9 +1852,9 @@ mod tests {
         runtime.replace_litex_to_lean_well_definedness_mode(true);
         runtime.clear_statement_verified_atomic_facts();
         let second = capture_well_defined_obj(&mut runtime, &application);
-        assert_ne!(second.root_proof_ids, first.root_proof_ids);
+        assert_ne!(second.root_obj_ids, first.root_obj_ids);
         let second_root = runtime
-            .well_defined_obj_proof(second.root_proof_ids[0])
+            .well_defined_obj_proof(second.root_obj_ids[0])
             .expect("new application proof should remain environment-visible");
         assert!(second_root.cache_key.function_contracts.contains(
             &WellDefinedFunctionContract::StoredMembershipFact(new_contract_id)
@@ -1045,19 +1890,19 @@ mod tests {
             })
             .unwrap_or_else(|| panic!("outer application proof; objects: {object_names:?}"));
         let middle = outer
-            .child_proof_ids
+            .child_uses
             .iter()
-            .find_map(|proof_id| {
+            .find_map(|child| {
                 certificate.objects.iter().find(|proof| {
-                    proof.well_defined_obj_proof_id == *proof_id
+                    proof.well_defined_obj_id == child.obj_id
                         && strip_free_param_numeric_tags_in_display(&proof.object.to_string())
                             .ends_with("g(h(x))")
                 })
             })
             .expect("outer proof should cite the direct middle application proof");
-        assert!(middle.child_proof_ids.iter().any(|proof_id| {
+        assert!(middle.child_uses.iter().any(|child| {
             certificate.objects.iter().any(|proof| {
-                proof.well_defined_obj_proof_id == *proof_id
+                proof.well_defined_obj_id == child.obj_id
                     && strip_free_param_numeric_tags_in_display(&proof.object.to_string())
                         .ends_with("h(x)")
             })
@@ -1069,9 +1914,176 @@ mod tests {
                 strip_free_param_numeric_tags_in_display(&proof.object.to_string())
                     .ends_with("f(g(h(x)))")
             })
-            .map(|proof| proof.well_defined_obj_proof_id)
+            .map(|proof| proof.well_defined_obj_id)
             .collect::<std::collections::HashSet<_>>();
         assert!(!outer_ids.is_empty());
+    }
+
+    #[test]
+    fn layered_function_application_freezes_the_callable_prefix() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(
+            &mut runtime,
+            "forall g fn(x R) fn(y R) R:\n    g(1)(2) = g(1)(2)",
+        );
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("layered function application should verify");
+        let certificate = &result.factual_success().unwrap().well_definedness;
+        let outer = certificate
+            .objects
+            .iter()
+            .find(|object| {
+                strip_free_param_numeric_tags_in_display(&object.object.to_string())
+                    .ends_with("g(1)(2)")
+            })
+            .expect("the full layered application must have an object ID");
+        let prefix_uses = outer
+            .child_uses
+            .iter()
+            .filter(|child| {
+                child.role
+                    == WellDefinedObjChildRole::FunctionPrefix {
+                        through_layer_index: 0,
+                    }
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(prefix_uses.len(), 1);
+        let prefix = certificate
+            .objects
+            .iter()
+            .find(|object| object.well_defined_obj_id == prefix_uses[0].obj_id)
+            .expect("the callable-prefix edge must resolve to a frozen object");
+        assert!(
+            strip_free_param_numeric_tags_in_display(&prefix.object.to_string()).ends_with("g(1)")
+        );
+        assert!(matches!(prefix.intrinsic_result_set, Some(Obj::FnSet(_))));
+        assert!(outer.child_uses.iter().any(|child| {
+            child.role
+                == WellDefinedObjChildRole::FunctionArgument {
+                    layer_index: 1,
+                    argument_index: 0,
+                }
+        }));
+    }
+
+    #[test]
+    fn repeated_function_argument_keeps_both_ordered_child_uses() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(
+            &mut runtime,
+            "forall f fn(u, v R) R, g fn(x R) R, a R:\n    f(g(a), g(a)) = f(g(a), g(a))",
+        );
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("repeated cached argument should verify");
+        let certificate = &result.factual_success().unwrap().well_definedness;
+        let outer = certificate
+            .objects
+            .iter()
+            .find(|object| {
+                strip_free_param_numeric_tags_in_display(&object.object.to_string())
+                    .ends_with("f(g(a), g(a))")
+            })
+            .expect("outer application object should be retained");
+        let argument_uses = outer
+            .child_uses
+            .iter()
+            .filter(|child| {
+                matches!(
+                    child.role,
+                    WellDefinedObjChildRole::FunctionArgument { layer_index: 0, .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(argument_uses.len(), 2);
+        assert_eq!(argument_uses[0].obj_id, argument_uses[1].obj_id);
+        assert_eq!(
+            argument_uses[0].role,
+            WellDefinedObjChildRole::FunctionArgument {
+                layer_index: 0,
+                argument_index: 0,
+            }
+        );
+        assert_eq!(
+            argument_uses[1].role,
+            WellDefinedObjChildRole::FunctionArgument {
+                layer_index: 0,
+                argument_index: 1,
+            }
+        );
+    }
+
+    #[test]
+    fn nested_function_application_dag_names_each_direct_child_before_parent() {
+        let mut runtime = new_test_runtime();
+        runtime.replace_litex_to_lean_well_definedness_mode(true);
+        let stmt = parse_stmt(
+            &mut runtime,
+            "forall f fn(u, v R) R, g fn(x R) R, t fn(y R) R, a, b R:\n    f(g(a), t(b)) = f(g(a), t(b))",
+        );
+        let result = runtime
+            .exec_stmt(&stmt)
+            .expect("nested cached application should verify");
+        let certificate = &result.factual_success().unwrap().well_definedness;
+        let outer = certificate
+            .objects
+            .iter()
+            .find(|object| {
+                strip_free_param_numeric_tags_in_display(&object.object.to_string())
+                    .ends_with("f(g(a), t(b))")
+            })
+            .expect("outer application object should be retained");
+        let direct_arguments = outer
+            .child_uses
+            .iter()
+            .filter(|child| {
+                matches!(
+                    child.role,
+                    WellDefinedObjChildRole::FunctionArgument { layer_index: 0, .. }
+                )
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(direct_arguments.len(), 2);
+        assert_eq!(
+            direct_arguments[0].role,
+            WellDefinedObjChildRole::FunctionArgument {
+                layer_index: 0,
+                argument_index: 0,
+            }
+        );
+        assert_eq!(
+            direct_arguments[1].role,
+            WellDefinedObjChildRole::FunctionArgument {
+                layer_index: 0,
+                argument_index: 1,
+            }
+        );
+        assert_ne!(direct_arguments[0].obj_id, direct_arguments[1].obj_id);
+
+        let first_child = certificate
+            .objects
+            .iter()
+            .find(|object| object.well_defined_obj_id == direct_arguments[0].obj_id)
+            .expect("g(a) child ID should resolve in the frozen environment DAG");
+        let second_child = certificate
+            .objects
+            .iter()
+            .find(|object| object.well_defined_obj_id == direct_arguments[1].obj_id)
+            .expect("t(b) child ID should resolve in the frozen environment DAG");
+        assert!(
+            strip_free_param_numeric_tags_in_display(&first_child.object.to_string())
+                .ends_with("g(a)")
+        );
+        assert!(
+            strip_free_param_numeric_tags_in_display(&second_child.object.to_string())
+                .ends_with("t(b)")
+        );
+        assert!(certificate
+            .root_obj_ids
+            .contains(&outer.well_defined_obj_id));
     }
 
     #[test]
@@ -1117,25 +2129,25 @@ mod tests {
         assert_eq!(
             runtime
                 .well_defined_cache_entry(&ordinary_key)
-                .and_then(|entry| entry.proof_id),
+                .and_then(|entry| entry.obj_id),
             None,
             "the ordinary binder cache should remain proofless"
         );
 
         runtime.replace_litex_to_lean_well_definedness_mode(true);
         let certificate = capture_well_defined_obj(&mut runtime, &set_builder);
-        assert_eq!(certificate.root_proof_ids.len(), 1);
+        assert_eq!(certificate.root_obj_ids.len(), 1);
         assert!(
             certificate
                 .objects
                 .iter()
-                .any(|proof| proof.well_defined_obj_proof_id == certificate.root_proof_ids[0]),
+                .any(|proof| proof.well_defined_obj_id == certificate.root_obj_ids[0]),
             "To-Lean must recompute and retain a real DAG instead of citing the boolean entry"
         );
         assert_eq!(
             runtime
                 .well_defined_cache_entry(&ordinary_key)
-                .and_then(|entry| entry.proof_id),
+                .and_then(|entry| entry.obj_id),
             None,
             "a binder-owned compiler proof is deliberately not reusable as a cache entry"
         );
@@ -1161,25 +2173,24 @@ mod tests {
             .run_in_local_env(|runtime| {
                 let reused_parent = capture_well_defined_obj(runtime, &parent_application);
                 assert_eq!(
-                    reused_parent.root_proof_ids, parent_certificate.root_proof_ids,
+                    reused_parent.root_obj_ids, parent_certificate.root_obj_ids,
                     "a child environment should cite its parent's exact proof ID"
                 );
                 Ok::<_, RuntimeError>(capture_well_defined_obj(runtime, &child_application))
             })
             .expect("temporary child verification should succeed");
 
-        assert_eq!(child_certificate.root_proof_ids.len(), 1);
+        assert_eq!(child_certificate.root_obj_ids.len(), 1);
         assert!(
             child_certificate
                 .objects
                 .iter()
-                .any(|proof| proof.well_defined_obj_proof_id
-                    == child_certificate.root_proof_ids[0]),
+                .any(|proof| proof.well_defined_obj_id == child_certificate.root_obj_ids[0]),
             "the frozen StmtResult projection should own its child proof snapshot"
         );
         assert!(
             runtime
-                .well_defined_obj_proof(child_certificate.root_proof_ids[0])
+                .well_defined_obj_proof(child_certificate.root_obj_ids[0])
                 .is_none(),
             "an unreferenced temporary child proof must disappear with its environment"
         );
@@ -1216,9 +2227,9 @@ mod tests {
             .end_statement_well_definedness_capture()
             .expect("the parent should be able to freeze the referenced child DAG");
 
-        assert_eq!(certificate.root_proof_ids.len(), 1);
+        assert_eq!(certificate.root_obj_ids.len(), 1);
         assert!(runtime
-            .well_defined_obj_proof(certificate.root_proof_ids[0])
+            .well_defined_obj_proof(certificate.root_obj_ids[0])
             .is_some());
         assert!(
             runtime.well_defined_cache_entry(&cache_key).is_none(),
@@ -1245,12 +2256,12 @@ mod tests {
             })
             .expect("committed child verification should succeed");
 
-        let root_id = certificate.root_proof_ids[0];
+        let root_id = certificate.root_obj_ids[0];
         assert!(runtime.well_defined_obj_proof(root_id).is_some());
         assert_eq!(
             runtime
                 .well_defined_cache_entry(&cache_key)
-                .and_then(|entry| entry.proof_id),
+                .and_then(|entry| entry.obj_id),
             Some(root_id),
             "committing an environment should merge its WD proof store and cache"
         );

@@ -83,7 +83,7 @@ pub struct Environment {
     pub cache_well_defined_obj: HashMap<WellDefinedCacheKey, CachedWellDefinedObj>,
     /// Compiler-only proof DAG. These propositions are intentionally absent
     /// from Litex's ordinary known-fact indexes.
-    pub well_defined_obj_proofs: HashMap<WellDefinedObjProofId, Rc<WellDefinedObjProof>>,
+    pub well_defined_obj_proofs: HashMap<WellDefinedObjId, Rc<WellDefinedObjProof>>,
     pub well_defined_fact_proofs: HashMap<WellDefinedFactId, Rc<WellDefinedFactProof>>,
     /// Creation order within this environment; Lean emission preserves it.
     pub well_defined_fact_order: Vec<WellDefinedFactId>,

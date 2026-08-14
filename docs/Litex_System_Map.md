@@ -114,6 +114,11 @@ An existential fact therefore does not silently expose a globally named
 witness. Use `witness` to prove an existential and `obtain` to introduce opaque
 witness names from an existential that is already known.
 
+For a positive existential target, the verifier checks an exact known
+existential before specialized builtin existential routes. The successful
+result therefore retains the existing source `FactId` for To-Lean replay;
+later known-`forall` and builtin routes keep their existing relative behavior.
+
 ## Module and Bare-Name Resolution
 
 Manifest imports and exports define a module namespace separate from the symbol

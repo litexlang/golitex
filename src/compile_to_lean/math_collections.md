@@ -47,7 +47,7 @@ Current hole: many source object constructors still lack universal-object
 lowering. Unsupported constructors fail closed.
 
 The ABI is packaged once in `lean/Litex/Core.lean`; generated files obtain it
-through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 2`. The
+through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 7`. The
 nearest rejected packaging repeats this declaration block in every generated
 file, allowing theorem bodies and semantic primitives to drift independently.
 
@@ -111,9 +111,9 @@ def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
 always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
-it is not an independent classifier. The current shared core has not yet
-migrated from opaque `IsSet` and redundant derived-predicate conjuncts; that
-implementation drift is recorded in `lean/Litex/Core.lean`.
+it is not an independent classifier. ABI version 7 implements this definition
+directly and removes the redundant sethood conjuncts from the two derived
+predicates.
 
 ## Standard numeric sets and numerals
 
@@ -141,13 +141,13 @@ boundary.
 
 Downstream uses: closed numeral membership and arithmetic/order theorems.
 
-Current implementation includes proof-carrying `Litex.add/sub/mul`, total
-`Litex.div`, numeric embedding bridges, complex/real closure theorems, adjacent
+Current implementation includes proof-carrying `Litex.add/sub/mul/div`, numeric
+embedding bridges, complex/real closure theorems, adjacent
 `N → Z → Q → R → C` projection theorems, and rational normalization. Every
-`add/sub/mul` term consumes two ordered verifier-owned `In operand C` proofs.
-Current holes include proof-carrying division, power semantics,
-transcendental operations, refined numeric-set laws, and most arithmetic
-builtin certificates.
+`add/sub/mul` term consumes two ordered verifier-owned `In operand C` proofs;
+`div` additionally consumes the exact denominator-nonzero proof. Current holes
+include power semantics, transcendental operations, refined numeric-set laws,
+and most arithmetic builtin certificates.
 
 ## Function-set objects
 
@@ -193,8 +193,8 @@ axiom Litex.apply :
 Generated source uses direct list syntax:
 
 ```text
-f(1, 2, 3) -> f [1, 2, 3] proof
-g(1)(2)    -> (g [1] firstProof) [2] secondProof
+f(1, 2, 3) -> f [obj_1, obj_2, obj_3] proof
+g(1)(2)    -> obj_4 [obj_5] secondProof, where obj_4 := g [obj_1] firstProof
 ```
 
 `Litex.fnSetResult` proves that the result of one layer belongs to its
@@ -220,7 +220,7 @@ Litex verifies object well-definedness before the enclosing fact. The
 parser/runtime retain:
 
 - `SourceObjectOccurrenceId` for every parsed application occurrence;
-- `WellDefinedObjProofId` for object-proof DAG nodes;
+- `WellDefinedObjId` for object-proof DAG nodes;
 - `WellDefinedFactId` for factual WD obligations;
 - phase-labelled root object uses for preflight/proof/store disambiguation;
 - child edges, exact target-requirement roles, and source scope.
@@ -363,11 +363,11 @@ Dependencies: structured builtin certificates and the small semantic core.
 
 Downstream uses: replay of verifier automation without target proof search.
 
-Complex and real addition, subtraction, and multiplication closure now use
-structured certificates and real Lean theorems over proof-carrying target
-terms. Real division closure still targets the temporary total division
-constructor. Current holes include proof-carrying division, power closure, and
-most remaining builtin families.
+Complex and real addition, subtraction, multiplication, and division closure
+now use structured certificates and real Lean theorems over proof-carrying
+target terms. Division closure consumes the same two complex-membership facts
+and denominator-nonzero fact as the constructed quotient. Current holes
+include power closure and most remaining builtin families.
 
 ## Trust and incomplete output
 

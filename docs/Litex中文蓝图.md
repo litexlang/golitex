@@ -6,6 +6,10 @@ Jiachen Shen and The Litex Team, 2026-07-24. Email: litexlang@outlook.com
 
 > **Litex 是一个实验性爱好项目，仍处于 beta 阶段。请预期会有边缘问题。**
 
+> **核心定位。** Litex 是一门基于集合论、以事实为导向的形式化语言，用于书写可读且可机器检查的数学。
+> 用户写下构成证明主干的数学事实；Litex 则通过事实匹配、等式替换、定义、量化规则与有界数学推理，
+> 重建常规的局部证明依据。
+
 ## 背景
 
 Litex 是一门以对象和事实为中心的数学形式化语言。它试图降低形式化证明的学习、书写和阅读门槛，让人和 AI 能用接近日常数学的方式表达推理、促进理解、激发新灵感；与此同时，每条提交给系统的结论都要接受机器的严格检查。
@@ -288,7 +292,7 @@ forall a, b, c set:
 ```lean
 import Litex.BuiltinRules
 
-example : Litex.abiVersion = 2 := rfl
+example : Litex.abiVersion = 7 := rfl
 
 theorem fact19 :
     ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)

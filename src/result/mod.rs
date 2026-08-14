@@ -63,14 +63,16 @@ pub use runtime_success::{
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;
 pub use well_definedness_certificate::{
-    WellDefinednessCertificate, WellDefinednessCertificateId, WellDefinednessFactEvidence,
+    WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
     WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
     WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
-    WellDefinednessTargetRequirementEvidence,
+    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementEvidence,
 };
 pub use well_definedness_proof::{
-    CachedWellDefinedObj, WellDefinedCacheKey, WellDefinedFactId, WellDefinedFactProof,
-    WellDefinedFunctionContract, WellDefinedObjProof, WellDefinedObjProofId,
+    CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,
+    WellDefinedBinderScopeId, WellDefinedBinderScopeProof, WellDefinedCacheKey, WellDefinedFactId,
+    WellDefinedFactProof, WellDefinedFunctionContract, WellDefinedObjChildRole,
+    WellDefinedObjChildUse, WellDefinedObjId, WellDefinedObjProof,
     WellDefinedTargetRequirementProof, WellDefinedTargetRequirementUse,
     WellDefinednessTargetRequirementPhase,
 };

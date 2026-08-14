@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_existential_intro_elim.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_existential_intro_elim.lit",
+  "proof_spine": ["construct the positive existential", "choose one witness", "project type then body by exact roles"],
+  "blocks": [{"id":"B001","source_order":1,"intent":"introduce and eliminate one existential","dependencies":[],"attempts":[{"candidate":"witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\ny = 1","result":"passed","verifier_evidence":"one source FactId and two ordered projection FactIds retained","diagnosis":"existential rendering and local projection scope were missing","next_change":"materialize introduction and elimination"}],"accepted_litex":"witness exist x R st {x = 1} from 1:\n    1 = 1\nobtain y from exist x R st {x = 1}\ny = 1","reusable_lesson":"Existential elimination exports typed projections, not an unstructured witness side effect.","status":"materialized"}],
+  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release existential_intro_and_elim_replay_exact_projection_roles -- --nocapture","file_gate_result":"focused shape and malformed-role gates pass; the complete 15-entry ledger compiles against real Mathlib"}
+}

@@ -1,0 +1,122 @@
+# Scratch tracer: the derivative of x^2 is proved directly from epsilon-delta
+# control of the difference quotient. This relation does not yet select a
+# derivative value for arbitrary differentiable functions.
+
+prop derivative_delta_controlled(f fn(x R) R, x0, L R, epsilon, delta R+):
+    forall x R:
+        x != x0
+        abs(x - x0) < delta
+        =>:
+            abs((f(x) - f(x0)) / (x - x0) - L) < epsilon
+
+prop has_derivative_at_R(f fn(x R) R, x0, L R):
+    forall epsilon R+:
+        exist delta R+ st {$derivative_delta_controlled(f, x0, L, epsilon, delta)}
+
+have fn square_function(x R) R = x^2
+
+thm square_difference_quotient:
+    ? forall x0, x R:
+        x != x0
+        =>:
+            (square_function(x) - square_function(x0)) / (x - x0) = x + x0
+    x - x0 != 0
+    square_function(x) = x^2
+    square_function(x0) = x0^2
+    square_function(x) - square_function(x0) = x^2 - x0^2 = (x - x0) * (x + x0)
+    (square_function(x) - square_function(x0)) / (x - x0) = ((x - x0) * (x + x0)) / (x - x0) = x + x0
+
+thm square_function_has_derivative_at:
+    ? forall x0 R:
+        $has_derivative_at_R(square_function, x0, 2 * x0)
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)}
+        witness exist delta R+ st {$derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)} from epsilon:
+            claim:
+                ? forall x R:
+                    x != x0
+                    abs(x - x0) < epsilon
+                    =>:
+                        abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) < epsilon
+                by thm square_difference_quotient(x0, x)
+                (square_function(x) - square_function(x0)) / (x - x0) = x + x0
+                (square_function(x) - square_function(x0)) / (x - x0) - 2 * x0 = (x + x0) - 2 * x0 = x - x0
+                abs((square_function(x) - square_function(x0)) / (x - x0) - 2 * x0) = abs(x - x0) < epsilon
+            by def $derivative_delta_controlled(square_function, x0, 2 * x0, epsilon, delta)
+    by def $has_derivative_at_R(square_function, x0, 2 * x0)
+
+by thm square_function_has_derivative_at(3)
+$has_derivative_at_R(square_function, 3, 6)
+
+# Differentiability records existence of a candidate. This first version keeps
+# the derivative relational; it does not assume a trusted global selector.
+prop is_differentiable_at_R(f fn(x R) R, x0 R):
+    exist L R st {$has_derivative_at_R(f, x0, L)}
+
+template<a, b R>:
+    have fn affine_function(x R) R = a * x + b
+
+thm affine_difference_quotient:
+    ? forall a, b, x0, x R:
+        x != x0
+        =>:
+            (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
+    x - x0 != 0
+    \affine_function<a, b>(x) = a * x + b
+    \affine_function<a, b>(x0) = a * x0 + b
+    \affine_function<a, b>(x) - \affine_function<a, b>(x0) = (a * x + b) - (a * x0 + b) = a * (x - x0)
+    (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = (a * (x - x0)) / (x - x0) = a
+
+thm affine_function_has_derivative_at:
+    ? forall a, b, x0 R:
+        $has_derivative_at_R(\affine_function<a, b>, x0, a)
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {$derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, delta)}
+        witness exist delta R+ st {$derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, delta)} from 1:
+            claim:
+                ? forall x R:
+                    x != x0
+                    abs(x - x0) < 1
+                    =>:
+                        abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) < epsilon
+                by thm affine_difference_quotient(a, b, x0, x)
+                (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) = a
+                (\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a = 0
+                abs((\affine_function<a, b>(x) - \affine_function<a, b>(x0)) / (x - x0) - a) = abs(0) = 0 < epsilon
+            by def:
+                ? $derivative_delta_controlled(\affine_function<a, b>, x0, a, epsilon, delta)
+    by def:
+        ? $has_derivative_at_R(\affine_function<a, b>, x0, a)
+
+thm derivative_candidate_implies_differentiable:
+    ? forall f fn(x R) R, x0, L R:
+        $has_derivative_at_R(f, x0, L)
+        =>:
+            $is_differentiable_at_R(f, x0)
+    witness $is_differentiable_at_R(f, x0) from L:
+        $has_derivative_at_R(f, x0, L)
+
+thm square_function_is_differentiable_at:
+    ? forall x0 R:
+        $is_differentiable_at_R(square_function, x0)
+    by thm square_function_has_derivative_at(x0)
+    by thm derivative_candidate_implies_differentiable(square_function, x0, 2 * x0)
+
+\affine_function<3, 2>(4) = 14
+by thm affine_function_has_derivative_at(3, 2, 4)
+$has_derivative_at_R(\affine_function<3, 2>, 4, 3)
+by thm derivative_candidate_implies_differentiable(\affine_function<3, 2>, 4, 3)
+$is_differentiable_at_R(\affine_function<3, 2>, 4)
+
+# At x0=3 the derivative 6 becomes the slope of the displayed tangent. The
+# remaining error is exactly quadratic, not hidden behind automation.
+have fn square_tangent_at_three(x R) R = 9 + 6 * (x - 3)
+
+thm square_tangent_error_at_three:
+    ? forall x R:
+        square_function(x) - square_tangent_at_three(x) = (x - 3)^2
+    square_function(x) = x^2
+    square_tangent_at_three(x) = 9 + 6 * (x - 3)
+    square_function(x) - square_tangent_at_three(x) = x^2 - (9 + 6 * (x - 3)) = (x - 3)^2

@@ -8,8 +8,16 @@ impl Runtime {
         x: &Union,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         Ok(())
     }
 
@@ -20,8 +28,16 @@ impl Runtime {
         x: &Intersect,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         Ok(())
     }
 
@@ -32,8 +48,16 @@ impl Runtime {
         x: &SetMinus,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         Ok(())
     }
 
@@ -44,7 +68,11 @@ impl Runtime {
         x: &BigUnion,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         Ok(())
     }
 
@@ -55,7 +83,11 @@ impl Runtime {
         x: &BigIntersect,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.left, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         Ok(())
     }
 
@@ -67,8 +99,13 @@ impl Runtime {
         x: &ListSet,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for obj in &x.list {
-            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
+        let parent: Obj = x.clone().into();
+        for (argument_index, obj) in x.list.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                obj,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
         }
 
         let next_verify_state = verify_state.with_well_defined_already_verified();
@@ -103,6 +140,14 @@ impl Runtime {
                 if verify_result.is_unknown() {
                     return Err(RuntimeError::from(WellDefinedRuntimeError(RuntimeErrorStruct::new_with_just_msg(format!("list set elements must be pairwise not equal, but it is not provable: {}", not_equal_atomic_fact)))));
                 }
+                self.record_well_definedness_target_requirement(
+                    &parent,
+                    WellDefinednessRequirementRole::ConstructorPairwiseDistinct {
+                        left_index: i,
+                        right_index: j,
+                    },
+                    verify_result,
+                )?;
                 j += 1;
             }
             i += 1;
@@ -124,20 +169,13 @@ impl Runtime {
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
         // Run in local env so param binding and body facts do not leak into the outer scope.
         self.run_in_local_env(|rt| {
-            if let Err(well_defined_error) = rt.verify_obj_well_defined_and_store_cache(
+            rt.verify_child_obj_well_defined_and_store_cache(
                 &x.param_set,
                 &UseContextVerifyState::new(0, false),
-            ) {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                            "failed to verify well-defined of set builder {}",
-                            x.to_string()
-                        ),
-                        well_defined_error,
-                    ),
-                )));
-            }
+                WellDefinedObjChildRole::BinderParameterCarrier {
+                    parameter_group_index: 0,
+                },
+            )?;
             if let Err(e) = rt.store_parameter_binding(&x.param_binding, ParamObjType::SetBuilder) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -228,7 +266,16 @@ impl Runtime {
             return self.verify_fn_set_well_defined(&renamed, verify_state);
         }
 
-        for param_def_with_set in x.body.params_def_with_set.iter() {
+        for (parameter_group_index, param_def_with_set) in
+            x.body.params_def_with_set.iter().enumerate()
+        {
+            self.verify_child_obj_well_defined_and_store_cache(
+                param_def_with_set.set_obj(),
+                verify_state,
+                WellDefinedObjChildRole::BinderParameterCarrier {
+                    parameter_group_index,
+                },
+            )?;
             if let Err(e) = self.define_params_with_set(param_def_with_set) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
@@ -261,8 +308,11 @@ impl Runtime {
             }
         }
 
-        if let Err(e) = self.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state)
-        {
+        if let Err(e) = self.verify_child_obj_well_defined_and_store_cache(
+            &x.body.ret_set,
+            verify_state,
+            WellDefinedObjChildRole::BinderReturnCarrier,
+        ) {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_cause(
                     format!(
@@ -295,42 +345,76 @@ impl Runtime {
         }
 
         self.run_in_local_env(|rt| {
-            for param_def_with_set in x.body.params_def_with_set.iter() {
-                if let Err(e) =
-                    rt.define_params_with_set_in_scope(param_def_with_set, ParamObjType::FnSet)
-                {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to verify well-defined of anonymous fn {}",
-                                x.to_string()
-                            ),
-                            e,
-                        ),
-                    )));
-                }
-            }
-
-            for fact in x.body.dom_facts.iter() {
-                if let Err(e) = rt.store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                    fact,
-                    verify_state,
-                ) {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
-                        RuntimeErrorStruct::new_with_msg_and_cause(
-                            format!(
-                                "failed to verify well-defined of anonymous fn {}",
-                                x.to_string()
-                            ),
-                            e,
-                        ),
-                    )));
-                }
-            }
-
-            if let Err(e) =
-                rt.verify_obj_well_defined_and_store_cache(&x.body.ret_set, verify_state)
+            let parent: Obj = x.clone().into();
+            for (parameter_group_index, param_def_with_set) in
+                x.body.params_def_with_set.iter().enumerate()
             {
+                rt.verify_child_obj_well_defined_and_store_cache(
+                    param_def_with_set.set_obj(),
+                    verify_state,
+                    WellDefinedObjChildRole::BinderParameterCarrier {
+                        parameter_group_index,
+                    },
+                )?;
+            }
+            let binder_scope_id = rt.begin_well_definedness_binder_scope(&parent)?;
+            let verification = (|| -> Result<(), RuntimeError> {
+            for (parameter_group_index, param_def_with_set) in
+                x.body.params_def_with_set.iter().enumerate()
+            {
+                let mut parameter_infers = rt
+                    .define_params_with_set_in_scope(param_def_with_set, ParamObjType::FnSet)
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ),
+                            e,
+                        ),
+                    ))
+                    })?;
+                rt.attach_known_fact_ids_to_infer_result(&mut parameter_infers)?;
+                rt.record_well_definedness_binder_parameter_group(
+                    binder_scope_id,
+                    parameter_group_index,
+                    param_def_with_set,
+                    &parameter_infers,
+                )?;
+            }
+
+            for (domain_index, fact) in x.body.dom_facts.iter().enumerate() {
+                let mut domain_infers = rt
+                    .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                        fact,
+                        verify_state,
+                    )
+                    .map_err(|e| {
+                        RuntimeError::from(WellDefinedRuntimeError(
+                        RuntimeErrorStruct::new_with_msg_and_cause(
+                            format!(
+                                "failed to verify well-defined of anonymous fn {}",
+                                x.to_string()
+                            ),
+                            e,
+                        ),
+                    ))
+                    })?;
+                rt.attach_known_fact_ids_to_infer_result(&mut domain_infers)?;
+                rt.record_well_definedness_binder_domain(
+                    binder_scope_id,
+                    domain_index,
+                    fact.clone().into(),
+                    &domain_infers,
+                )?;
+            }
+
+            if let Err(e) = rt.verify_child_obj_well_defined_and_store_cache(
+                &x.body.ret_set,
+                verify_state,
+                WellDefinedObjChildRole::BinderReturnCarrier,
+            ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!(
@@ -342,7 +426,11 @@ impl Runtime {
                 )));
             }
 
-            if let Err(e) = rt.verify_obj_well_defined_and_store_cache(&x.equal_to, verify_state) {
+            if let Err(e) = rt.verify_child_obj_well_defined_and_store_cache(
+                &x.equal_to,
+                verify_state,
+                WellDefinedObjChildRole::BinderBody,
+            ) {
                 return Err(RuntimeError::from(WellDefinedRuntimeError(
                     RuntimeErrorStruct::new_with_msg_and_cause(
                         format!(
@@ -361,28 +449,45 @@ impl Runtime {
                 verify_state,
             )?;
             let mut return_value_verified = !return_value_result.is_unknown();
+            if return_value_verified {
+                rt.record_well_definedness_target_requirement(
+                    &parent,
+                    WellDefinednessRequirementRole::AnonymousFunctionBodyMembership,
+                    return_value_result,
+                )?;
+            }
             if !return_value_verified {
-                for param_group in x.body.params_def_with_set.iter() {
-                    let body_is_bound_param = param_group.params.iter().any(|binding| {
+                'parameter_groups: for (parameter_group_index, param_group) in
+                    x.body.params_def_with_set.iter().enumerate()
+                {
+                    for (parameter_index, binding) in param_group.params.iter().enumerate() {
                         let param_obj =
                             obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
-                        objs_equal_with_nested_binder_alpha_equivalence(
+                        if !objs_equal_with_nested_binder_alpha_equivalence(
                             x.equal_to.as_ref(),
                             &param_obj,
+                        ) {
+                            continue;
+                        }
+                        let subset_fact: AtomicFact = SubsetFact::new(
+                            param_group.set_obj().clone(),
+                            (*x.body.ret_set).clone(),
+                            default_line_file(),
                         )
-                    });
-                    if !body_is_bound_param {
-                        continue;
-                    }
-                    let subset_fact: AtomicFact = SubsetFact::new(
-                        param_group.set_obj().clone(),
-                        (*x.body.ret_set).clone(),
-                        default_line_file(),
-                    )
-                    .into();
-                    if rt.verify_atomic_fact(&subset_fact, verify_state)?.is_true() {
-                        return_value_verified = true;
-                        break;
+                        .into();
+                        let subset_result = rt.verify_atomic_fact(&subset_fact, verify_state)?;
+                        if subset_result.is_true() {
+                            rt.record_well_definedness_target_requirement(
+                                &parent,
+                                WellDefinednessRequirementRole::AnonymousFunctionBoundParameterSubset {
+                                    parameter_group_index,
+                                    parameter_index,
+                                },
+                                subset_result,
+                            )?;
+                            return_value_verified = true;
+                            break 'parameter_groups;
+                        }
                     }
                 }
             }
@@ -396,6 +501,13 @@ impl Runtime {
             }
 
             Ok(())
+            })();
+            let scope_result = rt.end_well_definedness_binder_scope(
+                binder_scope_id,
+                verification.is_ok(),
+            );
+            scope_result?;
+            verification
         })
     }
 
@@ -436,8 +548,12 @@ impl Runtime {
         x: &Cart,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for obj in &x.args {
-            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
+        for (argument_index, obj) in x.args.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                obj,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
         }
         Ok(())
     }
@@ -449,7 +565,11 @@ impl Runtime {
         x: &CartDim,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
 
         let is_cart_fact = IsCartFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_cart_fact, verify_state)?;
@@ -472,8 +592,16 @@ impl Runtime {
         x: &Proj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.set, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&x.dim, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.dim,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
 
         let projection_dimension_obj: Obj =
             if let Some(projection_dimension_number) = self.resolve_obj_to_number(&x.dim) {
@@ -540,7 +668,11 @@ impl Runtime {
         x: &TupleDim,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
 
         let is_tuple_fact = IsTupleFact::new((*x.arg).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_tuple_fact, verify_state)?;
@@ -563,8 +695,12 @@ impl Runtime {
         x: &Tuple,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        for obj in &x.args {
-            self.verify_obj_well_defined_and_store_cache(obj, verify_state)?;
+        for (argument_index, obj) in x.args.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                obj,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
         }
         Ok(())
     }
@@ -576,6 +712,11 @@ impl Runtime {
         x: &FiniteSetSize,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         // `finite_set_size` is well-defined only for finite sets.
         let is_finite_set_fact = IsFiniteSetFact::new((*x.set).clone(), default_line_file()).into();
         let result = self.verify_atomic_fact(&is_finite_set_fact, verify_state)?;
@@ -597,6 +738,11 @@ impl Runtime {
         x: &FiniteSetMax,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MAX, verify_state)
     }
 
@@ -607,6 +753,11 @@ impl Runtime {
         x: &FiniteSetMin,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.verify_finite_set_extremum_well_defined(&x.set, FINITE_SET_MIN, verify_state)
     }
 
@@ -618,7 +769,6 @@ impl Runtime {
         operator_name: &str,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(set, verify_state)?;
         let finite: AtomicFact = IsFiniteSetFact::new(set.clone(), default_line_file()).into();
         let nonempty: AtomicFact = IsNonemptySetFact::new(set.clone(), default_line_file()).into();
         for fact in [finite, nonempty] {
@@ -693,7 +843,11 @@ impl Runtime {
         x: &FnRange,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&x.function, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.function,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         if self.get_fn_range_function_body(&x.function).is_none() {
             return Err(RuntimeError::from(WellDefinedRuntimeError(
                 RuntimeErrorStruct::new_with_just_msg(format!(
@@ -723,7 +877,11 @@ impl Runtime {
             )));
         }
 
-        self.verify_obj_well_defined_and_store_cache(&x.source_set, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &x.source_set,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         let uniqueness_fact = self.replacement_uniqueness_fact(x)?;
         let uniqueness_as_fact: Fact = uniqueness_fact.clone().into();
         let exact_cached = self

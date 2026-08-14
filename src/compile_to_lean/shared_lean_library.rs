@@ -1,4 +1,4 @@
-pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 2;
+pub(super) const LITEX_LEAN_ABI_VERSION: u32 = 7;
 
 /// Imports the shared target ABI and pins generated output to its ABI version.
 pub(super) fn generated_import_header() -> String {
@@ -17,25 +17,37 @@ mod tests {
 
     #[test]
     fn shared_library_owns_one_object_abi_and_real_builtin_theorems() {
-        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 2"));
+        assert!(CORE_SOURCE.contains("def abiVersion : Nat := 7"));
         assert!(CORE_SOURCE.contains("axiom Object : Type"));
         assert!(CORE_SOURCE.contains("axiom In : Object → Object → Prop"));
-        assert!(CORE_SOURCE.contains("axiom IsSet : Object → Prop"));
+        assert!(CORE_SOURCE.contains("def IsSet (_ : Object) : Prop := True"));
+        assert!(!CORE_SOURCE.contains("axiom IsSet"));
+        assert!(CORE_SOURCE.contains("theorem everyObjectIsSet"));
         assert!(CORE_SOURCE.contains("def IsNonemptySet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("def IsFiniteSet (s : Object) : Prop :="));
         assert!(CORE_SOURCE.contains("axiom Applicable : Object → List Object → Prop"));
         assert!(CORE_SOURCE.contains("axiom add (a b : Object) : In a C → In b C → Object"));
+        assert!(CORE_SOURCE.contains("axiom inRPos_iff"));
+        assert!(CORE_SOURCE.contains("axiom inNPos_iff"));
+        assert!(CORE_SOURCE.contains("theorem isSetR : IsSet R"));
         assert!(!CORE_SOURCE.contains("axiom add : Object → Object → Object"));
+        assert!(CORE_SOURCE.contains("axiom div (a b : Object) : In a C → In b C → b ≠ 0 → Object"));
+        assert!(!CORE_SOURCE.contains("axiom div : Object → Object → Object"));
         assert!(!CORE_SOURCE.contains("namespace BuiltinRules"));
 
         assert!(BUILTIN_RULES_SOURCE.starts_with("import Litex.Core"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem notEqualSymmetry"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInN"));
+        assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInNPos"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem numeralInC"));
+        assert!(BUILTIN_RULES_SOURCE.contains("theorem positiveRealMembership"));
+        assert!(BUILTIN_RULES_SOURCE.contains("theorem realSetNonempty"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem complexAddClosure"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem complexSubClosure"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem complexMulClosure"));
+        assert!(BUILTIN_RULES_SOURCE.contains("theorem complexDivClosure"));
         assert!(BUILTIN_RULES_SOURCE.contains("theorem realSubClosure"));
+        assert!(BUILTIN_RULES_SOURCE.contains("theorem realDivClosure"));
         assert!(!BUILTIN_RULES_SOURCE.contains("axiom notEqualSymmetry"));
     }
 
@@ -44,7 +56,7 @@ mod tests {
         let header = generated_import_header();
         assert_eq!(
             header,
-            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 2 := rfl"
+            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 7 := rfl"
         );
         assert!(!header.contains("import Mathlib"));
         assert!(!header.contains("axiom Object"));

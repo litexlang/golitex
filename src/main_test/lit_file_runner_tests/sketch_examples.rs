@@ -162,36 +162,49 @@ fn compile_tmp_to_lean(index: usize) {
     } else {
         format!("tmp{}.lit", index)
     };
-    let Some(generated_lean) = compile_example_lit_file_to_lean(&relative_path) else {
+    let lit_path = example_lit_path(&relative_path);
+    let lit_content = fs::read_to_string(&lit_path)
+        .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", lit_path, read_error));
+    let lit_source = source_without_trailing_triple_quoted_block(&lit_content).trim();
+    if lit_source.is_empty() {
+        println!(
+            "\n=== LITEX -> LEAN: examples/{} is empty ===\n\
+             Put Litex source in that file and rerun:\n  \
+             cargo test --release tmp{}_to_lean -- --nocapture\n",
+            relative_path, index
+        );
         return;
-    };
-    let output_path = std::env::var_os("LITEX_TMP_LEAN_PATH")
-        .map(PathBuf::from)
-        .unwrap_or_else(|| {
-            PathBuf::from(
-                "/Users/shenjiachen/主要文件夹/GeekGems/2026/mathematics_in_lean/tmp.lean",
+    }
+
+    let path_str = lit_path
+        .to_str()
+        .unwrap_or_else(|| panic!("{:?} must be valid UTF-8", lit_path));
+    let normalized_source = remove_windows_carriage_return(lit_source);
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(path_str);
+    runtime.isolated = source_has_isolated_import(normalized_source.as_str());
+    let generated_lean =
+        compile_to_lean(normalized_source.as_str(), &mut runtime).unwrap_or_else(|error| {
+            panic!(
+                "failed to generate Lean from {}:\n{}",
+                path_str,
+                display_runtime_error_json(&runtime, &error, false)
             )
         });
-    fs::write(&output_path, generated_lean.as_bytes()).unwrap_or_else(|write_error| {
-        panic!(
-            "failed to replace generated Lean output {:?}: {}",
-            output_path, write_error
-        )
-    });
 
-    println!("generated Lean replaced {:?}", output_path);
+    println!(
+        "{}",
+        render_tmp_translation(&relative_path, lit_source, &generated_lean)
+    );
 }
 
 #[test]
-#[ignore = "developer scratch command that rewrites examples/tmp.lit and an external Lean file"]
-fn compile_tmp0_to_lean() {
-    run_with_large_stack("compile_tmp0_to_lean_large_stack", || {
-        compile_tmp_to_lean(0)
-    });
+fn tmp0_to_lean() {
+    run_with_large_stack("tmp0_to_lean_large_stack", || compile_tmp_to_lean(0));
 }
 
 #[test]
-#[ignore = "developer scratch command that rewrites examples/tmp1.lit and an external Lean file"]
+#[ignore = "developer scratch command; run explicitly to print the source/target pair"]
 fn compile_tmp1_to_lean() {
     run_with_large_stack("compile_tmp1_to_lean_large_stack", || {
         compile_tmp_to_lean(1)
@@ -199,7 +212,7 @@ fn compile_tmp1_to_lean() {
 }
 
 #[test]
-#[ignore = "developer scratch command that rewrites examples/tmp2.lit and an external Lean file"]
+#[ignore = "developer scratch command; run explicitly to print the source/target pair"]
 fn compile_tmp2_to_lean() {
     run_with_large_stack("compile_tmp2_to_lean_large_stack", || {
         compile_tmp_to_lean(2)
@@ -239,6 +252,23 @@ fn keeps_nontrailing_triple_quoted_blocks() {
 
     assert!(updated_source.starts_with("\"\"\"\nsource note\n\"\"\"\n"));
     assert!(updated_source.ends_with("\"\"\"\nimport Mathlib\n\"\"\"\n"));
+}
+
+#[test]
+fn renders_tmp_translation_as_one_clean_source_target_pair() {
+    let output = render_tmp_translation(
+        "tmp.lit",
+        "1 + 1 = 2",
+        "theorem fact_0 : 1 + 1 = 2 := by\n  norm_num\n",
+    );
+
+    assert_eq!(output.matches("----- LITEX SOURCE").count(), 1);
+    assert_eq!(output.matches("----- GENERATED LEAN").count(), 1);
+    assert!(output.contains("source: examples/tmp.lit"));
+    assert!(output.contains("1 + 1 = 2"));
+    assert!(output.contains("theorem fact_0"));
+    assert!(!output.contains("generated Lean appended"));
+    assert!(!output.contains("generated Lean replaced"));
 }
 
 #[test]
@@ -305,4 +335,20 @@ fn source_without_trailing_triple_quoted_block(source: &str) -> &str {
     }
 
     source
+}
+
+fn render_tmp_translation(relative_path: &str, litex_source: &str, generated_lean: &str) -> String {
+    format!(
+        "\n==================== LITEX -> LEAN ====================\n\
+         source: examples/{relative_path}\n\
+         \n\
+         ----- LITEX SOURCE -----------------------------------\n\
+         {}\n\
+         \n\
+         ----- GENERATED LEAN ---------------------------------\n\
+         {}\n\
+         ========================= END =========================\n",
+        litex_source.trim(),
+        generated_lean.trim()
+    )
 }

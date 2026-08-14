@@ -500,7 +500,12 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&add.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&add.right, param_to_arg_map, param_obj_type)?;
-        Ok(Add::new(instantiated_left_obj, instantiated_right_obj).into())
+        Ok(Add::new_with_source_occurrence_id(
+            instantiated_left_obj,
+            instantiated_right_obj,
+            add.source_occurrence_id,
+        )
+        .into())
     }
 
     pub fn inst_matrix_add(
@@ -566,7 +571,12 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&sub.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&sub.right, param_to_arg_map, param_obj_type)?;
-        Ok(Sub::new(instantiated_left_obj, instantiated_right_obj).into())
+        Ok(Sub::new_with_source_occurrence_id(
+            instantiated_left_obj,
+            instantiated_right_obj,
+            sub.source_occurrence_id,
+        )
+        .into())
     }
 
     pub fn inst_mul(
@@ -577,7 +587,12 @@ impl Runtime {
     ) -> Result<Obj, RuntimeError> {
         let instantiated_left_obj = self.inst_obj(&mul.left, param_to_arg_map, param_obj_type)?;
         let instantiated_right_obj = self.inst_obj(&mul.right, param_to_arg_map, param_obj_type)?;
-        Ok(Mul::new(instantiated_left_obj, instantiated_right_obj).into())
+        Ok(Mul::new_with_source_occurrence_id(
+            instantiated_left_obj,
+            instantiated_right_obj,
+            mul.source_occurrence_id,
+        )
+        .into())
     }
 
     pub fn inst_div(
@@ -586,9 +601,10 @@ impl Runtime {
         param_to_arg_map: &HashMap<String, Obj>,
         param_obj_type: ParamObjType,
     ) -> Result<Obj, RuntimeError> {
-        Ok(Div::new(
+        Ok(Div::new_with_source_occurrence_id(
             self.inst_obj(&div.left, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&div.right, param_to_arg_map, param_obj_type)?,
+            div.source_occurrence_id,
         )
         .into())
     }
@@ -730,7 +746,7 @@ impl Runtime {
         for obj in list_set.list.iter() {
             list.push(self.inst_obj(obj, param_to_arg_map, param_obj_type)?);
         }
-        Ok(ListSet::new(list).into())
+        Ok(ListSet::new_with_source_occurrence_id(list, list_set.source_occurrence_id).into())
     }
 
     pub fn inst_set_builder(
@@ -974,7 +990,7 @@ impl Runtime {
                 None,
             )?);
         }
-        Ok(AnonymousFn::new(
+        Ok(AnonymousFn::new_with_source_occurrence_id(
             params_def_with_set,
             dom_facts,
             self.inst_obj(
@@ -987,6 +1003,7 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
+            af.source_occurrence_id,
         )?
         .into())
     }
@@ -1077,7 +1094,7 @@ impl Runtime {
             return Ok(anonymous_fn.clone());
         }
         let body = self.alpha_rename_fn_set_body(&anonymous_fn.body, rename_map)?;
-        AnonymousFn::new(
+        AnonymousFn::new_with_source_occurrence_id(
             body.params_def_with_set,
             body.dom_facts,
             *body.ret_set,
@@ -1086,6 +1103,7 @@ impl Runtime {
                 rename_map,
                 ParamObjType::AlphaRename,
             )?,
+            anonymous_fn.source_occurrence_id,
         )
     }
 

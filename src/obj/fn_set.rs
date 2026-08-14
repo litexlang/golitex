@@ -82,6 +82,9 @@ impl FnSet {
 pub struct AnonymousFn {
     pub body: FnSetBody,
     pub equal_to: Box<Obj>,
+    /// Parser-owned identity of this exact source lambda occurrence. Kernel-
+    /// synthesized anonymous functions deliberately leave it absent.
+    pub source_occurrence_id: Option<SourceObjectOccurrenceId>,
 }
 
 impl AnonymousFn {
@@ -91,10 +94,27 @@ impl AnonymousFn {
         ret_set: Obj,
         equal_to: Obj,
     ) -> Result<Self, RuntimeError> {
+        Self::new_with_source_occurrence_id(
+            params_and_their_sets,
+            dom_facts,
+            ret_set,
+            equal_to,
+            None,
+        )
+    }
+
+    pub fn new_with_source_occurrence_id(
+        params_and_their_sets: impl Into<ParamDefWithSet>,
+        dom_facts: Vec<QuantifierFreeFact>,
+        ret_set: Obj,
+        equal_to: Obj,
+        source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    ) -> Result<Self, RuntimeError> {
         let params_and_their_sets = params_and_their_sets.into();
         let anonymous_fn = AnonymousFn {
             body: FnSetBody::new(params_and_their_sets, dom_facts, ret_set),
             equal_to: Box::new(equal_to),
+            source_occurrence_id,
         };
         check_anonymous_fn_has_no_duplicate_fn_set_free_parameter(&anonymous_fn)?;
         Ok(anonymous_fn)

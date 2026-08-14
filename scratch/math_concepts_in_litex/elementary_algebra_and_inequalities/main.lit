@@ -1,0 +1,107 @@
+# Scratch tracer: two-variable AM-GM grows from one nonnegative square.
+
+have fn arithmetic_mean(x, y R) R = (x + y) / 2
+have fn geometric_mean(x, y R: x >= 0, y >= 0) R = sqrt(x * y)
+
+thm two_variable_am_gm:
+    ? forall x, y R:
+        x >= 0
+        y >= 0
+        =>:
+            geometric_mean(x, y) <= arithmetic_mean(x, y)
+    x * y >= 0
+    sqrt(x * y)^2 = x * y
+    (x + y)^2 - 4 * x * y = (x - y)^2
+    0 <= (x - y)^2
+    0 <= (x + y)^2 - 4 * x * y
+    4 * x * y <= (x + y)^2
+    x * y <= (x + y)^2 / 4
+    ((x + y) / 2)^2 = (x + y)^2 / 4
+    x * y <= ((x + y) / 2)^2
+    0 <= sqrt(x * y)
+    0 <= x + y
+    0 < 2
+    0 <= (x + y) / 2
+    by contra:
+        ? sqrt(x * y) <= (x + y) / 2
+        sqrt(x * y) > (x + y) / 2
+        sqrt(x * y)^2 > ((x + y) / 2)^2
+        impossible x * y <= ((x + y) / 2)^2
+    geometric_mean(x, y) = sqrt(x * y)
+    arithmetic_mean(x, y) = (x + y) / 2
+
+by thm two_variable_am_gm(9, 16)
+geometric_mean(9, 16) = sqrt(9 * 16) = 12
+arithmetic_mean(9, 16) = (9 + 16) / 2 = 25 / 2
+12 <= 25 / 2
+
+# Equations remain close to ordinary algebra: expose the nonzero divisor,
+# factor explicitly, and split only where the mathematics splits.
+
+thm solve_linear_equation:
+    ? forall a, b, c, x R:
+        a != 0
+        a * x + b = c
+        =>:
+            x = (c - b) / a
+    a * x = c - b
+    x = (a * x) / a = (c - b) / a
+
+thm factored_quadratic_roots:
+    ? forall x R:
+        x^2 - 6 * x + 5 = 0
+        =>:
+            x = 1 or x = 5
+    x^2 - 6 * x + 5 = (x - 1) * (x - 5)
+    (x - 1) * (x - 5) = 0
+    by cases:
+        ? x = 1 or x = 5
+        case x - 1 = 0:
+            x = 1
+        case x - 5 = 0:
+            x = 5
+
+thm absolute_value_equation:
+    ? forall x R:
+        abs(x - 3) = 2
+        =>:
+            x = 1 or x = 5
+    by cases:
+        ? x = 1 or x = 5
+        case x - 3 >= 0:
+            abs(x - 3) = x - 3
+            x - 3 = 2
+            x = 5
+        case x - 3 < 0:
+            abs(x - 3) = -(x - 3)
+            -(x - 3) = 2
+            x = 1
+
+# The radicand premise is an explicit well-definedness boundary. Squaring
+# yields two algebraic candidates; the original equation's sign rejects one.
+thm radical_equation_has_only_solution_five:
+    ? forall x R:
+        0 <= 11 - 2 * x
+        x = sqrt(11 - 2 * x) + 4
+        =>:
+            x = 5
+    x - 4 = sqrt(11 - 2 * x)
+    0 <= sqrt(11 - 2 * x)
+    4 <= x
+    sqrt(11 - 2 * x)^2 = 11 - 2 * x
+    (x - 4)^2 = sqrt(11 - 2 * x)^2 = 11 - 2 * x
+    (x - 4)^2 = x^2 - 8 * x + 16
+    x^2 - 8 * x + 16 = 11 - 2 * x
+    x^2 - 6 * x + 5 = x^2 - 8 * x + 16 - (11 - 2 * x) = 0
+    by thm factored_quadratic_roots(x)
+    by cases:
+        ? x = 5
+        case x = 1:
+            impossible 4 <= x
+        case x = 5:
+            x = 5
+
+0 <= 11 - 2 * 5
+sqrt(11 - 2 * 5) = 1
+5 = sqrt(11 - 2 * 5) + 4
+by thm radical_equation_has_only_solution_five(5)

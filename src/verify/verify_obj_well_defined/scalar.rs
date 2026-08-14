@@ -118,21 +118,29 @@ impl Runtime {
         add: &Add,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&add.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&add.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &add.left,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &add.right,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
+        )?;
         let parent: Obj = add.clone().into();
         let left = self.require_obj_in_c(&add.left, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
             left,
-        );
+        )?;
         let right = self.require_obj_in_c(&add.right, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
             right,
-        );
+        )?;
         Ok(())
     }
 
@@ -143,21 +151,29 @@ impl Runtime {
         sub: &Sub,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&sub.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&sub.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &sub.left,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &sub.right,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
+        )?;
         let parent: Obj = sub.clone().into();
         let left = self.require_obj_in_c(&sub.left, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
             left,
-        );
+        )?;
         let right = self.require_obj_in_c(&sub.right, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
             right,
-        );
+        )?;
         Ok(())
     }
 
@@ -168,21 +184,29 @@ impl Runtime {
         mul: &Mul,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&mul.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&mul.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &mul.left,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &mul.right,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
+        )?;
         let parent: Obj = mul.clone().into();
         let left = self.require_obj_in_c(&mul.left, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
             left,
-        );
+        )?;
         let right = self.require_obj_in_c(&mul.right, verify_state)?;
         self.record_well_definedness_target_requirement(
             &parent,
             WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
             right,
-        );
+        )?;
         Ok(())
     }
 
@@ -193,8 +217,16 @@ impl Runtime {
         div: &Div,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&div.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&div.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &div.left,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &div.right,
+            verify_state,
+            WellDefinedObjChildRole::BuiltinArgument { argument_index: 1 },
+        )?;
 
         let zero: Obj = Number::new("0".to_string()).into();
         let not_equal_fact = NotEqualFact::new((*div.right).clone(), zero, default_line_file());
@@ -208,9 +240,24 @@ impl Runtime {
                 )),
             )));
         }
-
-        self.require_obj_in_c(&div.left, verify_state)?;
-        self.require_obj_in_c(&div.right, verify_state)?;
+        let parent: Obj = div.clone().into();
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentNonzero { argument_index: 1 },
+            result,
+        )?;
+        let left = self.require_obj_in_c(&div.left, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 0 },
+            left,
+        )?;
+        let right = self.require_obj_in_c(&div.right, verify_state)?;
+        self.record_well_definedness_target_requirement(
+            &parent,
+            WellDefinednessRequirementRole::BuiltinArgumentMembership { argument_index: 1 },
+            right,
+        )?;
         Ok(())
     }
 
@@ -221,8 +268,16 @@ impl Runtime {
         m: &Mod,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&m.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&m.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &m.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&m.left, verify_state)?;
         self.require_obj_in_z(&m.right, verify_state)?;
         if matches!(m.right.as_ref(), Obj::Gcd(_)) {
@@ -250,8 +305,16 @@ impl Runtime {
         gcd: &Gcd,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&gcd.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&gcd.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &gcd.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &gcd.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&gcd.left, verify_state)?;
         self.require_obj_in_z(&gcd.right, verify_state)?;
 
@@ -309,7 +372,11 @@ impl Runtime {
         abs: &Abs,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&abs.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &abs.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&abs.arg, verify_state)?;
         Ok(())
     }
@@ -321,8 +388,16 @@ impl Runtime {
         lcm: &Lcm,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&lcm.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&lcm.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &lcm.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &lcm.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_z(&lcm.left, verify_state)?;
         self.require_obj_in_z(&lcm.right, verify_state)
     }
@@ -333,7 +408,11 @@ impl Runtime {
         floor: &Floor,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&floor.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &floor.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&floor.arg, verify_state)
     }
 
@@ -343,7 +422,11 @@ impl Runtime {
         ceil: &Ceil,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&ceil.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ceil.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&ceil.arg, verify_state)
     }
 
@@ -353,8 +436,16 @@ impl Runtime {
         min: &Min,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&min.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&min.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &min.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &min.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_r(&min.left, verify_state)?;
         self.require_obj_in_r(&min.right, verify_state)
     }
@@ -365,8 +456,16 @@ impl Runtime {
         max: &Max,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&max.left, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&max.right, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &max.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &max.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_r(&max.left, verify_state)?;
         self.require_obj_in_r(&max.right, verify_state)
     }
@@ -378,7 +477,11 @@ impl Runtime {
         exp: &Exp,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&exp.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &exp.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&exp.arg, verify_state)
     }
 
@@ -389,7 +492,11 @@ impl Runtime {
         ln: &Ln,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&ln.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &ln.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&ln.arg, verify_state)?;
         let positive: AtomicFact = GreaterFact::new(
             (*ln.arg).clone(),
@@ -416,7 +523,11 @@ impl Runtime {
         sign: &Sign,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&sign.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &sign.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&sign.arg, verify_state)
     }
 
@@ -427,7 +538,11 @@ impl Runtime {
         factorial: &Factorial,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&factorial.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &factorial.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_n(&factorial.arg, verify_state)
     }
 
@@ -437,7 +552,11 @@ impl Runtime {
         sin: &Sin,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&sin.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &sin.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&sin.arg, verify_state)
     }
 
@@ -447,7 +566,11 @@ impl Runtime {
         cos: &Cos,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&cos.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &cos.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&cos.arg, verify_state)
     }
 
@@ -458,7 +581,11 @@ impl Runtime {
         tan: &Tan,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&tan.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &tan.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&tan.arg, verify_state)?;
         let denominator: Obj = Cos::new((*tan.arg).clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
@@ -483,7 +610,11 @@ impl Runtime {
         cot: &Cot,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&cot.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &cot.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&cot.arg, verify_state)?;
         let denominator: Obj = Sin::new((*cot.arg).clone()).into();
         let zero: Obj = Number::new("0".to_string()).into();
@@ -508,7 +639,11 @@ impl Runtime {
         real_part: &RealPart,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&real_part.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &real_part.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_c(&real_part.arg, verify_state)?;
         Ok(())
     }
@@ -520,7 +655,11 @@ impl Runtime {
         imaginary_part: &ImaginaryPart,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&imaginary_part.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &imaginary_part.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_c(&imaginary_part.arg, verify_state)?;
         Ok(())
     }
@@ -532,7 +671,11 @@ impl Runtime {
         complex_abs: &ComplexAbs,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&complex_abs.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &complex_abs.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_c(&complex_abs.arg, verify_state)?;
         Ok(())
     }
@@ -544,7 +687,11 @@ impl Runtime {
         sqrt: &Sqrt,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&sqrt.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &sqrt.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.require_obj_in_r(&sqrt.arg, verify_state)?;
         let zero: Obj = Number::new("0".to_string()).into();
         let nonnegative: AtomicFact =
@@ -568,8 +715,16 @@ impl Runtime {
         log: &Log,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&log.base, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&log.arg, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &log.base,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &log.arg,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         self.require_obj_in_r(&log.base, verify_state)?;
         self.require_obj_in_r(&log.arg, verify_state)?;
         let zero: Obj = Number::new("0".to_string()).into();
@@ -618,8 +773,16 @@ impl Runtime {
         pow: &Pow,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_obj_well_defined_and_store_cache(&pow.base, verify_state)?;
-        self.verify_obj_well_defined_and_store_cache(&pow.exponent, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &pow.base,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &pow.exponent,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let zero_obj: Obj = Number::new("0".to_string()).into();
 
         let complex_base_and_natural_exponent = AndChainAtomicFact::AndFact(AndFact::new(

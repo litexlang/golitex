@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "target": "examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit",
+  "session_command": "target/release/litex -compact -session -before examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit (standalone examples have no litex.config, so startup rejects); isolated release runner used for the source gate",
+  "proof_spine": [
+    "Freeze one WellDefinedObjId for each proof-carrying arithmetic object",
+    "Join every parsed arithmetic occurrence directly to that WellDefinedObjId and reject missing, duplicated, or retargeted joins",
+    "Retain exact In-left-C and In-right-C WellDefinedFactId requirements",
+    "For division, retain the exact right-operand-not-equal-zero WellDefinedFactId",
+    "Emit child obj_N declarations and well_defined_fact_N theorems before parent construction",
+    "Call shared Lean closure theorems with the verifier-selected proofs"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "Compile a/b only after Litex has checked both complex memberships and b != 0",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b",
+          "result": "passed",
+          "verifier_evidence": "the isolated release runner returned top-level ok: true before the compiler migration; the former compiler emitted total Litex.div a b and did not consume the three verifier facts",
+          "diagnosis": "the source verifier already enforced the right conditions, but its WD target recipe and Lean constructor were incomplete",
+          "next_change": "type the three requirement roles, migrate Litex.div, and add malformed-certificate and real-Lean rejection gates"
+        }
+      ],
+      "accepted_litex": "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b\n\nforall a, b C:\n    b != 0\n    =>:\n        (a / b) + a = (a / b) + a\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R",
+      "reusable_lesson": "A partial source operator must consume the verifier-owned partiality proof in the target constructor; a detached audit theorem is insufficient.",
+      "status": "materialized"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/05_compiler_interop/compile_to_lean_proof_carrying_arithmetic.lit; cargo test --release proof_carrying_arithmetic_replays_well_defined_fact_ids -- --nocapture; LITEX_LEAN_PROJECT=lean cargo test --release proof_carrying_arithmetic_compiles_with_mathlib -- --ignored --nocapture",
+    "file_gate_result": "source runner, focused Rust shape/rejection tests, shared Lake build, and generated real-Mathlib gate passed"
+  }
+}

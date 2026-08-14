@@ -39,7 +39,7 @@ impl Runtime {
         }
 
         for arg in struct_obj.params.iter() {
-            self.verify_obj_well_defined_and_store_cache(arg, verify_state)?;
+            self.verify_obj_well_defined_as_verification_dependency(arg, verify_state)?;
         }
 
         let param_to_arg_map = if let Some((param_def, dom_facts)) = &def.param_def_with_dom {
@@ -212,6 +212,13 @@ impl Runtime {
         struct_obj: &StructObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        for (argument_index, parameter) in struct_obj.params.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                parameter,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
+        }
         let (def, param_to_arg_map) =
             self.struct_header_param_to_arg_map(struct_obj, verify_state)?;
         for field in def.fields.iter() {
@@ -220,7 +227,10 @@ impl Runtime {
                 &param_to_arg_map,
                 ParamObjType::DefHeader,
             )?;
-            self.verify_obj_well_defined_and_store_cache(&instantiated_field_type, verify_state)?;
+            self.verify_obj_well_defined_as_verification_dependency(
+                &instantiated_field_type,
+                verify_state,
+            )?;
         }
         self.run_in_local_env(|rt| {
             let field_bindings = def
@@ -289,6 +299,13 @@ impl Runtime {
         template_obj: &InstantiatedTemplateObj,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
+        for (argument_index, argument) in template_obj.args.iter().enumerate() {
+            self.verify_child_obj_well_defined_and_store_cache(
+                argument,
+                verify_state,
+                WellDefinedObjChildRole::ConstructorArgument { argument_index },
+            )?;
+        }
         self.materialize_instantiated_template_obj(template_obj, verify_state)
     }
 
@@ -300,9 +317,18 @@ impl Runtime {
         field_access: &ObjAsStructInstanceWithFieldAccess,
         verify_state: &UseContextVerifyState,
     ) -> Result<(), RuntimeError> {
-        self.verify_struct_obj_well_defined(&field_access.struct_obj, verify_state)?;
+        let struct_carrier: Obj = field_access.struct_obj.as_ref().clone().into();
+        self.verify_child_obj_well_defined_and_store_cache(
+            &struct_carrier,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
         self.struct_field_index(&field_access.struct_obj, &field_access.field_name)?;
-        self.verify_obj_well_defined_and_store_cache(&field_access.obj, verify_state)?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &field_access.obj,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
         let membership_fact: AtomicFact = InFact::new(
             (*field_access.obj).clone(),
             (*field_access.struct_obj).clone().into(),

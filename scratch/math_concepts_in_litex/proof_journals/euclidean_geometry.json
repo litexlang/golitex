@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "target": "scratch/math_concepts_in_litex/euclidean_geometry/main.lit",
+  "date": "2026-08-14",
+  "session_command": "target/release/litex -compact -session -before scratch/math_concepts_in_litex/euclidean_geometry/main.lit",
+  "proof_spine": [
+    "model points as pairs of real coordinates",
+    "measure segments by squared distance",
+    "rotate the base vector by sixty degrees without changing its norm",
+    "use the explicit apex as the witness in Euclid I.1"
+  ],
+  "attempts": [
+    {
+      "id": "runner-001",
+      "status": "failed",
+      "summary": "Tuple membership did not transfer through the named points alias without the carrier fact.",
+      "evidence": "line 17: verification failed for (0, 0) $in points"
+    },
+    {
+      "id": "geometry-006",
+      "status": "accepted",
+      "summary": "Added direct R x R membership before consuming membership through points."
+    },
+    {
+      "id": "G004-G007",
+      "status": "materialized",
+      "summary": "Added congruent-segment and equilateral-triangle interfaces, the explicit 60-degree apex, its two distance equalities, and Euclid I.1."
+    },
+    {
+      "id": "G008-G008b",
+      "status": "failed",
+      "summary": "Concrete tuple disequality needed explicit projection evaluations before the numeric contradiction.",
+      "evidence": "unknown equality: 0 = 2"
+    },
+    {
+      "id": "G008c",
+      "status": "materialized",
+      "summary": "Exposed both first-coordinate projections and checked the concrete base from (0,0) to (2,0), whose apex is (1,sqrt(3))."
+    }
+  ],
+  "accepted_blocks": [
+    "point carrier and analytic operations",
+    "distance_sq_coordinate_formula theorem",
+    "3-4-5 squared-distance example",
+    "equilateral rotation norm identity",
+    "explicit equilateral vertex distance lemma",
+    "Euclid Book I Proposition 1",
+    "concrete base and apex consumption"
+  ],
+  "lesson": "Analytic geometry remains inspectable when tuple projection bridges and the explicit construction witness are kept in the proof.",
+  "final_gate": "release file and module runners: ok=true, exit code 0"
+}
