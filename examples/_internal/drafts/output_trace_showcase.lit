@@ -9,7 +9,8 @@ claim:
     x = x
 
 # Ordinary claim: proof steps and the final goal verification.
-claim 1 = 1:
+claim:
+    ? 1 = 1
     1 = 1
 
 # By cases: coverage, each case assumption, conclusions, and impossible checks.

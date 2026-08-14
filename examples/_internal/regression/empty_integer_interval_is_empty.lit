@@ -30,9 +30,9 @@ forall i1 closed_range(3, 2):
     1 = 0
 
 by for:
-    ? forall i1 range(3, 2) => {1 = 0}
+    ? forall i1 range(3, 2) => 1 = 0
 by for:
-    ? forall i1 closed_range(3, 2) => {1 = 0}
+    ? forall i1 closed_range(3, 2) => 1 = 0
 
 have fn empty_to_empty(x {}) {} = x
 

@@ -124,10 +124,10 @@ These two analogies describe the center of gravity of the default interfaces, no
 
 > **Comparison note.** Lean remains the running comparison because it makes
 > the Goal-first/fact-first contrast especially concrete. References below to
-> Mizar, Isabelle/Isar, Rocq, ACL2, and Naproche are retrospective design-space
-> comparisons: Litex was designed independently rather than derived from these
-> systems. They locate neighboring ideas and the resulting differences; they
-> are not claims of direct intellectual influence.
+> Mizar, Isabelle/Isar, Rocq, ACL2, and Naproche locate Litex in the existing
+> design space: Litex was designed independently rather than derived from
+> these systems. The references identify neighboring ideas and the resulting
+> differences; they are not claims of direct intellectual influence.
 
 ## A Small but Complete Comparison: Uniqueness of the Identity in a Group
 
@@ -309,24 +309,21 @@ forall a, b, c set:
 For this equality-rewrite route supported by the current MVP, the compiler generates the following Lean code (the concrete fact ID is assigned at runtime):
 
 ```lean
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 7 := rfl
+import Litex.Rules
 
 theorem fact19 :
-    ∀ (a : Litex.Object) (litex_param_fact_1 : Litex.IsSet a)
-      (b : Litex.Object) (litex_param_fact_2 : Litex.IsSet b)
-      (c : Litex.Object) (litex_param_fact_3 : Litex.IsSet c)
-      (litex_domain_fact_1 : a ≠ c)
-      (litex_domain_fact_2 : a = b),
+    ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a)
+      (b : Litex.Object) (h_0_2 : Litex.IsSet b)
+      (c : Litex.Object) (h_0_3 : Litex.IsSet c)
+      (h_0_4 : a ≠ c)
+      (h_0_5 : a = b),
       b ≠ c := by
-  intro a litex_param_fact_1 b litex_param_fact_2 c litex_param_fact_3
-    litex_domain_fact_1 litex_domain_fact_2
+  intro a h_0_1 b h_0_2 c h_0_3 h_0_4 h_0_5
   exact by
-    simpa only [litex_domain_fact_2] using litex_domain_fact_1
+    simpa only [h_0_5] using h_0_4
 ```
 
-This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.BuiltinRules` Lake module supplies the one `Litex.Object` universe and checks ABI version 7; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.Rules` Lake module supplies the one `Litex.Object` universe and checks ABI version 8; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. Generated assumptions use `h_<forall-depth>_<local-order>`; parameter facts and domain premises share one source-ordered counter within each `forall` layer. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
 
 Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 
@@ -343,7 +340,7 @@ argument is stated as `identity = G.mul(G.one, identity) = G.one`. The checker
 finds the relevant identity-law instances and equality direction, so the
 source records what should hold while the verification route supplies why.
 
-> **Retrospective comparison.** Local support search is not unique to Litex:
+> **Position in the design space.** Local support search is not unique to Litex:
 > [Lean `grind`](https://lean-lang.org/doc/reference/latest/The--grind--tactic/),
 > [Rocq `auto`](https://rocq-prover.org/doc/master/refman/proofs/automatic-tactics/auto.html),
 > and [Isabelle/Isar](https://isabelle.in.tum.de/doc/isar-ref.pdf) expose it
@@ -370,7 +367,7 @@ the carrier, `identity s` states membership, and `G &Group<s>` places the
 structure on that set. The carrier constraints remain explicit without first
 presenting them as a user-managed universe hierarchy.
 
-> **Retrospective comparison.** A set-theoretic presentation is not a Litex
+> **Position in the design space.** A set-theoretic presentation is not a Litex
 > novelty: [Mizar's library](https://wiki.mizar.org/library/) is based on
 > Tarski–Grothendieck set theory, while
 > [Lean](https://lean-lang.org/doc/reference/latest/The-Type-System/) and
@@ -395,7 +392,7 @@ In the `Group` declaration, multiplication is written as the binary function
 the familiar mathematical arity instead of requiring the user-facing syntax
 to present multiplication as a curried chain of unary functions.
 
-> **Retrospective comparison.** Readable, declarative mathematical syntax also
+> **Position in the design space.** Readable, declarative mathematical syntax also
 > has important predecessors: Mizar organizes formal articles as sequences of
 > mathematical statements and justifications, Isabelle/Isar provides
 > structured declarative proofs, and Naproche checks controlled natural
@@ -424,7 +421,7 @@ reintroduces a slower but more independent audit path. This architecture makes
 low-latency local checking plausible; it does not by itself establish that
 current Litex is universally faster.
 
-> **Retrospective comparison.**
+> **Position in the design space.**
 > [Lean](https://lean-lang.org/doc/reference/latest/Elaboration-and-Compilation/)
 > and [Rocq](https://rocq-prover.org/doc/V9.2.0/refman/language/core/index.html)
 > sharply separate sophisticated proof construction from kernels that check
@@ -555,7 +552,7 @@ concept is defined; the candidate identity laws later enlarge the context;
 only then is the uniqueness chain checked. That sequence is the same
 bottom-up pattern illustrated by the calculation and inclusion examples.
 
-> **Retrospective comparison.** Mizar and Isar already support forward,
+> **Position in the design space.** Mizar and Isar already support forward,
 > declarative proof text; ACL2 grows a reusable theorem database; and Naproche
 > checks successive mathematical steps. Bottom-up growth alone is therefore
 > not the claim. Litex tests the combination in which an ordinary fact is the
@@ -595,7 +592,7 @@ default division of labor: the author supplies the mathematical proof spine;
 the checker supplies its routine local connections; and explicit proof
 structure appears when the mathematics actually demands it. That division of
 labor—not local automation in isolation—is the intended interface distinction.
-The retrospective comparisons above show that the individual mechanisms have
+The design-space comparisons above show that the individual mechanisms have
 precedents. Litex therefore advances a narrower, more architectural
 hypothesis: can the entire fact-triggered cycle—not merely an optional tactic,
 a citation convention, or a theorem-level prover—serve as the uniform default

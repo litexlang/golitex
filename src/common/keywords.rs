@@ -57,6 +57,14 @@ pub const UNFOLD: &str = "unfold";
 
 pub const UNION: &str = "union";
 pub const INTERSECT: &str = "intersect";
+/// Unicode-only infix set union. Canonical rendering remains `union(A, B)`.
+pub const UNICODE_UNION: &str = "∪";
+/// Unicode-only infix set intersection. Canonical rendering remains `intersect(A, B)`.
+pub const UNICODE_INTERSECT: &str = "∩";
+/// Unicode-only infix Cartesian product. Canonical rendering remains `cart(A, B)`.
+pub const UNICODE_CART: &str = "×";
+/// Unicode-only negated membership. Canonical rendering remains `not x $in A`.
+pub const UNICODE_NOT_IN: &str = "∉";
 pub const SET_MINUS: &str = "set_minus";
 pub const BIG_UNION: &str = "big_union";
 pub const BIG_INTERSECT: &str = "big_intersect";
@@ -251,6 +259,10 @@ fn build_key_symbols_map() -> HashMap<&'static str, &'static str> {
         DOUBLE_QUOTE,
         COLON,
         INTERVAL_LITERAL_PREFIX,
+        UNICODE_UNION,
+        UNICODE_INTERSECT,
+        UNICODE_CART,
+        UNICODE_NOT_IN,
     ];
     for &s in &symbols {
         m.insert(s, s);
@@ -390,6 +402,39 @@ fn build_keywords_map() -> HashMap<&'static str, &'static str> {
         m.insert(s, s);
     }
     m
+}
+
+/// Canonical ASCII tokens for supported Unicode mathematical input aliases.
+///
+/// Unicode spellings are surface syntax only. The parser, stored facts, and
+/// rendered diagnostics continue to use the existing ASCII tokens.
+pub(crate) fn unicode_alias_tokens(token: &str) -> Option<&'static [&'static str]> {
+    match token {
+        "∀" => Some(&[FORALL]),
+        "∃" => Some(&[EXIST]),
+        "≤" => Some(&[LESS_EQUAL]),
+        "≥" => Some(&[GREATER_EQUAL]),
+        "≠" => Some(&[NOT_EQUAL]),
+        "→" => Some(&[RIGHT_ARROW]),
+        "↔" => Some(&[EQUIVALENT_SIGN]),
+        "∧" => Some(&[AND]),
+        "∨" => Some(&[OR]),
+        "¬" => Some(&[NOT]),
+        "∈" => Some(&[FACT_PREFIX, IN]),
+        "⊆" => Some(&[FACT_PREFIX, SUBSET]),
+        "⊇" => Some(&[FACT_PREFIX, SUPERSET]),
+        "⊊" => Some(&[FACT_PREFIX, PROPER_SUBSET]),
+        "⊋" => Some(&[FACT_PREFIX, PROPER_SUPERSET]),
+        "⊂" => Some(&[FACT_PREFIX, PROPER_SUBSET]),
+        "ℕ" => Some(&[N]),
+        "ℤ" => Some(&[Z]),
+        "ℚ" => Some(&[Q]),
+        "ℝ" => Some(&[R]),
+        "ℂ" => Some(&[C]),
+        "π" => Some(&[PI]),
+        "∅" => Some(&[LEFT_CURLY_BRACE, RIGHT_CURLY_BRACE]),
+        _ => None,
+    }
 }
 
 static KEY_SYMBOLS_MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();

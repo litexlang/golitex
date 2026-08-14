@@ -59,9 +59,10 @@ fn shared_builtin_rule_tracer_imports_theorems() {
         let generated = compile_to_lean_from_source(&source, SHARED_BUILTIN_TRACER)
             .expect("the shared builtin-rule tracer should compile");
         assert_new_shared_library_header("shared_builtin_rules", &generated);
+        assert!(!generated.contains("Litex.BuiltinRules"), "{generated}");
         for theorem in ["notEqualSymmetry", "numeralInN", "numeralInC"] {
             assert!(
-                generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                generated.contains(&format!("Litex.Rules.{theorem}")),
                 "{generated}"
             );
             assert!(
@@ -109,10 +110,6 @@ fn shared_builtin_rule_tracer_compiles_with_mathlib() {
             .expect("the shared builtin-rule tracer should compile");
         let mut library = SharedLeanTestLibrary::new("shared-builtin-tracer");
         library.compile_generated("shared-builtin-tracer", &generated);
-        library.reject_generated(
-            "wrong-abi-version",
-            "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 1 := rfl\n",
-        );
     });
 }
 
@@ -139,8 +136,10 @@ fn assert_new_abi(label: &str, generated: &str) {
         );
     }
     let source_declarations = generated
-        .strip_prefix("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl\n")
+        .strip_prefix("import Litex.Rules\n\n")
         .expect("generated source should begin after the shared-library header");
+    assert!(!generated.contains("Litex.abiVersion"), "{generated}");
+    assert!(!generated.contains("well_defined_fact_"), "{generated}");
     for forbidden in ["(a : ℝ)", "(a : ℂ)", "(b : ℝ)", "(b : ℂ)"] {
         assert!(
             !source_declarations.contains(forbidden),
@@ -150,13 +149,18 @@ fn assert_new_abi(label: &str, generated: &str) {
     match label {
         "well_defined_object_dag" => {
             assert!(
-                generated.matches("noncomputable def obj_").count() >= 3,
+                generated.matches("\n  have obj_").count() >= 3,
                 "{generated}"
             );
             assert!(
-                generated.contains("_applicable : ∀") && generated.contains("Litex.Applicable"),
+                generated.contains("_applicable : Litex.Applicable"),
                 "{generated}"
             );
+            assert!(
+                !generated.contains("\nnoncomputable def obj_"),
+                "{generated}"
+            );
+            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
             assert!(!generated.contains("well_defined_object_"), "{generated}");
         }
         "trusted_forall_atomic_fact" => {
@@ -167,18 +171,19 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert_eq!(generated.matches("axiom fact").count(), 1, "{generated}");
             assert!(generated.contains(": p 1 := by"), "{generated}");
             assert!(
-                generated.contains(" 1 (Litex.BuiltinRules.numeralInR 1)"),
+                generated.contains(" 1 (Litex.Rules.numeralInR 1)"),
                 "{generated}"
             );
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "membership_wd" => {
+            assert!(generated.contains("wd_0_3"), "{generated}");
             assert!(
-                generated.contains("theorem well_defined_fact_3"),
+                generated.contains("\n  have obj_") && generated.contains("_applicable"),
                 "{generated}"
             );
             assert!(
-                generated.contains("noncomputable def obj_") && generated.contains("_applicable"),
+                !generated.contains("\nnoncomputable def obj_"),
                 "{generated}"
             );
         }
@@ -231,7 +236,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         }
         "builtin_theorem" => {
             assert!(
-                generated.contains("Litex.BuiltinRules.notEqualSymmetry"),
+                generated.contains("Litex.Rules.notEqualSymmetry"),
                 "{generated}"
             );
             assert!(!generated.contains("axiom notEqualSymmetry"), "{generated}");
@@ -253,17 +258,26 @@ fn assert_new_abi(label: &str, generated: &str) {
         "arithmetic_forall_wd" => {
             assert!(generated.contains("Litex.sub"), "{generated}");
             assert!(
-                generated.contains("Litex.BuiltinRules.realSubClosure"),
+                generated.contains("Litex.Rules.realSubClosure"),
+                "{generated}"
+            );
+            assert!(generated.contains("h_1_1"), "{generated}");
+            assert!(generated.contains("\n  have litex_scope_"), "{generated}");
+            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
+            assert!(
+                !generated.contains("\nnoncomputable def obj_"),
                 "{generated}"
             );
             assert!(
-                generated.contains("litex_nested_param_fact_"),
+                !generated.contains("litex_nh_") && !generated.contains("litex_nested_param_fact_"),
                 "{generated}"
             );
             let helper_names = generated
                 .lines()
                 .filter_map(|line| {
-                    line.strip_prefix("theorem well_defined_fact_")
+                    let line = line.trim_start();
+                    line.strip_prefix("have wd_")
+                        .or_else(|| line.strip_prefix("theorem wd_"))
                         .and_then(|rest| rest.split_whitespace().next())
                 })
                 .collect::<Vec<_>>();
@@ -286,16 +300,16 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "complexDivClosure",
             ] {
                 assert!(
-                    generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                    generated.contains(&format!("Litex.Rules.{theorem}")),
                     "{generated}"
                 );
             }
+            assert!(generated.contains("wd_0_5"), "{generated}");
             assert!(
-                generated.contains("theorem well_defined_fact_"),
+                generated.contains("(Litex.add (Litex.add a b) c)"),
                 "{generated}"
             );
-            assert!(generated.contains("Litex.add (obj_"), "{generated}");
-            assert!(generated.contains("Litex.div (obj_"), "{generated}");
+            assert!(generated.contains("(Litex.div a b)"), "{generated}");
         }
         "inferred_forall_premise" => {
             assert!(
@@ -303,7 +317,11 @@ fn assert_new_abi(label: &str, generated: &str) {
                 "{generated}"
             );
             assert!(
-                generated.contains("Litex.BuiltinRules.positiveRealMembership litex_param_fact_1"),
+                generated.contains("Litex.Rules.positiveRealMembership h_0_1"),
+                "{generated}"
+            );
+            assert!(
+                !generated.contains("litex_h_") && !generated.contains("litex_param_fact_"),
                 "{generated}"
             );
             assert!(
@@ -313,12 +331,10 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "proof_carrying_list_set" => {
-            assert!(generated.contains("Litex.listSet [(obj_"), "{generated}");
-            assert!(generated.contains("List.Pairwise.cons"), "{generated}");
-            assert!(
-                generated.contains("exact (well_defined_fact_"),
-                "{generated}"
-            );
+            assert!(generated.contains("Litex.listSet [a, b]"), "{generated}");
+            assert!(generated.contains("\n  have wd_0_"), "{generated}");
+            assert!(!generated.contains("List.Pairwise.cons"), "{generated}");
+            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
             assert!(!generated.contains("sorry"), "{generated}");
         }
         "object_choice" => {
@@ -345,9 +361,9 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(generated.contains("Litex.union"), "{generated}");
         }
         "proof_carrying_division" => {
-            assert!(generated.contains("Litex.div (obj_"), "{generated}");
+            assert!(generated.contains("Litex.div a b"), "{generated}");
             assert!(
-                generated.contains("Litex.BuiltinRules.realDivClosure"),
+                generated.contains("Litex.Rules.realDivClosure"),
                 "{generated}"
             );
         }
@@ -398,7 +414,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         "shared_builtin_rules" => {
             for theorem in ["notEqualSymmetry", "numeralInN", "numeralInC"] {
                 assert!(
-                    generated.contains(&format!("Litex.BuiltinRules.{theorem}")),
+                    generated.contains(&format!("Litex.Rules.{theorem}")),
                     "{generated}"
                 );
             }
@@ -409,8 +425,11 @@ fn assert_new_abi(label: &str, generated: &str) {
 
 fn assert_new_shared_library_header(label: &str, generated: &str) {
     assert!(
-        generated
-            .starts_with("import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl\n"),
+        generated.starts_with("import Litex.Rules\n\n"),
+        "{label}\n{generated}"
+    );
+    assert!(
+        !generated.contains("Litex.abiVersion"),
         "{label}\n{generated}"
     );
 }

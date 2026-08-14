@@ -5,7 +5,7 @@
 //!   matched with longest-first priority.
 //! - Double-quoted segments are one token (with `\"` and `\\` skips for the closing quote).
 
-use crate::common::keywords::key_symbols_sorted_by_len_desc;
+use crate::common::keywords::{key_symbols_sorted_by_len_desc, unicode_alias_tokens};
 use crate::parse::TokenBlock;
 use crate::prelude::*;
 
@@ -124,7 +124,21 @@ impl Tokenizer {
             tokens.push(ch.to_string());
             i += ch.len_utf8();
         }
-        tokens
+        let mut canonical_tokens = Vec::with_capacity(tokens.len());
+        let mut inside_double_quotes = false;
+        for token in tokens {
+            if token == DOUBLE_QUOTE {
+                inside_double_quotes = !inside_double_quotes;
+                canonical_tokens.push(token);
+            } else if inside_double_quotes {
+                canonical_tokens.push(token);
+            } else if let Some(alias_tokens) = unicode_alias_tokens(token.as_str()) {
+                canonical_tokens.extend(alias_tokens.iter().map(|token| token.to_string()));
+            } else {
+                canonical_tokens.push(token);
+            }
+        }
+        canonical_tokens
     }
 
     pub(crate) fn strip_triple_quote_comment_blocks(&self, source_code: &str) -> String {
@@ -364,6 +378,100 @@ mod tests {
                 .tokenize_line("thm 自反等式:", test_line_file())
                 .unwrap(),
             vec!["thm", "自反等式", ":"]
+        );
+    }
+
+    #[test]
+    fn unicode_math_aliases_normalize_to_canonical_ascii_tokens() {
+        let tokenizer = Tokenizer::new();
+        let cases = [
+            ("∀", vec!["forall"]),
+            ("∃", vec!["exist"]),
+            ("∃!", vec!["exist", "!"]),
+            ("≤", vec!["<="]),
+            ("≥", vec![">="]),
+            ("≠", vec!["!="]),
+            ("→", vec!["=>"]),
+            ("↔", vec!["<=>"]),
+            ("∧", vec!["and"]),
+            ("∨", vec!["or"]),
+            ("¬", vec!["not"]),
+            ("∈", vec!["$", "in"]),
+            ("⊆", vec!["$", "subset"]),
+            ("⊇", vec!["$", "superset"]),
+            ("⊊", vec!["$", "proper_subset"]),
+            ("⊋", vec!["$", "proper_superset"]),
+            ("⊂", vec!["$", "proper_subset"]),
+            ("ℕ", vec!["N"]),
+            ("ℤ", vec!["Z"]),
+            ("ℚ", vec!["Q"]),
+            ("ℝ", vec!["R"]),
+            ("ℂ", vec!["C"]),
+            ("π", vec!["pi"]),
+            ("∅", vec!["{", "}"]),
+        ];
+
+        for (source, expected) in cases {
+            assert_eq!(
+                tokenizer.tokenize_line(source, test_line_file()).unwrap(),
+                expected,
+                "{source}"
+            );
+        }
+        assert_eq!(
+            tokenizer
+                .tokenize_line("∃! x ℕ st {x ∈ ∅}", test_line_file())
+                .unwrap(),
+            vec!["exist", "!", "x", "N", "st", "{", "x", "$", "in", "{", "}", "}"]
+        );
+    }
+
+    #[test]
+    fn unicode_aliases_do_not_rewrite_quoted_paths_or_longer_identifiers() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("import \"../ℝ/π/∅\" as Math", test_line_file())
+                .unwrap(),
+            vec!["import", "\"", ".", ".", "/", "ℝ", "/", "π", "/", "∅", "\"", "as", "Math"]
+        );
+        assert_eq!(
+            tokenizer
+                .tokenize_line("π_value ℝspace", test_line_file())
+                .unwrap(),
+            vec!["π_value", "ℝspace"]
+        );
+    }
+
+    #[test]
+    fn unicode_infix_operators_remain_distinct_parser_tokens() {
+        let tokenizer = Tokenizer::new();
+        assert_eq!(
+            tokenizer
+                .tokenize_line("x ∉ A, A ⊂ B, A ∪ B, A ∩ B, A × B", test_line_file())
+                .unwrap(),
+            vec![
+                "x",
+                "∉",
+                "A",
+                ",",
+                "A",
+                "$",
+                "proper_subset",
+                "B",
+                ",",
+                "A",
+                "∪",
+                "B",
+                ",",
+                "A",
+                "∩",
+                "B",
+                ",",
+                "A",
+                "×",
+                "B"
+            ]
         );
     }
 

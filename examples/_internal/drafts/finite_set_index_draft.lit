@@ -16,7 +16,7 @@ prop bijective_fn(S, T set, f fn(x S) T):
     $surjective_fn(S, T, f)
 
 prop is_index_fn(S finite_set, index fn(x N+: x <= finite_set_size(S)) S):
-    forall y S => {exist i1 N+ st {i1 <= finite_set_size(S), y = index(i1)}}
+    forall y S => exist i1 N+ st {i1 <= finite_set_size(S), y = index(i1)}
 
 prop finite_set_size_has_index(n N+):
     forall s finite_set:
@@ -82,7 +82,8 @@ thm index_function_for_singleton:
     set_minus(s, {a}) = {}
     have fn idx(i1 N+: i1 <= finite_set_size(s)) s = a
     witness exist idx0 fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
-        claim forall y s => {exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}}:
+        claim:
+            ? forall y s => exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}
             by contra:
                 ? y = a
                 y != a
@@ -131,7 +132,8 @@ thm index_function_step:
     prev(1) $in s
     idx(1) $in s
     witness exist idx0 fn(x N+: x <= finite_set_size(s)) s st {$is_index_fn(s, idx0)} from idx:
-        claim forall y s => {exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}}:
+        claim:
+            ? forall y s => exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}
             y = a or y != a
             by cases:
                 ? exist i1 N+ st {i1 <= finite_set_size(s), y = idx0(i1)}

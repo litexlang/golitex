@@ -1,7 +1,18 @@
-# Before: finite set literals retained checked child and pairwise WD evidence,
-# but the target constructor did not consume the exact indexed matrix.
-# Now: `Litex.listSet` receives source-ordered children and every pair proof.
+# Tracer: list-set denotation is proof-free while pairwise WD stays local.
+#
+# Before (Litex verified, but Lean theorem types mentioned local WD names):
+# forall a, b set:
+#     a != b
+#     =>:
+#         {a, b} = {a, b}
+# Former behavior: `Litex.listSet [a, b] (by ... exact wd_0_N)` put a proof
+# created after `intro` into the theorem type.
+#
+# Now (verified): `Litex.listSet [a, b]` is the object term, while the exact
+# pairwise `WellDefinedFactId` is replayed as a local `have wd_0_N`.
 # Boundary: missing, duplicated, reversed, or retargeted pair roles fail closed.
+# Evidence: `LITEX_LEAN_PROJECT=lean LITEX_LAKE=lake cargo test --release
+# proof_carrying_list_set_compiles_with_mathlib -- --ignored --nocapture`.
 
 forall a, b set:
     a != b

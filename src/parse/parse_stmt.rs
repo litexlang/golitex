@@ -195,6 +195,21 @@ mod parse_stmt_diagnostic_tests {
     }
 
     #[test]
+    fn claim_requires_an_indented_question_goal() {
+        for source_code in [
+            "claim 1 = 1:\n    1 = 1",
+            "claim forall x R => x = x:\n    x = x",
+        ] {
+            let message = parse_one_stmt_error_message(source_code);
+            assert!(
+                message.contains("claim requires `claim:`"),
+                "{source_code:?}: {message}"
+            );
+        }
+        assert!(parse_one_stmt("claim:\n    ? 1 = 1").is_ok());
+    }
+
+    #[test]
     fn function_implementation_syntax_requires_for_after_have_algo() {
         assert_eq!(
             parse_one_stmt_error_message("have algo f(x):\n    x"),

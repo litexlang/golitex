@@ -1,15 +1,17 @@
-# Named functions consume the exact ordered parameter/domain evidence retained
-# by Litex. The identity checks the proof-independent baseline.
+# Named function objects have proof-free denotation. Their closure theorem
+# consumes the exact ordered parameter/domain evidence retained by Litex. The
+# identity checks the proof-independent baseline.
 have fn id(x R) R = x
 id(1) = 1
 
-# A compound body becomes a verifier-owned obj_N DAG. Its In-C evidence is
-# passed into Litex.add, then the checked definition is replayed at 1.
+# A compound body retains a verifier-owned WD DAG. Its In-C evidence is replayed
+# locally inside `inc_closed`; `Litex.add` itself remains proof-free, and the
+# checked definition is replayed at 1.
 have fn inc(x R) R = x + 1
 inc(1) = 1 + 1
 
 # A partial body receives x != 0 from the same dependent requirements
-# telescope and passes it directly to Litex.div.
+# telescope and replays it locally beside the proof-free `Litex.div` term.
 have fn reciprocal(x R: x != 0) R = 1 / x
 forall a R:
     a != 0

@@ -3,11 +3,11 @@
   "target": "examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit",
   "session_command": "target/release/litex -compact -session -before examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit (standalone examples have no litex.config, so startup rejects); isolated release runner used for the source gate",
   "proof_spine": [
-    "Freeze one WellDefinedObjId for each proof-carrying arithmetic object",
+    "Freeze one WellDefinedObjId for each checked arithmetic object",
     "Join every parsed arithmetic occurrence directly to that WellDefinedObjId and reject missing, duplicated, or retargeted joins",
     "Retain exact In-left-C and In-right-C WellDefinedFactId requirements",
     "For division, retain the exact right-operand-not-equal-zero WellDefinedFactId",
-    "Emit child obj_N declarations and well_defined_fact_N theorems before parent construction",
+    "Render proof-free arithmetic terms and replay child WD facts as local have bindings in the owning theorem before parent WD steps",
     "Call shared Lean closure theorems with the verifier-selected proofs"
   ],
   "blocks": [
@@ -20,13 +20,13 @@
         {
           "candidate": "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b",
           "result": "passed",
-          "verifier_evidence": "the isolated release runner returned top-level ok: true before the compiler migration; the former compiler emitted total Litex.div a b and did not consume the three verifier facts",
-          "diagnosis": "the source verifier already enforced the right conditions, but its WD target recipe and Lean constructor were incomplete",
-          "next_change": "type the three requirement roles, migrate Litex.div, and add malformed-certificate and real-Lean rejection gates"
+          "verifier_evidence": "the isolated release runner returned top-level ok: true; the compiler certificate retains both membership roles and the exact denominator-nonzero role",
+          "diagnosis": "the source verifier already enforced the right conditions, but earlier target emission either discarded them or leaked generalized proof helpers outside the owning theorem",
+          "next_change": "keep Litex.div denotation proof-free, validate all three requirement roles, replay them locally after intro, and retain malformed-certificate plus real-Lean gates"
         }
       ],
       "accepted_litex": "forall a, b C:\n    b != 0\n    =>:\n        a / b = a / b\n\nforall a, b C:\n    b != 0\n    =>:\n        (a / b) + a = (a / b) + a\n\nforall a, b R:\n    b != 0\n    =>:\n        a / b $in R",
-      "reusable_lesson": "A partial source operator must consume the verifier-owned partiality proof in the target constructor; a detached audit theorem is insufficient.",
+      "reusable_lesson": "A partial source operator keeps proof-free target denotation, while its verifier-owned partiality proof must be replayed locally in the corresponding Lean environment; a detached top-level audit theorem is insufficient.",
       "status": "materialized"
     }
   ],

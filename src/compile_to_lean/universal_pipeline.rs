@@ -3,7 +3,7 @@ use crate::prelude::*;
 use crate::verify::rule_schema::{canonical_atomic_facts_equal, MatchLimits};
 use std::collections::{HashMap, HashSet};
 
-use super::shared_lean_library::generated_import_header;
+use super::shared_lean_library::{generated_import_header, rule_theorem_name};
 use super::{
     LitexToLeanCompilationPhase, LitexToLeanCompilationReport, LitexToLeanUnsupportedStatement,
 };
@@ -143,7 +143,7 @@ struct RenderContext {
     local_fact_propositions: HashMap<FactId, Fact>,
     local_forall_facts: HashMap<FactId, Fact>,
     well_defined_fact_names: HashMap<WellDefinedFactId, String>,
-    /// Exact verifier DAG node selected for each proof-carrying source object.
+    /// Exact verifier DAG node selected for each certificate-bearing source object.
     /// The renderer never searches membership propositions to reconstruct this
     /// association.
     well_defined_object_ids: HashMap<SourceObjectOccurrenceId, WellDefinedObjId>,
@@ -153,6 +153,7 @@ struct RenderContext {
     well_defined_result_membership_names: HashMap<WellDefinedObjId, String>,
     well_definedness: LitexToLeanWellDefinednessCertificateIr,
     function_set_depth: usize,
+    forall_depth: Option<usize>,
 }
 
 struct ForallEmission {
@@ -162,8 +163,15 @@ struct ForallEmission {
     parameter_symbol_ids: Vec<SymbolId>,
     parameter_fact_ids: Vec<FactId>,
     domain_fact_ids: Vec<FactId>,
+    local_proof_steps: Vec<LocalProofStep>,
     inferred_facts: Vec<InferredFactEmission>,
     conclusions: Vec<LitexToLeanFactIr>,
+}
+
+struct LocalProofStep {
+    name: String,
+    proposition: String,
+    proof: String,
 }
 
 struct InferredFactEmission {
@@ -189,7 +197,6 @@ struct ProofCarryingObjectScope {
 }
 
 struct RenderedFunctionApplication {
-    value: String,
     result_membership: String,
     contract_fact_id: FactId,
     function: LitexToLeanFunctionTypeIr,
@@ -663,6 +670,9 @@ impl UniversalEmitter {
         if !emission.binder_names.is_empty() {
             proof_lines.push(format!("  intro {}", emission.binder_names.join(" ")));
         }
+        for step in emission.local_proof_steps.iter() {
+            proof_lines.push(render_local_proof_step(step));
+        }
         for inferred in emission.inferred_facts.iter() {
             proof_lines.push(format!(
                 "  have {} : {} := by\n    exact {}",
@@ -993,10 +1003,9 @@ impl UniversalEmitter {
             ));
         }
 
-        // First expose the verifier's local binder scope directly. Every
-        // emitted obj_N/well_defined_fact_N helper below is parameterized by
-        // this exact ordered telescope, never by a reconstructed proposition
-        // search in Lean.
+        // First expose the verifier's local binder scope directly. Every local
+        // wd_<depth>_<id> step below is interpreted under this exact ordered
+        // telescope, never by a reconstructed proposition search in Lean.
         let mut scoped_context = base_context.clone();
         let mut scoped_binder_names =
             Vec::with_capacity(ir.function.parameters.len() + expected_requirement_count);
@@ -1019,12 +1028,6 @@ impl UniversalEmitter {
             .collect::<Vec<_>>();
         let mut premise_binder_names = Vec::with_capacity(expected_requirement_count);
         for (requirement_index, premise) in ordered_premises.iter().enumerate() {
-            self.prepare_well_defined_facts_for_fact_type(
-                &mut scoped_context,
-                &premise.fact,
-                &scoped_binder_names,
-                &scoped_binder_types,
-            )?;
             let expected = if requirement_index < ir.function.parameters.len() {
                 let parameter = &ir.function.parameters[requirement_index];
                 let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premise.fact else {
@@ -1096,92 +1099,6 @@ impl UniversalEmitter {
             }
         }
 
-        // Inferred facts are derived once from the explicit telescope and
-        // become reusable named helpers. Body WD facts may cite their stable
-        // FactIds exactly as the verifier did.
-        let mut inferred_helpers = Vec::new();
-        for (index, inferred) in ir.inferred_premises.iter().enumerate() {
-            let fact_id = inferred.fact_id.ok_or_else(|| {
-                universal_error(
-                    &inferred.proposition.line_file(),
-                    "named-function inferred premise reached emission without a FactId",
-                )
-            })?;
-            self.prepare_well_defined_facts_for_fact_type(
-                &mut scoped_context,
-                &inferred.proposition,
-                &scoped_binder_names,
-                &scoped_binder_types,
-            )?;
-            self.prepare_well_defined_facts_for_fact_proof(
-                &mut scoped_context,
-                inferred,
-                &scoped_binder_names,
-                &scoped_binder_types,
-            )?;
-            let proposition = self.render_fact(&inferred.proposition, &scoped_context)?;
-            let proof = self.render_proof_term(inferred, &scoped_context)?;
-            let theorem_name = format!("{name}_inferred_{}", index + 1);
-            if !self.global_names.insert(theorem_name.clone()) {
-                return Err(universal_error(
-                    &inferred.proposition.line_file(),
-                    format!("Lean declaration name `{theorem_name}` is already in use"),
-                ));
-            }
-            let binders = render_explicit_binders(&scoped_binder_names, &scoped_binder_types)?;
-            let theorem_type = format!("∀ {}, {proposition}", binders.join(" "));
-            self.declarations.push(format!(
-                "theorem {theorem_name} : {theorem_type} := by\n  intro {}\n  exact {proof}",
-                scoped_binder_names.join(" ")
-            ));
-            let helper = WellDefinedHelperBinding {
-                theorem_name,
-                binder_names: scoped_binder_names.clone(),
-                binder_types: scoped_binder_types.clone(),
-            };
-            let applied = apply_scoped_declaration(
-                &helper.theorem_name,
-                &helper.binder_names,
-                &helper.binder_types,
-                &scoped_binder_names,
-                &scoped_binder_types,
-                "named-function inferred premise",
-            )?;
-            scoped_context.local_fact_names.insert(fact_id, applied);
-            scoped_context
-                .local_fact_propositions
-                .insert(fact_id, inferred.proposition.clone());
-            inferred_helpers.push((fact_id, inferred.proposition.clone(), helper));
-        }
-
-        let mut source_occurrence_ids = HashSet::new();
-        collect_proof_carrying_object_occurrence_ids(&ir.body, &mut source_occurrence_ids)?;
-        collect_proof_carrying_object_occurrence_ids(
-            ir.function.return_set.as_ref(),
-            &mut source_occurrence_ids,
-        )?;
-        let well_definedness = ir.well_definedness.clone();
-        self.prepare_scoped_well_defined_facts(
-            &mut scoped_context,
-            &well_definedness,
-            &source_occurrence_ids,
-            &HashSet::new(),
-            &scoped_binder_names,
-            &scoped_binder_types,
-        )?;
-        self.prepare_well_defined_facts_for_fact_type(
-            &mut scoped_context,
-            &ir.return_check.proposition,
-            &scoped_binder_names,
-            &scoped_binder_types,
-        )?;
-        self.prepare_well_defined_facts_for_fact_proof(
-            &mut scoped_context,
-            &ir.return_check,
-            &scoped_binder_names,
-            &scoped_binder_types,
-        )?;
-
         let arguments_name = "litex_function_args";
         let length_name = "litex_function_length";
         let requirements_name = "litex_function_requirements";
@@ -1209,19 +1126,73 @@ impl UniversalEmitter {
                 dependent_requirement_projection(requirements_name, index),
             );
         }
-        for (fact_id, proposition, helper) in inferred_helpers.iter() {
-            let applied = apply_scoped_declaration_with_substitutions(
-                &helper.theorem_name,
-                &helper.binder_names,
-                &helper.binder_types,
-                &body_substitutions,
-                "named-function inferred premise in body",
+        let mut local_proof_steps = Vec::new();
+        for (index, inferred) in ir.inferred_premises.iter().enumerate() {
+            let fact_id = inferred.fact_id.ok_or_else(|| {
+                universal_error(
+                    &inferred.proposition.line_file(),
+                    "named-function inferred premise reached emission without a FactId",
+                )
+            })?;
+            self.prepare_local_well_defined_facts_for_fact_type(
+                &mut body_context,
+                &inferred.proposition,
+                &[],
+                &[],
+                &mut local_proof_steps,
             )?;
-            body_context.local_fact_names.insert(*fact_id, applied);
+            self.prepare_local_well_defined_facts_for_fact_proof(
+                &mut body_context,
+                inferred,
+                &[],
+                &[],
+                &mut local_proof_steps,
+            )?;
+            let proposition = self.render_fact(&inferred.proposition, &body_context)?;
+            let proof = self.render_proof_term(inferred, &body_context)?;
+            let local_name = format!("litex_function_inferred_{}", index + 1);
+            push_unique_local_proof_step(
+                &mut local_proof_steps,
+                LocalProofStep {
+                    name: local_name.clone(),
+                    proposition,
+                    proof,
+                },
+            )?;
+            body_context.local_fact_names.insert(fact_id, local_name);
             body_context
                 .local_fact_propositions
-                .insert(*fact_id, proposition.clone());
+                .insert(fact_id, inferred.proposition.clone());
         }
+
+        let mut source_occurrence_ids = HashSet::new();
+        collect_proof_carrying_object_occurrence_ids(&ir.body, &mut source_occurrence_ids)?;
+        collect_proof_carrying_object_occurrence_ids(
+            ir.function.return_set.as_ref(),
+            &mut source_occurrence_ids,
+        )?;
+        let well_definedness = ir.well_definedness.clone();
+        self.prepare_local_scoped_well_defined_facts(
+            &mut body_context,
+            &well_definedness,
+            &source_occurrence_ids,
+            &HashSet::new(),
+            &mut local_proof_steps,
+        )?;
+        self.prepare_local_well_defined_facts_for_fact_type(
+            &mut body_context,
+            &ir.return_check.proposition,
+            &[],
+            &[],
+            &mut local_proof_steps,
+        )?;
+        self.prepare_local_well_defined_facts_for_fact_proof(
+            &mut body_context,
+            &ir.return_check,
+            &[],
+            &[],
+            &mut local_proof_steps,
+        )?;
 
         let body = self.render_obj(&ir.source_body, &body_context)?;
         let range = self.render_obj(&ir.source_return_set, &body_context)?;
@@ -1279,11 +1250,20 @@ impl UniversalEmitter {
             ));
         }
         let return_proof = self.render_proof_term(&ir.return_check, &body_context)?;
+        let mut closed_proof_lines = vec![format!(
+            "  intro {arguments_name} {length_name} {requirements_name}"
+        )];
+        for step in local_proof_steps.iter() {
+            closed_proof_lines.push(render_local_proof_step(step));
+        }
+        closed_proof_lines.push(format!("  change {expected_return_type}"));
+        closed_proof_lines.push(format!("  exact {return_proof}"));
         self.declarations.push(format!(
-            "theorem {closed_name} :\n    ∀ {arguments_name} {length_name} {requirements_name},\n      Litex.In\n        ({body_name} {arguments_name} {length_name} {requirements_name})\n        ({spec_name}.range {arguments_name} {length_name} {requirements_name}) := by\n  intro {arguments_name} {length_name} {requirements_name}\n  change {expected_return_type}\n  exact {return_proof}"
+            "theorem {closed_name} :\n    ∀ {arguments_name} {length_name} {requirements_name},\n      Litex.In\n        ({body_name} {arguments_name} {length_name} {requirements_name})\n        ({spec_name}.range {arguments_name} {length_name} {requirements_name}) := by\n{}",
+            closed_proof_lines.join("\n")
         ));
         self.declarations.push(format!(
-            "noncomputable def {implementation_name} : Litex.Object :=\n  Litex.functionObject {spec_name} {body_name} {closed_name}"
+            "noncomputable def {implementation_name} : Litex.Object :=\n  Litex.functionObject {spec_name} {body_name}"
         ));
         self.declarations.push(format!(
             "noncomputable def {name} : Litex.Object := {implementation_name}"
@@ -1337,23 +1317,12 @@ impl UniversalEmitter {
                 domain_fact_ids: Vec::new(),
             },
         );
-        let mut body_object_ids = scoped_context
-            .well_defined_object_names
-            .keys()
-            .copied()
-            .collect::<Vec<_>>();
-        body_object_ids.sort_by_key(|obj_id| obj_id.value());
-        let body_object_definition_names = body_object_ids
-            .into_iter()
-            .filter_map(|obj_id| self.global_objects.get(&obj_id))
-            .map(|binding| binding.name.clone())
-            .collect::<Vec<_>>();
         self.named_function_helpers.insert(
             ir.name.clone(),
             NamedFunctionHelpers {
                 implementation_name,
                 body_name,
-                body_object_definition_names,
+                body_object_definition_names: Vec::new(),
             },
         );
         Ok(())
@@ -1652,6 +1621,7 @@ impl UniversalEmitter {
             Fact::ForallFact(forall) => {
                 let mut context = RenderContext {
                     function_bindings: self.global_function_bindings.clone(),
+                    forall_depth: Some(0),
                     ..RenderContext::default()
                 };
                 let mut binders = Vec::new();
@@ -1663,7 +1633,7 @@ impl UniversalEmitter {
                         binders.push(format!("({name} : Litex.Object)"));
                         parameter_index += 1;
                         binders.push(format!(
-                            "(litex_param_fact_{} : {})",
+                            "(h_0_{} : {})",
                             parameter_index,
                             self.render_parameter_requirement(&name, &group.param_type, &context,)?
                         ));
@@ -1671,8 +1641,8 @@ impl UniversalEmitter {
                 }
                 for (index, domain) in forall.dom_facts.iter().enumerate() {
                     binders.push(format!(
-                        "(litex_domain_fact_{} : {})",
-                        index + 1,
+                        "(h_0_{} : {})",
+                        parameter_index + index + 1,
                         self.render_fact(&domain.clone().into(), &context)?
                     ));
                 }
@@ -1816,6 +1786,9 @@ impl UniversalEmitter {
         if !emission.binder_names.is_empty() {
             proof_lines.push(format!("  intro {}", emission.binder_names.join(" ")));
         }
+        for step in emission.local_proof_steps.iter() {
+            proof_lines.push(render_local_proof_step(step));
+        }
         for inferred in emission.inferred_facts.iter() {
             proof_lines.push(format!(
                 "  have {} : {} := by\n    exact {}",
@@ -1872,12 +1845,31 @@ impl UniversalEmitter {
             well_definedness: well_definedness.clone(),
             ..RenderContext::default()
         };
-        self.prepare_well_defined_facts_for_fact_type(&mut context, &fact.proposition, &[], &[])?;
-        self.prepare_well_defined_facts_for_fact_proof(&mut context, fact, &[], &[])?;
+        let mut local_proof_steps = Vec::new();
+        self.prepare_local_well_defined_facts_for_fact_type(
+            &mut context,
+            &fact.proposition,
+            &[],
+            &[],
+            &mut local_proof_steps,
+        )?;
+        self.prepare_local_well_defined_facts_for_fact_proof(
+            &mut context,
+            fact,
+            &[],
+            &[],
+            &mut local_proof_steps,
+        )?;
         let theorem_type = self.render_fact(&fact.proposition, &context)?;
         let proof = self.render_proof_term(fact, &context)?;
+        let mut proof_lines = local_proof_steps
+            .iter()
+            .map(render_local_proof_step)
+            .collect::<Vec<_>>();
+        proof_lines.push(format!("  exact {proof}"));
         self.declarations.push(format!(
-            "theorem {theorem_name} : {theorem_type} := by\n  exact {proof}"
+            "theorem {theorem_name} : {theorem_type} := by\n{}",
+            proof_lines.join("\n")
         ));
         self.register_global_function_binding(fact_id, &fact.proposition, theorem_name.clone())?;
         self.global_facts.insert(
@@ -1941,6 +1933,7 @@ impl UniversalEmitter {
         let mut context = RenderContext {
             function_bindings: self.global_function_bindings.clone(),
             well_definedness: well_definedness.clone(),
+            forall_depth: Some(0),
             ..RenderContext::default()
         };
         let mut binder_names = Vec::new();
@@ -1957,7 +1950,7 @@ impl UniversalEmitter {
                 parameter_symbol_ids.push(binding.id());
 
                 let premise = &parameter_premises[parameter_index];
-                let proof_name = format!("litex_param_fact_{}", parameter_index + 1);
+                let proof_name = format!("h_0_{}", parameter_index + 1);
                 let proof_type = self.render_fact(&premise.fact, &context)?;
                 binder_names.push(proof_name.clone());
                 binder_types.push(proof_type);
@@ -1984,16 +1977,18 @@ impl UniversalEmitter {
         }
 
         let mut domain_fact_ids = Vec::new();
+        let mut local_proof_steps = Vec::new();
         for premise in premises.iter() {
-            self.prepare_well_defined_facts_for_fact_type(
+            self.prepare_local_well_defined_facts_for_fact_type(
                 &mut context,
                 &premise.fact,
                 &binder_names,
                 &binder_types,
+                &mut local_proof_steps,
             )?;
         }
         for (index, premise) in premises.iter().enumerate() {
-            let proof_name = format!("litex_domain_fact_{}", index + 1);
+            let proof_name = format!("h_0_{}", parameter_index + index + 1);
             let proof_type = self.render_fact(&premise.fact, &context)?;
             binder_names.push(proof_name.clone());
             binder_types.push(proof_type);
@@ -2017,17 +2012,19 @@ impl UniversalEmitter {
                     "an inferred forall premise reached emission without a FactId",
                 )
             })?;
-            self.prepare_well_defined_facts_for_fact_type(
+            self.prepare_local_well_defined_facts_for_fact_type(
                 &mut context,
                 &inferred.proposition,
                 &binder_names,
                 &binder_types,
+                &mut local_proof_steps,
             )?;
-            self.prepare_well_defined_facts_for_fact_proof(
+            self.prepare_local_well_defined_facts_for_fact_proof(
                 &mut context,
                 inferred,
                 &binder_names,
                 &binder_types,
+                &mut local_proof_steps,
             )?;
             let proposition = self.render_fact(&inferred.proposition, &context)?;
             let proof = self.render_proof_term(inferred, &context)?;
@@ -2049,17 +2046,19 @@ impl UniversalEmitter {
         }
 
         for conclusion in conclusions.iter() {
-            self.prepare_well_defined_facts_for_fact_type(
+            self.prepare_local_well_defined_facts_for_fact_type(
                 &mut context,
                 &conclusion.proposition,
                 &binder_names,
                 &binder_types,
+                &mut local_proof_steps,
             )?;
-            self.prepare_well_defined_facts_for_fact_proof(
+            self.prepare_local_well_defined_facts_for_fact_proof(
                 &mut context,
                 conclusion,
                 &binder_names,
                 &binder_types,
+                &mut local_proof_steps,
             )?;
         }
 
@@ -2070,6 +2069,7 @@ impl UniversalEmitter {
             parameter_symbol_ids,
             parameter_fact_ids,
             domain_fact_ids,
+            local_proof_steps,
             inferred_facts,
             conclusions: conclusions.clone(),
         })
@@ -2279,7 +2279,7 @@ impl UniversalEmitter {
             &mut selected_ids,
         )?;
 
-        // Audit facts can mention another proof-carrying arithmetic cache node
+        // Audit facts can mention another certificate-bearing arithmetic cache node
         // (for example a normalization witness). Preserve those checks too by
         // closing the selected DAG over every retained fact proof tree.
         loop {
@@ -2439,8 +2439,7 @@ impl UniversalEmitter {
                     });
                 match rendered {
                     Ok((proof_type, proof)) => {
-                        let name =
-                            format!("well_defined_fact_{}", fact.well_defined_fact_id.value());
+                        let name = well_defined_fact_name(&fact_context, fact.well_defined_fact_id);
                         let binders =
                             render_explicit_binders(&fact_binder_names, &fact_binder_types)?;
                         let helper_type = if binders.is_empty() {
@@ -2883,7 +2882,7 @@ impl UniversalEmitter {
             &closed_name,
         )?;
         self.declarations.push(format!(
-            "noncomputable def {} : Litex.Object :=\n  Litex.functionObject {applied_spec} {applied_body} {applied_closed}",
+            "noncomputable def {} : Litex.Object :=\n  Litex.functionObject {applied_spec} {applied_body}",
             declaration_head(&name)
         ));
         let applied_object = apply_scoped_declaration(
@@ -3099,12 +3098,12 @@ impl UniversalEmitter {
                         .insert(child.obj_id, child_name);
                 }
 
-                // Rendering the definition of `obj_N` already has the exact
-                // node ID. Temporarily bind the occurrence embedded in that
-                // frozen node so its proof-carrying constructor can consume
-                // the certificate. Remove the temporary binding afterwards;
-                // source statements must still carry their own explicit use
-                // edge and cannot inherit this declaration-only binding.
+                // This legacy generalized path still needs the exact frozen
+                // node ID to validate a certificate-bearing source object's
+                // construction recipe. Temporarily bind the embedded
+                // occurrence, then remove it; source statements must still
+                // carry their own explicit use edge and cannot inherit this
+                // declaration-only binding.
                 let temporary_source_binding = if is_proof_carrying_object(&object.source_object) {
                     let source_occurrence_id =
                         object.source_object.source_occurrence_id().ok_or_else(|| {
@@ -3401,10 +3400,7 @@ impl UniversalEmitter {
                             .well_defined_applicable_names
                             .insert(obj_id, applied_helper_name.clone());
                     }
-                    application_value = Some(format!(
-                        "{head} [{}] ({applied_helper_name})",
-                        arguments.join(", ")
-                    ));
+                    application_value = Some(format!("{head} [{}]", arguments.join(", ")));
                     let mut result_context = object_context.clone();
                     for (parameter, argument) in
                         current_function.parameters.iter().zip(arguments.iter())
@@ -3624,12 +3620,13 @@ impl UniversalEmitter {
         Ok(child)
     }
 
-    fn prepare_well_defined_facts_for_fact_type(
+    fn prepare_local_well_defined_facts_for_fact_type(
         &mut self,
         context: &mut RenderContext,
         fact: &Fact,
         binder_names: &[String],
         binder_types: &[String],
+        local_steps: &mut Vec<LocalProofStep>,
     ) -> Result<(), RuntimeError> {
         let mut scopes = Vec::new();
         self.collect_application_scopes_from_fact(
@@ -3641,19 +3638,52 @@ impl UniversalEmitter {
         )?;
         let well_definedness = context.well_definedness.clone();
         for mut scope in scopes {
+            merge_local_well_defined_context(&mut scope.context, context)?;
             let occurrence_ids = HashSet::from([scope.source_occurrence_id]);
-            self.prepare_scoped_well_defined_facts(
+            let proof_ids = resolve_source_occurrence_object_ids(
+                &well_definedness,
+                &occurrence_ids,
+                &mut scope.context,
+                &fact.line_file(),
+            )?;
+            if well_defined_closure_uses_binder_scope(&well_definedness, &proof_ids)? {
+                self.prepare_scoped_well_defined_facts(
+                    &mut scope.context,
+                    &well_definedness,
+                    &occurrence_ids,
+                    &HashSet::new(),
+                    &scope.binder_names,
+                    &scope.binder_types,
+                )?;
+                merge_well_defined_object_ids(context, &scope.context)?;
+                context
+                    .well_defined_fact_names
+                    .extend(scope.context.well_defined_fact_names);
+                continue;
+            }
+            if scope.binder_names != binder_names || scope.binder_types != binder_types {
+                self.prepare_local_generalized_well_defined_scope(
+                    context,
+                    &mut scope.context,
+                    &well_definedness,
+                    &occurrence_ids,
+                    &HashSet::new(),
+                    binder_names,
+                    binder_types,
+                    &scope.binder_names,
+                    &scope.binder_types,
+                    local_steps,
+                )?;
+                continue;
+            }
+            self.prepare_local_scoped_well_defined_facts(
                 &mut scope.context,
                 &well_definedness,
                 &occurrence_ids,
                 &HashSet::new(),
-                &scope.binder_names,
-                &scope.binder_types,
+                local_steps,
             )?;
-            merge_well_defined_object_ids(context, &scope.context)?;
-            context
-                .well_defined_fact_names
-                .extend(scope.context.well_defined_fact_names);
+            merge_local_well_defined_context(context, &scope.context)?;
         }
 
         let mut proof_carrying_scopes = Vec::new();
@@ -3665,34 +3695,151 @@ impl UniversalEmitter {
             &mut proof_carrying_scopes,
         )?;
         for mut scope in proof_carrying_scopes {
+            merge_local_well_defined_context(&mut scope.context, context)?;
             let proof_ids = resolve_source_occurrence_object_ids(
                 &well_definedness,
                 &scope.source_occurrence_ids,
                 &mut scope.context,
                 &fact.line_file(),
             )?;
-            self.prepare_scoped_well_defined_facts(
+            if well_defined_closure_uses_binder_scope(&well_definedness, &proof_ids)? {
+                self.prepare_scoped_well_defined_facts(
+                    &mut scope.context,
+                    &well_definedness,
+                    &HashSet::new(),
+                    &proof_ids,
+                    &scope.binder_names,
+                    &scope.binder_types,
+                )?;
+                merge_well_defined_object_ids(context, &scope.context)?;
+                context
+                    .well_defined_fact_names
+                    .extend(scope.context.well_defined_fact_names);
+                continue;
+            }
+            if scope.binder_names != binder_names || scope.binder_types != binder_types {
+                self.prepare_local_generalized_well_defined_scope(
+                    context,
+                    &mut scope.context,
+                    &well_definedness,
+                    &HashSet::new(),
+                    &proof_ids,
+                    binder_names,
+                    binder_types,
+                    &scope.binder_names,
+                    &scope.binder_types,
+                    local_steps,
+                )?;
+                continue;
+            }
+            self.prepare_local_scoped_well_defined_facts(
                 &mut scope.context,
                 &well_definedness,
                 &HashSet::new(),
                 &proof_ids,
-                &scope.binder_names,
-                &scope.binder_types,
+                local_steps,
             )?;
-            merge_well_defined_object_ids(context, &scope.context)?;
-            context
-                .well_defined_fact_names
-                .extend(scope.context.well_defined_fact_names);
+            merge_local_well_defined_context(context, &scope.context)?;
         }
         Ok(())
     }
 
-    fn prepare_well_defined_facts_for_fact_proof(
+    #[allow(clippy::too_many_arguments)]
+    fn prepare_local_generalized_well_defined_scope(
+        &mut self,
+        outer_context: &mut RenderContext,
+        nested_context: &mut RenderContext,
+        well_definedness: &LitexToLeanWellDefinednessCertificateIr,
+        application_occurrence_ids: &HashSet<SourceObjectOccurrenceId>,
+        initial_object_proof_ids: &HashSet<WellDefinedObjId>,
+        outer_binder_names: &[String],
+        outer_binder_types: &[String],
+        nested_binder_names: &[String],
+        nested_binder_types: &[String],
+        local_steps: &mut Vec<LocalProofStep>,
+    ) -> Result<(), RuntimeError> {
+        if nested_binder_names.len() < outer_binder_names.len()
+            || nested_binder_types.len() < outer_binder_types.len()
+            || nested_binder_names[..outer_binder_names.len()] != *outer_binder_names
+            || nested_binder_types[..outer_binder_types.len()] != *outer_binder_types
+        {
+            return Err(universal_error(
+                &default_line_file(),
+                "a nested WD environment changed its visible outer Lean binders",
+            ));
+        }
+        let extra_names = &nested_binder_names[outer_binder_names.len()..];
+        let extra_types = &nested_binder_types[outer_binder_types.len()..];
+        if extra_names.is_empty() {
+            return Err(universal_error(
+                &default_line_file(),
+                "a generalized local WD environment has no additional binders",
+            ));
+        }
+
+        let mut nested_steps = Vec::new();
+        self.prepare_local_scoped_well_defined_facts(
+            nested_context,
+            well_definedness,
+            application_occurrence_ids,
+            initial_object_proof_ids,
+            &mut nested_steps,
+        )?;
+        if nested_steps.is_empty() {
+            return merge_local_well_defined_context(outer_context, nested_context);
+        }
+
+        let binders = render_explicit_binders(extra_names, extra_types)?;
+        let bundled_proposition = right_associated(
+            nested_steps
+                .iter()
+                .map(|step| step.proposition.clone())
+                .collect(),
+            " ∧ ",
+            "True",
+        );
+        let generalized_proposition = format!("∀ {}, {bundled_proposition}", binders.join(" "));
+        let mut proof_lines = vec![
+            "by".to_string(),
+            format!("  intro {}", extra_names.join(" ")),
+        ];
+        for step in nested_steps.iter() {
+            proof_lines.push(render_local_proof_step(step));
+        }
+        let bundled_value = right_associated_conjunction_proof(
+            nested_steps.iter().map(|step| step.name.clone()).collect(),
+        )
+        .expect("nonempty nested WD steps have a conjunction proof");
+        proof_lines.push(format!("  exact {bundled_value}"));
+        let scope_name = format!(
+            "litex_scope_{}_{}",
+            nested_steps.first().expect("nonempty nested WD steps").name,
+            nested_steps.last().expect("nonempty nested WD steps").name
+        );
+        push_unique_local_proof_step(
+            local_steps,
+            LocalProofStep {
+                name: scope_name.clone(),
+                proposition: generalized_proposition,
+                proof: proof_lines.join("\n"),
+            },
+        )?;
+
+        let scope_application = format!("{scope_name} {}", extra_names.join(" "));
+        for (index, step) in nested_steps.iter().enumerate() {
+            let projection = conjunction_projection(&scope_application, index, nested_steps.len());
+            replace_local_proof_name(nested_context, &step.name, &projection);
+        }
+        merge_local_well_defined_context(outer_context, nested_context)
+    }
+
+    fn prepare_local_well_defined_facts_for_fact_proof(
         &mut self,
         context: &mut RenderContext,
         fact: &LitexToLeanFactIr,
         binder_names: &[String],
         binder_types: &[String],
+        local_steps: &mut Vec<LocalProofStep>,
     ) -> Result<(), RuntimeError> {
         let mut source_occurrence_ids = HashSet::new();
         collect_proof_carrying_object_occurrence_ids_from_compiler_fact(
@@ -3715,18 +3862,585 @@ impl UniversalEmitter {
             &fact.proposition.line_file(),
         )?;
         let mut scope = context.clone();
-        self.prepare_scoped_well_defined_facts(
-            &mut scope,
-            &well_definedness,
-            &HashSet::new(),
-            &proof_ids,
-            binder_names,
-            binder_types,
+        if well_defined_closure_uses_binder_scope(&well_definedness, &proof_ids)? {
+            self.prepare_scoped_well_defined_facts(
+                &mut scope,
+                &well_definedness,
+                &HashSet::new(),
+                &proof_ids,
+                binder_names,
+                binder_types,
+            )?;
+        } else {
+            self.prepare_local_scoped_well_defined_facts(
+                &mut scope,
+                &well_definedness,
+                &HashSet::new(),
+                &proof_ids,
+                local_steps,
+            )?;
+        }
+        merge_local_well_defined_context(context, &scope)
+    }
+
+    fn prepare_local_scoped_well_defined_facts(
+        &mut self,
+        context: &mut RenderContext,
+        well_definedness: &LitexToLeanWellDefinednessCertificateIr,
+        application_occurrence_ids: &HashSet<SourceObjectOccurrenceId>,
+        initial_object_proof_ids: &HashSet<WellDefinedObjId>,
+        local_steps: &mut Vec<LocalProofStep>,
+    ) -> Result<(), RuntimeError> {
+        if application_occurrence_ids.is_empty() && initial_object_proof_ids.is_empty() {
+            return Ok(());
+        }
+        let mut canonical_proof_ids = initial_object_proof_ids.clone();
+        canonical_proof_ids.extend(resolve_source_occurrence_object_ids(
+            well_definedness,
+            application_occurrence_ids,
+            context,
+            &default_line_file(),
+        )?);
+        let mut selected_ids = HashSet::new();
+        let mut selected_roles = HashSet::new();
+        for requirement in well_definedness.target_requirements.iter() {
+            if !application_occurrence_ids.contains(&requirement.source_occurrence_id)
+                || !selected_roles.insert((requirement.source_occurrence_id, requirement.role))
+            {
+                continue;
+            }
+            canonical_proof_ids.insert(requirement.well_defined_obj_id);
+            selected_ids.insert(requirement.well_defined_fact_id);
+        }
+
+        let objects_by_id = well_definedness
+            .objects
+            .iter()
+            .map(|object| (object.well_defined_obj_id, object))
+            .collect::<HashMap<_, _>>();
+        let mut pending_object_ids = canonical_proof_ids.into_iter().collect::<Vec<_>>();
+        let mut selected_object_ids = HashSet::new();
+        add_well_defined_object_proof_closure(
+            &objects_by_id,
+            &mut pending_object_ids,
+            &mut selected_object_ids,
+            &mut selected_ids,
         )?;
-        merge_well_defined_object_ids(context, &scope)?;
+
+        loop {
+            let mut referenced_occurrence_ids = HashSet::new();
+            for fact in well_definedness
+                .facts
+                .iter()
+                .filter(|fact| selected_ids.contains(&fact.well_defined_fact_id))
+            {
+                collect_proof_carrying_object_occurrence_ids_from_fact(
+                    &fact.expected_proposition,
+                    &mut referenced_occurrence_ids,
+                )?;
+                collect_proof_carrying_object_occurrence_ids_from_compiler_fact(
+                    &fact.fact,
+                    &mut referenced_occurrence_ids,
+                )?;
+            }
+            let mut added = false;
+            for source_occurrence_id in referenced_occurrence_ids {
+                if context
+                    .well_defined_object_ids
+                    .contains_key(&source_occurrence_id)
+                {
+                    continue;
+                }
+                pending_object_ids.extend(resolve_source_occurrence_object_ids(
+                    well_definedness,
+                    &HashSet::from([source_occurrence_id]),
+                    context,
+                    &default_line_file(),
+                )?);
+                added = true;
+            }
+            if !added {
+                break;
+            }
+            add_well_defined_object_proof_closure(
+                &objects_by_id,
+                &mut pending_object_ids,
+                &mut selected_object_ids,
+                &mut selected_ids,
+            )?;
+        }
+
+        let mut remaining = well_definedness
+            .facts
+            .iter()
+            .filter(|fact| {
+                selected_ids.contains(&fact.well_defined_fact_id)
+                    && !context
+                        .well_defined_fact_names
+                        .contains_key(&fact.well_defined_fact_id)
+            })
+            .collect::<Vec<_>>();
+        remaining.sort_by_key(|fact| fact.well_defined_fact_id.value());
+        for fact in remaining.iter() {
+            if !fact.ambient_binder_scope_ids.is_empty() {
+                return Err(universal_error(
+                    &fact.expected_proposition.line_file(),
+                    format!(
+                        "WellDefinedFactId {} belongs to a nested binder environment and cannot be emitted in its parent theorem scope",
+                        fact.well_defined_fact_id.value()
+                    ),
+                ));
+            }
+            if !facts_are_canonically_equal(&fact.expected_proposition, &fact.fact.proposition)? {
+                return Err(universal_error(
+                    &fact.expected_proposition.line_file(),
+                    format!(
+                        "WellDefinedFactId {} changed proposition during local Lean emission",
+                        fact.well_defined_fact_id.value()
+                    ),
+                ));
+            }
+        }
+
+        while !remaining.is_empty() {
+            let mut next = Vec::new();
+            let mut made_progress = false;
+            for fact in remaining {
+                let rendered = self
+                    .render_fact(&fact.expected_proposition, context)
+                    .and_then(|proposition| {
+                        self.render_proof_term(&fact.fact, context)
+                            .map(|proof| (proposition, proof))
+                    });
+                match rendered {
+                    Ok((proposition, proof)) => {
+                        let name = well_defined_fact_name(context, fact.well_defined_fact_id);
+                        push_unique_local_proof_step(
+                            local_steps,
+                            LocalProofStep {
+                                name: name.clone(),
+                                proposition,
+                                proof,
+                            },
+                        )?;
+                        context
+                            .well_defined_fact_names
+                            .insert(fact.well_defined_fact_id, name);
+                        made_progress = true;
+                    }
+                    Err(_) => next.push(fact),
+                }
+            }
+            if next.is_empty() {
+                break;
+            }
+            if !made_progress {
+                let blocked = next
+                    .iter()
+                    .map(|fact| fact.well_defined_fact_id.value().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let first_error = self
+                    .render_fact(&next[0].expected_proposition, context)
+                    .and_then(|_| self.render_proof_term(&next[0].fact, context))
+                    .expect_err("a blocked local WD fact must still fail diagnostic replay");
+                return Err(universal_error(
+                    &next[0].expected_proposition.line_file(),
+                    format!(
+                        "could not replay local well-defined facts [{blocked}] in dependency order: {}",
+                        first_error.trace_message()
+                    ),
+                ));
+            }
+            remaining = next;
+        }
+
+        self.prepare_local_well_defined_objects(
+            context,
+            &objects_by_id,
+            &selected_object_ids,
+            local_steps,
+        )
+    }
+
+    fn prepare_local_well_defined_objects(
+        &self,
+        context: &mut RenderContext,
+        objects_by_id: &HashMap<WellDefinedObjId, &LitexToLeanWellDefinednessObjectIr>,
+        selected_object_ids: &HashSet<WellDefinedObjId>,
+        local_steps: &mut Vec<LocalProofStep>,
+    ) -> Result<(), RuntimeError> {
+        let mut remaining = selected_object_ids
+            .iter()
+            .filter(|obj_id| !context.well_defined_object_names.contains_key(obj_id))
+            .copied()
+            .collect::<Vec<_>>();
+        remaining.sort_by_key(|obj_id| obj_id.value());
+        while !remaining.is_empty() {
+            let mut next = Vec::new();
+            let mut made_progress = false;
+            for obj_id in remaining {
+                let object = objects_by_id.get(&obj_id).ok_or_else(|| {
+                    universal_error(
+                        &default_line_file(),
+                        format!(
+                            "WellDefinedObjId {} has no frozen object record",
+                            obj_id.value()
+                        ),
+                    )
+                })?;
+                if !object.ambient_binder_scope_ids.is_empty()
+                    || object.owned_binder_scope_id.is_some()
+                {
+                    return Err(universal_error(
+                        &default_line_file(),
+                        format!(
+                            "obj_{} belongs to a nested binder environment and cannot be emitted in its parent theorem scope",
+                            obj_id.value()
+                        ),
+                    ));
+                }
+                if object.child_uses.iter().any(|child| {
+                    selected_object_ids.contains(&child.obj_id)
+                        && !context
+                            .well_defined_object_names
+                            .contains_key(&child.obj_id)
+                }) {
+                    next.push(obj_id);
+                    continue;
+                }
+
+                if let Obj::FnObj(_) = &object.source_object {
+                    self.prepare_local_function_application_object(context, object, local_steps)?;
+                } else {
+                    let value = self.render_obj(&object.source_object, context)?;
+                    context
+                        .well_defined_object_names
+                        .insert(obj_id, value.clone());
+                    if is_proof_carrying_arithmetic_obj(&object.source_object) {
+                        self.prepare_local_arithmetic_result_membership_object(
+                            context,
+                            object,
+                            &value,
+                            local_steps,
+                        )?;
+                    }
+                }
+                made_progress = true;
+            }
+            if next.is_empty() {
+                break;
+            }
+            if !made_progress {
+                let blocked = next
+                    .iter()
+                    .map(|obj_id| format!("obj_{}", obj_id.value()))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                return Err(universal_error(
+                    &default_line_file(),
+                    format!("local WD object dependency cycle or missing child: {blocked}"),
+                ));
+            }
+            remaining = next;
+        }
+        Ok(())
+    }
+
+    fn prepare_local_arithmetic_result_membership_object(
+        &self,
+        context: &RenderContext,
+        object: &LitexToLeanWellDefinednessObjectIr,
+        value: &str,
+        local_steps: &mut Vec<LocalProofStep>,
+    ) -> Result<(), RuntimeError> {
+        let Some(result_set) = object.intrinsic_result_set.as_ref() else {
+            return Err(universal_error(
+                &default_line_file(),
+                format!(
+                    "proof-carrying arithmetic obj_{} has no frozen intrinsic result carrier",
+                    object.well_defined_obj_id.value()
+                ),
+            ));
+        };
+        if !matches!(
+            result_set,
+            LitexToLeanObjectIr::StandardSet(LitexToLeanStandardSetIr::Complex)
+        ) {
+            return Err(universal_error(
+                &default_line_file(),
+                format!(
+                    "proof-carrying arithmetic obj_{} changed its intrinsic result carrier",
+                    object.well_defined_obj_id.value()
+                ),
+            ));
+        }
+
+        let already_named = context.well_defined_fact_names.iter().any(|(fact_id, _)| {
+            context
+                .well_definedness
+                .facts
+                .iter()
+                .find(|fact| fact.well_defined_fact_id == *fact_id)
+                .is_some_and(|fact| {
+                    matches!(
+                        &fact.expected_proposition,
+                        Fact::AtomicFact(AtomicFact::InFact(membership))
+                            if obj_equality_key(&membership.element)
+                                == obj_equality_key(&object.source_object)
+                                && matches!(
+                                    &membership.set,
+                                    Obj::StandardSet(StandardSet::C)
+                                )
+                    )
+                })
+        });
+        if already_named {
+            return Ok(());
+        }
+
+        let LitexToLeanObjectIr::BuiltinApp {
+            source_occurrence_id,
+            semantic_key,
+            operator,
+            arguments,
+        } = LitexToLeanObjectIr::lower(&object.source_object)
+            .map_err(|message| universal_error(&default_line_file(), message))?
+        else {
+            return Err(universal_error(
+                &default_line_file(),
+                "proof-carrying arithmetic WD object lowered to a non-builtin object",
+            ));
+        };
+        let theorem_name = match operator {
+            LitexToLeanBuiltinObjectOperatorIr::Add => "complexAddClosure",
+            LitexToLeanBuiltinObjectOperatorIr::Sub => "complexSubClosure",
+            LitexToLeanBuiltinObjectOperatorIr::Mul => "complexMulClosure",
+            LitexToLeanBuiltinObjectOperatorIr::Div => "complexDivClosure",
+            _ => {
+                return Err(universal_error(
+                    &default_line_file(),
+                    "a proof-carrying arithmetic result used an unsupported builtin operator",
+                ));
+            }
+        };
+        let membership_proofs = self.resolve_builtin_argument_membership_proofs(
+            source_occurrence_id,
+            &semantic_key,
+            operator,
+            &arguments,
+            context,
+        )?;
+        let theorem = rule_theorem_name(theorem_name);
+        let proof = if operator == LitexToLeanBuiltinObjectOperatorIr::Div {
+            let nonzero_proof = self.resolve_builtin_argument_nonzero_proof(
+                source_occurrence_id,
+                &semantic_key,
+                operator,
+                &arguments,
+                context,
+            )?;
+            format!(
+                "({theorem} ({}) ({}) ({nonzero_proof}))",
+                membership_proofs[0], membership_proofs[1]
+            )
+        } else {
+            format!(
+                "({theorem} ({}) ({}))",
+                membership_proofs[0], membership_proofs[1]
+            )
+        };
+        push_unique_local_proof_step(
+            local_steps,
+            LocalProofStep {
+                name: format!("obj_{}_result", object.well_defined_obj_id.value()),
+                proposition: format!(
+                    "Litex.In {value} {}",
+                    self.render_obj_ir(result_set, context)?
+                ),
+                proof,
+            },
+        )
+    }
+
+    fn prepare_local_function_application_object(
+        &self,
+        context: &mut RenderContext,
+        object: &LitexToLeanWellDefinednessObjectIr,
+        local_steps: &mut Vec<LocalProofStep>,
+    ) -> Result<(), RuntimeError> {
+        let obj_id = object.well_defined_obj_id;
+        let LitexToLeanObjectIr::FunctionApplication(application) =
+            LitexToLeanObjectIr::lower(&object.source_object)
+                .map_err(|message| universal_error(&default_line_file(), message))?
+        else {
+            return Err(universal_error(
+                &default_line_file(),
+                "function WD object lowered to a non-application",
+            ));
+        };
+        let layer_index = application
+            .argument_layers
+            .len()
+            .checked_sub(1)
+            .ok_or_else(|| universal_error(&default_line_file(), "application has no layer"))?;
+        let Some(WellDefinedFunctionContract::StoredMembershipFact(contract_fact_id)) =
+            object.function_contracts.first()
+        else {
+            return Err(universal_error(
+                &default_line_file(),
+                "local named application has no exact function membership FactId",
+            ));
+        };
+        let binding = context
+            .function_bindings
+            .get(contract_fact_id)
+            .ok_or_else(|| {
+                universal_error(
+                    &default_line_file(),
+                    format!(
+                        "obj_{} cannot resolve function contract FactId {}",
+                        obj_id.value(),
+                        contract_fact_id.value()
+                    ),
+                )
+            })?;
+        let mut current_function = binding.function.clone();
+        for previous_layer in 0..layer_index {
+            let LitexToLeanObjectIr::FunctionSet { function: next } =
+                current_function.return_set.as_ref()
+            else {
+                return Err(universal_error(
+                    &default_line_file(),
+                    format!(
+                        "obj_{} retains layer {} after a non-function return",
+                        obj_id.value(),
+                        previous_layer + 2
+                    ),
+                ));
+            };
+            current_function = next.as_ref().clone();
+        }
+
+        let (head, current_membership) = if layer_index == 0 {
+            (
+                self.render_obj_ir(application.head.as_ref(), context)?,
+                binding.membership_proof_name.clone(),
+            )
+        } else {
+            let prefixes = object
+                .child_uses
+                .iter()
+                .filter(|child| {
+                    matches!(
+                        child.role,
+                        WellDefinedObjChildRole::FunctionPrefix { through_layer_index }
+                            if through_layer_index + 1 == layer_index
+                    )
+                })
+                .collect::<Vec<_>>();
+            if prefixes.len() != 1 {
+                return Err(universal_error(
+                    &default_line_file(),
+                    format!(
+                        "obj_{} layer {} has {} callable-prefix edges",
+                        obj_id.value(),
+                        layer_index + 1,
+                        prefixes.len()
+                    ),
+                ));
+            }
+            let prefix_id = prefixes[0].obj_id;
+            (
+                context
+                    .well_defined_object_names
+                    .get(&prefix_id)
+                    .cloned()
+                    .ok_or_else(|| {
+                        universal_error(
+                            &default_line_file(),
+                            format!(
+                                "obj_{} cannot resolve prefix obj_{}",
+                                obj_id.value(),
+                                prefix_id.value()
+                            ),
+                        )
+                    })?,
+                context
+                    .well_defined_result_membership_names
+                    .get(&prefix_id)
+                    .cloned()
+                    .ok_or_else(|| {
+                        universal_error(
+                            &default_line_file(),
+                            format!(
+                                "obj_{} prefix obj_{} has no local result proof",
+                                obj_id.value(),
+                                prefix_id.value()
+                            ),
+                        )
+                    })?,
+            )
+        };
+        let arguments = application.source_argument_layers[layer_index]
+            .iter()
+            .enumerate()
+            .map(|(argument_index, argument)| {
+                self.render_function_argument_child(
+                    object,
+                    layer_index,
+                    argument_index,
+                    argument,
+                    context,
+                )
+            })
+            .collect::<Result<Vec<_>, RuntimeError>>()?;
+        let requirements = self.render_application_requirements(
+            &application,
+            layer_index,
+            &current_function,
+            &arguments,
+            context,
+        )?;
+        let applicable_name = format!("obj_{}_applicable", obj_id.value());
+        push_unique_local_proof_step(
+            local_steps,
+            LocalProofStep {
+                name: applicable_name.clone(),
+                proposition: format!("Litex.Applicable ({head}) [{}]", arguments.join(", ")),
+                proof: format!("Litex.fnSetApplicable {current_membership} rfl ({requirements})"),
+            },
+        )?;
         context
-            .well_defined_fact_names
-            .extend(scope.well_defined_fact_names);
+            .well_defined_applicable_names
+            .insert(obj_id, applicable_name);
+
+        let value = format!("{head} [{}]", arguments.join(", "));
+        context
+            .well_defined_object_names
+            .insert(obj_id, format!("({value})"));
+        let mut result_context = context.clone();
+        for (parameter, argument) in current_function.parameters.iter().zip(arguments.iter()) {
+            result_context
+                .symbol_names
+                .insert(parameter.symbol_id, argument.clone());
+        }
+        let result_set =
+            self.render_obj_ir(current_function.return_set.as_ref(), &result_context)?;
+        let result_name = format!("obj_{}_result", obj_id.value());
+        push_unique_local_proof_step(
+            local_steps,
+            LocalProofStep {
+                name: result_name.clone(),
+                proposition: format!("Litex.In ({value}) {result_set}"),
+                proof: format!(
+                    "by simpa using (Litex.fnSetResult {current_membership} rfl ({requirements}))"
+                ),
+            },
+        )?;
+        context
+            .well_defined_result_membership_names
+            .insert(obj_id, result_name);
         Ok(())
     }
 
@@ -4036,6 +4750,9 @@ impl UniversalEmitter {
         let mut nested = context.clone();
         let mut names = binder_names.to_vec();
         let mut types = binder_types.to_vec();
+        let nested_depth = context.forall_depth.map_or(0, |depth| depth + 1);
+        nested.forall_depth = Some(nested_depth);
+        let mut assumption_index = 0;
         for group in forall.params_def_with_type.groups.iter() {
             for binding in group.params.iter() {
                 let name = lean_name(binding.name());
@@ -4043,7 +4760,8 @@ impl UniversalEmitter {
                 names.push(name.clone());
                 types.push("Litex.Object".to_string());
 
-                let proof_name = format!("litex_nested_param_fact_{}", binding.id().value());
+                assumption_index += 1;
+                let proof_name = format!("h_{nested_depth}_{assumption_index}");
                 let proof_type =
                     self.render_parameter_requirement(&name, &group.param_type, &nested)?;
                 names.push(proof_name.clone());
@@ -4232,7 +4950,7 @@ impl UniversalEmitter {
                             "real-set nonemptiness changed its target or retained unexpected premises",
                         ));
                     }
-                    Ok("Litex.BuiltinRules.realSetNonempty".to_string())
+                    Ok(rule_theorem_name("realSetNonempty"))
                 }
                 LitexToLeanProofRuleIr::ObjectIsSet => {
                     if !parameter_requirements.is_empty() || !premises.is_empty() {
@@ -4248,7 +4966,8 @@ impl UniversalEmitter {
                         ));
                     };
                     Ok(format!(
-                        "Litex.BuiltinRules.objectIsSet {}",
+                        "{} {}",
+                        rule_theorem_name("objectIsSet"),
                         self.render_obj(&sethood.set, context)?
                     ))
                 }
@@ -4918,7 +5637,7 @@ impl UniversalEmitter {
                 "closed comparison reflection currently requires natural numeral operands",
             )
         })?;
-        let equivalence = format!("Litex.BuiltinRules.{theorem} {left} {right}");
+        let equivalence = format!("{} {left} {right}", rule_theorem_name(theorem));
         if negated {
             Ok(format!(
                 "(by\n  exact (not_congr ({equivalence})).2 (by norm_num))"
@@ -4975,7 +5694,8 @@ impl UniversalEmitter {
             )
         })?;
         Ok(format!(
-            "(Litex.BuiltinRules.numeralInNPos {numeral} (by norm_num))"
+            "({} {numeral} (by norm_num))",
+            rule_theorem_name("numeralInNPos")
         ))
     }
 
@@ -5209,15 +5929,39 @@ impl UniversalEmitter {
                     format!("checked function replay names unemitted function `{source_name}`"),
                 )
             })?;
-        let application_ir = LitexToLeanObjectIr::lower(application_side)
+        let application_object_ir = LitexToLeanObjectIr::lower(application_side)
             .map_err(|message| universal_error(&proposition.line_file(), message))?;
-        if !matches!(application_ir, LitexToLeanObjectIr::FunctionApplication(_)) {
+        let LitexToLeanObjectIr::FunctionApplication(application_ir) = &application_object_ir
+        else {
             return Err(universal_error(
                 &proposition.line_file(),
                 "checked function replay retained a non-application side",
             ));
-        }
-        let application = self.render_obj_ir(&application_ir, context)?;
+        };
+        let object_id = context
+            .well_defined_object_ids
+            .get(&application_ir.source_occurrence_id)
+            .copied()
+            .ok_or_else(|| {
+                universal_error(
+                    &proposition.line_file(),
+                    "checked function replay has no exact application WellDefinedObjId",
+                )
+            })?;
+        let applicable = context
+            .well_defined_applicable_names
+            .get(&object_id)
+            .cloned()
+            .ok_or_else(|| {
+                universal_error(
+                    &proposition.line_file(),
+                    format!(
+                        "checked function replay has no local obj_{}_applicable proof",
+                        object_id.value()
+                    ),
+                )
+            })?;
+        let application = self.render_obj_ir(&application_object_ir, context)?;
         let other = self.render_obj(other_side, context)?;
         let target = if application_is_left {
             format!("{application} = {other}")
@@ -5232,21 +5976,21 @@ impl UniversalEmitter {
         }
         object_definition_names.sort();
         object_definition_names.dedup();
-        let mut simp_names = vec![
-            binding.theorem_name.clone(),
-            helpers.implementation_name.clone(),
-            helpers.body_name.clone(),
-        ];
+        let mut simp_names = vec![helpers.body_name.clone()];
         simp_names.extend(object_definition_names);
         simp_names.extend([
-            "Litex.functionObject_apply".to_string(),
             "Litex.arg".to_string(),
             "List.getD_cons_zero".to_string(),
             "List.getD_cons_succ".to_string(),
             "List.getD_nil".to_string(),
         ]);
         Ok(format!(
-            "(by\n  change {target}\n  simp only [{}])",
+            "(by\n  change {target}\n  rw [{}]\n  unfold {}\n  rw [Litex.functionObject_apply _ _ _ (by\n    simpa only [{}, {}] using {})]\n  simp only [{}])",
+            binding.theorem_name,
+            helpers.implementation_name,
+            binding.theorem_name,
+            helpers.implementation_name,
+            applicable,
             simp_names.join(", ")
         ))
     }
@@ -5512,7 +6256,8 @@ impl UniversalEmitter {
         }
         let source_proof = self.render_proof_term(&premises[0], context)?;
         Ok(format!(
-            "(Litex.BuiltinRules.notEqualSymmetry ({source_proof}))"
+            "({} ({source_proof}))",
+            rule_theorem_name("notEqualSymmetry")
         ))
     }
 
@@ -5565,7 +6310,8 @@ impl UniversalEmitter {
         }
         let source_proof = self.render_proof_term(&premises[0], context)?;
         Ok(format!(
-            "(Litex.BuiltinRules.positiveRealMembership {source_proof})"
+            "({} {source_proof})",
+            rule_theorem_name("positiveRealMembership")
         ))
     }
 
@@ -5649,27 +6395,19 @@ impl UniversalEmitter {
                 "real arithmetic closure targets a set other than R",
             ));
         }
-        let (left, right, theorem) = match (rule, &target.element) {
-            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(value)) => (
-                value.left.as_ref(),
-                value.right.as_ref(),
-                "Litex.BuiltinRules.realAddClosure",
-            ),
-            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(value)) => (
-                value.left.as_ref(),
-                value.right.as_ref(),
-                "Litex.BuiltinRules.realSubClosure",
-            ),
-            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(value)) => (
-                value.left.as_ref(),
-                value.right.as_ref(),
-                "Litex.BuiltinRules.realMulClosure",
-            ),
-            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(value)) => (
-                value.left.as_ref(),
-                value.right.as_ref(),
-                "Litex.BuiltinRules.realDivClosure",
-            ),
+        let (left, right, theorem_name) = match (rule, &target.element) {
+            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Add, Obj::Add(value)) => {
+                (value.left.as_ref(), value.right.as_ref(), "realAddClosure")
+            }
+            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(value)) => {
+                (value.left.as_ref(), value.right.as_ref(), "realSubClosure")
+            }
+            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(value)) => {
+                (value.left.as_ref(), value.right.as_ref(), "realMulClosure")
+            }
+            (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Div, Obj::Div(value)) => {
+                (value.left.as_ref(), value.right.as_ref(), "realDivClosure")
+            }
             (LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr::Pow, Obj::Pow(_)) => {
                 return Err(universal_error(
                     &proposition.line_file(),
@@ -5683,6 +6421,7 @@ impl UniversalEmitter {
                 ))
             }
         };
+        let theorem = rule_theorem_name(theorem_name);
         if premises.len() != 2 {
             return Err(universal_error(
                 &proposition.line_file(),
@@ -5787,24 +6526,21 @@ impl UniversalEmitter {
                 "complex arithmetic closure targets a set other than C",
             ));
         }
-        let (operator, theorem) = match rule {
-            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Add => (
-                LitexToLeanBuiltinObjectOperatorIr::Add,
-                "Litex.BuiltinRules.complexAddClosure",
-            ),
-            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Sub => (
-                LitexToLeanBuiltinObjectOperatorIr::Sub,
-                "Litex.BuiltinRules.complexSubClosure",
-            ),
-            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul => (
-                LitexToLeanBuiltinObjectOperatorIr::Mul,
-                "Litex.BuiltinRules.complexMulClosure",
-            ),
-            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Div => (
-                LitexToLeanBuiltinObjectOperatorIr::Div,
-                "Litex.BuiltinRules.complexDivClosure",
-            ),
+        let (operator, theorem_name) = match rule {
+            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Add => {
+                (LitexToLeanBuiltinObjectOperatorIr::Add, "complexAddClosure")
+            }
+            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Sub => {
+                (LitexToLeanBuiltinObjectOperatorIr::Sub, "complexSubClosure")
+            }
+            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Mul => {
+                (LitexToLeanBuiltinObjectOperatorIr::Mul, "complexMulClosure")
+            }
+            LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr::Div => {
+                (LitexToLeanBuiltinObjectOperatorIr::Div, "complexDivClosure")
+            }
         };
+        let theorem = rule_theorem_name(theorem_name);
         let target_ir = LitexToLeanObjectIr::lower(&target.element)
             .map_err(|message| universal_error(&proposition.line_file(), message))?;
         let LitexToLeanObjectIr::BuiltinApp {
@@ -6554,7 +7290,7 @@ impl UniversalEmitter {
                 )
             })?;
 
-        let mut pairwise_proofs = HashMap::new();
+        let mut pairwise_requirements = HashSet::new();
         for requirement in object.target_requirements.iter() {
             let WellDefinednessRequirementRole::ConstructorPairwiseDistinct {
                 left_index,
@@ -6568,7 +7304,7 @@ impl UniversalEmitter {
             };
             if left_index >= right_index
                 || right_index >= items.len()
-                || pairwise_proofs.contains_key(&(left_index, right_index))
+                || !pairwise_requirements.insert((left_index, right_index))
             {
                 return Err(universal_error(
                     &requirement.expected_proposition.line_file(),
@@ -6580,42 +7316,24 @@ impl UniversalEmitter {
                 source.list[left_index].as_ref(),
                 source.list[right_index].as_ref(),
             )?;
-            let proof_name = context
-                .well_defined_fact_names
-                .get(&requirement.well_defined_fact_id)
-                .cloned()
-                .ok_or_else(|| {
-                    universal_error(
-                        &requirement.expected_proposition.line_file(),
-                        format!(
-                            "WellDefinedFactId {} has no named exact Lean proof",
-                            requirement.well_defined_fact_id.value()
-                        ),
-                    )
-                })?;
-            pairwise_proofs.insert((left_index, right_index), proof_name);
         }
         let expected_pairs = items.len().saturating_mul(items.len().saturating_sub(1)) / 2;
-        if pairwise_proofs.len() != expected_pairs {
+        if pairwise_requirements.len() != expected_pairs {
             return Err(universal_error(
                 &default_line_file(),
                 format!(
                     "proof-carrying list set requires {expected_pairs} ordered pairwise-distinctness proofs, but retained {}",
-                    pairwise_proofs.len()
+                    pairwise_requirements.len()
                 ),
             ));
         }
-        let pairwise_proof = render_list_set_pairwise_proof(items.len(), &pairwise_proofs)?;
-        Ok(format!(
-            "(Litex.listSet [{}] ({pairwise_proof}))",
-            rendered_items.join(", ")
-        ))
+        Ok(format!("(Litex.listSet [{}])", rendered_items.join(", ")))
     }
 
     fn render_builtin_application(
         &self,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-        semantic_key: &str,
+        _source_occurrence_id: Option<SourceObjectOccurrenceId>,
+        _semantic_key: &str,
         operator: LitexToLeanBuiltinObjectOperatorIr,
         arguments: &[LitexToLeanObjectIr],
         context: &RenderContext,
@@ -6659,189 +7377,11 @@ impl UniversalEmitter {
                 ),
             ));
         }
-        if source_occurrence_id.is_none()
-            && is_closed_synthetic_complex_application(operator, arguments)
-        {
-            let rendered_arguments = arguments
-                .iter()
-                .map(|argument| self.render_obj_ir(argument, context))
-                .collect::<Result<Vec<_>, RuntimeError>>()?;
-            let membership_proofs = arguments
-                .iter()
-                .map(|argument| {
-                    let LitexToLeanObjectIr::Number { normalized_value } = argument else {
-                        unreachable!("closed synthetic arithmetic was checked numeral-only")
-                    };
-                    Ok(format!(
-                        "(Litex.BuiltinRules.numeralInC {normalized_value})"
-                    ))
-                })
-                .collect::<Result<Vec<_>, RuntimeError>>()?;
-            return Ok(format!(
-                "({name} {} {} {} {})",
-                rendered_arguments[0],
-                rendered_arguments[1],
-                membership_proofs[0],
-                membership_proofs[1]
-            ));
-        }
-        match operator {
-            LitexToLeanBuiltinObjectOperatorIr::Add
-            | LitexToLeanBuiltinObjectOperatorIr::Sub
-            | LitexToLeanBuiltinObjectOperatorIr::Mul
-            | LitexToLeanBuiltinObjectOperatorIr::Div => {
-                let operand_names = self.resolve_builtin_argument_object_names(
-                    source_occurrence_id,
-                    semantic_key,
-                    operator,
-                    arguments,
-                    context,
-                )?;
-                let membership_proofs = self.resolve_builtin_argument_membership_proofs(
-                    source_occurrence_id,
-                    semantic_key,
-                    operator,
-                    arguments,
-                    context,
-                )?;
-                if operator == LitexToLeanBuiltinObjectOperatorIr::Div {
-                    let nonzero_proof = self.resolve_builtin_argument_nonzero_proof(
-                        source_occurrence_id,
-                        semantic_key,
-                        operator,
-                        arguments,
-                        context,
-                    )?;
-                    Ok(format!(
-                        "({name} {} {} {} {} {nonzero_proof})",
-                        operand_names[0],
-                        operand_names[1],
-                        membership_proofs[0],
-                        membership_proofs[1]
-                    ))
-                } else {
-                    Ok(format!(
-                        "({name} {} {} {} {})",
-                        operand_names[0],
-                        operand_names[1],
-                        membership_proofs[0],
-                        membership_proofs[1]
-                    ))
-                }
-            }
-            _ => unreachable!("the supported operator match above is exhaustive"),
-        }
-    }
-
-    fn resolve_builtin_argument_object_names(
-        &self,
-        source_occurrence_id: Option<SourceObjectOccurrenceId>,
-        semantic_key: &str,
-        operator: LitexToLeanBuiltinObjectOperatorIr,
-        arguments: &[LitexToLeanObjectIr],
-        context: &RenderContext,
-    ) -> Result<[String; 2], RuntimeError> {
-        let source_occurrence_id = source_occurrence_id.ok_or_else(|| {
-            universal_error(
-                &default_line_file(),
-                format!("proof-carrying operator `{operator:?}` has no source occurrence ID"),
-            )
-        })?;
-        let proof_id = context
-            .well_defined_object_ids
-            .get(&source_occurrence_id)
-            .copied()
-            .ok_or_else(|| {
-                universal_error(
-                    &default_line_file(),
-                    format!("proof-carrying operator `{operator:?}` has no exact WellDefinedObjId"),
-                )
-            })?;
-        let parent = context
-            .well_definedness
-            .objects
-            .iter()
-            .find(|object| object.well_defined_obj_id == proof_id)
-            .ok_or_else(|| {
-                universal_error(
-                    &default_line_file(),
-                    format!("WellDefinedObjId {} is unavailable", proof_id.value()),
-                )
-            })?;
-        if obj_equality_key(&parent.source_object) != semantic_key {
-            return Err(universal_error(
-                &default_line_file(),
-                format!(
-                    "WellDefinedObjId {} changed its source object before operand rendering",
-                    proof_id.value()
-                ),
-            ));
-        }
-        let (_, source_arguments) = arithmetic_source_operator_and_arguments(&parent.source_object)
-            .ok_or_else(|| {
-                universal_error(
-                    &default_line_file(),
-                    "proof-carrying arithmetic parent is not arithmetic",
-                )
-            })?;
-        let mut resolved: [Option<String>; 2] = [None, None];
-        for child in parent.child_uses.iter() {
-            let WellDefinedObjChildRole::BuiltinArgument { argument_index } = child.role else {
-                continue;
-            };
-            if argument_index >= resolved.len() || resolved[argument_index].is_some() {
-                return Err(universal_error(
-                    &default_line_file(),
-                    "proof-carrying arithmetic retained a duplicate or out-of-range object child",
-                ));
-            }
-            let child_object = context
-                .well_definedness
-                .objects
-                .iter()
-                .find(|object| object.well_defined_obj_id == child.obj_id)
-                .ok_or_else(|| {
-                    universal_error(
-                        &default_line_file(),
-                        "arithmetic object child is absent from the frozen certificate",
-                    )
-                })?;
-            if obj_equality_key(&child_object.source_object)
-                != obj_equality_key(source_arguments[argument_index])
-            {
-                return Err(universal_error(
-                    &default_line_file(),
-                    "arithmetic object child changed its ordered source operand",
-                ));
-            }
-            let expected = LitexToLeanObjectIr::lower(source_arguments[argument_index])
-                .map_err(|message| universal_error(&default_line_file(), message))?;
-            if expected != arguments[argument_index] {
-                return Err(universal_error(
-                    &default_line_file(),
-                    "arithmetic object IR changed its ordered source operand",
-                ));
-            }
-            resolved[argument_index] = Some(
-                if let Some(name) = context.well_defined_object_names.get(&child.obj_id) {
-                    name.clone()
-                } else {
-                    // A WD fact establishing the parent can precede the
-                    // child's `obj_N` declaration in Lean. Such an audit fact
-                    // replays the same certified child term inline; once the
-                    // object declarations are emitted, parent `obj_N`
-                    // definitions consume the child aliases directly.
-                    self.render_obj_ir(&arguments[argument_index], context)?
-                },
-            );
-        }
-        let [Some(left), Some(right)] = resolved else {
-            return Err(universal_error(
-                &default_line_file(),
-                "proof-carrying arithmetic requires exactly two ordered object children",
-            ));
-        };
-        Ok([left, right])
+        Ok(format!(
+            "({name} {} {})",
+            self.render_obj_ir(&arguments[0], context)?,
+            self.render_obj_ir(&arguments[1], context)?
+        ))
     }
 
     fn resolve_builtin_argument_membership_proofs(
@@ -6861,7 +7401,8 @@ impl UniversalEmitter {
                     unreachable!("closed synthetic arithmetic was checked numeral-only")
                 };
                 proofs.push(format!(
-                    "(Litex.BuiltinRules.numeralInC {normalized_value})"
+                    "({} {normalized_value})",
+                    rule_theorem_name("numeralInC")
                 ));
             }
             return Ok([proofs.remove(0), proofs.remove(0)]);
@@ -7150,9 +7691,22 @@ impl UniversalEmitter {
         application: &LitexToLeanFunctionApplicationIr,
         context: &RenderContext,
     ) -> Result<String, RuntimeError> {
-        let value = self
-            .render_function_application_with_result(application, context, None)?
-            .value;
+        if application.argument_layers.is_empty()
+            || application.argument_layers.len() != application.source_argument_layers.len()
+        {
+            return Err(universal_error(
+                &default_line_file(),
+                "function application IR has empty or mismatched source layers",
+            ));
+        }
+        let mut value = self.render_obj_ir(application.head.as_ref(), context)?;
+        for arguments in application.argument_layers.iter() {
+            let rendered_arguments = arguments
+                .iter()
+                .map(|argument| self.render_obj_ir(argument, context))
+                .collect::<Result<Vec<_>, RuntimeError>>()?;
+            value = format!("({value}) [{}]", rendered_arguments.join(", "));
+        }
         Ok(format!("({value})"))
     }
 
@@ -7257,34 +7811,17 @@ impl UniversalEmitter {
                 &rendered_arguments,
                 context,
             )?;
-            let applicable = if application.argument_layers.len() == 1 && layer_index == 0 {
-                context
-                    .well_defined_applicable_names
-                    .get(&obj_id)
-                    .cloned()
-                    .unwrap_or_else(|| {
-                        format!(
-                            "Litex.fnSetApplicable {current_membership} rfl ({requirement_proof})"
-                        )
-                    })
-            } else {
-                format!("Litex.fnSetApplicable {current_membership} rfl ({requirement_proof})")
-            };
             let rendered_head = if layer_index == 0 {
                 current_head.clone()
             } else {
                 format!("({current_head})")
             };
-            let applied = format!(
-                "{rendered_head} [{}] ({applicable})",
-                rendered_arguments.join(", ")
-            );
+            let applied = format!("{rendered_head} [{}]", rendered_arguments.join(", "));
             let result_membership = format!(
                 "(by simpa using (Litex.fnSetResult {current_membership} rfl ({requirement_proof})))"
             );
             if layer_index + 1 == application.argument_layers.len() {
                 return Ok(RenderedFunctionApplication {
-                    value: applied,
                     result_membership,
                     contract_fact_id,
                     function: initial_function,
@@ -7420,6 +7957,81 @@ impl UniversalEmitter {
     }
 }
 
+fn merge_local_well_defined_context(
+    target: &mut RenderContext,
+    source: &RenderContext,
+) -> Result<(), RuntimeError> {
+    merge_well_defined_object_ids(target, source)?;
+    target
+        .well_defined_fact_names
+        .extend(source.well_defined_fact_names.clone());
+    target
+        .well_defined_object_names
+        .extend(source.well_defined_object_names.clone());
+    target
+        .well_defined_applicable_names
+        .extend(source.well_defined_applicable_names.clone());
+    target
+        .well_defined_result_membership_names
+        .extend(source.well_defined_result_membership_names.clone());
+    Ok(())
+}
+
+fn replace_local_proof_name(context: &mut RenderContext, name: &str, replacement: &str) {
+    for proof in context.well_defined_fact_names.values_mut() {
+        if proof == name {
+            *proof = replacement.to_string();
+        }
+    }
+    for proof in context.well_defined_applicable_names.values_mut() {
+        if proof == name {
+            *proof = replacement.to_string();
+        }
+    }
+    for proof in context.well_defined_result_membership_names.values_mut() {
+        if proof == name {
+            *proof = replacement.to_string();
+        }
+    }
+}
+
+fn well_defined_fact_name(context: &RenderContext, fact_id: WellDefinedFactId) -> String {
+    let environment_depth = context.forall_depth.unwrap_or(0);
+    format!("wd_{environment_depth}_{}", fact_id.value())
+}
+
+fn push_unique_local_proof_step(
+    local_steps: &mut Vec<LocalProofStep>,
+    step: LocalProofStep,
+) -> Result<(), RuntimeError> {
+    if let Some(existing) = local_steps
+        .iter()
+        .find(|existing| existing.name == step.name)
+    {
+        if existing.proposition == step.proposition && existing.proof == step.proof {
+            return Ok(());
+        }
+        return Err(universal_error(
+            &default_line_file(),
+            format!(
+                "local Lean proof name `{}` was assigned two different WD certificates",
+                step.name
+            ),
+        ));
+    }
+    local_steps.push(step);
+    Ok(())
+}
+
+fn render_local_proof_step(step: &LocalProofStep) -> String {
+    let proof = format!("exact ({})", step.proof)
+        .lines()
+        .map(|line| format!("    {line}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+    format!("  have {} : {} := by\n{proof}", step.name, step.proposition)
+}
+
 fn projection_source_index(
     source: &ForallFact,
     projection: &LitexToLeanFactIr,
@@ -7519,6 +8131,40 @@ fn add_well_defined_object_proof_closure(
         pending_object_ids.extend(object.child_uses.iter().map(|child| child.obj_id));
     }
     Ok(())
+}
+
+fn well_defined_closure_uses_binder_scope(
+    well_definedness: &LitexToLeanWellDefinednessCertificateIr,
+    initial_object_ids: &HashSet<WellDefinedObjId>,
+) -> Result<bool, RuntimeError> {
+    let objects_by_id = well_definedness
+        .objects
+        .iter()
+        .map(|object| (object.well_defined_obj_id, object))
+        .collect::<HashMap<_, _>>();
+    let mut pending_object_ids = initial_object_ids.iter().copied().collect::<Vec<_>>();
+    let mut selected_object_ids = HashSet::new();
+    let mut selected_fact_ids = HashSet::new();
+    add_well_defined_object_proof_closure(
+        &objects_by_id,
+        &mut pending_object_ids,
+        &mut selected_object_ids,
+        &mut selected_fact_ids,
+    )?;
+
+    if selected_object_ids.iter().any(|object_id| {
+        let object = objects_by_id
+            .get(object_id)
+            .expect("selected WD object must exist in the frozen certificate");
+        !object.ambient_binder_scope_ids.is_empty() || object.owned_binder_scope_id.is_some()
+    }) {
+        return Ok(true);
+    }
+
+    Ok(well_definedness.facts.iter().any(|fact| {
+        selected_fact_ids.contains(&fact.well_defined_fact_id)
+            && !fact.ambient_binder_scope_ids.is_empty()
+    }))
 }
 
 fn is_proof_carrying_object(object: &Obj) -> bool {
@@ -8082,74 +8728,6 @@ fn validate_list_set_pairwise_distinct(
     Ok(())
 }
 
-fn render_list_set_pairwise_proof(
-    item_count: usize,
-    pairwise_proofs: &HashMap<(usize, usize), String>,
-) -> Result<String, RuntimeError> {
-    let mut lines = vec!["by".to_string()];
-    if item_count == 0 {
-        lines.push("  exact List.Pairwise.nil".to_string());
-        return Ok(lines.join("\n"));
-    }
-
-    lines.push("  apply List.Pairwise.cons".to_string());
-    let mut indent = 2;
-    for left_index in 0..item_count {
-        let prefix = " ".repeat(indent);
-        lines.push(format!("{prefix}· intro x hx"));
-        let tail_count = item_count - left_index - 1;
-        if tail_count == 0 {
-            lines.push(format!("{prefix}  simp only [List.not_mem_nil] at hx"));
-        } else {
-            lines.push(format!(
-                "{prefix}  simp only [List.mem_cons, List.not_mem_nil, or_false] at hx"
-            ));
-            if tail_count == 1 {
-                lines.push(format!("{prefix}  subst x"));
-                let proof = pairwise_proofs
-                    .get(&(left_index, left_index + 1))
-                    .ok_or_else(|| {
-                        universal_error(
-                            &default_line_file(),
-                            "list-set pairwise proof matrix is missing an adjacent pair",
-                        )
-                    })?;
-                lines.push(format!("{prefix}  exact {proof}"));
-            } else {
-                lines.push(format!(
-                    "{prefix}  rcases hx with ({})",
-                    (0..tail_count)
-                        .map(|index| format!("hx_{index}"))
-                        .collect::<Vec<_>>()
-                        .join(" | ")
-                ));
-                for right_index in (left_index + 1)..item_count {
-                    let proof = pairwise_proofs
-                        .get(&(left_index, right_index))
-                        .ok_or_else(|| {
-                            universal_error(
-                                &default_line_file(),
-                                format!(
-                                    "list-set pairwise proof matrix is missing pair ({left_index}, {right_index})"
-                                ),
-                            )
-                        })?;
-                    lines.push(format!("{prefix}  · subst x"));
-                    lines.push(format!("{prefix}    exact {proof}"));
-                }
-            }
-        }
-
-        if left_index + 1 == item_count {
-            lines.push(format!("{prefix}· exact List.Pairwise.nil"));
-        } else {
-            lines.push(format!("{prefix}· apply List.Pairwise.cons"));
-            indent += 2;
-        }
-    }
-    Ok(lines.join("\n"))
-}
-
 fn validate_divisor_nonzero(
     proposition: &Fact,
     expected_divisor: &Obj,
@@ -8174,7 +8752,7 @@ fn validate_divisor_nonzero(
 fn native_standard_set_projection_path(
     source: &StandardSet,
     target: &StandardSet,
-) -> Option<Vec<&'static str>> {
+) -> Option<Vec<String>> {
     fn rank(set: &StandardSet) -> Option<usize> {
         match set {
             StandardSet::N => Some(0),
@@ -8187,17 +8765,22 @@ fn native_standard_set_projection_path(
     }
 
     const ADJACENT_THEOREMS: [&str; 4] = [
-        "Litex.BuiltinRules.naturalInInteger",
-        "Litex.BuiltinRules.integerInRational",
-        "Litex.BuiltinRules.rationalInReal",
-        "Litex.BuiltinRules.realInComplex",
+        "naturalInInteger",
+        "integerInRational",
+        "rationalInReal",
+        "realInComplex",
     ];
     let source_rank = rank(source)?;
     let target_rank = rank(target)?;
     if source_rank >= target_rank {
         return None;
     }
-    Some(ADJACENT_THEOREMS[source_rank..target_rank].to_vec())
+    Some(
+        ADJACENT_THEOREMS[source_rank..target_rank]
+            .iter()
+            .map(|theorem_name| rule_theorem_name(theorem_name))
+            .collect(),
+    )
 }
 
 fn render_closed_standard_membership(
@@ -8228,30 +8811,31 @@ fn render_closed_standard_membership_object(
     context: &RenderContext,
 ) -> Result<String, RuntimeError> {
     if matches!(set, Obj::StandardSet(StandardSet::R)) {
-        let (left, right, theorem) = match element {
+        let (left, right, theorem_name) = match element {
             Obj::Add(value) => (
                 Some(value.left.as_ref()),
                 Some(value.right.as_ref()),
-                "Litex.BuiltinRules.realAddClosure",
+                "realAddClosure",
             ),
             Obj::Sub(value) => (
                 Some(value.left.as_ref()),
                 Some(value.right.as_ref()),
-                "Litex.BuiltinRules.realSubClosure",
+                "realSubClosure",
             ),
             Obj::Mul(value) => (
                 Some(value.left.as_ref()),
                 Some(value.right.as_ref()),
-                "Litex.BuiltinRules.realMulClosure",
+                "realMulClosure",
             ),
             Obj::Div(value) => (
                 Some(value.left.as_ref()),
                 Some(value.right.as_ref()),
-                "Litex.BuiltinRules.realDivClosure",
+                "realDivClosure",
             ),
             _ => (None, None, ""),
         };
         if let (Some(left), Some(right)) = (left, right) {
+            let theorem = rule_theorem_name(theorem_name);
             let left_real =
                 render_closed_standard_membership_object(emitter, left, set, line_file, context)?;
             let right_real =
@@ -8322,12 +8906,12 @@ fn render_closed_standard_membership_object(
             "closed standard membership proof targets a nonstandard set",
         ));
     };
-    let theorem = match set {
-        StandardSet::N => "Litex.BuiltinRules.numeralInN",
-        StandardSet::Z => "Litex.BuiltinRules.numeralInZ",
-        StandardSet::Q => "Litex.BuiltinRules.numeralInQ",
-        StandardSet::R => "Litex.BuiltinRules.numeralInR",
-        StandardSet::C => "Litex.BuiltinRules.numeralInC",
+    let theorem_name = match set {
+        StandardSet::N => "numeralInN",
+        StandardSet::Z => "numeralInZ",
+        StandardSet::Q => "numeralInQ",
+        StandardSet::R => "numeralInR",
+        StandardSet::C => "numeralInC",
         _ => {
             return Err(universal_error(
                 line_file,
@@ -8335,6 +8919,7 @@ fn render_closed_standard_membership_object(
             ))
         }
     };
+    let theorem = rule_theorem_name(theorem_name);
     Ok(format!("{} {}", theorem, number.normalized_value))
 }
 
@@ -8743,12 +9328,8 @@ mod tests {
 "#;
             let output = compile_to_lean_from_source(source, "universal-object-tracer.lit")
                 .expect("the universal-object tracer should compile");
-            assert!(
-                output.starts_with(
-                    "import Litex.BuiltinRules\n\nexample : Litex.abiVersion = 8 := rfl\n"
-                ),
-                "{output}"
-            );
+            assert!(output.starts_with("import Litex.Rules\n\n"), "{output}");
+            assert!(!output.contains("Litex.abiVersion"), "{output}");
             assert!(!output.contains("import Mathlib"), "{output}");
             assert!(!output.contains("axiom Object : Type"), "{output}");
             assert!(!output.contains("LitexObject"), "{output}");
@@ -8758,19 +9339,65 @@ mod tests {
                     && output.contains("Litex.In a Litex.R"),
                 "{output}"
             );
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(output.contains("\n  have wd_0_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
             assert!(
-                output.contains("noncomputable def obj_") && output.contains("_applicable"),
-                "{output}"
-            );
-            assert!(
-                output.contains("theorem well_defined_fact_2")
-                    && output.contains("theorem well_defined_fact_3")
-                    && output.contains("well_defined_fact_3"),
+                output.contains("\n  have obj_") && output.contains("_applicable :"),
                 "{output}"
             );
             assert!(!output.contains("Set ℝ"), "{output}");
             assert!(!output.contains("(a : ℂ)"), "{output}");
             assert!(!output.contains("downcast"), "{output}");
+        });
+    }
+
+    #[test]
+    fn well_defined_object_dag_stays_inside_its_owning_forall_scope() {
+        run_with_large_stack(|| {
+            let output = compile_to_lean_from_source(
+                scoped_nested_application_source(),
+                "well-defined-object-scope.lit",
+            )
+            .expect("the scoped nested-application tracer should compile");
+
+            assert_eq!(output.matches("\ntheorem fact").count(), 1, "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\ntheorem obj_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+
+            let intro = output.find("\n  intro ").expect("forall intro");
+            let inner_g_fact = output.find("\n  have wd_0_7").expect("g argument WD fact");
+            let inner_g_applicable = output
+                .find("\n  have obj_44_applicable")
+                .expect("g application proof");
+            let inner_g_result = output
+                .find("\n  have obj_44_result")
+                .expect("g result membership");
+            let inner_t_fact = output.find("\n  have wd_0_8").expect("t argument WD fact");
+            let inner_t_applicable = output
+                .find("\n  have obj_45_applicable")
+                .expect("t application proof");
+            let inner_t_result = output
+                .find("\n  have obj_45_result")
+                .expect("t result membership");
+            let outer_applicable = output
+                .find("\n  have obj_46_applicable")
+                .expect("outer application proof");
+            let conclusion = output.rfind("\n  exact rfl").expect("source proof");
+            assert!(
+                intro < inner_g_fact
+                    && inner_g_fact < inner_g_applicable
+                    && inner_g_applicable < inner_g_result
+                    && inner_g_result < inner_t_fact
+                    && inner_t_fact < inner_t_applicable
+                    && inner_t_applicable < inner_t_result
+                    && inner_t_result < outer_applicable
+                    && outer_applicable < conclusion,
+                "{output}"
+            );
+            assert!(!output.contains("well_defined_fact_"), "{output}");
         });
     }
 
@@ -8856,7 +9483,11 @@ mod tests {
                 "{output}"
             );
             assert!(
-                output.contains("Litex.BuiltinRules.positiveRealMembership litex_param_fact_1"),
+                output.contains("Litex.Rules.positiveRealMembership h_0_1"),
+                "{output}"
+            );
+            assert!(
+                !output.contains("litex_h_") && !output.contains("litex_param_fact_"),
                 "{output}"
             );
             assert!(output.contains("exact litex_inferred_fact_1"), "{output}");
@@ -9389,10 +10020,7 @@ S = S
                 .expect("a set-builder definition should compile with a local binder");
             assert!(output.contains("Litex.setBuilder Litex.R"), "{output}");
             assert!(output.contains("fun litex_set_builder_"), "{output}");
-            assert!(
-                output.contains("Litex.BuiltinRules.objectIsSet"),
-                "{output}"
-            );
+            assert!(output.contains("Litex.Rules.objectIsSet"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
 
             let mut runtime = Runtime::new();
@@ -9464,7 +10092,15 @@ id(1) = 1
             );
             assert!(output.contains("def litex_id_body"), "{output}");
             assert!(output.contains("theorem litex_id_closed"), "{output}");
-            assert!(output.contains("Litex.functionObject"), "{output}");
+            assert!(
+                output.contains("Litex.functionObject litex_id_spec litex_id_body"),
+                "{output}"
+            );
+            assert!(
+                !output
+                    .contains("Litex.functionObject litex_id_spec litex_id_body litex_id_closed"),
+                "{output}"
+            );
             assert!(output.contains("Litex.functionObjectInFnSet"), "{output}");
             assert!(output.contains("_applicable"), "{output}");
             assert!(output.contains("_result"), "{output}");
@@ -9532,15 +10168,17 @@ id(1) = 1
     }
 
     #[test]
-    fn named_function_replays_proof_carrying_compound_body() {
+    fn named_function_replays_compound_body_wd_inside_its_closed_proof() {
         run_with_large_stack(|| {
             let source = r#"have fn inc(x R) R = x + 1
 inc(1) = 1 + 1
 "#;
             let output = compile_to_lean_from_source(source, "named-function-compound-body.lit")
-                .expect("a named function must replay its proof-carrying arithmetic body");
-            assert!(output.contains("theorem well_defined_fact_"), "{output}");
-            assert!(output.contains("noncomputable def obj_"), "{output}");
+                .expect("a named function must replay its arithmetic body WD locally");
+            assert!(output.contains("\n  have wd_0_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
             assert!(output.contains("Litex.add"), "{output}");
             assert!(output.contains("Litex.functionObject_apply"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
@@ -9559,7 +10197,10 @@ forall a R:
             let output = compile_to_lean_from_source(source, "named-function-partial-body.lit")
                 .expect("a named function must pass its retained domain proof to division");
             assert!(output.contains("Litex.div"), "{output}");
-            assert!(output.contains("well_defined_fact_"), "{output}");
+            assert!(output.contains("\n  have wd_0_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
             assert!(output.contains("litex_function_requirements"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
         });
@@ -9717,7 +10358,7 @@ q = q
             assert!(output.contains("Litex.tupleObject_at"), "{output}");
             assert!(output.contains("theorem q_dimension_positive"), "{output}");
             assert!(
-                output.contains("Litex.BuiltinRules.numeralInNPos 2 (by norm_num)"),
+                output.contains("Litex.Rules.numeralInNPos 2 (by norm_num)"),
                 "{output}"
             );
             assert!(!output.contains("axiom q"), "{output}");
@@ -9914,16 +10555,16 @@ into_builder(1) = 1
             let output = emit_lean_from_litex_to_lean_ir(&ir)
                 .expect("nested applications should compile through object aliases");
             assert!(
-                output.contains("_applicable : ∀") && output.contains("Litex.Applicable"),
+                output.contains("_applicable : Litex.Applicable"),
                 "{output}"
             );
             for obj_id in [child_ids[0], child_ids[1], outer_id] {
                 assert_eq!(
                     output
-                        .matches(&format!("noncomputable def obj_{} ", obj_id.value()))
+                        .matches(&format!("have obj_{}_applicable", obj_id.value()))
                         .count(),
                     1,
-                    "selected WellDefinedObjId {} must have exactly one Lean definition\n{output}",
+                    "selected WellDefinedObjId {} must have exactly one local applicability proof\n{output}",
                     obj_id.value()
                 );
             }
@@ -9931,13 +10572,17 @@ into_builder(1) = 1
                 .rsplit_once("theorem fact")
                 .map(|(_, theorem)| theorem)
                 .expect("emitted tracer must end with its source fact theorem");
+            let source_theorem_type = source_theorem
+                .split_once(":=\nby")
+                .map(|(theorem_type, _)| theorem_type)
+                .expect("source theorem must separate its type from its proof");
             assert_eq!(
-                source_theorem
-                    .matches(&format!("(obj_{} ", outer_id.value()))
-                    .count(),
+                source_theorem_type.matches("f [(g [a]), (t [b])]").count(),
                 2,
-                "the two source occurrences must reuse the same fixed outer object\n{output}"
+                "the two source occurrences must render the same proof-free outer object\n{output}"
             );
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
             assert!(!output.contains("well_defined_object_"), "{output}");
         });
     }
@@ -10062,7 +10707,7 @@ into_builder(1) = 1
             );
             assert!(
                 output.contains(&format!(
-                    "fact{} 1 (Litex.BuiltinRules.numeralInR 1)",
+                    "fact{} 1 (Litex.Rules.numeralInR 1)",
                     trusted_fact_id.value()
                 )),
                 "{output}"
@@ -10268,7 +10913,7 @@ $is_zero(0)
             assert!(
                 output.contains("theorem fact1 : Litex.In 1 Litex.N")
                     && output.contains("theorem fact2 : Litex.Le 0 1")
-                    && output.contains("Litex.BuiltinRules.numeralLe 0 1"),
+                    && output.contains("Litex.Rules.numeralLe 0 1"),
                 "{output}"
             );
         });
@@ -10463,10 +11108,7 @@ by def $is_zero(named_zero)
 "#;
             let output = compile_to_lean_from_source(source, "builtin-not-equal-symmetry.lit")
                 .expect("the checked builtin certificate should compile");
-            assert!(
-                output.contains("Litex.BuiltinRules.notEqualSymmetry"),
-                "{output}"
-            );
+            assert!(output.contains("Litex.Rules.notEqualSymmetry"), "{output}");
             assert!(!output.contains("theorem notEqualSymmetry"), "{output}");
             assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
         });
@@ -10488,7 +11130,7 @@ forall a, b, c set:
 "#;
             let output = compile_to_lean_from_source(source, "known-equality-path.lit")
                 .expect("known equality symmetry and transitivity should compile");
-            assert!(output.contains("Eq.symm (litex_domain_fact_1)"), "{output}");
+            assert!(output.contains("Eq.symm (h_0_3)"), "{output}");
             assert!(output.contains("Eq.trans"), "{output}");
             assert!(!output.contains("same known equality class"), "{output}");
         });
@@ -10568,20 +11210,22 @@ forall g fn(x R) fn(y R) R:
 "#;
             let output = compile_to_lean_from_source(source, "exact-application-layers.lit")
                 .expect("one-layer and nested applications should compile");
-            assert!(output.contains("f [obj_"), "{output}");
-            assert!(output.contains("g [obj_"), "{output}");
-            assert!(output.contains(") [obj_"), "{output}");
+            assert!(output.contains("f [1, 2, 3]"), "{output}");
+            assert!(output.contains("(g [1]) [2]"), "{output}");
             assert!(output.contains("Litex.fnSetResult"), "{output}");
             assert!(
                 output.matches("_result :").count() >= 3
-                    && output.contains("Litex.Applicable (obj_"),
+                    && output.contains("Litex.Applicable (f)")
+                    && output.contains("Litex.Applicable ((g [1]))"),
                 "layered application must retain a named prefix result theorem\n{output}"
             );
             assert!(
-                output.contains("Exists.intro ((well_defined_fact_")
-                    && output.matches("theorem well_defined_fact_").count() >= 5,
+                output.contains("Exists.intro (wd_0_") && output.matches("have wd_0_").count() >= 5,
                 "{output}"
             );
+            assert!(!output.contains("well_defined_fact_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
         });
     }
 
@@ -10611,46 +11255,126 @@ forall g fn(x R) fn(y R) R:
             let output = compile_to_lean_from_source(source, "arithmetic-forall-tracer.lit")
                 .expect("subtraction, nested forall, and exact WD evidence should compile");
             assert!(output.contains("Litex.sub"), "{output}");
-            assert!(output.contains("Litex.BuiltinRules"), "{output}");
-            assert!(output.contains("well_defined_fact_"), "{output}");
+            assert!(output.contains("Litex.Rules"), "{output}");
+            assert!(output.contains("wd_0_"), "{output}");
+            assert!(output.contains("wd_1_"), "{output}");
+            assert!(output.contains("\n  have litex_scope_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
+            assert!(output.contains("h_0_1"), "{output}");
+            assert!(output.contains("h_0_2"), "{output}");
+            assert!(output.contains("h_1_1"), "{output}");
+            assert!(!output.contains("litex_h_"), "{output}");
+            assert!(!output.contains("litex_nh_"), "{output}");
+            assert!(!output.contains("litex_domain_fact_"), "{output}");
             assert!(!output.contains("(y : ℝ)"), "{output}");
         });
     }
 
     #[test]
-    fn proof_carrying_arithmetic_replays_well_defined_fact_ids() {
+    fn first_forall_in_a_definition_starts_at_depth_zero() {
+        run_with_large_stack(|| {
+            let source = r#"prop has_self_equality(x R):
+    forall y R:
+        x = x
+"#;
+            let output = compile_to_lean_from_source(source, "definition-forall-depth.lit")
+                .expect("the first forall in a definition should compile at depth zero");
+            assert!(output.contains("(y : Litex.Object) (h_0_1 :"), "{output}");
+            assert!(!output.contains("h_1_1"), "{output}");
+        });
+    }
+
+    #[test]
+    fn arithmetic_denotation_is_proof_free_and_wd_replays_locally() {
         run_with_large_stack(|| {
             let source = include_str!(
                 "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit"
             );
             let output = compile_to_lean_from_source(source, "proof-carrying-arithmetic.lit")
-                .expect("proof-carrying +, -, *, and / should compile from exact WD evidence");
+                .expect("+, -, *, and / should compile from exact local WD evidence");
+            assert!(output.contains("Litex.Rules.complexAddClosure"), "{output}");
+            assert!(output.contains("Litex.Rules.complexSubClosure"), "{output}");
+            assert!(output.contains("Litex.Rules.complexMulClosure"), "{output}");
+            assert!(output.contains("Litex.Rules.complexDivClosure"), "{output}");
+            assert!(output.contains("Litex.Rules.realDivClosure"), "{output}");
+            assert!(output.contains("\n  have wd_0_"), "{output}");
+            assert!(output.contains("\n  have wd_0_5 :"), "{output}");
             assert!(
-                output.contains("Litex.BuiltinRules.complexAddClosure"),
-                "{output}"
+                output.contains(
+                    "_result : Litex.In (Litex.add (Litex.add a b) c) Litex.C"
+                ),
+                "the outer arithmetic result membership must remain in the owning theorem proof\n{output}"
             );
-            assert!(
-                output.contains("Litex.BuiltinRules.complexSubClosure"),
-                "{output}"
-            );
-            assert!(
-                output.contains("Litex.BuiltinRules.complexMulClosure"),
-                "{output}"
-            );
-            assert!(
-                output.contains("Litex.BuiltinRules.complexDivClosure"),
-                "{output}"
-            );
-            assert!(
-                output.contains("Litex.BuiltinRules.realDivClosure"),
-                "{output}"
-            );
-            assert!(output.contains("theorem well_defined_fact_"), "{output}");
-            assert!(output.contains("Litex.add (obj_"), "{output}");
-            assert!(output.contains("Litex.div (obj_"), "{output}");
-            assert!(output.contains("well_defined_fact_"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(output.contains("(Litex.add (Litex.add a b) c)"), "{output}");
+            assert!(output.contains("(Litex.div a b)"), "{output}");
+            assert!(output.contains("wd_0_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
             assert!(!output.contains("axiom add"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
+        });
+    }
+
+    #[test]
+    fn arithmetic_intrinsic_result_carrier_fails_closed_when_missing() {
+        run_with_large_stack(|| {
+            let source = r#"forall a, b, c C:
+    (a + b) + c = (a + b) + c
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope("missing-arithmetic-result-carrier.lit");
+            runtime.replace_litex_to_lean_ir_mode(true);
+            let tokenizer = Tokenizer::new();
+            let blocks = tokenizer
+                .parse_blocks(source, runtime.current_file_path_rc())
+                .expect("parse arithmetic result-carrier tracer");
+            let mut ir = Vec::new();
+            for mut block in blocks {
+                let statement = runtime.parse_stmt(&mut block).expect("parse statement");
+                let result = run_stmt_at_global_env(&statement, &mut runtime)
+                    .expect("verify arithmetic result-carrier tracer");
+                ir.push(
+                    result
+                        .litex_to_lean_ir()
+                        .expect("statement should retain To-Lean IR")
+                        .clone(),
+                );
+            }
+            let LitexToLeanStatementIr::Fact(statement) = &mut ir[0] else {
+                panic!("expected arithmetic fact statement")
+            };
+            let mut changed = 0;
+            for arithmetic in statement
+                .well_definedness
+                .objects
+                .iter_mut()
+                .filter(|object| {
+                    matches!(
+                        &object.source_object,
+                        Obj::Add(add) if matches!(add.left.as_ref(), Obj::Add(_))
+                    )
+                })
+            {
+                arithmetic.intrinsic_result_set = None;
+                changed += 1;
+            }
+            assert!(
+                changed > 0,
+                "arithmetic statement should retain an outer addition WD object"
+            );
+
+            let error = emit_lean_from_litex_to_lean_ir(&ir)
+                .expect_err("missing intrinsic arithmetic result carrier must fail closed");
+            assert!(
+                error
+                    .trace_message()
+                    .contains("has no frozen intrinsic result carrier"),
+                "unexpected missing-result-carrier rejection: {}",
+                error.trace_message()
+            );
         });
     }
 
@@ -11254,7 +11978,8 @@ forall a R:
             assert!(output.contains("Litex.functionObjectInFnSet"), "{output}");
             assert!(output.contains("_applicable"), "{output}");
             assert!(output.contains("_result"), "{output}");
-            assert!(output.contains("theorem well_defined_fact_"), "{output}");
+            assert!(output.contains("theorem wd_0_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
         });
     }
@@ -11313,10 +12038,12 @@ forall a R:
             );
             let output = compile_to_lean_from_source(source, "proof-carrying-list-set.lit")
                 .expect("a finite set literal should compile from exact indexed WD evidence");
-            assert!(output.contains("Litex.listSet [(obj_"), "{output}");
-            assert!(output.contains("List.Pairwise.cons"), "{output}");
-            assert!(output.contains("exact (well_defined_fact_"), "{output}");
-            assert!(output.contains("theorem well_defined_fact_"), "{output}");
+            assert!(output.contains("Litex.listSet [a, b]"), "{output}");
+            assert!(output.contains("\n  have wd_0_"), "{output}");
+            assert!(!output.contains("List.Pairwise.cons"), "{output}");
+            assert!(!output.contains("\ntheorem wd_"), "{output}");
+            assert!(!output.contains("\nnoncomputable def obj_"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
             assert!(!output.contains("axiom listSet"), "{output}");
             assert!(!output.contains("sorry"), "{output}");
         });
@@ -11958,25 +12685,6 @@ forall a, b, c set:
                 "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit"
             );
             assert_source_compiles_with_mathlib(source, "proof-carrying-arithmetic");
-
-            use crate::compile_to_lean::lean_test_support::SharedLeanTestLibrary;
-            let mut library = SharedLeanTestLibrary::new("unchecked-arithmetic-rejected");
-            library.reject_generated(
-                "unchecked-add",
-                r#"import Litex.BuiltinRules
-
-example (a b : Litex.Object) : Litex.Object := Litex.add a b
-"#,
-            );
-            library.reject_generated(
-                "unchecked-div",
-                r#"import Litex.BuiltinRules
-
-example (a b : Litex.Object)
-    (ha : Litex.In a Litex.C) (hb : Litex.In b Litex.C) :
-    Litex.Object := Litex.div a b ha hb
-"#,
-            );
         });
     }
 
@@ -11988,16 +12696,6 @@ example (a b : Litex.Object)
                 "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_list_set.lit"
             );
             assert_source_compiles_with_mathlib(source, "proof-carrying-list-set");
-
-            use crate::compile_to_lean::lean_test_support::SharedLeanTestLibrary;
-            let mut library = SharedLeanTestLibrary::new("unchecked-list-set-rejected");
-            library.reject_generated(
-                "unchecked-list-set",
-                r#"import Litex.BuiltinRules
-
-example (a : Litex.Object) : Litex.Object := Litex.listSet [a]
-"#,
-            );
         });
     }
 

@@ -47,9 +47,10 @@ Current hole: many source object constructors still lack universal-object
 lowering. Unsupported constructors fail closed.
 
 The ABI is packaged once in `lean/Litex/Core.lean`; generated files obtain it
-through `import Litex.BuiltinRules` and assert `Litex.abiVersion = 8`. The
-nearest rejected packaging repeats this declaration block in every generated
-file, allowing theorem bodies and semantic primitives to drift independently.
+through `import Litex.Rules` alone and do not emit an `abiVersion`
+declaration or proof. The nearest rejected packaging repeats the shared
+declaration block in every generated file, allowing theorem bodies and semantic
+primitives to drift independently.
 
 ## Membership and sethood
 
@@ -111,7 +112,7 @@ def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
 always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
-it is not an independent classifier. ABI version 8 implements this definition
+it is not an independent classifier. ABI version 9 implements this definition
 directly and removes the redundant sethood conjuncts from the two derived
 predicates.
 
@@ -130,7 +131,7 @@ axiom Litex.inR_iff {x : Litex.Object} :
 ```
 
 The concrete fact `1 $in R` is proved by
-`Litex.BuiltinRules.numeralInR`; it is not a generated axiom and is not
+`Litex.Rules.numeralInR`; it is not a generated axiom and is not
 accepted merely because the target expected `ℝ`.
 
 The nearest rejected design is `Set.univ : Set ℝ` plus a native
@@ -141,11 +142,13 @@ boundary.
 
 Downstream uses: closed numeral membership and arithmetic/order theorems.
 
-Current implementation includes proof-carrying `Litex.add/sub/mul/div`, numeric
+Current implementation includes proof-free `Litex.add/sub/mul/div`, numeric
 embedding bridges, complex/real closure theorems, adjacent
 `N → Z → Q → R → C` projection theorems, and rational normalization. Every
-`add/sub/mul` term consumes two ordered verifier-owned `In operand C` proofs;
-`div` additionally consumes the exact denominator-nonzero proof. Current holes
+`add/sub/mul` source certificate retains two ordered verifier-owned
+`In operand C` proofs; `div` additionally retains the exact
+denominator-nonzero proof. Generated theorems replay these facts locally rather
+than putting them in object terms. Current holes
 include power semantics, transcendental operations, refined numeric-set laws,
 and most arithmetic builtin certificates.
 
@@ -157,7 +160,8 @@ One source function layer is a restricted specification:
 structure Litex.FnSpec where
   arity : Nat
   requirements : List Litex.Object → Prop
-  range : List Litex.Object → Litex.Object
+  range : (args : List Litex.Object) →
+    args.length = arity → requirements args → Litex.Object
 
 axiom Litex.FnSet : Litex.FnSpec → Litex.Object
 ```
@@ -176,25 +180,25 @@ IR.
 Downstream uses: parameter facts, application well-definedness, and
 function-valued returns.
 
-Current hole: anonymous function values and named function definitions are not
-yet emitted.
+Named function values and proof-independent anonymous functions are emitted.
+The remaining hole is theorem-local replay for compound anonymous bodies and
+other dependent owned-binder constructions.
 
-## Proof-carrying application and exact layers
+## Proof-free application and exact checked layers
 
-Application consumes an explicit proof:
+Application denotation is proof-free; applicability is a separate proposition:
 
 ```lean
 axiom Litex.Applicable : Litex.Object → List Litex.Object → Prop
 axiom Litex.apply :
-  (f : Litex.Object) → (args : List Litex.Object) →
-  Litex.Applicable f args → Litex.Object
+  (f : Litex.Object) → (args : List Litex.Object) → Litex.Object
 ```
 
 Generated source uses direct list syntax:
 
 ```text
-f(1, 2, 3) -> f [obj_1, obj_2, obj_3] proof
-g(1)(2)    -> obj_4 [obj_5] secondProof, where obj_4 := g [obj_1] firstProof
+f(1, 2, 3) -> f [1, 2, 3]
+g(1)(2)    -> (g [1]) [2]
 ```
 
 `Litex.fnSetResult` proves that the result of one layer belongs to its
@@ -225,9 +229,11 @@ parser/runtime retain:
 - phase-labelled root object uses for preflight/proof/store disambiguation;
 - child edges, exact target-requirement roles, and source scope.
 
-The emitter names replayable WD facts as `well_defined_fact_<id>`. If an
-application occurs in a theorem type, the helper theorem is emitted before the
-target theorem and generalized over the visible environment.
+The emitter names replayable WD facts as
+`wd_<environment-depth>_<WellDefinedFactId>`. The depth follows the lexical
+forall environment (`0` at the outer level, `1` in its nested forall, and so
+on). If an application occurs in a theorem type, the helper theorem is emitted
+before the target theorem and generalized over the visible environment.
 
 A cache hit creates another exact source-occurrence use of the earlier proof.
 It does not become a proofless boolean and the emitter does not rediscover the
@@ -342,14 +348,14 @@ definition folding without target proof search.
 
 `Litex.Core` contains the small semantic boundary. Each concrete verifier
 builtin is represented once by a real Lean theorem in the shared
-`Litex.BuiltinRules` module. Generated files import that module. The checked
+`Litex.Rules` module. Generated files import that module. The checked
 certificate validates its stable rule identity, target, ordered children, and
 substitution shape before emitting a call to the theorem.
 
 The first ordinary rule is inequality symmetry:
 
 ```lean
-theorem Litex.BuiltinRules.notEqualSymmetry
+theorem Litex.Rules.notEqualSymmetry
     {a b : Litex.Object} (h : a ≠ b) : b ≠ a := by
   exact Ne.symm h
 ```
@@ -364,9 +370,10 @@ Dependencies: structured builtin certificates and the small semantic core.
 Downstream uses: replay of verifier automation without target proof search.
 
 Complex and real addition, subtraction, multiplication, and division closure
-now use structured certificates and real Lean theorems over proof-carrying
-target terms. Division closure consumes the same two complex-membership facts
-and denominator-nonzero fact as the constructed quotient. Current holes
+now use structured certificates and real Lean theorems over proof-free target
+terms. Division closure consumes the same two complex-membership facts and
+denominator-nonzero fact retained for the source quotient, but those facts are
+local proof evidence rather than quotient arguments. Current holes
 include power closure and most remaining builtin families.
 
 ## Trust and incomplete output

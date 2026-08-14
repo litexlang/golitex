@@ -503,7 +503,7 @@ A practical rule of thumb is:
 
 - use automatic `forall` matching for short, local, common facts whose intended
   instantiation is obvious from the goal shape;
-- use `claim forall` or direct `forall` facts when you want a helper to behave
+- use `claim:` with a `? forall ...` goal, or direct `forall` facts, when you want a helper to behave
   like local reusable context;
 - use `thm` plus `by thm` when the theorem name and arguments should be visible
   in the proof;

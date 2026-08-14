@@ -4,10 +4,47 @@ use std::collections::HashMap;
 impl Runtime {
     pub fn parse_obj(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         self.ensure_execution_frame_for_parse();
-        self.parse_obj_hierarchy1(tb)
+        self.parse_unicode_union(tb)
     }
 
-    /// Lowest-precedence additive operators; left associative, e.g. `2 + 3 - 4`.
+    /// Unicode set union has the lowest object-expression precedence.
+    fn parse_unicode_union(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let mut left = self.parse_unicode_intersect(tb)?;
+        while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(UNICODE_UNION) {
+            tb.skip_token(UNICODE_UNION)?;
+            let right = self.parse_unicode_intersect(tb)?;
+            left = Union::new(left, right).into();
+        }
+        Ok(left)
+    }
+
+    /// Unicode set intersection binds tighter than union.
+    fn parse_unicode_intersect(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let mut left = self.parse_unicode_cart(tb)?;
+        while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(UNICODE_INTERSECT) {
+            tb.skip_token(UNICODE_INTERSECT)?;
+            let right = self.parse_unicode_cart(tb)?;
+            left = Intersect::new(left, right).into();
+        }
+        Ok(left)
+    }
+
+    /// Unicode Cartesian product binds tighter than set intersection and flattens a direct chain.
+    fn parse_unicode_cart(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
+        let first = self.parse_obj_hierarchy1(tb)?;
+        if tb.exceed_end_of_head() || !tb.current_token_is_equal_to(UNICODE_CART) {
+            return Ok(first);
+        }
+
+        let mut factors = vec![first];
+        while !tb.exceed_end_of_head() && tb.current_token_is_equal_to(UNICODE_CART) {
+            tb.skip_token(UNICODE_CART)?;
+            factors.push(self.parse_obj_hierarchy1(tb)?);
+        }
+        Ok(Cart::new(factors).into())
+    }
+
+    /// Lowest-precedence arithmetic operators; left associative, e.g. `2 + 3 - 4`.
     fn parse_obj_hierarchy1(&mut self, tb: &mut TokenBlock) -> Result<Obj, RuntimeError> {
         let mut left = self.parse_obj_hierarchy2(tb)?;
         loop {
@@ -2843,6 +2880,26 @@ mod matrix_operator_parse_tests {
         let mut blocks = tokenizer.parse_blocks(source, Rc::from("test.lit"))?;
         assert_eq!(blocks.len(), 1, "{source:?}");
         Runtime::new().parse_obj(&mut blocks[0])
+    }
+
+    #[test]
+    fn unicode_set_operators_have_canonical_ast_and_precedence() {
+        let cases = [
+            ("A ∪ B ∩ C", "union(A, intersect(B, C))"),
+            ("A ∩ B ∪ C", "union(intersect(A, B), C)"),
+            ("A × B × C", "cart(A, B, C)"),
+            ("A ∪ B × C", "union(A, cart(B, C))"),
+            ("(A ∪ B) ∩ C", "intersect(union(A, B), C)"),
+        ];
+
+        for (source, canonical) in cases {
+            let obj = parse_obj_line(source).expect("Unicode set expression should parse");
+            assert_eq!(obj.to_string(), canonical, "{source}");
+        }
+
+        let product = parse_obj_line("2 × 3").expect("Cartesian product syntax should parse");
+        assert_eq!(product.kind(), ObjKind::Cart);
+        assert_eq!(product.to_string(), "cart(2, 3)");
     }
 
     #[test]

@@ -191,9 +191,9 @@ forall i1 closed_range(3, 2):
     1 = 0
 
 by for:
-    ? forall i1 range(3, 2) => {1 = 0}
+    ? forall i1 range(3, 2) => 1 = 0
 by for:
-    ? forall i1 closed_range(3, 2) => {1 = 0}
+    ? forall i1 closed_range(3, 2) => 1 = 0
 "#;
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope(
@@ -1651,7 +1651,7 @@ fn general_cart_builtin_definition_choice_and_membership_inference() {
             let source_code = r#"
 have I set
 have X nonempty_set
-trust forall x X => {$is_nonempty_set(x)}
+trust forall x X => $is_nonempty_set(x)
 have g fn(alpha I) X
 
 general_cart(I, X, g) = {c fn(t I)big_union(X): $is_choice_function_for(I, X, g, c)}

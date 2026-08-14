@@ -433,10 +433,10 @@ by extension:
     ? {1} = {1}
 
 by for:
-    ? forall n range(0, 3) => {n < 3}
+    ? forall n range(0, 3) => n < 3
 
 by enumerate finite_set:
-    ? forall z {1, 2} => {z $in {1, 2}}
+    ? forall z {1, 2} => z $in {1, 2}
 
 prop qgoal_same_obj(x set, y set):
     x = y
@@ -1265,19 +1265,15 @@ denominator != 0
 }
 
 #[test]
-fn inline_by_extension_for_and_enumerate_match_block_forms() {
+fn inline_extension_and_block_for_and_enumerate_keep_proof_routes() {
     let source_code = r#"
 by extension {1} = {1}
 
 by extension:
     ? {2} = {2}
 
-by for forall n range(0, 3) => {n < 3}
-
 by for:
-    ? forall m closed_range(0, 2) => {m <= 2}
-
-by enumerate finite_set forall x {1, 2} => {x $in {1, 2}}
+    ? forall m closed_range(0, 2) => m <= 2
 
 by enumerate finite_set:
     ? forall y {3, 4}:
@@ -1286,7 +1282,7 @@ by enumerate finite_set:
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "inline_by_extension_for_and_enumerate_match_block_forms",
+        "inline_extension_and_block_for_and_enumerate_keep_proof_routes",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
@@ -1294,64 +1290,47 @@ by enumerate finite_set:
 
     assert!(
         run_succeeded,
-        "inline and block proof-method goal forms should use the same executors:\n{}",
+        "extension and goal-block proof methods should use their existing executors:\n{}",
         run_output
     );
     assert!(
         run_output.contains("\"type\": \"proof by extension\"")
             && run_output.contains("\"type\": \"proof by finite set enumeration\"")
             && run_output.contains("\"type\": \"proof by universal introduction\""),
-        "all three inline forms should retain their existing proof provenance:\n{}",
+        "all three proof methods should retain their existing proof provenance:\n{}",
         run_output
     );
 }
 
 #[test]
-fn inline_by_proof_methods_keep_body_and_target_shape_boundaries() {
-    let body_cases = [
-        "by extension {1} = {1}:\n    do_nothing",
-        "by for forall n range(0, 1) => {n < 1}:\n    do_nothing",
-        "by enumerate finite_set forall n {0} => {n = 0}:\n    do_nothing",
-    ];
-
-    for (index, source_code) in body_cases.iter().enumerate() {
+fn proof_method_goal_placement_boundaries_are_explicit() {
+    for source_code in [
+        "by for forall n range(0, 1) => n < 1",
+        "by enumerate finite_set forall n {0} => n = 0",
+    ] {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(&format!("inline_by_body_{}", index));
+        runtime.new_file_path_new_env_new_name_scope("removed_inline_proof_goal");
         let (results, error) = run_source_code(source_code, &mut runtime);
         let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
         assert!(
             !succeeded,
-            "an inline proof method must not accept an indented body: {source_code}"
+            "the removed inline proof goal unexpectedly succeeded: {source_code}"
         );
         assert!(
-            output.contains("does not accept an indented body"),
-            "the diagnostic should direct bodyful proofs to block form:\n{output}"
+            output.contains("followed by an indented `? forall ...` goal"),
+            "the diagnostic should direct the goal to block form:\n{output}"
         );
     }
 
-    let target_cases = [
-        ("by extension 1 < 2", "goal expects equal fact"),
-        ("by for 1 = 1", "expects a single forall fact"),
-        (
-            "by enumerate finite_set 1 = 1",
-            "expects a single forall fact",
-        ),
-    ];
-
-    for (index, (source_code, expected)) in target_cases.iter().enumerate() {
-        let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope(&format!("inline_by_target_{}", index));
-        let (results, error) = run_source_code(source_code, &mut runtime);
-        let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
-        assert!(
-            !succeeded,
-            "an inline proof method must retain its target shape: {source_code}"
-        );
-        assert!(
-            output.contains(expected),
-            "the diagnostic should identify the required target shape:\n{output}"
-        );
-    }
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("inline_extension_body_boundary");
+    let (results, error) = run_source_code("by extension {1} = {1}:\n    do_nothing", &mut runtime);
+    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    assert!(!succeeded, "inline extension accepted a body:\n{output}");
+    assert!(
+        output.contains("does not accept an indented body"),
+        "{output}"
+    );
 }
 
 #[test]

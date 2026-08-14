@@ -1605,10 +1605,7 @@ y != x
         assert!(output.contains("Litex.IsSet a"), "{output}");
         assert!(output.contains("Litex.IsSet b"), "{output}");
         assert!(!output.contains("theorem notEqualSymmetry"), "{output}");
-        assert!(
-            output.contains("Litex.BuiltinRules.notEqualSymmetry"),
-            "{output}"
-        );
+        assert!(output.contains("Litex.Rules.notEqualSymmetry"), "{output}");
         assert!(!output.contains("axiom notEqualSymmetry"), "{output}");
         assert!(!output.contains("Set α"), "{output}");
         assert!(!output.contains("sorry"), "{output}");

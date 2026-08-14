@@ -6,13 +6,14 @@ import Mathlib
 This module is the shared, versioned interpretation boundary used by generated
 Litex-to-Lean proofs. `Litex.Object` is the Lean carrier of source-level Litex
 objects; it is not an internal universal set. Membership remains an explicit
-`Litex.In` proposition, and proof-carrying operations consume the exact
-well-definedness evidence retained by the Litex verifier.
+`Litex.In` proposition. Object denotation is proof-free; the exact
+well-definedness evidence retained by the Litex verifier is replayed as
+propositions in the corresponding Lean proof environment.
 
 The axioms in this file interpret source primitives and representation
-bridges. Concrete verifier rules belong in `Litex.BuiltinRules`, where they are
-proved as ordinary Lean theorems. Generated files import that module and check
-`abiVersion`; they do not repeat this core.
+bridges. Concrete verifier rules belong in `Litex.Rules`, where they are
+proved as ordinary Lean theorems. Generated files import that module; they do
+not repeat this core or add an ABI-version declaration.
 
 See `lean/SEMANTIC_REFERENCE.md` for the declaration-by-declaration
 correspondence with Tao's *Analysis I*, target-only engineering choices,
@@ -22,7 +23,7 @@ extensions beyond the book, trust boundaries, and known implementation drift.
 namespace Litex
 
 /-- Version of the shared target ABI expected by generated Litex proofs. -/
-def abiVersion : Nat := 8
+def abiVersion : Nat := 9
 
 axiom Object : Type
 
@@ -150,36 +151,32 @@ axiom inC_iff {x : Object} :
 axiom inRPos_iff {x : Object} :
   In x RPos ↔ ∃ r : ℝ, 0 < r ∧ embedComplex (r : ℂ) = x
 
-axiom add (a b : Object) : In a C → In b C → Object
-axiom sub (a b : Object) : In a C → In b C → Object
-axiom mul (a b : Object) : In a C → In b C → Object
-axiom div (a b : Object) : In a C → In b C → b ≠ 0 → Object
+/-! Arithmetic object denotation is total at the target representation layer.
+The source verifier still proves complex membership and divisor nonzeroness
+before accepting these objects; those facts are replayed separately. -/
+axiom add : Object → Object → Object
+axiom sub : Object → Object → Object
+axiom mul : Object → Object → Object
+axiom div : Object → Object → Object
 
-@[simp] axiom add_embedComplex (a b : ℂ)
-    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
-  add (embedComplex a) (embedComplex b) ha hb = embedComplex (a + b)
-@[simp] axiom sub_embedComplex (a b : ℂ)
-    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
-  sub (embedComplex a) (embedComplex b) ha hb = embedComplex (a - b)
-@[simp] axiom mul_embedComplex (a b : ℂ)
-    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C) :
-  mul (embedComplex a) (embedComplex b) ha hb = embedComplex (a * b)
-@[simp] axiom div_embedComplex (a b : ℂ)
-    (ha : In (embedComplex a) C) (hb : In (embedComplex b) C)
-    (hb0 : embedComplex b ≠ 0) :
-  div (embedComplex a) (embedComplex b) ha hb hb0 = embedComplex (a / b)
+@[simp] axiom add_embedComplex (a b : ℂ) :
+  add (embedComplex a) (embedComplex b) = embedComplex (a + b)
+@[simp] axiom sub_embedComplex (a b : ℂ) :
+  sub (embedComplex a) (embedComplex b) = embedComplex (a - b)
+@[simp] axiom mul_embedComplex (a b : ℂ) :
+  mul (embedComplex a) (embedComplex b) = embedComplex (a * b)
+@[simp] axiom div_embedComplex (a b : ℂ) :
+  div (embedComplex a) (embedComplex b) = embedComplex (a / b)
 
 /-- Litex's canonical finite-set literal invariant: source entries are
 pairwise distinct in their source order. -/
 def ListSetWellDefined (xs : List Object) : Prop :=
   xs.Pairwise (· ≠ ·)
 
-axiom listSet (xs : List Object) :
-  ListSetWellDefined xs → Object
+axiom listSet : List Object → Object
 
-@[simp] axiom inListSet_iff {x : Object} {xs : List Object}
-    {h : ListSetWellDefined xs} :
-  In x (listSet xs h) ↔ x ∈ xs
+@[simp] axiom inListSet_iff {x : Object} {xs : List Object} :
+  In x (listSet xs) ↔ x ∈ xs
 
 def arg (args : List Object) (index : Nat) : Object :=
   args.getD index 0
@@ -197,22 +194,20 @@ structure FnSpec where
 
 axiom FnSet : FnSpec → Object
 axiom Applicable : Object → List Object → Prop
-axiom apply :
-  (f : Object) →
-  (args : List Object) →
-  Applicable f args →
-  Object
+/-! Object denotation is independent of its well-definedness proof.  The
+verifier-owned `Applicable` evidence is replayed in the Lean proof environment
+that corresponds to the Litex runtime environment which produced it. -/
+axiom apply : Object → List Object → Object
 
 def IsChoiceFunctionFor
     (indexSet _familySet family chooser : Object) : Prop :=
   ∀ (alpha : Object), In alpha indexSet →
-    ∀ (chooserApplicable : Applicable chooser [alpha])
-      (familyApplicable : Applicable family [alpha]),
-      In (apply chooser [alpha] chooserApplicable)
-        (apply family [alpha] familyApplicable)
+    ∀ (_chooserApplicable : Applicable chooser [alpha])
+      (_familyApplicable : Applicable family [alpha]),
+      In (apply chooser [alpha]) (apply family [alpha])
 
-instance : CoeFun Object fun f =>
-    (args : List Object) → Applicable f args → Object where
+instance : CoeFun Object fun _ =>
+    (args : List Object) → Object where
   coe := apply
 
 axiom fnSetApplicable
@@ -231,33 +226,30 @@ axiom fnSetResult
     (hf : In f (FnSet spec))
     (hLength : args.length = spec.arity)
     (hRequirements : spec.requirements args) :
-    In (f args (fnSetApplicable hf hLength hRequirements))
+    In (f args)
       (spec.range args hLength hRequirements)
 
-/-- A checked source function object. The constructor consumes the exact
-pointwise range proof retained by the Litex verifier. -/
+/-- A source function object. Its denotation depends on the specification and
+body, not on which pointwise range proof the verifier selected. -/
 axiom functionObject
     (spec : FnSpec)
     (body :
       (args : List Object) →
       args.length = spec.arity →
-      spec.requirements args →
-      Object)
-    (closed : ∀ args hLength hRequirements,
-      In (body args hLength hRequirements)
-        (spec.range args hLength hRequirements)) : Object
+      spec.requirements args → Object) : Object
 
+/-- The verifier-owned pointwise closure proof establishes function-space
+membership without becoming an argument of the function object itself. -/
 axiom functionObjectInFnSet
     (spec : FnSpec)
     (body :
       (args : List Object) →
       args.length = spec.arity →
-      spec.requirements args →
-      Object)
+      spec.requirements args → Object)
     (closed : ∀ args hLength hRequirements,
       In (body args hLength hRequirements)
         (spec.range args hLength hRequirements)) :
-  In (functionObject spec body closed) (FnSet spec)
+  In (functionObject spec body) (FnSet spec)
 
 /-- Applicability of a checked function object retains the source arity
 certificate. These projections let definition replay consume the same proof
@@ -267,29 +259,21 @@ axiom functionObjectApplicableLength
     (body :
       (args : List Object) →
       args.length = spec.arity →
-      spec.requirements args →
-      Object)
-    (closed : ∀ args hLength hRequirements,
-      In (body args hLength hRequirements)
-        (spec.range args hLength hRequirements))
+      spec.requirements args → Object)
     (args : List Object)
-    (_applicable : Applicable (functionObject spec body closed) args) :
+    (_applicable : Applicable (functionObject spec body) args) :
   args.length = spec.arity
 
 /-- Applicability of a checked function object retains the exact ordered
-requirements certificate used by its proof-carrying body and range. -/
+requirements certificate used by its dependent body and range. -/
 axiom functionObjectApplicableRequirements
     (spec : FnSpec)
     (body :
       (args : List Object) →
       args.length = spec.arity →
-      spec.requirements args →
-      Object)
-    (closed : ∀ args hLength hRequirements,
-      In (body args hLength hRequirements)
-        (spec.range args hLength hRequirements))
+      spec.requirements args → Object)
     (args : List Object)
-    (_applicable : Applicable (functionObject spec body closed) args) :
+    (_applicable : Applicable (functionObject spec body) args) :
   spec.requirements args
 
 @[simp] axiom functionObject_apply
@@ -297,17 +281,13 @@ axiom functionObjectApplicableRequirements
     (body :
       (args : List Object) →
       args.length = spec.arity →
-      spec.requirements args →
-      Object)
-    (closed : ∀ args hLength hRequirements,
-      In (body args hLength hRequirements)
-        (spec.range args hLength hRequirements))
+      spec.requirements args → Object)
     (args : List Object)
-    (applicable : Applicable (functionObject spec body closed) args) :
-  apply (functionObject spec body closed) args applicable =
+    (applicable : Applicable (functionObject spec body) args) :
+  apply (functionObject spec body) args =
     body args
-      (functionObjectApplicableLength spec body closed args applicable)
-      (functionObjectApplicableRequirements spec body closed args applicable)
+      (functionObjectApplicableLength spec body args applicable)
+      (functionObjectApplicableRequirements spec body args applicable)
 
 end
 

@@ -3,7 +3,7 @@
 This document audits the shared Lean target ABI used by Litex-to-Lean. It
 answers four questions for every declaration currently exposed by
 [`Litex.Core`](Litex/Core.lean) and every theorem currently proved in
-[`Litex.BuiltinRules`](Litex/BuiltinRules.lean):
+[`Litex.Rules`](Litex/Rules.lean):
 
 1. What source-level Litex concept does it represent?
 2. Where is the underlying mathematical concept developed in Terence Tao's
@@ -12,8 +12,8 @@ answers four questions for every declaration currently exposed by
 4. Is it a settled semantic boundary, a target representation device, an
    extension beyond the book, or known implementation drift?
 
-The reference covers ABI version 8. At this version, `Litex.Core` contains 61
-Lean `axiom` declarations and `Litex.BuiltinRules` contains 24 ordinary Lean
+The reference covers ABI version 9. At this version, `Litex.Core` contains 50
+Lean `axiom` declarations and `Litex.Rules` contains 24 ordinary Lean
 theorems. The number of declarations is not a measure of foundational
 minimality: several declarations are fields of one intended model that have
 not yet been consolidated or constructed.
@@ -43,14 +43,14 @@ The correspondence labels used below have precise meanings:
 - **Pure-set specialization:** the book explicitly permits both pure and
   impure readings; Litex selects the pure reading.
 - **Representation bridge:** the declaration connects Litex objects to
-  Mathlib values or proof-carrying target syntax. It is not asserted by the
+  Mathlib values or explicit target proof evidence. It is not asserted by the
   book.
 - **Extension:** the concept is useful to Litex but is not developed in
   *Analysis I*.
 - **Engineering:** the declaration versions or packages the compiler ABI and
   has no mathematical source claim.
 - **Current drift:** the declaration is a known temporary mismatch between the
-  decided source semantics and ABI version 8.
+  decided source semantics and ABI version 9.
 
 These labels prevent a citation from doing more work than it really does.
 *Analysis I* motivates the mathematical interfaces; it does not prove that
@@ -64,19 +64,19 @@ this particular Lean ABI is a model of Litex.
 | `def` | A transparent abbreviation or proposition built from earlier declarations. | No. Its body can be unfolded by Lean. |
 | `structure` | Transparent data needed by the target ABI. | No additional proposition is assumed. |
 | `instance` | Lean notation or elaboration support for an existing operation. | No additional proposition is assumed. |
-| `theorem` in `Litex.BuiltinRules` | A concrete verifier rule proved once from `Litex.Core` and Mathlib. | No new axiom; Lean kernel-checks the proof. |
+| `theorem` in `Litex.Rules` | A concrete verifier rule proved once from `Litex.Core` and Mathlib. | No new axiom; Lean kernel-checks the proof. |
 | generated `axiom` for a source `trust` | The exact proposition explicitly trusted by Litex source. | Yes, but it is source-local and is not silently added to this shared core. |
 
 This is why the implementation file is named `Core.lean`, not `Axioms.lean`:
 the module contains axioms, transparent definitions, a structure, notation
 instances, and the contracts from which ordinary theorems are proved.
 
-## Tracer: proof-carrying addition
+## Tracer: proof-free addition with local WD evidence
 
 The central example is:
 
 ```lean
-axiom add (a b : Object) : In a C -> In b C -> Object
+axiom add : Object → Object → Object
 ```
 
 Addition itself occurs throughout the book: Definition 2.2.1 introduces
@@ -86,10 +86,15 @@ addition on Cauchy representatives. The shared target operation uses `C` as
 Litex's largest current numeric domain. That choice of a complex super-domain
 is an extension beyond *Analysis I*, not a theorem quoted from it.
 
-The two proof arguments are the concrete target form of Litex
-well-definedness. A generated term cannot apply `add` merely because `a` and
-`b` have Lean type `Object`; it must replay the verifier's retained facts
-`In a C` and `In b C`. The representation law
+The target term is independent of the proof route used to establish Litex
+well-definedness. Litex still rejects `a + b` until it has proved the exact
+facts `In a C` and `In b C`; generated Lean replays those facts as local
+`have` steps in the proof environment that owns the expression. The frozen
+arithmetic object recipe also records `C` as its intrinsic result carrier, so
+an outer expression such as `(a + b) + c` gets a local result-membership step
+after `intro`; this result evidence never becomes a constructor argument or a
+top-level generalized fact. The
+representation law
 
 ```lean
 add_embedComplex
@@ -97,7 +102,7 @@ add_embedComplex
 
 says that, on represented complex values, the source operation agrees with
 Mathlib addition. Then `complexAddClosure` and `realAddClosure` are proved in
-`Litex.BuiltinRules`; they are not additional axioms. Thus the path is:
+`Litex.Rules`; they are not additional axioms. Thus the path is:
 
 ```text
 book arithmetic concept
@@ -108,9 +113,11 @@ book arithmetic concept
 ```
 
 This tracer does not show that every Litex arithmetic rule has been ported.
-ABI version 8 retains the proof-carrying `div` pattern, with an
-additional denominator-nonzero proof. Power, transcendental operations, and
-many arithmetic certificates remain outside the current target coverage.
+ABI version 9 treats `div a b` the same way: its object denotation is total at
+the representation layer, while both complex memberships and the exact
+denominator-nonzero fact remain mandatory source certificates and local Lean
+proof steps. Power, transcendental operations, and many arithmetic
+certificates remain outside the current target coverage.
 
 ## `Litex.Core` declaration ledger
 
@@ -118,7 +125,7 @@ many arithmetic certificates remain outside the current target coverage.
 
 | Declaration | Lean form | Analysis I anchor | Exact role and boundary |
 | --- | --- | --- | --- |
-| `abiVersion` | `def` | None; engineering. | Pins generated files to a compatible shared ABI. An incompatible semantic or signature change requires coordinated version review. |
+| `abiVersion` | `def` | None; engineering. | Records the shared ABI revision for coordinated version review. Generated files do not mention it. |
 | `Object` | `axiom` | Remark 2.1.14 (objects are treated by their properties), Axiom 3.1 (sets are objects), and Remark 3.1.3 (pure set theory). | The meta-level carrier of all source Litex objects. `Object : Type` is not itself a term of type `Object`, so it is not an internal universal set. |
 | `In` | `axiom` | Definition 3.1.1 (elementhood). | Interprets source `$in` as a relation between two represented objects. Membership is evidence, not Lean typing or a cast. |
 | `IsSet` | `def` | Remark 3.1.3, specialized to its pure branch. | Definitionally `True`, exactly recording the decided Litex semantics that every well-defined source object is set-like without adding a classifier axiom. |
@@ -170,7 +177,7 @@ positive-natural reflection and `positiveRealMembership` theorems, while
 bridges for source order and carrier predicates, not a claim that all ordered
 number-system laws have been ported.
 
-ABI version 8 declares the refined numeric objects but does not yet include
+ABI version 9 declares the refined numeric objects but does not yet include
 their full membership-characterization laws. They should therefore be read as
 opaque ABI placeholders whose intended source meanings are listed above, not
 as a completed Lean development of every refined carrier.
@@ -196,26 +203,26 @@ cast to a new `Object` when another membership fact is proved.
 
 | Declaration | Lean form | Analysis I anchor | Exact role and boundary |
 | --- | --- | --- | --- |
-| `add` | `axiom` | Definitions 2.2.1, 4.1.2, 4.2.2, and 5.3.4. | Primitive represented addition. Its two `In _ C` arguments ensure target terms consume source well-definedness evidence. The choice of `C` is a Litex extension. |
-| `sub` | `axiom` | Definition 4.1.4 introduces negation; subtraction is obtained from addition and negation throughout Chapters 4 and 5. | Primitive represented subtraction with the same proof-carrying operand contract as `add`. |
-| `mul` | `axiom` | Definitions 2.3.1, 4.1.2, 4.2.2, and 5.3.9. | Primitive represented multiplication with proof-carrying complex membership. |
-| `div` | `axiom` | Rational division and field structure in Section 4.2; real reciprocals in Definition 5.3.16. | Primitive represented division. Its two `In _ C` arguments and one denominator-nonzero argument force target construction to consume all three source well-definedness facts. |
+| `add` | `axiom` | Definitions 2.2.1, 4.1.2, 4.2.2, and 5.3.4. | Proof-free represented addition. The source certificate still records two ordered `In _ C` obligations, replayed locally; the choice of `C` is a Litex extension. |
+| `sub` | `axiom` | Definition 4.1.4 introduces negation; subtraction is obtained from addition and negation throughout Chapters 4 and 5. | Proof-free represented subtraction with the same source WD contract as `add`. |
+| `mul` | `axiom` | Definitions 2.3.1, 4.1.2, 4.2.2, and 5.3.9. | Proof-free represented multiplication whose complex-membership obligations remain verifier evidence. |
+| `div` | `axiom` | Rational division and field structure in Section 4.2; real reciprocals in Definition 5.3.16. | Proof-free represented division. The two `In _ C` obligations and denominator-nonzero obligation remain mandatory source certificates and local proof steps. |
 | `add_embedComplex` | `axiom` | Arithmetic concepts above; exact equation is a representation bridge. | Makes represented addition agree with Mathlib complex addition. |
 | `sub_embedComplex` | `axiom` | Arithmetic concepts above; exact equation is a representation bridge. | Makes represented subtraction agree with Mathlib complex subtraction. |
 | `mul_embedComplex` | `axiom` | Arithmetic concepts above; exact equation is a representation bridge. | Makes represented multiplication agree with Mathlib complex multiplication. |
-| `div_embedComplex` | `axiom` | Sections 4.2 and 5.3; the exact equation is a representation bridge. | Makes represented division agree with Mathlib complex division after receiving the retained memberships and nonzero proof. It consumes but does not independently derive those source obligations. |
+| `div_embedComplex` | `axiom` | Sections 4.2 and 5.3; the exact equation is a representation bridge. | Makes represented division agree with Mathlib complex division. Source acceptance and generated closure proofs separately retain the membership and nonzero obligations. |
 
 The coherence declarations are axioms because `Object` and its operations are
 currently abstract. A later concrete model could turn some or all of them into
 definitions and proofs without changing their public mathematical contract.
 
-### Proof-carrying finite set literals
+### Proof-free finite set literals with checked pairwise WD
 
 | Declaration | Lean form | Analysis I anchor | Exact role and boundary |
 | --- | --- | --- | --- |
 | `ListSetWellDefined` | `def` | Axiom 3.2 (pair set) and finite extensional set notation; the ordered no-duplicate certificate is Litex-specific engineering. | Defines the exact source WD invariant as `List.Pairwise (· ≠ ·)`. It lives in `Prop`, so the selected proof route does not become mathematical object data. |
-| `listSet` | `axiom` | Axiom 3.2 and finite unions built in Section 3.4. | Constructs the represented finite set only after consuming the verifier-owned pairwise-distinctness proof. |
-| `inListSet_iff` | `axiom` | Extensional membership meaning of finite set notation. | States that membership in the proof-carrying constructor is exactly list membership; the proof argument remains implicit and proof-irrelevant. |
+| `listSet` | `axiom` | Axiom 3.2 and finite unions built in Section 3.4. | Proof-free represented finite-set denotation. Litex's complete indexed pairwise-distinctness matrix remains a mandatory checked certificate and local proof trace. |
+| `inListSet_iff` | `axiom` | Extensional membership meaning of finite set notation. | States that membership in the represented list set is exactly list membership. |
 
 ### Functions, function spaces, and choice functions
 
@@ -225,13 +232,13 @@ definitions and proofs without changing their public mathematical contract.
 | `FnSpec` with `arity`, `requirements`, and proof-dependent `range` | `structure` | Definition 3.3.1 (vertical-line/function contract). | Packages one exact Litex application layer. `range args hLength hRequirements` may consume the same ordered WD evidence as the body, so a partial source range is never totalized merely to fit Lean. The list and proof telescope are target machinery, not Tao's definition. |
 | `FnSet` | `axiom` | Axiom 3.10, the set `Y^X` of functions from `X` to `Y`. | Turns a target function specification into a source-level function-space object. |
 | `Applicable` | `axiom` | Definition 3.3.1 requires an input to be in the function's domain; exact proposition is a representation bridge. | Records that one function object can be applied to one exact argument list. |
-| `apply` | `axiom` | Definition 3.3.1 and the notation `f(x)`. | Produces the application object only after receiving `Applicable` evidence. Nested Litex applications remain separate target layers. |
+| `apply` | `axiom` | Definition 3.3.1 and the notation `f(x)`. | Proof-free application denotation. `Applicable` remains a separate proposition replayed for every exact source layer. |
 | `IsChoiceFunctionFor` | `def` | Definition 8.4.1 (infinite products as choice functions) and Axiom 8.1 (choice). | Defines the pointwise condition that a chooser selects a member of each family value. The retained `_familySet` argument preserves the source predicate's public arity; its carrier obligations are checked by Litex well-definedness rather than repeated in this proposition. This definition is not itself the axiom of choice. |
-| `CoeFun Object` | `instance` | Function-application notation in Section 3.3. | Lets Lean print and elaborate `f args proof` using `apply`; it is syntax support, not an assertion that every object is callable. |
-| `fnSetApplicable` | `axiom` | Definition 3.3.1 and Axiom 3.10. | From exact function-space membership, arity, and requirements, constructs the applicability certificate consumed by `apply`. |
+| `CoeFun Object` | `instance` | Function-application notation in Section 3.3. | Lets Lean print and elaborate `f args` using `apply`; it is syntax support, not an assertion that every object is callable. |
+| `fnSetApplicable` | `axiom` | Definition 3.3.1 and Axiom 3.10. | From exact function-space membership, arity, and requirements, constructs the separate applicability certificate for the source application layer. |
 | `fnSetResult` | `axiom` | Definition 3.3.1: a function sends each domain input to its declared codomain. | Proves that a certified application belongs to `range args hLength hRequirements`, preserving the exact arity and requirements evidence. |
-| `functionObject` | `axiom` | Definition 3.3.1. | Constructs a source function only from its exact `FnSpec`, a body that consumes arity/requirements evidence, and the pointwise checked range proof. |
-| `functionObjectInFnSet` | `axiom` | Axiom 3.10. | Exposes the constructed function's exact function-space membership as the stored source fact. |
+| `functionObject` | `axiom` | Definition 3.3.1. | Proof-free function-object denotation from its exact `FnSpec` and dependent body; the selected closure proof is not object data. |
+| `functionObjectInFnSet` | `axiom` | Axiom 3.10. | Consumes the verifier-owned pointwise closure proof to establish the proof-free function object's exact function-space membership. |
 | `functionObjectApplicableLength` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact arity certificate from an already named `Applicable` proof so definition replay can call the proof-dependent body. |
 | `functionObjectApplicableRequirements` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact ordered requirements certificate from an already named `Applicable` proof. |
 | `functionObject_apply` | `axiom` | Definition 3.3.1 and function evaluation. | Replays the source defining equality using the two applicability projections; unavailable defining `FactId`s remain compiler errors. |
@@ -241,7 +248,7 @@ only defines what a displayed chooser must satisfy. A source use of the axiom
 of choice remains explicit trust unless its particular instance is proved by
 other means and compiled through a supported proof route.
 
-## `Litex.BuiltinRules` theorem ledger
+## `Litex.Rules` theorem ledger
 
 Every declaration in this section is a Lean `theorem`, not an axiom. The
 theorems expose concrete verifier rules while keeping their proof dependencies
@@ -300,7 +307,7 @@ the [universal object design](../src/compile_to_lean/litex_object_design.md).
 In particular, "inspired by *Analysis I*" is not used as a substitute for a
 soundness argument. The book supplies the mathematical development and named
 concepts. Litex chooses a source semantics. `Litex.Core` states the current
-target interpretation boundary. `Litex.BuiltinRules` proves reusable
+target interpretation boundary. `Litex.Rules` proves reusable
 consequences. Generated Lean must then replay the exact verifier evidence
 without inventing memberships, applicability certificates, or target-side
 proof search.
@@ -315,7 +322,7 @@ Any change to this ABI should update this reference in the same change:
 3. give an exact *Analysis I* item when a book correspondence is claimed, or
    explicitly state that there is no direct anchor;
 4. justify why an unproved proposition belongs in `Litex.Core` instead of
-   being a theorem in `Litex.BuiltinRules`;
+   being a theorem in `Litex.Rules`;
 5. update or remove the relevant drift note;
 6. review `abiVersion` whenever generated files compiled against the previous
    signature would no longer typecheck or would acquire different semantics.

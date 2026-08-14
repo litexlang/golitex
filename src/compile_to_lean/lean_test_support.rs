@@ -1,3 +1,4 @@
+use super::shared_lean_library::RULES_NAMESPACE_NAME;
 use std::ffi::OsString;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -38,7 +39,7 @@ impl SharedLeanTestLibrary {
             generated_files: Vec::new(),
         };
         library.compile_shared_module("Core");
-        library.compile_shared_module("BuiltinRules");
+        library.compile_shared_module(RULES_NAMESPACE_NAME);
         library
     }
 
@@ -56,25 +57,6 @@ impl SharedLeanTestLibrary {
             vec![path.as_os_str().to_owned()],
         );
         assert_lean_success(label, &output, generated);
-    }
-
-    pub(crate) fn reject_generated(&mut self, label: &str, generated: &str) {
-        let path = self
-            .output_root
-            .join(format!("{}.lean", safe_path_component(label)));
-        fs::write(&path, generated).expect("write rejected Lean test source");
-        self.generated_files.push(path.clone());
-
-        let output = run_lean(
-            &self.lake,
-            &self.project,
-            Some(&self.output_root),
-            vec![path.as_os_str().to_owned()],
-        );
-        assert!(
-            !output.status.success(),
-            "Lean source {label} unexpectedly compiled\nsource:\n{generated}"
-        );
     }
 
     fn compile_shared_module(&self, module: &str) {
@@ -107,7 +89,7 @@ impl Drop for SharedLeanTestLibrary {
         for path in self.generated_files.iter() {
             let _ = fs::remove_file(path);
         }
-        for module in ["BuiltinRules", "Core"] {
+        for module in [RULES_NAMESPACE_NAME, "Core"] {
             let _ = fs::remove_file(
                 self.output_root
                     .join("Litex")

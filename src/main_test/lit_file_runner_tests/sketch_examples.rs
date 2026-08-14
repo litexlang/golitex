@@ -287,7 +287,7 @@ fn renders_not_equal_symmetry_source_with_its_generated_lean() {
     assert!(output.contains("Litex.IsSet b"));
     assert!(output.contains("a ≠ b"));
     assert!(output.contains("b ≠ a"));
-    assert!(output.contains("Litex.BuiltinRules.notEqualSymmetry"));
+    assert!(output.contains("Litex.Rules.notEqualSymmetry"));
 }
 
 #[test]

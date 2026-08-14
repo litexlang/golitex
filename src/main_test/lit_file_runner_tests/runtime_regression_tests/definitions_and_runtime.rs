@@ -810,6 +810,26 @@ by thm 自反等式(1)
 }
 
 #[test]
+fn unicode_cart_does_not_mean_numeric_multiplication() {
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("unicode_cart_is_not_numeric_multiplication");
+    let (stmt_results, runtime_error) = run_source_code("2 × 3 = 6", &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "Unicode × must remain Cartesian product syntax, not numeric multiplication:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("cart(2, 3)"),
+        "the rejected expression should expose its canonical Cartesian-product meaning:\n{}",
+        run_output
+    );
+}
+
+#[test]
 fn theorem_axiom_and_strategy_reject_multiple_names() {
     let cases = [
         "thm first, second:\n    ? forall x R:\n        x = x\n    x = x",

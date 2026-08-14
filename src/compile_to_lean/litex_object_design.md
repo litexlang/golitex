@@ -18,7 +18,7 @@ document:
 
 The shared ABI and builtin proofs live in
 [`lean/Litex/Core.lean`](../../lean/Litex/Core.lean) and
-[`lean/Litex/BuiltinRules.lean`](../../lean/Litex/BuiltinRules.lean). The exact
+[`lean/Litex/Rules.lean`](../../lean/Litex/Rules.lean). The exact
 import plus ABI-version check emitted today is checked in as
 [`current_generated_file_header.lean`](current_generated_file_header.lean), and
 Rust tests require the compiler, shared core, and checked-in header to agree.
@@ -175,21 +175,20 @@ Separate theorems establish memberships such as `1 ∈ N`, `1 ∈ R`, and
 
 Litex does not overload source `+`. Every source occurrence denotes the one
 Litex complex addition operation. Real or integer closure is justified by
-ordinary builtin-rule theorems using retained membership proofs. ABI version 8
-makes addition, subtraction, multiplication, and division proof-carrying:
+ordinary builtin-rule theorems using retained membership proofs. ABI version 9
+makes arithmetic denotation proof-free:
 
 ```lean
-axiom Litex.add (a b : Litex.Object) :
-  Litex.In a Litex.C → Litex.In b Litex.C → Litex.Object
+axiom Litex.add : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.sub : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.mul : Litex.Object → Litex.Object → Litex.Object
+axiom Litex.div : Litex.Object → Litex.Object → Litex.Object
 ```
 
-`Litex.sub` and `Litex.mul` have the same ordered contract. `Litex.div` has the
-additional exact denominator-nonzero slot:
-
-```lean
-axiom Litex.div (a b : Litex.Object) :
-  Litex.In a Litex.C → Litex.In b Litex.C → b ≠ 0 → Litex.Object
-```
+The Litex verifier still requires two ordered complex-membership facts for
+every operation and the exact denominator-nonzero fact for division. Those
+facts stay in the WD certificate and are replayed as local Lean proof steps;
+they are not arguments of the object term.
 
 ## 4. Function spaces are set objects
 
@@ -227,7 +226,7 @@ that are explicitly citable.
 
 ## 5. Calls preserve exact Litex application layers
 
-Application is proof-carrying:
+Application denotation is proof-free and applicability is separate evidence:
 
 ```lean
 axiom Litex.Applicable :
@@ -235,17 +234,15 @@ axiom Litex.Applicable :
 
 axiom Litex.apply :
   (f : Litex.Object) →
-  (args : List Litex.Object) →
-  Litex.Applicable f args →
-  Litex.Object
+  (args : List Litex.Object) → Litex.Object
 ```
 
 Generated Lean uses direct list syntax through the current `CoeFun` instance;
 there is no surface macro:
 
 ```text
-f(a, b) -> f [a, b] well_defined_fact
-f(a)(b) -> (f [a] first_well_defined_fact) [b] second_well_defined_fact
+f(a, b) -> f [a, b]
+f(a)(b) -> (f [a]) [b]
 ```
 
 Application groups are exact:
@@ -253,7 +250,8 @@ Application groups are exact:
 - `f(1, 2, 3)` is one layer containing three arguments.
 - `g(1)(2)` is two layers.
 - Lean currying must never turn a Litex-rejected grouping into a valid call.
-- Every layer receives its own `Applicable` proof.
+- Every layer receives its own local `Applicable` proof binding, but that
+  proof is not part of the displayed object term.
 
 Membership in a function space builds applicability and proves the result
 membership:
@@ -274,22 +272,23 @@ axiom Litex.fnSetResult
     (hLength : args.length = spec.arity)
     (hRequirements : spec.requirements args) :
   Litex.In
-    (Litex.apply f args
-      (Litex.fnSetApplicable hf hLength hRequirements))
+    (Litex.apply f args)
     (spec.range args hLength hRequirements)
 ```
 
 If the range is another `FnSet`, `fnSetResult` supplies the membership needed
 for the next source application layer.
 
-## 6. WD evidence is part of partial object construction
+## 6. WD evidence follows the source environment, not object denotation
 
 The decided rule is:
 
-> If Litex needs a nontrivial WD proof before an object expression exists,
-> the corresponding Lean object constructor or call consumes that proof.
+> A Litex object has proof-free Lean denotation. Every nontrivial WD fact that
+> made the source object usable is replayed as proof evidence in the Lean
+> environment corresponding to the Litex environment that owns it.
 
-The proof is not merely a detached audit comment. Examples include:
+The proof is neither object data nor a detached top-level audit comment.
+Examples include:
 
 - function application and every later application layer;
 - anonymous-function construction and its range obligation;
@@ -304,9 +303,7 @@ def Litex.ListSetWellDefined (xs : List Litex.Object) : Prop :=
   xs.Pairwise (· ≠ ·)
 
 axiom Litex.listSet :
-  (xs : List Litex.Object) →
-  Litex.ListSetWellDefined xs →
-  Litex.Object
+  List Litex.Object → Litex.Object
 
 def Litex.ReplacementWellDefined
     (P : Litex.Object → Litex.Object → Prop)
@@ -316,22 +313,16 @@ def Litex.ReplacementWellDefined
 
 axiom Litex.replacement :
   (P : Litex.Object → Litex.Object → Prop) →
-  (A : Litex.Object) →
-  Litex.ReplacementWellDefined P A →
-  Litex.Object
+  Litex.Object → Litex.Object
 ```
 
 `ListSetWellDefined`, `listSet`, and `inListSet_iff` are implemented in ABI
-version 5. The replacement declarations remain a decided semantic shape whose
-exact target spelling is not implemented yet.
+version 9. The replacement declarations remain a decided semantic direction
+whose exact target spelling is not implemented yet. All certificates inhabit
+`Prop`; the compiler records the exact proof route for audit and replay without
+letting that route change the mathematical object.
 
-All certificates inhabit `Prop`. Lean proof irrelevance therefore prevents
-the chosen proof route from becoming mathematical data. For example, two
-proofs `h₁ h₂ : ListSetWellDefined xs` are equal, so the two applications of
-`listSet xs` can be proved equal. The compiler still records which proof route
-Litex actually used.
-
-## 7. Function objects carry construction WD
+## 7. Function objects separate denotation from construction WD
 
 A named or anonymous Litex function is a function object, not a native Lean
 lambda exported as the source value. Its target construction must retain at
@@ -342,10 +333,17 @@ least:
 3. the WD proof DAG for the body;
 4. a proof that every legal body result belongs to the declared range.
 
-ABI version 8 fixes the shared packaging as:
+ABI version 9 fixes the shared packaging as:
 
 ```lean
 axiom Litex.functionObject
+    (spec : Litex.FnSpec)
+    (body : (args : List Litex.Object) →
+      (hLength : args.length = spec.arity) →
+      spec.requirements args → Litex.Object) :
+  Litex.Object
+
+axiom Litex.functionObjectInFnSet
     (spec : Litex.FnSpec)
     (body : (args : List Litex.Object) →
       (hLength : args.length = spec.arity) →
@@ -353,14 +351,14 @@ axiom Litex.functionObject
     (closed : ∀ args hLength hRequirements,
       Litex.In (body args hLength hRequirements)
         (spec.range args hLength hRequirements)) :
-  Litex.Object
+  Litex.In (Litex.functionObject spec body) (Litex.FnSet spec)
 ```
 
-Named functions now emit their full body WD DAG under this telescope, including
-proof-carrying arithmetic and domain-dependent division. The current anonymous
-emitter deliberately remains at the proof-independent identity-body slice;
-compound anonymous bodies still fail closed until their binder-owned DAG is
-connected to the same ABI.
+Named functions now emit their full body WD DAG locally under the `closed`
+telescope, including arithmetic and domain-dependent division. The current
+anonymous emitter deliberately remains at the proof-independent identity-body
+slice; compound anonymous bodies still fail closed until their binder-owned
+DAG is replayed in the same lexical Lean scope.
 
 ## 8. Set constructors and semantic laws
 
@@ -392,15 +390,14 @@ Concrete Litex builtin rules such as union commutativity are then real Lean
 theorems derived from these semantic laws and `Litex.ext`. They must not be
 added as independent axioms.
 
-Partial constructors such as `listSet` and `replacement` additionally take
-their WD proof as described above. The membership theorem refers to the
-proof-carrying object:
+Partial source constructors such as `listSet` and `replacement` use
+proof-free target terms; their WD facts are replayed separately as described
+above. The membership theorem therefore refers only to the represented object:
 
 ```lean
 axiom Litex.inListSet_iff
-    {x : Litex.Object} {xs : List Litex.Object}
-    {h : Litex.ListSetWellDefined xs} :
-  Litex.In x (Litex.listSet xs h) ↔ x ∈ xs
+    {x : Litex.Object} {xs : List Litex.Object} :
+  Litex.In x (Litex.listSet xs) ↔ x ∈ xs
 ```
 
 ## 9. Verifier-owned object identities and replay order
@@ -415,37 +412,36 @@ target proof. The verifier freezes:
 - direct child edges, target requirement roles, source scope, root execution
   phase, and the exact function-space membership contract.
 
-Lean declarations use stable names such as:
+Inside the theorem that owns the source environment, Lean proof steps use
+stable names such as:
 
 ```lean
-theorem well_defined_fact_17 ... :
-    Litex.In (Litex.add a b a_in_C b_in_C) Litex.C := by
-  exact Litex.BuiltinRules.complexAddClosure a_in_C b_in_C
+have wd_0_17 : Litex.In (Litex.add a b) Litex.C := by
+  exact Litex.Rules.complexAddClosure a_in_C b_in_C
 ```
 
-Children are emitted before parents. If the proof is needed in another
-theorem's type, its helper is emitted before that theorem and generalized over
-the visible Litex environment. An outer term then passes
-`well_defined_fact_17` to its proof-carrying constructor. A WD cache hit cites
-the original accessible ID; it does not become a proofless boolean. Root uses
-retain preflight/proof/store phase so equal source objects do not force a
-structural guess. Child environments see parent facts, discarded child facts
-do not leak, and committed scopes follow the runtime's real merge rules.
+Children are replayed before parents after the owning theorem's `intro`. The
+theorem type contains only proof-free object terms; it never mentions a proof
+created in the proof body. A WD cache hit cites the original accessible ID; it
+does not become a proofless boolean. Root uses retain preflight/proof/store
+phase so equal source objects do not force a structural guess. Child
+environments see parent facts, discarded child facts do not leak, and
+committed scopes follow the runtime's real merge rules.
 
 `WellDefinedObjId` is deliberately not named `WellDefinedObjProofId`. The
 identity denotes the fixed object that becomes available after WD succeeds;
 its construction happens to be justified by a proof DAG. Runtime cache
 entries, frozen statement certificates, To-Lean IR, and Lean emission all use
-that same identity. The stable target spelling is:
+that same identity. The stable local proof-binding spelling is:
 
 ```text
-WellDefinedObjId(12)  -> obj_12
-WellDefinedFactId(17) -> well_defined_fact_17
+WellDefinedObjId(12)  -> obj_12_applicable / obj_12_result
+WellDefinedFactId(17) -> wd_0_17
 ```
 
-When Lean's proof-carrying application ABI needs a target-only
-`Litex.Applicable` bridge, its stable helper name is derived from the object
-identity rather than consuming a second verifier fact identity:
+When Lean needs a target-only `Litex.Applicable` bridge, its stable local
+helper name is derived from the object identity rather than consuming a second
+verifier fact identity:
 
 ```text
 WellDefinedObjId(12) -> obj_12_applicable
@@ -458,8 +454,11 @@ also exposed under the same identity:
 WellDefinedObjId(12) -> obj_12_result
 ```
 
-The shorter object spelling is unambiguous beside the deliberately explicit
-`well_defined_fact_N` audit names.
+The shorter helper spelling is unambiguous beside the deliberately explicit
+`wd_<environment-depth>_<WellDefinedFactId>` audit names. The depth is the
+lexical forall depth already visible in hypothesis names such as `h_0_1` and
+`h_1_1`; it prevents local helpers owned by different nested environments from
+colliding without changing the verifier-owned fact identity.
 
 One source occurrence and one fixed object are different identities. Every
 compound-object occurrence records the exact `WellDefinedObjId` it used. A
@@ -510,7 +509,7 @@ membership, restricted object constructors, numeric embedding, and the exact
 function/application boundary.
 
 Each concrete verifier builtin rule is a real Lean theorem under
-`Litex.BuiltinRules`, proved once in the shared Lake library from that core and
+`Litex.Rules`, proved once in the shared Lake library from that core and
 Mathlib. A compiler certificate validates the rule ID, target, ordered child
 facts, and substitution shape before calling that theorem. It does not repeat
 the theorem proof at the use site or turn the successful builtin use into
@@ -526,9 +525,7 @@ search, or implicit axioms.
 Every successful generated source currently has this shape:
 
 ```text
-import Litex.BuiltinRules
-
-example : Litex.abiVersion = 8 := rfl
+import Litex.Rules
 
 <WD helper declarations and translated source declarations>
 ```
@@ -543,7 +540,7 @@ above.
 ## Ten representative examples
 
 The Lean blocks below show the required shape, not stable generated identifier
-numbers. A name such as `well_defined_fact_17` stands for the exact helper
+numbers. A name such as `wd_0_17` stands for the exact helper
 selected by the verifier-owned ID.
 
 ### Example 1 — standard set, user set, and set parameter
@@ -591,8 +588,10 @@ Required target facts and call:
 (haR : Litex.In a Litex.R)
 (hf : Litex.In f (Litex.FnSet spec))
 
-f [a]
-  (Litex.fnSetApplicable hf rfl haR)
+have obj_applicable : Litex.Applicable f [a] :=
+  Litex.fnSetApplicable hf rfl haR
+
+-- theorem type uses `f [a]`
 ```
 
 The same `a` retains both memberships. Without the exact proof `haR`, Litex
@@ -600,21 +599,22 @@ rejects `f(a)` and To-Lean emits no call.
 
 ### Example 3 — one numeral and the one complex addition
 
-Status: **Current** for the numeral object and proof-carrying addition.
+Status: **Current** for the numeral object and proof-free addition with local
+WD evidence.
 
 ```litex
 forall a, b R:
     a + b $in R
 ```
 
-The target constructor and real-closure theorem both consume the exact complex
-membership proofs selected from the WD DAG:
+The target term is proof-free. The real-closure theorem consumes the exact
+complex and real membership proofs selected from the WD DAG:
 
 ```lean
-Litex.add a b haC hbC
+Litex.add a b
 
-Litex.BuiltinRules.realAddClosure haC hbC haR hbR :
-  Litex.In (Litex.add a b haC hbC) Litex.R
+Litex.Rules.realAddClosure haC hbC haR hbR :
+  Litex.In (Litex.add a b) Litex.R
 ```
 
 There is no separate real `+`. Both operands are also known to be in `C`, and
@@ -639,10 +639,9 @@ let spec : Litex.FnSpec := {
 }
 
 hf : Litex.In f (Litex.FnSet spec)
-
-f [2]
-  (Litex.fnSetApplicable hf rfl
-    (Litex.BuiltinRules.numeralInR 2))
+have obj_applicable : Litex.Applicable f [2] :=
+  Litex.fnSetApplicable hf rfl (Litex.Rules.numeralInR 2)
+-- theorem type and object equality use only `f [2]`
 ```
 
 The membership `hf`, not the Lean type of `f`, says which function contract is
@@ -666,7 +665,7 @@ have h2Pos : Litex.gt (2 : Litex.Object) 0 := ...
 have happ : Litex.Applicable f [2] :=
   Litex.fnSetApplicable hf rfl ⟨h2R, h2Pos⟩
 
-exact f [2] happ
+exact rfl -- the object term is `f [2]`; `happ` audits its source applicability
 ```
 
 For `f(-1)`, the compiler cannot manufacture the positive-domain fact, so the
@@ -681,14 +680,12 @@ forall f fn(x, y, z R) R:
     f(1, 2, 3) = f(1, 2, 3)
 ```
 
-Required target shape:
+Required target shape inside the theorem proof:
 
 ```lean
-noncomputable def obj_1 : Litex.Object := 1
-noncomputable def obj_2 : Litex.Object := 2
-noncomputable def obj_3 : Litex.Object := 3
-noncomputable def obj_4 : Litex.Object :=
-  f [obj_1, obj_2, obj_3] obj_4_applicable
+have obj_4_applicable : Litex.Applicable f [1, 2, 3] := by
+  exact Litex.fnSetApplicable hf rfl requirements
+-- theorem type uses `f [1, 2, 3]`
 ```
 
 The one source group remains one list. A split expression such as
@@ -704,14 +701,14 @@ forall g fn(x R) fn(y R) R:
     g(1)(2) = g(1)(2)
 ```
 
-Required target shape:
+Required target shape inside the theorem proof:
 
 ```lean
-noncomputable def obj_40 : Litex.Object := g [obj_1] obj_40_applicable
-theorem obj_40_result : Litex.In obj_40 innerFnSet :=
+have obj_40_applicable : Litex.Applicable g [1] := ...
+have obj_40_result : Litex.In (g [1]) innerFnSet :=
   Litex.fnSetResult hf rfl first_requirements
-noncomputable def obj_41 : Litex.Object :=
-  obj_40 [obj_2] obj_41_applicable
+have obj_41_applicable : Litex.Applicable (g [1]) [2] := ...
+-- theorem type uses `(g [1]) [2]`
 ```
 
 The two `Applicable` proofs are distinct. This is not identified with one call
@@ -756,7 +753,8 @@ emission is deliberately deferred.
 fn(x, y R: x < y) R {x + y}
 ```
 
-The target object must carry a certificate equivalent to:
+The target proof environment must carry separate closure evidence equivalent
+to:
 
 ```lean
 have hBody :
@@ -766,16 +764,19 @@ have hBody :
   -- Replays the retained WD DAG for x + y and real closure.
   ...
 
-Litex.functionObject spec body hBody
+Litex.functionObject spec body
+
+Litex.functionObjectInFnSet spec body hBody
 ```
 
-The domain facts justify construction of the body, and `hBody` proves that the
-result belongs to the declared range. The compiler may not emit an unguarded
-Lean lambda that is meaningful outside the source domain.
+The domain facts justify the body's local WD replay, and `hBody` proves that
+the result belongs to the declared range without becoming part of the function
+object's denotation. The compiler may not invent closure evidence outside the
+source binder environment.
 
-### Example 10 — proof-carrying list set and replacement
+### Example 10 — proof-free list set with checked WD, and replacement
 
-Status: list sets are **current in ABI version 8**; replacement remains
+Status: list sets are **current in ABI version 9**; replacement remains
 **decided, not emitted yet**.
 
 ```litex
@@ -783,25 +784,23 @@ Status: list sets are **current in ABI version 8**; replacement remains
 replacement(P, A)
 ```
 
-Required target shape:
+Required list-set target shape inside the owning theorem:
 
 ```lean
-noncomputable def obj_54 : Litex.Object :=
-  Litex.listSet [obj_51, obj_52] (by
-    apply List.Pairwise.cons
-    · intro x hx
-      ...
-      exact well_defined_fact_53
-    · ...)
+have wd_0_53 : obj_51 ≠ obj_52 := by
+  ...
+
+-- theorem type uses `Litex.listSet [obj_51, obj_52]`
 
 have hUnique : Litex.ReplacementWellDefined P A :=
-  well_defined_fact_53
+  wd_0_53
 
-let imageSet := Litex.replacement P A hUnique
+let imageSet := Litex.replacement P A
 ```
 
-The WD proofs are arguments of the constructed objects, not detached comments.
-Their IDs still preserve the exact Litex proof routes. Because the certificate
+The WD proofs are local proof bindings, not detached top-level comments or
+arguments of the constructed objects. Their IDs preserve the exact Litex proof
+routes. Because the certificate
 types are propositions, using a different proof of the same obligation does
 not introduce new mathematical data.
 
@@ -813,8 +812,8 @@ The design is implemented only when all of the following are true:
    predicates consistently;
 2. set extensionality and restricted primitive set constructors have explicit
    semantic laws;
-3. every partial object constructor and application consumes its retained WD
-   certificate;
+3. every partial source constructor and application has proof-free denotation
+   and replays its retained WD certificate in the corresponding Lean scope;
 4. anonymous functions replay body WD and range membership;
 5. all ten examples have executable positive coverage when their source syntax
    is supported, with the nearest invalid domain/application boundary kept as

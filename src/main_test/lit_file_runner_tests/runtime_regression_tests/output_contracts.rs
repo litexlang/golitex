@@ -1964,7 +1964,8 @@ fn claim_fact_output_explains_proof_steps_and_final_goal() {
         "claim_fact_output_explains_proof_steps_and_final_goal",
         || {
             let source_code = r#"
-claim 1 = 1:
+claim:
+    ? 1 = 1
     1 = 1
 "#;
 

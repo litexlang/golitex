@@ -30,7 +30,10 @@ fn lean_ledger_command_freshly_compiles_all_09_entries() {
 
     let generated = fs::read_to_string(&output_path).expect("read bundled Lean output");
     assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 22);
-    assert_eq!(generated.matches("import Litex.BuiltinRules").count(), 1);
+    assert_eq!(generated.matches("import Litex.Rules").count(), 1);
+    assert!(!generated.contains("Litex.abiVersion"));
+    assert!(generated.contains("wd_0_"));
+    assert!(!generated.contains("well_defined_fact_"));
     assert!(generated.contains("-- BEGIN ENTRY 02: trusted_forall_atomic_fact"));
     assert!(generated.contains("namespace Entry02"));
     assert!(generated.contains("axiom fact3"));
