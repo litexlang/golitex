@@ -968,3 +968,158 @@ thm theorem_VIII_Fermat:
             by thm finite_product_toolkit::congruent_mod_transport_equalities(p, a ^ p, a, a ^ section6::euler_phi(p) * a, 1 * a)
             by def:
                 ? $fermat_little_theorem_conclusion(p, a)
+
+# Variable-size companion to the constant-fiber unique-cover theorem.  This
+# is the reusable counting interface needed when a finite lattice region is
+# partitioned into rows whose cardinalities depend on the row index.
+prop fixed_unique_cover_size_sum_holds(U, D set, T finite_set):
+    forall S finite_set, F fn(K D) power_set(U):
+        $fixed_unique_cover_of(U, D, S, T, F)
+        T $subset D
+        forall K T:
+            $is_finite_set(F(K))
+        =>:
+            finite_set_size(S) = finite_set_sum(T, fn(K T) N {finite_set_size(F(K))})
+
+thm finite_set_size_over_fixed_unique_cover:
+    ? forall U, D set, T finite_set:
+        $fixed_unique_cover_size_sum_holds(U, D, T)
+    by induc P:
+        ? $fixed_unique_cover_size_sum_holds(U, D, P)
+        ? from P = {}:
+            claim:
+                ? forall A finite_set, F fn(K D) power_set(U):
+                    $fixed_unique_cover_of(U, D, A, {}, F)
+                    {} $subset D
+                    forall K {}:
+                        $is_finite_set(F(K))
+                    =>:
+                        finite_set_size(A) = finite_set_sum({}, fn(K {}) N {finite_set_size(F(K))})
+                claim:
+                    ? A = {}
+                    by extension:
+                        ? A = {}
+                        claim:
+                            ? forall x A:
+                                x $in {}
+                            by contra:
+                                ? x $in {}
+                                exist! K {} st {x $in F(K)}
+                                obtain K from exist! K {} st {x $in F(K)}
+                                impossible K $in {}
+                        claim:
+                            ? forall x {}:
+                                x $in A
+                            by contra:
+                                ? x $in A
+                                impossible x $in {}
+                finite_set_size(A) = finite_set_size({}) = 0
+                finite_set_sum({}, fn(K {}) N {finite_set_size(F(K))}) = 0
+            by def:
+                ? $fixed_unique_cover_size_sum_holds(U, D, {})
+        ? induc K, I:
+            $fixed_unique_cover_size_sum_holds(U, D, I)
+            forall S0 finite_set, F0 fn(L D) power_set(U):
+                $fixed_unique_cover_of(U, D, S0, I, F0)
+                I $subset D
+                forall L I:
+                    $is_finite_set(F0(L))
+                =>:
+                    finite_set_size(S0) = finite_set_sum(I, fn(L I) N {finite_set_size(F0(L))})
+            claim:
+                ? forall A finite_set, F fn(L D) power_set(U):
+                    $fixed_unique_cover_of(U, D, A, union({K}, I), F)
+                    union({K}, I) $subset D
+                    forall L union({K}, I):
+                        $is_finite_set(F(L))
+                    =>:
+                        finite_set_size(A) = finite_set_sum(union({K}, I), fn(L union({K}, I)) N {finite_set_size(F(L))})
+                not K $in I
+                $fixed_indexed_subfamily(U, D, A, union({K}, I), F)
+                K $in union({K}, I)
+                K $in D
+                have A0 finite_set = set_minus(A, F(K))
+                by thm fixed_unique_cover_remove_inserted_index(U, D, A, I, K, F)
+                I $subset union({K}, I)
+                I $subset D
+                claim:
+                    ? forall L I:
+                        $is_finite_set(F(L))
+                    L $in union({K}, I)
+                    $is_finite_set(F(L))
+                finite_set_size(A0) = finite_set_sum(I, fn(L I) N {finite_set_size(F(L))})
+                $is_finite_set(F(K))
+                claim:
+                    ? A = union(F(K), A0)
+                    by extension:
+                        ? A = union(F(K), A0)
+                        claim:
+                            ? forall x A:
+                                x $in union(F(K), A0)
+                            x $in F(K) or not x $in F(K)
+                            by cases:
+                                ? x $in union(F(K), A0)
+                                case x $in F(K):
+                                    x $in union(F(K), A0)
+                                case not x $in F(K):
+                                    x $in set_minus(A, F(K))
+                                    x $in A0
+                                    x $in union(F(K), A0)
+                        claim:
+                            ? forall x union(F(K), A0):
+                                x $in A
+                            x $in F(K) or x $in A0
+                            by cases:
+                                ? x $in A
+                                case x $in F(K):
+                                    F(K) $subset A
+                                    x $in A
+                                case x $in A0:
+                                    A0 = set_minus(A, F(K))
+                                    x $in set_minus(A, F(K))
+                                    x $in A
+                claim:
+                    ? intersect(F(K), A0) = {}
+                    by extension:
+                        ? intersect(F(K), A0) = {}
+                        claim:
+                            ? forall x intersect(F(K), A0):
+                                x $in {}
+                            x $in F(K)
+                            x $in A0
+                            not x $in F(K)
+                            by contra:
+                                ? x $in {}
+                                impossible not x $in F(K)
+                        claim:
+                            ? forall x {}:
+                                x $in intersect(F(K), A0)
+                            by contra:
+                                ? x $in intersect(F(K), A0)
+                                impossible x $in {}
+                by thm finite_set_size_disjoint_union_fixed_cover(F(K), A0)
+                finite_set_size(A) = finite_set_size(union(F(K), A0)) = finite_set_size(F(K)) + finite_set_size(A0)
+                claim:
+                    ? intersect({K}, I) = {}
+                    by extension:
+                        ? intersect({K}, I) = {}
+                        claim:
+                            ? forall L intersect({K}, I):
+                                L $in {}
+                            L = K
+                            K $in I
+                            by contra:
+                                ? L $in {}
+                                impossible not K $in I
+                        claim:
+                            ? forall L {}:
+                                L $in intersect({K}, I)
+                            by contra:
+                                ? L $in intersect({K}, I)
+                                impossible L $in {}
+                finite_set_sum(union({K}, I), fn(L union({K}, I)) N {finite_set_size(F(L))}) = finite_set_sum({K}, fn(L {K}) N {finite_set_size(F(L))}) + finite_set_sum(I, fn(L I) N {finite_set_size(F(L))})
+                finite_set_sum({K}, fn(L {K}) N {finite_set_size(F(L))}) = finite_set_size(F(K))
+                finite_set_sum(union({K}, I), fn(L union({K}, I)) N {finite_set_size(F(L))}) = finite_set_size(F(K)) + finite_set_sum(I, fn(L I) N {finite_set_size(F(L))})
+                finite_set_size(A) = finite_set_size(F(K)) + finite_set_size(A0) = finite_set_size(F(K)) + finite_set_sum(I, fn(L I) N {finite_set_size(F(L))}) = finite_set_sum(union({K}, I), fn(L union({K}, I)) N {finite_set_size(F(L))})
+            by def:
+                ? $fixed_unique_cover_size_sum_holds(U, D, union({K}, I))

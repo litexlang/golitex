@@ -282,10 +282,8 @@ thm interval_endpoint_form_is_a_bounded_interval:
         $has_interval_endpoints(I, a, b)
         =>:
             $is_bounded_interval(I)
-    witness exist u, v R st {$has_interval_endpoints(I, u, v)} from a, b:
+    witness $is_bounded_interval(I) from a, b:
         $has_interval_endpoints(I, a, b)
-    by def:
-        ? $is_bounded_interval(I)
 
 thm endpoint_forms_are_bounded_intervals_for_intersection:
     ? forall a, b R:
@@ -801,10 +799,8 @@ thm bounded_connected_subsets_are_bounded_intervals:
                 X = '[0, 0] or X = '[0, 0) or X = '(0, 0] or X = '(0, 0)
                 by def:
                     ? $has_interval_endpoints(X, 0, 0)
-            witness exist a, b R st {$has_interval_endpoints(X, a, b)} from 0, 0:
+            witness $is_bounded_interval(X) from 0, 0:
                 $has_interval_endpoints(X, 0, 0)
-            by def:
-                ? $is_bounded_interval(X)
 
 thm bounded_intervals_are_bounded_connected:
     ? forall X power_set(R):
@@ -814,7 +810,7 @@ thm bounded_intervals_are_bounded_connected:
             $is_connected_subset_of_R(X)
     # Source handling: split the displayed endpoint forms.  Each form is
     # connected directly; boundedness comes from containment in `[a,b]`.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(X, a, b)}
+    obtain a, b from $is_bounded_interval(X)
     by cases:
         ? $chap9::is_bounded_real_set(X)
         ? $is_connected_subset_of_R(X)
@@ -1013,10 +1009,8 @@ thm interval_length_endpoint_case:
         $has_interval_length_with_endpoints(I, l, a, b)
         =>:
             $has_interval_length(I, l)
-    witness exist a0, b0 R st {$has_interval_length_with_endpoints(I, l, a0, b0)} from a, b:
+    witness $has_interval_length(I, l) from a, b:
         $has_interval_length_with_endpoints(I, l, a, b)
-    by def:
-        ? $has_interval_length(I, l)
 
 thm interval_endpoint_case_has_total_length:
     ? forall I power_set(R), a, b R:
@@ -1079,7 +1073,7 @@ have fn interval_length by exist!:
     # Source handling: this packages the endpoint-only length formula as a
     # selector.  Degenerate and empty intervals are represented by degenerate
     # endpoint forms, so no separate length branch is needed.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     by thm interval_endpoint_case_has_total_length(I, a, b)
     claim:
         ? exist l R st {$has_interval_length(I, l)}
@@ -1101,7 +1095,7 @@ thm interval_length_nonnegative:
             interval_length(I) >= 0
     # Source handling: interval length is the positive part of an endpoint
     # difference, so it is non-negative in every endpoint convention.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     by thm interval_endpoint_case_has_total_length(I, a, b)
     $has_interval_length(I, finite_set_max(union({b - a}, { 0})))
     $has_interval_length(I, interval_length(I))
@@ -1249,10 +1243,8 @@ thm singleton_interval_is_bounded:
         {a} = '[a, a] or {a} = '[a, a) or {a} = '(a, a] or {a} = '(a, a)
         by def:
             ? $has_interval_endpoints({a}, a, a)
-    witness exist a0, b0 R st {$has_interval_endpoints({a}, a0, b0)} from a, a:
+    witness $is_bounded_interval({a}) from a, a:
         $has_interval_endpoints({a}, a, a)
-    by def:
-        ? $is_bounded_interval({a})
 
 thm empty_interval_is_bounded:
     ? forall:
@@ -1277,10 +1269,8 @@ thm empty_interval_is_bounded:
         {} = '[0, 0] or {} = '[0, 0) or {} = '(0, 0] or {} = '(0, 0)
         by def:
             ? $has_interval_endpoints({}, 0, 0)
-    witness exist a, b R st {$has_interval_endpoints({}, a, b)} from 0, 0:
+    witness $is_bounded_interval({}) from 0, 0:
         $has_interval_endpoints({}, 0, 0)
-    by def:
-        ? $is_bounded_interval({})
 
 thm max_positive_part_identity_when_positive:
     ? forall a, b R:
@@ -2332,17 +2322,15 @@ thm partition_has_removable_piece:
                                 not $is_nonempty_set(J)
                                 claim:
                                     ? $has_empty_partition_piece(P)
-                                    witness exist K P st {not $is_nonempty_set(K)} from J:
+                                    witness $has_empty_partition_piece(P) from J:
                                         not $is_nonempty_set(J)
-                                    by def:
-                                        ? $has_empty_partition_piece(P)
                                 impossible $has_empty_partition_piece(P)
                         by def:
                             ? $has_only_nonempty_partition_pieces(P)
                         impossible not $has_only_nonempty_partition_pieces(P)
             by def:
                 ? $has_empty_partition_piece(P)
-            obtain J0 from exist J P st {not $is_nonempty_set(J)}
+            obtain J0 from $has_empty_partition_piece(P)
             claim:
                 ? J0 = {}
                 by extension:
@@ -2572,8 +2560,8 @@ thm interval_length_adds_across_bounded_difference:
                     interval_length(I) = interval_length(I) + 0 = interval_length(J) + interval_length(K)
                 case $is_nonempty_set(K):
                     by thm disjoint_nonempty_bounded_intervals_are_ordered(J, K)
-                    obtain p, q from exist p, q R st {$has_interval_endpoints(I, p, q)}
-                    obtain a, b from exist a, b R st {$has_interval_endpoints(J, a, b)}
+                    obtain p, q from $is_bounded_interval(I)
+                    obtain a, b from $is_bounded_interval(J)
                     obtain c, d from exist c, d R st {$has_interval_endpoints(set_minus(I, J), c, d)}
                     $has_interval_endpoints(K, c, d)
                     by cases:
@@ -4653,9 +4641,9 @@ thm constant_on_subset_add:
             $is_constant_on_subset(I, E, fn(x I) R {f(x) + g(x)})
     # Source handling: this is the same-piece algebra step used in Exercise
     # 11.2.2 before passing to a common refinement.
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {f(x) + g(x)}, c)} from cf + cg:
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
+    witness $is_constant_on_subset(I, E, fn(x I) R {f(x) + g(x)}) from cf + cg:
         E $subset I
         forall x E:
             x $in I
@@ -4668,8 +4656,6 @@ thm constant_on_subset_add:
             fn(y I) R {f(y) + g(y)}(x) = cf + cg
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {f(x) + g(x)}, cf + cg)
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {f(x) + g(x)})
 
 thm constant_on_subset_sub:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -4680,9 +4666,9 @@ thm constant_on_subset_sub:
             $is_constant_on_subset(I, E, fn(x I) R {f(x) - g(x)})
     # Source handling: this is the same-piece subtraction step used in
     # Exercise 11.2.2.
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {f(x) - g(x)}, c)} from cf - cg:
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
+    witness $is_constant_on_subset(I, E, fn(x I) R {f(x) - g(x)}) from cf - cg:
         E $subset I
         forall x E:
             x $in I
@@ -4695,8 +4681,6 @@ thm constant_on_subset_sub:
             fn(y I) R {f(y) - g(y)}(x) = cf - cg
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {f(x) - g(x)}, cf - cg)
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {f(x) - g(x)})
 
 thm constant_on_subset_mul:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -4707,9 +4691,9 @@ thm constant_on_subset_mul:
             $is_constant_on_subset(I, E, fn(x I) R {f(x) * g(x)})
     # Source handling: this is the same-piece multiplication step used in
     # Exercise 11.2.2.
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {f(x) * g(x)}, c)} from cf * cg:
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
+    witness $is_constant_on_subset(I, E, fn(x I) R {f(x) * g(x)}) from cf * cg:
         E $subset I
         forall x E:
             x $in I
@@ -4722,8 +4706,6 @@ thm constant_on_subset_mul:
             fn(y I) R {f(y) * g(y)}(x) = cf * cg
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {f(x) * g(x)}, cf * cg)
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {f(x) * g(x)})
 
 thm constant_on_subset_max:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -4734,9 +4716,9 @@ thm constant_on_subset_max:
             $is_constant_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
     # Source handling: this is the same-piece maximum step used in Exercise
     # 11.2.2.
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}, c)} from finite_set_max(union({cf}, { cg})):
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
+    witness $is_constant_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}) from finite_set_max(union({cf}, { cg})):
         E $subset I
         claim:
             ? forall x E:
@@ -4752,8 +4734,6 @@ thm constant_on_subset_max:
             fn(y I) R {finite_set_max(union({f(y)}, { g(y)}))}(x) = finite_set_max(union({f(x)}, {g(x)})) = finite_set_max(union({cf}, {cg}))
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))}, finite_set_max(union({cf}, { cg})))
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {finite_set_max(union({f(x)}, { g(x)}))})
 
 thm constant_on_subset_min:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -4764,9 +4744,9 @@ thm constant_on_subset_min:
             $is_constant_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
     # Source handling: this is the same-piece minimum step used in Theorem
     # 11.4.3.
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
-    witness exist c R st {$has_constant_value_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}, c)} from finite_set_min(union({cf}, { cg})):
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
+    witness $is_constant_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}) from finite_set_min(union({cf}, { cg})):
         E $subset I
         claim:
             ? forall x E:
@@ -4782,8 +4762,6 @@ thm constant_on_subset_min:
             fn(y I) R {finite_set_min(union({f(y)}, { g(y)}))}(x) = finite_set_min(union({f(x)}, {g(x)})) = finite_set_min(union({cf}, {cg}))
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))}, finite_set_min(union({cf}, { cg})))
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {finite_set_min(union({f(x)}, { g(x)}))})
 
 thm constant_on_subset_scalar_mul:
     ? forall I power_set(R), E power_set(R), f fn(x I) R, c R:
@@ -4793,8 +4771,8 @@ thm constant_on_subset_scalar_mul:
             $is_constant_on_subset(I, E, fn(x I) R {c * f(x)})
     # Source handling: scalar multiplication is another same-piece algebra
     # step used by the linearity laws.
-    obtain cf from exist cf R st {$has_constant_value_on_subset(I, E, f, cf)}
-    witness exist c0 R st {$has_constant_value_on_subset(I, E, fn(x I) R {c * f(x)}, c0)} from c * cf:
+    obtain cf from $is_constant_on_subset(I, E, f)
+    witness $is_constant_on_subset(I, E, fn(x I) R {c * f(x)}) from c * cf:
         E $subset I
         forall x E:
             x $in I
@@ -4805,8 +4783,6 @@ thm constant_on_subset_scalar_mul:
             fn(y I) R {c * f(y)}(x) = c * cf
         by def:
             ? $has_constant_value_on_subset(I, E, fn(x I) R {c * f(x)}, c * cf)
-    by def:
-        ? $is_constant_on_subset(I, E, fn(x I) R {c * f(x)})
 
 thm constant_on_subset_quotient:
     ? forall I power_set(R), E power_set(R), f, g fn(x I) R:
@@ -4824,8 +4800,8 @@ thm constant_on_subset_quotient:
     # quotient's constant-value predicate.
     trust $is_constant_on_subset(I, E, fn(x I) R {f(x) / g(x)})
     """
-    obtain cf from exist c R st {$has_constant_value_on_subset(I, E, f, c)}
-    obtain cg from exist c R st {$has_constant_value_on_subset(I, E, g, c)}
+    obtain cf from $is_constant_on_subset(I, E, f)
+    obtain cg from $is_constant_on_subset(I, E, g)
     by cases:
         ? $is_constant_on_subset(I, E, fn(x I) R {f(x) / g(x)})
         case $is_nonempty_set(E):
@@ -5094,7 +5070,7 @@ thm example_11_2_4_piecewise_constant_for_constant_preserving_partitions:
         by cases:
             ? $is_constant_on_subset('[1, 6], J, f)
             case J $subset '[1, 3):
-                witness exist c R st {$has_constant_value_on_subset('[1, 6], J, f, c)} from 7:
+                witness $is_constant_on_subset('[1, 6], J, f) from 7:
                     J $subset '[1, 6]
                     forall x J:
                         x $in '[1, 6]
@@ -5103,10 +5079,8 @@ thm example_11_2_4_piecewise_constant_for_constant_preserving_partitions:
                         f(x) = 7
                     by def:
                         ? $has_constant_value_on_subset('[1, 6], J, f, 7)
-                by def:
-                    ? $is_constant_on_subset('[1, 6], J, f)
             case J $subset {3}:
-                witness exist c R st {$has_constant_value_on_subset('[1, 6], J, f, c)} from 4:
+                witness $is_constant_on_subset('[1, 6], J, f) from 4:
                     J $subset '[1, 6]
                     forall x J:
                         x $in '[1, 6]
@@ -5115,10 +5089,8 @@ thm example_11_2_4_piecewise_constant_for_constant_preserving_partitions:
                         f(x) = 4
                     by def:
                         ? $has_constant_value_on_subset('[1, 6], J, f, 4)
-                by def:
-                    ? $is_constant_on_subset('[1, 6], J, f)
             case J $subset '(3, 6):
-                witness exist c R st {$has_constant_value_on_subset('[1, 6], J, f, c)} from 5:
+                witness $is_constant_on_subset('[1, 6], J, f) from 5:
                     J $subset '[1, 6]
                     forall x J:
                         x $in '[1, 6]
@@ -5129,10 +5101,8 @@ thm example_11_2_4_piecewise_constant_for_constant_preserving_partitions:
                         f(x) = 5
                     by def:
                         ? $has_constant_value_on_subset('[1, 6], J, f, 5)
-                by def:
-                    ? $is_constant_on_subset('[1, 6], J, f)
             case J $subset {6}:
-                witness exist c R st {$has_constant_value_on_subset('[1, 6], J, f, c)} from 2:
+                witness $is_constant_on_subset('[1, 6], J, f) from 2:
                     J $subset '[1, 6]
                     forall x J:
                         x $in '[1, 6]
@@ -5141,8 +5111,6 @@ thm example_11_2_4_piecewise_constant_for_constant_preserving_partitions:
                         f(x) = 2
                     by def:
                         ? $has_constant_value_on_subset('[1, 6], J, f, 2)
-                by def:
-                    ? $is_constant_on_subset('[1, 6], J, f)
         by def:
             ? $is_constant_on_subset('[1, 6], J, f)
     by def:
@@ -5163,10 +5131,8 @@ thm piecewise_constant_with_partition_is_piecewise_constant:
             $is_piecewise_constant_on(I, f)
     # Source handling: this is just Definition 11.2.5 with the displayed
     # partition as witness.
-    witness exist P0 finite_set st {$is_piecewise_constant_with_partition(I, P0, f)} from P:
+    witness $is_piecewise_constant_on(I, f) from P:
         $is_piecewise_constant_with_partition(I, P, f)
-    by def:
-        ? $is_piecewise_constant_on(I, f)
 
 """
 Example 11.2.6.  The previous example is piecewise constant on `[1,6]`, and
@@ -5189,15 +5155,13 @@ thm constant_function_is_piecewise_constant_with_one_piece_partition:
         J = I
         J $in power_set(R)
         J $subset I
-        witness exist c0 R st {$has_constant_value_on_subset(I, J, fn(x I) R {c}, c0)} from c:
+        witness $is_constant_on_subset(I, J, fn(x I) R {c}) from c:
             J $subset I
             forall x J:
                 x $in I
                 fn(y I) R {c}(x) = c
             by def:
                 ? $has_constant_value_on_subset(I, J, fn(x I) R {c}, c)
-        by def:
-            ? $is_constant_on_subset(I, J, fn(x I) R {c})
     by def:
         ? $is_piecewise_constant_with_partition(I, {I}, fn(x I) R {c})
 
@@ -5209,10 +5173,8 @@ thm constant_function_is_piecewise_constant:
     # Source handling: Tao marks this as `(why?)`; the one-piece partition
     # `{I}` witnesses piecewise constancy.
     by thm constant_function_is_piecewise_constant_with_one_piece_partition(I, c)
-    witness exist P finite_set st {$is_piecewise_constant_with_partition(I, P, fn(x I) R {c})} from {I}:
+    witness $is_piecewise_constant_on(I, fn(x I) R {c}) from {I}:
         $is_piecewise_constant_with_partition(I, {I}, fn(x I) R {c})
-    by def:
-        ? $is_piecewise_constant_on(I, fn(x I) R {c})
 
 """
 Lemma 11.2.7.  If a partition is refined, a function piecewise constant on the
@@ -5239,16 +5201,14 @@ thm piecewise_constant_refines:
         K $in power_set(R)
         J $subset K
         $is_constant_on_subset(I, K, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, K, f, c)}
-        witness exist c0 R st {$has_constant_value_on_subset(I, J, f, c0)} from c:
+        obtain c from $is_constant_on_subset(I, K, f)
+        witness $is_constant_on_subset(I, J, f) from c:
             J $subset I
             forall x J:
                 x $in K
                 f(x) = c
             by def:
                 ? $has_constant_value_on_subset(I, J, f, c)
-        by def:
-            ? $is_constant_on_subset(I, J, f)
     by def:
         ? $is_piecewise_constant_with_partition(I, Pfine, f)
 
@@ -5270,8 +5230,8 @@ thm piecewise_constant_algebra:
             $is_piecewise_constant_on(I, fn(x I) R {f(x) * g(x)})
     # Source handling: Tao proves this in Exercise 11.2.2 by passing to a
     # common refinement.
-    obtain Pf from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
-    obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g)}
+    obtain Pf from $is_piecewise_constant_on(I, f)
+    obtain Pg from $is_piecewise_constant_on(I, g)
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
     by thm partition_is_set_of_real_subsets(I, Pf)
@@ -5318,8 +5278,8 @@ thm piecewise_constant_quotient:
     # resulting piecewise-constant existential.
     trust $is_piecewise_constant_on(I, fn(x I) R {f(x) / g(x)})
     """
-    obtain Pf from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
-    obtain Pg from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g)}
+    obtain Pf from $is_piecewise_constant_on(I, f)
+    obtain Pg from $is_piecewise_constant_on(I, g)
     $is_partition_of_bounded_interval(I, Pf)
     $is_partition_of_bounded_interval(I, Pg)
     by thm partition_is_set_of_real_subsets(I, Pf)
@@ -6288,7 +6248,7 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 2:
+                witness $is_constant_on_subset('[1, 4], J, f) from 2:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6297,8 +6257,6 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         f(x) = 2
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 2)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = {3}:
                 by thm singleton_interval_is_bounded(3)
                 J $in power_set(R)
@@ -6311,7 +6269,7 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 4:
+                witness $is_constant_on_subset('[1, 4], J, f) from 4:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6319,8 +6277,6 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         f(x) = 4
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 4)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = '(3, 4]:
                 by thm non_degenerate_interval_forms_are_bounded_intervals(3, 4)
                 J $in power_set(R)
@@ -6336,7 +6292,7 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 6:
+                witness $is_constant_on_subset('[1, 4], J, f) from 6:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6346,8 +6302,6 @@ thm example_11_2_12_displayed_partition_piecewise_constant:
                         f(x) = 6
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 6)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
     by def:
         ? $is_piecewise_constant_with_partition('[1, 4], example_11_2_12_partition_set, f)
 
@@ -6399,7 +6353,7 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 2:
+                witness $is_constant_on_subset('[1, 4], J, f) from 2:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6410,8 +6364,6 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         f(x) = 2
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 2)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = '[2, 3):
                 by thm non_degenerate_interval_forms_are_bounded_intervals(2, 3)
                 J $in power_set(R)
@@ -6429,7 +6381,7 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 2:
+                witness $is_constant_on_subset('[1, 4], J, f) from 2:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6438,8 +6390,6 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         f(x) = 2
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 2)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = {3}:
                 by thm singleton_interval_is_bounded(3)
                 J $in power_set(R)
@@ -6452,7 +6402,7 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 4:
+                witness $is_constant_on_subset('[1, 4], J, f) from 4:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6460,8 +6410,6 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         f(x) = 4
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 4)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = '(3, 4]:
                 by thm non_degenerate_interval_forms_are_bounded_intervals(3, 4)
                 J $in power_set(R)
@@ -6477,7 +6425,7 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         x $in '[1, 4]
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 6:
+                witness $is_constant_on_subset('[1, 4], J, f) from 6:
                     J $subset '[1, 4]
                     forall x J:
                         x $in '[1, 4]
@@ -6487,8 +6435,6 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                         f(x) = 6
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 6)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
             case J = {}:
                 by thm empty_interval_is_bounded()
                 J $in power_set(R)
@@ -6506,7 +6452,7 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                             impossible $is_nonempty_set({})
                     by def:
                         ? J $subset '[1, 4]
-                witness exist c R st {$has_constant_value_on_subset('[1, 4], J, f, c)} from 0:
+                witness $is_constant_on_subset('[1, 4], J, f) from 0:
                     J $subset '[1, 4]
                     claim:
                         ? forall x J:
@@ -6520,8 +6466,6 @@ thm example_11_2_12_refined_partition_piecewise_constant:
                             impossible $is_nonempty_set({})
                     by def:
                         ? $has_constant_value_on_subset('[1, 4], J, f, 0)
-                by def:
-                    ? $is_constant_on_subset('[1, 4], J, f)
     by def:
         ? $is_piecewise_constant_with_partition('[1, 4], example_11_2_12_refined_partition_set, f)
 
@@ -6559,9 +6503,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], '[1, 3), f, 2)
     claim:
         ? $is_constant_on_subset('[1, 4], '[1, 3), f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], '[1, 3), f, c)} from 2
-        by def:
-            ? $is_constant_on_subset('[1, 4], '[1, 3), f)
+        witness $is_constant_on_subset('[1, 4], '[1, 3), f) from 2
     by thm non_degenerate_interval_forms_are_bounded_intervals(1, 3)
     by thm non_degenerate_interval_forms_length_value(1, 3)
     interval_length('[1, 3)) = 3 - 1 = 2
@@ -6593,9 +6535,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], {3}, f, 4)
     claim:
         ? $is_constant_on_subset('[1, 4], {3}, f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], {3}, f, c)} from 4
-        by def:
-            ? $is_constant_on_subset('[1, 4], {3}, f)
+        witness $is_constant_on_subset('[1, 4], {3}, f) from 4
     by thm singleton_interval_is_bounded(3)
     by thm singleton_interval_length_value(3)
     claim:
@@ -6628,9 +6568,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], '(3, 4], f, 6)
     claim:
         ? $is_constant_on_subset('[1, 4], '(3, 4], f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], '(3, 4], f, c)} from 6
-        by def:
-            ? $is_constant_on_subset('[1, 4], '(3, 4], f)
+        witness $is_constant_on_subset('[1, 4], '(3, 4], f) from 6
     by thm non_degenerate_interval_forms_are_bounded_intervals(3, 4)
     by thm non_degenerate_interval_forms_length_value(3, 4)
     interval_length('(3, 4]) = 4 - 3 = 1
@@ -6666,9 +6604,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], '[1, 2), f, 2)
     claim:
         ? $is_constant_on_subset('[1, 4], '[1, 2), f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], '[1, 2), f, c)} from 2
-        by def:
-            ? $is_constant_on_subset('[1, 4], '[1, 2), f)
+        witness $is_constant_on_subset('[1, 4], '[1, 2), f) from 2
     by thm non_degenerate_interval_forms_are_bounded_intervals(1, 2)
     by thm non_degenerate_interval_forms_length_value(1, 2)
     interval_length('[1, 2)) = 2 - 1 = 1
@@ -6704,9 +6640,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], '[2, 3), f, 2)
     claim:
         ? $is_constant_on_subset('[1, 4], '[2, 3), f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], '[2, 3), f, c)} from 2
-        by def:
-            ? $is_constant_on_subset('[1, 4], '[2, 3), f)
+        witness $is_constant_on_subset('[1, 4], '[2, 3), f) from 2
     by thm non_degenerate_interval_forms_are_bounded_intervals(2, 3)
     by thm non_degenerate_interval_forms_length_value(2, 3)
     interval_length('[2, 3)) = 3 - 2 = 1
@@ -6745,9 +6679,7 @@ thm example_11_2_12_piece_contribution_has_values:
             ? $has_constant_value_on_subset('[1, 4], {}, f, 0)
     claim:
         ? $is_constant_on_subset('[1, 4], {}, f)
-        witness exist c R st {$has_constant_value_on_subset('[1, 4], {}, f, c)} from 0
-        by def:
-            ? $is_constant_on_subset('[1, 4], {}, f)
+        witness $is_constant_on_subset('[1, 4], {}, f) from 0
     by thm empty_interval_is_bounded()
     by thm empty_interval_length_value()
     claim:
@@ -6820,7 +6752,7 @@ thm piecewise_constant_partition_sum_ignores_empty_pieces:
         J $in power_set(R)
         $is_bounded_interval(J)
         $is_constant_on_subset(I, J, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, J, f, c)}
+        obtain c from $is_constant_on_subset(I, J, f)
         by thm empty_bounded_interval_length_value(J)
         interval_length(J) = 0
         witness exist c0 R st {$has_constant_value_on_subset(I, J, f, c0), 0 = c0 * interval_length(J)} from c:
@@ -6866,7 +6798,7 @@ thm piecewise_constant_integral_with_partition_reindexes_over_refinement:
         $is_bounded_interval(K)
         K $subset I
         $is_constant_on_subset(I, K, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, K, f, c)}
+        obtain c from $is_constant_on_subset(I, K, f)
         $has_constant_value_on_subset(I, K, f, c)
         # Source handling: the refinement fiber partitions K, so its lengths
         # sum to the length of K.
@@ -6989,7 +6921,7 @@ have fn piecewise_constant_integral by exist!:
             exist! s R st {$has_piecewise_constant_integral(I, f, s)}
     # Source handling: Definition 11.2.14 selects the common finite-rectangle
     # value after Proposition 11.2.13 has established partition independence.
-    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
+    obtain P from $is_piecewise_constant_on(I, f)
     by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, f)
     by thm piecewise_constant_integral_with_partition_has_value(I, P, f)
     have s R = piecewise_constant_integral_with_partition(I, P, f)
@@ -7672,7 +7604,7 @@ thm lower_bounded_real_set_with_member_has_infimum:
             -element_e $in negE
     claim:
         ? $chap5::has_upper_bound(negE)
-        witness exist set_C R st {$chap5::is_upper_bound(negE, set_C)} from -B:
+        witness exist bound_witness R st {$chap5::is_upper_bound(negE, bound_witness)} from -B:
             claim:
                 ? forall y negE:
                     y <= -B
@@ -7692,13 +7624,12 @@ thm lower_bounded_real_set_with_member_has_infimum:
     by thm chap5::least_upper_bound_existence(negE)
     $chap5::has_least_upper_bound(negE)
     obtain L from exist L R st {$chap5::is_least_upper_bound(negE, L)}
-    witness exist s R st {$is_infimum_of_real_set(E, s)} from -L:
+    witness $has_infimum_of_real_set(E) from -L:
         claim:
-            ? $is_lower_bound_of_real_set(E, s)
+            ? $is_lower_bound_of_real_set(E, -L)
             claim:
                 ? forall x E:
-                    s <= x
-                s = -L
+                    -L <= x
                 negE = fn_range(negate_on_E)
                 negate_on_E(x) = -x
                 negate_on_E(x) $in fn_range(negate_on_E)
@@ -7710,12 +7641,12 @@ thm lower_bounded_real_set_with_member_has_infimum:
                 -(-x) = x
                 -L <= x
             by def:
-                ? $is_lower_bound_of_real_set(E, s)
+                ? $is_lower_bound_of_real_set(E, -L)
         claim:
             ? forall set_C R:
                 $is_lower_bound_of_real_set(E, set_C)
                 =>:
-                    set_C <= s
+                    set_C <= -L
             claim:
                 ? $chap5::is_upper_bound(negE, -set_C)
                 claim:
@@ -7736,11 +7667,8 @@ thm lower_bounded_real_set_with_member_has_infimum:
             L <= -set_C
             -(-set_C) <= -L
             -(-set_C) = set_C
-            s = -L
         by def:
-            ? $is_infimum_of_real_set(E, s)
-    by def:
-        ? $has_infimum_of_real_set(E)
+            ? $is_infimum_of_real_set(E, -L)
 
 thm lower_riemann_integral_candidate_values_have_least_upper_bound:
     ? forall I power_set(R), f fn(x I) R:
@@ -7779,7 +7707,7 @@ thm lower_riemann_integral_candidate_values_have_least_upper_bound:
             ? $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
             by thm constant_function_is_piecewise_constant(I, -M)
             by thm piecewise_constant_integral_of_constant(I, -M)
-            witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, -M * interval_length(I))} from fn(x I) R {-M}:
+            witness $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I)) from fn(x I) R {-M}:
                 $is_piecewise_constant_on(I, fn(x I) R {-M})
                 claim:
                     ? $minorizes_on(I, fn(x I) R {-M}, f)
@@ -7797,14 +7725,12 @@ thm lower_riemann_integral_candidate_values_have_least_upper_bound:
                 by def:
                     ? $minorizes_on(I, fn(x I) R {-M}, f)
                 $has_piecewise_constant_integral(I, fn(x I) R {-M}, -M * interval_length(I))
-            by def:
-                ? $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
         by thm lower_riemann_integral_candidate_value_member(I, f, -M * interval_length(I))
         -M * interval_length(I) $in lower_riemann_integral_candidate_values(I, f)
         witness $is_nonempty_set(lower_riemann_integral_candidate_values(I, f)) from -M * interval_length(I)
     claim:
         ? $chap5::has_upper_bound(lower_riemann_integral_candidate_values(I, f))
-        witness exist B R st {$chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), B)} from M * interval_length(I):
+        witness exist bound_witness R st {$chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), bound_witness)} from M * interval_length(I):
             $is_upper_bound_of_real_set(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
             by def:
                 ? $chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), M * interval_length(I))
@@ -7834,10 +7760,8 @@ thm lower_riemann_integral_candidate_values_have_least_upper_bound:
                 ? $chap5::is_upper_bound(lower_riemann_integral_candidate_values(I, f), B)
         by def:
             ? $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
-    witness exist L0 R st {$is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L0)} from L:
+    witness $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f)) from L:
         $is_least_upper_bound(lower_riemann_integral_candidate_values(I, f), L)
-    by def:
-        ? $has_least_upper_bound(lower_riemann_integral_candidate_values(I, f))
 
 thm upper_riemann_integral_candidate_values_have_infimum:
     ? forall I power_set(R), f fn(x I) R:
@@ -7853,7 +7777,7 @@ thm upper_riemann_integral_candidate_values_have_infimum:
     by thm piecewise_constant_integral_of_constant(I, M)
     claim:
         ? $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I))
-        witness exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, M * interval_length(I))} from fn(x I) R {M}:
+        witness $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I)) from fn(x I) R {M}:
             $is_piecewise_constant_on(I, fn(x I) R {M})
             claim:
                 ? $majorizes_on(I, fn(x I) R {M}, f)
@@ -7867,8 +7791,6 @@ thm upper_riemann_integral_candidate_values_have_infimum:
                     ? $majorizes_on(I, fn(x I) R {M}, f)
             $majorizes_on(I, fn(x I) R {M}, f)
             $has_piecewise_constant_integral(I, fn(x I) R {M}, M * interval_length(I))
-        by def:
-            ? $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I))
     by thm upper_riemann_integral_candidate_value_member(I, f, M * interval_length(I))
     M * interval_length(I) $in upper_riemann_integral_candidate_values(I, f)
     claim:
@@ -8045,12 +7967,10 @@ thm upper_lower_riemann_integral_bounds:
             ? $majorizes_on(I, fn(x I) R {M}, f)
     claim:
         ? $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I))
-        witness exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, M * interval_length(I))} from fn(x I) R {M}:
+        witness $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I)) from fn(x I) R {M}:
             $is_piecewise_constant_on(I, fn(x I) R {M})
             $majorizes_on(I, fn(x I) R {M}, f)
             $has_piecewise_constant_integral(I, fn(x I) R {M}, M * interval_length(I))
-        by def:
-            ? $is_upper_riemann_integral_candidate_value(I, f, M * interval_length(I))
     by thm upper_riemann_integral_le_candidate_value(I, f, upper_riemann_integral(I, f), M * interval_length(I))
     upper_riemann_integral(I, f) <= M * interval_length(I)
 
@@ -8066,12 +7986,10 @@ thm upper_lower_riemann_integral_bounds:
             ? $minorizes_on(I, fn(x I) R {-M}, f)
     claim:
         ? $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
-        witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, -M * interval_length(I))} from fn(x I) R {-M}:
+        witness $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I)) from fn(x I) R {-M}:
             $is_piecewise_constant_on(I, fn(x I) R {-M})
             $minorizes_on(I, fn(x I) R {-M}, f)
             $has_piecewise_constant_integral(I, fn(x I) R {-M}, -M * interval_length(I))
-        by def:
-            ? $is_lower_riemann_integral_candidate_value(I, f, -M * interval_length(I))
     by thm lower_riemann_integral_candidate_value_le_integral(I, f, lower_riemann_integral(I, f), -M * interval_length(I))
     -M * interval_length(I) <= lower_riemann_integral(I, f)
 
@@ -8217,11 +8135,9 @@ thm upper_riemann_integral_has_candidate_within:
                         sg < upper_riemann_integral(I, f) + epsilon
                         claim:
                             ? $has_upper_riemann_candidate_within()
-                            witness exist sg0 R st {$is_upper_riemann_integral_candidate_value(I, f, sg0), sg0 < upper_riemann_integral(I, f) + epsilon} from sg:
+                            witness $has_upper_riemann_candidate_within() from sg:
                                 $is_upper_riemann_integral_candidate_value(I, f, sg)
                                 sg < upper_riemann_integral(I, f) + epsilon
-                            by def:
-                                ? $has_upper_riemann_candidate_within()
                         impossible $has_upper_riemann_candidate_within()
                 upper_riemann_integral(I, f) + epsilon $in R
                 by def:
@@ -8260,11 +8176,9 @@ thm lower_riemann_integral_has_candidate_within:
                         lower_riemann_integral(I, f) - epsilon < sh
                         claim:
                             ? $has_lower_riemann_candidate_within()
-                            witness exist sh0 R st {$is_lower_riemann_integral_candidate_value(I, f, sh0), lower_riemann_integral(I, f) - epsilon < sh0} from sh:
+                            witness $has_lower_riemann_candidate_within() from sh:
                                 $is_lower_riemann_integral_candidate_value(I, f, sh)
                                 lower_riemann_integral(I, f) - epsilon < sh
-                            by def:
-                                ? $has_lower_riemann_candidate_within()
                         impossible $has_lower_riemann_candidate_within()
                 lower_riemann_integral(I, f) - epsilon $in R
                 by def:
@@ -8450,7 +8364,7 @@ thm sum_of_bounded_functions_is_bounded:
     obtain Mf from exist Mf0 R+ st {$chap9::is_function_bounded_by(I, f, Mf0)}
     obtain Mg from exist Mg0 R+ st {$chap9::is_function_bounded_by(I, g, Mg0)}
     Mf + Mg > 0
-    witness exist M R+ st {$chap9::is_function_bounded_by(I, fn(x I) R {f(x) + g(x)}, M)} from Mf + Mg:
+    witness $chap9::is_bounded_function_on(I, fn(x I) R {f(x) + g(x)}) from Mf + Mg:
         forall x I:
             abs(f(x) + g(x)) <= abs(f(x)) + abs(g(x))
             abs(f(x)) <= Mf
@@ -8460,12 +8374,8 @@ thm sum_of_bounded_functions_is_bounded:
             abs(fn(y I) R {f(y) + g(y)}(x)) = abs(f(x) + g(x))
             abs(fn(y I) R {f(y) + g(y)}(x)) = abs(f(x) + g(x)) <= abs(f(x)) + abs(g(x)) <= Mf + Mg
             abs(fn(y I) R {f(y) + g(y)}(x)) <= Mf + Mg
-            M = Mf + Mg
-            abs(fn(y I) R {f(y) + g(y)}(x)) <= M
         by def:
             ? $chap9::is_function_bounded_by(I, fn(x I) R {f(x) + g(x)}, Mf + Mg)
-    by def:
-        ? $chap9::is_bounded_function_on(I, fn(x I) R {f(x) + g(x)})
 
 """
 thm riemann_integrable_sum_has_darboux_approximation:
@@ -8520,7 +8430,7 @@ thm upper_riemann_integral_candidates_add:
         $is_upper_riemann_integral_candidate_value(I, g, sg)
         =>:
             $is_upper_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg)
-    obtain hf from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $majorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, sf)}
+    obtain hf from $is_upper_riemann_integral_candidate_value(I, f, sf)
     obtain hg from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $majorizes_on(I, h, g), $has_piecewise_constant_integral(I, h, sg)}
     by thm piecewise_constant_algebra(I, hf, hg)
     $is_piecewise_constant_on(I, fn(x I) R {hf(x) + hg(x)})
@@ -8537,12 +8447,10 @@ thm upper_riemann_integral_candidates_add:
             ? $majorizes_on(I, fn(x I) R {hf(x) + hg(x)}, fn(x I) R {f(x) + g(x)})
     by thm piecewise_constant_integral_laws(I, hf, hg, sf, sg, 1)
     $has_piecewise_constant_integral(I, fn(x I) R {hf(x) + hg(x)}, sf + sg)
-    witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $majorizes_on(I, h, fn(x I) R {f(x) + g(x)}), $has_piecewise_constant_integral(I, h, sf + sg)} from fn(x I) R {hf(x) + hg(x)}:
+    witness $is_upper_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg) from fn(x I) R {hf(x) + hg(x)}:
         $is_piecewise_constant_on(I, fn(x I) R {hf(x) + hg(x)})
         $majorizes_on(I, fn(x I) R {hf(x) + hg(x)}, fn(x I) R {f(x) + g(x)})
         $has_piecewise_constant_integral(I, fn(x I) R {hf(x) + hg(x)}, sf + sg)
-    by def:
-        ? $is_upper_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg)
 
 thm lower_riemann_integral_candidates_add:
     ? forall I power_set(R), f, g fn(x I) R, sf, sg R:
@@ -8550,8 +8458,8 @@ thm lower_riemann_integral_candidates_add:
         $is_lower_riemann_integral_candidate_value(I, g, sg)
         =>:
             $is_lower_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg)
-    obtain hf from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, sf)}
-    obtain hg from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, g), $has_piecewise_constant_integral(I, h, sg)}
+    obtain hf from $is_lower_riemann_integral_candidate_value(I, f, sf)
+    obtain hg from $is_lower_riemann_integral_candidate_value(I, g, sg)
     by thm piecewise_constant_algebra(I, hf, hg)
     $is_piecewise_constant_on(I, fn(x I) R {hf(x) + hg(x)})
     claim:
@@ -8567,12 +8475,10 @@ thm lower_riemann_integral_candidates_add:
             ? $minorizes_on(I, fn(x I) R {hf(x) + hg(x)}, fn(x I) R {f(x) + g(x)})
     by thm piecewise_constant_integral_laws(I, hf, hg, sf, sg, 1)
     $has_piecewise_constant_integral(I, fn(x I) R {hf(x) + hg(x)}, sf + sg)
-    witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, fn(x I) R {f(x) + g(x)}), $has_piecewise_constant_integral(I, h, sf + sg)} from fn(x I) R {hf(x) + hg(x)}:
+    witness $is_lower_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg) from fn(x I) R {hf(x) + hg(x)}:
         $is_piecewise_constant_on(I, fn(x I) R {hf(x) + hg(x)})
         $minorizes_on(I, fn(x I) R {hf(x) + hg(x)}, fn(x I) R {f(x) + g(x)})
         $has_piecewise_constant_integral(I, fn(x I) R {hf(x) + hg(x)}, sf + sg)
-    by def:
-        ? $is_lower_riemann_integral_candidate_value(I, fn(x I) R {f(x) + g(x)}, sf + sg)
 
 thm upper_riemann_integral_sum_le:
     ? forall I power_set(R), f, g fn(x I) R:
@@ -8662,7 +8568,7 @@ thm scalar_of_bounded_function_is_bounded:
             $chap9::is_bounded_function_on(I, fn(x I) R {c * f(x)})
     obtain M from exist M0 R+ st {$chap9::is_function_bounded_by(I, f, M0)}
     abs(c) * M + 1 > 0
-    witness exist B R+ st {$chap9::is_function_bounded_by(I, fn(x I) R {c * f(x)}, B)} from abs(c) * M + 1:
+    witness $chap9::is_bounded_function_on(I, fn(x I) R {c * f(x)}) from abs(c) * M + 1:
         forall x I:
             abs(fn(y I) R {c * f(y)}(x)) = abs(c * f(x))
             abs(c * f(x)) = abs(c) * abs(f(x))
@@ -8670,12 +8576,8 @@ thm scalar_of_bounded_function_is_bounded:
             abs(c) * abs(f(x)) <= abs(c) * M
             abs(c) * M <= abs(c) * M + 1
             abs(fn(y I) R {c * f(y)}(x)) <= abs(c) * M + 1
-            B = abs(c) * M + 1
-            abs(fn(y I) R {c * f(y)}(x)) <= B
         by def:
             ? $chap9::is_function_bounded_by(I, fn(x I) R {c * f(x)}, abs(c) * M + 1)
-    by def:
-        ? $chap9::is_bounded_function_on(I, fn(x I) R {c * f(x)})
 
 """
 thm riemann_integrable_scalar_has_darboux_approximation:
@@ -8801,7 +8703,7 @@ thm upper_riemann_integral_candidate_scalar_nonnegative:
     # proof_debt: scalar-composed witness elaboration is blocked.
     trust $is_upper_riemann_integral_candidate_value(I, fn(x I) R {c * f(x)}, c * s)
     """
-    obtain g from exist g0 fn(x I) R st {$is_piecewise_constant_on(I, g0), $majorizes_on(I, g0, f), $has_piecewise_constant_integral(I, g0, s)}
+    obtain g from $is_upper_riemann_integral_candidate_value(I, f, s)
     by thm piecewise_constant_integral_laws(I, g, g, s, s, c)
     $has_piecewise_constant_integral(I, fn(x I) R {c * g(x)}, c * s)
     claim:
@@ -8829,7 +8731,7 @@ thm lower_riemann_integral_candidate_scalar_nonnegative:
     # proof_debt: scalar-composed witness elaboration is blocked.
     trust $is_lower_riemann_integral_candidate_value(I, fn(x I) R {c * f(x)}, c * s)
     """
-    obtain h from exist h0 fn(x I) R st {$is_piecewise_constant_on(I, h0), $minorizes_on(I, h0, f), $has_piecewise_constant_integral(I, h0, s)}
+    obtain h from $is_lower_riemann_integral_candidate_value(I, f, s)
     by thm piecewise_constant_integral_laws(I, h, h, s, s, c)
     $has_piecewise_constant_integral(I, fn(x I) R {c * h(x)}, c * s)
     claim:
@@ -8857,7 +8759,7 @@ thm upper_riemann_integral_candidate_scalar_negative:
     # proof_debt: negative scalar witness transport is blocked.
     trust $is_upper_riemann_integral_candidate_value(I, fn(x I) R {c * f(x)}, c * s)
     """
-    obtain h from exist h0 fn(x I) R st {$is_piecewise_constant_on(I, h0), $minorizes_on(I, h0, f), $has_piecewise_constant_integral(I, h0, s)}
+    obtain h from $is_lower_riemann_integral_candidate_value(I, f, s)
     by thm piecewise_constant_integral_laws(I, h, h, s, s, c)
     $has_piecewise_constant_integral(I, fn(x I) R {c * h(x)}, c * s)
     claim:
@@ -8885,7 +8787,7 @@ thm lower_riemann_integral_candidate_scalar_negative:
     # proof_debt: negative scalar witness transport is blocked.
     trust $is_lower_riemann_integral_candidate_value(I, fn(x I) R {c * f(x)}, c * s)
     """
-    obtain g from exist g0 fn(x I) R st {$is_piecewise_constant_on(I, g0), $majorizes_on(I, g0, f), $has_piecewise_constant_integral(I, g0, s)}
+    obtain g from $is_upper_riemann_integral_candidate_value(I, f, s)
     by thm piecewise_constant_integral_laws(I, g, g, s, s, c)
     $has_piecewise_constant_integral(I, fn(x I) R {c * g(x)}, c * s)
     claim:
@@ -9273,7 +9175,7 @@ thm piecewise_constant_partition_has_constant_selector:
         A = constant_value_set(J)
         J $in power_set(R)
         $is_constant_on_subset(I, J, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, J, f, c)}
+        obtain c from $is_constant_on_subset(I, J, f)
         constant_value_set(J) = {c R: $has_constant_value_on_subset(I, J, f, c)}
         c $in constant_value_set(J)
         c $in A
@@ -9364,7 +9266,7 @@ thm piecewise_constant_functions_are_riemann_integrable:
     # majorant and a minorant.  The two Darboux extrema are consequently
     # squeezed to its displayed piecewise-constant value.
     $is_piecewise_constant_on(I, f)
-    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
+    obtain P from $is_piecewise_constant_on(I, f)
     $is_partition_of_bounded_interval(I, P)
     $is_bounded_interval(I)
     by thm piecewise_constant_on_bounded_interval_is_bounded(I, f)
@@ -9373,7 +9275,7 @@ thm piecewise_constant_functions_are_riemann_integrable:
     $has_lower_riemann_integral(I, f, lower_riemann_integral(I, f))
     claim:
         ? $is_upper_riemann_integral_candidate_value(I, f, s)
-        witness exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, s)} from f:
+        witness $is_upper_riemann_integral_candidate_value(I, f, s) from f:
             $is_piecewise_constant_on(I, f)
             claim:
                 ? $majorizes_on(I, f, f)
@@ -9383,13 +9285,11 @@ thm piecewise_constant_functions_are_riemann_integrable:
                     ? $majorizes_on(I, f, f)
             $majorizes_on(I, f, f)
             $has_piecewise_constant_integral(I, f, s)
-        by def:
-            ? $is_upper_riemann_integral_candidate_value(I, f, s)
     by thm upper_riemann_integral_le_candidate_value(I, f, upper_riemann_integral(I, f), s)
     upper_riemann_integral(I, f) <= s
     claim:
         ? $is_lower_riemann_integral_candidate_value(I, f, s)
-        witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, s)} from f:
+        witness $is_lower_riemann_integral_candidate_value(I, f, s) from f:
             $is_piecewise_constant_on(I, f)
             claim:
                 ? $minorizes_on(I, f, f)
@@ -9399,8 +9299,6 @@ thm piecewise_constant_functions_are_riemann_integrable:
                     ? $minorizes_on(I, f, f)
             $minorizes_on(I, f, f)
             $has_piecewise_constant_integral(I, f, s)
-        by def:
-            ? $is_lower_riemann_integral_candidate_value(I, f, s)
     by thm lower_riemann_integral_candidate_value_le_integral(I, f, lower_riemann_integral(I, f), s)
     s <= lower_riemann_integral(I, f)
     obtain M from exist M R+ st {$chap9::is_function_bounded_by(I, f, M)}
@@ -9442,7 +9340,7 @@ thm piecewise_constant_on_bounded_interval_has_piecewise_constant_integral:
             exist s R st {$has_piecewise_constant_integral(I, f, s)}
     # Source handling: choose the partition witnessing piecewise constancy and
     # use its finite sum as the partition-free value.
-    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, f)}
+    obtain P from $is_piecewise_constant_on(I, f)
     by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, f)
     by thm piecewise_constant_integral_with_partition_has_value(I, P, f)
     have pc_s R = piecewise_constant_integral_with_partition(I, P, f)
@@ -9525,11 +9423,9 @@ thm function_on_empty_interval_has_piecewise_constant_integral_zero:
                 $is_constant_on_subset(I, J, f)
             J = I
             J $in power_set(R)
-            witness exist c R st {$has_constant_value_on_subset(I, J, f, c)} from 0:
+            witness $is_constant_on_subset(I, J, f) from 0:
                 $has_constant_value_on_subset(I, I, f, 0)
                 $has_constant_value_on_subset(I, J, f, 0)
-            by def:
-                ? $is_constant_on_subset(I, J, f)
         by def:
             ? $is_piecewise_constant_with_partition(I, {I}, f)
     claim:
@@ -9559,7 +9455,7 @@ thm function_on_singleton_interval_has_piecewise_constant_integral_zero:
             $has_piecewise_constant_integral(I, f, 0)
     # Source handling: on a singleton, every value equals the value at the
     # unique point, while the singleton length is zero.
-    obtain a from exist a R st {I = {a}}
+    obtain a from $is_singleton_interval(I)
     I = {a}
     a $in {a}
     a $in I
@@ -9585,11 +9481,9 @@ thm function_on_singleton_interval_has_piecewise_constant_integral_zero:
                 $is_constant_on_subset(I, J, f)
             J = I
             J $in power_set(R)
-            witness exist c R st {$has_constant_value_on_subset(I, J, f, c)} from f(a):
+            witness $is_constant_on_subset(I, J, f) from f(a):
                 $has_constant_value_on_subset(I, I, f, f(a))
                 $has_constant_value_on_subset(I, J, f, f(a))
-            by def:
-                ? $is_constant_on_subset(I, J, f)
         by def:
             ? $is_piecewise_constant_with_partition(I, {I}, f)
     claim:
@@ -9712,10 +9606,8 @@ thm bounded_piece_function_values_have_upper_bound:
                 abs(fn(y J) R {f(y)}(x)) <= M
             by def:
                 ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        witness exist M0 R+ st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+        witness $chap9::is_bounded_function_on(J, fn(x J) R {f(x)}) from M:
             $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        by def:
-            ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
     by thm chap9::bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
     $chap9::is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
     function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
@@ -9765,10 +9657,8 @@ thm bounded_piece_function_values_have_lower_bound:
                 abs(fn(y J) R {f(y)}(x)) <= M
             by def:
                 ? $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        witness exist M0 R+ st {$chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M0)} from M:
+        witness $chap9::is_bounded_function_on(J, fn(x J) R {f(x)}) from M:
             $chap9::is_function_bounded_by(J, fn(x J) R {f(x)}, M)
-        by def:
-            ? $chap9::is_bounded_function_on(J, fn(x J) R {f(x)})
     by thm chap9::bounded_function_implies_bounded_range(J, fn(x J) R {f(x)})
     $chap9::is_bounded_real_set(fn_range(fn(x J) R {f(x)}))
     function_values_on_subset(I, J, f) = fn_range(fn(x J) R {f(x)})
@@ -11179,7 +11069,7 @@ thm piecewise_constant_majorant_with_partition_bounds_upper_riemann_sum:
         $is_bounded_interval(J)
         J $subset I
         $is_constant_on_subset(I, J, g)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, J, g, c)}
+        obtain c from $is_constant_on_subset(I, J, g)
         $has_upper_riemann_sum_piece_contribution(I, J, f, u(J))
         by thm upper_riemann_sum_piece_has_value(I, J, f)
         $has_upper_riemann_sum_piece_contribution(I, J, f, upper_riemann_sum_piece(I, J, f))
@@ -11223,7 +11113,7 @@ thm piecewise_constant_minorant_with_partition_bounds_lower_riemann_sum:
         $is_bounded_interval(J)
         J $subset I
         $is_constant_on_subset(I, J, h)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, J, h, c)}
+        obtain c from $is_constant_on_subset(I, J, h)
         $has_lower_riemann_sum_piece_contribution(I, J, f, l(J))
         by thm lower_riemann_sum_piece_has_value(I, J, f)
         $has_lower_riemann_sum_piece_contribution(I, J, f, lower_riemann_sum_piece(I, J, f))
@@ -11494,7 +11384,7 @@ thm upper_riemann_integral_candidate_has_no_smaller_upper_sum:
     trust 0 = 0
 """
     obtain g from exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, sg)}
-    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, g)}
+    obtain P from $is_piecewise_constant_on(I, g)
     by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, g)
     P $in power_set(power_set(R))
     by thm upper_riemann_sum_exists(I, P, f)
@@ -11515,7 +11405,7 @@ thm lower_riemann_integral_candidate_has_no_larger_lower_sum:
     trust 0 = 0
 """
     obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, sh)}
-    obtain P from exist P finite_set st {$is_piecewise_constant_with_partition(I, P, h)}
+    obtain P from $is_piecewise_constant_on(I, h)
     by thm piecewise_constant_partition_is_set_of_real_subsets(I, P, h)
     P $in power_set(power_set(R))
     by thm lower_riemann_sum_exists(I, P, f)
@@ -11942,12 +11832,10 @@ thm riemann_integral_nonnegative_law:
         $minorizes_on(I, fn(x I) R {0}, f)
     claim:
         ? $is_lower_riemann_integral_candidate_value(I, f, 0)
-        witness exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, 0)} from fn(x I) R {0}:
+        witness $is_lower_riemann_integral_candidate_value(I, f, 0) from fn(x I) R {0}:
             $is_piecewise_constant_on(I, fn(x I) R {0})
             $minorizes_on(I, fn(x I) R {0}, f)
             $has_piecewise_constant_integral(I, fn(x I) R {0}, 0)
-        by def:
-            ? $is_lower_riemann_integral_candidate_value(I, f, 0)
         $is_lower_riemann_integral_candidate_value(I, f, 0)
     by thm lower_riemann_integral_candidate_value_le_integral(I, f, lower_riemann_integral(I, f), 0)
     0 <= lower_riemann_integral(I, f)
@@ -12351,10 +12239,8 @@ thm nonnegative_bounded_product_is_bounded:
             abs(fn(y I) R {f(y) * g(y)}(x)) <= Mf * Mg + 1
         by def:
             ? $chap9::is_function_bounded_by(I, fn(x I) R {f(x) * g(x)}, Mf * Mg + 1)
-    witness exist B R+ st {$chap9::is_function_bounded_by(I, fn(x I) R {f(x) * g(x)}, B)} from Mf * Mg + 1:
+    witness $chap9::is_bounded_function_on(I, fn(x I) R {f(x) * g(x)}) from Mf * Mg + 1:
         $chap9::is_function_bounded_by(I, fn(x I) R {f(x) * g(x)}, Mf * Mg + 1)
-    by def:
-        ? $chap9::is_bounded_function_on(I, fn(x I) R {f(x) * g(x)})
 
 thm riemann_integrable_nonnegative_product_has_darboux_approximation:
     ? forall I power_set(R), f, g fn(x I) R, epsilon R+:
@@ -12851,15 +12737,13 @@ thm uniformly_continuous_on_bounded_interval_is_bounded:
     by thm chap9::uniformly_continuous_maps_bounded_sets_to_bounded_sets(I, f, I)
     $chap9::function_image_of_subset_is_bounded(I, f, I)
     obtain M from exist M R+ st {$chap9::is_subset_image_bounded_by(I, f, I, M)}
-    witness exist M0 R+ st {$chap9::is_function_bounded_by(I, f, M0)} from M:
+    witness $chap9::is_bounded_function_on(I, f) from M:
         I $subset I
         forall x I:
             abs(f(x)) <= M
         by def:
             ? $chap9::is_function_bounded_by(I, f, M)
         $chap9::is_function_bounded_by(I, f, M)
-    by def:
-        ? $chap9::is_bounded_function_on(I, f)
 
 thm uniformly_continuous_on_bounded_interval_has_small_oscillation_partitions:
     ? forall I power_set(R), f fn(x I) R, epsilon R+:
@@ -13046,10 +12930,8 @@ thm closed_interval_with_nonpositive_endpoints_is_point_or_empty:
         case a = b:
             by thm singleton_interval_is_closed_degenerate(a)
             I = '[a, b] = '[a, a] = {a}
-            witness exist c R st {I = {c}} from a:
+            witness $is_singleton_interval(I) from a:
                 I = {a}
-            by def:
-                ? $is_singleton_interval(I)
             by def:
                 ? $is_point_or_empty_interval(I)
         case a > b:
@@ -13263,12 +13145,10 @@ thm integrable_closed_trim_from_delta:
     $chap9::is_continuous_on('[a + delta, b - delta], fn(x '[a + delta, b - delta]) R {f(x)})
     by thm continuous_closed_interval_riemann_integrable(a + delta, b - delta, fn(x '[a + delta, b - delta]) R {f(x)})
     $is_riemann_integrable_on('[a + delta, b - delta], fn(x '[a + delta, b - delta]) R {f(x)})
-    witness exist J power_set(R) st {J $subset I, $is_closed_interval_trim_with_tail_length_at_most(I, J, eta), $is_riemann_integrable_on(J, fn(x J) R {f(x)})} from '[a + delta, b - delta]:
+    witness $has_integrable_closed_interval_trim(I, f, eta) from '[a + delta, b - delta]:
         '[a + delta, b - delta] $subset I
         $is_closed_interval_trim_with_tail_length_at_most(I, '[a + delta, b - delta], eta)
         $is_riemann_integrable_on('[a + delta, b - delta], fn(x '[a + delta, b - delta]) R {f(x)})
-    by def:
-        ? $has_integrable_closed_interval_trim(I, f, eta)
 
 thm continuous_bounded_interval_has_integrable_closed_trims:
     ? forall I power_set(R), f fn(x I) R, eta R+:
@@ -13277,7 +13157,7 @@ thm continuous_bounded_interval_has_integrable_closed_trims:
         $chap9::is_continuous_on(I, f)
         =>:
             $has_integrable_closed_interval_trim(I, f, eta)
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     by thm non_point_or_empty_interval_has_strict_endpoints(I, a, b)
     a < b
     b - a > 0
@@ -13543,9 +13423,9 @@ thm constant_extension_constant_on_fine_piece:
         =>:
             $is_constant_on_subset(I, K, F)
     J $subset I
-    obtain cf from exist cf R st {$has_constant_value_on_subset(J, K, f, cf)}
+    obtain cf from $is_constant_on_subset(J, K, f)
     K $subset J
-    witness exist c0 R st {$has_constant_value_on_subset(I, K, F, c0)} from cf:
+    witness $is_constant_on_subset(I, K, F) from cf:
         forall x K:
             x $in J
             x $in I
@@ -13562,8 +13442,6 @@ thm constant_extension_constant_on_fine_piece:
         by def:
             ? $has_constant_value_on_subset(I, K, F, cf)
         $has_constant_value_on_subset(I, K, F, cf)
-    by def:
-        ? $is_constant_on_subset(I, K, F)
 
 thm constant_extension_constant_on_tail_piece:
     ? forall I, J, K power_set(R), Pcoarse finite_set, f fn(x J) R, c R, F fn(x I) R:
@@ -13575,7 +13453,7 @@ thm constant_extension_constant_on_tail_piece:
             $is_constant_on_subset(I, K, F)
     K $in Pcoarse
     K != J
-    witness exist c0 R st {$has_constant_value_on_subset(I, K, F, c0)} from c:
+    witness $is_constant_on_subset(I, K, F) from c:
         K $subset I
         claim:
             ? forall x K:
@@ -13591,8 +13469,6 @@ thm constant_extension_constant_on_tail_piece:
         by def:
             ? $has_constant_value_on_subset(I, K, F, c)
         $has_constant_value_on_subset(I, K, F, c)
-    by def:
-        ? $is_constant_on_subset(I, K, F)
 
 thm constant_extension_is_piecewise_constant:
     ? forall I, J power_set(R), Pcoarse, Pfine finite_set, f fn(x J) R, c R, F fn(x I) R:
@@ -14611,7 +14487,7 @@ thm closed_subinterval_is_partition_piece:
         '[c, d] $subset I
         =>:
             exist P finite_set st {$is_partition_of_bounded_interval(I, P), '[c, d] $in P}
-    obtain p, q from exist p, q R st {$has_interval_endpoints(I, p, q)}
+    obtain p, q from $is_bounded_interval(I)
     I = '[p, q] or I = '[p, q) or I = '(p, q] or I = '(p, q)
     by cases:
         ? exist P finite_set st {$is_partition_of_bounded_interval(I, P), '[c, d] $in P}
@@ -14758,7 +14634,7 @@ thm darbouxs_criterion_from_integrable_closed_trims_and_bounded_tails:
         epsilon / (8 * M) > 0
         have eta R+ = epsilon / (8 * M)
         $has_integrable_closed_interval_trim(I, f, eta)
-        obtain J from exist J power_set(R) st {J $subset I, $is_closed_interval_trim_with_tail_length_at_most(I, J, eta), $is_riemann_integrable_on(J, fn(x J) R {f(x)})}
+        obtain J from $has_integrable_closed_interval_trim(I, f, eta)
         $is_bounded_interval(J)
         obtain a, b from exist a, b R st {a < b, J = '[a, b]}
         by thm riemann_integrable_has_darboux_approximation(J, fn(x J) R {f(x)}, delta)
@@ -14849,10 +14725,8 @@ thm piecewise_continuous_with_partition_is_piecewise_continuous:
             $is_piecewise_continuous_on(I, f)
     # Source handling: this is Definition 11.5.4 with the displayed partition
     # as witness.
-    witness exist P0 finite_set st {$is_piecewise_continuous_with_partition(I, P0, f)} from P:
+    witness $is_piecewise_continuous_on(I, f) from P:
         $is_piecewise_continuous_with_partition(I, P, f)
-    by def:
-        ? $is_piecewise_continuous_on(I, f)
 
 """
 Example 11.5.5.  A function on `[1,3]` equal to `x^2` on `[1,2)`, `7` at
@@ -15357,7 +15231,7 @@ thm bounded_piecewise_continuous_riemann_integrable:
     """
     # Source handling: Tao proves this in Exercise 11.5.1 using additivity over
     # partition pieces.
-    obtain P from exist P finite_set st {$is_piecewise_continuous_with_partition(I, P, f)}
+    obtain P from $is_piecewise_continuous_on(I, f)
     obtain M from exist M R+ st {$chap9::is_function_bounded_by(I, f, M)}
     claim:
         ? forall J P:
@@ -15511,7 +15385,7 @@ thm bounded_piecewise_monotone_riemann_integrable:
             $is_riemann_integrable_on(I, f)
     # Source handling: choose the partition from the definition, prove
     # integrability with that partition, and forget the witness.
-    obtain P from exist P finite_set st {$is_piecewise_monotone_with_partition(I, P, f)}
+    obtain P from $is_piecewise_monotone_on(I, f)
     by thm bounded_piecewise_monotone_with_partition_riemann_integrable(I, P, f)
 
 prop is_tail_close_to_value(a fn(k N+) R, L R, epsilon R+, N0 N+):
@@ -15845,7 +15719,7 @@ thm positive_length_bounded_interval_has_rational_and_irrational_points:
     # A positive interval length forces strict endpoint order. Density then
     # supplies both kinds of points strictly between those endpoints, hence in
     # every open/closed endpoint form at once.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(J, a, b)}
+    obtain a, b from $is_bounded_interval(J)
     by thm interval_endpoint_case_has_total_length(J, a, b)
     $has_interval_length(J, finite_set_max(union({b - a}, { 0})))
     $has_interval_length(J, interval_length(J))
@@ -16266,7 +16140,7 @@ thm alpha_interval_length_exists_unique:
     # argument for the alpha-length selector.
     trust exist! l R st {$has_alpha_interval_length(alpha, I, l)}
     """
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     a < b or not a < b
     by cases:
         ? exist! l R st {$has_alpha_interval_length(alpha, I, l)}
@@ -16442,7 +16316,7 @@ thm monotone_alpha_interval_length_nonnegative:
     """
     # On a non-degenerate endpoint interval, monotonicity gives
     # `alpha(a) <= alpha(b)`; degenerate endpoint forms have alpha-length zero.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
     by thm real_order_split_lt_or_ge(a, b)
     by cases:
@@ -16585,7 +16459,7 @@ thm identity_alpha_length_is_interval_length:
             alpha_interval_length(identity_alpha, I) = interval_length(I)
     # Source handling: Tao marks this as `(why?)`; it is the case
     # `alpha(b)-alpha(a)=b-a`.
-    obtain a, b from exist a, b R st {$has_interval_endpoints(I, a, b)}
+    obtain a, b from $is_bounded_interval(I)
     I = '[a, b] or I = '[a, b) or I = '(a, b] or I = '(a, b)
     by thm identity_alpha_endpoint_lengths_match_interval_lengths(a, b)
     by cases:
@@ -16795,7 +16669,7 @@ have fn piecewise_constant_riemann_stieltjes_integral_piece_contribution by exis
         $is_constant_on_subset(I, J, f)
         =>:
             exist! t R st {$has_piecewise_constant_riemann_stieltjes_integral_piece_contribution(I, J, alpha, f, t)}
-    obtain cv from exist c R st {$has_constant_value_on_subset(I, J, f, c)}
+    obtain cv from $is_constant_on_subset(I, J, f)
     witness exist t R st {$has_piecewise_constant_riemann_stieltjes_integral_piece_contribution(I, J, alpha, f, t)} from cv * alpha_interval_length(alpha, J):
         $is_bounded_interval(J)
         $is_constant_on_subset(I, J, f)
@@ -17021,7 +16895,7 @@ thm piecewise_constant_riemann_stieltjes_partition_sum_ignores_empty_pieces:
         J $in power_set(R)
         $is_bounded_interval(J)
         $is_constant_on_subset(I, J, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, J, f, c)}
+        obtain c from $is_constant_on_subset(I, J, f)
         by thm empty_bounded_interval_alpha_length_value(alpha, J)
         alpha_interval_length(alpha, J) = 0
         witness exist c0 R st {$has_constant_value_on_subset(I, J, f, c0), 0 = c0 * alpha_interval_length(alpha, J)} from c:
@@ -17059,7 +16933,7 @@ thm piecewise_constant_riemann_stieltjes_integral_with_partition_reindexes_over_
         $is_bounded_interval(K)
         K $subset I
         $is_constant_on_subset(I, K, f)
-        obtain c from exist c R st {$has_constant_value_on_subset(I, K, f, c)}
+        obtain c from $is_constant_on_subset(I, K, f)
         $has_constant_value_on_subset(I, K, f, c)
         by thm alpha_length_reindexes_over_refinement_fiber(I, Pfine, Pcoarse, F, K, alpha)
         alpha_interval_length(alpha, K) = finite_set_sum(F(K), fn(J F(K)) R {alpha_interval_length(alpha, J)})
@@ -17769,7 +17643,7 @@ thm identity_alpha_upper_riemann_candidate_from_ordinary:
             $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
     # Source handling: an ordinary piecewise-constant majorant has the same
     # candidate value for Stieltjes integration with the identity alpha.
-    obtain g from exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_integral(I, g, s)}
+    obtain g from $is_upper_riemann_integral_candidate_value(I, f, s)
     $is_piecewise_constant_on(I, g)
     $majorizes_on(I, g, f)
     $has_piecewise_constant_integral(I, g, s)
@@ -17787,7 +17661,7 @@ thm identity_alpha_upper_riemann_candidate_to_ordinary:
             $is_upper_riemann_integral_candidate_value(I, f, s)
     # Source handling: the identity-alpha Stieltjes majorant contributes the
     # same ordinary piecewise-constant integral value.
-    obtain g from exist g fn(x I) R st {$is_piecewise_constant_on(I, g), $majorizes_on(I, g, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)}
+    obtain g from $is_upper_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
     $is_piecewise_constant_on(I, g)
     $majorizes_on(I, g, f)
     $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, g, s)
@@ -17805,7 +17679,7 @@ thm identity_alpha_lower_riemann_candidate_from_ordinary:
             $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
     # Source handling: an ordinary piecewise-constant minorant has the same
     # candidate value for identity-alpha Stieltjes integration.
-    obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_integral(I, h, s)}
+    obtain h from $is_lower_riemann_integral_candidate_value(I, f, s)
     $is_piecewise_constant_on(I, h)
     $minorizes_on(I, h, f)
     $has_piecewise_constant_integral(I, h, s)
@@ -17823,7 +17697,7 @@ thm identity_alpha_lower_riemann_candidate_to_ordinary:
             $is_lower_riemann_integral_candidate_value(I, f, s)
     # Source handling: the identity-alpha Stieltjes minorant has the same
     # ordinary piecewise-constant integral value.
-    obtain h from exist h fn(x I) R st {$is_piecewise_constant_on(I, h), $minorizes_on(I, h, f), $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)}
+    obtain h from $is_lower_riemann_stieltjes_integral_candidate_value(I, identity_alpha, f, s)
     $is_piecewise_constant_on(I, h)
     $minorizes_on(I, h, f)
     $has_piecewise_constant_riemann_stieltjes_integral(I, identity_alpha, h, s)
@@ -18074,7 +17948,7 @@ thm lower_riemann_stieltjes_integral_candidate_values_have_least_upper_bound:
         witness $is_nonempty_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f)) from -M * alpha_interval_length(alpha, I)
     claim:
         ? $chap5::has_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f))
-        witness exist B R st {$chap5::is_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), B)} from M * alpha_interval_length(alpha, I):
+        witness exist bound_witness R st {$chap5::is_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), bound_witness)} from M * alpha_interval_length(alpha, I):
             $is_upper_bound_of_real_set(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), M * alpha_interval_length(alpha, I))
             by def:
                 ? $chap5::is_upper_bound(lower_riemann_stieltjes_integral_candidate_values(I, alpha, f), M * alpha_interval_length(alpha, I))
@@ -18392,19 +18266,12 @@ thm closed_initial_subinterval_subset_parent:
         a <= x <= b
         t <= x <= b
 
-prop is_closed_initial_restriction(a, b R, f fn(t '[a, b]) R, x '[a, b], r fn(y '[a, b]) R):
-    a < b
-    forall y '[a, b]:
-        r(y) = f(y)
-
-have fn closed_initial_restriction(a, b R, f fn(t '[a, b]) R, x '[a, b]: a < b) fn(r_arg '[a, b]) R = fn(y '[a, b]) R {f(y)}
-
 thm closed_initial_restriction_is_riemann_integrable:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         =>:
-            $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)})
+            $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {f(y)})
     by thm interval_endpoint_forms_are_bounded_intervals(a, b)
     by thm interval_endpoint_forms_are_bounded_intervals(a, x)
     by thm interval_endpoint_forms_are_bounded_intervals(x, b)
@@ -18548,18 +18415,6 @@ thm closed_initial_restriction_is_riemann_integrable:
             ? $is_partition_of_bounded_interval('[a, b], union({'[a, x]}, {'(x, b]}))
     by thm riemann_integral_additive_over_two_piece_partition('[a, b], union({'[a, x]}, {'(x, b]}), '[a, x], '(x, b], f)
     $is_riemann_integrable_on('[a, x], fn(y '[a, x]) R {f(y)})
-    claim:
-        ? forall y '[a, x]:
-            closed_initial_restriction(a, b, f, x)(y) = f(y)
-        y $in '[a, b]
-    claim:
-        ? forall y '[a, x]:
-            fn(z '[a, x]) R {closed_initial_restriction(a, b, f, x)(z)}(y) = fn(z '[a, x]) R {f(z)}(y)
-        y $in '[a, b]
-        closed_initial_restriction(a, b, f, x)(y) = f(y)
-        fn(z '[a, x]) R {closed_initial_restriction(a, b, f, x)(z)}(y) = closed_initial_restriction(a, b, f, x)(y)
-        fn(z '[a, x]) R {f(z)}(y) = f(y)
-    by thm riemann_integral_respects_pointwise_equality('[a, x], fn(y '[a, x]) R {f(y)}, fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)})
 
 # Source handling: Theorem 11.9.1 defines the left-endpoint integral directly.
 # The restriction, its subinterval integrability, and the selected integral
@@ -18569,30 +18424,30 @@ have fn integral_from_left_endpoint by exist!:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         =>:
-            exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s)}
+            exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)}
     by thm closed_initial_restriction_is_riemann_integrable(a, b, f, x)
-    witness exist s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s)} from integral_on('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}):
-        by thm integral_on_has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)})
+    witness exist s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)} from integral_on('[a, x], fn(y '[a, x]) R {f(y)}):
+        by thm integral_on_has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)})
     claim:
         ? forall s1, s2 R:
-            $has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s1)
-            $has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s2)
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s1)
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s2)
             =>:
                 s1 = s2
-        by thm riemann_integral_value_unique('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s1, s2)
-    exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, s)}
+        by thm riemann_integral_value_unique('[a, x], fn(y '[a, x]) R {f(y)}, s1, s2)
+    exist! s R st {$has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, s)}
 
 thm integral_from_left_endpoint_has_value:
     ? forall a, b R, f fn(t '[a, b]) R, x '[a, b]:
         a < b
         $is_riemann_integrable_on('[a, b], f)
         =>:
-            $has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, integral_from_left_endpoint(a, b, f, x))
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, integral_from_left_endpoint(a, b, f, x))
 
 prop is_integral_function_from_left_endpoint(a, b R, f fn(t '[a, b]) R, F fn(x '[a, b]) R):
     a < b
     forall x '[a, b]:
-        $has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, F(x))
+        $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, F(x))
 
 thm selected_left_endpoint_integral_is_integral_function:
     ? forall a, b R, f fn(t '[a, b]) R:
@@ -18602,7 +18457,7 @@ thm selected_left_endpoint_integral_is_integral_function:
             $is_integral_function_from_left_endpoint(a, b, f, fn(x '[a, b]) R {integral_from_left_endpoint(a, b, f, x)})
     claim:
         ? forall x '[a, b]:
-            $has_riemann_integral('[a, x], fn(y '[a, x]) R {closed_initial_restriction(a, b, f, x)(y)}, fn(z '[a, b]) R {integral_from_left_endpoint(a, b, f, z)}(x))
+            $has_riemann_integral('[a, x], fn(y '[a, x]) R {f(y)}, fn(z '[a, b]) R {integral_from_left_endpoint(a, b, f, z)}(x))
         fn(z '[a, b]) R {integral_from_left_endpoint(a, b, f, z)}(x) = integral_from_left_endpoint(a, b, f, x)
         by thm integral_from_left_endpoint_has_value(a, b, f, x)
     by def:

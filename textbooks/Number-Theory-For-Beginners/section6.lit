@@ -1201,6 +1201,49 @@ prop is_field(carrier set, add fn(x, y carrier) carrier, mul fn(x, y carrier) ca
         =>:
             exist! y carrier st {mul(x, y) = one}
 
+prop is_multiplicative_inverse(carrier set, mul fn(x, y carrier) carrier, one carrier, x, inverse carrier):
+    mul(x, inverse) = one
+
+thm multiplicative_inverse_exists_unique:
+    ? forall carrier set, add, mul fn(x, y carrier) carrier, zero, one carrier, x carrier:
+        $is_field(carrier, add, mul, zero, one)
+        x != zero
+        =>:
+            exist! candidate carrier st {$is_multiplicative_inverse(carrier, mul, one, x, candidate)}
+    by def:
+        ? $is_field(carrier, add, mul, zero, one)
+    obtain candidate from exist! y carrier st {mul(x, y) = one}
+    witness exist! candidate0 carrier st {$is_multiplicative_inverse(carrier, mul, one, x, candidate0)} from candidate:
+        by def $is_multiplicative_inverse(carrier, mul, one, x, candidate)
+        claim:
+            ? forall candidate1, candidate2 carrier:
+                $is_multiplicative_inverse(carrier, mul, one, x, candidate1)
+                $is_multiplicative_inverse(carrier, mul, one, x, candidate2)
+                =>:
+                    candidate1 = candidate2
+            mul(x, candidate1) = one
+            mul(x, candidate2) = one
+            obtain unique_candidate from exist! y carrier st {mul(x, y) = one}
+            candidate1 = unique_candidate
+            candidate2 = unique_candidate
+
+template<carrier set, add, mul fn(x, y carrier) carrier, zero, one carrier>:
+    have fn multiplicative_inverse by exist!:
+        ? forall x carrier:
+            $is_field(carrier, add, mul, zero, one)
+            x != zero
+            =>:
+                exist! candidate carrier st {$is_multiplicative_inverse(carrier, mul, one, x, candidate)}
+        by thm multiplicative_inverse_exists_unique(carrier, add, mul, zero, one, x)
+
+thm multiplicative_inverse_satisfies_inverse:
+    ? forall carrier set, add, mul fn(x, y carrier) carrier, zero, one carrier, x carrier:
+        $is_field(carrier, add, mul, zero, one)
+        x != zero
+        =>:
+            $is_multiplicative_inverse(carrier, mul, one, x, \multiplicative_inverse<carrier, add, mul, zero, one>(x))
+    $is_multiplicative_inverse(carrier, mul, one, x, \multiplicative_inverse<carrier, add, mul, zero, one>(x))
+
 prop residue_classes_form_field_mod(m N+):
     exist Classes finite_set, add fn(A, B Classes) Classes, mul fn(A, B Classes) Classes, zero Classes, one Classes st {$section5::is_set_of_all_residue_classes_mod(m, Classes), finite_set_size(Classes) = m, $section5::is_residue_class_addition_operation(m, Classes, add, zero), $is_residue_class_multiplication_operation(m, Classes, mul), one = section5::residue_class_mod(m, 1), $is_commutative_unitary_ring(Classes, add, mul, zero, one), $is_field(Classes, add, mul, zero, one)}
 

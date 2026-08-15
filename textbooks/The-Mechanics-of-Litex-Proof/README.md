@@ -50,6 +50,12 @@ The corresponding source interfaces are:
 - `by def` introduces a positive defined predicate after its mathematical body
   has been proved. Negative predicates continue to use ordinary proofs such as
   `by contra`.
+- When a concrete predicate's whole body is one positive ordinary `exist` fact,
+  `obtain k from $p(args)` and `witness $p(args) from value` cross that named
+  boundary directly at runtime. Named construction excludes `exist!`, which
+  uses explicit `witness exist! ...` plus `by def`. Raw existentials, abstract
+  predicates, nested local definitions, and multi-clause definitions also keep
+  their explicit forms.
 - `by thm <builtin-name>(...)` invokes a named semantic object rule, such as
   `set_builder_member` or `tuple_equal_from_coordinates`. These interfaces are
   not silently included in automatic atomic search.

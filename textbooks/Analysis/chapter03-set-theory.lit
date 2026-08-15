@@ -28,8 +28,10 @@ sketch:
 Axiom 3.1 (Sets are objects). If A is a set, then A is also an object.
 """
 
-# Litex's set-theoretic universe treats every object as a set, so `is_set` is
-# universal.
+# Tao leaves the choice between pure and impure set theories open. Litex
+# selects the pure interpretation: every well-defined Litex object is
+# set-coded, so `is_set` is universal. This is a foundational representation
+# choice, not the assertion that there is one set containing every object.
 
 forall A set:
     $is_set(A)
@@ -1014,9 +1016,12 @@ Remark 3.3.6. Functions are objects, but they are not sets; a function can be
 represented by its graph later.
 """
 
-# Section 3.5 will explain the graph `{(x,f(x)): x in X}` using Cartesian
-# products; here we keep the source distinction that a function itself is not a
-# set.
+# Section 3.5 explains the graph `{(x,f(x)): x in X}` using Cartesian
+# products. Tao's surface presentation distinguishes functions from sets;
+# Litex preserves the callable function interface, while its pure-set
+# foundation still treats the underlying function object as set-coded. The
+# distinction here is therefore about mathematical use, not a fact of the form
+# `not $is_set(f)`.
 
 
 
@@ -1492,9 +1497,7 @@ sketch:
     by def:
         ? $is_forward_image_of({1, 2, 3}, {2, 4, 6}, double_on_three, {1, 2, 3}, {2, 4, 6})
 
-    witness exist x {1, 2, 3} st {x $in N, double_nat(1) = double_nat(x)} from 1
-    by def:
-        ? $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1))
+    witness $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, double_nat(1)) from 1
     \restricted_image<N, N, double_nat, {1, 2, 3}> = {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)}
     by thm set_builder_member(double_nat(1), {y N: $has_preimage_in_subset(N, N, {1, 2, 3}, double_nat, y)})
     double_nat(1) $in \restricted_image<N, N, double_nat, {1, 2, 3}>
@@ -1866,9 +1869,7 @@ sketch:
     A(1) = {2, 3}
     2 $in {2, 3}
     2 $in A(1)
-    witness exist i_index {1, 2, 3} st {2 $in A(i_index)} from 1
-    by def:
-        ? $is_in_indexed_union({1, 2, 3}, N, A, 2)
+    witness $is_in_indexed_union({1, 2, 3}, N, A, 2) from 1
     \indexed_union<{1, 2, 3}, N, A> = {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)}
     by thm set_builder_member(2, {z N: $is_in_indexed_union({1, 2, 3}, N, A, z)})
     2 $in \indexed_union<{1, 2, 3}, N, A>
@@ -2118,7 +2119,7 @@ sketch:
     cart_add_two_inputs(2, 3) = 5
 
     forall x, y N:
-        cart_add_on_pair((x, y)) = (x, y)[1] + (x, y)[2] = x + y = cart_add_two_inputs(x, y)
+        cart_add_on_pair((x, y)) = x + y = cart_add_two_inputs(x, y)
 
 
 """
@@ -2320,9 +2321,7 @@ sketch:
 
     by def:
         ? $is_bijective_fn({0, 1, 2}, {3, 4, 5}, shift_0_to_3)
-    witness exist f fn(x {0, 1, 2}) {3, 4, 5} st {$is_bijective_fn({0, 1, 2}, {3, 4, 5}, f)} from shift_0_to_3
-    by def:
-        ? $has_equal_cardinality({0, 1, 2}, {3, 4, 5})
+    witness $has_equal_cardinality({0, 1, 2}, {3, 4, 5}) from shift_0_to_3
 
 """
 Remark 3.6.3. The natural numbers have equal cardinality with the even natural
@@ -2344,9 +2343,7 @@ sketch:
     claim:
         ? forall n N:
             2 * n $in even_N
-        witness exist k N st {2 * n = 2 * k} from n
-        by def:
-            ? $is_even_nat(2 * n)
+        witness $is_even_nat(2 * n) from n
         by thm set_builder_member(2 * n, {m N: $is_even_nat(m)})
 
     have fn double_to_even(n N) even_N = 2 * n
@@ -2376,9 +2373,7 @@ sketch:
 
     by def:
         ? $is_bijective_fn(N, even_N, double_to_even)
-    witness exist f fn(x N) even_N st {$is_bijective_fn(N, even_N, f)} from double_to_even
-    by def:
-        ? $has_equal_cardinality(N, even_N)
+    witness $has_equal_cardinality(N, even_N) from double_to_even
 
     by contra:
         ? not 1 $in even_N
@@ -2418,9 +2413,7 @@ sketch:
             ? $is_surjective_fn(X, X, id_X)
         by def:
             ? $is_bijective_fn(X, X, id_X)
-        witness exist f fn(x X) X st {$is_bijective_fn(X, X, f)} from id_X
-        by def:
-            ? $has_equal_cardinality(X, X)
+        witness $has_equal_cardinality(X, X) from id_X
 
 """
 Definition 3.6.5. A set has cardinality n when it has equal cardinality with a
@@ -2487,9 +2480,7 @@ sketch:
 
     by def:
         ? $is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, shift_zero_to_one)
-    witness exist f fn(x {0, 1, 2, 3}) {1, 2, 3, 4} st {$is_bijective_fn({0, 1, 2, 3}, {1, 2, 3, 4}, f)} from shift_zero_to_one
-    by def:
-        ? $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4})
+    witness $has_equal_cardinality({0, 1, 2, 3}, {1, 2, 3, 4}) from shift_zero_to_one
 
 """
 Example 3.6.7. Listed finite sets with distinct entries have the expected

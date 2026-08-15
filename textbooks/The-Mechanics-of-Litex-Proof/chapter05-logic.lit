@@ -229,9 +229,7 @@ sketch:
                 not $is_square_two(a)
         by contra:
             ? not $is_square_two(a)
-            witness exist n N st {$is_square_two(n)} from a
-            by def:
-                ? $some_square_two()
+            witness $some_square_two() from a
             impossible $some_square_two()
 
     claim:
@@ -481,9 +479,7 @@ sketch:
                 not $is_square_two(a)
         by contra:
             ? not $is_square_two(a)
-            witness exist n N st {$is_square_two(n)} from a
-            by def:
-                ? $some_square_two_again()
+            witness $some_square_two_again() from a
             impossible $some_square_two_again()
 
     claim:

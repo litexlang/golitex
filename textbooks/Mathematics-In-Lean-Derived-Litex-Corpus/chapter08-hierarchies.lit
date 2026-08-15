@@ -420,19 +420,15 @@ thm fraction_relation_reflexive:
         $is_submonoid(M, monoid, carrier)
         =>:
             $submonoid_fraction_equiv(M, monoid, carrier, x, x)
-    witness exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(x, z)} from &Monoid<M>{monoid}.one, &Monoid<M>{monoid}.one
-    by def:
-        ? $submonoid_fraction_equiv(M, monoid, carrier, x, x)
+    witness $submonoid_fraction_equiv(M, monoid, carrier, x, x) from &Monoid<M>{monoid}.one, &Monoid<M>{monoid}.one
 
 thm fraction_relation_symmetric:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y M:
         $submonoid_fraction_equiv(M, monoid, carrier, x, y)
         =>:
             $submonoid_fraction_equiv(M, monoid, carrier, y, x)
-    obtain w, z from exist w, z M st {w $in carrier, z $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, z)}
-    witness exist w2, z2 M st {w2 $in carrier, z2 $in carrier, &Monoid<M>{monoid}.mul(y, w2) = &Monoid<M>{monoid}.mul(x, z2)} from z, w
-    by def:
-        ? $submonoid_fraction_equiv(M, monoid, carrier, y, x)
+    obtain w, z from $submonoid_fraction_equiv(M, monoid, carrier, x, y)
+    witness $submonoid_fraction_equiv(M, monoid, carrier, y, x) from z, w
 
 thm fraction_relation_transitive:
     ? forall M nonempty_set, monoid &Monoid<M>, carrier power_set(M), x, y, z M:
@@ -447,7 +443,7 @@ thm fraction_relation_transitive:
             u = v
             =>:
                 f(u) = f(v)
-    obtain x_den, y_num from exist w, q M st {w $in carrier, q $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(y, q)}
+    obtain x_den, y_num from $submonoid_fraction_equiv(M, monoid, carrier, x, y)
     obtain y_den, z_num from exist w, q M st {w $in carrier, q $in carrier, &Monoid<M>{monoid}.mul(y, w) = &Monoid<M>{monoid}.mul(z, q)}
     have left_den M = &Monoid<M>{monoid}.mul(x_den, y_den)
     have right_num M = &Monoid<M>{monoid}.mul(y_num, z_num)
@@ -462,9 +458,7 @@ thm fraction_relation_transitive:
     by thm function_substitution(M, M, fn(q M) M {&Monoid<M>{monoid}.mul(y, q)}, &Monoid<M>{monoid}.mul(y_num, y_den), &Monoid<M>{monoid}.mul(y_den, y_num))
     by thm function_substitution(M, M, fn(q M) M {&Monoid<M>{monoid}.mul(z, q)}, &Monoid<M>{monoid}.mul(z_num, y_num), &Monoid<M>{monoid}.mul(y_num, z_num))
     &Monoid<M>{monoid}.mul(x, left_den) = &Monoid<M>{monoid}.mul(x, &Monoid<M>{monoid}.mul(x_den, y_den)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(x, x_den), y_den) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_num), y_den) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_num, y_den)) = &Monoid<M>{monoid}.mul(y, &Monoid<M>{monoid}.mul(y_den, y_num)) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(y, y_den), y_num) = &Monoid<M>{monoid}.mul(&Monoid<M>{monoid}.mul(z, z_num), y_num) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(z_num, y_num)) = &Monoid<M>{monoid}.mul(z, &Monoid<M>{monoid}.mul(y_num, z_num)) = &Monoid<M>{monoid}.mul(z, right_num)
-    witness exist w, q M st {w $in carrier, q $in carrier, &Monoid<M>{monoid}.mul(x, w) = &Monoid<M>{monoid}.mul(z, q)} from left_den, right_num
-    by def:
-        ? $submonoid_fraction_equiv(M, monoid, carrier, x, z)
+    witness $submonoid_fraction_equiv(M, monoid, carrier, x, z) from left_den, right_num
 
 # Source quotient constructor. The represented-class carrier becomes a genuine
 # quotient only for a commutative monoid and a submonoid carrier.

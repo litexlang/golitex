@@ -364,20 +364,16 @@ sketch:
             5 * n = 8 * a
             =>:
                 $dvdZ(8, n)
-        witness exist c Z st {n = 8 * c} from -3 * a + 2 * n:
+        witness $dvdZ(8, n) from -3 * a + 2 * n:
             n = -3 * (5 * n) + 16 * n = -3 * (8 * a) + 16 * n = 8 * (-3 * a + 2 * n)
-        by def:
-            ? $dvdZ(8, n)
 
     claim:
         ? forall n, a Z:
             n = 8 * a
             =>:
                 $dvdZ(8, 5 * n)
-        witness exist c Z st {5 * n = 8 * c} from 5 * a:
+        witness $dvdZ(8, 5 * n) from 5 * a:
             5 * n = 5 * (8 * a) = 8 * (5 * a)
-        by def:
-            ? $dvdZ(8, 5 * n)
 
 # 4.2.3 and 4.2.4
 
@@ -398,11 +394,9 @@ sketch:
             $odd(n)
             =>:
                 $mod_eq(n, 1, 2)
-        obtain k from exist k Z st {n = 2 * k + 1}
-        witness exist c Z st {n - 1 = 2 * c} from k:
+        obtain k from $odd(n)
+        witness $mod_eq(n, 1, 2) from k:
             n - 1 = 2 * k + 1 - 1 = 2 * k
-        by def:
-            ? $mod_eq(n, 1, 2)
 
     claim:
         ? forall n Z:
@@ -410,10 +404,8 @@ sketch:
             =>:
                 $odd(n)
         obtain k from exist k Z st {n - 1 = 2 * k}
-        witness exist c Z st {n = 2 * c + 1} from k:
+        witness $odd(n) from k:
             n = n - 1 + 1 = 2 * k + 1
-        by def:
-            ? $odd(n)
 
     claim:
         ? forall n Z:
@@ -421,10 +413,8 @@ sketch:
             =>:
                 $mod_eq(n, 0, 2)
         obtain k from exist k Z st {n = 2 * k}
-        witness exist c Z st {n - 0 = 2 * c} from k:
+        witness $mod_eq(n, 0, 2) from k:
             n - 0 = n = 2 * k
-        by def:
-            ? $mod_eq(n, 0, 2)
 
     claim:
         ? forall n Z:
@@ -432,10 +422,8 @@ sketch:
             =>:
                 $even(n)
         obtain k from exist k Z st {n - 0 = 2 * k}
-        witness exist c Z st {n = 2 * c} from k:
+        witness $even(n) from k:
             n = n - 0 = 2 * k
-        by def:
-            ? $even(n)
 
 # 4.2.5 and 4.2.6
 
@@ -489,30 +477,24 @@ sketch:
             $odd(a)
             =>:
                 $mod_eq(a, 1, 2)
-        obtain k from exist k Z st {a = 2 * k + 1}
-        witness exist t Z st {a - 1 = 2 * t} from k:
+        obtain k from $odd(a)
+        witness $mod_eq(a, 1, 2) from k:
             a - 1 = (2 * k + 1) - 1 = 2 * k
-        by def:
-            ? $mod_eq(a, 1, 2)
 
     claim:
         ? forall a Z:
             $mod_eq(a, 1, 2)
             =>:
                 $odd(a)
-        obtain k from exist k Z st {a - 1 = 2 * k}
-        witness exist t Z st {a = 2 * t + 1} from k:
+        obtain k from $mod_eq(a, 1, 2)
+        witness $odd(a) from k:
             a = (a - 1) + 1 = 2 * k + 1
-        by def:
-            ? $odd(a)
 
     claim:
         ? forall a, n Z:
             $mod_eq(a, a, n)
-        witness exist k Z st {a - a = n * k} from 0:
+        witness $mod_eq(a, a, n) from 0:
             a - a = n * 0
-        by def:
-            ? $mod_eq(a, a, n)
 
     claim:
         ? forall a, b, c, n Z:
@@ -520,12 +502,10 @@ sketch:
             $mod_eq(b, c, n)
             =>:
                 $mod_eq_trans(a, b, c, n)
-        obtain x from exist x Z st {a - b = n * x}
+        obtain x from $mod_eq(a, b, n)
         obtain y from exist y Z st {b - c = n * y}
-        witness exist k Z st {a - c = n * k} from x + y:
+        witness $mod_eq(a, c, n) from x + y:
             a - c = (a - b) + (b - c) = n * x + n * y = n * (x + y)
-        by def:
-            ? $mod_eq(a, c, n)
         by def:
             ? $mod_eq_trans(a, b, c, n)
 
@@ -535,12 +515,10 @@ sketch:
             $mod_eq(c, d, n)
             =>:
                 $mod_eq(a + c, b + d, n)
-        obtain x from exist x Z st {a - b = n * x}
-        obtain y from exist y Z st {c - d = n * y}
-        witness exist k Z st {(a + c) - (b + d) = n * k} from x + y:
+        obtain x from $mod_eq(a, b, n)
+        obtain y from $mod_eq(c, d, n)
+        witness $mod_eq(a + c, b + d, n) from x + y:
             (a + c) - (b + d) = (a - b) + (c - d) = n * x + n * y = n * (x + y)
-        by def:
-            ? $mod_eq(a + c, b + d, n)
 
     claim:
         ? forall x, y Z:
@@ -553,10 +531,8 @@ sketch:
         $mod_eq(x + y, 1 + 1, 2)
         $mod_eq(1, 1, 2)
         $mod_eq(x + y + 1, 1 + 1 + 1, 2)
-        witness exist k Z st {1 + 1 + 1 - 1 = 2 * k} from 1:
+        witness $mod_eq(1 + 1 + 1, 1, 2) from 1:
             1 + 1 + 1 - 1 = 2 * 1
-        by def:
-            ? $mod_eq(1 + 1 + 1, 1, 2)
         $mod_eq_trans(x + y + 1, 1 + 1 + 1, 1, 2)
         $mod_eq(x + y + 1, 1, 2)
 
@@ -727,7 +703,7 @@ sketch:
         ? not $dvdN(3, 13)
         by contra:
             ? not $dvdN(3, 13)
-            obtain a from exist k N st {13 = 3 * k}
+            obtain a from exist c N st {13 = 3 * c}
             witness exist k Z st {13 = 3 * k + 0} from a
             0 < 3
             13 = 3 * a + 0

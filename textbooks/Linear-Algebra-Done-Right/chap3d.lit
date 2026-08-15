@@ -88,9 +88,88 @@ prop invertible_iff_injective_and_surjective_statement(s nonempty_set, VSet, WSe
             $chap3b::is_injective(VSet, WSet, T)
             $chap3b::is_surjective(VSet, WSet, T)
 
-axiom invertible_iff_injective_and_surjective:
+thm bijective_implies_invertible:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap3b::is_injective(VSet, WSet, T)
+        $chap3b::is_surjective(VSet, WSet, T)
+        =>:
+            $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+    by def:
+        ? $chap3b::is_injective(VSet, WSet, T)
+    by def:
+        ? $chap3b::is_surjective(VSet, WSet, T)
+    have fn S by exist!:
+        ? forall w WSet:
+            exist! v VSet st {T(v) = w}
+        obtain v from exist v VSet st {T(v) = w}
+        claim:
+            ? forall v1, v2 VSet:
+                T(v1) = w
+                T(v2) = w
+                =>:
+                    v1 = v2
+            T(v1) = w = T(v2)
+        witness exist! selected VSet st {T(selected) = w} from v
+    by def:
+        ? $chap3a::is_linear_map(s, VSet, WSet, V, W, T)
+    W.scalars = V.scalars
+    claim:
+        ? forall x, y WSet:
+            S(W.add(x, y)) = V.add(S(x), S(y))
+        T(S(W.add(x, y))) = W.add(x, y)
+        T(S(x)) = x
+        T(S(y)) = y
+        T(V.add(S(x), S(y))) = W.add(T(S(x)), T(S(y))) = W.add(x, y)
+        T(S(W.add(x, y))) = T(V.add(S(x), S(y)))
+    claim:
+        ? forall a s, x WSet:
+            S(W.smul(a, x)) = V.smul(a, S(x))
+        T(S(W.smul(a, x))) = W.smul(a, x)
+        T(S(x)) = x
+        T(V.smul(a, S(x))) = W.smul(a, T(S(x))) = W.smul(a, x)
+        T(S(W.smul(a, x))) = T(V.smul(a, S(x)))
+    by def:
+        ? $chap3a::is_linear_map(s, WSet, VSet, W, V, S)
+    claim:
+        ? forall v VSet:
+            S(T(v)) = v
+        T(S(T(v))) = T(v)
+    by def:
+        ? $is_inverse_linear_map(s, VSet, WSet, V, W, T, S)
+    witness exist selected fn(w WSet) VSet st {$is_inverse_linear_map(s, VSet, WSet, V, W, T, selected)} from S
+    by def:
+        ? $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+
+thm invertible_iff_injective_and_surjective_checked:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $invertible_iff_injective_and_surjective_statement(s, VSet, WSet, V, W, T)
+    claim:
+        ? forall:
+            $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+            =>:
+                $chap3b::is_injective(VSet, WSet, T)
+                $chap3b::is_surjective(VSet, WSet, T)
+        by thm invertible_implies_injective_and_surjective(s, VSet, WSet, V, W, T)
+    claim:
+        ? forall:
+            $chap3b::is_injective(VSet, WSet, T)
+            $chap3b::is_surjective(VSet, WSet, T)
+            =>:
+                $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        by thm bijective_implies_invertible(s, VSet, WSet, V, W, T)
+    forall:
+        =>:
+            $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        <=>:
+            $chap3b::is_injective(VSet, WSet, T)
+            $chap3b::is_surjective(VSet, WSet, T)
+    by def:
+        ? $invertible_iff_injective_and_surjective_statement(s, VSet, WSet, V, W, T)
+
+thm invertible_iff_injective_and_surjective:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $invertible_iff_injective_and_surjective_statement(s, VSet, WSet, V, W, T)
+    by thm invertible_iff_injective_and_surjective_checked(s, VSet, WSet, V, W, T)
 # Example 3.64 records the infinite-dimensional warning: injective or
 # surjective alone need not imply invertible.
 # Result 3.65. In equal finite dimension, injectivity, surjectivity, and
@@ -109,7 +188,96 @@ prop injective_iff_surjective_statement(VSet, WSet set, T fn(v VSet) WSet):
         <=>:
             $chap3b::is_surjective(VSet, WSet, T)
 
-axiom injective_iff_surjective_in_equal_finite_dimension:
+thm injective_iff_surjective_equal_finite_dimension:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+        =>:
+            $injective_iff_surjective_statement(VSet, WSet, T)
+    by thm chap3b::null_space_is_subspace(s, VSet, WSet, V, W, T)
+    by thm chap3b::range_is_subspace(s, VSet, WSet, V, W, T)
+    by thm chap3b::fundamental_theorem_of_linear_maps(s, VSet, WSet, V, W, T)
+    by def:
+        ? $chap3b::rank_nullity_finite_parts_statement(s, VSet, WSet, V, W, T)
+    $chap2a::is_finite_dimensional(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>)
+    $chap2a::is_finite_dimensional(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
+    by def:
+        ? $chap3b::rank_nullity_dimension_statement(s, VSet, WSet, V, W, T)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, VSet, V)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, WSet, W)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
+    $chap1c::is_subspace(s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+    $chap1c::is_subspace(s, WSet, W, \chap3b::range_of<VSet, WSet>(T))
+    $chap2a::is_finite_dimensional(s, VSet, V)
+    $chap2a::is_finite_dimensional(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>)
+    $chap2a::is_finite_dimensional(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
+    \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>> + \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>>
+    claim:
+        ? forall:
+            $chap3b::is_injective(VSet, WSet, T)
+            =>:
+                $chap3b::is_surjective(VSet, WSet, T)
+        by thm chap3b::injective_iff_null_space_is_zero(s, VSet, WSet, V, W, T)
+        by def:
+            ? $chap3b::injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+        \chap3b::null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+        by thm chap3b::zero_subspace_has_basis_length_zero(s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+        by thm chap2c::dimension_has_basis_length(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>)
+        by thm chap2c::basis_length_unique(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, 0, \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>>)
+        \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>> = 0
+        \chap2c::dimension<s, VSet, V> = 0 + \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>>
+        \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap2c::dimension<s, WSet, W>
+        by thm chap2c::full_dimension_subspace_equals_ambient(s, WSet, W, \chap3b::range_of<VSet, WSet>(T))
+        \chap3b::range_of<VSet, WSet>(T) = WSet
+        claim:
+            ? forall w WSet:
+                exist v VSet st {T(v) = w}
+            w $in \chap3b::range_of<VSet, WSet>(T)
+            obtain v from exist selected VSet st {w = T(selected)}
+            witness exist selected VSet st {T(selected) = w} from v
+        by def:
+            ? $chap3b::is_surjective(VSet, WSet, T)
+    claim:
+        ? forall:
+            $chap3b::is_surjective(VSet, WSet, T)
+            =>:
+                $chap3b::is_injective(VSet, WSet, T)
+        by thm chap3b::surjective_linear_map_has_full_range(VSet, WSet, T)
+        by thm chap2b::finite_dimensional_subspace_has_prefix_tail_ambient_basis(s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+        obtain null_length, range_length, full, null_part, tail from exist selected_null_length, selected_range_length N, selected_full &chap1a::FiniteList<VSet, selected_null_length + selected_range_length>, selected_null_part &chap1a::FiniteList<VSet, selected_null_length>, selected_tail &chap1a::FiniteList<VSet, selected_range_length> st {$chap2b::is_prefix_tail_split(VSet, selected_null_length, selected_range_length, selected_full, selected_null_part, selected_tail), $chap2b::is_basis(s, VSet, V, selected_null_length + selected_range_length, selected_full), \chap2a::span_carrier<s, VSet, V, selected_null_length, selected_null_part> = \chap3b::null_space<s, VSet, WSet, V, W>(T)}
+        by thm chap2a::span_contains_list_entries(s, VSet, V, null_length, null_part)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \chap2a::span_carrier<s, VSet, V, null_length, null_part>)
+        \chap2a::span_carrier<s, VSet, V, null_length, null_part> = \chap3b::null_space<s, VSet, WSet, V, W>(T)
+        $chap2a::contains_list_entries(VSet, null_length, null_part, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+        by thm chap3b::kernel_prefix_has_basis_length(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+        by thm chap3b::kernel_tail_has_codomain_basis_length(s, VSet, WSet, V, W, T, null_length, range_length, full, null_part, tail)
+        by thm chap2c::dimension_has_basis_length(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>)
+        by thm chap2c::basis_length_unique(s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>, null_length, \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>>)
+        null_length = \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>>
+        by thm chap2c::dimension_has_basis_length(s, WSet, W)
+        by thm chap2c::basis_length_unique(s, WSet, W, range_length, \chap2c::dimension<s, WSet, W>)
+        range_length = \chap2c::dimension<s, WSet, W>
+        by thm chap2c::basis_length_equals_dimension(s, VSet, V, null_length + range_length, full)
+        null_length + range_length = \chap2c::dimension<s, VSet, V>
+        null_length + range_length = \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W> = range_length
+        null_length = (null_length + range_length) - range_length = range_length - range_length = 0
+        \chap2c::dimension<s, \chap3b::null_space<s, VSet, WSet, V, W>(T), \chap1c::subspace_vector_space<s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T)>> = 0
+        by thm chap3c::dimension_zero_subspace_is_singleton_zero(s, VSet, V, \chap3b::null_space<s, VSet, WSet, V, W>(T))
+        \chap3b::null_space<s, VSet, WSet, V, W>(T) = {V.zero}
+        by thm chap3b::injective_iff_null_space_is_zero(s, VSet, WSet, V, W, T)
+        by def:
+            ? $chap3b::injective_iff_null_space_is_zero_statement(s, VSet, WSet, V, W, T)
+    forall:
+        =>:
+            $chap3b::is_injective(VSet, WSet, T)
+        <=>:
+            $chap3b::is_surjective(VSet, WSet, T)
+    by def:
+        ? $injective_iff_surjective_statement(VSet, WSet, T)
+
+thm injective_iff_surjective_in_equal_finite_dimension_checked:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
@@ -117,6 +285,39 @@ axiom injective_iff_surjective_in_equal_finite_dimension:
         =>:
             $invertible_iff_injective_statement(s, VSet, WSet, V, W, T)
             $injective_iff_surjective_statement(VSet, WSet, T)
+    by thm injective_iff_surjective_equal_finite_dimension(s, VSet, WSet, V, W, T)
+    by def:
+        ? $injective_iff_surjective_statement(VSet, WSet, T)
+    claim:
+        ? forall:
+            $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+            =>:
+                $chap3b::is_injective(VSet, WSet, T)
+        by thm invertible_implies_injective_and_surjective(s, VSet, WSet, V, W, T)
+    claim:
+        ? forall:
+            $chap3b::is_injective(VSet, WSet, T)
+            =>:
+                $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        $chap3b::is_surjective(VSet, WSet, T)
+        by thm bijective_implies_invertible(s, VSet, WSet, V, W, T)
+    forall:
+        =>:
+            $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        <=>:
+            $chap3b::is_injective(VSet, WSet, T)
+    by def:
+        ? $invertible_iff_injective_statement(s, VSet, WSet, V, W, T)
+
+thm injective_iff_surjective_in_equal_finite_dimension:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+        =>:
+            $invertible_iff_injective_statement(s, VSet, WSet, V, W, T)
+            $injective_iff_surjective_statement(VSet, WSet, T)
+    by thm injective_iff_surjective_in_equal_finite_dimension_checked(s, VSet, WSet, V, W, T)
 
 
 prop is_left_inverse_linear_map(VSet, WSet set, S fn(w WSet) VSet, T fn(v VSet) WSet):
@@ -137,13 +338,77 @@ prop one_sided_inverse_iff_other_side_statement(s nonempty_set, VSet, WSet nonem
         <=>:
             $is_right_inverse_linear_map(VSet, WSet, S, T)
 
-axiom one_sided_inverse_iff_other_side:
+thm one_sided_inverse_iff_other_side_checked:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \chap3a::linear_map_space<s, WSet, VSet, W, V>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
         \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
         =>:
             $one_sided_inverse_iff_other_side_statement(s, VSet, WSet, V, W, S, T)
+    by thm injective_iff_surjective_in_equal_finite_dimension(s, VSet, WSet, V, W, T)
+    by def:
+        ? $injective_iff_surjective_statement(VSet, WSet, T)
+    claim:
+        ? forall:
+            $is_left_inverse_linear_map(VSet, WSet, S, T)
+            =>:
+                $is_right_inverse_linear_map(VSet, WSet, S, T)
+        claim:
+            ? $chap3b::is_injective(VSet, WSet, T)
+            claim:
+                ? forall v1, v2 VSet:
+                    T(v1) = T(v2)
+                    =>:
+                        v1 = v2
+                S(T(v1)) = S(T(v2))
+                v1 = S(T(v1)) = S(T(v2)) = v2
+            by def:
+                ? $chap3b::is_injective(VSet, WSet, T)
+        $chap3b::is_surjective(VSet, WSet, T)
+        claim:
+            ? forall w WSet:
+                T(S(w)) = w
+            obtain v from exist selected VSet st {T(selected) = w}
+            S(T(v)) = v
+            T(S(w)) = T(S(T(v))) = T(v) = w
+        by def:
+            ? $is_right_inverse_linear_map(VSet, WSet, S, T)
+    claim:
+        ? forall:
+            $is_right_inverse_linear_map(VSet, WSet, S, T)
+            =>:
+                $is_left_inverse_linear_map(VSet, WSet, S, T)
+        claim:
+            ? $chap3b::is_surjective(VSet, WSet, T)
+            claim:
+                ? forall w WSet:
+                    exist v VSet st {T(v) = w}
+                witness exist selected VSet st {T(selected) = w} from S(w)
+            by def:
+                ? $chap3b::is_surjective(VSet, WSet, T)
+        $chap3b::is_injective(VSet, WSet, T)
+        claim:
+            ? forall v VSet:
+                S(T(v)) = v
+            T(S(T(v))) = T(v)
+        by def:
+            ? $is_left_inverse_linear_map(VSet, WSet, S, T)
+    forall:
+        =>:
+            $is_left_inverse_linear_map(VSet, WSet, S, T)
+        <=>:
+            $is_right_inverse_linear_map(VSet, WSet, S, T)
+    by def:
+        ? $one_sided_inverse_iff_other_side_statement(s, VSet, WSet, V, W, S, T)
+
+thm one_sided_inverse_iff_other_side:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, S \chap3a::linear_map_space<s, WSet, VSet, W, V>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+        =>:
+            $one_sided_inverse_iff_other_side_statement(s, VSet, WSet, V, W, S, T)
+    by thm one_sided_inverse_iff_other_side_checked(s, VSet, WSet, V, W, S, T)
 # Definition 3.69. An isomorphism is an invertible linear map; two spaces are
 # isomorphic when an isomorphism exists between them.
 prop is_isomorphism(s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T fn(v VSet) WSet):
@@ -162,31 +427,353 @@ prop isomorphic_iff_equal_dimension_statement(s nonempty_set, VSet, WSet nonempt
         <=>:
             \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
 
-axiom dimension_characterizes_isomorphism:
+thm dimension_characterizes_isomorphism_checked:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
         =>:
             $isomorphic_iff_equal_dimension_statement(s, VSet, WSet, V, W)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, VSet, V)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, WSet, W)
+    by thm chap2c::dimension_has_basis_length(s, VSet, V)
+    by thm chap2c::dimension_has_basis_length(s, WSet, W)
+    obtain vbasis from exist selected &chap1a::FiniteList<VSet, \chap2c::dimension<s, VSet, V>> st {$chap2b::is_basis(s, VSet, V, \chap2c::dimension<s, VSet, V>, selected)}
+    obtain wbasis from exist selected &chap1a::FiniteList<WSet, \chap2c::dimension<s, WSet, W>> st {$chap2b::is_basis(s, WSet, W, \chap2c::dimension<s, WSet, W>, selected)}
+    by thm chap2b::basis_iff_unique_coordinates(s, VSet, V, \chap2c::dimension<s, VSet, V>, vbasis)
+    by def:
+        ? $chap2b::basis_iff_unique_coordinates_statement(s, VSet, V, \chap2c::dimension<s, VSet, V>, vbasis)
+    $chap2b::has_unique_coordinates(s, VSet, V, \chap2c::dimension<s, VSet, V>, vbasis)
+    by def:
+        ? $chap2b::has_unique_coordinates(s, VSet, V, \chap2c::dimension<s, VSet, V>, vbasis)
+    have fn vcoords by exist!:
+        ? forall value VSet:
+            exist! coefficients &chap1a::FiniteList<s, \chap2c::dimension<s, VSet, V>> st {value = \chap2a::linear_combination_value<s, VSet, V, \chap2c::dimension<s, VSet, V>>(coefficients, vbasis)}
+    claim:
+        ? forall:
+            \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+            =>:
+                $are_isomorphic(s, VSet, WSet, V, W)
+        have wtarget &chap1a::FiniteList<WSet, \chap2c::dimension<s, VSet, V>> = wbasis
+        $chap2b::is_basis(s, WSet, W, \chap2c::dimension<s, VSet, V>, wtarget)
+        by thm chap2b::basis_iff_unique_coordinates(s, WSet, W, \chap2c::dimension<s, VSet, V>, wtarget)
+        by def:
+            ? $chap2b::basis_iff_unique_coordinates_statement(s, WSet, W, \chap2c::dimension<s, VSet, V>, wtarget)
+        $chap2b::has_unique_coordinates(s, WSet, W, \chap2c::dimension<s, VSet, V>, wtarget)
+        by def:
+            ? $chap2b::has_unique_coordinates(s, WSet, W, \chap2c::dimension<s, VSet, V>, wtarget)
+        have fn wtargetcoords by exist!:
+            ? forall value WSet:
+                exist! coefficients &chap1a::FiniteList<s, \chap2c::dimension<s, VSet, V>> st {value = \chap2a::linear_combination_value<s, WSet, W, \chap2c::dimension<s, VSet, V>>(coefficients, wtarget)}
+        by thm chap3a::linear_map_lemma(s, VSet, WSet, V, W, \chap2c::dimension<s, VSet, V>, vbasis, wtarget)
+        obtain T from exist! selected \chap3a::linear_map_space<s, VSet, WSet, V, W> st {$chap3a::has_prescribed_basis_values(s, VSet, WSet, V, W, \chap2c::dimension<s, VSet, V>, vbasis, wtarget, selected)}
+        W.scalars = V.scalars
+        by thm chap3a::linear_map_lemma(s, WSet, VSet, W, V, \chap2c::dimension<s, VSet, V>, wtarget, vbasis)
+        obtain S from exist! selected \chap3a::linear_map_space<s, WSet, VSet, W, V> st {$chap3a::has_prescribed_basis_values(s, WSet, VSet, W, V, \chap2c::dimension<s, VSet, V>, wtarget, vbasis, selected)}
+        by def:
+            ? $chap3a::has_prescribed_basis_values(s, VSet, WSet, V, W, \chap2c::dimension<s, VSet, V>, vbasis, wtarget, T)
+        by def:
+            ? $chap3a::has_prescribed_basis_values(s, WSet, VSet, W, V, \chap2c::dimension<s, VSet, V>, wtarget, vbasis, S)
+        by thm chap3a::linear_map_compose_is_linear(s, VSet, WSet, VSet, V, W, V, S, T)
+        have ST \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap3a::linear_map_compose<s, VSet, WSet, VSet, V, W, V>(S, T)
+        by thm chap3a::identity_linear_map_is_linear(s, VSet, V)
+        have IdV \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap3a::identity_linear_map<s, VSet, V>
+        claim:
+            ? forall k N+:
+                k <= \chap2c::dimension<s, VSet, V>
+                =>:
+                    ST(vbasis.entries(k)) = IdV(vbasis.entries(k))
+            ST(vbasis.entries(k)) = \chap3a::linear_map_compose<s, VSet, WSet, VSet, V, W, V>(S, T)(vbasis.entries(k))
+            \chap3a::linear_map_compose<s, VSet, WSet, VSet, V, W, V>(S, T)(vbasis.entries(k)) = S(T(vbasis.entries(k)))
+            T(vbasis.entries(k)) = wtarget.entries(k)
+            S(wtarget.entries(k)) = vbasis.entries(k)
+            IdV(vbasis.entries(k)) = \chap3a::identity_linear_map<s, VSet, V>(vbasis.entries(k))
+            \chap3a::identity_linear_map<s, VSet, V>(vbasis.entries(k)) = vbasis.entries(k)
+            ST(vbasis.entries(k)) = S(T(vbasis.entries(k))) = S(wtarget.entries(k)) = vbasis.entries(k) = IdV(vbasis.entries(k))
+        claim:
+            ? forall value VSet:
+                value = \chap2a::linear_combination_value<s, VSet, V, \chap2c::dimension<s, VSet, V>>(vcoords(value), vbasis)
+        by thm chap3a::linear_maps_equal_from_coordinates(s, VSet, VSet, V, V, \chap2c::dimension<s, VSet, V>, vbasis, vcoords, ST, IdV)
+        by thm chap3a::linear_map_compose_is_linear(s, WSet, VSet, WSet, W, V, W, T, S)
+        have TS \chap3a::linear_map_space<s, WSet, WSet, W, W> = \chap3a::linear_map_compose<s, WSet, VSet, WSet, W, V, W>(T, S)
+        by thm chap3a::identity_linear_map_is_linear(s, WSet, W)
+        have IdW \chap3a::linear_map_space<s, WSet, WSet, W, W> = \chap3a::identity_linear_map<s, WSet, W>
+        claim:
+            ? forall k N+:
+                k <= \chap2c::dimension<s, VSet, V>
+                =>:
+                    TS(wtarget.entries(k)) = IdW(wtarget.entries(k))
+            TS(wtarget.entries(k)) = \chap3a::linear_map_compose<s, WSet, VSet, WSet, W, V, W>(T, S)(wtarget.entries(k))
+            \chap3a::linear_map_compose<s, WSet, VSet, WSet, W, V, W>(T, S)(wtarget.entries(k)) = T(S(wtarget.entries(k)))
+            S(wtarget.entries(k)) = vbasis.entries(k)
+            T(vbasis.entries(k)) = wtarget.entries(k)
+            IdW(wtarget.entries(k)) = \chap3a::identity_linear_map<s, WSet, W>(wtarget.entries(k))
+            \chap3a::identity_linear_map<s, WSet, W>(wtarget.entries(k)) = wtarget.entries(k)
+            TS(wtarget.entries(k)) = T(S(wtarget.entries(k))) = T(vbasis.entries(k)) = wtarget.entries(k) = IdW(wtarget.entries(k))
+        claim:
+            ? forall value WSet:
+                value = \chap2a::linear_combination_value<s, WSet, W, \chap2c::dimension<s, VSet, V>>(wtargetcoords(value), wtarget)
+        by thm chap3a::linear_maps_equal_from_coordinates(s, WSet, WSet, W, W, \chap2c::dimension<s, VSet, V>, wtarget, wtargetcoords, TS, IdW)
+        claim:
+            ? forall v VSet:
+                S(T(v)) = v
+            ST(v) = \chap3a::linear_map_compose<s, VSet, WSet, VSet, V, W, V>(S, T)(v)
+            \chap3a::linear_map_compose<s, VSet, WSet, VSet, V, W, V>(S, T)(v) = S(T(v))
+            IdV(v) = \chap3a::identity_linear_map<s, VSet, V>(v)
+            \chap3a::identity_linear_map<s, VSet, V>(v) = v
+            S(T(v)) = ST(v) = IdV(v) = v
+        claim:
+            ? forall w WSet:
+                T(S(w)) = w
+            TS(w) = \chap3a::linear_map_compose<s, WSet, VSet, WSet, W, V, W>(T, S)(w)
+            \chap3a::linear_map_compose<s, WSet, VSet, WSet, W, V, W>(T, S)(w) = T(S(w))
+            IdW(w) = \chap3a::identity_linear_map<s, WSet, W>(w)
+            \chap3a::identity_linear_map<s, WSet, W>(w) = w
+            T(S(w)) = TS(w) = IdW(w) = w
+        by def:
+            ? $is_inverse_linear_map(s, VSet, WSet, V, W, T, S)
+        witness exist selected fn(w WSet) VSet st {$is_inverse_linear_map(s, VSet, WSet, V, W, T, selected)} from S
+        by def:
+            ? $is_invertible_linear_map(s, VSet, WSet, V, W, T)
+        by def:
+            ? $is_isomorphism(s, VSet, WSet, V, W, T)
+        witness exist selected fn(v VSet) WSet st {$is_isomorphism(s, VSet, WSet, V, W, selected)} from T
+        by def:
+            ? $are_isomorphic(s, VSet, WSet, V, W)
+    claim:
+        ? forall:
+            $are_isomorphic(s, VSet, WSet, V, W)
+            =>:
+                \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+        by def:
+            ? $are_isomorphic(s, VSet, WSet, V, W)
+        obtain T from exist selected fn(v VSet) WSet st {$is_isomorphism(s, VSet, WSet, V, W, selected)}
+        by def:
+            ? $is_isomorphism(s, VSet, WSet, V, W, T)
+        by thm invertible_implies_injective_and_surjective(s, VSet, WSet, V, W, T)
+        claim:
+            ? \chap2c::dimension<s, VSet, V> <= \chap2c::dimension<s, WSet, W>
+            by contra:
+                ? \chap2c::dimension<s, VSet, V> <= \chap2c::dimension<s, WSet, W>
+                \chap2c::dimension<s, WSet, W> < \chap2c::dimension<s, VSet, V>
+                by thm chap3b::lower_dimensional_codomain_prevents_injectivity(s, VSet, WSet, V, W, T)
+                not $chap3b::is_injective(VSet, WSet, T)
+                impossible $chap3b::is_injective(VSet, WSet, T)
+        claim:
+            ? \chap2c::dimension<s, WSet, W> <= \chap2c::dimension<s, VSet, V>
+            by contra:
+                ? \chap2c::dimension<s, WSet, W> <= \chap2c::dimension<s, VSet, V>
+                \chap2c::dimension<s, VSet, V> < \chap2c::dimension<s, WSet, W>
+                by thm chap3b::higher_dimensional_codomain_prevents_surjectivity(s, VSet, WSet, V, W, T)
+                not $chap3b::is_surjective(VSet, WSet, T)
+                impossible $chap3b::is_surjective(VSet, WSet, T)
+        \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+    forall:
+        =>:
+            $are_isomorphic(s, VSet, WSet, V, W)
+        <=>:
+            \chap2c::dimension<s, VSet, V> = \chap2c::dimension<s, WSet, W>
+    by def:
+        ? $isomorphic_iff_equal_dimension_statement(s, VSet, WSet, V, W)
+
+thm dimension_characterizes_isomorphism:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        V.scalars = W.scalars
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        =>:
+            $isomorphic_iff_equal_dimension_statement(s, VSet, WSet, V, W)
+    by thm dimension_characterizes_isomorphism_checked(s, VSet, WSet, V, W)
 # Result 3.71. Once bases are fixed, the matrix-formation map is an
-# isomorphism from L(VSet,WSet) onto the m-by-n matrix carrier.
-axiom linear_maps_and_matrices_are_isomorphic:
+# isomorphism from L(VSet,WSet) onto the canonical m-by-n matrix vector space.
+thm linear_maps_and_matrices_are_isomorphic_checked:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>:
+        V.scalars = W.scalars
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         =>:
-            $chap3b::is_injective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) {\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)})
-            $chap3b::is_surjective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) {\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)})
+            $is_isomorphism(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) {\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)})
+    by thm chap3a::linear_map_space_is_nonempty(s, VSet, WSet, V, W)
+    have source_space &chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>> = \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>
+    have target_space &chap1b::VectorSpace<s, matrix(s, m, n)> = \chap3c::matrix_vector_space<s, V.scalars, m, n>
+    source_space = (V.scalars, \chap3a::zero_linear_map<s, VSet, WSet, V, W>, \chap3a::linear_map_space_add<s, VSet, WSet, V, W>, \chap3a::linear_map_space_smul<s, VSet, WSet, V, W>)
+    source_space[1] = source_space.scalars
+    source_space[3] = source_space.add
+    source_space[4] = source_space.smul
+    source_space.add = source_space[3] = \chap3a::linear_map_space_add<s, VSet, WSet, V, W>
+    source_space.smul = source_space[4] = \chap3a::linear_map_space_smul<s, VSet, WSet, V, W>
+    target_space = (V.scalars, \chap3c::zero_matrix<s, V.scalars, m, n>, \chap3c::matrix_add<s, V.scalars, m, n>, \chap3c::matrix_smul<s, V.scalars, m, n>)
+    target_space[1] = target_space.scalars
+    target_space[3] = target_space.add
+    target_space[4] = target_space.smul
+    target_space.add = target_space[3] = \chap3c::matrix_add<s, V.scalars, m, n>
+    target_space.smul = target_space[4] = \chap3c::matrix_smul<s, V.scalars, m, n>
+    have fn matrix_map(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+    claim:
+        ? $chap3a::is_linear_map(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, matrix_map)
+        &chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.scalars = source_space.scalars = target_space.scalars = &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.scalars
+        claim:
+            ? forall S, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+                matrix_map(&chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.add(S, T)) = &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.add(matrix_map(S), matrix_map(T))
+            by thm chap3a::linear_map_add_is_in_space(s, VSet, WSet, V, W, S, T)
+            by thm chap3c::matrix_of_sum(s, VSet, WSet, V, W, n, m, v, w, S, T)
+            source_space.add(S, T) = \chap3a::linear_map_space_add<s, VSet, WSet, V, W>(S, T) = \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)
+            target_space.add(matrix_map(S), matrix_map(T)) = \chap3c::matrix_add<s, V.scalars, m, n>(matrix_map(S), matrix_map(T))
+            &chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.add(S, T) = source_space.add(S, T)
+            &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.add(matrix_map(S), matrix_map(T)) = target_space.add(matrix_map(S), matrix_map(T))
+            matrix_map(&chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.add(S, T)) = matrix_map(source_space.add(S, T)) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)) = \chap3c::matrix_add<s, V.scalars, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)) = target_space.add(matrix_map(S), matrix_map(T)) = &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.add(matrix_map(S), matrix_map(T))
+        claim:
+            ? forall a s, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+                matrix_map(&chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.smul(a, T)) = &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.smul(a, matrix_map(T))
+            by thm chap3a::linear_map_smul_is_in_space(s, VSet, WSet, V, W, a, T)
+            by thm chap3c::matrix_of_scalar_multiple(s, VSet, WSet, V, W, n, m, v, w, a, T)
+            source_space.smul(a, T) = \chap3a::linear_map_space_smul<s, VSet, WSet, V, W>(a, T) = \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)
+            target_space.smul(a, matrix_map(T)) = \chap3c::matrix_smul<s, V.scalars, m, n>(a, matrix_map(T))
+            &chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.smul(a, T) = source_space.smul(a, T)
+            &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.smul(a, matrix_map(T)) = target_space.smul(a, matrix_map(T))
+            matrix_map(&chap1b::VectorSpace<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>>{\chap3a::linear_map_vector_space<s, VSet, WSet, V, W>}.smul(a, T)) = matrix_map(source_space.smul(a, T)) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)) = \chap3c::matrix_smul<s, V.scalars, m, n>(a, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)) = target_space.smul(a, matrix_map(T)) = &chap1b::VectorSpace<s, matrix(s, m, n)>{\chap3c::matrix_vector_space<s, V.scalars, m, n>}.smul(a, matrix_map(T))
+        by def:
+            ? $chap3a::is_linear_map(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, matrix_map)
+    by def:
+        ? $chap3a::is_linear_map(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, matrix_map)
+    matrix_map $in \chap3a::linear_map_space<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>>
+    by thm chap2b::basis_iff_unique_coordinates(s, VSet, V, n, v)
+    by def:
+        ? $chap2b::basis_iff_unique_coordinates_statement(s, VSet, V, n, v)
+    $chap2b::has_unique_coordinates(s, VSet, V, n, v)
+    by def:
+        ? $chap2b::has_unique_coordinates(s, VSet, V, n, v)
+    have fn coordinates by exist!:
+        ? forall value VSet:
+            exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, v)}
+    claim:
+        ? $chap3b::is_injective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), matrix_map)
+        claim:
+            ? forall S, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
+                matrix_map(S) = matrix_map(T)
+                =>:
+                    S = T
+            by thm chap3c::matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, S)
+            by thm chap3c::matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, T)
+            by def:
+                ? $chap3c::is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, S, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S))
+            by def:
+                ? $chap3c::is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, T, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+            claim:
+                ? forall k N+:
+                    k <= n
+                    =>:
+                        S(v.entries(k)) = T(v.entries(k))
+                matrix_map(S) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)
+                matrix_map(T) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+                \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S) = matrix_map(S) = matrix_map(T) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+                S(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), k), w) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), w) = T(v.entries(k))
+            by thm chap3a::linear_maps_equal_from_coordinates(s, VSet, WSet, V, W, n, v, coordinates, S, T)
+        by def:
+            ? $chap3b::is_injective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), matrix_map)
+    claim:
+        ? $chap3b::is_surjective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), matrix_map)
+        claim:
+            ? forall A matrix(s, m, n):
+                exist T \chap3a::linear_map_space<s, VSet, WSet, V, W> st {matrix_map(T) = A}
+            have values &chap1a::FiniteList<WSet, n> = (n, fn(k N+: k <= n) WSet {\chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(A, k), w)})
+            by thm chap3a::linear_map_lemma(s, VSet, WSet, V, W, n, v, values)
+            obtain T from exist! selected \chap3a::linear_map_space<s, VSet, WSet, V, W> st {$chap3a::has_prescribed_basis_values(s, VSet, WSet, V, W, n, v, values, selected)}
+            by def:
+                ? $chap3a::has_prescribed_basis_values(s, VSet, WSet, V, W, n, v, values, T)
+            by thm chap3c::matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, T)
+            by def:
+                ? $chap3c::is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, T, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+            have result matrix(s, m, n) = matrix_map(T)
+            claim:
+                ? forall j, k N+:
+                    j <= m
+                    k <= n
+                    =>:
+                        result(j, k) = A(j, k)
+                have result_coefficients &chap1a::FiniteList<s, m> = \chap3c::matrix_column_coefficients<s, m, n>(result, k)
+                have target_coefficients &chap1a::FiniteList<s, m> = \chap3c::matrix_column_coefficients<s, m, n>(A, k)
+                have result_entries fn(row N+: row <= m) s = result_coefficients.entries
+                have target_entries fn(row N+: row <= m) s = target_coefficients.entries
+                matrix_map(T) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+                result = matrix_map(T) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+                T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), w) = \chap2a::linear_combination_value<s, WSet, W, m>(result_coefficients, w)
+                values = (n, fn(position N+: position <= n) WSet {\chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(A, position), w)})
+                values.entries(k) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(A, k), w) = \chap2a::linear_combination_value<s, WSet, W, m>(target_coefficients, w)
+                T(v.entries(k)) = values.entries(k) = \chap2a::linear_combination_value<s, WSet, W, m>(target_coefficients, w)
+                by def:
+                    ? $chap2b::is_basis(s, WSet, W, m, w)
+                by thm chap2b::independent_coordinates_unique(s, WSet, W, m, w, T(v.entries(k)), result_coefficients, target_coefficients)
+                result_coefficients = (m, fn(row N+: row <= m) s {result(row, k)})
+                target_coefficients = (m, fn(row N+: row <= m) s {A(row, k)})
+                result_coefficients.entries = fn(row N+: row <= m) s {result(row, k)}
+                target_coefficients.entries = fn(row N+: row <= m) s {A(row, k)}
+                result_entries = result_coefficients.entries = fn(row N+: row <= m) s {result(row, k)}
+                target_entries = target_coefficients.entries = fn(row N+: row <= m) s {A(row, k)}
+                result_coefficients.entries(j) = result_entries(j) = result(j, k)
+                target_coefficients.entries(j) = target_entries(j) = A(j, k)
+                result(j, k) = result_entries(j) = result_coefficients.entries(j) = target_coefficients.entries(j) = target_entries(j) = A(j, k)
+            by def $fn_eq(result, A)
+            result = A
+            witness exist selected \chap3a::linear_map_space<s, VSet, WSet, V, W> st {matrix_map(selected) = A} from T
+        by def:
+            ? $chap3b::is_surjective(\chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), matrix_map)
+    by thm bijective_implies_invertible(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, matrix_map)
+    by def:
+        ? $is_isomorphism(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, matrix_map)
+    matrix_map = fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) {\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)}
+
+thm linear_maps_and_matrices_are_isomorphic:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>:
+        V.scalars = W.scalars
+        $chap2b::is_basis(s, VSet, V, n, v)
+        $chap2b::is_basis(s, WSet, W, m, w)
+        =>:
+            $is_isomorphism(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, matrix(s, m, n), \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap3c::matrix_vector_space<s, V.scalars, m, n>, fn(T \chap3a::linear_map_space<s, VSet, WSet, V, W>) matrix(s, m, n) {\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)})
+    by thm linear_maps_and_matrices_are_isomorphic_checked(s, VSet, WSet, V, W, n, m, v, w)
 # Result 3.72. dim L(VSet,WSet) = (dim VSet)(dim WSet).
-axiom dimension_of_linear_map_space:
+# The remaining constructive boundary is pullback of the matrix-unit basis.
+axiom linear_map_space_product_basis_exists:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
         $chap2a::is_finite_dimensional(s, VSet, V)
         $chap2a::is_finite_dimensional(s, WSet, W)
         V.scalars = W.scalars
-        $is_nonempty_set(\chap3a::linear_map_space<s, VSet, WSet, V, W>)
-        $chap2c::admits_basis_length(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+        $chap2c::admits_basis_length(s, VSet, V)
+        $chap2c::admits_basis_length(s, WSet, W)
         =>:
+            exist basis &chap1a::FiniteList<\chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>> st {$chap2b::is_basis(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>, basis)}
+
+thm dimension_of_linear_map_space_checked:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        V.scalars = W.scalars
+        =>:
+            $is_nonempty_set(\chap3a::linear_map_space<s, VSet, WSet, V, W>)
+            $chap2a::is_finite_dimensional(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+            $chap2c::admits_basis_length(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
             \chap2c::dimension<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>> = \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>
+    by thm chap3a::linear_map_space_is_nonempty(s, VSet, WSet, V, W)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, VSet, V)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, WSet, W)
+    by thm linear_map_space_product_basis_exists(s, VSet, WSet, V, W)
+    obtain basis from exist selected &chap1a::FiniteList<\chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>> st {$chap2b::is_basis(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>, selected)}
+    witness exist length N, vectors &chap1a::FiniteList<\chap3a::linear_map_space<s, VSet, WSet, V, W>, length> st {$chap2a::spans(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, length, vectors)} from \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>, basis
+    by def $chap2a::is_finite_dimensional(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+    by thm chap2c::basis_length_equals_dimension(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>, \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>, basis)
+
+thm dimension_of_linear_map_space:
+    ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>:
+        $chap2a::is_finite_dimensional(s, VSet, V)
+        $chap2a::is_finite_dimensional(s, WSet, W)
+        V.scalars = W.scalars
+        =>:
+            $is_nonempty_set(\chap3a::linear_map_space<s, VSet, WSet, V, W>)
+            $chap2a::is_finite_dimensional(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+            $chap2c::admits_basis_length(s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>)
+            \chap2c::dimension<s, \chap3a::linear_map_space<s, VSet, WSet, V, W>, \chap3a::linear_map_vector_space<s, VSet, WSet, V, W>> = \chap2c::dimension<s, VSet, V> * \chap2c::dimension<s, WSet, W>
+    by thm dimension_of_linear_map_space_checked(s, VSet, WSet, V, W)
 # Definition 3.73. The matrix of a vector is its coordinate column with
 # respect to the displayed basis.
 prop is_matrix_of_vector(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, v VSet, A matrix(s, n, 1)):
@@ -194,26 +781,116 @@ prop is_matrix_of_vector(s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpa
     v = \chap2a::linear_combination_value<s, VSet, V, n>(\chap3c::matrix_column_coefficients<s, n, 1>(A, 1), basis)
 
 template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+>:
-    trust have matrix_of_vector fn(basis &chap1a::FiniteList<VSet, n>, v VSet) matrix(s, n, 1)
+    have fn vector_coordinates by exist!:
+        ? forall basis &chap1a::FiniteList<VSet, n>, value VSet:
+            $chap2b::is_basis(s, VSet, V, n, basis)
+            =>:
+                exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)}
+        by thm chap2b::basis_iff_unique_coordinates(s, VSet, V, n, basis)
+        by def:
+            ? $chap2b::basis_iff_unique_coordinates_statement(s, VSet, V, n, basis)
+        $chap2b::has_unique_coordinates(s, VSet, V, n, basis)
+        by def:
+            ? $chap2b::has_unique_coordinates(s, VSet, V, n, basis)
+
+template<s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+>:
+    have fn matrix_of_vector(basis &chap1a::FiniteList<VSet, n>, value VSet: $chap2b::is_basis(s, VSet, V, n, basis)) matrix(s, n, 1) = \chap3c::coordinate_column_matrix<s, n>(fn(j N+: j <= n) s {&chap1a::FiniteList<s, n>{\vector_coordinates<s, VSet, V, n>(basis, value)}.entries(j)})
 # Example 3.74 is comment-only: coordinate columns for a polynomial and for a
 # vector in F^n illustrate the definition.
 # Result 3.75. The kth column of M(T) is M(T(v_k)).
-axiom matrix_column_of_linear_map:
+thm matrix_column_of_linear_map:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, k N+:
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         k <= n
         =>:
             \chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k) = fn(j N+: j <= m) s {\chap3d::matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1)}
+    by thm chap3c::matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, T)
+    by def:
+        ? $chap3c::is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, T, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), w)
+    T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k))), w)
+    by thm chap2b::independent_coordinates_unique(s, WSet, W, m, w, T(v.entries(k)), \chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), \vector_coordinates<s, WSet, W, m>(w, T(v.entries(k))))
+    claim:
+        ? forall j N+:
+            j <= m
+            =>:
+                \chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)(j) = \matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1)
+        \chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)(j) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k)
+        &chap1a::FiniteList<s, m>{\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)}.entries(j) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k)
+        &chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k)))}.entries(j) = &chap1a::FiniteList<s, m>{\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)}.entries(j)
+        \matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k))) = \chap3c::coordinate_column_matrix<s, m>(fn(position N+: position <= m) s {&chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k)))}.entries(position)})
+        \matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1) = \chap3c::coordinate_column_matrix<s, m>(fn(position N+: position <= m) s {&chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k)))}.entries(position)})(j, 1)
+        \chap3c::coordinate_column_matrix<s, m>(fn(position N+: position <= m) s {&chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k)))}.entries(position)})(j, 1) = &chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(w, T(v.entries(k)))}.entries(j)
+    by def $fn_eq(\chap3c::matrix_column<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), fn(j N+: j <= m) s {\matrix_of_vector<s, WSet, W, m>(w, T(v.entries(k)))(j, 1)})
 # Result 3.76. Coordinate columns turn a linear map into matrix multiplication.
-axiom linear_maps_act_like_matrix_multiplication:
+thm linear_maps_act_like_matrix_multiplication:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, v VSet:
         $chap2b::is_basis(s, VSet, V, n, vbasis)
         $chap2b::is_basis(s, WSet, W, m, wbasis)
         =>:
             \chap3d::matrix_of_vector<s, WSet, W, m>(wbasis, T(v)) = \chap3c::matrix_mul<s, V.scalars, m, n, 1>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), \chap3d::matrix_of_vector<s, VSet, V, n>(vbasis, v))
+    have domain_coefficients &chap1a::FiniteList<s, n> = \vector_coordinates<s, VSet, V, n>(vbasis, v)
+    have A matrix(s, m, n) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T)
+    have B matrix(s, n, 1) = \matrix_of_vector<s, VSet, V, n>(vbasis, v)
+    have product_matrix matrix(s, m, 1) = \chap3c::matrix_mul<s, V.scalars, m, n, 1>(A, B)
+    have product_coefficients &chap1a::FiniteList<s, m> = \chap3c::matrix_column_coefficients<s, m, 1>(product_matrix, 1)
+    by def $chap3a::is_linear_map(s, VSet, WSet, V, W, T)
+    v = \chap2a::linear_combination_value<s, VSet, V, n>(\vector_coordinates<s, VSet, V, n>(vbasis, v), vbasis) = \chap2a::linear_combination_value<s, VSet, V, n>(domain_coefficients, vbasis)
+    by thm chap3a::linear_map_preserves_linear_combination(s, VSet, WSet, V, W, T, n, domain_coefficients, vbasis)
+    T(v) = T(\chap2a::linear_combination_value<s, VSet, V, n>(domain_coefficients, vbasis)) = \chap2a::linear_combination_value<s, WSet, W, n>(domain_coefficients, \chap3a::mapped_finite_list<VSet, WSet, n>(T, vbasis))
+    claim:
+        ? forall r N+:
+            r <= n
+            =>:
+                &chap1a::FiniteList<WSet, n>{\chap3a::mapped_finite_list<VSet, WSet, n>(T, vbasis)}.entries(r) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(A, r), wbasis)
+        by thm chap3c::matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, vbasis, wbasis, T)
+        by def $chap3c::is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, vbasis, wbasis, T, \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T))
+        &chap1a::FiniteList<WSet, n>{\chap3a::mapped_finite_list<VSet, WSet, n>(T, vbasis)}.entries(r) = T(vbasis.entries(r))
+        T(vbasis.entries(r)) = \chap2a::linear_combination_value<s, WSet, W, m>(\chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), r), wbasis)
+        \chap3c::matrix_column_coefficients<s, m, n>(A, r) = \chap3c::matrix_column_coefficients<s, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), r)
+    B = \chap3c::coordinate_column_matrix<s, n>(fn(position N+: position <= n) s {&chap1a::FiniteList<s, n>{\vector_coordinates<s, VSet, V, n>(vbasis, v)}.entries(position)})
+    product_matrix = fn(row, column N+: row <= m, column <= 1) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), B(r, column))})}
+    claim:
+        ? forall row N+:
+            row <= m
+            =>:
+                product_matrix(row, 1) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))})
+        product_matrix(row, 1) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), B(r, 1))})
+        have left_terms finite_seq(s, n) = fn(r N+: r <= n) s {V.scalars.mul(A(row, r), B(r, 1))}
+        have right_terms finite_seq(s, n) = fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))}
+        claim:
+            ? forall r N+:
+                r <= n
+                =>:
+                    left_terms(r) = right_terms(r)
+            B(r, 1) = \chap3c::coordinate_column_matrix<s, n>(fn(position N+: position <= n) s {&chap1a::FiniteList<s, n>{\vector_coordinates<s, VSet, V, n>(vbasis, v)}.entries(position)})(r, 1) = &chap1a::FiniteList<s, n>{\vector_coordinates<s, VSet, V, n>(vbasis, v)}.entries(r) = domain_coefficients.entries(r)
+            left_terms(r) = V.scalars.mul(A(row, r), B(r, 1)) = V.scalars.mul(A(row, r), domain_coefficients.entries(r)) = right_terms(r)
+        by def $fn_eq(left_terms, right_terms)
+        product_matrix(row, 1) = \chap3b::scalar_finite_sum<s, V.scalars, n>(left_terms) = \chap3b::scalar_finite_sum<s, V.scalars, n>(right_terms) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))})
+    \chap3c::matrix_column_coefficients<s, m, 1>(product_matrix, 1) = (m, fn(row N+: row <= m) s {product_matrix(row, 1)})
+    by def $fn_eq(fn(row N+: row <= m) s {product_matrix(row, 1)}, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))})})
+    (m, fn(row N+: row <= m) s {product_matrix(row, 1)}) = (m, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))})})
+    product_coefficients = (m, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(A(row, r), domain_coefficients.entries(r))})})
+    by thm chap3c::basis_coordinate_substitution(s, V.scalars, WSet, W, m, n, wbasis, A, domain_coefficients, \chap3a::mapped_finite_list<VSet, WSet, n>(T, vbasis), product_coefficients)
+    T(v) = \chap2a::linear_combination_value<s, WSet, W, n>(domain_coefficients, \chap3a::mapped_finite_list<VSet, WSet, n>(T, vbasis)) = \chap2a::linear_combination_value<s, WSet, W, m>(product_coefficients, wbasis)
+    T(v) = \chap2a::linear_combination_value<s, WSet, W, m>(\vector_coordinates<s, WSet, W, m>(wbasis, T(v)), wbasis)
+    by thm chap2b::independent_coordinates_unique(s, WSet, W, m, wbasis, T(v), \vector_coordinates<s, WSet, W, m>(wbasis, T(v)), product_coefficients)
+    claim:
+        ? forall j, k N+:
+            j <= m
+            k <= 1
+            =>:
+                \matrix_of_vector<s, WSet, W, m>(wbasis, T(v))(j, k) = \chap3c::matrix_mul<s, V.scalars, m, n, 1>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), \matrix_of_vector<s, VSet, V, n>(vbasis, v))(j, k)
+        by enumerate range: k $in range(1, 2)
+        \matrix_of_vector<s, WSet, W, m>(wbasis, T(v)) = \chap3c::coordinate_column_matrix<s, m>(fn(position N+: position <= m) s {&chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(wbasis, T(v))}.entries(position)})
+        \matrix_of_vector<s, WSet, W, m>(wbasis, T(v))(j, k) = \chap3c::coordinate_column_matrix<s, m>(fn(position N+: position <= m) s {&chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(wbasis, T(v))}.entries(position)})(j, k) = &chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(wbasis, T(v))}.entries(j)
+        &chap1a::FiniteList<s, m>{\vector_coordinates<s, WSet, W, m>(wbasis, T(v))}.entries(j) = product_coefficients.entries(j)
+        product_coefficients.entries(j) = product_matrix(j, 1) = product_matrix(j, k)
+        product_matrix(j, k) = \chap3c::matrix_mul<s, V.scalars, m, n, 1>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), \matrix_of_vector<s, VSet, V, n>(vbasis, v))(j, k)
+    by def $fn_eq(\matrix_of_vector<s, WSet, W, m>(wbasis, T(v)), \chap3c::matrix_mul<s, V.scalars, m, n, 1>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T), \matrix_of_vector<s, VSet, V, n>(vbasis, v)))
 # Result 3.78. The dimension of range T equals the column rank of M(T).
-axiom dimension_of_range_equals_column_rank:
+thm dimension_of_range_equals_column_rank:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, vbasis &chap1a::FiniteList<VSet, n>, wbasis &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, VSet, V, n, vbasis)
         $chap2b::is_basis(s, WSet, W, m, wbasis)
@@ -221,6 +898,10 @@ axiom dimension_of_range_equals_column_rank:
         $chap2c::admits_basis_length(s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>)
         =>:
             \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap3c::column_rank<s, V.scalars, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T))
+    have A matrix(s, m, n) = \chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T)
+    # trust: second-pass boundary; needs span-under-coordinate-isomorphism dimension transport
+    trust \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap2c::dimension<s, \chap3c::matrix_column_space<s, V.scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, V.scalars, m>, \chap3c::matrix_column_space<s, V.scalars, m, n>(A)>>
+    \chap2c::dimension<s, \chap3b::range_of<VSet, WSet>(T), \chap1c::subspace_vector_space<s, WSet, W, \chap3b::range_of<VSet, WSet>(T)>> = \chap2c::dimension<s, \chap3c::matrix_column_space<s, V.scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, V.scalars, m>, \chap3c::matrix_column_space<s, V.scalars, m, n>(A)>> = \chap3c::column_rank<s, V.scalars, m, n>(A) = \chap3c::column_rank<s, V.scalars, m, n>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(vbasis, wbasis, T))
 # Definition 3.79. I_n has scalar one on the diagonal and zero elsewhere.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
     have fn identity_matrix_entry(j, k N+) s by cases:
@@ -229,6 +910,50 @@ template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
     have identity_matrix matrix(s, n, n) = fn(j, k N+: j <= n, k <= n) s {\identity_matrix_entry<s, scalars, n>(j, k)}
+
+# The identity map fixes every basis vector, so its kth matrix column is the
+# kth unit coefficient list. The entrywise proof is checked; the final matrix
+# extensionality fold remains the localized verifier boundary recorded in the
+# source-owned todo.
+thm matrix_of_identity_with_same_basis:
+    ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>:
+        $chap2b::is_basis(s, VSet, V, n, basis)
+        \chap3a::identity_linear_map<s, VSet, V> $in \chap3a::linear_map_space<s, VSet, VSet, V, V>
+        =>:
+            \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>) = \identity_matrix<s, V.scalars, n>
+    by thm chap3c::matrix_of_linear_map_spec(s, VSet, VSet, V, V, n, n, basis, basis, \chap3a::identity_linear_map<s, VSet, V>)
+    by def $chap3c::is_matrix_of_linear_map(s, VSet, VSet, V, V, n, n, basis, basis, \chap3a::identity_linear_map<s, VSet, V>, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>))
+    claim:
+        ? forall j, k N+:
+            j <= n
+            k <= n
+            =>:
+                \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>)(j, k) = \identity_matrix<s, V.scalars, n>(j, k)
+        have unit &chap1a::FiniteList<s, n> = \chap3a::unit_coefficient_list<s, V.scalars, n, k>
+        \chap3a::identity_linear_map<s, VSet, V>(basis.entries(k)) = \chap2a::linear_combination_value<s, VSet, V, n>(\chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k), basis)
+        \chap3a::identity_linear_map<s, VSet, V>(basis.entries(k)) = basis.entries(k)
+        by thm chap3a::unit_coefficient_list_value(s, VSet, V, n, basis, k)
+        basis.entries(k) = \chap2a::linear_combination_value<s, VSet, V, n>(unit, basis)
+        by thm chap2b::independent_coordinates_unique(s, VSet, V, n, basis, basis.entries(k), \chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k), unit)
+        \chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k) = unit
+        by thm chap3a::unit_coefficient_list_entry(s, V.scalars, n, k, j, unit)
+        &chap1a::FiniteList<s, n>{\chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k)}.entries(j) = unit.entries(j) = \chap3a::unit_coefficient_entry<s, V.scalars, n, k>(j)
+        &chap1a::FiniteList<s, n>{\chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k)}.entries(j) = \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>)(j, k)
+        j = k or j != k
+        by cases:
+            ? \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>)(j, k) = \identity_matrix<s, V.scalars, n>(j, k)
+            case j = k:
+                \chap3a::unit_coefficient_entry<s, V.scalars, n, k>(j) = V.scalars.one
+                \identity_matrix_entry<s, V.scalars, n>(j, k) = V.scalars.one
+                \identity_matrix<s, V.scalars, n>(j, k) = \identity_matrix_entry<s, V.scalars, n>(j, k)
+                \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>)(j, k) = &chap1a::FiniteList<s, n>{\chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k)}.entries(j) = unit.entries(j) = \chap3a::unit_coefficient_entry<s, V.scalars, n, k>(j) = V.scalars.one = \identity_matrix_entry<s, V.scalars, n>(j, k) = \identity_matrix<s, V.scalars, n>(j, k)
+            case j != k:
+                \chap3a::unit_coefficient_entry<s, V.scalars, n, k>(j) = V.scalars.zero
+                \identity_matrix_entry<s, V.scalars, n>(j, k) = V.scalars.zero
+                \identity_matrix<s, V.scalars, n>(j, k) = \identity_matrix_entry<s, V.scalars, n>(j, k)
+                \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>)(j, k) = &chap1a::FiniteList<s, n>{\chap3c::matrix_column_coefficients<s, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>), k)}.entries(j) = unit.entries(j) = \chap3a::unit_coefficient_entry<s, V.scalars, n, k>(j) = V.scalars.zero = \identity_matrix_entry<s, V.scalars, n>(j, k) = \identity_matrix<s, V.scalars, n>(j, k)
+    # trust: bounded entrywise equality is checked above; matrix $fn_eq does not consume it
+    trust \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, \chap3a::identity_linear_map<s, VSet, V>) = \identity_matrix<s, V.scalars, n>
 # Definition 3.80. B is an inverse of square A when AB=BA=I; invertibility is
 # existence, and inverse_matrix selects the unique B.
 prop is_inverse_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A, B matrix(s, n, n)):
@@ -238,10 +963,39 @@ prop is_inverse_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A
 prop is_invertible_matrix(s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n)):
     exist B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
 
+thm inverse_matrix_is_unique:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A, B1, B2 matrix(s, n, n):
+        $is_inverse_matrix(s, scalars, n, A, B1)
+        $is_inverse_matrix(s, scalars, n, A, B2)
+        =>:
+            B1 = B2
+    # trust: needs square-matrix multiplication associativity and identity laws
+    trust B1 = B2
+
+thm inverse_matrix_exists_unique:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+, A matrix(s, n, n):
+        $is_invertible_matrix(s, scalars, n, A)
+        =>:
+            exist! B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
+    obtain B from exist B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
+    claim:
+        ? forall B1, B2 matrix(s, n, n):
+            $is_inverse_matrix(s, scalars, n, A, B1)
+            $is_inverse_matrix(s, scalars, n, A, B2)
+            =>:
+                B1 = B2
+        by thm inverse_matrix_is_unique(s, scalars, n, A, B1, B2)
+    witness exist! B2 matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B2)} from B
+
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+>:
-    trust have inverse_matrix fn(A matrix(s, n, n): $is_invertible_matrix(s, scalars, n, A)) matrix(s, n, n)
+    have fn inverse_matrix by exist!:
+        ? forall A matrix(s, n, n):
+            $is_invertible_matrix(s, scalars, n, A)
+            =>:
+                exist! B matrix(s, n, n) st {$is_inverse_matrix(s, scalars, n, A, B)}
+        by thm inverse_matrix_exists_unique(s, scalars, n, A)
 # Result 3.81. The explicit-basis matrix of ST is the corresponding product.
-axiom matrix_of_product_with_explicit_bases:
+thm matrix_of_product_with_explicit_bases:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, m, n, p N+, u &chap1a::FiniteList<USet, m>, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, p>, T \chap3a::linear_map_space<s, USet, VSet, U, V>, S \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, USet, U, m, u)
         $chap2b::is_basis(s, VSet, V, n, v)
@@ -249,20 +1003,30 @@ axiom matrix_of_product_with_explicit_bases:
         \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T) $in \chap3a::linear_map_space<s, USet, WSet, U, W>
         =>:
             \chap3c::matrix_of_linear_map<s, USet, WSet, U, W, m, p>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)) = \chap3c::matrix_mul<s, V.scalars, p, n, m>(\chap3c::matrix_of_linear_map<s, VSet, WSet, V, W, n, p>(v, w, S), \chap3c::matrix_of_linear_map<s, USet, VSet, U, V, m, n>(u, v, T))
+    by thm chap3c::matrix_of_product(s, USet, VSet, WSet, U, V, W, m, n, p, u, v, w, T, S)
 # Result 3.82. The two change-of-coordinate matrices for opposite basis orders
 # are mutual inverses.
-axiom identity_map_between_two_bases:
+thm identity_map_between_two_bases:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, u, v &chap1a::FiniteList<VSet, n>:
         $chap2b::is_basis(s, VSet, V, n, u)
         $chap2b::is_basis(s, VSet, V, n, v)
         \chap3a::identity_linear_map<s, VSet, V> $in \chap3a::linear_map_space<s, VSet, VSet, V, V>
         =>:
             $is_inverse_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>))
+    by thm chap3a::linear_map_compose_is_linear(s, VSet, VSet, VSet, V, V, V, \chap3a::identity_linear_map<s, VSet, V>, \chap3a::identity_linear_map<s, VSet, V>)
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, v, u, v, \chap3a::identity_linear_map<s, VSet, V>, \chap3a::identity_linear_map<s, VSet, V>)
+    by thm chap3a::linear_map_composition_has_right_identity(s, VSet, VSet, V, V, \chap3a::identity_linear_map<s, VSet, V>)
+    by thm matrix_of_identity_with_same_basis(s, VSet, V, n, v)
+    \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>)) = \identity_matrix<s, V.scalars, n>
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, u, v, u, \chap3a::identity_linear_map<s, VSet, V>, \chap3a::identity_linear_map<s, VSet, V>)
+    by thm matrix_of_identity_with_same_basis(s, VSet, V, n, u)
+    \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)) = \identity_matrix<s, V.scalars, n>
+    by def $is_inverse_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>))
 # Example 3.83 is comment-only: the source computes the two coordinate-change
 # matrices for bases ((4,2),(5,3)) and the standard basis of R^2.
 # Result 3.84. If C changes u-coordinates to v-coordinates, then
 # M(T,u)=C^-1 M(T,v) C.
-axiom change_of_basis_formula:
+thm change_of_basis_formula:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, u, v &chap1a::FiniteList<VSet, n>, T \chap3a::linear_map_space<s, VSet, VSet, V, V>:
         $chap2b::is_basis(s, VSet, V, n, u)
         $chap2b::is_basis(s, VSet, V, n, v)
@@ -270,9 +1034,21 @@ axiom change_of_basis_formula:
         $is_invertible_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>))
         =>:
             \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, T) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)), \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, v, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)))
+    by thm chap3a::linear_map_compose_is_linear(s, VSet, VSet, VSet, V, V, V, T, \chap3a::identity_linear_map<s, VSet, V>)
+    by thm chap3a::linear_map_compose_is_linear(s, VSet, VSet, VSet, V, V, V, \chap3a::identity_linear_map<s, VSet, V>, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, u, v, v, \chap3a::identity_linear_map<s, VSet, V>, T)
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, u, v, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>), \chap3a::identity_linear_map<s, VSet, V>)
+    by thm chap3a::linear_map_composition_has_right_identity(s, VSet, VSet, V, V, T)
+    by thm chap3a::linear_map_composition_has_left_identity(s, VSet, VSet, V, V, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))
+    \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(\chap3a::identity_linear_map<s, VSet, V>, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))) = \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))
+    \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>)) = \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, T)
+    \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, v, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)))
+    \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, T) = \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>)) = \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, u, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(\chap3a::identity_linear_map<s, VSet, V>, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, \chap3a::identity_linear_map<s, VSet, V>))) = \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>), \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, v, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)))
+    by thm identity_map_between_two_bases(s, VSet, V, n, u, v)
+    by thm inverse_matrix_is_unique(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>), \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(u, v, \chap3a::identity_linear_map<s, VSet, V>)), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(v, u, \chap3a::identity_linear_map<s, VSet, V>))
 # Result 3.86. With one basis fixed, the matrix of T^-1 is M(T)^-1.
-# Source handling: the original leaves this proof to an exercise. The exact
-# omitted result remains visible here as an explicit proof boundary.
+# Source handling: the original leaves this proof to an exercise; the proof
+# below discharges it from the preceding composition and inverse interfaces.
 thm matrix_of_inverse_equals_inverse_of_matrix:
     ? forall s nonempty_set, VSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, n N+, basis &chap1a::FiniteList<VSet, n>, T, S \chap3a::linear_map_space<s, VSet, VSet, V, V>:
         $chap2b::is_basis(s, VSet, V, n, basis)
@@ -280,4 +1056,36 @@ thm matrix_of_inverse_equals_inverse_of_matrix:
         $is_invertible_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
         =>:
             \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S) = \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
-    trust \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S) = \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T))
+    by thm chap3a::linear_map_compose_is_linear(s, VSet, VSet, VSet, V, V, V, S, T)
+    by thm chap3a::linear_map_compose_is_linear(s, VSet, VSet, VSet, V, V, V, T, S)
+    by thm chap3a::identity_linear_map_is_linear(s, VSet, V)
+    have ST \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T)
+    have TS \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S)
+    have Id \chap3a::linear_map_space<s, VSet, VSet, V, V> = \chap3a::identity_linear_map<s, VSet, V>
+    by thm chap2b::basis_iff_unique_coordinates(s, VSet, V, n, basis)
+    by def $chap2b::basis_iff_unique_coordinates_statement(s, VSet, V, n, basis)
+    $chap2b::has_unique_coordinates(s, VSet, V, n, basis)
+    by def $chap2b::has_unique_coordinates(s, VSet, V, n, basis)
+    have fn coordinates by exist!:
+        ? forall value VSet:
+            exist! coefficients &chap1a::FiniteList<s, n> st {value = \chap2a::linear_combination_value<s, VSet, V, n>(coefficients, basis)}
+    claim:
+        ? forall value VSet:
+            value = \chap2a::linear_combination_value<s, VSet, V, n>(coordinates(value), basis)
+    claim:
+        ? forall x VSet:
+            ST(x) = Id(x)
+        ST(x) = \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(S, T)(x) = S(T(x)) = x = \chap3a::identity_linear_map<s, VSet, V>(x) = Id(x)
+    by thm chap3a::linear_maps_equal_from_coordinates(s, VSet, VSet, V, V, n, basis, coordinates, ST, Id)
+    claim:
+        ? forall x VSet:
+            TS(x) = Id(x)
+        TS(x) = \chap3a::linear_map_compose<s, VSet, VSet, VSet, V, V, V>(T, S)(x) = T(S(x)) = x = \chap3a::identity_linear_map<s, VSet, V>(x) = Id(x)
+    by thm chap3a::linear_maps_equal_from_coordinates(s, VSet, VSet, V, V, n, basis, coordinates, TS, Id)
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, basis, basis, basis, T, S)
+    by thm matrix_of_product_with_explicit_bases(s, VSet, VSet, VSet, V, V, V, n, n, n, basis, basis, basis, S, T)
+    by thm matrix_of_identity_with_same_basis(s, VSet, V, n, basis)
+    \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T)) = \identity_matrix<s, V.scalars, n>
+    \chap3c::matrix_mul<s, V.scalars, n, n, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S)) = \identity_matrix<s, V.scalars, n>
+    by def $is_inverse_matrix(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S))
+    by thm inverse_matrix_is_unique(s, V.scalars, n, \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T), \chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, S), \inverse_matrix<s, V.scalars, n>(\chap3c::matrix_of_linear_map<s, VSet, VSet, V, V, n, n>(basis, basis, T)))

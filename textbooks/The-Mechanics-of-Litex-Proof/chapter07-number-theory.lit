@@ -190,7 +190,11 @@ claim:
 
 # With these facts in the context, the whole proof body is the following 11 lines:
 
-claim forall a N+: 2 <= a => {exist k N+ st {k > a, $prime(k)}}:
+claim:
+    ? forall a N+:
+        2 <= a
+        =>:
+            exist k N+ st {k > a, $prime(k)}
     2 <= a <= product(1, a, fn(x N+) N+ {x}) <= product(1, a, fn(x N+) N+ {x}) + 1
     obtain k from exist k N+ st {$prime(k), (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0}
     by cases:
@@ -330,10 +334,8 @@ claim:
     by thm bezout_of_coprime(a, d)
     obtain u, v from exist x Z, y Z st {1 = x * a + y * d}
     obtain z from exist z Z st {a * b = d * z}
-    witness exist k Z st {b = d * k} from u * z + b * v:
+    witness $citation::divides(d, b) from u * z + b * v:
         b = b * 1 = b * (u * a + v * d) = u * (a * b) + b * v * d = u * (d * z) + b * v * d = d * (u * z + b * v)
-    by def:
-        ? $citation::divides(d, b)
 
 # 7.3 Gauss's and Euclid's Lemmas
 
@@ -395,18 +397,14 @@ sketch:
                 by thm bezout_of_coprime(a, p)
                 obtain u, v from exist u Z, v Z st {1 = u * a + v * p}
                 obtain z from exist z Z st {a * b = p * z}
-                witness exist k Z st {b = p * k} from u * z + b * v:
+                witness $citation::divides(p, b) from u * z + b * v:
                     b = b * 1 = b * (u * a + v * p) = u * (a * b) + b * v * p = u * (p * z) + b * v * p = p * (u * z + b * v)
-                by def:
-                    ? $citation::divides(p, b)
                 $citation::divides(p, a) or $citation::divides(p, b)
             case gcd(a, p) = p:
                 by thm citation::gcd_divides_left(a, p)
                 obtain q from exist q Z st {a = gcd(a, p) * q}
-                witness exist k Z st {a = p * k} from q:
+                witness $citation::divides(p, a) from q:
                     a = gcd(a, p) * q = p * q
-                by def:
-                    ? $citation::divides(p, a)
                 $citation::divides(p, a) or $citation::divides(p, b)
 
     prop euclid_lemma_pow_at(k Z):
@@ -500,7 +498,6 @@ sketch:
         a * q > 0
         p > 0
         p $in N+
-        gcd(p, q) = 1
         witness exist r, s N+ st {a = r / s, gcd(r, s) = 1} from p, q:
             a = p / q
             gcd(p, q) = 1
@@ -578,16 +575,12 @@ sketch:
         q^2 = 2 * c^2 + 0
         q^2 % 2= 0
         q % 2 = 0
-        witness exist t Z st {p = 2 * t} from c
-        by def:
-            ? $citation::divides(2, p)
+        witness $citation::divides(2, p) from c
         witness exist t Z st {q = 2 * t + q % 2} from basics::integer_quotient(q, 2):
             q = 2 * basics::integer_quotient(q, 2) + q % 2
         obtain d from exist t Z st {q = 2 * t + q % 2}
         q = 2 * d + q % 2 = 2 * d
-        witness exist t Z st {q = 2 * t} from d
-        by def:
-            ? $citation::divides(2, q)
+        witness $citation::divides(2, q) from d
         by thm citation::common_divisor_le_gcd(p, q, 2)
         2 <= gcd(p, q) = 1
         impossible 2 <= 1

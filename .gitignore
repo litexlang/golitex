@@ -69,7 +69,10 @@ example_cleanup_plan.md
 
 todo/
 
-scripts
+scripts/*
+!scripts/predeploy_gate.py
+!scripts/test_predeploy_gate.py
 
 # Independent local planning repository.
 /plan/
+./plan

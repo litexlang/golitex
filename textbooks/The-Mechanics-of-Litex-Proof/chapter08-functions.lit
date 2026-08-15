@@ -1041,9 +1041,7 @@ thm bijective_implies_has_inverse:
 
     by def:
         ? $is_inverse(S, T, f, g)
-    witness exist h fn(y T) S st {$is_inverse(S, T, f, h)} from g
-    by def:
-        ? $has_inverse(S, T, f)
+    witness $has_inverse(S, T, f) from g
 
 sketch:
     claim:
@@ -1052,7 +1050,7 @@ sketch:
             =>:
                 $bijective_fn(S, T, f)
 
-        obtain g from exist g fn(y T) S st {$is_inverse(S, T, f, g)}
+        obtain g from $has_inverse(S, T, f)
         $is_inverse(S, T, f, g)
         by thm inverse_implies_bijective(S, T, f, g)
 
@@ -1786,9 +1784,7 @@ sketch:
 
     claim:
         ? $exist_bijection(cart(N, N), N)
-        witness exist f fn(x cart(N, N)) N st {$bijective_fn(cart(N, N), N, f)} from cauchy_pair
-        by def:
-            ? $exist_bijection(cart(N, N), N)
+        witness $exist_bijection(cart(N, N), N) from cauchy_pair
 
 # Summary
 

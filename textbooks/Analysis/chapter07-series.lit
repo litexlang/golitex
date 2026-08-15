@@ -524,16 +524,14 @@ thm finite_set_sum_exists:
         =>:
             $has_finite_set_sum(X, f)
     by thm finite_set_sum_satisfies_self_definition(X, f)
-    witness exist l R st {$is_finite_set_sum(X, f, l)} from finite_set_sum(X, f)
-    by def:
-        ? $has_finite_set_sum(X, f)
+    witness $has_finite_set_sum(X, f) from finite_set_sum(X, f)
 
 # This construction chooses the unique value whose existence was just proved,
 # matching Tao's idea: once all enumerations give the same sum, that common
 # value is "the" finite-set sum.
 
 template<X finite_set, f fn(x X) R: X $subset R, finite_set_size(X) >= 1, $has_finite_set_sum(X, f)>:
-    obtain self_finite_set_sum from exist l R st {$is_finite_set_sum(X, f, l)}
+    obtain self_finite_set_sum from $has_finite_set_sum(X, f)
 
 thm self_finite_set_sum_satisfies_definition:
     ? forall X finite_set, f fn(x X) R:
@@ -868,15 +866,13 @@ thm closed_limit_implies_strict_limit:
         epsilon / 2 $in R+
         epsilon / 2 < epsilon
         obtain n0 from exist n0 N+ st {$is_tail_close_to(a, L, epsilon / 2, n0)}
-        witness exist n1 N+ st {$chap6::is_tail_close_to(a, L, epsilon, n1)} from n0:
+        witness $chap6::has_eventual_closeness_to(a, L, epsilon) from n0:
             forall n N+:
                 n >= n0
                 =>:
                     abs(a(n) - L) <= epsilon / 2 < epsilon
             by def:
                 ? $chap6::is_tail_close_to(a, L, epsilon, n0)
-        by def:
-            ? $chap6::has_eventual_closeness_to(a, L, epsilon)
     by def:
         ? $chap6::has_limit(a, L)
 
@@ -894,7 +890,7 @@ thm strict_limit_extensional:
             $chap6::has_eventual_closeness_to(b, L, epsilon)
         by thm chap6::has_limit_gives_eventual_closeness(a, L, epsilon)
         obtain n0 from exist n0 N+ st {$chap6::is_tail_close_to(a, L, epsilon, n0)}
-        witness exist n1 N+ st {$chap6::is_tail_close_to(b, L, epsilon, n1)} from n0:
+        witness $chap6::has_eventual_closeness_to(b, L, epsilon) from n0:
             forall n N+:
                 n >= n0
                 =>:
@@ -904,8 +900,6 @@ thm strict_limit_extensional:
                     abs(b(n) - L) < epsilon
             by def:
                 ? $chap6::is_tail_close_to(b, L, epsilon, n0)
-        by def:
-            ? $chap6::has_eventual_closeness_to(b, L, epsilon)
     by def:
         ? $chap6::has_limit(b, L)
 
@@ -917,7 +911,7 @@ thm constant_sequence_has_strict_limit:
     claim:
         ? forall epsilon R+:
             $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon)
-        witness exist n0 N+ st {$chap6::is_tail_close_to(constant_sequence(c), c, epsilon, n0)} from 1:
+        witness $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon) from 1:
             forall k N+:
                 k >= 1
                 =>:
@@ -928,8 +922,6 @@ thm constant_sequence_has_strict_limit:
                     abs(constant_sequence(c)(k) - c) < epsilon
             by def:
                 ? $chap6::is_tail_close_to(constant_sequence(c), c, epsilon, 1)
-        by def:
-            ? $chap6::has_eventual_closeness_to(constant_sequence(c), c, epsilon)
     by def:
         ? $chap6::has_limit(constant_sequence(c), c)
 
@@ -991,11 +983,9 @@ thm series_convergence_extensional:
         $is_convergent_series(a)
         =>:
             $is_convergent_series(b)
-    obtain L from exist L R st {$has_series_sum(a, L)}
+    obtain L from $is_convergent_series(a)
     by thm series_sum_extensional(a, b, L)
-    witness exist M R st {$has_series_sum(b, M)} from L
-    by def:
-        ? $is_convergent_series(b)
+    witness $is_convergent_series(b) from L
 
 have fn geometric_series_terms_from_one(x R) fn(i_index N+) R = fn(j N+) R {x^j}
 
@@ -1148,7 +1138,7 @@ thm geometric_series_from_one_diverges_when_abs_ge_one:
     by contra:
         ? not $is_convergent_series(geometric_series_terms_from_one(x))
         $is_convergent_series(geometric_series_terms_from_one(x))
-        obtain L from exist L R st {$has_series_sum(geometric_series_terms_from_one(x), L)}
+        obtain L from $is_convergent_series(geometric_series_terms_from_one(x))
         $has_limit(fn(k N+) R {partial_sum(geometric_series_terms_from_one(x), k)}, L)
         1 / 3 $in R+
         obtain n0 from exist n0 N+ st {$is_tail_close_to(fn(k N+) R {partial_sum(geometric_series_terms_from_one(x), k)}, L, 1 / 3, n0)}
@@ -1294,7 +1284,7 @@ thm series_cauchy_criterion_forward:
         $is_convergent_series(a)
         =>:
             $has_cauchy_series_tails(a)
-    obtain L from exist L R st {$has_series_sum(a, L)}
+    obtain L from $is_convergent_series(a)
     $has_limit(fn(k N+) R {partial_sum(a, k)}, L)
     claim:
         ? forall epsilon R+:
@@ -1492,13 +1482,11 @@ thm series_cauchy_criterion_reverse:
     by thm chap5::real_cauchy_sequence_has_limit_in_R(fn(k N+) R {partial_sum(a, k)})
     obtain L from exist L R st {$chap5::has_limit_in_R(fn(k N+) R {partial_sum(a, k)}, L)}
     by thm nonstrict_real_limit_gives_series_limit(fn(k N+) R {partial_sum(a, k)}, L)
-    witness exist M R st {$has_series_sum(a, M)} from L:
+    witness $is_convergent_series(a) from L:
         $has_limit(fn(k N+) R {partial_sum(a, k)}, L)
         by def:
             ? $has_series_sum(a, L)
         $has_series_sum(a, L)
-    by def:
-        ? $is_convergent_series(a)
 
 """
 Corollary 7.2.6 (Zero test). Every convergent series has terms tending to 0.
@@ -2487,7 +2475,7 @@ thm series_laws_tail_convergence:
         $is_convergent_series(a)
         =>:
             $is_convergent_series(series_shift(a, h))
-    obtain L from exist L R st {$has_series_sum(a, L)}
+    obtain L from $is_convergent_series(a)
     by thm closed_limit_implies_strict_limit(fn(k N+) R {partial_sum(a, k)}, L)
     claim:
         ? $chap6::has_limit(fn(n N+) R {partial_sum(a, n + h)}, L)
@@ -2496,7 +2484,7 @@ thm series_laws_tail_convergence:
                 $chap6::has_eventual_closeness_to(fn(n N+) R {partial_sum(a, n + h)}, L, epsilon)
             by thm chap6::has_limit_gives_eventual_closeness(fn(k N+) R {partial_sum(a, k)}, L, epsilon)
             obtain n0 from exist n0 N+ st {$chap6::is_tail_close_to(fn(k N+) R {partial_sum(a, k)}, L, epsilon, n0)}
-            witness exist n1 N+ st {$chap6::is_tail_close_to(fn(n N+) R {partial_sum(a, n + h)}, L, epsilon, n1)} from n0:
+            witness $chap6::has_eventual_closeness_to(fn(n N+) R {partial_sum(a, n + h)}, L, epsilon) from n0:
                 forall n N+:
                     n >= n0
                     =>:
@@ -2507,8 +2495,6 @@ thm series_laws_tail_convergence:
                         abs(fn(j N+) R {partial_sum(a, j + h)}(n) - L) < epsilon
                 by def:
                     ? $chap6::is_tail_close_to(fn(n N+) R {partial_sum(a, n + h)}, L, epsilon, n0)
-            by def:
-                ? $chap6::has_eventual_closeness_to(fn(n N+) R {partial_sum(a, n + h)}, L, epsilon)
         by def:
             ? $chap6::has_limit(fn(n N+) R {partial_sum(a, n + h)}, L)
         $chap6::has_limit(fn(n N+) R {partial_sum(a, n + h)}, L)
@@ -2527,19 +2513,15 @@ thm series_laws_tail_convergence:
     by thm strict_limit_implies_closed_limit(fn(k N+) R {partial_sum(series_shift(a, h), k)}, L - partial_sum(a, h))
     by def:
         ? $has_series_sum(series_shift(a, h), L - partial_sum(a, h))
-    witness exist T R st {$has_series_sum(series_shift(a, h), T)} from L - partial_sum(a, h)
-    by def:
-        ? $is_convergent_series(series_shift(a, h))
+    witness $is_convergent_series(series_shift(a, h)) from L - partial_sum(a, h)
 
 thm series_laws_index_shift:
     ? forall a seq(R), k N, x R:
         $has_series_sum(a, x)
         =>:
             $is_convergent_series(series_shift(a, k))
-    witness exist L R st {$has_series_sum(a, L)} from x:
+    witness $is_convergent_series(a) from x:
         $has_series_sum(a, x)
-    by def:
-        ? $is_convergent_series(a)
     $is_convergent_series(a)
     by thm series_laws_tail_convergence(a, k)
 
@@ -2728,7 +2710,7 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
         $is_convergent_series(a)
         =>:
             $has_bounded_partial_sums(a)
-    obtain L from exist L R st {$has_series_sum(a, L)}
+    obtain L from $is_convergent_series(a)
     $has_limit(fn(k N+) R {partial_sum(a, k)}, L)
     1 $in R+
     obtain n0 from exist n0 N+ st {$is_tail_close_to(fn(k N+) R {partial_sum(a, k)}, L, 1, n0)}
@@ -2762,14 +2744,12 @@ thm nonnegative_series_convergent_has_bounded_partial_sums:
                 finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
                 partial_sum(a, k) <= L + 1 <= finite_set_max(union({partial_sum(a, n0)}, { L + 1})) = M
                 partial_sum(a, k) <= M
-    witness exist B R st {$is_partial_sum_bound(a, B)} from M:
+    witness $has_bounded_partial_sums(a) from M:
         forall k N+:
             partial_sum(a, k) <= M
         by def:
             ? $is_partial_sum_bound(a, M)
         $is_partial_sum_bound(a, M)
-    by def:
-        ? $has_bounded_partial_sums(a)
 
 thm nonnegative_series_bounded_partial_sums_converge:
     ? forall a seq(R):
@@ -2777,7 +2757,7 @@ thm nonnegative_series_bounded_partial_sums_converge:
         $has_bounded_partial_sums(a)
         =>:
             $is_convergent_series(a)
-    obtain M from exist M R st {$is_partial_sum_bound(a, M)}
+    obtain M from $has_bounded_partial_sums(a)
     have partial_sums seq(R) = fn(k N+) R {partial_sum(a, k)}
     claim:
         ? forall k N+:
@@ -2797,9 +2777,7 @@ thm nonnegative_series_bounded_partial_sums_converge:
         partial_sum(a, n) <= M
     by def:
         ? $chap6::is_sequence_upper_bound(partial_sums, M)
-    witness exist B R st {$chap6::is_sequence_upper_bound(partial_sums, B)} from M
-    by def:
-        ? $chap6::is_bounded_above_sequence(partial_sums)
+    witness $chap6::is_bounded_above_sequence(partial_sums) from M
     by thm chap6::bounded_increasing_sequence_converges(partial_sums)
     by thm chap6::convergent_sequence_has_limit(partial_sums)
     obtain L from exist L R st {$chap6::has_limit(partial_sums, L)}
@@ -2820,9 +2798,7 @@ thm nonnegative_series_bounded_partial_sums_converge:
         ? $has_limit(partial_sums, L)
     by def:
         ? $has_series_sum(a, L)
-    witness exist S R st {$has_series_sum(a, S)} from L
-    by def:
-        ? $is_convergent_series(a)
+    witness $is_convergent_series(a) from L
 
 """
 Corollary 7.3.2 (Comparison test). If |a_n| is bounded by a convergent
@@ -2852,7 +2828,7 @@ thm comparison_test_for_series:
         ? forall k N+:
             sum(1, k, fn(i_index N+) R {abs(a(i_index))}) <= sum(1, k, fn(i_index N+) R {b(i_index)})
         by thm sum_le_sum_from_pointwise(sum(1, k, fn(i_index N+) R {abs(a(i_index))}), sum(1, k, fn(i_index N+) R {b(i_index)}))
-    witness exist M0 R st {$is_partial_sum_bound(fn(j N+) R {abs(a(j))}, M0)} from M:
+    witness $has_bounded_partial_sums(fn(j N+) R {abs(a(j))}) from M:
         forall k N+:
             partial_sum(fn(j N+) R {abs(a(j))}, k) = sum(1, k, fn(i_index N+) R {abs(a(i_index))})
             partial_sum(b, k) = sum(1, k, fn(i_index N+) R {b(i_index)})
@@ -2864,8 +2840,6 @@ thm comparison_test_for_series:
             partial_sum(fn(j N+) R {abs(a(j))}, k) <= M
         by def:
             ? $is_partial_sum_bound(fn(j N+) R {abs(a(j))}, M)
-    by def:
-        ? $has_bounded_partial_sums(fn(j N+) R {abs(a(j))})
     forall n N+:
         fn(j N+) R {abs(a(j))}(n) = abs(a(n))
         abs(a(n)) >= 0
@@ -2957,9 +2931,7 @@ thm absolute_series_laws_tail_convergence_reverse:
     by thm nonnegative_series_convergent_has_bounded_partial_sums(series_shift(fn(i_index N+) R {abs(a(i_index))}, k))
     obtain M from exist M R st {$is_partial_sum_bound(series_shift(fn(i_index N+) R {abs(a(i_index))}, k), M)}
     by thm shifted_abs_partial_sum_bound_extends_to_original(a, k, M)
-    witness exist B R st {$is_partial_sum_bound(fn(i_index N+) R {abs(a(i_index))}, B)} from partial_sum(fn(i_index N+) R {abs(a(i_index))}, k) + M + abs(M)
-    by def:
-        ? $has_bounded_partial_sums(fn(i_index N+) R {abs(a(i_index))})
+    witness $has_bounded_partial_sums(fn(i_index N+) R {abs(a(i_index))}) from partial_sum(fn(i_index N+) R {abs(a(i_index))}, k) + M + abs(M)
     by thm absolute_sequence_nonnegative(a)
     by thm nonnegative_series_bounded_partial_sums_converge(fn(i_index N+) R {abs(a(i_index))})
     by thm series_convergence_extensional(fn(i_index N+) R {abs(a(i_index))}, fn(j N+) R {abs(a(j))})
@@ -3526,9 +3498,7 @@ thm cauchy_condensation_test_forward:
         2 * M = B
     by def:
         ? $is_partial_sum_bound(condensed_terms(a), B)
-    witness exist set_C R st {$is_partial_sum_bound(condensed_terms(a), set_C)} from B
-    by def:
-        ? $has_bounded_partial_sums(condensed_terms(a))
+    witness $has_bounded_partial_sums(condensed_terms(a)) from B
     by thm condensed_terms_nonnegative(a)
     by thm nonnegative_series_bounded_partial_sums_converge(condensed_terms(a))
 
@@ -3556,9 +3526,7 @@ thm cauchy_condensation_test_reverse:
         partial_sum(a, k) <= partial_sum(a, 2^K - 1) <= partial_sum(condensed_terms(a), K) <= M
     by def:
         ? $is_partial_sum_bound(a, M)
-    witness exist B R st {$is_partial_sum_bound(a, B)} from M
-    by def:
-        ? $has_bounded_partial_sums(a)
+    witness $has_bounded_partial_sums(a) from M
     by thm nonnegative_series_bounded_partial_sums_converge(a)
 
 """
@@ -4189,14 +4157,12 @@ thm nonnegative_series_same_sum_from_cofinal_partial_sums:
         obtain m from exist m N+ st {partial_sum(b, n) <= partial_sum(a, m)}
         by thm nonnegative_partial_sum_below_series_sum(a, L, m)
         partial_sum(b, n) <= partial_sum(a, m) <= L
-    witness exist M R st {$is_partial_sum_bound(b, M)} from L:
+    witness $has_bounded_partial_sums(b) from L:
         forall n N+:
             partial_sum(b, n) <= L
         by def:
             ? $is_partial_sum_bound(b, L)
         $is_partial_sum_bound(b, L)
-    by def:
-        ? $has_bounded_partial_sums(b)
     by thm nonnegative_series_bounded_partial_sums_converge(b)
     obtain M from exist M R st {$has_series_sum(b, M)}
     claim:
@@ -4445,13 +4411,11 @@ thm square_reciprocal_pair_swap_preserves_sum:
     by thm nonnegative_rearrangement(square_reciprocal_terms, adjacent_pair_swap, L)
 
 $is_convergent_series(square_reciprocal_terms)
-obtain square_sum from exist square_sum R st {$has_series_sum(square_reciprocal_terms, square_sum)}
+obtain square_sum from $is_convergent_series(square_reciprocal_terms)
 # trust: The theorem verifies in its declaration, but the top-level obtained
 # sum witness is rejected as an argument by the same theorem call.
 trust $has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), square_sum)
-witness exist M R st {$has_series_sum(rearranged_series(square_reciprocal_terms, adjacent_pair_swap), M)} from square_sum
-by def:
-    ? $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap))
+witness $is_convergent_series(rearranged_series(square_reciprocal_terms, adjacent_pair_swap)) from square_sum
 
 """
 Proposition 7.4.3 (Rearrangement of series). An absolutely convergent series
@@ -4481,7 +4445,7 @@ thm rearranged_series_absolutely_convergent:
         =>:
             $is_absolutely_convergent_series(rearranged_series(a, phi))
     $is_convergent_series(fn(j N+) R {abs(a(j))})
-    obtain A from exist A R st {$has_series_sum(fn(j N+) R {abs(a(j))}, A)}
+    obtain A from $is_convergent_series(fn(j N+) R {abs(a(j))})
     forall n N+:
         fn(j N+) R {abs(a(j))}(n) = abs(a(n))
         abs(a(n)) >= 0
@@ -4495,10 +4459,8 @@ thm rearranged_series_absolutely_convergent:
         by thm rearranged_absolute_value_terms_pointwise(a, phi, n)
         fn(j N+) R {abs(rearranged_series(a, phi)(j))}(n) = abs(rearranged_series(a, phi)(n))
     by thm series_sum_extensional(rearranged_series(fn(j N+) R {abs(a(j))}, phi), fn(j N+) R {abs(rearranged_series(a, phi)(j))}, A)
-    witness exist B R st {$has_series_sum(fn(j N+) R {abs(rearranged_series(a, phi)(j))}, B)} from A:
+    witness $is_convergent_series(fn(j N+) R {abs(rearranged_series(a, phi)(j))}) from A:
         $has_series_sum(fn(j N+) R {abs(rearranged_series(a, phi)(j))}, A)
-    by def:
-        ? $is_convergent_series(fn(j N+) R {abs(rearranged_series(a, phi)(j))})
     $is_convergent_series(fn(j N+) R {abs(rearranged_series(a, phi)(j))})
     by def:
         ? $is_absolutely_convergent_series(rearranged_series(a, phi))
@@ -5002,10 +4964,8 @@ thm root_test_absolute_convergence:
     1 - r > 0
     1 - r != 0
     by thm geometric_series_from_one_formula(r)
-    witness exist M R st {$has_series_sum(geometric_series_terms_from_one(r), M)} from r / (1 - r):
+    witness $is_convergent_series(geometric_series_terms_from_one(r)) from r / (1 - r):
         $has_series_sum(geometric_series_terms_from_one(r), r / (1 - r))
-    by def:
-        ? $is_convergent_series(geometric_series_terms_from_one(r))
     $is_convergent_series(geometric_series_terms_from_one(r))
     by thm eventual_comparison_test_for_series(a, geometric_series_terms_from_one(r), n0)
 
@@ -5023,7 +4983,7 @@ thm root_test_divergence:
         $exceeds_infinitely_often(root_test_terms(a), 1)
         obtain n0 from exist n0 N+ st {$is_tail_close_to(a, 0, 1, n0)}
         $has_late_term_above(root_test_terms(a), 1, n0)
-        obtain n from exist n N+ st {n >= n0 and root_test_terms(a)(n) > 1}
+        obtain n from $has_late_term_above(root_test_terms(a), 1, n0)
         abs(a(n) - 0) <= 1
         root_test_terms(a)(n) = abs(a(n))^(1 / n)
         abs(a(n) - 0) = abs(a(n))
@@ -5102,16 +5062,14 @@ thm finite_limsup_extensional:
             ? forall n0 N+:
                 $has_late_term_above(b, x, n0)
             $has_late_term_above(a, x, n0)
-            obtain n from exist n N+ st {n >= n0 and a(n) > x}
-            witness exist k N+ st {k >= n0 and b(k) > x} from n:
+            obtain n from $has_late_term_above(a, x, n0)
+            witness $has_late_term_above(b, x, n0) from n:
                 n >= n0 and a(n) > x
                 n >= n0
                 a(n) > x
                 a(n) = b(n)
                 b(n) > x
                 n >= n0 and b(n) > x
-            by def:
-                ? $has_late_term_above(b, x, n0)
         by def:
             ? $exceeds_infinitely_often(b, x)
     by def:
@@ -5150,16 +5108,14 @@ thm finite_liminf_extensional:
             ? forall n0 N+:
                 $has_late_term_below(b, y, n0)
             $has_late_term_below(a, y, n0)
-            obtain n from exist n N+ st {n >= n0 and a(n) < y}
-            witness exist k N+ st {k >= n0 and b(k) < y} from n:
+            obtain n from $has_late_term_below(a, y, n0)
+            witness $has_late_term_below(b, y, n0) from n:
                 n >= n0 and a(n) < y
                 n >= n0
                 a(n) < y
                 a(n) = b(n)
                 b(n) < y
                 n >= n0 and b(n) < y
-            by def:
-                ? $has_late_term_below(b, y, n0)
         by def:
             ? $falls_infinitely_often(b, y)
     by def:

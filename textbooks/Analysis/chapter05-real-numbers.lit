@@ -232,7 +232,7 @@ claim:
     epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
     obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
-    witness exist n1 N+ st {$is_tail_epsilon_steady_in_Q(fn(n N+) Q {1 / n}, epsilon, n1)} from n0:
+    witness $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {1 / n}, epsilon) from n0:
         forall j, k N+:
             j >= n0
             k >= n0
@@ -240,8 +240,6 @@ claim:
                 $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 / n}(j), fn(n N+) Q {1 / n}(k))
         by def:
             ? $is_tail_epsilon_steady_in_Q(fn(n N+) Q {1 / n}, epsilon, n0)
-    by def:
-        ? $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {1 / n}, epsilon)
 by def:
     ? $is_cauchy_sequence_in_Q(fn(n N+) Q {1 / n})
 
@@ -358,7 +356,7 @@ claim:
         =>:
             $is_bounded_sequence_in_Q(a)
     $has_eventual_epsilon_steadiness_in_Q(a, 1)
-    obtain n0 from exist n0 N+ st {$is_tail_epsilon_steady_in_Q(a, 1, n0)}
+    obtain n0 from $has_eventual_epsilon_steadiness_in_Q(a, 1)
     $is_finite_prefix_bounded_in_Q(a, n0, prefix_bound_Q(a, n0))
     claim:
         ? forall i_index N+:
@@ -381,14 +379,12 @@ claim:
                 abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0))
                 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
                 abs(a(i_index)) <= abs(a(i_index) - a(n0)) + abs(a(n0)) <= 1 + abs(a(n0)) <= prefix_bound_Q(a, n0) + abs(a(n0)) + 1
-    witness exist M Q st {$is_bounded_by_in_Q(a, M)} from prefix_bound_Q(a, n0) + abs(a(n0)) + 1:
+    witness $is_bounded_sequence_in_Q(a) from prefix_bound_Q(a, n0) + abs(a(n0)) + 1:
         prefix_bound_Q(a, n0) >= 0
         abs(a(n0)) >= 0
         prefix_bound_Q(a, n0) + abs(a(n0)) + 1 >= 0
         by def:
             ? $is_bounded_by_in_Q(a, prefix_bound_Q(a, n0) + abs(a(n0)) + 1)
-    by def:
-        ? $is_bounded_sequence_in_Q(a)
 
 # 5.2 Equivalent Cauchy sequences
 
@@ -532,15 +528,13 @@ claim:
     claim:
         ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(a, a, epsilon)
-        witness exist n0 N+ st {$is_tail_close_in_Q(a, a, epsilon, n0)} from 1:
+        witness $has_eventual_closeness_in_Q(a, a, epsilon) from 1:
             forall n N+:
                 n >= 1
                 =>:
                     $chap4::is_close_in_Q(epsilon, a(n), a(n))
             by def:
                 ? $is_tail_close_in_Q(a, a, epsilon, 1)
-        by def:
-            ? $has_eventual_closeness_in_Q(a, a, epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(a, a)
 
@@ -553,8 +547,8 @@ claim:
         ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(b, a, epsilon)
         $has_eventual_closeness_in_Q(a, b, epsilon)
-        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, b, epsilon, n0)}
-        witness exist n1 N+ st {$is_tail_close_in_Q(b, a, epsilon, n1)} from n0:
+        obtain n0 from $has_eventual_closeness_in_Q(a, b, epsilon)
+        witness $has_eventual_closeness_in_Q(b, a, epsilon) from n0:
             forall n N+:
                 n >= n0
                 =>:
@@ -562,8 +556,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, b(n), a(n))
             by def:
                 ? $is_tail_close_in_Q(b, a, epsilon, n0)
-        by def:
-            ? $has_eventual_closeness_in_Q(b, a, epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(b, a)
 
@@ -579,12 +571,12 @@ claim:
         epsilon / 2 $in Q+
         $has_eventual_closeness_in_Q(a, b, epsilon / 2)
         $has_eventual_closeness_in_Q(b, c, epsilon / 2)
-        obtain n1 from exist n1 N+ st {$is_tail_close_in_Q(a, b, epsilon / 2, n1)}
+        obtain n1 from $has_eventual_closeness_in_Q(a, b, epsilon / 2)
         obtain n2 from exist n2 N+ st {$is_tail_close_in_Q(b, c, epsilon / 2, n2)}
         have tail_start N+ = finite_set_max(union({n1}, {n2}))
         n1 <= tail_start
         n2 <= tail_start
-        witness exist n0 N+ st {$is_tail_close_in_Q(a, c, epsilon, n0)} from tail_start:
+        witness $has_eventual_closeness_in_Q(a, c, epsilon) from tail_start:
             forall n N+:
                 n >= tail_start
                 =>:
@@ -601,8 +593,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, a(n), c(n))
             by def:
                 ? $is_tail_close_in_Q(a, c, epsilon, tail_start)
-        by def:
-            ? $has_eventual_closeness_in_Q(a, c, epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(a, c)
 
@@ -640,7 +630,7 @@ claim:
     epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
     obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
-    witness exist n1 N+ st {$is_tail_close_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
+    witness $has_eventual_closeness_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon) from n0:
         claim:
             ? forall i_index N+:
                 i_index >= n0
@@ -664,8 +654,6 @@ claim:
                 ? $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1 + 1 / 10^n}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
         by def:
             ? $is_tail_close_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n0)
-    by def:
-        ? $has_eventual_closeness_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
 by def:
     ? $is_equivalent_cauchy_sequence_in_Q(fn(n N+) Q {1 + 1 / 10^n}, fn(n N+) Q {1 - 1 / 10^n})
 
@@ -685,7 +673,7 @@ claim:
     epsilon $in R+
     by thm archimedean_property(epsilon)
     obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
-    witness exist n1 N+ st {$is_tail_close_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n1)} from n0:
+    witness $has_eventual_closeness_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon) from n0:
         claim:
             ? forall i_index N+:
                 i_index >= n0
@@ -708,8 +696,6 @@ claim:
                 ? $chap4::is_close_in_Q(epsilon, fn(n N+) Q {1}(i_index), fn(n N+) Q {1 - 1 / 10^n}(i_index))
         by def:
             ? $is_tail_close_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon, n0)
-    by def:
-        ? $has_eventual_closeness_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n}, epsilon)
 by def:
     ? $is_equivalent_cauchy_sequence_in_Q(fn(n N+) Q {1}, fn(n N+) Q {1 - 1 / 10^n})
 
@@ -790,7 +776,7 @@ thm equivalent_cauchy_sequence_preserves_formal_limit_in_Q:
         $has_rational_sequence_limit_in_R(a, x)
         obtain n1 from exist n1 N+ st {$is_rational_sequence_tail_close_to_real(a, x, epsilon / 2, n1)}
         $has_eventual_closeness_in_Q(a, b, eta)
-        obtain n2 from exist n2 N+ st {$is_tail_close_in_Q(a, b, eta, n2)}
+        obtain n2 from $has_eventual_closeness_in_Q(a, b, eta)
         have tail_start N+ = finite_set_max(union({n1}, {n2}))
         n1 <= tail_start
         n2 <= tail_start
@@ -981,12 +967,12 @@ claim:
         epsilon / 2 $in Q+
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon / 2)
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / 2)
-        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon / 2, n1)}
-        obtain n2 from exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon / 2, n2)}
+        obtain n1 from $has_eventual_epsilon_steadiness_in_Q(a, epsilon / 2)
+        obtain n2 from $has_eventual_epsilon_steadiness_in_Q(b, epsilon / 2)
         have tail_start N+ = finite_set_max(union({n1}, {n2}))
         n1 <= tail_start
         n2 <= tail_start
-        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, n0)} from tail_start:
+        witness $has_eventual_epsilon_steadiness_in_Q(seq_add_Q(a, b), epsilon) from tail_start:
             forall j, k N+:
                 j >= tail_start
                 k >= tail_start
@@ -1006,8 +992,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(j), seq_add_Q(a, b)(k))
             by def:
                 ? $is_tail_epsilon_steady_in_Q(seq_add_Q(a, b), epsilon, tail_start)
-        by def:
-            ? $has_eventual_epsilon_steadiness_in_Q(seq_add_Q(a, b), epsilon)
     by def:
         ? $is_cauchy_sequence_in_Q(seq_add_Q(a, b))
 
@@ -1028,8 +1012,8 @@ claim:
         ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon)
         $has_eventual_closeness_in_Q(a, a_prime, epsilon)
-        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, a_prime, epsilon, n0)}
-        witness exist n1 N+ st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n1)} from n0:
+        obtain n0 from $has_eventual_closeness_in_Q(a, a_prime, epsilon)
+        witness $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon) from n0:
             claim:
                 ? forall n N+:
                     n >= n0
@@ -1043,8 +1027,6 @@ claim:
                     ? $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a_prime, b)(n))
             by def:
                 ? $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon, n0)
-        by def:
-            ? $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b), epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a_prime, b))
 
@@ -1061,7 +1043,7 @@ claim:
             $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon)
         $has_eventual_closeness_in_Q(b, b_prime, epsilon)
         obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(b, b_prime, epsilon, n0)}
-        witness exist n1 N+ st {$is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n1)} from n0:
+        witness $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon) from n0:
             claim:
                 ? forall n N+:
                     n >= n0
@@ -1075,8 +1057,6 @@ claim:
                     ? $chap4::is_close_in_Q(epsilon, seq_add_Q(a, b)(n), seq_add_Q(a, b_prime)(n))
             by def:
                 ? $is_tail_close_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon, n0)
-        by def:
-            ? $has_eventual_closeness_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime), epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(seq_add_Q(a, b), seq_add_Q(a, b_prime))
 
@@ -1126,8 +1106,8 @@ claim:
             $is_cauchy_sequence_in_Q(seq_mul_Q(a, b))
     $is_bounded_sequence_in_Q(a)
     $is_bounded_sequence_in_Q(b)
-    obtain M_a from exist M_a Q st {$is_bounded_by_in_Q(a, M_a)}
-    obtain M_b from exist M_b Q st {$is_bounded_by_in_Q(b, M_b)}
+    obtain M_a from $is_bounded_sequence_in_Q(a)
+    obtain M_b from $is_bounded_sequence_in_Q(b)
     M_a + 1 > 0
     M_b + 1 > 0
     M_a + 1 != 0
@@ -1143,12 +1123,12 @@ claim:
         epsilon / (2 * (M_a + 1)) $in Q+
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon / (2 * (M_b + 1)))
         $has_eventual_epsilon_steadiness_in_Q(b, epsilon / (2 * (M_a + 1)))
-        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon / (2 * (M_b + 1)), n1)}
-        obtain n2 from exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon / (2 * (M_a + 1)), n2)}
+        obtain n1 from $has_eventual_epsilon_steadiness_in_Q(a, epsilon / (2 * (M_b + 1)))
+        obtain n2 from $has_eventual_epsilon_steadiness_in_Q(b, epsilon / (2 * (M_a + 1)))
         have tail_start N+ = finite_set_max(union({n1}, {n2}))
         n1 <= tail_start
         n2 <= tail_start
-        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, n0)} from tail_start:
+        witness $has_eventual_epsilon_steadiness_in_Q(seq_mul_Q(a, b), epsilon) from tail_start:
             forall j, k N+:
                 j >= tail_start
                 k >= tail_start
@@ -1189,8 +1169,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(j), seq_mul_Q(a, b)(k))
             by def:
                 ? $is_tail_epsilon_steady_in_Q(seq_mul_Q(a, b), epsilon, tail_start)
-        by def:
-            ? $has_eventual_epsilon_steadiness_in_Q(seq_mul_Q(a, b), epsilon)
     by def:
         ? $is_cauchy_sequence_in_Q(seq_mul_Q(a, b))
 
@@ -1206,7 +1184,7 @@ thm seq_mul_Q_respects_equivalent_left_factor:
         =>:
             $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b))
     $is_bounded_sequence_in_Q(b)
-    obtain M_b from exist M_b Q st {$is_bounded_by_in_Q(b, M_b)}
+    obtain M_b from $is_bounded_sequence_in_Q(b)
     M_b + 1 > 0
     M_b + 1 != 0
     claim:
@@ -1214,8 +1192,8 @@ thm seq_mul_Q_respects_equivalent_left_factor:
             $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon)
         epsilon / (M_b + 1) $in Q+
         $has_eventual_closeness_in_Q(a, a_prime, epsilon / (M_b + 1))
-        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, a_prime, epsilon / (M_b + 1), n0)}
-        witness exist n1 N+ st {$is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n1)} from n0:
+        obtain n0 from $has_eventual_closeness_in_Q(a, a_prime, epsilon / (M_b + 1))
+        witness $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon) from n0:
             forall n N+:
                 n >= n0
                 =>:
@@ -1229,8 +1207,6 @@ thm seq_mul_Q_respects_equivalent_left_factor:
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, b)(n), seq_mul_Q(a_prime, b)(n))
             by def:
                 ? $is_tail_close_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon, n0)
-        by def:
-            ? $has_eventual_closeness_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b), epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, b), seq_mul_Q(a_prime, b))
 
@@ -1280,7 +1256,7 @@ claim:
     claim:
         ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon)
-        witness exist n0 N+ st {$is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, n0)} from 1:
+        witness $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon) from 1:
             forall n N+:
                 n >= 1
                 =>:
@@ -1288,8 +1264,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, seq_mul_Q(a, seq_add_Q(b, c))(n), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c))(n))
             by def:
                 ? $is_tail_close_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon, 1)
-        by def:
-            ? $has_eventual_closeness_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)), epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(seq_mul_Q(a, seq_add_Q(b, c)), seq_add_Q(seq_mul_Q(a, b), seq_mul_Q(a, c)))
 
@@ -1338,7 +1312,7 @@ sketch:
         case n % 2 = 1: 1
         case n % 2 = 0: -1
 
-    witness exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)} from 1:
+    witness $is_bounded_away_from_zero_in_Q(alternating_sign_Q) from 1:
         1 $in Q+
         claim:
             ? forall n N+:
@@ -1357,15 +1331,13 @@ sketch:
         by def:
             ? $is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, 1)
         $is_bounded_away_from_zero_by_in_Q(alternating_sign_Q, 1)
-    by def:
-        ? $is_bounded_away_from_zero_in_Q(alternating_sign_Q)
 
     claim:
         ? not $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
         by contra:
             ? not $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
             $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
-            obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {1 / 10^n}, c)}
+            obtain c from $is_bounded_away_from_zero_in_Q(fn(n N+) Q {1 / 10^n})
             by thm archimedean_property(c)
             obtain n0 from exist n0 N+ st {1 / n0 < c}
             n0 <= 10^n0
@@ -1394,13 +1366,13 @@ sketch:
         by contra:
             ? not $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
             $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
-            obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(zero_then_decimal_nines_Q, c)}
+            obtain c from $is_bounded_away_from_zero_in_Q(zero_then_decimal_nines_Q)
             zero_then_decimal_nines_Q(1) = 0
             abs(zero_then_decimal_nines_Q(1)) = abs(0) = 0
             abs(zero_then_decimal_nines_Q(1)) >= c
             impossible 0 >= c
 
-    witness exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, c)} from 1:
+    witness $is_bounded_away_from_zero_in_Q(fn(n N+) Q {10^n}) from 1:
         1 $in Q+
         forall i_index N+:
             i_index >= 1
@@ -1414,15 +1386,13 @@ sketch:
         by def:
             ? $is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, 1)
         $is_bounded_away_from_zero_by_in_Q(fn(n N+) Q {10^n}, 1)
-    by def:
-        ? $is_bounded_away_from_zero_in_Q(fn(n N+) Q {10^n})
 
     claim:
         ? not $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
         by contra:
             ? not $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
             $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
-            obtain M from exist M Q st {$is_bounded_by_in_Q(fn(n N+) Q {10^n}, M)}
+            obtain M from $is_bounded_sequence_in_Q(fn(n N+) Q {10^n})
             M + 1 > 0
             M + 1 $in R+
             1 / (M + 1) $in R+
@@ -1476,11 +1446,11 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
         ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(b, epsilon)
         $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
-        obtain n1 from exist n1 N+ st {$is_tail_epsilon_steady_in_Q(a, epsilon, n1)}
+        obtain n1 from $has_eventual_epsilon_steadiness_in_Q(a, epsilon)
         have tail_start N+ = finite_set_max(union({n0}, {n1}))
         n0 <= tail_start
         n1 <= tail_start
-        witness exist n2 N+ st {$is_tail_epsilon_steady_in_Q(b, epsilon, n2)} from tail_start:
+        witness $has_eventual_epsilon_steadiness_in_Q(b, epsilon) from tail_start:
             forall j, k N+:
                 j >= tail_start
                 k >= tail_start
@@ -1496,8 +1466,6 @@ thm finite_prefix_replacement_preserves_cauchy_and_formal_limit_in_Q:
                     $chap4::is_close_in_Q(epsilon, b(j), b(k))
             by def:
                 ? $is_tail_epsilon_steady_in_Q(b, epsilon, tail_start)
-        by def:
-            ? $has_eventual_epsilon_steadiness_in_Q(b, epsilon)
     by def:
         ? $is_cauchy_sequence_in_Q(b)
     claim:
@@ -1573,9 +1541,7 @@ thm nonzero_real_has_bounded_away_rational_representative:
                 abs(b(n)) = abs(a(n)) >= c
     by def:
         ? $is_bounded_away_from_zero_by_in_Q(b, c)
-    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(b, d)} from c
-    by def:
-        ? $is_bounded_away_from_zero_in_Q(b)
+    witness $is_bounded_away_from_zero_in_Q(b) from c
     witness exist b0 seq(Q) st {$is_cauchy_sequence_in_Q(b0), $has_formal_limit_in_Q(b0, x), $is_bounded_away_from_zero_in_Q(b0)} from b
 
 # The algebraic estimate used by both reciprocal lemmas.
@@ -1619,7 +1585,7 @@ claim:
         $is_bounded_away_from_zero_in_Q(a)
         =>:
             $is_nonzero_sequence_in_Q(a)
-    obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c)}
+    obtain c from $is_bounded_away_from_zero_in_Q(a)
     claim:
         ? forall n N+:
             a(n) != 0
@@ -1662,13 +1628,13 @@ claim:
         =>:
             $is_cauchy_sequence_in_Q(seq_recip_Q(a))
     $is_nonzero_sequence_in_Q(a)
-    obtain c from exist c Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c)}
+    obtain c from $is_bounded_away_from_zero_in_Q(a)
     claim:
         ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon)
         $has_eventual_epsilon_steadiness_in_Q(a, c^2 * epsilon)
-        obtain n0 from exist n0 N+ st {$is_tail_epsilon_steady_in_Q(a, c^2 * epsilon, n0)}
-        witness exist n1 N+ st {$is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n1)} from n0:
+        obtain n0 from $has_eventual_epsilon_steadiness_in_Q(a, c^2 * epsilon)
+        witness $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon) from n0:
             forall j, k N+:
                 j >= n0
                 k >= n0
@@ -1682,8 +1648,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(j), seq_recip_Q(a)(k))
             by def:
                 ? $is_tail_epsilon_steady_in_Q(seq_recip_Q(a), epsilon, n0)
-        by def:
-            ? $has_eventual_epsilon_steadiness_in_Q(seq_recip_Q(a), epsilon)
     by def:
         ? $is_cauchy_sequence_in_Q(seq_recip_Q(a))
 
@@ -1713,14 +1677,14 @@ claim:
             $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
     $is_nonzero_sequence_in_Q(a)
     $is_nonzero_sequence_in_Q(b)
-    obtain c_a from exist c_a Q+ st {$is_bounded_away_from_zero_by_in_Q(a, c_a)}
-    obtain c_b from exist c_b Q+ st {$is_bounded_away_from_zero_by_in_Q(b, c_b)}
+    obtain c_a from $is_bounded_away_from_zero_in_Q(a)
+    obtain c_b from $is_bounded_away_from_zero_in_Q(b)
     claim:
         ? forall epsilon Q+:
             $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon)
         $has_eventual_closeness_in_Q(a, b, c_a * c_b * epsilon)
-        obtain n0 from exist n0 N+ st {$is_tail_close_in_Q(a, b, c_a * c_b * epsilon, n0)}
-        witness exist n1 N+ st {$is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n1)} from n0:
+        obtain n0 from $has_eventual_closeness_in_Q(a, b, c_a * c_b * epsilon)
+        witness $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon) from n0:
             forall n N+:
                 n >= n0
                 =>:
@@ -1731,8 +1695,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, seq_recip_Q(a)(n), seq_recip_Q(b)(n))
             by def:
                 ? $is_tail_close_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon, n0)
-        by def:
-            ? $has_eventual_closeness_in_Q(seq_recip_Q(a), seq_recip_Q(b), epsilon)
     by def:
         ? $is_equivalent_cauchy_sequence_in_Q(seq_recip_Q(a), seq_recip_Q(b))
 
@@ -1768,30 +1730,26 @@ claim:
         $is_positively_bounded_away_from_zero_in_Q(a)
         =>:
             $is_bounded_away_from_zero_in_Q(a)
-    obtain c from exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(a, c)}
-    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
+    obtain c from $is_positively_bounded_away_from_zero_in_Q(a)
+    witness $is_bounded_away_from_zero_in_Q(a) from c:
         forall n N+:
             a(n) >= c > 0
             abs(a(n)) = a(n) >= c
         by def:
             ? $is_bounded_away_from_zero_by_in_Q(a, c)
-    by def:
-        ? $is_bounded_away_from_zero_in_Q(a)
 
 claim:
     ? forall a seq(Q):
         $is_negatively_bounded_away_from_zero_in_Q(a)
         =>:
             $is_bounded_away_from_zero_in_Q(a)
-    obtain c from exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(a, c)}
-    witness exist d Q+ st {$is_bounded_away_from_zero_by_in_Q(a, d)} from c:
+    obtain c from $is_negatively_bounded_away_from_zero_in_Q(a)
+    witness $is_bounded_away_from_zero_in_Q(a) from c:
         forall n N+:
             a(n) <= -c < 0
             abs(a(n)) = -a(n) >= c
         by def:
             ? $is_bounded_away_from_zero_by_in_Q(a, c)
-    by def:
-        ? $is_bounded_away_from_zero_in_Q(a)
 
 """
 Examples 5.4.2. The decimal sequence 1.1, 1.01, 1.001, ... is positively
@@ -1807,7 +1765,7 @@ sketch:
         case n % 2 = 1: 1
         case n % 2 = 0: -1
 
-    witness exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, c)} from 1:
+    witness $is_positively_bounded_away_from_zero_in_Q(decimal_above_one_Q) from 1:
         1 $in Q+
         forall n N+:
             10^n > 0
@@ -1817,10 +1775,8 @@ sketch:
             decimal_above_one_Q(n) >= 1
         by def:
             ? $is_positively_bounded_away_from_zero_by_in_Q(decimal_above_one_Q, 1)
-    by def:
-        ? $is_positively_bounded_away_from_zero_in_Q(decimal_above_one_Q)
 
-    witness exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, c)} from 1:
+    witness $is_negatively_bounded_away_from_zero_in_Q(negative_decimal_below_minus_one_Q) from 1:
         1 $in Q+
         forall n N+:
             10^n > 0
@@ -1831,15 +1787,13 @@ sketch:
             negative_decimal_below_minus_one_Q(n) <= -1
         by def:
             ? $is_negatively_bounded_away_from_zero_by_in_Q(negative_decimal_below_minus_one_Q, 1)
-    by def:
-        ? $is_negatively_bounded_away_from_zero_in_Q(negative_decimal_below_minus_one_Q)
 
     claim:
         ? not $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
         by contra:
             ? not $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
-            obtain c from exist c Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
+            obtain c from $is_positively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             alternating_sign_Q(2) = -1
             alternating_sign_Q(2) >= c
             -1 >= c
@@ -1852,7 +1806,7 @@ sketch:
         by contra:
             ? not $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
-            obtain c from exist c Q+ st {$is_negatively_bounded_away_from_zero_by_in_Q(alternating_sign_Q, c)}
+            obtain c from $is_negatively_bounded_away_from_zero_in_Q(alternating_sign_Q)
             -c < 0
             alternating_sign_Q(1) = 1
             alternating_sign_Q(1) <= -c
@@ -2200,7 +2154,7 @@ claim:
     epsilon / 2 $in R+
     by thm archimedean_property(epsilon / 2)
     obtain n0 from exist n0 N+ st {1 / n0 < epsilon / 2}
-    witness exist n1 N+ st {$is_tail_close_in_Q(one_plus_reciprocal_Q, one_minus_reciprocal_Q, epsilon, n1)} from n0:
+    witness $has_eventual_closeness_in_Q(one_plus_reciprocal_Q, one_minus_reciprocal_Q, epsilon) from n0:
         forall n N+:
             n >= n0
             =>:
@@ -2215,8 +2169,6 @@ claim:
                 $chap4::is_close_in_Q(epsilon, one_plus_reciprocal_Q(n), one_minus_reciprocal_Q(n))
         by def:
             ? $is_tail_close_in_Q(one_plus_reciprocal_Q, one_minus_reciprocal_Q, epsilon, n0)
-    by def:
-        ? $has_eventual_closeness_in_Q(one_plus_reciprocal_Q, one_minus_reciprocal_Q, epsilon)
 by def:
     ? $is_equivalent_cauchy_sequence_in_Q(one_plus_reciprocal_Q, one_minus_reciprocal_Q)
 
@@ -2275,11 +2227,9 @@ thm positive_builtin_real_has_positive_rational_representative:
                 a(n) > c
                 a(n) >= c
                 b(n) >= c
-    witness exist c0 Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(b, c0)} from c:
+    witness $is_positively_bounded_away_from_zero_in_Q(b) from c:
         by def:
             ? $is_positively_bounded_away_from_zero_by_in_Q(b, c)
-    by def:
-        ? $is_positively_bounded_away_from_zero_in_Q(b)
     witness exist b0 seq(Q) st {$is_cauchy_sequence_in_Q(b0), $has_formal_limit_in_Q(b0, x), $is_positively_bounded_away_from_zero_in_Q(b0)} from b
 
 claim:
@@ -2295,7 +2245,7 @@ claim:
     claim:
         ? forall epsilon Q+:
             $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {q}, epsilon)
-        witness exist n0 N+ st {$is_tail_epsilon_steady_in_Q(fn(n N+) Q {q}, epsilon, n0)} from 1:
+        witness $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {q}, epsilon) from 1:
             forall j, k N+:
                 j >= 1
                 k >= 1
@@ -2303,8 +2253,6 @@ claim:
                     $chap4::is_close_in_Q(epsilon, fn(n N+) Q {q}(j), fn(n N+) Q {q}(k))
             by def:
                 ? $is_tail_epsilon_steady_in_Q(fn(n N+) Q {q}, epsilon, 1)
-        by def:
-            ? $has_eventual_epsilon_steadiness_in_Q(fn(n N+) Q {q}, epsilon)
     by def:
         ? $is_cauchy_sequence_in_Q(fn(n N+) Q {q})
 
@@ -2347,8 +2295,8 @@ claim:
     ? forall x R+:
         exist q Q+ st {q <= x}
     $is_positive_real_by_cauchy_sequence(x)
-    obtain a from exist a seq(Q) st {$is_cauchy_sequence_in_Q(a), $has_formal_limit_in_Q(a, x), $is_positively_bounded_away_from_zero_in_Q(a)}
-    obtain q from exist q Q+ st {$is_positively_bounded_away_from_zero_by_in_Q(a, q)}
+    obtain a from $is_positive_real_by_cauchy_sequence(x)
+    obtain q from $is_positively_bounded_away_from_zero_in_Q(a)
     $has_formal_limit_in_Q(a, x)
     $is_positively_bounded_away_from_zero_by_in_Q(a, q)
     by thm positive_representative_lower_bound_passes_to_limit(a, x, q)
@@ -2679,7 +2627,7 @@ sketch:
         by contra:
             ? not $has_least_upper_bound({})
             $has_least_upper_bound({})
-            obtain M from exist M R st {$is_least_upper_bound({}, M)}
+            obtain M from $has_least_upper_bound({})
             M - 1 $in R
             by thm empty_set_upper_bound(M - 1)
             M <= M - 1
@@ -3179,10 +3127,8 @@ thm bisection_bracket_exists:
         by thm recursive_bisection_width_eventually_below(E, lower, upper, epsilon)
     by def:
         ? $is_bisection_bracket_for_supremum(E, lower, upper)
-    witness exist lower0, upper0 seq(R) st {$is_bisection_bracket_for_supremum(E, lower0, upper0)} from lower, upper:
+    witness $has_bisection_bracket_for_supremum(E) from lower, upper:
         $is_bisection_bracket_for_supremum(E, lower, upper)
-    by def:
-        ? $has_bisection_bracket_for_supremum(E)
 
 thm bisection_lower_endpoint_tail_close:
     ? forall E set, lower, upper seq(R), epsilon R+, n0, j, k N+:
@@ -3483,9 +3429,7 @@ thm least_upper_bound_exists_from_cauchy_bisection:
     by thm bisection_bracket_has_common_limit(E, lower, upper)
     obtain L from exist L R st {$has_limit_in_R(lower, L), $has_limit_in_R(upper, L)}
     by thm common_limit_of_bisection_bracket_is_lub(E, lower, upper, L)
-    witness exist M R st {$is_least_upper_bound(E, M)} from L
-    by def:
-        ? $has_least_upper_bound(E)
+    witness $has_least_upper_bound(E) from L
 
 """
 Theorem 5.5.9. Every non-empty set of reals which is bounded above has a
@@ -3698,7 +3642,7 @@ claim:
             impossible y^2 < 2
     by def:
         ? $is_upper_bound(sqrt_two_candidate_set, 2)
-    witness exist M R st {$is_upper_bound(sqrt_two_candidate_set, M)} from 2
+    witness exist bound_witness R st {$is_upper_bound(sqrt_two_candidate_set, bound_witness)} from 2
     by def:
         ? $has_upper_bound(sqrt_two_candidate_set)
     by def:
@@ -3999,7 +3943,7 @@ thm nth_root_candidate_set_nonempty_bounded:
                     impossible y^n <= x
             by def:
                 ? $is_upper_bound(nth_root_candidate_set(x, n), 1)
-            witness exist M R st {$is_upper_bound(nth_root_candidate_set(x, n), M)} from 1
+            witness exist bound_witness R st {$is_upper_bound(nth_root_candidate_set(x, n), bound_witness)} from 1
             by def:
                 ? $has_upper_bound(nth_root_candidate_set(x, n))
         case x > 1:
@@ -4015,7 +3959,7 @@ thm nth_root_candidate_set_nonempty_bounded:
                     impossible y^n <= x
             by def:
                 ? $is_upper_bound(nth_root_candidate_set(x, n), x)
-            witness exist M R st {$is_upper_bound(nth_root_candidate_set(x, n), M)} from x
+            witness exist bound_witness R st {$is_upper_bound(nth_root_candidate_set(x, n), bound_witness)} from x
             by def:
                 ? $has_upper_bound(nth_root_candidate_set(x, n))
     by def:

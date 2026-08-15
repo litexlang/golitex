@@ -135,10 +135,8 @@ sketch:
     claim:
         ? forall x N:
             $divides(x, x)
-        witness exist k N st {x = x * k} from 1:
+        witness $divides(x, x) from 1:
             x = x * 1
-        by def:
-            ? $divides(x, x)
 
     # Transitive
     claim:
@@ -149,10 +147,8 @@ sketch:
                 $divides(a, c)
         obtain k1 from exist k N st {b = a * k}
         obtain k2 from exist k N st {c = b * k}
-        witness exist k N st {c = a * k} from k1 * k2:
+        witness $divides(a, c) from k1 * k2:
             c = b * k2 = (a * k1) * k2 = a * (k1 * k2)
-        by def:
-            ? $divides(a, c)
 
     # Antisymmetric
     claim:
@@ -185,11 +181,9 @@ sketch:
     # Not symmetric
     claim:
         ? $divides(1, 2)
-        witness exist k N st {2 = 1 * k} from 2:
+        witness $divides(1, 2) from 2:
             2 = 1 * 2
 
-        by def:
-            ? $divides(1, 2)
 
     claim:
         ? not $divides(2, 1)
@@ -374,10 +368,8 @@ sketch:
             =>:
                 $mod_eq(y, x, n)
         obtain k from exist k Z st {x - y = n * k}
-        witness exist k2 Z st {y - x = n * k2} from -k:
+        witness $mod_eq(y, x, n) from -k:
             y - x = -(x - y) = -(n * k) = n * (-k)
-        by def:
-            ? $mod_eq(y, x, n)
 
     claim:
         ? forall x, y, z, n Z:
@@ -387,10 +379,8 @@ sketch:
                 $mod_eq(x, z, n)
         obtain k1 from exist k Z st {x - y = n * k}
         obtain k2 from exist k Z st {y - z = n * k}
-        witness exist k Z st {x - z = n * k} from k1 + k2:
+        witness $mod_eq(x, z, n) from k1 + k2:
             x - z = (x - y) + (y - z) = n * k1 + n * k2 = n * (k1 + k2)
-        by def:
-            ? $mod_eq(x, z, n)
 
 # 10.2.2 Equality of squares
 
@@ -661,9 +651,7 @@ sketch:
             ? $surjective_fn(S, S, id)
         by def:
             ? $bijective_fn(S, S, id)
-        witness exist f fn(x S) S st {$bijective_fn(S, S, f)} from id
-        by def:
-            ? $exist_bijection(S, S)
+        witness $exist_bijection(S, S) from id
 
     # Symmetric: if f is a bijection from S to T, then its inverse is a bijection
     # from T to S.
@@ -694,9 +682,7 @@ sketch:
 
         by def:
             ? $bijective_fn(T, S, g)
-        witness exist inverse_bijection fn(x T) S st {$bijective_fn(T, S, inverse_bijection)} from g
-        by def:
-            ? $exist_bijection(T, S)
+        witness $exist_bijection(T, S) from g
 
     # Transitive: compose two bijections.
     claim:
@@ -738,9 +724,7 @@ sketch:
 
         by def:
             ? $bijective_fn(S, U, h)
-        witness exist composed_bijection fn(x S) U st {$bijective_fn(S, U, composed_bijection)} from h
-        by def:
-            ? $exist_bijection(S, U)
+        witness $exist_bijection(S, U) from h
 
 # Summary
 

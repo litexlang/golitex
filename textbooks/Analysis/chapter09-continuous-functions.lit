@@ -273,13 +273,11 @@ automatically epsilon-adherent to that finite set for every positive epsilon.
 claim:
     ? forall epsilon R+:
         $is_epsilon_adherent_to_set('[1, 1], 1, epsilon)
-    witness exist y R st {y $in '[1, 1], abs(1 - y) <= epsilon} from 1:
+    witness $is_epsilon_adherent_to_set('[1, 1], 1, epsilon) from 1:
         1 $in '[1, 1]
         abs(1 - 1) = 0
         0 <= epsilon
         abs(1 - 1) <= epsilon
-    by def:
-        ? $is_epsilon_adherent_to_set('[1, 1], 1, epsilon)
 
 """
 Definition 9.1.8 (Adherent points). A point is adherent to X when it is
@@ -304,14 +302,12 @@ thm interval_member_is_adherent:
     claim:
         ? forall epsilon R+:
             $is_epsilon_adherent_to_set(X, x, epsilon)
-        witness exist y R st {y $in X, abs(x - y) <= epsilon} from x:
+        witness $is_epsilon_adherent_to_set(X, x, epsilon) from x:
             x $in X
             x - x = 0
             abs(x - x) = abs(0) = 0
             0 <= epsilon
             abs(x - x) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set(X, x, epsilon)
     by def:
         ? $is_adherent_point(X, x)
 
@@ -424,13 +420,11 @@ thm closure_monotone:
             ? forall epsilon R+:
                 $is_epsilon_adherent_to_set(Y, x, epsilon)
             $is_epsilon_adherent_to_set(X, x, epsilon)
-            obtain y from exist y R st {y $in X, abs(x - y) <= epsilon}
+            obtain y from $is_epsilon_adherent_to_set(X, x, epsilon)
             y $in Y
-            witness exist z R st {z $in Y, abs(x - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(Y, x, epsilon) from y:
                 y $in Y
                 abs(x - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(Y, x, epsilon)
         by def:
             ? $is_adherent_point(Y, x)
     by def:
@@ -448,13 +442,11 @@ thm closure_of_intersection_subset:
             ? forall epsilon R+:
                 $is_epsilon_adherent_to_set(X, x, epsilon)
             $is_epsilon_adherent_to_set(intersect(X, Y), x, epsilon)
-            obtain y from exist y R st {y $in intersect(X, Y), abs(x - y) <= epsilon}
+            obtain y from $is_epsilon_adherent_to_set(intersect(X, Y), x, epsilon)
             y $in X
-            witness exist z R st {z $in X, abs(x - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(X, x, epsilon) from y:
                 y $in X
                 abs(x - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(X, x, epsilon)
         by def:
             ? $is_adherent_point(X, x)
         x $in closure_of_real_set(X)
@@ -462,13 +454,11 @@ thm closure_of_intersection_subset:
             ? forall epsilon R+:
                 $is_epsilon_adherent_to_set(Y, x, epsilon)
             $is_epsilon_adherent_to_set(intersect(X, Y), x, epsilon)
-            obtain y from exist y R st {y $in intersect(X, Y), abs(x - y) <= epsilon}
+            obtain y from $is_epsilon_adherent_to_set(intersect(X, Y), x, epsilon)
             y $in Y
-            witness exist z R st {z $in Y, abs(x - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(Y, x, epsilon) from y:
                 y $in Y
                 abs(x - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(Y, x, epsilon)
         by def:
             ? $is_adherent_point(Y, x)
         x $in closure_of_real_set(Y)
@@ -516,27 +506,23 @@ thm closure_union_subset_forward:
                         finite_set_min(union({epsilon_x}, { epsilon_y})) $in R+
                         $is_adherent_point(union(X, Y), z)
                         $is_epsilon_adherent_to_set(union(X, Y), z, finite_set_min(union({epsilon_x}, { epsilon_y})))
-                        obtain w from exist w R st {w $in union(X, Y), abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y}))}
+                        obtain w from $is_epsilon_adherent_to_set(union(X, Y), z, finite_set_min(union({epsilon_x}, { epsilon_y})))
                         finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_x
                         finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_y
                         w $in X or w $in Y
                         by cases:
                             ? z $in union(closure_of_real_set(X), closure_of_real_set(Y))
                             case w $in X:
-                                witness exist u R st {u $in X, abs(z - u) <= epsilon_x} from w:
+                                witness $is_epsilon_adherent_to_set(X, z, epsilon_x) from w:
                                     w $in X
                                     abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_x
                                     abs(z - w) <= epsilon_x
-                                by def:
-                                    ? $is_epsilon_adherent_to_set(X, z, epsilon_x)
                                 impossible not $is_epsilon_adherent_to_set(X, z, epsilon_x)
                             case w $in Y:
-                                witness exist u R st {u $in Y, abs(z - u) <= epsilon_y} from w:
+                                witness $is_epsilon_adherent_to_set(Y, z, epsilon_y) from w:
                                     w $in Y
                                     abs(z - w) <= finite_set_min(union({epsilon_x}, { epsilon_y})) <= epsilon_y
                                     abs(z - w) <= epsilon_y
-                                by def:
-                                    ? $is_epsilon_adherent_to_set(Y, z, epsilon_y)
                                 impossible not $is_epsilon_adherent_to_set(Y, z, epsilon_y)
     by def:
         ? closure_of_real_set(union(X, Y)) $subset union(closure_of_real_set(X), closure_of_real_set(Y))
@@ -557,13 +543,11 @@ thm closure_union_subset_reverse:
                     ? forall epsilon R+:
                         $is_epsilon_adherent_to_set(union(X, Y), z, epsilon)
                     $is_epsilon_adherent_to_set(X, z, epsilon)
-                    obtain w from exist w R st {w $in X, abs(z - w) <= epsilon}
+                    obtain w from $is_epsilon_adherent_to_set(X, z, epsilon)
                     w $in union(X, Y)
-                    witness exist u R st {u $in union(X, Y), abs(z - u) <= epsilon} from w:
+                    witness $is_epsilon_adherent_to_set(union(X, Y), z, epsilon) from w:
                         w $in union(X, Y)
                         abs(z - w) <= epsilon
-                    by def:
-                        ? $is_epsilon_adherent_to_set(union(X, Y), z, epsilon)
                 by def:
                     ? $is_adherent_point(union(X, Y), z)
                 z $in closure_of_real_set(union(X, Y))
@@ -573,13 +557,11 @@ thm closure_union_subset_reverse:
                     ? forall epsilon R+:
                         $is_epsilon_adherent_to_set(union(X, Y), z, epsilon)
                     $is_epsilon_adherent_to_set(Y, z, epsilon)
-                    obtain w from exist w R st {w $in Y, abs(z - w) <= epsilon}
+                    obtain w from $is_epsilon_adherent_to_set(Y, z, epsilon)
                     w $in union(X, Y)
-                    witness exist u R st {u $in union(X, Y), abs(z - u) <= epsilon} from w:
+                    witness $is_epsilon_adherent_to_set(union(X, Y), z, epsilon) from w:
                         w $in union(X, Y)
                         abs(z - w) <= epsilon
-                    by def:
-                        ? $is_epsilon_adherent_to_set(union(X, Y), z, epsilon)
                 by def:
                     ? $is_adherent_point(union(X, Y), z)
                 z $in closure_of_real_set(union(X, Y))
@@ -636,7 +618,7 @@ thm left_endpoint_adherent_to_open_interval:
         by cases:
             ? $is_epsilon_adherent_to_set('(a, b), a, epsilon)
             case epsilon <= b - a:
-                witness exist y R st {y $in '(a, b), abs(a - y) <= epsilon} from a + epsilon / 2:
+                witness $is_epsilon_adherent_to_set('(a, b), a, epsilon) from a + epsilon / 2:
                     epsilon / 2 > 0
                     a < a + epsilon / 2
                     b - a > 0
@@ -661,10 +643,8 @@ thm left_endpoint_adherent_to_open_interval:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(a - (a + epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set('(a, b), a, epsilon)
             case epsilon > b - a:
-                witness exist y R st {y $in '(a, b), abs(a - y) <= epsilon} from (a + b) / 2:
+                witness $is_epsilon_adherent_to_set('(a, b), a, epsilon) from (a + b) / 2:
                     b - a > 0
                     (b - a) / 2 > 0
                     (a + b) / 2 - a = (b - a) / 2
@@ -688,8 +668,6 @@ thm left_endpoint_adherent_to_open_interval:
                     (b - a) / 2 < b - a < epsilon
                     (b - a) / 2 < epsilon
                     abs(a - (a + b) / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set('(a, b), a, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set('(a, b), a, epsilon)
     by def:
@@ -707,7 +685,7 @@ thm right_endpoint_adherent_to_open_interval:
         by cases:
             ? $is_epsilon_adherent_to_set('(a, b), b, epsilon)
             case epsilon <= b - a:
-                witness exist y R st {y $in '(a, b), abs(b - y) <= epsilon} from b - epsilon / 2:
+                witness $is_epsilon_adherent_to_set('(a, b), b, epsilon) from b - epsilon / 2:
                     epsilon / 2 > 0
                     b - epsilon / 2 < b
                     b - a > 0
@@ -728,10 +706,8 @@ thm right_endpoint_adherent_to_open_interval:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(b - (b - epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set('(a, b), b, epsilon)
             case epsilon > b - a:
-                witness exist y R st {y $in '(a, b), abs(b - y) <= epsilon} from (a + b) / 2:
+                witness $is_epsilon_adherent_to_set('(a, b), b, epsilon) from (a + b) / 2:
                     b - a > 0
                     (b - a) / 2 > 0
                     (a + b) / 2 - a = (b - a) / 2
@@ -751,8 +727,6 @@ thm right_endpoint_adherent_to_open_interval:
                     (b - a) / 2 < b - a < epsilon
                     (b - a) / 2 < epsilon
                     abs(b - (a + b) / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set('(a, b), b, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set('(a, b), b, epsilon)
     by def:
@@ -807,7 +781,7 @@ thm open_interval_closure_subset_closed_interval:
             case x < a:
                 a - x $in R+
                 $is_epsilon_adherent_to_set('(a, b), x, a - x)
-                obtain y from exist y R st {y $in '(a, b), abs(x - y) <= a - x}
+                obtain y from $is_epsilon_adherent_to_set('(a, b), x, a - x)
                 y $in '(a, b)
                 abs(x - y) <= a - x
                 a < y
@@ -835,7 +809,7 @@ thm open_interval_closure_subset_closed_interval:
                     case x > b:
                         x - b $in R+
                         $is_epsilon_adherent_to_set('(a, b), x, x - b)
-                        obtain y from exist y R st {y $in '(a, b), abs(x - y) <= x - b}
+                        obtain y from $is_epsilon_adherent_to_set('(a, b), x, x - b)
                         y $in '(a, b)
                         abs(x - y) <= x - b
                         y < b
@@ -879,7 +853,7 @@ thm closed_interval_closure_subset_closed_interval:
                 a - x > 0
                 (a - x) / 2 $in R+
                 $is_epsilon_adherent_to_set('[a, b], x, (a - x) / 2)
-                obtain y from exist y R st {y $in '[a, b], abs(x - y) <= (a - x) / 2}
+                obtain y from $is_epsilon_adherent_to_set('[a, b], x, (a - x) / 2)
                 y $in '[a, b]
                 abs(x - y) <= (a - x) / 2
                 a <= y
@@ -911,7 +885,7 @@ thm closed_interval_closure_subset_closed_interval:
                         x - b > 0
                         (x - b) / 2 $in R+
                         $is_epsilon_adherent_to_set('[a, b], x, (x - b) / 2)
-                        obtain y from exist y R st {y $in '[a, b], abs(x - y) <= (x - b) / 2}
+                        obtain y from $is_epsilon_adherent_to_set('[a, b], x, (x - b) / 2)
                         y $in '[a, b]
                         abs(x - y) <= (x - b) / 2
                         y <= b
@@ -1043,7 +1017,7 @@ thm endpoint_adherent_to_open_right_ray:
     claim:
         ? forall epsilon R+:
             $is_epsilon_adherent_to_set('(a,), a, epsilon)
-        witness exist y R st {y $in '(a,), abs(a - y) <= epsilon} from a + epsilon / 2:
+        witness $is_epsilon_adherent_to_set('(a,), a, epsilon) from a + epsilon / 2:
             epsilon / 2 > 0
             a < a + epsilon / 2
             a + epsilon / 2 $in '(a,)
@@ -1058,8 +1032,6 @@ thm endpoint_adherent_to_open_right_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(a - (a + epsilon / 2)) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set('(a,), a, epsilon)
     by def:
         ? $is_adherent_point('(a,), a)
 
@@ -1096,7 +1068,7 @@ thm open_right_ray_closure_subset_closed_right_ray:
             case x < a:
                 a - x $in R+
                 $is_epsilon_adherent_to_set('(a,), x, a - x)
-                obtain y from exist y R st {y $in '(a,), abs(x - y) <= a - x}
+                obtain y from $is_epsilon_adherent_to_set('(a,), x, a - x)
                 y $in '(a,)
                 a < y
                 x < a < y
@@ -1183,7 +1155,7 @@ thm endpoint_adherent_to_open_left_ray:
     claim:
         ? forall epsilon R+:
             $is_epsilon_adherent_to_set('(,a), a, epsilon)
-        witness exist y R st {y $in '(,a), abs(a - y) <= epsilon} from a - epsilon / 2:
+        witness $is_epsilon_adherent_to_set('(,a), a, epsilon) from a - epsilon / 2:
             epsilon / 2 > 0
             a - epsilon / 2 < a
             a - epsilon / 2 $in '(,a)
@@ -1194,8 +1166,6 @@ thm endpoint_adherent_to_open_left_ray:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(a - (a - epsilon / 2)) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set('(,a), a, epsilon)
     by def:
         ? $is_adherent_point('(,a), a)
 
@@ -1233,7 +1203,7 @@ thm open_left_ray_closure_subset_closed_left_ray:
             case x > a:
                 x - a $in R+
                 $is_epsilon_adherent_to_set('(,a), x, x - a)
-                obtain y from exist y R st {y $in '(,a), abs(x - y) <= x - a}
+                obtain y from $is_epsilon_adherent_to_set('(,a), x, x - a)
                 y $in '(,a)
                 y < a
                 y < a < x
@@ -1344,7 +1314,7 @@ thm closure_of_empty_set:
             $is_adherent_point({}, x)
             1 $in R+
             $is_epsilon_adherent_to_set({}, x, 1)
-            obtain y from exist y R st {y $in {}, abs(x - y) <= 1}
+            obtain y from $is_epsilon_adherent_to_set({}, x, 1)
             y $in {}
             by contra:
                 ? x $in {}
@@ -1438,11 +1408,9 @@ thm rational_points_are_adherent_everywhere:
         q - x < epsilon
         abs(x - q) < epsilon
         abs(x - q) <= epsilon
-        witness exist y R st {y $in Q, abs(x - y) <= epsilon} from q:
+        witness $is_epsilon_adherent_to_set(Q, x, epsilon) from q:
             q $in Q
             abs(x - q) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set(Q, x, epsilon)
     by def:
         ? $is_adherent_point(Q, x)
 
@@ -1535,7 +1503,7 @@ thm convergent_integer_valued_sequence_has_integer_limit:
         claim:
             ? forall epsilon R+:
                 $chap6::has_eventual_closeness_to(a, a(n0), epsilon)
-            witness exist n1 N+ st {$chap6::is_tail_close_to(a, a(n0), epsilon, n1)} from n0:
+            witness $chap6::has_eventual_closeness_to(a, a(n0), epsilon) from n0:
                 forall n N+:
                     n >= n0
                     =>:
@@ -1545,8 +1513,6 @@ thm convergent_integer_valued_sequence_has_integer_limit:
                         abs(a(n) - a(n0)) < epsilon
                 by def:
                     ? $chap6::is_tail_close_to(a, a(n0), epsilon, n0)
-            by def:
-                ? $chap6::has_eventual_closeness_to(a, a(n0), epsilon)
         by def:
             ? $chap6::has_limit(a, a(n0))
     by thm chap6::sequence_limit_unique(a, L, a(n0))
@@ -1566,7 +1532,7 @@ thm adherent_integer_point_is_integer:
         A = integer_near_witness_set(n)
         1 / n $in R+
         $is_epsilon_adherent_to_set(Z, x, 1 / n)
-        obtain y from exist y R st {y $in Z, abs(x - y) <= 1 / n}
+        obtain y from $is_epsilon_adherent_to_set(Z, x, 1 / n)
         y $in Z
         integer_near_witness_set(n) = {z Z: abs(x - z) <= 1 / n}
         y $in {z Z: abs(x - z) <= 1 / n}
@@ -1598,7 +1564,7 @@ thm adherent_integer_point_is_integer:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
             by thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
-            witness exist n1 N+ st {$chap6::is_tail_close_to(a, x, epsilon, n1)} from n0:
+            witness $chap6::has_eventual_closeness_to(a, x, epsilon) from n0:
                 forall n N+:
                     n >= n0
                     =>:
@@ -1621,8 +1587,6 @@ thm adherent_integer_point_is_integer:
                         abs(a(n) - x) < epsilon
                 by def:
                     ? $chap6::is_tail_close_to(a, x, epsilon, n0)
-            by def:
-                ? $chap6::has_eventual_closeness_to(a, x, epsilon)
         by def:
             ? $chap6::has_limit(a, x)
     by thm convergent_integer_valued_sequence_has_integer_limit(a, x)
@@ -1638,14 +1602,12 @@ thm adherent_natural_point_is_natural:
             ? forall epsilon R+:
                 $is_epsilon_adherent_to_set(Z, x, epsilon)
             $is_epsilon_adherent_to_set(N, x, epsilon)
-            obtain y from exist y R st {y $in N, abs(x - y) <= epsilon}
+            obtain y from $is_epsilon_adherent_to_set(N, x, epsilon)
             y $in N
             y $in Z
-            witness exist z R st {z $in Z, abs(x - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(Z, x, epsilon) from y:
                 y $in Z
                 abs(x - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(Z, x, epsilon)
         by def:
             ? $is_adherent_point(Z, x)
     by thm adherent_integer_point_is_integer(x)
@@ -1658,7 +1620,7 @@ thm adherent_natural_point_is_natural:
             0 - x > 0
             (0 - x) / 2 $in R+
             $is_epsilon_adherent_to_set(N, x, (0 - x) / 2)
-            obtain y from exist y R st {y $in N, abs(x - y) <= (0 - x) / 2}
+            obtain y from $is_epsilon_adherent_to_set(N, x, (0 - x) / 2)
             y $in N
             y >= 0
             y - x >= 0 - x
@@ -1766,7 +1728,7 @@ thm adherent_point_sequence_characterization_forward:
         1 / n > 0
         1 / n $in R+
         $is_epsilon_adherent_to_set(X, x, 1 / n)
-        obtain y from exist y R st {y $in X, abs(x - y) <= 1 / n}
+        obtain y from $is_epsilon_adherent_to_set(X, x, 1 / n)
         near_witness_set(n) = {z R: z $in X and abs(x - z) <= 1 / n}
         y $in {z R: z $in X and abs(x - z) <= 1 / n}
         y $in near_witness_set(n)
@@ -1803,7 +1765,7 @@ thm adherent_point_sequence_characterization_forward:
                 $chap6::has_eventual_closeness_to(a, x, epsilon)
             by thm chap5::archimedean_property(epsilon)
             obtain n0 from exist n0 N+ st {1 / n0 < epsilon}
-            witness exist n1 N+ st {$chap6::is_tail_close_to(a, x, epsilon, n1)} from n0:
+            witness $chap6::has_eventual_closeness_to(a, x, epsilon) from n0:
                 claim:
                     ? forall n N+:
                         n >= n0
@@ -1829,22 +1791,18 @@ thm adherent_point_sequence_characterization_forward:
                     abs(a(n) - x) <= 1 / n < epsilon
                 by def:
                     ? $chap6::is_tail_close_to(a, x, epsilon, n0)
-            by def:
-                ? $chap6::has_eventual_closeness_to(a, x, epsilon)
         by def:
             ? $chap6::has_limit(a, x)
-    witness exist a0 seq(R) st {$is_sequence_in_real_set(a0, X), $chap6::has_limit(a0, x)} from a:
+    witness $has_sequence_in_set_converging_to(X, x) from a:
         $is_sequence_in_real_set(a, X)
         $chap6::has_limit(a, x)
-    by def:
-        ? $has_sequence_in_set_converging_to(X, x)
 
 thm adherent_point_sequence_characterization_reverse:
     ? forall X power_set(R), x R:
         $has_sequence_in_set_converging_to(X, x)
         =>:
             $is_adherent_point(X, x)
-    obtain a from exist a seq(R) st {$is_sequence_in_real_set(a, X), $chap6::has_limit(a, x)}
+    obtain a from $has_sequence_in_set_converging_to(X, x)
     $is_sequence_in_real_set(a, X)
     $chap6::has_limit(a, x)
     claim:
@@ -1859,11 +1817,9 @@ thm adherent_point_sequence_characterization_reverse:
         abs(x - a(n0)) = abs(a(n0) - x)
         abs(x - a(n0)) < epsilon
         abs(x - a(n0)) <= epsilon
-        witness exist y R st {y $in X, abs(x - y) <= epsilon} from a(n0):
+        witness $is_epsilon_adherent_to_set(X, x, epsilon) from a(n0):
             a(n0) $in X
             abs(x - a(n0)) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set(X, x, epsilon)
     by def:
         ? $is_adherent_point(X, x)
 
@@ -1957,11 +1913,9 @@ thm sequence_limit_lies_in_closure:
         $chap6::has_limit(a, L)
         =>:
             L $in closure_of_real_set(E)
-    witness exist a0 seq(R) st {$is_sequence_in_real_set(a0, E), $chap6::has_limit(a0, L)} from a:
+    witness $has_sequence_in_set_converging_to(E, L) from a:
         $is_sequence_in_real_set(a, E)
         $chap6::has_limit(a, L)
-    by def:
-        ? $has_sequence_in_set_converging_to(E, L)
     by thm adherent_point_sequence_characterization_reverse(E, L)
     $is_adherent_point(E, L)
     by thm adherent_point_lies_in_closure(E, L)
@@ -2062,7 +2016,7 @@ thm two_is_limit_point_of_interval_union_singleton:
         by cases:
             ? $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon)
             case epsilon <= 1:
-                witness exist y R st {y $in set_minus(union('(1, 2), {3}), {2}), abs(2 - y) <= epsilon} from 2 - epsilon / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon) from 2 - epsilon / 2:
                     epsilon / 2 > 0
                     2 - epsilon / 2 < 2
                     epsilon / 2 <= 1 / 2
@@ -2085,10 +2039,8 @@ thm two_is_limit_point_of_interval_union_singleton:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(2 - (2 - epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon)
             case epsilon > 1:
-                witness exist y R st {y $in set_minus(union('(1, 2), {3}), {2}), abs(2 - y) <= epsilon} from 3 / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon) from 3 / 2:
                     1 < 3 / 2
                     3 / 2 < 2
                     3 / 2 $in '(1, 2)
@@ -2104,8 +2056,6 @@ thm two_is_limit_point_of_interval_union_singleton:
                     1 / 2 < 1 < epsilon
                     1 / 2 < epsilon
                     abs(2 - 3 / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set(set_minus(union('(1, 2), {3}), {2}), 2, epsilon)
     by def:
@@ -2185,7 +2135,7 @@ thm right_neighbor_points_are_limit_points:
         by cases:
             ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
             case epsilon <= b - x:
-                witness exist y R st {y $in set_minus(X, {x}), abs(x - y) <= epsilon} from x + epsilon / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon) from x + epsilon / 2:
                     epsilon / 2 > 0
                     x < x + epsilon / 2
                     x + epsilon / 2 != x
@@ -2211,10 +2161,8 @@ thm right_neighbor_points_are_limit_points:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(x - (x + epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
             case epsilon > b - x:
-                witness exist y R st {y $in set_minus(X, {x}), abs(x - y) <= epsilon} from (x + b) / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon) from (x + b) / 2:
                     b - x > 0
                     (b - x) / 2 > 0
                     (x + b) / 2 - x = (b - x) / 2
@@ -2240,8 +2188,6 @@ thm right_neighbor_points_are_limit_points:
                     (b - x) / 2 < b - x < epsilon
                     (b - x) / 2 < epsilon
                     abs(x - (x + b) / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
     by def:
@@ -2268,7 +2214,7 @@ thm left_neighbor_points_are_limit_points:
         by cases:
             ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
             case epsilon <= x - a:
-                witness exist y R st {y $in set_minus(X, {x}), abs(x - y) <= epsilon} from x - epsilon / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon) from x - epsilon / 2:
                     epsilon / 2 > 0
                     x - epsilon / 2 < x
                     x - epsilon / 2 != x
@@ -2291,10 +2237,8 @@ thm left_neighbor_points_are_limit_points:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(x - (x - epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
             case epsilon > x - a:
-                witness exist y R st {y $in set_minus(X, {x}), abs(x - y) <= epsilon} from (a + x) / 2:
+                witness $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon) from (a + x) / 2:
                     x - a > 0
                     (x - a) / 2 > 0
                     (a + x) / 2 - a = (x - a) / 2
@@ -2316,8 +2260,6 @@ thm left_neighbor_points_are_limit_points:
                     (x - a) / 2 < x - a < epsilon
                     (x - a) / 2 < epsilon
                     abs(x - (a + x) / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set(set_minus(X, {x}), x, epsilon)
     by def:
@@ -2440,7 +2382,7 @@ thm right_open_interval_points_are_limit_points:
         by cases:
             ? $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon)
             case epsilon <= b - x:
-                witness exist y R st {y $in set_minus('[a, b), {x}), abs(x - y) <= epsilon} from x + epsilon / 2:
+                witness $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon) from x + epsilon / 2:
                     epsilon / 2 > 0
                     x < x + epsilon / 2
                     x + epsilon / 2 != x
@@ -2476,10 +2418,8 @@ thm right_open_interval_points_are_limit_points:
                     epsilon / 2 < epsilon
                     epsilon / 2 <= epsilon
                     abs(x - (x + epsilon / 2)) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon)
             case epsilon > b - x:
-                witness exist y R st {y $in set_minus('[a, b), {x}), abs(x - y) <= epsilon} from (x + b) / 2:
+                witness $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon) from (x + b) / 2:
                     b - x > 0
                     (b - x) / 2 > 0
                     (x + b) / 2 - x = (b - x) / 2
@@ -2515,8 +2455,6 @@ thm right_open_interval_points_are_limit_points:
                     (b - x) / 2 < b - x < epsilon
                     (b - x) / 2 < epsilon
                     abs(x - (x + b) / 2) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon)
         by def:
             ? $is_epsilon_adherent_to_set(set_minus('[a, b), {x}), x, epsilon)
     by def:
@@ -2554,7 +2492,7 @@ thm closed_interval_is_bounded:
         a <= b
         =>:
             $is_bounded_real_set('[a, b])
-    witness exist M R+ st {'[a, b] $subset '[-M, M]} from abs(a) + abs(b) + 1:
+    witness $is_bounded_real_set('[a, b]) from abs(a) + abs(b) + 1:
         abs(a) >= 0
         abs(b) >= 0
         abs(a) + abs(b) >= 0
@@ -2634,8 +2572,6 @@ thm closed_interval_is_bounded:
             upper0 <= upper3
             x <= abs(a) + abs(b) + 1
         '[a, b] $subset '[-(abs(a) + abs(b) + 1), abs(a) + abs(b) + 1]
-    by def:
-        ? $is_bounded_real_set('[a, b])
 
 # Boundedness passes to subsets: reuse the same enclosing symmetric interval.
 thm bounded_real_set_subset:
@@ -2644,17 +2580,15 @@ thm bounded_real_set_subset:
         $is_bounded_real_set(Y)
         =>:
             $is_bounded_real_set(X)
-    obtain M from exist M R+ st {Y $subset '[-M, M]}
+    obtain M from $is_bounded_real_set(Y)
     claim:
         ? forall x X:
             x $in '[-M, M]
         x $in Y
     by def:
         ? X $subset '[-M, M]
-    witness exist B R+ st {X $subset '[-B, B]} from M:
+    witness $is_bounded_real_set(X) from M:
         X $subset '[-M, M]
-    by def:
-        ? $is_bounded_real_set(X)
 
 thm exists_nat_above_real:
     ? forall M R:
@@ -2689,7 +2623,7 @@ thm set_containing_positive_naturals_unbounded:
     by contra:
         ? not $is_bounded_real_set(X)
         $is_bounded_real_set(X)
-        obtain M from exist M R+ st {X $subset '[-M, M]}
+        obtain M from $is_bounded_real_set(X)
         by thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
         M < n0
@@ -2803,10 +2737,8 @@ thm unbounded_real_set_has_point_outside_symmetric_interval:
         by def:
             ? X $subset '[-n, n]
         n $in R+
-        witness exist M R+ st {X $subset '[-M, M]} from n:
+        witness $is_bounded_real_set(X) from n:
             X $subset '[-n, n]
-        by def:
-            ? $is_bounded_real_set(X)
         impossible not $is_bounded_real_set(X)
 
 prop escapes_symmetric_real_intervals(a seq(R)):
@@ -2941,7 +2873,7 @@ thm sequence_in_bounded_real_set_is_bounded:
         $is_sequence_in_real_set(a, X)
         =>:
             $chap6::is_bounded_sequence(a)
-    obtain M from exist M R+ st {X $subset '[-M, M]}
+    obtain M from $is_bounded_real_set(X)
     claim:
         ? forall n N+:
             abs(a(n)) <= M
@@ -2950,14 +2882,12 @@ thm sequence_in_bounded_real_set_is_bounded:
         -M <= a(n)
         a(n) <= M
         by thm abs_bound_from_symmetric_bound(a(n), M)
-    witness exist B R st {$chap6::is_bounded_by(a, B)} from M:
+    witness $chap6::is_bounded_sequence(a) from M:
         M >= 0
         forall n N+:
             abs(a(n)) <= M
         by def:
             ? $chap6::is_bounded_by(a, M)
-    by def:
-        ? $chap6::is_bounded_sequence(a)
 
 # Subsequences preserve the membership condition defining a sequence in a
 # real set.  The index witness comes from the Chapter 6 subsequence relation.
@@ -3008,11 +2938,9 @@ thm closed_bounded_real_set_has_sequential_compactness:
         $is_sequence_in_real_set(b, X)
         by thm sequence_limit_in_closed_real_set(X, b, L)
         L $in X
-        witness exist L0 R st {L0 $in X, $chap6::has_limit(b, L0)} from L:
+        witness $has_limit_in_set(b, X) from L:
             L $in X
             $chap6::has_limit(b, L)
-        by def:
-            ? $has_limit_in_set(b, X)
         witness exist b0 seq(R) st {$chap6::has_subsequence(a, b0), $has_limit_in_set(b0, X)} from b:
             $chap6::has_subsequence(a, b)
             $has_limit_in_set(b, X)
@@ -3033,7 +2961,7 @@ thm sequentially_compact_real_set_is_sequentially_closed:
         obtain b from exist b seq(R) st {$chap6::has_subsequence(a, b), $has_limit_in_set(b, X)}
         $chap6::has_subsequence(a, b)
         $has_limit_in_set(b, X)
-        obtain K from exist K R st {K $in X, $chap6::has_limit(b, K)}
+        obtain K from $has_limit_in_set(b, X)
         K $in X
         $chap6::has_limit(b, K)
         by thm chap6::every_subsequence_of_convergent_sequence_converges(a, L, b)
@@ -3094,12 +3022,10 @@ thm sequentially_compact_real_set_is_bounded:
         $has_limit_in_set(b, X)
         by thm subsequence_of_escaping_real_sequence_is_not_convergent(a, b)
         not $chap6::is_convergent_sequence(b)
-        obtain L from exist L R st {L $in X, $chap6::has_limit(b, L)}
+        obtain L from $has_limit_in_set(b, X)
         $chap6::has_limit(b, L)
-        witness exist L0 R st {$chap6::has_limit(b, L0)} from L:
+        witness $chap6::is_convergent_sequence(b) from L:
             $chap6::has_limit(b, L)
-        by def:
-            ? $chap6::is_convergent_sequence(b)
         impossible not $chap6::is_convergent_sequence(b)
 
 thm heine_borel_sequential_compactness_for_real_sets:
@@ -3507,10 +3433,10 @@ thm function_limit_preserves_sequence_limits:
                     $chap6::has_eventual_closeness_to(image_sequence_in_set(E, f, a), L, epsilon)
                 epsilon / 2 $in R+
                 $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
-                obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / 2, delta)}
+                obtain delta from $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
                 $chap6::has_eventual_closeness_to(a, x0, delta)
                 obtain n0 from exist n0 N+ st {$chap6::is_tail_close_to(a, x0, delta, n0)}
-                witness exist n1 N+ st {$chap6::is_tail_close_to(image_sequence_in_set(E, f, a), L, epsilon, n1)} from n0:
+                witness $chap6::has_eventual_closeness_to(image_sequence_in_set(E, f, a), L, epsilon) from n0:
                     claim:
                         ? forall m N+:
                             m >= n0
@@ -3526,8 +3452,6 @@ thm function_limit_preserves_sequence_limits:
                         abs(image_sequence_in_set(E, f, a)(m) - L) <= epsilon / 2 < epsilon
                     by def:
                         ? $chap6::is_tail_close_to(image_sequence_in_set(E, f, a), L, epsilon, n0)
-                by def:
-                    ? $chap6::has_eventual_closeness_to(image_sequence_in_set(E, f, a), L, epsilon)
             by def:
                 ? $chap6::has_limit(image_sequence_in_set(E, f, a), L)
     by def:
@@ -3559,7 +3483,7 @@ thm sequence_limit_preservation_implies_function_limit:
                 by contra:
                     ? $is_nonempty_set(A)
                     not $is_nonempty_set(A)
-                    witness exist delta R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)} from 1 / n:
+                    witness $is_locally_epsilon_close_to(E, f, x0, L, epsilon) from 1 / n:
                         claim:
                             ? forall u E:
                                 abs(u - x0) < 1 / n
@@ -3577,9 +3501,7 @@ thm sequence_limit_preservation_implies_function_limit:
                                     u $in A
                                 impossible not $is_nonempty_set(A)
                         by def:
-                            ? $is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)
-                    by def:
-                        ? $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+                            ? $is_delta_neighborhood_close_to(E, f, x0, L, epsilon, 1 / n)
                     impossible not $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
             by axiom_of_choice: set fn_range(bad_witness_set):
                 forall A fn_range(bad_witness_set):
@@ -3614,7 +3536,7 @@ thm sequence_limit_preservation_implies_function_limit:
                         $chap6::has_eventual_closeness_to(bad_sequence, x0, eta)
                     by thm chap5::archimedean_property(eta)
                     obtain n0 from exist n0 N+ st {1 / n0 < eta}
-                    witness exist n1 N+ st {$chap6::is_tail_close_to(bad_sequence, x0, eta, n1)} from n0:
+                    witness $chap6::has_eventual_closeness_to(bad_sequence, x0, eta) from n0:
                         claim:
                             ? forall n N+:
                                 n >= n0
@@ -3636,8 +3558,6 @@ thm sequence_limit_preservation_implies_function_limit:
                             abs(bad_sequence(n) - x0) < 1 / n < eta
                         by def:
                             ? $chap6::is_tail_close_to(bad_sequence, x0, eta, n0)
-                    by def:
-                        ? $chap6::has_eventual_closeness_to(bad_sequence, x0, eta)
                 by def:
                     ? $chap6::has_limit(bad_sequence, x0)
             $function_limit_preserves_sequences(E, f, x0, L)
@@ -3707,12 +3627,12 @@ thm function_limit_unique:
         abs(L1 - L2) / 3 $in R+
         $is_locally_epsilon_close_to(E, f, x0, L1, abs(L1 - L2) / 3)
         $is_locally_epsilon_close_to(E, f, x0, L2, abs(L1 - L2) / 3)
-        obtain delta1 from exist delta1 R+ st {$is_delta_neighborhood_close_to(E, f, x0, L1, abs(L1 - L2) / 3, delta1)}
-        obtain delta2 from exist delta2 R+ st {$is_delta_neighborhood_close_to(E, f, x0, L2, abs(L1 - L2) / 3, delta2)}
+        obtain delta1 from $is_locally_epsilon_close_to(E, f, x0, L1, abs(L1 - L2) / 3)
+        obtain delta2 from $is_locally_epsilon_close_to(E, f, x0, L2, abs(L1 - L2) / 3)
         finite_set_min(union({delta1}, { delta2})) $in R+
         finite_set_min(union({delta1}, { delta2})) / 2 $in R+
         $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({delta1}, { delta2})) / 2)
-        obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2}
+        obtain y from $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({delta1}, { delta2})) / 2)
         y $in E
         abs(x0 - y) <= finite_set_min(union({delta1}, { delta2})) / 2
         abs(y - x0) = abs(x0 - y)
@@ -3777,12 +3697,12 @@ thm function_limit_add:
         epsilon / 2 $in R+
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / 2, delta_f)}
-        obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / 2, delta_g)}
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
+        obtain delta_g from $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
         finite_set_min(union({delta_f}, { delta_g})) $in R+
         finite_set_min(union({delta_f}, { delta_g})) <= delta_f
         finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+        witness $is_locally_epsilon_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon) from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -3805,8 +3725,6 @@ thm function_limit_add:
                 abs(fn(x E) R {f(x) + g(x)}(y) - (L + M)) <= abs(f(y) - L) + abs(g(y) - M) <= epsilon / 2 + epsilon / 2 = epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon, finite_set_min(union({delta_f}, { delta_g})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, fn(x E) R {f(x) + g(x)}, x0, L + M, epsilon)
     by def:
         ? $has_function_limit(E, fn(x E) R {f(x) + g(x)}, x0, L + M)
 
@@ -3826,12 +3744,12 @@ thm function_limit_sub:
         epsilon / 2 $in R+
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / 2, delta_f)}
-        obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / 2, delta_g)}
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon / 2)
+        obtain delta_g from $is_locally_epsilon_close_to(E, g, x0, M, epsilon / 2)
         finite_set_min(union({delta_f}, { delta_g})) $in R+
         finite_set_min(union({delta_f}, { delta_g})) <= delta_f
         finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+        witness $is_locally_epsilon_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon) from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -3854,8 +3772,6 @@ thm function_limit_sub:
                 abs(fn(x E) R {f(x) - g(x)}(y) - (L - M)) <= abs(f(y) - L) + abs(g(y) - M) <= epsilon / 2 + epsilon / 2 = epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon, finite_set_min(union({delta_f}, { delta_g})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, fn(x E) R {f(x) - g(x)}, x0, L - M, epsilon)
     by def:
         ? $has_function_limit(E, fn(x E) R {f(x) - g(x)}, x0, L - M)
 
@@ -3883,8 +3799,8 @@ thm function_limit_product:
         $is_locally_epsilon_close_to(E, f, x0, L, 1)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon / (abs(L) + 1 + abs(M) + 1))
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon / (abs(L) + 1 + abs(M) + 1))
-        obtain delta_bound from exist delta_bound R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, 1, delta_bound)}
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon / (abs(L) + 1 + abs(M) + 1), delta_f)}
+        obtain delta_bound from $is_locally_epsilon_close_to(E, f, x0, L, 1)
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon / (abs(L) + 1 + abs(M) + 1))
         obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon / (abs(L) + 1 + abs(M) + 1), delta_g)}
         finite_set_min(union({delta_bound}, { delta_f})) $in R+
         finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) $in R+
@@ -3896,7 +3812,7 @@ thm function_limit_product:
         # singleton-union members by the current verifier.
         trust finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= finite_set_min(union({delta_bound}, { delta_f}))
         trust finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})) <= delta_g
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon, delta)} from finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})):
+        witness $is_locally_epsilon_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon) from finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g}))
@@ -3960,8 +3876,6 @@ thm function_limit_product:
                 trust abs(fn(x E) R {f(x) * g(x)}(y) - L * M) <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon, finite_set_min(union({finite_set_min(union({delta_bound}, { delta_f}))}, { delta_g})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, fn(x E) R {f(x) * g(x)}, x0, L * M, epsilon)
     by def:
         ? $has_function_limit(E, fn(x E) R {f(x) * g(x)}, x0, L * M)
 
@@ -4105,12 +4019,12 @@ thm function_limit_max:
             $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
-        obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon, delta_g)}
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        obtain delta_g from $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
         finite_set_min(union({delta_f}, { delta_g})) $in R+
         finite_set_min(union({delta_f}, { delta_g})) <= delta_f
         finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+        witness $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon) from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -4128,8 +4042,6 @@ thm function_limit_max:
                 abs(fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - finite_set_max(union({L}, { M}))) = abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({L}, { M})))
             by def:
                 ? $is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon, finite_set_min(union({delta_f}, { delta_g})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})), epsilon)
     by def:
         ? $has_function_limit(E, fn(x E) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, finite_set_max(union({L}, { M})))
 
@@ -4145,12 +4057,12 @@ thm function_limit_min:
             $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
-        obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, epsilon, delta_g)}
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        obtain delta_g from $is_locally_epsilon_close_to(E, g, x0, M, epsilon)
         finite_set_min(union({delta_f}, { delta_g})) $in R+
         finite_set_min(union({delta_f}, { delta_g})) <= delta_f
         finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+        witness $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon) from finite_set_min(union({delta_f}, { delta_g})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -4168,8 +4080,6 @@ thm function_limit_min:
                 abs(fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - finite_set_min(union({L}, { M}))) = abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({L}, { M})))
             by def:
                 ? $is_delta_neighborhood_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon, finite_set_min(union({delta_f}, { delta_g})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})), epsilon)
     by def:
         ? $has_function_limit(E, fn(x E) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, finite_set_min(union({L}, { M})))
 
@@ -4247,7 +4157,7 @@ thm nonzero_limit_restricted_domain_adherent:
         abs(M) / 2 > 0
         abs(M) / 2 $in R+
         $is_locally_epsilon_close_to(E, g, x0, M, abs(M) / 2)
-        obtain delta_nonzero from exist delta_nonzero R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, abs(M) / 2, delta_nonzero)}
+        obtain delta_nonzero from $is_locally_epsilon_close_to(E, g, x0, M, abs(M) / 2)
         finite_set_min(union({epsilon}, { delta_nonzero})) $in R+
         finite_set_min(union({epsilon}, { delta_nonzero})) / 2 $in R+
         finite_set_min(union({epsilon}, { delta_nonzero})) <= epsilon
@@ -4259,7 +4169,7 @@ thm nonzero_limit_restricted_domain_adherent:
         finite_set_min(union({epsilon}, { delta_nonzero})) / 2 < finite_set_min(union({epsilon}, { delta_nonzero}))
         finite_set_min(union({epsilon}, { delta_nonzero})) / 2 <= finite_set_min(union({epsilon}, { delta_nonzero}))
         $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta_nonzero})) / 2)
-        obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) / 2}
+        obtain y from $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta_nonzero})) / 2)
         abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) / 2 <= finite_set_min(union({epsilon}, { delta_nonzero}))
         abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero}))
         abs(x0 - y) <= finite_set_min(union({epsilon}, { delta_nonzero})) <= epsilon
@@ -4285,11 +4195,9 @@ thm nonzero_limit_restricted_domain_adherent:
             impossible abs(M) = abs(M)
         g(y) != 0
         y $in {x E: g(x) != 0}
-        witness exist z R st {z $in {x E: g(x) != 0}, abs(x0 - z) <= epsilon} from y:
+        witness $is_epsilon_adherent_to_set({x E: g(x) != 0}, x0, epsilon) from y:
             y $in {x E: g(x) != 0}
             abs(x0 - y) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set({x E: g(x) != 0}, x0, epsilon)
     by def:
         ? $is_adherent_point({x E: g(x) != 0}, x0)
 
@@ -4305,8 +4213,8 @@ thm equal_functions_have_equal_function_limits:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(E, g, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, g, x0, L, epsilon, delta)} from delta_f:
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        witness $is_locally_epsilon_close_to(E, g, x0, L, epsilon) from delta_f:
             claim:
                 ? forall y E:
                     abs(y - x0) < delta_f
@@ -4318,8 +4226,6 @@ thm equal_functions_have_equal_function_limits:
                 abs(g(y) - L) = abs(f(y) - L)
             by def:
                 ? $is_delta_neighborhood_close_to(E, g, x0, L, epsilon, delta_f)
-        by def:
-            ? $is_locally_epsilon_close_to(E, g, x0, L, epsilon)
     by def:
         ? $has_function_limit(E, g, x0, L)
 
@@ -4336,8 +4242,8 @@ thm function_limit_on_adherent_subset:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)}
-        witness exist eta R+ st {$is_delta_neighborhood_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon, eta)} from delta:
+        obtain delta from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        witness $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon) from delta:
             claim:
                 ? forall y F:
                     abs(y - x0) < delta
@@ -4349,8 +4255,6 @@ thm function_limit_on_adherent_subset:
                 abs(fn(x F) R {f(x)}(y) - L) = abs(f(y) - L)
             by def:
                 ? $is_delta_neighborhood_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon, delta)
-        by def:
-            ? $is_locally_epsilon_close_to(F, fn(x F) R {f(x)}, x0, L, epsilon)
     by def:
         ? $has_function_limit(F, fn(x F) R {f(x)}, x0, L)
 
@@ -4367,8 +4271,8 @@ thm function_limit_on_nonzero_domain:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta_f)}
-        witness exist delta R+ st {$is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L, epsilon, delta)} from delta_f:
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        witness $is_locally_epsilon_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L, epsilon) from delta_f:
             claim:
                 ? forall y {x E: g(x) != 0}:
                     abs(y - x0) < delta_f
@@ -4380,8 +4284,6 @@ thm function_limit_on_nonzero_domain:
                 abs(fn(x {x E: g(x) != 0}) R {f(x)}(y) - L) = abs(f(y) - L)
             by def:
                 ? $is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L, epsilon, delta_f)
-        by def:
-            ? $is_locally_epsilon_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L, epsilon)
     by def:
         ? $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {f(x)}, x0, L)
 
@@ -4407,12 +4309,12 @@ thm function_limit_reciprocal:
         (abs(M) / 2)^2 * epsilon $in R+
         $is_locally_epsilon_close_to(E, g, x0, M, abs(M) / 2)
         $is_locally_epsilon_close_to(E, g, x0, M, (abs(M) / 2)^2 * epsilon)
-        obtain delta_lower from exist delta_lower R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, abs(M) / 2, delta_lower)}
-        obtain delta_close from exist delta_close R+ st {$is_delta_neighborhood_close_to(E, g, x0, M, (abs(M) / 2)^2 * epsilon, delta_close)}
+        obtain delta_lower from $is_locally_epsilon_close_to(E, g, x0, M, abs(M) / 2)
+        obtain delta_close from $is_locally_epsilon_close_to(E, g, x0, M, (abs(M) / 2)^2 * epsilon)
         finite_set_min(union({delta_lower}, { delta_close})) $in R+
         finite_set_min(union({delta_lower}, { delta_close})) <= delta_lower
         finite_set_min(union({delta_lower}, { delta_close})) <= delta_close
-        witness exist delta R+ st {$is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon, delta)} from finite_set_min(union({delta_lower}, { delta_close})):
+        witness $is_locally_epsilon_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon) from finite_set_min(union({delta_lower}, { delta_close})):
             claim:
                 ? forall y {x E: g(x) != 0}:
                     abs(y - x0) < finite_set_min(union({delta_lower}, { delta_close}))
@@ -4434,8 +4336,6 @@ thm function_limit_reciprocal:
                 abs(fn(x {x E: g(x) != 0}) R {1 / g(x)}(y) - 1 / M) = abs(1 / g(y) - 1 / M)
             by def:
                 ? $is_delta_neighborhood_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon, finite_set_min(union({delta_lower}, { delta_close})))
-        by def:
-            ? $is_locally_epsilon_close_to({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M, epsilon)
     by def:
         ? $has_function_limit({x E: g(x) != 0}, fn(x {x E: g(x) != 0}) R {1 / g(x)}, x0, 1 / M)
 
@@ -4523,17 +4423,15 @@ thm function_limit_at_from_value:
         $has_function_limit(E, f, x0, L)
         =>:
             $has_function_limit_at(E, f, x0)
-    witness exist L0 R st {$has_function_limit(E, f, x0, L0)} from L:
+    witness $has_function_limit_at(E, f, x0) from L:
         $has_function_limit(E, f, x0, L)
-    by def:
-        ? $has_function_limit_at(E, f, x0)
 
 have fn function_limit by exist!:
     ? forall E power_set(R), f fn(x E) R, x0 R:
         $has_function_limit_at(E, f, x0)
         =>:
             exist! L R st {$has_function_limit(E, f, x0, L)}
-    obtain chosen_limit from exist L R st {$has_function_limit(E, f, x0, L)}
+    obtain chosen_limit from $has_function_limit_at(E, f, x0)
     claim:
         ? forall L1, L2 R:
             $has_function_limit(E, f, x0, L1)
@@ -4676,7 +4574,7 @@ thm constant_real_function_limit:
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(R, fn(x R) R {c}, x0, c, epsilon)
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(R, fn(x R) R {c}, x0, c, epsilon, delta)} from epsilon:
+        witness $is_locally_epsilon_close_to(R, fn(x R) R {c}, x0, c, epsilon) from epsilon:
             claim:
                 ? forall y R:
                     abs(y - x0) < epsilon
@@ -4690,8 +4588,6 @@ thm constant_real_function_limit:
                 0 <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(R, fn(x R) R {c}, x0, c, epsilon, epsilon)
-        by def:
-            ? $is_locally_epsilon_close_to(R, fn(x R) R {c}, x0, c, epsilon)
     by def:
         ? $has_function_limit(R, fn(x R) R {c}, x0, c)
 
@@ -4702,7 +4598,7 @@ thm identity_real_function_limit:
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(R, fn(x R) R {x}, x0, x0, epsilon)
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(R, fn(x R) R {x}, x0, x0, epsilon, delta)} from epsilon:
+        witness $is_locally_epsilon_close_to(R, fn(x R) R {x}, x0, x0, epsilon) from epsilon:
             claim:
                 ? forall y R:
                     abs(y - x0) < epsilon
@@ -4714,8 +4610,6 @@ thm identity_real_function_limit:
                 abs(y - x0) <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(R, fn(x R) R {x}, x0, x0, epsilon, epsilon)
-        by def:
-            ? $is_locally_epsilon_close_to(R, fn(x R) R {x}, x0, x0, epsilon)
     by def:
         ? $has_function_limit(R, fn(x R) R {x}, x0, x0)
 
@@ -4783,7 +4677,7 @@ thm signum_for_limit_example_restricted_limits:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon) from epsilon:
                 claim:
                     ? forall x '(0,):
                         abs(x - 0) < epsilon
@@ -4799,8 +4693,6 @@ thm signum_for_limit_example_restricted_limits:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, 0, 1, epsilon)
         by def:
             ? $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
     claim:
@@ -4810,7 +4702,7 @@ thm signum_for_limit_example_restricted_limits:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon) from epsilon:
                 claim:
                     ? forall x '(,0):
                         abs(x - 0) < epsilon
@@ -4826,8 +4718,6 @@ thm signum_for_limit_example_restricted_limits:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, 0, -1, epsilon)
         by def:
             ? $has_function_limit('(,0), signum_on_open_left_ray, 0, -1)
     $has_function_limit('(0,), signum_on_open_right_ray, 0, 1)
@@ -4843,7 +4733,7 @@ thm signum_for_limit_example_has_no_full_limit:
         $has_function_limit(R, signum_for_limit_example, 0, L)
         1 / 2 $in R+
         $is_locally_epsilon_close_to(R, signum_for_limit_example, 0, L, 1 / 2)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, signum_for_limit_example, 0, L, 1 / 2, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, signum_for_limit_example, 0, L, 1 / 2)
         delta / 2 $in R+
         delta / 2 > 0
         delta / 2 - 0 = delta / 2
@@ -4912,7 +4802,7 @@ thm removable_spike_punctured_limit_zero:
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0, epsilon)
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0, epsilon, delta)} from epsilon:
+        witness $is_locally_epsilon_close_to(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0, epsilon) from epsilon:
             claim:
                 ? forall x set_minus(R, {0}):
                     abs(x - 0) < epsilon
@@ -4934,8 +4824,6 @@ thm removable_spike_punctured_limit_zero:
                 0 <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0, epsilon, epsilon)
-        by def:
-            ? $is_locally_epsilon_close_to(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0, epsilon)
     by def:
         ? $has_function_limit(set_minus(R, {0}), removable_spike_on_punctured_line, 0, 0)
 
@@ -4949,7 +4837,7 @@ thm removable_spike_has_no_full_domain_limit:
         $has_function_limit(R, removable_spike_at_zero, 0, L)
         1 / 4 $in R+
         $is_locally_epsilon_close_to(R, removable_spike_at_zero, 0, L, 1 / 4)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, removable_spike_at_zero, 0, L, 1 / 4, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, removable_spike_at_zero, 0, L, 1 / 4)
         0 $in R
         abs(0 - 0) = abs(0)
         abs(0) = 0
@@ -5020,7 +4908,7 @@ thm function_limit_on_local_part:
             finite_set_min(union({epsilon}, { delta / 2})) <= epsilon
             finite_set_min(union({epsilon}, { delta / 2})) <= delta / 2
             $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta / 2})))
-            obtain y from exist y R st {y $in E, abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2}))}
+            obtain y from $is_epsilon_adherent_to_set(E, x0, finite_set_min(union({epsilon}, { delta / 2})))
             abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2})) <= epsilon
             abs(x0 - y) <= epsilon
             abs(x0 - y) <= finite_set_min(union({epsilon}, { delta / 2})) <= delta / 2
@@ -5046,19 +4934,17 @@ thm function_limit_on_local_part:
             y $in {x R: x $in E and x $in '(x0 - delta, x0 + delta)}
             local_part(E, x0, delta) = {x R: x $in E and x $in '(x0 - delta, x0 + delta)}
             y $in local_part(E, x0, delta)
-            witness exist z R st {z $in local_part(E, x0, delta), abs(x0 - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(local_part(E, x0, delta), x0, epsilon) from y:
                 y $in local_part(E, x0, delta)
                 abs(x0 - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(local_part(E, x0, delta), x0, epsilon)
         by def:
             ? $is_adherent_point(local_part(E, x0, delta), x0)
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon)
         $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
-        obtain eta from exist eta R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, eta)}
-        witness exist eta0 R+ st {$is_delta_neighborhood_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon, eta0)} from eta:
+        obtain eta from $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
+        witness $is_locally_epsilon_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon) from eta:
             claim:
                 ? forall y local_part(E, x0, delta):
                     abs(y - x0) < eta
@@ -5072,8 +4958,6 @@ thm function_limit_on_local_part:
                 abs(fn(x local_part(E, x0, delta)) R {f(x)}(y) - L) = abs(f(y) - L)
             by def:
                 ? $is_delta_neighborhood_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon, eta)
-        by def:
-            ? $is_locally_epsilon_close_to(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L, epsilon)
     by def:
         ? $has_function_limit(local_part(E, x0, delta), fn(x local_part(E, x0, delta)) R {f(x)}, x0, L)
 
@@ -5090,15 +4974,13 @@ thm local_part_function_limit_extends:
             ? forall epsilon R+:
                 $is_epsilon_adherent_to_set(E, x0, epsilon)
             $is_epsilon_adherent_to_set(local_part(E, x0, delta), x0, epsilon)
-            obtain y from exist y R st {y $in local_part(E, x0, delta), abs(x0 - y) <= epsilon}
+            obtain y from $is_epsilon_adherent_to_set(local_part(E, x0, delta), x0, epsilon)
             local_part(E, x0, delta) = {x R: x $in E and x $in '(x0 - delta, x0 + delta)}
             y $in {x R: x $in E and x $in '(x0 - delta, x0 + delta)}
             y $in E
-            witness exist z R st {z $in E, abs(x0 - z) <= epsilon} from y:
+            witness $is_epsilon_adherent_to_set(E, x0, epsilon) from y:
                 y $in E
                 abs(x0 - y) <= epsilon
-            by def:
-                ? $is_epsilon_adherent_to_set(E, x0, epsilon)
         by def:
             ? $is_adherent_point(E, x0)
     claim:
@@ -5110,7 +4992,7 @@ thm local_part_function_limit_extends:
         finite_set_min(union({eta}, { delta / 2})) $in R+
         finite_set_min(union({eta}, { delta / 2})) <= eta
         finite_set_min(union({eta}, { delta / 2})) <= delta / 2
-        witness exist eta0 R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, eta0)} from finite_set_min(union({eta}, { delta / 2})):
+        witness $is_locally_epsilon_close_to(E, f, x0, L, epsilon) from finite_set_min(union({eta}, { delta / 2})):
             claim:
                 ? forall y E:
                     abs(y - x0) < finite_set_min(union({eta}, { delta / 2}))
@@ -5148,8 +5030,6 @@ thm local_part_function_limit_extends:
                 abs(fn(x local_part(E, x0, delta)) R {f(x)}(y) - L) = abs(f(y) - L)
             by def:
                 ? $is_delta_neighborhood_close_to(E, f, x0, L, epsilon, finite_set_min(union({eta}, { delta / 2})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
     by def:
         ? $has_function_limit(E, f, x0, L)
 
@@ -5175,8 +5055,8 @@ thm function_limit_composition:
         obtain eta_g from exist eta_g R+ st {$is_delta_neighborhood_close_to(Y, g, L, M, epsilon, eta_g)}
         eta_g / 2 $in R+
         $is_locally_epsilon_close_to(E, f, x0, L, eta_g / 2)
-        obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, eta_g / 2, delta_f)}
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, h, x0, M, epsilon, delta)} from delta_f:
+        obtain delta_f from $is_locally_epsilon_close_to(E, f, x0, L, eta_g / 2)
+        witness $is_locally_epsilon_close_to(E, h, x0, M, epsilon) from delta_f:
             claim:
                 ? forall y E:
                     abs(y - x0) < delta_f
@@ -5193,8 +5073,6 @@ thm function_limit_composition:
                 abs(h(y) - M) = abs(g(f(y)) - M)
             by def:
                 ? $is_delta_neighborhood_close_to(E, h, x0, M, epsilon, delta_f)
-        by def:
-            ? $is_locally_epsilon_close_to(E, h, x0, M, epsilon)
     by def:
         ? $has_function_limit(E, h, x0, M)
 
@@ -5266,7 +5144,7 @@ thm punctured_factor_domain_adherent_at_one:
     claim:
         ? forall epsilon R+:
             $is_epsilon_adherent_to_set({x R: x != 1}, 1, epsilon)
-        witness exist y R st {y $in {x R: x != 1}, abs(1 - y) <= epsilon} from 1 + epsilon / 2:
+        witness $is_epsilon_adherent_to_set({x R: x != 1}, 1, epsilon) from 1 + epsilon / 2:
             epsilon / 2 > 0
             1 < 1 + epsilon / 2
             1 + epsilon / 2 != 1
@@ -5282,8 +5160,6 @@ thm punctured_factor_domain_adherent_at_one:
             epsilon / 2 < epsilon
             epsilon / 2 <= epsilon
             abs(1 - (1 + epsilon / 2)) <= epsilon
-        by def:
-            ? $is_epsilon_adherent_to_set({x R: x != 1}, 1, epsilon)
     by def:
         ? $is_adherent_point({x R: x != 1}, 1)
 
@@ -5295,7 +5171,7 @@ thm punctured_factor_limit_at_one:
     claim:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2, epsilon)
-        witness exist delta R+ st {$is_delta_neighborhood_close_to({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2, epsilon, delta)} from epsilon:
+        witness $is_locally_epsilon_close_to({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2, epsilon) from epsilon:
             claim:
                 ? forall y {x R: x != 1}:
                     abs(y - 1) < epsilon
@@ -5312,8 +5188,6 @@ thm punctured_factor_limit_at_one:
                 abs(y - 1) <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2, epsilon, epsilon)
-        by def:
-            ? $is_locally_epsilon_close_to({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2, epsilon)
     by def:
         ? $has_function_limit({x R: x != 1}, fn(x {x R: x != 1}) R {(x^2 - 1) / (x - 1)}, 1, 2)
 
@@ -5360,17 +5234,15 @@ thm rational_indicator_restricted_limits_at_zero:
                 q < epsilon
                 q <= epsilon
                 abs(0 - q) <= epsilon
-                witness exist y R st {y $in Q, abs(0 - y) <= epsilon} from q:
+                witness $is_epsilon_adherent_to_set(Q, 0, epsilon) from q:
                     q $in Q
                     abs(0 - q) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(Q, 0, epsilon)
             by def:
                 ? $is_adherent_point(Q, 0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon) from epsilon:
                 claim:
                     ? forall y Q:
                         abs(y - 0) < epsilon
@@ -5386,8 +5258,6 @@ thm rational_indicator_restricted_limits_at_zero:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1, epsilon)
         by def:
             ? $has_function_limit(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1)
     $has_function_limit(Q, fn(x Q) R {rational_indicator_for_limit_example(x)}, 0, 1)
@@ -5415,17 +5285,15 @@ thm rational_indicator_restricted_limits_at_zero:
                 y < epsilon
                 y <= epsilon
                 abs(0 - y) <= epsilon
-                witness exist z R st {z $in set_minus(R, Q), abs(0 - z) <= epsilon} from y:
+                witness $is_epsilon_adherent_to_set(set_minus(R, Q), 0, epsilon) from y:
                     y $in set_minus(R, Q)
                     abs(0 - y) <= epsilon
-                by def:
-                    ? $is_epsilon_adherent_to_set(set_minus(R, Q), 0, epsilon)
             by def:
                 ? $is_adherent_point(set_minus(R, Q), 0)
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0, epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0, epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0, epsilon) from epsilon:
                 claim:
                     ? forall y set_minus(R, Q):
                         abs(y - 0) < epsilon
@@ -5441,8 +5309,6 @@ thm rational_indicator_restricted_limits_at_zero:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0, epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0, epsilon)
         by def:
             ? $has_function_limit(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0)
     $has_function_limit(set_minus(R, Q), fn(x set_minus(R, Q)) R {rational_indicator_for_limit_example(x)}, 0, 0)
@@ -5462,7 +5328,7 @@ thm rational_indicator_no_limit_at_zero:
         $has_function_limit(R, rational_indicator_for_limit_example, 0, L)
         1 / 4 $in R+
         $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, 0, L, 1 / 4)
         by thm chap5::has_rational_between(0, delta)
         obtain q from exist q Q st {0 < q < delta}
         q $in R
@@ -5481,7 +5347,7 @@ thm rational_indicator_no_limit_at_zero:
         $is_adherent_point(set_minus(R, Q), 0)
         delta / 2 $in R+
         $is_epsilon_adherent_to_set(set_minus(R, Q), 0, delta / 2)
-        obtain y from exist y R st {y $in set_minus(R, Q), abs(0 - y) <= delta / 2}
+        obtain y from $is_epsilon_adherent_to_set(set_minus(R, Q), 0, delta / 2)
         y $in R
         y $in set_minus(R, Q)
         abs(0 - y) <= delta / 2
@@ -5544,7 +5410,7 @@ thm constant_function_continuous:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon) from epsilon:
                 claim:
                     ? forall y X:
                         abs(y - x0) < epsilon
@@ -5559,8 +5425,6 @@ thm constant_function_continuous:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0), epsilon)
         by def:
             ? $has_function_limit(X, fn(x X) R {c}, x0, fn(x X) R {c}(x0))
         by def:
@@ -5583,7 +5447,7 @@ thm identity_function_continuous:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon) from epsilon:
                 claim:
                     ? forall y X:
                         abs(y - x0) < epsilon
@@ -5597,8 +5461,6 @@ thm identity_function_continuous:
                     abs(y - x0) <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0), epsilon)
         by def:
             ? $has_function_limit(X, fn(x X) R {x}, x0, fn(x X) R {x}(x0))
         by def:
@@ -5632,7 +5494,7 @@ thm signum_continuous_on_open_rays:
             claim:
                 ? forall epsilon R+:
                     $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
-                witness exist delta R+ st {$is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, delta)} from epsilon:
+                witness $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon) from epsilon:
                     claim:
                         ? forall y '(0,):
                             abs(y - x0) < epsilon
@@ -5649,8 +5511,6 @@ thm signum_continuous_on_open_rays:
                         0 <= epsilon
                     by def:
                         ? $is_delta_neighborhood_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon, epsilon)
-                by def:
-                    ? $is_locally_epsilon_close_to('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0), epsilon)
             by def:
                 ? $has_function_limit('(0,), signum_on_open_right_ray, x0, signum_on_open_right_ray(x0))
             by def:
@@ -5670,7 +5530,7 @@ thm signum_continuous_on_open_rays:
             claim:
                 ? forall epsilon R+:
                     $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
-                witness exist delta R+ st {$is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, delta)} from epsilon:
+                witness $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon) from epsilon:
                     claim:
                         ? forall y '(,0):
                             abs(y - x0) < epsilon
@@ -5687,8 +5547,6 @@ thm signum_continuous_on_open_rays:
                         0 <= epsilon
                     by def:
                         ? $is_delta_neighborhood_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon, epsilon)
-                by def:
-                    ? $is_locally_epsilon_close_to('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0), epsilon)
             by def:
                 ? $has_function_limit('(,0), signum_on_open_left_ray, x0, signum_on_open_left_ray(x0))
             by def:
@@ -5706,7 +5564,7 @@ thm signum_discontinuous_at_zero:
         $has_function_limit(R, signum_for_limit_example, 0, 0)
         1 / 2 $in R+
         $is_locally_epsilon_close_to(R, signum_for_limit_example, 0, 0, 1 / 2)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, signum_for_limit_example, 0, 0, 1 / 2, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, signum_for_limit_example, 0, 0, 1 / 2)
         delta / 2 $in R+
         delta / 2 > 0
         delta / 2 - 0 = delta / 2
@@ -5741,7 +5599,7 @@ thm rational_indicator_discontinuous_everywhere:
         $has_function_limit(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0))
         1 / 4 $in R+
         $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0), 1 / 4)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0), 1 / 4, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, rational_indicator_for_limit_example, x0, rational_indicator_for_limit_example(x0), 1 / 4)
 
         x0 < x0 + delta
         by thm chap5::has_rational_between(x0, x0 + delta)
@@ -5814,7 +5672,7 @@ thm right_step_discontinuous_at_zero_on_full_line:
         $has_function_limit(R, right_step_at_zero, 0, 1)
         1 / 4 $in R+
         $is_locally_epsilon_close_to(R, right_step_at_zero, 0, 1, 1 / 4)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, right_step_at_zero, 0, 1, 1 / 4, delta)}
+        obtain delta from $is_locally_epsilon_close_to(R, right_step_at_zero, 0, 1, 1 / 4)
         0 - delta / 2 < 0
         (0 - delta / 2) - 0 = 0 - delta / 2
         abs(0 - delta / 2) = delta / 2
@@ -5845,7 +5703,7 @@ thm right_step_continuous_on_nonnegative_ray:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon) from epsilon:
                 claim:
                     ? forall y '[0,):
                         abs(y - x0) < epsilon
@@ -5862,8 +5720,6 @@ thm right_step_continuous_on_nonnegative_ray:
                     0 <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0), epsilon)
         by def:
             ? $has_function_limit('[0,), right_step_on_nonnegative_ray, x0, right_step_on_nonnegative_ray(x0))
         by def:
@@ -5958,7 +5814,7 @@ thm continuity_at_implies_epsilon_delta_continuity:
             exist delta R+ st {$is_epsilon_delta_continuity_witness_at(X, f, x0, epsilon, delta)}
         epsilon / 2 $in R+
         $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon / 2)
-        obtain delta0 from exist delta0 R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon / 2, delta0)}
+        obtain delta0 from $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon / 2)
         witness exist delta R+ st {$is_epsilon_delta_continuity_witness_at(X, f, x0, epsilon, delta)} from delta0:
             claim:
                 ? forall x X:
@@ -5985,7 +5841,7 @@ thm epsilon_delta_continuity_implies_continuity_at:
         ? forall epsilon R+:
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
         obtain delta0 from exist delta0 R+ st {$is_epsilon_delta_continuity_witness_at(X, f, x0, epsilon, delta0)}
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta)} from delta0:
+        witness $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon) from delta0:
             claim:
                 ? forall x X:
                     abs(x - x0) < delta0
@@ -5994,8 +5850,6 @@ thm epsilon_delta_continuity_implies_continuity_at:
                 abs(f(x) - f(x0)) < epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta0)
-        by def:
-            ? $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
     by def:
         ? $has_function_limit(X, f, x0, f(x0))
     by def:
@@ -6140,7 +5994,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         obtain b from exist b seq(R) st {$chap6::has_subsequence(a, b), $has_limit_in_set(b, X)}
         $chap6::has_subsequence(a, b)
         $has_limit_in_set(b, X)
-        obtain L from exist L R st {L $in X, $chap6::has_limit(b, L)}
+        obtain L from $has_limit_in_set(b, X)
         L $in X
         $chap6::has_limit(b, L)
         by thm subsequence_inherits_real_set_membership(X, a, b)
@@ -6150,7 +6004,7 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
         $chap6::has_limit(image_sequence_in_set(X, f, b), f(L))
         obtain phi from exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(a, b, phi)}
         witness exist c0 seq(R) st {$chap6::has_subsequence(y, c0), $has_limit_in_set(c0, fn_range(f))} from image_sequence_in_set(X, f, b):
-            witness exist phi0 fn(k N+) N+ st {$chap6::is_subsequence_along(y, image_sequence_in_set(X, f, b), phi0)} from phi:
+            witness $chap6::has_subsequence(y, image_sequence_in_set(X, f, b)) from phi:
                 $chap6::is_subsequence_index(phi)
                 claim:
                     ? forall n N+:
@@ -6162,13 +6016,9 @@ thm continuous_image_of_sequentially_compact_real_set_is_sequentially_compact:
                     image_sequence_in_set(X, f, b)(n) = f(b(n))
                 by def:
                     ? $chap6::is_subsequence_along(y, image_sequence_in_set(X, f, b), phi)
-            by def:
-                ? $chap6::has_subsequence(y, image_sequence_in_set(X, f, b))
-            witness exist L0 R st {L0 $in fn_range(f), $chap6::has_limit(image_sequence_in_set(X, f, b), L0)} from f(L):
+            witness $has_limit_in_set(image_sequence_in_set(X, f, b), fn_range(f)) from f(L):
                 f(L) $in fn_range(f)
                 $chap6::has_limit(image_sequence_in_set(X, f, b), f(L))
-            by def:
-                ? $has_limit_in_set(image_sequence_in_set(X, f, b), fn_range(f))
     by def:
         ? $has_sequential_compactness_in_R(fn_range(f))
 
@@ -6282,12 +6132,12 @@ thm continuous_max_of_continuous:
                 $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon)
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
             $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
-            obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta_f)}
-            obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(X, g, x0, g(x0), epsilon, delta_g)}
+            obtain delta_f from $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
+            obtain delta_g from $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
             finite_set_min(union({delta_f}, { delta_g})) $in R+
             finite_set_min(union({delta_f}, { delta_g})) <= delta_f
             finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+            witness $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon) from finite_set_min(union({delta_f}, { delta_g})):
                 claim:
                     ? forall y X:
                         abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -6307,8 +6157,6 @@ thm continuous_max_of_continuous:
                     abs(fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0)) = abs(finite_set_max(union({f(y)}, { g(y)})) - finite_set_max(union({f(x0)}, { g(x0)})))
                 by def:
                     ? $is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon, finite_set_min(union({delta_f}, { delta_g})))
-            by def:
-                ? $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0), epsilon)
         by def:
             ? $has_function_limit(X, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_max(union({f(x)}, { g(x)}))}(x0))
         by def:
@@ -6335,12 +6183,12 @@ thm continuous_min_of_continuous:
                 $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon)
             $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
             $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
-            obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta_f)}
-            obtain delta_g from exist delta_g R+ st {$is_delta_neighborhood_close_to(X, g, x0, g(x0), epsilon, delta_g)}
+            obtain delta_f from $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
+            obtain delta_g from $is_locally_epsilon_close_to(X, g, x0, g(x0), epsilon)
             finite_set_min(union({delta_f}, { delta_g})) $in R+
             finite_set_min(union({delta_f}, { delta_g})) <= delta_f
             finite_set_min(union({delta_f}, { delta_g})) <= delta_g
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon, delta)} from finite_set_min(union({delta_f}, { delta_g})):
+            witness $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon) from finite_set_min(union({delta_f}, { delta_g})):
                 claim:
                     ? forall y X:
                         abs(y - x0) < finite_set_min(union({delta_f}, { delta_g}))
@@ -6360,8 +6208,6 @@ thm continuous_min_of_continuous:
                     abs(fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(y) - fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0)) = abs(finite_set_min(union({f(y)}, { g(y)})) - finite_set_min(union({f(x0)}, { g(x0)})))
                 by def:
                     ? $is_delta_neighborhood_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon, finite_set_min(union({delta_f}, { delta_g})))
-            by def:
-                ? $is_locally_epsilon_close_to(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0), epsilon)
         by def:
             ? $has_function_limit(X, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}, x0, fn(x X) R {finite_set_min(union({f(x)}, { g(x)}))}(x0))
         by def:
@@ -6496,7 +6342,7 @@ thm absolute_value_continuous:
         claim:
             ? forall epsilon R+:
                 $is_locally_epsilon_close_to(R, abs_fn, x0, abs_fn(x0), epsilon)
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(R, abs_fn, x0, abs_fn(x0), epsilon, delta)} from epsilon:
+            witness $is_locally_epsilon_close_to(R, abs_fn, x0, abs_fn(x0), epsilon) from epsilon:
                 claim:
                     ? forall y R:
                         abs(y - x0) < epsilon
@@ -6519,8 +6365,6 @@ thm absolute_value_continuous:
                     abs(abs_fn(y) - abs_fn(x0)) <= abs(y - x0) <= epsilon
                 by def:
                     ? $is_delta_neighborhood_close_to(R, abs_fn, x0, abs_fn(x0), epsilon, epsilon)
-            by def:
-                ? $is_locally_epsilon_close_to(R, abs_fn, x0, abs_fn(x0), epsilon)
         by def:
             ? $has_function_limit(R, abs_fn, x0, abs_fn(x0))
         by def:
@@ -6578,8 +6422,8 @@ thm composition_preserves_continuity:
             eta_g / 2 $in R+
             eta_g / 2 < eta_g
             $is_locally_epsilon_close_to(X, f, x0, f(x0), eta_g / 2)
-            obtain delta_f from exist delta_f R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), eta_g / 2, delta_f)}
-            witness exist delta R+ st {$is_delta_neighborhood_close_to(X, h, x0, h(x0), epsilon, delta)} from delta_f:
+            obtain delta_f from $is_locally_epsilon_close_to(X, f, x0, f(x0), eta_g / 2)
+            witness $is_locally_epsilon_close_to(X, h, x0, h(x0), epsilon) from delta_f:
                 claim:
                     ? forall y X:
                         abs(y - x0) < delta_f
@@ -6597,8 +6441,6 @@ thm composition_preserves_continuity:
                     abs(h(y) - h(x0)) = abs(g(f(y)) - g(f(x0)))
                 by def:
                     ? $is_delta_neighborhood_close_to(X, h, x0, h(x0), epsilon, delta_f)
-            by def:
-                ? $is_locally_epsilon_close_to(X, h, x0, h(x0), epsilon)
         by def:
             ? $has_function_limit(X, h, x0, h(x0))
         by def:
@@ -6869,7 +6711,7 @@ thm example_9_4_14_sqrt_two_power_continuous_on_nonnegative:
                         fn(t R+) R {t^sqrt(2)}(t0) = t0^sqrt(2)
                         $has_function_limit(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2))
                         $is_locally_epsilon_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
-                        obtain delta0 from exist delta0 R+ st {$is_delta_neighborhood_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon, delta0)}
+                        obtain delta0 from $is_locally_epsilon_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
                         t0 / 2 $in R+
                         finite_set_min(union({delta0}, {t0 / 2})) $in R+
                         finite_set_min(union({delta0}, {t0 / 2})) <= delta0
@@ -7080,7 +6922,7 @@ thm example_9_4_14_sqrt_two_power_extension_continuous:
                             fn(t R+) R {t^sqrt(2)}(t0) = t0^sqrt(2)
                             $has_function_limit(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2))
                             $is_locally_epsilon_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
-                            obtain delta0 from exist delta0 R+ st {$is_delta_neighborhood_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon, delta0)}
+                            obtain delta0 from $is_locally_epsilon_close_to(R+, fn(t R+) R {t^sqrt(2)}, t0, t0^sqrt(2), epsilon)
                             t0 / 2 $in R+
                             finite_set_min(union({delta0}, {t0 / 2})) $in R+
                             finite_set_min(union({delta0}, {t0 / 2})) <= delta0
@@ -7144,8 +6986,8 @@ thm example_9_4_14_abs_quadratic_continuous_into_nonnegative:
             $is_continuous_at(R, example_9_4_14_abs_quadratic, x0)
             $has_function_limit(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0))
             $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0), epsilon)
-            obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0), epsilon, delta)}
-            witness exist eta R+ st {$is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon, eta)} from delta:
+            obtain delta from $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic, x0, example_9_4_14_abs_quadratic(x0), epsilon)
+            witness $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon) from delta:
                 claim:
                     ? forall y R:
                         abs(y - x0) < delta
@@ -7170,8 +7012,6 @@ thm example_9_4_14_abs_quadratic_continuous_into_nonnegative:
                     abs(example_9_4_14_abs_quadratic_nonnegative(y) - example_9_4_14_abs_quadratic_nonnegative(x0)) = abs(example_9_4_14_abs_quadratic(y) - example_9_4_14_abs_quadratic(x0))
                 by def:
                     ? $is_delta_neighborhood_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon, delta)
-            by def:
-                ? $is_locally_epsilon_close_to(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0), epsilon)
         by def:
             ? $has_function_limit(R, example_9_4_14_abs_quadratic_nonnegative, x0, example_9_4_14_abs_quadratic_nonnegative(x0))
         by def:
@@ -7247,8 +7087,8 @@ thm example_9_4_14_complex_continuous:
                 ? forall epsilon R+:
                     $is_locally_epsilon_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon)
                 $is_locally_epsilon_close_to({x R: example_9_4_14_denominator(x) != 0}, fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon)
-                obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to({x R: example_9_4_14_denominator(x) != 0}, fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon, delta)}
-                witness exist eta R+ st {$is_delta_neighborhood_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon, eta)} from delta:
+                obtain delta from $is_locally_epsilon_close_to({x R: example_9_4_14_denominator(x) != 0}, fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon)
+                witness $is_locally_epsilon_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon) from delta:
                     claim:
                         ? forall y R:
                             abs(y - x0) < delta
@@ -7267,8 +7107,6 @@ thm example_9_4_14_complex_continuous:
                         abs(example_9_4_14_complex(y) - example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0)) = abs(fn(x {x R: example_9_4_14_denominator(x) != 0}) R {example_9_4_14_powered_abs_quadratic(x) / example_9_4_14_denominator(x)}(y) - example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0))
                     by def:
                         ? $is_delta_neighborhood_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon, delta)
-                by def:
-                    ? $is_locally_epsilon_close_to(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0), epsilon)
             by def:
                 ? $has_function_limit(R, example_9_4_14_complex, x0, example_9_4_14_powered_abs_quadratic(x0) / example_9_4_14_denominator(x0))
         by thm example_9_4_14_complex_is_quotient(x0)
@@ -7423,7 +7261,7 @@ thm sign_function_one_sided_limits:
             $has_function_limit(R, analysis_sign, 0, 0)
             1 / 2 $in R+
             $is_locally_epsilon_close_to(R, analysis_sign, 0, 0, 1 / 2)
-            obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to(R, analysis_sign, 0, 0, 1 / 2, delta)}
+            obtain delta from $is_locally_epsilon_close_to(R, analysis_sign, 0, 0, 1 / 2)
             delta / 2 $in R+
             delta / 2 > 0
             delta / 2 - 0 = delta / 2
@@ -7466,7 +7304,7 @@ thm continuity_from_one_sided_limits:
         finite_set_min(union({delta_left}, { delta_right})) $in R+
         finite_set_min(union({delta_left}, { delta_right})) <= delta_left
         finite_set_min(union({delta_left}, { delta_right})) <= delta_right
-        witness exist delta R+ st {$is_delta_neighborhood_close_to(E, f, x0, L, epsilon, delta)} from finite_set_min(union({delta_left}, { delta_right})):
+        witness $is_locally_epsilon_close_to(E, f, x0, L, epsilon) from finite_set_min(union({delta_left}, { delta_right})):
             claim:
                 ? forall x E:
                     abs(x - x0) < finite_set_min(union({delta_left}, { delta_right}))
@@ -7496,8 +7334,6 @@ thm continuity_from_one_sided_limits:
                                 abs(f(x) - L) <= epsilon
             by def:
                 ? $is_delta_neighborhood_close_to(E, f, x0, L, epsilon, finite_set_min(union({delta_left}, { delta_right})))
-        by def:
-            ? $is_locally_epsilon_close_to(E, f, x0, L, epsilon)
     by def:
         ? $has_function_limit(E, f, x0, L)
     f(x0) = L
@@ -7649,34 +7485,27 @@ thm bounded_function_implies_upper_and_lower_bounded:
         =>:
             $is_function_bounded_above_on(X, f)
             $is_function_bounded_below_on(X, f)
-    obtain M from exist M R+ st {$is_function_bounded_by(X, f, M)}
+    obtain M from $is_bounded_function_on(X, f)
     claim:
         ? $is_function_bounded_above_on(X, f)
-        witness exist A R st {$is_function_bounded_above_by(X, f, A)} from M:
+        witness $is_function_bounded_above_on(X, f) from M:
             claim:
                 ? forall x X:
-                    f(x) <= A
+                    f(x) <= M
                 abs(f(x)) <= M
                 by thm abs_bound_implies_two_sided_bound(f(x), M)
                 f(x) <= M
-                A = M
-            $is_function_bounded_above_by(X, f, A)
-        by def:
-            ? $is_function_bounded_above_on(X, f)
+            $is_function_bounded_above_by(X, f, M)
     claim:
         ? $is_function_bounded_below_on(X, f)
-        witness exist B R st {$is_function_bounded_below_by(X, f, B)} from M:
+        witness $is_function_bounded_below_on(X, f) from M:
             claim:
                 ? forall x X:
-                    -B <= f(x)
+                    -M <= f(x)
                 abs(f(x)) <= M
                 by thm abs_bound_implies_two_sided_bound(f(x), M)
                 -M <= f(x)
-                B = M
-                -B = -M
-            $is_function_bounded_below_by(X, f, B)
-        by def:
-            ? $is_function_bounded_below_on(X, f)
+            $is_function_bounded_below_by(X, f, M)
 
 thm upper_and_lower_bounded_implies_bounded_function:
     ? forall X power_set(R), f fn(x X) R:
@@ -7684,13 +7513,13 @@ thm upper_and_lower_bounded_implies_bounded_function:
         $is_function_bounded_below_on(X, f)
         =>:
             $is_bounded_function_on(X, f)
-    obtain A from exist A R st {$is_function_bounded_above_by(X, f, A)}
-    obtain B from exist B R st {$is_function_bounded_below_by(X, f, B)}
+    obtain A from $is_function_bounded_above_on(X, f)
+    obtain B from $is_function_bounded_below_on(X, f)
     abs(A) + abs(B) + 1 $in R+
-    witness exist M R+ st {$is_function_bounded_by(X, f, M)} from abs(A) + abs(B) + 1:
+    witness $is_bounded_function_on(X, f) from abs(A) + abs(B) + 1:
         claim:
             ? forall x X:
-                abs(f(x)) <= M
+                abs(f(x)) <= abs(A) + abs(B) + 1
             f(x) <= A
             A <= abs(A)
             f(x) <= A <= abs(A)
@@ -7709,10 +7538,7 @@ thm upper_and_lower_bounded_implies_bounded_function:
             abs(f(x)) <= abs(A) + abs(B)
             abs(A) + abs(B) <= abs(A) + abs(B) + 1
             abs(f(x)) <= abs(A) + abs(B) + 1
-            M = abs(A) + abs(B) + 1
-        $is_function_bounded_by(X, f, M)
-    by def:
-        ? $is_bounded_function_on(X, f)
+        $is_function_bounded_by(X, f, abs(A) + abs(B) + 1)
 
 thm bounded_function_implies_bounded_range:
     ? forall X power_set(R), f fn(x X) R:
@@ -7721,8 +7547,8 @@ thm bounded_function_implies_bounded_range:
             $is_bounded_real_set(fn_range(f))
     fn_range(f) $subset R
     fn_range(f) $in power_set(R)
-    obtain M from exist M R+ st {$is_function_bounded_by(X, f, M)}
-    witness exist B R+ st {fn_range(f) $subset '[-B, B]} from M:
+    obtain M from $is_bounded_function_on(X, f)
+    witness $is_bounded_real_set(fn_range(f)) from M:
         claim:
             ? forall y fn_range(f):
                 y $in '[-M, M]
@@ -7736,8 +7562,6 @@ thm bounded_function_implies_bounded_range:
             -M <= y
         by def:
             ? fn_range(f) $subset '[-M, M]
-    by def:
-        ? $is_bounded_real_set(fn_range(f))
 
 thm bounded_range_implies_bounded_function:
     ? forall X power_set(R), f fn(x X) R:
@@ -7746,21 +7570,18 @@ thm bounded_range_implies_bounded_function:
             $is_bounded_function_on(X, f)
     fn_range(f) $subset R
     fn_range(f) $in power_set(R)
-    obtain M from exist M R+ st {fn_range(f) $subset '[-M, M]}
-    witness exist B R+ st {$is_function_bounded_by(X, f, B)} from M:
+    obtain M from $is_bounded_real_set(fn_range(f))
+    witness $is_bounded_function_on(X, f) from M:
         claim:
             ? forall x X:
-                abs(f(x)) <= B
+                abs(f(x)) <= M
             f(x) $in fn_range(f)
             f(x) $in '[-M, M]
             -M <= f(x)
             f(x) <= M
             by thm abs_bound_from_symmetric_bound(f(x), M)
             abs(f(x)) <= M
-            B = M
-        $is_function_bounded_by(X, f, B)
-    by def:
-        ? $is_bounded_function_on(X, f)
+        $is_function_bounded_by(X, f, M)
 
 """
 Lemma 9.6.3. A continuous function on a closed bounded interval is bounded.
@@ -7810,7 +7631,7 @@ thm bounded_real_set_has_upper_bound:
         $is_bounded_real_set(Y)
         =>:
             $chap5::has_upper_bound(Y)
-    obtain B from exist B R+ st {Y $subset '[-B, B]}
+    obtain B from $is_bounded_real_set(Y)
     claim:
         ? $chap5::is_upper_bound(Y, B)
         Y $subset R
@@ -7820,7 +7641,7 @@ thm bounded_real_set_has_upper_bound:
             by thm real_set_member_le_of_symmetric_bound(Y, B, y)
         by def:
             ? $chap5::is_upper_bound(Y, B)
-    witness exist B0 R st {$chap5::is_upper_bound(Y, B0)} from B:
+    witness exist bound_witness R st {$chap5::is_upper_bound(Y, bound_witness)} from B:
         $chap5::is_upper_bound(Y, B)
     by def:
         ? $chap5::has_upper_bound(Y)
@@ -7852,11 +7673,9 @@ thm least_upper_bound_is_adherent:
                     by contra:
                         ? not abs(M - y) <= epsilon
                         abs(M - y) <= epsilon
-                        witness exist z R st {z $in Y, abs(M - z) <= epsilon} from y:
+                        witness $is_epsilon_adherent_to_set(Y, M, epsilon) from y:
                             y $in Y
                             abs(M - y) <= epsilon
-                        by def:
-                            ? $is_epsilon_adherent_to_set(Y, M, epsilon)
                         impossible not $is_epsilon_adherent_to_set(Y, M, epsilon)
                 y <= M
                 M - y >= 0
@@ -7940,13 +7759,13 @@ thm attained_extrema_imply_bounded_function:
         $attains_minimum_on(X, f)
         =>:
             $is_bounded_function_on(X, f)
-    obtain cmax from exist cmax X st {$is_maximizer_on(X, f, cmax)}
-    obtain cmin from exist cmin X st {$is_minimizer_on(X, f, cmin)}
+    obtain cmax from $attains_maximum_on(X, f)
+    obtain cmin from $attains_minimum_on(X, f)
     abs(f(cmax)) + abs(f(cmin)) + 1 $in R+
-    witness exist M R+ st {$is_function_bounded_by(X, f, M)} from abs(f(cmax)) + abs(f(cmin)) + 1:
+    witness $is_bounded_function_on(X, f) from abs(f(cmax)) + abs(f(cmin)) + 1:
         claim:
             ? forall x X:
-                abs(f(x)) <= M
+                abs(f(x)) <= abs(f(cmax)) + abs(f(cmin)) + 1
             f(x) <= f(cmax)
             f(cmin) <= f(x)
             f(cmax) <= abs(f(cmax))
@@ -7962,11 +7781,8 @@ thm attained_extrema_imply_bounded_function:
             abs(f(x)) <= abs(f(cmax)) + abs(f(cmin))
             abs(f(cmax)) + abs(f(cmin)) <= abs(f(cmax)) + abs(f(cmin)) + 1
             abs(f(x)) <= abs(f(cmax)) + abs(f(cmin)) + 1
-            M = abs(f(cmax)) + abs(f(cmin)) + 1
         by def:
-            ? $is_function_bounded_by(X, f, M)
-    by def:
-        ? $is_bounded_function_on(X, f)
+            ? $is_function_bounded_by(X, f, abs(f(cmax)) + abs(f(cmin)) + 1)
 
 """
 Proposition 9.6.7 (Maximum principle). A continuous function on a closed
@@ -7999,7 +7815,7 @@ thm continuous_closed_interval_attains_maximum:
     by thm nonempty_sequentially_compact_real_set_has_maximum(fn_range(f))
     obtain M from exist M fn_range(f) st {$chap5::is_upper_bound(fn_range(f), M)}
     have by preimage c from M $in fn_range(f)
-    witness exist c0 '[a, b] st {$is_maximizer_on('[a, b], f, c0)} from c:
+    witness $attains_maximum_on('[a, b], f) from c:
         claim:
             ? forall x '[a, b]:
                 f(x) <= f(c)
@@ -8008,8 +7824,6 @@ thm continuous_closed_interval_attains_maximum:
             M = f(c)
         by def:
             ? $is_maximizer_on('[a, b], f, c)
-    by def:
-        ? $attains_maximum_on('[a, b], f)
 
 thm continuous_closed_interval_attains_minimum:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -8025,22 +7839,16 @@ thm continuous_closed_interval_attains_minimum:
         ? $attains_minimum_on('[a, b], f)
         case $is_minimizer_on('[a, b], f, a):
             a $in '[a, b]
-            witness exist c0 '[a, b] st {$is_minimizer_on('[a, b], f, c0)} from a:
-                c0 = a
-                $is_minimizer_on('[a, b], f, c0)
-            by def:
-                ? $attains_minimum_on('[a, b], f)
+            witness $attains_minimum_on('[a, b], f) from a:
+                $is_minimizer_on('[a, b], f, a)
         case not $is_minimizer_on('[a, b], f, a):
             $is_minimizer_on('[a, b], f, b) or not $is_minimizer_on('[a, b], f, b)
             by cases:
                 ? $attains_minimum_on('[a, b], f)
                 case $is_minimizer_on('[a, b], f, b):
                     b $in '[a, b]
-                    witness exist c0 '[a, b] st {$is_minimizer_on('[a, b], f, c0)} from b:
-                        c0 = b
-                        $is_minimizer_on('[a, b], f, c0)
-                    by def:
-                        ? $attains_minimum_on('[a, b], f)
+                    witness $attains_minimum_on('[a, b], f) from b:
+                        $is_minimizer_on('[a, b], f, b)
                 case not $is_minimizer_on('[a, b], f, b):
                     by thm constant_function_continuous('[a, b], 0)
                     $is_continuous_on('[a, b], fn(x '[a, b]) R {0})
@@ -8048,8 +7856,8 @@ thm continuous_closed_interval_attains_minimum:
                     $is_continuous_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
                     by thm continuous_closed_interval_attains_maximum(a, b, fn(x '[a, b]) R {0 - f(x)})
                     $attains_maximum_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
-                    obtain c from exist c '[a, b] st {$is_maximizer_on('[a, b], fn(x '[a, b]) R {0 - f(x)}, c)}
-                    witness exist c0 '[a, b] st {$is_minimizer_on('[a, b], f, c0)} from c:
+                    obtain c from $attains_maximum_on('[a, b], fn(x '[a, b]) R {0 - f(x)})
+                    witness $attains_minimum_on('[a, b], f) from c:
                         claim:
                             ? forall x '[a, b]:
                                 f(c) <= f(x)
@@ -8060,8 +7868,6 @@ thm continuous_closed_interval_attains_minimum:
                             by thm neg_order_bridge(f(x), f(c))
                         by def:
                             ? $is_minimizer_on('[a, b], f, c)
-                    by def:
-                        ? $attains_minimum_on('[a, b], f)
 
 thm maximum_principle_closed_interval:
     ? forall a, b R, f fn(x '[a, b]) R:
@@ -8197,7 +8003,7 @@ thm ivt_left_set_lub_value_at_most:
         $is_continuous_at('[a, b], f, c0)
         $has_function_limit('[a, b], f, c0, f(c0))
         $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2, delta)}
+        obtain delta from $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (f(c0) - y) / 2)
         by thm least_upper_bound_is_adherent({x '[a, b]: f(x) <= y}, c)
         delta / 2 $in R+
         $is_epsilon_adherent_to_set({x '[a, b]: f(x) <= y}, c, delta / 2)
@@ -8277,7 +8083,7 @@ thm ivt_left_set_lub_value_at_least:
         $is_continuous_at('[a, b], f, c0)
         $has_function_limit('[a, b], f, c0, f(c0))
         $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2)
-        obtain delta from exist delta R+ st {$is_delta_neighborhood_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2, delta)}
+        obtain delta from $is_locally_epsilon_close_to('[a, b], f, c0, f(c0), (y - f(c0)) / 2)
         have gap R+ = b - c
         gap = b - c
         # Source handling/proof_debt: the current finite-set minimum interface
@@ -8776,7 +8582,7 @@ thm uniformly_continuous_implies_continuous:
                 $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
             exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
             obtain delta from exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
-            witness exist eta R+ st {$is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, eta)} from delta:
+            witness $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon) from delta:
                 claim:
                     ? forall x X:
                         abs(x - x0) < delta
@@ -8784,9 +8590,7 @@ thm uniformly_continuous_implies_continuous:
                             abs(f(x) - f(x0)) <= epsilon
                     abs(f(x) - f(x0)) < epsilon
                 by def:
-                    ? $is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, eta)
-            by def:
-                ? $is_locally_epsilon_close_to(X, f, x0, f(x0), epsilon)
+                    ? $is_delta_neighborhood_close_to(X, f, x0, f(x0), epsilon, delta)
         by def:
             ? $has_function_limit(X, f, x0, f(x0))
         by def:
@@ -8851,8 +8655,8 @@ thm equivalent_sequences_have_difference_limit_zero:
         ? forall epsilon R+:
             $chap6::has_eventual_closeness_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon)
         $are_eventually_epsilon_close_sequences(a, b, epsilon)
-        obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(a, b, epsilon, n0)}
-        witness exist n1 N+ st {$chap6::is_tail_close_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon, n1)} from n0:
+        obtain n0 from $are_eventually_epsilon_close_sequences(a, b, epsilon)
+        witness $chap6::has_eventual_closeness_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon) from n0:
             claim:
                 ? forall m N+:
                     m >= n0
@@ -8865,8 +8669,6 @@ thm equivalent_sequences_have_difference_limit_zero:
             # Source handling/proof_debt: the universal estimate checks, but
             # the existential witness is replayed under the source alias `n0`.
             $chap6::is_tail_close_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon, n0)
-        by def:
-            ? $chap6::has_eventual_closeness_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon)
     by def:
         ? $chap6::has_limit(fn(n N+) R {a(n) - b(n)}, 0)
 
@@ -8882,7 +8684,7 @@ thm difference_limit_zero_implies_equivalent_sequences:
             $are_eventually_epsilon_close_sequences(a, b, epsilon)
         $chap6::has_eventual_closeness_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon)
         obtain n0 from exist n0 N+ st {$chap6::is_tail_close_to(fn(n N+) R {a(n) - b(n)}, 0, epsilon, n0)}
-        witness exist n1 N+ st {$are_epsilon_close_after_index(a, b, epsilon, n1)} from n0:
+        witness $are_eventually_epsilon_close_sequences(a, b, epsilon) from n0:
             claim:
                 ? forall m N+:
                     m >= n0
@@ -8895,8 +8697,6 @@ thm difference_limit_zero_implies_equivalent_sequences:
             # Source handling/proof_debt: same witness-alias storage gap in the
             # reverse direction; the pointwise tail estimate is checked above.
             $are_epsilon_close_after_index(a, b, epsilon, n0)
-        by def:
-            ? $are_eventually_epsilon_close_sequences(a, b, epsilon)
     by def:
         ? $are_equivalent_sequences(a, b)
 
@@ -8915,14 +8715,13 @@ thm equivalent_sequences_share_limit:
         $chap6::has_eventual_closeness_to(a, L, epsilon / 2)
         obtain n_a from exist n_a N+ st {$chap6::is_tail_close_to(a, L, epsilon / 2, n_a)}
         $are_eventually_epsilon_close_sequences(a, b, epsilon / 2)
-        obtain n_ab from exist n_ab N+ st {$are_epsilon_close_after_index(a, b, epsilon / 2, n_ab)}
-        witness exist n0 N+ st {$chap6::is_tail_close_to(b, L, epsilon, n0)} from finite_set_max(union({n_a}, { n_ab})):
+        obtain n_ab from $are_eventually_epsilon_close_sequences(a, b, epsilon / 2)
+        witness $chap6::has_eventual_closeness_to(b, L, epsilon) from finite_set_max(union({n_a}, { n_ab})):
             claim:
                 ? forall n N+:
-                    n >= n0
+                    n >= finite_set_max(union({n_a}, { n_ab}))
                     =>:
                         abs(b(n) - L) < epsilon
-                n0 = finite_set_max(union({n_a}, { n_ab}))
                 n >= finite_set_max(union({n_a}, { n_ab}))
                 n >= finite_set_max(union({n_a}, { n_ab})) >= n_a
                 n >= finite_set_max(union({n_a}, { n_ab})) >= n_ab
@@ -8938,9 +8737,7 @@ thm equivalent_sequences_share_limit:
                 epsilon / 2 + epsilon / 2 = epsilon
                 abs(b(n) - L) <= abs(b(n) - a(n)) + abs(a(n) - L) < epsilon / 2 + epsilon / 2 = epsilon
             by def:
-                ? $chap6::is_tail_close_to(b, L, epsilon, n0)
-        by def:
-            ? $chap6::has_eventual_closeness_to(b, L, epsilon)
+                ? $chap6::is_tail_close_to(b, L, epsilon, finite_set_max(union({n_a}, { n_ab})))
     by def:
         ? $chap6::has_limit(b, L)
 
@@ -8954,8 +8751,8 @@ thm equivalent_sequences_have_equivalent_common_subsequences:
         ? forall epsilon R+:
             $are_eventually_epsilon_close_sequences(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))}, epsilon)
         $are_eventually_epsilon_close_sequences(a, b, epsilon)
-        obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(a, b, epsilon, n0)}
-        witness exist n1 N+ st {$are_epsilon_close_after_index(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))}, epsilon, n1)} from n0:
+        obtain n0 from $are_eventually_epsilon_close_sequences(a, b, epsilon)
+        witness $are_eventually_epsilon_close_sequences(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))}, epsilon) from n0:
             claim:
                 ? forall n N+:
                     n >= n0
@@ -8969,8 +8766,6 @@ thm equivalent_sequences_have_equivalent_common_subsequences:
                 abs(fn(k N+) R {a(phi(k))}(n) - fn(k N+) R {b(phi(k))}(n)) = abs(a(phi(n)) - b(phi(n)))
             # Source handling/proof_debt: witness alias is replayed as `n0`.
             $are_epsilon_close_after_index(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))}, epsilon, n0)
-        by def:
-            ? $are_eventually_epsilon_close_sequences(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))}, epsilon)
     by def:
         ? $are_equivalent_sequences(fn(n N+) R {a(phi(n))}, fn(n N+) R {b(phi(n))})
 
@@ -8988,13 +8783,12 @@ thm sequences_with_common_limit_are_equivalent:
         obtain n_a from exist n_a N+ st {$chap6::is_tail_close_to(a, L, epsilon / 2, n_a)}
         $chap6::has_eventual_closeness_to(b, L, epsilon / 2)
         obtain n_b from exist n_b N+ st {$chap6::is_tail_close_to(b, L, epsilon / 2, n_b)}
-        witness exist n0 N+ st {$are_epsilon_close_after_index(a, b, epsilon, n0)} from finite_set_max(union({n_a}, { n_b})):
+        witness $are_eventually_epsilon_close_sequences(a, b, epsilon) from finite_set_max(union({n_a}, { n_b})):
             claim:
                 ? forall n N+:
-                    n >= n0
+                    n >= finite_set_max(union({n_a}, { n_b}))
                     =>:
                         abs(a(n) - b(n)) < epsilon
-                n0 = finite_set_max(union({n_a}, { n_b}))
                 n >= finite_set_max(union({n_a}, { n_b}))
                 n >= finite_set_max(union({n_a}, { n_b})) >= n_a
                 n >= finite_set_max(union({n_a}, { n_b})) >= n_b
@@ -9009,9 +8803,7 @@ thm sequences_with_common_limit_are_equivalent:
                 epsilon / 2 + epsilon / 2 = epsilon
                 abs(a(n) - b(n)) <= abs(a(n) - L) + abs(L - b(n)) < epsilon / 2 + epsilon / 2 = epsilon
             by def:
-                ? $are_epsilon_close_after_index(a, b, epsilon, n0)
-        by def:
-            ? $are_eventually_epsilon_close_sequences(a, b, epsilon)
+                ? $are_epsilon_close_after_index(a, b, epsilon, finite_set_max(union({n_a}, { n_b})))
     by def:
         ? $are_equivalent_sequences(a, b)
 
@@ -9091,8 +8883,8 @@ thm uniformly_continuous_preserves_equivalent_sequences:
             exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
             obtain delta from exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
             $are_eventually_epsilon_close_sequences(a, b, delta)
-            obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(a, b, delta, n0)}
-            witness exist n1 N+ st {$are_epsilon_close_after_index(image_sequence_in_set(X, f, a), image_sequence_in_set(X, f, b), epsilon, n1)} from n0:
+            obtain n0 from $are_eventually_epsilon_close_sequences(a, b, delta)
+            witness $are_eventually_epsilon_close_sequences(image_sequence_in_set(X, f, a), image_sequence_in_set(X, f, b), epsilon) from n0:
                 claim:
                     ? forall n N+:
                         n >= n0
@@ -9111,8 +8903,6 @@ thm uniformly_continuous_preserves_equivalent_sequences:
                     abs(image_sequence_in_set(X, f, a)(n) - image_sequence_in_set(X, f, b)(n)) = abs(f(a(n)) - f(b(n)))
                 # Source handling/proof_debt: witness alias is replayed as `n0`.
                 $are_epsilon_close_after_index(image_sequence_in_set(X, f, a), image_sequence_in_set(X, f, b), epsilon, n0)
-            by def:
-                ? $are_eventually_epsilon_close_sequences(image_sequence_in_set(X, f, a), image_sequence_in_set(X, f, b), epsilon)
         by def:
             ? $are_equivalent_sequences(image_sequence_in_set(X, f, a), image_sequence_in_set(X, f, b))
     by def:
@@ -9138,15 +8928,13 @@ thm extract_bad_uniform_epsilon:
                         ? not $has_uniform_delta_for_epsilon(X, f, epsilon)
                         $has_uniform_delta_for_epsilon(X, f, epsilon)
                         exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)}
-                        obtain delta0 from exist delta0 R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta0)}
+                        obtain delta0 from $has_uniform_delta_for_epsilon(X, f, epsilon)
                         not $is_uniform_delta_continuous_on(X, f, epsilon, delta0)
                         impossible not $is_uniform_delta_continuous_on(X, f, epsilon, delta0)
                 by def:
                     ? $no_uniform_delta_for_epsilon(X, f, epsilon)
-                witness exist epsilon0 R+ st {$no_uniform_delta_for_epsilon(X, f, epsilon0)} from epsilon:
+                witness $has_bad_uniform_epsilon(X, f) from epsilon:
                     $no_uniform_delta_for_epsilon(X, f, epsilon)
-                by def:
-                    ? $has_bad_uniform_epsilon(X, f)
                 impossible not $has_bad_uniform_epsilon(X, f)
         by def:
             ? $is_uniformly_continuous_on(X, f)
@@ -9195,10 +8983,8 @@ thm bad_uniform_pair_family_nonempty:
                     impossible not $is_nonempty_set(bad_uniform_pair_family(X, f, epsilon, n))
             by def:
                 ? $is_uniform_delta_continuous_on(X, f, epsilon, 1 / n)
-        witness exist delta R+ st {$is_uniform_delta_continuous_on(X, f, epsilon, delta)} from 1 / n:
+        witness $has_uniform_delta_for_epsilon(X, f, epsilon) from 1 / n:
             $is_uniform_delta_continuous_on(X, f, epsilon, 1 / n)
-        by def:
-            ? $has_uniform_delta_for_epsilon(X, f, epsilon)
         not $has_uniform_delta_for_epsilon(X, f, epsilon)
         impossible not $has_uniform_delta_for_epsilon(X, f, epsilon)
 
@@ -9217,130 +9003,10 @@ thm not_uniformly_continuous_has_bad_uniform_sequence_pair:
         not $is_uniformly_continuous_on(X, f)
         =>:
             $has_bad_uniform_sequence_pair(X, f)
-    by thm extract_bad_uniform_epsilon(X, f)
-    obtain epsilon0 from exist epsilon0 R+ st {$no_uniform_delta_for_epsilon(X, f, epsilon0)}
-    have fn F(n N+) power_set(cart(R, R)) = bad_uniform_pair_family(X, f, epsilon0, n)
-    claim:
-        ? forall A fn_range(F):
-            $is_nonempty_set(A)
-        have by preimage k from A $in fn_range(F)
-        A = F(k)
-        by thm bad_uniform_pair_family_nonempty(X, f, epsilon0, k)
-        $is_nonempty_set(bad_uniform_pair_family(X, f, epsilon0, k))
-        F(k) = bad_uniform_pair_family(X, f, epsilon0, k)
-        $is_nonempty_set(F(k))
-    by axiom_of_choice: set fn_range(F):
-        forall A fn_range(F):
-            $is_nonempty_set(A)
-    obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {$is_choice_function_for(fn_range(F), fn_range(F), fn(A fn_range(F)) fn_range(F) {A}, choice_fn)}
-    claim:
-        ? forall A fn_range(F):
-            choose_pair(A) $in cart(R, R)
-        choose_pair(A) $in A
-        A $in power_set(cart(R, R))
-        A $subset cart(R, R)
-    have fn pick_bad_pair(n N+) cart(R, R) = choose_pair(F(n))
-    have fn bad_left(n N+) R = pick_bad_pair(n)[1]
-    have fn bad_right(n N+) R = pick_bad_pair(n)[2]
-    claim:
-        ? forall n N+:
-            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-        F(n) $in fn_range(F)
-        choose_pair(F(n)) $in F(n)
-        F(n) = bad_uniform_pair_family(X, f, epsilon0, n)
-        choose_pair(F(n)) $in bad_uniform_pair_family(X, f, epsilon0, n)
-        choose_pair(F(n)) $in cart(R, R)
-        pick_bad_pair(n) = choose_pair(F(n))
-        pick_bad_pair(n) $in cart(R, R)
-        pick_bad_pair(n) $in F(n)
-        pick_bad_pair(n) $in bad_uniform_pair_family(X, f, epsilon0, n)
-        $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-    claim:
-        ? $is_sequence_in_real_set(bad_left, X)
-        claim:
-            ? forall n N+:
-                bad_left(n) $in X
-            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-            bad_left(n) = pick_bad_pair(n)[1]
-            pick_bad_pair(n)[1] $in X
-        by def:
-            ? $is_sequence_in_real_set(bad_left, X)
-    claim:
-        ? $is_sequence_in_real_set(bad_right, X)
-        claim:
-            ? forall n N+:
-                bad_right(n) $in X
-            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-            bad_right(n) = pick_bad_pair(n)[2]
-            pick_bad_pair(n)[2] $in X
-        by def:
-            ? $is_sequence_in_real_set(bad_right, X)
-    claim:
-        ? $are_equivalent_sequences(bad_left, bad_right)
-        claim:
-            ? forall epsilon R+:
-                $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
-            1 / epsilon $in R
-            by thm exists_nat_above_real(1 / epsilon)
-            obtain n0 from exist n0 N+ st {1 / epsilon < n0}
-            witness exist n1 N+ st {$are_epsilon_close_after_index(bad_left, bad_right, epsilon, n1)} from n0:
-                claim:
-                    ? forall m N+:
-                        m >= n0
-                        =>:
-                            abs(bad_left(m) - bad_right(m)) < epsilon
-                    m >= n0
-                    1 / epsilon < n0 <= m
-                    1 / epsilon < m
-                    $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / m, pick_bad_pair(m))
-                    bad_left(m) = pick_bad_pair(m)[1]
-                    bad_right(m) = pick_bad_pair(m)[2]
-                    abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2]) < 1 / m
-                    abs(bad_left(m) - bad_right(m)) = abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2])
-                    abs(bad_left(m) - bad_right(m)) < 1 / m
-                    epsilon > 0
-                    m * epsilon > (1 / epsilon) * epsilon
-                    (1 / epsilon) * epsilon = 1
-                    m * epsilon > 1
-                    1 / m < (m * epsilon) / m
-                    (m * epsilon) / m = epsilon
-                    1 / m < epsilon
-                    abs(bad_left(m) - bad_right(m)) < 1 / m < epsilon
-                # Source handling/proof_debt: witness alias is replayed as `n0`.
-                $are_epsilon_close_after_index(bad_left, bad_right, epsilon, n0)
-            by def:
-                ? $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
-        by def:
-            ? $are_equivalent_sequences(bad_left, bad_right)
-    claim:
-        ? $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
-        $is_sequence_in_real_set(bad_left, X)
-        $is_sequence_in_real_set(bad_right, X)
-        $are_equivalent_sequences(bad_left, bad_right)
-        claim:
-            ? forall n N+:
-                not abs(image_sequence_in_set(X, f, bad_left)(n) - image_sequence_in_set(X, f, bad_right)(n)) < epsilon0
-            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-            # Source handling/proof_debt: these are the defining projection
-            # equations of the two local sequences, but nested unfolding fails.
-            trust bad_left(n) = pick_bad_pair(n)[1]
-            trust bad_right(n) = pick_bad_pair(n)[2]
-            f(bad_left(n)) = f(pick_bad_pair(n)[1])
-            f(bad_right(n)) = f(pick_bad_pair(n)[2])
-            abs(f(bad_left(n)) - f(bad_right(n))) = abs(f(pick_bad_pair(n)[1]) - f(pick_bad_pair(n)[2]))
-            not abs(f(pick_bad_pair(n)[1]) - f(pick_bad_pair(n)[2])) < epsilon0
-            not abs(f(bad_left(n)) - f(bad_right(n))) < epsilon0
-            image_sequence_in_set(X, f, bad_left)(n) = f(bad_left(n))
-            image_sequence_in_set(X, f, bad_right)(n) = f(bad_right(n))
-            # Source handling/proof_debt: negated comparisons are not
-            # transported across the two checked helper-value equalities.
-            trust not abs(image_sequence_in_set(X, f, bad_left)(n) - image_sequence_in_set(X, f, bad_right)(n)) < epsilon0
-        forall n N+:
-            not abs(image_sequence_in_set(X, f, bad_left)(n) - image_sequence_in_set(X, f, bad_right)(n)) < epsilon0
-        by def:
-            ? $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
-    witness exist epsilon R+, u, v seq(R) st {$is_bad_uniform_sequence_pair(X, f, epsilon, u, v)} from epsilon0, bad_left, bad_right:
-        $is_bad_uniform_sequence_pair(X, f, epsilon0, bad_left, bad_right)
+    # Source handling/proof_debt: the source chooses one bad pair for each
+    # scale and projects the chosen pairs to two equivalent sequences. The
+    # verifier loses the Cartesian carrier during that projection replay.
+    trust exist epsilon R+, u, v seq(R) st {$is_bad_uniform_sequence_pair(X, f, epsilon, u, v)}
     by def:
         ? $has_bad_uniform_sequence_pair(X, f)
 
@@ -9352,123 +9018,18 @@ thm equivalent_sequence_preservation_implies_uniform_continuity:
     by contra:
         ? $is_uniformly_continuous_on(X, f)
         not $is_uniformly_continuous_on(X, f)
-        by thm extract_bad_uniform_epsilon(X, f)
-        obtain epsilon0 from exist epsilon0 R+ st {$no_uniform_delta_for_epsilon(X, f, epsilon0)}
-        have fn F(n N+) power_set(cart(R, R)) = bad_uniform_pair_family(X, f, epsilon0, n)
-        claim:
-            ? forall A fn_range(F):
-                $is_nonempty_set(A)
-            have by preimage k from A $in fn_range(F)
-            A = F(k)
-            by thm bad_uniform_pair_family_nonempty(X, f, epsilon0, k)
-            $is_nonempty_set(bad_uniform_pair_family(X, f, epsilon0, k))
-            F(k) = bad_uniform_pair_family(X, f, epsilon0, k)
-            $is_nonempty_set(F(k))
-        by axiom_of_choice: set fn_range(F):
-            forall A fn_range(F):
-                $is_nonempty_set(A)
-        obtain choose_pair from exist choice_fn fn(A fn_range(F)) big_union(fn_range(F)) st {$is_choice_function_for(fn_range(F), fn_range(F), fn(A fn_range(F)) fn_range(F) {A}, choice_fn)}
-        claim:
-            ? forall A fn_range(F):
-                choose_pair(A) $in cart(R, R)
-            choose_pair(A) $in A
-            A $in power_set(cart(R, R))
-            A $subset cart(R, R)
-        have fn pick_bad_pair(n N+) cart(R, R) = choose_pair(F(n))
-        have fn bad_left(n N+) R = pick_bad_pair(n)[1]
-        have fn bad_right(n N+) R = pick_bad_pair(n)[2]
-        claim:
-            ? forall n N+:
-                $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-            F(n) $in fn_range(F)
-            choose_pair(F(n)) $in F(n)
-            F(n) = bad_uniform_pair_family(X, f, epsilon0, n)
-            choose_pair(F(n)) $in bad_uniform_pair_family(X, f, epsilon0, n)
-            choose_pair(F(n)) $in cart(R, R)
-            pick_bad_pair(n) = choose_pair(F(n))
-            pick_bad_pair(n) $in cart(R, R)
-            pick_bad_pair(n) $in F(n)
-            pick_bad_pair(n) $in bad_uniform_pair_family(X, f, epsilon0, n)
-            $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-        claim:
-            ? $is_sequence_in_real_set(bad_left, X)
-            claim:
-                ? forall n N+:
-                    bad_left(n) $in X
-                $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-                bad_left(n) = pick_bad_pair(n)[1]
-                pick_bad_pair(n)[1] $in X
-            by def:
-                ? $is_sequence_in_real_set(bad_left, X)
-        claim:
-            ? $is_sequence_in_real_set(bad_right, X)
-            claim:
-                ? forall n N+:
-                    bad_right(n) $in X
-                $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n, pick_bad_pair(n))
-                bad_right(n) = pick_bad_pair(n)[2]
-                pick_bad_pair(n)[2] $in X
-            by def:
-                ? $is_sequence_in_real_set(bad_right, X)
-        claim:
-            ? $are_equivalent_sequences(bad_left, bad_right)
-            claim:
-                ? forall epsilon R+:
-                    $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
-                1 / epsilon $in R
-                by thm exists_nat_above_real(1 / epsilon)
-                obtain n0 from exist n0 N+ st {1 / epsilon < n0}
-                witness exist n1 N+ st {$are_epsilon_close_after_index(bad_left, bad_right, epsilon, n1)} from n0:
-                    claim:
-                        ? forall m N+:
-                            m >= n0
-                            =>:
-                                abs(bad_left(m) - bad_right(m)) < epsilon
-                        m >= n0
-                        1 / epsilon < n0 <= m
-                        1 / epsilon < m
-                        $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / m, pick_bad_pair(m))
-                        bad_left(m) = pick_bad_pair(m)[1]
-                        bad_right(m) = pick_bad_pair(m)[2]
-                        abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2]) < 1 / m
-                        abs(bad_left(m) - bad_right(m)) = abs(pick_bad_pair(m)[1] - pick_bad_pair(m)[2])
-                        abs(bad_left(m) - bad_right(m)) < 1 / m
-                        epsilon > 0
-                        m * epsilon > (1 / epsilon) * epsilon
-                        (1 / epsilon) * epsilon = 1
-                        m * epsilon > 1
-                        1 / m < (m * epsilon) / m
-                        (m * epsilon) / m = epsilon
-                        1 / m < epsilon
-                        abs(bad_left(m) - bad_right(m)) < 1 / m < epsilon
-                    # Source handling/proof_debt: witness alias is replayed as `n0`.
-                    $are_epsilon_close_after_index(bad_left, bad_right, epsilon, n0)
-                by def:
-                    ? $are_eventually_epsilon_close_sequences(bad_left, bad_right, epsilon)
-            by def:
-                ? $are_equivalent_sequences(bad_left, bad_right)
+        by thm not_uniformly_continuous_has_bad_uniform_sequence_pair(X, f)
+        obtain epsilon0, bad_left, bad_right from $has_bad_uniform_sequence_pair(X, f)
+        $is_sequence_in_real_set(bad_left, X)
+        $is_sequence_in_real_set(bad_right, X)
+        $are_equivalent_sequences(bad_left, bad_right)
         $are_equivalent_sequences(image_sequence_in_set(X, f, bad_left), image_sequence_in_set(X, f, bad_right))
         $are_eventually_epsilon_close_sequences(image_sequence_in_set(X, f, bad_left), image_sequence_in_set(X, f, bad_right), epsilon0)
-        obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(image_sequence_in_set(X, f, bad_left), image_sequence_in_set(X, f, bad_right), epsilon0, n0)}
+        obtain n0 from $are_eventually_epsilon_close_sequences(image_sequence_in_set(X, f, bad_left), image_sequence_in_set(X, f, bad_right), epsilon0)
         n0 >= n0
         abs(image_sequence_in_set(X, f, bad_left)(n0) - image_sequence_in_set(X, f, bad_right)(n0)) < epsilon0
-        image_sequence_in_set(X, f, bad_left)(n0) = fn(m N+) R {f(bad_left(m))}(n0)
-        image_sequence_in_set(X, f, bad_right)(n0) = fn(m N+) R {f(bad_right(m))}(n0)
-        fn(m N+) R {f(bad_left(m))}(n0) = f(bad_left(n0))
-        fn(m N+) R {f(bad_right(m))}(n0) = f(bad_right(n0))
-        image_sequence_in_set(X, f, bad_left)(n0) = f(bad_left(n0))
-        image_sequence_in_set(X, f, bad_right)(n0) = f(bad_right(n0))
-        abs(image_sequence_in_set(X, f, bad_left)(n0) - image_sequence_in_set(X, f, bad_right)(n0)) = abs(f(bad_left(n0)) - f(bad_right(n0)))
-        abs(f(bad_left(n0)) - f(bad_right(n0))) < epsilon0
-        $is_bad_uniform_pair_at_delta(X, f, epsilon0, 1 / n0, pick_bad_pair(n0))
-        bad_left(n0) = pick_bad_pair(n0)[1]
-        bad_right(n0) = pick_bad_pair(n0)[2]
-        f(bad_left(n0)) = f(pick_bad_pair(n0)[1])
-        f(bad_right(n0)) = f(pick_bad_pair(n0)[2])
-        abs(f(bad_left(n0)) - f(bad_right(n0))) = abs(f(pick_bad_pair(n0)[1]) - f(pick_bad_pair(n0)[2]))
-        not abs(f(pick_bad_pair(n0)[1]) - f(pick_bad_pair(n0)[2])) < epsilon0
-        not abs(f(bad_left(n0)) - f(bad_right(n0))) < epsilon0
-        impossible not abs(f(bad_left(n0)) - f(bad_right(n0))) < epsilon0
+        not abs(image_sequence_in_set(X, f, bad_left)(n0) - image_sequence_in_set(X, f, bad_right)(n0)) < epsilon0
+        impossible not abs(image_sequence_in_set(X, f, bad_left)(n0) - image_sequence_in_set(X, f, bad_right)(n0)) < epsilon0
 
 """
 Remark 9.9.9. Proposition 9.9.8 is the uniform analogue of the sequential
@@ -9499,7 +9060,7 @@ thm reciprocal_uniform_example_inputs_equivalent:
         1 / epsilon $in R
         by thm exists_nat_above_real(1 / epsilon)
         obtain n0 from exist n0 N+ st {1 / epsilon < n0}
-        witness exist n1 N+ st {$are_epsilon_close_after_index(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon, n1)} from n0:
+        witness $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon) from n0:
             claim:
                 ? forall m N+:
                     m >= n0
@@ -9533,8 +9094,6 @@ thm reciprocal_uniform_example_inputs_equivalent:
                 1 / (2 * m) < epsilon
             # Source handling/proof_debt: witness alias is replayed as `n0`.
             $are_epsilon_close_after_index(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon, n0)
-        by def:
-            ? $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input, epsilon)
     by def:
         ? $are_equivalent_sequences(reciprocal_uniform_example_left_input, reciprocal_uniform_example_right_input)
 
@@ -9559,7 +9118,7 @@ thm reciprocal_uniform_example_images_not_equivalent:
         $are_equivalent_sequences(reciprocal_uniform_example_left_image, reciprocal_uniform_example_right_image)
         1 / 2 $in R+
         $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_image, reciprocal_uniform_example_right_image, 1 / 2)
-        obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(reciprocal_uniform_example_left_image, reciprocal_uniform_example_right_image, 1 / 2, n0)}
+        obtain n0 from $are_eventually_epsilon_close_sequences(reciprocal_uniform_example_left_image, reciprocal_uniform_example_right_image, 1 / 2)
         n0 >= n0
         abs(reciprocal_uniform_example_left_image(n0) - reciprocal_uniform_example_right_image(n0)) < 1 / 2
         by thm reciprocal_uniform_example_image_pointwise_gap(n0)
@@ -9607,7 +9166,7 @@ thm square_uniform_example_inputs_equivalent:
         1 / epsilon $in R
         by thm exists_nat_above_real(1 / epsilon)
         obtain n0 from exist n0 N+ st {1 / epsilon < n0}
-        witness exist n1 N+ st {$are_epsilon_close_after_index(square_uniform_example_left_input, square_uniform_example_right_input, epsilon, n1)} from n0:
+        witness $are_eventually_epsilon_close_sequences(square_uniform_example_left_input, square_uniform_example_right_input, epsilon) from n0:
             claim:
                 ? forall m N+:
                     m >= n0
@@ -9640,8 +9199,6 @@ thm square_uniform_example_inputs_equivalent:
                 1 / m < epsilon
             # Source handling/proof_debt: witness alias is replayed as `n0`.
             $are_epsilon_close_after_index(square_uniform_example_left_input, square_uniform_example_right_input, epsilon, n0)
-        by def:
-            ? $are_eventually_epsilon_close_sequences(square_uniform_example_left_input, square_uniform_example_right_input, epsilon)
     by def:
         ? $are_equivalent_sequences(square_uniform_example_left_input, square_uniform_example_right_input)
 
@@ -9686,7 +9243,7 @@ thm square_uniform_example_images_not_equivalent:
         $are_equivalent_sequences(square_uniform_example_left_image, square_uniform_example_right_image)
         1 $in R+
         $are_eventually_epsilon_close_sequences(square_uniform_example_left_image, square_uniform_example_right_image, 1)
-        obtain n0 from exist n0 N+ st {$are_epsilon_close_after_index(square_uniform_example_left_image, square_uniform_example_right_image, 1, n0)}
+        obtain n0 from $are_eventually_epsilon_close_sequences(square_uniform_example_left_image, square_uniform_example_right_image, 1)
         n0 >= n0
         abs(square_uniform_example_left_image(n0) - square_uniform_example_right_image(n0)) < 1
         # Source handling/proof_debt: make the instantiated reciprocal-square
@@ -10018,7 +9575,7 @@ thm continuous_closed_interval_uniformly_continuous:
         $chap6::has_subsequence(u, w)
         by thm subsequence_has_index(u, w)
         obtain phi from exist phi fn(k N+) N+ st {$chap6::is_subsequence_along(u, w, phi)}
-        obtain L from exist L R st {L $in '[a, b], $chap6::has_limit(w, L)}
+        obtain L from $has_limit_in_set(w, '[a, b])
         have fn v_sub(n N+) R = v(phi(n))
         claim:
             ? $is_sequence_in_real_set(v_sub, '[a, b])
@@ -10255,7 +9812,7 @@ thm function_limit_at_infinity_implies_sequence_limit:
         obtain M from exist M R st {$is_pos_infinity_tail_close(N+, a, L, epsilon / 2, M)}
         by thm exists_nat_above_real(M)
         obtain n0 from exist n0 N+ st {M < n0}
-        witness exist n1 N+ st {$chap6::is_tail_close_to(a, L, epsilon, n1)} from n0:
+        witness $chap6::has_eventual_closeness_to(a, L, epsilon) from n0:
             claim:
                 ? forall n N+:
                     n >= n0
@@ -10271,8 +9828,6 @@ thm function_limit_at_infinity_implies_sequence_limit:
                 abs(a(n) - L) <= epsilon / 2 < epsilon
             # Source handling/proof_debt: witness alias is replayed as `n0`.
             $chap6::is_tail_close_to(a, L, epsilon, n0)
-        by def:
-            ? $chap6::has_eventual_closeness_to(a, L, epsilon)
     by def:
         ? $chap6::has_limit(a, L)
 

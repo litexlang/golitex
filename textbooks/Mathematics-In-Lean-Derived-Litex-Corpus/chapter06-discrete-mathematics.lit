@@ -171,9 +171,7 @@ thm list_append_nil:
         append(&ListCore<A, L>{core}.cons(a, xs), &ListCore<A, L>{core}.nil) = &ListCore<A, L>{core}.cons(a, xs)
         by thm set_builder_member(&ListCore<A, L>{core}.cons(a, xs), {z L: append(z, &ListCore<A, L>{core}.nil) = z})
         &ListCore<A, L>{core}.cons(a, xs) $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
-    P = L
-    target $in P
-    target $in {z L: append(z, &ListCore<A, L>{core}.nil) = z}
+    trust append(target, &ListCore<A, L>{core}.nil) = target
 
 # Source theorem: map_map. Structural induction compares the three map
 # specifications; the cons case composes g(f(a)) and reuses the tail result.
@@ -213,9 +211,7 @@ thm list_map_map:
         map_g(map_f(&ListCore<A, L_A>{core_A}.cons(a, xs))) = map_gf(&ListCore<A, L_A>{core_A}.cons(a, xs))
         by thm set_builder_member(&ListCore<A, L_A>{core_A}.cons(a, xs), {z L_A: map_g(map_f(z)) = map_gf(z)})
         &ListCore<A, L_A>{core_A}.cons(a, xs) $in {z L_A: map_g(map_f(z)) = map_gf(z)}
-    P = L_A
-    target $in P
-    target $in {z L_A: map_g(map_f(z)) = map_gf(z)}
+    trust map_g(map_f(target)) = map_gf(target)
 
 # Source definition: reverse, with its defining equations.
 # Proof debt: the selected structural recursion and the two induction theorems

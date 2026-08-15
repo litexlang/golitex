@@ -164,10 +164,150 @@ thm euler_power_is_one_or_minus_one:
 
 # The reduced-power iff is the remaining prime finite-field power-map boundary.
 # Euler's two cases below are derived from its quadratic specialization.
+thm power_congruence_solution_is_relatively_prime:
+    ? forall p N+, k N+, a, x Z:
+        $section3::relatively_prime_Z(a, p)
+        $solves_power_congruence_mod(p, k, a, x)
+        =>:
+            $section3::relatively_prime_Z(x, p)
+    by thm section3::theorem_III_1_relprime_implies_bezout_pair(a, p)
+    obtain u, v from exist u, v Z st {a * u + p * v = 1}
+    by def:
+        ? $solves_power_congruence_mod(p, k, a, x)
+    obtain t from exist t Z st {x ^ k - a = p * t}
+    x ^ k = (x ^ k - a) + a = p * t + a = a + p * t
+    k - 1 $in N
+    (k - 1) + 1 = k
+    x * x ^ (k - 1) = x ^ ((k - 1) + 1) = x ^ k
+    p * (v - t * u) = p * v - p * t * u
+    x * (x ^ (k - 1) * u) = (x * x ^ (k - 1)) * u = x ^ k * u
+    x ^ k * u + (p * v - p * t * u) = x ^ k * u + p * v - p * t * u
+    x ^ k * u + p * v - p * t * u = (a + p * t) * u + p * v - p * t * u = a * u + p * v = 1
+    witness exist bx, bp Z st {x * bx + p * bp = 1} from x ^ (k - 1) * u, v - t * u:
+        x * (x ^ (k - 1) * u) + p * (v - t * u) = x ^ k * u + (p * v - p * t * u) = x ^ k * u + p * v - p * t * u = 1
+    by thm section3::theorem_III_1_bezout_implies_relprime_pair(x, p)
+
+thm power_congruence_solvable_implies_reduced_power:
+    ? forall p N+, k N+, a Z, d N+, exp_e N:
+        $power_congruence_prime_condition(p, k, a, d)
+        exp_e * d = p - 1
+        $power_congruence_solvable_mod(p, k, a)
+        =>:
+            a ^ exp_e % p = 1
+    by def:
+        ? $power_congruence_prime_condition(p, k, a, d)
+    by def:
+        ? $power_congruence_solvable_mod(p, k, a)
+    obtain x from exist x Z st {$solves_power_congruence_mod(p, k, a, x)}
+    by thm solves_power_congruence_mod_has_same_remainder(p, k, a, x)
+    by thm power_congruence_solution_is_relatively_prime(p, k, a, x)
+    by thm section8::theorem_VIII_Euler(p, x)
+    $section8::euler_theorem_conclusion(p, x)
+    by def:
+        ? $section8::euler_theorem_conclusion(p, x)
+    by thm section5::congruent_mod_has_same_remainder(p, x ^ section6::euler_phi(p), 1)
+    claim:
+        ? $section2::euclidean_division_Z(1, p, 0, 1)
+        p > 0
+        1 = p * 0 + 1
+        0 <= 1 < p
+        by def:
+            ? $section2::euclidean_division_Z(1, p, 0, 1)
+    by thm section2::euclidean_division_remainder_is_mod(1, p, 0, 1)
+    1 % p = 1
+    by thm section6::euler_phi_prime_value(p)
+    section6::euler_phi(p) = p - 1
+    x ^ (p - 1) % p = x ^ section6::euler_phi(p) % p = 1
+    by thm section2::gcd_Z_dvd_left(k, p - 1)
+    obtain q from exist q Z st {k = section2::gcd_Z(k, p - 1) * q}
+    k = section2::gcd_Z(k, p - 1) * q = d * q
+    d > 0
+    k > 0
+    q > 0 or q = 0 or q < 0
+    by cases:
+        ? a ^ exp_e % p = 1
+        case q > 0:
+            q $in N+
+            k * exp_e = (d * q) * exp_e = (exp_e * d) * q = (p - 1) * q
+            (x ^ k) ^ exp_e = x ^ (k * exp_e) = x ^ ((p - 1) * q) = (x ^ (p - 1)) ^ q
+            ((x ^ k) % p) ^ exp_e % p = (a % p) ^ exp_e % p
+            (x ^ k) ^ exp_e % p = ((x ^ k) % p) ^ exp_e % p = (a % p) ^ exp_e % p = a ^ exp_e % p
+            ((x ^ (p - 1)) % p) ^ q % p = 1 ^ q % p = 1 % p = 1
+            (x ^ (p - 1)) ^ q % p = ((x ^ (p - 1)) % p) ^ q % p = 1
+            a ^ exp_e % p = 1
+        case q = 0:
+            k = d * q = d * 0 = 0
+            impossible k > 0
+        case q < 0:
+            d * q < 0
+            k = d * q < 0
+            impossible k > 0
+
+# A reduced power equal to one forces the gcd d to divide the selected
+# primitive-root index of a.  This is the exact Section VI premise needed by
+# the remaining linear exponent-congruence construction.
+thm reduced_power_implies_gcd_divides_index:
+    ? forall p N+, k N+, a Z, d N+, exp_e N:
+        $power_congruence_prime_condition(p, k, a, d)
+        exp_e * d = p - 1
+        a ^ exp_e % p = 1
+        =>:
+            exist g Z st {$section10::primitive_root_mod(p, g), $section1::divides_Z(d, section10::index_mod(p, g, a))}
+    by def:
+        ? $power_congruence_prime_condition(p, k, a, d)
+    by thm section10::theorem_X_primitive_root_prime_modulus(p)
+    obtain g from exist g0 Z st {$section10::primitive_root_mod(p, g0)}
+    by thm section10::index_mod_satisfies_spec(p, g, a)
+    by def:
+        ? $section10::index_mod_spec(p, g, a, section10::index_mod(p, g, a))
+    by def:
+        ? $section10::primitive_root_mod(p, g)
+    have idx N = section10::index_mod(p, g, a)
+    g ^ idx $in Z
+    (g ^ idx) ^ exp_e % p = ((g ^ idx) % p) ^ exp_e % p = (a % p) ^ exp_e % p = a ^ exp_e % p = 1
+    g ^ (idx * exp_e) = (g ^ idx) ^ exp_e
+    g ^ (idx * exp_e) % p = 1
+    by thm section10::multiplicative_order_divides_return_exponent(p, g, section6::euler_phi(p), idx * exp_e)
+    by thm section6::euler_phi_prime_value(p)
+    obtain q from exist q Z st {idx * exp_e = section6::euler_phi(p) * q}
+    idx * exp_e = section6::euler_phi(p) * q = (p - 1) * q = (exp_e * d) * q = exp_e * (d * q)
+    claim:
+        ? exp_e > 0
+        by contra:
+            ? exp_e > 0
+            exp_e <= 0
+            exp_e = 0
+            p - 1 = exp_e * d = 0
+            p = 1
+            impossible p > 1
+    idx = idx * exp_e / exp_e = exp_e * (d * q) / exp_e = d * q
+    witness exist factor Z st {idx = d * factor} from q
+    by def:
+        ? $section1::divides_Z(d, idx)
+    witness exist g0 Z st {$section10::primitive_root_mod(p, g0), $section1::divides_Z(d, section10::index_mod(p, g0, a))} from g
+
 thm theorem_XI_power_congruence_criterion:
     ? forall p N+, k N+, a Z, d N+, exp_e N:
         $power_congruence_prime_criterion(p, k, a, d, exp_e)
-    trust $power_congruence_prime_criterion(p, k, a, d, exp_e)
+    claim:
+        ? forall:
+            $power_congruence_prime_condition(p, k, a, d)
+            exp_e * d = p - 1
+            $power_congruence_solvable_mod(p, k, a)
+            =>:
+                a ^ exp_e % p = 1
+        by thm power_congruence_solvable_implies_reduced_power(p, k, a, d, exp_e)
+    # trust: second-pass boundary; the Section X interfaces and exponent
+    # construction are staged, but the final negative-shift carrier transport
+    # still needs a checked contextual sign bridge.
+    trust forall:
+        $power_congruence_prime_condition(p, k, a, d)
+        exp_e * d = p - 1
+        a ^ exp_e % p = 1
+        =>:
+            $power_congruence_solvable_mod(p, k, a)
+    by def:
+        ? $power_congruence_prime_criterion(p, k, a, d, exp_e)
 
 thm theorem_XI_quadratic_residue_split:
     ? forall p N+, a Z, h N:
@@ -346,7 +486,7 @@ thm theorem_XI_minus_one_quadratic_residue:
                         (-1) ^ h = (-1) ^ (2 * m + 1) = -1
                         0 <= p - 1 < p
                         p - 1 = p * 0 + (p - 1)
-                        trust (p - 1) % p = p - 1
+                        by thm section2::euclidean_division_remainder_is_mod(p - 1, p, 0, p - 1)
                         (-1) % p = (p - (1 % p)) % p = (p - 1) % p = p - 1
                         (-1) ^ h % p = (-1) % p = p - 1
                         (-1) ^ h % p = 1
@@ -384,7 +524,7 @@ thm theorem_XI_minus_one_quadratic_residue:
                     ? $euler_nonresidue_condition(p, -1, h)
                 by thm minus_one_even_power(m)
                 (-1) ^ h = (-1) ^ (2 * m) = 1
-                trust 1 % p = 1
+                by thm section2::euclidean_division_remainder_is_mod(1, p, 0, 1)
                 (-1) ^ h % p = 1 % p = 1
                 (-1) ^ h % p = p - 1
                 p - 1 = 1

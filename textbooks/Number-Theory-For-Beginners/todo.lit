@@ -28,8 +28,9 @@
 # proof bodies, both downstream of this one remaining trusted interface.
 #
 # Section XII — Theorem XII.2
-# The quadratic reciprocity statement and its lattice-count parity proof have
-# not yet been added to the current draft.
+# Quadratic reciprocity is now checked through the two oriented lattice counts,
+# their parity bridges, and the rectangle partition. Section XII has no
+# executable trust.
 #
 # Section XIII — Lemma and Theorem XIII.1
 # Rational-prime norm now implies Gaussian primality by an explicit
@@ -44,9 +45,10 @@
 # the prime-or-Bezout route, and cancellation. Replay principal ideals and the
 # remaining factorization arguments without restoring coordinate pairs.
 #
-# Section XIII — Theorems XIII.2–XIII.4 and Corollary 1
+# Section XIII — Theorems XIII.2–XIII.3
 # Gaussian factorization traces now contain native-complex factors and partial
 # products. Replay norm induction for existence and associate cancellation for
 # uniqueness against this carrier.
-# Rational-prime splitting, the mod-four classification, and the resulting
-# classification of Gaussian primes also remain to be proved.
+# Rational-prime splitting remains. Theorem XIII.4 and the Gaussian-prime
+# classification corollary have no direct trust; their split branches still
+# inherit XIII.3's explicit upstream trust.
