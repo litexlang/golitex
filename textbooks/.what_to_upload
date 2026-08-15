@@ -4,11 +4,6 @@ Analysis
 "Almost done, needs clean up. some concepts can be expressed in a better way, some verification process can be reduced"
 
 [book]
-Concrete-Mathematics
-15%
-"Just start formalizing"
-
-[book]
 Linear-Algebra-Done-Right
 50%
 "Basic framework done, some concepts need extra thinkings, might require big refactoring"

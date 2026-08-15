@@ -421,7 +421,7 @@ thm banach_steinhaus:
     by thm complete_normed_space_is_complete_metric(E, source)
     by thm chap11::complete_metric_closed_cover_has_ball(E, \norm_distance<E, source>, \pointwise_bound_level_set<Index, E, F, target, g>)
     obtain level, center, epsilon from exist k N, c E, r R+ st {\chap11::metric_ball<E, \norm_distance<E, source>>(c, r) $subset \pointwise_bound_level_set<Index, E, F, target, g>(k)}
-    witness exist bound R st {$is_uniform_operator_norm_bound(Index, E, F, source, target, g, bound)} from shell_bound_constant(level, epsilon / 2):
+    witness $is_uniformly_bounded_continuous_linear_map_family(Index, E, F, source, target, g) from shell_bound_constant(level, epsilon / 2):
         claim:
             ? forall j Index:
                 $is_continuous_real_linear_map(E, F, source, target, g(j))
@@ -431,8 +431,6 @@ thm banach_steinhaus:
             by thm operator_norm_le_of_shell(E, F, source, target, g(j), epsilon / 2, epsilon, shell_bound_constant(level, epsilon / 2))
         by def:
             ? $is_uniform_operator_norm_bound(Index, E, F, source, target, g, shell_bound_constant(level, epsilon / 2))
-    by def:
-        ? $is_uniformly_bounded_continuous_linear_map_family(Index, E, F, source, target, g)
 
 # Asymptotic relations are genuine properties of candidate functions and a
 # filter, not selected functions.

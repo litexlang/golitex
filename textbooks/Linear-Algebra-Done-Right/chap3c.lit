@@ -32,40 +32,259 @@ axiom matrix_of_linear_map_spec:
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
     have fn matrix_add(A, B matrix(s, m, n)) matrix(s, m, n) = fn(j N+, k N+: j <= m, k <= n) s {scalars.add(A(j, k), B(j, k))}
 # Result 3.35. Taking matrices commutes with addition of linear maps.
-axiom matrix_of_sum:
+thm matrix_of_sum:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, S, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T) $in \chap3a::linear_map_space<s, VSet, WSet, V, W>
         =>:
             \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)) = \matrix_add<s, V.scalars, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, S)
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, T)
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))
+    by def:
+        ? $is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, S, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S))
+    by def:
+        ? $is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, T, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    by def:
+        ? $is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)))
+    have left matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))
+    have right matrix(s, m, n) = \matrix_add<s, V.scalars, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    claim:
+        ? forall j, k N+:
+            j <= m
+            k <= n
+            =>:
+                left(j, k) = right(j, k)
+        have sum_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))
+        have S_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)
+        have T_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+        have sum_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)), k)
+        have S_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), k)
+        have T_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)
+        have added_coefficients &chap1a::FiniteList<s, m> = \chap2a::coefficient_list_add<s, W.scalars, m>(S_coefficients, T_coefficients)
+        \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)), k), w)
+        \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(sum_coefficients, w)
+        S(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), k), w)
+        S(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(S_coefficients, w)
+        T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), w)
+        T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(T_coefficients, w)
+        \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)(v.entries(k)) = W.add(S(v.entries(k)), T(v.entries(k)))
+        by thm chap2a::linear_combination_value_add_coefficients(s, WSet, W, m, S_coefficients, T_coefficients, w)
+        \chap2a::linear_combination_value<s, WSet, W, m>(added_coefficients, w) = W.add(\chap2a::linear_combination_value<s, WSet, W, m>(S_coefficients, w), \chap2a::linear_combination_value<s, WSet, W, m>(T_coefficients, w)) = W.add(S(v.entries(k)), T(v.entries(k))) = \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)(v.entries(k))
+        by def:
+            ? $chap2b::is_basis(s, WSet, W, m, w)
+        by thm chap2b::independent_coordinates_unique(s, WSet, W, m, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)(v.entries(k)), sum_coefficients, added_coefficients)
+        by thm chap2a::coefficient_list_add_entry(s, W.scalars, m, S_coefficients, T_coefficients, added_coefficients, j)
+        sum_coefficients.entries(j) = added_coefficients.entries(j) = W.scalars.add(S_coefficients.entries(j), T_coefficients.entries(j))
+        have sum_entries fn(position N+: position <= m) s = sum_coefficients.entries
+        have S_entries fn(position N+: position <= m) s = S_coefficients.entries
+        have T_entries fn(position N+: position <= m) s = T_coefficients.entries
+        \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T)), k) = (m, fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))(position, k)})
+        sum_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))(position, k)}
+        sum_entries = sum_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))(position, k)}
+        \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), k) = (m, fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(position, k)})
+        S_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(position, k)}
+        S_entries = S_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(position, k)}
+        \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k) = (m, fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)})
+        T_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)}
+        T_entries = T_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)}
+        sum_coefficients.entries(j) = sum_entries(j) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_add<s, VSet, WSet, V, W>(S, T))(j, k) = sum_matrix(j, k)
+        S_coefficients.entries(j) = S_entries(j) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(j, k) = S_matrix(j, k)
+        T_coefficients.entries(j) = T_entries(j) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k) = T_matrix(j, k)
+        V.scalars = W.scalars
+        W.scalars.add(S_matrix(j, k), T_matrix(j, k)) = V.scalars.add(S_matrix(j, k), T_matrix(j, k))
+        left(j, k) = sum_matrix(j, k) = sum_coefficients.entries(j) = added_coefficients.entries(j) = W.scalars.add(S_coefficients.entries(j), T_coefficients.entries(j)) = W.scalars.add(S_matrix(j, k), T_matrix(j, k)) = V.scalars.add(S_matrix(j, k), T_matrix(j, k))
+        \matrix_add<s, V.scalars, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)) = fn(row N+, column N+: row <= m, column <= n) s {V.scalars.add(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(row, column), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))}
+        right = fn(row N+, column N+: row <= m, column <= n) s {V.scalars.add(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(row, column), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))}
+        right(j, k) = (fn(row N+, column N+: row <= m, column <= n) s {V.scalars.add(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(row, column), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))})(j, k) = V.scalars.add(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)(j, k), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k)) = V.scalars.add(S_matrix(j, k), T_matrix(j, k))
+    by def $fn_eq(left, right)
+    left = right
 # Definition 3.36. Scalar multiplication of matrices is entrywise.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
     have fn matrix_smul(a s, A matrix(s, m, n)) matrix(s, m, n) = fn(j N+, k N+: j <= m, k <= n) s {scalars.mul(a, A(j, k))}
 # Result 3.38. The matrix of a scalar multiple is the corresponding scalar
 # multiple of the matrix.
-axiom matrix_of_scalar_multiple:
+thm matrix_of_scalar_multiple:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, n, m N+, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, a s, T \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, VSet, V, n, v)
         $chap2b::is_basis(s, WSet, W, m, w)
         \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T) $in \chap3a::linear_map_space<s, VSet, WSet, V, W>
         =>:
             \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)) = \matrix_smul<s, V.scalars, m, n>(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, T)
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    by def:
+        ? $is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, T, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    by def:
+        ? $is_matrix_of_linear_map(s, VSet, WSet, V, W, n, m, v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T), \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)))
+    have left matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))
+    have right matrix(s, m, n) = \matrix_smul<s, V.scalars, m, n>(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T))
+    claim:
+        ? forall j, k N+:
+            j <= m
+            k <= n
+            =>:
+                left(j, k) = right(j, k)
+        have scaled_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))
+        have T_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)
+        have scaled_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)), k)
+        have T_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k)
+        have expected_coefficients &chap1a::FiniteList<s, m> = \chap2a::coefficient_list_smul<s, W.scalars, m>(a, T_coefficients)
+        \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)), k), w)
+        \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(scaled_coefficients, w)
+        T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k), w)
+        T(v.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(T_coefficients, w)
+        \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)(v.entries(k)) = W.smul(a, T(v.entries(k)))
+        by thm chap2a::linear_combination_value_smul_coefficients(s, WSet, W, m, a, T_coefficients, w)
+        \chap2a::linear_combination_value<s, WSet, W, m>(expected_coefficients, w) = W.smul(a, \chap2a::linear_combination_value<s, WSet, W, m>(T_coefficients, w)) = W.smul(a, T(v.entries(k))) = \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)(v.entries(k))
+        by def:
+            ? $chap2b::is_basis(s, WSet, W, m, w)
+        by thm chap2b::independent_coordinates_unique(s, WSet, W, m, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)(v.entries(k)), scaled_coefficients, expected_coefficients)
+        by thm chap2a::coefficient_list_smul_entry(s, W.scalars, m, a, T_coefficients, expected_coefficients, j)
+        scaled_coefficients.entries(j) = expected_coefficients.entries(j) = W.scalars.mul(a, T_coefficients.entries(j))
+        have scaled_entries fn(position N+: position <= m) s = scaled_coefficients.entries
+        have T_entries fn(position N+: position <= m) s = T_coefficients.entries
+        \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T)), k) = (m, fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))(position, k)})
+        scaled_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))(position, k)}
+        scaled_entries = scaled_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))(position, k)}
+        \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T), k) = (m, fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)})
+        T_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)}
+        T_entries = T_coefficients.entries = fn(position N+: position <= m) s {\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(position, k)}
+        scaled_coefficients.entries(j) = scaled_entries(j) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, \chap3a::linear_map_smul<s, VSet, WSet, V, W>(a, T))(j, k) = scaled_matrix(j, k)
+        T_coefficients.entries(j) = T_entries(j) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k) = T_matrix(j, k)
+        V.scalars = W.scalars
+        W.scalars.mul(a, T_matrix(j, k)) = V.scalars.mul(a, T_matrix(j, k))
+        left(j, k) = scaled_matrix(j, k) = scaled_coefficients.entries(j) = expected_coefficients.entries(j) = W.scalars.mul(a, T_coefficients.entries(j)) = W.scalars.mul(a, T_matrix(j, k)) = V.scalars.mul(a, T_matrix(j, k))
+        \matrix_smul<s, V.scalars, m, n>(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)) = fn(row N+, column N+: row <= m, column <= n) s {V.scalars.mul(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))}
+        right = fn(row N+, column N+: row <= m, column <= n) s {V.scalars.mul(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))}
+        right(j, k) = (fn(row N+, column N+: row <= m, column <= n) s {V.scalars.mul(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(row, column))})(j, k) = V.scalars.mul(a, \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, T)(j, k)) = V.scalars.mul(a, T_matrix(j, k))
+    by def $fn_eq(left, right)
+    left = right
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn zero_matrix(j N+, k N+: j <= m, k <= n) s = scalars.zero
+
+thm matrix_tuple_is_vector_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+:
+        (scalars, \zero_matrix<s, scalars, m, n>, \matrix_add<s, scalars, m, n>, \matrix_smul<s, scalars, m, n>) $in &chap1b::VectorSpace<s, matrix(s, m, n)>
+    # The laws are pointwise scalar-system laws. The remaining boundary is
+    # packaging two-index function extensionality into the structure tuple.
+    trust (scalars, \zero_matrix<s, scalars, m, n>, \matrix_add<s, scalars, m, n>, \matrix_smul<s, scalars, m, n>) $in &chap1b::VectorSpace<s, matrix(s, m, n)>
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have matrix_vector_space &chap1b::VectorSpace<s, matrix(s, m, n)> = (scalars, \zero_matrix<s, scalars, m, n>, \matrix_add<s, scalars, m, n>, \matrix_smul<s, scalars, m, n>)
 # Notation 3.39. F^(m,n) is precisely matrix(F,m,n) in the builtin surface.
-# Result 3.40. The matrix space has dimension mn.
-axiom dimension_of_matrix_space:
-    ? forall s nonempty_set, m, n N+, matrix_space &chap1b::VectorSpace<s, matrix(s, m, n)>:
-        $chap2c::admits_basis_length(s, matrix(s, m, n), matrix_space)
-        =>:
-            \chap2c::dimension<s, matrix(s, m, n), matrix_space> = m * n
+# Result 3.40. The canonical entrywise matrix space has dimension mn.
+# The exact remaining boundary is existence of its matrix-unit basis.
+axiom matrix_unit_basis_exists:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+:
+        exist basis &chap1a::FiniteList<matrix(s, m, n), m * n> st {$chap2b::is_basis(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>, m * n, basis)}
+
+thm dimension_of_matrix_space_checked:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+:
+        $chap2a::is_finite_dimensional(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+        $chap2c::admits_basis_length(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+        \chap2c::dimension<s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>> = m * n
+    by thm matrix_unit_basis_exists(s, scalars, m, n)
+    obtain basis from exist selected &chap1a::FiniteList<matrix(s, m, n), m * n> st {$chap2b::is_basis(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>, m * n, selected)}
+    by def:
+        ? $chap2b::is_basis(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>, m * n, basis)
+    witness exist length N, vectors &chap1a::FiniteList<matrix(s, m, n), length> st {$chap2a::spans(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>, length, vectors)} from m * n, basis
+    by def $chap2a::is_finite_dimensional(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+    by thm chap2c::basis_length_equals_dimension(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>, m * n, basis)
+
+thm dimension_of_matrix_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+:
+        $chap2a::is_finite_dimensional(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+        $chap2c::admits_basis_length(s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>)
+        \chap2c::dimension<s, matrix(s, m, n), \matrix_vector_space<s, scalars, m, n>> = m * n
+    by thm dimension_of_matrix_space_checked(s, scalars, m, n)
 # Definition 3.41. Matrix multiplication contracts the shared index. The
 # scalar finite sum is the explicit generic-field analogue of the builtin
 # numeric matrix product.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n, p N+>:
     have fn matrix_mul(A matrix(s, m, n), B matrix(s, n, p)) matrix(s, m, p) = fn(j, k N+: j <= m, k <= p) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), B(r, k))})}
+
+# Coordinate substitution turns a linear combination of vectors given by
+# matrix columns into the corresponding matrix-column combination.  Keeping
+# the coordinate scalar system explicit lets the lemma serve composition
+# proofs whose source and target VectorSpace records share equal scalars.
+thm basis_coordinate_substitution:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, WSet nonempty_set, W &chap1b::VectorSpace<s, WSet>, m, n N+, w &chap1a::FiniteList<WSet, m>, A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>, values &chap1a::FiniteList<WSet, n>, result_coefficients &chap1a::FiniteList<s, m>:
+        scalars = W.scalars
+        $chap2b::is_basis(s, WSet, W, m, w)
+        forall r N+:
+            r <= n
+            =>:
+                values.entries(r) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(A, r), w)
+        result_coefficients = (m, fn(j N+: j <= m) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})})
+        =>:
+            \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values) = \chap2a::linear_combination_value<s, WSet, W, m>(result_coefficients, w)
+    have coordinate_basis &chap1a::FiniteList<finite_seq(s, m), m> = \chap3b::standard_coordinate_basis<s, scalars, m>
+    by thm chap3b::standard_coordinate_basis_is_basis(s, scalars, m)
+    by thm chap3a::linear_map_lemma(s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W, m, coordinate_basis, w)
+    obtain synthesis from exist! selected \chap3a::linear_map_space<s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W> st {$chap3a::has_prescribed_basis_values(s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W, m, coordinate_basis, w, selected)}
+    by def:
+        ? $chap3a::has_prescribed_basis_values(s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W, m, coordinate_basis, w, synthesis)
+    have mapped_basis &chap1a::FiniteList<WSet, m> = \chap3a::mapped_finite_list<finite_seq(s, m), WSet, m>(synthesis, coordinate_basis)
+    claim:
+        ? forall idx N+:
+            idx <= m
+            =>:
+                mapped_basis.entries(idx) = w.entries(idx)
+        mapped_basis = \chap3a::mapped_finite_list<finite_seq(s, m), WSet, m>(synthesis, coordinate_basis)
+        \chap3a::mapped_finite_list<finite_seq(s, m), WSet, m>(synthesis, coordinate_basis) = (m, fn(k N+: k <= m) WSet {synthesis(coordinate_basis.entries(k))})
+        mapped_basis.entries(idx) = synthesis(coordinate_basis.entries(idx)) = w.entries(idx)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(WSet, m, mapped_basis, w)
+    by thm chap1a::finite_list_extensionality(WSet, m, mapped_basis, w)
+    claim:
+        ? forall chosen &chap1a::FiniteList<s, m>:
+            synthesis(chosen.entries) = \chap2a::linear_combination_value<s, WSet, W, m>(chosen, w)
+        by thm chap3b::standard_coordinate_reconstruction(s, scalars, m, chosen)
+        by thm chap3a::linear_map_preserves_linear_combination(s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W, synthesis, m, chosen, coordinate_basis)
+        synthesis(chosen.entries) = synthesis(\chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, m>(chosen, coordinate_basis))
+        synthesis(\chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, m>(chosen, coordinate_basis)) = \chap2a::linear_combination_value<s, WSet, W, m>(chosen, \chap3a::mapped_finite_list<finite_seq(s, m), WSet, m>(synthesis, coordinate_basis))
+        \chap3a::mapped_finite_list<finite_seq(s, m), WSet, m>(synthesis, coordinate_basis) = mapped_basis = w
+        synthesis(chosen.entries) = \chap2a::linear_combination_value<s, WSet, W, m>(chosen, w)
+    have columns &chap1a::FiniteList<finite_seq(s, m), n> = \chap3b::matrix_columns<s, scalars, m, n, A>
+    have mapped_columns &chap1a::FiniteList<WSet, n> = \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns)
+    claim:
+        ? forall r N+:
+            r <= n
+            =>:
+                mapped_columns.entries(r) = values.entries(r)
+        have column_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, n>(A, r)
+        \matrix_column_coefficients<s, m, n>(A, r) = (m, fn(j N+: j <= m) s {A(j, r)})
+        column_coefficients.entries = fn(j N+: j <= m) s {A(j, r)}
+        columns = \chap3b::matrix_columns<s, scalars, m, n, A>
+        \chap3b::matrix_columns<s, scalars, m, n, A> = (n, fn(k N+: k <= n) finite_seq(s, m) {fn(j N+: j <= m) s {A(j, k)}})
+        columns.entries(r) = fn(j N+: j <= m) s {A(j, r)} = column_coefficients.entries
+        mapped_columns = \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns)
+        \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns) = (n, fn(k N+: k <= n) WSet {synthesis(columns.entries(k))})
+        mapped_columns.entries(r) = synthesis(columns.entries(r)) = synthesis(column_coefficients.entries)
+        synthesis(column_coefficients.entries) = \chap2a::linear_combination_value<s, WSet, W, m>(column_coefficients, w)
+        values.entries(r) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(A, r), w) = \chap2a::linear_combination_value<s, WSet, W, m>(column_coefficients, w)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(WSet, n, mapped_columns, values)
+    by thm chap1a::finite_list_extensionality(WSet, n, mapped_columns, values)
+    have coordinate_result finite_seq(s, m) = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, columns)
+    by thm chap3b::matrix_column_combination_reconstruction(s, scalars, m, n, A, coefficients)
+    coordinate_result = fn(j N+: j <= m) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    result_coefficients.entries = fn(j N+: j <= m) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    coordinate_result = result_coefficients.entries
+    by thm chap3a::linear_map_preserves_linear_combination(s, finite_seq(s, m), WSet, \chap1b::coordinate_space<s, scalars, m>, W, synthesis, n, coefficients, columns)
+    synthesis(\chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, columns)) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns))
+    synthesis(coordinate_result) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns))
+    \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, \chap3a::mapped_finite_list<finite_seq(s, m), WSet, n>(synthesis, columns)) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, mapped_columns)
+    synthesis(coordinate_result) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, mapped_columns) = \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values)
+    synthesis(result_coefficients.entries) = \chap2a::linear_combination_value<s, WSet, W, m>(result_coefficients, w)
+    synthesis(coordinate_result) = synthesis(result_coefficients.entries)
+    \chap2a::linear_combination_value<s, WSet, W, n>(coefficients, values) = synthesis(coordinate_result) = synthesis(result_coefficients.entries) = \chap2a::linear_combination_value<s, WSet, W, m>(result_coefficients, w)
 # Result 3.43. Matrix formation converts composition of linear maps into matrix
 # multiplication, with all three bases shown explicitly.
-axiom matrix_of_product:
+thm matrix_of_product:
     ? forall s nonempty_set, USet, VSet, WSet nonempty_set, U &chap1b::VectorSpace<s, USet>, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, p, n, m N+, u &chap1a::FiniteList<USet, p>, v &chap1a::FiniteList<VSet, n>, w &chap1a::FiniteList<WSet, m>, T \chap3a::linear_map_space<s, USet, VSet, U, V>, S \chap3a::linear_map_space<s, VSet, WSet, V, W>:
         $chap2b::is_basis(s, USet, U, p, u)
         $chap2b::is_basis(s, VSet, V, n, v)
@@ -73,6 +292,107 @@ axiom matrix_of_product:
         \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T) $in \chap3a::linear_map_space<s, USet, WSet, U, W>
         =>:
             \matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)) = \matrix_mul<s, V.scalars, m, n, p>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T))
+    by thm matrix_of_linear_map_spec(s, USet, WSet, U, W, p, m, u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+    by thm matrix_of_linear_map_spec(s, VSet, WSet, V, W, n, m, v, w, S)
+    by thm matrix_of_linear_map_spec(s, USet, VSet, U, V, p, n, u, v, T)
+    have left matrix(s, m, p) = \matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+    have right matrix(s, m, p) = \matrix_mul<s, V.scalars, m, n, p>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), \matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T))
+    claim:
+        ? forall j, k N+:
+            j <= m
+            k <= p
+            =>:
+                left(j, k) = right(j, k)
+        have composition_matrix matrix(s, m, p) = \matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+        have S_matrix matrix(s, m, n) = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)
+        have T_matrix matrix(s, n, p) = \matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T)
+        have product_matrix matrix(s, m, p) = \matrix_mul<s, V.scalars, m, n, p>(S_matrix, T_matrix)
+        have composition_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, p>(composition_matrix, k)
+        have T_coefficients &chap1a::FiniteList<s, n> = \matrix_column_coefficients<s, n, p>(T_matrix, k)
+        have S_images &chap1a::FiniteList<WSet, n> = \chap3a::mapped_finite_list<VSet, WSet, n>(S, v)
+        have product_coefficients &chap1a::FiniteList<s, m> = \matrix_column_coefficients<s, m, p>(product_matrix, k)
+        \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, p>(\matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)), k), w)
+        composition_matrix = \matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+        \matrix_column_coefficients<s, m, p>(\matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)), k) = \matrix_column_coefficients<s, m, p>(composition_matrix, k) = composition_coefficients
+        \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u.entries(k)) = \chap2a::linear_combination_value<s, WSet, W, m>(composition_coefficients, w)
+        T(u.entries(k)) = \chap2a::linear_combination_value<s, VSet, V, n>(\matrix_column_coefficients<s, n, p>(\matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T), k), v)
+        T_matrix = \matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T)
+        \matrix_column_coefficients<s, n, p>(\matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T), k) = \matrix_column_coefficients<s, n, p>(T_matrix, k) = T_coefficients
+        T(u.entries(k)) = \chap2a::linear_combination_value<s, VSet, V, n>(T_coefficients, v)
+        \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u.entries(k)) = S(T(u.entries(k)))
+        by thm chap3a::linear_map_preserves_linear_combination(s, VSet, WSet, V, W, S, n, T_coefficients, v)
+        S(\chap2a::linear_combination_value<s, VSet, V, n>(T_coefficients, v)) = \chap2a::linear_combination_value<s, WSet, W, n>(T_coefficients, \chap3a::mapped_finite_list<VSet, WSet, n>(S, v))
+        S(T(u.entries(k))) = S(\chap2a::linear_combination_value<s, VSet, V, n>(T_coefficients, v))
+        S_images = \chap3a::mapped_finite_list<VSet, WSet, n>(S, v)
+        \chap2a::linear_combination_value<s, WSet, W, n>(T_coefficients, \chap3a::mapped_finite_list<VSet, WSet, n>(S, v)) = \chap2a::linear_combination_value<s, WSet, W, n>(T_coefficients, S_images)
+        S(T(u.entries(k))) = \chap2a::linear_combination_value<s, WSet, W, n>(T_coefficients, S_images)
+        claim:
+            ? forall r N+:
+                r <= n
+                =>:
+                    S_images.entries(r) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(S_matrix, r), w)
+            S(v.entries(r)) = \chap2a::linear_combination_value<s, WSet, W, m>(\matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), r), w)
+            \chap3a::mapped_finite_list<VSet, WSet, n>(S, v) = (n, fn(position N+: position <= n) WSet {S(v.entries(position))})
+            S_images.entries(r) = S(v.entries(r))
+            \matrix_column_coefficients<s, m, n>(S_matrix, r) = \matrix_column_coefficients<s, m, n>(\matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S), r)
+        \matrix_mul<s, V.scalars, m, n, p>(S_matrix, T_matrix) = fn(row, column N+: row <= m, column <= p) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_matrix(r, column))})}
+        product_matrix = \matrix_mul<s, V.scalars, m, n, p>(S_matrix, T_matrix)
+        product_matrix = fn(row, column N+: row <= m, column <= p) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_matrix(r, column))})}
+        \matrix_column_coefficients<s, m, p>(product_matrix, k) = (m, fn(row N+: row <= m) s {product_matrix(row, k)})
+        product_coefficients = (m, fn(row N+: row <= m) s {product_matrix(row, k)})
+        T_coefficients = \matrix_column_coefficients<s, n, p>(T_matrix, k)
+        \matrix_column_coefficients<s, n, p>(T_matrix, k) = (n, fn(r N+: r <= n) s {T_matrix(r, k)})
+        T_coefficients.entries = fn(r N+: r <= n) s {T_matrix(r, k)}
+        claim:
+            ? forall row N+:
+                row <= m
+                =>:
+                    product_matrix(row, k) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})
+            product_matrix(row, k) = (fn(a, b N+: a <= m, b <= p) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(a, r), T_matrix(r, b))})})(row, k)
+            (fn(a, b N+: a <= m, b <= p) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(a, r), T_matrix(r, b))})})(row, k) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_matrix(r, k))})
+            have left_terms finite_seq(s, n) = fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_matrix(r, k))}
+            have right_terms finite_seq(s, n) = fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))}
+            claim:
+                ? forall r N+:
+                    r <= n
+                    =>:
+                        left_terms(r) = right_terms(r)
+                T_coefficients.entries(r) = (fn(position N+: position <= n) s {T_matrix(position, k)})(r) = T_matrix(r, k)
+                left_terms(r) = V.scalars.mul(S_matrix(row, r), T_matrix(r, k)) = V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r)) = right_terms(r)
+            by def $fn_eq(left_terms, right_terms)
+            \chap3b::scalar_finite_sum<s, V.scalars, n>(left_terms) = \chap3b::scalar_finite_sum<s, V.scalars, n>(right_terms)
+            \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_matrix(r, k))}) = \chap3b::scalar_finite_sum<s, V.scalars, n>(left_terms) = \chap3b::scalar_finite_sum<s, V.scalars, n>(right_terms) = \chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})
+        by def $fn_eq(fn(row N+: row <= m) s {product_matrix(row, k)}, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})})
+        (m, fn(row N+: row <= m) s {product_matrix(row, k)}) = (m, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})})
+        product_coefficients = (m, fn(row N+: row <= m) s {product_matrix(row, k)}) = (m, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})})
+        product_coefficients = (m, fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, V.scalars, n>(fn(r N+: r <= n) s {V.scalars.mul(S_matrix(row, r), T_coefficients.entries(r))})})
+        V.scalars = W.scalars
+        by thm basis_coordinate_substitution(s, V.scalars, WSet, W, m, n, w, S_matrix, T_coefficients, S_images, product_coefficients)
+        \chap2a::linear_combination_value<s, WSet, W, n>(T_coefficients, S_images) = \chap2a::linear_combination_value<s, WSet, W, m>(product_coefficients, w)
+        \chap2a::linear_combination_value<s, WSet, W, m>(composition_coefficients, w) = \chap2a::linear_combination_value<s, WSet, W, m>(product_coefficients, w)
+        by def:
+            ? $chap2b::is_basis(s, WSet, W, m, w)
+        by thm chap2b::independent_coordinates_unique(s, WSet, W, m, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T)(u.entries(k)), composition_coefficients, product_coefficients)
+        have composition_entries fn(position N+: position <= m) s = composition_coefficients.entries
+        have product_entries fn(position N+: position <= m) s = product_coefficients.entries
+        composition_coefficients = \matrix_column_coefficients<s, m, p>(composition_matrix, k)
+        \matrix_column_coefficients<s, m, p>(composition_matrix, k) = (m, fn(position N+: position <= m) s {composition_matrix(position, k)})
+        composition_coefficients = (m, fn(position N+: position <= m) s {composition_matrix(position, k)})
+        composition_coefficients.entries = fn(position N+: position <= m) s {composition_matrix(position, k)}
+        composition_entries = composition_coefficients.entries = fn(position N+: position <= m) s {composition_matrix(position, k)}
+        product_coefficients = \matrix_column_coefficients<s, m, p>(product_matrix, k)
+        \matrix_column_coefficients<s, m, p>(product_matrix, k) = (m, fn(position N+: position <= m) s {product_matrix(position, k)})
+        product_coefficients = (m, fn(position N+: position <= m) s {product_matrix(position, k)})
+        product_coefficients.entries = fn(position N+: position <= m) s {product_matrix(position, k)}
+        product_entries = product_coefficients.entries = fn(position N+: position <= m) s {product_matrix(position, k)}
+        composition_matrix(j, k) = composition_entries(j) = composition_coefficients.entries(j) = product_coefficients.entries(j) = product_entries(j) = product_matrix(j, k)
+        product_matrix = \matrix_mul<s, V.scalars, m, n, p>(S_matrix, T_matrix)
+        S_matrix = \matrix_of_linear_map<s, VSet, WSet, V, W, n, m>(v, w, S)
+        T_matrix = \matrix_of_linear_map<s, USet, VSet, U, V, p, n>(u, v, T)
+        composition_matrix = \matrix_of_linear_map<s, USet, WSet, U, W, p, m>(u, w, \chap3a::linear_map_compose<s, USet, VSet, WSet, U, V, W>(S, T))
+        left(j, k) = composition_matrix(j, k) = product_matrix(j, k) = right(j, k)
+    by def $fn_eq(left, right)
+    left = right
 # Notation 3.44. A(j,·) and A(·,k) are the jth row and kth column.
 template<s set, m, n N+>:
     have fn matrix_row(A matrix(s, m, n), j N+: j <= m) finite_seq(s, n) = fn(k N+: k <= n) s {A(j, k)}
@@ -119,11 +439,16 @@ thm column_of_matrix_product:
         \matrix_column<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), k)(j) = \matrix_mul<s, scalars, m, n, p>(A, B)(j, k)
         by thm entry_of_matrix_product(s, scalars, m, n, p, A, B, j, k)
         \matrix_mul<s, scalars, m, n, p>(A, B)(j, k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))})
+        have row finite_seq(s, n) = \matrix_row<s, m, n>(A, j)
+        row = fn(r N+: r <= n) s {A(j, r)}
         claim:
             ? forall r N+:
                 r <= n
                 =>:
                     \matrix_row<s, m, n>(A, j)(r) = A(j, r)
+            \matrix_row<s, m, n>(A, j) = row
+            \matrix_row<s, m, n>(A, j)(r) = row(r)
+            row(r) = A(j, r)
         trust fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))} = fn(r N+: r <= n) s {scalars.mul(A(j, r), \matrix_column<s, n, p>(B, k)(r))}
         \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))}) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), \matrix_column<s, n, p>(B, k)(r))})
         \matrix_vector_mul<s, scalars, m, n>(A, \matrix_column<s, n, p>(B, k))(j) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), \matrix_column<s, n, p>(B, k)(r))})
@@ -195,11 +520,16 @@ thm matrix_product_column_and_row_descriptions:
             left(k) = \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j)(k) = \matrix_mul<s, scalars, m, n, p>(A, B)(j, k)
             by thm entry_of_matrix_product(s, scalars, m, n, p, A, B, j, k)
             \matrix_mul<s, scalars, m, n, p>(A, B)(j, k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))})
+            have column finite_seq(s, n) = \matrix_column<s, n, p>(B, k)
+            column = fn(r N+: r <= n) s {B(r, k)}
             claim:
                 ? forall r N+:
                     r <= n
                     =>:
                         \matrix_column<s, n, p>(B, k)(r) = B(r, k)
+                \matrix_column<s, n, p>(B, k) = column
+                \matrix_column<s, n, p>(B, k)(r) = column(r)
+                column(r) = B(r, k)
             trust fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))} = fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), B(r, k))}
             trust \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), \matrix_column<s, n, p>(B, k)(r))}) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), B(r, k))})
             right(k) = \vector_matrix_mul<s, scalars, n, p>(\matrix_row<s, m, n>(A, j), B)(k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(\matrix_row<s, m, n>(A, j)(r), B(r, k))})
@@ -211,13 +541,467 @@ thm matrix_product_column_and_row_descriptions:
 # Definition 3.52. Column rank and row rank are the dimensions of the spans of
 # the matrix's columns and rows. They remain callable canonical values.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
-    trust have column_rank fn(A matrix(s, m, n)) N
+    have fn matrix_column_space(A matrix(s, m, n)) power_set(finite_seq(s, m)) = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+
+thm matrix_column_space_is_subspace:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        $chap1c::is_subspace(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A))
+    by thm chap2a::span_is_subspace(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>)
+    \matrix_column_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+
+thm matrix_column_space_admits_basis_length:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        $chap2c::admits_basis_length(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>)
+    by thm chap3b::coordinate_space_is_finite_dimensional(s, scalars, m)
+    by thm matrix_column_space_is_subspace(s, scalars, m, n, A)
+    by thm chap2a::subspace_of_finite_dimensional_is_finite_dimensional(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A))
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>)
 
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
-    trust have row_rank fn(A matrix(s, m, n)) N
+    have fn column_rank(A matrix(s, m, n)) N = \chap2c::dimension<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>>
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn matrix_rows(A matrix(s, m, n)) &chap1a::FiniteList<finite_seq(s, n), m> = (m, fn(j N+: j <= m) finite_seq(s, n) {fn(k N+: k <= n) s {A(j, k)}})
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn matrix_row_space(A matrix(s, m, n)) power_set(finite_seq(s, n)) = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A)>
+
+thm matrix_row_space_is_subspace:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        $chap1c::is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A))
+    by thm chap2a::span_is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A))
+    \matrix_row_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A)>
+
+thm matrix_row_space_admits_basis_length:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        $chap2c::admits_basis_length(s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>)
+    by thm chap3b::coordinate_space_is_finite_dimensional(s, scalars, n)
+    by thm matrix_row_space_is_subspace(s, scalars, m, n, A)
+    by thm chap2a::subspace_of_finite_dimensional_is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A))
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>)
+
+template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
+    have fn row_rank(A matrix(s, m, n)) N = \chap2c::dimension<s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>>
 # Definition 3.54. The transpose swaps row and column indices.
 template<s set, m, n N+>:
     have fn transpose(A matrix(s, m, n)) matrix(s, n, m) = fn(j N+, k N+: j <= n, k <= m) s {A(k, j)}
+
+# A row-vector times a matrix is the linear combination of the matrix rows
+# with the row-vector entries as coefficients. Transpose exposes those rows as
+# columns, so the checked column-combination reconstruction applies.
+thm vector_matrix_mul_is_row_linear_combination:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, p N+, x finite_seq(s, n), B matrix(s, n, p):
+        \vector_matrix_mul<s, scalars, n, p>(x, B) = \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>((n, fn(r N+: r <= n) s {x(r)}), \matrix_rows<s, scalars, n, p>(B))
+    have coefficients &chap1a::FiniteList<s, n> = (n, fn(r N+: r <= n) s {x(r)})
+    have rows &chap1a::FiniteList<finite_seq(s, p), n> = \matrix_rows<s, scalars, n, p>(B)
+    have transposed matrix(s, p, n) = \transpose<s, n, p>(B)
+    have columns &chap1a::FiniteList<finite_seq(s, p), n> = \chap3b::matrix_columns<s, scalars, p, n, transposed>
+    claim:
+        ? forall r N+:
+            r <= n
+            =>:
+                rows.entries(r) = columns.entries(r)
+        have left finite_seq(s, p) = rows.entries(r)
+        have right finite_seq(s, p) = columns.entries(r)
+        claim:
+            ? forall k N+:
+                k <= p
+                =>:
+                    left(k) = right(k)
+            rows = \matrix_rows<s, scalars, n, p>(B) = (n, fn(row N+: row <= n) finite_seq(s, p) {fn(column N+: column <= p) s {B(row, column)}})
+            rows.entries(r) = (fn(row N+: row <= n) finite_seq(s, p) {fn(column N+: column <= p) s {B(row, column)}})(r) = fn(column N+: column <= p) s {B(r, column)}
+            left(k) = rows.entries(r)(k) = (fn(column N+: column <= p) s {B(r, column)})(k) = B(r, k)
+            transposed = \transpose<s, n, p>(B) = fn(row N+, column N+: row <= p, column <= n) s {B(column, row)}
+            columns = \chap3b::matrix_columns<s, scalars, p, n, transposed> = (n, fn(column N+: column <= n) finite_seq(s, p) {fn(row N+: row <= p) s {transposed(row, column)}})
+            columns.entries(r) = (fn(column N+: column <= n) finite_seq(s, p) {fn(row N+: row <= p) s {transposed(row, column)}})(r) = fn(row N+: row <= p) s {transposed(row, r)}
+            right(k) = columns.entries(r)(k) = (fn(row N+: row <= p) s {transposed(row, r)})(k) = transposed(k, r) = B(r, k)
+        by def $fn_eq(left, right)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(finite_seq(s, p), n, rows, columns)
+    by thm chap1a::finite_list_extensionality(finite_seq(s, p), n, rows, columns)
+    by thm chap3b::matrix_column_combination_reconstruction(s, scalars, p, n, transposed, coefficients)
+    have reconstructed finite_seq(s, p) = fn(k N+: k <= p) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(transposed(k, r), coefficients.entries(r))})}
+    \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>(coefficients, columns) = reconstructed
+    have target finite_seq(s, p) = \vector_matrix_mul<s, scalars, n, p>(x, B)
+    claim:
+        ? forall k N+:
+            k <= p
+            =>:
+                reconstructed(k) = target(k)
+        reconstructed(k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(transposed(k, r), coefficients.entries(r))})
+        transposed = \transpose<s, n, p>(B) = fn(row N+, column N+: row <= p, column <= n) s {B(column, row)}
+        coefficients = (n, fn(position N+: position <= n) s {x(position)})
+        have left_terms finite_seq(s, n) = fn(r N+: r <= n) s {scalars.mul(transposed(k, r), coefficients.entries(r))}
+        have right_terms finite_seq(s, n) = fn(r N+: r <= n) s {scalars.mul(x(r), B(r, k))}
+        claim:
+            ? forall r N+:
+                r <= n
+                =>:
+                    left_terms(r) = right_terms(r)
+            transposed(k, r) = B(r, k)
+            coefficients.entries(r) = x(r)
+            scalars.mul(B(r, k), x(r)) = scalars.mul(x(r), B(r, k))
+            left_terms(r) = scalars.mul(transposed(k, r), coefficients.entries(r)) = scalars.mul(B(r, k), x(r)) = scalars.mul(x(r), B(r, k)) = right_terms(r)
+        by def $fn_eq(left_terms, right_terms)
+        target = \vector_matrix_mul<s, scalars, n, p>(x, B) = fn(column N+: column <= p) s {\chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(x(r), B(r, column))})}
+        target(k) = \chap3b::scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(x(r), B(r, k))}) = \chap3b::scalar_finite_sum<s, scalars, n>(right_terms)
+        reconstructed(k) = \chap3b::scalar_finite_sum<s, scalars, n>(left_terms) = \chap3b::scalar_finite_sum<s, scalars, n>(right_terms) = target(k)
+    by def $fn_eq(reconstructed, target)
+    \vector_matrix_mul<s, scalars, n, p>(x, B) = target = reconstructed = \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>(coefficients, columns) = \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>((n, fn(r N+: r <= n) s {x(r)}), \matrix_rows<s, scalars, n, p>(B))
+
+# Consequently every row-vector product lies in the row space of its matrix.
+# This is the row-space containment bridge used by the rank comparison.
+thm vector_matrix_mul_in_row_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n, p N+, x finite_seq(s, n), B matrix(s, n, p):
+        \vector_matrix_mul<s, scalars, n, p>(x, B) $in \matrix_row_space<s, scalars, n, p>(B)
+    have coefficients &chap1a::FiniteList<s, n> = (n, fn(r N+: r <= n) s {x(r)})
+    by thm vector_matrix_mul_is_row_linear_combination(s, scalars, n, p, x, B)
+    \vector_matrix_mul<s, scalars, n, p>(x, B) = \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>(coefficients, \matrix_rows<s, scalars, n, p>(B))
+    witness exist selected &chap1a::FiniteList<s, n> st {\vector_matrix_mul<s, scalars, n, p>(x, B) = \chap2a::linear_combination_value<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n>(selected, \matrix_rows<s, scalars, n, p>(B))} from coefficients
+    by def:
+        ? $chap2a::is_linear_combination(s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, \vector_matrix_mul<s, scalars, n, p>(x, B), \matrix_rows<s, scalars, n, p>(B))
+    by thm chap2a::span_carrier_spec(s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, \matrix_rows<s, scalars, n, p>(B))
+    \matrix_row_space<s, scalars, n, p>(B) = \chap2a::span_carrier<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, \matrix_rows<s, scalars, n, p>(B)> = \chap2a::span<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, \matrix_rows<s, scalars, n, p>(B)> = {value finite_seq(s, p): $chap2a::is_linear_combination(s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, value, \matrix_rows<s, scalars, n, p>(B))}
+    \vector_matrix_mul<s, scalars, n, p>(x, B) $in {value finite_seq(s, p): $chap2a::is_linear_combination(s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, n, value, \matrix_rows<s, scalars, n, p>(B))}
+
+# The dimension of a span cannot exceed the number of displayed generators.
+# The proof retypes the generators into their exact span carrier, where they
+# still span, and compares them with a basis using Result 2.22.
+thm span_dimension_le_generator_length:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, vectors &chap1a::FiniteList<v, n>:
+        $chap2c::admits_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>)
+        =>:
+            \chap2c::dimension<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>> <= n
+    by thm chap2a::span_is_subspace(s, v, space, n, vectors)
+    claim:
+        ? forall idx N+:
+            idx <= n
+            =>:
+                vectors.entries(idx) $in \chap2a::span_carrier<s, v, space, n, vectors>
+        by thm chap2a::span_contains_list_entries(s, v, space, n, vectors)
+        by def:
+            ? $chap2a::contains_list_entries(v, n, vectors, \chap2a::span_carrier<s, v, space, n, vectors>)
+        vectors.entries(idx) $in \chap2a::span_carrier<s, v, space, n, vectors> = \chap2a::span_carrier<s, v, space, n, vectors>
+    have restricted &chap1a::FiniteList<\chap2a::span_carrier<s, v, space, n, vectors>, n> = (n, fn(idx N+: idx <= n) \chap2a::span_carrier<s, v, space, n, vectors> {vectors.entries(idx)})
+    claim:
+        ? vectors = (n, fn(idx N+: idx <= n) v {restricted.entries(idx)})
+        have lifted &chap1a::FiniteList<v, n> = (n, fn(idx N+: idx <= n) v {restricted.entries(idx)})
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    vectors.entries(idx) = lifted.entries(idx)
+            restricted = (n, fn(position N+: position <= n) \chap2a::span_carrier<s, v, space, n, vectors> {vectors.entries(position)})
+            restricted.entries(idx) = vectors.entries(idx)
+            lifted = (n, fn(position N+: position <= n) v {restricted.entries(position)})
+            lifted.entries(idx) = restricted.entries(idx) = vectors.entries(idx)
+        by def:
+            ? $chap1a::have_same_finite_list_entries(v, n, vectors, lifted)
+        by thm chap1a::finite_list_extensionality(v, n, vectors, lifted)
+    claim:
+        ? $chap2a::spans(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted)
+        claim:
+            ? forall x \chap2a::span_carrier<s, v, space, n, vectors>:
+                x $in \chap2a::span<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted>
+            x $in \chap2a::span_carrier<s, v, space, n, vectors> = \chap2a::span_carrier<s, v, space, n, vectors>
+            by thm chap2a::span_carrier_spec(s, v, space, n, vectors)
+            x $in \chap2a::span<s, v, space, n, vectors>
+            by def:
+                ? $chap2a::is_linear_combination(s, v, space, n, x, vectors)
+            obtain coefficients from exist selected &chap1a::FiniteList<s, n> st {x = \chap2a::linear_combination_value<s, v, space, n>(selected, vectors)}
+            by thm chap2b::inherited_linear_combination_equals_ambient_lift(s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>, n, restricted, vectors, coefficients)
+            \chap2a::linear_combination_value<s, v, space, n>(coefficients, vectors) = \chap2a::linear_combination_value<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n>(coefficients, restricted)
+            x = \chap2a::linear_combination_value<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n>(coefficients, restricted)
+            witness exist selected &chap1a::FiniteList<s, n> st {x = \chap2a::linear_combination_value<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n>(selected, restricted)} from coefficients
+            by def:
+                ? $chap2a::is_linear_combination(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, x, restricted)
+            x $in {value \chap2a::span_carrier<s, v, space, n, vectors>: $chap2a::is_linear_combination(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, value, restricted)}
+            \chap2a::span<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted> = {value \chap2a::span_carrier<s, v, space, n, vectors>: $chap2a::is_linear_combination(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, value, restricted)}
+        claim:
+            ? forall x \chap2a::span<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted>:
+                x $in \chap2a::span_carrier<s, v, space, n, vectors>
+        by extension:
+            ? \chap2a::span<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted> = \chap2a::span_carrier<s, v, space, n, vectors>
+        by def:
+            ? $chap2a::spans(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, n, restricted)
+    $chap2c::admits_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>)
+    \chap2a::span_carrier<s, v, space, n, vectors> = \chap2a::span_carrier<s, v, space, n, vectors>
+    $chap2c::admits_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>)
+    by thm chap2c::dimension_has_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>)
+    have dimU N = \chap2c::dimension<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>>
+    $chap2c::has_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, dimU)
+    by def:
+        ? $chap2c::has_basis_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, dimU)
+    obtain basis from exist selected &chap1a::FiniteList<\chap2a::span_carrier<s, v, space, n, vectors>, dimU> st {$chap2b::is_basis(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, dimU, selected)}
+    by def:
+        ? $chap2b::is_basis(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, dimU, basis)
+    by thm chap2a::independent_length_le_spanning_length(s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>, dimU, n, basis, restricted)
+    \chap2c::dimension<s, \chap2a::span_carrier<s, v, space, n, vectors>, \chap1c::subspace_vector_space<s, v, space, \chap2a::span_carrier<s, v, space, n, vectors>>> = dimU
+
+# Every row of a matrix product is a linear combination of the right
+# factor's rows, so span minimality puts the full product row space inside
+# the right factor's row space.
+thm matrix_product_row_space_subset_right:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n, p N+, A matrix(s, m, n), B matrix(s, n, p):
+        \matrix_row_space<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)) $subset \matrix_row_space<s, scalars, n, p>(B)
+    by thm matrix_row_space_is_subspace(s, scalars, n, p, B)
+    claim:
+        ? $chap2a::contains_list_entries(finite_seq(s, p), m, \matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)), \matrix_row_space<s, scalars, n, p>(B))
+        claim:
+            ? forall j N+:
+                j <= m
+                =>:
+                    &chap1a::FiniteList<finite_seq(s, p), m>{\matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B))}.entries(j) $in \matrix_row_space<s, scalars, n, p>(B)
+            by thm matrix_product_column_and_row_descriptions(s, scalars, m, n, p, A, B)
+            by def:
+                ? $has_matrix_product_column_and_row_descriptions(s, scalars, m, n, p, A, B)
+            \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j) = \vector_matrix_mul<s, scalars, n, p>(\matrix_row<s, m, n>(A, j), B)
+            by thm vector_matrix_mul_in_row_space(s, scalars, n, p, \matrix_row<s, m, n>(A, j), B)
+            \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j) $in \matrix_row_space<s, scalars, n, p>(B)
+            \matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)) = (m, fn(row N+: row <= m) finite_seq(s, p) {fn(column N+: column <= p) s {\matrix_mul<s, scalars, m, n, p>(A, B)(row, column)}})
+            &chap1a::FiniteList<finite_seq(s, p), m>{\matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B))}.entries(j) = fn(column N+: column <= p) s {\matrix_mul<s, scalars, m, n, p>(A, B)(j, column)}
+            \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j) = fn(column N+: column <= p) s {\matrix_mul<s, scalars, m, n, p>(A, B)(j, column)}
+            &chap1a::FiniteList<finite_seq(s, p), m>{\matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B))}.entries(j) = \matrix_row<s, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B), j)
+        by def:
+            ? $chap2a::contains_list_entries(finite_seq(s, p), m, \matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)), \matrix_row_space<s, scalars, n, p>(B))
+    by thm chap2a::span_is_smallest_subspace(s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, m, \matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)), \matrix_row_space<s, scalars, n, p>(B))
+    \matrix_row_space<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B)) = \chap2a::span_carrier<s, finite_seq(s, p), \chap1b::coordinate_space<s, scalars, p>, m, \matrix_rows<s, scalars, m, p>(\matrix_mul<s, scalars, m, n, p>(A, B))>
+    \matrix_mul<s, scalars, m, n, p>(A, B) = \matrix_mul<s, scalars, m, n, p>(A, B)
+
+# Equal subspace carriers have equal dimensions even though dependent template
+# selections do not rewrite automatically. Lift a basis of the first carrier
+# to the ambient space, then retype and restrict it to the second carrier.
+thm equal_subspace_carriers_have_equal_dimensions:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v):
+        U = W
+        $chap1c::is_subspace(s, v, space, U)
+        $chap1c::is_subspace(s, v, space, W)
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+        $chap2c::admits_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
+        =>:
+            \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>> = \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>>
+    $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    U = U
+    $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    by thm chap2c::dimension_has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    have dimU N = \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>>
+    $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    by def:
+        ? $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    obtain basisU from exist selected &chap1a::FiniteList<U, dimU> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU, selected)}
+    have lifted &chap1a::FiniteList<v, dimU> = (dimU, fn(idx N+: idx <= dimU) v {basisU.entries(idx)})
+    by thm chap2c::inherited_subspace_basis_is_ambient_independent(s, v, space, U, dimU, basisU, lifted)
+    by thm chap2b::lifted_inherited_basis_span_is_subspace(s, v, space, U, dimU, basisU, lifted)
+    \chap2a::span_carrier<s, v, space, dimU, lifted> = U = W
+    claim:
+        ? forall idx N+:
+            idx <= dimU
+            =>:
+                basisU.entries(idx) $in W
+        basisU.entries(idx) $in U
+        U = W
+    have basisW &chap1a::FiniteList<W, dimU> = (dimU, fn(idx N+: idx <= dimU) W {basisU.entries(idx)})
+    claim:
+        ? lifted = (dimU, fn(idx N+: idx <= dimU) v {basisW.entries(idx)})
+        have relifted &chap1a::FiniteList<v, dimU> = (dimU, fn(idx N+: idx <= dimU) v {basisW.entries(idx)})
+        claim:
+            ? forall idx N+:
+                idx <= dimU
+                =>:
+                    lifted.entries(idx) = relifted.entries(idx)
+            lifted = (dimU, fn(position N+: position <= dimU) v {basisU.entries(position)})
+            lifted.entries(idx) = basisU.entries(idx)
+            basisW = (dimU, fn(position N+: position <= dimU) W {basisU.entries(position)})
+            basisW.entries(idx) = basisU.entries(idx)
+            relifted = (dimU, fn(position N+: position <= dimU) v {basisW.entries(position)})
+            relifted.entries(idx) = basisW.entries(idx)
+        by def:
+            ? $chap1a::have_same_finite_list_entries(v, dimU, lifted, relifted)
+        by thm chap1a::finite_list_extensionality(v, dimU, lifted, relifted)
+    by thm chap2c::ambient_independent_span_restricts_to_subspace_basis(s, v, space, W, dimU, basisW, lifted)
+    witness exist basis_vectors &chap1a::FiniteList<W, dimU> st {$chap2b::is_basis(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimU, basis_vectors)} from basisW
+    by def:
+        ? $chap2c::has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimU)
+    by thm chap2c::dimension_has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
+    by thm chap2c::basis_length_unique(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimU, \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>>)
+    \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>> = dimU = \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>>
+# Transpose exchanges the concrete row list with the concrete column list.
+thm equal_finite_lists_have_equal_span_carriers:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, n N, left, right &chap1a::FiniteList<v, n>:
+        left = right
+        =>:
+            \chap2a::span_carrier<s, v, space, n, left> = \chap2a::span_carrier<s, v, space, n, right>
+    by thm chap2a::span_is_subspace(s, v, space, n, right)
+    claim:
+        ? $chap2a::contains_list_entries(v, n, left, \chap2a::span_carrier<s, v, space, n, right>)
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    left.entries(idx) $in \chap2a::span_carrier<s, v, space, n, right>
+            by thm chap1a::finite_list_equal_implies_same_entries(v, n, left, right)
+            by def:
+                ? $chap1a::have_same_finite_list_entries(v, n, left, right)
+            left.entries(idx) = right.entries(idx)
+            by thm chap2a::span_contains_list_entries(s, v, space, n, right)
+            by def:
+                ? $chap2a::contains_list_entries(v, n, right, \chap2a::span_carrier<s, v, space, n, right>)
+            right.entries(idx) $in \chap2a::span_carrier<s, v, space, n, right>
+        by def:
+            ? $chap2a::contains_list_entries(v, n, left, \chap2a::span_carrier<s, v, space, n, right>)
+    by thm chap2a::span_is_smallest_subspace(s, v, space, n, left, \chap2a::span_carrier<s, v, space, n, right>)
+    \chap2a::span_carrier<s, v, space, n, left> $subset \chap2a::span_carrier<s, v, space, n, right>
+    by thm chap2a::span_is_subspace(s, v, space, n, left)
+    claim:
+        ? $chap2a::contains_list_entries(v, n, right, \chap2a::span_carrier<s, v, space, n, left>)
+        claim:
+            ? forall idx N+:
+                idx <= n
+                =>:
+                    right.entries(idx) $in \chap2a::span_carrier<s, v, space, n, left>
+            by thm chap1a::finite_list_equal_implies_same_entries(v, n, left, right)
+            by def:
+                ? $chap1a::have_same_finite_list_entries(v, n, left, right)
+            left.entries(idx) = right.entries(idx)
+            by thm chap2a::span_contains_list_entries(s, v, space, n, left)
+            by def:
+                ? $chap2a::contains_list_entries(v, n, left, \chap2a::span_carrier<s, v, space, n, left>)
+            left.entries(idx) $in \chap2a::span_carrier<s, v, space, n, left>
+        by def:
+            ? $chap2a::contains_list_entries(v, n, right, \chap2a::span_carrier<s, v, space, n, left>)
+    by thm chap2a::span_is_smallest_subspace(s, v, space, n, right, \chap2a::span_carrier<s, v, space, n, left>)
+    \chap2a::span_carrier<s, v, space, n, right> $subset \chap2a::span_carrier<s, v, space, n, left>
+    by thm chap2b::mutual_subset_implies_set_equal(\chap2a::span_carrier<s, v, space, n, left>, \chap2a::span_carrier<s, v, space, n, right>)
+
+thm matrix_rows_equal_transpose_columns:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \matrix_rows<s, scalars, m, n>(A) = \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>
+    claim:
+        ? forall j N+:
+            j <= m
+            =>:
+                &chap1a::FiniteList<finite_seq(s, n), m>{\matrix_rows<s, scalars, m, n>(A)}.entries(j) = &chap1a::FiniteList<finite_seq(s, n), m>{\chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>}.entries(j)
+        have left finite_seq(s, n) = &chap1a::FiniteList<finite_seq(s, n), m>{\matrix_rows<s, scalars, m, n>(A)}.entries(j)
+        have right finite_seq(s, n) = &chap1a::FiniteList<finite_seq(s, n), m>{\chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>}.entries(j)
+        claim:
+            ? forall k N+:
+                k <= n
+                =>:
+                    left(k) = right(k)
+            \matrix_rows<s, scalars, m, n>(A) = (m, fn(row N+: row <= m) finite_seq(s, n) {fn(column N+: column <= n) s {A(row, column)}})
+            left = fn(column N+: column <= n) s {A(j, column)}
+            left(k) = A(j, k)
+            \transpose<s, m, n>(A) = fn(row N+, column N+: row <= n, column <= m) s {A(column, row)}
+            \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)> = (m, fn(column N+: column <= m) finite_seq(s, n) {fn(row N+: row <= n) s {\transpose<s, m, n>(A)(row, column)}})
+            right = fn(row N+: row <= n) s {\transpose<s, m, n>(A)(row, j)}
+            right(k) = \transpose<s, m, n>(A)(k, j) = A(j, k)
+        by def $fn_eq(left, right)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(finite_seq(s, n), m, \matrix_rows<s, scalars, m, n>(A), \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>)
+    by thm chap1a::finite_list_extensionality(finite_seq(s, n), m, \matrix_rows<s, scalars, m, n>(A), \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>)
+
+thm matrix_row_space_equals_transpose_column_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \matrix_row_space<s, scalars, m, n>(A) = \matrix_column_space<s, scalars, n, m>(\transpose<s, m, n>(A))
+    by thm matrix_rows_equal_transpose_columns(s, scalars, m, n, A)
+    by thm equal_finite_lists_have_equal_span_carriers(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A), \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>)
+    \matrix_row_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A)> = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \chap3b::matrix_columns<s, scalars, n, m, \transpose<s, m, n>(A)>> = \matrix_column_space<s, scalars, n, m>(\transpose<s, m, n>(A))
+
+thm row_rank_equals_transpose_column_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \row_rank<s, scalars, m, n>(A) = \column_rank<s, scalars, n, m>(\transpose<s, m, n>(A))
+    by thm matrix_row_space_equals_transpose_column_space(s, scalars, m, n, A)
+    by thm matrix_row_space_is_subspace(s, scalars, m, n, A)
+    by thm matrix_column_space_is_subspace(s, scalars, n, m, \transpose<s, m, n>(A))
+    by thm matrix_row_space_admits_basis_length(s, scalars, m, n, A)
+    by thm matrix_column_space_admits_basis_length(s, scalars, n, m, \transpose<s, m, n>(A))
+    by thm equal_subspace_carriers_have_equal_dimensions(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A), \matrix_column_space<s, scalars, n, m>(\transpose<s, m, n>(A)))
+    \row_rank<s, scalars, m, n>(A) = \chap2c::dimension<s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>>
+    \column_rank<s, scalars, n, m>(\transpose<s, m, n>(A)) = \chap2c::dimension<s, \matrix_column_space<s, scalars, n, m>(\transpose<s, m, n>(A)), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_column_space<s, scalars, n, m>(\transpose<s, m, n>(A))>>
+
+# Subspace inclusion is monotone for the inherited finite dimensions.
+thm ambient_independent_restricts_to_subspace_independent:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v), n N, source &chap1a::FiniteList<U, n>, lifted &chap1a::FiniteList<v, n>:
+        $chap1c::is_subspace(s, v, space, U)
+        lifted = (n, fn(idx N+: idx <= n) v {source.entries(idx)})
+        $chap2a::is_linearly_independent(s, v, space, n, lifted)
+        =>:
+            $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+    claim:
+        ? forall coefficients &chap1a::FiniteList<s, n>:
+            \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source) = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero
+            =>:
+                $chap2a::has_only_zero_coefficients(s, &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars, n, coefficients)
+        by thm chap2b::inherited_linear_combination_equals_ambient_lift(s, v, space, U, n, source, lifted, coefficients)
+        \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, n>(coefficients, source)
+        &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero = space.zero
+        \chap2a::linear_combination_value<s, v, space, n>(coefficients, lifted) = space.zero
+        by def:
+            ? $chap2a::is_linearly_independent(s, v, space, n, lifted)
+        $chap2a::has_only_zero_coefficients(s, space.scalars, n, coefficients)
+        &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.scalars = space.scalars
+    by def:
+        ? $chap2a::is_linearly_independent(s, U, \chap1c::subspace_vector_space<s, v, space, U>, n, source)
+
+thm contained_subspace_dimension_le:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U, W power_set(v):
+        U $subset W
+        $chap1c::is_subspace(s, v, space, U)
+        $chap1c::is_subspace(s, v, space, W)
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+        $chap2c::admits_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
+        =>:
+            \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>> <= \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>>
+    $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    U = U
+    by thm chap2c::dimension_has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    have dimU N = \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>>
+    $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    by def:
+        ? $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU)
+    obtain basisU from exist selected &chap1a::FiniteList<U, dimU> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, dimU, selected)}
+    have lifted &chap1a::FiniteList<v, dimU> = (dimU, fn(idx N+: idx <= dimU) v {basisU.entries(idx)})
+    by thm chap2c::inherited_subspace_basis_is_ambient_independent(s, v, space, U, dimU, basisU, lifted)
+    claim:
+        ? forall idx N+:
+            idx <= dimU
+            =>:
+                basisU.entries(idx) $in W
+        basisU.entries(idx) $in U
+        U $subset W
+    have basisInW &chap1a::FiniteList<W, dimU> = (dimU, fn(idx N+: idx <= dimU) W {basisU.entries(idx)})
+    claim:
+        ? lifted = (dimU, fn(idx N+: idx <= dimU) v {basisInW.entries(idx)})
+        have relifted &chap1a::FiniteList<v, dimU> = (dimU, fn(idx N+: idx <= dimU) v {basisInW.entries(idx)})
+        claim:
+            ? forall idx N+:
+                idx <= dimU
+                =>:
+                    lifted.entries(idx) = relifted.entries(idx)
+            lifted = (dimU, fn(position N+: position <= dimU) v {basisU.entries(position)})
+            lifted.entries(idx) = basisU.entries(idx)
+            basisInW = (dimU, fn(position N+: position <= dimU) W {basisU.entries(position)})
+            basisInW.entries(idx) = basisU.entries(idx)
+            relifted = (dimU, fn(position N+: position <= dimU) v {basisInW.entries(position)})
+            relifted.entries(idx) = basisInW.entries(idx)
+        by def:
+            ? $chap1a::have_same_finite_list_entries(v, dimU, lifted, relifted)
+        by thm chap1a::finite_list_extensionality(v, dimU, lifted, relifted)
+    by thm ambient_independent_restricts_to_subspace_independent(s, v, space, W, dimU, basisInW, lifted)
+    $chap2c::admits_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
+    W = W
+    by thm chap2c::dimension_has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>)
+    have dimW N = \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>>
+    $chap2c::has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW)
+    by def:
+        ? $chap2c::has_basis_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW)
+    obtain basisW from exist selected &chap1a::FiniteList<W, dimW> st {$chap2b::is_basis(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW, selected)}
+    by def:
+        ? $chap2b::is_basis(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimW, basisW)
+    by thm chap2a::independent_length_le_spanning_length(s, W, \chap1c::subspace_vector_space<s, v, space, W>, dimU, dimW, basisInW, basisW)
+    \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>> = dimU
+    \chap2c::dimension<s, W, \chap1c::subspace_vector_space<s, v, space, W>> = dimW
+
 # Result 3.56. A positive-rank matrix factors as a column matrix times a row
 # matrix, with the inner size equal to its column rank. The source also permits
 # rank zero; builtin matrix dimensions are N+, so the zero-width case is
@@ -225,13 +1009,424 @@ template<s set, m, n N+>:
 prop has_positive_column_row_factorization(s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n)):
     exist r N+, map_c matrix(s, m, r), Rm matrix(s, r, n) st {r = \column_rank<s, scalars, m, n>(A), A = \matrix_mul<s, scalars, m, r, n>(map_c, Rm)}
 
-axiom column_row_factorization:
+thm column_row_factorization:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
         \column_rank<s, scalars, m, n>(A) = 0 or $has_positive_column_row_factorization(s, scalars, m, n, A)
+    by cases:
+        ? \column_rank<s, scalars, m, n>(A) = 0 or $has_positive_column_row_factorization(s, scalars, m, n, A)
+        case \column_rank<s, scalars, m, n>(A) = 0:
+            \column_rank<s, scalars, m, n>(A) = 0
+        case \column_rank<s, scalars, m, n>(A) != 0:
+            have r N+ = \column_rank<s, scalars, m, n>(A)
+            by thm matrix_column_space_is_subspace(s, scalars, m, n, A)
+            by thm matrix_column_space_admits_basis_length(s, scalars, m, n, A)
+            by thm chap2c::dimension_has_basis_length(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>)
+            \chap2c::dimension<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>> = \column_rank<s, scalars, m, n>(A) = r
+            $chap2c::has_basis_length(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r)
+            by def:
+                ? $chap2c::has_basis_length(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r)
+            obtain source_basis from exist basis_vectors &chap1a::FiniteList<\matrix_column_space<s, scalars, m, n>(A), r> st {$chap2b::is_basis(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r, basis_vectors)}
+            by thm chap2b::basis_iff_unique_coordinates(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r, source_basis)
+            by def:
+                ? $chap2b::basis_iff_unique_coordinates_statement(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r, source_basis)
+            $chap2b::has_unique_coordinates(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r, source_basis)
+            by def:
+                ? $chap2b::has_unique_coordinates(s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r, source_basis)
+            have fn raw_coordinates by exist!:
+                ? forall value \matrix_column_space<s, scalars, m, n>(A):
+                    exist! coefficients &chap1a::FiniteList<s, r> st {value = \chap2a::linear_combination_value<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r>(coefficients, source_basis)}
+                exist! coefficients &chap1a::FiniteList<s, r> st {value = \chap2a::linear_combination_value<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r>(coefficients, source_basis)}
+            have fn total_column(k N+) finite_seq(s, m) by cases:
+                case k <= n: \matrix_column<s, m, n>(A, k)
+                case k > n: \chap1a::coordinate_zero<s, scalars, m>
+            claim:
+                ? forall k N+:
+                    k <= n
+                    =>:
+                        total_column(k) $in \matrix_column_space<s, scalars, m, n>(A)
+                by thm chap2a::span_contains_list_entries(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>)
+                by def:
+                    ? $chap2a::contains_list_entries(finite_seq(s, m), n, \chap3b::matrix_columns<s, scalars, m, n, A>, \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>)
+                &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) $in \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+                \matrix_column_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+                &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) $in \matrix_column_space<s, scalars, m, n>(A)
+                \chap3b::matrix_columns<s, scalars, m, n, A> = (n, fn(column N+: column <= n) finite_seq(s, m) {fn(row N+: row <= m) s {A(row, column)}})
+                &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) = fn(row N+: row <= m) s {A(row, k)}
+                \matrix_column<s, m, n>(A, k) = fn(row N+: row <= m) s {A(row, k)}
+                total_column(k) = \matrix_column<s, m, n>(A, k)
+                total_column(k) $in \matrix_column_space<s, scalars, m, n>(A)
+            have fn source_column(k N+) \matrix_column_space<s, scalars, m, n>(A) by cases:
+                case k <= n: total_column(k)
+                case k > n: &chap1b::VectorSpace<s, \matrix_column_space<s, scalars, m, n>(A)>{\chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>}.zero
+            claim:
+                ? forall k N+:
+                    k <= n
+                    =>:
+                        source_column(k) = total_column(k)
+                source_column(k) = total_column(k)
+            have fn coordinate_list(k N+) &chap1a::FiniteList<s, r> = raw_coordinates(source_column(k))
+            have lifted_basis &chap1a::FiniteList<finite_seq(s, m), r> = (r, fn(q N+: q <= r) finite_seq(s, m) {source_basis.entries(q)})
+            have map_c matrix(s, m, r) = fn(j, q N+: j <= m, q <= r) s {lifted_basis.entries(q)(j)}
+            have Rm matrix(s, r, n) = fn(q, k N+: q <= r, k <= n) s {&chap1a::FiniteList<s, r>{coordinate_list(k)}.entries(q)}
+            have map_columns &chap1a::FiniteList<finite_seq(s, m), r> = \chap3b::matrix_columns<s, scalars, m, r, map_c>
+            claim:
+                ? forall q N+:
+                    q <= r
+                    =>:
+                        map_columns.entries(q) = lifted_basis.entries(q)
+                have left finite_seq(s, m) = map_columns.entries(q)
+                have right finite_seq(s, m) = lifted_basis.entries(q)
+                claim:
+                    ? forall j N+:
+                        j <= m
+                        =>:
+                            left(j) = right(j)
+                    map_columns = \chap3b::matrix_columns<s, scalars, m, r, map_c> = (r, fn(column N+: column <= r) finite_seq(s, m) {fn(row N+: row <= m) s {map_c(row, column)}})
+                    map_columns.entries(q) = fn(row N+: row <= m) s {map_c(row, q)}
+                    left(j) = map_columns.entries(q)(j) = map_c(j, q)
+                    map_c = fn(row, column N+: row <= m, column <= r) s {lifted_basis.entries(column)(row)}
+                    map_c(j, q) = lifted_basis.entries(q)(j) = right(j)
+                by def:
+                    ? $fn_eq(left, right)
+                left = right
+            by def:
+                ? $chap1a::have_same_finite_list_entries(finite_seq(s, m), r, map_columns, lifted_basis)
+            by thm chap1a::finite_list_extensionality(finite_seq(s, m), r, map_columns, lifted_basis)
+            have factor_product matrix(s, m, n) = \matrix_mul<s, scalars, m, r, n>(map_c, Rm)
+            claim:
+                ? forall j, k N+:
+                    j <= m
+                    k <= n
+                    =>:
+                        A(j, k) = factor_product(j, k)
+                have coefficients &chap1a::FiniteList<s, r> = coordinate_list(k)
+                coordinate_list(k) = raw_coordinates(source_column(k))
+                coefficients = raw_coordinates(source_column(k))
+                source_column(k) = \chap2a::linear_combination_value<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r>(raw_coordinates(source_column(k)), source_basis)
+                source_column(k) = \chap2a::linear_combination_value<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r>(coefficients, source_basis)
+                by thm chap2b::inherited_linear_combination_equals_ambient_lift(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A), r, source_basis, lifted_basis, coefficients)
+                \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, lifted_basis) = \chap2a::linear_combination_value<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>, r>(coefficients, source_basis) = source_column(k)
+                map_columns = lifted_basis
+                \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, map_columns) = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, lifted_basis)
+                by thm chap3b::matrix_column_combination_reconstruction(s, scalars, m, r, map_c, coefficients)
+                \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, \chap3b::matrix_columns<s, scalars, m, r, map_c>) = fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, scalars, r>(fn(q N+: q <= r) s {scalars.mul(map_c(row, q), coefficients.entries(q))})}
+                map_columns = \chap3b::matrix_columns<s, scalars, m, r, map_c>
+                \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, map_columns) = fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, scalars, r>(fn(q N+: q <= r) s {scalars.mul(map_c(row, q), coefficients.entries(q))})}
+                have coordinate_result finite_seq(s, m) = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, map_columns)
+                have summed_result finite_seq(s, m) = fn(row N+: row <= m) s {\chap3b::scalar_finite_sum<s, scalars, r>(fn(q N+: q <= r) s {scalars.mul(map_c(row, q), coefficients.entries(q))})}
+                coordinate_result = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, map_columns) = summed_result
+                coordinate_result(j) = summed_result(j)
+                have left_terms finite_seq(s, r) = fn(q N+: q <= r) s {scalars.mul(map_c(j, q), coefficients.entries(q))}
+                have right_terms finite_seq(s, r) = fn(q N+: q <= r) s {scalars.mul(map_c(j, q), Rm(q, k))}
+                summed_result(j) = \chap3b::scalar_finite_sum<s, scalars, r>(left_terms)
+                claim:
+                    ? forall q N+:
+                        q <= r
+                        =>:
+                            left_terms(q) = right_terms(q)
+                    Rm = fn(row, column N+: row <= r, column <= n) s {&chap1a::FiniteList<s, r>{coordinate_list(column)}.entries(row)}
+                    Rm(q, k) = &chap1a::FiniteList<s, r>{coordinate_list(k)}.entries(q)
+                    coefficients = coordinate_list(k)
+                    coefficients.entries(q) = &chap1a::FiniteList<s, r>{coordinate_list(k)}.entries(q) = Rm(q, k)
+                    left_terms(q) = scalars.mul(map_c(j, q), coefficients.entries(q)) = scalars.mul(map_c(j, q), Rm(q, k)) = right_terms(q)
+                by def:
+                    ? $fn_eq(left_terms, right_terms)
+                left_terms = right_terms
+                \chap3b::scalar_finite_sum<s, scalars, r>(left_terms) = \chap3b::scalar_finite_sum<s, scalars, r>(right_terms)
+                coordinate_result(j) = summed_result(j) = \chap3b::scalar_finite_sum<s, scalars, r>(left_terms) = \chap3b::scalar_finite_sum<s, scalars, r>(right_terms)
+                factor_product = \matrix_mul<s, scalars, m, r, n>(map_c, Rm) = fn(row, column N+: row <= m, column <= n) s {\chap3b::scalar_finite_sum<s, scalars, r>(fn(q N+: q <= r) s {scalars.mul(map_c(row, q), Rm(q, column))})}
+                factor_product(j, k) = \chap3b::scalar_finite_sum<s, scalars, r>(right_terms)
+                have actual_column finite_seq(s, m) = total_column(k)
+                source_column(k) = total_column(k) = \matrix_column<s, m, n>(A, k) = fn(row N+: row <= m) s {A(row, k)}
+                actual_column = total_column(k) = fn(row N+: row <= m) s {A(row, k)}
+                actual_column(j) = A(j, k)
+                actual_column = total_column(k) = source_column(k) = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, lifted_basis) = \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, r>(coefficients, map_columns) = coordinate_result
+                A(j, k) = actual_column(j) = coordinate_result(j) = \chap3b::scalar_finite_sum<s, scalars, r>(right_terms) = factor_product(j, k)
+            by def:
+                ? $fn_eq(A, factor_product)
+            A = factor_product = \matrix_mul<s, scalars, m, r, n>(map_c, Rm)
+            witness exist selected_r N+, selected_c matrix(s, m, selected_r), selected_R matrix(s, selected_r, n) st {selected_r = \column_rank<s, scalars, m, n>(A), A = \matrix_mul<s, scalars, m, selected_r, n>(selected_c, selected_R)} from r, map_c, Rm
+            by def:
+                ? $has_positive_column_row_factorization(s, scalars, m, n, A)
 # Result 3.57. Column rank equals row rank.
-axiom column_rank_equals_row_rank:
+# The positive-rank branch of Result 3.57 follows from Result 3.56.
+thm positive_factorization_row_rank_le_column_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        $has_positive_column_row_factorization(s, scalars, m, n, A)
+        =>:
+            \row_rank<s, scalars, m, n>(A) <= \column_rank<s, scalars, m, n>(A)
+    by def:
+        ? $has_positive_column_row_factorization(s, scalars, m, n, A)
+    obtain r, map_c, Rm from exist selected_r N+, selected_c matrix(s, m, selected_r), selected_R matrix(s, selected_r, n) st {selected_r = \column_rank<s, scalars, m, n>(A), A = \matrix_mul<s, scalars, m, selected_r, n>(selected_c, selected_R)}
+    by thm matrix_product_row_space_subset_right(s, scalars, m, r, n, map_c, Rm)
+    \matrix_row_space<s, scalars, m, n>(A) $subset \matrix_row_space<s, scalars, r, n>(Rm)
+    by thm matrix_row_space_is_subspace(s, scalars, m, n, A)
+    by thm matrix_row_space_is_subspace(s, scalars, r, n, Rm)
+    by thm matrix_row_space_admits_basis_length(s, scalars, m, n, A)
+    by thm matrix_row_space_admits_basis_length(s, scalars, r, n, Rm)
+    by thm contained_subspace_dimension_le(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A), \matrix_row_space<s, scalars, r, n>(Rm))
+    \chap2c::dimension<s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>> <= \chap2c::dimension<s, \matrix_row_space<s, scalars, r, n>(Rm), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, r, n>(Rm)>>
+    \row_rank<s, scalars, m, n>(A) = \chap2c::dimension<s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>>
+    \row_rank<s, scalars, r, n>(Rm) = \chap2c::dimension<s, \matrix_row_space<s, scalars, r, n>(Rm), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, r, n>(Rm)>>
+    \row_rank<s, scalars, m, n>(A) <= \row_rank<s, scalars, r, n>(Rm)
+    by thm chap3b::coordinate_space_is_finite_dimensional(s, scalars, n)
+    by thm chap2a::span_is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm))
+    by thm chap2a::subspace_of_finite_dimensional_is_finite_dimensional(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>)
+    by thm chap2c::finite_dimensional_admits_basis_length(s, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>, \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>>)
+    \matrix_row_space<s, scalars, r, n>(Rm) = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>
+    by thm equal_subspace_carriers_have_equal_dimensions(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, r, n>(Rm), \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>)
+    \chap2c::dimension<s, \matrix_row_space<s, scalars, r, n>(Rm), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, r, n>(Rm)>> = \chap2c::dimension<s, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>, \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>>>
+    by thm span_dimension_le_generator_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm))
+    \chap2c::dimension<s, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>, \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, r, \matrix_rows<s, scalars, r, n>(Rm)>>> <= r
+    \row_rank<s, scalars, r, n>(Rm) <= r
+    r = \column_rank<s, scalars, m, n>(A)
+    \row_rank<s, scalars, m, n>(A) <= \row_rank<s, scalars, r, n>(Rm) <= r = \column_rank<s, scalars, m, n>(A)
+
+thm dimension_zero_subspace_is_singleton_zero:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>, U power_set(v):
+        $chap1c::is_subspace(s, v, space, U)
+        $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+        \chap2c::dimension<s, U, \chap1c::subspace_vector_space<s, v, space, U>> = 0
+        =>:
+            U = {space.zero}
+    $chap2c::admits_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    U = U
+    by thm chap2c::dimension_has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>)
+    $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0)
+    by def:
+        ? $chap2c::has_basis_length(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0)
+    obtain basis from exist selected &chap1a::FiniteList<U, 0> st {$chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, selected)}
+    by def:
+        ? $chap2b::is_basis(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, basis)
+    by def:
+        ? $chap2a::spans(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, basis)
+    claim:
+        ? forall x U:
+            x $in {space.zero}
+        by thm chap2a::span_carrier_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, basis)
+        x $in U = \chap2a::span<s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, basis>
+        by def:
+            ? $chap2a::is_linear_combination(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, x, basis)
+        obtain coefficients from exist selected &chap1a::FiniteList<s, 0> st {x = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0>(selected, basis)}
+        by thm chap2a::linear_combination_value_satisfies_spec(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, coefficients, basis)
+        by def:
+            ? $chap2a::has_linear_combination_value(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, coefficients, basis, \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0>(coefficients, basis))
+        obtain trace from exist selected fn(k closed_range(0, 0)) U st {$chap2a::is_linear_combination_partial_sum_sequence(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, coefficients, basis, selected), \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0>(coefficients, basis) = selected(0)}
+        by def:
+            ? $chap2a::is_linear_combination_partial_sum_sequence(s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0, coefficients, basis, trace)
+        trace(0) = &chap1b::VectorSpace<s, U>{\chap1c::subspace_vector_space<s, v, space, U>}.zero = space.zero
+        x = \chap2a::linear_combination_value<s, U, \chap1c::subspace_vector_space<s, v, space, U>, 0>(coefficients, basis) = trace(0) = space.zero
+        x $in {space.zero}
+    claim:
+        ? forall x {space.zero}:
+            x $in U
+        x = space.zero
+        by def:
+            ? $chap1c::is_subspace(s, v, space, U)
+        space.zero $in U
+    by extension:
+        ? U = {space.zero}
+
+thm singleton_zero_is_subspace:
+    ? forall s nonempty_set, v nonempty_set, space &chap1b::VectorSpace<s, v>:
+        $chap1c::is_subspace(s, v, space, {space.zero})
+    witness $is_nonempty_set({space.zero}) from space.zero
+    space.zero $in {space.zero}
+    claim:
+        ? forall x, y {space.zero}:
+            space.add(x, y) $in {space.zero}
+        x = space.zero
+        y = space.zero
+        space.add(x, y) = space.add(space.zero, space.zero) = space.zero
+    claim:
+        ? forall a s, x {space.zero}:
+            space.smul(a, x) $in {space.zero}
+        x = space.zero
+        space.smul(a, x) = space.smul(a, space.zero) = space.zero
+    by def:
+        ? $chap1c::is_subspace(s, v, space, {space.zero})
+
+thm coordinate_zero_singleton_is_subspace:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, n N+:
+        $chap1c::is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, {\chap1a::coordinate_zero<s, scalars, n>})
+    have space &chap1b::VectorSpace<s, finite_seq(s, n)> = \chap1b::coordinate_space<s, scalars, n>
+    by thm singleton_zero_is_subspace(s, finite_seq(s, n), space)
+    space = \chap1b::coordinate_space<s, scalars, n> = (scalars, \chap1a::coordinate_zero<s, scalars, n>, \chap1a::coordinate_add<s, scalars, n>, \chap1a::coordinate_smul<s, scalars, n>)
+    space.zero = \chap1a::coordinate_zero<s, scalars, n>
+    claim:
+        ? {space.zero} = {\chap1a::coordinate_zero<s, scalars, n>}
+        claim:
+            ? forall x {space.zero}:
+                x $in {\chap1a::coordinate_zero<s, scalars, n>}
+            x = space.zero = \chap1a::coordinate_zero<s, scalars, n>
+        claim:
+            ? forall x {\chap1a::coordinate_zero<s, scalars, n>}:
+                x $in {space.zero}
+            x = \chap1a::coordinate_zero<s, scalars, n> = space.zero
+        by extension:
+            ? {space.zero} = {\chap1a::coordinate_zero<s, scalars, n>}
+    $chap1c::is_subspace(s, finite_seq(s, n), space, {space.zero})
+    $chap1c::is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, {\chap1a::coordinate_zero<s, scalars, n>})
+
+thm zero_column_rank_implies_zero_row_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) = 0
+        =>:
+            \row_rank<s, scalars, m, n>(A) = 0
+    by thm matrix_column_space_is_subspace(s, scalars, m, n, A)
+    by thm matrix_column_space_admits_basis_length(s, scalars, m, n, A)
+    \column_rank<s, scalars, m, n>(A) = \chap2c::dimension<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>> = 0
+    by thm dimension_zero_subspace_is_singleton_zero(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A))
+    \matrix_column_space<s, scalars, m, n>(A) = {\chap1a::coordinate_zero<s, scalars, m>}
+    claim:
+        ? forall j, k N+:
+            j <= m
+            k <= n
+            =>:
+                A(j, k) = scalars.zero
+        by thm chap2a::span_contains_list_entries(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>)
+        by def:
+            ? $chap2a::contains_list_entries(finite_seq(s, m), n, \chap3b::matrix_columns<s, scalars, m, n, A>, \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>)
+        &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) $in \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+        \matrix_column_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>>
+        &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) $in \matrix_column_space<s, scalars, m, n>(A)
+        \matrix_column_space<s, scalars, m, n>(A) = {\chap1a::coordinate_zero<s, scalars, m>}
+        &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) $in {\chap1a::coordinate_zero<s, scalars, m>}
+        &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) = \chap1a::coordinate_zero<s, scalars, m>
+        have actual_column finite_seq(s, m) = &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k)
+        \chap3b::matrix_columns<s, scalars, m, n, A> = (n, fn(column N+: column <= n) finite_seq(s, m) {fn(row N+: row <= m) s {A(row, column)}})
+        actual_column = &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) = fn(row N+: row <= m) s {A(row, k)}
+        actual_column = \chap1a::coordinate_zero<s, scalars, m>
+        actual_column(j) = A(j, k)
+        actual_column(j) = \chap1a::coordinate_zero<s, scalars, m>(j) = scalars.zero
+        A(j, k) = actual_column(j) = scalars.zero
+    by thm coordinate_zero_singleton_is_subspace(s, scalars, n)
+    claim:
+        ? $chap2a::contains_list_entries(finite_seq(s, n), m, \matrix_rows<s, scalars, m, n>(A), {\chap1a::coordinate_zero<s, scalars, n>})
+        claim:
+            ? forall j N+:
+                j <= m
+                =>:
+                    &chap1a::FiniteList<finite_seq(s, n), m>{\matrix_rows<s, scalars, m, n>(A)}.entries(j) $in {\chap1a::coordinate_zero<s, scalars, n>}
+            have actual_row finite_seq(s, n) = &chap1a::FiniteList<finite_seq(s, n), m>{\matrix_rows<s, scalars, m, n>(A)}.entries(j)
+            have zero_row finite_seq(s, n) = \chap1a::coordinate_zero<s, scalars, n>
+            claim:
+                ? forall k N+:
+                    k <= n
+                    =>:
+                        actual_row(k) = zero_row(k)
+                \matrix_rows<s, scalars, m, n>(A) = (m, fn(row_index N+: row_index <= m) finite_seq(s, n) {fn(column N+: column <= n) s {A(row_index, column)}})
+                actual_row = &chap1a::FiniteList<finite_seq(s, n), m>{\matrix_rows<s, scalars, m, n>(A)}.entries(j) = fn(column N+: column <= n) s {A(j, column)}
+                actual_row(k) = A(j, k) = scalars.zero = zero_row(k)
+            by def $fn_eq(actual_row, zero_row)
+            actual_row = zero_row = \chap1a::coordinate_zero<s, scalars, n>
+            actual_row $in {\chap1a::coordinate_zero<s, scalars, n>}
+        by def:
+            ? $chap2a::contains_list_entries(finite_seq(s, n), m, \matrix_rows<s, scalars, m, n>(A), {\chap1a::coordinate_zero<s, scalars, n>})
+    by thm chap2a::span_is_smallest_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A), {\chap1a::coordinate_zero<s, scalars, n>})
+    \matrix_row_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, m, \matrix_rows<s, scalars, m, n>(A)>
+    \matrix_row_space<s, scalars, m, n>(A) $subset {\chap1a::coordinate_zero<s, scalars, n>}
+    by thm matrix_row_space_is_subspace(s, scalars, m, n, A)
+    claim:
+        ? {\chap1a::coordinate_zero<s, scalars, n>} $subset \matrix_row_space<s, scalars, m, n>(A)
+        claim:
+            ? forall x {\chap1a::coordinate_zero<s, scalars, n>}:
+                x $in \matrix_row_space<s, scalars, m, n>(A)
+            x = \chap1a::coordinate_zero<s, scalars, n>
+            by def:
+                ? $chap1c::is_subspace(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A))
+            \chap1a::coordinate_zero<s, scalars, n> $in \matrix_row_space<s, scalars, m, n>(A)
+        by def:
+            ? {\chap1a::coordinate_zero<s, scalars, n>} $subset \matrix_row_space<s, scalars, m, n>(A)
+    by thm chap2b::mutual_subset_implies_set_equal(\matrix_row_space<s, scalars, m, n>(A), {\chap1a::coordinate_zero<s, scalars, n>})
+    \matrix_row_space<s, scalars, m, n>(A) = {\chap1a::coordinate_zero<s, scalars, n>}
+    by thm chap3b::zero_subspace_has_basis_length_zero(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A))
+    by thm matrix_row_space_admits_basis_length(s, scalars, m, n, A)
+    by thm chap2c::dimension_has_basis_length(s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>)
+    \chap2c::dimension<s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>> = \row_rank<s, scalars, m, n>(A)
+    $chap2c::has_basis_length(s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>, \row_rank<s, scalars, m, n>(A))
+    by thm chap2c::basis_length_unique(s, \matrix_row_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \matrix_row_space<s, scalars, m, n>(A)>, \row_rank<s, scalars, m, n>(A), 0)
+    \row_rank<s, scalars, m, n>(A) = 0
+
+thm row_rank_le_column_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \row_rank<s, scalars, m, n>(A) <= \column_rank<s, scalars, m, n>(A)
+    by thm column_row_factorization(s, scalars, m, n, A)
+    by cases:
+        ? \row_rank<s, scalars, m, n>(A) <= \column_rank<s, scalars, m, n>(A)
+        case \column_rank<s, scalars, m, n>(A) = 0:
+            by thm zero_column_rank_implies_zero_row_rank(s, scalars, m, n, A)
+            \row_rank<s, scalars, m, n>(A) = 0 = \column_rank<s, scalars, m, n>(A)
+        case $has_positive_column_row_factorization(s, scalars, m, n, A):
+            by thm positive_factorization_row_rank_le_column_rank(s, scalars, m, n, A)
+
+thm matrix_columns_equal_transpose_rows:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \chap3b::matrix_columns<s, scalars, m, n, A> = \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A))
+    claim:
+        ? forall k N+:
+            k <= n
+            =>:
+                &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k) = &chap1a::FiniteList<finite_seq(s, m), n>{\matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A))}.entries(k)
+        have left finite_seq(s, m) = &chap1a::FiniteList<finite_seq(s, m), n>{\chap3b::matrix_columns<s, scalars, m, n, A>}.entries(k)
+        have right finite_seq(s, m) = &chap1a::FiniteList<finite_seq(s, m), n>{\matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A))}.entries(k)
+        claim:
+            ? forall j N+:
+                j <= m
+                =>:
+                    left(j) = right(j)
+            \chap3b::matrix_columns<s, scalars, m, n, A> = (n, fn(column N+: column <= n) finite_seq(s, m) {fn(row N+: row <= m) s {A(row, column)}})
+            left = fn(row N+: row <= m) s {A(row, k)}
+            left(j) = A(j, k)
+            \transpose<s, m, n>(A) = fn(row N+, column N+: row <= n, column <= m) s {A(column, row)}
+            \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A)) = (n, fn(row N+: row <= n) finite_seq(s, m) {fn(column N+: column <= m) s {\transpose<s, m, n>(A)(row, column)}})
+            right = fn(column N+: column <= m) s {\transpose<s, m, n>(A)(k, column)}
+            right(j) = \transpose<s, m, n>(A)(k, j) = A(j, k)
+        by def $fn_eq(left, right)
+    by def:
+        ? $chap1a::have_same_finite_list_entries(finite_seq(s, m), n, \chap3b::matrix_columns<s, scalars, m, n, A>, \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A)))
+    by thm chap1a::finite_list_extensionality(finite_seq(s, m), n, \chap3b::matrix_columns<s, scalars, m, n, A>, \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A)))
+
+thm matrix_column_space_equals_transpose_row_space:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \matrix_column_space<s, scalars, m, n>(A) = \matrix_row_space<s, scalars, n, m>(\transpose<s, m, n>(A))
+    by thm matrix_columns_equal_transpose_rows(s, scalars, m, n, A)
+    by thm equal_finite_lists_have_equal_span_carriers(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>, \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A)))
+    \matrix_column_space<s, scalars, m, n>(A) = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \chap3b::matrix_columns<s, scalars, m, n, A>> = \chap2a::span_carrier<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, \matrix_rows<s, scalars, n, m>(\transpose<s, m, n>(A))> = \matrix_row_space<s, scalars, n, m>(\transpose<s, m, n>(A))
+
+thm column_rank_equals_transpose_row_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, n, m>(\transpose<s, m, n>(A))
+    by thm matrix_column_space_equals_transpose_row_space(s, scalars, m, n, A)
+    by thm matrix_column_space_is_subspace(s, scalars, m, n, A)
+    by thm matrix_row_space_is_subspace(s, scalars, n, m, \transpose<s, m, n>(A))
+    by thm matrix_column_space_admits_basis_length(s, scalars, m, n, A)
+    by thm matrix_row_space_admits_basis_length(s, scalars, n, m, \transpose<s, m, n>(A))
+    by thm equal_subspace_carriers_have_equal_dimensions(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A), \matrix_row_space<s, scalars, n, m>(\transpose<s, m, n>(A)))
+    \column_rank<s, scalars, m, n>(A) = \chap2c::dimension<s, \matrix_column_space<s, scalars, m, n>(A), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_column_space<s, scalars, m, n>(A)>>
+    \row_rank<s, scalars, n, m>(\transpose<s, m, n>(A)) = \chap2c::dimension<s, \matrix_row_space<s, scalars, n, m>(\transpose<s, m, n>(A)), \chap1c::subspace_vector_space<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, \matrix_row_space<s, scalars, n, m>(\transpose<s, m, n>(A))>>
+
+thm column_rank_le_row_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) <= \row_rank<s, scalars, m, n>(A)
+    by thm row_rank_le_column_rank(s, scalars, n, m, \transpose<s, m, n>(A))
+    by thm column_rank_equals_transpose_row_rank(s, scalars, m, n, A)
+    by thm row_rank_equals_transpose_column_rank(s, scalars, m, n, A)
+    \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, n, m>(\transpose<s, m, n>(A)) <= \column_rank<s, scalars, n, m>(\transpose<s, m, n>(A)) = \row_rank<s, scalars, m, n>(A)
+
+thm column_rank_equals_row_rank_checked:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
         \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, m, n>(A)
+    by thm row_rank_le_column_rank(s, scalars, m, n, A)
+    by thm column_rank_le_row_rank(s, scalars, m, n, A)
+    \row_rank<s, scalars, m, n>(A) <= \column_rank<s, scalars, m, n>(A)
+    \column_rank<s, scalars, m, n>(A) <= \row_rank<s, scalars, m, n>(A)
+    \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, m, n>(A)
+
+thm column_rank_equals_row_rank:
+    ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n):
+        \column_rank<s, scalars, m, n>(A) = \row_rank<s, scalars, m, n>(A)
+    by thm column_rank_equals_row_rank_checked(s, scalars, m, n, A)
 # Definition 3.58. The rank of a matrix is this common column/row rank.
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
     have fn matrix_rank(A matrix(s, m, n)) N = \column_rank<s, scalars, m, n>(A)

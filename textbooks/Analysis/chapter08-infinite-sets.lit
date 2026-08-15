@@ -54,9 +54,7 @@ thm countably_infinite_is_at_most_countable:
         by def:
             ? $chap3::is_injective_fn(X, N, inverse_f)
         $chap3::is_injective_fn(X, N, inverse_f)
-    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from inverse_f
-    by def:
-        ? $embeds_into(X, N)
+    witness $embeds_into(X, N) from inverse_f
     $embeds_into(X, N)
     by def:
         ? $is_at_most_countable(X)
@@ -88,9 +86,7 @@ thm finite_cardinality_gives_at_most_countable:
         by def:
             ? $chap3::is_injective_fn(X, N, encode_X)
         $chap3::is_injective_fn(X, N, encode_X)
-    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
-    by def:
-        ? $embeds_into(X, N)
+    witness $embeds_into(X, N) from encode_X
     $embeds_into(X, N)
     by def:
         ? $is_at_most_countable(X)
@@ -120,9 +116,7 @@ thm injection_into_at_most_countable_gives_at_most_countable:
         by def:
             ? $chap3::is_injective_fn(X, N, encode_X)
         $chap3::is_injective_fn(X, N, encode_X)
-    witness exist g fn(x X) N st {$chap3::is_injective_fn(X, N, g)} from encode_X
-    by def:
-        ? $embeds_into(X, N)
+    witness $embeds_into(X, N) from encode_X
     $embeds_into(X, N)
     by def:
         ? $is_at_most_countable(X)
@@ -169,9 +163,7 @@ claim:
     by def:
         ? $chap3::is_bijective_fn(N, N, id_N)
     $chap3::is_bijective_fn(N, N, id_N)
-    witness exist f fn(x N) N st {$chap3::is_bijective_fn(N, N, f)} from id_N
-    by def:
-        ? $chap3::has_equal_cardinality(N, N)
+    witness $chap3::has_equal_cardinality(N, N) from id_N
     by def:
         ? $is_countably_infinite(N)
 
@@ -202,9 +194,7 @@ claim:
         $chap3::is_surjective_fn(N, N+, succ_N)
     by def:
         ? $chap3::is_bijective_fn(N, N+, succ_N)
-    witness exist f fn(x N) N+ st {$chap3::is_bijective_fn(N, N+, f)} from succ_N
-    by def:
-        ? $chap3::has_equal_cardinality(N, N+)
+    witness $chap3::has_equal_cardinality(N, N+) from succ_N
     by def:
         ? $is_countably_infinite(N+)
 
@@ -231,7 +221,7 @@ claim:
             y $in even_natural_numbers
             y $in {n N: $is_even_natural_number(n)}
             $is_even_natural_number(y)
-            obtain k from exist k N st {y = 2 * k}
+            obtain k from $is_even_natural_number(y)
             double_to_even(k) = 2 * k
             y = double_to_even(k)
             witness exist x N st {y = double_to_even(x)} from k
@@ -370,9 +360,7 @@ thm empty_set_has_equal_cardinality_self:
         $chap3::is_surjective_fn({}, {}, empty_to_empty)
     by def:
         ? $chap3::is_bijective_fn({}, {}, empty_to_empty)
-    witness exist f fn(x {}) {} st {$chap3::is_bijective_fn({}, {}, f)} from empty_to_empty
-    by def:
-        ? $chap3::has_equal_cardinality({}, {})
+    witness $chap3::has_equal_cardinality({}, {}) from empty_to_empty
 
 thm empty_set_has_cardinality_zero:
     ? forall:
@@ -386,9 +374,7 @@ thm empty_set_has_finite_cardinality:
     ? forall:
         $chap3::has_finite_cardinality({})
     by thm empty_set_has_cardinality_zero()
-    witness exist n N st {$chap3::has_cardinality({}, n)} from 0
-    by def:
-        ? $chap3::has_finite_cardinality({})
+    witness $chap3::has_finite_cardinality({}) from 0
 
 # Chapter 3 defines cardinality with the zero-based model `range(0, n)`,
 # while the finite-set enumeration from Chapter 7 uses `closed_range(1, n)`.
@@ -468,9 +454,7 @@ thm positive_count_finite_set_has_cardinality:
     by def:
         ? $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
     $chap3::is_bijective_fn(s, range(0, finite_set_size(s)), zero_index_of_s)
-    witness exist f fn(x s) range(0, finite_set_size(s)) st {$chap3::is_bijective_fn(s, range(0, finite_set_size(s)), f)} from zero_index_of_s
-    by def:
-        ? $chap3::has_equal_cardinality(s, range(0, finite_set_size(s)))
+    witness $chap3::has_equal_cardinality(s, range(0, finite_set_size(s))) from zero_index_of_s
     by def:
         ? $chap3::has_cardinality(s, finite_set_size(s))
 
@@ -1041,9 +1025,7 @@ thm infinite_subset_of_N_has_unique_increasing_enumeration:
             f1(n) = increasing_N_subset_enum_value(X, n) = f2(n)
         by def:
             ? $fn_eq(f1, f2)
-    witness exist f0 fn(x N) X st {$chap3::is_bijective_fn(N, X, f0)} from f
-    by def:
-        ? $chap3::has_equal_cardinality(N, X)
+    witness $chap3::has_equal_cardinality(N, X) from f
     by def:
         ? $is_countably_infinite(X)
 
@@ -1054,7 +1036,7 @@ thm infinite_at_most_countable_is_countably_infinite:
         =>:
             $is_countably_infinite(X)
     $embeds_into(X, N)
-    obtain f from exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)}
+    obtain f from $embeds_into(X, N)
     have fn inverse_f by exist!:
         ? forall y fn_range(f):
             exist! x X st {y = f(x)}
@@ -1083,9 +1065,7 @@ thm infinite_at_most_countable_is_countably_infinite:
                     ? $surjective(fn_range(f), X, inverse_f)
             $is_finite_set(X)
             by thm finite_set_has_cardinality_count(X)
-            witness exist n N st {$chap3::has_cardinality(X, n)} from finite_set_size(X)
-            by def:
-                ? $chap3::has_finite_cardinality(X)
+            witness $chap3::has_finite_cardinality(X) from finite_set_size(X)
             by def:
                 ? $chap3::has_infinite_cardinality(X)
             impossible $chap3::has_finite_cardinality(X)
@@ -1200,9 +1180,7 @@ thm natural_subset_is_at_most_countable:
                 x1 = include_in_N(x1) = include_in_N(x2) = x2
         by def:
             ? $chap3::is_injective_fn(X, N, include_in_N)
-    witness exist f fn(x X) N st {$chap3::is_injective_fn(X, N, f)} from include_in_N
-    by def:
-        ? $embeds_into(X, N)
+    witness $embeds_into(X, N) from include_in_N
     by def:
         ? $is_at_most_countable(X)
 
@@ -1260,9 +1238,7 @@ thm natural_image_is_at_most_countable:
                 y1 = f(first_index(y1)) = f(first_index(y2)) = y2
         by def:
             ? $chap3::is_injective_fn(fn_range(f), N, first_index)
-    witness exist g fn(x fn_range(f)) N st {$chap3::is_injective_fn(fn_range(f), N, g)} from first_index
-    by def:
-        ? $embeds_into(fn_range(f), N)
+    witness $embeds_into(fn_range(f), N) from first_index
     by def:
         ? $is_at_most_countable(fn_range(f))
 
@@ -1318,7 +1294,7 @@ thm union_of_two_countable_sets_is_countable:
     by thm countably_infinite_is_at_most_countable(Y)
     $embeds_into(X, N)
     $embeds_into(Y, N)
-    obtain codeX from exist codeX fn(x X) N st {$chap3::is_injective_fn(X, N, codeX)}
+    obtain codeX from $embeds_into(X, N)
     obtain codeY from exist codeY fn(y Y) N st {$chap3::is_injective_fn(Y, N, codeY)}
     have fn extended_codeY(z union(X, Y)) N by cases:
         case z $in Y: codeY(z)
@@ -1397,9 +1373,7 @@ thm union_of_two_countable_sets_is_countable:
                             z1 = z2
         by def:
             ? $chap3::is_injective_fn(union(X, Y), N, union_code)
-    witness exist code fn(z union(X, Y)) N st {$chap3::is_injective_fn(union(X, Y), N, code)} from union_code
-    by def:
-        ? $embeds_into(union(X, Y), N)
+    witness $embeds_into(union(X, Y), N) from union_code
     by def:
         ? $is_at_most_countable(union(X, Y))
     have fn embed_N(n N) union(X, Y) = enumX(n)
@@ -1414,9 +1388,7 @@ thm union_of_two_countable_sets_is_countable:
                 n1 = n2
         by def:
             ? $chap3::is_injective_fn(N, union(X, Y), embed_N)
-    witness exist element_e fn(x N) union(X, Y) st {$chap3::is_injective_fn(N, union(X, Y), element_e)} from embed_N
-    by def:
-        ? $embeds_into(N, union(X, Y))
+    witness $embeds_into(N, union(X, Y)) from embed_N
     by thm at_most_countable_with_N_embedding_is_countably_infinite(union(X, Y))
 
 """
@@ -1457,9 +1429,7 @@ thm integers_are_countable:
             ? $chap3::is_surjective_fn(N, negative_natural_part, enumerate_negative_naturals)
     by def:
         ? $chap3::is_bijective_fn(N, negative_natural_part, enumerate_negative_naturals)
-    witness exist f fn(x N) negative_natural_part st {$chap3::is_bijective_fn(N, negative_natural_part, f)} from enumerate_negative_naturals
-    by def:
-        ? $chap3::has_equal_cardinality(N, negative_natural_part)
+    witness $chap3::has_equal_cardinality(N, negative_natural_part) from enumerate_negative_naturals
     by def:
         ? $is_countably_infinite(negative_natural_part)
     claim:
@@ -1734,9 +1704,7 @@ claim:
 
 by def:
     ? $chap3::is_bijective_fn(N, natural_triangle, triangle_unrank)
-witness exist f fn(x N) natural_triangle st {$chap3::is_bijective_fn(N, natural_triangle, f)} from triangle_unrank
-by def:
-    ? $chap3::has_equal_cardinality(N, natural_triangle)
+witness $chap3::has_equal_cardinality(N, natural_triangle) from triangle_unrank
 by def:
     ? $is_countably_infinite(natural_triangle)
 
@@ -1822,9 +1790,7 @@ claim:
 
 by def:
     ? $chap3::is_bijective_fn(N, upper_natural_triangle, upper_triangle_enum)
-witness exist f fn(x N) upper_natural_triangle st {$chap3::is_bijective_fn(N, upper_natural_triangle, f)} from upper_triangle_enum
-by def:
-    ? $chap3::has_equal_cardinality(N, upper_natural_triangle)
+witness $chap3::has_equal_cardinality(N, upper_natural_triangle) from upper_triangle_enum
 by def:
     ? $is_countably_infinite(upper_natural_triangle)
 
@@ -1902,9 +1868,7 @@ thm product_of_countable_sets_is_countable:
                 n1 = n2
         by def:
             ? $chap3::is_injective_fn(N, cart(X, Y), embed_N_into_cart)
-    witness exist element_e fn(x N) cart(X, Y) st {$chap3::is_injective_fn(N, cart(X, Y), element_e)} from embed_N_into_cart
-    by def:
-        ? $embeds_into(N, cart(X, Y))
+    witness $embeds_into(N, cart(X, Y)) from embed_N_into_cart
     by thm at_most_countable_with_N_embedding_is_countably_infinite(cart(X, Y))
 
 """
@@ -1949,9 +1913,7 @@ claim:
 
 by def:
     ? $chap3::is_bijective_fn(N, Z-, negative_integer_enum)
-witness exist f fn(x N) Z- st {$chap3::is_bijective_fn(N, Z-, f)} from negative_integer_enum
-by def:
-    ? $chap3::has_equal_cardinality(N, Z-)
+witness $chap3::has_equal_cardinality(N, Z-) from negative_integer_enum
 by def:
     ? $is_countably_infinite(Z-)
 
@@ -2025,9 +1987,7 @@ claim:
                 x1 = natural_to_rational(x1) = natural_to_rational(x2) = x2
         by def:
             ? $chap3::is_injective_fn(N, Q, natural_to_rational)
-    witness exist f fn(x N) Q st {$chap3::is_injective_fn(N, Q, f)} from natural_to_rational
-    by def:
-        ? $embeds_into(N, Q)
+    witness $embeds_into(N, Q) from natural_to_rational
 
 by thm at_most_countable_with_N_embedding_is_countably_infinite(Q)
 
@@ -2151,7 +2111,7 @@ thm countable_union_of_at_most_countable_sets:
         trust min_of_N_subset(owner_code_set(x)) $in owner_code_set(x)
         min_of_N_subset(owner_code_set(x)) $in {n N: $is_owner_code(I, U, A, index_code, x, n)}
         $is_owner_code(I, U, A, index_code, x, min_of_N_subset(owner_code_set(x)))
-        obtain i from exist i I st {x $in A(i), min_of_N_subset(owner_code_set(x)) = index_code(i)}
+        obtain i from $is_owner_code(I, U, A, index_code, x, min_of_N_subset(owner_code_set(x)))
         witness exist! j I st {x $in A(j), index_code(j) = min_of_N_subset(owner_code_set(x))} from i:
             x $in A(i)
             index_code(i) = min_of_N_subset(owner_code_set(x))
@@ -2196,9 +2156,7 @@ thm union_of_two_at_most_countable_sets_is_at_most_countable:
     X $subset union(X, Y)
     Y $subset union(X, Y)
     by thm finite_set_has_cardinality_count({0, 1})
-    witness exist n N st {$chap3::has_cardinality({0, 1}, n)} from finite_set_size({0, 1})
-    by def:
-        ? $chap3::has_finite_cardinality({0, 1})
+    witness $chap3::has_finite_cardinality({0, 1}) from finite_set_size({0, 1})
     by thm finite_cardinality_gives_at_most_countable({0, 1})
     have fn family(i_index {0, 1}) power_set(union(X, Y)) by cases:
         case i_index = 0: X
@@ -2743,7 +2701,7 @@ thm nonnegative_double_sum_bounds_finite_subsums:
     $has_countable_set_series_sum(cart(N+, N+), f, L)
     by def:
         ? $has_countable_set_series_sum(cart(N+, N+), f, L)
-    obtain g from exist g fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), g), $chap7::has_series_sum(\countable_set_series_terms<cart(N+, N+), f, g>, L)}
+    obtain g from $has_countable_set_series_sum(cart(N+, N+), f, L)
     claim:
         ? forall A finite_set:
             A $subset cart(N+, N+)
@@ -2764,7 +2722,7 @@ thm nonnegative_double_sum_has_finite_support_capture:
     $has_countable_set_series_sum(cart(N+, N+), f, L)
     by def:
         ? $has_countable_set_series_sum(cart(N+, N+), f, L)
-    obtain g from exist g fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), g), $chap7::has_series_sum(\countable_set_series_terms<cart(N+, N+), f, g>, L)}
+    obtain g from $has_countable_set_series_sum(cart(N+, N+), f, L)
     claim:
         ? forall epsilon R+:
             exist A finite_set st {A $subset cart(N+, N+), finite_set_sum(A, fn(p A) R {f(p)}) >= L - epsilon}
@@ -2855,9 +2813,7 @@ thm row_partial_sums_bounded_by_finite_double_bound:
         chap7::partial_sum(fn(m N+) R {f((n, m))}, k) = chap7::partial_sum(row, k) <= L
     by def:
         ? $chap7::is_partial_sum_bound(fn(m N+) R {f((n, m))}, L)
-    witness exist M R st {$chap7::is_partial_sum_bound(fn(m N+) R {f((n, m))}, M)} from L
-    by def:
-        ? $chap7::has_bounded_partial_sums(fn(m N+) R {f((n, m))})
+    witness $chap7::has_bounded_partial_sums(fn(m N+) R {f((n, m))}) from L
 
 thm each_nonnegative_bounded_row_has_unique_sum:
     ? forall f fn(p cart(N+, N+)) R, L R, n N+:
@@ -3114,9 +3070,7 @@ thm row_sum_partial_sums_bounded:
         by thm row_partial_sum_below_finite_double_bound(f, L, r, k)
     by def:
         ? $chap7::is_partial_sum_bound(r, L)
-    witness exist M R st {$chap7::is_partial_sum_bound(r, M)} from L
-    by def:
-        ? $chap7::has_bounded_partial_sums(r)
+    witness $chap7::has_bounded_partial_sums(r) from L
 
 thm finite_double_subsum_below_row_first_sum:
     ? forall f fn(p cart(N+, N+)) R, r seq(R), S R, A finite_set:
@@ -3277,9 +3231,7 @@ thm bounded_rectangles_and_capture_give_row_first_sum:
             impossible L - epsilon <= S
     L = S
     $chap7::has_series_sum(r, L)
-    witness exist r0 seq(R) st {$has_row_sums(f, r0), $chap7::has_series_sum(r0, L)} from r
-    by def:
-        ? $has_row_first_sum(f, L)
+    witness $has_row_first_sum(f, L) from r
 
 thm fubini_row_first_nonnegative_case:
     ? forall f fn(p cart(N+, N+)) R, L R:
@@ -3313,9 +3265,7 @@ thm double_positive_part_has_double_sum_from_enumeration:
         (abs(f(g(n))) + f(g(n))) / 2 = (abs(\countable_set_series_terms<cart(N+, N+), f, g>(n)) + \countable_set_series_terms<cart(N+, N+), f, g>(n)) / 2 = chap7::positive_part_series(\countable_set_series_terms<cart(N+, N+), f, g>)(n)
         \countable_set_series_terms<cart(N+, N+), \double_positive_part<f>, g>(n) = \double_positive_part<f>(g(n)) = (abs(f(g(n))) + f(g(n))) / 2 = chap7::positive_part_series(\countable_set_series_terms<cart(N+, N+), f, g>)(n)
     by thm chap7::series_sum_extensional(chap7::positive_part_series(\countable_set_series_terms<cart(N+, N+), f, g>), \countable_set_series_terms<cart(N+, N+), \double_positive_part<f>, g>, P)
-    witness exist g0 fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), g0), $chap7::has_series_sum(\countable_set_series_terms<cart(N+, N+), \double_positive_part<f>, g0>, P)} from g
-    by def:
-        ? $has_countable_set_series_sum(cart(N+, N+), \double_positive_part<f>, P)
+    witness $has_countable_set_series_sum(cart(N+, N+), \double_positive_part<f>, P) from g
     $has_countable_set_series_sum(cart(N+, N+), \double_positive_part<f>, P)
     by def:
         ? $has_double_sum(\double_positive_part<f>, P)
@@ -3336,9 +3286,7 @@ thm double_negative_part_has_double_sum_from_enumeration:
         (abs(f(g(n))) - f(g(n))) / 2 = (abs(\countable_set_series_terms<cart(N+, N+), f, g>(n)) - \countable_set_series_terms<cart(N+, N+), f, g>(n)) / 2 = chap7::negative_part_series(\countable_set_series_terms<cart(N+, N+), f, g>)(n)
         \countable_set_series_terms<cart(N+, N+), \double_negative_part<f>, g>(n) = \double_negative_part<f>(g(n)) = (abs(f(g(n))) - f(g(n))) / 2 = chap7::negative_part_series(\countable_set_series_terms<cart(N+, N+), f, g>)(n)
     by thm chap7::series_sum_extensional(chap7::negative_part_series(\countable_set_series_terms<cart(N+, N+), f, g>), \countable_set_series_terms<cart(N+, N+), \double_negative_part<f>, g>, Nsum)
-    witness exist g0 fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), g0), $chap7::has_series_sum(\countable_set_series_terms<cart(N+, N+), \double_negative_part<f>, g0>, Nsum)} from g
-    by def:
-        ? $has_countable_set_series_sum(cart(N+, N+), \double_negative_part<f>, Nsum)
+    witness $has_countable_set_series_sum(cart(N+, N+), \double_negative_part<f>, Nsum) from g
     $has_countable_set_series_sum(cart(N+, N+), \double_negative_part<f>, Nsum)
     by def:
         ? $has_double_sum(\double_negative_part<f>, Nsum)
@@ -3437,9 +3385,7 @@ thm fubini_row_first_general_case:
     by thm chap7::series_laws_add(positive_rows, chap7::series_scalar_mul(-1, negative_rows), P, -1 * Nsum)
     P + (-1 * Nsum) = P - Nsum = L
     $chap7::has_series_sum(row_sums, L)
-    witness exist r seq(R) st {$has_row_sums(f, r), $chap7::has_series_sum(r, L)} from row_sums
-    by def:
-        ? $has_row_first_sum(f, L)
+    witness $has_row_first_sum(f, L) from row_sums
 
 thm swapped_double_series_is_absolutely_convergent:
     ? forall f fn(p cart(N+, N+)) R:
@@ -3459,9 +3405,7 @@ thm swapped_double_series_is_absolutely_convergent:
         swap_pair(swap_pair(g(n))) = g(n)
         swapped(\swapped_countable_enumeration<g>(n)) = f(swap_pair(\swapped_countable_enumeration<g>(n))) = f(swap_pair(swap_pair(g(n)))) = f(g(n))
     by thm countable_set_series_absolute_convergence_extensional(cart(N+, N+), f, swapped, g, \swapped_countable_enumeration<g>)
-    witness exist h fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), h), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<cart(N+, N+), swapped, h>)} from \swapped_countable_enumeration<g>
-    by def:
-        ? $is_absolutely_convergent_countable_set_series(cart(N+, N+), swapped)
+    witness $is_absolutely_convergent_countable_set_series(cart(N+, N+), swapped) from \swapped_countable_enumeration<g>
     $is_absolutely_convergent_countable_set_series(cart(N+, N+), swapped)
     by def:
         ? $is_absolutely_convergent_double_sum(fn(p cart(N+, N+)) R {f(swap_pair(p))})
@@ -3485,9 +3429,7 @@ thm fubini_swapped_double_sum_from_absolute_convergence:
         swap_pair(swap_pair(g(n))) = g(n)
         swapped(\swapped_countable_enumeration<g>(n)) = f(swap_pair(\swapped_countable_enumeration<g>(n))) = f(swap_pair(swap_pair(g(n)))) = f(g(n))
     by thm countable_set_series_sum_extensional(cart(N+, N+), f, swapped, g, \swapped_countable_enumeration<g>, L)
-    witness exist h fn(n N+) cart(N+, N+) st {$is_countable_enumeration(cart(N+, N+), h), $chap7::has_series_sum(\countable_set_series_terms<cart(N+, N+), swapped, h>, L)} from \swapped_countable_enumeration<g>
-    by def:
-        ? $has_countable_set_series_sum(cart(N+, N+), swapped, L)
+    witness $has_countable_set_series_sum(cart(N+, N+), swapped, L) from \swapped_countable_enumeration<g>
     $has_countable_set_series_sum(cart(N+, N+), swapped, L)
     by def:
         ? $has_swapped_double_sum(f, L)
@@ -3519,9 +3461,7 @@ thm fubini_column_first_from_swapped_sum:
             by thm chap7::series_sum_extensional(fn(n N+) R {fn(p cart(N+, N+)) R {f(swap_pair(p))}((m, n))}, fn(n N+) R {f((n, m))}, r(m))
         by def:
             ? $has_column_sums(f, r)
-    witness exist c seq(R) st {$has_column_sums(f, c), $chap7::has_series_sum(c, L)} from r
-    by def:
-        ? $has_column_first_sum(f, L)
+    witness $has_column_first_sum(f, L) from r
 
 thm fubini_for_infinite_sums:
     ? forall f fn(p cart(N+, N+)) R, L R:
@@ -3576,7 +3516,7 @@ thm enumerated_absolute_convergence_from_bounded_finite_subsums:
         $has_bounded_finite_absolute_subsums(X, f)
         =>:
             $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>)
-    obtain M from exist M R st {$is_finite_subsum_abs_bound(X, f, M)}
+    obtain M from $has_bounded_finite_absolute_subsums(X, f)
     have fn absolute_family(x X) R = abs(f(x))
     have fn absolute_terms(n N+) R = \countable_set_series_terms<X, absolute_family, g>(n)
     claim:
@@ -3610,9 +3550,7 @@ thm enumerated_absolute_convergence_from_bounded_finite_subsums:
                 trust chap7::partial_sum(absolute_terms, k) = finite_set_sum(A, fn(x A) R {absolute_family(x)}) <= M
             by def:
                 ? $chap7::is_partial_sum_bound(absolute_terms, M)
-        witness exist B R st {$chap7::is_partial_sum_bound(absolute_terms, B)} from M
-        by def:
-            ? $chap7::has_bounded_partial_sums(absolute_terms)
+        witness $chap7::has_bounded_partial_sums(absolute_terms) from M
     by thm chap7::nonnegative_series_bounded_partial_sums_converge(absolute_terms)
     claim:
         ? forall n N+:
@@ -3651,9 +3589,7 @@ thm bounded_finite_subsums_imply_countable_absolute_convergence:
             by thm countably_infinite_has_positive_enumeration(X)
             obtain g from exist g fn(n N+) X st {$is_countable_enumeration(X, g)}
             by thm enumerated_absolute_convergence_from_bounded_finite_subsums(X, f, g)
-            witness exist h fn(n N+) X st {$is_countable_enumeration(X, h), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, h>)} from g
-            by def:
-                ? $is_absolutely_convergent_countable_set_series(X, f)
+            witness $is_absolutely_convergent_countable_set_series(X, f) from g
             $is_absolutely_convergent_countable_set_series(X, f)
             by def:
                 ? $is_absolutely_convergent_at_most_countable_set_series(X, f)
@@ -3974,8 +3910,8 @@ thm nonnegative_countable_zero_extension_aliases_have_cofinal_partial_sums:
         ? forall n N+:
             exist m N+ st {chap7::partial_sum(source_terms, n) <= chap7::partial_sum(target_terms, m)}
         by thm countable_enumeration_prefix_is_finite_subset_sum(S, fn(x S) R {f(x)}, g, n)
-        # trust: source_terms is the project-qualified alias of the enumerated
-        # source series returned by the prefix theorem.
+        # Compatibility trust: source_terms is the project-qualified alias of
+        # the enumerated source series returned by the prefix theorem.
         trust exist A finite_set st {A $subset S, finite_set_sum(A, fn(x A) R {fn(y S) R {f(y)}(x)}) = chap7::partial_sum(source_terms, n)}
         obtain A from exist A finite_set st {A $subset S, finite_set_sum(A, fn(x A) R {fn(y S) R {f(y)}(x)}) = chap7::partial_sum(source_terms, n)}
         by def:
@@ -4255,7 +4191,7 @@ thm at_most_countable_zero_extension_preserves_sum:
                     finite_set_sum(T, f) = finite_set_sum(S, fn(x S) R {f(x)}) = L
                     $has_finite_set_series_sum(T, f, L)
                 case $has_countable_set_series_sum(S, fn(x S) R {f(x)}, L):
-                    obtain g from exist g fn(n N+) S st {$is_countable_enumeration(S, g), $chap7::has_series_sum(\countable_set_series_terms<S, fn(x S) R {f(x)}, g>, L)}
+                    obtain g from $has_countable_set_series_sum(S, fn(x S) R {f(x)}, L)
                     by thm finite_set_has_no_countable_enumeration(S, g)
                     impossible $is_countable_enumeration(S, g)
         case not $is_finite_set(T):
@@ -4277,7 +4213,7 @@ thm at_most_countable_zero_extension_preserves_sum:
                     witness exist e fn(n N+) T st {$is_countable_enumeration(T, e), $chap7::has_series_sum(\countable_set_series_terms<T, f, e>, L)} from h
                     $has_countable_set_series_sum(T, f, L)
                 case $has_countable_set_series_sum(S, fn(x S) R {f(x)}, L):
-                    obtain g from exist g fn(n N+) S st {$is_countable_enumeration(S, g), $chap7::has_series_sum(\countable_set_series_terms<S, fn(x S) R {f(x)}, g>, L)}
+                    obtain g from $has_countable_set_series_sum(S, fn(x S) R {f(x)}, L)
                     by thm subset_of_at_most_countable_is_at_most_countable(T, S)
                     obtain M from exist M R st {$is_finite_subsum_abs_bound(T, f, M)}
                     claim:
@@ -4309,7 +4245,7 @@ thm at_most_countable_zero_extension_preserves_sum:
                                 impossible not $is_finite_set(S)
                             case $is_absolutely_convergent_countable_set_series(S, fn(x S) R {f(x)}):
                                 $is_absolutely_convergent_countable_set_series(S, fn(x S) R {f(x)})
-                    obtain e from exist e fn(n N+) S st {$is_countable_enumeration(S, e), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<S, fn(x S) R {f(x)}, e>)}
+                    obtain e from $is_absolutely_convergent_countable_set_series(S, fn(x S) R {f(x)})
                     by thm countable_set_absolute_convergence_well_defined(S, fn(x S) R {f(x)}, e, g)
                     by thm countable_zero_extension_preserves_absolute_sum(S, T, f, g, h, L)
                     witness exist q fn(n N+) T st {$is_countable_enumeration(T, q), $chap7::has_series_sum(\countable_set_series_terms<T, f, q>, L)} from h
@@ -4342,7 +4278,7 @@ thm finite_carrier_at_most_countable_sum_value:
         case $has_finite_set_series_sum(X, f, L):
             L = finite_set_sum(X, f)
         case $has_countable_set_series_sum(X, f, L):
-            obtain g from exist g fn(n N+) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
+            obtain g from $has_countable_set_series_sum(X, f, L)
             by thm finite_set_has_no_countable_enumeration(X, g)
             impossible $is_countable_enumeration(X, g)
 
@@ -4363,13 +4299,13 @@ thm nonfinite_at_most_countable_sum_has_absolute_enumeration:
                 impossible not $is_finite_set(X)
             case $is_absolutely_convergent_countable_set_series(X, f):
                 $is_absolutely_convergent_countable_set_series(X, f)
-    obtain element_e from exist element_e fn(n N+) X st {$is_countable_enumeration(X, element_e), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, element_e>)}
+    obtain element_e from $is_absolutely_convergent_countable_set_series(X, f)
     by cases:
         ? exist g fn(n N+) X st {$is_countable_enumeration(X, g), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, g>), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
         case $has_finite_set_series_sum(X, f, L):
             impossible not $is_finite_set(X)
         case $has_countable_set_series_sum(X, f, L):
-            obtain g from exist g fn(n N+) X st {$is_countable_enumeration(X, g), $chap7::has_series_sum(\countable_set_series_terms<X, f, g>, L)}
+            obtain g from $has_countable_set_series_sum(X, f, L)
             by thm countable_set_absolute_convergence_well_defined(X, f, element_e, g)
             witness exist h fn(n N+) X st {$is_countable_enumeration(X, h), $chap7::is_absolutely_convergent_series(\countable_set_series_terms<X, f, h>), $chap7::has_series_sum(\countable_set_series_terms<X, f, h>, L)} from g
 
@@ -4438,9 +4374,7 @@ thm absolute_summability_restricts_to_subset:
             finite_set_sum(A, fn(x A) R {abs(fn(y S) R {f(y)}(x))}) = finite_set_sum(A, fn(x A) R {abs(f(x))}) <= M
         by def:
             ? $is_finite_subsum_abs_bound(S, fn(x S) R {f(x)}, M)
-    witness exist B R st {$is_finite_subsum_abs_bound(S, fn(x S) R {f(x)}, B)} from M
-    by def:
-        ? $has_bounded_finite_absolute_subsums(S, fn(x S) R {f(x)})
+    witness $has_bounded_finite_absolute_subsums(S, fn(x S) R {f(x)}) from M
     by def:
         ? $is_absolutely_summable_on_set(S, fn(x S) R {f(x)})
 
@@ -4973,7 +4907,7 @@ thm arbitrary_set_series_bijection_change:
             finite_set_sum(pulled_support, fn(y pulled_support) R {pulled(y)}) = finite_set_sum(source_support, fn(x source_support) R {fn(y pulled_support) R {pulled(y)}(support_inverse(x))}) = finite_set_sum(source_support, fn(x source_support) R {f(x)}) = L
             $has_finite_set_series_sum(pulled_support, fn(w pulled_support) R {pulled(w)}, L)
         case $has_countable_set_series_sum(source_support, fn(v source_support) R {f(v)}, L):
-            obtain g from exist g fn(n N+) source_support st {$is_countable_enumeration(source_support, g), $chap7::has_series_sum(\countable_set_series_terms<source_support, fn(v source_support) R {f(v)}, g>, L)}
+            obtain g from $has_countable_set_series_sum(source_support, fn(v source_support) R {f(v)}, L)
             have fn pulled_enum(n N+) pulled_support = support_inverse(g(n))
             claim:
                 ? $is_countable_enumeration(pulled_support, pulled_enum)
@@ -5136,9 +5070,7 @@ claim:
     by def:
         ? $chap3::is_injective_fn(N, power_set(N), singleton_subset_of_N)
 
-witness exist f fn(x N) power_set(N) st {$chap3::is_injective_fn(N, power_set(N), f)} from singleton_subset_of_N
-by def:
-    ? $embeds_into(N, power_set(N))
+witness $embeds_into(N, power_set(N)) from singleton_subset_of_N
 
 claim:
     ? $is_uncountable(power_set(N))
@@ -5172,7 +5104,7 @@ thm series_shift_has_sum:
                 $chap6::has_eventual_closeness_to(fn(n N+) R {chap7::partial_sum(a, n + h)}, L, epsilon)
             by thm chap6::has_limit_gives_eventual_closeness(fn(k N+) R {chap7::partial_sum(a, k)}, L, epsilon)
             obtain n0 from exist n0 N+ st {$chap6::is_tail_close_to(fn(k N+) R {chap7::partial_sum(a, k)}, L, epsilon, n0)}
-            witness exist n1 N+ st {$chap6::is_tail_close_to(fn(m N+) R {chap7::partial_sum(a, m + h)}, L, epsilon, n1)} from n0:
+            witness $chap6::has_eventual_closeness_to(fn(n N+) R {chap7::partial_sum(a, n + h)}, L, epsilon) from n0:
                 forall n N+:
                     n >= n0
                     =>:
@@ -5182,8 +5114,6 @@ thm series_shift_has_sum:
                         abs(fn(m N+) R {chap7::partial_sum(a, m + h)}(n) - L) = abs(fn(k N+) R {chap7::partial_sum(a, k)}(n + h) - L) < epsilon
                 by def:
                     ? $chap6::is_tail_close_to(fn(m N+) R {chap7::partial_sum(a, m + h)}, L, epsilon, n0)
-            by def:
-                ? $chap6::has_eventual_closeness_to(fn(n N+) R {chap7::partial_sum(a, n + h)}, L, epsilon)
         by def:
             ? $chap6::has_limit(fn(n N+) R {chap7::partial_sum(a, n + h)}, L)
         $chap6::has_limit(fn(n N+) R {chap7::partial_sum(a, n + h)}, L)
@@ -5205,9 +5135,7 @@ thm series_shift_has_sum:
             by def:
                 ? $chap6::is_tail_close_to(prefix_constant, chap7::partial_sum(a, h), epsilon, 1)
             $chap6::is_tail_close_to(prefix_constant, chap7::partial_sum(a, h), epsilon, 1)
-            witness exist n0 N+ st {$chap6::is_tail_close_to(prefix_constant, chap7::partial_sum(a, h), epsilon, n0)} from 1
-            by def:
-                ? $chap6::has_eventual_closeness_to(prefix_constant, chap7::partial_sum(a, h), epsilon)
+            witness $chap6::has_eventual_closeness_to(prefix_constant, chap7::partial_sum(a, h), epsilon) from 1
         by def:
             ? $chap6::has_limit(prefix_constant, chap7::partial_sum(a, h))
     by thm chap6::seq_sub_converges_to(fn(n N+) R {chap7::partial_sum(a, n + h)}, prefix_constant, L, chap7::partial_sum(a, h))
@@ -6115,10 +6043,8 @@ thm least_upper_bound_of_real_set_member_above:
                         x > b0
                         claim:
                             ? $has_member_above()
-                            witness exist z E st {b0 < z} from x:
+                            witness $has_member_above() from x:
                                 x > b0
-                            by def:
-                                ? $has_member_above()
                         impossible $has_member_above()
                 forall x E:
                     x <= b0
@@ -7288,11 +7214,9 @@ thm finite_total_order_is_well_ordered:
                                     case z $in T:
                                         T = {}
                                         impossible z $in {}
-                            witness exist m X st {$is_least_element(X, le, union({a}, T), m)} from a:
+                            witness $has_least_element(X, le, union({a}, T)) from a:
                                 by def:
                                     ? $is_least_element(X, le, union({a}, T), a)
-                            by def:
-                                ? $has_least_element(X, le, union({a}, T))
                             by def:
                                 ? $finite_subset_has_least_element(X, le, union({a}, T))
                         case $is_nonempty_set(T):
@@ -7310,7 +7234,7 @@ thm finite_total_order_is_well_ordered:
                                         $has_least_element(X, le, T)
                             by def:
                                 ? $has_least_element(X, le, T)
-                            obtain m from exist m X st {$is_least_element(X, le, T, m)}
+                            obtain m from $has_least_element(X, le, T)
                             by def:
                                 ? $is_least_element(X, le, T, m)
                             (a, m) $in le or (m, a) $in le
@@ -7329,11 +7253,9 @@ thm finite_total_order_is_well_ordered:
                                             case z $in T:
                                                 (m, z) $in le
                                                 (a, z) $in le
-                                    witness exist u X st {$is_least_element(X, le, union({a}, T), u)} from a:
+                                    witness $has_least_element(X, le, union({a}, T)) from a:
                                         by def:
                                             ? $is_least_element(X, le, union({a}, T), a)
-                                    by def:
-                                        ? $has_least_element(X, le, union({a}, T))
                                     by def:
                                         ? $finite_subset_has_least_element(X, le, union({a}, T))
                                 case (m, a) $in le:
@@ -7349,11 +7271,9 @@ thm finite_total_order_is_well_ordered:
                                             case z $in T:
                                                 (m, z) $in le
                                     m $in union({a}, T)
-                                    witness exist u X st {$is_least_element(X, le, union({a}, T), u)} from m:
+                                    witness $has_least_element(X, le, union({a}, T)) from m:
                                         by def:
                                             ? $is_least_element(X, le, union({a}, T), m)
-                                    by def:
-                                        ? $has_least_element(X, le, union({a}, T))
                                     by def:
                                         ? $finite_subset_has_least_element(X, le, union({a}, T))
 
@@ -7379,7 +7299,7 @@ thm finite_total_order_is_well_ordered:
                     $has_least_element(X, le, A)
         by def:
             ? $has_least_element(X, le, A)
-        obtain m from exist m X st {$is_least_element(X, le, A, m)}
+        obtain m from $has_least_element(X, le, A)
         by def:
             ? $is_least_element(X, le, A, m)
         claim:
@@ -7647,7 +7567,7 @@ thm strict_upper_bound_choice_relation_exists:
             ? $is_nonempty_set(upper_choice_family(Y))
             case $is_well_ordered_chain_with_minimum(X, le, x0, Y):
                 $has_strict_upper_bound(X, le, Y)
-                obtain u from exist u X st {$is_strict_upper_bound(X, le, Y, u)}
+                obtain u from $has_strict_upper_bound(X, le, Y)
                 witness $is_nonempty_set(upper_choice_family(Y)) from u
             case not $is_well_ordered_chain_with_minimum(X, le, x0, Y):
                 witness $is_nonempty_set(upper_choice_family(Y)) from x0
@@ -7880,10 +7800,8 @@ thm zorn_maximal_element_principle:
                         impossible u != z
                 by def:
                     ? $is_strict_upper_bound(X, le, Y, z)
-                witness exist s X st {$is_strict_upper_bound(X, le, Y, s)} from z:
+                witness $has_strict_upper_bound(X, le, Y) from z:
                     $is_strict_upper_bound(X, le, Y, z)
-                by def:
-                    ? $has_strict_upper_bound(X, le, Y)
                 impossible not $has_strict_upper_bound(X, le, Y)
         by def:
             ? $is_maximal_element(X, le, X, u)

@@ -196,6 +196,78 @@ thm theorem_IV_1_prime_divides_binary_product:
             by thm section3::theorem_III_2_euclid_lemma(p, a, b)
             $section1::divides_Z(p, b)
 
+# A proper positive divisor of a prime square is the prime itself.  This is
+# the integer bridge used when a Gaussian proper divisor has norm between
+# one and the square of a rational prime.
+thm proper_positive_divisor_of_prime_square:
+    ? forall p N+, d Z:
+        $is_prime_Z(p)
+        d > 1
+        d < p ^ 2
+        $section1::divides_Z(d, p ^ 2)
+        =>:
+            d = p
+    by thm prime_divisor_exists(d)
+    obtain r from exist r Z st {$is_prime_Z(r), $section1::divides_Z(r, d)}
+    obtain u from exist u Z st {d = r * u}
+    obtain v from exist v Z st {p ^ 2 = d * v}
+    witness exist k Z st {p * p = r * k} from u * v:
+        p * p = p ^ 2 = d * v = r * u * v = r * (u * v)
+    by def:
+        ? $section1::divides_Z(r, p * p)
+    claim:
+        ? $section1::divides_Z(r, p)
+        by thm prime_divides_or_is_relatively_prime(r, p)
+        by cases:
+            ? $section1::divides_Z(r, p)
+            case $section1::divides_Z(r, p):
+                $section1::divides_Z(r, p)
+            case $section3::relatively_prime_Z(r, p):
+                by thm section3::theorem_III_2_euclid_lemma(r, p, p)
+                $section1::divides_Z(r, p)
+    by def:
+        ? $is_prime_Z(p)
+    r > 1
+    r > 0
+    r = 1 or r = p
+    claim:
+        ? r = p
+        by cases:
+            ? r = p
+            case r = 1:
+                impossible r > 1
+            case r = p:
+                r = p
+    d = r * u = p * u
+    p > 1
+    p > 0
+    claim:
+        ? u > 0
+        by contra:
+            ? u > 0
+            u <= 0
+            p * (-1 * u) >= 0
+            p * (-1 * u) = -1 * (p * u)
+            -1 * (p * u) >= 0
+            -1 * (-1 * (p * u)) <= 0
+            p * u = -1 * (-1 * (p * u)) <= 0
+            d = p * u <= 0
+            impossible d > 1
+    p * p = p ^ 2 = d * v = p * u * v = p * (u * v)
+    p = (p * p) / p = (p * (u * v)) / p = u * v
+    witness exist k Z st {p = u * k} from v:
+        p = u * v
+    by def:
+        ? $section1::divides_Z(u, p)
+    u = 1 or u = p
+    by cases:
+        ? d = p
+        case u = 1:
+            d = p * u = p
+        case u = p:
+            d = p * u = p ^ 2
+            impossible d < p ^ 2
+
 prop prime_divides_some_factor(p Z, n N+, f fn(idx_i N+) Z):
     exist idx_i N+ st {idx_i <= n, $section1::divides_Z(p, f(idx_i))}
 

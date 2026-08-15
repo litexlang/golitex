@@ -22,9 +22,7 @@ thm gcd_divides_left:
             $divides(gcd(a, b), a)
     by thm basics::gcd_divides_left(a, b)
     obtain k from exist k Z st {a = gcd(a, b) * k}
-    witness exist t Z st {a = gcd(a, b) * t} from k
-    by def:
-        ? $divides(gcd(a, b), a)
+    witness $divides(gcd(a, b), a) from k
 
 thm gcd_divides_right:
     ? forall a, b Z:
@@ -32,10 +30,8 @@ thm gcd_divides_right:
         =>:
             $divides(gcd(a, b), b)
     by thm basics::gcd_divides_right(a, b)
-    obtain k from exist k Z st {b = gcd(a, b) * k}
-    witness exist t Z st {b = gcd(a, b) * t} from k
-    by def:
-        ? $divides(gcd(a, b), b)
+    obtain k from $divides(gcd(a, b), b)
+    witness $divides(gcd(a, b), b) from k
 
 thm common_divisor_le_gcd:
     ? forall a, b Z, d N+:

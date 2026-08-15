@@ -82,6 +82,72 @@ have fn index_mod by exist!:
             x1 = x2
     exist! y N st {$index_mod_spec(m, g, a, y)}
 
+# The selected value already carries its defining relation.  Export that stored
+# fact so downstream proofs do not try to reconstruct it with `by def`.
+thm index_mod_satisfies_spec:
+    ? forall m N+, g, a Z:
+        $primitive_root_mod(m, g)
+        $section3::relatively_prime_Z(a, m)
+        =>:
+            $index_mod_spec(m, g, a, index_mod(m, g, a))
+    $index_mod_spec(m, g, a, index_mod(m, g, a))
+
+# Minimal positive order implies divisibility of every natural return
+# exponent.  Euclidean division leaves a remainder below n; if that remainder
+# were positive, it would contradict the defining minimality of n.
+thm multiplicative_order_divides_return_exponent:
+    ? forall m N+, g Z, n N+, exponent N:
+        $multiplicative_order_mod(m, g, n)
+        g ^ exponent % m = 1
+        =>:
+            $section1::divides_Z(n, exponent)
+    by def:
+        ? $multiplicative_order_mod(m, g, n)
+    0 <= g ^ n % m < m
+    1 < m
+    claim:
+        ? $section2::euclidean_division_Z(1, m, 0, 1)
+        m > 0
+        1 = m * 0 + 1
+        0 <= 1 < m
+        by def:
+            ? $section2::euclidean_division_Z(1, m, 0, 1)
+    by thm section2::euclidean_division_remainder_is_mod(1, m, 0, 1)
+    1 % m = 1
+    by def:
+        ? $section2::euclidean_division_Z(exponent, n, section2::integer_quotient(exponent, n), exponent % n)
+    claim:
+        ? section2::integer_quotient(exponent, n) >= 0
+        by contra:
+            ? section2::integer_quotient(exponent, n) >= 0
+            section2::integer_quotient(exponent, n) < 0
+            section2::integer_quotient(exponent, n) <= -1
+            n * section2::integer_quotient(exponent, n) <= n * (-1) = -n
+            exponent % n <= n - 1
+            exponent = n * section2::integer_quotient(exponent, n) + exponent % n <= -n + (n - 1) = -1
+            impossible exponent >= 0
+    have qN N = section2::integer_quotient(exponent, n)
+    have rN N = exponent % n
+    exponent = n * qN + rN
+    g ^ exponent = g ^ (n * qN + rN) = g ^ (n * qN) * g ^ rN
+    g ^ (n * qN) = (g ^ n) ^ qN
+    g ^ exponent = (g ^ n) ^ qN * g ^ rN
+    ((g ^ n) ^ qN * g ^ rN) % m = (((g ^ n) ^ qN % m) * (g ^ rN % m)) % m
+    g ^ n $in Z
+    (g ^ n) ^ qN % m = ((g ^ n) % m) ^ qN % m = 1 ^ qN % m = 1 % m = 1
+    g ^ exponent % m = ((g ^ n) ^ qN * g ^ rN) % m = (((g ^ n) ^ qN % m) * (g ^ rN % m)) % m = (1 * (g ^ rN % m)) % m = (g ^ rN % m) % m = g ^ rN % m
+    g ^ rN % m = 1
+    by cases:
+        ? $section1::divides_Z(n, exponent)
+        case rN = 0:
+            witness exist factor Z st {exponent = n * factor} from qN
+            by def:
+                ? $section1::divides_Z(n, exponent)
+        case rN > 0:
+            rN $in N+
+            n <= rN
+            impossible rN < n
+
 # The roots-of-unity version of cyclicity states directly that every root is
 # an integral power of one chosen root, so later statements can use the set
 # object rather than an existentially hidden group.

@@ -92,6 +92,11 @@ fn run_examples() {
 }
 
 #[test]
+fn run_examples_only() {
+    run_with_large_stack("run_examples_only_large_stack", run_examples_dataset_impl);
+}
+
+#[test]
 fn run_docs_markdown_files() {
     run_with_large_stack("run_docs_markdown_files_large_stack", || {
         run_docs_markdown_impl(true)

@@ -55,22 +55,30 @@
 # recursive construction and the resulting matrix-system identities remain
 # incomplete.
 #
-# Chapter 3C, Definitions 3.49 and 3.52 — matrices and rank
-# Matrices of linear maps, matrix products, and row and column ranks have the
-# intended types. Basis-coordinate construction, finite product sums, and the
-# proof that rank is the dimension of the corresponding span remain absent.
+# Chapter 3C, Definitions 3.31 and 3.52 — matrices and rank
+# Result 3.35 is checked from basis-coordinate uniqueness, and the entry,
+# row, and column descriptions of matrix products are checked. The selected
+# matrix-of-map construction, the one localized finite-coordinate-substitution
+# step in product compatibility Result 3.43, and the factorization/rank-equality
+# proofs built on the now-checked column- and row-span dimension definitions
+# remain explicit debt.
 #
 # Chapter 3D, Definitions 3.59-3.61 and 3.73-3.80 — inverses and coordinates
 # Invertibility and inverse uniqueness are expressed, but the canonical inverse
 # map, coordinate-column map, identity matrix, and inverse matrix remain
 # selected objects with unfinished construction or uniqueness bridges.
 #
-# Chapter 3E, Definitions 3.91-3.104 — products and quotients
+# Chapter 3E, Definitions 3.91-3.107 — products and quotients
 # Product-space and quotient-space operations are callable. The common-scalar
 # premise is explicit, quotient_carrier is checked nonempty via zero+U, and
-# quotient_map is the checked translate function. Folding the product laws into
-# VectorSpace, representative independence, the quotient VectorSpace, and the
-# induced map still need proofs.
+# quotient_map is the checked translate function. Quotient addition and scalar
+# multiplication now have checked existence and representative independence.
+# Result 3.103 now transports every inherited law and packages the checked
+# quotient VectorSpace. Result 3.105's subtraction theorem is checked relative
+# to one named complement/quotient equal-dimension axiom: the restricted map's
+# linearity, injectivity, and surjectivity are checked, but rebinding those
+# anonymous-function facts to one linear_map_space object remains unstable.
+# Folding the remaining product laws and constructing the induced map are next.
 #
 # Chapter 3F, Definitions 3.108-3.124 — dual spaces
 # Scalar, dual, dual-basis, and dual-map interfaces are present. The vector

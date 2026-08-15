@@ -164,6 +164,7 @@ thm self_sub:
 thm one_add_one_eq_two:
     ? forall s nonempty_set, ring &Ring<s>:
         ring.add(ring.one, ring.one) = \ring_two<s, ring>
+    \ring_two<s, ring> = ring.add(ring.one, ring.one)
 
 # Result (source label: two_mul). Distributivity expands `ring_two`; the stored
 # additive group and multiplicative left identity simplify the two summands.

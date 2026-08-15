@@ -10,6 +10,28 @@ its current unique-existence proof is trusted, or a property while every
 theorem about it is checked.  Knowledge state never changes the mathematical
 role of the concept.
 
+## Named existential proposition boundary
+
+Candidate limits, boundedness, convergence, and many set properties are named
+`prop` interfaces whose body is one positive ordinary existential fact. At
+that boundary the readable interface is direct:
+
+~~~litex
+prop is_bounded_sequence(a seq(R)):
+    exist M R st {$is_bounded_by(a, M)}
+
+obtain M from $is_bounded_sequence(a)
+witness $is_bounded_sequence(a) from M
+~~~
+
+The verifier looks up the concrete proposition at runtime and checks the
+substituted existential body. It does not compile the definition into the
+statement. Named construction is deliberately unavailable for `exist!`, which
+uses explicit `witness exist! ...` and a separate `by def` fold. Abstract
+predicates, nested local definitions, and definitions with additional clauses
+also retain their applicable explicit syntax. Proof bodies should use the
+concrete expression after `from` rather than the hidden existential binder name.
+
 ## Book-wide struct boundary
 
 A `struct` is appropriate when the mathematics carries several named data
@@ -365,6 +387,17 @@ sum to the possibly smaller support left after cancellation.  The disjoint-
 union law is the direct corollary: zero-extend each restricted family to the
 union, add them, and use disjointness to identify the pointwise sum with the
 original family.
+
+The internal theorem
+`nonnegative_countable_zero_extension_aliases_have_cofinal_partial_sums` is
+deliberately representation-aware: it accepts the source and target sequences
+as typed aliases together with equations identifying them with their
+`countable_set_series_terms` constructions.  This is not a new mathematical
+notion; it keeps the cofinal-partial-sum proof on the exact sequence objects
+consumed by the verifier and avoids an unsupported higher-order proposition
+rewrite at the caller.  Its two compatibility `trust` lines predate this
+interface repair and remain localized to replaying the finite-prefix
+existentials; no additional trust was introduced by the alias change.
 
 The row, column, swapped, finite-bound, and finite-capture predicates are
 relations on proposed witnesses. They make the proof route of Fubini visible;

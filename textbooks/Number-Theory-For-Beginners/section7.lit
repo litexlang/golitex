@@ -475,6 +475,27 @@ thm group_power_neg:
         (-a) + a = 0
         by thm zero_group_power_is_one(G, mul, one, x, mul(z, y))
 
+# The group laws make the value represented by a fixed integral exponent
+# unique.  Exposing this theorem once avoids rebuilding inverse cancellation
+# inside every later power-index argument.
+thm group_power_is_unique:
+    ? forall G set, mul fn(x, y G) G, one G, x, y, z G, a Z:
+        $is_group(G, mul, one)
+        $has_group_power(G, mul, one, x, a, y)
+        $has_group_power(G, mul, one, x, a, z)
+        =>:
+            y = z
+    by thm group_power_neg(G, mul, one, x, z, a)
+    obtain inverse_z from exist inverse_z0 G st {$has_group_power(G, mul, one, x, -a, inverse_z0), mul(z, inverse_z0) = one, mul(inverse_z0, z) = one}
+    by thm group_power_add(G, mul, one, x, y, inverse_z, a, -a)
+    a + (-a) = 0
+    by thm zero_group_power_is_one(G, mul, one, x, mul(y, inverse_z))
+    by thm group_power_neg(G, mul, one, x, inverse_z, -a)
+    obtain restored from exist restored0 G st {$has_group_power(G, mul, one, x, -(-a), restored0), mul(inverse_z, restored0) = one, mul(restored0, inverse_z) = one}
+    -(-a) = a
+    y = mul(y, one) = mul(y, mul(inverse_z, restored)) = mul(mul(y, inverse_z), restored) = mul(one, restored) = restored
+    z = mul(z, one) = mul(z, mul(inverse_z, restored)) = mul(mul(z, inverse_z), restored) = mul(one, restored) = restored
+
 prop is_integral_power_of(G set, mul fn(x, y G) G, one G, x, y G):
     exist n Z st {$has_group_power(G, mul, one, x, n, y)}
 
@@ -952,23 +973,6 @@ thm group_power_equality_iff_exponent_difference_in_kernel:
         $is_group(G, mul, one)
         =>:
             $group_power_equality_kernel_law(G, mul, one, x)
-    thm group_power_is_unique:
-        ? forall a Z, ya, yb G:
-            $has_group_power(G, mul, one, x, a, ya)
-            $has_group_power(G, mul, one, x, a, yb)
-            =>:
-                ya = yb
-        by thm group_power_neg(G, mul, one, x, yb, a)
-        obtain invb from exist z G st {$has_group_power(G, mul, one, x, -a, z), mul(yb, z) = one, mul(z, yb) = one}
-        by thm group_power_add(G, mul, one, x, ya, invb, a, -a)
-        a + (-a) = 0
-        by thm zero_group_power_is_one(G, mul, one, x, mul(ya, invb))
-        by thm group_power_neg(G, mul, one, x, invb, -a)
-        obtain z from exist z0 G st {$has_group_power(G, mul, one, x, -(-a), z0), mul(invb, z0) = one, mul(z0, invb) = one}
-        -(-a) = a
-        ya = mul(ya, one) = mul(ya, mul(invb, z)) = mul(mul(ya, invb), z) = mul(one, z) = z
-        yb = mul(yb, one) = mul(yb, mul(invb, z)) = mul(mul(yb, invb), z) = mul(one, z) = z
-
     claim:
         ? forall a, b Z, ya, yb G:
             $has_group_power(G, mul, one, x, a, ya)
@@ -997,7 +1001,7 @@ thm group_power_equality_iff_exponent_difference_in_kernel:
         b + (a - b) = a
         mul(yb, one) = yb
         $has_group_power(G, mul, one, x, a, yb)
-        by thm group_power_is_unique(a, ya, yb)
+        by thm group_power_is_unique(G, mul, one, x, ya, yb, a)
 
     by def:
         ? $group_power_equality_kernel_law(G, mul, one, x)

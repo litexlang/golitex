@@ -234,26 +234,24 @@ thm equal_scalar_systems_have_equal_operation_fields:
     B.mul = B[5]
     A.mul = B.mul
 # Example 1.7. R^2 and R^3 are ordered real coordinate lists. finite_seq is
-# the native homogeneous positive-length list carrier used below.
+# the native homogeneous finite-list carrier used below, including length zero.
 sketch:
     have real_pair finite_seq(R, 2) = [1, 2]
     have real_triple finite_seq(R, 3) = [1, 2, 3]
     real_pair(2) = 2
     real_triple(3) = 3
 # Definition 1.8. A finite list has a length and an ordered coordinate map.
-# The family FiniteList<s,n> also admits n=0, unlike native finite_seq, whose
-# length parameter is N+. For n>0 the coordinate development below uses
-# finite_seq because it already provides application and list literals.
+# Native finite_seq has the same N-valued length convention and supplies the
+# checked empty coordinate map used by the n=0 record below.
 struct FiniteList<s set, n N>:
     length N
     entries fn(idx N+: idx <= n) s
     <=>:
         length = n
-# Trust reason: Litex can type the empty-domain function space at n=0, but its
-# current finite_seq/list-literal constructor requires a positive length and
-# does not construct the unique empty coordinate map.
 template<s set>:
-    trust have empty_list &FiniteList<s, 0>
+    have empty_entries finite_seq(s, 0) = []
+template<s set>:
+    have empty_list &FiniteList<s, 0> = (0, \empty_entries<s>)
 # Equality of these dependent list records is extensional in the coordinate
 # function. Equality implies entrywise equality is checked below; the converse
 # remains the explicit finite-list extensionality proof boundary.

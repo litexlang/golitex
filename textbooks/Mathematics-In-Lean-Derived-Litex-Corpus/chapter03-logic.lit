@@ -297,12 +297,10 @@ thm has_upper_bound_add:
         $has_upper_bound(g)
         =>:
             $has_upper_bound(fn(x R) R {f(x) + g(x)})
-    obtain a from exist a R st {$is_upper_bound_of_fn(f, a)}
-    obtain b from exist b R st {$is_upper_bound_of_fn(g, b)}
+    obtain a from $has_upper_bound(f)
+    obtain b from $has_upper_bound(g)
     by thm upper_bound_of_fn_add(f, g, a, b)
-    witness exist c R st {$is_upper_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
-    by def:
-        ? $has_upper_bound(fn(x R) R {f(x) + g(x)})
+    witness $has_upper_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 thm has_lower_bound_add:
     ? forall f, g fn(x R) R:
@@ -310,12 +308,10 @@ thm has_lower_bound_add:
         $has_lower_bound(g)
         =>:
             $has_lower_bound(fn(x R) R {f(x) + g(x)})
-    obtain a from exist a R st {$is_lower_bound_of_fn(f, a)}
-    obtain b from exist b R st {$is_lower_bound_of_fn(g, b)}
+    obtain a from $has_lower_bound(f)
+    obtain b from $has_lower_bound(g)
     by thm lower_bound_of_fn_add(f, g, a, b)
-    witness exist c R st {$is_lower_bound_of_fn(fn(x R) R {f(x) + g(x)}, c)} from a + b
-    by def:
-        ? $has_lower_bound(fn(x R) R {f(x) + g(x)})
+    witness $has_lower_bound(fn(x R) R {f(x) + g(x)}) from a + b
 
 # Source definition SumOfSquares. The carrier and its operations are explicit,
 # so the definition remains generic instead of silently specializing to R.

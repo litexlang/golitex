@@ -534,6 +534,20 @@ thm surjective_linear_map_has_full_range:
     # range set-builder membership and carrier-subset folding do not replay.
     trust \range_of<VSet, WSet>(T) = WSet
 
+thm full_range_implies_surjective:
+    ? forall VSet, WSet nonempty_set, T fn(v VSet) WSet:
+        \range_of<VSet, WSet>(T) = WSet
+        =>:
+            $is_surjective(VSet, WSet, T)
+    claim:
+        ? forall w WSet:
+            exist v VSet st {T(v) = w}
+        w $in \range_of<VSet, WSet>(T)
+        obtain v from exist source VSet st {w = T(source)}
+        witness exist source VSet st {T(source) = w} from v
+    by def:
+        ? $is_surjective(VSet, WSet, T)
+
 thm kernel_tail_has_codomain_basis_length:
     ? forall s nonempty_set, VSet, WSet nonempty_set, V &chap1b::VectorSpace<s, VSet>, W &chap1b::VectorSpace<s, WSet>, T \chap3a::linear_map_space<s, VSet, WSet, V, W>, null_length, range_length N, full &chap1a::FiniteList<VSet, null_length + range_length>, null_part &chap1a::FiniteList<VSet, null_length>, tail &chap1a::FiniteList<VSet, range_length>:
         $chap2b::is_prefix_tail_split(VSet, null_length, range_length, full, null_part, tail)
@@ -649,7 +663,7 @@ thm coordinate_space_dimension_equals_length:
     by thm chap2c::dimension_has_basis_length(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>)
     by thm chap2c::basis_length_unique(s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>, \chap2c::dimension<s, finite_seq(s, n), \chap1b::coordinate_space<s, scalars, n>>, n)
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n)>:
-    trust have matrix_columns &chap1a::FiniteList<finite_seq(s, m), n>
+    have matrix_columns &chap1a::FiniteList<finite_seq(s, m), n> = (n, fn(k N+: k <= n) finite_seq(s, m) {fn(j N+: j <= m) s {A(j, k)}})
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
     have fn matrix_column_partial_sum_entry(A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>, k closed_range(0, n), j N+: j <= m) s = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, k)
 template<s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+>:
@@ -665,9 +679,103 @@ thm scalar_finite_sum_partial_step:
 thm matrix_column_combination_reconstruction:
     ? forall s nonempty_set, scalars &chap1a::ScalarSystem<s>, m, n N+, A matrix(s, m, n), coefficients &chap1a::FiniteList<s, n>:
         \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, \matrix_columns<s, scalars, m, n, A>) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
-    # The former proof unfolded the tuple-backed column selector and replayed a
-    # coordinate induction.  Preserve the resulting matrix identity directly.
-    trust \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, \matrix_columns<s, scalars, m, n, A>) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    have columns &chap1a::FiniteList<finite_seq(s, m), n> = \matrix_columns<s, scalars, m, n, A>
+    have fn trace(k closed_range(0, n)) finite_seq(s, m) = \matrix_column_partial_sum<s, scalars, m, n>(A, coefficients, k)
+    claim:
+        ? forall q closed_range(0, n), row N+:
+            row <= m
+            =>:
+                trace(q)(row) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, q, row)
+        trace(q) = \matrix_column_partial_sum<s, scalars, m, n>(A, coefficients, q)
+        \matrix_column_partial_sum<s, scalars, m, n>(A, coefficients, q) = fn(j N+: j <= m) s {\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, q, j)}
+        \matrix_column_partial_sum<s, scalars, m, n>(A, coefficients, q)(row) = (fn(j N+: j <= m) s {\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, q, j)})(row) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, q, row)
+        trace(q)(row) = \matrix_column_partial_sum<s, scalars, m, n>(A, coefficients, q)(row) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, q, row)
+    claim:
+        ? $chap2a::is_linear_combination_partial_sum_sequence(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns, trace)
+        have initial finite_seq(s, m) = trace(0)
+        have zero finite_seq(s, m) = \chap1a::coordinate_zero<s, scalars, m>
+        claim:
+            ? forall j N+:
+                j <= m
+                =>:
+                    initial(j) = zero(j)
+            initial(j) = trace(0)(j) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, 0, j)
+            \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, 0, j) = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, 0)
+            by thm scalar_finite_sum_partial_zero(s, scalars, n, fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})
+            \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, 0) = scalars.zero
+            initial(j) = trace(0)(j) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, 0, j) = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, 0) = scalars.zero
+            zero(j) = \chap1a::coordinate_zero<s, scalars, m>(j) = scalars.zero
+        $fn_eq(initial, zero)
+        initial = zero
+        trace(0) = initial = zero = \chap1a::coordinate_zero<s, scalars, m> = &chap1b::VectorSpace<s, finite_seq(s, m)>{\chap1b::coordinate_space<s, scalars, m>}.zero
+        claim:
+            ? forall k N+:
+                k <= n
+                =>:
+                    trace(k) = &chap1b::VectorSpace<s, finite_seq(s, m)>{\chap1b::coordinate_space<s, scalars, m>}.add(trace(k - 1), &chap1b::VectorSpace<s, finite_seq(s, m)>{\chap1b::coordinate_space<s, scalars, m>}.smul(coefficients.entries(k), columns.entries(k)))
+            have left finite_seq(s, m) = trace(k)
+            have right finite_seq(s, m) = \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))
+            claim:
+                ? forall j N+:
+                    j <= m
+                    =>:
+                        left(j) = right(j)
+                left(j) = trace(k)(j) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k, j)
+                have row_terms finite_seq(s, n) = fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}
+                \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k, j) = \scalar_finite_sum_partial<s, scalars, n>(row_terms, k)
+                \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j) = \scalar_finite_sum_partial<s, scalars, n>(row_terms, k - 1)
+                row_terms(k) = scalars.mul(A(j, k), coefficients.entries(k))
+                by thm scalar_finite_sum_partial_step(s, scalars, n, row_terms, k)
+                \scalar_finite_sum_partial<s, scalars, n>(row_terms, k) = scalars.add(\scalar_finite_sum_partial<s, scalars, n>(row_terms, k - 1), row_terms(k))
+                \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k, j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(A(j, k), coefficients.entries(k)))
+                columns = \matrix_columns<s, scalars, m, n, A>
+                columns.entries(k) = fn(row N+: row <= m) s {A(row, k)}
+                (fn(row N+: row <= m) s {A(row, k)})(j) = A(j, k)
+                columns.entries(k)(j) = (fn(row N+: row <= m) s {A(row, k)})(j) = A(j, k)
+                scalars.mul(coefficients.entries(k), A(j, k)) = scalars.mul(A(j, k), coefficients.entries(k))
+                right(j) = \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))(j)
+                \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k))(j) = scalars.mul(coefficients.entries(k), columns.entries(k)(j))
+                \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))(j) = scalars.add(trace(k - 1)(j), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k))(j))
+                \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))(j) = scalars.add(trace(k - 1)(j), scalars.mul(coefficients.entries(k), columns.entries(k)(j)))
+                right(j) = \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))(j) = scalars.add(trace(k - 1)(j), scalars.mul(coefficients.entries(k), columns.entries(k)(j)))
+                trace(k - 1)(j) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j)
+                scalars.mul(coefficients.entries(k), columns.entries(k)(j)) = scalars.mul(coefficients.entries(k), A(j, k)) = scalars.mul(A(j, k), coefficients.entries(k))
+                right(j) = scalars.add(trace(k - 1)(j), scalars.mul(coefficients.entries(k), columns.entries(k)(j)))
+                right(j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(coefficients.entries(k), columns.entries(k)(j)))
+                right(j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(coefficients.entries(k), A(j, k)))
+                right(j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(A(j, k), coefficients.entries(k)))
+                left(j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(A(j, k), coefficients.entries(k)))
+                right(j) = scalars.add(\matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, k - 1, j), scalars.mul(A(j, k), coefficients.entries(k))) = left(j)
+            $fn_eq(left, right)
+            left = right
+            trace(k) = left = right = \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k)))
+            \chap1a::coordinate_add<s, scalars, m>(trace(k - 1), \chap1a::coordinate_smul<s, scalars, m>(coefficients.entries(k), columns.entries(k))) = &chap1b::VectorSpace<s, finite_seq(s, m)>{\chap1b::coordinate_space<s, scalars, m>}.add(trace(k - 1), &chap1b::VectorSpace<s, finite_seq(s, m)>{\chap1b::coordinate_space<s, scalars, m>}.smul(coefficients.entries(k), columns.entries(k)))
+        by def $chap2a::is_linear_combination_partial_sum_sequence(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns, trace)
+    have final finite_seq(s, m) = trace(n)
+    have target finite_seq(s, m) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    claim:
+        ? forall j N+:
+            j <= m
+            =>:
+                final(j) = target(j)
+        final(j) = trace(n)(j) = \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, n, j)
+        \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, n, j) = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, n)
+        \scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}) = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, n)
+        target = fn(row N+: row <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(row, r), coefficients.entries(r))})}
+        target(j) = (fn(row N+: row <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(row, r), coefficients.entries(r))})})(j) = \scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})
+        \matrix_column_partial_sum_entry<s, scalars, m, n>(A, coefficients, n, j) = \scalar_finite_sum_partial<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}, n) = \scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))}) = target(j)
+    $fn_eq(final, target)
+    final = target
+    trace(n) = final = target
+    claim:
+        ? $chap2a::has_linear_combination_value(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns, target)
+        witness exist partial_sums fn(k closed_range(0, n)) finite_seq(s, m) st {$chap2a::is_linear_combination_partial_sum_sequence(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns, partial_sums), target = partial_sums(n)} from trace
+    by thm chap2a::linear_combination_value_exists_unique(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns)
+    by thm chap2a::linear_combination_value_satisfies_spec(s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n, coefficients, columns)
+    \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, columns) = target
+    columns = \matrix_columns<s, scalars, m, n, A>
+    target = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
+    \chap2a::linear_combination_value<s, finite_seq(s, m), \chap1b::coordinate_space<s, scalars, m>, n>(coefficients, \matrix_columns<s, scalars, m, n, A>) = fn(j N+: j <= m) s {\scalar_finite_sum<s, scalars, n>(fn(r N+: r <= n) s {scalars.mul(A(j, r), coefficients.entries(r))})}
 # Result 3.26. A homogeneous system with more variables than equations has a
 # nonzero solution.
 axiom homogeneous_system_with_more_variables_has_nonzero_solution:

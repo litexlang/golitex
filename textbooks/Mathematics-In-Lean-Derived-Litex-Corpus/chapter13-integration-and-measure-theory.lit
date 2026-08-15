@@ -158,11 +158,15 @@ thm measurable_countable_intersection:
                 ? {y X: not y $in A(n)} = set_minus(X, A(n))
                 by extension:
                     ? {y X: not y $in A(n)} = set_minus(X, A(n))
-                    claim forall y {q X: not q $in A(n)} => {y $in set_minus(X, A(n))}:
+                    claim:
+                        ? forall y {q X: not q $in A(n)}:
+                            y $in set_minus(X, A(n))
                         y $in X
                         not y $in A(n)
                         y $in set_minus(X, A(n))
-                    claim forall y set_minus(X, A(n)) => {y $in {q X: not q $in A(n)}}:
+                    claim:
+                        ? forall y set_minus(X, A(n)):
+                            y $in {q X: not q $in A(n)}
                         not y $in A(n)
                         by thm set_builder_member(y, {q X: not q $in A(n)})
             {y X: not y $in A(n)} $in M
@@ -207,9 +211,7 @@ thm measurable_countable_intersection:
                     by thm set_builder_member(x1, {y X: not y $in A(n)})
                     (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n) = {y X: not y $in A(n)}
                     x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(n)
-                    witness exist j N st {x1 $in (fn(k N) power_set(X) {{y X: not y $in A(k)}})(j)} from n
-                    by def:
-                        ? $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x1)
+                    witness $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x1) from n
                     by thm set_builder_member(x1, {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)})
                     impossible not x1 $in {x X: $_member_of_countable_union(X, fn(k N) power_set(X) {{y X: not y $in A(k)}}, x)}
             by def:

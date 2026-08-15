@@ -304,10 +304,8 @@ sketch:
             =>:
                 $multiple8(x)
         obtain b from exist a Z st {5 * x = 8 * a}
-        witness exist c Z st {x = 8 * c} from 5 * b - 3 * x:
+        witness $multiple8(x) from 5 * b - 3 * x:
             x = 25 * x - 24 * x = 5 * (5 * x) - 3 * (8 * x) = 5 * (8 * b) - 3 * (8 * x) = 8 * (5 * b - 3 * x)
-        by def:
-            ? $multiple8(x)
 
     claim:
         ? forall x Z:
@@ -315,10 +313,8 @@ sketch:
             =>:
                 $multiple8(5 * x)
         obtain b from exist a Z st {x = 8 * a}
-        witness exist c Z st {5 * x = 8 * c} from 5 * b:
+        witness $multiple8(5 * x) from 5 * b:
             5 * x = 5 * (8 * b) = 8 * (5 * b)
-        by def:
-            ? $multiple8(5 * x)
 
 # 9.1.8 Finite Sets As Listed Alternatives
 
@@ -472,7 +468,9 @@ by extension:
 
 by extension:
     ? union({1, 2}, {2, 4}) = {1, 2, 4}
-    claim forall x union({1, 2}, {2, 4}) => {x $in {1, 2, 4}}:
+    claim:
+        ? forall x union({1, 2}, {2, 4}):
+            x $in {1, 2, 4}
         by cases:
             ? x $in {1, 2, 4}
             case x $in {1, 2}:
@@ -486,7 +484,9 @@ by extension:
                     case x = 2
                     case x = 4
 
-    claim forall x {1, 2, 4} => {x $in union({1, 2}, {2, 4})}:
+    claim:
+        ? forall x {1, 2, 4}:
+            x $in union({1, 2}, {2, 4})
         by cases:
             ? x $in union({1, 2}, {2, 4})
             case x = 1
@@ -497,7 +497,9 @@ by extension:
 
 by extension:
     ? union({1, 2}, {2, 4}) = {1, 2, 4}
-    claim forall x union({1, 2}, {2, 4}) => {x $in {1, 2, 4}}:
+    claim:
+        ? forall x union({1, 2}, {2, 4}):
+            x $in {1, 2, 4}
         by cases:
             ? x $in {1, 2, 4}
             case x $in {1, 2}:
@@ -548,7 +550,9 @@ by extension:
 # {-2, 3} intersect {x Q : x^2 = 9} $subset {a Q : 0 < a}.
 # ```
 
-claim forall x intersect({-2, 3}, {y Q: y^2 = 9}) => {x $in {a Q: 0 < a}}:
+claim:
+    ? forall x intersect({-2, 3}, {y Q: y^2 = 9}):
+        x $in {a Q: 0 < a}
     x $in {-2, 3}
     by cases:
         ? x = 3
@@ -588,7 +592,9 @@ by def:
 # {n N : 4 <= n} intersect {n N : n < 7} $subset {4, 5, 6}.
 # ```
 
-claim forall x intersect({n N: 4 <= n}, {n N: n < 7}) => {x $in {4, 5, 6}}:
+claim:
+    ? forall x intersect({n N: 4 <= n}, {n N: n < 7}):
+        x $in {4, 5, 6}
     x $in range(4, 7)
     by for:
         ? forall i1 range(4, 7):
@@ -628,7 +634,9 @@ forall a, b set, x set_minus(a, b):
 
 by extension:
     ? set_minus(Z, {n Z: n % 2 = 0}) = {n Z: n % 2 = 1}
-    claim forall x set_minus(Z, {n Z: n % 2 = 0}) => {x $in {n Z: n % 2 = 1}}:
+    claim:
+        ? forall x set_minus(Z, {n Z: n % 2 = 0}):
+            x $in {n Z: n % 2 = 1}
         x $in Z
         not x $in {n Z: n % 2 = 0}
         x % 2 = 0 or x % 2 = 1
@@ -639,7 +647,9 @@ by extension:
                 impossible x $in {n Z: n % 2 = 0}
             case x % 2 = 1
         by thm set_builder_member(x, {n Z: n % 2 = 1})
-    claim forall x {n Z: n % 2 = 1} => {x $in set_minus(Z, {n Z: n % 2 = 0})}:
+    claim:
+        ? forall x {n Z: n % 2 = 1}:
+            x $in set_minus(Z, {n Z: n % 2 = 0})
         x $in Z
         x % 2 = 1
         by contra:
@@ -677,7 +687,8 @@ claim:
 
 # Now we prove that the intersection of two sets of numbers that are congruent to 1 and 2 modulo 5 is the empty set.
 
-claim intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}) = {}:
+claim:
+    ? intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}) = {}
     by extension:
         ? intersect({n Z: n % 5 = 1}, {n Z: n % 5 = 2}) = {}
         claim:

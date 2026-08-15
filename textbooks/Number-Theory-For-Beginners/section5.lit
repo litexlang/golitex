@@ -28,6 +28,55 @@ prop is_abelian_group(G set, add fn(x, y G) G, zero G):
     forall x G:
         add(zero, x) = x
 
+prop is_additive_inverse(G set, add fn(x, y G) G, zero G, x, inverse G):
+    add(x, inverse) = zero
+
+thm additive_inverse_exists_unique:
+    ? forall G set, add fn(x, y G) G, zero G, x G:
+        $is_abelian_group(G, add, zero)
+        =>:
+            exist! candidate G st {$is_additive_inverse(G, add, zero, x, candidate)}
+    by def:
+        ? $is_abelian_group(G, add, zero)
+    obtain candidate from exist! z G st {add(x, z) = zero}
+    witness exist! candidate0 G st {$is_additive_inverse(G, add, zero, x, candidate0)} from candidate:
+        by def $is_additive_inverse(G, add, zero, x, candidate)
+        claim:
+            ? forall candidate1, candidate2 G:
+                $is_additive_inverse(G, add, zero, x, candidate1)
+                $is_additive_inverse(G, add, zero, x, candidate2)
+                =>:
+                    candidate1 = candidate2
+            add(x, candidate1) = zero
+            add(x, candidate2) = zero
+            obtain unique_candidate from exist! z G st {add(x, z) = zero}
+            candidate1 = unique_candidate
+            candidate2 = unique_candidate
+
+template<G set, add fn(x, y G) G, zero G>:
+    have fn additive_inverse by exist!:
+        ? forall x G:
+            $is_abelian_group(G, add, zero)
+            =>:
+                exist! candidate G st {$is_additive_inverse(G, add, zero, x, candidate)}
+        by thm additive_inverse_exists_unique(G, add, zero, x)
+
+thm additive_inverse_satisfies_inverse:
+    ? forall G set, add fn(x, y G) G, zero G, x G:
+        $is_abelian_group(G, add, zero)
+        =>:
+            $is_additive_inverse(G, add, zero, x, \additive_inverse<G, add, zero>(x))
+    $is_additive_inverse(G, add, zero, x, \additive_inverse<G, add, zero>(x))
+
+thm additive_inverse_of_zero:
+    ? forall G set, add fn(x, y G) G, zero G:
+        $is_abelian_group(G, add, zero)
+        =>:
+            \additive_inverse<G, add, zero>(zero) = zero
+    by thm additive_inverse_satisfies_inverse(G, add, zero, zero)
+    add(zero, \additive_inverse<G, add, zero>(zero)) = zero
+    add(zero, \additive_inverse<G, add, zero>(zero)) = \additive_inverse<G, add, zero>(zero)
+
 """
 Examples. The integers, rational numbers, and real numbers are abelian groups
 under addition.  The nonzero rational numbers are an abelian group under

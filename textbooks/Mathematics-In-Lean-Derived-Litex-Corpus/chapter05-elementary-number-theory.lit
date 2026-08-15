@@ -8,11 +8,9 @@
 
 # 5.1 Irrational Roots
 
-# The source uses Nat.Coprime. Litex exposes the mathematical gcd-one condition
-# directly, with the guard required by Chapter 2's local gcd construction.
-prop coprime(a, b N):
-    a != 0 or b != 0
-    gcd(a, b) = 1
+# The source uses Nat.Coprime. Litex now uses the native `$coprime(a, b)` on
+# N x N directly; a positive fact exposes the non-all-zero guard and gcd-one
+# equation needed by the Chapter 2 gcd construction below.
 
 # Euclidean division is the one source-local selected object needed by the
 # parity proof below and Chapter 7's centered quotient construction.
@@ -66,9 +64,7 @@ thm even_of_even_sqr:
             m < 0
             impossible m >= 0
     q $in N
-    witness exist k N st {m = 2 * k} from q
-    by def:
-        ? $chap1::even(m)
+    witness $chap1::even(m) from q
 
 # The classical irrational-square contradiction: coprime numerator and
 # denominator cannot satisfy m^2 = 2 n^2.
@@ -80,9 +76,7 @@ thm coprime_square_not_twice_square:
     by contra:
         ? m^2 != 2 * n^2
         m^2 = 2 * n^2
-        witness exist k N st {m^2 = 2 * k} from n^2
-        by def:
-            ? $chap1::even(m^2)
+        witness $chap1::even(m^2) from n^2
         $chap1::even(m^2)
         by thm even_of_even_sqr(m)
         $chap1::even(m)
@@ -90,23 +84,15 @@ thm coprime_square_not_twice_square:
         m^2 = (2 * a)^2 = 4 * a^2
         2 * n^2 = 4 * a^2
         n^2 = (2 * n^2) / 2 = (4 * a^2) / 2 = 2 * a^2
-        witness exist k N st {n^2 = 2 * k} from a^2
-        by def:
-            ? $chap1::even(n^2)
+        witness $chap1::even(n^2) from a^2
         $chap1::even(n^2)
         by thm even_of_even_sqr(n)
         $chap1::even(n)
         obtain b from exist b N st {n = 2 * b}
-        witness exist q Z st {m = 2 * q} from a
-        by def:
-            ? $MILAlternative::chap2_struct::divides(2, m)
+        witness $MILAlternative::chap2_struct::divides(2, m) from a
         $MILAlternative::chap2_struct::divides(2, m)
-        witness exist q Z st {n = 2 * q} from b
-        by def:
-            ? $MILAlternative::chap2_struct::divides(2, n)
+        witness $MILAlternative::chap2_struct::divides(2, n) from b
         $MILAlternative::chap2_struct::divides(2, n)
-        m != 0 or n != 0
-        gcd(m, n) = 1
         by thm MILAlternative::chap2_struct::common_divisor_le_gcd(m, n, 2)
         2 <= gcd(m, n) = 1
         impossible 2 <= 1
@@ -469,10 +455,8 @@ thm exists_prime_factor:
         ? from n = 2:
             by def:
                 ? $prime(2)
-            witness exist k Z st {2 = 2 * k} from 1:
+            witness $MILAlternative::chap2_struct::divides(2, 2) from 1:
                 2 = 2 * 1
-            by def:
-                ? $MILAlternative::chap2_struct::divides(2, 2)
             witness exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, 2)} from 2
         ? strong_induc:
             forall y N:
@@ -484,10 +468,8 @@ thm exists_prime_factor:
             by cases:
                 ? exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, n + 1)}
                 case $prime(n + 1):
-                    witness exist k Z st {n + 1 = (n + 1) * k} from 1:
+                    witness $MILAlternative::chap2_struct::divides(n + 1, n + 1) from 1:
                         n + 1 = (n + 1) * 1
-                    by def:
-                        ? $MILAlternative::chap2_struct::divides(n + 1, n + 1)
                     witness exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, n + 1)} from n + 1
                 case not $prime(n + 1):
                     claim:
@@ -507,10 +489,8 @@ thm exists_prime_factor:
                     obtain p from exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, d)}
                     obtain a from exist a Z st {d = p * a}
                     obtain b from exist b Z st {n + 1 = d * b}
-                    witness exist factor Z st {n + 1 = p * factor} from a * b:
+                    witness $MILAlternative::chap2_struct::divides(p, n + 1) from a * b:
                         n + 1 = d * b = p * a * b = p * (a * b)
-                    by def:
-                        ? $MILAlternative::chap2_struct::divides(p, n + 1)
                     witness exist q N+ st {$prime(q), $MILAlternative::chap2_struct::divides(q, n + 1)} from p
 
 # Source theorem: primes_infinite. This keeps Euclid's route: choose a prime
@@ -532,10 +512,8 @@ thm primes_infinite:
             by thm positive_index_divides_factorial(p, n)
             obtain a from exist a Z st {factorial(n) = p * a}
             obtain b from exist b Z st {factorial(n) + 1 = p * b}
-            witness exist q Z st {1 = p * q} from b - a:
+            witness $MILAlternative::chap2_struct::divides(p, 1) from b - a:
                 1 = (factorial(n) + 1) - factorial(n) = p * b - p * a = p * (b - a)
-            by def:
-                ? $MILAlternative::chap2_struct::divides(p, 1)
             $MILAlternative::chap2_struct::divides(p, 1)
             by thm MILAlternative::chap2_struct::_positive_divisor_le_abs(p, 1)
             p <= abs(1) = 1
@@ -738,10 +716,8 @@ thm _gcd_add_right_for_fibonacci:
     by thm MILAlternative::chap2_struct::gcd_divides_right(a, b)
     obtain q from exist q Z st {a = gcd(a, b) * q}
     obtain r from exist r Z st {b = gcd(a, b) * r}
-    witness exist s Z st {a + b = gcd(a, b) * s} from q + r:
+    witness $MILAlternative::chap2_struct::divides(gcd(a, b), a + b) from q + r:
         a + b = gcd(a, b) * q + gcd(a, b) * r = gcd(a, b) * (q + r)
-    by def:
-        ? $MILAlternative::chap2_struct::divides(gcd(a, b), a + b)
     by thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, a + b, gcd(a, b))
     gcd(a, b) <= gcd(a, a + b)
 
@@ -750,10 +726,8 @@ thm _gcd_add_right_for_fibonacci:
     by thm MILAlternative::chap2_struct::gcd_divides_right(a, a + b)
     obtain u from exist u Z st {a = gcd(a, a + b) * u}
     obtain v from exist v Z st {a + b = gcd(a, a + b) * v}
-    witness exist s Z st {b = gcd(a, a + b) * s} from v - u:
+    witness $MILAlternative::chap2_struct::divides(gcd(a, a + b), b) from v - u:
         b = (a + b) - a = gcd(a, a + b) * v - gcd(a, a + b) * u = gcd(a, a + b) * (v - u)
-    by def:
-        ? $MILAlternative::chap2_struct::divides(gcd(a, a + b), b)
     by thm MILAlternative::chap2_struct::common_divisor_le_gcd(a, b, gcd(a, a + b))
     gcd(a, a + b) <= gcd(a, b)
 
@@ -788,11 +762,8 @@ thm fib_coprime_fib_succ:
             gcd(fibonacci(n), fibonacci(n + 1)) = gcd(0, 1) = 1
             by def:
                 ? $coprime(fibonacci(n), fibonacci(n + 1))
-            $coprime(fibonacci(n), fibonacci(n + 1))
         ? induc:
             $coprime(fibonacci(n), fibonacci(n + 1))
-            fibonacci(n) != 0 or fibonacci(n + 1) != 0
-            gcd(fibonacci(n), fibonacci(n + 1)) = 1
             by thm _fibonacci_successor_positive(n)
             fibonacci(n + 1) > 0
             fibonacci(n + 1) $in N+
@@ -810,7 +781,6 @@ thm fib_coprime_fib_succ:
             fibonacci(n + 1) != 0 or fibonacci((n + 1) + 1) != 0
             by def:
                 ? $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
-            $coprime(fibonacci(n + 1), fibonacci((n + 1) + 1))
 
 # Source definition: fib'. This tail-recursive state machine is a callable
 # construction, not merely a second proof script.
@@ -957,10 +927,8 @@ thm ne_one_iff_exists_prime_dvd_forward:
             case n = 0:
                 witness exist p N+ st {$prime(p), $MILAlternative::chap2_struct::divides(p, n)} from 2:
                     $prime(2)
-                    witness exist q Z st {n = 2 * q} from 0:
+                    witness $MILAlternative::chap2_struct::divides(2, n) from 0:
                         n = 0 = 2 * 0
-                    by def:
-                        ? $MILAlternative::chap2_struct::divides(2, n)
                     $MILAlternative::chap2_struct::divides(2, n)
             case n != 0:
                 n $in N+

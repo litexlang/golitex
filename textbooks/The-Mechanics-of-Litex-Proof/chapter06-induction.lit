@@ -67,19 +67,15 @@ sketch:
                 witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
                     n = 2 * basics::integer_quotient(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
-                witness exist l Z st {n = 2 * l} from k:
+                witness $even(n) from k:
                     n = 2 * k + 0 = 2 * k
-                by def:
-                    ? $even(n)
                 $even(n) or $odd(n)
             case n % 2 = 1:
                 witness exist q Z st {n = 2 * q + n % 2} from basics::integer_quotient(n, 2):
                     n = 2 * basics::integer_quotient(n, 2) + n % 2
                 obtain k from exist k Z st {n = 2 * k + n % 2}
-                witness exist l Z st {n = 2 * l + 1} from k:
+                witness $odd(n) from k:
                     n = 2 * k + 1
-                by def:
-                    ? $odd(n)
                 $even(n) or $odd(n)
 
 # This example is a useful reminder: induction is not always the shortest proof.
@@ -126,7 +122,7 @@ sketch:
             ? $mod_eq(a^n, b^n, d)
             obtain k from exist k Z st {a - b = d * k}
             d != 0
-            witness exist q Z st {a^1 - b^1 = d * q} from k:
+            witness exist mod_witness Z st {a^1 - b^1 = d * mod_witness} from k:
                 a^1 - b^1 = a - b = d * k
             by def:
                 ? $mod_eq(a^1, b^1, d)
@@ -143,7 +139,7 @@ sketch:
                 m $in N+
                 a^(m + 1) = a^m * a
                 b^(m + 1) = b^m * b
-                witness exist q Z st {a^(m + 1) - b^(m + 1) = d * q} from x * a + b^m * y:
+                witness exist mod_witness Z st {a^(m + 1) - b^(m + 1) = d * mod_witness} from x * a + b^m * y:
                     a^(m + 1) - b^(m + 1) = a^m * a - b^m * b = (a^m - b^m) * a + b^m * (a - b) = d * x * a + b^m * (d * y) = d * (x * a + b^m * y)
                 by def:
                     ? $mod_eq(a^(m + 1), b^(m + 1), d)
@@ -169,7 +165,7 @@ sketch:
         by induc n from 0:
             ? $residue_is_one_or_four(n)
             15 != 0
-            witness exist k Z st {4^0 - 1 = 15 * k} from 0:
+            witness exist mod_witness Z st {4^0 - 1 = 15 * mod_witness} from 0:
                 4^0 - 1 = 1 - 1 = 15 * 0
             by def:
                 ? $mod_eq(4^0, 1, 15)
@@ -188,7 +184,7 @@ sketch:
                     ? $residue_is_one_or_four(m + 1)
                     case $mod_eq(4^m, 1, 15):
                         obtain x from exist x Z st {4^m - 1 = 15 * x}
-                        witness exist q Z st {4^(m + 1) - 4 = 15 * q} from 4 * x:
+                        witness exist mod_witness Z st {4^(m + 1) - 4 = 15 * mod_witness} from 4 * x:
                             4^(m + 1) - 4 = 4^m * 4 - 4 = 4 * (4^m - 1) = 4 * (15 * x) = 15 * (4 * x)
                         by def:
                             ? $mod_eq(4^(m + 1), 4, 15)
@@ -197,7 +193,7 @@ sketch:
                             ? $residue_is_one_or_four(m + 1)
                     case $mod_eq(4^m, 4, 15):
                         obtain x from exist x Z st {4^m - 4 = 15 * x}
-                        witness exist q Z st {4^(m + 1) - 1 = 15 * q} from 4 * x + 1:
+                        witness exist mod_witness Z st {4^(m + 1) - 1 = 15 * mod_witness} from 4 * x + 1:
                             4^(m + 1) - 1 = 4^m * 4 - 1 = 4 * (4^m - 4) + 15 = 4 * (15 * x) + 15 = 15 * (4 * x + 1)
                         by def:
                             ? $mod_eq(4^(m + 1), 1, 15)
@@ -308,10 +304,8 @@ claim:
             $odd(a(n))
     by induc n from 0:
         ? $odd(a(n))
-        witness exist k Z st {a(0) = 2 * k + 1} from 1:
+        witness $odd(a(0)) from 1:
             a(0) = 3 = 2 * 1 + 1
-        by def:
-            ? $odd(a(0))
 
         claim:
             ? forall m Z:
@@ -319,11 +313,9 @@ claim:
                 $odd(a(m))
                 =>:
                     $odd(a(m + 1))
-            obtain k from exist k Z st {a(m) = 2 * k + 1}
-            witness exist l Z st {a(m + 1) = 2 * l + 1} from 2 * k^2 + 2 * k - 1:
+            obtain k from $odd(a(m))
+            witness $odd(a(m + 1)) from 2 * k^2 + 2 * k - 1:
                 a(m + 1) = a(m)^2 - 2 = (2 * k + 1)^2 - 2 = 4 * k^2 + 4 * k + 1 - 2 = 4 * k^2 + 4 * k - 1 = 2 * (2 * k^2 + 2 * k - 1) + 1
-            by def:
-                ? $odd(a(m + 1))
 
 # This is the main pattern in the sequence examples: prove the formula at the
 # initial index, then use the recurrence to rewrite the next term.
@@ -345,7 +337,7 @@ claim:
     by induc n from 0:
         ? $mod_eq(x(n), 1, 4)
         4 != 0
-        witness exist k Z st {x(0) - 1 = 4 * k} from 1:
+        witness exist mod_witness Z st {x(0) - 1 = 4 * mod_witness} from 1:
             x(0) - 1 = 5 - 1 = 4 = 4 * 1
         by def:
             ? $mod_eq(x(0), 1, 4)
@@ -359,7 +351,7 @@ claim:
             obtain k from exist k Z st {x(m) - 1 = 4 * k}
             4 != 0
             x(m + 1) = 2 * x(m) - 1
-            witness exist l Z st {x(m + 1) - 1 = 4 * l} from 2 * k:
+            witness exist mod_witness Z st {x(m + 1) - 1 = 4 * mod_witness} from 2 * k:
                 x(m + 1) - 1 = (2 * x(m) - 1) - 1 = 2 * x(m) - 2 = 2 * (x(m) - 1) = 2 * (4 * k) = 4 * (2 * k)
             by def:
                 ? $mod_eq(x(m + 1), 1, 4)
@@ -484,16 +476,12 @@ sketch:
                         case d <= m:
                             $divides(d, f(m))
                             obtain c from exist c Z st {f(m) = d * c}
-                            witness exist q Z st {f(m + 1) = d * q} from (m + 1) * c:
+                            witness $divides(d, f(m + 1)) from (m + 1) * c:
                                 f(m + 1) = (m + 1) * f(m) = (m + 1) * (d * c) = d * ((m + 1) * c)
-                            by def:
-                                ? $divides(d, f(m + 1))
                         case d >= m + 1:
                             d = m + 1
-                            witness exist q Z st {f(m + 1) = d * q} from f(m):
+                            witness $divides(d, f(m + 1)) from f(m):
                                 f(m + 1) = (m + 1) * f(m) = d * f(m)
-                            by def:
-                                ? $divides(d, f(m + 1))
                 by def:
                     ? $factorial_divisible(f, m + 1)
 
@@ -690,12 +678,12 @@ sketch:
                 ? $seq_mod_pair(a, 1)
                 1 >= 1
                 6 != 0
-                witness exist k Z st {a(1) - 1 = 6 * k} from 0:
+                witness exist mod_witness Z st {a(1) - 1 = 6 * mod_witness} from 0:
                     a(1) - 1 = 1 - 1 = 0 = 6 * 0
                 by def:
                     ? $mod_eq(a(1), 1, 6)
                 a(1 + 1) = a(2) = a(0 + 2) = a(0 + 1) + 2 * a(0) = a(1) + 2 * a(0) = 1 + 2 * 2 = 5
-                witness exist l Z st {a(1 + 1) - 5 = 6 * l} from 0:
+                witness exist mod_witness Z st {a(1 + 1) - 5 = 6 * mod_witness} from 0:
                     a(1 + 1) - 5 = 5 - 5 = 0 = 6 * 0
                 by def:
                     ? $mod_eq(a(1 + 1), 5, 6)
@@ -729,7 +717,7 @@ sketch:
                         $mod_eq(a(m + 1), 5, 6)
                         a((m + 1) + 1) = a(m + 2) = a(m + 1) + 2 * a(m)
                         6 != 0
-                        witness exist t Z st {a((m + 1) + 1) - 1 = 6 * t} from l + 2 * k + 1:
+                        witness exist mod_witness Z st {a((m + 1) + 1) - 1 = 6 * mod_witness} from l + 2 * k + 1:
                             a((m + 1) + 1) - 1 = a(m + 1) + 2 * a(m) - 1 = (a(m + 1) - 5) + 2 * (a(m) - 1) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
                         by def:
                             ? $mod_eq(a((m + 1) + 1), 1, 6)
@@ -747,7 +735,7 @@ sketch:
                         $mod_eq(a(m + 1), 1, 6)
                         a((m + 1) + 1) = a(m + 2) = a(m + 1) + 2 * a(m)
                         6 != 0
-                        witness exist t Z st {a((m + 1) + 1) - 5 = 6 * t} from l + 2 * k + 1:
+                        witness exist mod_witness Z st {a((m + 1) + 1) - 5 = 6 * mod_witness} from l + 2 * k + 1:
                             a((m + 1) + 1) - 5 = a(m + 1) + 2 * a(m) - 5 = (a(m + 1) - 1) + 2 * (a(m) - 5) + 6 = 6 * l + 2 * (6 * k) + 6 = 6 * (l + 2 * k + 1)
                         by def:
                             ? $mod_eq(a((m + 1) + 1), 5, 6)
@@ -1227,7 +1215,7 @@ sketch:
             n = p * basics::integer_quotient(n, p) + n % p
         obtain k from exist q Z st {n = p * q + n % p}
         n = p * k + n % p = p * k = k * p
-        witness exist c Z st {n = p * c} from k:
+        witness exist divisor_witness Z st {n = p * divisor_witness} from k:
             n = k * p = p * k
         by def:
             ? $dvdN(p, n)

@@ -39,6 +39,16 @@ Some similarly named source definitions remain deliberately local. In
 particular, Chapter 7 uses a non-strict series-tail convention (`<= epsilon`)
 where Chapter 6 uses a strict sequence-tail convention (`< epsilon`).
 
+Across Chapters 3 and 5--11, one-existential proposition interfaces now use
+the shorter runtime form: `obtain M from $p(args)` eliminates a known named
+fact, and `witness $p(args) from value` constructs one. This is used only when
+the concrete definition's whole body is a single positive ordinary `exist`
+fact. Named construction keeps `exist!` on explicit `witness exist! ...` plus
+`by def`; raw existential goals, abstract or nested local predicates, and
+multi-clause definitions also remain explicit. See the
+[`acceptance record`](../experience/problem_notes/named-existential-proof-style-acceptance.md)
+for the exact boundaries and verification evidence.
+
 ## Chapter 3 cardinality surface
 
 Chapter 3 defines equal cardinality through a bijection and proves the

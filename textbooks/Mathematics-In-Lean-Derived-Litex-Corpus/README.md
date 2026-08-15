@@ -29,6 +29,15 @@ lowered the executable trust count from 224 to 210. The full acceptance and
 the deliberate non-migrations are recorded in
 [`experience/problem_notes/2026-8-5-litex-native-writing-audit.md`](../experience/problem_notes/2026-8-5-litex-native-writing-audit.md).
 
+The 2026-08-11 named-existential pass also removes duplicated definition
+plumbing. When a concrete `prop` consists solely of one positive ordinary
+existential fact, proofs now read `obtain k from $p(args)` and
+`witness $p(args) from value`; the verifier resolves the definition at runtime.
+Named construction leaves `exist!` on explicit `witness exist! ...` plus
+`by def`. Explicit syntax also remains at raw goals, abstract or nested local
+predicates, and definitions with additional clauses. The acceptance record is
+[`named-existential-proof-style-acceptance.md`](../experience/problem_notes/named-existential-proof-style-acceptance.md).
+
 ## Begin with one checked fact
 
 The retained complete structure-oriented Chapter 2 contains this small
@@ -53,7 +62,7 @@ rather than `ring.mul(a, ring.zero)`. A setting is an elaboration-time bundle
 of theorem parameters and laws, not a runtime mathematical value.
 
 An independent structure-oriented presentation lives in
-[`textbook2/chapter02-basics-struct.lit`](textbook2/chapter02-basics-struct.lit),
+[`textbook2/chapter02-basics-struct.lit`](../textbook2/chapter02-basics-struct.lit),
 exported there as `chap2_struct`. It owns the checked
 `AdditiveCommutativeGroup<s>`, `Group<s>`,
 flat `Ring<s>`, one-field `PartialOrder<s>` and `MetricSpace<s>`, and
@@ -62,7 +71,7 @@ properties. These objects remain the right interface when a theorem packages,
 compares, or transports whole mathematical systems. The two Chapter 2 files
 do not cite or import one another and each verifies in isolation.
 
-The publication module exports `./textbook2` as `MILAlternative` because Chapters
+The main module imports `../textbook2` as `MILAlternative` because Chapters
 3, 5, and 7--12 retain existing first-class structure APIs. Their references
 are therefore explicit, for example
 `MILAlternative::chap2_struct::Group<G>`. This module-level dependency is not
@@ -139,10 +148,11 @@ The current section inventory and work order are maintained in
 At the Litex source-module level, this project has no configured `std` import
 and no cite module. The small shared number-theory layer is ordinary checked
 Litex in the source-ordered chapters: Chapter 2 defines divisibility and gcd,
-Chapter 4 defines primality, and Chapter 5 selects the Euclidean integer
-quotient from a checked unique-existence fact. This is a precise claim about
-module dependencies, not a claim that the corpus needs no verifier support.
-Arithmetic normalization, finite-set operations and extrema, and the narrow
+Chapter 4 defines primality, and Chapter 5 uses native `$coprime` on `N x N`
+before selecting the Euclidean integer quotient from a checked
+unique-existence fact. This is a precise claim about module dependencies, not
+a claim that the corpus needs no verifier support. Coprimality, arithmetic
+normalization, finite-set operations and extrema, and the narrow
 Euclidean-quotient existence rule remain kernel builtin boundaries.
 
 Strict project success establishes that the configured no-`std` graph loads
@@ -180,7 +190,7 @@ The current Litex-to-Lean bridge supports only a limited trust-free arithmetic
 subset. This thirteen-chapter project is not currently compiled to Lean.
 Within the supported subset, trusted or unsupported forms must not be
 presented as trust-free Lean output. See
-[`src/compile_to_lean/README.md`](../../../src/compile_to_lean/README.md) for the current
+[`src/to_lean/README.md`](../../../src/to_lean/README.md) for the current
 implementation boundary.
 
 ## Run entrypoint

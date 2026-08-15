@@ -258,15 +258,120 @@ When doing mathematics, people often begin by recognizing a pattern: the current
 
 Litex therefore places verified facts in the current context and tries to match and substitute them. A known `forall` fact can be instantiated when its parameter conditions are satisfied, and a known equality can help match a larger expression. This is not “guessing a proof”: every accepted result must still pass the rule and context checks. Litex retains named theorems and explicit `by thm` invocations when a result is large, when checking it would be expensive, or when its dependencies should remain visible to the reader.
 
+#### What the “Automatic Verification Magic” Actually Does
+
+The short answer is: a sophisticated, bounded matching-and-replacement
+engine. When a user submits a fact, Litex does not send it to an unconstrained
+prover and ask for an arbitrary proof. The exact dispatch depends on the shape
+of the fact, but the ordinary verification process can be understood as the
+following cascade:
+
+1. **Check meaning first.** Verify that the objects, function applications,
+   memberships, binders, and other components of the submitted fact are
+   well-defined.
+2. **Retrieve plausible local support.** Use the fact's relation or predicate
+   head and the shapes of its arguments to narrow the search among known
+   facts, known `forall` facts, definitions, and builtin rule schemas.
+3. **Match the conclusion and bind its variables.** Compare a candidate
+   conclusion structurally with the submitted fact. A pattern variable such
+   as `a` may thereby be bound to a concrete object such as `identity`; a
+   repeated variable must match the same object each time.
+4. **Instantiate and discharge the requirements.** Apply those bindings to
+   the candidate's parameter types, domain conditions, and premises, then
+   verify the resulting concrete requirements through the checks permitted by
+   that route.
+5. **Bridge small representational gaps.** Where the two shapes are not
+   literally identical, try controlled operations such as reversing an
+   equality, transporting through known equalities, direct computation,
+   bounded symbolic normalization, structural congruence, or a checked
+   definition replay.
+6. **Commit the result with evidence.** If one bounded route succeeds, record
+   its immediate provenance, store the new fact in the context, and apply the
+   relevant inference rules. If none succeeds, report `unknown` rather than
+   silently inventing a proof.
+
+The important point is that this cascade has more than one source of reusable
+patterns. A pattern may come from the builtin rule catalog, or it may come
+from a `forall` fact that the user has already proved and placed in the
+environment. Their provenance is different, but the central operation is the
+same: match the requested conclusion, select a substitution, and check the
+instantiated requirements.
+
+First consider a small builtin example:
+
+```litex
+forall y R:
+    0 <= abs(y + 1)
+```
+
+The catalog contains the schema `forall x R: 0 <= abs(x)`. For the atomic
+conclusion `0 <= abs(y + 1)`, structural matching selects `x := y + 1`; the
+checker then confirms the instantiated requirement `y + 1 $in R` from the
+typed binder and the arithmetic rules. The detailed output names the selected
+catalog entry, `order.abs_nonnegative`, and exposes its subgoal rather than
+hiding the match behind a generic automation label.
+
+Now let the reusable pattern be proved by the user instead:
+
+```litex
+thm abs_zero_or_one:
+    ? forall x R:
+        x = 0 or x = 1
+        =>:
+            abs(x) <= 1
+    by cases:
+        ? abs(x) <= 1
+        case x = 0:
+            abs(x) <= 1
+        case x = 1:
+            abs(x) <= 1
+
+abs(1) <= 1
+# Or explicitly: by thm abs_zero_or_one(1)
+```
+
+The theorem is checked once and its `forall` fact is stored. The active line
+contains only the atomic fact `abs(1) <= 1`, with no `claim` wrapper and no
+required `by thm` call. The following comment shows the alternative for a user
+who wants to name the dependency explicitly: `by thm abs_zero_or_one(1)`.
+The fact has the same structural shape as the stored conclusion `abs(x) <= 1`:
+matching selects `x := 1`, after which the instantiated type and premise are
+checkable.
+
+There is one provenance nuance in this deliberately concrete example.
+`abs(1) <= 1` is also directly computable, so the current checker reaches the
+builtin `number comparison` route before it needs the stored `forall`. The
+universal fact is a matching source, but it is not the immediate source
+selected in this particular run. This is an example of overlapping local
+justifications, not evidence that the checker recorded `cite forall fact` for
+this line. The commented `by thm` alternative, by contrast, explicitly selects
+the named theorem.
+
+Thus builtin rules and user-proved universal facts are not two unrelated
+automation mechanisms. They feed the same bounded match–substitute–check
+architecture, while remaining distinguishable in the evidence: one cites a
+builtin rule, and the other cites a previously proved fact. More structured
+examples, such as applying the identity laws in a `Group`, scale up the same
+idea; they add `struct` and carrier notation, not a different verification
+principle.
+
+The apparent magic is therefore mostly careful engineering around candidate
+indexing, canonical structural matching, equality-aware replacement, bounded
+mathematical rules, and provenance. It is more capable than literal string
+matching, but much more constrained and auditable than unrestricted proof
+search.
+
 #### Verification at the Level Where Mathematics Is Written
 
 Much of working mathematics proceeds by using established facts at the
-current level of abstraction. In the `Group` example, the step
+current level of abstraction. The same mechanism scales to structured
+theories: in the earlier `Group` example, the step
 `identity = G.mul(G.one, identity)` is checked against the identity laws at
-that same mathematical level. On its ordinary verification path, Litex does
-not first require that local step to be lowered into a foundational proof
-term: it tries the relevant fact instances, equality replacements,
-definitions, and bounded mathematical rules directly.
+that mathematical level. The additional carrier and `struct` notation changes
+the available facts, not the underlying matching principle. On its ordinary
+verification path, Litex does not first require that local step to be lowered
+into a foundational proof term: it tries the relevant fact instances,
+equality replacements, definitions, and bounded mathematical rules directly.
 
 This differs from Lean's acceptance path, even though Lean source can also be
 high-level. Lean elaboration translates user-facing syntax and tactic results

@@ -49,16 +49,20 @@ claim:
         $multiple8(x)
         =>:
             $multiple8(5 * x)
-    obtain k from exist a Z st {x = 8 * a}
-    witness exist c Z st {5 * x = 8 * c} from 5 * k:
+    obtain k from $multiple8(x)
+    witness $multiple8(5 * x) from 5 * k:
         5 * x = 5 * (8 * k) = 8 * (5 * k)
-    by def:
-        ? $multiple8(5 * x)
 ```
 
-This is a `prop` boundary, not a theorem call and not an automatic direct rule.
-The nearest rejected form is implicit reverse definition search after the
-witness. Negative instances remain ordinary contradiction proofs.
+This is a runtime `prop` boundary, not a theorem call or compile-time
+expansion. The short form is limited to a concrete definition whose entire
+body is one positive ordinary existential fact. A named witness does not target
+`exist!`; use explicit `witness exist! ...` and then the separate `by def` fold.
+A raw existential, abstract predicate, nested local definition, or definition
+with another clause likewise keeps its applicable explicit statement. Negative
+instances remain ordinary contradiction proofs. In a named witness proof body,
+use the concrete expression supplied after `from`, not the hidden existential
+binder's source spelling.
 
 ## Arithmetic objects and structural strategies
 

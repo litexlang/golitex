@@ -39,6 +39,33 @@ one-signature change. The dependency DAG, session evidence, and exact kernel
 boundaries are in
 [`experience/problem_notes/2026-8-5-litex-native-writing-audit.md`](../experience/problem_notes/2026-8-5-litex-native-writing-audit.md).
 
+## Named existential proposition boundary
+
+A concrete named predicate whose complete body is one positive ordinary
+existential fact supports direct elimination and construction. Chapter 1's
+evenness proof is the representative interface:
+
+```litex
+prop even(n N):
+    exist k N st {n = 2 * k}
+
+thm even_mul:
+    ? forall m, n N:
+        $even(n)
+        =>:
+            $even(m * n)
+    obtain k from $even(n)
+    witness $even(m * n) from m * k:
+        m * n = m * (2 * k) = 2 * (m * k)
+```
+
+The definition is resolved at runtime; it is not expanded into the parsed
+source. The nearest rejected named-witness forms target `exist!`, an abstract
+predicate, a nested local definition, or a definition with another clause.
+Those cases keep the applicable explicit statement and a separate `by def`
+fold when one is required. A named witness proof body uses the actual values
+after `from`, not otherwise-unbound names copied from the definition.
+
 ## Closed facts and reusable relationships
 
 A closed source theorem should remain a direct fact or named `thm`. A `prop`
@@ -71,7 +98,7 @@ one ambient mathematical system. Its operations remain direct subjects:
 directly and proves every theorem from those laws or earlier theorems in the
 same file.
 
-The bundled `./textbook2` module provides a structure-first presentation.
+The separate `../textbook2` module provides a structure-first presentation.
 Its `chap2_struct` export owns first-class structure values for construction,
 comparison, transport, and downstream APIs that need a system as an object.
 Neither Chapter 2 presentation cites the other. This independence is the
@@ -107,9 +134,9 @@ mathematical object and not a runtime package. Settings expand only in
 setting-first proofs do not fold into, cite, or otherwise depend on the
 structure-first law predicates.
 
-`./textbook2/chapter02-basics-struct.lit`, exported as `chap2_struct`, is the
-independent structure-oriented chapter. The publication module exports its
-containing module as `MILAlternative` because later chapters retain first-class
+`../textbook2/chapter02-basics-struct.lit`, exported as `chap2_struct`, is the
+independent structure-oriented chapter. The main module imports its containing
+module as `MILAlternative` only because later chapters retain first-class
 structure signatures. At a deliberate boundary between the two styles, the
 call must name the struct view explicitly:
 
@@ -390,14 +417,20 @@ the common-divisor set is bounded by a finite interval and is recovered as a
 double relative complement. The gcd positivity, divisibility, greatestness,
 base, and symmetry laws are ordinary checked theorems built on that definition.
 
-Chapter 4 defines primality directly on `N+`. Chapter 5 introduces
-`integer_quotient` as a callable function with `have fn ... by exist!`; the
-kernel discharges only the narrow unique-existence fact for Euclidean division.
-This division of responsibility is intentional: the mathematical vocabulary
-and reusable proof route remain visible Litex, while arithmetic, remainder,
-finite-set difference, finite extrema, and Euclidean-quotient existence are
-explicit builtin boundaries. The rejected form is an empty cite package or an
-imported theorem whose simple local proof is hidden from the corpus reader.
+Chapter 4 defines primality directly on `N+`. Chapter 5 uses native
+`$coprime(a, b)` on `N x N`, matching the source's `Nat.Coprime` carrier; a
+positive fact exposes both the non-all-zero guard and `gcd(a, b) = 1` used by
+the irrational-square proof. The former chapter-local `prop coprime` was
+rejected once the exact builtin interface became available because it was a
+duplicate wrapper over the same carrier and definition. Chapter 5 also
+introduces `integer_quotient` as a callable function with
+`have fn ... by exist!`; the kernel discharges only the narrow unique-existence
+fact for Euclidean division. This division of responsibility is intentional:
+the mathematical vocabulary and reusable proof route remain visible Litex,
+while coprimality, arithmetic, remainder, finite-set difference, finite
+extrema, and Euclidean-quotient existence are explicit builtin boundaries. The
+other rejected form is an empty cite package or an imported theorem whose
+simple local proof is hidden from the corpus reader.
 
 The later induction section uses native `factorial : N -> N+` and keeps
 Fibonacci plus the tail-recursive Fibonacci state machine callable. The native
@@ -441,7 +474,11 @@ interface.
 Arbitrary choice is not smuggled into an unconstrained function declaration.
 Chapter 4 builds, for each target, the set of its preimages or the singleton
 default when no preimage exists. Choice on this nonempty family proves
-`total_inverse_exists`. The existential is then packaged as
+`total_inverse_exists`. Its chooser existential has the single atomic body
+`$is_choice_function_for(F, F, fn(A F) F {A}, chooser)`; the builtin
+definition exposes the ordinary pointwise fact `forall A F: chooser(A) $in A`.
+This keeps anonymous `forall` out of existential bodies without hiding the
+selection condition or changing its downstream use. The existential is then packaged as
 `has_total_inverse`, and a constrained `obtain inverse` template exposes the
 selected callable function:
 

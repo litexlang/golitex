@@ -116,7 +116,7 @@ concepts and intermediate nodes that determine later interfaces.
 - **Downstream uses:** Every complex-linear concept from subspaces onward.
   Probe: call one `_general` theorem with `\as_vector_space<VSet,V>` and recover
   a conclusion written with `V.add` and `V.smul`.
-- **Allowable hole:** Existing selected coordinate, product, quotient, and
+- **Allowable hole:** Existing selected coordinate, product, and
   function-space instances may retain their already-recorded proof debt. The
   C/generic bridges themselves must be checked.
 
@@ -151,8 +151,9 @@ concepts and intermediate nodes that determine later interfaces.
   `v+U`, and the quotient map sends `v` to its translate.
 - **Semantic role:** Carrier constructions plus callable operations and maps.
 - **Ideal Litex form:** Product operations require
-  `V.scalars = W.scalars`; `quotient_carrier` is an ordinary `nonempty_set`,
-  and `quotient_map` is an ordinary `have fn`.
+  `V.scalars = W.scalars`; `quotient_carrier` is an ordinary `nonempty_set`;
+  `quotient_add` and `quotient_smul` are uniquely selected under the subspace
+  refinement; and `quotient_map` is an ordinary `have fn`.
 - **Interface sketch:** `\quotient_map<s,VSet,V>(U,v) =
   \translate<s,VSet,V>(U,v)`, with the translate proved to belong to
   `\quotient_carrier<s,VSet,V,U>`.
@@ -164,8 +165,23 @@ concepts and intermediate nodes that determine later interfaces.
   translate definition.
 - **Downstream uses:** Product dimension, quotient vector spaces, quotient
   dimension, and the first isomorphism theorem.
-- **Allowable hole:** Folding the product tuple into `VectorSpace` and the
-  representative-independent quotient operations remain localized proof debt.
+- **Checked representative use:** Result 3.92 selects bases at the two factor
+  dimensions, consumes the exact `product_basis_exists` construction
+  interface, and derives the binary dimension sum by basis-length uniqueness.
+  Result 3.93 checks that the binary addition map is injective exactly when
+  the two summands have unique representations: directness gives coordinate
+  equality, while injectivity gives pair equality and hence both coordinates.
+- **Checked quotient operations:** Definition 3.102 extracts representatives,
+  proves addition and scalar multiplication preserve translate membership, and
+  uses translate equality to prove both selected results independent of those
+  representatives.
+- **Checked quotient structure:** Result 3.103 transports associativity,
+  commutativity, zero and inverses, both scalar laws, distributivity, and the
+  scalar-one law through representative equations, then packages the exact
+  quotient tuple as `quotient_vector_space<s,VSet,V,U>`.
+- **Allowable hole:** Folding the product tuple into `VectorSpace`, constructing
+  the concatenated embedded product basis, and proving the quotient dimension
+  formula remain localized proof debt.
 
 ### Subspaces, sums, and direct sums
 
@@ -292,10 +308,19 @@ concepts and intermediate nodes that determine later interfaces.
 - **Semantic role:** Builtin carrier, callable matrix operations, and canonical
   basis-dependent selected matrices.
 - **Ideal Litex form:** builtin `matrix(s,m,n)`; template-scoped `have fn`
-  addition, scalar multiplication, multiplication, rows, columns, and
-  transpose; `matrix_of_linear_map` selected from its coordinate relation.
+  zero, addition, scalar multiplication, multiplication, rows, columns, and
+  transpose; a canonical `matrix_vector_space` packaging the entrywise
+  operations; `matrix_of_linear_map` selected from its coordinate relation.
 - **Interface sketch:**
-  `\matrix_of_linear_map<s,VSet,WSet,V,W,n,m>(domain_basis,codomain_basis,T)`.
+  `\matrix_vector_space<s,scalars,m,n>` and
+  `\matrix_of_linear_map<s,VSet,WSet,V,W,n,m>(domain_basis,codomain_basis,T)`;
+  `\vector_coordinates<s,VSet,V,n>(basis,value)` selects the unique
+  `FiniteList<s,n>` supplied by Result 2.28, and
+  `\matrix_of_vector<s,VSet,V,n>(basis,value)` packages its entries as the
+  canonical `n`-by-`1` column;
+  `matrix_unit_basis_exists` isolates the remaining existence/proof boundary
+  for an `m*n`-entry basis, while `dimension_of_matrix_space` is the checked
+  canonical consequence.
 - **Nearest wrong alternative:** A parallel list-of-lists carrier discards
   builtin shape checking; omitting the two bases makes the matrix
   mathematically ambiguous.
@@ -303,8 +328,49 @@ concepts and intermediate nodes that determine later interfaces.
   scalar sums by `definition`; matrix extensionality by `well_definedness`.
 - **Downstream uses:** Matrix products, rank, change of basis, operator
   matrices, determinants, and spectral theory.
-- **Allowable hole:** Coordinate selection, rank selection, factorization, and
-  row-rank/column-rank equality retain visible debt.
+- **Checked representative use:** Result 3.35 adds the two codomain-coordinate
+  lists, uses basis-coordinate uniqueness, and proves the two-index matrix
+  equality by `$fn_eq`. Section 3C also checks that
+  `vector_matrix_mul(x,B)` is the linear combination of the rows of `B`
+  with coefficients `x`, hence belongs to the row space of `B`. Result 3.71
+  uses the canonical `matrix_vector_space`: matrix formation is linear,
+  injective from basis values, and surjective by extending arbitrary columns,
+  so it is a checked isomorphism at this interface. Definition 3.73 now
+  selects vector coordinates by unique existence and packages them as a
+  one-column matrix; Result 3.75 checks that these are exactly the columns of
+  `matrix_of_linear_map`. Result 3.76 is also checked: applying a linear map
+  and then taking coordinates agrees with multiplying its matrix by the
+  input coordinate column. Result 3.78 now exposes its exact remaining
+  boundary: the checked column-space definition and rank fold surround one
+  localized trust asserting that codomain coordinates transport the dimension
+  of `range(T)` to the span of the matrix columns. Result 3.81 reuses the
+  checked Result 3.43 interface directly, so the explicit-basis matrix of a
+  composition is no longer duplicated as an axiom. Result 3.82 applies this
+  interface in both basis orders and proves the two change-of-coordinate
+  matrices are mutual inverses. Its same-basis identity-matrix bridge derives
+  every entry from the corresponding unit coefficient list; only the final
+  matrix-extensionality packaging remains a localized trust boundary.
+  Definition 3.80 now separates the inverse relation, checked existence from
+  invertibility, localized uniqueness debt, and an `exist!`-selected callable
+  inverse whose defining law is available downstream. Result 3.84 then uses
+  two nested composition-to-product applications to obtain the source's
+  right-nested three-factor formula without invoking matrix associativity.
+  Result 3.86 derives the two matrix inverse laws from the corresponding
+  inverse-linear-map composites and then applies selected inverse uniqueness;
+  its theorem body therefore removes the source-deferred direct trust.
+- **Allowable hole:** Rank selection, factorization, and
+  column and row rank are now the checked dimensions of explicit finite-list
+  spans. Positive-rank column-row factorization and equality of column rank
+  with row rank are checked: the proof supplies product row-space containment,
+  the generated-span dimension bound, zero-rank handling, and direct transpose
+  row/column span transport. Scalar-multiple
+  compatibility is checked, while composition compatibility is now a theorem
+  with one localized finite coordinate-substitution trust. Packaging the
+  entrywise matrix tuple as a `VectorSpace` retains one localized trust. The
+  matrix-unit basis existence remains explicit proof debt because the module
+  still lacks a reusable bounded-pair enumeration. The public dimension
+  theorem must consume only `matrix_vector_space`; an arbitrary structure on
+  the same matrix carrier is deliberately outside the interface.
 
 ### Inverses, quotients, and duals
 
@@ -328,9 +394,90 @@ concepts and intermediate nodes that determine later interfaces.
   composition and basis coordinates by `definition/proof`.
 - **Downstream uses:** Isomorphism theorems, quotient dimension, first
   isomorphism, annihilators, duality, transpose, and rank.
-- **Allowable hole:** Quotient representative independence, dependent-carrier
-  structure transport, dual-basis construction, and the major duality
-  dimension theorems remain visible proof debt.
+- **Checked representative use:** Result 3.63 selects the unique preimage of
+  each codomain vector for a bijective linear map, proves the selected inverse
+  linear by injective cancellation, and checks invertibility iff bijectivity.
+  Result 3.65 then uses rank-nullity and kernel prefix/tail basis lengths to
+  check the equal-finite-dimension injective/surjective/invertible
+  equivalences without equating dependent inherited structures. Result 3.68
+  uses that equivalence to check that either pointwise one-sided inverse
+  identity implies the other. Result 3.70 makes the source's “same scalar
+  field” condition explicit as equality of the two stored scalar systems,
+  retypes the target basis at the common dimension, extends the paired bases
+  to mutually inverse linear maps, and obtains the converse dimension equality
+  from the checked injectivity and surjectivity dimension obstructions.
+- **Checked dual-basis slice:** Definition 3.112 uniquely selects the
+  functional with unit-coordinate values, constructs a `FiniteList` in the
+  callable dual carrier, and checks the Kronecker-delta specification. Result
+  3.114 selects the unique coordinate list. Result 3.116 combines the explicit
+  dual list's independence interface with `dim(V') = dim(V)` and the existing
+  dimension-length basis criterion.
+- **Explicit dual-map construction:** Definition 3.118 constructs
+  `dual_map(T)(phi)` from the existing `linear_map_compose(phi,T)` operation,
+  then packages the outer function as a linear map from `W'` to `V'`. This
+  preserves the source formula as data rather than leaving `dual_map` as an
+  opaque trusted function. Result 3.120 is a checked aggregate theorem over
+  three named facets: dualization preserves addition and scalar
+  multiplication and reverses composition order.
+- **Annihilator interface:** Definition 3.121 keeps `annihilator(U)` as the
+  set of dual functionals vanishing on `U`. Result 3.124 is now a checked
+  subspace theorem assembled from named zero, addition, and scalar-closure
+  facets. Result 3.125 has an explicit restriction map
+  `dual_restriction(U): V' -> U'`, constructed by restricting each functional
+  to the subspace carrier. Its kernel identification and surjectivity are
+  named exact boundaries; the public dimension formula is an ordinary theorem
+  assembled from those boundaries, rank-nullity, and dual-space dimension.
+  Result 3.127 exposes all four extreme cases as named direction theorems and
+  keeps both biconditionals in a trust-free aggregate. The direct cases and
+  the zero-annihilator converse check outright; the full-annihilator converse
+  reuses Result 3.125 and retains only the final natural-number cancellation.
+  Result 3.128 exposes the canonical equality
+  `null(T')=annihilator(range(T))` separately, then derives the displayed
+  nullity formula through Result 3.125 and rank-nullity. The public source
+  theorem is an ordinary aggregate over those two facets. Result 3.129 then
+  checks `T` surjective iff `T'` injective by combining that kernel equality,
+  the extreme-annihilator directions, and the null-space criterion for
+  injectivity; it introduces no additional trust boundary. Result 3.130
+  separates `range(T')=annihilator(null(T))` from its numerical consequence.
+  The dimension equality is checked through Result 3.125 and rank-nullity;
+  the carrier equality remains the exact functional-extension and nested
+  callable-projection boundary. Result 3.131 then checks `T` injective iff
+  `T'` surjective by combining this range equality with the extreme
+  annihilator theorem and the null-space criterion. A carrier-generic
+  `full_range_implies_surjective` bridge keeps the nested dual carrier out of
+  the existential-elimination proof; neither theorem adds trust debt.
+  Result 3.132 checks the matrix identity entrywise: matrix specifications
+  reduce both sides to dual-basis coordinates and transpose swaps `(j,k)` with
+  `(k,j)`. Its former theorem-wide axiom is removed. Two exact pointwise
+  boundaries remain for double-dual evaluation and for applying `dual_map_spec`
+  through a nested dual-basis entry.
+- **Allowable hole:** Quotient representative independence and the major
+  duality theorems remain visible proof debt. The dual-basis slice has two
+  narrow finite-sum boundaries: extracting a coordinate by applying a delta
+  functional, and commuting point evaluation with a finite linear combination
+  of functionals to establish independence.
+  The dual-map construction additionally retains localized refinement and
+  function-application projection boundaries. Each of Result 3.120's three
+  facet equalities is isolated at that same nested extensionality boundary;
+  the former theorem-wide axiom has been removed. Result 3.124 similarly
+  retains three exact closure trusts because unfolding pointwise dual
+  operations over the annihilator either fails to project or exceeds the
+  proof timebox; its former theorem-wide axiom has also been removed.
+  Result 3.125 retains exact boundaries for restriction membership, outer
+  linearity, kernel identification, extension/surjectivity, and dependent
+  dimension transport/arithmetic replay; its former theorem-wide axiom has
+  been removed. Result 3.127 retains one exact arithmetic cancellation trust
+  in the full-annihilator converse; its former theorem-wide axiom has also
+  been removed. Result 3.128 retains one exact nested-evaluation boundary for
+  the null-space equality and one final rank-nullity arithmetic boundary for
+  its formula; dependent dimension transport is checked explicitly and its
+  former theorem-wide axiom has been removed.
+  Result 3.131 has no remaining local hole; its trust is inherited only from
+  Result 3.130's already-recorded carrier equality.
+  Result 3.132 retains two localized pointwise holes: the selected dual basis
+  of `V'` must be identified with evaluation on `v`, and the dual-map
+  specification must instantiate through a nested dual-basis list entry. The
+  matrix-coordinate and extensionality spine itself is checked.
 
 ## Chapters 2–3 interface and naming audit
 
@@ -404,12 +551,28 @@ invertibility + inverse uniqueness
   -[selection]-> inverse_linear_map
 subspace translates + representative independence
   -[definition/law]-> quotient space and quotient map
+quotient map restricted to a direct complement
+  -[proof]-> linearity + injectivity + surjectivity
+  -[trust]-> complement/quotient equal dimension
+complement dimension + direct-sum dimension
+  -[proof]-> quotient dimension subtraction
+linear map + quotient by its null space
+  -[selection/proof]-> representative-independent induced_map
+  -[proof]-> representative equation + factorization
+  -[trust]-> anonymous-function injectivity/range + codomain-restricted isomorphism
 linear_map_space into scalars
   -[definition]-> dual_space
 dual basis + composition
   -[selection/proof]-> dual_map and annihilator
+finite bounded families of vector spaces
+  -[signature/law]-> FiniteVectorSpaceFamily
+FiniteVectorSpaceFamily + component dimensions
+  -[definition/trust]-> finite tensor-family interfaces
 ~~~
 
 This order is refined by the source-ordered exports from `chap1a` through
 `chap9d`. Short names in the C-facing layer depend on their `_general`
-backends; bridge templates are the only edges between those two layers.
+backends; bridge templates are the only edges between those two layers.  The
+four indexed fields of `FiniteVectorSpaceFamily` use exact bounded `fn`
+carriers rather than the extensionally equivalent `finite_seq` spelling so
+that structure-field projection preserves callability.
