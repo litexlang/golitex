@@ -38,7 +38,11 @@ LITEX_CURSOR_LOCAL.md
 /private/
 
 examples/testings/.order
-tools/
+tools/*
+!tools/predeploy_gate.py
+!tools/release/
+!tools/release/**
+tools/release/__pycache__/
 
 mathematics_in_litex/
 
