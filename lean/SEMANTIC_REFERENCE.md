@@ -245,9 +245,9 @@ definitions and proofs without changing their public mathematical contract.
 | `fnSetResult` | `axiom` | Definition 3.3.1: a function sends each domain input to its declared codomain. | Proves that a certified application belongs to `range args hLength hRequirements`, preserving the exact arity and requirements evidence. |
 | `functionObject` | `axiom` | Definition 3.3.1. | Proof-free function-object denotation from its exact `FnSpec` and dependent body; the selected closure proof is not object data. |
 | `functionObjectInFnSet` | `axiom` | Axiom 3.10. | Consumes the verifier-owned pointwise closure proof to establish the proof-free function object's exact function-space membership. |
-| `functionObjectApplicableLength` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact arity certificate from an already named `Applicable` proof so definition replay can call the proof-dependent body. |
+| `functionObjectApplicableLength` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact arity certificate from an already named `Applicable` proof so definition reduction can call the proof-dependent body. |
 | `functionObjectApplicableRequirements` | `axiom` | Definition 3.3.1; representation bridge. | Recovers the exact ordered requirements certificate from an already named `Applicable` proof. |
-| `functionObject_apply` | `axiom` | Definition 3.3.1 and function evaluation. | Replays the source defining equality using the two applicability projections; unavailable defining `FactId`s remain compiler errors. |
+| `functionObject_apply` | `axiom` | Definition 3.3.1 and function evaluation. | Uses the exact stored defining equality through the two applicability projections; unavailable defining `FactId`s remain compiler errors. |
 
 `IsChoiceFunctionFor` should not be confused with a proof of Axiom 8.1. It
 only defines what a displayed chooser must satisfy. A source use of the axiom

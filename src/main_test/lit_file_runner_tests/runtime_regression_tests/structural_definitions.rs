@@ -162,7 +162,7 @@ forall p &Pair<R>, a, b R:
             );
             assert_eq!(
                 run_output
-                    .matches("replay-safe structural equality")
+                    .matches("structural equality with terminating reductions")
                     .count(),
                 2,
                 "both field equalities should use structural provenance:\n{run_output}"

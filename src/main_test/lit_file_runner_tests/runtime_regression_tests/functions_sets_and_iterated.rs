@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn known_equality_candidate_replays_checked_function_bodies_with_safe_leaves() {
+fn checked_definition_reduction_uses_only_terminating_equality_leaves() {
     let source_code = r#"
 have fn left(k N+) R = k
 have fn right(k N+) R = k + 1
@@ -15,14 +15,14 @@ value = combined(1)
 
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "known_equality_candidate_replays_checked_function_bodies_structurally",
+        "checked_definition_reduction_uses_stored_function_leaf_equalities",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "a checked-function replay should compare structural leaves through stored non-forall equalities or direct computation:\n{}",
+        "a direct checked-definition reduction should compare structural leaves through stored non-forall equalities or direct computation:\n{}",
         run_output
     );
 
@@ -36,7 +36,7 @@ value = combined(1)
 "#;
     let mut recursive_unfold_runtime = Runtime::new();
     recursive_unfold_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_does_not_recursively_unfold_structural_leaves",
+        "checked_definition_reduction_does_not_unfold_named_child_definitions",
     );
     let (stmt_results, runtime_error) =
         run_source_code(recursive_unfold_source, &mut recursive_unfold_runtime);
@@ -55,12 +55,11 @@ value = combined(1)
     let normalization_leaf_source = r#"
 have q R
 have fn with_zero(t R) cart(R, R) = (0 + t, t)
-have value cart(R, R) = with_zero(q)
-value = (q, q)
+with_zero(q) = (q, q)
 "#;
     let mut normalization_leaf_runtime = Runtime::new();
     normalization_leaf_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_uses_bounded_normalization_for_structural_leaves",
+        "checked_definition_reduction_uses_bounded_normalization_for_structural_leaves",
     );
     let (stmt_results, runtime_error) =
         run_source_code(normalization_leaf_source, &mut normalization_leaf_runtime);
@@ -76,6 +75,30 @@ value = (q, q)
         run_output
     );
 
+    let direct_normalization_source = r#"
+have a, t R
+a * t = a * t + 0
+"#;
+    let mut direct_normalization_runtime = Runtime::new();
+    direct_normalization_runtime.new_file_path_new_env_new_name_scope(
+        "terminating_equality_leaf_uses_bounded_normalization",
+    );
+    let (stmt_results, runtime_error) = run_source_code(
+        direct_normalization_source,
+        &mut direct_normalization_runtime,
+    );
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &direct_normalization_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        run_succeeded,
+        "a direct comparison may use bounded obligation-free normalization:\n{}",
+        run_output
+    );
+
     let normalization_representative_source = r#"
 have a, t R
 have k R = a * t
@@ -83,7 +106,7 @@ k = a * t + 0
 "#;
     let mut normalization_representative_runtime = Runtime::new();
     normalization_representative_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_normalizes_after_selecting_representative",
+        "normalization_does_not_enumerate_known_equality_representatives",
     );
     let (stmt_results, runtime_error) = run_source_code(
         normalization_representative_source,
@@ -96,8 +119,8 @@ k = a * t + 0
         false,
     );
     assert!(
-        run_succeeded,
-        "the representative `a * t` should normalize against `a * t + 0` without an ordinary builtin rule:\n{}",
+        !run_succeeded,
+        "normalization must not enumerate the representative `a * t` for alias `k`:\n{}",
         run_output
     );
 
@@ -111,7 +134,7 @@ value = (f(1), 1)
 "#;
     let mut forall_leaf_runtime = Runtime::new();
     forall_leaf_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_replay_does_not_use_forall_for_structural_leaves",
+        "checked_definition_reduction_does_not_use_forall_for_structural_leaves",
     );
     let (stmt_results, runtime_error) =
         run_source_code(forall_leaf_source, &mut forall_leaf_runtime);
@@ -129,13 +152,38 @@ guarded(1) = 1
 "#;
     let mut invalid_runtime = Runtime::new();
     invalid_runtime
-        .new_file_path_new_env_new_name_scope("known_function_replay_does_not_bypass_domain_facts");
+        .new_file_path_new_env_new_name_scope("definition_reduction_does_not_bypass_domain_facts");
     let (stmt_results, runtime_error) = run_source_code(invalid_source, &mut invalid_runtime);
     let (run_succeeded, _) =
         render_run_source_code_output(&invalid_runtime, &stmt_results, &runtime_error, false);
     assert!(
         !run_succeeded,
-        "checked-function replay must not bypass the function's domain facts"
+        "checked-definition reduction must not bypass the function's domain facts"
+    );
+
+    let implicit_alias_source = r#"
+trust have f fn(x, y R) R
+trust have a R
+trust a = 1
+have selected R = f(a, 0)
+selected = f(1, 0)
+"#;
+    let mut implicit_alias_runtime = Runtime::new();
+    implicit_alias_runtime.new_file_path_new_env_new_name_scope(
+        "known_congruence_does_not_reopen_an_alias_representative",
+    );
+    let (stmt_results, runtime_error) =
+        run_source_code(implicit_alias_source, &mut implicit_alias_runtime);
+    let (run_succeeded, run_output) = render_run_source_code_output(
+        &implicit_alias_runtime,
+        &stmt_results,
+        &runtime_error,
+        false,
+    );
+    assert!(
+        !run_succeeded,
+        "an alias must not be reopened as an equality representative for structural congruence:\n{}",
+        run_output
     );
 
     let one_argument_source = r#"
@@ -143,11 +191,11 @@ trust have f fn(x, y R) R
 trust have a R
 trust a = 1
 have selected R = f(a, 0)
-selected = f(1, 0)
+selected = f(a, 0) = f(1, 0)
 "#;
     let mut one_argument_runtime = Runtime::new();
     one_argument_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_congruence_replaces_one_argument_under_same_head",
+        "explicit_alias_bridge_then_known_argument_congruence",
     );
     let (stmt_results, runtime_error) =
         run_source_code(one_argument_source, &mut one_argument_runtime);
@@ -155,7 +203,7 @@ selected = f(1, 0)
         render_run_source_code_output(&one_argument_runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "one directly known-equal argument should be transported under the same function head:\n{}",
+        "an explicit alias bridge should expose the direct structural congruence step:\n{}",
         run_output
     );
 
@@ -165,19 +213,18 @@ trust have a, b R
 trust a = 1
 trust b = 2
 have selected R = f(a, b)
-selected = f(1, 2)
+selected = f(a, b) = f(1, 2)
 "#;
     let mut two_argument_runtime = Runtime::new();
-    two_argument_runtime.new_file_path_new_env_new_name_scope(
-        "known_candidate_congruence_replaces_all_corresponding_arguments",
-    );
+    two_argument_runtime
+        .new_file_path_new_env_new_name_scope("explicit_alias_bridge_then_two_argument_congruence");
     let (stmt_results, runtime_error) =
         run_source_code(two_argument_source, &mut two_argument_runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&two_argument_runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "all corresponding arguments should be compared through their known equalities:\n{}",
+        "the explicit bridge should allow all corresponding arguments to use known equalities:\n{}",
         run_output
     );
 
@@ -230,8 +277,8 @@ f(a, b) = g(1, 2)(3, 4)
 }
 
 #[test]
-fn equality_representative_replays_template_definition_to_tuple() {
-    let source_code = r#"
+fn template_aliases_require_an_explicit_definition_equality() {
+    let setup = r#"
 struct AdditiveCarrier<v nonempty_set>:
     zero v
     add fn(a, b v) v
@@ -247,40 +294,57 @@ have W &AdditiveCarrier<WSet> = (w0, fn(a, b WSet) WSet {w0})
 have x, y cart(VSet, WSet)
 have xy cart(VSet, WSet) = \product_add<s, VSet, WSet, V, W>(x, y)
 have expected cart(VSet, WSet) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
+"#;
 
+    let implicit_source = format!("{setup}\nxy = expected\n");
+    let mut implicit_runtime = Runtime::new();
+    implicit_runtime.new_file_path_new_env_new_name_scope(
+        "template_aliases_do_not_open_an_equality_representative_graph",
+    );
+    let (stmt_results, runtime_error) = run_source_code(&implicit_source, &mut implicit_runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&implicit_runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        !run_succeeded,
+        "two aliases must not trigger representative enumeration plus definition reduction:\n{}",
+        run_output
+    );
+
+    let explicit_source = format!(
+        r#"{setup}
+\product_add<s, VSet, WSet, V, W>(x, y) = (V.add(x[1], y[1]), W.add(x[2], y[2]))
 xy = expected
 xy = (V.add(x[1], y[1]), W.add(x[2], y[2]))
-"#;
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(
-        "equality_representative_replays_template_definition_to_tuple",
+"#
     );
-    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope("explicit_template_definition_reduction");
+    let (stmt_results, runtime_error) = run_source_code(&explicit_source, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "one checked template definition should expose a tuple after enumerating both sides' stored equality representatives:\n{}",
+        "an explicit checked template definition equality should connect both aliases:\n{}",
         run_output
     );
 }
 
 #[test]
-fn checked_definition_replay_allows_direct_pure_computation() {
+fn checked_definition_reduction_allows_direct_pure_computation() {
     let source_code = r#"
 have fn square(t R) R = t^2
 square(2) = 4
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "checked_definition_replay_allows_direct_pure_computation",
+        "checked_definition_reduction_allows_direct_pure_computation",
     );
     let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
     let (run_succeeded, run_output) =
         render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
     assert!(
         run_succeeded,
-        "one checked definition replay may finish by direct terminating computation:\n{}",
+        "one checked definition reduction may finish by direct terminating computation:\n{}",
         run_output
     );
 }
@@ -1881,9 +1945,9 @@ fn(x N) R {x} = fn(x R) R {x}
 }
 
 #[test]
-fn anonymous_fn_applications_beta_reduce_before_structural_equality_replay() {
+fn anonymous_fn_applications_beta_reduce_before_structural_equality_comparison() {
     run_with_large_stack(
-        "anonymous_fn_applications_beta_reduce_before_structural_equality_replay",
+        "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison",
         || {
             let positive_source_code = r#"
 forall f, g fn(x R) R, a R:
@@ -1898,7 +1962,7 @@ forall f, g fn(x R) R, a R:
 
             let mut positive_runtime = Runtime::new();
             positive_runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_applications_beta_reduce_before_structural_equality_replay_positive",
+                "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_positive",
             );
             let (positive_stmt_results, positive_runtime_error) =
                 run_source_code(positive_source_code, &mut positive_runtime);
@@ -1923,7 +1987,7 @@ forall f, g fn(x R) R, a, b R:
 
             let mut negative_runtime = Runtime::new();
             negative_runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_applications_beta_reduce_before_structural_equality_replay_negative",
+                "anonymous_fn_applications_beta_reduce_before_structural_equality_comparison_negative",
             );
             let (negative_stmt_results, negative_runtime_error) =
                 run_source_code(negative_source_code, &mut negative_runtime);

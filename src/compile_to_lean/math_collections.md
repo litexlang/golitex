@@ -295,7 +295,7 @@ theorems.
 
 Current hole: supported inferred-forall premises are not yet emitted.
 
-## Statement definitions and definition replay
+## Statement definitions and definition reduction
 
 An `abstract_prop P(x)` introduces an uninterpreted target predicate
 `P : Litex.Object → Prop`. A bodyful concrete proposition is different: its

@@ -1,4 +1,4 @@
-# Tracer: beta-reduced anonymous applications use structural equality replay.
+# Tracer: beta-reduced anonymous applications use terminating structural equality.
 #
 # Before (did not work):
 # forall f, g fn(x R) R, a R:

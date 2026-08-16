@@ -164,7 +164,7 @@ impl Runtime {
         result.expect("known-equality comparison is infallible")
     }
 
-    pub(crate) fn objs_are_congruent_by_replay_safe_equality_routes(
+    pub(crate) fn objs_are_equal_by_terminating_reduction_and_congruence(
         &mut self,
         left: &Obj,
         right: &Obj,
@@ -178,7 +178,7 @@ impl Runtime {
         }
 
         // Definitional redexes expose their reduced objects to the same
-        // replay-safe comparison. This introduces no new proof route: after
+        // terminating structural comparison. This introduces no new proof route: after
         // one reduction, every leaf is still limited to stored non-forall
         // equality or obligation-free builtin computation.
         let reduced_left = self.reduce_structural_equality_obj_once(left)?;
@@ -190,7 +190,7 @@ impl Runtime {
                 !objs_equal_with_nested_binder_alpha_equivalence(left, candidate_left)
                     || !objs_equal_with_nested_binder_alpha_equivalence(right, candidate_right);
             if made_progress
-                && self.objs_are_congruent_by_replay_safe_equality_routes(
+                && self.objs_are_equal_by_terminating_reduction_and_congruence(
                     candidate_left,
                     candidate_right,
                     line_file.clone(),
@@ -201,7 +201,7 @@ impl Runtime {
         }
 
         Self::same_shape_and_corresponding_args_match(left, right, &mut |left_arg, right_arg| {
-            self.objs_are_congruent_by_replay_safe_equality_routes(
+            self.objs_are_equal_by_terminating_reduction_and_congruence(
                 left_arg,
                 right_arg,
                 line_file.clone(),
@@ -346,7 +346,7 @@ impl Runtime {
                 if !peeled_application_group {
                     // Comparing the unchanged pair again would recurse forever
                     // for a malformed or zero-layer FnObj. Exact identity was
-                    // already handled by the replay-safe leaf above.
+                    // already handled by the terminating leaf above.
                     return Ok(false);
                 }
                 let left_prefix = left.prefix_obj(left_group_count);

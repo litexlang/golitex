@@ -127,7 +127,7 @@ impl Environment {
     /// well-definedness environment while retaining directly checked atomic
     /// consequences, the universal atomic rules created while materializing
     /// their objects, and reusable verification caches. A cached template
-    /// application is not replay-safe without those materialized equations.
+    /// application cannot be reduced without those materialized equations.
     pub fn retain_only_well_definedness_certificate_data(&mut self) {
         self.symbols = SymbolTable::new();
         self.defined_identifiers.clear();

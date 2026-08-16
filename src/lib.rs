@@ -1,8 +1,6 @@
 pub mod cli;
 pub mod common;
 pub mod compile_to_lean;
-#[cfg(test)]
-pub mod debug_test;
 pub mod environment;
 pub mod error;
 pub mod execute;

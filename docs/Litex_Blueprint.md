@@ -284,7 +284,7 @@ following cascade:
    literally identical, try controlled operations such as reversing an
    equality, transporting through known equalities, direct computation,
    bounded symbolic normalization, structural congruence, or a checked
-   definition replay.
+   checked definition reduction.
 6. **Commit the result with evidence.** If one bounded route succeeds, record
    its immediate provenance, store the new fact in the context, and apply the
    relevant inference rules. If none succeeds, report `unknown` rather than

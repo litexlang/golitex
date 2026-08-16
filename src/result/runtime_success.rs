@@ -512,7 +512,7 @@ pub struct VerifiedByFactResult {
     /// Exact source retained when equality verification unfolded one checked
     /// named function definition. This is distinct from an ordinary citation:
     /// the goal itself may only exist in a temporary forall scope.
-    pub checked_definition_replay: Option<CheckedDefinitionReplayEvidence>,
+    pub checked_function_definition_reduction: Option<CheckedFunctionDefinitionReductionEvidence>,
     /// Exact parameter and clause checks used when a concrete `prop` was
     /// folded. Keeping the successful child results here lets compiler
     /// backends replay the verifier-selected route instead of proving the
@@ -528,7 +528,7 @@ pub struct DefinitionReductionVerificationEvidence {
 }
 
 #[derive(Clone)]
-pub struct CheckedDefinitionReplayEvidence {
+pub struct CheckedFunctionDefinitionReductionEvidence {
     pub definition_object: Obj,
     pub defining_equality: Fact,
     pub defining_equality_fact_id: FactId,
@@ -539,10 +539,10 @@ pub struct CheckedDefinitionReplayEvidence {
     pub reduced_matches_other_by_alpha: bool,
 }
 
-impl fmt::Debug for CheckedDefinitionReplayEvidence {
+impl fmt::Debug for CheckedFunctionDefinitionReductionEvidence {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         formatter
-            .debug_struct("CheckedDefinitionReplayEvidence")
+            .debug_struct("CheckedFunctionDefinitionReductionEvidence")
             .field("definition_object", &self.definition_object.to_string())
             .field("defining_equality", &self.defining_equality.to_string())
             .field("defining_equality_fact_id", &self.defining_equality_fact_id)
@@ -863,7 +863,7 @@ impl VerifiedByResult {
             source_fact_id: None,
             equality_transport: None,
             fact_transformation: None,
-            checked_definition_replay: None,
+            checked_function_definition_reduction: None,
             definition_reduction: None,
         })
     }
@@ -882,7 +882,7 @@ impl VerifiedByResult {
             source_fact_id: None,
             equality_transport: None,
             fact_transformation: None,
-            checked_definition_replay: None,
+            checked_function_definition_reduction: None,
             definition_reduction: Some(Rc::new(DefinitionReductionVerificationEvidence {
                 parameter_checks,
                 clause_facts,
@@ -905,7 +905,7 @@ impl VerifiedByResult {
             source_fact_id,
             equality_transport,
             fact_transformation,
-            checked_definition_replay: None,
+            checked_function_definition_reduction: None,
             definition_reduction: None,
         })
     }
@@ -930,9 +930,9 @@ impl VerifiedByResult {
         Self::cited_fact(goal, cite_what, msg)
     }
 
-    pub fn fact_with_checked_definition_replay(
+    pub fn fact_with_checked_function_definition_reduction(
         goal: Fact,
-        evidence: CheckedDefinitionReplayEvidence,
+        evidence: CheckedFunctionDefinitionReductionEvidence,
         detail: Option<String>,
     ) -> Self {
         let cite_what = goal.clone().into_stmt();
@@ -942,7 +942,7 @@ impl VerifiedByResult {
             source_fact_id: None,
             equality_transport: None,
             fact_transformation: None,
-            checked_definition_replay: Some(evidence),
+            checked_function_definition_reduction: Some(evidence),
             definition_reduction: None,
         })
     }
@@ -955,7 +955,7 @@ impl VerifiedByResult {
             source_fact_id: Some(source_fact_id),
             equality_transport: None,
             fact_transformation: None,
-            checked_definition_replay: None,
+            checked_function_definition_reduction: None,
             definition_reduction: None,
         })
     }

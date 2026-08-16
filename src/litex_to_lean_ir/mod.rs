@@ -456,7 +456,7 @@ pub enum LitexToLeanProofRuleIr {
     /// Equality obtained by unfolding one verifier-selected named function
     /// whose defining equality was already stored. The exact source and
     /// reduction payload prevent the emitter from guessing from target syntax.
-    CheckedFunctionDefinitionReplay {
+    CheckedFunctionDefinitionReduction {
         definition: LitexToLeanObjectIr,
         defining_equality_fact_id: FactId,
         defining_equality: Fact,
@@ -712,7 +712,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .debug_struct("DefinitionReduction")
                 .field("definition", definition)
                 .finish(),
-            LitexToLeanProofRuleIr::CheckedFunctionDefinitionReplay {
+            LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
                 definition,
                 defining_equality_fact_id,
                 defining_equality,
@@ -723,7 +723,7 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 application_is_left,
                 reduced_matches_other_by_alpha,
             } => f
-                .debug_struct("CheckedFunctionDefinitionReplay")
+                .debug_struct("CheckedFunctionDefinitionReduction")
                 .field("definition", definition)
                 .field("defining_equality_fact_id", defining_equality_fact_id)
                 .field("defining_equality", &defining_equality.to_string())

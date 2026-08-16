@@ -79,8 +79,8 @@ python3 src/compile_to_lean/generate_builtin_inventory.py --check
 | B0007 | rule | `definition` | choice function by pointwise membership definition | `src/verify/verify_atomic_fact_by_definition.rs:119` | atomic fact by definition | none | `pending` |
 | B0008 | rule | `definition` | subset by definition (forall x in left: x in right) | `src/verify/verify_atomic_fact_by_definition.rs:197` | atomic fact by definition | none | `pending` |
 | B0009 | rule | `definition` | superset by definition (forall x in right: x in left) | `src/verify/verify_atomic_fact_by_definition.rs:233` | atomic fact by definition | none | `pending` |
-| B0010 | rule | `legacy_custom` | replay-safe structural equality | `src/verify/verify_builtin_rule.rs:52` | builtin rule | none | `pending` |
-| B0011 | rule | `legacy_custom` | replay-safe structural equality | `src/verify/verify_builtin_rule.rs:100` | builtin rule | none | `pending` |
+| B0010 | rule | `legacy_custom` | structural equality with terminating reductions | `src/verify/verify_builtin_rule.rs:52` | builtin rule | none | `pending` |
+| B0011 | rule | `legacy_custom` | structural equality with terminating reductions | `src/verify/verify_builtin_rule.rs:100` | builtin rule | none | `pending` |
 | B0012 | rule | `local_schema` | number comparison | `src/verify/verify_builtin_rule.rs:190` | builtin rule | none | `pending` |
 | B0013 | rule | `legacy_custom` | dynamic: reason.to_string() | `src/verify/verify_builtin_rule.rs:219` | builtin rule | none | `pending` |
 | B0014 | rule | `legacy_custom` | abs: x <= abs(x) and -x <= abs(x) | `src/verify/verify_builtin_rules/abs_order_builtin.rs:235` | abs order | none | `pending` |

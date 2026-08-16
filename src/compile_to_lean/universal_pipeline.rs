@@ -706,9 +706,10 @@ impl UniversalEmitter {
                 format!("Lean declaration name `{name}` is already in use"),
             ));
         }
-        let mut theorem_type_context = emission.context.clone();
-        theorem_type_context.forall_depth = None;
-        let theorem_type = self.render_fact(&ir.theorem.proposition, &theorem_type_context)?;
+        let theorem_type = render_top_level_forall_type(
+            &render_explicit_binders(&emission.binder_names, &emission.binder_types)?,
+            &self.render_fact(&emission.conclusions[0].proposition, &emission.context)?,
+        );
         let mut proof_lines = vec!["by".to_string()];
         if !emission.binder_names.is_empty() {
             proof_lines.push(format!("  intro {}", emission.binder_names.join(" ")));
@@ -757,7 +758,8 @@ impl UniversalEmitter {
             self.render_proof_term(&emission.conclusions[0], &emission.context)?;
         proof_lines.push(format!("  exact {conclusion_proof}"));
         self.declarations.push(format!(
-            "theorem {name} : {theorem_type} :=\n{}",
+            "{} :=\n{}",
+            render_declaration_head(&format!("theorem {name}"), &theorem_type),
             proof_lines.join("\n")
         ));
 
@@ -850,9 +852,10 @@ impl UniversalEmitter {
                     "forall `example` emission requires one checked conclusion",
                 ));
             }
-            let mut example_type_context = emission.context.clone();
-            example_type_context.forall_depth = None;
-            let example_type = self.render_fact(&ir.target.proposition, &example_type_context)?;
+            let example_type = render_top_level_forall_type(
+                &render_explicit_binders(&emission.binder_names, &emission.binder_types)?,
+                &self.render_fact(&emission.conclusions[0].proposition, &emission.context)?,
+            );
             let mut proof_lines = vec!["by".to_string()];
             if !emission.binder_names.is_empty() {
                 proof_lines.push(format!("  intro {}", emission.binder_names.join(" ")));
@@ -873,7 +876,8 @@ impl UniversalEmitter {
                 self.render_proof_term(&emission.conclusions[0], &emission.context)?;
             proof_lines.push(format!("  exact {conclusion_proof}"));
             self.declarations.push(format!(
-                "example : {example_type} :=\n{}",
+                "{} :=\n{}",
+                render_declaration_head("example", &example_type),
                 proof_lines.join("\n")
             ));
             return Ok(());
@@ -1940,7 +1944,8 @@ impl UniversalEmitter {
         let theorem_name = generated_fact_name(fact_id);
         let theorem_type = self.render_top_level_fact_type(&fact.proposition)?;
         self.declarations.push(format!(
-            "theorem {theorem_name} : {theorem_type} := {proof}"
+            "{} := {proof}",
+            render_declaration_head(&format!("theorem {theorem_name}"), &theorem_type)
         ));
         self.register_global_function_binding(fact_id, &fact.proposition, theorem_name.clone())?;
         self.global_facts.insert(
@@ -1972,8 +1977,10 @@ impl UniversalEmitter {
                 .map(generated_fact_name)
                 .unwrap_or_else(|| format!("__trusted_fact{}", index + 1));
             let theorem_type = self.render_top_level_fact_type(&fact.proposition)?;
-            self.declarations
-                .push(format!("axiom {theorem_name} : {theorem_type}"));
+            self.declarations.push(render_declaration_head(
+                &format!("axiom {theorem_name}"),
+                &theorem_type,
+            ));
             if let Some(fact_id) = fact.fact_id {
                 self.register_global_function_binding(
                     fact_id,
@@ -2077,7 +2084,7 @@ impl UniversalEmitter {
                 if binders.is_empty() {
                     Ok(conclusion)
                 } else {
-                    Ok(format!("∀ {}, {}", binders.join(" "), conclusion))
+                    Ok(render_top_level_forall_type(&binders, &conclusion))
                 }
             }
             _ => self.render_fact(
@@ -2200,11 +2207,7 @@ impl UniversalEmitter {
         {
             binders.push(format!("({name} : {binder_type})"));
         }
-        let theorem_type = if binders.is_empty() {
-            conclusion_text
-        } else {
-            format!("∀ {}, {}", binders.join(" "), conclusion_text)
-        };
+        let theorem_type = render_top_level_forall_type(&binders, &conclusion_text);
         let mut proof_lines = vec!["by".to_string()];
         if !emission.binder_names.is_empty() {
             proof_lines.push(format!("  intro {}", emission.binder_names.join(" ")));
@@ -2228,7 +2231,8 @@ impl UniversalEmitter {
             ));
         }
         self.declarations.push(format!(
-            "theorem {theorem_name} : {theorem_type} :=\n{}",
+            "{} :=\n{}",
+            render_declaration_head(&format!("theorem {theorem_name}"), &theorem_type),
             proof_lines.join("\n")
         ));
 
@@ -2613,11 +2617,7 @@ impl UniversalEmitter {
                     let proof = self.render_proof_term(inferred, &emission.context)?;
                     let binders =
                         render_explicit_binders(&emission.binder_names, &emission.binder_types)?;
-                    let theorem_type = if binders.is_empty() {
-                        proposition
-                    } else {
-                        format!("∀ {}, {proposition}", binders.join(" "))
-                    };
+                    let theorem_type = render_top_level_forall_type(&binders, &proposition);
                     let theorem_proof = if emission.binder_names.is_empty() {
                         format!("by\n  exact {proof}")
                     } else {
@@ -2627,7 +2627,8 @@ impl UniversalEmitter {
                         )
                     };
                     self.declarations.push(format!(
-                        "theorem {theorem_name} : {theorem_type} :=\n{theorem_proof}"
+                        "{} :=\n{theorem_proof}",
+                        render_declaration_head(&format!("theorem {theorem_name}"), &theorem_type,)
                     ));
                     self.binder_scope_inferred_helpers.insert(
                         key,
@@ -2868,11 +2869,7 @@ impl UniversalEmitter {
                         let name = well_defined_fact_name(&fact_context, fact.well_defined_fact_id);
                         let binders =
                             render_explicit_binders(&fact_binder_names, &fact_binder_types)?;
-                        let helper_type = if binders.is_empty() {
-                            proof_type
-                        } else {
-                            format!("∀ {}, {proof_type}", binders.join(" "))
-                        };
+                        let helper_type = render_top_level_forall_type(&binders, &proof_type);
                         let helper_proof = if fact_binder_names.is_empty() {
                             format!("by\n  exact {proof}")
                         } else {
@@ -2881,8 +2878,10 @@ impl UniversalEmitter {
                                 fact_binder_names.join(" ")
                             )
                         };
-                        self.declarations
-                            .push(format!("theorem {name} : {helper_type} :=\n{helper_proof}"));
+                        self.declarations.push(format!(
+                            "{} :=\n{helper_proof}",
+                            render_declaration_head(&format!("theorem {name}"), &helper_type)
+                        ));
                         self.well_defined_helpers.insert(
                             fact.well_defined_fact_id,
                             WellDefinedHelperBinding {
@@ -3802,11 +3801,7 @@ impl UniversalEmitter {
                     let proof_type = format!("Litex.Applicable {head} {argument_list}");
                     let lean_binders =
                         render_explicit_binders(&object_binder_names, &object_binder_types)?;
-                    let helper_type = if lean_binders.is_empty() {
-                        proof_type
-                    } else {
-                        format!("∀ {}, {proof_type}", lean_binders.join(" "))
-                    };
+                    let helper_type = render_top_level_forall_type(&lean_binders, &proof_type);
                     let helper_proof = if object_binder_names.is_empty() {
                         format!(
                             "by\n  exact {applicable_rule} (args := {argument_list}) {} rfl ({requirements})",
@@ -3820,7 +3815,8 @@ impl UniversalEmitter {
                         )
                     };
                     self.declarations.push(format!(
-                        "theorem {helper_name} : {helper_type} :=\n{helper_proof}"
+                        "{} :=\n{helper_proof}",
+                        render_declaration_head(&format!("theorem {helper_name}"), &helper_type)
                     ));
                     let applied_helper_name = apply_scoped_declaration(
                         &helper_name,
@@ -3922,11 +3918,7 @@ impl UniversalEmitter {
                         &name,
                     )?;
                     let proposition = format!("Litex.In {declared_object} {result_set}");
-                    let theorem_type = if lean_binders.is_empty() {
-                        proposition
-                    } else {
-                        format!("∀ {}, {proposition}", lean_binders.join(" "))
-                    };
+                    let theorem_type = render_top_level_forall_type(&lean_binders, &proposition);
                     let theorem_proof = if object_binder_names.is_empty() {
                         format!(
                             "by\n  simpa [{name}] using ({result_rule} (args := {argument_list}) {current_membership} rfl ({requirements}))"
@@ -3938,7 +3930,8 @@ impl UniversalEmitter {
                         )
                     };
                     self.declarations.push(format!(
-                        "theorem {theorem_name} : {theorem_type} :=\n{theorem_proof}"
+                        "{} :=\n{theorem_proof}",
+                        render_declaration_head(&format!("theorem {theorem_name}"), &theorem_type,)
                     ));
                     let applied_theorem_name = apply_scoped_declaration(
                         &theorem_name,
@@ -5933,7 +5926,7 @@ impl UniversalEmitter {
                     }
                     self.render_proof_term(&premises[0], context)
                 }
-                LitexToLeanProofRuleIr::CheckedFunctionDefinitionReplay {
+                LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
                     definition,
                     defining_equality_fact_id,
                     defining_equality,
@@ -5943,7 +5936,7 @@ impl UniversalEmitter {
                     other_side,
                     application_is_left,
                     reduced_matches_other_by_alpha,
-                } => self.render_checked_function_definition_replay(
+                } => self.render_checked_function_definition_reduction(
                     proposition,
                     definition,
                     *defining_equality_fact_id,
@@ -6936,7 +6929,7 @@ impl UniversalEmitter {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn render_checked_function_definition_replay(
+    fn render_checked_function_definition_reduction(
         &self,
         proposition: &Fact,
         definition: &LitexToLeanObjectIr,
@@ -6960,7 +6953,7 @@ impl UniversalEmitter {
         {
             return Err(universal_error(
                 &proposition.line_file(),
-                "checked function replay changed its target, reduction, or proof arity",
+                "checked function reduction changed its target, result, or proof arity",
             ));
         }
         let LitexToLeanObjectIr::Symbol {
@@ -6969,7 +6962,7 @@ impl UniversalEmitter {
         else {
             return Err(universal_error(
                 &proposition.line_file(),
-                "checked function replay retained a non-symbol definition",
+                "checked function reduction retained a non-symbol definition",
             ));
         };
         let binding = self
@@ -6979,14 +6972,14 @@ impl UniversalEmitter {
                 universal_error(
                     &proposition.line_file(),
                     format!(
-                        "checked function replay cites unavailable defining FactId {defining_equality_fact_id}"
+                        "checked function reduction cites unavailable defining FactId {defining_equality_fact_id}"
                     ),
                 )
             })?;
         if !facts_are_canonically_equal(&binding.proposition, defining_equality)? {
             return Err(universal_error(
                 &proposition.line_file(),
-                "checked function replay retargeted its defining equality FactId",
+                "checked function reduction retargeted its defining equality FactId",
             ));
         }
         let helpers = self
@@ -6995,7 +6988,7 @@ impl UniversalEmitter {
             .ok_or_else(|| {
                 universal_error(
                     &proposition.line_file(),
-                    format!("checked function replay names unemitted function `{source_name}`"),
+                    format!("checked function reduction names unemitted function `{source_name}`"),
                 )
             })?;
         let application_object_ir = LitexToLeanObjectIr::lower(application_side)
@@ -7004,7 +6997,7 @@ impl UniversalEmitter {
         else {
             return Err(universal_error(
                 &proposition.line_file(),
-                "checked function replay retained a non-application side",
+                "checked function reduction retained a non-application side",
             ));
         };
         let object_id = context
@@ -7014,7 +7007,7 @@ impl UniversalEmitter {
             .ok_or_else(|| {
                 universal_error(
                     &proposition.line_file(),
-                    "checked function replay has no exact application WellDefinedObjId",
+                    "checked function reduction has no exact application WellDefinedObjId",
                 )
             })?;
         let applicable = context
@@ -7025,7 +7018,7 @@ impl UniversalEmitter {
                 universal_error(
                     &proposition.line_file(),
                     format!(
-                        "checked function replay has no local obj_{}_applicable proof",
+                        "checked function reduction has no local obj_{}_applicable proof",
                         object_id.value()
                     ),
                 )
@@ -10608,6 +10601,40 @@ fn conjunction_projection(base: &str, index: usize, count: usize) -> String {
     conjunction_projection(&format!("({base}).2"), index - 1, count - 1)
 }
 
+fn render_top_level_forall_type(binders: &[String], conclusion: &str) -> String {
+    if binders.is_empty() {
+        return conclusion.to_string();
+    }
+    let inline = format!("∀ {}, {conclusion}", binders.join(" "));
+    if inline.chars().count() <= 100 {
+        return inline;
+    }
+
+    let mut output = String::new();
+    for (index, pair) in binders.chunks(2).enumerate() {
+        if index == 0 {
+            output.push_str("∀ ");
+        } else {
+            output.push_str("\n  ");
+        }
+        output.push_str(&pair.join(" "));
+    }
+    output.push_str(",\n  ");
+    output.push_str(conclusion);
+    output
+}
+
+fn render_declaration_head(declaration: &str, declaration_type: &str) -> String {
+    if declaration_type.contains('\n') {
+        format!(
+            "{declaration} :\n  {}",
+            declaration_type.replace('\n', "\n  ")
+        )
+    } else {
+        format!("{declaration} : {declaration_type}")
+    }
+}
+
 fn lean_name(name: &str) -> String {
     let mut output = String::new();
     for character in name.chars() {
@@ -10975,6 +11002,13 @@ mod tests {
                 "{output}"
             );
             assert!(!output.contains("Litex.FnSpec"), "{output}");
+            assert!(
+                output.contains(
+                    "theorem __fact43 :\n  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)\n    (b : Litex.Object) (__h0_2 : Litex.In b Litex.R)\n    (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 Litex.R Litex.R))\n    (t : Litex.Object) (__h0_4 : Litex.In t (Litex.fnSpace1 Litex.R Litex.R))\n    (f : Litex.Object) (__h0_5 : Litex.In f (Litex.fnSpace2 Litex.R Litex.R Litex.R)),\n    (f [(g [a]), (t [b])]) = (f [(g [a]), (t [b])]) :="
+                ),
+                "{output}"
+            );
+            assert!(!output.contains("theorem __fact43 : ∀"), "{output}");
 
             let intro = output.find("\n  intro ").expect("forall intro");
             let inner_g_fact = output.find("\n  have __wd0_7").expect("g argument WD fact");
@@ -12317,7 +12351,7 @@ S = S
     }
 
     #[test]
-    fn named_function_emits_checked_constructor_and_definition_replay() {
+    fn named_function_emits_checked_constructor_and_definition_reduction() {
         run_with_large_stack(|| {
             let source = r#"have fn id(x R) R = x
 id(1) = 1
@@ -12379,14 +12413,14 @@ id(1) = 1
                 proof => proof,
             };
             let LitexToLeanFactProofIr::RuleApplication { rule, .. } = proof else {
-                panic!("expected checked function replay proof: {proof:#?}")
+                panic!("expected checked function reduction proof: {proof:#?}")
             };
-            let LitexToLeanProofRuleIr::CheckedFunctionDefinitionReplay {
+            let LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
                 defining_equality_fact_id,
                 ..
             } = rule
             else {
-                panic!("expected checked function definition replay")
+                panic!("expected checked function definition reduction")
             };
             *defining_equality_fact_id = FactId::new(u64::MAX);
             let error = emit_lean_from_litex_to_lean_ir(&ir)

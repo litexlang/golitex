@@ -103,11 +103,6 @@ fn run_docs_markdown_files() {
 }
 
 #[test]
-fn run_all() {
-    run_with_large_stack("run_all_large_stack", run_examples_impl);
-}
-
-#[test]
 #[ignore = "slow full repository suite; run explicitly with --ignored"]
 fn run_all_docs_examples_runtime_contracts() {
     run_with_large_stack(

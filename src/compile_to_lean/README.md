@@ -45,6 +45,11 @@ If Litex later proves `a $in R`, the target retains a second proposition
 `Litex.In a Litex.R`. The object is not converted from `ℂ` to `ℝ`; neither of
 those native types is its Lean type.
 
+Generated top-level `forall` types stay on one line while they remain short.
+When the rendered type exceeds 100 characters, the emitter puts each adjacent
+binder pair on a continuation line and the conclusion on a separate line.
+This formatting does not shorten `Litex.*` names or change declaration types.
+
 Every `Litex.Object` is a set in the decided target model. `IsNonemptySet` and
 `IsFiniteSet` are not separate axioms; they classify the object's membership
 extension. The `Set.Finite` expression is only a Mathlib view of that
@@ -96,7 +101,7 @@ take the selected WD proofs as object arguments.
 Named `have fn` definitions render a proof-free body. Their `closed` theorem
 introduces the function telescope and then replays the verifier-owned body WD
 DAG locally: `x + 1` cites the retained complex-membership facts, and `1 / x`
-cites the exact domain `FactId` for `x != 0`. Later definition replay unfolds
+cites the exact domain `FactId` for `x != 0`. Later definition reduction unfolds
 only the cited defining equality and uses the exact locally named application
 certificate.
 Anonymous functions use the same ABI. Compound bodies replay their WD and
@@ -191,7 +196,7 @@ supporting routes:
   with local WD helpers and `Litex.fnSetResult` between layers;
 - named function definitions with proof-free `+`, `-`, `*`, `/` bodies, local
   ordered parameter/domain evidence, exact return membership, and checked
-  definition replay;
+  definition reduction;
 - nested forall replay with retained temporary parameter `FactId`s;
 - `Litex.add/sub/mul/div`, real arithmetic closure theorems, and rational
   normalization for the arithmetic tracer.

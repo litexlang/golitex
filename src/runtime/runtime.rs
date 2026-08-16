@@ -129,8 +129,6 @@ pub struct Runtime {
     /// Prevents set-builder definition transport from recursively selecting itself
     /// while unfolding a named definition or checking a chosen theorem's requirements.
     pub(crate) active_set_builder_forall_transport: bool,
-    /// Prevents structural child equality checks from reopening the root candidate graph.
-    pub(crate) known_equality_candidate_replay_depth: usize,
     pub(crate) symbol_id_allocator: Rc<SymbolIdAllocator>,
     pub(crate) template_instance_interner: RefCell<HashMap<String, SymbolBinding>>,
     /// Parser-only notation metadata. A source binder written as `a &Struct`
@@ -176,7 +174,6 @@ impl Runtime {
             active_well_defined_objects: HashSet::new(),
             active_set_builder_membership_unfolds: HashSet::new(),
             active_set_builder_forall_transport: false,
-            known_equality_candidate_replay_depth: 0,
             symbol_id_allocator: Rc::new(SymbolIdAllocator::new()),
             template_instance_interner: RefCell::new(HashMap::new()),
             default_struct_views: HashMap::new(),

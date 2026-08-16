@@ -290,14 +290,14 @@ mod tests {
             1,
             "constructor decomposition must have one implementation",
         );
-        let replay_safe_impl = equality_structural
-            .split("pub(crate) fn objs_are_congruent_by_replay_safe_equality_routes(")
+        let terminating_impl = equality_structural
+            .split("pub(crate) fn objs_are_equal_by_terminating_reduction_and_congruence(")
             .nth(1)
-            .expect("replay-safe structural equality implementation must exist")
+            .expect("terminating structural equality implementation must exist")
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
-            .expect("central matcher must follow replay-safe comparison");
-        assert!(replay_safe_impl.contains("same_shape_and_corresponding_args_match("));
+            .expect("central matcher must follow terminating comparison");
+        assert!(terminating_impl.contains("same_shape_and_corresponding_args_match("));
 
         let equality_dispatch = include_str!("verify_builtin_rules/equality_dispatch.rs");
         assert!(
@@ -309,9 +309,9 @@ mod tests {
             .split("pub fn verify_equal_fact(")
             .nth(1)
             .expect("full equality implementation must exist")
-            .split("pub(crate) fn verify_equality_with_known_equalities(")
+            .split("fn verify_equality_after_one_checked_definition_reduction(")
             .next()
-            .expect("known-equality replay must follow full equality");
+            .expect("direct checked-definition reduction must follow full equality");
         assert!(!full_equality_impl.contains("FnEqualFact"));
         assert!(!full_equality_impl.contains("EqualFact::new("));
         let round_zero_index = full_equality_impl
