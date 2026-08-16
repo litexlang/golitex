@@ -128,7 +128,8 @@ thm converges_to_mul_const:
                     abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```
 
 在下面两个默认交互维度上，Litex 与 Lean tactic 的推进方向恰好相反；这里的“相反”只描述默认工作流的方向，不是对两种系统整体能力的判断。

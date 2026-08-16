@@ -25,8 +25,8 @@ pub use builtin_rule_evidence::{
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
     NativeConstantMembershipBuiltinRule, NonzeroExpressionOrientation,
     RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, ResolvedAtomicFactComputationBuiltinRuleEvidence,
-    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
+    SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;

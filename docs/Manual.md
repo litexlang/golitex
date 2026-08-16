@@ -2502,26 +2502,32 @@ must always be an explicit `impossible fact`.
 For an ordinary atomic fact, the main order is:
 
 1. Parse the statement and check every object for well-definedness.
-2. Check an already known non-`forall` atomic fact with the same predicate
-   shape, using known equalities.
-3. Try bounded builtin mathematical rules.
-4. For an equality at outer round 0, compare matching object constructors by
+2. Begin zero-premise verification by checking an already known non-`forall`
+   atomic fact with the same predicate shape, using known equalities.
+3. Finish zero-premise verification by directly evaluating the atomic fact as
+   written.
+4. Try one bounded premise-producing builtin mathematical rule.
+5. For an equality at outer round 0, compare matching object constructors by
    recursively proving their corresponding arguments equal.
-5. At outer round 0, try the target's concrete definition with the full
+6. At outer round 0, try the target's concrete definition with the full
    verifier.
-6. Try an applicable known `forall` fact
+7. Try an applicable known `forall` fact
    and verify its instantiated premises.
-7. Try registered predicate properties or enabled strategies where applicable.
-8. On success, store the fact and run builtin inference.
+8. Try registered predicate properties or enabled strategies where applicable.
+9. On success, store the fact and run builtin inference.
 
-Builtin computation may expose a closed non-equational atomic target by
-unfolding checked `have x T = value` object definitions. This is not textual
-replacement and does not treat an arbitrary proved equality as a definition.
-The successful result still proves the original source fact: it retains the
-closed computed fact, any rational normalization step, and the defining
-equality `FactId`s needed to rewrite back to the goal. A bodyless object such as
-`have unknown_set set` has no value to unfold and therefore supplies no such
-route.
+Here a **premise** is a child fact that a rule must verify before it may
+conclude its parent fact. Zero-premise verification does not generate such
+child facts: it reuses a known fact in step 2 or directly evaluates the current
+fact in step 3. This separation is necessary after a builtin rule has consumed
+the allowed rule step. For example, proving `x * 2 >= 0` from known `x >= 0`
+uses the multiplication rule once; its remaining premise `2 >= 0` must still
+close by direct evaluation without opening another premise-producing rule.
+
+Direct evaluation does not unfold every argument through checked
+`have x T = value` definitions and retry on a rewritten target. Equality-aware
+known-fact matching remains separate: it can transport an already proved fact,
+but it does not create that source fact by computing rewritten arguments.
 
 During step 1, function application uses direct callable metadata first. Only
 when the callee has no direct signature does it inspect the callee's stored

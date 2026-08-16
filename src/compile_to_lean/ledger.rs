@@ -262,7 +262,7 @@ mod tests {
                 let output = root.join("private/compile-to-lean-generated.lean");
                 let count = compile_markdown_ledger_file_to_lean(&ledger, &output)
                     .expect("compile the Markdown ledger to one Lean file");
-                assert_eq!(count, 25, "the compiler ledger changed shape");
+                assert_eq!(count, 24, "the compiler ledger changed shape");
                 println!(
                     "wrote {count} freshly generated Lean entries to {}",
                     output.display()

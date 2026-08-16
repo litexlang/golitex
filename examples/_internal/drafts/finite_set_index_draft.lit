@@ -66,7 +66,10 @@ thm remove_singleton_from_singleton_sized_set_is_empty:
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
     $is_finite_set(intersect(s, {a}))
-    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = 1 - 1 = 0
+    finite_set_size(intersect(s, {a})) = finite_set_size({a}) = 1
+    finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1
+    finite_set_size(s) - 1 = 1 - 1
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1 = 1 - 1 = 0
 
 thm index_function_for_singleton:
     ? forall s finite_set:
@@ -117,7 +120,10 @@ thm index_function_step:
     finite_set_size({a}) = 1
     $is_finite_set(set_minus(s, {a}))
     $is_finite_set(intersect(s, {a}))
-    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = (n + 1) - 1 = n
+    finite_set_size(intersect(s, {a})) = finite_set_size({a}) = 1
+    finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1
+    finite_set_size(s) - 1 = (n + 1) - 1
+    finite_set_size(set_minus(s, {a})) = finite_set_size(s) - finite_set_size(intersect(s, {a})) = finite_set_size(s) - 1 = (n + 1) - 1 = n
     $finite_set_size_has_index(n)
     $is_finite_set(set_minus(s, {a}))
     finite_set_size(set_minus(s, {a})) = n

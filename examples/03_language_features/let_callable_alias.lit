@@ -10,10 +10,13 @@
 # Now (verified):
 have fn f(x R) R = x + 1
 let g = f
-g(1) = 2
+f(1) = 2
+g(1) = f(1)
+g(1) = f(1) = 2
 fn_range(g) = fn_range(f)
 # Current behavior: direct signature lookup falls back to a callable member of
-# g's already stored equality class, then checks the ordinary argument domain.
+# g's already stored equality class. The application equality and computed
+# value are materialized separately before the final chain.
 #
 # Boundary: equality does not bypass arity or domain checks; `g(1, 2)` remains
 # rejected by the executable Rust regression.

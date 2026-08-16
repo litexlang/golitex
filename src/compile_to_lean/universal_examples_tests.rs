@@ -14,7 +14,7 @@ fn universal_examples_compile_to_the_new_abi() {
         let examples = ledger_examples();
         assert_eq!(
             examples.len(),
-            25,
+            24,
             "the append-only feature ledger changed shape"
         );
         for (label, source) in examples {
@@ -407,19 +407,6 @@ fn assert_new_abi(label: &str, generated: &str) {
                     "{generated}"
                 );
             }
-        }
-        "resolved_builtin_computation" => {
-            assert!(
-                generated.contains("Litex.Rules.numeralInZ 2"),
-                "{generated}"
-            );
-            assert!(
-                generated.contains("simpa only [__fact6, __fact3] using"),
-                "{generated}"
-            );
-            assert!(generated.contains("convert ("), "{generated}");
-            assert!(!generated.contains("__normalized"), "{generated}");
-            assert!(!generated.contains("assumption"), "{generated}");
         }
         "example_and_sketch" => {
             assert_eq!(generated.matches("\nexample :").count(), 2, "{generated}");

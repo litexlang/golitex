@@ -107,7 +107,8 @@ thm converges_to_mul_const:
                     abs(c * s(n) - c * a) = abs(c * (s(n) - a)) = abs(c) * abs(s(n) - a)
                     abs(c) * abs(s(n) - a) <= (abs(c) + 1) * abs(s(n) - a) < (abs(c) + 1) * (epsilon / (abs(c) + 1)) = epsilon
                     abs(fn(k N) R {c * s(k)}(n) - c * a) < epsilon
-            $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+            by def $is_eventually_close(fn(n N) R {c * s(n)}, c * a, epsilon, N0)
+    by def $converges_to(fn(n N) R {c * s(n)}, c * a)
 ```
 
 Along these two axes, Litex's default interaction runs in the opposite direction from Lean tactics. Here, “opposite” describes only the direction of the default workflows, not the overall capabilities of the two systems.

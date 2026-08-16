@@ -14,12 +14,15 @@ impl Runtime {
                 self.verify_equal_fact_with_one_builtin_rule(equal_fact, builtin_state)
             }
             _ => {
-                let leaf_result =
-                    self.verify_non_equational_atomic_fact_with_known_fact_then_computation(child)?;
-                if leaf_result.is_true() || !builtin_state.can_apply_builtin_rule() {
-                    return Ok(leaf_result);
+                let zero_premise_result =
+                    self.verify_non_equational_atomic_fact_with_zero_premise_verification(child)?;
+                if zero_premise_result.is_true() || !builtin_state.can_apply_builtin_rule() {
+                    return Ok(zero_premise_result);
                 }
-                self.verify_non_equational_atomic_fact_with_one_builtin_rule(child, builtin_state)
+                self.verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+                    child,
+                    builtin_state,
+                )
             }
         }
     }
@@ -70,7 +73,8 @@ mod tests {
             "a builtin premise must dispatch to its fact-family owner exactly once"
         );
         assert!(implementation.contains("verify_equal_fact_with_one_builtin_rule"));
-        assert!(implementation.contains("verify_non_equational_atomic_fact_with_one_builtin_rule"));
+        assert!(implementation
+            .contains("verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule"));
     }
 
     #[test]
@@ -135,7 +139,7 @@ mod tests {
     }
 
     #[test]
-    fn computation_matchers_are_not_repeated_in_the_direct_dispatchers() {
+    fn direct_evaluation_matchers_are_not_repeated_in_builtin_rule_dispatchers() {
         let non_equational = include_str!("verify_builtin_rules/non_equational_dispatch.rs");
         assert!(!non_equational.contains("verify_prime_fact_by_computation"));
 
@@ -145,7 +149,7 @@ mod tests {
                 .matches("verify_number_comparison_builtin_rule(")
                 .count(),
             1,
-            "number comparison computation must only be defined here, not called again by the direct rule dispatcher"
+            "number-comparison direct evaluation must be defined once and stay out of the premise-producing rule dispatcher"
         );
 
         let extrema = include_str!("verify_builtin_rules/order_semantics_builtin.rs");
@@ -171,6 +175,21 @@ mod tests {
             ["verify_atomic_fact_by_builtin_", "computation"].concat(),
             ["verify_atomic_fact_with_one_", "builtin_rule"].concat(),
             ["verify_atomic_fact_with_builtin_rules_", "inner"].concat(),
+            [
+                "verify_non_equational_atomic_fact_with_known_fact_then_",
+                "with_builtin_computation",
+            ]
+            .concat(),
+            [
+                "verify_non_equational_atomic_fact_by_builtin_",
+                "computation",
+            ]
+            .concat(),
+            [
+                "verify_non_equational_atomic_fact_with_one_",
+                "builtin_rule",
+            ]
+            .concat(),
         ];
         visit_rust_files(&src, &mut |path, source| {
             for name in &obsolete {
@@ -210,13 +229,42 @@ mod tests {
             .split("pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(")
             .next()
             .expect("known-fact leaf must follow the non-equational direct route");
-        let non_equational_leaf = non_equational_direct
-            .find("verify_non_equational_atomic_fact_with_known_fact_then_computation")
-            .expect("non-equational direct route must begin with known facts and computation");
+        let non_equational_zero_premise = non_equational_direct
+            .find("verify_non_equational_atomic_fact_with_zero_premise_verification")
+            .expect("non-equational direct route must begin with zero-premise verification");
         let non_equational_builtin = non_equational_direct
-            .find("verify_non_equational_atomic_fact_with_one_builtin_rule")
-            .expect("non-equational direct route must finish with one builtin rule");
-        assert!(non_equational_leaf < non_equational_builtin);
+            .find("verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule")
+            .expect("non-equational direct route must finish with one premise-producing rule");
+        assert!(non_equational_zero_premise < non_equational_builtin);
+
+        let zero_premise_impl = non_equational
+            .split(
+                "pub(crate) fn verify_non_equational_atomic_fact_with_zero_premise_verification(",
+            )
+            .nth(1)
+            .expect("non-equational owner must define zero-premise verification")
+            .split("pub(crate) fn verify_non_equational_atomic_fact_by_direct_evaluation(")
+            .next()
+            .expect("direct evaluation must follow zero-premise verification");
+        let known_index = zero_premise_impl
+            .find("verify_non_equational_atomic_fact_with_known_fact(atomic_fact)")
+            .expect("zero-premise verification must try known facts first");
+        let evaluation_index = zero_premise_impl
+            .find("verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact)")
+            .expect("zero-premise verification must finish with direct evaluation");
+        assert!(known_index < evaluation_index);
+
+        let direct_evaluation_impl = non_equational
+            .split("pub(crate) fn verify_non_equational_atomic_fact_by_direct_evaluation(")
+            .nth(1)
+            .expect("non-equational owner must define direct evaluation")
+            .split(
+                "pub(crate) fn verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(",
+            )
+            .next()
+            .expect("premise-producing rules must follow direct evaluation");
+        assert!(!direct_evaluation_impl.contains("UseBuiltinRuleVerifyState"));
+        assert!(!direct_evaluation_impl.contains("verify_builtin_rule_premise"));
 
         let strategy = include_str!("verify_builtin_strategy.rs");
         let child_dispatch = strategy

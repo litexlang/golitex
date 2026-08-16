@@ -11,9 +11,9 @@
 # clauses from scratch even though each clause was checked at declaration and
 # the concrete argument had already been checked against R.
 #
-# Now (verified): the same surface program first materializes the instantiated
-# parameter facts and then stores the definition instances without repeating
-# their complete WD.
+# Now (verified): the program materializes the numeric premise and explicitly
+# introduces each predicate definition instead of relying on rewritten
+# computation inside a wrapper predicate.
 
 prop traced_nonnegative(x R):
     x >= 0
@@ -22,8 +22,8 @@ prop traced_wrapped_nonnegative(x R):
     $traced_nonnegative(x)
 
 2 >= 0
-$traced_wrapped_nonnegative(2)
-$traced_nonnegative(2)
+by def $traced_nonnegative(2)
+by def $traced_wrapped_nonnegative(2)
 
 # Boundary: ordinary proof still cannot establish `$natural_only(-1)` for
 # `natural_only(n N)`. An explicit `trust` may assume that false proposition,

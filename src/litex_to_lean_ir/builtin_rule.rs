@@ -164,7 +164,6 @@ impl LitexToLeanBuiltinRuleIr {
             | BuiltinRuleEvidence::FunctionSetMembership(_)
             | BuiltinRuleEvidence::RefinedNumericMembership(_)
             | BuiltinRuleEvidence::ClosedNumericComparison(_)
-            | BuiltinRuleEvidence::ResolvedAtomicFactComputation(_)
             | BuiltinRuleEvidence::DisjunctionIntroduction(_)
             | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
             | BuiltinRuleEvidence::KnownEqualityPath(_) => return None,

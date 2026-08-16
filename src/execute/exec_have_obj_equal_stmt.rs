@@ -256,10 +256,6 @@ impl Runtime {
                     )
                 })?;
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
-            self.top_level_env().known_object_definitions.insert(
-                obj_equality_key(&defined),
-                KnownObjectDefinition::new(defined, obj.clone(), equality),
-            );
         }
 
         let lf = have_obj_equal_stmt.line_file.clone();

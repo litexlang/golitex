@@ -3860,61 +3860,6 @@ impl Runtime {
                 premises,
             });
         }
-        if let Some(BuiltinRuleEvidence::ResolvedAtomicFactComputation(evidence)) = evidence {
-            if evidence.expected_target.to_string() != goal.to_string() {
-                return Err(litex_to_lean_ir_error(
-                    &goal.line_file(),
-                    "resolved builtin-computation evidence was retargeted after verification",
-                ));
-            }
-            if evidence.fact_transformation.steps.is_empty()
-                || evidence.fact_transformation.source.to_string()
-                    != evidence.resolved_target.to_string()
-            {
-                return Err(litex_to_lean_ir_error(
-                    &goal.line_file(),
-                    "resolved builtin-computation evidence retained an empty or retargeted transformation",
-                ));
-            }
-            let mut premises = self.build_litex_to_lean_ir_subgoals(subgoals, context)?;
-            if premises.len() != 1
-                || premises[0].proposition.to_string() != evidence.resolved_target.to_string()
-            {
-                return Err(litex_to_lean_ir_error(
-                    &goal.line_file(),
-                    "resolved builtin-computation evidence lost its exact computed premise",
-                ));
-            }
-            if evidence
-                .fact_transformation
-                .steps
-                .iter()
-                .filter_map(|step| match &step.rule {
-                    FactTransformationRule::EqualityRewrite(transport) => Some(transport),
-                    FactTransformationRule::RationalNormalization => None,
-                })
-                .flat_map(|transport| transport.steps.iter())
-                .any(|step| step.equality_fact_id.is_none())
-            {
-                return Err(litex_to_lean_ir_error(
-                    &goal.line_file(),
-                    "resolved builtin-computation evidence has a definition equality without FactId provenance",
-                ));
-            }
-            let source = premises.remove(0);
-            let rewritten = self
-                .build_litex_to_lean_ir_fact_transformation(source, &evidence.fact_transformation);
-            if rewritten.proposition.to_string() != goal.to_string() {
-                return Err(litex_to_lean_ir_error(
-                    &goal.line_file(),
-                    "resolved builtin-computation transformations did not end at the source goal",
-                ));
-            }
-            if let LitexToLeanFactProofIr::Unsupported { reason } = &rewritten.proof {
-                return Err(litex_to_lean_ir_error(&goal.line_file(), reason.clone()));
-            }
-            return Ok(rewritten.proof);
-        }
         if let Some(BuiltinRuleEvidence::DisjunctionIntroduction(evidence)) = evidence {
             if evidence.expected_target.to_string() != goal.to_string() {
                 return Err(litex_to_lean_ir_error(
@@ -5244,7 +5189,7 @@ fn reverse_assumption_introduction_for_target(
 }
 
 #[cfg(test)]
-mod resolved_builtin_computation_evidence_tests {
+mod fact_transformation_evidence_tests {
     use super::*;
 
     fn integer_membership(element: Obj) -> Fact {
