@@ -547,8 +547,8 @@ claim:
             1 % k = 1
             (0 + 1) % k = 1 % k = 1
             (product(1, a, fn(x N+) N+ {x}) + 1) % k = (product(1, a, fn(x N+) N+ {x}) % k + 1 % k) % k = (0 + 1) % k = 1
-            0 = (product(1, a, fn(x N+) N+ {x}) + 1) % k = 1
-            impossible 0 = 1
+            (product(1, a, fn(x N+) N+ {x}) + 1) % k != 0
+            impossible (product(1, a, fn(x N+) N+ {x}) + 1) % k = 0
         case k > a
     witness exist prime_larger N+ st {prime_larger > a, $prime(prime_larger)} from k
 ```

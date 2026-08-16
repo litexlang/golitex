@@ -203,8 +203,10 @@ Most proof obligations eventually ask for an atomic target. The public model is:
 ```text
 atomic target
   -> all objects are well-defined
-  -> match a known non-forall atomic fact, or
-  -> try one builtin mathematical rule, or
+  -> zero-premise verification:
+       -> match a known non-forall atomic fact, or
+       -> directly evaluate the written atomic fact, or
+  -> try one premise-producing builtin mathematical rule, or
   -> run a strictly structural builtin strategy, or
   -> for equality at outer round 0, recursively compare matching object constructors, or
   -> verify a concrete definition at outer round 0, or
@@ -213,18 +215,21 @@ atomic target
   -> true or unknown
 ```
 
-Closed `$prime(n)` and `$coprime(a,b)` goals use dedicated computation leaves
+A premise is a child fact that a rule must verify before concluding its parent
+fact. Zero-premise verification generates no child facts and consumes no new
+builtin-rule step. This is why a rule proving `x * 2 >= 0` from `x >= 0` may
+still directly evaluate its closed premise `2 >= 0` after the multiplication
+rule has consumed the allowed rule step.
+
+Closed `$prime(n)` and `$coprime(a,b)` goals use dedicated direct-evaluation leaves
 after their natural-number domains are checked. Symbolic positive facts use
 their explicit definitions: trial division for prime, and the non-all-zero
 condition plus `gcd(a,b)=1` for coprime.
 
-For ordinary non-equational computation, a checked object definition may be
-unfolded before the computation leaf. The runtime stores these definitions in
-a table distinct from the general equality graph. A success is then assembled
-in proof direction: closed computed target, optional numeric normalization,
-and exact defining-equality rewrites back to the original atomic target. The
-Litex-to-Lean IR consumes that frozen chain; it does not repeat verifier search
-or use proposition matching in Lean.
+Ordinary non-equational computation stays on the atomic fact as written. It
+does not unfold every argument through checked object definitions and retry on
+a rewritten target. Equality-aware known-fact matching is a separate route and
+requires an already proved source fact.
 
 Within one statement, Litex reuses an exact successful atomic subgoal if that
 same subgoal is requested again. This memo follows the ordinary environment

@@ -1131,47 +1131,6 @@ end __Sketch22
 
 namespace __Sketch23
 
-noncomputable def one : Litex.Object := 1
-
-theorem __fact472 : Litex.In one Litex.Z := by
-  simpa only [one] using (Litex.Rules.numeralInZ 1)
-
-theorem __fact473 : one = 1 := by
-  rfl
-
-noncomputable def integer_set : Litex.Object := Litex.Z
-
-theorem __fact475 : Litex.IsSet integer_set := by
-  simpa only [integer_set] using (Litex.Rules.objectIsSet Litex.Z)
-
-theorem __fact476 : integer_set = Litex.Z := by
-  rfl
-
-theorem __fact477 : Litex.In (Litex.add one 1) integer_set := by
-  have __wd0_231 : Litex.In one Litex.C := by
-    exact (by simpa only [__fact473] using (Litex.Rules.numeralInC 1))
-  have __wd0_232 : Litex.In 1 Litex.C := by
-    exact (Litex.Rules.numeralInC 1)
-  have __obj589_result : Litex.In (Litex.add one 1) Litex.C := by
-    exact ((Litex.Rules.complexAddClosure (__wd0_231) (__wd0_232)))
-  exact by simpa only [__fact476, __fact473] using ((by
-  convert (Litex.Rules.numeralInZ 2) using 1 <;>
-    simp only [OfNat.ofNat, Litex.add_embedComplex, Litex.sub_embedComplex, Litex.mul_embedComplex, Litex.div_embedComplex] <;>
-    norm_num))
-
-theorem __fact478 : Litex.In (Litex.add one 1) Litex.Z := by
-  have __wd0_231 : Litex.In one Litex.C := by
-    exact (by simpa only [__fact473] using (Litex.Rules.numeralInC 1))
-  have __wd0_232 : Litex.In 1 Litex.C := by
-    exact (Litex.Rules.numeralInC 1)
-  have __obj589_result : Litex.In (Litex.add one 1) Litex.C := by
-    exact ((Litex.Rules.complexAddClosure (__wd0_231) (__wd0_232)))
-  exact by simpa only [__fact476] using (__fact477)
-
-end __Sketch23
-
-namespace __Sketch24
-
 example : (1 : Litex.Object) = 1 :=
 by
   have __step_1 : (2 : Litex.Object) = 2 := by
@@ -1185,29 +1144,29 @@ by
 
 namespace __Sketch01
 
-theorem __fact483 : (3 : Litex.Object) = 3 := by
+theorem __fact475 : (3 : Litex.Object) = 3 := by
   exact rfl
 
 end __Sketch01
 
-end __Sketch24
+end __Sketch23
 
-namespace __Sketch25
+namespace __Sketch24
 
-theorem __fact490 : ∀ (F : Litex.Object) (__h0_1 : Litex.IsSet F), (Litex.bigUnion F) = (Litex.bigUnion F) :=
+theorem __fact482 : ∀ (F : Litex.Object) (__h0_1 : Litex.IsSet F), (Litex.bigUnion F) = (Litex.bigUnion F) :=
 by
   intro F __h0_1
   exact rfl
 
-theorem __fact497 : ∀ (F : Litex.Object) (__h0_1 : Litex.IsSet F), (Litex.bigIntersect F) = (Litex.bigIntersect F) :=
+theorem __fact489 : ∀ (F : Litex.Object) (__h0_1 : Litex.IsSet F), (Litex.bigIntersect F) = (Litex.bigIntersect F) :=
 by
   intro F __h0_1
   exact rfl
 
-theorem __fact498 : (Litex.powerSet Litex.R) = (Litex.powerSet Litex.R) := by
+theorem __fact490 : (Litex.powerSet Litex.R) = (Litex.powerSet Litex.R) := by
   exact rfl
 
-theorem __fact517 :
+theorem __fact509 :
   ∀ (I : Litex.Object) (__h0_1 : Litex.IsSet I)
     (S : Litex.Object) (__h0_2 : Litex.IsNonemptySet S)
     (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 I S)),
@@ -1216,165 +1175,165 @@ by
   intro I __h0_1 S __h0_2 g __h0_3
   exact rfl
 
-theorem __fact518 : (Litex.range 1 4) = (Litex.range 1 4) := by
+theorem __fact510 : (Litex.range 1 4) = (Litex.range 1 4) := by
   exact rfl
 
-theorem __fact519 : (Litex.closedRange 1 4) = (Litex.closedRange 1 4) := by
+theorem __fact511 : (Litex.closedRange 1 4) = (Litex.closedRange 1 4) := by
   exact rfl
 
-theorem __wd0_262 :
+theorem __wd0_260 :
   ∀ (__wd_scope26_arg1 : Litex.Object) (__wd_scope26_premise1 : Litex.In __wd_scope26_arg1 Litex.Z),
     Litex.In __wd_scope26_arg1 Litex.Z :=
 by
   intro __wd_scope26_arg1 __wd_scope26_premise1
   exact __wd_scope26_premise1
 
-theorem __wd0_267 :
+theorem __wd0_265 :
   ∀ (__wd_scope27_arg1 : Litex.Object) (__wd_scope27_premise1 : Litex.In __wd_scope27_arg1 Litex.Z),
     Litex.In __wd_scope27_arg1 Litex.Z :=
 by
   intro __wd_scope27_arg1 __wd_scope27_premise1
   exact __wd_scope27_premise1
 
-noncomputable def __obj637 : Litex.Object :=
+noncomputable def __obj628 : Litex.Object :=
   Litex.Z
 
-noncomputable def __obj656 (__wd_scope26_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj647 (__wd_scope26_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope26_arg1
 
-noncomputable def __obj657_spec : Litex.FnSpec :=
+noncomputable def __obj648_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj657_body (__obj657_arg : List Litex.Object) (__arg_len : __obj657_arg.length = (__obj657_spec).arity) (__arg_req : (__obj657_spec).requirements __obj657_arg) : Litex.Object :=
-  (Litex.arg __obj657_arg 0)
+noncomputable def __obj648_body (__obj648_arg : List Litex.Object) (__arg_len : __obj648_arg.length = (__obj648_spec).arity) (__arg_req : (__obj648_spec).requirements __obj648_arg) : Litex.Object :=
+  (Litex.arg __obj648_arg 0)
 
-theorem __obj657_closed :
-    ∀ (__obj657_arg : List Litex.Object)
-      (__obj657_arg_len : __obj657_arg.length = (__obj657_spec).arity)
-      (__obj657_arg_req : (__obj657_spec).requirements __obj657_arg),
-      Litex.In (__obj657_body __obj657_arg __obj657_arg_len __obj657_arg_req) ((__obj657_spec).range __obj657_arg __obj657_arg_len __obj657_arg_req) :=
+theorem __obj648_closed :
+    ∀ (__obj648_arg : List Litex.Object)
+      (__obj648_arg_len : __obj648_arg.length = (__obj648_spec).arity)
+      (__obj648_arg_req : (__obj648_spec).requirements __obj648_arg),
+      Litex.In (__obj648_body __obj648_arg __obj648_arg_len __obj648_arg_req) ((__obj648_spec).range __obj648_arg __obj648_arg_len __obj648_arg_req) :=
 by
-  intro __obj657_arg __obj657_arg_len __obj657_arg_req
-  change Litex.In (Litex.arg __obj657_arg 0) Litex.Z
-  exact (__wd0_262 ((Litex.arg __obj657_arg 0)) (Exists.choose (__obj657_arg_req)))
+  intro __obj648_arg __obj648_arg_len __obj648_arg_req
+  change Litex.In (Litex.arg __obj648_arg 0) Litex.Z
+  exact (__wd0_260 ((Litex.arg __obj648_arg 0)) (Exists.choose (__obj648_arg_req)))
 
-noncomputable def __obj657 : Litex.Object :=
-  Litex.functionObject __obj657_spec __obj657_body
+noncomputable def __obj648 : Litex.Object :=
+  Litex.functionObject __obj648_spec __obj648_body
 
-theorem __obj657_in_fn_space :
-    Litex.In __obj657 (Litex.FnSet __obj657_spec) := by
-  unfold __obj657
-  exact Litex.functionObjectInFnSet __obj657_spec __obj657_body __obj657_closed
+theorem __obj648_in_fn_space :
+    Litex.In __obj648 (Litex.FnSet __obj648_spec) := by
+  unfold __obj648
+  exact Litex.functionObjectInFnSet __obj648_spec __obj648_body __obj648_closed
 
-noncomputable def __obj663 (__wd_scope27_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj654 (__wd_scope27_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope27_arg1
 
-noncomputable def __obj664_spec : Litex.FnSpec :=
+noncomputable def __obj655_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj664_body (__obj664_arg : List Litex.Object) (__arg_len : __obj664_arg.length = (__obj664_spec).arity) (__arg_req : (__obj664_spec).requirements __obj664_arg) : Litex.Object :=
-  (Litex.arg __obj664_arg 0)
+noncomputable def __obj655_body (__obj655_arg : List Litex.Object) (__arg_len : __obj655_arg.length = (__obj655_spec).arity) (__arg_req : (__obj655_spec).requirements __obj655_arg) : Litex.Object :=
+  (Litex.arg __obj655_arg 0)
 
-theorem __obj664_closed :
-    ∀ (__obj664_arg : List Litex.Object)
-      (__obj664_arg_len : __obj664_arg.length = (__obj664_spec).arity)
-      (__obj664_arg_req : (__obj664_spec).requirements __obj664_arg),
-      Litex.In (__obj664_body __obj664_arg __obj664_arg_len __obj664_arg_req) ((__obj664_spec).range __obj664_arg __obj664_arg_len __obj664_arg_req) :=
+theorem __obj655_closed :
+    ∀ (__obj655_arg : List Litex.Object)
+      (__obj655_arg_len : __obj655_arg.length = (__obj655_spec).arity)
+      (__obj655_arg_req : (__obj655_spec).requirements __obj655_arg),
+      Litex.In (__obj655_body __obj655_arg __obj655_arg_len __obj655_arg_req) ((__obj655_spec).range __obj655_arg __obj655_arg_len __obj655_arg_req) :=
 by
-  intro __obj664_arg __obj664_arg_len __obj664_arg_req
-  change Litex.In (Litex.arg __obj664_arg 0) Litex.Z
-  exact (__wd0_267 ((Litex.arg __obj664_arg 0)) (Exists.choose (__obj664_arg_req)))
+  intro __obj655_arg __obj655_arg_len __obj655_arg_req
+  change Litex.In (Litex.arg __obj655_arg 0) Litex.Z
+  exact (__wd0_265 ((Litex.arg __obj655_arg 0)) (Exists.choose (__obj655_arg_req)))
 
-noncomputable def __obj664 : Litex.Object :=
-  Litex.functionObject __obj664_spec __obj664_body
+noncomputable def __obj655 : Litex.Object :=
+  Litex.functionObject __obj655_spec __obj655_body
 
-theorem __obj664_in_fn_space :
-    Litex.In __obj664 (Litex.FnSet __obj664_spec) := by
-  unfold __obj664
-  exact Litex.functionObjectInFnSet __obj664_spec __obj664_body __obj664_closed
+theorem __obj655_in_fn_space :
+    Litex.In __obj655 (Litex.FnSet __obj655_spec) := by
+  unfold __obj655
+  exact Litex.functionObjectInFnSet __obj655_spec __obj655_body __obj655_closed
 
-theorem __fact556 : (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
+theorem __fact548 : (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_298 :
+theorem __wd0_296 :
   ∀ (__wd_scope32_arg1 : Litex.Object) (__wd_scope32_premise1 : Litex.In __wd_scope32_arg1 Litex.Z),
     Litex.In __wd_scope32_arg1 Litex.Z :=
 by
   intro __wd_scope32_arg1 __wd_scope32_premise1
   exact __wd_scope32_premise1
 
-theorem __wd0_303 :
+theorem __wd0_301 :
   ∀ (__wd_scope33_arg1 : Litex.Object) (__wd_scope33_premise1 : Litex.In __wd_scope33_arg1 Litex.Z),
     Litex.In __wd_scope33_arg1 Litex.Z :=
 by
   intro __wd_scope33_arg1 __wd_scope33_premise1
   exact __wd_scope33_premise1
 
-noncomputable def __obj698 (__wd_scope32_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj689 (__wd_scope32_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope32_arg1
 
-noncomputable def __obj699_spec : Litex.FnSpec :=
+noncomputable def __obj690_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj699_body (__obj699_arg : List Litex.Object) (__arg_len : __obj699_arg.length = (__obj699_spec).arity) (__arg_req : (__obj699_spec).requirements __obj699_arg) : Litex.Object :=
-  (Litex.arg __obj699_arg 0)
+noncomputable def __obj690_body (__obj690_arg : List Litex.Object) (__arg_len : __obj690_arg.length = (__obj690_spec).arity) (__arg_req : (__obj690_spec).requirements __obj690_arg) : Litex.Object :=
+  (Litex.arg __obj690_arg 0)
 
-theorem __obj699_closed :
-    ∀ (__obj699_arg : List Litex.Object)
-      (__obj699_arg_len : __obj699_arg.length = (__obj699_spec).arity)
-      (__obj699_arg_req : (__obj699_spec).requirements __obj699_arg),
-      Litex.In (__obj699_body __obj699_arg __obj699_arg_len __obj699_arg_req) ((__obj699_spec).range __obj699_arg __obj699_arg_len __obj699_arg_req) :=
+theorem __obj690_closed :
+    ∀ (__obj690_arg : List Litex.Object)
+      (__obj690_arg_len : __obj690_arg.length = (__obj690_spec).arity)
+      (__obj690_arg_req : (__obj690_spec).requirements __obj690_arg),
+      Litex.In (__obj690_body __obj690_arg __obj690_arg_len __obj690_arg_req) ((__obj690_spec).range __obj690_arg __obj690_arg_len __obj690_arg_req) :=
 by
-  intro __obj699_arg __obj699_arg_len __obj699_arg_req
-  change Litex.In (Litex.arg __obj699_arg 0) Litex.Z
-  exact (__wd0_298 ((Litex.arg __obj699_arg 0)) (Exists.choose (__obj699_arg_req)))
+  intro __obj690_arg __obj690_arg_len __obj690_arg_req
+  change Litex.In (Litex.arg __obj690_arg 0) Litex.Z
+  exact (__wd0_296 ((Litex.arg __obj690_arg 0)) (Exists.choose (__obj690_arg_req)))
 
-noncomputable def __obj699 : Litex.Object :=
-  Litex.functionObject __obj699_spec __obj699_body
+noncomputable def __obj690 : Litex.Object :=
+  Litex.functionObject __obj690_spec __obj690_body
 
-theorem __obj699_in_fn_space :
-    Litex.In __obj699 (Litex.FnSet __obj699_spec) := by
-  unfold __obj699
-  exact Litex.functionObjectInFnSet __obj699_spec __obj699_body __obj699_closed
+theorem __obj690_in_fn_space :
+    Litex.In __obj690 (Litex.FnSet __obj690_spec) := by
+  unfold __obj690
+  exact Litex.functionObjectInFnSet __obj690_spec __obj690_body __obj690_closed
 
-noncomputable def __obj705 (__wd_scope33_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj696 (__wd_scope33_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope33_arg1
 
-noncomputable def __obj706_spec : Litex.FnSpec :=
+noncomputable def __obj697_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj706_body (__obj706_arg : List Litex.Object) (__arg_len : __obj706_arg.length = (__obj706_spec).arity) (__arg_req : (__obj706_spec).requirements __obj706_arg) : Litex.Object :=
-  (Litex.arg __obj706_arg 0)
+noncomputable def __obj697_body (__obj697_arg : List Litex.Object) (__arg_len : __obj697_arg.length = (__obj697_spec).arity) (__arg_req : (__obj697_spec).requirements __obj697_arg) : Litex.Object :=
+  (Litex.arg __obj697_arg 0)
 
-theorem __obj706_closed :
-    ∀ (__obj706_arg : List Litex.Object)
-      (__obj706_arg_len : __obj706_arg.length = (__obj706_spec).arity)
-      (__obj706_arg_req : (__obj706_spec).requirements __obj706_arg),
-      Litex.In (__obj706_body __obj706_arg __obj706_arg_len __obj706_arg_req) ((__obj706_spec).range __obj706_arg __obj706_arg_len __obj706_arg_req) :=
+theorem __obj697_closed :
+    ∀ (__obj697_arg : List Litex.Object)
+      (__obj697_arg_len : __obj697_arg.length = (__obj697_spec).arity)
+      (__obj697_arg_req : (__obj697_spec).requirements __obj697_arg),
+      Litex.In (__obj697_body __obj697_arg __obj697_arg_len __obj697_arg_req) ((__obj697_spec).range __obj697_arg __obj697_arg_len __obj697_arg_req) :=
 by
-  intro __obj706_arg __obj706_arg_len __obj706_arg_req
-  change Litex.In (Litex.arg __obj706_arg 0) Litex.Z
-  exact (__wd0_303 ((Litex.arg __obj706_arg 0)) (Exists.choose (__obj706_arg_req)))
+  intro __obj697_arg __obj697_arg_len __obj697_arg_req
+  change Litex.In (Litex.arg __obj697_arg 0) Litex.Z
+  exact (__wd0_301 ((Litex.arg __obj697_arg 0)) (Exists.choose (__obj697_arg_req)))
 
-noncomputable def __obj706 : Litex.Object :=
-  Litex.functionObject __obj706_spec __obj706_body
+noncomputable def __obj697 : Litex.Object :=
+  Litex.functionObject __obj697_spec __obj697_body
 
-theorem __obj706_in_fn_space :
-    Litex.In __obj706 (Litex.FnSet __obj706_spec) := by
-  unfold __obj706
-  exact Litex.functionObjectInFnSet __obj706_spec __obj706_body __obj706_closed
+theorem __obj697_in_fn_space :
+    Litex.In __obj697 (Litex.FnSet __obj697_spec) := by
+  unfold __obj697
+  exact Litex.functionObjectInFnSet __obj697_spec __obj697_body __obj697_closed
 
-theorem __fact593 : (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
+theorem __fact585 : (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_342 :
+theorem __wd0_340 :
   ∀ (__wd_scope40_arg1 : Litex.Object) (__wd_scope40_premise1 : Litex.In __wd_scope40_arg1 Litex.Z),
     Litex.In __wd_scope40_arg1 Litex.Z :=
 by
   intro __wd_scope40_arg1 __wd_scope40_premise1
   exact __wd_scope40_premise1
 
-theorem __wd0_343 :
+theorem __wd0_341 :
   ∀ (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object)
     (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z),
     Litex.In __wd_scope41_arg1 Litex.Z :=
@@ -1382,7 +1341,7 @@ by
   intro __wd_scope41_arg1 __wd_scope41_arg2 __wd_scope41_premise1 __wd_scope41_premise2
   exact __wd_scope41_premise1
 
-theorem __wd0_344 :
+theorem __wd0_342 :
   ∀ (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object)
     (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z),
     Litex.In __wd_scope41_arg1 Litex.C :=
@@ -1390,7 +1349,7 @@ by
   intro __wd_scope41_arg1 __wd_scope41_arg2 __wd_scope41_premise1 __wd_scope41_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope41_premise1))))))
 
-theorem __wd0_345 :
+theorem __wd0_343 :
   ∀ (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object)
     (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z),
     Litex.In __wd_scope41_arg2 Litex.Z :=
@@ -1398,7 +1357,7 @@ by
   intro __wd_scope41_arg1 __wd_scope41_arg2 __wd_scope41_premise1 __wd_scope41_premise2
   exact __wd_scope41_premise2
 
-theorem __wd0_346 :
+theorem __wd0_344 :
   ∀ (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object)
     (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z),
     Litex.In __wd_scope41_arg2 Litex.C :=
@@ -1406,7 +1365,7 @@ by
   intro __wd_scope41_arg1 __wd_scope41_arg2 __wd_scope41_premise1 __wd_scope41_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope41_premise2))))))
 
-theorem __wd0_347 :
+theorem __wd0_345 :
   ∀ (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object)
     (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z),
     Litex.In (Litex.add __wd_scope41_arg1 __wd_scope41_arg2) Litex.Z :=
@@ -1414,14 +1373,14 @@ by
   intro __wd_scope41_arg1 __wd_scope41_arg2 __wd_scope41_premise1 __wd_scope41_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope41_premise1) (__wd_scope41_premise2))
 
-theorem __wd0_351 :
+theorem __wd0_349 :
   ∀ (__wd_scope42_arg1 : Litex.Object) (__wd_scope42_premise1 : Litex.In __wd_scope42_arg1 Litex.Z),
     Litex.In __wd_scope42_arg1 Litex.Z :=
 by
   intro __wd_scope42_arg1 __wd_scope42_premise1
   exact __wd_scope42_premise1
 
-theorem __wd0_352 :
+theorem __wd0_350 :
   ∀ (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object)
     (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z),
     Litex.In __wd_scope43_arg1 Litex.Z :=
@@ -1429,7 +1388,7 @@ by
   intro __wd_scope43_arg1 __wd_scope43_arg2 __wd_scope43_premise1 __wd_scope43_premise2
   exact __wd_scope43_premise1
 
-theorem __wd0_353 :
+theorem __wd0_351 :
   ∀ (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object)
     (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z),
     Litex.In __wd_scope43_arg1 Litex.C :=
@@ -1437,7 +1396,7 @@ by
   intro __wd_scope43_arg1 __wd_scope43_arg2 __wd_scope43_premise1 __wd_scope43_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope43_premise1))))))
 
-theorem __wd0_354 :
+theorem __wd0_352 :
   ∀ (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object)
     (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z),
     Litex.In __wd_scope43_arg2 Litex.Z :=
@@ -1445,7 +1404,7 @@ by
   intro __wd_scope43_arg1 __wd_scope43_arg2 __wd_scope43_premise1 __wd_scope43_premise2
   exact __wd_scope43_premise2
 
-theorem __wd0_355 :
+theorem __wd0_353 :
   ∀ (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object)
     (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z),
     Litex.In __wd_scope43_arg2 Litex.C :=
@@ -1453,7 +1412,7 @@ by
   intro __wd_scope43_arg1 __wd_scope43_arg2 __wd_scope43_premise1 __wd_scope43_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope43_premise2))))))
 
-theorem __wd0_356 :
+theorem __wd0_354 :
   ∀ (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object)
     (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z),
     Litex.In (Litex.add __wd_scope43_arg1 __wd_scope43_arg2) Litex.Z :=
@@ -1461,8 +1420,71 @@ by
   intro __wd_scope43_arg1 __wd_scope43_arg2 __wd_scope43_premise1 __wd_scope43_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope43_premise1) (__wd_scope43_premise2))
 
-noncomputable def __obj745 (__wd_scope40_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj736 (__wd_scope40_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope40_arg1
+
+noncomputable def __obj737_spec : Litex.FnSpec :=
+  ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
+
+noncomputable def __obj737_body (__obj737_arg : List Litex.Object) (__arg_len : __obj737_arg.length = (__obj737_spec).arity) (__arg_req : (__obj737_spec).requirements __obj737_arg) : Litex.Object :=
+  (Litex.arg __obj737_arg 0)
+
+theorem __obj737_closed :
+    ∀ (__obj737_arg : List Litex.Object)
+      (__obj737_arg_len : __obj737_arg.length = (__obj737_spec).arity)
+      (__obj737_arg_req : (__obj737_spec).requirements __obj737_arg),
+      Litex.In (__obj737_body __obj737_arg __obj737_arg_len __obj737_arg_req) ((__obj737_spec).range __obj737_arg __obj737_arg_len __obj737_arg_req) :=
+by
+  intro __obj737_arg __obj737_arg_len __obj737_arg_req
+  change Litex.In (Litex.arg __obj737_arg 0) Litex.Z
+  exact (__wd0_340 ((Litex.arg __obj737_arg 0)) (Exists.choose (__obj737_arg_req)))
+
+noncomputable def __obj737 : Litex.Object :=
+  Litex.functionObject __obj737_spec __obj737_body
+
+theorem __obj737_in_fn_space :
+    Litex.In __obj737 (Litex.FnSet __obj737_spec) := by
+  unfold __obj737
+  exact Litex.functionObjectInFnSet __obj737_spec __obj737_body __obj737_closed
+
+noncomputable def __obj738 (__wd_scope41_arg1 : Litex.Object) : Litex.Object :=
+  __wd_scope41_arg1
+
+noncomputable def __obj739 (__wd_scope41_arg2 : Litex.Object) : Litex.Object :=
+  __wd_scope41_arg2
+
+noncomputable def __obj740 : Litex.Object :=
+  Litex.C
+
+noncomputable def __obj741 (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object) (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z) : Litex.Object :=
+  (Litex.add __wd_scope41_arg1 __wd_scope41_arg2)
+
+noncomputable def __obj742_spec : Litex.FnSpec :=
+  ({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
+
+noncomputable def __obj742_body (__obj742_arg : List Litex.Object) (__arg_len : __obj742_arg.length = (__obj742_spec).arity) (__arg_req : (__obj742_spec).requirements __obj742_arg) : Litex.Object :=
+  (Litex.add (Litex.arg __obj742_arg 0) (Litex.arg __obj742_arg 1))
+
+theorem __obj742_closed :
+    ∀ (__obj742_arg : List Litex.Object)
+      (__obj742_arg_len : __obj742_arg.length = (__obj742_spec).arity)
+      (__obj742_arg_req : (__obj742_spec).requirements __obj742_arg),
+      Litex.In (__obj742_body __obj742_arg __obj742_arg_len __obj742_arg_req) ((__obj742_spec).range __obj742_arg __obj742_arg_len __obj742_arg_req) :=
+by
+  intro __obj742_arg __obj742_arg_len __obj742_arg_req
+  change Litex.In (__obj741 ((Litex.arg __obj742_arg 0)) ((Litex.arg __obj742_arg 1)) (Exists.choose (__obj742_arg_req)) (Exists.choose (Exists.choose_spec (__obj742_arg_req)))) Litex.Z
+  exact (__wd0_345 ((Litex.arg __obj742_arg 0)) ((Litex.arg __obj742_arg 1)) (Exists.choose (__obj742_arg_req)) (Exists.choose (Exists.choose_spec (__obj742_arg_req))))
+
+noncomputable def __obj742 : Litex.Object :=
+  Litex.functionObject __obj742_spec __obj742_body
+
+theorem __obj742_in_fn_space :
+    Litex.In __obj742 (Litex.FnSet __obj742_spec) := by
+  unfold __obj742
+  exact Litex.functionObjectInFnSet __obj742_spec __obj742_body __obj742_closed
+
+noncomputable def __obj745 (__wd_scope42_arg1 : Litex.Object) : Litex.Object :=
+  __wd_scope42_arg1
 
 noncomputable def __obj746_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
@@ -1478,7 +1500,7 @@ theorem __obj746_closed :
 by
   intro __obj746_arg __obj746_arg_len __obj746_arg_req
   change Litex.In (Litex.arg __obj746_arg 0) Litex.Z
-  exact (__wd0_342 ((Litex.arg __obj746_arg 0)) (Exists.choose (__obj746_arg_req)))
+  exact (__wd0_349 ((Litex.arg __obj746_arg 0)) (Exists.choose (__obj746_arg_req)))
 
 noncomputable def __obj746 : Litex.Object :=
   Litex.functionObject __obj746_spec __obj746_body
@@ -1488,17 +1510,17 @@ theorem __obj746_in_fn_space :
   unfold __obj746
   exact Litex.functionObjectInFnSet __obj746_spec __obj746_body __obj746_closed
 
-noncomputable def __obj747 (__wd_scope41_arg1 : Litex.Object) : Litex.Object :=
-  __wd_scope41_arg1
+noncomputable def __obj747 (__wd_scope43_arg1 : Litex.Object) : Litex.Object :=
+  __wd_scope43_arg1
 
-noncomputable def __obj748 (__wd_scope41_arg2 : Litex.Object) : Litex.Object :=
-  __wd_scope41_arg2
+noncomputable def __obj748 (__wd_scope43_arg2 : Litex.Object) : Litex.Object :=
+  __wd_scope43_arg2
 
 noncomputable def __obj749 : Litex.Object :=
   Litex.C
 
-noncomputable def __obj750 (__wd_scope41_arg1 : Litex.Object) (__wd_scope41_arg2 : Litex.Object) (__wd_scope41_premise1 : Litex.In __wd_scope41_arg1 Litex.Z) (__wd_scope41_premise2 : Litex.In __wd_scope41_arg2 Litex.Z) : Litex.Object :=
-  (Litex.add __wd_scope41_arg1 __wd_scope41_arg2)
+noncomputable def __obj750 (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object) (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z) : Litex.Object :=
+  (Litex.add __wd_scope43_arg1 __wd_scope43_arg2)
 
 noncomputable def __obj751_spec : Litex.FnSpec :=
   ({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
@@ -1514,7 +1536,7 @@ theorem __obj751_closed :
 by
   intro __obj751_arg __obj751_arg_len __obj751_arg_req
   change Litex.In (__obj750 ((Litex.arg __obj751_arg 0)) ((Litex.arg __obj751_arg 1)) (Exists.choose (__obj751_arg_req)) (Exists.choose (Exists.choose_spec (__obj751_arg_req)))) Litex.Z
-  exact (__wd0_347 ((Litex.arg __obj751_arg 0)) ((Litex.arg __obj751_arg 1)) (Exists.choose (__obj751_arg_req)) (Exists.choose (Exists.choose_spec (__obj751_arg_req))))
+  exact (__wd0_354 ((Litex.arg __obj751_arg 0)) ((Litex.arg __obj751_arg 1)) (Exists.choose (__obj751_arg_req)) (Exists.choose (Exists.choose_spec (__obj751_arg_req))))
 
 noncomputable def __obj751 : Litex.Object :=
   Litex.functionObject __obj751_spec __obj751_body
@@ -1524,222 +1546,159 @@ theorem __obj751_in_fn_space :
   unfold __obj751
   exact Litex.functionObjectInFnSet __obj751_spec __obj751_body __obj751_closed
 
-noncomputable def __obj754 (__wd_scope42_arg1 : Litex.Object) : Litex.Object :=
-  __wd_scope42_arg1
-
-noncomputable def __obj755_spec : Litex.FnSpec :=
-  ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
-
-noncomputable def __obj755_body (__obj755_arg : List Litex.Object) (__arg_len : __obj755_arg.length = (__obj755_spec).arity) (__arg_req : (__obj755_spec).requirements __obj755_arg) : Litex.Object :=
-  (Litex.arg __obj755_arg 0)
-
-theorem __obj755_closed :
-    ∀ (__obj755_arg : List Litex.Object)
-      (__obj755_arg_len : __obj755_arg.length = (__obj755_spec).arity)
-      (__obj755_arg_req : (__obj755_spec).requirements __obj755_arg),
-      Litex.In (__obj755_body __obj755_arg __obj755_arg_len __obj755_arg_req) ((__obj755_spec).range __obj755_arg __obj755_arg_len __obj755_arg_req) :=
-by
-  intro __obj755_arg __obj755_arg_len __obj755_arg_req
-  change Litex.In (Litex.arg __obj755_arg 0) Litex.Z
-  exact (__wd0_351 ((Litex.arg __obj755_arg 0)) (Exists.choose (__obj755_arg_req)))
-
-noncomputable def __obj755 : Litex.Object :=
-  Litex.functionObject __obj755_spec __obj755_body
-
-theorem __obj755_in_fn_space :
-    Litex.In __obj755 (Litex.FnSet __obj755_spec) := by
-  unfold __obj755
-  exact Litex.functionObjectInFnSet __obj755_spec __obj755_body __obj755_closed
-
-noncomputable def __obj756 (__wd_scope43_arg1 : Litex.Object) : Litex.Object :=
-  __wd_scope43_arg1
-
-noncomputable def __obj757 (__wd_scope43_arg2 : Litex.Object) : Litex.Object :=
-  __wd_scope43_arg2
-
-noncomputable def __obj758 : Litex.Object :=
-  Litex.C
-
-noncomputable def __obj759 (__wd_scope43_arg1 : Litex.Object) (__wd_scope43_arg2 : Litex.Object) (__wd_scope43_premise1 : Litex.In __wd_scope43_arg1 Litex.Z) (__wd_scope43_premise2 : Litex.In __wd_scope43_arg2 Litex.Z) : Litex.Object :=
-  (Litex.add __wd_scope43_arg1 __wd_scope43_arg2)
-
-noncomputable def __obj760_spec : Litex.FnSpec :=
-  ({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
-
-noncomputable def __obj760_body (__obj760_arg : List Litex.Object) (__arg_len : __obj760_arg.length = (__obj760_spec).arity) (__arg_req : (__obj760_spec).requirements __obj760_arg) : Litex.Object :=
-  (Litex.add (Litex.arg __obj760_arg 0) (Litex.arg __obj760_arg 1))
-
-theorem __obj760_closed :
-    ∀ (__obj760_arg : List Litex.Object)
-      (__obj760_arg_len : __obj760_arg.length = (__obj760_spec).arity)
-      (__obj760_arg_req : (__obj760_spec).requirements __obj760_arg),
-      Litex.In (__obj760_body __obj760_arg __obj760_arg_len __obj760_arg_req) ((__obj760_spec).range __obj760_arg __obj760_arg_len __obj760_arg_req) :=
-by
-  intro __obj760_arg __obj760_arg_len __obj760_arg_req
-  change Litex.In (__obj759 ((Litex.arg __obj760_arg 0)) ((Litex.arg __obj760_arg 1)) (Exists.choose (__obj760_arg_req)) (Exists.choose (Exists.choose_spec (__obj760_arg_req)))) Litex.Z
-  exact (__wd0_356 ((Litex.arg __obj760_arg 0)) ((Litex.arg __obj760_arg 1)) (Exists.choose (__obj760_arg_req)) (Exists.choose (Exists.choose_spec (__obj760_arg_req))))
-
-noncomputable def __obj760 : Litex.Object :=
-  Litex.functionObject __obj760_spec __obj760_body
-
-theorem __obj760_in_fn_space :
-    Litex.In __obj760 (Litex.FnSet __obj760_spec) := by
-  unfold __obj760
-  exact Litex.functionObjectInFnSet __obj760_spec __obj760_body __obj760_closed
-
-theorem __fact636 : (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) = (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) := by
+theorem __fact628 : (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) = (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) := by
   exact rfl
 
-theorem __wd0_401 :
+theorem __wd0_399 :
   ∀ (__wd_scope53_arg1 : Litex.Object) (__wd_scope53_premise1 : Litex.In __wd_scope53_arg1 Litex.Z),
     Litex.In __wd_scope53_arg1 Litex.Z :=
 by
   intro __wd_scope53_arg1 __wd_scope53_premise1
   exact __wd_scope53_premise1
 
-theorem __wd0_408 :
+theorem __wd0_406 :
   ∀ (__wd_scope55_arg1 : Litex.Object) (__wd_scope55_premise1 : Litex.In __wd_scope55_arg1 Litex.Z),
     Litex.In __wd_scope55_arg1 Litex.Z :=
 by
   intro __wd_scope55_arg1 __wd_scope55_premise1
   exact __wd_scope55_premise1
 
-noncomputable def __obj808 (__wd_scope53_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj799 (__wd_scope53_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope53_arg1
 
-noncomputable def __obj809_spec : Litex.FnSpec :=
+noncomputable def __obj800_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj809_body (__obj809_arg : List Litex.Object) (__arg_len : __obj809_arg.length = (__obj809_spec).arity) (__arg_req : (__obj809_spec).requirements __obj809_arg) : Litex.Object :=
-  (Litex.arg __obj809_arg 0)
+noncomputable def __obj800_body (__obj800_arg : List Litex.Object) (__arg_len : __obj800_arg.length = (__obj800_spec).arity) (__arg_req : (__obj800_spec).requirements __obj800_arg) : Litex.Object :=
+  (Litex.arg __obj800_arg 0)
 
-theorem __obj809_closed :
-    ∀ (__obj809_arg : List Litex.Object)
-      (__obj809_arg_len : __obj809_arg.length = (__obj809_spec).arity)
-      (__obj809_arg_req : (__obj809_spec).requirements __obj809_arg),
-      Litex.In (__obj809_body __obj809_arg __obj809_arg_len __obj809_arg_req) ((__obj809_spec).range __obj809_arg __obj809_arg_len __obj809_arg_req) :=
+theorem __obj800_closed :
+    ∀ (__obj800_arg : List Litex.Object)
+      (__obj800_arg_len : __obj800_arg.length = (__obj800_spec).arity)
+      (__obj800_arg_req : (__obj800_spec).requirements __obj800_arg),
+      Litex.In (__obj800_body __obj800_arg __obj800_arg_len __obj800_arg_req) ((__obj800_spec).range __obj800_arg __obj800_arg_len __obj800_arg_req) :=
 by
-  intro __obj809_arg __obj809_arg_len __obj809_arg_req
-  change Litex.In (Litex.arg __obj809_arg 0) Litex.Z
-  exact (__wd0_401 ((Litex.arg __obj809_arg 0)) (Exists.choose (__obj809_arg_req)))
+  intro __obj800_arg __obj800_arg_len __obj800_arg_req
+  change Litex.In (Litex.arg __obj800_arg 0) Litex.Z
+  exact (__wd0_399 ((Litex.arg __obj800_arg 0)) (Exists.choose (__obj800_arg_req)))
 
-noncomputable def __obj809 : Litex.Object :=
-  Litex.functionObject __obj809_spec __obj809_body
+noncomputable def __obj800 : Litex.Object :=
+  Litex.functionObject __obj800_spec __obj800_body
 
-theorem __obj809_in_fn_space :
-    Litex.In __obj809 (Litex.FnSet __obj809_spec) := by
-  unfold __obj809
-  exact Litex.functionObjectInFnSet __obj809_spec __obj809_body __obj809_closed
+theorem __obj800_in_fn_space :
+    Litex.In __obj800 (Litex.FnSet __obj800_spec) := by
+  unfold __obj800
+  exact Litex.functionObjectInFnSet __obj800_spec __obj800_body __obj800_closed
 
-noncomputable def __obj819 (__wd_scope55_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj810 (__wd_scope55_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope55_arg1
 
-noncomputable def __obj820_spec : Litex.FnSpec :=
+noncomputable def __obj811_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj820_body (__obj820_arg : List Litex.Object) (__arg_len : __obj820_arg.length = (__obj820_spec).arity) (__arg_req : (__obj820_spec).requirements __obj820_arg) : Litex.Object :=
-  (Litex.arg __obj820_arg 0)
+noncomputable def __obj811_body (__obj811_arg : List Litex.Object) (__arg_len : __obj811_arg.length = (__obj811_spec).arity) (__arg_req : (__obj811_spec).requirements __obj811_arg) : Litex.Object :=
+  (Litex.arg __obj811_arg 0)
 
-theorem __obj820_closed :
-    ∀ (__obj820_arg : List Litex.Object)
-      (__obj820_arg_len : __obj820_arg.length = (__obj820_spec).arity)
-      (__obj820_arg_req : (__obj820_spec).requirements __obj820_arg),
-      Litex.In (__obj820_body __obj820_arg __obj820_arg_len __obj820_arg_req) ((__obj820_spec).range __obj820_arg __obj820_arg_len __obj820_arg_req) :=
+theorem __obj811_closed :
+    ∀ (__obj811_arg : List Litex.Object)
+      (__obj811_arg_len : __obj811_arg.length = (__obj811_spec).arity)
+      (__obj811_arg_req : (__obj811_spec).requirements __obj811_arg),
+      Litex.In (__obj811_body __obj811_arg __obj811_arg_len __obj811_arg_req) ((__obj811_spec).range __obj811_arg __obj811_arg_len __obj811_arg_req) :=
 by
-  intro __obj820_arg __obj820_arg_len __obj820_arg_req
-  change Litex.In (Litex.arg __obj820_arg 0) Litex.Z
-  exact (__wd0_408 ((Litex.arg __obj820_arg 0)) (Exists.choose (__obj820_arg_req)))
+  intro __obj811_arg __obj811_arg_len __obj811_arg_req
+  change Litex.In (Litex.arg __obj811_arg 0) Litex.Z
+  exact (__wd0_406 ((Litex.arg __obj811_arg 0)) (Exists.choose (__obj811_arg_req)))
 
-noncomputable def __obj820 : Litex.Object :=
-  Litex.functionObject __obj820_spec __obj820_body
+noncomputable def __obj811 : Litex.Object :=
+  Litex.functionObject __obj811_spec __obj811_body
 
-theorem __obj820_in_fn_space :
-    Litex.In __obj820 (Litex.FnSet __obj820_spec) := by
-  unfold __obj820
-  exact Litex.functionObjectInFnSet __obj820_spec __obj820_body __obj820_closed
+theorem __obj811_in_fn_space :
+    Litex.In __obj811 (Litex.FnSet __obj811_spec) := by
+  unfold __obj811
+  exact Litex.functionObjectInFnSet __obj811_spec __obj811_body __obj811_closed
 
-theorem __fact685 : (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
+theorem __fact677 : (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_450 :
+theorem __wd0_448 :
   ∀ (__wd_scope65_arg1 : Litex.Object) (__wd_scope65_premise1 : Litex.In __wd_scope65_arg1 Litex.Z),
     Litex.In __wd_scope65_arg1 Litex.Z :=
 by
   intro __wd_scope65_arg1 __wd_scope65_premise1
   exact __wd_scope65_premise1
 
-theorem __wd0_457 :
+theorem __wd0_455 :
   ∀ (__wd_scope67_arg1 : Litex.Object) (__wd_scope67_premise1 : Litex.In __wd_scope67_arg1 Litex.Z),
     Litex.In __wd_scope67_arg1 Litex.Z :=
 by
   intro __wd_scope67_arg1 __wd_scope67_premise1
   exact __wd_scope67_premise1
 
-noncomputable def __obj874 (__wd_scope65_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj865 (__wd_scope65_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope65_arg1
 
-noncomputable def __obj875_spec : Litex.FnSpec :=
+noncomputable def __obj866_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj875_body (__obj875_arg : List Litex.Object) (__arg_len : __obj875_arg.length = (__obj875_spec).arity) (__arg_req : (__obj875_spec).requirements __obj875_arg) : Litex.Object :=
-  (Litex.arg __obj875_arg 0)
+noncomputable def __obj866_body (__obj866_arg : List Litex.Object) (__arg_len : __obj866_arg.length = (__obj866_spec).arity) (__arg_req : (__obj866_spec).requirements __obj866_arg) : Litex.Object :=
+  (Litex.arg __obj866_arg 0)
 
-theorem __obj875_closed :
-    ∀ (__obj875_arg : List Litex.Object)
-      (__obj875_arg_len : __obj875_arg.length = (__obj875_spec).arity)
-      (__obj875_arg_req : (__obj875_spec).requirements __obj875_arg),
-      Litex.In (__obj875_body __obj875_arg __obj875_arg_len __obj875_arg_req) ((__obj875_spec).range __obj875_arg __obj875_arg_len __obj875_arg_req) :=
+theorem __obj866_closed :
+    ∀ (__obj866_arg : List Litex.Object)
+      (__obj866_arg_len : __obj866_arg.length = (__obj866_spec).arity)
+      (__obj866_arg_req : (__obj866_spec).requirements __obj866_arg),
+      Litex.In (__obj866_body __obj866_arg __obj866_arg_len __obj866_arg_req) ((__obj866_spec).range __obj866_arg __obj866_arg_len __obj866_arg_req) :=
 by
-  intro __obj875_arg __obj875_arg_len __obj875_arg_req
-  change Litex.In (Litex.arg __obj875_arg 0) Litex.Z
-  exact (__wd0_450 ((Litex.arg __obj875_arg 0)) (Exists.choose (__obj875_arg_req)))
+  intro __obj866_arg __obj866_arg_len __obj866_arg_req
+  change Litex.In (Litex.arg __obj866_arg 0) Litex.Z
+  exact (__wd0_448 ((Litex.arg __obj866_arg 0)) (Exists.choose (__obj866_arg_req)))
 
-noncomputable def __obj875 : Litex.Object :=
-  Litex.functionObject __obj875_spec __obj875_body
+noncomputable def __obj866 : Litex.Object :=
+  Litex.functionObject __obj866_spec __obj866_body
 
-theorem __obj875_in_fn_space :
-    Litex.In __obj875 (Litex.FnSet __obj875_spec) := by
-  unfold __obj875
-  exact Litex.functionObjectInFnSet __obj875_spec __obj875_body __obj875_closed
+theorem __obj866_in_fn_space :
+    Litex.In __obj866 (Litex.FnSet __obj866_spec) := by
+  unfold __obj866
+  exact Litex.functionObjectInFnSet __obj866_spec __obj866_body __obj866_closed
 
-noncomputable def __obj885 (__wd_scope67_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj876 (__wd_scope67_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope67_arg1
 
-noncomputable def __obj886_spec : Litex.FnSpec :=
+noncomputable def __obj877_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj886_body (__obj886_arg : List Litex.Object) (__arg_len : __obj886_arg.length = (__obj886_spec).arity) (__arg_req : (__obj886_spec).requirements __obj886_arg) : Litex.Object :=
-  (Litex.arg __obj886_arg 0)
+noncomputable def __obj877_body (__obj877_arg : List Litex.Object) (__arg_len : __obj877_arg.length = (__obj877_spec).arity) (__arg_req : (__obj877_spec).requirements __obj877_arg) : Litex.Object :=
+  (Litex.arg __obj877_arg 0)
 
-theorem __obj886_closed :
-    ∀ (__obj886_arg : List Litex.Object)
-      (__obj886_arg_len : __obj886_arg.length = (__obj886_spec).arity)
-      (__obj886_arg_req : (__obj886_spec).requirements __obj886_arg),
-      Litex.In (__obj886_body __obj886_arg __obj886_arg_len __obj886_arg_req) ((__obj886_spec).range __obj886_arg __obj886_arg_len __obj886_arg_req) :=
+theorem __obj877_closed :
+    ∀ (__obj877_arg : List Litex.Object)
+      (__obj877_arg_len : __obj877_arg.length = (__obj877_spec).arity)
+      (__obj877_arg_req : (__obj877_spec).requirements __obj877_arg),
+      Litex.In (__obj877_body __obj877_arg __obj877_arg_len __obj877_arg_req) ((__obj877_spec).range __obj877_arg __obj877_arg_len __obj877_arg_req) :=
 by
-  intro __obj886_arg __obj886_arg_len __obj886_arg_req
-  change Litex.In (Litex.arg __obj886_arg 0) Litex.Z
-  exact (__wd0_457 ((Litex.arg __obj886_arg 0)) (Exists.choose (__obj886_arg_req)))
+  intro __obj877_arg __obj877_arg_len __obj877_arg_req
+  change Litex.In (Litex.arg __obj877_arg 0) Litex.Z
+  exact (__wd0_455 ((Litex.arg __obj877_arg 0)) (Exists.choose (__obj877_arg_req)))
 
-noncomputable def __obj886 : Litex.Object :=
-  Litex.functionObject __obj886_spec __obj886_body
+noncomputable def __obj877 : Litex.Object :=
+  Litex.functionObject __obj877_spec __obj877_body
 
-theorem __obj886_in_fn_space :
-    Litex.In __obj886 (Litex.FnSet __obj886_spec) := by
-  unfold __obj886
-  exact Litex.functionObjectInFnSet __obj886_spec __obj886_body __obj886_closed
+theorem __obj877_in_fn_space :
+    Litex.In __obj877 (Litex.FnSet __obj877_spec) := by
+  unfold __obj877
+  exact Litex.functionObjectInFnSet __obj877_spec __obj877_body __obj877_closed
 
-theorem __fact734 : (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
+theorem __fact726 : (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_523 :
+theorem __wd0_521 :
   ∀ (__wd_scope76_arg1 : Litex.Object) (__wd_scope76_premise1 : Litex.In __wd_scope76_arg1 Litex.Z),
     Litex.In __wd_scope76_arg1 Litex.Z :=
 by
   intro __wd_scope76_arg1 __wd_scope76_premise1
   exact __wd_scope76_premise1
 
-theorem __wd0_524 :
+theorem __wd0_522 :
   ∀ (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object)
     (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z),
     Litex.In __wd_scope77_arg1 Litex.Z :=
@@ -1747,7 +1706,7 @@ by
   intro __wd_scope77_arg1 __wd_scope77_arg2 __wd_scope77_premise1 __wd_scope77_premise2
   exact __wd_scope77_premise1
 
-theorem __wd0_525 :
+theorem __wd0_523 :
   ∀ (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object)
     (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z),
     Litex.In __wd_scope77_arg1 Litex.C :=
@@ -1755,7 +1714,7 @@ by
   intro __wd_scope77_arg1 __wd_scope77_arg2 __wd_scope77_premise1 __wd_scope77_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope77_premise1))))))
 
-theorem __wd0_526 :
+theorem __wd0_524 :
   ∀ (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object)
     (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z),
     Litex.In __wd_scope77_arg2 Litex.Z :=
@@ -1763,7 +1722,7 @@ by
   intro __wd_scope77_arg1 __wd_scope77_arg2 __wd_scope77_premise1 __wd_scope77_premise2
   exact __wd_scope77_premise2
 
-theorem __wd0_527 :
+theorem __wd0_525 :
   ∀ (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object)
     (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z),
     Litex.In __wd_scope77_arg2 Litex.C :=
@@ -1771,7 +1730,7 @@ by
   intro __wd_scope77_arg1 __wd_scope77_arg2 __wd_scope77_premise1 __wd_scope77_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope77_premise2))))))
 
-theorem __wd0_528 :
+theorem __wd0_526 :
   ∀ (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object)
     (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z),
     Litex.In (Litex.add __wd_scope77_arg1 __wd_scope77_arg2) Litex.Z :=
@@ -1779,14 +1738,14 @@ by
   intro __wd_scope77_arg1 __wd_scope77_arg2 __wd_scope77_premise1 __wd_scope77_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope77_premise1) (__wd_scope77_premise2))
 
-theorem __wd0_544 :
+theorem __wd0_542 :
   ∀ (__wd_scope78_arg1 : Litex.Object) (__wd_scope78_premise1 : Litex.In __wd_scope78_arg1 Litex.Z),
     Litex.In __wd_scope78_arg1 Litex.Z :=
 by
   intro __wd_scope78_arg1 __wd_scope78_premise1
   exact __wd_scope78_premise1
 
-theorem __wd0_545 :
+theorem __wd0_543 :
   ∀ (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object)
     (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z),
     Litex.In __wd_scope79_arg1 Litex.Z :=
@@ -1794,7 +1753,7 @@ by
   intro __wd_scope79_arg1 __wd_scope79_arg2 __wd_scope79_premise1 __wd_scope79_premise2
   exact __wd_scope79_premise1
 
-theorem __wd0_546 :
+theorem __wd0_544 :
   ∀ (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object)
     (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z),
     Litex.In __wd_scope79_arg1 Litex.C :=
@@ -1802,7 +1761,7 @@ by
   intro __wd_scope79_arg1 __wd_scope79_arg2 __wd_scope79_premise1 __wd_scope79_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope79_premise1))))))
 
-theorem __wd0_547 :
+theorem __wd0_545 :
   ∀ (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object)
     (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z),
     Litex.In __wd_scope79_arg2 Litex.Z :=
@@ -1810,7 +1769,7 @@ by
   intro __wd_scope79_arg1 __wd_scope79_arg2 __wd_scope79_premise1 __wd_scope79_premise2
   exact __wd_scope79_premise2
 
-theorem __wd0_548 :
+theorem __wd0_546 :
   ∀ (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object)
     (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z),
     Litex.In __wd_scope79_arg2 Litex.C :=
@@ -1818,7 +1777,7 @@ by
   intro __wd_scope79_arg1 __wd_scope79_arg2 __wd_scope79_premise1 __wd_scope79_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope79_premise2))))))
 
-theorem __wd0_549 :
+theorem __wd0_547 :
   ∀ (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object)
     (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z),
     Litex.In (Litex.add __wd_scope79_arg1 __wd_scope79_arg2) Litex.Z :=
@@ -1826,151 +1785,151 @@ by
   intro __wd_scope79_arg1 __wd_scope79_arg2 __wd_scope79_premise1 __wd_scope79_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope79_premise1) (__wd_scope79_premise2))
 
-noncomputable def __obj950 (__wd_scope76_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj941 (__wd_scope76_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope76_arg1
 
-noncomputable def __obj951_spec : Litex.FnSpec :=
+noncomputable def __obj942_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj951_body (__obj951_arg : List Litex.Object) (__arg_len : __obj951_arg.length = (__obj951_spec).arity) (__arg_req : (__obj951_spec).requirements __obj951_arg) : Litex.Object :=
-  (Litex.arg __obj951_arg 0)
+noncomputable def __obj942_body (__obj942_arg : List Litex.Object) (__arg_len : __obj942_arg.length = (__obj942_spec).arity) (__arg_req : (__obj942_spec).requirements __obj942_arg) : Litex.Object :=
+  (Litex.arg __obj942_arg 0)
 
-theorem __obj951_closed :
-    ∀ (__obj951_arg : List Litex.Object)
-      (__obj951_arg_len : __obj951_arg.length = (__obj951_spec).arity)
-      (__obj951_arg_req : (__obj951_spec).requirements __obj951_arg),
-      Litex.In (__obj951_body __obj951_arg __obj951_arg_len __obj951_arg_req) ((__obj951_spec).range __obj951_arg __obj951_arg_len __obj951_arg_req) :=
+theorem __obj942_closed :
+    ∀ (__obj942_arg : List Litex.Object)
+      (__obj942_arg_len : __obj942_arg.length = (__obj942_spec).arity)
+      (__obj942_arg_req : (__obj942_spec).requirements __obj942_arg),
+      Litex.In (__obj942_body __obj942_arg __obj942_arg_len __obj942_arg_req) ((__obj942_spec).range __obj942_arg __obj942_arg_len __obj942_arg_req) :=
 by
-  intro __obj951_arg __obj951_arg_len __obj951_arg_req
-  change Litex.In (Litex.arg __obj951_arg 0) Litex.Z
-  exact (__wd0_523 ((Litex.arg __obj951_arg 0)) (Exists.choose (__obj951_arg_req)))
+  intro __obj942_arg __obj942_arg_len __obj942_arg_req
+  change Litex.In (Litex.arg __obj942_arg 0) Litex.Z
+  exact (__wd0_521 ((Litex.arg __obj942_arg 0)) (Exists.choose (__obj942_arg_req)))
 
-noncomputable def __obj951 : Litex.Object :=
-  Litex.functionObject __obj951_spec __obj951_body
+noncomputable def __obj942 : Litex.Object :=
+  Litex.functionObject __obj942_spec __obj942_body
 
-theorem __obj951_in_fn_space :
-    Litex.In __obj951 (Litex.FnSet __obj951_spec) := by
-  unfold __obj951
-  exact Litex.functionObjectInFnSet __obj951_spec __obj951_body __obj951_closed
+theorem __obj942_in_fn_space :
+    Litex.In __obj942 (Litex.FnSet __obj942_spec) := by
+  unfold __obj942
+  exact Litex.functionObjectInFnSet __obj942_spec __obj942_body __obj942_closed
 
-noncomputable def __obj952 (__wd_scope77_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj943 (__wd_scope77_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope77_arg1
 
-noncomputable def __obj953 (__wd_scope77_arg2 : Litex.Object) : Litex.Object :=
+noncomputable def __obj944 (__wd_scope77_arg2 : Litex.Object) : Litex.Object :=
   __wd_scope77_arg2
 
-noncomputable def __obj954 : Litex.Object :=
+noncomputable def __obj945 : Litex.Object :=
   Litex.C
 
-noncomputable def __obj955 (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object) (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z) : Litex.Object :=
+noncomputable def __obj946 (__wd_scope77_arg1 : Litex.Object) (__wd_scope77_arg2 : Litex.Object) (__wd_scope77_premise1 : Litex.In __wd_scope77_arg1 Litex.Z) (__wd_scope77_premise2 : Litex.In __wd_scope77_arg2 Litex.Z) : Litex.Object :=
   (Litex.add __wd_scope77_arg1 __wd_scope77_arg2)
 
-noncomputable def __obj956_spec : Litex.FnSpec :=
+noncomputable def __obj947_spec : Litex.FnSpec :=
   ({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj956_body (__obj956_arg : List Litex.Object) (__arg_len : __obj956_arg.length = (__obj956_spec).arity) (__arg_req : (__obj956_spec).requirements __obj956_arg) : Litex.Object :=
-  (Litex.add (Litex.arg __obj956_arg 0) (Litex.arg __obj956_arg 1))
+noncomputable def __obj947_body (__obj947_arg : List Litex.Object) (__arg_len : __obj947_arg.length = (__obj947_spec).arity) (__arg_req : (__obj947_spec).requirements __obj947_arg) : Litex.Object :=
+  (Litex.add (Litex.arg __obj947_arg 0) (Litex.arg __obj947_arg 1))
 
-theorem __obj956_closed :
-    ∀ (__obj956_arg : List Litex.Object)
-      (__obj956_arg_len : __obj956_arg.length = (__obj956_spec).arity)
-      (__obj956_arg_req : (__obj956_spec).requirements __obj956_arg),
-      Litex.In (__obj956_body __obj956_arg __obj956_arg_len __obj956_arg_req) ((__obj956_spec).range __obj956_arg __obj956_arg_len __obj956_arg_req) :=
+theorem __obj947_closed :
+    ∀ (__obj947_arg : List Litex.Object)
+      (__obj947_arg_len : __obj947_arg.length = (__obj947_spec).arity)
+      (__obj947_arg_req : (__obj947_spec).requirements __obj947_arg),
+      Litex.In (__obj947_body __obj947_arg __obj947_arg_len __obj947_arg_req) ((__obj947_spec).range __obj947_arg __obj947_arg_len __obj947_arg_req) :=
 by
-  intro __obj956_arg __obj956_arg_len __obj956_arg_req
-  change Litex.In (__obj955 ((Litex.arg __obj956_arg 0)) ((Litex.arg __obj956_arg 1)) (Exists.choose (__obj956_arg_req)) (Exists.choose (Exists.choose_spec (__obj956_arg_req)))) Litex.Z
-  exact (__wd0_528 ((Litex.arg __obj956_arg 0)) ((Litex.arg __obj956_arg 1)) (Exists.choose (__obj956_arg_req)) (Exists.choose (Exists.choose_spec (__obj956_arg_req))))
+  intro __obj947_arg __obj947_arg_len __obj947_arg_req
+  change Litex.In (__obj946 ((Litex.arg __obj947_arg 0)) ((Litex.arg __obj947_arg 1)) (Exists.choose (__obj947_arg_req)) (Exists.choose (Exists.choose_spec (__obj947_arg_req)))) Litex.Z
+  exact (__wd0_526 ((Litex.arg __obj947_arg 0)) ((Litex.arg __obj947_arg 1)) (Exists.choose (__obj947_arg_req)) (Exists.choose (Exists.choose_spec (__obj947_arg_req))))
 
-noncomputable def __obj956 : Litex.Object :=
-  Litex.functionObject __obj956_spec __obj956_body
+noncomputable def __obj947 : Litex.Object :=
+  Litex.functionObject __obj947_spec __obj947_body
 
-theorem __obj956_in_fn_space :
-    Litex.In __obj956 (Litex.FnSet __obj956_spec) := by
-  unfold __obj956
-  exact Litex.functionObjectInFnSet __obj956_spec __obj956_body __obj956_closed
+theorem __obj947_in_fn_space :
+    Litex.In __obj947 (Litex.FnSet __obj947_spec) := by
+  unfold __obj947
+  exact Litex.functionObjectInFnSet __obj947_spec __obj947_body __obj947_closed
 
-noncomputable def __obj968 (__wd_scope78_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj959 (__wd_scope78_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope78_arg1
 
-noncomputable def __obj969_spec : Litex.FnSpec :=
+noncomputable def __obj960_spec : Litex.FnSpec :=
   ({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj969_body (__obj969_arg : List Litex.Object) (__arg_len : __obj969_arg.length = (__obj969_spec).arity) (__arg_req : (__obj969_spec).requirements __obj969_arg) : Litex.Object :=
-  (Litex.arg __obj969_arg 0)
+noncomputable def __obj960_body (__obj960_arg : List Litex.Object) (__arg_len : __obj960_arg.length = (__obj960_spec).arity) (__arg_req : (__obj960_spec).requirements __obj960_arg) : Litex.Object :=
+  (Litex.arg __obj960_arg 0)
 
-theorem __obj969_closed :
-    ∀ (__obj969_arg : List Litex.Object)
-      (__obj969_arg_len : __obj969_arg.length = (__obj969_spec).arity)
-      (__obj969_arg_req : (__obj969_spec).requirements __obj969_arg),
-      Litex.In (__obj969_body __obj969_arg __obj969_arg_len __obj969_arg_req) ((__obj969_spec).range __obj969_arg __obj969_arg_len __obj969_arg_req) :=
+theorem __obj960_closed :
+    ∀ (__obj960_arg : List Litex.Object)
+      (__obj960_arg_len : __obj960_arg.length = (__obj960_spec).arity)
+      (__obj960_arg_req : (__obj960_spec).requirements __obj960_arg),
+      Litex.In (__obj960_body __obj960_arg __obj960_arg_len __obj960_arg_req) ((__obj960_spec).range __obj960_arg __obj960_arg_len __obj960_arg_req) :=
 by
-  intro __obj969_arg __obj969_arg_len __obj969_arg_req
-  change Litex.In (Litex.arg __obj969_arg 0) Litex.Z
-  exact (__wd0_544 ((Litex.arg __obj969_arg 0)) (Exists.choose (__obj969_arg_req)))
+  intro __obj960_arg __obj960_arg_len __obj960_arg_req
+  change Litex.In (Litex.arg __obj960_arg 0) Litex.Z
+  exact (__wd0_542 ((Litex.arg __obj960_arg 0)) (Exists.choose (__obj960_arg_req)))
 
-noncomputable def __obj969 : Litex.Object :=
-  Litex.functionObject __obj969_spec __obj969_body
+noncomputable def __obj960 : Litex.Object :=
+  Litex.functionObject __obj960_spec __obj960_body
 
-theorem __obj969_in_fn_space :
-    Litex.In __obj969 (Litex.FnSet __obj969_spec) := by
-  unfold __obj969
-  exact Litex.functionObjectInFnSet __obj969_spec __obj969_body __obj969_closed
+theorem __obj960_in_fn_space :
+    Litex.In __obj960 (Litex.FnSet __obj960_spec) := by
+  unfold __obj960
+  exact Litex.functionObjectInFnSet __obj960_spec __obj960_body __obj960_closed
 
-noncomputable def __obj970 (__wd_scope79_arg1 : Litex.Object) : Litex.Object :=
+noncomputable def __obj961 (__wd_scope79_arg1 : Litex.Object) : Litex.Object :=
   __wd_scope79_arg1
 
-noncomputable def __obj971 (__wd_scope79_arg2 : Litex.Object) : Litex.Object :=
+noncomputable def __obj962 (__wd_scope79_arg2 : Litex.Object) : Litex.Object :=
   __wd_scope79_arg2
 
-noncomputable def __obj972 : Litex.Object :=
+noncomputable def __obj963 : Litex.Object :=
   Litex.C
 
-noncomputable def __obj973 (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object) (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z) : Litex.Object :=
+noncomputable def __obj964 (__wd_scope79_arg1 : Litex.Object) (__wd_scope79_arg2 : Litex.Object) (__wd_scope79_premise1 : Litex.In __wd_scope79_arg1 Litex.Z) (__wd_scope79_premise2 : Litex.In __wd_scope79_arg2 Litex.Z) : Litex.Object :=
   (Litex.add __wd_scope79_arg1 __wd_scope79_arg2)
 
-noncomputable def __obj974_spec : Litex.FnSpec :=
+noncomputable def __obj965_spec : Litex.FnSpec :=
   ({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)
 
-noncomputable def __obj974_body (__obj974_arg : List Litex.Object) (__arg_len : __obj974_arg.length = (__obj974_spec).arity) (__arg_req : (__obj974_spec).requirements __obj974_arg) : Litex.Object :=
-  (Litex.add (Litex.arg __obj974_arg 0) (Litex.arg __obj974_arg 1))
+noncomputable def __obj965_body (__obj965_arg : List Litex.Object) (__arg_len : __obj965_arg.length = (__obj965_spec).arity) (__arg_req : (__obj965_spec).requirements __obj965_arg) : Litex.Object :=
+  (Litex.add (Litex.arg __obj965_arg 0) (Litex.arg __obj965_arg 1))
 
-theorem __obj974_closed :
-    ∀ (__obj974_arg : List Litex.Object)
-      (__obj974_arg_len : __obj974_arg.length = (__obj974_spec).arity)
-      (__obj974_arg_req : (__obj974_spec).requirements __obj974_arg),
-      Litex.In (__obj974_body __obj974_arg __obj974_arg_len __obj974_arg_req) ((__obj974_spec).range __obj974_arg __obj974_arg_len __obj974_arg_req) :=
+theorem __obj965_closed :
+    ∀ (__obj965_arg : List Litex.Object)
+      (__obj965_arg_len : __obj965_arg.length = (__obj965_spec).arity)
+      (__obj965_arg_req : (__obj965_spec).requirements __obj965_arg),
+      Litex.In (__obj965_body __obj965_arg __obj965_arg_len __obj965_arg_req) ((__obj965_spec).range __obj965_arg __obj965_arg_len __obj965_arg_req) :=
 by
-  intro __obj974_arg __obj974_arg_len __obj974_arg_req
-  change Litex.In (__obj973 ((Litex.arg __obj974_arg 0)) ((Litex.arg __obj974_arg 1)) (Exists.choose (__obj974_arg_req)) (Exists.choose (Exists.choose_spec (__obj974_arg_req)))) Litex.Z
-  exact (__wd0_549 ((Litex.arg __obj974_arg 0)) ((Litex.arg __obj974_arg 1)) (Exists.choose (__obj974_arg_req)) (Exists.choose (Exists.choose_spec (__obj974_arg_req))))
+  intro __obj965_arg __obj965_arg_len __obj965_arg_req
+  change Litex.In (__obj964 ((Litex.arg __obj965_arg 0)) ((Litex.arg __obj965_arg 1)) (Exists.choose (__obj965_arg_req)) (Exists.choose (Exists.choose_spec (__obj965_arg_req)))) Litex.Z
+  exact (__wd0_547 ((Litex.arg __obj965_arg 0)) ((Litex.arg __obj965_arg 1)) (Exists.choose (__obj965_arg_req)) (Exists.choose (Exists.choose_spec (__obj965_arg_req))))
 
-noncomputable def __obj974 : Litex.Object :=
-  Litex.functionObject __obj974_spec __obj974_body
+noncomputable def __obj965 : Litex.Object :=
+  Litex.functionObject __obj965_spec __obj965_body
 
-theorem __obj974_in_fn_space :
-    Litex.In __obj974 (Litex.FnSet __obj974_spec) := by
-  unfold __obj974
-  exact Litex.functionObjectInFnSet __obj974_spec __obj974_body __obj974_closed
+theorem __obj965_in_fn_space :
+    Litex.In __obj965 (Litex.FnSet __obj965_spec) := by
+  unfold __obj965
+  exact Litex.functionObjectInFnSet __obj965_spec __obj965_body __obj965_closed
 
-theorem __fact795 : (Litex.finiteSetReduce (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) = (Litex.finiteSetReduce (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) := by
+theorem __fact787 : (Litex.finiteSetReduce (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) = (Litex.finiteSetReduce (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) := by
   exact rfl
 
-theorem __fact796 : (Litex.tupleLiteral [1, 2, 3]) = (Litex.tupleLiteral [1, 2, 3]) := by
+theorem __fact788 : (Litex.tupleLiteral [1, 2, 3]) = (Litex.tupleLiteral [1, 2, 3]) := by
   exact rfl
 
-theorem __fact797 : Litex.IsTuple (Litex.tupleLiteral [1, 2, 3]) := by
+theorem __fact789 : Litex.IsTuple (Litex.tupleLiteral [1, 2, 3]) := by
   exact (Litex.tupleLiteralIsTuple [1, 2, 3])
 
-theorem __fact798 : (Litex.tupleDim (Litex.tupleLiteral [1, 2, 3])) = 3 := by
+theorem __fact790 : (Litex.tupleDim (Litex.tupleLiteral [1, 2, 3])) = 3 := by
   exact (Litex.tupleLiteral_dim [1, 2, 3])
 
-theorem __fact799 : (Litex.sequenceLiteral [1, 2, 3]) = (Litex.sequenceLiteral [1, 2, 3]) := by
+theorem __fact791 : (Litex.sequenceLiteral [1, 2, 3]) = (Litex.sequenceLiteral [1, 2, 3]) := by
   exact rfl
 
-theorem __fact800 : (Litex.finiteSequenceSet Litex.Z 3) = (Litex.finiteSequenceSet Litex.Z 3) := by
+theorem __fact792 : (Litex.finiteSequenceSet Litex.Z 3) = (Litex.finiteSequenceSet Litex.Z 3) := by
   exact rfl
 
-theorem __fact801 : (Litex.sequenceSet Litex.Z) = (Litex.sequenceSet Litex.Z) := by
+theorem __fact793 : (Litex.sequenceSet Litex.Z) = (Litex.sequenceSet Litex.Z) := by
   exact rfl
 
-end __Sketch25
+end __Sketch24

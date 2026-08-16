@@ -10,26 +10,34 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
         debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
-        let leaf_result =
-            self.verify_non_equational_atomic_fact_with_known_fact_then_computation(atomic_fact)?;
-        if leaf_result.is_true() {
-            return Ok(leaf_result);
+        let zero_premise_result =
+            self.verify_non_equational_atomic_fact_with_zero_premise_verification(atomic_fact)?;
+        if zero_premise_result.is_true() {
+            return Ok(zero_premise_result);
         }
 
         let builtin_state = UseBuiltinRuleVerifyState::new();
-        self.verify_non_equational_atomic_fact_with_one_builtin_rule(atomic_fact, &builtin_state)
+        self.verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
+            atomic_fact,
+            &builtin_state,
+        )
     }
 
     pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
         Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
-    pub(crate) fn verify_non_equational_atomic_fact_with_known_fact_then_computation(
+    // A premise is a child fact that a rule must verify before concluding its parent fact.
+    // Zero-premise verification closes the current fact without generating such child facts:
+    // it first reuses a known fact, then tries direct evaluation on the fact as written.
+    // This extra phase is necessary for `x * 2 >= 0` from known `x >= 0`: the multiplication
+    // rule consumes the allowed builtin-rule step, while its closed premise `2 >= 0` must still
+    // be evaluated without opening another premise-producing rule step.
+    pub(crate) fn verify_non_equational_atomic_fact_with_zero_premise_verification(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
@@ -38,72 +46,13 @@ impl Runtime {
             return Ok(known_result);
         }
 
-        let result = self.verify_non_equational_atomic_fact_by_builtin_computation(atomic_fact);
-        if result.is_true() {
-            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
-        }
-
-        let Some((definition_resolved_fact, equality_transport)) =
-            self.atomic_fact_with_explicit_definitions_resolved(atomic_fact)?
-        else {
-            return Ok(result);
-        };
-        let resolved_fact = match &definition_resolved_fact {
-            AtomicFact::InFact(fact) => fact
-                .element
-                .evaluate_to_normalized_decimal_number()
-                .map(|number| {
-                    InFact::new(number.into(), fact.set.clone(), fact.line_file.clone()).into()
-                })
-                .unwrap_or_else(|| definition_resolved_fact.clone()),
-            AtomicFact::NotInFact(fact) => fact
-                .element
-                .evaluate_to_normalized_decimal_number()
-                .map(|number| {
-                    NotInFact::new(number.into(), fact.set.clone(), fact.line_file.clone()).into()
-                })
-                .unwrap_or_else(|| definition_resolved_fact.clone()),
-            _ => definition_resolved_fact.clone(),
-        };
-        let resolved_result =
-            self.verify_non_equational_atomic_fact_by_builtin_computation(&resolved_fact);
-        if !resolved_result.is_true() {
-            return Ok(result);
-        }
-
-        let expected_target: Fact = atomic_fact.clone().into();
-        let resolved_target: Fact = resolved_fact.clone().into();
-        let definition_resolved_target: Fact = definition_resolved_fact.into();
-        let mut transformation_steps = Vec::new();
-        if resolved_target.to_string() != definition_resolved_target.to_string() {
-            transformation_steps.push(FactTransformationStep::new(
-                definition_resolved_target,
-                FactTransformationRule::RationalNormalization,
-            ));
-        }
-        transformation_steps.push(FactTransformationStep::new(
-            expected_target.clone(),
-            FactTransformationRule::EqualityRewrite(equality_transport),
-        ));
-        let fact_transformation =
-            FactTransformationEvidence::new(resolved_target.clone(), transformation_steps);
-        let result = FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-            expected_target.clone(),
-            "builtin computation after explicit object definition resolution".to_string(),
-            BuiltinRuleEvidence::ResolvedAtomicFactComputation(
-                ResolvedAtomicFactComputationBuiltinRuleEvidence::new(
-                    expected_target,
-                    resolved_target,
-                    fact_transformation,
-                ),
-            ),
-            vec![resolved_result],
-        )
-        .into();
+        let result = self.verify_non_equational_atomic_fact_by_direct_evaluation(atomic_fact);
         Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
     }
 
-    pub(crate) fn verify_non_equational_atomic_fact_by_builtin_computation(
+    // Direct evaluation is the computation arm of zero-premise verification: it may inspect
+    // the current expression, but it cannot generate premises or apply another rule.
+    pub(crate) fn verify_non_equational_atomic_fact_by_direct_evaluation(
         &self,
         atomic_fact: &AtomicFact,
     ) -> StmtResult {
@@ -160,13 +109,15 @@ impl Runtime {
                 }
             }
             AtomicFact::EqualFact(_) => {
-                unreachable!("equality has an owner-specific computation route")
+                unreachable!("equality has an owner-specific direct-evaluation route")
             }
             _ => StmtUnknown::new().into(),
         }
     }
 
-    pub(crate) fn verify_non_equational_atomic_fact_with_one_builtin_rule(
+    // This bounded phase may generate premises, so entering it consumes the available
+    // builtin-rule step before any child fact is checked.
+    pub(crate) fn verify_non_equational_atomic_fact_with_one_premise_producing_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,

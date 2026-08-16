@@ -1100,7 +1100,7 @@ impl Runtime {
             return Ok(exact);
         }
         let computed =
-            self.verify_non_equational_atomic_fact_with_known_fact_then_computation(bound)?;
+            self.verify_non_equational_atomic_fact_with_zero_premise_verification(bound)?;
         if computed.is_true() {
             return Ok(computed);
         }
@@ -1391,7 +1391,7 @@ impl Runtime {
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
             let direct_result =
-                self.verify_non_equational_atomic_fact_with_known_fact_then_computation(&in_z)?;
+                self.verify_non_equational_atomic_fact_with_zero_premise_verification(&in_z)?;
             if direct_result.is_true() {
                 steps.push(direct_result);
                 continue;

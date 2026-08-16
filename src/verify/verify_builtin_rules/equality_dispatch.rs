@@ -2522,7 +2522,7 @@ impl Runtime {
             };
             if let Some(empty_order) = empty_order {
                 let comparison = self
-                    .verify_non_equational_atomic_fact_with_known_fact_then_computation(
+                    .verify_non_equational_atomic_fact_with_zero_premise_verification(
                         &empty_order,
                     )?;
                 if comparison.is_true() {

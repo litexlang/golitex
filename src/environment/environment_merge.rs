@@ -221,7 +221,6 @@ impl Environment {
             known_objs_equal_to_matrix_list,
             known_objs_in_matrix_sets,
             known_obj_values,
-            known_object_definitions,
             known_objs_equal_to_set_builder,
             known_objs_in_fn_sets,
             known_transitive_props,
@@ -342,10 +341,6 @@ impl Environment {
 
         for (name, value) in known_obj_values {
             self.known_obj_values.insert(name, value);
-        }
-
-        for (name, definition) in known_object_definitions {
-            self.known_object_definitions.insert(name, definition);
         }
 
         for (name, value) in known_objs_equal_to_set_builder {

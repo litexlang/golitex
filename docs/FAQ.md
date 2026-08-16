@@ -1070,19 +1070,20 @@ direct `FactId` citation before considering specialized builtin existential
 routes. This keeps the compiler's source provenance stable; it does not widen
 ordinary existential proof search.
 
-## Does builtin computation replace every symbol by an equal object?
+## Does zero-premise direct evaluation replace every symbol by an equal object?
 
-No. It may unfold a symbol introduced by a checked definition such as
-`have one Z = 1`, because that statement explicitly records both the value and
-its defining equality. It does not choose an arbitrary representative from an
-ordinary equality class.
+No. Direct evaluation checks the atomic fact as written. It does not unfold
+every argument through `have x T = value` definitions and then retry the
+evaluation on a rewritten target.
 
-For example, after also writing `have integer_set set = Z`, the fact
-`one + 1 $in integer_set` can be checked by computing the resolved fact and
-then rewriting the proof back through the two stored definition equalities.
-The result remains a proof of the source fact, and Litex-to-Lean cites those
-exact equality `FactId`s. By contrast, `have unknown_set set` provides no value,
-so `one + 1 $in unknown_set` remains `unknown`.
+For example, `2 $in Z` is zero-premise direct evaluation: it closes the fact
+without generating a child fact that must also be proved. After
+`have one Z = 1` and `have integer_set set = Z`, the fact
+`one + 1 $in integer_set` does not become direct evaluation merely because all of
+its arguments have equal closed representatives. Known-fact matching may
+still transport an already proved fact through checked equalities, but it does
+not manufacture that source fact by running direct evaluation on rewritten
+arguments.
 
 ## Why does Litex distinguish `true`, `unknown`, and `error`?
 

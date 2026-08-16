@@ -1,7 +1,7 @@
 use super::*;
 
 #[test]
-fn builtin_computation_unfolds_explicit_object_definitions_with_provenance() {
+fn direct_evaluation_does_not_rewrite_all_arguments_through_object_definitions() {
     let source = r#"
 have one Z = 1
 have integer_set set = Z
@@ -10,75 +10,58 @@ one + 1 $in integer_set
 "#;
     let mut runtime = Runtime::new();
     runtime.new_file_path_new_env_new_name_scope(
-        "builtin_computation_unfolds_explicit_object_definitions_with_provenance",
+        "direct_evaluation_does_not_rewrite_all_arguments_through_object_definitions",
     );
     let (results, error) = run_source_code(source, &mut runtime);
     let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
     assert!(
-        succeeded,
-        "explicit values should close the builtin membership computation:\n{output}"
+        !succeeded,
+        "direct evaluation must not rewrite every argument through object definitions:\n{output}"
     );
-
-    let success = results
-        .last()
-        .and_then(StmtResult::factual_success)
-        .expect("the resolved membership should retain a factual success");
-    assert_eq!(
-        strip_parsing_free_param_tags_for_user_display(&success.stmt.to_string()),
-        "one + 1 $in integer_set"
-    );
-    let VerifiedByResult::BuiltinRule(rule) = success.underlying_verified_by() else {
-        panic!("the original goal should retain the resolved computation rule: {success:?}");
-    };
-    let Some(BuiltinRuleEvidence::ResolvedAtomicFactComputation(evidence)) = &rule.evidence else {
-        panic!("the resolved computation should retain typed evidence: {rule:?}");
-    };
-    assert_eq!(
-        strip_parsing_free_param_tags_for_user_display(&evidence.expected_target.to_string()),
-        "one + 1 $in integer_set"
-    );
-    assert_eq!(evidence.resolved_target.to_string(), "2 $in Z");
-    assert_eq!(evidence.fact_transformation.source.to_string(), "2 $in Z");
-    assert_eq!(evidence.fact_transformation.steps.len(), 2);
-    let FactTransformationRule::EqualityRewrite(equality_transport) =
-        &evidence.fact_transformation.steps[1].rule
-    else {
-        panic!("the final transformation should rewrite definitions");
-    };
-    assert_eq!(equality_transport.steps.len(), 2);
     assert!(
-        equality_transport
-            .steps
-            .iter()
-            .all(|step| step.equality_fact_id.is_some()),
-        "each definition rewrite must cite its stored equality FactId"
+        output.contains("\"message\": \"unknown result\""),
+        "{output}"
     );
-    assert_eq!(rule.subgoals.len(), 1);
-    assert_eq!(
-        rule.subgoals[0]
-            .factual_success()
-            .expect("the rule should retain its closed computation")
-            .stmt
-            .to_string(),
-        "2 $in Z"
+    assert!(
+        output.contains("\"failed_goal\": \"one + 1 $in integer_set\""),
+        "{output}"
     );
 
-    let boundary = r#"
-have one Z = 1
-have unknown_set set
+    let mut direct_runtime = Runtime::new();
+    direct_runtime.new_file_path_new_env_new_name_scope(
+        "direct_evaluation_still_checks_the_written_closed_fact",
+    );
+    let (direct_results, direct_error) = run_source_code("2 $in Z", &mut direct_runtime);
+    let (direct_succeeded, direct_output) =
+        render_run_source_code_output(&direct_runtime, &direct_results, &direct_error, false);
+    assert!(
+        direct_succeeded,
+        "zero-premise direct evaluation on the written fact must remain available:\n{direct_output}"
+    );
 
-one + 1 $in unknown_set
+    let known_fact_source = r#"
+abstract_prop P(x)
+
+forall x, y R:
+    $P(x)
+    x = y
+    =>:
+        $P(y)
 "#;
-    let mut boundary_runtime = Runtime::new();
-    boundary_runtime.new_file_path_new_env_new_name_scope(
-        "builtin_computation_does_not_invent_unknown_set_value",
+    let mut known_fact_runtime = Runtime::new();
+    known_fact_runtime
+        .new_file_path_new_env_new_name_scope("known_fact_matching_still_uses_checked_equalities");
+    let (known_fact_results, known_fact_error) =
+        run_source_code(known_fact_source, &mut known_fact_runtime);
+    let (known_fact_succeeded, known_fact_output) = render_run_source_code_output(
+        &known_fact_runtime,
+        &known_fact_results,
+        &known_fact_error,
+        false,
     );
-    let (boundary_results, boundary_error) = run_source_code(boundary, &mut boundary_runtime);
-    let (boundary_succeeded, boundary_output) =
-        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
     assert!(
-        !boundary_succeeded,
-        "a symbol without an explicit value must remain unknown:\n{boundary_output}"
+        known_fact_succeeded,
+        "known-fact matching through a checked equality must remain available:\n{known_fact_output}"
     );
 }
 

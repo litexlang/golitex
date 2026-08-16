@@ -15,18 +15,6 @@ pub struct DivNotEqualZeroBuiltinRuleEvidence {
     pub orientation: NonzeroExpressionOrientation,
 }
 
-/// A non-equational atomic goal proved by first unfolding checked object
-/// definitions, then running the ordinary builtin computation on the closed
-/// resolved target. The enclosing builtin result keeps that computed proof as
-/// its sole subgoal; `fact_transformation` normalizes and rewrites it back to
-/// the source goal.
-#[derive(Clone, Debug)]
-pub struct ResolvedAtomicFactComputationBuiltinRuleEvidence {
-    pub expected_target: Fact,
-    pub resolved_target: Fact,
-    pub fact_transformation: FactTransformationEvidence,
-}
-
 /// Exact introduction certificate for one selected branch of an `or` fact.
 /// The enclosing result retains exactly one child proving
 /// `expected_selected`; `selected_index` fixes its position in
@@ -56,20 +44,6 @@ impl fmt::Debug for DisjunctionIntroductionBuiltinRuleEvidence {
             .field("expected_selected", &self.expected_selected.to_string())
             .field("selected_index", &self.selected_index)
             .finish()
-    }
-}
-
-impl ResolvedAtomicFactComputationBuiltinRuleEvidence {
-    pub fn new(
-        expected_target: Fact,
-        resolved_target: Fact,
-        fact_transformation: FactTransformationEvidence,
-    ) -> Self {
-        Self {
-            expected_target,
-            resolved_target,
-            fact_transformation,
-        }
     }
 }
 
@@ -473,7 +447,6 @@ pub enum BuiltinRuleEvidence {
     FunctionSetMembership(FunctionSetMembershipBuiltinRuleEvidence),
     RefinedNumericMembership(RefinedNumericMembershipBuiltinRuleEvidence),
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleEvidence),
-    ResolvedAtomicFactComputation(ResolvedAtomicFactComputationBuiltinRuleEvidence),
     DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
     KnownEqualityPath(KnownEqualityBuiltinRuleEvidence),
@@ -522,10 +495,6 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::ClosedNumericComparison(evidence) => f
                 .debug_tuple("ClosedNumericComparison")
-                .field(evidence)
-                .finish(),
-            BuiltinRuleEvidence::ResolvedAtomicFactComputation(evidence) => f
-                .debug_tuple("ResolvedAtomicFactComputation")
                 .field(evidence)
                 .finish(),
             BuiltinRuleEvidence::DisjunctionIntroduction(evidence) => f

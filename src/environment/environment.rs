@@ -71,9 +71,6 @@ pub struct Environment {
         HashMap<ObjString, (MatrixListObj, Option<MatrixSet>, LineFile)>,
     pub known_objs_in_matrix_sets: HashMap<ObjString, (MatrixSet, LineFile)>,
     pub known_obj_values: HashMap<ObjString, KnownObjValue>,
-    /// Checked `have x T = value` bindings. These are deliberately separate
-    /// from ordinary equality classes and numeric normalization caches.
-    pub known_object_definitions: HashMap<ObjString, KnownObjectDefinition>,
     pub known_objs_equal_to_set_builder: HashMap<ObjString, (SetBuilder, LineFile)>,
 
     pub known_objs_in_fn_sets: HashMap<ObjString, KnownFnInfo>,
@@ -105,23 +102,6 @@ pub enum KnownObjValue {
     SimplifiedFraction(Div),  // when a = 1/3, store a = 1/3
 }
 
-#[derive(Clone)]
-pub struct KnownObjectDefinition {
-    pub defined: Obj,
-    pub value: Obj,
-    pub equality: EqualFact,
-}
-
-impl KnownObjectDefinition {
-    pub fn new(defined: Obj, value: Obj, equality: EqualFact) -> Self {
-        Self {
-            defined,
-            value,
-            equality,
-        }
-    }
-}
-
 impl Environment {
     /// Remove declarations and proof-control state from a temporary
     /// well-definedness environment while retaining directly checked atomic
@@ -151,7 +131,6 @@ impl Environment {
         self.known_objs_equal_to_matrix_list.clear();
         self.known_objs_in_matrix_sets.clear();
         self.known_obj_values.clear();
-        self.known_object_definitions.clear();
         self.known_objs_equal_to_set_builder.clear();
         self.known_objs_in_fn_sets.clear();
         self.known_transitive_props.clear();
@@ -247,7 +226,6 @@ impl Environment {
             known_objs_equal_to_matrix_list: known_matrix_list_objs,
             known_objs_in_matrix_sets: HashMap::new(),
             known_obj_values,
-            known_object_definitions: HashMap::new(),
             known_objs_equal_to_set_builder: known_set_builder_objs,
             known_transitive_props: HashMap::new(),
             known_symmetric_props: HashMap::new(),

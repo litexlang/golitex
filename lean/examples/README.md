@@ -74,7 +74,6 @@ prefix. `cases/` contains the corresponding standalone Litex sources.
 | `litex_object_abi` | One target object type with independent numeric and function-domain memberships |
 | `set_predicate_definitions` | Nonempty and finite set predicates derived from the shared membership model |
 | `shared_builtin_rules` | Generated proofs calling checked theorems from `Litex.Rules` |
-| `resolved_builtin_computation` | Closed builtin computation after checked object-definition unfolding, replayed through exact defining-equality `FactId`s |
 
 Strict compilation remains fail-closed. Unsupported proof routes never become
 `sorry`, compiler-invented axioms, or calls into the deleted native backend.

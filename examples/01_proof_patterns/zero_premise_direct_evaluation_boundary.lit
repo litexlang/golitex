@@ -1,0 +1,24 @@
+# Tracer: zero-premise direct evaluation stays on the atomic fact as written.
+#
+# Before (worked implicitly):
+# have one Z = 1
+# have integer_set set = Z
+# one + 1 $in integer_set
+# Former behavior: the verifier unfolded every explicitly defined argument,
+# computed `2 $in Z`, and rewrote the proof back to the source goal.
+#
+# Now (verified):
+2 $in Z
+forall x R:
+    x >= 0
+    =>:
+        x * 2 >= 0
+# Current behavior: zero-premise direct evaluation remains available without
+# rewriting the target through object definitions. In the universal example,
+# `x >= 0` is a known premise and `2 >= 0` closes by direct evaluation after
+# the multiplication rule consumes the allowed builtin-rule step.
+#
+# Boundary: `one + 1 $in integer_set` above is intentionally unknown. Its
+# executable negative regression is
+# `direct_evaluation_does_not_rewrite_all_arguments_through_object_definitions`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/01_proof_patterns/zero_premise_direct_evaluation_boundary.lit

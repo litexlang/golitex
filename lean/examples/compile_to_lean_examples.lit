@@ -241,15 +241,7 @@ sketch:
     1 $in N
     1 $in C
 
-# 23. Unfolding the definitions one = 1 and integer_set = Z reduces the final
-# claim to the closed computation 2 $in Z.
-sketch:
-    have one Z = 1
-    have integer_set set = Z
-
-    one + 1 $in integer_set
-
-# 24. Anonymous goal examples and targetless sketches check local mathematics
+# 23. Anonymous goal examples and targetless sketches check local mathematics
 # without exporting their facts into the enclosing example ledger.
 sketch:
     example:
@@ -263,7 +255,7 @@ sketch:
     sketch:
         3 = 3
 
-# 25. Aggregate object families keep their denotations proof-free while every
+# 24. Aggregate object families keep their denotations proof-free while every
 # partial child, callable contract, and fold audit stays in the owning proof.
 sketch:
     forall F set:

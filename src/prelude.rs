@@ -17,7 +17,6 @@ pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality,
     KnownEqualityProofStep, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
-    KnownObjectDefinition,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -376,12 +375,11 @@ pub use crate::result::{
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
     NativeConstantMembershipBuiltinRule, RealArithmeticMembershipClosureBuiltinRule,
     RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
-    ResolvedAtomicFactComputationBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
-    SetBuiltinRule, SetRelationDualityBuiltinRule, WellDefinednessBinderScopeEvidence,
-    WellDefinednessCertificate, WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
-    WellDefinednessParameterFactEvidence, WellDefinednessRequirementRole,
-    WellDefinednessRootObjectProofUse, WellDefinednessSourceObjectUse,
-    WellDefinednessTargetRequirementEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
+    WellDefinednessBinderScopeEvidence, WellDefinednessCertificate, WellDefinednessFactEvidence,
+    WellDefinednessObjectEvidence, WellDefinednessParameterFactEvidence,
+    WellDefinednessRequirementRole, WellDefinednessRootObjectProofUse,
+    WellDefinednessSourceObjectUse, WellDefinednessTargetRequirementEvidence,
 };
 pub use crate::result::{
     CachedWellDefinedObj, WellDefinedBinderPremiseProof, WellDefinedBinderPremiseRole,

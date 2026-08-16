@@ -847,42 +847,6 @@ impl Runtime {
         None
     }
 
-    pub(crate) fn known_object_definitions_for_objects(
-        &self,
-        objects: &[&Obj],
-    ) -> Vec<KnownObjectDefinition> {
-        let mut environments = self.iter_environments_from_top().collect::<Vec<_>>();
-        let mut module_names = Vec::new();
-        for object in objects {
-            for module_name in self.obj_referenced_module_names(object) {
-                if !module_names.contains(&module_name) {
-                    module_names.push(module_name);
-                }
-            }
-        }
-        for module_name in module_names {
-            environments.extend(self.imported_module_environments(&module_name));
-        }
-
-        let mut seen = HashSet::new();
-        let mut definitions = Vec::new();
-        for environment in environments {
-            for (key, definition) in environment.known_object_definitions.iter() {
-                if seen.insert(key.clone()) {
-                    definitions.push(definition.clone());
-                }
-            }
-        }
-        definitions.sort_by(|left, right| {
-            left.equality
-                .line_file
-                .0
-                .cmp(&right.equality.line_file.0)
-                .then_with(|| left.defined.to_string().cmp(&right.defined.to_string()))
-        });
-        definitions
-    }
-
     pub fn get_all_objs_equal_to_given(&self, given: &str) -> Vec<String> {
         let environments = self.iter_environments_from_top().collect::<Vec<_>>();
         Self::get_all_objs_equal_to_given_in_environments(&environments, given)

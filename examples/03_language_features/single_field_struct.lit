@@ -23,7 +23,9 @@ forall x, y R:
     zero_distance(x, y) >= 0
 by thm struct_member(zero_distance, &MetricSpace<R>)
 have metric &MetricSpace<R> = zero_distance
-metric.dist(1, 0) = metric(1, 0) = 0
+zero_distance(1, 0) = 0
+metric(1, 0) = zero_distance(1, 0)
+metric.dist(1, 0) = metric(1, 0) = zero_distance(1, 0) = 0
 
 # Remaining boundary: a struct must still declare at least one field.
 # struct Empty:
