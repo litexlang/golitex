@@ -247,6 +247,7 @@ impl Runtime {
         if self.infer_rule_firing_cached(&firing_key) {
             return Ok(InferResult::new());
         }
+        self.store_infer_rule_firing(firing_key);
         let mut param_to_arg_map: HashMap<String, Obj> = HashMap::new();
         insert_symbol_substitution(
             &mut param_to_arg_map,
@@ -294,8 +295,6 @@ impl Runtime {
                 fact_to_store,
             )?;
         }
-
-        self.store_infer_rule_firing(firing_key);
         Ok(infer_result)
     }
 

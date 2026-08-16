@@ -3,11 +3,11 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const SOURCE: &str = "examples/09_compile_to_lean/compile_to_lean_examples.lit";
-const GENERATED: &str = "examples/09_compile_to_lean/compile_to_lean_examples.lean";
+const SOURCE: &str = "lean/examples/compile_to_lean_examples.lit";
+const GENERATED: &str = "lean/examples/compile_to_lean_examples.lean";
 
 #[test]
-fn lean_command_reproduces_the_checked_in_09_examples() {
+fn lean_command_reproduces_the_checked_in_examples() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("success");
     let output_path = scratch.new_path("lean");
@@ -32,7 +32,7 @@ fn lean_command_reproduces_the_checked_in_09_examples() {
     assert_eq!(generated, checked_in, "the checked-in Lean ledger is stale");
     assert!(generated.starts_with("import Litex.Rules\n"));
     assert!(generated.contains("namespace __Sketch01"));
-    assert!(generated.contains("namespace __Sketch24"));
+    assert!(generated.contains("namespace __Sketch25"));
     assert!(generated.contains("example : (1 : Litex.Object) = 1 :="));
     assert!(!generated.contains("sorry"));
 }

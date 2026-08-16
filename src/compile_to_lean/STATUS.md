@@ -156,9 +156,12 @@ The remaining gaps are proof and resolution gaps rather than child-edge gaps:
   premise roles. Other partial
   constructors retain their successful facts in the audit DAG, but do not yet
   distinguish the semantic top-level WD conditions from proof-internal facts.
-  Replacement still needs its uniqueness condition; projections, indexing,
-  ranges, reductions, matrices, structs, and similar constructors need the
-  same explicit condition recipe.
+  Replacement still needs its uniqueness condition. Ranges and indexed or
+  finite-set reductions now have typed value slots, proof-free denotations,
+  and separate verification-dependency edges; their individual semantic
+  conditions are not yet all classified into a target-neutral condition enum.
+  Projections, indexing, matrices, structs, and similar constructors still
+  need both that classification and typed resolution snapshots.
 - A function-application cache key retains function-membership identities, but
   the frozen object node does not contain a self-contained snapshot of the
   exact selected layer specification. The validator can count argument
@@ -207,6 +210,11 @@ migration scaffolding, not the final object-construction ABI.
   membership content.
 - [x] Add proof-free list-set denotation with an ordered child and
   pairwise-distinct source certificate replayed locally.
+- [x] Lower big union/intersection, power set, general Cartesian products,
+  half-open/closed integer ranges, indexed and finite-set sum/product/reduce,
+  tuple/sequence literals, and finite/infinite sequence carriers to proof-free
+  `Litex.Object` terms. Closed-range aggregate rechecks are frozen as audit
+  dependencies rather than constructor value slots.
 - [ ] Replace the target-named proof-slot layer with a verifier-owned,
   target-neutral construction recipe: ordered value children, indexed semantic
   condition proofs, owned binder scopes, and typed environment-resolution

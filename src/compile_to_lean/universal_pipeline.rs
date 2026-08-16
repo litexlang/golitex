@@ -1,4 +1,5 @@
 use crate::common::keywords::IS_CHOICE_FUNCTION_FOR;
+use crate::litex_to_lean_ir::LitexToLeanAggregateObjectIr;
 use crate::prelude::*;
 use crate::verify::rule_schema::{canonical_atomic_facts_equal, MatchLimits};
 use std::collections::{HashMap, HashSet};
@@ -1818,7 +1819,7 @@ impl UniversalEmitter {
             "noncomputable def {value_name} ({index_name} : Litex.Object) : Litex.Object :=\n  {value}"
         ));
         self.declarations.push(format!(
-            "noncomputable def {name} : Litex.Object :=\n  Litex.tupleObject {dimension} {value_name} {positive_name} {at_least_two_name}"
+            "noncomputable def {name} : Litex.Object :=\n  Litex.tupleObject {dimension} {value_name}"
         ));
 
         let mut named_context = context.clone();
@@ -1850,7 +1851,7 @@ impl UniversalEmitter {
                         ));
                     }
                     format!(
-                        "by\n  unfold {name}\n  exact Litex.tupleObjectIsTuple {dimension} {value_name} {positive_name} {at_least_two_name}"
+                        "by\n  unfold {name}\n  exact Litex.tupleObjectIsTuple {dimension} {value_name}"
                     )
                 }
                 LitexToLeanStoredTupleFactRoleIr::Dimension => {
@@ -1862,11 +1863,11 @@ impl UniversalEmitter {
                         ));
                     }
                     format!(
-                        "by\n  simpa only [{name}] using\n    (Litex.tupleObject_dim {dimension} {value_name} {positive_name} {at_least_two_name})"
+                        "by\n  simpa only [{name}] using\n    (Litex.tupleObject_dim {dimension} {value_name})"
                     )
                 }
                 LitexToLeanStoredTupleFactRoleIr::Coordinate => format!(
-                    "by\n  intro __coord __coord_in_range\n  simpa only [{name}, {value_name}] using\n    (Litex.tupleObject_at {dimension} {value_name} {positive_name} {at_least_two_name} __coord)"
+                    "by\n  intro __coord __coord_in_range\n  simpa only [{name}, {value_name}] using\n    (Litex.tupleObject_at {dimension} {value_name} __coord)"
                 ),
             };
             self.declarations.push(format!(
@@ -5170,7 +5171,8 @@ impl UniversalEmitter {
                     scopes,
                 );
             }
-            LitexToLeanObjectIr::ClosedRange { start, end } => {
+            LitexToLeanObjectIr::ClosedRange { start, end }
+            | LitexToLeanObjectIr::Range { start, end } => {
                 self.collect_application_scopes_from_object(
                     start,
                     context,
@@ -5185,6 +5187,50 @@ impl UniversalEmitter {
                     binder_types,
                     scopes,
                 );
+            }
+            LitexToLeanObjectIr::GeneralCartesianProduct {
+                index_set,
+                family_set,
+                family_function,
+            } => {
+                for argument in [index_set, family_set, family_function] {
+                    self.collect_application_scopes_from_object(
+                        argument,
+                        context,
+                        binder_names,
+                        binder_types,
+                        scopes,
+                    );
+                }
+            }
+            LitexToLeanObjectIr::SequenceSet { values, length } => {
+                self.collect_application_scopes_from_object(
+                    values,
+                    context,
+                    binder_names,
+                    binder_types,
+                    scopes,
+                );
+                if let Some(length) = length {
+                    self.collect_application_scopes_from_object(
+                        length,
+                        context,
+                        binder_names,
+                        binder_types,
+                        scopes,
+                    );
+                }
+            }
+            LitexToLeanObjectIr::Aggregate { arguments, .. } => {
+                for argument in arguments {
+                    self.collect_application_scopes_from_object(
+                        argument,
+                        context,
+                        binder_names,
+                        binder_types,
+                        scopes,
+                    );
+                }
             }
             LitexToLeanObjectIr::TupleDimension(object) => self
                 .collect_application_scopes_from_object(
@@ -5389,6 +5435,93 @@ impl UniversalEmitter {
                 {
                     Ok("rfl".to_string())
                 }
+                LitexToLeanProofRuleIr::TupleLiteralIsTuple {
+                    tuple,
+                    expected_target,
+                } => {
+                    if !parameter_requirements.is_empty()
+                        || !premises.is_empty()
+                        || !facts_are_canonically_equal(proposition, expected_target)?
+                    {
+                        return Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal shape proof changed its target or retained premises",
+                        ));
+                    }
+                    let LitexToLeanObjectIr::Collection {
+                        constructor: LitexToLeanCollectionObjectIr::Tuple,
+                        items,
+                        ..
+                    } = tuple
+                    else {
+                        return Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal shape proof retained a non-tuple object",
+                        ));
+                    };
+                    let rendered_items = items
+                        .iter()
+                        .map(|item| self.render_obj_ir(item, context))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let tuple_term = self.render_obj_ir(tuple, context)?;
+                    if self.render_fact(proposition, context)?
+                        != format!("Litex.IsTuple {tuple_term}")
+                    {
+                        return Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal shape proof changed its exact literal",
+                        ));
+                    }
+                    Ok(format!(
+                        "(Litex.tupleLiteralIsTuple [{}])",
+                        rendered_items.join(", ")
+                    ))
+                }
+                LitexToLeanProofRuleIr::TupleLiteralDimension {
+                    tuple,
+                    expected_target,
+                } => {
+                    if !parameter_requirements.is_empty()
+                        || !premises.is_empty()
+                        || !facts_are_canonically_equal(proposition, expected_target)?
+                    {
+                        return Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal dimension proof changed its target or retained premises",
+                        ));
+                    }
+                    let LitexToLeanObjectIr::Collection {
+                        constructor: LitexToLeanCollectionObjectIr::Tuple,
+                        items,
+                        ..
+                    } = tuple
+                    else {
+                        return Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal dimension proof retained a non-tuple object",
+                        ));
+                    };
+                    let rendered_items = items
+                        .iter()
+                        .map(|item| self.render_obj_ir(item, context))
+                        .collect::<Result<Vec<_>, _>>()?;
+                    let forward =
+                        format!("(Litex.tupleLiteral_dim [{}])", rendered_items.join(", "));
+                    let tuple_term = self.render_obj_ir(tuple, context)?;
+                    let expected_forward =
+                        format!("(Litex.tupleDim {tuple_term}) = {}", items.len());
+                    let target = self.render_fact(proposition, context)?;
+                    if target == expected_forward {
+                        Ok(forward)
+                    } else if target == format!("{} = (Litex.tupleDim {tuple_term})", items.len()) {
+                        Ok(format!("Eq.symm {forward}"))
+                    } else {
+                        Err(universal_error(
+                            &proposition.line_file(),
+                            "tuple-literal dimension proof changed its exact literal or arity",
+                        ))
+                    }
+                }
                 LitexToLeanProofRuleIr::ClosedStandardMembership => {
                     if !parameter_requirements.is_empty() || !premises.is_empty() {
                         return Err(universal_error(
@@ -5511,6 +5644,15 @@ impl UniversalEmitter {
                 LitexToLeanProofRuleIr::Builtin(
                     LitexToLeanBuiltinRuleIr::ComplexArithmeticMembershipClosure(rule),
                 ) => self.render_complex_arithmetic_membership(
+                    proposition,
+                    *rule,
+                    parameter_requirements,
+                    premises,
+                    context,
+                ),
+                LitexToLeanProofRuleIr::Builtin(
+                    LitexToLeanBuiltinRuleIr::IntegerMembershipClosure(rule),
+                ) => self.render_integer_arithmetic_membership(
                     proposition,
                     *rule,
                     parameter_requirements,
@@ -5874,7 +6016,7 @@ impl UniversalEmitter {
                         format!(", {}", object_aliases.join(", "))
                     };
                     Ok(format!(
-                        "(by\n  have __normalized := ({source})\n  simp only [OfNat.ofNat, Litex.add_embedComplex, Litex.sub_embedComplex, Litex.mul_embedComplex, Litex.div_embedComplex{alias_simp}] at __normalized ⊢\n  norm_num at __normalized ⊢\n  exact __normalized)"
+                        "(by\n  convert ({source}) using 1 <;>\n    simp only [OfNat.ofNat, Litex.add_embedComplex, Litex.sub_embedComplex, Litex.mul_embedComplex, Litex.div_embedComplex{alias_simp}] <;>\n    norm_num)"
                     ))
                 }
                 other => Err(universal_error(
@@ -7469,6 +7611,85 @@ impl UniversalEmitter {
         }
     }
 
+    fn render_integer_arithmetic_membership(
+        &mut self,
+        proposition: &Fact,
+        rule: LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+        parameter_requirements: &[LitexToLeanFactIr],
+        premises: &[LitexToLeanFactIr],
+        context: &RenderContext,
+    ) -> Result<String, RuntimeError> {
+        if !parameter_requirements.is_empty() || premises.len() != 2 {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "integer arithmetic closure requires exactly two operand proofs",
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(target)) = proposition else {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "integer arithmetic closure targets a non-membership fact",
+            ));
+        };
+        if !matches!(&target.set, Obj::StandardSet(StandardSet::Z)) {
+            return Err(universal_error(
+                &proposition.line_file(),
+                "integer arithmetic closure targets a carrier other than Z",
+            ));
+        }
+        let (left, right, theorem) = match (rule, &target.element) {
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Add, Obj::Add(value)) => (
+                value.left.as_ref(),
+                value.right.as_ref(),
+                "integerAddClosure",
+            ),
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Sub, Obj::Sub(value)) => (
+                value.left.as_ref(),
+                value.right.as_ref(),
+                "integerSubClosure",
+            ),
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mul, Obj::Mul(value)) => (
+                value.left.as_ref(),
+                value.right.as_ref(),
+                "integerMulClosure",
+            ),
+            (LitexToLeanIntegerMembershipClosureBuiltinRuleIr::Mod, Obj::Mod(_)) => {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "integer remainder closure awaits the proof-free remainder object ABI",
+                ));
+            }
+            _ => {
+                return Err(universal_error(
+                    &proposition.line_file(),
+                    "integer arithmetic closure certificate changed its target operator",
+                ));
+            }
+        };
+        for (premise, expected) in premises.iter().zip([left, right]) {
+            let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premise.proposition else {
+                return Err(universal_error(
+                    &premise.proposition.line_file(),
+                    "integer arithmetic closure retained a non-membership premise",
+                ));
+            };
+            if obj_equality_key(&membership.element) != obj_equality_key(expected)
+                || !matches!(&membership.set, Obj::StandardSet(StandardSet::Z))
+            {
+                return Err(universal_error(
+                    &premise.proposition.line_file(),
+                    "integer arithmetic closure changed an ordered operand proof",
+                ));
+            }
+        }
+        let left_proof = self.render_proof_term(&premises[0], context)?;
+        let right_proof = self.render_proof_term(&premises[1], context)?;
+        Ok(format!(
+            "({} ({left_proof}) ({right_proof}))",
+            rule_theorem_name(theorem)
+        ))
+    }
+
     fn render_complex_arithmetic_membership(
         &self,
         proposition: &Fact,
@@ -8098,6 +8319,9 @@ impl UniversalEmitter {
             LitexToLeanObjectIr::SetBuilder(set_builder) => {
                 self.render_set_builder(set_builder, context)
             }
+            LitexToLeanObjectIr::AnonymousFunction(function) => {
+                self.render_inline_anonymous_function(function, context)
+            }
             LitexToLeanObjectIr::FunctionApplication(application) => {
                 self.render_function_application(application, context)
             }
@@ -8106,6 +8330,35 @@ impl UniversalEmitter {
                 self.render_obj_ir(start.as_ref(), context)?,
                 self.render_obj_ir(end.as_ref(), context)?
             )),
+            LitexToLeanObjectIr::Range { start, end } => Ok(format!(
+                "(Litex.range {} {})",
+                self.render_obj_ir(start.as_ref(), context)?,
+                self.render_obj_ir(end.as_ref(), context)?
+            )),
+            LitexToLeanObjectIr::GeneralCartesianProduct {
+                index_set,
+                family_set,
+                family_function,
+            } => Ok(format!(
+                "(Litex.generalCart {} {} {})",
+                self.render_obj_ir(index_set.as_ref(), context)?,
+                self.render_obj_ir(family_set.as_ref(), context)?,
+                self.render_obj_ir(family_function.as_ref(), context)?
+            )),
+            LitexToLeanObjectIr::SequenceSet { values, length } => match length {
+                Some(length) => Ok(format!(
+                    "(Litex.finiteSequenceSet {} {})",
+                    self.render_obj_ir(values.as_ref(), context)?,
+                    self.render_obj_ir(length.as_ref(), context)?
+                )),
+                None => Ok(format!(
+                    "(Litex.sequenceSet {})",
+                    self.render_obj_ir(values.as_ref(), context)?
+                )),
+            },
+            LitexToLeanObjectIr::Aggregate {
+                kind, arguments, ..
+            } => self.render_aggregate(*kind, arguments, context),
             LitexToLeanObjectIr::TupleDimension(object) => Ok(format!(
                 "(Litex.tupleDim {})",
                 self.render_obj_ir(object.as_ref(), context)?
@@ -8133,9 +8386,29 @@ impl UniversalEmitter {
                 constructor: LitexToLeanCollectionObjectIr::ListSet,
                 items,
             } => self.render_list_set(*source_occurrence_id, semantic_key, items, context),
-            other => Err(universal_error(
-                &default_line_file(),
-                format!("the universal-object MVP does not yet render object `{other:?}`"),
+            LitexToLeanObjectIr::Collection {
+                constructor: LitexToLeanCollectionObjectIr::Tuple,
+                items,
+                ..
+            } => Ok(format!(
+                "(Litex.tupleLiteral [{}])",
+                items
+                    .iter()
+                    .map(|item| self.render_obj_ir(item, context))
+                    .collect::<Result<Vec<_>, _>>()?
+                    .join(", ")
+            )),
+            LitexToLeanObjectIr::Collection {
+                constructor: LitexToLeanCollectionObjectIr::SequenceLiteral,
+                items,
+                ..
+            } => Ok(format!(
+                "(Litex.sequenceLiteral [{}])",
+                items
+                    .iter()
+                    .map(|item| self.render_obj_ir(item, context))
+                    .collect::<Result<Vec<_>, _>>()?
+                    .join(", ")
             )),
         }
     }
@@ -8163,6 +8436,28 @@ impl UniversalEmitter {
         };
         Ok(format!(
             "(Litex.setBuilder {base} (fun {binder} => {predicate}))"
+        ))
+    }
+
+    fn render_inline_anonymous_function(
+        &self,
+        function: &LitexToLeanAnonymousFunctionIr,
+        context: &RenderContext,
+    ) -> Result<String, RuntimeError> {
+        let spec = self.render_function_spec(&function.function, context)?;
+        let arguments = "__anonymous_args";
+        let length = "__anonymous_length";
+        let requirements = "__anonymous_requirements";
+        let mut body_context = context.clone();
+        for (parameter_index, parameter) in function.function.parameters.iter().enumerate() {
+            body_context.symbol_names.insert(
+                parameter.symbol_id,
+                format!("(Litex.arg {arguments} {parameter_index})"),
+            );
+        }
+        let body = self.render_obj_ir(function.body.as_ref(), &body_context)?;
+        Ok(format!(
+            "(Litex.functionObject ({spec}) (fun {arguments} {length} {requirements} => {body}))"
         ))
     }
 
@@ -8331,6 +8626,36 @@ impl UniversalEmitter {
         Ok(format!("(Litex.listSet [{}])", rendered_items.join(", ")))
     }
 
+    fn render_aggregate(
+        &self,
+        kind: LitexToLeanAggregateObjectIr,
+        arguments: &[LitexToLeanObjectIr],
+        context: &RenderContext,
+    ) -> Result<String, RuntimeError> {
+        let (name, arity) = match kind {
+            LitexToLeanAggregateObjectIr::Sum => ("Litex.sum", 3),
+            LitexToLeanAggregateObjectIr::Product => ("Litex.product", 3),
+            LitexToLeanAggregateObjectIr::FiniteSetSum => ("Litex.finiteSetSum", 2),
+            LitexToLeanAggregateObjectIr::FiniteSetProduct => ("Litex.finiteSetProduct", 2),
+            LitexToLeanAggregateObjectIr::Reduce => ("Litex.reduce", 5),
+            LitexToLeanAggregateObjectIr::FiniteSetReduce => ("Litex.finiteSetReduce", 4),
+        };
+        if arguments.len() != arity {
+            return Err(universal_error(
+                &default_line_file(),
+                format!(
+                    "aggregate `{kind:?}` retained {} arguments instead of {arity}",
+                    arguments.len()
+                ),
+            ));
+        }
+        let rendered = arguments
+            .iter()
+            .map(|argument| self.render_obj_ir(argument, context))
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(format!("({name} {})", rendered.join(" ")))
+    }
+
     fn render_builtin_application(
         &self,
         _source_occurrence_id: Option<SourceObjectOccurrenceId>,
@@ -8339,21 +8664,30 @@ impl UniversalEmitter {
         arguments: &[LitexToLeanObjectIr],
         context: &RenderContext,
     ) -> Result<String, RuntimeError> {
-        if operator == LitexToLeanBuiltinObjectOperatorIr::Union {
-            if arguments.len() != 2 {
+        let set_constructor = match operator {
+            LitexToLeanBuiltinObjectOperatorIr::Union => Some(("Litex.union", 2)),
+            LitexToLeanBuiltinObjectOperatorIr::Intersect => Some(("Litex.intersect", 2)),
+            LitexToLeanBuiltinObjectOperatorIr::SetMinus => Some(("Litex.setMinus", 2)),
+            LitexToLeanBuiltinObjectOperatorIr::BigUnion => Some(("Litex.bigUnion", 1)),
+            LitexToLeanBuiltinObjectOperatorIr::BigIntersect => Some(("Litex.bigIntersect", 1)),
+            LitexToLeanBuiltinObjectOperatorIr::PowerSet => Some(("Litex.powerSet", 1)),
+            _ => None,
+        };
+        if let Some((name, arity)) = set_constructor {
+            if arguments.len() != arity {
                 return Err(universal_error(
                     &default_line_file(),
                     format!(
-                        "total object constructor `Union` retained {} arguments instead of two",
-                        arguments.len()
+                        "total object constructor `{operator:?}` retained {} arguments instead of {arity}",
+                        arguments.len(),
                     ),
                 ));
             }
-            return Ok(format!(
-                "(Litex.union {} {})",
-                self.render_obj_ir(&arguments[0], context)?,
-                self.render_obj_ir(&arguments[1], context)?
-            ));
+            let rendered = arguments
+                .iter()
+                .map(|argument| self.render_obj_ir(argument, context))
+                .collect::<Result<Vec<_>, _>>()?;
+            return Ok(format!("({name} {})", rendered.join(" ")));
         }
         let name = match operator {
             LitexToLeanBuiltinObjectOperatorIr::Add => "Litex.add",
@@ -9500,6 +9834,11 @@ fn collect_proof_carrying_object_occurrence_ids(
                 collect_proof_carrying_object_occurrence_ids(item, source_occurrence_ids)?;
             }
         }
+        LitexToLeanObjectIr::Collection { items, .. } => {
+            for item in items {
+                collect_proof_carrying_object_occurrence_ids(item, source_occurrence_ids)?;
+            }
+        }
         LitexToLeanObjectIr::SetBuilder(set_builder) => {
             collect_proof_carrying_object_occurrence_ids(
                 set_builder.set.as_ref(),
@@ -9527,9 +9866,30 @@ fn collect_proof_carrying_object_occurrence_ids(
                 source_occurrence_ids,
             )?;
         }
-        LitexToLeanObjectIr::ClosedRange { start, end } => {
+        LitexToLeanObjectIr::ClosedRange { start, end }
+        | LitexToLeanObjectIr::Range { start, end } => {
             collect_proof_carrying_object_occurrence_ids(start, source_occurrence_ids)?;
             collect_proof_carrying_object_occurrence_ids(end, source_occurrence_ids)?;
+        }
+        LitexToLeanObjectIr::GeneralCartesianProduct {
+            index_set,
+            family_set,
+            family_function,
+        } => {
+            for argument in [index_set, family_set, family_function] {
+                collect_proof_carrying_object_occurrence_ids(argument, source_occurrence_ids)?;
+            }
+        }
+        LitexToLeanObjectIr::SequenceSet { values, length } => {
+            collect_proof_carrying_object_occurrence_ids(values, source_occurrence_ids)?;
+            if let Some(length) = length {
+                collect_proof_carrying_object_occurrence_ids(length, source_occurrence_ids)?;
+            }
+        }
+        LitexToLeanObjectIr::Aggregate { arguments, .. } => {
+            for argument in arguments {
+                collect_proof_carrying_object_occurrence_ids(argument, source_occurrence_ids)?;
+            }
         }
         LitexToLeanObjectIr::TupleDimension(object) => {
             collect_proof_carrying_object_occurrence_ids(object, source_occurrence_ids)?;
@@ -10159,10 +10519,29 @@ fn object_ir_is_independent_of_symbols(
                         .all(|argument| object_ir_is_independent_of_symbols(argument, symbol_ids))
                 })
         }
-        LitexToLeanObjectIr::ClosedRange { start, end } => {
+        LitexToLeanObjectIr::ClosedRange { start, end }
+        | LitexToLeanObjectIr::Range { start, end } => {
             object_ir_is_independent_of_symbols(start, symbol_ids)
                 && object_ir_is_independent_of_symbols(end, symbol_ids)
         }
+        LitexToLeanObjectIr::GeneralCartesianProduct {
+            index_set,
+            family_set,
+            family_function,
+        } => {
+            object_ir_is_independent_of_symbols(index_set, symbol_ids)
+                && object_ir_is_independent_of_symbols(family_set, symbol_ids)
+                && object_ir_is_independent_of_symbols(family_function, symbol_ids)
+        }
+        LitexToLeanObjectIr::SequenceSet { values, length } => {
+            object_ir_is_independent_of_symbols(values, symbol_ids)
+                && length
+                    .as_ref()
+                    .is_none_or(|length| object_ir_is_independent_of_symbols(length, symbol_ids))
+        }
+        LitexToLeanObjectIr::Aggregate { arguments, .. } => arguments
+            .iter()
+            .all(|argument| object_ir_is_independent_of_symbols(argument, symbol_ids)),
         LitexToLeanObjectIr::TupleDimension(object) => {
             object_ir_is_independent_of_symbols(object, symbol_ids)
         }
@@ -11083,9 +11462,8 @@ y = 1
     #[test]
     fn example_and_sketch_compile_to_scoped_lean_examples() {
         run_with_large_stack(|| {
-            let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit"
-            );
+            let source =
+                include_str!("../../lean/examples/cases/compile_to_lean_example_and_sketch.lit");
             let mut runtime = Runtime::new();
             runtime.new_file_path_new_env_new_name_scope("compile_to_lean_example_and_sketch.lit");
             runtime.replace_litex_to_lean_ir_mode(true);
@@ -11181,9 +11559,8 @@ y = 1
     #[ignore = "requires LITEX_LEAN_PROJECT pointing to a fetched Mathlib Lake project"]
     fn example_and_sketch_compile_with_mathlib() {
         run_with_large_stack(|| {
-            let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit"
-            );
+            let source =
+                include_str!("../../lean/examples/cases/compile_to_lean_example_and_sketch.lit");
             assert_source_compiles_with_mathlib(source, "example-and-sketch");
         });
     }
@@ -11601,7 +11978,7 @@ by contra:
         run_with_large_stack(|| {
             assert_source_compiles_with_mathlib(
                 include_str!(
-                    "../../examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit"
+                    "../../lean/examples/cases/compile_to_lean_case_and_contradiction_scopes.lit"
                 ),
                 "case-and-contradiction-scopes",
             );
@@ -11708,7 +12085,7 @@ forall A, B set:
     fn simple_statements_and_native_constants_emit_checked_lean() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_simple_statements_and_constants.lit"
+                "../../lean/examples/cases/compile_to_lean_simple_statements_and_constants.lit"
             );
             let output = compile_to_lean_from_source(
                 source,
@@ -11779,7 +12156,7 @@ forall A, B set:
         run_with_large_stack(|| {
             assert_source_compiles_with_mathlib(
                 include_str!(
-                    "../../examples/09_compile_to_lean/cases/compile_to_lean_simple_statements_and_constants.lit"
+                    "../../lean/examples/cases/compile_to_lean_simple_statements_and_constants.lit"
                 ),
                 "simple-statements-and-native-constants",
             );
@@ -13145,7 +13522,7 @@ forall g fn(x R) fn(y R) R:
     fn arithmetic_denotation_is_proof_free_and_wd_replays_locally() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit"
+                "../../lean/examples/cases/compile_to_lean_proof_carrying_arithmetic.lit"
             );
             let output = compile_to_lean_from_source(source, "proof-carrying-arithmetic.lit")
                 .expect("+, -, *, and / should compile from exact local WD evidence");
@@ -13599,6 +13976,142 @@ forall g fn(x R) fn(y R) R:
     }
 
     #[test]
+    fn finite_range_aggregate_recipe_separates_value_slots_from_audit_dependencies() {
+        run_with_large_stack(|| {
+            let source = r#"finite_set_sum(1...3, fn(k Z) Z {k}) = finite_set_sum(1...3, fn(k Z) Z {k})
+finite_set_product(1...3, fn(k Z) Z {k}) = finite_set_product(1...3, fn(k Z) Z {k})
+"#;
+            let mut runtime = Runtime::new();
+            runtime.new_file_path_new_env_new_name_scope(
+                "finite-range-aggregate-construction-recipe.lit",
+            );
+            runtime.replace_litex_to_lean_ir_mode(true);
+            let tokenizer = Tokenizer::new();
+            let blocks = tokenizer
+                .parse_blocks(source, runtime.current_file_path_rc())
+                .expect("parse finite-range aggregate recipe source");
+
+            for mut block in blocks {
+                let statement = runtime.parse_stmt(&mut block).expect("parse statement");
+                let result = run_stmt_at_global_env(&statement, &mut runtime)
+                    .expect("verify finite-range aggregate recipe source");
+                let LitexToLeanStatementIr::Fact(statement) = result
+                    .litex_to_lean_ir()
+                    .expect("aggregate statement should retain To-Lean IR")
+                else {
+                    panic!("expected one factual aggregate statement")
+                };
+
+                let parents = statement
+                    .well_definedness
+                    .objects
+                    .iter()
+                    .filter(|object| {
+                        matches!(
+                            object.source_object,
+                            Obj::SumOfFiniteSet(_) | Obj::ProductOfFiniteSet(_)
+                        )
+                    })
+                    .collect::<Vec<_>>();
+                assert!(!parents.is_empty(), "{:#?}", statement.well_definedness);
+                for parent in parents {
+                    let value_slots = parent
+                        .child_uses
+                        .iter()
+                        .filter_map(|child| match child.role {
+                            WellDefinedObjChildRole::ConstructorArgument { argument_index } => {
+                                Some(argument_index)
+                            }
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>();
+                    assert_eq!(value_slots, vec![0, 1], "{parent:#?}");
+
+                    let range_fold_dependency = parent
+                        .child_uses
+                        .iter()
+                        .find(|child| {
+                            matches!(
+                                child.role,
+                                WellDefinedObjChildRole::VerificationDependency { .. }
+                            ) && matches!(child.source_object, Obj::Sum(_) | Obj::Product(_))
+                        })
+                        .expect("closed-range audit must be a separate fold dependency");
+                    let dependency = statement
+                        .well_definedness
+                        .objects
+                        .iter()
+                        .find(|object| object.well_defined_obj_id == range_fold_dependency.obj_id)
+                        .expect("audit dependency must name a frozen WD object");
+                    let dependency_slots = dependency
+                        .child_uses
+                        .iter()
+                        .filter_map(|child| match child.role {
+                            WellDefinedObjChildRole::ConstructorArgument { argument_index } => {
+                                Some(argument_index)
+                            }
+                            _ => None,
+                        })
+                        .collect::<Vec<_>>();
+                    assert_eq!(dependency_slots, vec![0, 1, 2], "{dependency:#?}");
+                }
+            }
+        });
+    }
+
+    #[test]
+    fn aggregate_object_families_emit_proof_free_universal_object_terms() {
+        run_with_large_stack(|| {
+            let source = r#"forall F set:
+    big_union(F) = big_union(F)
+forall F set:
+    big_intersect(F) = big_intersect(F)
+power_set(R) = power_set(R)
+forall I set, S nonempty_set, g fn(i1 I) S:
+    general_cart(I, S, g) = general_cart(I, S, g)
+range(1, 4) = range(1, 4)
+closed_range(1, 4) = closed_range(1, 4)
+sum(1, 3, fn(k Z) Z {k}) = sum(1, 3, fn(k Z) Z {k})
+product(1, 3, fn(k Z) Z {k}) = product(1, 3, fn(k Z) Z {k})
+reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
+finite_set_sum(1...3, fn(k Z) Z {k}) = finite_set_sum(1...3, fn(k Z) Z {k})
+finite_set_product(1...3, fn(k Z) Z {k}) = finite_set_product(1...3, fn(k Z) Z {k})
+finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
+(1, 2, 3) = (1, 2, 3)
+[1, 2, 3] = [1, 2, 3]
+finite_seq(Z, 3) = finite_seq(Z, 3)
+seq(Z) = seq(Z)
+"#;
+            let output = compile_to_lean_from_source(source, "aggregate-object-families.lit")
+                .expect("all supported aggregate object families should compile");
+
+            for expected in [
+                "Litex.bigUnion F",
+                "Litex.bigIntersect F",
+                "Litex.powerSet Litex.R",
+                "Litex.generalCart I S g",
+                "Litex.range 1 4",
+                "Litex.closedRange 1 4",
+                "Litex.sum 1 3",
+                "Litex.product 1 3",
+                "Litex.reduce 1 3",
+                "Litex.finiteSetSum (Litex.closedRange 1 3)",
+                "Litex.finiteSetProduct (Litex.closedRange 1 3)",
+                "Litex.finiteSetReduce (Litex.closedRange 1 3)",
+                "Litex.tupleLiteral [1, 2, 3]",
+                "Litex.sequenceLiteral [1, 2, 3]",
+                "Litex.finiteSequenceSet Litex.Z 3",
+                "Litex.sequenceSet Litex.Z",
+            ] {
+                assert!(output.contains(expected), "missing `{expected}`\n{output}");
+            }
+            assert!(output.contains("Litex.functionObject"), "{output}");
+            assert!(!output.contains("sorry"), "{output}");
+            assert!(!output.contains("well_defined_fact_"), "{output}");
+        });
+    }
+
+    #[test]
     fn anonymous_function_wd_recipe_has_one_exact_return_route_and_occurrence_edge() {
         run_with_large_stack(|| {
             let source = "fn(x R) R {x} = fn(y R) R {y}";
@@ -13894,7 +14407,7 @@ forall a R:
         run_with_large_stack(|| {
             assert_source_compiles_with_mathlib(
                 include_str!(
-                    "../../examples/09_compile_to_lean/cases/compile_to_lean_owned_construction_scopes.lit"
+                    "../../lean/examples/cases/compile_to_lean_owned_construction_scopes.lit"
                 ),
                 "owned-construction-scopes",
             );
@@ -13905,7 +14418,7 @@ forall a R:
     fn proof_carrying_list_set_replays_indexed_well_definedness() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_list_set.lit"
+                "../../lean/examples/cases/compile_to_lean_proof_carrying_list_set.lit"
             );
             let output = compile_to_lean_from_source(source, "proof-carrying-list-set.lit")
                 .expect("a finite set literal should compile from exact indexed WD evidence");
@@ -14449,7 +14962,7 @@ forall a R:
     fn first_statement_tranche_compiles_with_mathlib() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_first_statement_tranche.lit"
+                "../../lean/examples/cases/compile_to_lean_first_statement_tranche.lit"
             );
             assert_source_compiles_with_mathlib(source, "first-statement-tranche");
         });
@@ -14553,7 +15066,7 @@ forall a, b, c set:
     fn proof_carrying_arithmetic_compiles_with_mathlib() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_arithmetic.lit"
+                "../../lean/examples/cases/compile_to_lean_proof_carrying_arithmetic.lit"
             );
             assert_source_compiles_with_mathlib(source, "proof-carrying-arithmetic");
         });
@@ -14564,7 +15077,7 @@ forall a, b, c set:
     fn proof_carrying_list_set_compiles_with_mathlib() {
         run_with_large_stack(|| {
             let source = include_str!(
-                "../../examples/09_compile_to_lean/cases/compile_to_lean_proof_carrying_list_set.lit"
+                "../../lean/examples/cases/compile_to_lean_proof_carrying_list_set.lit"
             );
             assert_source_compiles_with_mathlib(source, "proof-carrying-list-set");
         });
@@ -14592,9 +15105,7 @@ forall a, b, c set:
     }
 
     fn scoped_nested_application_source() -> &'static str {
-        include_str!(
-            "../../examples/09_compile_to_lean/cases/compile_to_lean_well_defined_object_dag.lit"
-        )
+        include_str!("../../lean/examples/cases/compile_to_lean_well_defined_object_dag.lit")
     }
 
     fn readable_function_spaces_source() -> &'static str {
@@ -14619,9 +15130,7 @@ forall f fn(a R, b C, c Z, d Q, m N, p N+) R:
     }
 
     fn trusted_forall_atomic_source() -> &'static str {
-        include_str!(
-            "../../examples/09_compile_to_lean/cases/compile_to_lean_trusted_forall_atomic_fact.lit"
-        )
+        include_str!("../../lean/examples/cases/compile_to_lean_trusted_forall_atomic_fact.lit")
     }
 
     fn run_with_large_stack(action: impl FnOnce() + Send + 'static) {

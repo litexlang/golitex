@@ -17,6 +17,20 @@ fn remove_param_bindings_from_param_to_arg_map(
     filtered_param_to_arg_map
 }
 
+/// Parser occurrence IDs identify the original syntax tree. Once an object is
+/// rebuilt by substitution or alpha-renaming it is a verifier-owned synthetic
+/// object; the enclosing construction recipe projects the original source
+/// occurrence onto its checked `WellDefinedObjId` explicitly.
+fn source_occurrence_after_instantiation(
+    source_occurrence_id: Option<SourceObjectOccurrenceId>,
+    param_to_arg_map: &HashMap<String, Obj>,
+) -> Option<SourceObjectOccurrenceId> {
+    param_to_arg_map
+        .is_empty()
+        .then_some(source_occurrence_id)
+        .flatten()
+}
+
 impl Runtime {
     pub fn inst_obj(
         &self,
@@ -476,7 +490,7 @@ impl Runtime {
         Ok(FnObj::new_with_source_occurrence_id(
             final_head,
             merged_body,
-            fn_obj.source_occurrence_id,
+            source_occurrence_after_instantiation(fn_obj.source_occurrence_id, param_to_arg_map),
         )
         .into())
     }
@@ -503,7 +517,7 @@ impl Runtime {
         Ok(Add::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            add.source_occurrence_id,
+            source_occurrence_after_instantiation(add.source_occurrence_id, param_to_arg_map),
         )
         .into())
     }
@@ -574,7 +588,7 @@ impl Runtime {
         Ok(Sub::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            sub.source_occurrence_id,
+            source_occurrence_after_instantiation(sub.source_occurrence_id, param_to_arg_map),
         )
         .into())
     }
@@ -590,7 +604,7 @@ impl Runtime {
         Ok(Mul::new_with_source_occurrence_id(
             instantiated_left_obj,
             instantiated_right_obj,
-            mul.source_occurrence_id,
+            source_occurrence_after_instantiation(mul.source_occurrence_id, param_to_arg_map),
         )
         .into())
     }
@@ -604,7 +618,7 @@ impl Runtime {
         Ok(Div::new_with_source_occurrence_id(
             self.inst_obj(&div.left, param_to_arg_map, param_obj_type)?,
             self.inst_obj(&div.right, param_to_arg_map, param_obj_type)?,
-            div.source_occurrence_id,
+            source_occurrence_after_instantiation(div.source_occurrence_id, param_to_arg_map),
         )
         .into())
     }
@@ -746,7 +760,11 @@ impl Runtime {
         for obj in list_set.list.iter() {
             list.push(self.inst_obj(obj, param_to_arg_map, param_obj_type)?);
         }
-        Ok(ListSet::new_with_source_occurrence_id(list, list_set.source_occurrence_id).into())
+        Ok(ListSet::new_with_source_occurrence_id(
+            list,
+            source_occurrence_after_instantiation(list_set.source_occurrence_id, param_to_arg_map),
+        )
+        .into())
     }
 
     pub fn inst_set_builder(
@@ -1003,7 +1021,10 @@ impl Runtime {
                 &filtered_param_to_arg_map,
                 param_obj_type,
             )?,
-            af.source_occurrence_id,
+            source_occurrence_after_instantiation(
+                af.source_occurrence_id,
+                &filtered_param_to_arg_map,
+            ),
         )?
         .into())
     }

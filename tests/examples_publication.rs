@@ -3,23 +3,31 @@ use std::path::{Path, PathBuf};
 
 #[test]
 fn examples_are_publishable_content_not_run_instructions() {
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("examples");
+    let repo = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let root = repo.join("examples");
     assert!(
         !root.join("05_compiler_interop").exists(),
-        "05_compiler_interop must stay consolidated into 09_compile_to_lean"
+        "05_compiler_interop must stay consolidated into lean/examples"
+    );
+    assert!(
+        !root.join("09_compile_to_lean").exists(),
+        "the target-side compiler ledger belongs in lean/examples"
     );
     assert!(
         !root.join("_internal/proof_journals").exists(),
         "developer proof journals do not belong in the publishable examples tree"
     );
 
-    let cases = root.join("09_compile_to_lean/cases");
+    let cases = repo.join("lean/examples/cases");
     let case_count = fs::read_dir(&cases)
         .unwrap_or_else(|error| panic!("read {}: {error}", cases.display()))
         .filter_map(Result::ok)
         .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("lit"))
         .count();
-    assert_eq!(case_count, 24, "09 must own all 24 Litex-to-Lean cases");
+    assert_eq!(
+        case_count, 27,
+        "lean/examples must own all 27 Litex-to-Lean cases"
+    );
 
     let forbidden = [
         "target/release/litex",

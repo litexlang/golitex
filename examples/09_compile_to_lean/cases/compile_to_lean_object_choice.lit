@@ -1,9 +1,0 @@
-# Before: To-Lean renamed this source statement to the effect-shaped
-# `HaveObjChoice` IR node.
-# Now: the IR retains its source path exactly as
-# `DefObjStmt(HaveObjInNonemptySetStmt(...))`; the emitter still shares the
-# Classical.choose implementation and preserves the exact membership FactId.
-have x R
-x $in R
-# Boundary: choosing from a carrier without verifier-owned nonemptiness remains
-# rejected; compiler IR may not invent a witness.

@@ -14,8 +14,7 @@ use super::helper::{
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
-const COMPILE_TO_LEAN_EXAMPLES_MARKDOWN: &str =
-    "examples/09_compile_to_lean/compile_to_lean_examples.md";
+const COMPILE_TO_LEAN_EXAMPLES_MARKDOWN: &str = "lean/examples/compile_to_lean_examples.md";
 
 #[derive(Clone)]
 struct LitexRunItem {

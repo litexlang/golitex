@@ -251,25 +251,25 @@ mod tests {
     use std::path::Path;
 
     #[test]
-    #[ignore = "writes private/09-generated.lean for manual inspection"]
-    fn dump_09_compile_to_lean_ledger() {
+    #[ignore = "writes private/compile-to-lean-generated.lean for manual inspection"]
+    fn dump_compile_to_lean_ledger() {
         std::thread::Builder::new()
-            .name("dump_09_compile_to_lean_ledger".to_string())
+            .name("dump_compile_to_lean_ledger".to_string())
             .stack_size(64 * 1024 * 1024)
             .spawn(|| {
                 let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-                let ledger = root.join("examples/09_compile_to_lean/compile_to_lean_examples.md");
-                let output = root.join("private/09-generated.lean");
+                let ledger = root.join("lean/examples/compile_to_lean_examples.md");
+                let output = root.join("private/compile-to-lean-generated.lean");
                 let count = compile_markdown_ledger_file_to_lean(&ledger, &output)
-                    .expect("compile the 09 Markdown ledger to one Lean file");
-                assert_eq!(count, 22, "the 09 compiler ledger changed shape");
+                    .expect("compile the Markdown ledger to one Lean file");
+                assert_eq!(count, 25, "the compiler ledger changed shape");
                 println!(
                     "wrote {count} freshly generated Lean entries to {}",
                     output.display()
                 );
             })
-            .expect("spawn 09 ledger dump test")
+            .expect("spawn ledger dump test")
             .join()
-            .expect("09 ledger dump test panicked");
+            .expect("ledger dump test panicked");
     }
 }

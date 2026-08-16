@@ -1,6 +1,0 @@
-# Before: HaveTupleStmt stopped at the statement-IR boundary.
-# Now: one representative indexed aggregate consumes both dimension checks and
-# exports is-tuple, dimension, and coordinate facts in their source roles.
-have tuple q for i1 <= 2, q[i1] = 0
-q = q
-# Boundary: other aggregate families wait until this recipe proves reusable.

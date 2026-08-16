@@ -1,8 +1,8 @@
 # Litex Examples
 
-This directory is a catalog of Litex language, proof, mathematics, module, and
-Litex-to-Lean examples. Each public entry states the behavior it demonstrates
-and keeps the corresponding Litex source close to that description.
+This directory is a catalog of Litex language, proof, mathematics, and module
+examples. Each public entry states the behavior it demonstrates and keeps the
+corresponding Litex source close to that description.
 
 ## Public Reading Path
 
@@ -19,8 +19,9 @@ and keeps the corresponding Litex source close to that description.
    from several interfaces.
 5. [`08_module_repository/`](08_module_repository/) is a configured module
    project that demonstrates ordered exports and submodules.
-6. [`09_compile_to_lean/`](09_compile_to_lean/) pairs Litex programs with the
-   complete Lean currently emitted for the checked Litex-to-Lean slice.
+
+The Litex-to-Lean source/generated pairs live with their target package in
+[`lean/examples/`](../lean/examples/).
 
 The numbering is a reading order, not a requirement that every number exist.
 Public `.lit` files have descriptive names and are self-contained unless their

@@ -33,6 +33,24 @@ pub enum LitexToLeanObjectIr {
         start: Box<LitexToLeanObjectIr>,
         end: Box<LitexToLeanObjectIr>,
     },
+    Range {
+        start: Box<LitexToLeanObjectIr>,
+        end: Box<LitexToLeanObjectIr>,
+    },
+    GeneralCartesianProduct {
+        index_set: Box<LitexToLeanObjectIr>,
+        family_set: Box<LitexToLeanObjectIr>,
+        family_function: Box<LitexToLeanObjectIr>,
+    },
+    SequenceSet {
+        values: Box<LitexToLeanObjectIr>,
+        length: Option<Box<LitexToLeanObjectIr>>,
+    },
+    Aggregate {
+        semantic_key: String,
+        kind: LitexToLeanAggregateObjectIr,
+        arguments: Vec<LitexToLeanObjectIr>,
+    },
     TupleDimension(Box<LitexToLeanObjectIr>),
     IndexedAccess {
         object: Box<LitexToLeanObjectIr>,
@@ -171,6 +189,18 @@ pub enum LitexToLeanBuiltinObjectOperatorIr {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanCollectionObjectIr {
     ListSet,
+    Tuple,
+    SequenceLiteral,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanAggregateObjectIr {
+    Sum,
+    Product,
+    FiniteSetSum,
+    FiniteSetProduct,
+    Reduce,
+    FiniteSetReduce,
 }
 
 impl LitexToLeanObjectIr {
@@ -222,6 +252,72 @@ impl LitexToLeanObjectIr {
                 start: Box::new(LitexToLeanObjectIr::lower(range.start.as_ref())?),
                 end: Box::new(LitexToLeanObjectIr::lower(range.end.as_ref())?),
             }),
+            Obj::Range(range) => Ok(LitexToLeanObjectIr::Range {
+                start: Box::new(LitexToLeanObjectIr::lower(range.start.as_ref())?),
+                end: Box::new(LitexToLeanObjectIr::lower(range.end.as_ref())?),
+            }),
+            Obj::GeneralCart(product) => Ok(LitexToLeanObjectIr::GeneralCartesianProduct {
+                index_set: Box::new(LitexToLeanObjectIr::lower(product.index_set.as_ref())?),
+                family_set: Box::new(LitexToLeanObjectIr::lower(product.family_set.as_ref())?),
+                family_function: Box::new(LitexToLeanObjectIr::lower(product.family_fn.as_ref())?),
+            }),
+            Obj::FiniteSeqSet(sequence) => Ok(LitexToLeanObjectIr::SequenceSet {
+                values: Box::new(LitexToLeanObjectIr::lower(sequence.set.as_ref())?),
+                length: Some(Box::new(LitexToLeanObjectIr::lower(sequence.n.as_ref())?)),
+            }),
+            Obj::SeqSet(sequence) => Ok(LitexToLeanObjectIr::SequenceSet {
+                values: Box::new(LitexToLeanObjectIr::lower(sequence.set.as_ref())?),
+                length: None,
+            }),
+            Obj::Sum(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::Sum,
+                [
+                    value.start.as_ref(),
+                    value.end.as_ref(),
+                    value.func.as_ref(),
+                ],
+            ),
+            Obj::Product(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::Product,
+                [
+                    value.start.as_ref(),
+                    value.end.as_ref(),
+                    value.func.as_ref(),
+                ],
+            ),
+            Obj::SumOfFiniteSet(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::FiniteSetSum,
+                [value.set.as_ref(), value.func.as_ref()],
+            ),
+            Obj::ProductOfFiniteSet(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::FiniteSetProduct,
+                [value.set.as_ref(), value.func.as_ref()],
+            ),
+            Obj::Reduce(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::Reduce,
+                [
+                    value.start.as_ref(),
+                    value.end.as_ref(),
+                    value.func.as_ref(),
+                    value.op.as_ref(),
+                    value.seed.as_ref(),
+                ],
+            ),
+            Obj::FiniteSetReduce(value) => aggregate(
+                obj,
+                LitexToLeanAggregateObjectIr::FiniteSetReduce,
+                [
+                    value.set.as_ref(),
+                    value.func.as_ref(),
+                    value.op.as_ref(),
+                    value.seed.as_ref(),
+                ],
+            ),
             Obj::TupleDim(dimension) => Ok(LitexToLeanObjectIr::TupleDimension(Box::new(
                 LitexToLeanObjectIr::lower(dimension.arg.as_ref())?,
             ))),
@@ -413,6 +509,26 @@ impl LitexToLeanObjectIr {
                     .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
                     .collect::<Result<Vec<_>, _>>()?,
             }),
+            Obj::Tuple(value) => Ok(LitexToLeanObjectIr::Collection {
+                source_occurrence_id: None,
+                semantic_key: obj_equality_key(obj),
+                constructor: LitexToLeanCollectionObjectIr::Tuple,
+                items: value
+                    .args
+                    .iter()
+                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .collect::<Result<Vec<_>, _>>()?,
+            }),
+            Obj::FiniteSeqListObj(value) => Ok(LitexToLeanObjectIr::Collection {
+                source_occurrence_id: None,
+                semantic_key: obj_equality_key(obj),
+                constructor: LitexToLeanCollectionObjectIr::SequenceLiteral,
+                items: value
+                    .objs
+                    .iter()
+                    .map(|item| LitexToLeanObjectIr::lower(item.as_ref()))
+                    .collect::<Result<Vec<_>, _>>()?,
+            }),
             other => Err(format!(
                 "Litex-to-Lean Obj IR does not support {:?} object `{}`",
                 other.kind(),
@@ -502,6 +618,21 @@ fn binary(
             LitexToLeanObjectIr::lower(left)?,
             LitexToLeanObjectIr::lower(right)?,
         ],
+    })
+}
+
+fn aggregate<'a, const N: usize>(
+    source: &Obj,
+    kind: LitexToLeanAggregateObjectIr,
+    arguments: [&'a Obj; N],
+) -> Result<LitexToLeanObjectIr, String> {
+    Ok(LitexToLeanObjectIr::Aggregate {
+        semantic_key: obj_equality_key(source),
+        kind,
+        arguments: arguments
+            .into_iter()
+            .map(LitexToLeanObjectIr::lower)
+            .collect::<Result<Vec<_>, _>>()?,
     })
 }
 

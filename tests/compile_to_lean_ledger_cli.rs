@@ -3,10 +3,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
+const LEDGER: &str = "lean/examples/compile_to_lean_examples.md";
 
 #[test]
-fn lean_ledger_command_freshly_compiles_all_09_entries() {
+fn lean_ledger_command_freshly_compiles_all_entries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("success");
     let output_path = scratch.new_path("lean");
@@ -25,11 +25,11 @@ fn lean_ledger_command_freshly_compiles_all_09_entries() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("wrote 24 freshly generated Lean entries")
+        String::from_utf8_lossy(&output.stdout).contains("wrote 25 freshly generated Lean entries")
     );
 
     let generated = fs::read_to_string(&output_path).expect("read bundled Lean output");
-    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 24);
+    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 25);
     assert_eq!(generated.matches("import Litex.Rules").count(), 1);
     assert!(!generated.contains("Litex.abiVersion"));
     assert!(generated.contains("__wd0_"));

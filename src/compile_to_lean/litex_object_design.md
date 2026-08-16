@@ -66,7 +66,7 @@ Remark 3.1.3 explicitly leaves the choice between pure and impure set theories
 open. Litex chooses the pure branch: numbers and functions retain their
 ordinary public interfaces, but at the foundational level they are set-coded
 objects. The compiler-facing consequence is exercised by the tracked
-[universal-object tracer](../../examples/09_compile_to_lean/cases/compile_to_lean_litex_object_abi.lit).
+[universal-object tracer](../../lean/examples/cases/compile_to_lean_litex_object_abi.lit).
 
 `Object : Type` is the Lean meta-level carrier of this object language; it is
 not itself a term of type `Object`. The declaration therefore does not create
@@ -175,7 +175,7 @@ Separate theorems establish memberships such as `1 ∈ N`, `1 ∈ R`, and
 
 Litex does not overload source `+`. Every source occurrence denotes the one
 Litex complex addition operation. Real or integer closure is justified by
-ordinary builtin-rule theorems using retained membership proofs. ABI version 9
+ordinary builtin-rule theorems using retained membership proofs. ABI version 10
 makes arithmetic denotation proof-free:
 
 ```lean
@@ -344,7 +344,7 @@ least:
 3. the WD proof DAG for the body;
 4. a proof that every legal body result belongs to the declared range.
 
-ABI version 9 fixes the shared packaging as:
+ABI version 10 fixes the shared packaging as:
 
 ```lean
 axiom Litex.functionObject
@@ -365,11 +365,10 @@ axiom Litex.functionObjectInFnSet
   Litex.In (Litex.functionObject spec body) (Litex.FnSet spec)
 ```
 
-Named functions now emit their full body WD DAG locally under the `closed`
-telescope, including arithmetic and domain-dependent division. The current
-anonymous emitter deliberately remains at the proof-independent identity-body
-slice; compound anonymous bodies still fail closed until their binder-owned
-DAG is replayed in the same lexical Lean scope.
+Named and anonymous functions emit their full body WD DAG locally under the
+`closed` telescope, including arithmetic and domain-dependent division.
+Compound anonymous bodies use the same binder-owned replay and retain a
+proof-free `functionObject` term.
 
 ## 8. Set constructors and semantic laws
 
@@ -782,7 +781,7 @@ source binder environment.
 
 ### Example 10 — proof-free list set with checked WD, and replacement
 
-Status: list sets are **current in ABI version 9**; replacement remains
+Status: list sets are **current in ABI version 10**; replacement remains
 **decided, not emitted yet**.
 
 ```litex

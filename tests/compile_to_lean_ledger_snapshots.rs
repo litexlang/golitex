@@ -2,13 +2,13 @@ use litex::compile_to_lean::compile_to_lean_from_source;
 use std::fs;
 use std::path::Path;
 
-const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
+const LEDGER: &str = "lean/examples/compile_to_lean_examples.md";
 
 #[test]
 fn actual_generated_lean_snapshots_match_current_compiler() {
     run_with_large_stack(|| {
         let (examples, snapshots) = ledger_examples_and_snapshots();
-        assert_eq!(examples.len(), 24, "the feature ledger changed shape");
+        assert_eq!(examples.len(), 25, "the feature ledger changed shape");
         assert_eq!(
             snapshots.len(),
             examples.len(),
@@ -17,7 +17,7 @@ fn actual_generated_lean_snapshots_match_current_compiler() {
         for ((label, source), (snapshot_label, snapshot)) in examples.into_iter().zip(snapshots) {
             assert_eq!(snapshot_label, label, "ledger snapshot order drifted");
             let case_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join("examples/09_compile_to_lean/cases")
+                .join("lean/examples/cases")
                 .join(format!("compile_to_lean_{label}.lit"));
             let case_source = fs::read_to_string(&case_path)
                 .unwrap_or_else(|error| panic!("read {}: {error}", case_path.display()));
@@ -55,7 +55,7 @@ fn update_actual_generated_lean_snapshots() {
 
         for (label, _) in examples {
             let case_path = root
-                .join("examples/09_compile_to_lean/cases")
+                .join("lean/examples/cases")
                 .join(format!("compile_to_lean_{label}.lit"));
             let case_source = fs::read_to_string(&case_path)
                 .unwrap_or_else(|error| panic!("read {}: {error}", case_path.display()));

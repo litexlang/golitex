@@ -14,6 +14,11 @@ This Lake package owns the shared target ABI used by Litex-to-Lean output.
 Generated files import only `Litex.Rules`. A generated ABI-version
 check fails if the file is compiled against an incompatible shared library.
 
+The executable compiler ledger lives in [`examples/`](examples/). Its
+`compile_to_lean_examples.lit` source and checked-in generated
+`compile_to_lean_examples.lean` stay beside this ABI and share this Lake
+project and toolchain.
+
 ## Why the ABI has one object type
 
 The universal `Litex.Object` is not a convenience erasure of native Lean

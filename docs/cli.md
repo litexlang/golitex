@@ -134,8 +134,8 @@ The canonical end-to-end compiler ledger uses the single-file command:
 
 ```bash
 litex -lean \
-  examples/09_compile_to_lean/compile_to_lean_examples.lit \
-  examples/09_compile_to_lean/compile_to_lean_examples.lean
+  lean/examples/compile_to_lean_examples.lit \
+  lean/examples/compile_to_lean_examples.lean
 ```
 
 Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.
