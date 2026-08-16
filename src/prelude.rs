@@ -312,7 +312,7 @@ pub use crate::result::ByStmtResult;
 pub use crate::result::ByTheoremVerificationResult;
 pub use crate::result::ByVerificationResult;
 pub use crate::result::ChainFactUnknown;
-pub use crate::result::CheckedDefinitionReplayEvidence;
+pub use crate::result::CheckedFunctionDefinitionReductionEvidence;
 pub use crate::result::ClaimFactVerificationResult;
 pub use crate::result::ClaimForallVerificationResult;
 pub use crate::result::ClaimVerificationResult;

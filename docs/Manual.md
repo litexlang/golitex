@@ -3176,14 +3176,11 @@ After the resulting `$fn_eq(f, g)` is stored, inference materializes `f = g` in
 the ordinary known-equality class; equality verification does not separately
 scan for `$fn_eq` facts.
 
-At outer round 0, checked-definition equality replay considers the original
-objects together with every available representative from their stored
-equality classes. For each representative pair it may unfold one checked outer
-definition on either side. Each comparison has at most one unfolded side; it
-never compares two freshly unfolded results or unfolds another definition at a
-child. When the unfolded result and the other representative have the same
-supported constructor, the central constructor matcher compares them
-componentwise. Each comparison node first tries syntactic identity (including
+At outer round 0, equality does not enumerate equality-class representatives or
+open a candidate graph. It may reduce one checked named-function application
+only when the application is literally one side of the submitted goal. The
+reduced result is compared with the other goal side by the central constructor
+matcher. Each comparison node first tries syntactic identity (including
 binder alpha-equivalence where applicable), an already stored non-forall
 equality class, pure numeric computation, bounded obligation-free rational
 expression normalization, capture-avoiding beta reduction of one complete
@@ -3192,11 +3189,13 @@ application layers are preserved when the substituted result is callable. The
 normalization and beta-reduction matchers are terminating and create no proof
 obligations; they handle shapes such as `a * t + 0 = a * t` and expose
 `fn(x R) R {f(x) * g(x)}(a)` as `f(a) * g(a)` without opening the ordinary
-builtin dispatcher. The replay-depth guard prevents comparison from
-instantiating known `forall` facts or reopening checked-definition replay.
-Consequently a representative `a * t` can prove `a * t + 0`, but a comparison
-cannot silently use another mathematical builtin rule or unfold a second named
-function.
+builtin dispatcher. Definition reduction does not instantiate known `forall`
+facts, follow a stored representative to discover a reducible application, or
+unfold a second named function recursively. Consequently `square(2) = 4` may
+reduce `square(2)` directly, while two aliases that hide the application need
+an explicit bridge equality. Likewise, after `selected = f(a, 0)` and `a = 1`,
+write `selected = f(a, 0) = f(1, 0)` rather than expecting
+`selected = f(1, 0)` to reopen the alias automatically.
 
 For example, after the first two conclusions below have been verified and
 stored, the last comparison beta-reduces both sides transiently. Multiplication

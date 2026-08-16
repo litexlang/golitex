@@ -10,7 +10,6 @@ on:
         type: choice
         options:
           - run_examples
-          - run_all
           - run_all_docs_examples_runtime_contracts
 
 env:
@@ -37,7 +36,7 @@ jobs:
       - name: Run selected suite
         run: |
           case "${{ inputs.suite }}" in
-            run_examples|run_all)
+            run_examples)
               cargo test --release "${{ inputs.suite }}" -- --nocapture
               ;;
             run_all_docs_examples_runtime_contracts)

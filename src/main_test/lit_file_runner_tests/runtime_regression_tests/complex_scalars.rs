@@ -279,7 +279,7 @@ forall z, w C:
             );
             assert!(
                 run_output
-                    .matches("replay-safe structural equality")
+                    .matches("structural equality with terminating reductions")
                     .count()
                     >= 5,
                 "complex congruence should expose structural provenance:\n{run_output}"

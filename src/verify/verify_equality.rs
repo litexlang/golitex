@@ -1,6 +1,4 @@
 use crate::prelude::*;
-use std::collections::HashSet;
-use std::rc::Rc;
 
 impl Runtime {
     pub(crate) fn verify_equal_fact_with_direct_routes(
@@ -51,7 +49,7 @@ impl Runtime {
             return Ok(leaf_result);
         }
 
-        if !self.objs_are_congruent_by_replay_safe_equality_routes(
+        if !self.objs_are_equal_by_terminating_reduction_and_congruence(
             &equal_fact.left,
             &equal_fact.right,
             equal_fact.line_file.clone(),
@@ -62,7 +60,7 @@ impl Runtime {
         let result: StmtResult =
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
-                "replay-safe structural equality".to_string(),
+                "structural equality with terminating reductions".to_string(),
                 Vec::new(),
             )
             .into();
@@ -141,12 +139,8 @@ impl Runtime {
             return Ok(result);
         }
 
-        result = self.verify_equality_with_known_equalities(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-            verify_state,
-        )?;
+        result =
+            self.verify_equality_after_one_checked_definition_reduction(equal_fact, verify_state)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -183,146 +177,64 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    pub(crate) fn verify_equality_with_known_equalities(
+    fn verify_equality_after_one_checked_definition_reduction(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        // The outer atomic-fact verifier must have discharged well-definedness
-        // before replay. This keeps `unfold_known_fn_application_once` on its
-        // substitution-only path: no carrier or domain proof search is repeated.
-        if !verify_state.is_round_0()
-            || !verify_state.well_defined_already_verified
-            || self.known_equality_candidate_replay_depth != 0
-        {
+        // The goal's well-definedness check already discharged the selected
+        // function application's carrier and domain obligations. Definition
+        // reduction therefore performs substitution only and never opens a
+        // second proof-search root.
+        if !verify_state.is_round_0() || !verify_state.well_defined_already_verified {
             return Ok((StmtUnknown::new()).into());
         }
 
-        let left_string = obj_equality_key(left);
-        let right_string = obj_equality_key(right);
-
-        let known_pairs =
-            self.collect_known_equality_pairs_from_envs(&left_string, &right_string, left, right);
-        let mut tried_pairs = HashSet::new();
-        for (known_left, known_right) in known_pairs {
-            let mut left_candidates = vec![left.clone()];
-            if let Some(known_left) = known_left {
-                let mut left_keys = HashSet::from([left_string.clone()]);
-                for candidate in known_left.iter() {
-                    if left_keys.insert(obj_equality_key(candidate)) {
-                        left_candidates.push(candidate.clone());
-                    }
-                }
-            }
-
-            let mut right_candidates = vec![right.clone()];
-            if let Some(known_right) = known_right {
-                let mut right_keys = HashSet::from([right_string.clone()]);
-                for candidate in known_right.iter() {
-                    if right_keys.insert(obj_equality_key(candidate)) {
-                        right_candidates.push(candidate.clone());
-                    }
-                }
-            }
-
-            for candidate_left in left_candidates.iter() {
-                for candidate_right in right_candidates.iter() {
-                    let pair_key = (
-                        obj_equality_key(candidate_left),
-                        obj_equality_key(candidate_right),
-                    );
-                    if !tried_pairs.insert(pair_key) {
-                        continue;
-                    }
-
-                    self.known_equality_candidate_replay_depth += 1;
-                    let candidate_result = self.try_verify_one_equality_representative_pair(
-                        left,
-                        right,
-                        candidate_left,
-                        candidate_right,
-                        line_file.clone(),
-                        verify_state,
-                    );
-                    self.known_equality_candidate_replay_depth -= 1;
-                    if let Some(result) = candidate_result? {
-                        return Ok(result);
-                    }
-                }
-            }
+        if let Some(result) = self.try_reduce_one_checked_definition_side(
+            &equal_fact.left,
+            &equal_fact.right,
+            true,
+            equal_fact.line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(result);
         }
-
+        if let Some(result) = self.try_reduce_one_checked_definition_side(
+            &equal_fact.right,
+            &equal_fact.left,
+            false,
+            equal_fact.line_file.clone(),
+            verify_state,
+        )? {
+            return Ok(result);
+        }
         Ok((StmtUnknown::new()).into())
     }
 
-    fn try_verify_one_equality_representative_pair(
+    fn try_reduce_one_checked_definition_side(
         &mut self,
-        statement_left: &Obj,
-        statement_right: &Obj,
-        candidate_left: &Obj,
-        candidate_right: &Obj,
-        line_file: LineFile,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.objs_are_congruent_by_replay_safe_equality_routes(
-            candidate_left,
-            candidate_right,
-            line_file.clone(),
-        )? {
-            return Ok(Some(known_equality_representative_replay_success(
-                statement_left,
-                statement_right,
-                candidate_left,
-                candidate_right,
-                line_file,
-                "known non-forall equality, pure computation, bounded symbolic normalization, anonymous-function beta reduction, or structural congruence",
-            )));
-        }
-
-        if let Some(done) = self.try_one_side_checked_definition_replay(
-            statement_left,
-            statement_right,
-            candidate_left,
-            candidate_right,
-            line_file.clone(),
-            verify_state,
-        )? {
-            return Ok(Some(done));
-        }
-        self.try_one_side_checked_definition_replay(
-            statement_left,
-            statement_right,
-            candidate_right,
-            candidate_left,
-            line_file,
-            verify_state,
-        )
-    }
-
-    fn try_one_side_checked_definition_replay(
-        &mut self,
-        statement_left: &Obj,
-        statement_right: &Obj,
         application_side: &Obj,
         other_side: &Obj,
+        application_is_left: bool,
         line_file: LineFile,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        // Replay exactly one checked outer definition. Comparison uses only
-        // known non-forall facts, obligation-free computation/normalization,
-        // and constructor descent; it cannot instantiate forall facts or
-        // reopen definition replay.
-        // Structured definition provenance is a Litex-to-Lean capture concern. Keep
-        // ordinary Litex verification on its established replay path so the
-        // compiler cannot perturb rule selection or environment effects.
+        let (statement_left, statement_right) = if application_is_left {
+            (application_side, other_side)
+        } else {
+            (other_side, application_side)
+        };
+        // Reduce exactly one checked definition already present in the goal.
+        // Comparison remains limited to known facts, terminating computation,
+        // and constructor descent.
         let checked_function_source = if self.captures_litex_to_lean_well_definedness() {
-            self.checked_function_definition_replay_source(application_side)?
+            self.checked_function_definition_reduction_source(application_side)?
         } else {
             None
         };
-        let reduced = match self.unfold_known_fn_application_once(application_side, verify_state)? {
+        let reduced = match self
+            .reduce_direct_known_fn_application_once(application_side, verify_state)?
+        {
             Some(reduced) => reduced,
             None => {
                 let Some(set_builder) = self.get_obj_equal_to_set_builder(application_side) else {
@@ -344,7 +256,7 @@ impl Runtime {
             let alpha_equal =
                 objs_equal_with_nested_binder_alpha_equivalence(&comparison_candidate, other_side);
             let compared_equal = alpha_equal
-                || self.objs_are_congruent_by_replay_safe_equality_routes(
+                || self.objs_are_equal_by_terminating_reduction_and_congruence(
                     &comparison_candidate,
                     other_side,
                     line_file.clone(),
@@ -354,24 +266,19 @@ impl Runtime {
             }
 
             let reason = format!(
-                "one checked definition replay `{}` = `{}`",
+                "one checked definition reduction `{}` = `{}`",
                 application_side, comparison_candidate
             );
-            let application_is_left =
-                objs_equal_with_nested_binder_alpha_equivalence(statement_left, application_side);
-            let application_is_right =
-                objs_equal_with_nested_binder_alpha_equivalence(statement_right, application_side);
-            if let (Some((definition_object, defining_equality, defining_equality_fact_id)), true) = (
-                checked_function_source.clone(),
-                application_is_left ^ application_is_right,
-            ) {
+            if let Some((definition_object, defining_equality, defining_equality_fact_id)) =
+                checked_function_source.clone()
+            {
                 let fact: Fact = EqualFact::new(
                     statement_left.clone(),
                     statement_right.clone(),
                     line_file.clone(),
                 )
                 .into();
-                let evidence = CheckedDefinitionReplayEvidence {
+                let evidence = CheckedFunctionDefinitionReductionEvidence {
                     definition_object,
                     defining_equality,
                     defining_equality_fact_id,
@@ -381,7 +288,7 @@ impl Runtime {
                     application_is_left,
                     reduced_matches_other_by_alpha: alpha_equal,
                 };
-                let verified_by = VerifiedByResult::fact_with_checked_definition_replay(
+                let verified_by = VerifiedByResult::fact_with_checked_function_definition_reduction(
                     fact.clone(),
                     evidence,
                     Some(reason),
@@ -395,11 +302,11 @@ impl Runtime {
                     .into(),
                 ));
             }
-            return Ok(Some(known_equality_representative_replay_success(
+            return Ok(Some(checked_definition_reduction_success(
                 statement_left,
                 statement_right,
                 application_side,
-                other_side,
+                &comparison_candidate,
                 line_file,
                 &reason,
             )));
@@ -407,7 +314,7 @@ impl Runtime {
         Ok(None)
     }
 
-    fn checked_function_definition_replay_source(
+    fn checked_function_definition_reduction_source(
         &self,
         application: &Obj,
     ) -> Result<Option<(Obj, Fact, FactId)>, RuntimeError> {
@@ -448,50 +355,6 @@ impl Runtime {
             defining_equality,
             defining_equality_fact_id,
         )))
-    }
-
-    /// Build equality closures without merging the underlying environments.
-    fn collect_known_equality_pairs_from_envs(
-        &self,
-        left_string: &str,
-        right_string: &str,
-        left: &Obj,
-        right: &Obj,
-    ) -> Vec<(Option<Rc<Vec<Obj>>>, Option<Rc<Vec<Obj>>>)> {
-        let current_environments = self.iter_environments_from_top().collect::<Vec<_>>();
-        let mut pairs = vec![(
-            known_equality_class_across_environments(
-                &current_environments,
-                &[left_string.to_string()],
-            ),
-            known_equality_class_across_environments(
-                &current_environments,
-                &[right_string.to_string()],
-            ),
-        )];
-        let mut module_names = self.obj_referenced_module_names(left);
-        for module_name in self.obj_referenced_module_names(right) {
-            if !module_names
-                .iter()
-                .any(|existing_module_name| existing_module_name == &module_name)
-            {
-                module_names.push(module_name);
-            }
-        }
-        for module_name in module_names.iter() {
-            let environments = self.imported_module_environments(module_name);
-            if environments.is_empty() {
-                continue;
-            }
-            pairs.push((
-                known_equality_class_across_environments(&environments, &[left_string.to_string()]),
-                known_equality_class_across_environments(
-                    &environments,
-                    &[right_string.to_string()],
-                ),
-            ));
-        }
-        pairs
     }
 
     fn verify_binary_objs_are_equal_when_both_corresponding_args_are_equal(
@@ -671,7 +534,7 @@ impl Runtime {
             right_obj.clone(),
             equality_line_file.clone(),
         );
-        let mut result = self.verify_equal_fact_with_direct_routes(&direct_goal)?;
+        let result = self.verify_equal_fact_with_direct_routes(&direct_goal)?;
         if result.is_true() {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -686,16 +549,6 @@ impl Runtime {
                 ))
                 .into(),
             );
-        }
-
-        result = self.verify_equality_with_known_equalities(
-            left_obj,
-            right_obj,
-            equality_line_file.clone(),
-            verify_state,
-        )?;
-        if result.is_true() {
-            return Ok(result);
         }
 
         let verified_by_arg_to_arg = self
@@ -736,50 +589,6 @@ fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool
     objs_equal_by_rational_expression_evaluation(left_abs.arg.as_ref(), &negated_right)
 }
 
-fn known_equality_class_across_environments(
-    environments: &[&Environment],
-    initial_keys: &[String],
-) -> Option<Rc<Vec<Obj>>> {
-    let mut keys = initial_keys.to_vec();
-    let mut known_keys = keys.iter().cloned().collect::<HashSet<_>>();
-    let mut objects = Vec::new();
-    let mut object_keys = HashSet::new();
-    let mut scanned_classes = HashSet::new();
-    let mut next_index = 0;
-    let mut found_equality = false;
-
-    while next_index < keys.len() {
-        let current = keys[next_index].clone();
-        next_index += 1;
-        for (environment_index, environment) in environments.iter().enumerate() {
-            let Some((class_id, _, equivalent_objects)) =
-                environment.known_equality.get_with_class_id(&current)
-            else {
-                continue;
-            };
-            found_equality = true;
-            if !scanned_classes.insert((environment_index, class_id)) {
-                continue;
-            }
-            for object in equivalent_objects.iter() {
-                let object_key = obj_equality_key(object);
-                if known_keys.insert(object_key.clone()) {
-                    keys.push(object_key.clone());
-                }
-                if object_keys.insert(object_key) {
-                    objects.push(object.clone());
-                }
-            }
-        }
-    }
-
-    if found_equality {
-        Some(Rc::new(objects))
-    } else {
-        None
-    }
-}
-
 fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
     match (left_obj, right_obj) {
         (Obj::FnObj(_), Obj::FnObj(_)) => {
@@ -790,19 +599,19 @@ fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
     }
 }
 
-fn known_equality_representative_replay_success(
+fn checked_definition_reduction_success(
     statement_left: &Obj,
     statement_right: &Obj,
-    candidate_left: &Obj,
-    candidate_right: &Obj,
+    application_side: &Obj,
+    reduced_side: &Obj,
     line_file: LineFile,
     reason: &str,
 ) -> StmtResult {
     let fact: Fact =
         EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into();
     let msg = format!(
-        "{} via known equality representatives `{}` and `{}`; comparison nodes may use stored non-forall equalities, pure computation, bounded symbolic normalization, capture-avoiding beta reduction of complete anonymous-function applications, or constructor descent, but never ordinary builtin rules, known forall, or recursive definition replay",
-        reason, candidate_left, candidate_right
+        "{}; reduced goal side `{}` is compared with `{}` using stored equalities, terminating computation, anonymous-function beta reduction, or constructor descent",
+        reason, application_side, reduced_side
     );
     let verified_by = VerifiedByResult::fact_with_note(fact.clone(), Some(msg));
     FactualStmtSuccess::new_with_verified_by_known_fact(fact, verified_by, Vec::new()).into()
@@ -840,76 +649,65 @@ mod tests {
     }
 
     #[test]
-    fn checked_definition_replay_uses_only_safe_leaves() {
+    fn checked_definition_reduction_has_no_candidate_graph_or_ambient_mode() {
         let source = include_str!("verify_equality.rs");
-        let replay_impl = source
-            .split("fn try_verify_one_equality_representative_pair(")
+        let reduction_impl = source
+            .split("fn try_reduce_one_checked_definition_side(")
             .nth(1)
-            .expect("representative replay implementation must exist")
-            .split("/// Build equality closures")
+            .expect("direct checked-definition reduction must exist")
+            .split("fn checked_function_definition_reduction_source(")
             .next()
-            .expect("equality closure implementation must follow representative replay");
+            .expect("definition source lookup must follow direct reduction");
 
-        assert!(replay_impl.contains("objs_are_congruent_by_replay_safe_equality_routes"));
+        assert!(reduction_impl.contains("objs_are_equal_by_terminating_reduction_and_congruence"));
         assert!(source.contains("!verify_state.well_defined_already_verified"));
-        assert!(!replay_impl.contains("resolve_obj"));
-        assert!(!replay_impl.contains("verify_atomic_fact_with_known_forall"));
-        assert!(!replay_impl.contains("verify_equal_fact_with_direct_routes"));
-        assert!(!replay_impl.contains("verify_equal_fact("));
+        let obsolete_depth = ["known_equality_candidate_", "replay_depth"].concat();
+        let obsolete_collector = ["collect_known_equality_", "pairs_from_envs"].concat();
+        let obsolete_pair_attempt = ["try_verify_one_equality_", "representative_pair"].concat();
+        assert!(!source.contains(&obsolete_depth));
+        assert!(!source.contains(&obsolete_collector));
+        assert!(!source.contains(&obsolete_pair_attempt));
+        assert!(!reduction_impl.contains("verify_atomic_fact_with_known_forall"));
+        assert!(!reduction_impl.contains("verify_equal_fact_with_direct_routes"));
+        assert!(!reduction_impl.contains("verify_equal_fact("));
 
         let structural_source = include_str!("verify_builtin_rules/equality_structural.rs");
-        let replay_safe_comparator = structural_source
-            .split("fn objs_are_congruent_by_replay_safe_equality_routes(")
+        let terminating_comparator = structural_source
+            .split("fn objs_are_equal_by_terminating_reduction_and_congruence(")
             .nth(1)
-            .expect("replay-safe comparator must exist")
+            .expect("terminating structural comparator must exist")
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
-            .expect("central structural matcher must follow the replay-safe comparator");
+            .expect("central structural matcher must follow the terminating comparator");
         assert!(
-            replay_safe_comparator.contains("verify_equal_fact_with_known_fact_then_computation")
+            terminating_comparator.contains("verify_equal_fact_with_known_fact_then_computation")
         );
-        assert!(replay_safe_comparator.contains("beta_reduce_complete_anonymous_application_once"));
+        assert!(terminating_comparator.contains("beta_reduce_complete_anonymous_application_once"));
         let obsolete_one_rule = ["verify_atomic_fact_with_one_", "builtin_rule"].concat();
-        assert!(!replay_safe_comparator.contains(&obsolete_one_rule));
+        assert!(!terminating_comparator.contains(&obsolete_one_rule));
         let obsolete_inner = ["verify_atomic_fact_with_builtin_rules_", "inner"].concat();
-        assert!(!replay_safe_comparator.contains(&obsolete_inner));
-        assert!(!replay_safe_comparator.contains("resolve_obj"));
-        assert!(!replay_safe_comparator.contains("verify_atomic_fact_with_known_forall"));
-        assert!(!replay_safe_comparator.contains("verify_equal_fact"));
+        assert!(!terminating_comparator.contains(&obsolete_inner));
+        assert!(!terminating_comparator.contains("resolve_obj"));
+        assert!(!terminating_comparator.contains("verify_atomic_fact_with_known_forall"));
+        assert!(!terminating_comparator.contains("verify_equal_fact("));
 
         let atomic_source = include_str!("verify_atomic_fact.rs");
-        assert!(atomic_source.contains("known_equality_candidate_replay_depth != 0"));
-        assert!(atomic_source.contains("verify_equal_fact_with_known_fact_then_computation"));
-        assert!(atomic_source
-            .contains("verify_non_equational_atomic_fact_with_known_fact_then_computation"));
+        assert!(!atomic_source.contains(&obsolete_depth));
         let forall_source = include_str!("verify_atomic_fact_with_known_forall.rs");
-        assert!(forall_source.contains("known_equality_candidate_replay_depth != 0"));
+        assert!(!forall_source.contains(&obsolete_depth));
 
         let equality_builtin_source = include_str!("verify_builtin_rules/equality_dispatch.rs");
-        let direct_cart_forall_lookup = equality_builtin_source
-            .split("fn verify_exact_cart_projection_from_known_forall(")
-            .nth(1)
-            .expect("direct cart-forall lookup must exist")
-            .split("fn try_verify_empty_set_equality_from_not_nonempty(")
-            .next()
-            .expect("the next equality builtin must follow cart-forall lookup");
-        assert!(direct_cart_forall_lookup.contains("known_equality_candidate_replay_depth != 0"));
+        assert!(!equality_builtin_source.contains(&obsolete_depth));
 
         let set_membership_source =
             include_str!("verify_builtin_rules/in_fact_builtin/set_membership.rs");
-        assert!(
-            set_membership_source
-                .matches("known_equality_candidate_replay_depth != 0")
-                .count()
-                >= 2
-        );
-        assert!(set_membership_source.contains("self.known_equality_candidate_replay_depth == 0"));
+        assert!(!set_membership_source.contains(&obsolete_depth));
     }
 
     #[test]
-    fn replay_safe_comparator_allows_computation_and_bounded_symbolic_normalization() {
+    fn terminating_comparator_allows_computation_and_bounded_symbolic_normalization() {
         let mut runtime = Runtime::new();
-        runtime.new_file_path_new_env_new_name_scope("replay_safe_computation");
+        runtime.new_file_path_new_env_new_name_scope("terminating_structural_computation");
         let one: Obj = Number::new("1".to_string()).into();
         let two: Obj = Number::new("2".to_string()).into();
         let one_plus_one: Obj = Add::new(one.clone(), one).into();
@@ -920,18 +718,18 @@ mod tests {
             default_line_file(),
         ));
         assert!(runtime
-            .objs_are_congruent_by_replay_safe_equality_routes(
+            .objs_are_equal_by_terminating_reduction_and_congruence(
                 &one_plus_one,
                 &two,
                 default_line_file(),
             )
-            .expect("replay-safe comparison"));
+            .expect("terminating structural comparison"));
 
         let x: Obj = Identifier::new("x".to_string()).into();
         let zero: Obj = Number::new("0".to_string()).into();
         let x_plus_zero: Obj = Add::new(x.clone(), zero).into();
         assert!(runtime
-            .objs_are_congruent_by_replay_safe_equality_routes(
+            .objs_are_equal_by_terminating_reduction_and_congruence(
                 &x_plus_zero,
                 &x,
                 default_line_file(),
@@ -944,7 +742,7 @@ mod tests {
         let abs_x_minus_y: Obj = Abs::new(x_minus_y).into();
         let abs_y_minus_x: Obj = Abs::new(y_minus_x).into();
         assert!(runtime
-            .objs_are_congruent_by_replay_safe_equality_routes(
+            .objs_are_equal_by_terminating_reduction_and_congruence(
                 &abs_x_minus_y,
                 &abs_y_minus_x,
                 default_line_file(),
@@ -954,7 +752,11 @@ mod tests {
         let abs_x: Obj = Abs::new(x).into();
         let abs_y: Obj = Abs::new(y).into();
         assert!(!runtime
-            .objs_are_congruent_by_replay_safe_equality_routes(&abs_x, &abs_y, default_line_file())
+            .objs_are_equal_by_terminating_reduction_and_congruence(
+                &abs_x,
+                &abs_y,
+                default_line_file(),
+            )
             .expect("unrelated absolute values must not compare equal"));
     }
 }

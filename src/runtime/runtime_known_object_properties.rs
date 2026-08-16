@@ -119,6 +119,26 @@ impl Runtime {
         application: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
+        self.unfold_known_fn_application_once_impl(application, verify_state, true)
+    }
+
+    /// Reduce only a definition attached directly to the submitted
+    /// application. This route neither materializes a new template instance
+    /// nor searches equality representatives for another function definition.
+    pub(crate) fn reduce_direct_known_fn_application_once(
+        &mut self,
+        application: &Obj,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<Obj>, RuntimeError> {
+        self.unfold_known_fn_application_once_impl(application, verify_state, false)
+    }
+
+    fn unfold_known_fn_application_once_impl(
+        &mut self,
+        application: &Obj,
+        verify_state: &UseContextVerifyState,
+        allow_indirect_lookup: bool,
+    ) -> Result<Option<Obj>, RuntimeError> {
         let Obj::FnObj(fn_obj) = application else {
             return Ok(None);
         };
@@ -143,23 +163,30 @@ impl Runtime {
         };
         if let Some((struct_value_obj, index)) = callable_projection {
             if let Obj::InstantiatedTemplateObj(template_obj) = &struct_value_obj {
-                if self
-                    .materialize_instantiated_template_obj(template_obj, verify_state)
-                    .is_err()
-                {
-                    return Ok(None);
+                if !self.is_name_used_for_identifier(&template_obj.surface_name()) {
+                    if !allow_indirect_lookup
+                        || self
+                            .materialize_instantiated_template_obj(template_obj, verify_state)
+                            .is_err()
+                    {
+                        return Ok(None);
+                    }
                 }
             }
             let mut struct_values = vec![struct_value_obj.clone()];
-            if let Some(unfolded_struct_value) =
-                self.unfold_known_fn_application_once(&struct_value_obj, verify_state)?
-            {
+            if let Some(unfolded_struct_value) = self.unfold_known_fn_application_once_impl(
+                &struct_value_obj,
+                verify_state,
+                allow_indirect_lookup,
+            )? {
                 struct_values.push(unfolded_struct_value);
             }
-            let key = obj_equality_key(&struct_value_obj);
-            for env in self.iter_environments_from_top() {
-                if let Some((_, equal_objs)) = env.known_equality.get(&key) {
-                    struct_values.extend(equal_objs.iter().cloned());
+            if allow_indirect_lookup {
+                let key = obj_equality_key(&struct_value_obj);
+                for env in self.iter_environments_from_top() {
+                    if let Some((_, equal_objs)) = env.known_equality.get(&key) {
+                        struct_values.extend(equal_objs.iter().cloned());
+                    }
                 }
             }
             for struct_value in struct_values {
@@ -168,9 +195,12 @@ impl Runtime {
                 // benefit from the one checked-constructor unfold below.
                 let constructor = match struct_value {
                     Obj::Tuple(tuple) => Some(Obj::Tuple(tuple)),
-                    Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_) => {
-                        self.unfold_known_fn_application_once(&struct_value, verify_state)?
-                    }
+                    Obj::FnObj(_) | Obj::InstantiatedTemplateObj(_) => self
+                        .unfold_known_fn_application_once_impl(
+                            &struct_value,
+                            verify_state,
+                            allow_indirect_lookup,
+                        )?,
                     _ => None,
                 };
                 let Some(Obj::Tuple(tuple)) = constructor else {
@@ -195,11 +225,14 @@ impl Runtime {
             // scope. That candidate cannot be unfolded now, but it must not
             // abort unrelated verification. Direct uses of an ill-defined
             // template are still rejected by the caller's ordinary WD check.
-            if self
-                .materialize_instantiated_template_obj(template_obj, verify_state)
-                .is_err()
-            {
-                return Ok(None);
+            if !self.is_name_used_for_identifier(&template_obj.surface_name()) {
+                if !allow_indirect_lookup
+                    || self
+                        .materialize_instantiated_template_obj(template_obj, verify_state)
+                        .is_err()
+                {
+                    return Ok(None);
+                }
             }
         }
         let function_name_obj: Obj = match fn_obj.head.as_ref() {
@@ -209,19 +242,23 @@ impl Runtime {
             _ => return Ok(None),
         };
         let direct_definition = self.get_known_fn_body_and_equal_to_for_obj(&function_name_obj);
-        let known_definition = direct_definition.or_else(|| {
-            self.get_all_obj_representatives_equal_to_given(&function_name_obj)
-                .into_iter()
-                .find_map(|representative| {
-                    let info = self.get_known_fn_info_for_obj(&representative)?;
-                    match (info.fn_set, info.equal_to) {
-                        (Some((body, _)), Some((equal_to, line_file))) => {
-                            Some((body, equal_to, line_file))
+        let known_definition = if allow_indirect_lookup {
+            direct_definition.or_else(|| {
+                self.get_all_obj_representatives_equal_to_given(&function_name_obj)
+                    .into_iter()
+                    .find_map(|representative| {
+                        let info = self.get_known_fn_info_for_obj(&representative)?;
+                        match (info.fn_set, info.equal_to) {
+                            (Some((body, _)), Some((equal_to, line_file))) => {
+                                Some((body, equal_to, line_file))
+                            }
+                            _ => None,
                         }
-                        _ => None,
-                    }
-                })
-        });
+                    })
+            })
+        } else {
+            direct_definition
+        };
         let Some((fn_set_body, equal_to_expr, _)) = known_definition else {
             return Ok(None);
         };

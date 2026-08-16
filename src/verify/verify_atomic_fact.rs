@@ -6,15 +6,6 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if self.known_equality_candidate_replay_depth != 0 {
-            return match fact {
-                AtomicFact::EqualFact(equal_fact) => {
-                    self.verify_equal_fact_with_known_fact_then_computation(equal_fact)
-                }
-                _ => self.verify_non_equational_atomic_fact_with_known_fact_then_computation(fact),
-            };
-        }
-
         if let Some(cached_result) =
             self.verify_fact_from_cache_using_display_string(&fact.clone().into())
         {

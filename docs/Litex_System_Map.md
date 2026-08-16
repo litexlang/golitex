@@ -384,24 +384,26 @@ equality `f = g`. Later root and nested equality checks use the normal equality
 class and constructor congruence; the equality verifier does not run a separate
 `$fn_eq` lookup.
 
-At outer round 0, equality replay enumerates each side's original object and
-stored equality representatives. Per representative pair, it may unfold one
-checked outer definition on one side and feed equal top-level constructors to
-the central structural matcher. Every comparison node first tries identity, a
-stored non-forall equality class, pure numeric computation, bounded
+At outer round 0, equality never enumerates stored representatives or opens a
+candidate graph. It may reduce one checked named-function application only
+when that application is literally a side of the submitted goal, then compare
+the result with the other goal side. Every comparison node first tries identity,
+a stored non-forall equality class, pure numeric computation, bounded
 obligation-free rational-expression normalization, capture-avoiding beta
 reduction of one complete anonymous-function application layer, and
 constructor descent. Remaining curried application layers are reapplied when
 the substituted result is callable. It never opens the ordinary builtin
-dispatcher, and beta-reduced comparison targets are not stored as facts. The
-replay guard blocks known `forall`, comparison of two freshly unfolded named
-definitions, and recursive checked-definition replay. Function applications
+dispatcher, and beta-reduced comparison targets are not stored as facts.
+Definition reduction does not instantiate known `forall`, follow equality
+representatives to find another application, or recursively unfold a second
+named definition. Function applications
 align trailing argument groups and then compare their remaining function
 prefixes, so the two sides need not have the same number of curried application
 groups. Other atomic-fact lookup may use known-only congruence for transport,
-but does not start the fuller child-proof route. One-step function unfolding is
-best-effort: a template candidate captured under an already closed local binder
-scope is skipped when it can no longer be materialized, while a direct
+but does not start the fuller child-proof route. If aliases hide a named
+application on both sides, the program must state the bridge equality
+explicitly. Thus `selected = f(a, 0) = f(1, 0)` exposes the direct congruence
+step, while `selected = f(1, 0)` alone does not reopen the alias. A direct
 ill-defined template use is still rejected by the ordinary well-definedness
 check.
 The nonzero rules also include `x > 0 => sqrt(x) != 0`, but not the invalid

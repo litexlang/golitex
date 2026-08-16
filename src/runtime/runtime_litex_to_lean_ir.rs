@@ -2875,80 +2875,85 @@ impl Runtime {
         self.build_litex_to_lean_ir_fact_from_success_with_context(success, context)
     }
 
-    fn build_litex_to_lean_ir_checked_definition_replay(
+    fn build_litex_to_lean_ir_checked_function_definition_reduction(
         &self,
         goal: &Fact,
-        replay: &CheckedDefinitionReplayEvidence,
+        reduction: &CheckedFunctionDefinitionReductionEvidence,
     ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
         let Fact::AtomicFact(AtomicFact::EqualFact(goal_equality)) = goal else {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "checked function-definition replay was attached to a non-equality goal",
+                "checked function-definition reduction was attached to a non-equality goal",
             ));
         };
-        let (expected_application, expected_other) = if replay.application_is_left {
+        let (expected_application, expected_other) = if reduction.application_is_left {
             (&goal_equality.left, &goal_equality.right)
         } else {
             (&goal_equality.right, &goal_equality.left)
         };
-        if obj_equality_key(expected_application) != obj_equality_key(&replay.application_side)
-            || obj_equality_key(expected_other) != obj_equality_key(&replay.other_side)
+        if obj_equality_key(expected_application) != obj_equality_key(&reduction.application_side)
+            || obj_equality_key(expected_other) != obj_equality_key(&reduction.other_side)
         {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "checked function-definition replay does not match the recorded goal orientation",
+                "checked function-definition reduction does not match the recorded goal orientation",
             ));
         }
-        if !replay.reduced_matches_other_by_alpha
-            || !objs_equal_with_nested_binder_alpha_equivalence(&replay.reduced, &replay.other_side)
+        if !reduction.reduced_matches_other_by_alpha
+            || !objs_equal_with_nested_binder_alpha_equivalence(
+                &reduction.reduced,
+                &reduction.other_side,
+            )
         {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "the current Litex-to-Lean function-definition replay adapter requires an alpha-equivalent unfolded result",
+                "the Litex-to-Lean function-definition reduction adapter requires an alpha-equivalent reduced result",
             ));
         }
-        let Fact::AtomicFact(AtomicFact::EqualFact(defining_equality)) = &replay.defining_equality
+        let Fact::AtomicFact(AtomicFact::EqualFact(defining_equality)) =
+            &reduction.defining_equality
         else {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "checked function-definition replay source is not a defining equality",
+                "checked function-definition reduction source is not a defining equality",
             ));
         };
-        if obj_equality_key(&defining_equality.left) != obj_equality_key(&replay.definition_object)
+        if obj_equality_key(&defining_equality.left)
+            != obj_equality_key(&reduction.definition_object)
             || !matches!(&defining_equality.right, Obj::AnonymousFn(_))
         {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "checked function-definition replay source does not define the recorded function object",
+                "checked function-definition reduction source does not define the recorded function object",
             ));
         }
-        let definition = LitexToLeanObjectIr::lower(&replay.definition_object)
+        let definition = LitexToLeanObjectIr::lower(&reduction.definition_object)
             .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
         if !matches!(definition, LitexToLeanObjectIr::Symbol { .. }) {
             return Err(litex_to_lean_ir_error(
                 &goal.line_file(),
-                "checked function-definition replay currently requires a named function symbol",
+                "checked function-definition reduction currently requires a named function symbol",
             ));
         }
         for object in [
-            &replay.application_side,
-            &replay.reduced,
-            &replay.other_side,
+            &reduction.application_side,
+            &reduction.reduced,
+            &reduction.other_side,
         ] {
             LitexToLeanObjectIr::lower(object)
                 .map_err(|message| litex_to_lean_ir_error(&goal.line_file(), message))?;
         }
         Ok(LitexToLeanFactProofIr::RuleApplication {
-            rule: LitexToLeanProofRuleIr::CheckedFunctionDefinitionReplay {
+            rule: LitexToLeanProofRuleIr::CheckedFunctionDefinitionReduction {
                 definition,
-                defining_equality_fact_id: replay.defining_equality_fact_id,
-                defining_equality: replay.defining_equality.clone(),
+                defining_equality_fact_id: reduction.defining_equality_fact_id,
+                defining_equality: reduction.defining_equality.clone(),
                 expected_target: goal.clone(),
-                application_side: replay.application_side.clone(),
-                reduced: replay.reduced.clone(),
-                other_side: replay.other_side.clone(),
-                application_is_left: replay.application_is_left,
-                reduced_matches_other_by_alpha: replay.reduced_matches_other_by_alpha,
+                application_side: reduction.application_side.clone(),
+                reduced: reduction.reduced.clone(),
+                other_side: reduction.other_side.clone(),
+                application_is_left: reduction.application_is_left,
+                reduced_matches_other_by_alpha: reduction.reduced_matches_other_by_alpha,
             },
             parameter_requirements: Vec::new(),
             premises: Vec::new(),
@@ -3125,8 +3130,10 @@ impl Runtime {
                     context,
                 ),
             VerifiedByResult::Fact(result) => {
-                if let Some(replay) = result.checked_definition_replay.as_ref() {
-                    return self.build_litex_to_lean_ir_checked_definition_replay(goal, replay);
+                if let Some(reduction) = result.checked_function_definition_reduction.as_ref() {
+                    return self.build_litex_to_lean_ir_checked_function_definition_reduction(
+                        goal, reduction,
+                    );
                 }
                 if let Some(evidence) = result.definition_reduction.as_ref() {
                     let Stmt::DefPredicateStmt(DefPredicateStmt::DefPropStmt(definition)) =

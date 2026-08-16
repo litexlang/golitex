@@ -54,129 +54,22 @@ fn run_example_lit_file(relative_path: &str) {
     );
 }
 
-fn compile_example_lit_file_to_lean(relative_path: &str) -> Option<String> {
-    run_example_lit_file(relative_path);
-
-    let lit_path = example_lit_path(relative_path);
-    let lit_content = match fs::read_to_string(&lit_path) {
-        Ok(content) => content,
-        Err(read_error) => panic!("failed to read {:?}: {}", lit_path, read_error),
-    };
-    if lit_content.trim().is_empty() {
-        return None;
-    }
-
-    let path_str = match lit_path.to_str() {
-        Some(path_string) => path_string,
-        None => panic!("{:?} must be valid UTF-8", lit_path),
-    };
-    let normalized_source = remove_windows_carriage_return(lit_content.as_str());
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope(path_str);
-    runtime.isolated = source_has_isolated_import(normalized_source.as_str());
-
-    let generated_lean =
-        compile_to_lean(normalized_source.as_str(), &mut runtime).unwrap_or_else(|error| {
-            panic!(
-                "failed to generate Lean from {}:\n{}",
-                path_str,
-                display_runtime_error_json(&runtime, &error, false)
-            )
-        });
-    let updated_source = source_with_generated_lean(&lit_content, &generated_lean);
-    fs::write(&lit_path, updated_source)
-        .unwrap_or_else(|write_error| panic!("failed to write {:?}: {}", lit_path, write_error));
-
-    println!("generated Lean appended to {:?}", lit_path);
-    Some(generated_lean)
-}
-
-#[test]
-#[ignore]
-fn print_tmp_lit_in_all_output_languages() {
-    run_with_large_stack("print_tmp_lit_in_all_output_languages_large_stack", || {
-        let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        let tmp_lit_path = manifest_dir.join("examples").join("tmp.lit");
-        let tmp_lit_content = match fs::read_to_string(&tmp_lit_path) {
-            Ok(content) => content,
-            Err(read_error) => panic!("failed to read {:?}: {}", tmp_lit_path, read_error),
-        };
-        let path_str = match tmp_lit_path.to_str() {
-            Some(path_string) => path_string,
-            None => panic!("{:?} must be valid UTF-8", tmp_lit_path),
-        };
-        let normalized_source = remove_windows_carriage_return(tmp_lit_content.as_str());
-        let languages = vec![
-            ("en", OutputLanguage::English),
-            ("zh", OutputLanguage::SimplifiedChinese),
-            ("zh-Hans", OutputLanguage::TraditionalChinese),
-            ("ja", OutputLanguage::Japanese),
-            ("ko", OutputLanguage::Korean),
-            ("es", OutputLanguage::Spanish),
-            ("fr", OutputLanguage::French),
-            ("de", OutputLanguage::German),
-            ("pt", OutputLanguage::Portuguese),
-            ("ru", OutputLanguage::Russian),
-            ("ar", OutputLanguage::Arabic),
-            ("hi", OutputLanguage::Hindi),
-            ("vi", OutputLanguage::Vietnamese),
-            ("id", OutputLanguage::Indonesian),
-        ];
-
-        for (language_code, output_language) in languages {
-            let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(path_str);
-            runtime.output_language = output_language;
-
-            let start_time = Instant::now();
-            let (stmt_results, runtime_error) =
-                run_source_code(normalized_source.as_str(), &mut runtime);
-            let duration_ms = start_time.elapsed().as_secs_f64() * 1000.0;
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-
-            println!(
-                "\n=== [lang={}] examples/tmp.lit {} ({:.2} ms user file only) ===\n{}\n",
-                language_code,
-                if run_succeeded { "OK" } else { "FAILED" },
-                duration_ms,
-                run_output
-            );
-
-            assert!(
-                run_succeeded,
-                "examples/tmp.lit failed for language `{}`",
-                language_code
-            );
-        }
-    });
-}
-
 #[test]
 fn run_tmp0() {
     run_with_large_stack("run_tmp0_large_stack", || run_example_lit_file("tmp.lit"));
 }
 
-fn compile_tmp_to_lean(index: usize) {
-    let (source_path, lit_path) = if index == 0 {
-        let source_path = "examples/tmp.lit".to_string();
-        (source_path, example_lit_path("tmp.lit"))
-    } else {
-        let source_path = format!("private/tmp{}.lit", index);
-        let lit_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(&source_path);
-        (source_path, lit_path)
-    };
+fn compile_tmp_to_lean() {
+    let source_path = "examples/tmp.lit";
+    let lit_path = example_lit_path("tmp.lit");
     let lit_content = fs::read_to_string(&lit_path)
         .unwrap_or_else(|read_error| panic!("failed to read {:?}: {}", lit_path, read_error));
     let lit_source = source_without_trailing_triple_quoted_block(&lit_content).trim();
     if lit_source.is_empty() {
-        let output = format!(
-            "\n=== LITEX -> LEAN: {} is empty ===\n\
+        let output = "\n=== LITEX -> LEAN: examples/tmp.lit is empty ===\n\
              Put Litex source in that file and rerun:\n  \
-             cargo test --release tmp{}_to_lean\n",
-            source_path, index
-        );
-        write_scratch_command_output(&output);
+             cargo test --release tmp0_to_lean\n";
+        write_scratch_command_output(output);
         return;
     }
 
@@ -196,119 +89,13 @@ fn compile_tmp_to_lean(index: usize) {
             )
         });
 
-    let output = render_tmp_translation(&source_path, lit_source, &generated_lean);
+    let output = render_tmp_translation(source_path, lit_source, &generated_lean);
     write_scratch_command_output(&output);
 }
 
 #[test]
 fn tmp0_to_lean() {
-    run_with_large_stack("tmp0_to_lean_large_stack", || compile_tmp_to_lean(0));
-}
-
-#[test]
-#[ignore = "developer scratch command; run explicitly to print the source/target pair"]
-fn compile_tmp1_to_lean() {
-    run_with_large_stack("compile_tmp1_to_lean_large_stack", || {
-        compile_tmp_to_lean(1)
-    });
-}
-
-#[test]
-#[ignore = "developer scratch command; run explicitly to print the source/target pair"]
-fn compile_tmp2_to_lean() {
-    run_with_large_stack("compile_tmp2_to_lean_large_stack", || {
-        compile_tmp_to_lean(2)
-    });
-}
-
-#[test]
-fn compile_empty_to_lean() {
-    run_with_large_stack("compile_empty_to_lean_large_stack", || {
-        compile_example_lit_file_to_lean("_internal/compile_to_lean/empty.lit");
-    });
-}
-
-#[test]
-#[ignore = "developer snapshot command that rewrites the showcase source"]
-fn compile_to_lean_showcase() {
-    run_with_large_stack("compile_to_lean_showcase_large_stack", || {
-        compile_example_lit_file_to_lean("_internal/compile_to_lean/showcase.lit");
-    });
-}
-
-#[test]
-fn wraps_generated_lean_at_end_of_tmp_source() {
-    let source = "1 + 1 = 2\n\n\n\"\"\"\nold generated Lean\n\"\"\"\n";
-    let updated_source = source_with_generated_lean(source, "import Mathlib\n");
-
-    assert_eq!(
-        updated_source,
-        "1 + 1 = 2\n\n\n\"\"\"\nimport Mathlib\n\"\"\"\n"
-    );
-}
-
-#[test]
-fn keeps_nontrailing_triple_quoted_blocks() {
-    let source = "\"\"\"\nsource note\n\"\"\"\n\n1 + 1 = 2\n";
-    let updated_source = source_with_generated_lean(source, "import Mathlib\n");
-
-    assert!(updated_source.starts_with("\"\"\"\nsource note\n\"\"\"\n"));
-    assert!(updated_source.ends_with("\"\"\"\nimport Mathlib\n\"\"\"\n"));
-}
-
-#[test]
-fn renders_tmp_translation_as_one_clean_source_target_pair() {
-    let output = render_tmp_translation(
-        "tmp.lit",
-        "1 + 1 = 2",
-        "theorem fact_0 : 1 + 1 = 2 := by\n  norm_num\n",
-    );
-
-    assert_eq!(output.matches("----- LITEX SOURCE").count(), 1);
-    assert_eq!(output.matches("----- GENERATED LEAN").count(), 1);
-    assert!(output.contains("source: examples/tmp.lit"));
-    assert!(output.contains("1 + 1 = 2"));
-    assert!(output.contains("theorem fact_0"));
-    assert!(!output.contains("generated Lean appended"));
-    assert!(!output.contains("generated Lean replaced"));
-}
-
-#[test]
-fn renders_not_equal_symmetry_source_with_its_generated_lean() {
-    let source = "forall a set, b set:\n    a != b\n    =>:\n        b != a";
-    let mut runtime = Runtime::new();
-    runtime.new_file_path_new_env_new_name_scope("tmp-not-equal-symmetry.lit");
-    let generated_lean = compile_to_lean(source, &mut runtime).expect("compile tracer to Lean");
-    let output = render_tmp_translation("tmp.lit", source, &generated_lean);
-
-    assert!(output.contains(source));
-    assert!(output.contains("theorem fact"));
-    assert!(output.contains("Litex.IsSet a"));
-    assert!(output.contains("Litex.IsSet b"));
-    assert!(output.contains("a ≠ b"));
-    assert!(output.contains("b ≠ a"));
-    assert!(output.contains("Litex.Rules.notEqualSymmetry"));
-}
-
-#[test]
-fn run_comparison_rules_draft() {
-    run_with_large_stack("run_comparison_rules_draft_large_stack", || {
-        run_example_lit_file("_internal/drafts/comparison_rules_draft.lit")
-    });
-}
-
-#[test]
-fn run_statement_forms_draft() {
-    run_with_large_stack("run_statement_forms_draft_large_stack", || {
-        run_example_lit_file("_internal/drafts/statement_forms_draft.lit")
-    });
-}
-
-#[test]
-fn run_output_trace_showcase() {
-    run_with_large_stack("run_output_trace_showcase_large_stack", || {
-        run_example_lit_file("_internal/drafts/output_trace_showcase.lit")
-    });
+    run_with_large_stack("tmp0_to_lean_large_stack", compile_tmp_to_lean);
 }
 
 fn example_lit_path(relative_path: &str) -> PathBuf {
@@ -316,15 +103,6 @@ fn example_lit_path(relative_path: &str) -> PathBuf {
     let path = manifest_dir.join("examples").join(relative_path);
     assert!(path.is_file(), "examples/{} must exist", relative_path);
     path
-}
-
-fn source_with_generated_lean(source: &str, generated_lean: &str) -> String {
-    let source = source_without_trailing_triple_quoted_block(source);
-    format!(
-        "{}\n\n\n\"\"\"\n{}\n\"\"\"\n",
-        source.trim_end(),
-        generated_lean.trim_end()
-    )
 }
 
 fn source_without_trailing_triple_quoted_block(source: &str) -> &str {

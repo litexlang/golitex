@@ -1,0 +1,26 @@
+# Tracer: checked definitions reduce directly; aliases require an explicit bridge.
+#
+# Before (implicit candidate-graph bridge):
+# trust have f fn(x, y R) R
+# trust have a R
+# trust a = 1
+# have selected R = f(a, 0)
+# selected = f(1, 0)
+# Former behavior: the last line reopened `selected` as `f(a, 0)` and then
+# applied structural congruence. That implicit representative search is gone.
+#
+# Now (verified):
+have fn square(t R) R = t^2
+square(2) = 4
+trust have f fn(x, y R) R
+trust have a R
+trust a = 1
+have selected R = f(a, 0)
+selected = f(a, 0) = f(1, 0)
+# Current behavior: a checked application on the goal side reduces once;
+# alias transport is written explicitly before structural congruence.
+#
+# Boundary: `selected = f(1, 0)` alone remains rejected. Definition reduction
+# does not enumerate equality representatives, instantiate known forall facts,
+# or recursively unfold a second named definition.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/03_language_features/checked_definition_equality.lit

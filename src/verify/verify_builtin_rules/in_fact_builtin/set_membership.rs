@@ -7,9 +7,7 @@ impl Runtime {
         obj: &Obj,
         verify_state: &UseContextVerifyState,
     ) -> Result<Option<Obj>, RuntimeError> {
-        if self.active_set_builder_forall_transport
-            || self.known_equality_candidate_replay_depth != 0
-        {
+        if self.active_set_builder_forall_transport {
             return Ok(None);
         }
         self.active_set_builder_forall_transport = true;
@@ -72,9 +70,7 @@ impl Runtime {
             ));
         }
 
-        if self.active_set_builder_forall_transport
-            || self.known_equality_candidate_replay_depth != 0
-        {
+        if self.active_set_builder_forall_transport {
             return Ok(None);
         }
         let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
@@ -176,10 +172,7 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.known_equality_candidate_replay_depth == 0
-            && !matches!(goal, AtomicFact::InFact(_))
-            && !self.active_set_builder_forall_transport
-        {
+        if !matches!(goal, AtomicFact::InFact(_)) && !self.active_set_builder_forall_transport {
             let forall_memberships: Vec<(InFact, Rc<KnownForallFactParamsAndDom>)> = self
                 .iter_environments_from_top()
                 .flat_map(|environment| {

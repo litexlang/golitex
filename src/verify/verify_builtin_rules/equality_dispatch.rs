@@ -2437,10 +2437,6 @@ impl Runtime {
         &mut self,
         goal: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        if self.known_equality_candidate_replay_depth != 0 {
-            return Ok(None);
-        }
-
         let lookup_key = (goal.key(), goal.is_true());
         let candidates: Vec<(AtomicFact, Rc<KnownForallFactParamsAndDom>)> = self
             .iter_environments_from_top()

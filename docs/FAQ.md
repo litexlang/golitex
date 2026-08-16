@@ -372,23 +372,25 @@ well-defined. Reversing those two facts still fails. The same ordered check is
 used at declaration time and whenever the instantiated struct carrier is
 checked; the temporary facts never leak into the surrounding environment.
 
-At outer round 0, equality replay enumerates the original objects and their
-stored equality representatives. For each pair it may unfold one checked outer
-definition on one side. If that exposes the same supported constructor, the
-central matcher descends componentwise. A comparison node first tries identity,
-an already stored non-forall equality class, pure numeric computation, bounded
-obligation-free rational-expression normalization, capture-avoiding beta
-reduction of one complete anonymous-function application layer, and structural
-descent. It does not launch the ordinary builtin dispatcher. Thus two terms
+At outer round 0, equality does not enumerate stored representatives or open a
+candidate graph. It may reduce one checked named-function application only
+when that application is literally one side of the submitted goal. The reduced
+term is compared with the other goal side by identity, an already stored
+non-forall equality class, pure numeric computation, bounded obligation-free
+rational-expression normalization, capture-avoiding beta reduction of one
+complete anonymous-function application layer, and structural descent. This
+comparison does not launch the ordinary builtin dispatcher. Thus two terms
 such as `fn(x R) R {f(x) * g(x)}(a)` and
 `fn(x R) R {f(x) * g(x)}(b)` are compared as `f(a) * g(a)` and
 `f(b) * g(b)`; multiplication descent still needs both corresponding leaf
 equalities to be stored. The reduced product equality is only a transient
-comparison target. Equality replay also blocks known `forall` instantiation,
-comparison of two freshly unfolded named-definition sides, and recursive child
-definition unfolding. Thus `k = a * t` can bridge `k = a * t + 0`, while a
-semantic builtin theorem or second named function definition is not silently
-used.
+comparison target. Definition reduction does not instantiate known `forall`
+facts, follow an equality-class representative to find a reducible application,
+or recursively unfold a second named definition. If aliases hide the function
+application on both goal sides, write the required bridge equality explicitly.
+For example, after `have selected R = f(a, 0)` and `a = 1`, write
+`selected = f(a, 0) = f(1, 0)`; the shorter `selected = f(1, 0)` does not
+implicitly reopen `selected` as an equality representative.
 
 Separately, a full equality goal reuses the same constructor matcher while
 allowing each corresponding child equality to use the bounded builtin/equality

@@ -385,7 +385,7 @@ axiom functionObjectInFnSet
   In (functionObject spec body) (FnSet spec)
 
 /-- Applicability of a checked function object retains the source arity
-certificate. These projections let definition replay consume the same proof
+certificate. These projections let definition reduction consume the same proof
 telescope even when the caller cites an already named `Applicable` fact. -/
 axiom functionObjectApplicableLength
     (spec : FnSpec)

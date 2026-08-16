@@ -17,6 +17,12 @@ inner applications' WD evidence must be replayed before the outer application
 evidence inside the theorem proof, and the two equal source occurrences must
 reuse the same frozen outer object identity.
 
+Formatting tracer: the emitter formerly placed this complete `forall`
+telescope on one physical line. The current snapshot keeps each object binder
+beside its membership premise and moves the conclusion to its own line. This is
+only presentation: all `Litex.*` qualification, binder order, FactIds, and
+proof replay remain unchanged.
+
 ```litex
 forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
     f(g(a), t(b)) = f(g(a), t(b))
@@ -28,7 +34,13 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact43 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (b : Litex.Object) (__h0_2 : Litex.In b Litex.R) (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 Litex.R Litex.R)) (t : Litex.Object) (__h0_4 : Litex.In t (Litex.fnSpace1 Litex.R Litex.R)) (f : Litex.Object) (__h0_5 : Litex.In f (Litex.fnSpace2 Litex.R Litex.R Litex.R)), (f [(g [a]), (t [b])]) = (f [(g [a]), (t [b])]) :=
+theorem __fact43 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.R)
+    (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 Litex.R Litex.R))
+    (t : Litex.Object) (__h0_4 : Litex.In t (Litex.fnSpace1 Litex.R Litex.R))
+    (f : Litex.Object) (__h0_5 : Litex.In f (Litex.fnSpace2 Litex.R Litex.R Litex.R)),
+    (f [(g [a]), (t [b])]) = (f [(g [a]), (t [b])]) :=
 by
   intro a __h0_1 b __h0_2 g __h0_3 t __h0_4 f __h0_5
   have __wd0_7 : Litex.In a Litex.R := by
@@ -191,7 +203,11 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact13 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (b : Litex.Object) (__h0_2 : Litex.In b Litex.C) (c : Litex.Object) (__h0_3 : Litex.In c Litex.C), (Litex.add (Litex.add a b) c) = (Litex.add (Litex.add a b) c) :=
+theorem __fact13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.C)
+    (c : Litex.Object) (__h0_3 : Litex.In c Litex.C),
+    (Litex.add (Litex.add a b) c) = (Litex.add (Litex.add a b) c) :=
 by
   intro a __h0_1 b __h0_2 c __h0_3
   have __wd0_5 : Litex.In a Litex.C := by
@@ -206,7 +222,11 @@ by
     exact ((Litex.Rules.complexAddClosure (__wd0_7) (__wd0_8)))
   exact rfl
 
-theorem __fact26 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (b : Litex.Object) (__h0_2 : Litex.In b Litex.C) (c : Litex.Object) (__h0_3 : Litex.In c Litex.C), (Litex.add (Litex.mul (Litex.sub a b) c) a) = (Litex.add (Litex.mul (Litex.sub a b) c) a) :=
+theorem __fact26 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.C)
+    (c : Litex.Object) (__h0_3 : Litex.In c Litex.C),
+    (Litex.add (Litex.mul (Litex.sub a b) c) a) = (Litex.add (Litex.mul (Litex.sub a b) c) a) :=
 by
   intro a __h0_1 b __h0_2 c __h0_3
   have __wd0_19 : Litex.In a Litex.C := by
@@ -225,7 +245,11 @@ by
     exact ((Litex.Rules.complexAddClosure (__wd0_23) (__wd0_24)))
   exact rfl
 
-theorem __fact39 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (b : Litex.Object) (__h0_2 : Litex.In b Litex.C) (__h0_3 : b ≠ 0), (Litex.div a b) = (Litex.div a b) :=
+theorem __fact39 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.C)
+    (__h0_3 : b ≠ 0),
+    (Litex.div a b) = (Litex.div a b) :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_34 : b ≠ 0 := by
@@ -238,7 +262,11 @@ by
     exact ((Litex.Rules.complexDivClosure (__wd0_35) (__wd0_36) (__wd0_34)))
   exact rfl
 
-theorem __fact52 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (b : Litex.Object) (__h0_2 : Litex.In b Litex.C) (__h0_3 : b ≠ 0), (Litex.add (Litex.div a b) a) = (Litex.add (Litex.div a b) a) :=
+theorem __fact52 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.C)
+    (__h0_3 : b ≠ 0),
+    (Litex.add (Litex.div a b) a) = (Litex.add (Litex.div a b) a) :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_45 : b ≠ 0 := by
@@ -255,7 +283,11 @@ by
     exact ((Litex.Rules.complexAddClosure (__wd0_48) (__wd0_49)))
   exact rfl
 
-theorem __fact65 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (b : Litex.Object) (__h0_2 : Litex.In b Litex.R) (__h0_3 : b ≠ 0), Litex.In (Litex.div a b) Litex.R :=
+theorem __fact65 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.R)
+    (__h0_3 : b ≠ 0),
+    Litex.In (Litex.div a b) Litex.R :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_60 : b ≠ 0 := by
@@ -368,14 +400,24 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact13 : ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a) (b : Litex.Object) (__h0_2 : Litex.IsSet b) (__h0_3 : a ≠ b), (Litex.listSet [a, b]) = (Litex.listSet [a, b]) :=
+theorem __fact13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+    (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+    (__h0_3 : a ≠ b),
+    (Litex.listSet [a, b]) = (Litex.listSet [a, b]) :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_2 : a ≠ b := by
     exact (__h0_3)
   exact rfl
 
-theorem __fact35 : ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a) (b : Litex.Object) (__h0_2 : Litex.IsSet b) (c : Litex.Object) (__h0_3 : Litex.IsSet c) (__h0_4 : a ≠ b) (__h0_5 : a ≠ c) (__h0_6 : b ≠ c), (Litex.listSet [a, b, c]) = (Litex.listSet [a, b, c]) :=
+theorem __fact35 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+    (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+    (c : Litex.Object) (__h0_3 : Litex.IsSet c)
+    (__h0_4 : a ≠ b) (__h0_5 : a ≠ c)
+    (__h0_6 : b ≠ c),
+    (Litex.listSet [a, b, c]) = (Litex.listSet [a, b, c]) :=
 by
   intro a __h0_1 b __h0_2 c __h0_3 __h0_4 __h0_5 __h0_6
   have __wd0_7 : a ≠ b := by
@@ -609,7 +651,10 @@ import Litex.Rules
 theorem __fact1 : Litex.pi = Litex.pi := by
   exact rfl
 
-theorem __fact11 : ∀ (A : Litex.Object) (__h0_1 : Litex.IsSet A) (B : Litex.Object) (__h0_2 : Litex.IsSet B), (Litex.union A B) = (Litex.union A B) :=
+theorem __fact11 :
+  ∀ (A : Litex.Object) (__h0_1 : Litex.IsSet A)
+    (B : Litex.Object) (__h0_2 : Litex.IsSet B),
+    (Litex.union A B) = (Litex.union A B) :=
 by
   intro A __h0_1 B __h0_2
   exact rfl
@@ -645,7 +690,11 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact13 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (b : Litex.Object) (__h0_2 : Litex.In b Litex.C) (__h0_3 : b ≠ 0), (Litex.div a b) = (Litex.div a b) :=
+theorem __fact13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.C)
+    (__h0_3 : b ≠ 0),
+    (Litex.div a b) = (Litex.div a b) :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_4 : b ≠ 0 := by
@@ -658,7 +707,11 @@ by
     exact ((Litex.Rules.complexDivClosure (__wd0_5) (__wd0_6) (__wd0_4)))
   exact rfl
 
-theorem __fact26 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (b : Litex.Object) (__h0_2 : Litex.In b Litex.R) (__h0_3 : b ≠ 0), Litex.In (Litex.div a b) Litex.R :=
+theorem __fact26 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (b : Litex.Object) (__h0_2 : Litex.In b Litex.R)
+    (__h0_3 : b ≠ 0),
+    Litex.In (Litex.div a b) Litex.R :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   have __wd0_15 : b ≠ 0 := by
@@ -905,7 +958,10 @@ theorem __fact23 : Litex.In reciprocal (Litex.FnSet ({ arity := 1, requirements 
 theorem __fact24 : reciprocal = __reciprocal_impl := by
   rfl
 
-theorem __fact34 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (__h0_2 : a ≠ 0), (reciprocal [a]) = (Litex.div 1 a) :=
+theorem __fact34 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (__h0_2 : a ≠ 0),
+    (reciprocal [a]) = (Litex.div 1 a) :=
 by
   intro a __h0_1 __h0_2
   have __wd0_28 : Litex.In a Litex.R := by
@@ -1200,12 +1256,16 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __wd0_3 : ∀ (__wd_scope3_arg1 : Litex.Object) (__wd_scope3_premise1 : Litex.In __wd_scope3_arg1 Litex.R), Litex.In __wd_scope3_arg1 Litex.R :=
+theorem __wd0_3 :
+  ∀ (__wd_scope3_arg1 : Litex.Object) (__wd_scope3_premise1 : Litex.In __wd_scope3_arg1 Litex.R),
+    Litex.In __wd_scope3_arg1 Litex.R :=
 by
   intro __wd_scope3_arg1 __wd_scope3_premise1
   exact __wd_scope3_premise1
 
-theorem __wd0_4 : ∀ (__wd_scope4_arg1 : Litex.Object) (__wd_scope4_premise1 : Litex.In __wd_scope4_arg1 Litex.R), Litex.In __wd_scope4_arg1 Litex.R :=
+theorem __wd0_4 :
+  ∀ (__wd_scope4_arg1 : Litex.Object) (__wd_scope4_premise1 : Litex.In __wd_scope4_arg1 Litex.R),
+    Litex.In __wd_scope4_arg1 Litex.R :=
 by
   intro __wd_scope4_arg1 __wd_scope4_premise1
   exact __wd_scope4_premise1
@@ -1273,7 +1333,10 @@ theorem __obj12_in_fn_space :
 theorem __fact7 : __obj9 = __obj12 := by
   exact rfl
 
-theorem __wd0_11 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (__wd_scope9_arg1 : Litex.Object) (__wd_scope9_premise1 : Litex.In __wd_scope9_arg1 Litex.R), Litex.In __wd_scope9_arg1 Litex.R :=
+theorem __wd0_11 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (__wd_scope9_arg1 : Litex.Object) (__wd_scope9_premise1 : Litex.In __wd_scope9_arg1 Litex.R),
+    Litex.In __wd_scope9_arg1 Litex.R :=
 by
   intro a __h0_1 __wd_scope9_arg1 __wd_scope9_premise1
   exact __wd_scope9_premise1
@@ -1316,7 +1379,9 @@ theorem __obj30_in_fn_space (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) :
   unfold __obj30
   exact Litex.functionObjectInFnSet (__obj30_spec a __h0_1) (__obj30_body a __h0_1) (__obj30_closed a __h0_1)
 
-theorem __obj31_app : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R), Litex.Applicable (__obj30 a __h0_1) [(__obj28 a)] :=
+theorem __obj31_app :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R),
+    Litex.Applicable (__obj30 a __h0_1) [(__obj28 a)] :=
 by
   intro a __h0_1
   exact Litex.fnSetApplicable (args := [(__obj28 a)]) (__obj30_in_fn_space a __h0_1) rfl (by
@@ -1333,7 +1398,10 @@ by
   change ∃ __h_arg0 : Litex.In ((__obj28 a)) Litex.R, True
   exact Exists.intro ((__wd0_12 a __h0_1)) (True.intro)))
 
-theorem __wd0_13 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) (__wd_scope10_arg1 : Litex.Object) (__wd_scope10_premise1 : Litex.In __wd_scope10_arg1 Litex.R), Litex.In __wd_scope10_arg1 Litex.R :=
+theorem __wd0_13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R)
+    (__wd_scope10_arg1 : Litex.Object) (__wd_scope10_premise1 : Litex.In __wd_scope10_arg1 Litex.R),
+    Litex.In __wd_scope10_arg1 Litex.R :=
 by
   intro a __h0_1 __wd_scope10_arg1 __wd_scope10_premise1
   exact __wd_scope10_premise1
@@ -1370,7 +1438,9 @@ theorem __obj33_in_fn_space (a : Litex.Object) (__h0_1 : Litex.In a Litex.R) :
   unfold __obj33
   exact Litex.functionObjectInFnSet (__obj33_spec a __h0_1) (__obj33_body a __h0_1) (__obj33_closed a __h0_1)
 
-theorem __obj34_app : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R), Litex.Applicable (__obj33 a __h0_1) [(__obj28 a)] :=
+theorem __obj34_app :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.R),
+    Litex.Applicable (__obj33 a __h0_1) [(__obj28 a)] :=
 by
   intro a __h0_1
   exact Litex.fnSetApplicable (args := [(__obj28 a)]) (__obj33_in_fn_space a __h0_1) rfl (by
@@ -1431,7 +1501,10 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact22 : ∀ (f : Litex.Object) (__h0_1 : Litex.In f (Litex.fnSpace1 Litex.R Litex.R)) (__h0_2 : ∀ (y : Litex.Object) (__h1_1 : Litex.In y Litex.R), (f [y]) = (f [(Litex.sub y 1)])), (f [2]) = (f [1]) :=
+theorem __fact22 :
+  ∀ (f : Litex.Object) (__h0_1 : Litex.In f (Litex.fnSpace1 Litex.R Litex.R))
+    (__h0_2 : ∀ (y : Litex.Object) (__h1_1 : Litex.In y Litex.R), (f [y]) = (f [(Litex.sub y 1)])),
+    (f [2]) = (f [1]) :=
 by
   intro f __h0_1 __h0_2
   have __scope0 : ∀ (y : Litex.Object) (__h1_1 : Litex.In y Litex.R), Litex.In y Litex.R ∧ (Litex.Applicable (f) [y] ∧ (Litex.In (f [y]) Litex.R)) := by
@@ -1616,12 +1689,21 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact13 : ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a) (b : Litex.Object) (__h0_2 : Litex.IsSet b) (__h0_3 : a = b), b = a :=
+theorem __fact13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+    (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+    (__h0_3 : a = b),
+    b = a :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   exact (Eq.symm (__h0_3))
 
-theorem __fact32 : ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a) (b : Litex.Object) (__h0_2 : Litex.IsSet b) (c : Litex.Object) (__h0_3 : Litex.IsSet c) (__h0_4 : a = b) (__h0_5 : b = c), a = c :=
+theorem __fact32 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+    (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+    (c : Litex.Object) (__h0_3 : Litex.IsSet c)
+    (__h0_4 : a = b) (__h0_5 : b = c),
+    a = c :=
 by
   intro a __h0_1 b __h0_2 c __h0_3 __h0_4 __h0_5
   exact (Eq.trans ((__h0_4)) ((__h0_5)))
@@ -1672,7 +1754,11 @@ by
   intro a __h0_1 __h0_2
   exact by simpa only [__h0_2] using (__fact27 a __h0_1 __h0_2)
 
-theorem __fact26 : ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C) (f : Litex.Object) (__h0_2 : Litex.In f (Litex.fnSpace1 Litex.R Litex.R)) (__h0_3 : a = 1), (f [a]) = (f [a]) :=
+theorem __fact26 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.In a Litex.C)
+    (f : Litex.Object) (__h0_2 : Litex.In f (Litex.fnSpace1 Litex.R Litex.R))
+    (__h0_3 : a = 1),
+    (f [a]) = (f [a]) :=
 by
   intro a __h0_1 f __h0_2 __h0_3
   have __wd0_2 : Litex.In a Litex.R := by
@@ -1766,7 +1852,11 @@ Actual generated Lean (current compiler snapshot):
 ```lean
 import Litex.Rules
 
-theorem __fact13 : ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a) (b : Litex.Object) (__h0_2 : Litex.IsSet b) (__h0_3 : a ≠ b), b ≠ a :=
+theorem __fact13 :
+  ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+    (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+    (__h0_3 : a ≠ b),
+    b ≠ a :=
 by
   intro a __h0_1 b __h0_2 __h0_3
   exact (Litex.Rules.notEqualSymmetry (__h0_3))
@@ -1989,7 +2079,11 @@ by
 theorem __fact15 : (Litex.powerSet Litex.R) = (Litex.powerSet Litex.R) := by
   exact rfl
 
-theorem __fact34 : ∀ (I : Litex.Object) (__h0_1 : Litex.IsSet I) (S : Litex.Object) (__h0_2 : Litex.IsNonemptySet S) (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 I S)), (Litex.generalCart I S g) = (Litex.generalCart I S g) :=
+theorem __fact34 :
+  ∀ (I : Litex.Object) (__h0_1 : Litex.IsSet I)
+    (S : Litex.Object) (__h0_2 : Litex.IsNonemptySet S)
+    (g : Litex.Object) (__h0_3 : Litex.In g (Litex.fnSpace1 I S)),
+    (Litex.generalCart I S g) = (Litex.generalCart I S g) :=
 by
   intro I __h0_1 S __h0_2 g __h0_3
   exact rfl
@@ -2000,12 +2094,16 @@ theorem __fact35 : (Litex.range 1 4) = (Litex.range 1 4) := by
 theorem __fact36 : (Litex.closedRange 1 4) = (Litex.closedRange 1 4) := by
   exact rfl
 
-theorem __wd0_30 : ∀ (__wd_scope3_arg1 : Litex.Object) (__wd_scope3_premise1 : Litex.In __wd_scope3_arg1 Litex.Z), Litex.In __wd_scope3_arg1 Litex.Z :=
+theorem __wd0_30 :
+  ∀ (__wd_scope3_arg1 : Litex.Object) (__wd_scope3_premise1 : Litex.In __wd_scope3_arg1 Litex.Z),
+    Litex.In __wd_scope3_arg1 Litex.Z :=
 by
   intro __wd_scope3_arg1 __wd_scope3_premise1
   exact __wd_scope3_premise1
 
-theorem __wd0_35 : ∀ (__wd_scope4_arg1 : Litex.Object) (__wd_scope4_premise1 : Litex.In __wd_scope4_arg1 Litex.Z), Litex.In __wd_scope4_arg1 Litex.Z :=
+theorem __wd0_35 :
+  ∀ (__wd_scope4_arg1 : Litex.Object) (__wd_scope4_premise1 : Litex.In __wd_scope4_arg1 Litex.Z),
+    Litex.In __wd_scope4_arg1 Litex.Z :=
 by
   intro __wd_scope4_arg1 __wd_scope4_premise1
   exact __wd_scope4_premise1
@@ -2070,12 +2168,16 @@ theorem __obj68_in_fn_space :
 theorem __fact73 : (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.sum 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_66 : ∀ (__wd_scope9_arg1 : Litex.Object) (__wd_scope9_premise1 : Litex.In __wd_scope9_arg1 Litex.Z), Litex.In __wd_scope9_arg1 Litex.Z :=
+theorem __wd0_66 :
+  ∀ (__wd_scope9_arg1 : Litex.Object) (__wd_scope9_premise1 : Litex.In __wd_scope9_arg1 Litex.Z),
+    Litex.In __wd_scope9_arg1 Litex.Z :=
 by
   intro __wd_scope9_arg1 __wd_scope9_premise1
   exact __wd_scope9_premise1
 
-theorem __wd0_71 : ∀ (__wd_scope10_arg1 : Litex.Object) (__wd_scope10_premise1 : Litex.In __wd_scope10_arg1 Litex.Z), Litex.In __wd_scope10_arg1 Litex.Z :=
+theorem __wd0_71 :
+  ∀ (__wd_scope10_arg1 : Litex.Object) (__wd_scope10_premise1 : Litex.In __wd_scope10_arg1 Litex.Z),
+    Litex.In __wd_scope10_arg1 Litex.Z :=
 by
   intro __wd_scope10_arg1 __wd_scope10_premise1
   exact __wd_scope10_premise1
@@ -2137,62 +2239,96 @@ theorem __obj110_in_fn_space :
 theorem __fact110 : (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.product 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_110 : ∀ (__wd_scope17_arg1 : Litex.Object) (__wd_scope17_premise1 : Litex.In __wd_scope17_arg1 Litex.Z), Litex.In __wd_scope17_arg1 Litex.Z :=
+theorem __wd0_110 :
+  ∀ (__wd_scope17_arg1 : Litex.Object) (__wd_scope17_premise1 : Litex.In __wd_scope17_arg1 Litex.Z),
+    Litex.In __wd_scope17_arg1 Litex.Z :=
 by
   intro __wd_scope17_arg1 __wd_scope17_premise1
   exact __wd_scope17_premise1
 
-theorem __wd0_111 : ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object) (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z), Litex.In __wd_scope18_arg1 Litex.Z :=
+theorem __wd0_111 :
+  ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object)
+    (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z),
+    Litex.In __wd_scope18_arg1 Litex.Z :=
 by
   intro __wd_scope18_arg1 __wd_scope18_arg2 __wd_scope18_premise1 __wd_scope18_premise2
   exact __wd_scope18_premise1
 
-theorem __wd0_112 : ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object) (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z), Litex.In __wd_scope18_arg1 Litex.C :=
+theorem __wd0_112 :
+  ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object)
+    (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z),
+    Litex.In __wd_scope18_arg1 Litex.C :=
 by
   intro __wd_scope18_arg1 __wd_scope18_arg2 __wd_scope18_premise1 __wd_scope18_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope18_premise1))))))
 
-theorem __wd0_113 : ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object) (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z), Litex.In __wd_scope18_arg2 Litex.Z :=
+theorem __wd0_113 :
+  ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object)
+    (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z),
+    Litex.In __wd_scope18_arg2 Litex.Z :=
 by
   intro __wd_scope18_arg1 __wd_scope18_arg2 __wd_scope18_premise1 __wd_scope18_premise2
   exact __wd_scope18_premise2
 
-theorem __wd0_114 : ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object) (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z), Litex.In __wd_scope18_arg2 Litex.C :=
+theorem __wd0_114 :
+  ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object)
+    (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z),
+    Litex.In __wd_scope18_arg2 Litex.C :=
 by
   intro __wd_scope18_arg1 __wd_scope18_arg2 __wd_scope18_premise1 __wd_scope18_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope18_premise2))))))
 
-theorem __wd0_115 : ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object) (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z), Litex.In (Litex.add __wd_scope18_arg1 __wd_scope18_arg2) Litex.Z :=
+theorem __wd0_115 :
+  ∀ (__wd_scope18_arg1 : Litex.Object) (__wd_scope18_arg2 : Litex.Object)
+    (__wd_scope18_premise1 : Litex.In __wd_scope18_arg1 Litex.Z) (__wd_scope18_premise2 : Litex.In __wd_scope18_arg2 Litex.Z),
+    Litex.In (Litex.add __wd_scope18_arg1 __wd_scope18_arg2) Litex.Z :=
 by
   intro __wd_scope18_arg1 __wd_scope18_arg2 __wd_scope18_premise1 __wd_scope18_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope18_premise1) (__wd_scope18_premise2))
 
-theorem __wd0_119 : ∀ (__wd_scope19_arg1 : Litex.Object) (__wd_scope19_premise1 : Litex.In __wd_scope19_arg1 Litex.Z), Litex.In __wd_scope19_arg1 Litex.Z :=
+theorem __wd0_119 :
+  ∀ (__wd_scope19_arg1 : Litex.Object) (__wd_scope19_premise1 : Litex.In __wd_scope19_arg1 Litex.Z),
+    Litex.In __wd_scope19_arg1 Litex.Z :=
 by
   intro __wd_scope19_arg1 __wd_scope19_premise1
   exact __wd_scope19_premise1
 
-theorem __wd0_120 : ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object) (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z), Litex.In __wd_scope20_arg1 Litex.Z :=
+theorem __wd0_120 :
+  ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object)
+    (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z),
+    Litex.In __wd_scope20_arg1 Litex.Z :=
 by
   intro __wd_scope20_arg1 __wd_scope20_arg2 __wd_scope20_premise1 __wd_scope20_premise2
   exact __wd_scope20_premise1
 
-theorem __wd0_121 : ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object) (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z), Litex.In __wd_scope20_arg1 Litex.C :=
+theorem __wd0_121 :
+  ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object)
+    (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z),
+    Litex.In __wd_scope20_arg1 Litex.C :=
 by
   intro __wd_scope20_arg1 __wd_scope20_arg2 __wd_scope20_premise1 __wd_scope20_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope20_premise1))))))
 
-theorem __wd0_122 : ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object) (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z), Litex.In __wd_scope20_arg2 Litex.Z :=
+theorem __wd0_122 :
+  ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object)
+    (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z),
+    Litex.In __wd_scope20_arg2 Litex.Z :=
 by
   intro __wd_scope20_arg1 __wd_scope20_arg2 __wd_scope20_premise1 __wd_scope20_premise2
   exact __wd_scope20_premise2
 
-theorem __wd0_123 : ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object) (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z), Litex.In __wd_scope20_arg2 Litex.C :=
+theorem __wd0_123 :
+  ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object)
+    (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z),
+    Litex.In __wd_scope20_arg2 Litex.C :=
 by
   intro __wd_scope20_arg1 __wd_scope20_arg2 __wd_scope20_premise1 __wd_scope20_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope20_premise2))))))
 
-theorem __wd0_124 : ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object) (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z), Litex.In (Litex.add __wd_scope20_arg1 __wd_scope20_arg2) Litex.Z :=
+theorem __wd0_124 :
+  ∀ (__wd_scope20_arg1 : Litex.Object) (__wd_scope20_arg2 : Litex.Object)
+    (__wd_scope20_premise1 : Litex.In __wd_scope20_arg1 Litex.Z) (__wd_scope20_premise2 : Litex.In __wd_scope20_arg2 Litex.Z),
+    Litex.In (Litex.add __wd_scope20_arg1 __wd_scope20_arg2) Litex.Z :=
 by
   intro __wd_scope20_arg1 __wd_scope20_arg2 __wd_scope20_premise1 __wd_scope20_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope20_premise1) (__wd_scope20_premise2))
@@ -2326,12 +2462,16 @@ theorem __obj164_in_fn_space :
 theorem __fact153 : (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) = (Litex.reduce 1 3 (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0))) (Litex.functionObject (({ arity := 2, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, ∃ __h_arg1 : Litex.In (Litex.arg __arg_0 1) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.add (Litex.arg __anonymous_args 0) (Litex.arg __anonymous_args 1)))) 0) := by
   exact rfl
 
-theorem __wd0_169 : ∀ (__wd_scope30_arg1 : Litex.Object) (__wd_scope30_premise1 : Litex.In __wd_scope30_arg1 Litex.Z), Litex.In __wd_scope30_arg1 Litex.Z :=
+theorem __wd0_169 :
+  ∀ (__wd_scope30_arg1 : Litex.Object) (__wd_scope30_premise1 : Litex.In __wd_scope30_arg1 Litex.Z),
+    Litex.In __wd_scope30_arg1 Litex.Z :=
 by
   intro __wd_scope30_arg1 __wd_scope30_premise1
   exact __wd_scope30_premise1
 
-theorem __wd0_176 : ∀ (__wd_scope32_arg1 : Litex.Object) (__wd_scope32_premise1 : Litex.In __wd_scope32_arg1 Litex.Z), Litex.In __wd_scope32_arg1 Litex.Z :=
+theorem __wd0_176 :
+  ∀ (__wd_scope32_arg1 : Litex.Object) (__wd_scope32_premise1 : Litex.In __wd_scope32_arg1 Litex.Z),
+    Litex.In __wd_scope32_arg1 Litex.Z :=
 by
   intro __wd_scope32_arg1 __wd_scope32_premise1
   exact __wd_scope32_premise1
@@ -2393,12 +2533,16 @@ theorem __obj224_in_fn_space :
 theorem __fact202 : (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetSum (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_218 : ∀ (__wd_scope42_arg1 : Litex.Object) (__wd_scope42_premise1 : Litex.In __wd_scope42_arg1 Litex.Z), Litex.In __wd_scope42_arg1 Litex.Z :=
+theorem __wd0_218 :
+  ∀ (__wd_scope42_arg1 : Litex.Object) (__wd_scope42_premise1 : Litex.In __wd_scope42_arg1 Litex.Z),
+    Litex.In __wd_scope42_arg1 Litex.Z :=
 by
   intro __wd_scope42_arg1 __wd_scope42_premise1
   exact __wd_scope42_premise1
 
-theorem __wd0_225 : ∀ (__wd_scope44_arg1 : Litex.Object) (__wd_scope44_premise1 : Litex.In __wd_scope44_arg1 Litex.Z), Litex.In __wd_scope44_arg1 Litex.Z :=
+theorem __wd0_225 :
+  ∀ (__wd_scope44_arg1 : Litex.Object) (__wd_scope44_premise1 : Litex.In __wd_scope44_arg1 Litex.Z),
+    Litex.In __wd_scope44_arg1 Litex.Z :=
 by
   intro __wd_scope44_arg1 __wd_scope44_premise1
   exact __wd_scope44_premise1
@@ -2460,62 +2604,96 @@ theorem __obj290_in_fn_space :
 theorem __fact251 : (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) = (Litex.finiteSetProduct (Litex.closedRange 1 3) (Litex.functionObject (({ arity := 1, requirements := fun __arg_0 => ∃ __h_arg0 : Litex.In (Litex.arg __arg_0 0) Litex.Z, True, range := fun __arg_0 _ _ => Litex.Z } : Litex.FnSpec)) (fun __anonymous_args __anonymous_length __anonymous_requirements => (Litex.arg __anonymous_args 0)))) := by
   exact rfl
 
-theorem __wd0_291 : ∀ (__wd_scope53_arg1 : Litex.Object) (__wd_scope53_premise1 : Litex.In __wd_scope53_arg1 Litex.Z), Litex.In __wd_scope53_arg1 Litex.Z :=
+theorem __wd0_291 :
+  ∀ (__wd_scope53_arg1 : Litex.Object) (__wd_scope53_premise1 : Litex.In __wd_scope53_arg1 Litex.Z),
+    Litex.In __wd_scope53_arg1 Litex.Z :=
 by
   intro __wd_scope53_arg1 __wd_scope53_premise1
   exact __wd_scope53_premise1
 
-theorem __wd0_292 : ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object) (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z), Litex.In __wd_scope54_arg1 Litex.Z :=
+theorem __wd0_292 :
+  ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object)
+    (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z),
+    Litex.In __wd_scope54_arg1 Litex.Z :=
 by
   intro __wd_scope54_arg1 __wd_scope54_arg2 __wd_scope54_premise1 __wd_scope54_premise2
   exact __wd_scope54_premise1
 
-theorem __wd0_293 : ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object) (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z), Litex.In __wd_scope54_arg1 Litex.C :=
+theorem __wd0_293 :
+  ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object)
+    (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z),
+    Litex.In __wd_scope54_arg1 Litex.C :=
 by
   intro __wd_scope54_arg1 __wd_scope54_arg2 __wd_scope54_premise1 __wd_scope54_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope54_premise1))))))
 
-theorem __wd0_294 : ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object) (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z), Litex.In __wd_scope54_arg2 Litex.Z :=
+theorem __wd0_294 :
+  ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object)
+    (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z),
+    Litex.In __wd_scope54_arg2 Litex.Z :=
 by
   intro __wd_scope54_arg1 __wd_scope54_arg2 __wd_scope54_premise1 __wd_scope54_premise2
   exact __wd_scope54_premise2
 
-theorem __wd0_295 : ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object) (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z), Litex.In __wd_scope54_arg2 Litex.C :=
+theorem __wd0_295 :
+  ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object)
+    (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z),
+    Litex.In __wd_scope54_arg2 Litex.C :=
 by
   intro __wd_scope54_arg1 __wd_scope54_arg2 __wd_scope54_premise1 __wd_scope54_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope54_premise2))))))
 
-theorem __wd0_296 : ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object) (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z), Litex.In (Litex.add __wd_scope54_arg1 __wd_scope54_arg2) Litex.Z :=
+theorem __wd0_296 :
+  ∀ (__wd_scope54_arg1 : Litex.Object) (__wd_scope54_arg2 : Litex.Object)
+    (__wd_scope54_premise1 : Litex.In __wd_scope54_arg1 Litex.Z) (__wd_scope54_premise2 : Litex.In __wd_scope54_arg2 Litex.Z),
+    Litex.In (Litex.add __wd_scope54_arg1 __wd_scope54_arg2) Litex.Z :=
 by
   intro __wd_scope54_arg1 __wd_scope54_arg2 __wd_scope54_premise1 __wd_scope54_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope54_premise1) (__wd_scope54_premise2))
 
-theorem __wd0_312 : ∀ (__wd_scope55_arg1 : Litex.Object) (__wd_scope55_premise1 : Litex.In __wd_scope55_arg1 Litex.Z), Litex.In __wd_scope55_arg1 Litex.Z :=
+theorem __wd0_312 :
+  ∀ (__wd_scope55_arg1 : Litex.Object) (__wd_scope55_premise1 : Litex.In __wd_scope55_arg1 Litex.Z),
+    Litex.In __wd_scope55_arg1 Litex.Z :=
 by
   intro __wd_scope55_arg1 __wd_scope55_premise1
   exact __wd_scope55_premise1
 
-theorem __wd0_313 : ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object) (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z), Litex.In __wd_scope56_arg1 Litex.Z :=
+theorem __wd0_313 :
+  ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object)
+    (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z),
+    Litex.In __wd_scope56_arg1 Litex.Z :=
 by
   intro __wd_scope56_arg1 __wd_scope56_arg2 __wd_scope56_premise1 __wd_scope56_premise2
   exact __wd_scope56_premise1
 
-theorem __wd0_314 : ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object) (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z), Litex.In __wd_scope56_arg1 Litex.C :=
+theorem __wd0_314 :
+  ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object)
+    (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z),
+    Litex.In __wd_scope56_arg1 Litex.C :=
 by
   intro __wd_scope56_arg1 __wd_scope56_arg2 __wd_scope56_premise1 __wd_scope56_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope56_premise1))))))
 
-theorem __wd0_315 : ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object) (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z), Litex.In __wd_scope56_arg2 Litex.Z :=
+theorem __wd0_315 :
+  ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object)
+    (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z),
+    Litex.In __wd_scope56_arg2 Litex.Z :=
 by
   intro __wd_scope56_arg1 __wd_scope56_arg2 __wd_scope56_premise1 __wd_scope56_premise2
   exact __wd_scope56_premise2
 
-theorem __wd0_316 : ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object) (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z), Litex.In __wd_scope56_arg2 Litex.C :=
+theorem __wd0_316 :
+  ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object)
+    (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z),
+    Litex.In __wd_scope56_arg2 Litex.C :=
 by
   intro __wd_scope56_arg1 __wd_scope56_arg2 __wd_scope56_premise1 __wd_scope56_premise2
   exact (Litex.Rules.realInComplex ((Litex.Rules.rationalInReal ((Litex.Rules.integerInRational (__wd_scope56_premise2))))))
 
-theorem __wd0_317 : ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object) (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z), Litex.In (Litex.add __wd_scope56_arg1 __wd_scope56_arg2) Litex.Z :=
+theorem __wd0_317 :
+  ∀ (__wd_scope56_arg1 : Litex.Object) (__wd_scope56_arg2 : Litex.Object)
+    (__wd_scope56_premise1 : Litex.In __wd_scope56_arg1 Litex.Z) (__wd_scope56_premise2 : Litex.In __wd_scope56_arg2 Litex.Z),
+    Litex.In (Litex.add __wd_scope56_arg1 __wd_scope56_arg2) Litex.Z :=
 by
   intro __wd_scope56_arg1 __wd_scope56_arg2 __wd_scope56_premise1 __wd_scope56_premise2
   exact (Litex.Rules.integerAddClosure (__wd_scope56_premise1) (__wd_scope56_premise2))
