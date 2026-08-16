@@ -506,10 +506,8 @@ impl Runtime {
                         || equality_and_strict_order_need_weak_bound(second_atomic, first_atomic),
                     )
                 {
-                    let weak_result = self.verify_non_equational_known_then_builtin_rules_only(
-                        &weak_bound,
-                        verify_state,
-                    )?;
+                    let weak_result = self
+                        .verify_atomic_fact_restricted_known_builtin(&weak_bound, verify_state)?;
                     if weak_result.is_true() {
                         return Ok(
                             (FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -570,9 +568,26 @@ impl Runtime {
             return Ok(result);
         }
 
-        for fact in or_fact.facts.iter() {
+        for (selected_index, fact) in or_fact.facts.iter().enumerate() {
             let result = self.verify_and_chain_atomic_fact(fact, &verify_state_for_children)?;
             if result.is_true() {
+                if self.litex_to_lean_ir_mode() {
+                    return Ok(
+                        (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                            or_fact.clone().into(),
+                            "or: selected verified disjunct".to_string(),
+                            BuiltinRuleEvidence::DisjunctionIntroduction(
+                                DisjunctionIntroductionBuiltinRuleEvidence::new(
+                                    or_fact.clone().into(),
+                                    fact.clone().into(),
+                                    selected_index,
+                                ),
+                            ),
+                            vec![result],
+                        ))
+                        .into(),
+                    );
+                }
                 return Ok((FactualStmtSuccess::new_with_verified_by_known_fact(
                     or_fact.clone().into(),
                     VerifiedByResult::wrap_bys(vec![VerifiedBysEnum::cited_fact(
@@ -676,8 +691,8 @@ impl Runtime {
         ];
         let mut steps = Vec::with_capacity(prerequisites.len());
         for prerequisite in prerequisites {
-            let result = self
-                .verify_non_equational_known_then_builtin_rules_only(&prerequisite, verify_state)?;
+            let result =
+                self.verify_atomic_fact_restricted_known_builtin(&prerequisite, verify_state)?;
             if result.is_unknown() {
                 return Ok(None);
             }

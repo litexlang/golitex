@@ -99,12 +99,48 @@ impl Runtime {
             vec![self.exec_by_cases_stmt_verify_cases_cover_all_situations(stmt)?];
         let mut case_result_counts = Vec::new();
         let mut case_fact_ids = Vec::new();
+        let mut proof_scopes = Vec::new();
 
         for case_index in 0..stmt.cases.len() {
-            let (case_fact_id, mut case_results) =
-                self.run_in_local_env(|rt| rt.exec_by_cases_stmt_for_one_case(stmt, case_index))?;
+            let (case_fact_id, mut case_results, proof_scope) = self.run_in_local_env(|rt| {
+                let captures_well_definedness = rt.captures_litex_to_lean_well_definedness();
+                if captures_well_definedness {
+                    rt.begin_statement_well_definedness_capture();
+                }
+                let branch_result = rt.exec_by_cases_stmt_for_one_case(stmt, case_index);
+                match branch_result {
+                    Ok((
+                        case_fact_id,
+                        case_assumption_infers,
+                        assumption_components,
+                        case_results,
+                    )) => {
+                        let well_definedness = if captures_well_definedness {
+                            rt.end_statement_well_definedness_capture()?
+                        } else {
+                            WellDefinednessCertificate::default()
+                        };
+                        Ok((
+                            case_fact_id,
+                            case_results,
+                            LocalProofScopeVerificationResult::new(
+                                case_assumption_infers,
+                                assumption_components,
+                                well_definedness,
+                            ),
+                        ))
+                    }
+                    Err(error) => {
+                        if captures_well_definedness {
+                            rt.discard_statement_well_definedness_capture();
+                        }
+                        Err(error)
+                    }
+                }
+            })?;
             case_fact_ids.push(case_fact_id);
             case_result_counts.push(case_results.len());
+            proof_scopes.push(proof_scope);
             inside_results.append(&mut case_results);
         }
 
@@ -119,6 +155,7 @@ impl Runtime {
             stmt.then_facts.clone(),
             proof_step_counts,
             case_result_counts,
+            proof_scopes,
             stmt.impossible_facts.clone(),
         )
         .into();
@@ -230,7 +267,7 @@ impl Runtime {
         &mut self,
         stmt: &ByCasesStmt,
         case_index: usize,
-    ) -> Result<(FactId, Vec<StmtResult>), RuntimeError> {
+    ) -> Result<(FactId, InferResult, Vec<(FactId, Fact)>, Vec<StmtResult>), RuntimeError> {
         let case_fact = &stmt.cases[case_index];
         let case_fact_as_fact: Fact = case_fact.clone().into();
         let case_label = case_fact.to_string();
@@ -253,17 +290,19 @@ impl Runtime {
                 })?;
             let mut infer_acc = InferResult::new();
 
-            self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
-                case_fact.clone(),
-            )
-            .map_err(|store_fact_error| {
-                short_exec_error(
-                    stmt.clone().into(),
-                    format!("by cases: failed to assume case `{}`", case_fact),
-                    Some(store_fact_error),
-                    vec![],
+            let mut case_assumption_infers = self
+                .store_and_chain_atomic_fact_without_well_defined_verified_and_infer(
+                    case_fact.clone(),
                 )
-            })?;
+                .map_err(|store_fact_error| {
+                    short_exec_error(
+                        stmt.clone().into(),
+                        format!("by cases: failed to assume case `{}`", case_fact),
+                        Some(store_fact_error),
+                        vec![],
+                    )
+                })?;
+            self.attach_known_fact_ids_to_infer_result(&mut case_assumption_infers)?;
             let case_fact_id = self
                 .known_fact_id_for_fact(&case_fact_as_fact)?
                 .ok_or_else(|| {
@@ -274,6 +313,7 @@ impl Runtime {
                         vec![],
                     )
                 })?;
+            let assumption_components = case_assumption_components_with_fact_ids(self, case_fact)?;
 
             for proof_stmt in stmt.proofs[case_index].iter() {
                 let exec_stmt_result = self.exec_stmt(proof_stmt);
@@ -329,10 +369,16 @@ impl Runtime {
                 inside_results.push(exec_fact_result);
             }
 
-            return Ok((case_fact_id, inside_results));
+            return Ok((
+                case_fact_id,
+                case_assumption_infers,
+                assumption_components,
+                inside_results,
+            ));
         }
 
-        self.store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
+        let mut case_assumption_infers = self
+            .store_and_chain_atomic_fact_without_well_defined_verified_and_infer(case_fact.clone())
             .map_err(|store_fact_error| {
                 short_exec_error(
                     stmt.clone().into(),
@@ -341,6 +387,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        self.attach_known_fact_ids_to_infer_result(&mut case_assumption_infers)?;
         let case_fact_id = self
             .known_fact_id_for_fact(&case_fact_as_fact)?
             .ok_or_else(|| {
@@ -351,6 +398,7 @@ impl Runtime {
                     vec![],
                 )
             })?;
+        let assumption_components = case_assumption_components_with_fact_ids(self, case_fact)?;
 
         for proof_stmt in stmt.proofs[case_index].iter() {
             let exec_stmt_result = self.exec_stmt(proof_stmt);
@@ -444,10 +492,52 @@ impl Runtime {
                 .into(),
             );
 
-            return Ok((case_fact_id, inside_results));
+            return Ok((
+                case_fact_id,
+                case_assumption_infers,
+                assumption_components,
+                inside_results,
+            ));
         }
 
         self.exec_by_cases_stmt_prove_then_facts_under_case(stmt, case_index, &mut inside_results)?;
-        Ok((case_fact_id, inside_results))
+        Ok((
+            case_fact_id,
+            case_assumption_infers,
+            assumption_components,
+            inside_results,
+        ))
     }
+}
+
+fn case_assumption_components_with_fact_ids(
+    runtime: &mut Runtime,
+    case_fact: &AndChainAtomicFact,
+) -> Result<Vec<(FactId, Fact)>, RuntimeError> {
+    let components = match case_fact {
+        AndChainAtomicFact::AtomicFact(_) => Vec::new(),
+        AndChainAtomicFact::AndFact(and_fact) => and_fact
+            .facts
+            .iter()
+            .cloned()
+            .map(Fact::from)
+            .collect::<Vec<_>>(),
+        AndChainAtomicFact::ChainFact(chain_fact) => chain_fact
+            .facts()?
+            .into_iter()
+            .map(Fact::from)
+            .collect::<Vec<_>>(),
+    };
+    let mut retained = Vec::with_capacity(components.len());
+    for component in components {
+        // `Environment::store_and_fact` deliberately indexes each atomic
+        // conjunct for verification without giving that projection a cache
+        // identity.  To-Lean needs stable identities after this local
+        // environment closes, so allocate/cache them while the branch is live.
+        // The IR still records the real derivation as ConjunctionProjection;
+        // assigning an ID here does not turn the component into a premise.
+        let fact_id = runtime.store_fact_cache_keys_with_nested_obj_binders(&component)?;
+        retained.push((fact_id, component));
+    }
+    Ok(retained)
 }

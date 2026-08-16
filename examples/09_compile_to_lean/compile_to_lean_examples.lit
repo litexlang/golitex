@@ -1,0 +1,264 @@
+# Litex-to-Lean executable example ledger.
+#
+# Each sketch is an independent mathematical program. The comment immediately
+# above it states the mathematics being checked; the generated Lean file keeps
+# every declaration-bearing sketch in its own namespace so examples cannot
+# pollute one another.
+#
+# Refresh the paired Lean file with:
+# litex -lean examples/09_compile_to_lean/compile_to_lean_examples.lit examples/09_compile_to_lean/compile_to_lean_examples.lean
+
+# 01. Nested function application is reflexive, with the inner applications
+# checked before the outer two-argument application.
+sketch:
+    forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
+        f(g(a), t(b)) = f(g(a), t(b))
+
+# 02. An explicitly assumed universal predicate fact proves its instance at 1.
+sketch:
+    abstract_prop p(x)
+
+    trust forall x R:
+        $p(x)
+
+    $p(1)
+
+# 03. Complex and real arithmetic expressions remain well-defined under
+# addition, subtraction, multiplication, and nonzero division.
+sketch:
+    forall a, b, c C:
+        (a + b) + c = (a + b) + c
+
+    forall a, b, c C:
+        ((a - b) * c) + a = ((a - b) * c) + a
+
+    forall a, b C:
+        b != 0
+        =>:
+            a / b = a / b
+
+    forall a, b C:
+        b != 0
+        =>:
+            (a / b) + a = (a / b) + a
+
+    forall a, b R:
+        b != 0
+        =>:
+            a / b $in R
+
+# 04. Membership in the positive reals implies strict positivity.
+sketch:
+    forall x R+:
+        x > 0
+
+# 05. Finite set literals with pairwise-distinct entries are well-defined.
+sketch:
+    forall a, b set:
+        a != b
+        =>:
+            {a, b} = {a, b}
+
+    forall a, b, c set:
+        a != b
+        a != c
+        b != c
+        =>:
+            {a, b, c} = {a, b, c}
+
+# 06. A real object can be selected from the nonempty set of real numbers.
+sketch:
+    have x R
+    x $in R
+
+# 07. The witness 1 proves an existential real equality, and elimination
+# recovers an object satisfying that equality.
+sketch:
+    witness exist x R st {x = 1} from 1:
+        1 = 1
+    obtain y from exist x R st {x = 1}
+    y = 1
+
+# 08. Equality goals can be proved by exhaustive cases or contradiction while
+# keeping branch assumptions local.
+sketch:
+    by cases:
+        ? 1 = 1
+        case 1 = 1:
+            2 = 2
+    by contra:
+        ? 2 = 2
+        1 = 1
+        impossible 2 != 2
+    by cases:
+        ? 4 = 4
+        case 3 = 3 and 4 = 4:
+            3 = 3
+    by contra:
+        ? 5 != 6
+        impossible 5 = 6
+
+# 09. A named theorem packages the reflexive equality 1 = 1.
+sketch:
+    thm one_eq_one:
+        ? forall:
+            1 = 1
+
+# 10. Pi and binary union are total mathematical object constructors.
+sketch:
+    pi = pi
+    forall A, B set:
+        union(A, B) = union(A, B)
+
+# 11. Division is reflexive over complex numbers and closed over real numbers
+# when the denominator is nonzero.
+sketch:
+    forall a, b C:
+        b != 0
+        =>:
+            a / b = a / b
+    forall a, b R:
+        b != 0
+        =>:
+            a / b $in R
+
+# 12. A set builder over the reals defines a set object whose identity is
+# reflexive and whose bound variable stays local.
+sketch:
+    have S set = {x R: x = x}
+    S = S
+
+# 13. Identity, successor, and reciprocal functions satisfy their defining
+# equations on the domains where their bodies are well-defined.
+sketch:
+    have fn id(x R) R = x
+    id(1) = 1
+
+    have fn inc(x R) R = x + 1
+    inc(1) = 1 + 1
+
+    have fn reciprocal(x R: x != 0) R = 1 / x
+    forall a R:
+        a != 0
+        =>:
+            reciprocal(a) = 1 / a
+
+# 14. A two-dimensional tuple has a coordinate value at every valid index.
+sketch:
+    have tuple q for i1 <= 2, q[i1] = 0
+    q = q
+
+# 15. Existential witnesses, case proofs, named functions, and set-builder
+# return sets compose without changing their individual mathematical meaning.
+sketch:
+    have fn id(x R) R = x
+    witness exist x R st {x = 1} from 1:
+        1 = 1
+    obtain y from exist x R st {x = 1}
+    id(y) = y
+
+    thm one_eq_one_by_cases:
+        ? forall:
+            1 = 1
+        by cases:
+            ? 1 = 1
+            case 1 = 1
+
+    have fn into_builder(x R) {z R: z = z} = x
+    into_builder(1) = 1
+
+# 16. Alpha-equivalent anonymous functions are equal, and applying an identity
+# anonymous function to a real object is reflexive.
+sketch:
+    fn(x R) R {x} = fn(y R) R {y}
+
+    forall a R:
+        fn(x R) R {x}(a) = fn(x R) R {x}(a)
+
+# 17. A real-valued function satisfying f(y) = f(y - 1) also satisfies the
+# concrete instance f(2) = f(1).
+sketch:
+    forall f fn(x R) R:
+        forall y R:
+            f(y) = f(y - 1)
+        =>:
+            f(2) = f(1)
+
+# 18. A concrete zero predicate unfolds at 0 and at a named zero object; an
+# unrelated marked predicate is used only through an explicit assumption.
+sketch:
+    abstract_prop marked(x)
+
+    prop is_zero(x R):
+        x = 0
+
+    $is_zero(0)
+
+    have named_zero R = 0
+    by def $is_zero(named_zero)
+
+    trust $marked(named_zero)
+    $marked(named_zero)
+
+# 19. Object equality is symmetric and transitive.
+sketch:
+    forall a, b set:
+        a = b
+        =>:
+            b = a
+
+    forall a, b, c set:
+        a = b
+        b = c
+        =>:
+            a = c
+
+# 20. One mathematical object may retain both complex and real membership and
+# can then be passed unchanged to a real-domain function.
+sketch:
+    forall a C, f fn(x R) R:
+        a = 1
+        =>:
+            1 $in R
+            a $in R
+            f(a) = f(a)
+
+# 21. Objects known as nonempty and finite sets retain ordinary reflexive
+# identity without changing their universal Litex object type.
+sketch:
+    forall s nonempty_set, t finite_set:
+        s = s
+        t = t
+
+# 22. Not-equality symmetry and numeral membership use the shared checked
+# mathematical rules rather than fresh target axioms.
+sketch:
+    forall a, b set:
+        a != b
+        =>:
+            b != a
+
+    1 $in N
+    1 $in C
+
+# 23. Unfolding the definitions one = 1 and integer_set = Z reduces the final
+# claim to the closed computation 2 $in Z.
+sketch:
+    have one Z = 1
+    have integer_set set = Z
+
+    one + 1 $in integer_set
+
+# 24. Anonymous goal examples and targetless sketches check local mathematics
+# without exporting their facts into the enclosing example ledger.
+sketch:
+    example:
+        ? 1 = 1
+        2 = 2
+
+    example:
+        ? forall x R:
+            x = x
+
+    sketch:
+        3 = 3

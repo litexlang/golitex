@@ -72,7 +72,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let source_result = self.verify_known_non_forall_atomic_fact(&source_membership)?;
+            let source_result =
+                self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
             if !source_result.is_true() {
                 continue;
             }
@@ -882,7 +883,7 @@ impl Runtime {
 
         let in_n_pos: AtomicFact =
             InFact::new(elem.clone(), StandardSet::NPos.into(), lf.clone()).into();
-        let in_n_pos_result = self.verify_known_non_forall_atomic_fact(&in_n_pos)?;
+        let in_n_pos_result = self.verify_non_equational_atomic_fact_with_known_fact(&in_n_pos)?;
         if in_n_pos_result.is_true() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1094,12 +1095,12 @@ impl Runtime {
         &mut self,
         bound: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let exact = self.verify_known_non_forall_atomic_fact(bound)?;
+        let exact = self.verify_non_equational_atomic_fact_with_known_fact(bound)?;
         if exact.is_true() {
             return Ok(exact);
         }
         let computed =
-            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(bound)?;
+            self.verify_non_equational_atomic_fact_with_known_fact_then_computation(bound)?;
         if computed.is_true() {
             return Ok(computed);
         }
@@ -1124,7 +1125,7 @@ impl Runtime {
             _ => None,
         };
         match stronger {
-            Some(stronger) => self.verify_known_non_forall_atomic_fact(&stronger),
+            Some(stronger) => self.verify_non_equational_atomic_fact_with_known_fact(&stronger),
             None => Ok(StmtUnknown::new().into()),
         }
     }
@@ -1390,7 +1391,7 @@ impl Runtime {
             let in_z: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::Z.into(), line_file.clone()).into();
             let direct_result =
-                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(&in_z)?;
+                self.verify_non_equational_atomic_fact_with_known_fact_then_computation(&in_z)?;
             if direct_result.is_true() {
                 steps.push(direct_result);
                 continue;
@@ -1445,7 +1446,8 @@ impl Runtime {
                 let finite_fact: AtomicFact =
                     IsFiniteSetFact::new(finite_set_size.set.as_ref().clone(), line_file.clone())
                         .into();
-                let finite_result = self.verify_known_non_forall_atomic_fact(&finite_fact)?;
+                let finite_result =
+                    self.verify_non_equational_atomic_fact_with_known_fact(&finite_fact)?;
                 if finite_result.is_true() {
                     steps.push(
                         number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1468,7 +1470,8 @@ impl Runtime {
                 }
                 let source_membership: AtomicFact =
                     InFact::new((*obj).clone(), source_set.clone(), line_file.clone()).into();
-                let source_result = self.verify_known_non_forall_atomic_fact(&source_membership)?;
+                let source_result =
+                    self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
                 if !source_result.is_true() {
                     continue;
                 }
@@ -1515,7 +1518,8 @@ impl Runtime {
         for source_set in self.known_sets_containing_obj(obj) {
             let source_membership: AtomicFact =
                 InFact::new(obj.clone(), source_set.clone(), line_file.clone()).into();
-            let source_result = self.verify_known_non_forall_atomic_fact(&source_membership)?;
+            let source_result =
+                self.verify_non_equational_atomic_fact_with_known_fact(&source_membership)?;
             if !source_result.is_true() {
                 continue;
             }
@@ -1554,7 +1558,8 @@ impl Runtime {
                         return Ok(Some(vec![source_result, subset_result]));
                     }
                 }
-                let subset_result = self.verify_known_non_forall_atomic_fact(&subset)?;
+                let subset_result =
+                    self.verify_non_equational_atomic_fact_with_known_fact(&subset)?;
                 if subset_result.is_true() {
                     return Ok(Some(vec![source_result, subset_result]));
                 }

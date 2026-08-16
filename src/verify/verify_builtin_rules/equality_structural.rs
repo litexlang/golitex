@@ -170,12 +170,9 @@ impl Runtime {
         right: &Obj,
         line_file: LineFile,
     ) -> Result<bool, RuntimeError> {
-        let candidate_fact: AtomicFact =
-            EqualFact::new(left.clone(), right.clone(), line_file.clone()).into();
-        let leaf_result = self
-            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
-                &candidate_fact,
-            )?;
+        let candidate_fact = EqualFact::new(left.clone(), right.clone(), line_file.clone());
+        let leaf_result =
+            self.verify_equal_fact_with_known_fact_then_computation(&candidate_fact)?;
         if leaf_result.is_true() {
             return Ok(true);
         }

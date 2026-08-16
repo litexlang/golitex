@@ -169,6 +169,7 @@ impl Runtime {
         // e.g. `x $in N` is never found when checking `b ^ x`, so pow domain fails.
         // Run in local env so param binding and body facts do not leak into the outer scope.
         self.run_in_local_env(|rt| {
+            let parent: Obj = x.clone().into();
             rt.verify_child_obj_well_defined_and_store_cache(
                 &x.param_set,
                 &UseContextVerifyState::new(0, false),
@@ -176,64 +177,77 @@ impl Runtime {
                     parameter_group_index: 0,
                 },
             )?;
-            if let Err(e) = rt.store_parameter_binding(&x.param_binding, ParamObjType::SetBuilder) {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                            "failed to verify well-defined of set builder {}",
-                            x.to_string()
-                        ),
-                        e,
-                    ),
-                )));
-            }
-            let param_in_set: Fact = InFact::new(
-                obj_for_bound_param_in_scope(&x.param_binding, ParamObjType::SetBuilder),
-                (*x.param_set).clone(),
-                default_line_file(),
-            )
-            .into();
-            if let Err(e) = rt
-                .store_with_well_defined_verification_and_infer_with_default_verify_state(
-                    param_in_set,
-                )
-            {
-                return Err(RuntimeError::from(WellDefinedRuntimeError(
-                    RuntimeErrorStruct::new_with_msg_and_cause(
-                        format!(
-                            "failed to verify well-defined of set builder {}",
-                            x.to_string()
-                        ),
-                        e,
-                    ),
-                )));
-            }
+            let binder_scope_id = rt.begin_well_definedness_binder_scope(&parent)?;
+            let verification =
+                (|| -> Result<(), RuntimeError> {
+                    if let Err(e) =
+                        rt.store_parameter_binding(&x.param_binding, ParamObjType::SetBuilder)
+                    {
+                        return Err(RuntimeError::from(WellDefinedRuntimeError(
+                            RuntimeErrorStruct::new_with_msg_and_cause(
+                                format!(
+                                    "failed to verify well-defined of set builder {}",
+                                    x.to_string()
+                                ),
+                                e,
+                            ),
+                        )));
+                    }
+                    let param_in_set: Fact = InFact::new(
+                        obj_for_bound_param_in_scope(&x.param_binding, ParamObjType::SetBuilder),
+                        (*x.param_set).clone(),
+                        default_line_file(),
+                    )
+                    .into();
+                    let mut parameter_infers = match rt
+                        .store_with_well_defined_verification_and_infer_with_default_verify_state(
+                            param_in_set.clone(),
+                        ) {
+                        Ok(result) => result,
+                        Err(e) => {
+                            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                                RuntimeErrorStruct::new_with_msg_and_cause(
+                                    format!(
+                                        "failed to verify well-defined of set builder {}",
+                                        x.to_string()
+                                    ),
+                                    e,
+                                ),
+                            )))
+                        }
+                    };
+                    rt.attach_known_fact_ids_to_infer_result(&mut parameter_infers)?;
+                    rt.record_well_definedness_set_builder_parameter(
+                        binder_scope_id,
+                        &x.param_binding,
+                        param_in_set,
+                        &parameter_infers,
+                    )?;
 
-            for fact in x.facts.iter() {
-                let result = match fact {
-                    QuantifierFreeFact::AtomicFact(f) => rt
-                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                            &QuantifierFreeFact::AtomicFact(f.clone()),
-                            verify_state,
-                        ),
-                    QuantifierFreeFact::AndFact(f) => rt
-                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                            &QuantifierFreeFact::AndFact(f.clone()),
-                            verify_state,
-                        ),
-                    QuantifierFreeFact::ChainFact(f) => rt
-                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                            &QuantifierFreeFact::ChainFact(f.clone()),
-                            verify_state,
-                        ),
-                    QuantifierFreeFact::OrFact(f) => rt
-                        .store_quantifier_free_fact_with_well_defined_verification_and_infer(
-                            &QuantifierFreeFact::OrFact(f.clone()),
-                            verify_state,
-                        ),
-                };
-                if let Err(e) = result {
-                    return Err(RuntimeError::from(WellDefinedRuntimeError(
+                    for (condition_index, fact) in x.facts.iter().enumerate() {
+                        let mut result = match fact {
+                        QuantifierFreeFact::AtomicFact(f) => rt
+                            .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                                &QuantifierFreeFact::AtomicFact(f.clone()),
+                                verify_state,
+                            ),
+                        QuantifierFreeFact::AndFact(f) => rt
+                            .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                                &QuantifierFreeFact::AndFact(f.clone()),
+                                verify_state,
+                            ),
+                        QuantifierFreeFact::ChainFact(f) => rt
+                            .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                                &QuantifierFreeFact::ChainFact(f.clone()),
+                                verify_state,
+                            ),
+                        QuantifierFreeFact::OrFact(f) => rt
+                            .store_quantifier_free_fact_with_well_defined_verification_and_infer(
+                                &QuantifierFreeFact::OrFact(f.clone()),
+                                verify_state,
+                            ),
+                    }
+                    .map_err(|e| RuntimeError::from(WellDefinedRuntimeError(
                         RuntimeErrorStruct::new_with_msg_and_cause(
                             format!(
                                 "failed to verify well-defined of set builder {}",
@@ -241,11 +255,22 @@ impl Runtime {
                             ),
                             e,
                         ),
-                    )));
-                }
-            }
+                    )))?;
+                        rt.attach_known_fact_ids_to_infer_result(&mut result)?;
+                        rt.record_well_definedness_set_builder_condition(
+                            binder_scope_id,
+                            condition_index,
+                            fact.clone().into(),
+                            &result,
+                        )?;
+                    }
 
-            Ok(())
+                    Ok(())
+                })();
+            let scope_result =
+                rt.end_well_definedness_binder_scope(binder_scope_id, verification.is_ok());
+            scope_result?;
+            verification
         })
     }
 

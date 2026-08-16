@@ -1,35 +1,203 @@
 use crate::prelude::*;
+use crate::verify::verify_builtin_rules::{
+    builtin_in_fact_result_for_evaluated_number_in_standard_set,
+    builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
+};
 
 impl Runtime {
+    pub(crate) fn verify_non_equational_atomic_fact_with_direct_routes(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
+        let leaf_result =
+            self.verify_non_equational_atomic_fact_with_known_fact_then_computation(atomic_fact)?;
+        if leaf_result.is_true() {
+            return Ok(leaf_result);
+        }
+
+        let builtin_state = UseBuiltinRuleVerifyState::new();
+        self.verify_non_equational_atomic_fact_with_one_builtin_rule(atomic_fact, &builtin_state)
+    }
+
+    pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
+        let result = self.verify_non_equational_atomic_fact_with_known_atomic_facts(atomic_fact)?;
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+    }
+
+    pub(crate) fn verify_non_equational_atomic_fact_with_known_fact_then_computation(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let known_result = self.verify_non_equational_atomic_fact_with_known_fact(atomic_fact)?;
+        if known_result.is_true() {
+            return Ok(known_result);
+        }
+
+        let result = self.verify_non_equational_atomic_fact_by_builtin_computation(atomic_fact);
+        if result.is_true() {
+            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+        }
+
+        let Some((definition_resolved_fact, equality_transport)) =
+            self.atomic_fact_with_explicit_definitions_resolved(atomic_fact)?
+        else {
+            return Ok(result);
+        };
+        let resolved_fact = match &definition_resolved_fact {
+            AtomicFact::InFact(fact) => fact
+                .element
+                .evaluate_to_normalized_decimal_number()
+                .map(|number| {
+                    InFact::new(number.into(), fact.set.clone(), fact.line_file.clone()).into()
+                })
+                .unwrap_or_else(|| definition_resolved_fact.clone()),
+            AtomicFact::NotInFact(fact) => fact
+                .element
+                .evaluate_to_normalized_decimal_number()
+                .map(|number| {
+                    NotInFact::new(number.into(), fact.set.clone(), fact.line_file.clone()).into()
+                })
+                .unwrap_or_else(|| definition_resolved_fact.clone()),
+            _ => definition_resolved_fact.clone(),
+        };
+        let resolved_result =
+            self.verify_non_equational_atomic_fact_by_builtin_computation(&resolved_fact);
+        if !resolved_result.is_true() {
+            return Ok(result);
+        }
+
+        let expected_target: Fact = atomic_fact.clone().into();
+        let resolved_target: Fact = resolved_fact.clone().into();
+        let definition_resolved_target: Fact = definition_resolved_fact.into();
+        let mut transformation_steps = Vec::new();
+        if resolved_target.to_string() != definition_resolved_target.to_string() {
+            transformation_steps.push(FactTransformationStep::new(
+                definition_resolved_target,
+                FactTransformationRule::RationalNormalization,
+            ));
+        }
+        transformation_steps.push(FactTransformationStep::new(
+            expected_target.clone(),
+            FactTransformationRule::EqualityRewrite(equality_transport),
+        ));
+        let fact_transformation =
+            FactTransformationEvidence::new(resolved_target.clone(), transformation_steps);
+        let result = FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+            expected_target.clone(),
+            "builtin computation after explicit object definition resolution".to_string(),
+            BuiltinRuleEvidence::ResolvedAtomicFactComputation(
+                ResolvedAtomicFactComputationBuiltinRuleEvidence::new(
+                    expected_target,
+                    resolved_target,
+                    fact_transformation,
+                ),
+            ),
+            vec![resolved_result],
+        )
+        .into();
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+    }
+
+    pub(crate) fn verify_non_equational_atomic_fact_by_builtin_computation(
+        &self,
+        atomic_fact: &AtomicFact,
+    ) -> StmtResult {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
+        match atomic_fact {
+            AtomicFact::InFact(fact) => {
+                let Obj::StandardSet(set) = &fact.set else {
+                    return StmtUnknown::new().into();
+                };
+                let Some(number) = fact.element.evaluate_to_normalized_decimal_number() else {
+                    return StmtUnknown::new().into();
+                };
+                builtin_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
+            }
+            AtomicFact::NotInFact(fact) => {
+                let Obj::StandardSet(set) = &fact.set else {
+                    return StmtUnknown::new().into();
+                };
+                let Some(number) = fact.element.evaluate_to_normalized_decimal_number() else {
+                    return StmtUnknown::new().into();
+                };
+                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
+            }
+            AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::LessFact(_)
+            | AtomicFact::GreaterFact(_)
+            | AtomicFact::LessEqualFact(_)
+            | AtomicFact::GreaterEqualFact(_) => {
+                if self.verify_number_comparison_builtin_rule(atomic_fact) != Some(true) {
+                    return StmtUnknown::new().into();
+                }
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "number comparison".to_string(),
+                    BuiltinRuleEvidence::ClosedNumericComparison(
+                        ClosedNumericComparisonBuiltinRuleEvidence::new(atomic_fact.clone().into()),
+                    ),
+                    Vec::new(),
+                )
+                .into()
+            }
+            AtomicFact::NotEqualFact(fact) => self
+                .verify_resolved_numeric_not_equal_without_builtin_recursion(fact)
+                .unwrap_or_else(|| StmtUnknown::new().into()),
+            AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
+                let prime_result = self.verify_prime_fact_by_computation(atomic_fact);
+                if prime_result.is_unknown() {
+                    self.verify_coprime_fact_by_computation(atomic_fact)
+                } else {
+                    prime_result
+                }
+            }
+            AtomicFact::EqualFact(_) => {
+                unreachable!("equality has an owner-specific computation route")
+            }
+            _ => StmtUnknown::new().into(),
+        }
+    }
+
+    pub(crate) fn verify_non_equational_atomic_fact_with_one_builtin_rule(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
+        if !builtin_state.can_apply_builtin_rule() {
+            return Ok(StmtUnknown::new().into());
+        }
+        let child_state = builtin_state.after_applying_builtin_rule();
+        if let Some(result) = self.try_verify_atomic_fact_with_local_builtin_catalog(atomic_fact)? {
+            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+        }
+        if let Some(result) =
+            self.try_verify_atomic_fact_from_known_set_builder_membership(atomic_fact)?
+        {
+            return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+        }
+        let result = self.verify_non_equational_atomic_fact_with_builtin_rules_inner(
+            atomic_fact,
+            &child_state,
+        )?;
+        Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result))
+    }
+
     pub fn verify_non_equational_atomic_fact(
         &mut self,
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
         post_process: bool,
     ) -> Result<StmtResult, RuntimeError> {
-        // A well-defined anonymous function belongs to a function space with
-        // the same signature. Example: `fn(x E) R {f(x)} $in fn(x E) R`.
-        // `verify_atomic_fact` establishes well-definedness before entering
-        // this non-equational proof phase, so matching the signature here also
-        // relies on the checked return-value obligation.
-        if let AtomicFact::InFact(in_fact) = atomic_fact {
-            if let (Obj::AnonymousFn(anonymous_fn), Obj::FnSet(expected_fn_set)) =
-                (&in_fact.element, &in_fact.set)
-            {
-                let result = self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
-                    anonymous_fn,
-                    expected_fn_set,
-                    in_fact,
-                    verify_state,
-                )?;
-                if result.is_true() {
-                    return Ok(result);
-                }
-            }
-        }
-
-        let mut result = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)?;
+        let mut result = self.verify_non_equational_atomic_fact_with_direct_routes(atomic_fact)?;
         if result.is_true() {
             return Ok(result);
         }
@@ -48,8 +216,10 @@ impl Runtime {
                 return Ok(verified_by_definition);
             }
 
-            result = self
-                .verify_atomic_fact_with_known_forall(atomic_fact, &verify_state_add_one_round)?;
+            result = self.verify_non_equational_atomic_fact_with_known_forall(
+                atomic_fact,
+                &verify_state_add_one_round,
+            )?;
             if result.is_true() {
                 return Ok(result);
             }
@@ -222,5 +392,17 @@ impl Runtime {
             other if other.is_true() => Ok(other),
             _ => Ok(fallback),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn anonymous_function_membership_is_not_dispatched_by_the_generic_orchestrator() {
+        let source = include_str!("verify_non_equational_atomic_fact.rs");
+        let implementation = source.split("#[cfg(test)]").next().unwrap_or(source);
+
+        assert!(!implementation.contains("Obj::AnonymousFn"));
+        assert!(!implementation.contains("verify_in_fact_anonymous_fn_signature_matches_fn_set"));
     }
 }

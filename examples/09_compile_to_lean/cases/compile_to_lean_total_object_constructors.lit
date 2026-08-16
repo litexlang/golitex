@@ -3,4 +3,4 @@
 pi = pi
 forall A, B set:
     union(A, B) = union(A, B)
-# Boundary: constants i/e and non-binary union IR remain explicit failures.
+# Boundary: malformed non-binary union IR remains an explicit failure.

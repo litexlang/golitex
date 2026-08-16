@@ -60,11 +60,10 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )
                 .into();
-                let left_to_right_subset_result = rt
-                    .verify_atomic_fact_by_known_atomic_or_builtin_only(
-                        &left_to_right_subset_fact,
-                        &UseContextVerifyState::new(0, false),
-                    )?;
+                let left_to_right_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
+                    &left_to_right_subset_fact,
+                    &UseContextVerifyState::new(0, false),
+                )?;
 
                 let left_to_right_param = rt.fresh_param_group_with_type(
                     vec![unused_name.clone()],
@@ -112,11 +111,10 @@ impl Runtime {
                     stmt.line_file.clone(),
                 )
                 .into();
-                let right_to_left_subset_result = rt
-                    .verify_atomic_fact_by_known_atomic_or_builtin_only(
-                        &right_to_left_subset_fact,
-                        &UseContextVerifyState::new(0, false),
-                    )?;
+                let right_to_left_subset_result = rt.verify_atomic_fact_restricted_known_builtin(
+                    &right_to_left_subset_fact,
+                    &UseContextVerifyState::new(0, false),
+                )?;
 
                 let right_to_left_param = rt.fresh_param_group_with_type(
                     vec![unused_name.clone()],

@@ -88,6 +88,12 @@ pub enum LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanNativeConstantMembershipBuiltinRuleIr {
+    ImaginaryUnitInComplex,
+    EulerNumberInReal,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum LitexToLeanSetRelationDualityBuiltinRuleIr {
     SubsetFromSuperset,
     SupersetFromSubset,
@@ -126,6 +132,7 @@ pub enum LitexToLeanBuiltinRuleIr {
     IntegerMembershipClosure(LitexToLeanIntegerMembershipClosureBuiltinRuleIr),
     ComplexArithmeticMembershipClosure(LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr),
     RealArithmeticMembershipClosure(LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr),
+    NativeConstantMembership(LitexToLeanNativeConstantMembershipBuiltinRuleIr),
     /// Not-equality is symmetric. Example: `a != b` proves `b != a`.
     NotEqualSymmetry,
     /// A strict order between two checked real objects proves they differ.
@@ -157,6 +164,8 @@ impl LitexToLeanBuiltinRuleIr {
             | BuiltinRuleEvidence::FunctionSetMembership(_)
             | BuiltinRuleEvidence::RefinedNumericMembership(_)
             | BuiltinRuleEvidence::ClosedNumericComparison(_)
+            | BuiltinRuleEvidence::ResolvedAtomicFactComputation(_)
+            | BuiltinRuleEvidence::DisjunctionIntroduction(_)
             | BuiltinRuleEvidence::FunctionApplicationReturnMembership(_)
             | BuiltinRuleEvidence::KnownEqualityPath(_) => return None,
             BuiltinRuleEvidence::DivNotEqualZero(evidence) => {
@@ -289,6 +298,16 @@ impl LitexToLeanBuiltinRuleIr {
                     }
                 })
             }
+            BuiltinRuleEvidence::NativeConstantMembership(rule) => {
+                LitexToLeanBuiltinRuleIr::NativeConstantMembership(match rule {
+                    NativeConstantMembershipBuiltinRule::ImaginaryUnitInComplex => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::ImaginaryUnitInComplex
+                    }
+                    NativeConstantMembershipBuiltinRule::EulerNumberInReal => {
+                        LitexToLeanNativeConstantMembershipBuiltinRuleIr::EulerNumberInReal
+                    }
+                })
+            }
             BuiltinRuleEvidence::NotEqualSymmetry => LitexToLeanBuiltinRuleIr::NotEqualSymmetry,
             BuiltinRuleEvidence::NotEqualFromStrictOrder => {
                 LitexToLeanBuiltinRuleIr::NotEqualFromStrictOrder
@@ -387,6 +406,10 @@ impl fmt::Debug for LitexToLeanBuiltinRuleIr {
                 .finish(),
             LitexToLeanBuiltinRuleIr::RealArithmeticMembershipClosure(rule) => f
                 .debug_tuple("RealArithmeticMembershipClosure")
+                .field(rule)
+                .finish(),
+            LitexToLeanBuiltinRuleIr::NativeConstantMembership(rule) => f
+                .debug_tuple("NativeConstantMembership")
                 .field(rule)
                 .finish(),
             LitexToLeanBuiltinRuleIr::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),

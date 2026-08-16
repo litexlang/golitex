@@ -57,7 +57,7 @@ This small file already shows the main Litex loop:
 
 A statement can be successful without adding a fact. For example, `prop`
 stores a definition, `have algo` stores an executable implementation, and
-`sketch` deliberately exports nothing.
+`example` and `sketch` deliberately export nothing.
 
 ## One Statement Lifecycle
 
@@ -74,9 +74,9 @@ parse
 ```
 
 Not every statement uses every phase. A definition may have no truth claim to
-prove. A proof block creates child scopes. `sketch` never commits its child
-scope. `trust` and `axiom` deliberately skip truth verification, but remain
-explicit trust boundaries and are rejected in strict mode.
+prove. A proof block creates child scopes. `example` and `sketch` never commit
+their child scopes. `trust` and `axiom` deliberately skip truth verification,
+but remain explicit trust boundaries and are rejected in strict mode.
 
 For the target of a checked fact, the important ordering rule is:
 
@@ -102,6 +102,7 @@ back to its parent.
 | `forall` | Fresh arbitrary parameters, their type facts, and the stated premises as assumptions. | Only the verified universal fact. Parameter names and assumed premises do not escape. |
 | `exist` / `exist!` fact | Bound witness variables exist only inside the fact body. | The existential fact, not a usable witness name. |
 | `claim` | A child of the current context. For a universal goal it also receives the universal parameters and premises. | The proved target fact. Intermediate proof bindings and facts are discarded. |
+| `example` | A child of the current context. For a universal goal it also receives the universal parameters and premises. | Nothing. The checked target, parameters, premises, and proof steps are discarded. |
 | `thm` | A child scope containing theorem parameters and premises. | The named theorem interface and its verified universal fact. |
 | `by cases` | One independent child scope per case, with that case assumed. | The common target facts, after coverage and every branch have been checked. |
 | `by contra` | A child scope with the logical negation of the target assumed. | The original target, after an explicit contradiction is verified. |
@@ -216,6 +217,14 @@ Closed `$prime(n)` and `$coprime(a,b)` goals use dedicated computation leaves
 after their natural-number domains are checked. Symbolic positive facts use
 their explicit definitions: trial division for prime, and the non-all-zero
 condition plus `gcd(a,b)=1` for coprime.
+
+For ordinary non-equational computation, a checked object definition may be
+unfolded before the computation leaf. The runtime stores these definitions in
+a table distinct from the general equality graph. A success is then assembled
+in proof direction: closed computed target, optional numeric normalization,
+and exact defining-equality rewrites back to the original atomic target. The
+Litex-to-Lean IR consumes that frozen chain; it does not repeat verifier search
+or use proposition matching in Lean.
 
 Within one statement, Litex reuses an exact successful atomic subgoal if that
 same subgoal is requested again. This memo follows the ordinary environment
@@ -493,6 +502,7 @@ search.
 | Form | Local scope | Structural / well-definedness checks | Verification / subgoals | Commit on success | Trust boundary |
 |---|---|---|---|---|---|
 | `claim: ? target ...` | Proof steps run in a child scope; a universal target also opens parameters and premises there. | The target must be well-defined. `claim` does not accept a universal equivalence target. | Execute the proof, then verify the target or all universal conclusions. | Store the target and infer in the parent scope. | Checked; any explicit trusted step remains visible as its own statement result. |
+| `example: ? target ...` | Proof steps run in a child scope; a universal target also opens parameters and premises there. | The target must be well-defined. `example` does not accept a universal equivalence target. | Execute the proof, then verify the target or all universal conclusions. | Nothing. The outer context is unchanged. | Checked; any explicit trusted step remains visible in the result but is not exported. |
 | `thm name: ? forall ...` | Theorem parameters and premises live in a child proof scope. | The name must be unused and the universal statement well-defined. | Execute the proof and verify every conclusion. | Store the named theorem and its universal fact. | The theorem itself carries no transitive trust tag; direct trusted proof steps remain separately countable. |
 | `axiom name: ? forall ...` | No proof scope is needed. | The named universal statement must be well-defined. | No truth proof. | Store a named theorem-like interface and universal fact. | Explicit axiom; rejected in strict mode. |
 | `trust facts` | The statement stages all facts in a temporary child environment; later facts can use earlier staged facts. | In user code, every assumed fact must still be well-defined and storable. | No truth proof. | Atomically merge all unsafe assumptions and inferred consequences only after every fact succeeds; discard the child on failure. | Explicit proof debt; rejected in strict mode. |

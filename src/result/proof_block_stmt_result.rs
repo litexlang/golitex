@@ -3,6 +3,7 @@ use crate::prelude::*;
 #[derive(Debug)]
 pub enum ProofBlockStmtResult {
     ClaimStmt(NonFactualStmtSuccess),
+    ExampleStmt(NonFactualStmtSuccess),
     SketchStmt(NonFactualStmtSuccess),
     TryStmt(NonFactualStmtSuccess),
 }
@@ -12,6 +13,9 @@ impl ProofBlockStmtResult {
         match &success.stmt {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(_)) => {
                 ProofBlockStmtResult::ClaimStmt(success)
+            }
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(_)) => {
+                ProofBlockStmtResult::ExampleStmt(success)
             }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_)) => {
                 ProofBlockStmtResult::SketchStmt(success)
@@ -24,6 +28,7 @@ impl ProofBlockStmtResult {
     pub fn success(&self) -> &NonFactualStmtSuccess {
         match self {
             ProofBlockStmtResult::ClaimStmt(success)
+            | ProofBlockStmtResult::ExampleStmt(success)
             | ProofBlockStmtResult::SketchStmt(success)
             | ProofBlockStmtResult::TryStmt(success) => success,
         }
@@ -32,6 +37,7 @@ impl ProofBlockStmtResult {
     pub fn success_mut(&mut self) -> &mut NonFactualStmtSuccess {
         match self {
             ProofBlockStmtResult::ClaimStmt(success)
+            | ProofBlockStmtResult::ExampleStmt(success)
             | ProofBlockStmtResult::SketchStmt(success)
             | ProofBlockStmtResult::TryStmt(success) => success,
         }
@@ -40,6 +46,7 @@ impl ProofBlockStmtResult {
     pub fn into_success(self) -> NonFactualStmtSuccess {
         match self {
             ProofBlockStmtResult::ClaimStmt(success)
+            | ProofBlockStmtResult::ExampleStmt(success)
             | ProofBlockStmtResult::SketchStmt(success)
             | ProofBlockStmtResult::TryStmt(success) => success,
         }

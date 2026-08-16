@@ -145,6 +145,9 @@ fn first_disallowed_control_stmt(stmt: &Stmt) -> Option<(Stmt, &'static str)> {
         Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }
+        Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
+            first_disallowed_control_stmt_in_stmts(&s.proof)
+        }
         Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
             first_disallowed_control_stmt_in_stmts(&s.proof)
         }

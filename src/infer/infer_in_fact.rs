@@ -343,7 +343,7 @@ impl Runtime {
         let is_cart_fact: AtomicFact =
             IsCartFact::new(in_fact.set.clone(), in_fact.line_file.clone()).into();
         let is_known_symbolic_cart = self
-            .verify_known_non_forall_atomic_fact(&is_cart_fact)?
+            .verify_non_equational_atomic_fact_with_known_fact(&is_cart_fact)?
             .is_true();
         if !is_known_symbolic_cart && self.get_object_equal_to_cart(&in_fact.set).is_none() {
             return Ok(InferResult::new());

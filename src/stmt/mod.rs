@@ -3,6 +3,7 @@ pub mod claim_stmt;
 pub mod define_algorithm_stmt;
 pub mod definition_stmt;
 pub mod eval_stmt;
+pub mod example_stmt;
 pub mod parameter_def;
 pub mod sketch_stmt;
 pub mod tooling_stmt;

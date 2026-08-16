@@ -26,6 +26,12 @@ pub enum WellDefinedBinderPremiseRole {
     Domain {
         domain_index: usize,
     },
+    /// One source-ordered predicate in a set builder.  Unlike function-domain
+    /// premises, later predicates may rely on this fact while their own
+    /// well-definedness is checked.
+    LocalCondition {
+        condition_index: usize,
+    },
 }
 
 /// One ordinary environment FactId that becomes a Lean premise when replaying

@@ -83,8 +83,14 @@ axiom RNeg : Object
 axiom RStar : Object
 axiom CStar : Object
 
+/-- The source constant `i`, represented by Mathlib's imaginary unit. -/
+def i : Object := embedComplex Complex.I
+
+/-- The source constant `e`, represented by the real exponential at one. -/
+def e : Object := embedComplex (Real.exp 1 : ℂ)
+
 /-- The source constant `pi`, represented by Mathlib's real pi inside the
-universal complex embedding. This constructor is total and needs no
+universal complex embedding. These constants are total and need no
 well-definedness premise. -/
 def pi : Object := embedComplex (Real.pi : ℂ)
 
@@ -178,7 +184,7 @@ axiom listSet : List Object → Object
 @[simp] axiom inListSet_iff {x : Object} {xs : List Object} :
   In x (listSet xs) ↔ x ∈ xs
 
-def arg (args : List Object) (index : Nat) : Object :=
+@[reducible] def arg (args : List Object) (index : Nat) : Object :=
   args.getD index 0
 
 structure FnSpec where
@@ -193,6 +199,39 @@ structure FnSpec where
     Object
 
 axiom FnSet : FnSpec → Object
+
+@[reducible] def fnSpaceRequirementsFrom
+    (args : List Object) (index : Nat) : List Object → Prop
+  | [] => True
+  | input :: inputs =>
+      ∃ _ : In (arg args index) input,
+        fnSpaceRequirementsFrom args (index + 1) inputs
+
+@[reducible] def fnSpaceSpec (inputs : List Object) (output : Object) : FnSpec :=
+  { arity := inputs.length
+    requirements := fun args => fnSpaceRequirementsFrom args 0 inputs
+    range := fun _ _ _ => output }
+
+/-- The object of functions with one exact application layer, fixed input
+sets, no extra domain conditions, and a fixed output set. -/
+@[reducible] def fnSpace (inputs : List Object) (output : Object) : Object :=
+  FnSet (fnSpaceSpec inputs output)
+
+@[reducible] def fnSpace1 (input output : Object) : Object :=
+  fnSpace [input] output
+
+@[reducible] def fnSpace2 (input₀ input₁ output : Object) : Object :=
+  fnSpace [input₀, input₁] output
+
+@[reducible] def fnSpace3 (input₀ input₁ input₂ output : Object) : Object :=
+  fnSpace [input₀, input₁, input₂] output
+
+@[reducible] def fnSpace4 (input₀ input₁ input₂ input₃ output : Object) : Object :=
+  fnSpace [input₀, input₁, input₂, input₃] output
+
+@[reducible] def fnSpace5 (input₀ input₁ input₂ input₃ input₄ output : Object) : Object :=
+  fnSpace [input₀, input₁, input₂, input₃, input₄] output
+
 axiom Applicable : Object → List Object → Prop
 /-! Object denotation is independent of its well-definedness proof.  The
 verifier-owned `Applicable` evidence is replayed in the Lean proof environment
@@ -228,6 +267,27 @@ axiom fnSetResult
     (hRequirements : spec.requirements args) :
     In (f args)
       (spec.range args hLength hRequirements)
+
+/-- Readable applicability bridge for an ordinary, nondependent function
+space. Generated proofs use this instead of exposing `FnSpec`. -/
+theorem fnSpaceApplicable
+    {f inputs output args}
+    (hf : In f (fnSpace inputs output))
+    (hLength : args.length = inputs.length)
+    (hRequirements : fnSpaceRequirementsFrom args 0 inputs) :
+    Applicable f args := by
+  exact fnSetApplicable (args := args) hf hLength hRequirements
+
+/-- Readable result-membership bridge for an ordinary, nondependent function
+space. -/
+theorem fnSpaceResult
+    {f inputs output args}
+    (hf : In f (fnSpace inputs output))
+    (hLength : args.length = inputs.length)
+    (hRequirements : fnSpaceRequirementsFrom args 0 inputs) :
+    In (f args) output := by
+  simpa only [fnSpace, fnSpaceSpec] using
+    (fnSetResult (args := args) hf hLength hRequirements)
 
 /-- A source function object. Its denotation depends on the specification and
 body, not on which pointwise range proof the verifier selected. -/

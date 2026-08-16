@@ -514,6 +514,22 @@ impl ClaimStmt {
     }
 }
 
+impl ExampleStmt {
+    pub fn to_latex_string(&self) -> String {
+        let mut rows = vec![
+            r"\text{\textbf{example}:} &".to_string(),
+            format!(r"\text{{\textbf{{?}}}} & {}", self.fact.to_latex_string()),
+        ];
+        for statement in &self.proof {
+            rows.push(format!(r"& \quad {}", statement.to_latex_string()));
+        }
+        format!(
+            "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+            rows.join(" \\\\\n+")
+        )
+    }
+}
+
 impl ClosedRange {
     pub fn to_latex_string(&self) -> String {
         format!(
@@ -2382,6 +2398,7 @@ impl Stmt {
                 latex_texttt_escape(&x.to_string())
             }
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(x)) => x.to_latex_string(),
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(x)) => x.to_latex_string(),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(x)) => x.to_latex_string(),
             Stmt::Command(CommandStmt::DoNothingStmt(x)) => x.to_latex_string(),

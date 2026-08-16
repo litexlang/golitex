@@ -249,9 +249,12 @@ impl Runtime {
             return None;
         }
         Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+            FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
                 not_equal_fact.clone().into(),
                 "not_equal_numeric_resolved_or_equal_class_calculation".to_string(),
+                BuiltinRuleEvidence::ClosedNumericComparison(
+                    ClosedNumericComparisonBuiltinRuleEvidence::new(not_equal_fact.clone().into()),
+                ),
                 Vec::new(),
             )
             .into(),
@@ -426,11 +429,12 @@ impl Runtime {
                 )
                 .into();
                 let positive_result =
-                    self.verify_known_non_forall_atomic_fact(&positive_membership)?;
+                    self.verify_non_equational_atomic_fact_with_known_fact(&positive_membership)?;
                 if !positive_result.is_true() {
                     continue;
                 }
-                let order_result = self.verify_known_non_forall_atomic_fact(&order)?;
+                let order_result =
+                    self.verify_non_equational_atomic_fact_with_known_fact(&order)?;
                 if !order_result.is_true() {
                     continue;
                 }
@@ -924,7 +928,8 @@ impl Runtime {
         for positive_set in [StandardSet::NPos, StandardSet::QPos, StandardSet::RPos] {
             let positive_membership: AtomicFact =
                 InFact::new(base.clone(), positive_set.into(), line_file.clone()).into();
-            let positive_result = self.verify_known_non_forall_atomic_fact(&positive_membership)?;
+            let positive_result =
+                self.verify_non_equational_atomic_fact_with_known_fact(&positive_membership)?;
             if positive_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -1146,8 +1151,10 @@ impl Runtime {
             NotEqualFact::new(left_base.clone(), zero_obj.clone(), line_file.clone()).into();
         let right_nonzero: AtomicFact =
             NotEqualFact::new(right_base.clone(), zero_obj, line_file.clone()).into();
-        let left_nonzero_result = self.verify_known_non_forall_atomic_fact(&left_nonzero)?;
-        let right_nonzero_result = self.verify_known_non_forall_atomic_fact(&right_nonzero)?;
+        let left_nonzero_result =
+            self.verify_non_equational_atomic_fact_with_known_fact(&left_nonzero)?;
+        let right_nonzero_result =
+            self.verify_non_equational_atomic_fact_with_known_fact(&right_nonzero)?;
         let nonzero_result = if left_nonzero_result.is_true() {
             Some(left_nonzero_result)
         } else if right_nonzero_result.is_true() {

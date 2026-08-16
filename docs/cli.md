@@ -123,6 +123,25 @@ so it may appear before or after `-f`. It may appear only once.
 | `litex -session -f <file>` | Run the registered project prefix through one file, then keep that same Runtime alive as a framed persistent session. |
 | `litex -session -before <file>` | Run the registered project prefix before one file, exclude that file, and start the persistent session in its file environment. |
 
+## Lean Compiler Commands
+
+| Command | Behavior |
+|---------|----------|
+| `litex -lean <input.lit> <output.lean>` | Verify and compile one Litex source file into one complete Lean file. The output is replaced only after the complete source compiles successfully. |
+| `litex -lean-ledger <input.md> <output.lean>` | Freshly compile every `litex` fence under a level-two Markdown heading and combine the results in numbered namespaces. |
+
+The canonical end-to-end compiler ledger uses the single-file command:
+
+```bash
+litex -lean \
+  examples/09_compile_to_lean/compile_to_lean_examples.lit \
+  examples/09_compile_to_lean/compile_to_lean_examples.lean
+```
+
+Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.
+This preserves source order and permits explicit trusted statements to remain
+explicit namespaced axioms without leaking names between examples.
+
 ### Trusted prefix file checks (preview)
 
 When editing the latter part of a long file, use:

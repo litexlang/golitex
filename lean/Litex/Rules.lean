@@ -39,6 +39,14 @@ theorem numeralInC (n : Nat) : In (OfNat.ofNat n : Object) C := by
   apply inC_iff.mpr
   exact ⟨n, rfl⟩
 
+theorem imaginaryUnitInC : In i C := by
+  apply inC_iff.mpr
+  exact ⟨Complex.I, rfl⟩
+
+theorem eInR : In e R := by
+  apply inR_iff.mpr
+  exact ⟨Real.exp 1, rfl⟩
+
 theorem realSetNonempty : IsNonemptySet R := by
   exact ⟨0, numeralInR 0⟩
 
@@ -62,6 +70,18 @@ theorem numeralLe (m n : Nat) :
     simp [OfNat.ofNat]]
   rw [le_embedReal]
   norm_num
+
+theorem numeralNe (m n : Nat) :
+    (OfNat.ofNat m : Object) ≠ (OfNat.ofNat n : Object) ↔ m ≠ n := by
+  constructor
+  · intro h hmn
+    apply h
+    subst n
+    rfl
+  · intro h hobjects
+    apply h
+    have hcomplex : (m : ℂ) = (n : ℂ) := embedComplex_injective hobjects
+    exact_mod_cast hcomplex
 
 theorem positiveRealMembership {x : Object} (h : In x RPos) : Lt 0 x := by
   rcases inRPos_iff.mp h with ⟨r, hr, rfl⟩
@@ -109,6 +129,13 @@ theorem complexSubClosure {a b : Object} (ha : In a C) (hb : In b C) :
   apply inC_iff.mpr
   refine ⟨a - b, ?_⟩
   simp
+
+/-! A negative source integer remains a proof-free `Object` term (`0 - n`).
+Its carrier proof is an ordinary theorem, so generated WD audits never place
+proof arguments inside the represented number. -/
+theorem negativeNumeralInC (n : Nat) :
+    In (Litex.sub 0 (OfNat.ofNat n : Object)) C :=
+  complexSubClosure (numeralInC 0) (numeralInC n)
 
 theorem complexMulClosure {a b : Object} (ha : In a C) (hb : In b C) :
     In (Litex.mul a b) C := by

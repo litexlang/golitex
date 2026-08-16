@@ -108,14 +108,12 @@ impl Runtime {
                     if let ParamType::Obj(target_set) = current_type {
                         known_source_sets = self.known_sets_containing_obj(current_param_equal_to);
                         for source_set in known_source_sets.iter() {
-                            let set_equality = self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                                &EqualFact::new(
+                            let set_equality =
+                                self.verify_equal_fact_with_direct_routes(&EqualFact::new(
                                     source_set.clone(),
                                     target_set.clone(),
                                     have_obj_equal_stmt.line_file.clone(),
-                                )
-                                .into(),
-                            )?;
+                                ))?;
                             if !set_equality.is_unknown() {
                                 verify_result = set_equality;
                                 break;
@@ -236,12 +234,14 @@ impl Runtime {
             .iter()
             .zip(have_obj_equal_stmt.objs_equal_to.iter())
         {
-            let equal_to_fact: AtomicFact = EqualFact::new(
-                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into(),
+            let defined: Obj =
+                Identifier::new_bound(binding.name().to_string(), binding.as_ref()).into();
+            let equality = EqualFact::new(
+                defined.clone(),
                 obj.clone(),
                 have_obj_equal_stmt.line_file.clone(),
-            )
-            .into();
+            );
+            let equal_to_fact: AtomicFact = equality.clone().into();
             let equal_to_fact_infer_result = self
                 .store_atomic_fact_without_well_defined_verified_and_infer_with_reason(
                     equal_to_fact,
@@ -256,6 +256,10 @@ impl Runtime {
                     )
                 })?;
             infer_result.new_infer_result_inside(equal_to_fact_infer_result);
+            self.top_level_env().known_object_definitions.insert(
+                obj_equality_key(&defined),
+                KnownObjectDefinition::new(defined, obj.clone(), equality),
+            );
         }
 
         let lf = have_obj_equal_stmt.line_file.clone();

@@ -1,0 +1,7 @@
+name = "litex_compile_to_lean_examples"
+version = "0.0.0"
+packagesDir = "../../lean/.lake/packages"
+
+[[require]]
+name = "litex"
+path = "../../lean"

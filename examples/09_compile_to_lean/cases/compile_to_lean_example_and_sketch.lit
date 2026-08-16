@@ -1,0 +1,26 @@
+# Tracer: checked, non-exporting `example` and `sketch` proof blocks.
+#
+# Before: Litex had `sketch`, but no goal-shaped `example` statement, and the
+# Lean compiler had no scoped lowering for either construct.
+#
+# Now: `example` checks one explicit goal and lowers to a Lean `example` of
+# that proposition. Its body remains local to the generated proof.
+example:
+    ? 1 = 1
+    2 = 2
+
+# A forall example reuses the verifier-owned parameter and conclusion FactIds.
+example:
+    ? forall x R:
+        x = x
+
+# `sketch` keeps its existing meaning: check every statement in a disposable
+# Litex scope. Lean replays the retained statements inside an isolated namespace.
+sketch:
+    3 = 3
+
+# Boundary: neither block exports facts or names to the following Litex code.
+# Explicit local `trust` remains an explicit namespaced axiom. Unsupported
+# local statements fail closed; the compiler never inserts `sorry`.
+# Evidence: the isolated runner verifies all three blocks; the compiler ledger
+# snapshot and real-Mathlib gate check the complete generated Lean source.

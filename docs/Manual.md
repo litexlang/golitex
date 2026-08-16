@@ -85,8 +85,10 @@ every explicit `trust` or `axiom` are relevant to the trusted boundary.
 `trust` records an assumption; it is not a proof. The current Litex-to-Lean code is a
 deliberately partial compiler, not a general compiler. Its checked subset now
 includes selected declarations, recursive proof certificates, explicit-value
-`have`, checked real-carrier selection such as `have x R`, binary `by cases`,
-atomic `by contra`, positive `witness exist`, and positive existential
+`have`, checked real-carrier selection such as `have x R`, binary `by cases`
+with branch-local proof statements, nested proof-control, and structural
+conjunct projections, atomic `by contra` with local proof statements and an
+explicit double-negation bridge for negative targets, positive `witness exist`, and positive existential
 extraction through `obtain` or body-style `have`, alongside a limited set of
 object and builtin-rule backends. It also includes source-named theorems,
 checked `have fn name(args) range = body` definitions, set builders, and one
@@ -156,6 +158,12 @@ Names refer to builtin objects, earlier declarations, local binders, or
 module-qualified declarations. Arithmetic uses ordinary precedence:
 parentheses and indexing bind tightly, then powers, multiplication and
 division, then addition and subtraction.
+
+User-defined names may begin with a letter or one underscore and may then use
+letters, numbers, and underscores. The prefix `__` is reserved for generated
+names and is rejected in Litex source. Prefixes such as `h_` and `fn_` remain
+ordinary user space; the compiler's own Lean helpers instead use names such as
+`__fact43`, `__h0_1`, and `__wd0_7`.
 
 ```litex
 have x R = 3
@@ -2002,13 +2010,16 @@ have algo for f(x):
 This is an `error`; the implementation does not agree with the declared
 function.
 
-### Local proof blocks: `claim`, `sketch`, and `try`
+### Local proof blocks: `claim`, `example`, `sketch`, and `try`
 
 `claim` proves one target and commits that target to the surrounding context.
-Temporary proof steps remain local. `sketch` checks a local block and commits
-nothing. `try` checks a candidate block atomically and commits it only if every
-step succeeds. A claim target always appears under `claim:` as an indented
-`? fact`; the former `claim fact:` header form is not accepted.
+`example` proves one target but commits nothing; it is the checked,
+non-exporting counterpart of Lean's anonymous `example`. Temporary proof steps
+remain local in both forms. `sketch` checks a local block without a distinguished
+target and commits nothing. `try` checks a candidate block atomically and
+commits it only if every step succeeds. A `claim` or `example` target always
+appears under its header as an indented `? fact`; header forms such as
+`claim fact:` and `example fact:` are not accepted.
 
 ```litex
 claim:
@@ -2018,6 +2029,12 @@ claim:
             (x + 1)^2 = 9
     x + 1 = 3
     (x + 1)^2 = 9
+
+example:
+    ? 1 + 1 = 2
+
+sketch:
+    2 + 2 = 4
 
 try:
     have x R = 1
@@ -2032,8 +2049,8 @@ x = 1
 ? 1 = 1
 ```
 
-This is a parse `error`. Put the target under `claim`, `thm`, `strategy`, or a
-statement that explicitly expects a goal.
+This is a parse `error`. Put the target under `claim`, `example`, `thm`,
+`strategy`, or a statement that explicitly expects a goal.
 
 ### Named interfaces: `thm`, `axiom`, and `by thm`
 
@@ -2329,6 +2346,7 @@ tuple/cart/sequence/matrix introductions.
 | `struct`, `setting`, `template` | Field/setting/template parameters and body contracts. | A named view, reusable binder prefix, or one parameterized definition family. |
 | `have algo for ...` | A declared function exists and the implementation agrees on its cases/results. | An executable presentation; it does not replace the mathematical function facts. |
 | `claim` | One target is proved in a lexical child scope. | Only the target; helper statements do not escape. |
+| `example` | One target is proved in a lexical child scope. | Nothing; the target and helper statements do not escape. |
 | `sketch` | Every contained statement checks. | Nothing outside the block. |
 | `try` | The whole block succeeds transactionally. | All block effects on success; none on failure. |
 | `thm`, `axiom` | `thm` proves its target; `axiom` checks its interface but trusts truth. | A named reusable theorem interface; universal facts also enter ordinary matching. |
@@ -2495,6 +2513,15 @@ For an ordinary atomic fact, the main order is:
    and verify its instantiated premises.
 7. Try registered predicate properties or enabled strategies where applicable.
 8. On success, store the fact and run builtin inference.
+
+Builtin computation may expose a closed non-equational atomic target by
+unfolding checked `have x T = value` object definitions. This is not textual
+replacement and does not treat an arbitrary proved equality as a definition.
+The successful result still proves the original source fact: it retains the
+closed computed fact, any rational normalization step, and the defining
+equality `FactId`s needed to rewrite back to the goal. A bodyless object such as
+`have unknown_set set` has no value to unfold and therefore supplies no such
+route.
 
 During step 1, function application uses direct callable metadata first. Only
 when the callee has no direct signature does it inspect the callee's stored

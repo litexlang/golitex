@@ -27,7 +27,7 @@ impl Runtime {
                             expected_fn_set.clone().into(),
                             default_line_file(),
                         );
-                        return self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                        return self.verify_anonymous_fn_in_fn_set_explicit(
                             anonymous_fn,
                             &expected_fn_set,
                             &in_fact,
@@ -41,7 +41,7 @@ impl Runtime {
             ParamType::NonemptySet(_) => IsNonemptySetFact::new(obj, default_line_file()).into(),
             ParamType::FiniteSet(_) => IsFiniteSetFact::new(obj, default_line_file()).into(),
         };
-        self.verify_non_equational_known_then_builtin_rules_only(&fact, verify_state)
+        self.verify_atomic_fact_restricted_known_builtin(&fact, verify_state)
     }
 
     // Definition folding usually receives arguments already stored with their declared
@@ -109,7 +109,7 @@ impl Runtime {
                             expected_fn_set.clone().into(),
                             default_line_file(),
                         );
-                        return self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                        return self.verify_anonymous_fn_in_fn_set_explicit(
                             anonymous_fn,
                             &expected_fn_set,
                             &in_fact,

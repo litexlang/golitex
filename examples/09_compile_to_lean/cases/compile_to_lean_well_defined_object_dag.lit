@@ -9,9 +9,11 @@
 # Now (verified):
 forall a, b R, g fn(x R) R, t fn(x R) R, f fn(x, y R) R:
     f(g(a), t(b)) = f(g(a), t(b))
-# Current behavior: the theorem type uses proof-free `g [a]`, `t [b]`, and
-# `f [g [a], t [b]]`. After `intro`, local `wd_0_N`, applicability, and result
-# membership steps replay the verifier DAG in child-before-parent order.
+# Current behavior: the theorem type uses `fnSpace1 R R` and
+# `fnSpace2 R R R`, plus proof-free `g [a]`, `t [b]`, and
+# `f [g [a], t [b]]`. Compiler-owned Lean names start with reserved `__`:
+# `__factN`, `__h0_N`, `__wd0_N`, `__objN_app`, and `__objN_result`.
+# Those local steps replay the verifier DAG in child-before-parent order.
 
 # Boundary: this tracer covers one lexical forall environment. A child/local
 # environment may see parent WD entries, but a closed environment's cache does

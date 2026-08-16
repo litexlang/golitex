@@ -1,0 +1,18 @@
+# Before: To-Lean rejected do_nothing, let, claim, e, and i after Litex verified them.
+# Now: ordinary fact claims, simple object aliases, no-op statements, and the e/i constants compile.
+# Boundary: forall claims and other effectful command statements remain explicit unsupported cases.
+# Evidence: the exact source passes Litex, focused To-Lean IR/emission tests, and real Mathlib.
+
+do_nothing
+
+let x = 1
+
+claim:
+    ? x = x
+    x = x
+
+x = 1
+e = e
+i = i
+e $in R
+i $in C

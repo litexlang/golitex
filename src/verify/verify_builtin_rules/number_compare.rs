@@ -969,7 +969,7 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            subset_result = self.verify_known_non_forall_atomic_fact(&superset)?;
+            subset_result = self.verify_non_equational_atomic_fact_with_known_fact(&superset)?;
         }
         if !subset_result.is_true() {
             return Ok(None);

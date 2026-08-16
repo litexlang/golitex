@@ -68,14 +68,6 @@ impl Runtime {
         Vec::new()
     }
 
-    pub(crate) fn verify_non_equational_known_then_builtin_rules_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        _verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)
-    }
-
     /// If the fact string is in the known-facts cache, return the cached verification result.
     pub fn verify_fact_from_cache_using_display_string(&self, fact: &Fact) -> Option<StmtResult> {
         let key = fact.to_string();
@@ -172,23 +164,12 @@ impl Runtime {
         {
             return Ok(cached_result);
         }
-        self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)
-    }
-
-    pub(crate) fn verify_atomic_fact_by_known_atomic_or_builtin_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
-    }
-
-    pub(crate) fn verify_atomic_fact_known_then_builtin_rules_only(
-        &mut self,
-        atomic_fact: &AtomicFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => {
+                self.verify_equal_fact_with_direct_routes(equal_fact)
+            }
+            _ => self.verify_non_equational_atomic_fact_with_direct_routes(atomic_fact),
+        }
     }
 
     pub(crate) fn verify_quantifier_free_fact_restricted_known_builtin(
@@ -201,23 +182,15 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
             QuantifierFreeFact::AndFact(and_fact) => {
-                self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
+                self.verify_and_fact_restricted_known_builtin(and_fact, verify_state)
             }
             QuantifierFreeFact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
+                self.verify_chain_fact_restricted_known_builtin(chain_fact, verify_state)
             }
             QuantifierFreeFact::OrFact(or_fact) => {
-                self.verify_or_fact_known_then_builtin_rules_only(or_fact, verify_state)
+                self.verify_or_fact_restricted_known_builtin(or_fact, verify_state)
             }
         }
-    }
-
-    pub(crate) fn verify_quantifier_free_fact_by_known_atomic_or_builtin_only(
-        &mut self,
-        fact: &QuantifierFreeFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_quantifier_free_fact_restricted_known_builtin(fact, verify_state)
     }
 
     pub(crate) fn verify_and_chain_atomic_fact_restricted_known_builtin(
@@ -230,23 +203,15 @@ impl Runtime {
                 self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)
             }
             AndChainAtomicFact::AndFact(and_fact) => {
-                self.verify_and_fact_known_then_builtin_rules_only(and_fact, verify_state)
+                self.verify_and_fact_restricted_known_builtin(and_fact, verify_state)
             }
             AndChainAtomicFact::ChainFact(chain_fact) => {
-                self.verify_chain_fact_known_then_builtin_rules_only(chain_fact, verify_state)
+                self.verify_chain_fact_restricted_known_builtin(chain_fact, verify_state)
             }
         }
     }
 
-    pub(crate) fn verify_and_chain_atomic_fact_known_then_builtin_rules_only(
-        &mut self,
-        fact: &AndChainAtomicFact,
-        verify_state: &UseContextVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)
-    }
-
-    pub(crate) fn verify_and_fact_known_then_builtin_rules_only(
+    pub(crate) fn verify_and_fact_restricted_known_builtin(
         &mut self,
         and_fact: &AndFact,
         verify_state: &UseContextVerifyState,
@@ -254,7 +219,7 @@ impl Runtime {
         let mut steps = Vec::with_capacity(and_fact.facts.len());
         for atomic_fact in and_fact.facts.iter() {
             let result =
-                self.verify_atomic_fact_known_then_builtin_rules_only(atomic_fact, verify_state)?;
+                self.verify_atomic_fact_restricted_known_builtin(atomic_fact, verify_state)?;
             if result.is_unknown() {
                 return Ok(result);
             }
@@ -270,17 +235,17 @@ impl Runtime {
         )
     }
 
-    pub(crate) fn verify_chain_fact_known_then_builtin_rules_only(
+    pub(crate) fn verify_chain_fact_restricted_known_builtin(
         &mut self,
         chain_fact: &ChainFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let facts = chain_fact.facts()?;
         let and_fact = AndFact::new(facts, chain_fact.line_file.clone());
-        self.verify_and_fact_known_then_builtin_rules_only(&and_fact, verify_state)
+        self.verify_and_fact_restricted_known_builtin(&and_fact, verify_state)
     }
 
-    pub(crate) fn verify_or_fact_known_then_builtin_rules_only(
+    pub(crate) fn verify_or_fact_restricted_known_builtin(
         &mut self,
         or_fact: &OrFact,
         verify_state: &UseContextVerifyState,
@@ -295,8 +260,8 @@ impl Runtime {
             return Ok(known_or_result);
         }
         for fact in or_fact.facts.iter() {
-            let result = self
-                .verify_and_chain_atomic_fact_known_then_builtin_rules_only(fact, verify_state)?;
+            let result =
+                self.verify_and_chain_atomic_fact_restricted_known_builtin(fact, verify_state)?;
             if result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -493,8 +458,7 @@ impl Runtime {
             seen.push(key);
             let in_r: AtomicFact =
                 InFact::new((*obj).clone(), StandardSet::R.into(), line_file.clone()).into();
-            let mut result =
-                self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&in_r)?;
+            let mut result = self.verify_non_equational_atomic_fact_with_direct_routes(&in_r)?;
             if !result.is_true() {
                 result = self.verify_atomic_fact_with_builtin_strategy(&in_r)?;
             }

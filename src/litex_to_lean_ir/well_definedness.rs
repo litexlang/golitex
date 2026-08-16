@@ -219,12 +219,15 @@ pub(crate) fn validate_litex_to_lean_well_definedness_certificate(
                 ));
             }
         }
-        if matches!(object.source_object, Obj::AnonymousFn(_))
-            && object.owned_binder_scope_id.is_none()
+        if matches!(
+            object.source_object,
+            Obj::AnonymousFn(_) | Obj::SetBuilder(_)
+        ) && object.owned_binder_scope_id.is_none()
         {
             return Err(format!(
-                "WellDefinedObjId {} anonymous function has no frozen binder scope",
-                object.well_defined_obj_id.value()
+                "WellDefinedObjId {} binder-owning object `{}` has no frozen binder scope",
+                object.well_defined_obj_id.value(),
+                object.source_object
             ));
         }
         remaining_child_counts.insert(object.well_defined_obj_id, object.child_uses.len());
@@ -915,19 +918,79 @@ fn validate_binder_scope_recipe(
     scope: &LitexToLeanWellDefinednessBinderScopeIr,
 ) -> Result<(), String> {
     let scope_id = scope.scope_id.value();
-    let Obj::AnonymousFn(function) = &scope.owner_object else {
-        return Err(format!(
-            "WellDefinedBinderScopeId {scope_id} currently has unsupported non-anonymous owner `{}`",
-            scope.owner_object
-        ));
-    };
     let mut expected_roles = HashSet::new();
     let mut expected_role_order = Vec::new();
-    for (parameter_group_index, group) in function.body.params_def_with_set.iter().enumerate() {
-        for (parameter_index, binding) in group.params.iter().enumerate() {
+    match &scope.owner_object {
+        Obj::AnonymousFn(function) => {
+            for (parameter_group_index, group) in
+                function.body.params_def_with_set.iter().enumerate()
+            {
+                for (parameter_index, binding) in group.params.iter().enumerate() {
+                    let role = WellDefinedBinderPremiseRole::ParameterMembership {
+                        parameter_group_index,
+                        parameter_index,
+                    };
+                    expected_roles.insert(role);
+                    expected_role_order.push(role);
+                    let premise = scope
+                        .premises
+                        .iter()
+                        .find(|premise| premise.role == role)
+                        .ok_or_else(|| {
+                            format!(
+                                "WellDefinedBinderScopeId {scope_id} is missing parameter premise {role:?}"
+                            )
+                        })?;
+                    if premise.symbol_id != Some(binding.id()) {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed SymbolId"
+                        ));
+                    }
+                    let Fact::AtomicFact(AtomicFact::InFact(membership)) = &premise.proposition
+                    else {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} is not a membership"
+                        ));
+                    };
+                    let bound = obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+                    if !objs_equal_with_nested_binder_alpha_equivalence(&membership.element, &bound)
+                        || !objs_equal_with_nested_binder_alpha_equivalence(
+                            &membership.set,
+                            group.set_obj(),
+                        )
+                    {
+                        return Err(format!(
+                            "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed its bound object or carrier"
+                        ));
+                    }
+                }
+            }
+            for (domain_index, domain) in function.body.dom_facts.iter().enumerate() {
+                let role = WellDefinedBinderPremiseRole::Domain { domain_index };
+                expected_roles.insert(role);
+                expected_role_order.push(role);
+                let premise = scope
+                    .premises
+                    .iter()
+                    .find(|premise| premise.role == role)
+                    .ok_or_else(|| {
+                        format!(
+                            "WellDefinedBinderScopeId {scope_id} is missing domain premise {role:?}"
+                        )
+                    })?;
+                if premise.symbol_id.is_some()
+                    || premise.proposition.to_string() != Fact::from(domain.clone()).to_string()
+                {
+                    return Err(format!(
+                        "WellDefinedBinderScopeId {scope_id} domain premise {role:?} changed its exact proposition"
+                    ));
+                }
+            }
+        }
+        Obj::SetBuilder(builder) => {
             let role = WellDefinedBinderPremiseRole::ParameterMembership {
-                parameter_group_index,
-                parameter_index,
+                parameter_group_index: 0,
+                parameter_index: 0,
             };
             expected_roles.insert(role);
             expected_role_order.push(role);
@@ -940,7 +1003,7 @@ fn validate_binder_scope_recipe(
                         "WellDefinedBinderScopeId {scope_id} is missing parameter premise {role:?}"
                     )
                 })?;
-            if premise.symbol_id != Some(binding.id()) {
+            if premise.symbol_id != Some(builder.param_binding.id()) {
                 return Err(format!(
                     "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed SymbolId"
                 ));
@@ -950,35 +1013,44 @@ fn validate_binder_scope_recipe(
                     "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} is not a membership"
                 ));
             };
-            let bound = obj_for_bound_param_in_scope(binding, ParamObjType::FnSet);
+            let bound =
+                obj_for_bound_param_in_scope(&builder.param_binding, ParamObjType::SetBuilder);
             if !objs_equal_with_nested_binder_alpha_equivalence(&membership.element, &bound)
                 || !objs_equal_with_nested_binder_alpha_equivalence(
                     &membership.set,
-                    group.set_obj(),
+                    builder.param_set.as_ref(),
                 )
             {
                 return Err(format!(
                     "WellDefinedBinderScopeId {scope_id} parameter premise {role:?} changed its bound object or carrier"
                 ));
             }
+            for (condition_index, condition) in builder.facts.iter().enumerate() {
+                let role = WellDefinedBinderPremiseRole::LocalCondition { condition_index };
+                expected_roles.insert(role);
+                expected_role_order.push(role);
+                let premise = scope
+                    .premises
+                    .iter()
+                    .find(|premise| premise.role == role)
+                    .ok_or_else(|| {
+                        format!(
+                            "WellDefinedBinderScopeId {scope_id} is missing local condition premise {role:?}"
+                        )
+                    })?;
+                if premise.symbol_id.is_some()
+                    || premise.proposition.to_string() != Fact::from(condition.clone()).to_string()
+                {
+                    return Err(format!(
+                        "WellDefinedBinderScopeId {scope_id} local condition premise {role:?} changed its exact proposition"
+                    ));
+                }
+            }
         }
-    }
-    for (domain_index, domain) in function.body.dom_facts.iter().enumerate() {
-        let role = WellDefinedBinderPremiseRole::Domain { domain_index };
-        expected_roles.insert(role);
-        expected_role_order.push(role);
-        let premise = scope
-            .premises
-            .iter()
-            .find(|premise| premise.role == role)
-            .ok_or_else(|| {
-                format!("WellDefinedBinderScopeId {scope_id} is missing domain premise {role:?}")
-            })?;
-        if premise.symbol_id.is_some()
-            || premise.proposition.to_string() != Fact::from(domain.clone()).to_string()
-        {
+        _ => {
             return Err(format!(
-                "WellDefinedBinderScopeId {scope_id} domain premise {role:?} changed its exact proposition"
+                "WellDefinedBinderScopeId {scope_id} has unsupported owner `{}`",
+                scope.owner_object
             ));
         }
     }

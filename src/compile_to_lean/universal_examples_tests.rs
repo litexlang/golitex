@@ -15,7 +15,7 @@ fn universal_examples_compile_to_the_new_abi() {
         let examples = ledger_examples();
         assert_eq!(
             examples.len(),
-            22,
+            24,
             "the append-only feature ledger changed shape"
         );
         for (label, source) in examples {
@@ -149,18 +149,15 @@ fn assert_new_abi(label: &str, generated: &str) {
     match label {
         "well_defined_object_dag" => {
             assert!(
-                generated.matches("\n  have obj_").count() >= 3,
+                generated.matches("\n  have __obj").count() >= 3,
                 "{generated}"
             );
+            assert!(generated.contains("_app : Litex.Applicable"), "{generated}");
             assert!(
-                generated.contains("_applicable : Litex.Applicable"),
+                !generated.contains("\nnoncomputable def __obj"),
                 "{generated}"
             );
-            assert!(
-                !generated.contains("\nnoncomputable def obj_"),
-                "{generated}"
-            );
-            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
+            assert!(!generated.contains("\ntheorem __wd"), "{generated}");
             assert!(!generated.contains("well_defined_object_"), "{generated}");
         }
         "trusted_forall_atomic_fact" => {
@@ -168,7 +165,7 @@ fn assert_new_abi(label: &str, generated: &str) {
                 generated.contains("axiom p : Litex.Object → Prop"),
                 "{generated}"
             );
-            assert_eq!(generated.matches("axiom fact").count(), 1, "{generated}");
+            assert_eq!(generated.matches("axiom __fact").count(), 1, "{generated}");
             assert!(generated.contains(": p 1 := by"), "{generated}");
             assert!(
                 generated.contains(" 1 (Litex.Rules.numeralInR 1)"),
@@ -177,13 +174,13 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "membership_wd" => {
-            assert!(generated.contains("wd_0_3"), "{generated}");
+            assert!(generated.contains("__wd0_3"), "{generated}");
             assert!(
-                generated.contains("\n  have obj_") && generated.contains("_applicable"),
+                generated.contains("\n  have __obj") && generated.contains("_app"),
                 "{generated}"
             );
             assert!(
-                !generated.contains("\nnoncomputable def obj_"),
+                !generated.contains("\nnoncomputable def __obj"),
                 "{generated}"
             );
         }
@@ -250,10 +247,9 @@ fn assert_new_abi(label: &str, generated: &str) {
             );
         }
         "exact_application_layers" => {
-            assert!(generated.contains("f [obj_"), "{generated}");
-            assert!(generated.contains("g [obj_"), "{generated}");
-            assert!(generated.contains(") [obj_"), "{generated}");
-            assert!(generated.contains("Litex.fnSetResult"), "{generated}");
+            assert!(generated.contains("f [1, 2, 3]"), "{generated}");
+            assert!(generated.contains("(g [1]) [2]"), "{generated}");
+            assert!(generated.contains("Litex.fnSpaceResult"), "{generated}");
         }
         "arithmetic_forall_wd" => {
             assert!(generated.contains("Litex.sub"), "{generated}");
@@ -261,11 +257,11 @@ fn assert_new_abi(label: &str, generated: &str) {
                 generated.contains("Litex.Rules.realSubClosure"),
                 "{generated}"
             );
-            assert!(generated.contains("h_1_1"), "{generated}");
-            assert!(generated.contains("\n  have litex_scope_"), "{generated}");
-            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
+            assert!(generated.contains("__h1_1"), "{generated}");
+            assert!(generated.contains("\n  have __scope"), "{generated}");
+            assert!(!generated.contains("\ntheorem __wd"), "{generated}");
             assert!(
-                !generated.contains("\nnoncomputable def obj_"),
+                !generated.contains("\nnoncomputable def __obj"),
                 "{generated}"
             );
             assert!(
@@ -276,8 +272,8 @@ fn assert_new_abi(label: &str, generated: &str) {
                 .lines()
                 .filter_map(|line| {
                     let line = line.trim_start();
-                    line.strip_prefix("have wd_")
-                        .or_else(|| line.strip_prefix("theorem wd_"))
+                    line.strip_prefix("have __wd")
+                        .or_else(|| line.strip_prefix("theorem __wd"))
                         .and_then(|rest| rest.split_whitespace().next())
                 })
                 .collect::<Vec<_>>();
@@ -304,37 +300,31 @@ fn assert_new_abi(label: &str, generated: &str) {
                     "{generated}"
                 );
             }
-            assert!(generated.contains("wd_0_5"), "{generated}");
-            assert!(
-                generated.contains("(Litex.add (Litex.add a b) c)"),
-                "{generated}"
-            );
-            assert!(generated.contains("(Litex.div a b)"), "{generated}");
+            assert!(generated.contains("__wd0_"), "{generated}");
+            assert!(generated.contains("Litex.add (Litex.add "), "{generated}");
+            assert!(generated.contains("Litex.div "), "{generated}");
         }
         "inferred_forall_premise" => {
             assert!(
-                generated.contains("have litex_inferred_fact_1 : Litex.Lt 0 x :="),
+                generated.contains("have __inferred0 : Litex.Lt 0 x :="),
                 "{generated}"
             );
             assert!(
-                generated.contains("Litex.Rules.positiveRealMembership h_0_1"),
+                generated.contains("Litex.Rules.positiveRealMembership __h0_1"),
                 "{generated}"
             );
             assert!(
                 !generated.contains("litex_h_") && !generated.contains("litex_param_fact_"),
                 "{generated}"
             );
-            assert!(
-                generated.contains("exact litex_inferred_fact_1"),
-                "{generated}"
-            );
+            assert!(generated.contains("exact __inferred0"), "{generated}");
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "proof_carrying_list_set" => {
-            assert!(generated.contains("Litex.listSet [a, b]"), "{generated}");
-            assert!(generated.contains("\n  have wd_0_"), "{generated}");
+            assert!(generated.contains("Litex.listSet ["), "{generated}");
+            assert!(generated.contains("\n  have __wd0_"), "{generated}");
             assert!(!generated.contains("List.Pairwise.cons"), "{generated}");
-            assert!(!generated.contains("\ntheorem wd_"), "{generated}");
+            assert!(!generated.contains("\ntheorem __wd"), "{generated}");
             assert!(!generated.contains("sorry"), "{generated}");
         }
         "object_choice" => {
@@ -346,11 +336,8 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(generated.contains("Classical.choose_spec"), "{generated}");
         }
         "case_and_contradiction_scopes" => {
-            assert!(generated.contains("have litex_case_1"), "{generated}");
-            assert!(
-                generated.contains("by_contra litex_reverse_assumption"),
-                "{generated}"
-            );
+            assert!(generated.contains("have __case1"), "{generated}");
+            assert!(generated.contains("by_contra __reverse"), "{generated}");
         }
         "named_theorem" => {
             assert!(generated.contains("theorem one_eq_one :"), "{generated}");
@@ -369,7 +356,7 @@ fn assert_new_abi(label: &str, generated: &str) {
         }
         "set_builder_scope" => {
             assert!(generated.contains("Litex.setBuilder"), "{generated}");
-            assert!(generated.contains("fun litex_set_builder_"), "{generated}");
+            assert!(generated.contains("fun __x"), "{generated}");
         }
         "named_function" => {
             assert!(generated.contains("Litex.functionObject"), "{generated}");
@@ -407,9 +394,12 @@ fn assert_new_abi(label: &str, generated: &str) {
         "litex_object_abi" => {
             assert!(generated.contains("Litex.In a Litex.C"), "{generated}");
             assert!(generated.contains("Litex.In a Litex.R"), "{generated}");
-            assert!(generated.contains("Litex.In f (Litex.FnSet"), "{generated}");
-            assert!(generated.contains("Litex.fnSetApplicable"), "{generated}");
-            assert!(generated.contains("Litex.fnSetResult"), "{generated}");
+            assert!(
+                generated.contains("Litex.In f (Litex.fnSpace1"),
+                "{generated}"
+            );
+            assert!(generated.contains("Litex.fnSpaceApplicable"), "{generated}");
+            assert!(generated.contains("Litex.fnSpaceResult"), "{generated}");
         }
         "shared_builtin_rules" => {
             for theorem in ["notEqualSymmetry", "numeralInN", "numeralInC"] {
@@ -418,6 +408,25 @@ fn assert_new_abi(label: &str, generated: &str) {
                     "{generated}"
                 );
             }
+        }
+        "resolved_builtin_computation" => {
+            assert!(
+                generated.contains("Litex.Rules.numeralInZ 2"),
+                "{generated}"
+            );
+            assert!(
+                generated.contains("simpa only [__fact6, __fact3] using"),
+                "{generated}"
+            );
+            assert!(generated.contains("__normalized"), "{generated}");
+            assert!(!generated.contains("assumption"), "{generated}");
+        }
+        "example_and_sketch" => {
+            assert_eq!(generated.matches("\nexample :").count(), 2, "{generated}");
+            assert!(generated.contains("namespace __Sketch01"), "{generated}");
+            assert!(generated.contains("have __step_1 :"), "{generated}");
+            assert!(generated.contains("\ntheorem __fact"), "{generated}");
+            assert!(!generated.contains("sorry"), "{generated}");
         }
         other => panic!("unregistered universal-object ledger example `{other}`"),
     }

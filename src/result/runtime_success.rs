@@ -16,6 +16,9 @@ pub struct NonFactualStmtSuccess {
     pub execution_trace: Option<StatementExecutionTrace>,
     pub theorem_verification: Option<TheoremVerificationResult>,
     pub claim_verification: Option<ClaimVerificationResult>,
+    /// Evidence owned by a disposable proof-block environment. The runtime
+    /// freezes it before `claim`, `example`, or `sketch` pops that environment.
+    pub local_proof_scope_verification: Option<LocalProofScopeVerificationResult>,
     /// Exact verifier-to-environment mapping for bare `have x T` selection.
     /// The proof results stay in `inside_results`; this record identifies which
     /// one certifies each selected object's stored type fact.
@@ -111,6 +114,7 @@ pub struct ByCasesVerificationResult {
     pub then_facts: Vec<Fact>,
     pub proof_step_counts: Vec<usize>,
     pub case_result_counts: Vec<usize>,
+    pub proof_scopes: Vec<LocalProofScopeVerificationResult>,
     pub impossible_facts: Vec<Option<AtomicFact>>,
 }
 
@@ -121,7 +125,29 @@ pub struct ByContraVerificationResult {
     /// proof environment was alive.
     pub reverse_assumption_fact_id: FactId,
     pub proof_step_count: usize,
+    pub proof_scope: LocalProofScopeVerificationResult,
     pub impossible_fact: AtomicFact,
+}
+
+#[derive(Clone, Debug)]
+pub struct LocalProofScopeVerificationResult {
+    pub assumption_infers: InferResult,
+    pub assumption_components: Vec<(FactId, Fact)>,
+    pub well_definedness: WellDefinednessCertificate,
+}
+
+impl LocalProofScopeVerificationResult {
+    pub fn new(
+        assumption_infers: InferResult,
+        assumption_components: Vec<(FactId, Fact)>,
+        well_definedness: WellDefinednessCertificate,
+    ) -> Self {
+        Self {
+            assumption_infers,
+            assumption_components,
+            well_definedness,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1199,6 +1225,7 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
+            local_proof_scope_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
             witness_atomic_fact_verification: None,
@@ -1224,6 +1251,7 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: Some(theorem_verification),
             claim_verification: None,
+            local_proof_scope_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
             witness_atomic_fact_verification: None,
@@ -1249,6 +1277,7 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: Some(claim_verification),
+            local_proof_scope_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
             witness_atomic_fact_verification: None,
@@ -1274,6 +1303,7 @@ impl NonFactualStmtSuccess {
             execution_trace: None,
             theorem_verification: None,
             claim_verification: None,
+            local_proof_scope_verification: None,
             object_choice_verification: None,
             witness_exist_verification: None,
             witness_atomic_fact_verification: None,
@@ -1289,6 +1319,14 @@ impl NonFactualStmtSuccess {
 
     pub fn with_reported_store_facts(mut self, reported_store_facts: Vec<StoreFactOutput>) -> Self {
         self.reported_store_facts = reported_store_facts;
+        self
+    }
+
+    pub fn with_local_proof_scope_verification(
+        mut self,
+        verification: LocalProofScopeVerificationResult,
+    ) -> Self {
+        self.local_proof_scope_verification = Some(verification);
         self
     }
 }
@@ -1351,6 +1389,7 @@ impl ByCasesVerificationResult {
         then_facts: Vec<Fact>,
         proof_step_counts: Vec<usize>,
         case_result_counts: Vec<usize>,
+        proof_scopes: Vec<LocalProofScopeVerificationResult>,
         impossible_facts: Vec<Option<AtomicFact>>,
     ) -> Self {
         ByCasesVerificationResult {
@@ -1359,6 +1398,7 @@ impl ByCasesVerificationResult {
             then_facts,
             proof_step_counts,
             case_result_counts,
+            proof_scopes,
             impossible_facts,
         }
     }
@@ -1370,6 +1410,7 @@ impl ByContraVerificationResult {
         reverse_assumption: Fact,
         reverse_assumption_fact_id: FactId,
         proof_step_count: usize,
+        proof_scope: LocalProofScopeVerificationResult,
         impossible_fact: AtomicFact,
     ) -> Self {
         ByContraVerificationResult {
@@ -1377,6 +1418,7 @@ impl ByContraVerificationResult {
             reverse_assumption,
             reverse_assumption_fact_id,
             proof_step_count,
+            proof_scope,
             impossible_fact,
         }
     }
@@ -1786,6 +1828,7 @@ impl fmt::Debug for ByCasesVerificationResult {
             .field("then_facts", &then_facts)
             .field("proof_step_counts", &self.proof_step_counts)
             .field("case_result_counts", &self.case_result_counts)
+            .field("proof_scopes", &self.proof_scopes)
             .field("impossible_facts", &impossible_facts)
             .finish()
     }
@@ -1801,6 +1844,7 @@ impl fmt::Debug for ByContraVerificationResult {
                 &self.reverse_assumption_fact_id,
             )
             .field("proof_step_count", &self.proof_step_count)
+            .field("proof_scope", &self.proof_scope)
             .field("impossible_fact", &self.impossible_fact.to_string())
             .finish()
     }

@@ -54,7 +54,12 @@ impl Runtime {
                 // Deliberately restricted: a local schema may cite an already
                 // known atomic fact. It cannot recurse into another builtin,
                 // computation, resolve, definition unfolding, or a strategy.
-                let result = self.verify_known_non_forall_atomic_fact(&instantiated)?;
+                let result = match &instantiated {
+                    AtomicFact::EqualFact(equal_fact) => {
+                        self.verify_equal_fact_with_known_fact(equal_fact)
+                    }
+                    _ => self.verify_non_equational_atomic_fact_with_known_fact(&instantiated)?,
+                };
                 if !result.is_true() {
                     candidate_failed = true;
                     break;

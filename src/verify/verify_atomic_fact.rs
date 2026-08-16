@@ -7,8 +7,12 @@ impl Runtime {
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         if self.known_equality_candidate_replay_depth != 0 {
-            return self
-                .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(fact);
+            return match fact {
+                AtomicFact::EqualFact(equal_fact) => {
+                    self.verify_equal_fact_with_known_fact_then_computation(equal_fact)
+                }
+                _ => self.verify_non_equational_atomic_fact_with_known_fact_then_computation(fact),
+            };
         }
 
         if let Some(cached_result) =

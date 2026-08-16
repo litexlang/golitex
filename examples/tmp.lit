@@ -1,4 +1,21 @@
-forall a set, b set:
-    a != b
+have fn f(x R: x >= 0) R = 0
+
+forall y R:
+    y >= 0
     =>:
-        b != a
+        f(y) = 0
+        f(y) $in {0}
+
+f $in fn(x R: x >= 0) {0}
+
+# To-Lean owner-local construction scope examples.
+have PositiveReciprocals set = {x R: x != 0, 1 / x > 0}
+
+have BoundedPositiveReciprocals set = {x R: x != 0, 1 / x > 0, 1 / x < 2}
+
+fn(x R) R {x + 1} = fn(y R) R {y + 1}
+
+fn(x R: x != 0) R {1 / x} = fn(y R: y != 0) R {1 / y}
+
+forall a R:
+    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)

@@ -686,7 +686,7 @@ impl Runtime {
             .into();
 
             let verification = if verify_requirements {
-                Some(self.verify_non_equational_known_then_builtin_rules_only(
+                Some(self.verify_atomic_fact_restricted_known_builtin(
                     &rational_requirement,
                     &verify_state,
                 )?)
@@ -777,10 +777,8 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic_result = self
-                        .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                            &conclusion,
-                        )?;
+                    let automatic_result =
+                        self.verify_non_equational_atomic_fact_with_direct_routes(&conclusion)?;
                     if automatic_result.is_true() {
                         Some(automatic_result)
                     } else if matches!(
@@ -843,7 +841,7 @@ impl Runtime {
                         );
                         let mut result = match &stmt.args[0] {
                             Obj::AnonymousFn(anonymous_fn) => self
-                                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                                .verify_anonymous_fn_in_fn_set_explicit(
                                     anonymous_fn,
                                     &fn_set,
                                     &expanded_in_fact,
@@ -986,10 +984,8 @@ impl Runtime {
                 .into();
                 let verification = if verify_requirements {
                     self.verify_atomic_fact_well_defined(&conclusion, &verify_state)?;
-                    let automatic = self
-                        .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                            &conclusion,
-                        )?;
+                    let automatic =
+                        self.verify_non_equational_atomic_fact_with_direct_routes(&conclusion)?;
                     if automatic.is_true() {
                         Some(automatic)
                     } else {

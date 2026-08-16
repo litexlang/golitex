@@ -18,6 +18,12 @@ impl ClaimStmt {
     }
 }
 
+impl ExampleStmt {
+    pub fn stmt_type_name(&self) -> String {
+        "ExampleStmt".to_string()
+    }
+}
+
 impl TrustStmt {
     pub fn stmt_type_name(&self) -> String {
         "TrustStmt".to_string()
@@ -361,6 +367,12 @@ impl TryStmt {
 impl ClaimStmt {
     pub fn output_type_string() -> String {
         "proved claim".to_string()
+    }
+}
+
+impl ExampleStmt {
+    pub fn output_type_string() -> String {
+        "verified example".to_string()
     }
 }
 

@@ -361,6 +361,39 @@ mathematical rules, and provenance. It is more capable than literal string
 matching, but much more constrained and auditable than unrestricted proof
 search.
 
+#### Hiding Mechanical Proof Work While Preserving the Mathematical Spine
+
+A limited analogy can be made with the successive abstraction layers of
+programming languages. C usually frees programmers from arranging individual
+assembly instructions; higher-level languages such as Python absorb still more
+routine work, including much manual memory management and the requirement to
+declare most variable types in advance. Litex is not implemented like either
+language, and the analogy does not imply that mathematical types disappear.
+What Litex borrows is only the broader design idea: recurring, mechanically
+classifiable work can be moved into the language system so that users can work
+with the distinctions that matter at their current level.
+
+In this limited sense, Litex's catalog of hundreds of common builtin schemas,
+together with shape-directed matching and replacement, aims to act as an
+abstraction layer for routine proof plumbing. Conceptually—not as a literal
+description of every implementation data structure—one can picture it as a
+large, curated dispatch tree: common fact shapes have been classified in
+advance, and the checker tries the relevant bounded routes. The practical hope
+is that users need not repeatedly name elementary helper lemmas, choose routine
+rewrite directions, instantiate obvious parameters, or restate type and
+well-definedness consequences when those operations contribute little to the
+mathematical move being expressed. The source can instead emphasize
+definitions, substantive assumptions, key intermediate facts, and conclusions.
+
+This is a design goal whose boundary still needs to be tested, not a claim that
+Litex has already hidden exactly the right things. Work hidden from the source
+does not disappear: builtin rules enlarge the trusted surface and still require
+implementation review, tests, and independent audit; checker output should
+continue to expose the selected provenance; and users can still write an
+explicit route such as `by thm` when that dependency matters. The intended
+simplification is to move routine work into the checker without moving rigor
+out of the system.
+
 #### Verification at the Level Where Mathematics Is Written
 
 Much of working mathematics proceeds by using established facts at the
@@ -416,19 +449,19 @@ For this equality-rewrite route supported by the current MVP, the compiler gener
 ```lean
 import Litex.Rules
 
-theorem fact19 :
-    ∀ (a : Litex.Object) (h_0_1 : Litex.IsSet a)
-      (b : Litex.Object) (h_0_2 : Litex.IsSet b)
-      (c : Litex.Object) (h_0_3 : Litex.IsSet c)
-      (h_0_4 : a ≠ c)
-      (h_0_5 : a = b),
+theorem __fact19 :
+    ∀ (a : Litex.Object) (__h0_1 : Litex.IsSet a)
+      (b : Litex.Object) (__h0_2 : Litex.IsSet b)
+      (c : Litex.Object) (__h0_3 : Litex.IsSet c)
+      (__h0_4 : a ≠ c)
+      (__h0_5 : a = b),
       b ≠ c := by
-  intro a h_0_1 b h_0_2 c h_0_3 h_0_4 h_0_5
+  intro a __h0_1 b __h0_2 c __h0_3 __h0_4 __h0_5
   exact by
-    simpa only [h_0_5] using h_0_4
+    simpa only [__h0_5] using __h0_4
 ```
 
-This Lean code expands the verification route found automatically by Litex. `fact19` carries the environment-stored Litex `FactId`. The shared `Litex.Rules` Lake module supplies the one `Litex.Object` universe and checks ABI version 8; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. Generated assumptions use `h_<forall-depth>_<local-order>`; parameter facts and domain premises share one source-ordered counter within each `forall` layer. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
+This Lean code expands the verification route found automatically by Litex. `__fact19` carries the environment-stored Litex `FactId`. The shared `Litex.Rules` Lake module supplies the one `Litex.Object` universe and checks ABI version 8; the generated file does not repeat that semantic core. Each source parameter is a value of `Litex.Object`, followed by its exact retained `Litex.IsSet` parameter fact. Compiler-owned names use the Litex-reserved `__` prefix; assumptions use `__h<forall-depth>_<local-order>`. Parameter facts and domain premises share one source-ordered counter within each `forall` layer. The two domain facts are introduced in source order. The final `simpa only` transports `a ≠ c` along the retained equality `a = b` to obtain `b ≠ c`. The corresponding proof IR records the `forall` introduction, every parameter and domain `FactId`, one forward equality rewrite, and the recursive dependencies between those nodes. The compiler is therefore not guessing a convenient Lean tactic after the fact; it is explicitly re-expressing the verification evidence already selected by the checker as a Lean proof.
 
 Known-`forall` use is expanded in the same style. The IR retains every concrete Litex object selected for a binder, its parameter-type check, every proposition-valued domain requirement, and the conclusion obtained by direct substitution. Lean materializes the selected objects as typed local names such as `proof_arg_2_1`, replays domain requirements as `proof_fact` values, and names the direct theorem application. If that direct instance is only rationally equal to the requested spelling of the goal, an enclosing normalization node names the final result separately and checks the conversion. Thus an application is not compressed into a single opaque-looking `factN ...` line, and a matcher-level equality is not silently treated as definitional equality by Lean.
 
@@ -695,8 +728,14 @@ double role unfolds into one complete cycle:
 Read together, these are not five independent conveniences. They define one
 default division of labor: the author supplies the mathematical proof spine;
 the checker supplies its routine local connections; and explicit proof
-structure appears when the mathematics actually demands it. That division of
-labor—not local automation in isolation—is the intended interface distinction.
+structure appears when the mathematics actually demands it.
+
+Seen as language design, this is an abstraction-layer hypothesis still to be
+tested: as higher-level programming languages absorb recurring low-level
+operations, Litex tries to make repeatable, classifiable proof operations part
+of the checker's infrastructure so that source can remain closer to the level
+at which mathematical reasoning occurs. That division of labor—not local
+automation in isolation—is the intended interface distinction.
 The design-space comparisons above show that the individual mechanisms have
 precedents. Litex therefore advances a narrower, more architectural
 hypothesis: can the entire fact-triggered cycle—not merely an optional tactic,

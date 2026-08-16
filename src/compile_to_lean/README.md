@@ -64,7 +64,20 @@ They are not a compatibility backend.
 
 ## Function objects
 
-`fn(...) ...` is a `Litex.Object` constructed from a restricted `Litex.FnSpec`.
+Ordinary `fn(...) ...` types use the readable `Litex.fnSpace` interface. The
+compiler emits `fnSpace1` through `fnSpace5` for one to five parameters and
+`fnSpace [A, B, ...] R` for larger arities:
+
+```text
+fn(x R) R                 -> Litex.fnSpace1 Litex.R Litex.R
+fn(x R, y C) R            -> Litex.fnSpace2 Litex.R Litex.C Litex.R
+fn(a A, b B, ..., f F) R  -> Litex.fnSpace [A, B, ..., F] R
+```
+
+`Litex.FnSpec` remains the advanced representation for dependent parameter
+sets, dependent result sets, and extra domain conditions. It is intentionally
+absent from ordinary generated function-space types.
+
 The source application layers are preserved exactly:
 
 ```text
@@ -109,13 +122,21 @@ those IDs; it does not match rendered propositions or rerun proof search.
   `Eq.trans`; it never searches the equivalence class again.
 - A known forall cites its theorem `FactId`, explicit object arguments,
   parameter membership/set-property proofs, and domain proofs.
+- Compiler-owned Lean identifiers use the reserved `__` prefix. Source Litex
+  names beginning with `__` are rejected, while ordinary source names
+  (including names beginning with one underscore) remain available. Typical
+  generated names are `__fact43`, `__h0_1`, `__wd0_7`, `__obj44_app`, and
+  `__obj44_result`.
+- Advanced function specifications use `__arg_0`, `__arg_1`, ... for nested
+  argument-list binders. A named function implementation uses `__fn_arg`,
+  `__fn_arg_len`, and `__fn_arg_req` for its argument list and evidence.
 - A WD fact is named from its exact `WellDefinedFactId` and replayed as a local
   `have` after the binders of its owning theorem or function-closure proof.
 - Selected WD objects and transitive children are traversed in dependency
   order. Their denotations remain proof-free; applications additionally get
-  local `obj_N_applicable` and `obj_N_result` proof bindings. Arithmetic
+  local `__objN_app` and `__objN_result` proof bindings. Arithmetic
   objects retain `C` as an intrinsic result carrier and likewise get a local
-  `obj_N_result` when no already-named `WellDefinedFactId` proves that exact
+  `__objN_result` when no already-named `WellDefinedFactId` proves that exact
   membership. Rolled-back verifier search nodes are not part of the statement
   certificate and emit nothing.
 - Equal source applications retain different occurrence IDs. If the second
@@ -154,6 +175,12 @@ supporting routes:
 - standard sets and natural numerals;
 - forall introduction and exact projected-forall `FactId`s;
 - direct known facts and known-forall instantiation;
+- `by cases` and atomic `by contra` with recursively emitted local proof
+  statements, branch-local WD certificates and `FactId`s, exact conjunction
+  introduction/projection, and nested cases/contradiction scopes;
+- non-exporting `example` goals as Lean `example : P := by ...`, and targetless
+  `sketch` blocks as `example : True := by ...`, with all retained statements
+  replayed as local proof facts;
 - equality transport and object reflexivity;
 - direct known-equality symmetry and transitivity through exact `FactId`
   paths;
@@ -180,8 +207,19 @@ remain explicit errors; they are not treated as definitions or target axioms.
 
 ## Inspecting the complete ledger output
 
-The CLI can freshly compile every `litex` fence under a level-two heading in
-the compiler ledger and collect the results in one Lean file:
+The primary executable ledger is one Litex file containing commented,
+independent `sketch` blocks. Refresh its checked-in Lean counterpart with:
+
+```text
+target/release/litex -lean \
+  examples/09_compile_to_lean/compile_to_lean_examples.lit \
+  examples/09_compile_to_lean/compile_to_lean_examples.lean
+```
+
+Each sketch is emitted in an isolated namespace, so declarations, named
+theorems, and explicit trusted axioms do not collide across examples. The CLI
+also supports freshly compiling every `litex` fence under a level-two heading
+in the detailed Markdown ledger and collecting the results in one Lean file:
 
 ```text
 target/release/litex -lean-ledger \
@@ -218,6 +256,8 @@ The known-equality path tracer is
 [`compile_to_lean_known_equality_path.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_known_equality_path.lit).
 The first statement-definition tracer is
 [`compile_to_lean_first_statement_tranche.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_first_statement_tranche.lit).
+The anonymous proof-block tracer is
+[`compile_to_lean_example_and_sketch.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit).
 The append-only executable feature history is in
 [`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
 

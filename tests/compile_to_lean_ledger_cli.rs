@@ -25,19 +25,19 @@ fn lean_ledger_command_freshly_compiles_all_09_entries() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("wrote 22 freshly generated Lean entries")
+        String::from_utf8_lossy(&output.stdout).contains("wrote 24 freshly generated Lean entries")
     );
 
     let generated = fs::read_to_string(&output_path).expect("read bundled Lean output");
-    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 22);
+    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 24);
     assert_eq!(generated.matches("import Litex.Rules").count(), 1);
     assert!(!generated.contains("Litex.abiVersion"));
-    assert!(generated.contains("wd_0_"));
+    assert!(generated.contains("__wd0_"));
     assert!(!generated.contains("well_defined_fact_"));
     assert!(generated.contains("-- BEGIN ENTRY 02: trusted_forall_atomic_fact"));
     assert!(generated.contains("namespace Entry02"));
-    assert!(generated.contains("axiom fact3"));
-    assert!(generated.contains("theorem fact4 : p 1 := by"));
+    assert!(generated.contains("axiom __fact3"));
+    assert!(generated.contains("theorem __fact4 : p 1 := by"));
     assert!(!generated.contains("Required generated shape"));
 }
 

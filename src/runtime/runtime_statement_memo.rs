@@ -341,6 +341,94 @@ impl Runtime {
         Ok(())
     }
 
+    pub(crate) fn record_well_definedness_set_builder_parameter(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        binding: &SymbolBinding,
+        expected: Fact,
+        infer_result: &InferResult,
+    ) -> Result<(), RuntimeError> {
+        self.record_well_definedness_binder_premise(
+            scope_id,
+            WellDefinedBinderPremiseRole::ParameterMembership {
+                parameter_group_index: 0,
+                parameter_index: 0,
+            },
+            Some(binding.id()),
+            expected,
+            infer_result,
+            "set-builder parameter",
+        )
+    }
+
+    pub(crate) fn record_well_definedness_set_builder_condition(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        condition_index: usize,
+        expected: Fact,
+        infer_result: &InferResult,
+    ) -> Result<(), RuntimeError> {
+        self.record_well_definedness_binder_premise(
+            scope_id,
+            WellDefinedBinderPremiseRole::LocalCondition { condition_index },
+            None,
+            expected,
+            infer_result,
+            "set-builder condition",
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn record_well_definedness_binder_premise(
+        &mut self,
+        scope_id: Option<WellDefinedBinderScopeId>,
+        role: WellDefinedBinderPremiseRole,
+        symbol_id: Option<SymbolId>,
+        expected: Fact,
+        infer_result: &InferResult,
+        description: &str,
+    ) -> Result<(), RuntimeError> {
+        let Some(scope_id) = scope_id else {
+            return Ok(());
+        };
+        let scope = self
+            .well_definedness_binder_scope_capture_stack
+            .last_mut()
+            .filter(|scope| scope.id == scope_id)
+            .ok_or_else(|| {
+                missing_well_definedness_proof_error(format!(
+                    "WD binder scope {} is not active while recording {description}",
+                    scope_id.value()
+                ))
+            })?;
+        let matches = infer_result
+            .store_fact_outputs
+            .iter()
+            .filter(|output| {
+                output.itself_and_why_itself_is_stored.0.to_string() == expected.to_string()
+            })
+            .collect::<Vec<_>>();
+        if matches.len() != 1 {
+            return Err(missing_well_definedness_proof_error(format!(
+                "WD binder scope {} retained {} primary {description} outputs for `{expected}`; expected exactly one",
+                scope_id.value(),
+                matches.len()
+            )));
+        }
+        let fact_id = matches[0].fact_id.ok_or_else(|| {
+            missing_well_definedness_proof_error(format!(
+                "WD binder {description} premise `{expected}` has no FactId"
+            ))
+        })?;
+        scope.premises.push(WellDefinedBinderPremiseProof::new(
+            role, symbol_id, fact_id, expected,
+        ));
+        scope
+            .assumption_infers
+            .new_infer_result_inside(infer_result.clone());
+        Ok(())
+    }
+
     pub(crate) fn end_well_definedness_binder_scope(
         &mut self,
         scope_id: Option<WellDefinedBinderScopeId>,
