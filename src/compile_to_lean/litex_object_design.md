@@ -192,7 +192,18 @@ they are not arguments of the object term.
 
 ## 4. Function spaces are set objects
 
-One source function layer is described by a restricted specification:
+The public target interface for an ordinary source function layer is:
+
+```lean
+def Litex.fnSpace (inputs : List Litex.Object) (output : Litex.Object) : Litex.Object
+def Litex.fnSpace1 (input output : Litex.Object) : Litex.Object
+-- likewise fnSpace2 through fnSpace5
+```
+
+Thus `fn(x R) R` renders as `Litex.fnSpace1 Litex.R Litex.R`, and a function
+with more than five fixed inputs renders through the generic list form.
+
+The lower-level dependent representation is:
 
 ```lean
 structure Litex.FnSpec where
@@ -416,7 +427,7 @@ Inside the theorem that owns the source environment, Lean proof steps use
 stable names such as:
 
 ```lean
-have wd_0_17 : Litex.In (Litex.add a b) Litex.C := by
+have __wd0_17 : Litex.In (Litex.add a b) Litex.C := by
   exact Litex.Rules.complexAddClosure a_in_C b_in_C
 ```
 
@@ -435,8 +446,8 @@ entries, frozen statement certificates, To-Lean IR, and Lean emission all use
 that same identity. The stable local proof-binding spelling is:
 
 ```text
-WellDefinedObjId(12)  -> obj_12_applicable / obj_12_result
-WellDefinedFactId(17) -> wd_0_17
+WellDefinedObjId(12)  -> __obj12_app / __obj12_result
+WellDefinedFactId(17) -> __wd0_17
 ```
 
 When Lean needs a target-only `Litex.Applicable` bridge, its stable local
@@ -444,21 +455,22 @@ helper name is derived from the object identity rather than consuming a second
 verifier fact identity:
 
 ```text
-WellDefinedObjId(12) -> obj_12_applicable
+WellDefinedObjId(12) -> __obj12_app
 ```
 
 If that application is a callable prefix, its checked return membership is
 also exposed under the same identity:
 
 ```text
-WellDefinedObjId(12) -> obj_12_result
+WellDefinedObjId(12) -> __obj12_result
 ```
 
-The shorter helper spelling is unambiguous beside the deliberately explicit
-`wd_<environment-depth>_<WellDefinedFactId>` audit names. The depth is the
-lexical forall depth already visible in hypothesis names such as `h_0_1` and
-`h_1_1`; it prevents local helpers owned by different nested environments from
-colliding without changing the verifier-owned fact identity.
+All compiler-owned Lean names begin with `__`, a prefix rejected for Litex
+source names. The WD audit spelling is
+`__wd<environment-depth>_<WellDefinedFactId>`. The depth is the lexical forall
+depth also visible in hypotheses such as `__h0_1` and `__h1_1`; it prevents
+local helpers owned by different nested environments from colliding without
+changing the verifier-owned fact identity.
 
 One source occurrence and one fixed object are different identities. Every
 compound-object occurrence records the exact `WellDefinedObjId` it used. A
@@ -540,7 +552,7 @@ above.
 ## Ten representative examples
 
 The Lean blocks below show the required shape, not stable generated identifier
-numbers. A name such as `wd_0_17` stands for the exact helper
+numbers. A name such as `__wd0_17` stands for the exact helper
 selected by the verifier-owned ID.
 
 ### Example 1 — standard set, user set, and set parameter
@@ -629,17 +641,11 @@ forall f fn(x R) R:
     f(2) = f(2)
 ```
 
-Conceptual function-space object and call:
+Function-space object and conceptual call evidence:
 
 ```lean
-let spec : Litex.FnSpec := {
-  arity := 1
-  requirements := fun args => Litex.In (Litex.arg args 0) Litex.R
-  range := fun _ => Litex.R
-}
-
-hf : Litex.In f (Litex.FnSet spec)
-have obj_applicable : Litex.Applicable f [2] :=
+hf : Litex.In f (Litex.fnSpace1 Litex.R Litex.R)
+have __obj4_app : Litex.Applicable f [2] :=
   Litex.fnSetApplicable hf rfl (Litex.Rules.numeralInR 2)
 -- theorem type and object equality use only `f [2]`
 ```
@@ -683,7 +689,7 @@ forall f fn(x, y, z R) R:
 Required target shape inside the theorem proof:
 
 ```lean
-have obj_4_applicable : Litex.Applicable f [1, 2, 3] := by
+have __obj4_app : Litex.Applicable f [1, 2, 3] := by
   exact Litex.fnSetApplicable hf rfl requirements
 -- theorem type uses `f [1, 2, 3]`
 ```
@@ -704,10 +710,10 @@ forall g fn(x R) fn(y R) R:
 Required target shape inside the theorem proof:
 
 ```lean
-have obj_40_applicable : Litex.Applicable g [1] := ...
-have obj_40_result : Litex.In (g [1]) innerFnSet :=
+have __obj40_app : Litex.Applicable g [1] := ...
+have __obj40_result : Litex.In (g [1]) innerFnSet :=
   Litex.fnSetResult hf rfl first_requirements
-have obj_41_applicable : Litex.Applicable (g [1]) [2] := ...
+have __obj41_app : Litex.Applicable (g [1]) [2] := ...
 -- theorem type uses `(g [1]) [2]`
 ```
 
@@ -787,13 +793,13 @@ replacement(P, A)
 Required list-set target shape inside the owning theorem:
 
 ```lean
-have wd_0_53 : obj_51 ≠ obj_52 := by
+have __wd0_53 : __obj51 ≠ __obj52 := by
   ...
 
--- theorem type uses `Litex.listSet [obj_51, obj_52]`
+-- theorem type uses `Litex.listSet [__obj51, __obj52]`
 
 have hUnique : Litex.ReplacementWellDefined P A :=
-  wd_0_53
+  __wd0_53
 
 let imageSet := Litex.replacement P A
 ```

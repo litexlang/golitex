@@ -40,6 +40,7 @@ impl Runtime {
             OBTAIN => self.parse_obtain_obj(tb),
             CLEAR => self.parse_clear_stmt(tb),
             CLAIM => self.parse_claim_stmt(tb),
+            EXAMPLE => self.parse_example_stmt(tb),
             THM => self.parse_def_thm_stmt(tb),
             AXIOM => self.parse_def_axiom_stmt(tb),
             STRATEGY => self.parse_def_strategy_stmt(tb),
@@ -52,7 +53,7 @@ impl Runtime {
             TRY => self.parse_try_stmt(tb),
             QUESTION_GOAL => Err(RuntimeError::from(ParseRuntimeError(
                 RuntimeErrorStruct::new_with_msg_and_line_file(
-                    "top-level `?` is not supported; use it as a goal block inside claim/thm/by/strategy statements".to_string(),
+                    "top-level `?` is not supported; use it as a goal block inside claim/example/thm/by/strategy statements".to_string(),
                     tb.line_file.clone(),
                 ),
             ))),

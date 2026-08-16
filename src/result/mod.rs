@@ -19,13 +19,14 @@ mod witness_stmt_result;
 pub use builtin_rule_evidence::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
     ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
-    DefinitionProjectionBuiltinRuleEvidence, DivNotEqualZeroBuiltinRuleEvidence,
-    FunctionApplicationReturnMembershipBuiltinRuleEvidence,
+    DefinitionProjectionBuiltinRuleEvidence, DisjunctionIntroductionBuiltinRuleEvidence,
+    DivNotEqualZeroBuiltinRuleEvidence, FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
-    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep, NonzeroExpressionOrientation,
+    KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
+    NativeConstantMembershipBuiltinRule, NonzeroExpressionOrientation,
     RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule,
+    RegisteredLocalBuiltinRuleEvidence, ResolvedAtomicFactComputationBuiltinRuleEvidence,
+    SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule, SetRelationDualityBuiltinRule,
 };
 pub use by_stmt_result::ByStmtResult;
 pub use command_stmt_result::CommandStmtResult;
@@ -55,10 +56,10 @@ pub use runtime_success::{
     FactTransformationRule, FactTransformationStep, FactualStmtSuccess, ForallProofResult,
     ForallProvedFactResult, FunctionDefinitionVerificationResult, KnownForallInstantiationItem,
     KnownForallInstantiationResult, KnownForallRequirementKind, KnownForallRequirementResult,
-    NonFactualStmtSuccess, ObjectChoiceVerificationResult, ObjectIntroductionItem,
-    TheoremVerificationResult, VerifiedByBuiltinRuleResult, VerifiedByFactResult, VerifiedByResult,
-    VerifiedBysEnum, VerifiedBysResult, WitnessAtomicFactVerificationResult,
-    WitnessExistVerificationResult,
+    LocalProofScopeVerificationResult, NonFactualStmtSuccess, ObjectChoiceVerificationResult,
+    ObjectIntroductionItem, TheoremVerificationResult, VerifiedByBuiltinRuleResult,
+    VerifiedByFactResult, VerifiedByResult, VerifiedBysEnum, VerifiedBysResult,
+    WitnessAtomicFactVerificationResult, WitnessExistVerificationResult,
 };
 pub use runtime_unknown::StmtUnknown;
 pub use unsafe_stmt_result::UnsafeStmtResult;

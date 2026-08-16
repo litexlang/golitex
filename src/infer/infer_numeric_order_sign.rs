@@ -141,8 +141,8 @@ impl Runtime {
             atomic_fact.line_file(),
         )
         .into();
-        let source_in_r_result = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&source_in_r)?;
+        let source_in_r_result =
+            self.verify_non_equational_atomic_fact_with_direct_routes(&source_in_r)?;
         if !source_in_r_result.is_true() {
             return Ok(InferResult::new());
         }

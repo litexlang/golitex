@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit",
+  "proof_spine": [
+    "parse example with the same indented goal shape as claim",
+    "verify the goal and freeze temporary parameter, proof-step, conclusion, FactId, and WD evidence before leaving the child scope",
+    "assert that example and sketch exported no environment effects",
+    "lower example to an anonymous Lean proof of its checked target",
+    "lower sketch to an anonymous Lean proof of True containing its checked local facts",
+    "reject unsupported local statements without sorry or invented axioms"
+  ],
+  "blocks": [
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "check a concrete anonymous goal with a local helper fact",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "example:\n    ? 1 = 1\n    2 = 2",
+          "result": "passed",
+          "verifier_evidence": "runner returned verified example; the result retained the helper equality and final goal verification",
+          "diagnosis": "the claim proof engine can be shared while suppressing the claim environment commit",
+          "next_change": "freeze the disposable scope for To-Lean"
+        }
+      ],
+      "accepted_litex": "example:\n    ? 1 = 1\n    2 = 2",
+      "reusable_lesson": "A non-exporting goal block differs from claim at commit time, not at truth verification time.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "check a universal anonymous goal",
+      "dependencies": ["B001"],
+      "attempts": [
+        {
+          "candidate": "example:\n    ? forall x R:\n        x = x",
+          "result": "passed",
+          "verifier_evidence": "runner retained x, its R-membership assumption, and the reflexive conclusion in the example result",
+          "diagnosis": "forall example can reuse the named-theorem introduction evidence without creating a global theorem FactId",
+          "next_change": "emit a Lean example with local binders"
+        }
+      ],
+      "accepted_litex": "example:\n    ? forall x R:\n        x = x",
+      "reusable_lesson": "Temporary forall premise identities must be frozen before the example scope is popped.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "check targetless sketch lowering",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "sketch:\n    3 = 3",
+          "result": "passed",
+          "verifier_evidence": "runner returned proof sketch with one checked equality and no exported result",
+          "diagnosis": "Lean needs a harmless enclosing proposition so the checked local declarations have a proof scope",
+          "next_change": "emit example : True and close with True.intro"
+        }
+      ],
+      "accepted_litex": "sketch:\n    3 = 3",
+      "reusable_lesson": "The Lean proposition True represents only the targetless container; it does not assert that sketch proved a Litex goal.",
+      "status": "materialized"
+    }
+  ]
+}

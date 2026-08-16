@@ -137,16 +137,12 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
 
-        let modulus_goal: AtomicFact = EqualFact::new(
+        let modulus_goal = EqualFact::new(
             left_mod.right.as_ref().clone(),
             right_mod.right.as_ref().clone(),
             fact.line_file.clone(),
-        )
-        .into();
-        let modulus_result = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                &modulus_goal,
-            )?;
+        );
+        let modulus_result = self.verify_equal_fact_with_direct_routes(&modulus_goal)?;
         if !modulus_result.is_true() {
             return Ok(StmtUnknown::new().into());
         }
@@ -177,21 +173,16 @@ impl Runtime {
             Mod::new(obj.clone(), modulus.clone()).into()
         };
         for (left, right) in pairs {
-            let child: AtomicFact = EqualFact::new(
+            let child = EqualFact::new(
                 residue(left, left_mod.right.as_ref()),
                 residue(right, right_mod.right.as_ref()),
                 fact.line_file.clone(),
-            )
-            .into();
-            let direct = self
-                .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&child)?;
+            );
+            let direct = self.verify_equal_fact_with_direct_routes(&child)?;
             let result = if direct.is_true() {
                 direct
             } else {
-                let AtomicFact::EqualFact(child_fact) = &child else {
-                    unreachable!("mod congruence strategy constructs an equality child")
-                };
-                self.verify_mod_congruence_with_builtin_strategy(child_fact)?
+                self.verify_mod_congruence_with_builtin_strategy(&child)?
             };
             if !result.is_true() {
                 return Ok(StmtUnknown::new().into());

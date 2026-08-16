@@ -271,26 +271,17 @@ impl Runtime {
         Ok((StmtUnknown::new()).into())
     }
 
-    /// `anon $in S` when `S` is a function space [`FnSet`] and the anonymous function's
-    /// [`FnSetBody`] (params, dom facts, return set) matches `S` (same as comparing `S` to a
-    /// [`FnSet`] built from the anon's body without the braced `equal_to`).
+    /// A well-defined anonymous function belongs to a function space with the
+    /// same signature. Example: `fn(x E) R {f(x)} $in fn(x E) R`.
+    ///
+    /// This is a structural leaf. The caller owns the prior return-value
+    /// well-definedness check; this comparison performs no proof search.
     pub(crate) fn verify_in_fact_anonymous_fn_signature_matches_fn_set(
         &mut self,
         anon: &AnonymousFn,
         expected_fn_set: &FnSet,
         in_fact: &InFact,
-        verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
-            &anon.clone().into(),
-            expected_fn_set,
-            in_fact,
-            verify_state,
-        )? {
-            if result.is_true() {
-                return Ok(result);
-            }
-        }
         let signature_from_anon = FnSet::new(
             anon.body.params_def_with_set.clone(),
             anon.body.dom_facts.clone(),
@@ -331,8 +322,23 @@ impl Runtime {
             );
         }
 
-        // Function-space transport across propositionally equal parameter sets.
-        // Example: `J = A` permits `fn(x J) R {f(x)}` as a member of `fn(x A) R`.
+        Ok((StmtUnknown::new()).into())
+    }
+
+    // Function-space membership transports across propositionally equal
+    // signatures. Example: `J = A` permits `fn(x J) R {f(x)}` in `fn(x A) R`.
+    pub(crate) fn verify_in_fact_anonymous_fn_signature_matches_fn_set_through_equal_sets(
+        &mut self,
+        anon: &AnonymousFn,
+        expected_fn_set: &FnSet,
+        in_fact: &InFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let signature_from_anon = FnSet::new(
+            anon.body.params_def_with_set.clone(),
+            anon.body.dom_facts.clone(),
+            (*anon.body.ret_set).clone(),
+        )?;
         let signature_equality = self.verify_fn_set_with_params_equality_by_builtin_rules(
             &signature_from_anon,
             expected_fn_set,
@@ -351,6 +357,41 @@ impl Runtime {
             );
         }
         Ok((StmtUnknown::new()).into())
+    }
+
+    pub(crate) fn verify_anonymous_fn_in_fn_set_explicit(
+        &mut self,
+        anon: &AnonymousFn,
+        expected_fn_set: &FnSet,
+        in_fact: &InFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if let Some(result) = self.verify_in_fact_element_in_fn_set_by_pointwise_values(
+            &anon.clone().into(),
+            expected_fn_set,
+            in_fact,
+            verify_state,
+        )? {
+            if result.is_true() {
+                return Ok(result);
+            }
+        }
+
+        let signature_result = self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+            anon,
+            expected_fn_set,
+            in_fact,
+        )?;
+        if signature_result.is_true() {
+            return Ok(signature_result);
+        }
+
+        self.verify_in_fact_anonymous_fn_signature_matches_fn_set_through_equal_sets(
+            anon,
+            expected_fn_set,
+            in_fact,
+            verify_state,
+        )
     }
 
     // If every entry of `[a, b, ...]` is in `S`, then applying it at a valid index gives an element of `S`.

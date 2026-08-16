@@ -19,7 +19,7 @@ fn examples_are_publishable_content_not_run_instructions() {
         .filter_map(Result::ok)
         .filter(|entry| entry.path().extension().and_then(|value| value.to_str()) == Some("lit"))
         .count();
-    assert_eq!(case_count, 22, "09 must own all 22 Litex-to-Lean cases");
+    assert_eq!(case_count, 24, "09 must own all 24 Litex-to-Lean cases");
 
     let forbidden = [
         "target/release/litex",

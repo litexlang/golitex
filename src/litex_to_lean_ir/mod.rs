@@ -29,7 +29,7 @@ pub use builtin_rule::{
     LitexToLeanAbsoluteValueBuiltinRuleIr, LitexToLeanArithmeticBuiltinRuleIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
     LitexToLeanDivNotEqualZeroIr, LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
-    LitexToLeanNonzeroExpressionOrientationIr,
+    LitexToLeanNativeConstantMembershipBuiltinRuleIr, LitexToLeanNonzeroExpressionOrientationIr,
     LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanSetBuiltinRuleIr,
     LitexToLeanSetRelationDualityBuiltinRuleIr,
 };
@@ -336,8 +336,8 @@ pub enum LitexToLeanFactProofIr {
         branches: Vec<LitexToLeanCaseBranchIr>,
     },
     ByContradiction {
-        reverse_assumption: LitexToLeanLocalPremiseIr,
-        steps: Vec<LitexToLeanStatementIr>,
+        reverse_assumption: LitexToLeanReverseAssumptionIr,
+        block: LitexToLeanLocalProofBlockIr,
         contradiction: LitexToLeanContradictionIr,
     },
     Inference {
@@ -355,8 +355,20 @@ pub enum LitexToLeanFactProofIr {
 #[derive(Clone, Debug)]
 pub struct LitexToLeanCaseBranchIr {
     pub assumption: LitexToLeanLocalPremiseIr,
-    pub steps: Vec<LitexToLeanStatementIr>,
+    pub block: LitexToLeanLocalProofBlockIr,
     pub exit: LitexToLeanCaseBranchExitIr,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LitexToLeanReverseAssumptionIntroductionIr {
+    DirectNegation,
+    ClassicalDoubleNegation,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanReverseAssumptionIr {
+    pub premise: LitexToLeanLocalPremiseIr,
+    pub introduction: LitexToLeanReverseAssumptionIntroductionIr,
 }
 
 #[derive(Clone, Debug)]
@@ -472,6 +484,17 @@ pub enum LitexToLeanProofRuleIr {
     },
     ModusPonens,
     AndIntroduction,
+    DisjunctionIntroduction {
+        expected_target: Fact,
+        expected_selected: Fact,
+        selected_index: usize,
+    },
+    ConjunctionProjection {
+        expected_source: Fact,
+        expected_target: Fact,
+        index: usize,
+        count: usize,
+    },
     ExistIntroduction {
         witnesses: Vec<Obj>,
         /// User proof statements executed in the temporary witness scope.
@@ -723,6 +746,28 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 .finish(),
             LitexToLeanProofRuleIr::ModusPonens => f.write_str("ModusPonens"),
             LitexToLeanProofRuleIr::AndIntroduction => f.write_str("AndIntroduction"),
+            LitexToLeanProofRuleIr::ConjunctionProjection {
+                expected_source,
+                expected_target,
+                index,
+                count,
+            } => f
+                .debug_struct("ConjunctionProjection")
+                .field("expected_source", &expected_source.to_string())
+                .field("expected_target", &expected_target.to_string())
+                .field("index", index)
+                .field("count", count)
+                .finish(),
+            LitexToLeanProofRuleIr::DisjunctionIntroduction {
+                expected_target,
+                expected_selected,
+                selected_index,
+            } => f
+                .debug_struct("DisjunctionIntroduction")
+                .field("expected_target", &expected_target.to_string())
+                .field("expected_selected", &expected_selected.to_string())
+                .field("selected_index", selected_index)
+                .finish(),
             LitexToLeanProofRuleIr::ExistIntroduction {
                 witnesses,
                 steps,

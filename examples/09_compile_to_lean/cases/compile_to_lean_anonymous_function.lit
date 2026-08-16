@@ -17,7 +17,6 @@ forall a R:
 # return-closure route, one functionObject, and one checked FnSet membership;
 # an applied anonymous head reuses that membership to construct Applicable.
 #
-# Boundary: fn(x R) N {x} remains rejected because x-in-N is not proved. A
-# body whose target Object term itself needs local WD proofs, such as x + 1,
-# still requires the proof-aware function-body ABI decision recorded in the
-# To-Lean status ledger.
+# Compound bodies such as `x + 1` are covered by
+# compile_to_lean_owned_construction_scopes.lit. Boundary: fn(x R) N {x}
+# remains rejected because x-in-N is not proved.

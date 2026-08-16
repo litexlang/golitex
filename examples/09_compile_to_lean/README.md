@@ -1,9 +1,34 @@
 # Litex-to-Lean example ledger
 
-[`compile_to_lean_examples.md`](compile_to_lean_examples.md) is the growing,
-reader-facing executable feature ledger for the universal-object compiler.
-Each section contains one independent Litex program and the complete Lean file
-currently emitted for it. The generated source:
+[`compile_to_lean_examples.lit`](compile_to_lean_examples.lit) is the executable
+source ledger for the universal-object compiler. Each mathematical example is
+introduced by a short comment and isolated in its own `sketch`. Run:
+
+```text
+litex -lean \
+  examples/09_compile_to_lean/compile_to_lean_examples.lit \
+  examples/09_compile_to_lean/compile_to_lean_examples.lean
+```
+
+This directory is also a thin Lake project for the checked-in generated file.
+It depends on the repository's canonical [`../../lean`](../../lean) package
+instead of copying the `Litex` Lean sources, and reuses that package's Mathlib
+checkout instead of downloading a second copy. This lets the Lean extension
+use the matching Lean toolchain and resolve `import Litex.Rules` when the
+generated file is opened in place. Check it from this directory with:
+
+```bash
+lake env lean compile_to_lean_examples.lean
+```
+
+On a fresh checkout, initialize the canonical package once with
+`cd ../../lean && lake build` before opening or checking this generated file.
+Do not run `lake update` here; dependency and toolchain updates are owned by
+`../../lean`, and this thin project follows its checked-in manifest.
+
+The checked-in [`compile_to_lean_examples.lean`](compile_to_lean_examples.lean)
+is the exact generated result and compiles as one complete file in the bundled
+Mathlib Lake project. The generated source:
 
 - imports the shared `Litex.Object` universe and `Litex.In` ABI;
 - contains the expected proof route for that section;
@@ -11,27 +36,37 @@ currently emitted for it. The generated source:
   binders, widening, downcast, or `LeanCarrier`;
 - compiles as a complete file in a real Mathlib Lake project.
 
+[`compile_to_lean_examples.md`](compile_to_lean_examples.md) remains the
+reader-facing detailed feature history. Each section shows the standalone
+Litex case, its complete generated Lean snapshot, the essential target shape,
+and the nearest rejected boundary.
+
 Every Litex program in the ledger is followed by the complete Lean file
 actually emitted by the current compiler. The smaller required-shape block is a
 compact description of the essential mapping and does not replace the complete
-output. `cases/` contains the corresponding standalone Litex sources.
+output. Ordinary function types appear as `fnSpace1` through `fnSpace5`, or as
+generic `fnSpace` for larger arities; dependent function types retain the
+advanced `FnSpec` layer. Compiler-owned Lean names use the reserved `__`
+prefix. `cases/` contains the corresponding standalone Litex sources.
 
 ## Current feature history
 
 | Section | Demonstrates |
 | --- | --- |
-| `well_defined_object_dag` | Stable verifier-owned object IDs and child-before-parent WD replay inside the owning theorem scope |
+| `well_defined_object_dag` | Readable `fnSpace1`/`fnSpace2` types, reserved `__` helper names, stable verifier-owned object IDs, and child-before-parent WD replay inside the owning theorem scope |
 | `trusted_forall_atomic_fact` | `abstract_prop`, one explicit trusted universal axiom, and exact-`FactId` replay for a concrete atomic theorem |
 | `proof_carrying_arithmetic` | Proof-free `+`, `-`, `*`, `/` terms plus exact local operand slots and a theorem-local intrinsic result proof, including quotient closure reused by an outer operation |
 | `inferred_forall_premise` | Verifier-inferred local facts emitted in source order and replayed by exact `FactId` inside a `forall` |
 | `proof_carrying_list_set` | Proof-free list-set terms plus ordered child IDs and the complete local indexed pairwise-distinct WD matrix |
 | `object_choice` | Noncomputable choice from exact nonemptiness evidence and its membership `FactId` |
 | `existential_intro_elim` | Positive existential construction and ordered witness projections |
-| `case_and_contradiction_scopes` | Branch-local and contradiction-local `FactId` scopes |
+| `case_and_contradiction_scopes` | Recursive branch-local statements and WD, exact conjunct projections, contradiction-local `FactId`s, and negative-goal double-negation replay |
+| `example_and_sketch` | Anonymous checked goals lowered to Lean `example`; targetless checked blocks replayed in isolated Lean namespaces without exporting Litex facts |
 | `named_theorem` | Source theorem naming, ordered nested steps, and complete-forall ownership |
 | `total_object_constructors` | Closed `pi` and total binary `union` without proof arguments |
 | `proof_carrying_division` | Proof-free division denotation with a dedicated two-membership-plus-nonzero WD certificate |
 | `set_builder_scope` | SymbolId-owned predicate binder with no scope leakage |
+| `owned_construction_scopes` | Ordered set-builder condition WD and compound anonymous-function body replay under their exact owner binders |
 | `named_function` | Dependent requirements telescope, proof-free `inc`/`reciprocal` bodies, local closure evidence, membership, definition, and exact replay |
 | `indexed_aggregate` | One tuple constructor with dimension checks and ordered interface facts |
 | `statement_object_interactions` | Witness-as-argument, cases-in-theorem, and set-builder return-set composition |
@@ -42,6 +77,7 @@ output. `cases/` contains the corresponding standalone Litex sources.
 | `litex_object_abi` | One target object type with independent numeric and function-domain memberships |
 | `set_predicate_definitions` | Nonempty and finite set predicates derived from the shared membership model |
 | `shared_builtin_rules` | Generated proofs calling checked theorems from `Litex.Rules` |
+| `resolved_builtin_computation` | Closed builtin computation after checked object-definition unfolding, replayed through exact defining-equality `FactId`s |
 
 Strict compilation remains fail-closed. Unsupported proof routes never become
 `sorry`, compiler-invented axioms, or calls into the deleted native backend.

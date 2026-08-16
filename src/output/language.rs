@@ -1240,6 +1240,7 @@ const ZH_TEXTS: &[(&str, &str)] = &[
     ("negated universal fact", "否定全称事实"),
     ("proof sketch", "证明草稿"),
     ("proved claim", "已证明的 claim"),
+    ("verified example", "已验证的 example"),
     ("unproved assumption", "未经证明的假设"),
     ("evaluation statement", "求值语句"),
     ("function implementation", "函数实现"),
@@ -1429,6 +1430,7 @@ const ZH_HANS_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "全稱事實"),
     ("proof sketch", "證明草稿"),
     ("proved claim", "已證明的 claim"),
+    ("verified example", "已驗證的 example"),
     ("unproved assumption", "未經證明的假設"),
     ("unproved object definition", "未經證明的物件定義"),
     ("predicate definition", "謂詞定義"),
@@ -1519,6 +1521,7 @@ const AR_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "حقيقة كلية"),
     ("proof sketch", "مسودة برهان"),
     ("proved claim", "claim مبرهن"),
+    ("verified example", "مثال متحقق"),
     ("unproved assumption", "افتراض غير مبرهن"),
     ("unproved object definition", "تعريف كائن غير مبرهن"),
     ("predicate definition", "تعريف محمول"),
@@ -1609,6 +1612,7 @@ const HI_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "सार्विक तथ्य"),
     ("proof sketch", "प्रमाण रेखाचित्र"),
     ("proved claim", "सिद्ध claim"),
+    ("verified example", "सत्यापित example"),
     ("unproved assumption", "अप्रमाणित मान्यता"),
     ("unproved object definition", "अप्रमाणित object परिभाषा"),
     ("predicate definition", "predicate परिभाषा"),
@@ -1699,6 +1703,7 @@ const VI_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "sự kiện phổ quát"),
     ("proof sketch", "phác thảo chứng minh"),
     ("proved claim", "claim đã chứng minh"),
+    ("verified example", "example đã kiểm chứng"),
     ("unproved assumption", "giả thiết chưa chứng minh"),
     (
         "unproved object definition",
@@ -1795,6 +1800,7 @@ const ID_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "fakta universal"),
     ("proof sketch", "sketsa bukti"),
     ("proved claim", "claim terbukti"),
+    ("verified example", "example terverifikasi"),
     ("unproved assumption", "asumsi belum terbukti"),
     (
         "unproved object definition",
@@ -1894,6 +1900,7 @@ const JA_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "全称事実"),
     ("proof sketch", "証明スケッチ"),
     ("proved claim", "証明済み claim"),
+    ("verified example", "検証済み example"),
     ("unproved assumption", "証明されていない仮定"),
     (
         "unproved object definition",
@@ -1987,6 +1994,7 @@ const KO_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "전칭 사실"),
     ("proof sketch", "증명 스케치"),
     ("proved claim", "증명된 claim"),
+    ("verified example", "검증된 example"),
     ("unproved assumption", "증명되지 않은 가정"),
     ("unproved object definition", "증명되지 않은 객체 정의"),
     ("predicate definition", "술어 정의"),
@@ -2077,6 +2085,7 @@ const ES_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "hecho universal"),
     ("proof sketch", "borrador de prueba"),
     ("proved claim", "claim probado"),
+    ("verified example", "example verificado"),
     ("unproved assumption", "suposición no demostrada"),
     (
         "unproved object definition",
@@ -2176,6 +2185,7 @@ const FR_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "fait universel"),
     ("proof sketch", "esquisse de preuve"),
     ("proved claim", "claim prouvé"),
+    ("verified example", "example vérifié"),
     ("unproved assumption", "hypothèse non prouvée"),
     (
         "unproved object definition",
@@ -2272,6 +2282,7 @@ const DE_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "Allfakt"),
     ("proof sketch", "Beweisskizze"),
     ("proved claim", "bewiesener claim"),
+    ("verified example", "verifiziertes example"),
     ("unproved assumption", "unbewiesene Annahme"),
     ("unproved object definition", "unbewiesene Objektdefinition"),
     ("predicate definition", "Prädikatsdefinition"),
@@ -2371,6 +2382,7 @@ const PT_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "fato universal"),
     ("proof sketch", "rascunho de prova"),
     ("proved claim", "claim provado"),
+    ("verified example", "example verificado"),
     ("unproved assumption", "suposição não provada"),
     (
         "unproved object definition",
@@ -2470,6 +2482,7 @@ const RU_TEXTS: &[(&str, &str)] = &[
     ("universal fact", "универсальный факт"),
     ("proof sketch", "набросок доказательства"),
     ("proved claim", "доказанный claim"),
+    ("verified example", "проверенный example"),
     ("unproved assumption", "недоказанное предположение"),
     (
         "unproved object definition",

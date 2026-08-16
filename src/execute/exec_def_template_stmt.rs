@@ -754,6 +754,17 @@ impl Runtime {
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
                 Ok(ClaimStmt::new(fact, proof, line_file.clone()).into())
             }
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
+                let fact = self.inst_fact(
+                    &s.fact,
+                    param_to_arg_map,
+                    ParamObjType::DefHeader,
+                    Some(line_file.clone()),
+                )?;
+                let proof =
+                    self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;
+                Ok(ExampleStmt::new(fact, proof, line_file.clone()).into())
+            }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
                 let proof =
                     self.inst_template_proof_process(&s.proof, param_to_arg_map, line_file)?;

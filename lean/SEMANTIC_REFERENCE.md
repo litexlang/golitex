@@ -263,6 +263,7 @@ inside the shared library.
 | `numeralInQ` | Definition 4.2.1 and the embedding of an integer as `a//1`. | Builds the `inQ_iff` witness for the same numeral object. |
 | `numeralInR` | Definition 5.3.1 and the constant rational Cauchy-sequence embedding. | Builds the `inR_iff` witness for the same numeral object. |
 | `numeralInC` | No direct *Analysis I* anchor; extension. | Builds the `inC_iff` witness for the same numeral object. |
+| `negativeNumeralInC` | No direct *Analysis I* anchor; complex extension. | Represents a negative source integer by the proof-free object `0 - n` and derives its complex membership from `complexSubClosure`. |
 | `realSetNonempty` | Axiom 3.2 and the existence of zero in the real-number system. | Uses the checked numeral-real membership theorem to produce the direct witness for `IsNonemptySet R`. |
 | `objectIsSet` | Remark 3.1.3, pure-set specialization. | Re-exports `everyObjectIsSet`; both theorems follow from the definitionally true `IsSet` and add no semantic axiom. |
 | `numeralLt` | Chapter 2 numeral order and Section 5.4 real order. | Reduces a closed natural-literal `Litex.Lt` proposition to native natural order through the real embedding. |

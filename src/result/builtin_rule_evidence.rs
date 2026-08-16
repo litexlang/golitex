@@ -15,6 +15,64 @@ pub struct DivNotEqualZeroBuiltinRuleEvidence {
     pub orientation: NonzeroExpressionOrientation,
 }
 
+/// A non-equational atomic goal proved by first unfolding checked object
+/// definitions, then running the ordinary builtin computation on the closed
+/// resolved target. The enclosing builtin result keeps that computed proof as
+/// its sole subgoal; `fact_transformation` normalizes and rewrites it back to
+/// the source goal.
+#[derive(Clone, Debug)]
+pub struct ResolvedAtomicFactComputationBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub resolved_target: Fact,
+    pub fact_transformation: FactTransformationEvidence,
+}
+
+/// Exact introduction certificate for one selected branch of an `or` fact.
+/// The enclosing result retains exactly one child proving
+/// `expected_selected`; `selected_index` fixes its position in
+/// `expected_target`.
+#[derive(Clone)]
+pub struct DisjunctionIntroductionBuiltinRuleEvidence {
+    pub expected_target: Fact,
+    pub expected_selected: Fact,
+    pub selected_index: usize,
+}
+
+impl DisjunctionIntroductionBuiltinRuleEvidence {
+    pub fn new(expected_target: Fact, expected_selected: Fact, selected_index: usize) -> Self {
+        Self {
+            expected_target,
+            expected_selected,
+            selected_index,
+        }
+    }
+}
+
+impl fmt::Debug for DisjunctionIntroductionBuiltinRuleEvidence {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("DisjunctionIntroductionBuiltinRuleEvidence")
+            .field("expected_target", &self.expected_target.to_string())
+            .field("expected_selected", &self.expected_selected.to_string())
+            .field("selected_index", &self.selected_index)
+            .finish()
+    }
+}
+
+impl ResolvedAtomicFactComputationBuiltinRuleEvidence {
+    pub fn new(
+        expected_target: Fact,
+        resolved_target: Fact,
+        fact_transformation: FactTransformationEvidence,
+    ) -> Self {
+        Self {
+            expected_target,
+            resolved_target,
+            fact_transformation,
+        }
+    }
+}
+
 impl DivNotEqualZeroBuiltinRuleEvidence {
     pub fn new(
         numerator: Obj,
@@ -95,6 +153,14 @@ pub enum RealArithmeticMembershipClosureBuiltinRule {
     Mul,
     Div,
     Pow,
+}
+
+/// Stable identities for primitive mathematical-constant memberships that
+/// need no premises.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NativeConstantMembershipBuiltinRule {
+    ImaginaryUnitInComplex,
+    EulerNumberInReal,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -407,6 +473,8 @@ pub enum BuiltinRuleEvidence {
     FunctionSetMembership(FunctionSetMembershipBuiltinRuleEvidence),
     RefinedNumericMembership(RefinedNumericMembershipBuiltinRuleEvidence),
     ClosedNumericComparison(ClosedNumericComparisonBuiltinRuleEvidence),
+    ResolvedAtomicFactComputation(ResolvedAtomicFactComputationBuiltinRuleEvidence),
+    DisjunctionIntroduction(DisjunctionIntroductionBuiltinRuleEvidence),
     FunctionApplicationReturnMembership(FunctionApplicationReturnMembershipBuiltinRuleEvidence),
     KnownEqualityPath(KnownEqualityBuiltinRuleEvidence),
     DivNotEqualZero(DivNotEqualZeroBuiltinRuleEvidence),
@@ -414,6 +482,7 @@ pub enum BuiltinRuleEvidence {
     IntegerMembershipClosure(IntegerMembershipClosureBuiltinRule),
     ComplexArithmeticMembershipClosure(ComplexArithmeticMembershipClosureBuiltinRule),
     RealArithmeticMembershipClosure(RealArithmeticMembershipClosureBuiltinRule),
+    NativeConstantMembership(NativeConstantMembershipBuiltinRule),
     NotEqualSymmetry,
     /// Two checked real-carrier premises followed by one strict comparison
     /// between the target operands prove their inequality.
@@ -455,6 +524,14 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .debug_tuple("ClosedNumericComparison")
                 .field(evidence)
                 .finish(),
+            BuiltinRuleEvidence::ResolvedAtomicFactComputation(evidence) => f
+                .debug_tuple("ResolvedAtomicFactComputation")
+                .field(evidence)
+                .finish(),
+            BuiltinRuleEvidence::DisjunctionIntroduction(evidence) => f
+                .debug_tuple("DisjunctionIntroduction")
+                .field(evidence)
+                .finish(),
             BuiltinRuleEvidence::FunctionApplicationReturnMembership(evidence) => f
                 .debug_tuple("FunctionApplicationReturnMembership")
                 .field(evidence)
@@ -478,6 +555,10 @@ impl fmt::Debug for BuiltinRuleEvidence {
                 .finish(),
             BuiltinRuleEvidence::RealArithmeticMembershipClosure(rule) => f
                 .debug_tuple("RealArithmeticMembershipClosure")
+                .field(rule)
+                .finish(),
+            BuiltinRuleEvidence::NativeConstantMembership(rule) => f
+                .debug_tuple("NativeConstantMembership")
                 .field(rule)
                 .finish(),
             BuiltinRuleEvidence::NotEqualSymmetry => f.write_str("NotEqualSymmetry"),

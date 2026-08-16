@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "target": "examples/09_compile_to_lean/cases/compile_to_lean_total_object_constructors.lit",
-  "session_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_total_object_constructors.lit",
-  "proof_spine": ["lower pi as a closed object", "lower binary union as a total object", "require no target proof arguments"],
-  "blocks": [{"id":"B001","source_order":1,"intent":"render total constructors","dependencies":[],"attempts":[{"candidate":"pi = pi\nforall A, B set:\n    union(A, B) = union(A, B)","result":"passed","verifier_evidence":"Constant(Pi) and BuiltinApp(Union) retained","diagnosis":"target constructors were missing","next_change":"materialize total constructors"}],"accepted_litex":"pi = pi\nforall A, B set:\n    union(A, B) = union(A, B)","reusable_lesson":"Total source constructors should not be forced through proof-carrying WD slots.","status":"materialized"}],
-  "materialization": {"block_ids":["B001"],"file_gate_command":"cargo test --release total_object_constructors_render_without_proof_arguments -- --nocapture","file_gate_result":"focused shape and malformed-arity gates pass; the complete 15-entry ledger compiles against real Mathlib"}
-}

@@ -1346,6 +1346,11 @@ fn collect_by_thm_names_in_stmt(stmt: &Stmt, out: &mut Vec<String>) {
                 collect_by_thm_names_in_stmt(stmt, out);
             }
         }
+        Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => {
+            for stmt in s.proof.iter() {
+                collect_by_thm_names_in_stmt(stmt, out);
+            }
+        }
         Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => {
             for stmt in s.proof.iter() {
                 collect_by_thm_names_in_stmt(stmt, out);

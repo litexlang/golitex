@@ -1,240 +1,26 @@
 use crate::prelude::*;
-use crate::verify::verify_builtin_rules::{
-    builtin_in_fact_result_for_evaluated_number_in_standard_set,
-    builtin_not_in_fact_result_for_evaluated_number_in_standard_set,
-};
-
 impl Runtime {
-    pub(crate) fn verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-        &mut self,
-        goal: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        // Prefer a named builtin certificate over replay-safe structural
-        // equality when both establish the same equality.  Structural replay
-        // is intentionally a leaf fallback, whereas a builtin keeps the
-        // premise-bearing proof route available to Litex-to-Lean.
-        let builtin_state = UseBuiltinRuleVerifyState::new();
-        if matches!(goal, AtomicFact::EqualFact(_)) {
-            let builtin_result =
-                self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
-            if builtin_result.is_true() {
-                return Ok(builtin_result);
-            }
-            let leaf_result =
-                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
-            if leaf_result.is_true() {
-                return Ok(leaf_result);
-            }
-        } else {
-            let leaf_result =
-                self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
-            if leaf_result.is_true() {
-                return Ok(leaf_result);
-            }
-            let builtin_result =
-                self.verify_atomic_fact_with_one_builtin_rule(goal, &builtin_state)?;
-            if builtin_result.is_true() {
-                return Ok(builtin_result);
-            }
-        }
-
-        let AtomicFact::EqualFact(equal_fact) = goal else {
-            return Ok(StmtUnknown::new().into());
-        };
-        if !self.objs_are_congruent_by_replay_safe_equality_routes(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-        )? {
-            return Ok(StmtUnknown::new().into());
-        }
-        let result: StmtResult =
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                equal_fact.clone().into(),
-                "replay-safe structural equality".to_string(),
-                Vec::new(),
-            )
-            .into();
-        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
-    }
-
-    pub(crate) fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(
-        &mut self,
-        goal: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let known_result = self.verify_known_non_forall_atomic_fact(goal)?;
-        if known_result.is_true() {
-            return Ok(known_result);
-        }
-
-        let result = self.verify_atomic_fact_by_builtin_computation(goal);
-        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
-    }
-
-    /// The replay-safe structural comparator is a leaf capability, not an
-    /// ordinary builtin rule. It may use stored non-forall equalities,
-    /// obligation-free computation/normalization, definitional reduction, and
-    /// constructor descent, but it cannot consume another builtin-rule step.
-    fn verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
-        &mut self,
-        goal: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result =
-            self.verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation(goal)?;
-        if leaf_result.is_true() {
-            return Ok(leaf_result);
-        }
-
-        let AtomicFact::EqualFact(equal_fact) = goal else {
-            return Ok(leaf_result);
-        };
-        if !self.objs_are_congruent_by_replay_safe_equality_routes(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-        )? {
-            return Ok(leaf_result);
-        }
-
-        let result: StmtResult =
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                equal_fact.clone().into(),
-                "replay-safe structural equality".to_string(),
-                Vec::new(),
-            )
-            .into();
-        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
-    }
-
-    pub(crate) fn verify_known_non_forall_atomic_fact(
-        &mut self,
-        goal: &AtomicFact,
-    ) -> Result<StmtResult, RuntimeError> {
-        let result = match goal {
-            AtomicFact::EqualFact(fact) => Ok(self.verify_objs_are_equal_by_known_equality(
-                &fact.left,
-                &fact.right,
-                fact.line_file.clone(),
-            )),
-            _ => self.verify_non_equational_atomic_fact_with_known_atomic_facts(goal),
-        }?;
-        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
-    }
-
     pub(crate) fn verify_builtin_rule_premise(
         &mut self,
         child: &AtomicFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let leaf_result = self
-            .verify_atomic_fact_with_non_forall_facts_then_with_builtin_computation_and_structural_equality(
-                child,
-            )?;
-        if leaf_result.is_true() {
-            return Ok(leaf_result);
-        }
-        if !builtin_state.can_apply_builtin_rule() {
-            return Ok(StmtUnknown::new().into());
-        }
-        self.verify_atomic_fact_with_one_builtin_rule(child, builtin_state)
-    }
-
-    pub(crate) fn verify_atomic_fact_by_builtin_computation(
-        &self,
-        fact: &AtomicFact,
-    ) -> StmtResult {
-        match fact {
-            AtomicFact::InFact(fact) => {
-                let Obj::StandardSet(set) = &fact.set else {
-                    return StmtUnknown::new().into();
-                };
-                let Some(number) = fact
-                    .element
-                    .evaluate_to_normalized_decimal_number()
-                    .or_else(|| match self.resolve_obj(&fact.element) {
-                        Obj::Number(number) => Some(number),
-                        _ => None,
-                    })
-                else {
-                    return StmtUnknown::new().into();
-                };
-                builtin_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
-            }
-            AtomicFact::NotInFact(fact) => {
-                let Obj::StandardSet(set) = &fact.set else {
-                    return StmtUnknown::new().into();
-                };
-                let Some(number) = fact
-                    .element
-                    .evaluate_to_normalized_decimal_number()
-                    .or_else(|| match self.resolve_obj(&fact.element) {
-                        Obj::Number(number) => Some(number),
-                        _ => None,
-                    })
-                else {
-                    return StmtUnknown::new().into();
-                };
-                builtin_not_in_fact_result_for_evaluated_number_in_standard_set(fact, &number, set)
-            }
-            AtomicFact::NotLessFact(_)
-            | AtomicFact::NotGreaterFact(_)
-            | AtomicFact::NotLessEqualFact(_)
-            | AtomicFact::NotGreaterEqualFact(_)
-            | AtomicFact::LessFact(_)
-            | AtomicFact::GreaterFact(_)
-            | AtomicFact::LessEqualFact(_)
-            | AtomicFact::GreaterEqualFact(_) => {
-                if self.verify_number_comparison_builtin_rule(fact) != Some(true) {
-                    return StmtUnknown::new().into();
+        match child {
+            AtomicFact::EqualFact(equal_fact) => {
+                let leaf_result = self.verify_equal_fact_with_leaf_routes(equal_fact)?;
+                if leaf_result.is_true() || !builtin_state.can_apply_builtin_rule() {
+                    return Ok(leaf_result);
                 }
-                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                    fact.clone().into(),
-                    "number comparison".to_string(),
-                    BuiltinRuleEvidence::ClosedNumericComparison(
-                        ClosedNumericComparisonBuiltinRuleEvidence::new(fact.clone().into()),
-                    ),
-                    Vec::new(),
-                )
-                .into()
+                self.verify_equal_fact_with_one_builtin_rule(equal_fact, builtin_state)
             }
-            AtomicFact::EqualFact(fact) => {
-                let left_resolved = self.resolve_obj(&fact.left);
-                let right_resolved = self.resolve_obj(&fact.right);
-                let reason = if fact
-                    .left
-                    .two_objs_can_be_calculated_and_equal_by_calculation(&fact.right)
-                    || left_resolved
-                        .two_objs_can_be_calculated_and_equal_by_calculation(&right_resolved)
-                {
-                    "direct numeric computation"
-                } else if objs_equal_by_bounded_symbolic_normalization(&fact.left, &fact.right)
-                    || objs_equal_by_bounded_symbolic_normalization(&left_resolved, &right_resolved)
-                {
-                    // Bounded, obligation-free symbolic normalization. Example:
-                    // `a * t + 0 = a * t` and `abs(x - y) = abs(y - x)`.
-                    "bounded symbolic normalization"
-                } else {
-                    return StmtUnknown::new().into();
-                };
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    fact.clone().into(),
-                    reason.to_string(),
-                    Vec::new(),
-                )
-                .into()
-            }
-            AtomicFact::NotEqualFact(fact) => self
-                .verify_resolved_numeric_not_equal_without_builtin_recursion(fact)
-                .unwrap_or_else(|| StmtUnknown::new().into()),
-            AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_) => {
-                let prime_result = self.verify_prime_fact_by_computation(fact);
-                if prime_result.is_unknown() {
-                    self.verify_coprime_fact_by_computation(fact)
-                } else {
-                    prime_result
+            _ => {
+                let leaf_result =
+                    self.verify_non_equational_atomic_fact_with_known_fact_then_computation(child)?;
+                if leaf_result.is_true() || !builtin_state.can_apply_builtin_rule() {
+                    return Ok(leaf_result);
                 }
+                self.verify_non_equational_atomic_fact_with_one_builtin_rule(child, builtin_state)
             }
-            _ => StmtUnknown::new().into(),
         }
     }
 
@@ -253,59 +39,6 @@ impl Runtime {
         }
         Ok(Some(results))
     }
-
-    fn verify_atomic_fact_with_builtin_rules_inner(
-        &mut self,
-        goal: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if let Some(result) = self.try_verify_atomic_fact_with_local_builtin_catalog(goal)? {
-            return Ok(result);
-        }
-        if let Some(result) = self.try_verify_atomic_fact_from_known_set_builder_membership(goal)? {
-            return Ok(result);
-        }
-        match goal {
-            AtomicFact::EqualFact(fact) => self.verify_equality_by_builtin_rules(
-                &fact.left,
-                &fact.right,
-                fact.line_file.clone(),
-                builtin_state,
-            ),
-            _ => {
-                self.verify_non_equational_atomic_fact_with_builtin_rules_inner(goal, builtin_state)
-            }
-        }
-    }
-
-    fn verify_atomic_fact_with_one_builtin_rule(
-        &mut self,
-        goal: &AtomicFact,
-        builtin_state: &UseBuiltinRuleVerifyState,
-    ) -> Result<StmtResult, RuntimeError> {
-        if !builtin_state.can_apply_builtin_rule() {
-            return Ok(StmtUnknown::new().into());
-        }
-        let child_state = builtin_state.after_applying_builtin_rule();
-        let result = self.verify_atomic_fact_with_builtin_rules_inner(goal, &child_state)?;
-        Ok(self.remember_successful_atomic_fact_for_statement(goal, result))
-    }
-}
-
-fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool {
-    if objs_equal_by_rational_expression_evaluation(left, right) {
-        return true;
-    }
-
-    // Absolute value is invariant under sign change. This remains a bounded
-    // computation leaf: it creates no proof obligations and applies no rules.
-    // Example: `abs(x - y) = abs(y - x)`.
-    let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (left, right) else {
-        return false;
-    };
-    let negative_one: Obj = Number::new("-1".to_string()).into();
-    let negated_right: Obj = Mul::new(negative_one, right_abs.arg.as_ref().clone()).into();
-    objs_equal_by_rational_expression_evaluation(left_abs.arg.as_ref(), &negated_right)
 }
 
 #[cfg(test)]
@@ -317,23 +50,27 @@ mod tests {
     #[test]
     fn raw_builtin_dispatch_has_only_the_single_rule_entry_point() {
         let source = include_str!("verify_builtin_rule.rs");
+        let implementation = source
+            .split("#[cfg(test)]")
+            .next()
+            .expect("builtin premise implementation must precede its tests");
         let full_verify_state_constructor = ["UseContextVerifyState", "::new("].concat();
-        let raw_dispatch = ["verify_atomic_fact_with_builtin_rules_", "inner("].concat();
-        let creates_full_verify_state =
-            source
-                .match_indices(&full_verify_state_constructor)
-                .any(|(index, _)| {
-                    source[..index]
-                        .chars()
-                        .next_back()
-                        .is_none_or(|ch| !(ch.is_ascii_alphanumeric() || ch == '_'))
-                });
+        let creates_full_verify_state = implementation
+            .match_indices(&full_verify_state_constructor)
+            .any(|(index, _)| {
+                source[..index]
+                    .chars()
+                    .next_back()
+                    .is_none_or(|ch| !(ch.is_ascii_alphanumeric() || ch == '_'))
+            });
         assert!(!creates_full_verify_state);
         assert_eq!(
-            source.matches(&raw_dispatch).count(),
-            2,
-            "the raw dispatcher must only be defined once and called by the one-rule entry point"
+            implementation.matches("match child").count(),
+            1,
+            "a builtin premise must dispatch to its fact-family owner exactly once"
         );
+        assert!(implementation.contains("verify_equal_fact_with_one_builtin_rule"));
+        assert!(implementation.contains("verify_non_equational_atomic_fact_with_one_builtin_rule"));
     }
 
     #[test]
@@ -374,7 +111,7 @@ mod tests {
 
         let finite_fact: AtomicFact = IsFiniteSetFact::new(set, line_file.clone()).into();
         let finite_result = runtime
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&finite_fact)
+            .verify_non_equational_atomic_fact_with_direct_routes(&finite_fact)
             .expect("direct finiteness verification should not error");
         assert!(finite_result.is_true());
 
@@ -417,20 +154,121 @@ mod tests {
     }
 
     #[test]
-    fn structural_equality_uses_one_shape_matcher_only_in_structural_routes() {
-        let common_leaf = include_str!("verify_builtin_rule.rs");
-        let common_leaf_impl = common_leaf
-            .split("#[cfg(test)]")
+    fn obsolete_mixed_direct_routes_cannot_reappear_in_source() {
+        let src = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        let obsolete = [
+            [
+                "verify_atomic_fact_with_known_non_forall_facts_then_",
+                "with_builtin_rules",
+            ]
+            .concat(),
+            [
+                "verify_atomic_fact_with_non_forall_facts_then_",
+                "with_builtin_computation",
+            ]
+            .concat(),
+            ["verify_known_non_forall_", "atomic_fact"].concat(),
+            ["verify_atomic_fact_by_builtin_", "computation"].concat(),
+            ["verify_atomic_fact_with_one_", "builtin_rule"].concat(),
+            ["verify_atomic_fact_with_builtin_rules_", "inner"].concat(),
+        ];
+        visit_rust_files(&src, &mut |path, source| {
+            for name in &obsolete {
+                assert!(
+                    !source.contains(name),
+                    "{} reintroduces obsolete cross-family route `{}`",
+                    path.display(),
+                    name
+                );
+            }
+        });
+    }
+
+    #[test]
+    fn family_owned_direct_routes_preserve_policy_order_and_boundaries() {
+        let equality = include_str!("verify_equality.rs");
+        let equality_direct = equality
+            .split("pub(crate) fn verify_equal_fact_with_direct_routes(")
+            .nth(1)
+            .expect("equality owner must expose a direct route")
+            .split("pub(crate) fn verify_equal_fact_with_known_fact(")
             .next()
-            .expect("builtin rule implementation must precede its tests");
-        let known_fact_index = common_leaf_impl
-            .find("verify_known_non_forall_atomic_fact(goal)?")
-            .expect("common equality leaf must first check known non-forall facts");
-        let computation_index = common_leaf_impl
-            .find("verify_atomic_fact_by_builtin_computation(goal)")
-            .expect("common equality leaf must finish with builtin computation");
+            .expect("known-equality leaf must follow the equality direct route");
+        let equality_builtin = equality_direct
+            .find("verify_equal_fact_with_one_builtin_rule")
+            .expect("equality direct route must try a named builtin rule");
+        let equality_leaf = equality_direct
+            .find("verify_equal_fact_with_leaf_routes")
+            .expect("equality direct route must retain its structural leaf fallback");
+        assert!(equality_builtin < equality_leaf);
+
+        let non_equational = include_str!("verify_non_equational_atomic_fact.rs");
+        let non_equational_direct = non_equational
+            .split("pub(crate) fn verify_non_equational_atomic_fact_with_direct_routes(")
+            .nth(1)
+            .expect("non-equational owner must expose a direct route")
+            .split("pub(crate) fn verify_non_equational_atomic_fact_with_known_fact(")
+            .next()
+            .expect("known-fact leaf must follow the non-equational direct route");
+        let non_equational_leaf = non_equational_direct
+            .find("verify_non_equational_atomic_fact_with_known_fact_then_computation")
+            .expect("non-equational direct route must begin with known facts and computation");
+        let non_equational_builtin = non_equational_direct
+            .find("verify_non_equational_atomic_fact_with_one_builtin_rule")
+            .expect("non-equational direct route must finish with one builtin rule");
+        assert!(non_equational_leaf < non_equational_builtin);
+
+        let strategy = include_str!("verify_builtin_strategy.rs");
+        let child_dispatch = strategy
+            .split("pub(crate) fn verify_builtin_strategy_child(")
+            .nth(1)
+            .expect("strategy child dispatcher must exist")
+            .split("pub(crate) fn verify_atomic_fact_with_builtin_strategy(")
+            .next()
+            .expect("top-level strategy dispatcher must follow its child dispatcher");
+        assert_eq!(child_dispatch.matches("match atomic_fact").count(), 1);
+        assert!(child_dispatch.contains("verify_equal_fact_with_direct_routes"));
+        assert!(child_dispatch.contains("verify_non_equational_atomic_fact_with_direct_routes"));
+
+        let known_forall = include_str!("verify_atomic_fact_with_known_forall.rs");
+        let forward = known_forall
+            .split("fn verify_atomic_fact_with_known_forall_forward(")
+            .nth(1)
+            .expect("known-forall forward matcher must be shared")
+            .split("fn get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(")
+            .next()
+            .expect("known-forall lookup must follow the shared matcher");
+        assert!(!forward.contains("fact_with_reversed_args"));
+        let equality_wrapper = known_forall
+            .split("pub(crate) fn verify_equal_fact_with_known_forall(")
+            .nth(1)
+            .expect("equality must own reverse known-forall retry")
+            .split("fn verify_atomic_fact_with_known_forall_forward(")
+            .next()
+            .expect("shared forward matcher must follow the equality wrapper");
+        assert!(equality_wrapper.contains("fact_with_reversed_args"));
+    }
+
+    #[test]
+    fn structural_equality_uses_one_shape_matcher_only_in_structural_routes() {
+        let equality_owner = include_str!("verify_equality.rs");
+        let equality_leaf_impl = equality_owner
+            .split("pub(crate) fn verify_equal_fact_with_known_fact_then_computation(")
+            .nth(1)
+            .expect("equality owner must define its known/computation leaf")
+            .split("pub(crate) fn verify_equal_fact_with_leaf_routes(")
+            .next()
+            .expect("equality structural leaf must follow known/computation");
+        let known_fact_index = equality_leaf_impl
+            .find("verify_equal_fact_with_known_fact(equal_fact)")
+            .expect("equality leaf must first check known equality");
+        let computation_index = equality_leaf_impl
+            .find("verify_equal_fact_by_builtin_computation(equal_fact)")
+            .expect("equality leaf must finish with builtin computation");
         assert!(known_fact_index < computation_index);
-        assert!(!common_leaf_impl.contains("try_verify_equality_by_corresponding_known_equalities"));
+        assert!(
+            !equality_leaf_impl.contains("try_verify_equality_by_corresponding_known_equalities")
+        );
 
         let equality_structural = include_str!("verify_builtin_rules/equality_structural.rs");
         let known_only_impl = equality_structural

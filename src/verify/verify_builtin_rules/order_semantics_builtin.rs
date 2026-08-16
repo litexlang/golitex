@@ -374,7 +374,7 @@ impl Runtime {
         &mut self,
         member_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let known = self.verify_known_non_forall_atomic_fact(member_fact)?;
+        let known = self.verify_non_equational_atomic_fact_with_known_fact(member_fact)?;
         if known.is_true() {
             return Ok(known);
         }

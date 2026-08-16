@@ -184,18 +184,17 @@ impl Runtime {
         let AtomicFact::InFact(in_fact) = membership else {
             return Ok(StmtUnknown::new().into());
         };
-        let known = self.verify_known_non_forall_atomic_fact(membership)?;
+        let known = self.verify_non_equational_atomic_fact_with_known_fact(membership)?;
         if known.is_true() {
             return Ok(known);
         }
         match value {
-            Obj::AnonymousFn(anonymous) => self
-                .verify_in_fact_anonymous_fn_signature_matches_fn_set(
-                    anonymous,
-                    expected,
-                    in_fact,
-                    verify_state,
-                ),
+            Obj::AnonymousFn(anonymous) => self.verify_anonymous_fn_in_fn_set_explicit(
+                anonymous,
+                expected,
+                in_fact,
+                verify_state,
+            ),
             _ => {
                 self.verify_in_fact_element_in_fn_set_by_stored_definition(value, expected, in_fact)
             }

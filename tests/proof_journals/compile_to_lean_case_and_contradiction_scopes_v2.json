@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "target": "examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+  "session_command": "target/release/litex -compact -session -before private/cases-contra-to-lean.DFOacr/main.lit",
+  "proof_spine": [
+    "verify case coverage",
+    "bind the case assumption and execute its local fact",
+    "project structural case components by exact local FactId",
+    "verify the branch conclusion",
+    "bind the reverse assumption and execute its local fact",
+    "for a negative target, introduce the positive reverse assumption through classical double negation",
+    "recursively execute nested cases or contradiction statements without exporting their local facts",
+    "close with the retained contradiction pair"
+  ],
+  "blocks": [
+    {
+      "id": "P001",
+      "source_order": 0,
+      "intent": "start a persistent session at the public tracer path",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "target/release/litex -compact -session -before examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+          "result": "not_run",
+          "verifier_evidence": "`-session -before` requires a litex.config in the target file's folder",
+          "diagnosis": "the public standalone tracer is not a registered project file",
+          "next_change": "run the same blocks in a temporary registered project and keep the public file as the durable artifact"
+        }
+      ],
+      "accepted_litex": null,
+      "reusable_lesson": "Standalone compiler tracers need an isolated final runner even when proof iteration uses a registered session mirror.",
+      "status": "protocol_boundary"
+    },
+    {
+      "id": "B001",
+      "source_order": 1,
+      "intent": "verify a by-cases branch containing a local fact statement",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    by cases:\n        ? 1 = 1\n        case 1 = 1:\n            2 = 2",
+          "result": "passed",
+          "verifier_evidence": "session block cases_body returned ok: true",
+          "diagnosis": "the Litex verifier already accepts the nonempty branch body",
+          "next_change": "materialize without the outer try block"
+        }
+      ],
+      "accepted_litex": "by cases:\n    ? 1 = 1\n    case 1 = 1:\n        2 = 2",
+      "reusable_lesson": "A case proof statement is a branch-local environment effect, not a top-level fact.",
+      "status": "materialized"
+    },
+    {
+      "id": "B002",
+      "source_order": 2,
+      "intent": "verify a by-contra body containing a local fact statement",
+      "dependencies": ["B001"],
+      "attempts": [
+        {
+          "candidate": "try:\n    by contra:\n        ? 2 = 2\n        1 = 1\n        impossible 2 != 2",
+          "result": "passed",
+          "verifier_evidence": "session block contra_body returned ok: true",
+          "diagnosis": "the Litex verifier already accepts the nonempty contradiction body",
+          "next_change": "materialize without the outer try block"
+        }
+      ],
+      "accepted_litex": "by contra:\n    ? 2 = 2\n    1 = 1\n    impossible 2 != 2",
+      "reusable_lesson": "The reverse assumption and every body statement must remain local to the contradiction proof.",
+      "status": "materialized"
+    },
+    {
+      "id": "B003",
+      "source_order": 3,
+      "intent": "verify a conjunction-valued case and use one projected component",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    by cases:\n        ? 4 = 4\n        case 3 = 3 and 4 = 4:\n            3 = 3",
+          "result": "passed",
+          "verifier_evidence": "session block conjunction_case returned ok: true",
+          "diagnosis": "the verifier stores the components in the branch environment even though their compiler FactIds must be retained explicitly",
+          "next_change": "materialize and require ordered conjunction-projection certificates"
+        }
+      ],
+      "accepted_litex": "by cases:\n    ? 4 = 4\n    case 3 = 3 and 4 = 4:\n        3 = 3",
+      "reusable_lesson": "Structural components need stable branch-local identities plus an explicit projection proof; environment lookup alone is insufficient after scope exit.",
+      "status": "materialized"
+    },
+    {
+      "id": "B004",
+      "source_order": 4,
+      "intent": "verify contradiction proof of a negative target",
+      "dependencies": [],
+      "attempts": [
+        {
+          "candidate": "try:\n    by contra:\n        ? 5 != 6\n        impossible 5 = 6",
+          "result": "passed",
+          "verifier_evidence": "session block negative_target returned ok: true",
+          "diagnosis": "the reverse assumption is positive equality, so Lean needs a checked double-negation bridge rather than direct `by_contra` binding",
+          "next_change": "materialize with Classical.byContradiction and closed-numeral inequality replay"
+        }
+      ],
+      "accepted_litex": "by contra:\n    ? 5 != 6\n    impossible 5 = 6",
+      "reusable_lesson": "The compiler must distinguish direct negation introduction from classical double-negation elimination by target polarity.",
+      "status": "materialized"
+    },
+    {
+      "id": "B005",
+      "source_order": 5,
+      "intent": "verify nested cases and contradiction scopes with proof-phase WD",
+      "dependencies": ["B001", "B002"],
+      "attempts": [
+        {
+          "candidate": "try:\n    have fn identity(x R) R = x\n    by cases:\n        ? identity(1) = identity(1)\n        case 1 = 1:\n            by contra:\n                ? 2 = 2\n                impossible 2 != 2\n            1 $in R",
+          "result": "passed",
+          "verifier_evidence": "session block nested_branch_wd returned ok: true; inverse nesting in nested_contra_case also returned ok: true",
+          "diagnosis": "nested statements already verify; compilation must recursively clone the local context and replay each owning WD certificate",
+          "next_change": "keep as a focused Rust and real-Mathlib compiler gate"
+        }
+      ],
+      "accepted_litex": "have fn identity(x R) R = x\nby cases:\n    ? identity(1) = identity(1)\n    case 1 = 1:\n        by contra:\n            ? 2 = 2\n            impossible 2 != 2\n        1 $in R",
+      "reusable_lesson": "A local proof block is recursive: nested statements own child scopes and WD evidence, while only the enclosing goal escapes.",
+      "status": "accepted_test_only"
+    }
+  ],
+  "materialization": {
+    "block_ids": ["B001", "B002", "B003", "B004"],
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+    "file_gate_result": "passed with top-level runner ok: true"
+  }
+}

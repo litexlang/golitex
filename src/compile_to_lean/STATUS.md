@@ -151,8 +151,9 @@ edge layer is therefore substantially stronger than the previous audit said.
 
 The remaining gaps are proof and resolution gaps rather than child-edge gaps:
 
-- Only function applications, `+`/`-`/`*`/`/`, list sets, and the anonymous
-  return closure expose exact construction-premise roles. Other partial
+- Function applications, `+`/`-`/`*`/`/`, list sets, ordered set-builder
+  predicates, and the anonymous return closure expose exact construction-
+  premise roles. Other partial
   constructors retain their successful facts in the audit DAG, but do not yet
   distinguish the semantic top-level WD conditions from proof-internal facts.
   Replacement still needs its uniqueness condition; projections, indexing,
@@ -168,19 +169,19 @@ The remaining gaps are proof and resolution gaps rather than child-edge gaps:
   not yet a typed construction-resolution record. Intrinsic checks such as a
   nonempty rectangular matrix can be revalidated from the source snapshot;
   selected environment results cannot be reconstructed after scope exit.
-- Anonymous functions own one exact binder scope and compile for
-  proof-independent bodies such as `{x}`. `functionObject` denotation is now
-  proof-free, but the anonymous-function emitter still materializes its
-  generalized spec/body/closure helpers outside the theorem that mentions the
-  literal. Its binder-owned compound WD DAG is therefore not yet replayed as
-  local steps, and the accepted Litex source `fn(x R) R {x + 1}` still fails
-  closed at this emitter-scope boundary.
-- Function sets and set builders need the same dependent owned-scope recipe
-  rather than unrelated statement-level renderers. This is necessary for a
-  set builder such as `{x R: x != 0, 1 / x > 0}`: the second predicate's WD
-  proof depends on the preceding local nonzero fact. A generated dependent
-  `Prop` evidence structure can support both this case and the anonymous
-  `x + 1` body without putting proof arguments into object denotation.
+- Anonymous functions own one exact binder scope. Compound bodies such as
+  `fn(x R) R {x + 1}` now keep the body `Object` term proof-free and replay
+  their WD/return closure in the generated owner `closed` theorem after the
+  parameter and domain telescope is introduced. The generalized helper
+  declarations are still hoisted; consolidating those declarations into a
+  smaller source-theorem-local presentation is an output-shape improvement,
+  not a missing proof-scope contract.
+- Set builders now freeze their parameter membership and every predicate as
+  source-ordered binder premises. `have S set = {x R: x != 0, 1 / x > 0}`
+  emits a definition-theorem-local dependent `Prop` audit whose quotient WD
+  proof cites the preceding nonzero FactId. The `Litex.setBuilder` term itself
+  remains proof-free. Function sets still need the same fully target-neutral
+  recipe for dependent return-carrier construction.
 - Active-object recursion suppression remains an ordinary Litex runtime
   optimization, but To-Lean capture now fails closed if the same active object
   is re-entered before its `WellDefinedObjId` is complete. A future accepted
@@ -223,9 +224,9 @@ migration scaffolding, not the final object-construction ABI.
   itself no longer consumes its closure proof. Named functions replay
   arithmetic and partial-body WD locally through their frozen
   `WellDefinedObjId`/`WellDefinedFactId` DAGs.
-- [ ] Connect compound anonymous bodies to theorem-local replay. The current
-  anonymous identity-body slice remains checked and ABI-compatible, but its
-  binder-owned compound DAG is intentionally still rejected.
+- [x] Connect compound anonymous bodies to owner-closure replay. Parameter and
+  domain premises are introduced before the compound WD DAG and return proof;
+  the `functionObject` body remains a proof-free term.
 - [ ] Add the remaining partial object constructors, beginning with
   replacement. Their Lean terms must remain proof-free while the
   verifier-owned WD construction recipe is replayed in the corresponding Lean
@@ -241,7 +242,7 @@ migration scaffolding, not the final object-construction ABI.
   `Litex.Rules`; no per-use tactic expansion or builtin axiom fallback.
 - [ ] Lower the remaining definition and statement boundaries. Object choice,
   positive one-witness existentials, cases/contradiction, named theorems, set
-  builders, named functions, and proof-independent anonymous functions have
+  builders, named functions, and compound anonymous functions have
   focused recipes; bodyless concrete props, `trust have`, wider
   existential/case forms, namespaces, and proof-dependent binder recipes
   remain explicit gaps.

@@ -481,7 +481,7 @@ impl Runtime {
         if let Some(set) = nonempty_set_exist_fact_set(exist_fact) {
             let nonempty: AtomicFact = IsNonemptySetFact::new(set, exist_fact.line_file()).into();
             let nonempty_result =
-                self.verify_non_equational_known_then_builtin_rules_only(&nonempty, verify_state)?;
+                self.verify_atomic_fact_restricted_known_builtin(&nonempty, verify_state)?;
             if nonempty_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -506,7 +506,7 @@ impl Runtime {
             )
             .into();
             let rational_membership =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
+                self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -531,7 +531,7 @@ impl Runtime {
             )
             .into();
             let rational_membership =
-                self.verify_non_equational_known_then_builtin_rules_only(&in_q, verify_state)?;
+                self.verify_atomic_fact_restricted_known_builtin(&in_q, verify_state)?;
             if rational_membership.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -551,14 +551,10 @@ impl Runtime {
                 InFact::new(dividend, StandardSet::Z.into(), exist_fact.line_file()).into();
             let divisor_in_n_pos: AtomicFact =
                 InFact::new(divisor, StandardSet::NPos.into(), exist_fact.line_file()).into();
-            let dividend_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &dividend_in_z,
-                verify_state,
-            )?;
-            let divisor_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &divisor_in_n_pos,
-                verify_state,
-            )?;
+            let dividend_result =
+                self.verify_atomic_fact_restricted_known_builtin(&dividend_in_z, verify_state)?;
+            let divisor_result =
+                self.verify_atomic_fact_restricted_known_builtin(&divisor_in_n_pos, verify_state)?;
             if dividend_result.is_true() && divisor_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -599,18 +595,14 @@ impl Runtime {
                 exist_fact.line_file(),
             )
             .into();
-            let dividend_result = self
-                .verify_atomic_fact_by_known_atomic_or_builtin_only(&dividend_in_z, verify_state)?;
-            let divisor_result = self
-                .verify_atomic_fact_by_known_atomic_or_builtin_only(&divisor_in_z, verify_state)?;
-            let divisor_nonzero_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
-                &divisor_nonzero,
-                verify_state,
-            )?;
-            let remainder_result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
-                &zero_remainder,
-                verify_state,
-            )?;
+            let dividend_result =
+                self.verify_atomic_fact_restricted_known_builtin(&dividend_in_z, verify_state)?;
+            let divisor_result =
+                self.verify_atomic_fact_restricted_known_builtin(&divisor_in_z, verify_state)?;
+            let divisor_nonzero_result =
+                self.verify_atomic_fact_restricted_known_builtin(&divisor_nonzero, verify_state)?;
+            let remainder_result =
+                self.verify_atomic_fact_restricted_known_builtin(&zero_remainder, verify_state)?;
             if dividend_result.is_true()
                 && divisor_result.is_true()
                 && divisor_nonzero_result.is_true()
@@ -642,10 +634,8 @@ impl Runtime {
                 exist_fact.line_file(),
             )
             .into();
-            let positive_bound_result = self.verify_non_equational_known_then_builtin_rules_only(
-                &positive_bound,
-                verify_state,
-            )?;
+            let positive_bound_result =
+                self.verify_atomic_fact_restricted_known_builtin(&positive_bound, verify_state)?;
             if positive_bound_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -668,7 +658,7 @@ impl Runtime {
             )? {
                 let interval_nonempty: AtomicFact =
                     LessFact::new(left, right, exist_fact.line_file()).into();
-                let interval_result = self.verify_non_equational_known_then_builtin_rules_only(
+                let interval_result = self.verify_atomic_fact_restricted_known_builtin(
                     &interval_nonempty,
                     verify_state,
                 )?;
@@ -696,7 +686,7 @@ impl Runtime {
             )? {
                 let interval_nonempty: AtomicFact =
                     LessFact::new(left, right, exist_fact.line_file()).into();
-                let interval_result = self.verify_non_equational_known_then_builtin_rules_only(
+                let interval_result = self.verify_atomic_fact_restricted_known_builtin(
                     &interval_nonempty,
                     verify_state,
                 )?;
@@ -732,10 +722,8 @@ impl Runtime {
                 } else {
                     GreaterEqualFact::new(gap, one, exist_fact.line_file()).into()
                 };
-                let gap_result = self.verify_non_equational_known_then_builtin_rules_only(
-                    &gap_requirement,
-                    verify_state,
-                )?;
+                let gap_result = self
+                    .verify_atomic_fact_restricted_known_builtin(&gap_requirement, verify_state)?;
                 if gap_result.is_true() {
                     steps.push(gap_result);
                     let rule = if strict {
@@ -886,8 +874,8 @@ impl Runtime {
         ];
         let mut steps = Vec::with_capacity(prerequisites.len());
         for prerequisite in prerequisites {
-            let result = self
-                .verify_non_equational_known_then_builtin_rules_only(&prerequisite, verify_state)?;
+            let result =
+                self.verify_atomic_fact_restricted_known_builtin(&prerequisite, verify_state)?;
             if !result.is_true() {
                 return Ok(None);
             }

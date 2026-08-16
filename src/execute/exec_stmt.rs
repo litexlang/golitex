@@ -271,6 +271,7 @@ impl Runtime {
             Stmt::DefThmStmt(s) => self.exec_def_thm_stmt(s),
             Stmt::DefStrategyStmt(s) => self.exec_def_strategy_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(s)) => self.exec_claim_stmt(s),
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(s)) => self.exec_example_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(s)) => self.exec_sketch_stmt(s),
             Stmt::ProofBlock(ProofBlockStmt::TryStmt(s)) => self.exec_try_stmt(s),
             Stmt::Command(CommandStmt::ImportStmt(_)) => Err(short_exec_error(
@@ -423,7 +424,8 @@ impl Runtime {
             {
                 self.exec_try_stmt(s)
             }
-            Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
+            Stmt::ProofBlock(ProofBlockStmt::ExampleStmt(_))
+            | Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_))
             | Stmt::ProofBlock(ProofBlockStmt::TryStmt(_))
             | Stmt::Command(CommandStmt::EvalStmt(_)) => {
                 Ok(NonFactualStmtSuccess::new_with_stmt(stmt.clone()).into())

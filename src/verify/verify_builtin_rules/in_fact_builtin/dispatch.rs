@@ -110,6 +110,33 @@ impl Runtime {
             )? {
                 return Ok(result);
             }
+
+            if let Obj::AnonymousFn(anonymous_fn) = &in_fact.element {
+                // A well-defined anonymous function belongs to the function
+                // space with the same signature. Example:
+                // `fn(x E) R {f(x)} $in fn(x E) R`.
+                // Keep the pre-existing pointwise route first so successful
+                // certificates and their child evidence remain unchanged.
+                let signature_result = self.verify_in_fact_anonymous_fn_signature_matches_fn_set(
+                    anonymous_fn,
+                    fn_set,
+                    in_fact,
+                )?;
+                if signature_result.is_true() {
+                    return Ok(signature_result);
+                }
+
+                let transported_result = self
+                    .verify_in_fact_anonymous_fn_signature_matches_fn_set_through_equal_sets(
+                        anonymous_fn,
+                        fn_set,
+                        in_fact,
+                        &UseContextVerifyState::new(0, true),
+                    )?;
+                if transported_result.is_true() {
+                    return Ok(transported_result);
+                }
+            }
         }
         if let Obj::GeneralCart(general_cart) = &in_fact.set {
             let result = self.verify_in_fact_in_general_cart_by_defining_facts(
@@ -203,10 +230,17 @@ impl Runtime {
             (&in_fact.element, &in_fact.set),
             (Obj::ImaginaryUnit(_), Obj::StandardSet(StandardSet::C))
         ) {
-            return Ok(number_in_set_verified_by_builtin_rules_result(
-                in_fact,
-                "native imaginary unit is in C",
-            ));
+            return Ok(
+                FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                    in_fact.clone().into(),
+                    "native imaginary unit is in C".to_string(),
+                    BuiltinRuleEvidence::NativeConstantMembership(
+                        NativeConstantMembershipBuiltinRule::ImaginaryUnitInComplex,
+                    ),
+                    Vec::new(),
+                )
+                .into(),
+            );
         }
         // Euler's number and pi are primitive positive real constants.
         // Example: `e $in R+`, `pi $in R`, and therefore both are also in `C`.
@@ -218,6 +252,21 @@ impl Runtime {
                     | Obj::StandardSet(StandardSet::C)
             )
         {
+            if matches!(&in_fact.element, Obj::EulerNumber(_))
+                && matches!(&in_fact.set, Obj::StandardSet(StandardSet::R))
+            {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
+                        in_fact.clone().into(),
+                        "native mathematical constant is a real".to_string(),
+                        BuiltinRuleEvidence::NativeConstantMembership(
+                            NativeConstantMembershipBuiltinRule::EulerNumberInReal,
+                        ),
+                        Vec::new(),
+                    )
+                    .into(),
+                );
+            }
             let reason = match &in_fact.set {
                 Obj::StandardSet(StandardSet::RPos) => {
                     "native mathematical constant is a positive real"

@@ -10,6 +10,22 @@ impl Runtime {
         atomic_fact: &AtomicFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => {
+                self.verify_equal_fact_with_known_forall(equal_fact, verify_state)
+            }
+            _ => {
+                self.verify_non_equational_atomic_fact_with_known_forall(atomic_fact, verify_state)
+            }
+        }
+    }
+
+    pub(crate) fn verify_non_equational_atomic_fact_with_known_forall(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         if self.known_equality_candidate_replay_depth != 0 {
             return Ok((StmtUnknown::new()).into());
         }
@@ -20,11 +36,67 @@ impl Runtime {
 
         known_forall_profile::record_entry();
         if let Some(fact_verified) =
-            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
+            self.verify_atomic_fact_with_known_forall_forward(atomic_fact, verify_state)?
         {
             known_forall_profile::record_success();
             let result = fact_verified.into();
             return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+        }
+
+        known_forall_profile::record_unknown();
+        Ok((StmtUnknown::new()).into())
+    }
+
+    pub(crate) fn verify_equal_fact_with_known_forall(
+        &mut self,
+        equal_fact: &EqualFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        if self.known_equality_candidate_replay_depth != 0 {
+            return Ok((StmtUnknown::new()).into());
+        }
+
+        let atomic_fact: AtomicFact = equal_fact.clone().into();
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&atomic_fact) {
+            return Ok(memoized_result);
+        }
+
+        known_forall_profile::record_entry();
+        if let Some(fact_verified) =
+            self.verify_atomic_fact_with_known_forall_forward(&atomic_fact, verify_state)?
+        {
+            known_forall_profile::record_success();
+            let result = fact_verified.into();
+            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+        }
+
+        let fact_with_reversed_args: AtomicFact = EqualFact::new(
+            equal_fact.right.clone(),
+            equal_fact.left.clone(),
+            equal_fact.line_file.clone(),
+        )
+        .into();
+        if let Some(fact_verified) =
+            self.try_verify_with_known_forall_facts_in_envs(&fact_with_reversed_args, verify_state)?
+        {
+            known_forall_profile::record_success();
+            let result = fact_verified.into();
+            return Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result));
+        }
+
+        known_forall_profile::record_unknown();
+        Ok((StmtUnknown::new()).into())
+    }
+
+    fn verify_atomic_fact_with_known_forall_forward(
+        &mut self,
+        atomic_fact: &AtomicFact,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<Option<FactualStmtSuccess>, RuntimeError> {
+        if let Some(fact_verified) =
+            self.try_verify_with_known_forall_facts_in_envs(atomic_fact, verify_state)?
+        {
+            return Ok(Some(fact_verified));
         }
 
         if let Some(resolved_fact) = self.resolved_atomic_fact_for_lookup(atomic_fact) {
@@ -32,34 +104,11 @@ impl Runtime {
                 self.try_verify_with_known_forall_facts_in_envs(&resolved_fact, verify_state)?
             {
                 fact_verified.stmt = atomic_fact.clone().into();
-                known_forall_profile::record_success();
-                let result = fact_verified.into();
-                return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
+                return Ok(Some(fact_verified));
             }
         }
 
-        if let AtomicFact::EqualFact(equal_fact) = atomic_fact {
-            let fact_with_reversed_args = EqualFact::new(
-                equal_fact.right.clone(),
-                equal_fact.left.clone(),
-                equal_fact.line_file.clone(),
-            );
-            let fact_with_reversed_args: AtomicFact = fact_with_reversed_args.into();
-            if let Some(fact_verified) = self.try_verify_with_known_forall_facts_in_envs(
-                &fact_with_reversed_args,
-                verify_state,
-            )? {
-                known_forall_profile::record_success();
-                let result = fact_verified.into();
-                return Ok(self.remember_successful_atomic_fact_for_statement(atomic_fact, result));
-            }
-
-            known_forall_profile::record_unknown();
-            return Ok((StmtUnknown::new()).into());
-        }
-
-        known_forall_profile::record_unknown();
-        Ok((StmtUnknown::new()).into())
+        Ok(None)
     }
 
     fn get_matched_atomic_fact_in_fallback_known_forall_fact_in_envs(

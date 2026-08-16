@@ -248,7 +248,7 @@ impl Runtime {
                     ParamObjType::FnSet,
                 )?;
             for param_membership_fact in param_membership_facts.iter() {
-                let result = self.verify_atomic_fact_by_known_atomic_or_builtin_only(
+                let result = self.verify_atomic_fact_restricted_known_builtin(
                     param_membership_fact,
                     verify_state,
                 )?;
@@ -263,7 +263,7 @@ impl Runtime {
                     ParamObjType::FnSet,
                     None,
                 )?;
-                let result = self.verify_quantifier_free_fact_by_known_atomic_or_builtin_only(
+                let result = self.verify_quantifier_free_fact_restricted_known_builtin(
                     &instantiated_dom_fact,
                     verify_state,
                 )?;
@@ -808,6 +808,42 @@ impl Runtime {
             }
         }
         None
+    }
+
+    pub(crate) fn known_object_definitions_for_objects(
+        &self,
+        objects: &[&Obj],
+    ) -> Vec<KnownObjectDefinition> {
+        let mut environments = self.iter_environments_from_top().collect::<Vec<_>>();
+        let mut module_names = Vec::new();
+        for object in objects {
+            for module_name in self.obj_referenced_module_names(object) {
+                if !module_names.contains(&module_name) {
+                    module_names.push(module_name);
+                }
+            }
+        }
+        for module_name in module_names {
+            environments.extend(self.imported_module_environments(&module_name));
+        }
+
+        let mut seen = HashSet::new();
+        let mut definitions = Vec::new();
+        for environment in environments {
+            for (key, definition) in environment.known_object_definitions.iter() {
+                if seen.insert(key.clone()) {
+                    definitions.push(definition.clone());
+                }
+            }
+        }
+        definitions.sort_by(|left, right| {
+            left.equality
+                .line_file
+                .0
+                .cmp(&right.equality.line_file.0)
+                .then_with(|| left.defined.to_string().cmp(&right.defined.to_string()))
+        });
+        definitions
     }
 
     pub fn get_all_objs_equal_to_given(&self, given: &str) -> Vec<String> {

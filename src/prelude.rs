@@ -17,6 +17,7 @@ pub use crate::environment::{
     atomic_fact_in_forall_arg_shape_key, AtomicFactInForallArgShapeIndex,
     AtomicFactInForallArgShapeKey, CachedKnownFact, Environment, KnownEquality,
     KnownEqualityProofStep, KnownFnInfo, KnownForallFactParamsAndDom, KnownObjValue,
+    KnownObjectDefinition,
 };
 pub use crate::error::exec_stmt_error_with_stmt_and_cause;
 pub use crate::error::short_exec_error;
@@ -112,28 +113,32 @@ pub use crate::litex_to_lean_ir::{
     LitexToLeanArithmeticBuiltinRuleIr, LitexToLeanBuiltinObjectOperatorIr,
     LitexToLeanBuiltinRuleIr, LitexToLeanByCasesStmtIr, LitexToLeanByContraStmtIr,
     LitexToLeanByDefStmtIr, LitexToLeanByStmtIr, LitexToLeanCaseBranchExitIr,
-    LitexToLeanCaseBranchIr, LitexToLeanCollectionObjectIr, LitexToLeanCommandStmtIr,
-    LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr, LitexToLeanConstantObjectIr,
-    LitexToLeanContradictionIr, LitexToLeanDefAbstractPropStmtIr, LitexToLeanDefInterfaceStmtIr,
-    LitexToLeanDefObjStmtIr, LitexToLeanDefPredicateStmtIr, LitexToLeanDefPropStmtIr,
-    LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr, LitexToLeanDivNotEqualZeroIr,
+    LitexToLeanCaseBranchIr, LitexToLeanClaimStmtIr, LitexToLeanCollectionObjectIr,
+    LitexToLeanCommandStmtIr, LitexToLeanComplexArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanConstantObjectIr, LitexToLeanContradictionIr, LitexToLeanDefAbstractPropStmtIr,
+    LitexToLeanDefInterfaceStmtIr, LitexToLeanDefObjStmtIr, LitexToLeanDefPredicateStmtIr,
+    LitexToLeanDefPropStmtIr, LitexToLeanDefThmStmtIr, LitexToLeanDefThmStmtProofStepIr,
+    LitexToLeanDivNotEqualZeroIr, LitexToLeanDoNothingStmtIr,
     LitexToLeanEqualityRewriteDirectionIr, LitexToLeanEqualityRewriteIr,
-    LitexToLeanEqualityRewriteStepIr, LitexToLeanExistentialProjectionRoleIr,
-    LitexToLeanExistentialWitnessIr, LitexToLeanFactIr, LitexToLeanFactProofIr,
-    LitexToLeanFactStatementIr, LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr,
-    LitexToLeanFunctionTypeIr, LitexToLeanHaveFnEqualStmtIr, LitexToLeanHaveObjByExistFactsStmtIr,
-    LitexToLeanHaveObjEqualStmtIr, LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr,
-    LitexToLeanHaveTupleStmtIr, LitexToLeanIffDirectionIr,
-    LitexToLeanIntegerMembershipClosureBuiltinRuleIr, LitexToLeanKnownEqualityPathIr,
-    LitexToLeanKnownEqualityStepIr, LitexToLeanKnownForallArgumentIr, LitexToLeanLocalPremiseIr,
+    LitexToLeanEqualityRewriteStepIr, LitexToLeanExampleStmtIr,
+    LitexToLeanExistentialProjectionRoleIr, LitexToLeanExistentialWitnessIr, LitexToLeanFactIr,
+    LitexToLeanFactProofIr, LitexToLeanFactStatementIr, LitexToLeanFunctionApplicationIr,
+    LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr, LitexToLeanHaveFnEqualStmtIr,
+    LitexToLeanHaveObjByExistFactsStmtIr, LitexToLeanHaveObjEqualStmtIr,
+    LitexToLeanHaveObjInNonemptySetOrParamTypeStmtIr, LitexToLeanHaveTupleStmtIr,
+    LitexToLeanIffDirectionIr, LitexToLeanIntegerMembershipClosureBuiltinRuleIr,
+    LitexToLeanKnownEqualityPathIr, LitexToLeanKnownEqualityStepIr,
+    LitexToLeanKnownForallArgumentIr, LitexToLeanLetObjStmtIr, LitexToLeanLocalPremiseIr,
+    LitexToLeanLocalProofBlockIr, LitexToLeanNativeConstantMembershipBuiltinRuleIr,
     LitexToLeanNonzeroExpressionOrientationIr, LitexToLeanNormalizationKindIr,
     LitexToLeanObjectChoiceIr, LitexToLeanObjectDefinitionIr, LitexToLeanObjectIr,
     LitexToLeanObtainObjFromAtomicFactIr, LitexToLeanObtainObjFromExistFactIr,
     LitexToLeanParameterGroupIr, LitexToLeanParameterTypeIr, LitexToLeanProofBlockStmtIr,
     LitexToLeanProofRuleIr, LitexToLeanRealArithmeticMembershipClosureBuiltinRuleIr,
+    LitexToLeanReverseAssumptionIntroductionIr, LitexToLeanReverseAssumptionIr,
     LitexToLeanSetBuilderIr, LitexToLeanSetBuiltinRuleIr,
-    LitexToLeanSetRelationDualityBuiltinRuleIr, LitexToLeanStandardSetIr, LitexToLeanStatementIr,
-    LitexToLeanStoredFunctionFactIr, LitexToLeanStoredTupleFactIr,
+    LitexToLeanSetRelationDualityBuiltinRuleIr, LitexToLeanSketchStmtIr, LitexToLeanStandardSetIr,
+    LitexToLeanStatementIr, LitexToLeanStoredFunctionFactIr, LitexToLeanStoredTupleFactIr,
     LitexToLeanStoredTupleFactRoleIr, LitexToLeanTrustStmtIr, LitexToLeanUnsafeStmtIr,
     LitexToLeanWellDefinednessBinderPremiseIr, LitexToLeanWellDefinednessBinderScopeIr,
     LitexToLeanWellDefinednessCertificateIr, LitexToLeanWellDefinednessFactIr,
@@ -339,6 +344,7 @@ pub use crate::result::ForallProvedFactResult;
 pub use crate::result::FunctionDefinitionVerificationResult;
 pub use crate::result::KnownForallInstantiationResult;
 pub use crate::result::KnownForallRequirementResult;
+pub use crate::result::LocalProofScopeVerificationResult;
 pub use crate::result::NonFactualStmtSuccess;
 pub use crate::result::NonzeroExpressionOrientation;
 pub use crate::result::NotForallUnknown;
@@ -364,13 +370,15 @@ pub use crate::result::WitnessStmtResult;
 pub use crate::result::{
     AbsoluteValueBuiltinRule, ArithmeticBuiltinRule, BuiltinRuleEvidence,
     ClosedNumericComparisonBuiltinRuleEvidence, ComplexArithmeticMembershipClosureBuiltinRule,
+    DisjunctionIntroductionBuiltinRuleEvidence,
     FunctionApplicationReturnMembershipBuiltinRuleEvidence,
     FunctionSetMembershipBuiltinRuleEvidence, IntegerMembershipClosureBuiltinRule,
     KnownEqualityBuiltinRuleEvidence, KnownEqualityBuiltinRuleStep,
-    RealArithmeticMembershipClosureBuiltinRule, RefinedNumericMembershipBuiltinRuleEvidence,
-    RegisteredLocalBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence, SetBuiltinRule,
-    SetRelationDualityBuiltinRule, WellDefinednessBinderScopeEvidence, WellDefinednessCertificate,
-    WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
+    NativeConstantMembershipBuiltinRule, RealArithmeticMembershipClosureBuiltinRule,
+    RefinedNumericMembershipBuiltinRuleEvidence, RegisteredLocalBuiltinRuleEvidence,
+    ResolvedAtomicFactComputationBuiltinRuleEvidence, SetBuilderMembershipBuiltinRuleEvidence,
+    SetBuiltinRule, SetRelationDualityBuiltinRule, WellDefinednessBinderScopeEvidence,
+    WellDefinednessCertificate, WellDefinednessFactEvidence, WellDefinednessObjectEvidence,
     WellDefinednessParameterFactEvidence, WellDefinednessRequirementRole,
     WellDefinednessRootObjectProofUse, WellDefinednessSourceObjectUse,
     WellDefinednessTargetRequirementEvidence,
@@ -449,6 +457,7 @@ pub use crate::stmt::definition_stmt::ObtainObjFromThm;
 pub use crate::stmt::definition_stmt::TemplateDefEnum;
 pub use crate::stmt::definition_stmt::TrustHaveStmt;
 pub use crate::stmt::eval_stmt::EvalStmt;
+pub use crate::stmt::example_stmt::ExampleStmt;
 pub use crate::stmt::parameter_def::FiniteSet;
 pub use crate::stmt::parameter_def::NonemptySet;
 pub use crate::stmt::parameter_def::ParamDefWithSet;
@@ -565,6 +574,7 @@ pub use crate::common::keywords::ENUMERATE;
 pub use crate::common::keywords::EQUAL;
 pub use crate::common::keywords::EQUIVALENT_SIGN;
 pub use crate::common::keywords::EVAL;
+pub use crate::common::keywords::EXAMPLE;
 pub use crate::common::keywords::EXIST;
 pub use crate::common::keywords::EXIST_BANG;
 pub use crate::common::keywords::EXP;

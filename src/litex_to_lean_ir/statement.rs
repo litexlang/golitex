@@ -1,4 +1,5 @@
 use super::*;
+use crate::common::defaults::LineFile;
 
 /// Compiler IR mirrors the source `Stmt` tree exactly. Unsupported source
 /// payloads keep their source names and remain unconstructible.
@@ -15,7 +16,6 @@ unsupported_statement_irs!(
     LitexToLeanDefAlgoStmtIr,
     LitexToLeanDefStrategyStmtIr,
     LitexToLeanTrustHaveStmtIr,
-    LitexToLeanLetObjStmtIr,
     LitexToLeanObtainObjFromThmIr,
     LitexToLeanHaveByPreimageStmtIr,
     LitexToLeanHaveFnEqualCaseByCaseStmtIr,
@@ -44,11 +44,8 @@ unsupported_statement_irs!(
     LitexToLeanByRegularityAxiomStmtIr,
     LitexToLeanByThmStmtIr,
     LitexToLeanWitnessNonemptySetIr,
-    LitexToLeanClaimStmtIr,
-    LitexToLeanSketchStmtIr,
     LitexToLeanTryStmtIr,
     LitexToLeanImportStmtIr,
-    LitexToLeanDoNothingStmtIr,
     LitexToLeanClearStmtIr,
     LitexToLeanEvalStmtIr,
     LitexToLeanUseStrategyStmtIr,
@@ -143,6 +140,7 @@ pub enum LitexToLeanWitnessStmtIr {
 #[derive(Clone, Debug)]
 pub enum LitexToLeanProofBlockStmtIr {
     ClaimStmt(LitexToLeanClaimStmtIr),
+    ExampleStmt(LitexToLeanExampleStmtIr),
     SketchStmt(LitexToLeanSketchStmtIr),
     TryStmt(LitexToLeanTryStmtIr),
 }
@@ -174,6 +172,40 @@ pub struct LitexToLeanDefPropStmtIr {
 pub struct LitexToLeanHaveObjEqualStmtIr {
     pub definitions: Vec<LitexToLeanObjectDefinitionIr>,
     pub facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanLetObjStmtIr {
+    pub line_file: LineFile,
+    pub symbol_id: SymbolId,
+    pub name: String,
+    pub value: LitexToLeanObjectIr,
+    pub defining_equality: LitexToLeanFactIr,
+    pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+impl LitexToLeanLetObjStmtIr {
+    pub fn new(
+        line_file: LineFile,
+        symbol_id: SymbolId,
+        name: String,
+        value: LitexToLeanObjectIr,
+        defining_equality: LitexToLeanFactIr,
+        inferred_facts: Vec<LitexToLeanFactIr>,
+        well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    ) -> Self {
+        Self {
+            line_file,
+            symbol_id,
+            name,
+            value,
+            defining_equality,
+            inferred_facts,
+            well_definedness,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -259,30 +291,133 @@ pub struct LitexToLeanHaveObjByExistFactsStmtIr {
 pub struct LitexToLeanWitnessExistFactIr {
     pub facts: Vec<LitexToLeanFactIr>,
     pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanWitnessAtomicFactIr {
     pub facts: Vec<LitexToLeanFactIr>,
     pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanLocalFactAliasIr {
+    pub local_fact_id: FactId,
+    pub parent_fact_id: FactId,
+    pub expected_fact: Fact,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanLocalProofBlockIr {
+    pub premise_aliases: Vec<LitexToLeanLocalFactAliasIr>,
+    pub assumption_inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    pub steps: Vec<LitexToLeanStatementIr>,
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanClaimStmtIr {
+    pub line_file: LineFile,
+    pub target: LitexToLeanFactIr,
+    pub block: LitexToLeanLocalProofBlockIr,
+    pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+impl LitexToLeanClaimStmtIr {
+    pub fn new(
+        line_file: LineFile,
+        target: LitexToLeanFactIr,
+        block: LitexToLeanLocalProofBlockIr,
+        inferred_facts: Vec<LitexToLeanFactIr>,
+        well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    ) -> Self {
+        Self {
+            line_file,
+            target,
+            block,
+            inferred_facts,
+            well_definedness,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanExampleStmtIr {
+    pub line_file: LineFile,
+    pub target: LitexToLeanFactIr,
+    pub block: LitexToLeanLocalProofBlockIr,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+impl LitexToLeanExampleStmtIr {
+    pub fn new(
+        line_file: LineFile,
+        target: LitexToLeanFactIr,
+        block: LitexToLeanLocalProofBlockIr,
+        well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    ) -> Self {
+        Self {
+            line_file,
+            target,
+            block,
+            well_definedness,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanSketchStmtIr {
+    pub line_file: LineFile,
+    pub block: LitexToLeanLocalProofBlockIr,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
+}
+
+impl LitexToLeanSketchStmtIr {
+    pub fn new(
+        line_file: LineFile,
+        block: LitexToLeanLocalProofBlockIr,
+        well_definedness: LitexToLeanWellDefinednessCertificateIr,
+    ) -> Self {
+        Self {
+            line_file,
+            block,
+            well_definedness,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub struct LitexToLeanDoNothingStmtIr {
+    pub line_file: LineFile,
+}
+
+impl LitexToLeanDoNothingStmtIr {
+    pub fn new(line_file: LineFile) -> Self {
+        Self { line_file }
+    }
 }
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanByCasesStmtIr {
     pub facts: Vec<LitexToLeanFactIr>,
     pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanByContraStmtIr {
     pub facts: Vec<LitexToLeanFactIr>,
     pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }
 
 #[derive(Clone, Debug)]
 pub struct LitexToLeanByDefStmtIr {
     pub facts: Vec<LitexToLeanFactIr>,
     pub inferred_facts: Vec<LitexToLeanFactIr>,
+    pub well_definedness: LitexToLeanWellDefinednessCertificateIr,
 }
 
 #[derive(Clone, Debug)]

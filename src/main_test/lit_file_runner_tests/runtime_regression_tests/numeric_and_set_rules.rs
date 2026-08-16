@@ -1,6 +1,88 @@
 use super::*;
 
 #[test]
+fn builtin_computation_unfolds_explicit_object_definitions_with_provenance() {
+    let source = r#"
+have one Z = 1
+have integer_set set = Z
+
+one + 1 $in integer_set
+"#;
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "builtin_computation_unfolds_explicit_object_definitions_with_provenance",
+    );
+    let (results, error) = run_source_code(source, &mut runtime);
+    let (succeeded, output) = render_run_source_code_output(&runtime, &results, &error, false);
+    assert!(
+        succeeded,
+        "explicit values should close the builtin membership computation:\n{output}"
+    );
+
+    let success = results
+        .last()
+        .and_then(StmtResult::factual_success)
+        .expect("the resolved membership should retain a factual success");
+    assert_eq!(
+        strip_parsing_free_param_tags_for_user_display(&success.stmt.to_string()),
+        "one + 1 $in integer_set"
+    );
+    let VerifiedByResult::BuiltinRule(rule) = success.underlying_verified_by() else {
+        panic!("the original goal should retain the resolved computation rule: {success:?}");
+    };
+    let Some(BuiltinRuleEvidence::ResolvedAtomicFactComputation(evidence)) = &rule.evidence else {
+        panic!("the resolved computation should retain typed evidence: {rule:?}");
+    };
+    assert_eq!(
+        strip_parsing_free_param_tags_for_user_display(&evidence.expected_target.to_string()),
+        "one + 1 $in integer_set"
+    );
+    assert_eq!(evidence.resolved_target.to_string(), "2 $in Z");
+    assert_eq!(evidence.fact_transformation.source.to_string(), "2 $in Z");
+    assert_eq!(evidence.fact_transformation.steps.len(), 2);
+    let FactTransformationRule::EqualityRewrite(equality_transport) =
+        &evidence.fact_transformation.steps[1].rule
+    else {
+        panic!("the final transformation should rewrite definitions");
+    };
+    assert_eq!(equality_transport.steps.len(), 2);
+    assert!(
+        equality_transport
+            .steps
+            .iter()
+            .all(|step| step.equality_fact_id.is_some()),
+        "each definition rewrite must cite its stored equality FactId"
+    );
+    assert_eq!(rule.subgoals.len(), 1);
+    assert_eq!(
+        rule.subgoals[0]
+            .factual_success()
+            .expect("the rule should retain its closed computation")
+            .stmt
+            .to_string(),
+        "2 $in Z"
+    );
+
+    let boundary = r#"
+have one Z = 1
+have unknown_set set
+
+one + 1 $in unknown_set
+"#;
+    let mut boundary_runtime = Runtime::new();
+    boundary_runtime.new_file_path_new_env_new_name_scope(
+        "builtin_computation_does_not_invent_unknown_set_value",
+    );
+    let (boundary_results, boundary_error) = run_source_code(boundary, &mut boundary_runtime);
+    let (boundary_succeeded, boundary_output) =
+        render_run_source_code_output(&boundary_runtime, &boundary_results, &boundary_error, false);
+    assert!(
+        !boundary_succeeded,
+        "a symbol without an explicit value must remain unknown:\n{boundary_output}"
+    );
+}
+
+#[test]
 fn standard_set_membership_lifting_is_target_driven_and_forward_only() {
     let source_code = r#"
 forall x, y N:

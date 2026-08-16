@@ -150,6 +150,12 @@ impl From<ClaimStmt> for Stmt {
     }
 }
 
+impl From<ExampleStmt> for Stmt {
+    fn from(v: ExampleStmt) -> Self {
+        ProofBlockStmt::ExampleStmt(v).into()
+    }
+}
+
 impl From<TrustStmt> for Stmt {
     fn from(v: TrustStmt) -> Self {
         UnsafeStmt::TrustStmt(v).into()

@@ -385,8 +385,7 @@ impl Runtime {
         let target_obj: Obj = target.clone().into();
         let subset: AtomicFact =
             SubsetFact::new(set.clone(), target_obj.clone(), lf.clone()).into();
-        let direct =
-            self.verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&subset)?;
+        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&subset)?;
         if direct.is_true() {
             return Ok(Some(vec![direct]));
         }
@@ -398,10 +397,8 @@ impl Runtime {
                     let child: AtomicFact =
                         InFact::new(element.as_ref().clone(), target_obj.clone(), lf.clone())
                             .into();
-                    let direct = self
-                        .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                            &child,
-                        )?;
+                    let direct =
+                        self.verify_non_equational_atomic_fact_with_direct_routes(&child)?;
                     let result = if direct.is_true() {
                         direct
                     } else {

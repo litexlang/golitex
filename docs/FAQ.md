@@ -1068,6 +1068,20 @@ direct `FactId` citation before considering specialized builtin existential
 routes. This keeps the compiler's source provenance stable; it does not widen
 ordinary existential proof search.
 
+## Does builtin computation replace every symbol by an equal object?
+
+No. It may unfold a symbol introduced by a checked definition such as
+`have one Z = 1`, because that statement explicitly records both the value and
+its defining equality. It does not choose an arbitrary representative from an
+ordinary equality class.
+
+For example, after also writing `have integer_set set = Z`, the fact
+`one + 1 $in integer_set` can be checked by computing the resolved fact and
+then rewriting the proof back through the two stored definition equalities.
+The result remains a proof of the source fact, and Litex-to-Lean cites those
+exact equality `FactId`s. By contrast, `have unknown_set set` provides no value,
+so `one + 1 $in unknown_set` remains `unknown`.
+
 ## Why does Litex distinguish `true`, `unknown`, and `error`?
 
 The three statuses separate three different situations that are easy to

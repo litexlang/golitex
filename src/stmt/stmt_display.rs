@@ -117,6 +117,7 @@ impl fmt::Display for ProofBlockStmt {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
         match self {
             ProofBlockStmt::ClaimStmt(x) => write!(f, "{}", x),
+            ProofBlockStmt::ExampleStmt(x) => write!(f, "{}", x),
             ProofBlockStmt::SketchStmt(x) => write!(f, "{}", x),
             ProofBlockStmt::TryStmt(x) => write!(f, "{}", x),
         }

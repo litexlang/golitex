@@ -110,8 +110,7 @@ impl Runtime {
         fact: &IsFiniteSetFact,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&atomic_fact)?;
+        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&atomic_fact)?;
         if direct.is_true() {
             return Ok(direct);
         }
@@ -301,8 +300,7 @@ impl Runtime {
         fact: &IsNonemptySetFact,
     ) -> Result<StmtResult, RuntimeError> {
         let atomic_fact: AtomicFact = fact.clone().into();
-        let direct = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(&atomic_fact)?;
+        let direct = self.verify_non_equational_atomic_fact_with_direct_routes(&atomic_fact)?;
         if direct.is_true() {
             return Ok(direct);
         }

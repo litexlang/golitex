@@ -5,24 +5,58 @@ impl Runtime {
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
-        let direct = self
-            .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(atomic_fact)?;
-        if direct.is_true() {
-            return Ok(direct);
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => {
+                let direct = self.verify_equal_fact_with_direct_routes(equal_fact)?;
+                if direct.is_true() {
+                    return Ok(direct);
+                }
+                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact)
+            }
+            _ => {
+                let direct =
+                    self.verify_non_equational_atomic_fact_with_direct_routes(atomic_fact)?;
+                if direct.is_true() {
+                    return Ok(direct);
+                }
+                self.verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact)
+            }
         }
-        self.verify_atomic_fact_with_builtin_strategy(atomic_fact)
     }
 
     pub(crate) fn verify_atomic_fact_with_builtin_strategy(
         &mut self,
         atomic_fact: &AtomicFact,
     ) -> Result<StmtResult, RuntimeError> {
+        match atomic_fact {
+            AtomicFact::EqualFact(equal_fact) => {
+                self.verify_equal_fact_with_builtin_strategy_routes(equal_fact)
+            }
+            _ => self.verify_non_equational_atomic_fact_with_builtin_strategy(atomic_fact),
+        }
+    }
+
+    fn verify_equal_fact_with_builtin_strategy_routes(
+        &mut self,
+        equal_fact: &EqualFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        let atomic_fact: AtomicFact = equal_fact.clone().into();
+        if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(&atomic_fact) {
+            return Ok(memoized_result);
+        }
+        let result = self.verify_equality_with_builtin_strategy(equal_fact)?;
+        Ok(self.remember_successful_atomic_fact_for_statement(&atomic_fact, result))
+    }
+
+    fn verify_non_equational_atomic_fact_with_builtin_strategy(
+        &mut self,
+        atomic_fact: &AtomicFact,
+    ) -> Result<StmtResult, RuntimeError> {
+        debug_assert!(!matches!(atomic_fact, AtomicFact::EqualFact(_)));
         if let Some(memoized_result) = self.verify_atomic_fact_from_statement_memo(atomic_fact) {
             return Ok(memoized_result);
         }
-
         let result = match atomic_fact {
-            AtomicFact::EqualFact(fact) => self.verify_equality_with_builtin_strategy(fact),
             AtomicFact::InFact(fact) => {
                 let numeric = self.verify_numeric_carrier_with_builtin_strategy(fact)?;
                 if numeric.is_true() {
@@ -55,6 +89,9 @@ impl Runtime {
             | AtomicFact::LessEqualFact(_)
             | AtomicFact::GreaterEqualFact(_) => {
                 self.verify_additive_sign_with_builtin_strategy(atomic_fact)
+            }
+            AtomicFact::EqualFact(_) => {
+                unreachable!("equality has an owner-specific builtin strategy route")
             }
             _ => Ok(StmtUnknown::new().into()),
         }?;

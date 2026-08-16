@@ -8,7 +8,7 @@ const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
 fn actual_generated_lean_snapshots_match_current_compiler() {
     run_with_large_stack(|| {
         let (examples, snapshots) = ledger_examples_and_snapshots();
-        assert_eq!(examples.len(), 22, "the feature ledger changed shape");
+        assert_eq!(examples.len(), 24, "the feature ledger changed shape");
         assert_eq!(
             snapshots.len(),
             examples.len(),

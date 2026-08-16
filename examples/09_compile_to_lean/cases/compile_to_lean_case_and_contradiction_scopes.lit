@@ -1,10 +1,40 @@
-# Before: CaseSplit and ByContradiction retained local FactIds, but the Lean
-# emitter had no branch-local scope.
-# Now: exact case and reverse-assumption binders are emitted locally.
+# Tracer: branch-local proof statements in compiled cases and contradiction.
+#
+# Before (verified by Litex, rejected by the Lean emitter):
+# by cases:
+#     ? 1 = 1
+#     case 1 = 1:
+#         2 = 2
+# by contra:
+#     ? 2 = 2
+#     1 = 1
+#     impossible 2 != 2
+# Former compiler behavior: nonempty proof bodies failed with
+# `case-branch proof statements are not yet emitted` or
+# `by-contradiction proof statements are not yet emitted`.
+#
+# Now: both local facts remain inside their owning Lean proof scopes.
 by cases:
     ? 1 = 1
-    case 1 = 1
+    case 1 = 1:
+        2 = 2
 by contra:
     ? 2 = 2
+    1 = 1
     impossible 2 != 2
-# Boundary: moving a local assumption into another coverage slot fails.
+by cases:
+    ? 4 = 4
+    case 3 = 3 and 4 = 4:
+        3 = 3
+by contra:
+    ? 5 != 6
+    impossible 5 = 6
+# Current behavior: Litex verifies all proof bodies; compile-to-Lean replays
+# local `have`s, conjunction projections, and the classical double-negation
+# bridge for a negative target inside the owning proof scope.
+#
+# Boundary: moving a local assumption into another coverage slot fails, and
+# branch-local object/function declarations remain fail-closed until they have
+# an explicit Lean-local lowering.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit
+# Compiler test: cargo test --release case_and_contradiction_scopes_replay_local_fact_ids -- --nocapture

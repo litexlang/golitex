@@ -12,10 +12,8 @@ impl Runtime {
             return Ok(StmtUnknown::new().into());
         };
         if normalized.to_string() != atomic_fact.to_string() {
-            let normalized_result = self
-                .verify_atomic_fact_with_known_non_forall_facts_then_with_builtin_rules(
-                    &normalized,
-                )?;
+            let normalized_result =
+                self.verify_non_equational_atomic_fact_with_direct_routes(&normalized)?;
             if normalized_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_strategy_recording_stmt(

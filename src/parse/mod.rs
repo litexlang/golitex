@@ -7,6 +7,7 @@ mod by_stmt;
 mod parse_claim_stmt;
 mod parse_def_stmt;
 mod parse_eval_stmt;
+mod parse_example_stmt;
 mod parse_fact;
 mod parse_helpers;
 mod parse_obj;

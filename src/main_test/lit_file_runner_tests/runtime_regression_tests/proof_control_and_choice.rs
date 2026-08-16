@@ -1,6 +1,67 @@
 use super::*;
 
 #[test]
+fn example_stmt_is_checked_and_does_not_export_its_goal() {
+    let source_code = r#"
+have example_value R
+example:
+    ? example_value = 1
+    trust:
+        example_value = 1
+example_value = 1
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "example_stmt_is_checked_and_does_not_export_its_goal",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(
+        !run_succeeded,
+        "an example target must not leak into the outer environment:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("\"type\": \"verified example\""),
+        "example should retain its distinct public result kind:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains("example:\\n"),
+        "example output should use the canonical `example:` spelling:\n{}",
+        run_output
+    );
+}
+
+#[test]
+fn example_stmt_accepts_a_checked_goal_without_exporting_bindings() {
+    let source_code = r#"
+example:
+    ? forall local_value R:
+        local_value = local_value
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "example_stmt_accepts_a_checked_goal_without_exporting_bindings",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+
+    assert!(run_succeeded, "{run_output}");
+    assert_eq!(stmt_results.len(), 1, "{run_output}");
+    let success = stmt_results[0]
+        .non_factual_success()
+        .expect("example should be a non-factual success");
+    assert!(success.infers.store_fact_outputs.is_empty(), "{run_output}");
+    assert!(success.claim_verification.is_some(), "{run_output}");
+}
+
+#[test]
 fn sketch_stmt_is_checked_and_local() {
     let source_code = r#"
 sketch:
@@ -1390,7 +1451,42 @@ forall I power_set(R), f, g fn(x I) R:
                 "anonymous quotient lambda should inherit nonzero-on facts:\n{}",
                 run_output
             );
+            assert!(
+                run_output.contains(
+                    "fn membership: same input domain and pointwise values lie in the target return set"
+                ),
+                "moving anonymous membership into the InFact owner must preserve its existing certificate:\n{}",
+                run_output
+            );
         },
+    );
+}
+
+#[test]
+fn anonymous_function_alpha_equivalent_signature_uses_membership_builtin() {
+    let source_code = r#"
+forall E set:
+    fn(y E) R {0} $in fn(x E) R
+"#;
+
+    let mut runtime = Runtime::new();
+    runtime.new_file_path_new_env_new_name_scope(
+        "anonymous_function_alpha_equivalent_signature_uses_membership_builtin",
+    );
+    let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
+    let (run_succeeded, run_output) =
+        render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
+    assert!(
+        run_succeeded,
+        "alpha-equivalent anonymous signature membership failed:\n{}",
+        run_output
+    );
+    assert!(
+        run_output.contains(
+            "fn membership: same input domain and pointwise values lie in the target return set"
+        ),
+        "alpha-equivalent anonymous membership should preserve its pointwise certificate:\n{}",
+        run_output
     );
 }
 
