@@ -1,46 +1,30 @@
-have fn f(x R: x >= 0) R = 0
-
-forall y R:
-    y >= 0
-    =>:
-        f(y) = 0
-        f(y) $in {0}
-
-f $in fn(x R: x >= 0) {0}
-
-# To-Lean owner-local construction scope examples.
-have PositiveReciprocals set = {x R: x != 0, 1 / x > 0}
-
-have BoundedPositiveReciprocals set = {x R: x != 0, 1 / x > 0, 1 / x < 2}
-
-fn(x R) R {x + 1} = fn(y R) R {y + 1}
-
-fn(x R: x != 0) R {1 / x} = fn(y R: y != 0) R {1 / y}
-
-forall a R:
-    fn(x R) R {x + 1}(a) = fn(x R) R {x + 1}(a)
-
-# To-Lean aggregate/set-family construction tracer.
+# Set-family constructors keep only mathematical values in the Lean term.
 forall F set:
     big_union(F) = big_union(F)
 forall F set:
     big_intersect(F) = big_intersect(F)
 power_set(R) = power_set(R)
 
+# The family function and its selected function layer remain verifier-owned.
 forall I set, S nonempty_set, g fn(i1 I) S:
     general_cart(I, S, g) = general_cart(I, S, g)
 
+# Half-open and closed integer ranges are distinct object constructors.
 range(1, 4) = range(1, 4)
 closed_range(1, 4) = closed_range(1, 4)
 
+# Indexed folds replay anonymous-function WD under their function binders.
 sum(1, 3, fn(k Z) Z {k}) = sum(1, 3, fn(k Z) Z {k})
 product(1, 3, fn(k Z) Z {k}) = product(1, 3, fn(k Z) Z {k})
 reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
 
+# Finite-set folds have two/four value slots; closed-range fold checks are
+# separate verification dependencies and never become extra constructor args.
 finite_set_sum(1...3, fn(k Z) Z {k}) = finite_set_sum(1...3, fn(k Z) Z {k})
 finite_set_product(1...3, fn(k Z) Z {k}) = finite_set_product(1...3, fn(k Z) Z {k})
 finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
 
+# Literal objects and sequence carriers retain their exact source family.
 (1, 2, 3) = (1, 2, 3)
 [1, 2, 3] = [1, 2, 3]
 finite_seq(Z, 3) = finite_seq(Z, 3)

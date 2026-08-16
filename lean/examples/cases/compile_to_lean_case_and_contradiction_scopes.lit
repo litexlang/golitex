@@ -36,5 +36,5 @@ by contra:
 # Boundary: moving a local assumption into another coverage slot fails, and
 # branch-local object/function declarations remain fail-closed until they have
 # an explicit Lean-local lowering.
-# Evidence: target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit
+# Evidence: target/release/litex -compact -isolated -runner -f lean/examples/cases/compile_to_lean_case_and_contradiction_scopes.lit
 # Compiler test: cargo test --release case_and_contradiction_scopes_replay_local_fact_ids -- --nocapture

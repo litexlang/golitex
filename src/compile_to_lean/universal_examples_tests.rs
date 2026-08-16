@@ -4,10 +4,9 @@ use super::ledger::parse_litex_ledger_examples;
 use std::fs;
 use std::path::Path;
 
-const LEDGER: &str = "examples/09_compile_to_lean/compile_to_lean_examples.md";
+const LEDGER: &str = "lean/examples/compile_to_lean_examples.md";
 const SHOWCASE: &str = "examples/_internal/compile_to_lean/showcase.lit";
-const SHARED_BUILTIN_TRACER: &str =
-    "examples/09_compile_to_lean/cases/compile_to_lean_shared_builtin_rules.lit";
+const SHARED_BUILTIN_TRACER: &str = "lean/examples/cases/compile_to_lean_shared_builtin_rules.lit";
 
 #[test]
 fn universal_examples_compile_to_the_new_abi() {
@@ -15,7 +14,7 @@ fn universal_examples_compile_to_the_new_abi() {
         let examples = ledger_examples();
         assert_eq!(
             examples.len(),
-            24,
+            25,
             "the append-only feature ledger changed shape"
         );
         for (label, source) in examples {
@@ -418,7 +417,8 @@ fn assert_new_abi(label: &str, generated: &str) {
                 generated.contains("simpa only [__fact6, __fact3] using"),
                 "{generated}"
             );
-            assert!(generated.contains("__normalized"), "{generated}");
+            assert!(generated.contains("convert ("), "{generated}");
+            assert!(!generated.contains("__normalized"), "{generated}");
             assert!(!generated.contains("assumption"), "{generated}");
         }
         "example_and_sketch" => {
@@ -426,6 +426,37 @@ fn assert_new_abi(label: &str, generated: &str) {
             assert!(generated.contains("namespace __Sketch01"), "{generated}");
             assert!(generated.contains("have __step_1 :"), "{generated}");
             assert!(generated.contains("\ntheorem __fact"), "{generated}");
+            assert!(!generated.contains("sorry"), "{generated}");
+        }
+        "aggregate_objects" => {
+            for expected in [
+                "Litex.bigUnion F",
+                "Litex.bigIntersect F",
+                "Litex.powerSet Litex.R",
+                "Litex.generalCart I S g",
+                "Litex.range 1 4",
+                "Litex.closedRange 1 4",
+                "Litex.sum 1 3",
+                "Litex.product 1 3",
+                "Litex.reduce 1 3",
+                "Litex.finiteSetSum (Litex.closedRange 1 3)",
+                "Litex.finiteSetProduct (Litex.closedRange 1 3)",
+                "Litex.finiteSetReduce (Litex.closedRange 1 3)",
+                "Litex.tupleLiteral",
+                "Litex.sequenceLiteral",
+                "Litex.finiteSequenceSet Litex.Z 3",
+                "Litex.sequenceSet Litex.Z",
+            ] {
+                assert!(
+                    generated.contains(expected),
+                    "missing `{expected}`\n{generated}"
+                );
+            }
+            assert!(
+                generated.contains("Litex.Rules.integerAddClosure"),
+                "{generated}"
+            );
+            assert!(generated.contains("Litex.functionObject"), "{generated}");
             assert!(!generated.contains("sorry"), "{generated}");
         }
         other => panic!("unregistered universal-object ledger example `{other}`"),

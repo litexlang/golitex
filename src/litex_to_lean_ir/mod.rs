@@ -38,9 +38,9 @@ pub use function::{
     LitexToLeanFunctionApplicationIr, LitexToLeanFunctionParameterIr, LitexToLeanFunctionTypeIr,
 };
 pub use object::{
-    LitexToLeanAnonymousFunctionIr, LitexToLeanBuiltinObjectOperatorIr,
-    LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr, LitexToLeanObjectIr,
-    LitexToLeanSetBuilderIr, LitexToLeanStandardSetIr,
+    LitexToLeanAggregateObjectIr, LitexToLeanAnonymousFunctionIr,
+    LitexToLeanBuiltinObjectOperatorIr, LitexToLeanCollectionObjectIr, LitexToLeanConstantObjectIr,
+    LitexToLeanObjectIr, LitexToLeanSetBuilderIr, LitexToLeanStandardSetIr,
 };
 pub use registered_rule::{LitexToLeanRegisteredRuleApplicationIr, LitexToLeanTypedBoundObjectIr};
 pub use statement::*;
@@ -388,6 +388,14 @@ pub enum LitexToLeanProofRuleIr {
     Builtin(LitexToLeanBuiltinRuleIr),
     RegisteredRule(LitexToLeanRegisteredRuleApplicationIr),
     ObjectReflexivity,
+    TupleLiteralIsTuple {
+        tuple: LitexToLeanObjectIr,
+        expected_target: Fact,
+    },
+    TupleLiteralDimension {
+        tuple: LitexToLeanObjectIr,
+        expected_target: Fact,
+    },
     ClosedRealMembership,
     ClosedStandardMembership,
     ClosedNumericReflection {
@@ -590,6 +598,22 @@ impl fmt::Debug for LitexToLeanProofRuleIr {
                 f.debug_tuple("RegisteredRule").field(application).finish()
             }
             LitexToLeanProofRuleIr::ObjectReflexivity => f.write_str("ObjectReflexivity"),
+            LitexToLeanProofRuleIr::TupleLiteralIsTuple {
+                tuple,
+                expected_target,
+            } => f
+                .debug_struct("TupleLiteralIsTuple")
+                .field("tuple", tuple)
+                .field("expected_target", &expected_target.to_string())
+                .finish(),
+            LitexToLeanProofRuleIr::TupleLiteralDimension {
+                tuple,
+                expected_target,
+            } => f
+                .debug_struct("TupleLiteralDimension")
+                .field("tuple", tuple)
+                .field("expected_target", &expected_target.to_string())
+                .finish(),
             LitexToLeanProofRuleIr::ClosedRealMembership => f.write_str("ClosedRealMembership"),
             LitexToLeanProofRuleIr::ClosedStandardMembership => {
                 f.write_str("ClosedStandardMembership")

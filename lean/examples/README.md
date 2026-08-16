@@ -6,25 +6,21 @@ introduced by a short comment and isolated in its own `sketch`. Run:
 
 ```text
 litex -lean \
-  examples/09_compile_to_lean/compile_to_lean_examples.lit \
-  examples/09_compile_to_lean/compile_to_lean_examples.lean
+  lean/examples/compile_to_lean_examples.lit \
+  lean/examples/compile_to_lean_examples.lean
 ```
 
-This directory is also a thin Lake project for the checked-in generated file.
-It depends on the repository's canonical [`../../lean`](../../lean) package
-instead of copying the `Litex` Lean sources, and reuses that package's Mathlib
-checkout instead of downloading a second copy. This lets the Lean extension
-use the matching Lean toolchain and resolve `import Litex.Rules` when the
-generated file is opened in place. Check it from this directory with:
+This directory lives inside the canonical [`lean/`](../) Lake project, beside
+the shared `Litex` target ABI. The Lean extension therefore uses the matching
+toolchain and resolves `import Litex.Rules` without a second project or a copy
+of the ABI. Check the generated file from `lean/` with:
 
 ```bash
-lake env lean compile_to_lean_examples.lean
+lake env lean examples/compile_to_lean_examples.lean
 ```
 
-On a fresh checkout, initialize the canonical package once with
-`cd ../../lean && lake build` before opening or checking this generated file.
-Do not run `lake update` here; dependency and toolchain updates are owned by
-`../../lean`, and this thin project follows its checked-in manifest.
+On a fresh checkout, run `lake build` in `lean/` once before opening or
+checking the generated file.
 
 The checked-in [`compile_to_lean_examples.lean`](compile_to_lean_examples.lean)
 is the exact generated result and compiles as one complete file in the bundled
@@ -69,6 +65,7 @@ prefix. `cases/` contains the corresponding standalone Litex sources.
 | `owned_construction_scopes` | Ordered set-builder condition WD and compound anonymous-function body replay under their exact owner binders |
 | `named_function` | Dependent requirements telescope, proof-free `inc`/`reciprocal` bodies, local closure evidence, membership, definition, and exact replay |
 | `indexed_aggregate` | One tuple constructor with dimension checks and ordered interface facts |
+| `aggregate_objects` | Big union/intersection, power set, general Cartesian products, integer ranges, indexed and finite-set folds, tuple/sequence literals, and sequence carriers as proof-free object terms with binder-local WD replay |
 | `statement_object_interactions` | Witness-as-argument, cases-in-theorem, and set-builder return-set composition |
 | `anonymous_function` | Alpha-equivalent anonymous functions, checked return membership, and separate application evidence |
 | `arithmetic_forall_wd` | Nested universal facts, subtraction closure, and occurrence-owned application evidence |

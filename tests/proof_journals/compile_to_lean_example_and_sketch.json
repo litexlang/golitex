@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "target": "examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit",
-  "session_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit",
+  "target": "lean/examples/cases/compile_to_lean_example_and_sketch.lit",
+  "session_command": "target/release/litex -compact -isolated -runner -f lean/examples/cases/compile_to_lean_example_and_sketch.lit",
   "proof_spine": [
     "parse example with the same indented goal shape as claim",
     "verify the goal and freeze temporary parameter, proof-step, conclusion, FactId, and WD evidence before leaving the child scope",

@@ -23,7 +23,7 @@ extensions beyond the book, trust boundaries, and known implementation drift.
 namespace Litex
 
 /-- Version of the shared target ABI expected by generated Litex proofs. -/
-def abiVersion : Nat := 9
+def abiVersion : Nat := 10
 
 axiom Object : Type
 
@@ -98,6 +98,33 @@ def pi : Object := embedComplex (Real.pi : ℂ)
 membership properties remain separate propositions and proofs. -/
 axiom union : Object → Object → Object
 
+/-- The ordinary set constructors use Mathlib's familiar pointwise set
+semantics at the `Litex.In` boundary. Their object terms remain total and
+proof-free. -/
+axiom intersect : Object → Object → Object
+axiom setMinus : Object → Object → Object
+axiom bigUnion : Object → Object
+axiom bigIntersect : Object → Object
+axiom powerSet : Object → Object
+
+@[simp] axiom inUnion_iff {x left right : Object} :
+  In x (union left right) ↔ In x left ∨ In x right
+
+@[simp] axiom inIntersect_iff {x left right : Object} :
+  In x (intersect left right) ↔ In x left ∧ In x right
+
+@[simp] axiom inSetMinus_iff {x left right : Object} :
+  In x (setMinus left right) ↔ In x left ∧ ¬ In x right
+
+@[simp] axiom inBigUnion_iff {x family : Object} :
+  In x (bigUnion family) ↔ ∃ member : Object, In member family ∧ In x member
+
+@[simp] axiom inBigIntersect_iff {x family : Object} :
+  In x (bigIntersect family) ↔ ∀ member : Object, In member family → In x member
+
+@[simp] axiom inPowerSet_iff {x base : Object} :
+  In x (powerSet base) ↔ Subset x base
+
 /-- Source set-builder. The base carrier stays separate from its predicate so
 membership can replay the exact base-membership and body proofs. -/
 axiom setBuilder (base : Object) (predicate : Object → Prop) : Object
@@ -109,35 +136,46 @@ axiom setBuilder (base : Object) (predicate : Object → Prop) : Object
 /-- One representative indexed aggregate: a tuple family with a positive
 dimension of at least two and a value at each source index. -/
 axiom IsTuple : Object → Prop
+axiom range : Object → Object → Object
 axiom closedRange : Object → Object → Object
 axiom tupleDim : Object → Object
 axiom atIndex : Object → Object → Object
+axiom tupleLiteral : List Object → Object
+axiom sequenceLiteral : List Object → Object
 axiom tupleObject
     (dimension : Object)
-    (value : Object → Object) :
-    In dimension NPos → Le 2 dimension → Object
+    (value : Object → Object) : Object
 
 axiom tupleObjectIsTuple
     (dimension : Object)
-    (value : Object → Object)
-    (positive : In dimension NPos)
-    (atLeastTwo : Le 2 dimension) :
-  IsTuple (tupleObject dimension value positive atLeastTwo)
+    (value : Object → Object) :
+  IsTuple (tupleObject dimension value)
+
+@[simp] axiom tupleLiteralIsTuple (xs : List Object) :
+  IsTuple (tupleLiteral xs)
 
 @[simp] axiom tupleObject_dim
     (dimension : Object)
-    (value : Object → Object)
-    (positive : In dimension NPos)
-    (atLeastTwo : Le 2 dimension) :
-  tupleDim (tupleObject dimension value positive atLeastTwo) = dimension
+    (value : Object → Object) :
+  tupleDim (tupleObject dimension value) = dimension
 
 @[simp] axiom tupleObject_at
     (dimension : Object)
     (value : Object → Object)
-    (positive : In dimension NPos)
-    (atLeastTwo : Le 2 dimension)
     (index : Object) :
-  atIndex (tupleObject dimension value positive atLeastTwo) index = value index
+  atIndex (tupleObject dimension value) index = value index
+
+@[simp] axiom tupleLiteral_dim (xs : List Object) :
+  tupleDim (tupleLiteral xs) = embedComplex (xs.length : ℂ)
+
+@[simp] axiom sequenceLiteral_dim (xs : List Object) :
+  tupleDim (sequenceLiteral xs) = embedComplex (xs.length : ℂ)
+
+@[simp] axiom inRange_iff {x start finish : Object} :
+  In x (range start finish) ↔ In x Z ∧ Le start x ∧ Lt x finish
+
+@[simp] axiom inClosedRange_iff {x start finish : Object} :
+  In x (closedRange start finish) ↔ In x Z ∧ Le start x ∧ Le x finish
 
 theorem isSetR : IsSet R := by
   trivial
@@ -232,6 +270,35 @@ sets, no extra domain conditions, and a fixed output set. -/
 @[reducible] def fnSpace5 (input₀ input₁ input₂ input₃ input₄ output : Object) : Object :=
   fnSpace [input₀, input₁, input₂, input₃, input₄] output
 
+/-- Sequence carriers are ordinary function spaces. A finite sequence uses
+the exact closed positive-index interval retained by the source verifier. -/
+@[reducible] def finiteSequenceSet (values length : Object) : Object :=
+  fnSpace1 (closedRange 1 length) values
+
+@[reducible] def sequenceSet (values : Object) : Object :=
+  fnSpace1 NPos values
+
+/-- General Cartesian products and finite-set folds are proof-free object
+denotations. Their sethood, callable contracts, range checks, operation laws,
+and seed checks are separate verifier-owned propositions. -/
+axiom generalCart : Object → Object → Object → Object
+axiom finiteSetSum : Object → Object → Object
+axiom finiteSetProduct : Object → Object → Object
+axiom finiteSetReduce : Object → Object → Object → Object → Object
+
+/-- Indexed scalar folds are the corresponding finite-set operations over the
+closed integer interval used by the Litex verifier. Source well-definedness can
+still reject an empty `sum` or `product`; that certificate is not object data. -/
+@[reducible] def sum (start finish function : Object) : Object :=
+  finiteSetSum (closedRange start finish) function
+
+@[reducible] def product (start finish function : Object) : Object :=
+  finiteSetProduct (closedRange start finish) function
+
+@[reducible] def reduce
+    (start finish function operation seed : Object) : Object :=
+  finiteSetReduce (closedRange start finish) function operation seed
+
 axiom Applicable : Object → List Object → Prop
 /-! Object denotation is independent of its well-definedness proof.  The
 verifier-owned `Applicable` evidence is replayed in the Lean proof environment
@@ -244,6 +311,12 @@ def IsChoiceFunctionFor
     ∀ (_chooserApplicable : Applicable chooser [alpha])
       (_familyApplicable : Applicable family [alpha]),
       In (apply chooser [alpha]) (apply family [alpha])
+
+@[simp] axiom inGeneralCart_iff
+    {chooser indexSet familySet family : Object} :
+  In chooser (generalCart indexSet familySet family) ↔
+    In chooser (fnSpace1 indexSet (bigUnion familySet)) ∧
+      IsChoiceFunctionFor indexSet familySet family chooser
 
 instance : CoeFun Object fun _ =>
     (args : List Object) → Object where

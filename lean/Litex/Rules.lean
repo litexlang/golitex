@@ -103,6 +103,30 @@ theorem integerInRational {x : Object} (h : In x Z) : In x Q := by
   refine ⟨(z : ℚ), ?_⟩
   simp
 
+theorem integerAddClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
+    In (Litex.add a b) Z := by
+  rcases inZ_iff.mp ha with ⟨a, rfl⟩
+  rcases inZ_iff.mp hb with ⟨b, rfl⟩
+  apply inZ_iff.mpr
+  refine ⟨a + b, ?_⟩
+  simp
+
+theorem integerSubClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
+    In (Litex.sub a b) Z := by
+  rcases inZ_iff.mp ha with ⟨a, rfl⟩
+  rcases inZ_iff.mp hb with ⟨b, rfl⟩
+  apply inZ_iff.mpr
+  refine ⟨a - b, ?_⟩
+  simp
+
+theorem integerMulClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
+    In (Litex.mul a b) Z := by
+  rcases inZ_iff.mp ha with ⟨a, rfl⟩
+  rcases inZ_iff.mp hb with ⟨b, rfl⟩
+  apply inZ_iff.mpr
+  refine ⟨a * b, ?_⟩
+  simp
+
 theorem rationalInReal {x : Object} (h : In x Q) : In x R := by
   rcases inQ_iff.mp h with ⟨q, rfl⟩
   apply inR_iff.mpr

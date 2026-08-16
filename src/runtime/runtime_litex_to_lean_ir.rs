@@ -4746,6 +4746,47 @@ fn build_litex_to_lean_ir_inferred_fact_proof(
     inferred_fact: &Fact,
     reason: &str,
 ) -> Result<LitexToLeanFactProofIr, RuntimeError> {
+    if let Fact::AtomicFact(AtomicFact::IsTupleFact(tuple_fact)) = inferred_fact {
+        if matches!(&tuple_fact.set, Obj::Tuple(_)) {
+            let tuple = LitexToLeanObjectIr::lower(&tuple_fact.set)
+                .map_err(|message| litex_to_lean_ir_error(&inferred_fact.line_file(), message))?;
+            return Ok(LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::TupleLiteralIsTuple {
+                    tuple,
+                    expected_target: inferred_fact.clone(),
+                },
+                parameter_requirements: Vec::new(),
+                premises: Vec::new(),
+            });
+        }
+    }
+    if let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = inferred_fact {
+        let dimension_literal = match (&equality.left, &equality.right) {
+            (Obj::TupleDim(dimension), Obj::Number(number)) => {
+                Some((dimension.arg.as_ref(), number))
+            }
+            (Obj::Number(number), Obj::TupleDim(dimension)) => {
+                Some((dimension.arg.as_ref(), number))
+            }
+            _ => None,
+        };
+        if let Some((Obj::Tuple(tuple), number)) = dimension_literal {
+            if number.normalized_value == tuple.args.len().to_string() {
+                let tuple_object: Obj = tuple.clone().into();
+                let tuple = LitexToLeanObjectIr::lower(&tuple_object).map_err(|message| {
+                    litex_to_lean_ir_error(&inferred_fact.line_file(), message)
+                })?;
+                return Ok(LitexToLeanFactProofIr::RuleApplication {
+                    rule: LitexToLeanProofRuleIr::TupleLiteralDimension {
+                        tuple,
+                        expected_target: inferred_fact.clone(),
+                    },
+                    parameter_requirements: Vec::new(),
+                    premises: Vec::new(),
+                });
+            }
+        }
+    }
     if let (
         Fact::AtomicFact(source_atomic),
         Fact::AtomicFact(inferred_atomic),

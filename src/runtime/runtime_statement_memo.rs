@@ -1176,9 +1176,11 @@ impl Runtime {
                         != obj_equality_key(&source_use.source_object)
                 {
                     return Err(missing_well_definedness_proof_error(format!(
-                        "source occurrence {} changed object within canonical phase {:?}",
+                        "source occurrence {} changed object within canonical phase {:?}: retained `{}`, later `{}`",
                         source_use.source_occurrence_id.value(),
                         source_use.phase,
+                        selected.source_object,
+                        source_use.source_object,
                     )));
                 }
                 if source_priority >= selected_priority {

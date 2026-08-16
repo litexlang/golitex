@@ -1,7 +1,6 @@
 # Rust build (crate root is repo root; was litex/target/)
 /target/
 /lean/.lake/
-/examples/09_compile_to_lean/.lake/
 
 # From former litex/.gitignore (paths now at root)
 binary/

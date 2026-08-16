@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "target": "examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+  "target": "lean/examples/cases/compile_to_lean_case_and_contradiction_scopes.lit",
   "session_command": "target/release/litex -compact -session -before private/cases-contra-to-lean.DFOacr/main.lit",
   "proof_spine": [
     "verify case coverage",
@@ -20,7 +20,7 @@
       "dependencies": [],
       "attempts": [
         {
-          "candidate": "target/release/litex -compact -session -before examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+          "candidate": "target/release/litex -compact -session -before lean/examples/cases/compile_to_lean_case_and_contradiction_scopes.lit",
           "result": "not_run",
           "verifier_evidence": "`-session -before` requires a litex.config in the target file's folder",
           "diagnosis": "the public standalone tracer is not a registered project file",
@@ -124,7 +124,7 @@
   ],
   "materialization": {
     "block_ids": ["B001", "B002", "B003", "B004"],
-    "file_gate_command": "target/release/litex -compact -isolated -runner -f examples/09_compile_to_lean/cases/compile_to_lean_case_and_contradiction_scopes.lit",
+    "file_gate_command": "target/release/litex -compact -isolated -runner -f lean/examples/cases/compile_to_lean_case_and_contradiction_scopes.lit",
     "file_gate_result": "passed with top-level runner ok: true"
   }
 }

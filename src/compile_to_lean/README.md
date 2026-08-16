@@ -99,8 +99,9 @@ DAG locally: `x + 1` cites the retained complex-membership facts, and `1 / x`
 cites the exact domain `FactId` for `x != 0`. Later definition replay unfolds
 only the cited defining equality and uses the exact locally named application
 certificate.
-Proof-independent anonymous identity bodies use the same ABI; compound
-anonymous bodies remain an explicit fail-closed boundary for now.
+Anonymous functions use the same ABI. Compound bodies replay their WD and
+return-membership DAG under the anonymous function's own binder telescope;
+the `functionObject` term itself remains proof-free.
 
 ## Proof evidence
 
@@ -194,14 +195,19 @@ supporting routes:
 - nested forall replay with retained temporary parameter `FactId`s;
 - `Litex.add/sub/mul/div`, real arithmetic closure theorems, and rational
   normalization for the arithmetic tracer.
+- big union/intersection, power set, general Cartesian products, half-open and
+  closed integer ranges, tuple/sequence literals, finite/infinite sequence
+  carriers, and indexed or finite-set `sum`/`product`/`reduce` object terms;
+- compound anonymous-function bodies under their exact binder-owned WD scope,
+  including integer addition used as a reduction operation.
 
 Unsupported statements or proof rules fail closed. They are not translated by
 the deleted backend and do not become `sorry` or implicit axioms.
 In particular, the current strict slice does not yet replay the
-`by axiom_of_choice` or `by zorn_lemma` statement certificates, nor does it yet
-lower every `general_cart`/`big_union` object. The named choice predicate has a
-target meaning now; those larger constructors still require their own checked
-IR and theorem routes before complete choice examples can compile.
+`by axiom_of_choice` or `by zorn_lemma` statement certificates. The
+`general_cart` and big-set object denotations now lower, but non-reflexive
+choice, membership, and algebraic proofs still require their own checked
+`Litex.Rules` adapters.
 Bodyless concrete `prop`, `trust have`, and function-valued `have fn` also
 remain explicit errors; they are not treated as definitions or target axioms.
 
@@ -212,8 +218,8 @@ independent `sketch` blocks. Refresh its checked-in Lean counterpart with:
 
 ```text
 target/release/litex -lean \
-  examples/09_compile_to_lean/compile_to_lean_examples.lit \
-  examples/09_compile_to_lean/compile_to_lean_examples.lean
+  lean/examples/compile_to_lean_examples.lit \
+  lean/examples/compile_to_lean_examples.lean
 ```
 
 Each sketch is emitted in an isolated namespace, so declarations, named
@@ -223,15 +229,15 @@ in the detailed Markdown ledger and collecting the results in one Lean file:
 
 ```text
 target/release/litex -lean-ledger \
-  examples/09_compile_to_lean/compile_to_lean_examples.md \
-  private/09-generated.lean
+  lean/examples/compile_to_lean_examples.md \
+  private/compile-to-lean-generated.lean
 ```
 
 The equivalent Cargo test entrypoint is deliberately ignored by the ordinary
 test suite because it leaves the inspection file in `private/`:
 
 ```text
-cargo test --release dump_09_compile_to_lean_ledger -- --ignored --nocapture
+cargo test --release dump_compile_to_lean_ledger -- --ignored --nocapture
 ```
 
 The output hoists shared imports once and places each ledger entry in its own
@@ -243,23 +249,23 @@ output path is replaced only after every Litex entry compiles successfully.
 ## Evidence
 
 The primary acceptance source is
-[`compile_to_lean_litex_object_abi.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_litex_object_abi.lit).
+[`compile_to_lean_litex_object_abi.lit`](../../lean/examples/cases/compile_to_lean_litex_object_abi.lit).
 The shared-builtin-library tracer is
-[`compile_to_lean_shared_builtin_rules.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_shared_builtin_rules.lit).
+[`compile_to_lean_shared_builtin_rules.lit`](../../lean/examples/cases/compile_to_lean_shared_builtin_rules.lit).
 The nested-forall/arithmetic/occurrence tracer is
-[`compile_to_lean_arithmetic_forall_wd.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_arithmetic_forall_wd.lit).
+[`compile_to_lean_arithmetic_forall_wd.lit`](../../lean/examples/cases/compile_to_lean_arithmetic_forall_wd.lit).
 The named well-defined-object DAG tracer is
-[`compile_to_lean_well_defined_object_dag.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_well_defined_object_dag.lit).
+[`compile_to_lean_well_defined_object_dag.lit`](../../lean/examples/cases/compile_to_lean_well_defined_object_dag.lit).
 The derived-set-predicate tracer is
-[`compile_to_lean_set_predicate_definitions.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_set_predicate_definitions.lit).
+[`compile_to_lean_set_predicate_definitions.lit`](../../lean/examples/cases/compile_to_lean_set_predicate_definitions.lit).
 The known-equality path tracer is
-[`compile_to_lean_known_equality_path.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_known_equality_path.lit).
+[`compile_to_lean_known_equality_path.lit`](../../lean/examples/cases/compile_to_lean_known_equality_path.lit).
 The first statement-definition tracer is
-[`compile_to_lean_first_statement_tranche.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_first_statement_tranche.lit).
+[`compile_to_lean_first_statement_tranche.lit`](../../lean/examples/cases/compile_to_lean_first_statement_tranche.lit).
 The anonymous proof-block tracer is
-[`compile_to_lean_example_and_sketch.lit`](../../examples/09_compile_to_lean/cases/compile_to_lean_example_and_sketch.lit).
+[`compile_to_lean_example_and_sketch.lit`](../../lean/examples/cases/compile_to_lean_example_and_sketch.lit).
 The append-only executable feature history is in
-[`compile_to_lean_examples.md`](../../examples/09_compile_to_lean/compile_to_lean_examples.md).
+[`compile_to_lean_examples.md`](../../lean/examples/compile_to_lean_examples.md).
 
 Focused Rust tests live beside `universal_pipeline.rs`. Ignored real-kernel
 tests use `LITEX_LEAN_PROJECT` and optional `LITEX_LAKE` to compile

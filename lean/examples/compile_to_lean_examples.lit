@@ -6,7 +6,7 @@
 # pollute one another.
 #
 # Refresh the paired Lean file with:
-# litex -lean examples/09_compile_to_lean/compile_to_lean_examples.lit examples/09_compile_to_lean/compile_to_lean_examples.lean
+# litex -lean lean/examples/compile_to_lean_examples.lit lean/examples/compile_to_lean_examples.lean
 
 # 01. Nested function application is reflexive, with the inner applications
 # checked before the outer two-argument application.
@@ -262,3 +262,31 @@ sketch:
 
     sketch:
         3 = 3
+
+# 25. Aggregate object families keep their denotations proof-free while every
+# partial child, callable contract, and fold audit stays in the owning proof.
+sketch:
+    forall F set:
+        big_union(F) = big_union(F)
+    forall F set:
+        big_intersect(F) = big_intersect(F)
+    power_set(R) = power_set(R)
+
+    forall I set, S nonempty_set, g fn(i1 I) S:
+        general_cart(I, S, g) = general_cart(I, S, g)
+
+    range(1, 4) = range(1, 4)
+    closed_range(1, 4) = closed_range(1, 4)
+
+    sum(1, 3, fn(k Z) Z {k}) = sum(1, 3, fn(k Z) Z {k})
+    product(1, 3, fn(k Z) Z {k}) = product(1, 3, fn(k Z) Z {k})
+    reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = reduce(1, 3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
+
+    finite_set_sum(1...3, fn(k Z) Z {k}) = finite_set_sum(1...3, fn(k Z) Z {k})
+    finite_set_product(1...3, fn(k Z) Z {k}) = finite_set_product(1...3, fn(k Z) Z {k})
+    finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0) = finite_set_reduce(1...3, fn(k Z) Z {k}, fn(x, y Z) Z {x + y}, 0)
+
+    (1, 2, 3) = (1, 2, 3)
+    [1, 2, 3] = [1, 2, 3]
+    finite_seq(Z, 3) = finite_seq(Z, 3)
+    seq(Z) = seq(Z)

@@ -599,12 +599,14 @@ impl Runtime {
                     &x.func,
                 );
             }
-            let range_sum = Sum::new(
+            let range_sum: Obj = Sum::new(
                 range.start.as_ref().clone(),
                 range.end.as_ref().clone(),
                 x.func.as_ref().clone(),
-            );
-            return self.verify_sum_obj_well_defined(&range_sum, verify_state);
+            )
+            .into();
+            return self
+                .verify_obj_well_defined_as_verification_dependency(&range_sum, verify_state);
         }
         self.verify_finite_set_iterand_has_exact_domain("finite_set_sum", &x.func, &x.set)
             .map_err(|e| {
@@ -881,12 +883,14 @@ impl Runtime {
                     &x.func,
                 );
             }
-            let range_product = Product::new(
+            let range_product: Obj = Product::new(
                 range.start.as_ref().clone(),
                 range.end.as_ref().clone(),
                 x.func.as_ref().clone(),
-            );
-            return self.verify_product_obj_well_defined(&range_product, verify_state);
+            )
+            .into();
+            return self
+                .verify_obj_well_defined_as_verification_dependency(&range_product, verify_state);
         }
         self.verify_finite_set_iterand_has_exact_domain("finite_set_product", &x.func, &x.set)
             .map_err(|e| {

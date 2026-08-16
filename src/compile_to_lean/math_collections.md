@@ -112,7 +112,7 @@ def Litex.IsFiniteSet (s : Litex.Object) : Prop :=
 The Mathlib set-builder is only the extension of one universal object under
 `Litex.In`; it does not add unrestricted source comprehension. The explicit
 always-true `IsSet` predicate records Litex's all-objects-are-sets foundation;
-it is not an independent classifier. ABI version 9 implements this definition
+it is not an independent classifier. ABI version 10 implements this definition
 directly and removes the redundant sethood conjuncts from the two derived
 predicates.
 

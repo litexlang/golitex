@@ -12,11 +12,9 @@ answers four questions for every declaration currently exposed by
 4. Is it a settled semantic boundary, a target representation device, an
    extension beyond the book, or known implementation drift?
 
-The reference covers ABI version 9. At this version, `Litex.Core` contains 50
-Lean `axiom` declarations and `Litex.Rules` contains 24 ordinary Lean
-theorems. The number of declarations is not a measure of foundational
-minimality: several declarations are fields of one intended model that have
-not yet been consolidated or constructed.
+The reference covers ABI version 10. The number of declarations is not a
+measure of foundational minimality: several declarations are fields of one
+intended model that have not yet been consolidated or constructed.
 
 ## Source and citation policy
 
@@ -50,7 +48,7 @@ The correspondence labels used below have precise meanings:
 - **Engineering:** the declaration versions or packages the compiler ABI and
   has no mathematical source claim.
 - **Current drift:** the declaration is a known temporary mismatch between the
-  decided source semantics and ABI version 9.
+  decided source semantics and ABI version 10.
 
 These labels prevent a citation from doing more work than it really does.
 *Analysis I* motivates the mathematical interfaces; it does not prove that
@@ -113,7 +111,7 @@ book arithmetic concept
 ```
 
 This tracer does not show that every Litex arithmetic rule has been ported.
-ABI version 9 treats `div a b` the same way: its object denotation is total at
+ABI version 10 treats `div a b` the same way: its object denotation is total at
 the representation layer, while both complex memberships and the exact
 denominator-nonzero fact remain mandatory source certificates and local Lean
 proof steps. Power, transcendental operations, and many arithmetic
@@ -133,18 +131,26 @@ certificates remain outside the current target coverage.
 | `IsNonemptySet` | `def` | Axiom 3.2 and Lemma 3.1.6 (a nonempty set has an element). | Defines nonemptiness exactly by an `In` witness; no redundant sethood conjunct remains in the pure model. |
 | `IsFiniteSet` | `def` | Definition 3.6.10 (finite cardinality). | Views the `In`-extension of one object as a Mathlib set and asks it to be finite. Tao defines finite cardinality using a bijection with a finite standard set, so this is a target representation of the same intended notion, not a derivation of their equivalence inside the current core. |
 
-### Total objects, set builders, and one indexed aggregate
+### Total objects, set builders, ranges, and aggregate families
 
 | Declaration | Lean form | Analysis I anchor | Exact role and boundary |
 | --- | --- | --- | --- |
 | `pi` | `def` | No direct anchor in *Analysis I*; representation bridge. | Represents source `pi` by Mathlib's real pi inside `embedComplex`; construction is total. |
 | `union` | `axiom` | Section 3.4 (unions). | Total binary source union object. Its sethood and membership laws remain separate proof interfaces. |
+| `intersect`, `setMinus` | `axiom`s | Section 3.4 and ordinary set difference. | Proof-free binary set denotations, characterized by conjunction and negated membership at the `In` boundary. |
+| `bigUnion`, `bigIntersect` | `axiom`s | Section 3.4 (unions and intersections of families). | Proof-free family operations with existential/universal membership characterizations over represented objects. |
+| `powerSet` | `axiom` | Axiom 3.4 (power set). | Proof-free power-set denotation; membership is exactly the represented `Subset` relation. |
 | `setBuilder`, `inSetBuilder_iff` | `axiom`s | Axiom 3.5 (specification). | Packages a base object and predicate, and gives the exact conjunction used to replay checked membership. The predicate binder is target-local and owned by its source `SymbolId`. |
 | `IsTuple` | `axiom` | Finite ordered families; target extension. | Records the source tuple predicate for one representative indexed aggregate recipe. |
-| `closedRange` | `axiom` | Finite integer intervals; target extension. | Represents the source index carrier without identifying it with a native Lean finite type. |
+| `range`, `closedRange`, `inRange_iff`, `inClosedRange_iff` | `axiom`s | Finite integer intervals; target extension. | Represent half-open and closed integer ranges without identifying them with native Lean finite types; their laws retain integer membership and exact lower/upper bounds. |
 | `tupleDim`, `atIndex` | `axiom`s | Finite sequence dimension and coordinate notation; target extension. | Expose the two source projections as object-valued operations. |
-| `tupleObject` | `axiom` | Finite ordered families; target extension. | Constructs one tuple only after consuming the retained positive-dimension and lower-bound proofs. |
+| `tupleObject` | `axiom` | Finite ordered families; target extension. | Proof-free denotation of a dimensioned tuple family. Positive-dimension and lower-bound checks remain verifier-owned proof evidence. |
 | `tupleObjectIsTuple`, `tupleObject_dim`, `tupleObject_at` | `axiom`s | Same indexed-family concept; representation bridge. | Export the exact three stored effects of `HaveTupleStmt`; they do not generalize matrices, sequences, or arbitrary aggregates. |
+| `tupleLiteral`, `sequenceLiteral`, literal dimension laws | `axiom`s | Finite ordered families; target extension. | Preserve the distinction between tuple and sequence literal syntax while exposing their source length as an object-valued dimension. |
+| `finiteSequenceSet`, `sequenceSet` | `def`s | Function spaces indexed by finite positive integer intervals or positive naturals. | Reuse the ordinary `fnSpace1` ABI instead of introducing a second sequence carrier model. |
+| `generalCart`, `inGeneralCart_iff` | `axiom`s | Axiom 3.10 and Chapter 8's product/choice interface. | A member is both a function from the index set into the union of the family and a pointwise choice function. This does not prove the axiom of choice. |
+| `finiteSetSum`, `finiteSetProduct`, `finiteSetReduce` | `axiom`s | Finite iteration; target extension. | Proof-free fold denotations. Finiteness, callable ranges, seeds, and associative/commutative laws stay in verifier-owned WD evidence. |
+| `sum`, `product`, `reduce` | `def`s | Finite iteration over closed integer intervals; target extension. | Transparent aliases for the corresponding finite-set fold over `closedRange start finish`, matching the verifier's index carrier. |
 
 ### Numeric objects and refinements
 
@@ -177,7 +183,7 @@ positive-natural reflection and `positiveRealMembership` theorems, while
 bridges for source order and carrier predicates, not a claim that all ordered
 number-system laws have been ported.
 
-ABI version 9 declares the refined numeric objects but does not yet include
+ABI version 10 declares the refined numeric objects but does not yet include
 their full membership-characterization laws. They should therefore be read as
 opaque ABI placeholders whose intended source meanings are listed above, not
 as a completed Lean development of every refined carrier.
@@ -277,6 +283,9 @@ inside the shared library.
 | `complexSubClosure` | Complex extension. | Proves represented complex subtraction is closed. |
 | `complexMulClosure` | Complex extension. | Proves represented complex multiplication is closed. |
 | `complexDivClosure` | Complex extension. | Uses the retained two complex-membership proofs and denominator-nonzero proof to form the represented quotient and prove it remains in `C`. |
+| `integerAddClosure` | Definition 4.1.2. | Opens the retained integer witnesses, uses represented addition coherence, and proves the result remains in `Z`. |
+| `integerSubClosure` | Definition 4.1.4. | Proves represented subtraction preserves integer membership. |
+| `integerMulClosure` | Definition 4.1.2. | Proves represented multiplication preserves integer membership. |
 | `realAddClosure` | Definition 5.3.4 and Proposition 5.3.11. | Uses retained `C` facts to form the term and retained `R` facts to prove the result is real. |
 | `realSubClosure` | Section 5.3 real algebra. | Proves represented subtraction preserves real membership. |
 | `realMulClosure` | Definition 5.3.9 and Proposition 5.3.11. | Proves represented multiplication preserves real membership. |
@@ -297,8 +306,8 @@ This ledger establishes an auditable design correspondence:
 - ordinary builtin rules are distinguished from unproved semantic axioms;
 - known ABI drift is visible rather than silently rationalized.
 
-It does **not** establish that the 59 current axioms are independent, minimal,
-or jointly consistent. It also does not establish a full model of ZF or ZFC,
+It does **not** establish that the current axioms are independent, minimal, or
+jointly consistent. It also does not establish a full model of ZF or ZFC,
 nor that every Litex verification route can already be emitted and accepted by
 Lean. Those stronger claims require a concrete model or relative-consistency
 argument, a completed compiler coverage audit, and real Lean compilation gates
