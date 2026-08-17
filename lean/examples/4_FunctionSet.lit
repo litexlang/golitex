@@ -1,9 +1,14 @@
 # Tracer: compiler2 unary function set and proof-carrying application
 #
-# Before: compiler2 rejected `fn(y s) S` while rendering the forall parameter,
-# and it had no native-carrier representation for the verified call `f(x)`.
+# Before (required an incidental wrapper):
+# sketch:
+#     forall s, S set, x s, f fn(y s) S:
+#         f(x) = f(x)
+# Former behavior: the function tracer was nested in `sketch`, and compiler2
+# flattened sketch statements instead of preserving their source scope.
 #
-# Now: s and S become Litex.Set values. x and f retain independent Lean
+# Now: the forall is a direct top-level fact. s and S become Litex.Set values.
+# x and f retain independent Lean
 # carriers plus their verifier-created Litex.In hypotheses. Each generated
 # Litex.fnApply consumes both the exact function-membership FactId proof and
 # the exact argument-membership WD proof selected for that source occurrence.
@@ -19,6 +24,5 @@
 # cd lean && ./compiler2.sh compile examples/4_FunctionSet.lit
 # cd lean && ./compiler2.sh check examples && lake env lean examples/4_FunctionSet.lean
 
-sketch:
-    forall s, S set, x s, f fn(y s) S:
-        f(x) = f(x)
+forall s, S set, x s, f fn(y s) S:
+    f(x) = f(x)

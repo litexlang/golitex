@@ -5,6 +5,8 @@ set_option linter.style.nameCheck false
 
 namespace __Compiler2_1_SetSystem
 
+namespace __Sketch01
+
 abbrev A : Litex.Set := Litex.R
 
 abbrev B : Litex.Set := Litex.C
@@ -15,7 +17,9 @@ theorem __fact0 :
   intro a __h0_1 b __h0_2 __h0_3
   exact ⟨(Litex.In.congr __h0_3 A).mp __h0_1, (Litex.In.congr __h0_3 B).mpr __h0_2⟩
 
-theorem __fact1 : Litex.Same (1 : ℂ) (1 : ℂ) := by
+end __Sketch01
+
+theorem __fact0 : Litex.Same (1 : ℂ) (1 : ℂ) := by
   exact Litex.Same.refl (1 : ℂ)
 
 end __Compiler2_1_SetSystem

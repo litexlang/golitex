@@ -4,7 +4,8 @@
 # no executable evidence that its Lean theorem came from Litex verification.
 #
 # Now: A and B are verified Litex definitions, and the equality rewrite is the
-# only source for the paired 1_SetSystem.lean theorem.
+# only source for the paired 1_SetSystem.lean theorem. The source sketch owns
+# an isolated `__Sketch01` namespace in the generated file.
 #
 # Boundary: this first named-set route supports checked aliases of R/C. A bare
 # `have A set` still has no verifier-backed inhabitant choice, and richer set

@@ -26,6 +26,11 @@ cd lean
 ./compiler2.sh check examples
 ```
 
+Compiler2 preserves source sketch scope. A top-level `sketch:` becomes an
+isolated `__SketchNN` namespace nested inside the file namespace; declarations
+and FactIds created there do not become later file-level bindings. Ordinary
+top-level facts are emitted directly in the file namespace.
+
 `1_SetSystem.lit` is the tracer for checked named set aliases, `Same`, and
 heterogeneous `In`: `have A set = R` becomes an `abbrev A : Litex.Set`, while
 verifier equality-rewrite evidence becomes a `Litex.In.congr` proof. A bare
@@ -40,6 +45,15 @@ parameter evidence, and premise evidence.
 than a `sketch`. It maps numeric equality to `Litex.Same`, consumes
 `ObjectReflexivity` or checked rational-normalization proof IR, and replays the
 captured closed-numeric WD membership facts inside the generated theorem.
+
+`4_FunctionSet.lit` is the first unary function-set tracer. Set parameters are
+emitted as `Litex.Set` values, while `x` and `f` retain independent carriers
+and explicit `Litex.In` hypotheses. Every generated `Litex.fnApply` consumes
+the verifier-selected function-membership FactId proof and argument-membership
+WD proof. The source `forall` is deliberately top-level rather than wrapped in
+`sketch`, so its generated theorem is also file-level. Anonymous functions,
+multiple arguments, domain clauses, and curried returns remain outside this
+first adapter.
 
 Generated `.lean` files are review artifacts, not editing surfaces. A new
 compiler2 feature must add the next numbered same-name pair. Unsupported

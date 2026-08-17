@@ -5,8 +5,9 @@
 This standalone first version models the theorem-facing core of elementary
 group theory. It is for readers learning how Litex represents an ambient
 mathematical structure without requiring that structure to be passed as a
-first-class record. Rings, modules, quotients, actions, and classification
-results are outside this checkpoint.
+first-class record. The flagship theorem proves that the kernel of a group
+homomorphism is a normal subgroup. Rings, modules, quotients, actions, and
+classification results are outside this checkpoint.
 
 ## Modeling conventions
 
@@ -64,9 +65,29 @@ objects. No parallel arithmetic or container interface is introduced.
 - **Nearest wrong alternative:** A struct-valued homomorphism is unnecessary
   before callers need to pass or project a packaged map and its proof.
 - **Dependencies:** Two candidate groups and a function.
-- **Downstream uses:** Preservation of identity and inverse.
-- **Allowable hole:** Kernels, images, isomorphisms, and composition remain
-  later work.
+- **Downstream uses:** Preservation of identity and inverse, then normality of
+  the kernel.
+- **Allowable hole:** Images, isomorphisms, and composition remain later work.
+
+### Subgroups, normality, and the kernel
+
+- **Ordinary meaning:** A subgroup contains the identity and is closed under
+  multiplication and inverse. It is normal when it is also closed under
+  conjugation. The kernel of `f` is the subset `{x A: f(x) = one_B}`.
+- **Semantic role:** `is_subgroup` and `is_normal_subgroup` are properties of
+  a supplied subset. The kernel used by the flagship theorem is an ordinary
+  native set-builder value.
+- **Ideal Litex form:** `prop is_subgroup([GroupSetting], H power_set(A))` and
+  `prop is_normal_subgroup([GroupSetting], H power_set(A))`.
+- **Interface sketch:** `is_normal_subgroup` consumes `is_subgroup` plus
+  `forall a A, h H: mul(mul(a,h),inv(a)) in H`.
+- **Nearest wrong alternative:** A `Subgroup` struct or a public kernel wrapper
+  would package data that no current theorem constructs, passes, or projects.
+- **Dependencies:** Group laws, native subsets and set builders, and the two
+  homomorphism preservation theorems.
+- **Downstream uses:** `kernel_is_normal_subgroup`.
+- **Allowable hole:** Cosets, quotient groups, and the first isomorphism
+  theorem remain later work.
 
 ## Dependency map
 
@@ -81,13 +102,17 @@ two GroupSetting bundles + supplied function
   -> GroupHomomorphismSetting              [universal context]
   -> preserves identity                    [proof]
   -> preserves inverse                     [proof]
+  -> kernel set builder                     [native construction]
+  -> subgroup and normal-subgroup laws      [definition]
+  -> kernel is normal                       [flagship proof]
 ```
 
 ## Intended build order
 
 Define the candidate group relation, expose its setting, prove cancellation
 and the identity/inverse uniqueness toolkit, define the homomorphism relation
-and setting, then prove identity and inverse preservation.
+and setting, prove identity and inverse preservation, then use the native
+kernel set builder to prove the kernel is a normal subgroup.
 
 ## Interface decisions and permissible gaps
 

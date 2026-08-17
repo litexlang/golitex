@@ -8,9 +8,9 @@ verifier-rule theorems in `Litex/Rules.lean`, and the same-name generated pairs
 under `examples/`. Concept definitions and Lean/Mathlib representation bridges
 must not be split into feature headers beside `Core.lean`.
 
-Functions and compiler execution are intentionally outside this first slice.
-The first ordered-numeric interface is included because it fixes how native
-Mathlib order is reached without retyping Litex objects.
+The first unary function-set/application interface is included together with
+the set system. The first ordered-numeric interface fixes how native Mathlib
+order is reached without retyping Litex objects.
 
 ## Representation bridge
 
@@ -40,9 +40,9 @@ and subtype equality enters through `Same.base`.
 Immediate use: a proof of `Same a b` transports `In a S` to `In b S` without
 changing either Lean variable's carrier.
 
-Open obligation: later function and predicate interfaces must explicitly
-respect `Same`. The ordered-numeric predicates below are the first executable
-instance of that rule.
+Open obligation: later extensional function and predicate interfaces must
+state how they respect `Same`. The current unary wrapper is a proof-carrying
+call interface; it does not claim function extensionality.
 
 ## Real representatives and order
 
@@ -98,6 +98,31 @@ the emitter: the verifier currently rejects that arbitrary choice because no
 checked inhabited-type backend exists for the meta-level parameter type
 `set`.
 
+## Unary function sets and application
+
+`Litex.Fn s S` contains one call field
+`{α : Type u} → (x : α) → Litex.In x s → S.Carrier`. A value is
+therefore not callable merely because of its Lean carrier: the call still
+needs the Litex proof that its argument belongs to `s`.
+
+`Litex.fnSet s S` packages `Fn s S` as an exact-carrier `Litex.Set`.
+`Litex.fnApply f hf x hx` first selects the `Fn s S` representative supplied
+by `hf : Litex.In f (Litex.fnSet s S)`, then calls it with
+`hx : Litex.In x s`. Both proofs are explicit inputs. The result is directly
+an `S.Carrier`; this wrapper layer has no inverse transport API.
+
+The authoritative probe is `examples/4_FunctionSet.lit`. Its generated theorem
+quantifies independent carriers for `x` and `f`, retains both membership
+hypotheses, and emits both occurrences of `f(x)` with the exact
+verifier-selected FactId/WD proofs. The nearest negative probe lives under
+workspace-local `private/compiler2-function-set-test/`: changing `x s` to
+`x S` is rejected by Litex before compiler2 emission.
+
+The current boundary is intentionally narrow: one named unary layer, no extra
+domain facts, no anonymous functions, no multiple arguments, and no curried
+function return. Those forms remain unsupported rather than being flattened
+to this ABI.
+
 ## Generated example contract
 
 The `.lit` file is authoritative. Compiler2 first verifies it and captures the
@@ -113,6 +138,11 @@ the fingerprinted `order.less_equal_of_less` registered rule, and top-level
 closed numeric equality through verifier-selected reflexivity or rational
 normalization. Numeric expression WD facts remain named local Lean facts.
 
+Statement scope is also part of this contract. A Litex `sketch` becomes an
+isolated `__SketchNN` Lean namespace with a cloned incoming compiler context;
+its new symbol and FactId bindings are discarded when emission returns to the
+file scope. A direct top-level fact is not placed in that namespace.
+
 ## Dependency order
 
 ```text
@@ -123,6 +153,8 @@ Mathlib native carriers
   -> Same                       [definition]
   -> Set                        [signature]
   -> In                         [definition: Same + Set.Carrier]
+  -> Fn / fnSet                 [one unary proof-carrying function carrier]
+  -> fnApply                    [consumes function + argument membership]
   -> numeric sets N/Z/Q/R/C     [definition]
   -> setBuilder                 [definition: subtype carrier]
   -> membership transport       [proof]

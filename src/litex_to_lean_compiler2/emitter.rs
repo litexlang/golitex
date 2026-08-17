@@ -21,9 +21,16 @@ const LESS_EQUAL_OF_LESS_FINGERPRINT: &str =
 pub fn emit_file(ir: &[LitexToLeanStatementIr], source_label: &str) -> Result<String, String> {
     let mut declarations = Vec::new();
     let mut fact_index = 0;
+    let mut sketch_namespace_index = 0;
     let mut context = RenderContext::default();
     for statement in ir {
-        emit_statement(statement, &mut declarations, &mut fact_index, &mut context)?;
+        emit_statement(
+            statement,
+            &mut declarations,
+            &mut fact_index,
+            &mut sketch_namespace_index,
+            &mut context,
+        )?;
     }
     if declarations.is_empty() {
         return Err("compiler2 requires at least one verified fact".into());
@@ -52,13 +59,33 @@ fn emit_statement(
     statement: &LitexToLeanStatementIr,
     declarations: &mut Vec<String>,
     fact_index: &mut usize,
+    sketch_namespace_index: &mut usize,
     context: &mut RenderContext,
 ) -> Result<(), String> {
     match statement {
         LitexToLeanStatementIr::ProofBlock(LitexToLeanProofBlockStmtIr::SketchStmt(sketch)) => {
+            crate::litex_to_lean_ir::validate_litex_to_lean_well_definedness_certificate(
+                &sketch.block.well_definedness,
+            )?;
+            let mut nested_declarations = Vec::new();
+            let mut nested_fact_index = 0;
+            let mut nested_sketch_namespace_index = 0;
+            let mut nested_context = context.clone();
             for step in &sketch.block.steps {
-                emit_statement(step, declarations, fact_index, context)?;
+                emit_statement(
+                    step,
+                    &mut nested_declarations,
+                    &mut nested_fact_index,
+                    &mut nested_sketch_namespace_index,
+                    &mut nested_context,
+                )?;
             }
+            *sketch_namespace_index += 1;
+            let namespace = format!("__Sketch{:02}", sketch_namespace_index);
+            declarations.push(format!(
+                "namespace {namespace}\n\n{}\n\nend {namespace}",
+                nested_declarations.join("\n\n")
+            ));
         }
         LitexToLeanStatementIr::DefObjStmt(LitexToLeanDefObjStmtIr::HaveObjEqualStmt(
             definition,
@@ -380,6 +407,7 @@ fn emit_forall_fact(
             context.function_bindings.insert(
                 premise.fact_id,
                 FunctionBinding {
+                    symbol_id: binding.id(),
                     function,
                     membership_proof_name: format!("__h{theorem_index}_{}", parameter_index + 1),
                 },
@@ -439,6 +467,7 @@ struct RenderContext {
 
 #[derive(Clone)]
 struct FunctionBinding {
+    symbol_id: SymbolId,
     function: LitexToLeanFunctionTypeIr,
     membership_proof_name: String,
 }
@@ -678,10 +707,7 @@ fn validate_set_parameter_premise(symbol_id: SymbolId, premise: &Fact) -> Result
 }
 
 fn set_requires_heterogeneous_carrier(set: &Obj) -> bool {
-    matches!(
-        set,
-        Obj::Atom(AtomObj::Forall(_)) | Obj::Atom(AtomObj::Identifier(_))
-    )
+    matches!(set, Obj::Atom(AtomObj::Forall(_)))
 }
 
 fn validate_unary_function_type(function: &LitexToLeanFunctionTypeIr) -> Result<(), String> {
@@ -780,21 +806,38 @@ fn render_function_application(
         .get(contract_fact_id)
         .ok_or_else(|| format!("unavailable function membership FactId `{contract_fact_id}`"))?;
     validate_unary_function_type(&binding.function)?;
+    let LitexToLeanObjectIr::Symbol {
+        symbol_id: head_symbol_id,
+        ..
+    } = application.head.as_ref()
+    else {
+        unreachable!("named head validated above")
+    };
+    if *head_symbol_id != binding.symbol_id {
+        return Err("function membership FactId belongs to another head symbol".into());
+    }
+    let lowered_source_argument =
+        LitexToLeanObjectIr::lower(&application.source_argument_layers[0][0])?;
+    if lowered_source_argument != application.argument_layers[0][0] {
+        return Err("unary application changed its retained argument IR".into());
+    }
 
-    let argument_requirement = certificate
+    let application_requirements = certificate
         .target_requirements
         .iter()
-        .find(|requirement| {
-            requirement.source_occurrence_id == application.source_occurrence_id
-                && requirement.role
-                    == WellDefinednessRequirementRole::FunctionArgumentMembership {
-                        layer_index: 0,
-                        parameter_index: 0,
-                    }
+        .filter(|requirement| requirement.source_occurrence_id == application.source_occurrence_id)
+        .collect::<Vec<_>>();
+    let [argument_requirement] = application_requirements.as_slice() else {
+        return Err("unary application must retain exactly one target requirement".into());
+    };
+    if argument_requirement.role
+        != (WellDefinednessRequirementRole::FunctionArgumentMembership {
+            layer_index: 0,
+            parameter_index: 0,
         })
-        .ok_or_else(|| {
-            "unary application has no exact argument-membership requirement".to_string()
-        })?;
+    {
+        return Err("unary application changed its argument-membership role".into());
+    }
     let argument_fact = certificate
         .facts
         .iter()
@@ -805,9 +848,19 @@ fn render_function_application(
     {
         return Err("unary application argument requirement changed proposition".into());
     }
-    let argument_membership = render_proof(&argument_fact.fact, context)?;
     let head = render_ir_symbol(application.head.as_ref(), context)?;
     let argument = render_obj(&application.source_argument_layers[0][0], context)?;
+    let expected_argument_membership = format!(
+        "Litex.In {argument} {}",
+        render_set_ir(&binding.function.parameters[0].set, context)?
+    );
+    let retained_argument_membership = render_fact(&argument_fact.expected_proposition, context)?;
+    if retained_argument_membership != expected_argument_membership {
+        return Err(format!(
+            "unary application expected `{expected_argument_membership}`, retained `{retained_argument_membership}`"
+        ));
+    }
+    let argument_membership = render_proof(&argument_fact.fact, context)?;
     Ok(format!(
         "(Litex.fnApply {head} {} {argument} {argument_membership})",
         binding.membership_proof_name

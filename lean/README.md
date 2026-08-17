@@ -27,6 +27,9 @@ The implemented scope is deliberately small:
 - `Litex.Same` is their reflexive, symmetric, transitive closure;
 - `Litex.Set` packages the exact carrier of a Litex set;
 - `Litex.In` defines heterogeneous membership through `Same`;
+- `Litex.Fn s S` is the first unary proof-carrying function carrier;
+- `Litex.fnSet s S` packages that carrier as a Litex set;
+- `Litex.fnApply f hf x hx` consumes both function and argument membership;
 - `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
 - `setBuilder` represents a predicate-defined subset by a subtype carrier;
 - `AsReal x r` means that `r : ℝ` is a real representative of `x`;
@@ -66,9 +69,10 @@ forall a A, b B:
 ```
 
 to two checked named-set aliases, two complex-valued binders, separate
-membership hypotheses, and one heterogeneous `Litex.Same` hypothesis. The
-emitted theorem shape retains the old compiler's `__fact0` and `__h0_*` naming
-convention inside a namespace derived from the source filename:
+membership hypotheses, and one heterogeneous `Litex.Same` hypothesis. Because
+this tracer is a source `sketch`, compiler2 emits it inside `__Sketch01`, nested
+under the namespace derived from the source filename. The theorem retains the
+`__fact0` and `__h0_*` naming convention:
 
 ```lean
 theorem __fact0 :
@@ -108,6 +112,32 @@ rational-normalization certificate, replays its numeric WD membership facts,
 and invokes `norm_num` only after compiler2 independently validates that exact
 source equality with Litex's rational-expression evaluator.
 
+The first function tracer is `examples/4_FunctionSet.lit`:
+
+```text
+forall s, S set, x s, f fn(y s) S:
+    f(x) = f(x)
+```
+
+The set parameters become `s S : Litex.Set`. The values `x` and `f` keep
+independent Lean carriers rather than being retyped to those sets. Their
+source parameter facts become `hx : Litex.In x s` and
+`hf : Litex.In f (Litex.fnSet s S)`. Each application is emitted as
+`Litex.fnApply f hf x hx`, using the exact function-membership FactId and the
+exact argument-membership WD edge selected by the verifier. The result already
+has carrier `S.Carrier`; no transport back to a native predicate is added.
+
+This first function adapter supports one named unary layer with no extra
+domain facts. Anonymous functions, multiple arguments, domain clauses, and
+curried function returns remain fail-closed.
+
+Sketch is a real source scope, not an example-file wrapper. Each top-level
+sketch is emitted as `__Sketch01`, `__Sketch02`, and so on. Its emitter context
+starts with the facts and symbols visible outside the sketch, but definitions
+and FactIds created inside it do not leak back out. Facts written directly at
+file level, including the function tracer above, remain direct declarations in
+the file namespace.
+
 Build and audit with:
 
 ```sh
@@ -144,8 +174,9 @@ deferred until the IR and v2 emitter support its Litex statement form; it is
 not represented by hand-written code under `examples/`.
 
 The compiler currently emits only the reviewed IR routes exercised by the
-three numbered examples. Checked named aliases of `R` and `C`, top-level atomic
-equality, nonnegative integer numerals, and addition are supported. Other
-atomic predicates and arithmetic operators, bare arbitrary-set choices
-(`have A set`), function spaces, application, richer set constructors, and
-broader production code-generation are not implemented yet.
+four numbered examples. Checked named aliases of `R` and `C`, top-level atomic
+equality, nonnegative integer numerals, addition, arbitrary set parameters,
+unary function sets, and named unary application are supported. Other atomic
+predicates and arithmetic operators, bare arbitrary-set choices
+(`have A set`), richer function forms, richer set constructors, and broader
+production code-generation are not implemented yet.

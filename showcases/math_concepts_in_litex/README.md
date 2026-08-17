@@ -54,7 +54,7 @@ dependency. Every child module remains independently runnable.
 | Euclidean geometry | Euclid I.1 from an explicit analytic equilateral vertex |
 | Linear algebra | Concrete `R^2` Gate A through kernel-zero iff injective |
 | Calculus | Relational derivatives for `x^2` and affine functions, differentiability existence, and a tangent-error identity |
-| Abstract algebra | Derived right identity and inverse laws, then preservation of identity and inverse by group homomorphisms |
+| Abstract algebra | The kernel of a group homomorphism is a normal subgroup, built from the earlier identity and inverse results |
 | Topology | Binary unions, three-way intersections, and composition of continuous maps via native preimages |
 
 All seven `main.lit` files pass their independent release file and module

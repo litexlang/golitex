@@ -6,16 +6,16 @@ use super::LitexToLeanObjectIr;
 /// One source application contract underlying a Litex `fn(...) ...` object.
 ///
 /// Litex application layers remain explicit in `LitexToLeanFunctionApplicationIr`;
-/// this type describes exactly one declared source layer. Every value, set,
-/// and function has target type `Litex.Object`; parameter sets and domain facts
-/// remain propositional requirements of that layer.
+/// this type describes exactly one declared source layer. Parameter sets and
+/// domain facts remain propositional requirements, so a native-carrier backend
+/// can consume them without collapsing the layer into a Lean function type.
 #[derive(Clone, Debug)]
 pub struct LitexToLeanFunctionTypeIr {
     /// Display-free source identity used when contracts are compared.
     pub semantic_key: String,
     pub parameters: Vec<LitexToLeanFunctionParameterIr>,
     pub domain_facts: Vec<Fact>,
-    /// Exact set-valued codomain used by `Litex.fnSetResult`.
+    /// Exact set-valued codomain of this source layer.
     pub return_set: Box<LitexToLeanObjectIr>,
 }
 

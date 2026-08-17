@@ -2,9 +2,9 @@ use crate::prelude::*;
 
 /// A structural compiler representation of one Litex object.
 ///
-/// The tree preserves source object syntax and symbol identity. Every node
-/// lowers to the one target type `LitexObject`; membership in numeric, user,
-/// and function sets is retained separately as `Litex.In` evidence.
+/// The tree preserves source object syntax and symbol identity without fixing
+/// a universal target carrier. Compiler2 selects Mathlib-native carriers while
+/// retaining numeric, user-set, and function membership as explicit evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LitexToLeanObjectIr {
     Symbol {
@@ -16,8 +16,8 @@ pub enum LitexToLeanObjectIr {
     },
     Constant(LitexToLeanConstantObjectIr),
     StandardSet(LitexToLeanStandardSetIr),
-    /// A Litex function set is itself one `LitexObject`, carrying a restricted
-    /// source application contract.
+    /// A Litex function set carries an exact source application contract; a
+    /// backend decides its native carrier representation.
     FunctionSet {
         function: Box<LitexToLeanFunctionTypeIr>,
     },
