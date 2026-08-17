@@ -419,6 +419,71 @@ impl Runtime {
         ))
     }
 
+    /// Definition of the native Euclidean quotient.
+    /// Example: `forall a Z, d N+: a = d * quot(a, d) + a % d`.
+    pub(crate) fn try_verify_quot_euclidean_decomposition(
+        &mut self,
+        left: &Obj,
+        right: &Obj,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<Option<StmtResult>, RuntimeError> {
+        fn decomposition_parts(side: &Obj) -> Option<(&Obj, &Obj)> {
+            let Obj::Add(sum) = side else {
+                return None;
+            };
+            let Obj::Mul(product) = sum.left.as_ref() else {
+                return None;
+            };
+            let Obj::Quot(quot) = product.right.as_ref() else {
+                return None;
+            };
+            let Obj::Mod(remainder) = sum.right.as_ref() else {
+                return None;
+            };
+            if !objs_equal_by_display_string(product.left.as_ref(), quot.right.as_ref())
+                || !objs_equal_by_display_string(remainder.left.as_ref(), quot.left.as_ref())
+                || !objs_equal_by_display_string(remainder.right.as_ref(), quot.right.as_ref())
+            {
+                return None;
+            }
+            Some((quot.left.as_ref(), quot.right.as_ref()))
+        }
+
+        let (dividend, divisor) = if let Some((dividend, divisor)) = decomposition_parts(right) {
+            if !objs_equal_by_display_string(left, dividend) {
+                return Ok(None);
+            }
+            (dividend, divisor)
+        } else if let Some((dividend, divisor)) = decomposition_parts(left) {
+            if !objs_equal_by_display_string(right, dividend) {
+                return Ok(None);
+            }
+            (dividend, divisor)
+        } else {
+            return Ok(None);
+        };
+
+        let dividend_in_z: AtomicFact =
+            InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into();
+        let divisor_in_n_pos: AtomicFact =
+            InFact::new(divisor.clone(), StandardSet::NPos.into(), line_file.clone()).into();
+        let Some(premises) =
+            self.verify_builtin_rule_premises(&[dividend_in_z, divisor_in_n_pos], builtin_state)?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(
+            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                "equality: Euclidean quotient decomposition a = d * quot(a, d) + a % d".to_string(),
+                premises,
+            )
+            .into(),
+        ))
+    }
+
     // Euclidean remainder uniqueness identifies a known bounded remainder with `%`.
     // Example: `a = m * q + r`, `0 <= r < m`, `m > 0` => `a % m = r`.
     pub(crate) fn try_verify_mod_eq_remainder_from_euclidean_division(

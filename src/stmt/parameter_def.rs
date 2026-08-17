@@ -646,6 +646,13 @@ fn collect_cited_param_indices_from_obj(
             shadowed_names,
             out,
         ),
+        Obj::Quot(x) => collect_cited_param_indices_from_two_objs(
+            &x.left,
+            &x.right,
+            previous_param_indices,
+            shadowed_names,
+            out,
+        ),
         Obj::Gcd(x) => collect_cited_param_indices_from_two_objs(
             &x.left,
             &x.right,

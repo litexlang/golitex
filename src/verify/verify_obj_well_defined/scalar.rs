@@ -298,6 +298,43 @@ impl Runtime {
         Ok(())
     }
 
+    /// Mathematical contract: `quot(a,d)` is the Euclidean integer quotient
+    /// for an integer dividend and a positive natural divisor.
+    pub(in crate::verify) fn verify_quot_well_defined(
+        &mut self,
+        quot: &Quot,
+        verify_state: &UseContextVerifyState,
+    ) -> Result<(), RuntimeError> {
+        self.verify_child_obj_well_defined_and_store_cache(
+            &quot.left,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 0 },
+        )?;
+        self.verify_child_obj_well_defined_and_store_cache(
+            &quot.right,
+            verify_state,
+            WellDefinedObjChildRole::ConstructorArgument { argument_index: 1 },
+        )?;
+        self.require_obj_in_z(&quot.left, verify_state)?;
+
+        let divisor_in_n_pos: AtomicFact = InFact::new(
+            (*quot.right).clone(),
+            StandardSet::NPos.into(),
+            default_line_file(),
+        )
+        .into();
+        let result = self.verify_atomic_fact(&divisor_in_n_pos, verify_state)?;
+        if result.is_unknown() {
+            return Err(RuntimeError::from(WellDefinedRuntimeError(
+                RuntimeErrorStruct::new_with_just_msg(format!(
+                    "quot divisor `{}` must be in N+",
+                    quot.right
+                )),
+            )));
+        }
+        Ok(())
+    }
+
     /// Mathematical contract: `gcd(a,b)` is meaningful for integers when at
     /// least one of `a` and `b` is provably nonzero.
     pub(in crate::verify) fn verify_gcd_well_defined(

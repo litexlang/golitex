@@ -1,218 +1,62 @@
 import Litex.Core
 
-/-!
-# Checked Litex verifier rules
-
-This module proves concrete verifier rules from the shared `Litex.Core`
-interpretation and Mathlib. Its declarations are ordinary Lean theorems, not
-additional semantic axioms. See `lean/SEMANTIC_REFERENCE.md` for their
-source-concept correspondence and exact trust boundary.
--/
-
 namespace Litex.Rules
 
-theorem notEqualSymmetry {a b : Object} (h : a ≠ b) : b ≠ a := by
-  exact Ne.symm h
+universe u
 
-theorem numeralInN (n : Nat) : In (OfNat.ofNat n : Object) N := by
-  apply inN_iff.mpr
-  exact ⟨n, rfl⟩
+theorem complexInC (z : ℂ) : Litex.In z Litex.C :=
+  Litex.In.own Litex.C z
 
-theorem numeralInNPos (n : Nat) (positive : 0 < n) :
-    In (OfNat.ofNat n : Object) NPos := by
-  apply inNPos_iff.mpr
-  exact ⟨n, positive, rfl⟩
+theorem complexNatInN (n : ℕ) : Litex.In (n : ℂ) Litex.N :=
+  ⟨n, Litex.Same.complexNat n⟩
 
-theorem numeralInZ (n : Nat) : In (OfNat.ofNat n : Object) Z := by
-  apply inZ_iff.mpr
-  exact ⟨n, rfl⟩
+theorem complexIntInZ (z : ℤ) : Litex.In (z : ℂ) Litex.Z :=
+  ⟨z, Litex.Same.complexInt z⟩
 
-theorem numeralInQ (n : Nat) : In (OfNat.ofNat n : Object) Q := by
-  apply inQ_iff.mpr
-  exact ⟨n, rfl⟩
+theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
+  ⟨q, Litex.Same.complexRat q⟩
 
-theorem numeralInR (n : Nat) : In (OfNat.ofNat n : Object) R := by
-  apply inR_iff.mpr
-  exact ⟨n, rfl⟩
+theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
+  ⟨r, Litex.Same.complexReal r⟩
 
-theorem numeralInC (n : Nat) : In (OfNat.ofNat n : Object) C := by
-  apply inC_iff.mpr
-  exact ⟨n, rfl⟩
+/-- Introduce membership in a predicate-defined set from a semantically equal
+base representative satisfying the predicate. -/
+theorem inSetBuilder
+    {base : Litex.Set.{u}}
+    {predicate : base.Carrier → Prop}
+    {α : Litex.u.{u}}
+    {x : α}
+    {y : base.Carrier}
+    (hxy : Litex.Same x y)
+    (hy : predicate y) :
+    Litex.In x (Litex.setBuilder base predicate) := by
+  let selected : Subtype predicate := ⟨y, hy⟩
+  exact ⟨selected, .trans hxy (.symm (.subtype selected))⟩
 
-theorem imaginaryUnitInC : In i C := by
-  apply inC_iff.mpr
-  exact ⟨Complex.I, rfl⟩
-
-theorem eInR : In e R := by
-  apply inR_iff.mpr
-  exact ⟨Real.exp 1, rfl⟩
-
-theorem realSetNonempty : IsNonemptySet R := by
-  exact ⟨0, numeralInR 0⟩
-
-theorem objectIsSet (x : Object) : IsSet x := by
-  exact everyObjectIsSet x
-
-theorem numeralLt (m n : Nat) :
-    Litex.Lt (OfNat.ofNat m : Object) (OfNat.ofNat n : Object) ↔ m < n := by
-  rw [show (OfNat.ofNat m : Object) = embedComplex ((m : ℝ) : ℂ) by
-    simp [OfNat.ofNat]]
-  rw [show (OfNat.ofNat n : Object) = embedComplex ((n : ℝ) : ℂ) by
-    simp [OfNat.ofNat]]
-  rw [lt_embedReal]
-  norm_num
-
-theorem numeralLe (m n : Nat) :
-    Litex.Le (OfNat.ofNat m : Object) (OfNat.ofNat n : Object) ↔ m ≤ n := by
-  rw [show (OfNat.ofNat m : Object) = embedComplex ((m : ℝ) : ℂ) by
-    simp [OfNat.ofNat]]
-  rw [show (OfNat.ofNat n : Object) = embedComplex ((n : ℝ) : ℂ) by
-    simp [OfNat.ofNat]]
-  rw [le_embedReal]
-  norm_num
-
-theorem numeralNe (m n : Nat) :
-    (OfNat.ofNat m : Object) ≠ (OfNat.ofNat n : Object) ↔ m ≠ n := by
+/-- Membership in a predicate-defined set always yields a satisfying base
+representative semantically equal to the original value. -/
+theorem inSetBuilder_iff
+    {base : Litex.Set.{u}}
+    {predicate : base.Carrier → Prop}
+    {α : Litex.u.{u}}
+    {x : α} :
+    Litex.In x (Litex.setBuilder base predicate) ↔
+      ∃ y : base.Carrier, predicate y ∧ Litex.Same x y := by
   constructor
-  · intro h hmn
-    apply h
-    subst n
-    rfl
-  · intro h hobjects
-    apply h
-    have hcomplex : (m : ℂ) = (n : ℂ) := embedComplex_injective hobjects
-    exact_mod_cast hcomplex
+  · rintro ⟨selected, hxSelected⟩
+    exact ⟨selected.val, selected.property,
+      .trans hxSelected (.subtype selected)⟩
+  · rintro ⟨y, hy, hxy⟩
+    exact inSetBuilder hxy hy
 
-theorem positiveRealMembership {x : Object} (h : In x RPos) : Lt 0 x := by
-  rcases inRPos_iff.mp h with ⟨r, hr, rfl⟩
-  rw [show (0 : Object) = embedComplex ((0 : ℝ) : ℂ) by
-    simp only [OfNat.ofNat]
-    congr 1
-    norm_num]
-  exact (lt_embedReal 0 r).mpr hr
-
-theorem naturalInInteger {x : Object} (h : In x N) : In x Z := by
-  rcases inN_iff.mp h with ⟨n, rfl⟩
-  apply inZ_iff.mpr
-  refine ⟨(n : ℤ), ?_⟩
-  simp
-
-theorem integerInRational {x : Object} (h : In x Z) : In x Q := by
-  rcases inZ_iff.mp h with ⟨z, rfl⟩
-  apply inQ_iff.mpr
-  refine ⟨(z : ℚ), ?_⟩
-  simp
-
-theorem integerAddClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
-    In (Litex.add a b) Z := by
-  rcases inZ_iff.mp ha with ⟨a, rfl⟩
-  rcases inZ_iff.mp hb with ⟨b, rfl⟩
-  apply inZ_iff.mpr
-  refine ⟨a + b, ?_⟩
-  simp
-
-theorem integerSubClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
-    In (Litex.sub a b) Z := by
-  rcases inZ_iff.mp ha with ⟨a, rfl⟩
-  rcases inZ_iff.mp hb with ⟨b, rfl⟩
-  apply inZ_iff.mpr
-  refine ⟨a - b, ?_⟩
-  simp
-
-theorem integerMulClosure {a b : Object} (ha : In a Z) (hb : In b Z) :
-    In (Litex.mul a b) Z := by
-  rcases inZ_iff.mp ha with ⟨a, rfl⟩
-  rcases inZ_iff.mp hb with ⟨b, rfl⟩
-  apply inZ_iff.mpr
-  refine ⟨a * b, ?_⟩
-  simp
-
-theorem rationalInReal {x : Object} (h : In x Q) : In x R := by
-  rcases inQ_iff.mp h with ⟨q, rfl⟩
-  apply inR_iff.mpr
-  refine ⟨(q : ℝ), ?_⟩
-  simp
-
-theorem realInComplex {x : Object} (h : In x R) : In x C := by
-  rcases inR_iff.mp h with ⟨r, rfl⟩
-  apply inC_iff.mpr
-  exact ⟨r, rfl⟩
-
-theorem complexAddClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.add a b) C := by
-  rcases inC_iff.mp ha with ⟨a, rfl⟩
-  rcases inC_iff.mp hb with ⟨b, rfl⟩
-  apply inC_iff.mpr
-  refine ⟨a + b, ?_⟩
-  simp
-
-theorem complexSubClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.sub a b) C := by
-  rcases inC_iff.mp ha with ⟨a, rfl⟩
-  rcases inC_iff.mp hb with ⟨b, rfl⟩
-  apply inC_iff.mpr
-  refine ⟨a - b, ?_⟩
-  simp
-
-/-! A negative source integer remains a proof-free `Object` term (`0 - n`).
-Its carrier proof is an ordinary theorem, so generated WD audits never place
-proof arguments inside the represented number. -/
-theorem negativeNumeralInC (n : Nat) :
-    In (Litex.sub 0 (OfNat.ofNat n : Object)) C :=
-  complexSubClosure (numeralInC 0) (numeralInC n)
-
-theorem complexMulClosure {a b : Object} (ha : In a C) (hb : In b C) :
-    In (Litex.mul a b) C := by
-  rcases inC_iff.mp ha with ⟨a, rfl⟩
-  rcases inC_iff.mp hb with ⟨b, rfl⟩
-  apply inC_iff.mpr
-  refine ⟨a * b, ?_⟩
-  simp
-
-theorem complexDivClosure {a b : Object}
-    (ha : In a C) (hb : In b C) (hb0 : b ≠ 0) :
-    In (Litex.div a b) C := by
-  rcases inC_iff.mp ha with ⟨a, rfl⟩
-  rcases inC_iff.mp hb with ⟨b, rfl⟩
-  apply inC_iff.mpr
-  refine ⟨a / b, ?_⟩
-  simp
-
-theorem realAddClosure {a b : Object}
-    (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.add a b) R := by
-  rcases inR_iff.mp ha with ⟨a, rfl⟩
-  rcases inR_iff.mp hb with ⟨b, rfl⟩
-  apply inR_iff.mpr
-  refine ⟨a + b, ?_⟩
-  simp
-
-theorem realSubClosure {a b : Object}
-    (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.sub a b) R := by
-  rcases inR_iff.mp ha with ⟨a, rfl⟩
-  rcases inR_iff.mp hb with ⟨b, rfl⟩
-  apply inR_iff.mpr
-  refine ⟨a - b, ?_⟩
-  simp
-
-theorem realMulClosure {a b : Object}
-    (haC : In a C) (hbC : In b C) (ha : In a R) (hb : In b R) :
-    In (Litex.mul a b) R := by
-  rcases inR_iff.mp ha with ⟨a, rfl⟩
-  rcases inR_iff.mp hb with ⟨b, rfl⟩
-  apply inR_iff.mpr
-  refine ⟨a * b, ?_⟩
-  simp
-
-theorem realDivClosure {a b : Object}
-    (haC : In a C) (hbC : In b C) (hb0 : b ≠ 0)
-    (ha : In a R) (hb : In b R) :
-    In (div a b) R := by
-  rcases inR_iff.mp ha with ⟨a, rfl⟩
-  rcases inR_iff.mp hb with ⟨b, rfl⟩
-  apply inR_iff.mpr
-  refine ⟨a / b, ?_⟩
-  simp
+theorem inBaseOfInSetBuilder
+    {base : Litex.Set.{u}}
+    {predicate : base.Carrier → Prop}
+    {α : Litex.u.{u}}
+    {x : α}
+    (h : Litex.In x (Litex.setBuilder base predicate)) :
+    Litex.In x base := by
+  rcases (inSetBuilder_iff.mp h) with ⟨y, _, hxy⟩
+  exact ⟨y, hxy⟩
 
 end Litex.Rules

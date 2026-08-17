@@ -255,6 +255,11 @@ impl Runtime {
                 x.right.as_ref(),
                 names,
             ),
+            Obj::Quot(x) => Self::obj_pair_depends_on_given_exist_param(
+                x.left.as_ref(),
+                x.right.as_ref(),
+                names,
+            ),
             Obj::Gcd(x) => Self::obj_pair_depends_on_given_exist_param(
                 x.left.as_ref(),
                 x.right.as_ref(),

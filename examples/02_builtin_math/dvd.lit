@@ -1,0 +1,24 @@
+# Tracer: builtin integer divisibility predicate
+#
+# Before (did not work):
+# $dvd(12, 3)
+# Former behavior: WellDefinedError: fact `dvd` not defined.
+#
+# Now (verified):
+$dvd(12, 3)
+# Current behavior: the nonzero integer 3 divides the integer 12.
+
+forall x Z, y Z*:
+    x % y = 0
+    =>:
+        $dvd(x, y)
+
+forall x Z, y Z*:
+    $dvd(x, y)
+    =>:
+        x % y = 0
+        exist a Z st {x = a * y}
+
+# Boundary: `$dvd(7, 3)` and every zero-divisor application remain rejected;
+# the executable negative regressions live in `native_number_theory.rs`.
+# Evidence: target/release/litex -compact -isolated -runner -f examples/02_builtin_math/dvd.lit

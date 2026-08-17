@@ -83,7 +83,7 @@ impl Runtime {
         }
 
         if self.objs_have_same_known_equality_rc_in_some_env(left, right) {
-            if self.litex_to_lean_ir_mode() {
+            if self.captures_well_definedness() {
                 if let Some(path) = self.compiler_known_equality_path(left, right) {
                     if !path.is_empty() {
                         let target: Fact =

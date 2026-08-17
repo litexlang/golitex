@@ -106,6 +106,11 @@ impl Runtime {
                 .into();
                 self.resolve_obj_try_fold_arithmetic(result)
             }
+            Obj::Quot(x) => {
+                let result: Obj =
+                    Quot::new(self.resolve_obj(&x.left), self.resolve_obj(&x.right)).into();
+                self.resolve_obj_try_fold_arithmetic(result)
+            }
             Obj::Gcd(gcd) => {
                 let result: Obj =
                     Gcd::new(self.resolve_obj(&gcd.left), self.resolve_obj(&gcd.right)).into();

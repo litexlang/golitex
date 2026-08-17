@@ -1,75 +1,79 @@
-# Litex Lean library
+# Litex-to-Lean Compiler 2
 
-This Lake package owns the shared target ABI used by Litex-to-Lean output.
+This repository is an independent executable prototype of the second Litex
+target ABI. It does not modify or wrap the existing universal-`Litex.Object`
+compiler.
 
-- `Litex.Core` defines the universal `Litex.Object` ABI and its small semantic
-  boundary.
-- `Litex.Rules` proves concrete verifier rules once and re-exports the
-  core by importing it.
-- `Litex` is the package root and re-exports `Litex.Rules`.
-- [`SEMANTIC_REFERENCE.md`](SEMANTIC_REFERENCE.md) audits every current core
-  declaration and builtin theorem against Tao's *Analysis I*, or explicitly
-  classifies it as a target representation device, extension, or known drift.
+The package retains the established `Litex` namespace and `abiVersion` name,
+but reports `Litex.abiVersion = 2` so it cannot be mistaken for the old object
+ABI.
 
-Generated files import only `Litex.Rules`. A generated ABI-version
-check fails if the file is compiled against an incompatible shared library.
+The implemented scope is deliberately small:
 
-The executable compiler ledger lives in [`examples/`](examples/). Its
-`compile_to_lean_examples.lit` source and checked-in generated
-`compile_to_lean_examples.lean` stay beside this ABI and share this Lake
-project and toolchain.
+- `Litex.BridgeRule` is the controlled extension point for primitive
+  representation rules;
+- `Litex.Bridge` records one installed cross-carrier representation step;
+- `Litex.Same` is their reflexive, symmetric, transitive closure;
+- `Litex.Set` packages the exact carrier of a Litex set;
+- `Litex.In` defines heterogeneous membership through `Same`;
+- `N`, `Z`, `Q`, `R`, and `C` use Mathlib's native carriers;
+- `setBuilder` represents a predicate-defined subset by a subtype carrier.
 
-## Why the ABI has one object type
+The primary executable example translates the intended source shape
 
-The universal `Litex.Object` is not a convenience erasure of native Lean
-types. It reflects Litex's pure-set object model: every source value, standard
-numeric set, user set, function space, and function value is one object, and
-`Litex.In x S` records membership without changing the type of `x`. In
-particular, `Litex.N`, `Litex.R`, and `Litex.C` are objects rather than Lean
-carrier types, and one numeral object may have membership proofs for all three.
-
-`Litex.Object : Type` is a Lean meta-level carrier, not an internal Litex
-universal set. The ABI does not provide unrestricted comprehension, and
-partial source constructions are accepted only after the Litex verifier has
-retained their exact well-definedness evidence. Object denotation is
-proof-free; generated theorems replay that evidence as local propositions in
-the Lean scope corresponding to the owning Litex environment. The source
-semantics decide that `IsSet` is always true, definitionally, rather than
-introducing a second object ontology.
-
-See the [language-level explanation](../docs/Manual.md#pure-set-object-model)
-and the
-[normative target design](../src/compile_to_lean/litex_object_design.md#why-this-is-source-semantics-not-target-side-type-erasure).
-
-The package is stable within a matching Litex release, not immutable forever.
-An incompatible source-semantic or Lean-signature change must be coordinated
-with the compiler and reviewed for an `abiVersion` update. Generated files only
-import `Litex.Rules`; they do not add a per-file ABI assertion.
-
-Add this package as a Lake dependency before compiling generated output:
-
-```toml
-[[require]]
-name = "litex"
-git = "https://github.com/litexlang/golitex"
-rev = "<matching Litex release or commit>"
-subDir = "lean"
+```text
+forall a R, b C:
+    a = b
+    =>:
+        b $in R
+        a $in C
 ```
 
-The package currently targets Lean and Mathlib `v4.28.0`.
+to two complex-valued binders, separate membership hypotheses, and one
+heterogeneous `Litex.Same` hypothesis. The emitted theorem shape retains the
+old compiler's `__SetSystem01`, `__fact0`, and `__h0_*` naming convention:
 
-## Cursor and VS Code
+```lean
+theorem __fact0 :
+  ∀ (a : ℂ) (__h0_1 : Litex.In a Litex.R)
+    (b : ℂ) (__h0_2 : Litex.In b Litex.C)
+    (__h0_3 : Litex.Same a b),
+    Litex.In b Litex.R ∧ Litex.In a Litex.C
+```
 
-The repository-level workspace enables automatic dependency builds for the
-Lean extension. Files below `lean/` use this directory as their Lake project
-root and the version in `lean-toolchain`; do not run them as standalone files
-from the Rust repository root. A command-line equivalent of the editor check
-is:
+See `examples/SetSystem.lean` for the compiled proof. Compiler2 examples live
+exclusively in that directory; the `Compiler2Examples` Lake target compiles
+them from the compiler2 environment.
 
-```bash
-cd lean
+For an exact user-defined set, the compiler creates a hidden carrier such as
+`__Marker` and emits `Markers := Litex.Set.ofType __Marker`. An element of
+`__Marker` is automatically in `Markers` via `Litex.In.own`. A proper subset,
+such as the nonzero reals, is instead emitted with `Litex.setBuilder`, whose
+carrier is a subtype and therefore does not collapse back to all reals.
+
+Build with:
+
+```sh
 lake build
 ```
 
-After dependencies or `lean-toolchain` change, run `Lean 4: Restart Server` in
-Cursor once to discard diagnostics produced by the old server process.
+The example file prints each tracer theorem's Lean axiom dependencies and
+contains a checked negative probe showing that the standard header does not
+install a `Bool`-to-`Nat` bridge. This project declares no new Lean axioms.
+The numeric examples inherit Mathlib's ordinary foundational dependencies for
+`ℝ` and `ℂ` (`propext`, `Classical.choice`, and `Quot.sound`); the independent
+finite-carrier example has no axiom dependencies.
+
+`BridgeRule` is intentionally extensible on the Lean side: an integration may
+register a new, reviewed representation relation. The Litex compiler will only
+emit/import its own allowlisted rules; ordinary source equality never creates
+a bridge by itself.
+
+`universe u` and `Litex.u := Type u` use Lean's ordinary universe hierarchy;
+they do not create a separate Litex universe. Mathlib's usual numeric carriers
+therefore work directly. `Same` currently relates different carriers at the
+same Lean universe level; cross-universe edges are not part of this slice.
+
+Function spaces, application, compiler IR, verifier evidence, FactIds,
+well-definedness DAGs, set union/intersection/power set, and production
+code-generation are not implemented yet.

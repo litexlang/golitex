@@ -102,6 +102,7 @@ impl Obj {
             Obj::Mul(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
             Obj::Div(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
             Obj::Mod(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
+            Obj::Quot(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
             Obj::Gcd(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
             Obj::Lcm(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),
             Obj::Min(x) => collect_forall_free_param_names_in_pair(&x.left, &x.right, collector),

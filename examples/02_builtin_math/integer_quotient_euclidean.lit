@@ -1,11 +1,19 @@
-import std basics
+# Before migration, this example imported std/basics and used the
+# source-defined selection function below:
+# import std basics
+# forall a Z, d N+:
+#     basics::integer_quotient(a, d) $in Z
+#     a = d * basics::integer_quotient(a, d) + a % d
+# basics::integer_quotient(-7, 3) = -3
+# -7 = 3 * basics::integer_quotient(-7, 3) + -7 % 3
 
-# The quotient is an ordinary source-defined function in std/basics. The
-# kernel verifies the narrow unique-existence fact behind that selection.
+# Active interface: quot is a kernel object, so no std import is needed.
+# Boundary: the dividend must be in Z and the divisor must be in N+.
+# Evidence: target/release/litex -isolated -f examples/02_builtin_math/integer_quotient_euclidean.lit
 
 forall a Z, d N+:
-    basics::integer_quotient(a, d) $in Z
-    a = d * basics::integer_quotient(a, d) + a % d
+    quot(a, d) $in Z
+    a = d * quot(a, d) + a % d
 
 # A bounded decomposition has the Euclidean remainder.
 forall a Z, m N+, q Z, r N:
@@ -15,6 +23,6 @@ forall a Z, m N+, q Z, r N:
         a % m = r
 
 # Negative dividends use non-negative Euclidean remainders.
-basics::integer_quotient(-7, 3) = -3
+quot(-7, 3) = -3
 -7 % 3 = 2
--7 = 3 * basics::integer_quotient(-7, 3) + -7 % 3
+-7 = 3 * quot(-7, 3) + -7 % 3

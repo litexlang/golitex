@@ -89,7 +89,7 @@ impl Runtime {
             let known_membership: AtomicFact =
                 InFact::new(obj.clone(), known_set, line_file.clone()).into();
             if self
-                .verify_non_equational_atomic_fact_with_known_fact(&known_membership)?
+                .verify_non_equational_atomic_fact_with_known_atomic_facts(&known_membership)?
                 .is_true()
             {
                 return Ok(true);
@@ -200,7 +200,7 @@ impl Runtime {
         let positive: AtomicFact =
             LessFact::new(Number::new("0".to_string()).into(), obj.clone(), line_file).into();
         Ok(self
-            .verify_non_equational_atomic_fact_with_known_fact(&positive)?
+            .verify_non_equational_atomic_fact_with_known_atomic_facts(&positive)?
             .is_true())
     }
 

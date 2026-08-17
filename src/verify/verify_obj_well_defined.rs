@@ -62,8 +62,10 @@ impl Runtime {
         let ordinary_cache_key = compiler_reusable_cache_key
             .clone()
             .unwrap_or_else(|| WellDefinedCacheKey::without_function_contract(obj.to_string()));
-        let captures_evidence = self.captures_litex_to_lean_well_definedness()
-            && !self.well_definedness_capture_stack.is_empty();
+        let captures_evidence = self
+            .well_defined_capture
+            .as_ref()
+            .is_some_and(|capture| !capture.frames.is_empty());
         let cached = if captures_evidence {
             compiler_reusable_cache_key
                 .as_ref()
@@ -105,7 +107,6 @@ impl Runtime {
                 ordinary_cache_key.clone(),
                 compiler_reusable_cache_key.is_some(),
             );
-            self.well_definedness_capture_depth += 1;
         }
         let result = match obj {
             Obj::Atom(AtomObj::Identifier(identifier)) => {
@@ -123,6 +124,7 @@ impl Runtime {
             Obj::Mul(mul) => self.verify_mul_well_defined(mul, verify_state),
             Obj::Div(div) => self.verify_div_well_defined(div, verify_state),
             Obj::Mod(m) => self.verify_mod_well_defined(m, verify_state),
+            Obj::Quot(x) => self.verify_quot_well_defined(x, verify_state),
             Obj::Gcd(g) => self.verify_gcd_well_defined(g, verify_state),
             Obj::Lcm(x) => self.verify_lcm_well_defined(x, verify_state),
             Obj::Floor(x) => self.verify_floor_well_defined(x, verify_state),
@@ -241,8 +243,6 @@ impl Runtime {
         };
 
         if captures_evidence {
-            self.well_definedness_capture_depth =
-                self.well_definedness_capture_depth.saturating_sub(1);
             let captured_obj_id = self.end_well_definedness_object_capture(
                 result.is_ok(),
                 intrinsic_well_definedness_result_set(obj),
@@ -292,7 +292,7 @@ mod tests {
     fn to_lean_capture_rejects_active_reentry_without_a_frozen_edge() {
         let mut runtime = Runtime::new();
         runtime.new_file_path_new_env_new_name_scope("to-lean-active-wd-reentry.lit");
-        runtime.replace_litex_to_lean_ir_mode(true);
+        runtime.start_well_defined_capture();
         runtime.begin_statement_well_definedness_capture();
         let object: Obj = Number::new("1".to_string()).into();
         runtime
@@ -318,7 +318,7 @@ mod tests {
 fn intrinsic_well_definedness_result_set(obj: &Obj) -> Option<Obj> {
     match obj {
         Obj::Add(_) | Obj::Sub(_) | Obj::Mul(_) | Obj::Div(_) => Some(StandardSet::C.into()),
-        Obj::Mod(_) => Some(StandardSet::Z.into()),
+        Obj::Mod(_) | Obj::Quot(_) => Some(StandardSet::Z.into()),
         _ => None,
     }
 }

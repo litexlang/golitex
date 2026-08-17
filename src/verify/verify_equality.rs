@@ -227,7 +227,7 @@ impl Runtime {
         // Reduce exactly one checked definition already present in the goal.
         // Comparison remains limited to known facts, terminating computation,
         // and constructor descent.
-        let checked_function_source = if self.captures_litex_to_lean_well_definedness() {
+        let checked_function_source = if self.captures_well_definedness() {
             self.checked_function_definition_reduction_source(application_side)?
         } else {
             None

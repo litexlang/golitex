@@ -67,6 +67,8 @@ impl AtomicFact {
             AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == PRIME => 1,
             AtomicFact::NormalAtomicFact(a) if a.predicate.to_string() == COPRIME => 2,
             AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == COPRIME => 2,
+            AtomicFact::NormalAtomicFact(a) if a.predicate.to_string() == DVD => 2,
+            AtomicFact::NotNormalAtomicFact(a) if a.predicate.to_string() == DVD => 2,
             AtomicFact::NormalAtomicFact(a)
                 if a.predicate.to_string() == crate::common::keywords::IS_CHOICE_FUNCTION_FOR =>
             {

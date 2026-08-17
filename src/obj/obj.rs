@@ -16,6 +16,7 @@ pub enum Obj {
     Mul(Mul),
     Div(Div),
     Mod(Mod),
+    Quot(Quot),
     Gcd(Gcd),
     Lcm(Lcm),
     Floor(Floor),
@@ -179,6 +180,7 @@ pub enum ObjKind {
     Factorial = 89,
     Reduce = 90,
     FiniteSetReduce = 91,
+    Quot = 92,
 }
 
 impl ObjKind {
@@ -649,6 +651,12 @@ pub struct Mod {
 }
 
 #[derive(Clone)]
+pub struct Quot {
+    pub left: Box<Obj>,
+    pub right: Box<Obj>,
+}
+
+#[derive(Clone)]
 pub struct Gcd {
     pub left: Box<Obj>,
     pub right: Box<Obj>,
@@ -957,6 +965,15 @@ impl Div {
 impl Mod {
     pub fn new(left: Obj, right: Obj) -> Self {
         Mod {
+            left: Box::new(left),
+            right: Box::new(right),
+        }
+    }
+}
+
+impl Quot {
+    pub fn new(left: Obj, right: Obj) -> Self {
+        Quot {
             left: Box::new(left),
             right: Box::new(right),
         }
@@ -1467,6 +1484,7 @@ fn precedence(o: &Obj) -> u8 {
         | Obj::Sqrt(_)
         | Obj::Log(_)
         | Obj::Lcm(_)
+        | Obj::Quot(_)
         | Obj::Floor(_)
         | Obj::Ceil(_)
         | Obj::Min(_)
@@ -1516,6 +1534,7 @@ impl Obj {
             Obj::Mul(_) => ObjKind::Mul,
             Obj::Div(_) => ObjKind::Div,
             Obj::Mod(_) => ObjKind::Mod,
+            Obj::Quot(_) => ObjKind::Quot,
             Obj::Gcd(_) => ObjKind::Gcd,
             Obj::Lcm(_) => ObjKind::Lcm,
             Obj::Floor(_) => ObjKind::Floor,
@@ -1622,6 +1641,7 @@ impl Obj {
         }
         match self {
             Obj::Mod(value) => binary(&value.left, &value.right, index),
+            Obj::Quot(value) => binary(&value.left, &value.right, index),
             Obj::Gcd(value) => binary(&value.left, &value.right, index),
             Obj::Lcm(value) => binary(&value.left, &value.right, index),
             Obj::Min(value) => binary(&value.left, &value.right, index),
@@ -1749,6 +1769,7 @@ impl Obj {
             Obj::Mul(_) => MUL.to_string(),
             Obj::Div(_) => DIV.to_string(),
             Obj::Mod(_) => MOD.to_string(),
+            Obj::Quot(_) => QUOT.to_string(),
             Obj::Gcd(_) => GCD.to_string(),
             Obj::Lcm(_) => LCM.to_string(),
             Obj::Floor(_) => FLOOR.to_string(),
@@ -1846,6 +1867,13 @@ impl Obj {
                 m.left.fmt_with_precedence(f, 2)?;
                 write!(f, " {} ", MOD)?;
                 m.right.fmt_with_precedence(f, 2)?;
+            }
+            Obj::Quot(x) => {
+                write!(f, "{}{}", QUOT, LEFT_BRACE)?;
+                x.left.fmt_with_precedence(f, 0)?;
+                write!(f, "{COMMA} ")?;
+                x.right.fmt_with_precedence(f, 0)?;
+                write!(f, "{}", RIGHT_BRACE)?;
             }
             Obj::Gcd(g) => {
                 write!(f, "{}{}", GCD, LEFT_BRACE)?;
@@ -2063,6 +2091,11 @@ impl Obj {
             )
             .into(),
             Obj::Mod(x) => Mod::new(
+                Obj::replace_bound_identifier(*x.left, from, to),
+                Obj::replace_bound_identifier(*x.right, from, to),
+            )
+            .into(),
+            Obj::Quot(x) => Quot::new(
                 Obj::replace_bound_identifier(*x.left, from, to),
                 Obj::replace_bound_identifier(*x.right, from, to),
             )
@@ -3451,6 +3484,12 @@ impl From<Div> for Obj {
 impl From<Mod> for Obj {
     fn from(m: Mod) -> Self {
         Obj::Mod(m)
+    }
+}
+
+impl From<Quot> for Obj {
+    fn from(x: Quot) -> Self {
+        Obj::Quot(x)
     }
 }
 

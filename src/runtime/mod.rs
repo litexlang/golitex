@@ -9,7 +9,6 @@ mod runtime_instantiate_fact;
 mod runtime_instantiate_have_fn_forall;
 mod runtime_instantiate_obj;
 mod runtime_known_object_properties;
-mod runtime_litex_to_lean_ir;
 mod runtime_parsing_free_param_collection;
 mod runtime_resolve_obj;
 mod runtime_statement_memo;

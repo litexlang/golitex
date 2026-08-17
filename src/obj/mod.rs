@@ -32,9 +32,9 @@ pub use obj::{
     IntervalObjStruct, Lcm, ListSet, Ln, Log, MatrixAdd, MatrixListObj, MatrixMul, MatrixPow,
     MatrixScalarMul, MatrixSet, MatrixSub, Max, Min, Mod, Mul, Number, Obj,
     ObjAsStructInstanceWithFieldAccess, ObjAtIndex, ObjKind, OneSideInfinityIntervalObj,
-    OneSideInfinityIntervalObjStruct, Pi, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Range,
-    RealPart, Reduce, Replacement, SeqSet, SetBuilder, SetMinus, Sign, Sin, Sqrt, StructObj, Sub,
-    Sum, SumOfFiniteSet, Tan, Tuple, TupleDim, Union,
+    OneSideInfinityIntervalObjStruct, Pi, Pow, PowerSet, Product, ProductOfFiniteSet, Proj, Quot,
+    Range, RealPart, Reduce, Replacement, SeqSet, SetBuilder, SetMinus, Sign, Sin, Sqrt, StructObj,
+    Sub, Sum, SumOfFiniteSet, Tan, Tuple, TupleDim, Union,
 };
 pub use obj_alpha_key::{
     nested_obj_binder_normalized_key, obj_equality_key,

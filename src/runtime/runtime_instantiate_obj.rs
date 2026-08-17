@@ -90,6 +90,11 @@ impl Runtime {
             Obj::Mul(inner) => self.inst_mul(inner, param_to_arg_map, param_obj_type),
             Obj::Div(inner) => self.inst_div(inner, param_to_arg_map, param_obj_type),
             Obj::Mod(inner) => self.inst_mod(inner, param_to_arg_map, param_obj_type),
+            Obj::Quot(inner) => Ok(Quot::new(
+                self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
+                self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,
+            )
+            .into()),
             Obj::Gcd(inner) => Ok(Gcd::new(
                 self.inst_obj(&inner.left, param_to_arg_map, param_obj_type)?,
                 self.inst_obj(&inner.right, param_to_arg_map, param_obj_type)?,

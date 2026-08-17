@@ -3,6 +3,7 @@
 mod abs_order_builtin;
 mod complex_builtin;
 mod coprime_builtin;
+mod dvd_builtin;
 mod equality_dispatch;
 mod equality_function;
 mod equality_numeric;

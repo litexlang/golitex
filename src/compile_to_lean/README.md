@@ -3,6 +3,19 @@
 The compiler replays verifier-produced proof IR over one universal Lean object
 type. It does not translate Litex set membership into Lean typing.
 
+## Ownership boundary
+
+`Runtime` executes Litex. Compiler entry points temporarily set
+`Runtime::well_defined_capture` to a capture session so the verifier preserves
+the evidence that exists only while local environments are alive. Ordinary
+execution leaves that field as `None`.
+
+`LitexToLeanCompiler` owns all construction of `LitexToLeanStatementIr` and
+borrows `Runtime` read-only. `Runtime` invokes it at the successful statement
+completion boundary, before a surrounding proof environment can disappear,
+and stores the resulting IR snapshot in the `StmtResult`. Lean emission then
+consumes only compiler IR.
+
 The consolidated target design and its ten representative examples are in
 [`litex_object_design.md`](litex_object_design.md). The shared ABI is owned by
 [`Litex.Core`](../../lean/Litex/Core.lean), concrete builtin theorems by

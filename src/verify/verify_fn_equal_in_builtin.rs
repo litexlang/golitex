@@ -184,7 +184,7 @@ impl Runtime {
         let AtomicFact::InFact(in_fact) = membership else {
             return Ok(StmtUnknown::new().into());
         };
-        let known = self.verify_non_equational_atomic_fact_with_known_fact(membership)?;
+        let known = self.verify_non_equational_atomic_fact_with_known_atomic_facts(membership)?;
         if known.is_true() {
             return Ok(known);
         }

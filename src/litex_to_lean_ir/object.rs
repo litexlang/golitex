@@ -355,6 +355,9 @@ impl LitexToLeanObjectIr {
                 value.left.as_ref(),
                 value.right.as_ref(),
             ),
+            Obj::Quot(_) => Err(
+                "Litex-to-Lean Obj IR does not yet support the builtin `quot` object".to_string(),
+            ),
             Obj::Gcd(value) => binary(
                 obj,
                 LitexToLeanBuiltinObjectOperatorIr::Gcd,

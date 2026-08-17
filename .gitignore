@@ -79,4 +79,9 @@ scripts
 /plan/
 ./plan
 
+# Local work records for each mathematical showcase.
+/showcases/math_concepts_in_litex/*/todo.*
+/showcases/math_concepts_in_litex/*/proof_journal*
+/showcases/math_concepts_in_litex/*/plan*
+
 scratch/

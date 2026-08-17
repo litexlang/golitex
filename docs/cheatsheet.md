@@ -71,6 +71,10 @@ strict set inclusion.
 means `gcd(a,b)=1`, and is false at `(0,0)`. Arguments known only in `Z` or `R`
 fail well-definedness for both predicates.
 
+`$dvd(x, y)` is a preview native predicate on `Z x Z*`, in dividend-first
+order. It means `x % y = 0` and exposes `exist a Z st {x = a * y}`; a zero
+divisor is rejected at well-definedness.
+
 Default struct views are also preview syntax. An explicit `obj &StructName`
 binding selects that view; a directly struct-typed field supplies the next
 view in a consecutive chain. A membership fact does not. Use the fully
@@ -204,7 +208,7 @@ cannot admit an unproved target. Required structural arms remain, and
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `by def fact` | A concrete positive prop call, or a supported positive builtin definition: subset/superset, proper subset/superset, `$prime`, `$coprime`, injective/surjective/bijective, `fn_eq_in`, or `fn_eq`. | Explicitly runs the selected mathematical definition with the full verifier. Ordinary round-0 atomic verification may also try this direction before known `forall` facts and user strategies. | Stores the target and runs inference only after every requirement succeeds. |
+| `by def fact` | A concrete positive prop call, or a supported positive builtin definition: subset/superset, proper subset/superset, `$prime`, `$coprime`, `$dvd`, injective/surjective/bijective, `fn_eq_in`, or `fn_eq`. | Explicitly runs the selected mathematical definition with the full verifier. Ordinary round-0 atomic verification may also try this direction before known `forall` facts and user strategies. | Stores the target and runs inference only after every requirement succeeds. |
 | `by thm name(args)` | A user theorem must exist and accept the arguments. Reserved bare builtin theorem names instead validate their fixed target-object shape and arity. `rational_has_unique_reduced_fraction(q)` has arity one and requires `q $in Q`. | Verifies user-theorem domains or the builtin handler's explicit requirements. The rational handler checks membership in `Q`, constructs its fixed conclusion, and verifies that conclusion is well-defined; the same existential is not an implicit builtin fact. One-layer builtin rules and structural builtin strategies are not unrestricted full-verifier entries. | Stores conclusions and runs inference only after every requirement succeeds; the rational interface stores `exist! p Z, d N+ st {q = p / d, gcd(p, d) = 1}`. A failed builtin call stores nothing. |
 | `by thm name(args) => atomic_fact`, or `by thm name(args):` plus one `? atomic_fact` goal (preview) | The selected atomic fact must be well-defined in the parent context; the theorem call has the same checks as the legacy form. The goal-block spelling is bodyless, and neither spelling accepts a compound target. | Applies the theorem in a temporary child scope, then checks the selected fact with the full atomic verifier there. The fact may be derived rather than a direct conclusion. | Discards the theorem's temporary conclusions, commits only the selected fact as the parent seed, then runs ordinary inference. Any failure commits nothing. |
 | `by cases` | Then-facts must be well-defined; case/prove shape restrictions must hold. A zero-statement proof arm is written `case fact` without `:`. | Verifies cases cover all situations; each case, including a bodyless case, must prove every then-fact. | Stores the then-facts. |
