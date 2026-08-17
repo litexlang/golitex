@@ -150,7 +150,7 @@ mod tests {
         assert!(!non_equational.contains("verify_prime_fact_by_computation"));
 
         let equality = include_str!("verify_builtin_rules/equality_dispatch.rs");
-        assert!(!equality.contains("objs_match_for_equality_pattern_and_calculation"));
+        assert!(!equality.contains("objs_match_for_pattern_and_calculation"));
         assert!(!equality.contains("objs_equal_by_rational_expression_evaluation"));
 
         let numeric_order = include_str!("verify_builtin_rules/number_compare.rs");
@@ -253,7 +253,7 @@ mod tests {
             .find("verify_equal_fact_by_known_equality_then_direct_evaluation(equal_fact)")
             .expect("zero-premise equality must retain known-equality-assisted evaluation");
         let equality_structural = equality_zero_premise_impl
-            .find("objs_are_equal_by_terminating_reduction_and_congruence")
+            .find("equal_fact_sides_are_equal_by_terminating_reduction_and_congruence")
             .expect("zero-premise equality must finish with terminating congruence");
         assert!(equality_known < equality_evaluation);
         assert!(equality_evaluation < equality_known_evaluation);
@@ -375,7 +375,7 @@ mod tests {
             .split("fn verify_equal_fact_directly_known_only(")
             .nth(1)
             .expect("direct known-only equality implementation must exist")
-            .split("pub(crate) fn objs_are_congruent_by_known_equalities(")
+            .split("pub(crate) fn equal_fact_sides_are_congruent_by_known_equalities(")
             .next()
             .expect("known congruence must follow direct known-only equality");
         assert!(!direct_known_only_impl.contains("resolve_obj"));
@@ -390,17 +390,19 @@ mod tests {
             "constructor decomposition must have one implementation",
         );
         let terminating_impl = equality_structural
-            .split("pub(crate) fn objs_are_equal_by_terminating_reduction_and_congruence(")
+            .split(
+                "pub(crate) fn equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(",
+            )
             .nth(1)
             .expect("terminating structural equality implementation must exist")
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
             .next()
             .expect("central matcher must follow terminating comparison");
         let known_index = terminating_impl
-            .find("verify_equal_fact_with_known_fact(&candidate_fact)")
+            .find("verify_equal_fact_with_known_fact(equal_fact)")
             .expect("terminating comparison must try known equality first");
         let evaluation_index = terminating_impl
-            .find("verify_equal_fact_by_direct_evaluation(&candidate_fact)")
+            .find("verify_equal_fact_by_direct_evaluation(equal_fact)")
             .expect("terminating comparison must try direct evaluation second");
         let shape_index = terminating_impl
             .find("same_shape_and_corresponding_args_match(")
@@ -415,7 +417,7 @@ mod tests {
             !equality_dispatch.contains("try_verify_equality_by_corresponding_known_equalities")
         );
         assert!(!equality_dispatch.contains("verify_equal_fact_by_direct_evaluation"));
-        assert!(!equality_dispatch.contains("objs_match_for_equality_pattern_and_calculation"));
+        assert!(!equality_dispatch.contains("objs_match_for_pattern_and_calculation"));
 
         let equality = include_str!("verify_equality.rs");
         let full_equality_impl = equality
@@ -450,6 +452,26 @@ mod tests {
 
     #[test]
     fn equality_proof_apis_receive_the_owned_equal_fact() {
+        // These helpers own, forward, or decide one equality proof obligation even when their
+        // historical names do not contain `equal`. Keeping the complete fact preserves source
+        // identity and prevents left/right orientation plus LineFile from drifting independently.
+        let owned_equality_target_apis = [
+            "try_verify_matrix_power_definition",
+            "try_verify_finite_set_size_fn_range_from_known_injection",
+            "try_verify_finite_set_size_from_known_bijection",
+            "try_trig_quotient_definition",
+            "verify_reduce_functions_pointwise_on_set",
+            "verify_zero_product_factor_matches_target",
+            "try_verify_sum_merge_ordered_pair",
+            "verify_finite_set_sum_functions_pointwise_premise",
+            "try_verify_intersection_from_subset",
+            "try_verify_literal_set_intersection_filter",
+            "try_verify_one_subtraction_from_known_addition",
+            "try_verify_product_from_known_division_candidate",
+            "equality_builtin_match_subgoals",
+            "collect_nested_equality_transport_steps",
+        ];
+        let mut explicitly_checked = vec![false; owned_equality_target_apis.len()];
         visit_rust_files(Path::new("src/verify"), &mut |path, source| {
             for function_tail in source.split("fn ").skip(1) {
                 let Some((header, _)) = function_tail.split_once('{') else {
@@ -459,16 +481,23 @@ mod tests {
                     continue;
                 };
                 let name = name.trim();
-                if !(name.contains("equal") || name.contains("equality"))
-                    || name.contains("not_equal")
-                    || name.contains("non_equational")
-                {
-                    continue;
+                let explicitly_owned = owned_equality_target_apis
+                    .iter()
+                    .position(|candidate| *candidate == name);
+                if let Some(index) = explicitly_owned {
+                    explicitly_checked[index] = true;
                 }
                 let returns_equality_proof_result = (header.contains("-> StmtResult")
                     || header.contains("Option<StmtResult>"))
                     && !header.contains("Vec<StmtResult>");
-                if !returns_equality_proof_result {
+                let equality_named_proof_api = (name.contains("equal")
+                    || name.contains("equality"))
+                    && !name.contains("not_equal")
+                    && !name.contains("less_equal")
+                    && !name.contains("greater_equal")
+                    && !name.contains("non_equational")
+                    && returns_equality_proof_result;
+                if !equality_named_proof_api && explicitly_owned.is_none() {
                     continue;
                 }
                 assert!(
@@ -478,8 +507,27 @@ mod tests {
                 );
             }
         });
+        for (name, found) in owned_equality_target_apis
+            .iter()
+            .zip(explicitly_checked.iter())
+        {
+            assert!(
+                *found,
+                "owned equality target API `{name}` must remain audited"
+            );
+        }
 
         let equality = include_str!("verify_equality.rs");
+        let known_fact_impl = equality
+            .split("pub(crate) fn verify_equal_fact_with_known_fact(")
+            .nth(1)
+            .expect("known-equality implementation must exist")
+            .split("pub(crate) fn verify_equal_fact_with_zero_premise_verification(")
+            .next()
+            .expect("zero-premise verification must follow known equality");
+        assert!(known_fact_impl
+            .contains("verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact)"));
+        assert!(!known_fact_impl.contains("EqualFact::new"));
         assert!(equality.contains(
             "fn verify_equal_fact_when_both_sides_have_same_builtin_shape_and_equal_args_recursively(\n        &mut self,\n        equal_fact: &EqualFact,"
         ));

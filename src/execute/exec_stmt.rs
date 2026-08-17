@@ -1,4 +1,4 @@
-use crate::compile_to_lean::LitexToLeanCompiler;
+use crate::litex_to_lean_ir::LitexToLeanIrBuilder;
 use crate::prelude::*;
 
 impl Runtime {
@@ -47,7 +47,7 @@ impl Runtime {
                 let result = result.with_execution_trace(trace);
                 if self.captures_well_definedness() && !result.is_unknown() {
                     let litex_to_lean_ir =
-                        LitexToLeanCompiler::new(self).compile_statement(&result)?;
+                        LitexToLeanIrBuilder::new(self).compile_statement(&result)?;
                     Ok(result.with_litex_to_lean_ir(litex_to_lean_ir))
                 } else {
                     Ok(result)

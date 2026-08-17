@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const SOURCE: &str = "lean/examples/compile_to_lean_examples.lit";
-const GENERATED: &str = "lean/examples/compile_to_lean_examples.lean";
+const SOURCE: &str = "lean/examples/1_SetSystem.lit";
+const GENERATED: &str = "lean/examples/1_SetSystem.lean";
 
 #[test]
 fn lean_command_reproduces_the_checked_in_examples() {
@@ -30,10 +30,13 @@ fn lean_command_reproduces_the_checked_in_examples() {
     let generated = fs::read_to_string(&output_path).expect("read generated Lean output");
     let checked_in = fs::read_to_string(root.join(GENERATED)).expect("read checked-in Lean output");
     assert_eq!(generated, checked_in, "the checked-in Lean ledger is stale");
-    assert!(generated.starts_with("import Litex.Rules\n"));
+    assert!(generated.contains("import Litex\n"));
+    assert!(!generated.contains("import Litex.Rules\n"));
     assert!(generated.contains("namespace __Sketch01"));
-    assert!(generated.contains("namespace __Sketch25"));
-    assert!(generated.contains("example : (1 : Litex.Object) = 1 :="));
+    assert!(generated.contains("Litex.In b A"));
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(!generated.contains("axiom "));
     assert!(!generated.contains("sorry"));
 }
 
@@ -104,7 +107,7 @@ impl ScratchFiles {
             .as_nanos();
         Self {
             prefix: private.join(format!(
-                "compile-to-lean-file-cli-{label}-{}-{nonce}",
+                "litex-to-lean-compiler-cli-{label}-{}-{nonce}",
                 std::process::id()
             )),
             paths: Vec::new(),

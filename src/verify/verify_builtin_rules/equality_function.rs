@@ -7,9 +7,21 @@ impl Runtime {
     pub(crate) fn try_verify_matrix_power_definition(
         &self,
         equal_fact: &EqualFact,
-        power_side: &Obj,
-        other_side: &Obj,
     ) -> Option<StmtResult> {
+        self.try_verify_matrix_power_definition_in_direction(equal_fact, true)
+            .or_else(|| self.try_verify_matrix_power_definition_in_direction(equal_fact, false))
+    }
+
+    fn try_verify_matrix_power_definition_in_direction(
+        &self,
+        equal_fact: &EqualFact,
+        power_is_left: bool,
+    ) -> Option<StmtResult> {
+        let (power_side, other_side) = if power_is_left {
+            (&equal_fact.left, &equal_fact.right)
+        } else {
+            (&equal_fact.right, &equal_fact.left)
+        };
         let line_file = equal_fact.line_file.clone();
         let Obj::MatrixPow(power) = power_side else {
             return None;

@@ -65,27 +65,17 @@ impl Runtime {
     // Example: from `(x - 1) * y = 0` and `x - 1 != 0`, prove `y = 0`.
     pub(crate) fn verify_zero_product_factor_matches_target(
         &mut self,
-        target: &Obj,
-        factor: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Do not call the full equality builtin here; that would re-enter zero-product
         // cancellation while this rule is already trying to match a factor.
-        let known_result = self.verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-            target,
-            factor,
-            line_file.clone(),
-        ));
+        let known_result = self.verify_equal_fact_by_known_equality(equal_fact);
         if known_result.is_true() {
             return Ok(known_result);
         }
 
-        let calculation_result = self.verify_equal_fact_by_direct_evaluation(&EqualFact::new(
-            target.clone(),
-            factor.clone(),
-            line_file.clone(),
-        ));
+        let calculation_result = self.verify_equal_fact_by_direct_evaluation(equal_fact);
         if calculation_result.is_true() {
             return Ok(calculation_result);
         }
@@ -127,9 +117,7 @@ impl Runtime {
                 };
 
                 let left_target_result = self.verify_zero_product_factor_matches_target(
-                    target,
-                    mul.left.as_ref(),
-                    line_file.clone(),
+                    &EqualFact::new_from_refs(target, mul.left.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
                 if left_target_result.is_true() {
@@ -144,7 +132,7 @@ impl Runtime {
                     if right_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                equal_fact.clone().into(),
                                 "equality: b = 0 from a * b = 0 and a != 0".to_string(),
                                 vec![left_target_result, right_nonzero_result],
                             )
@@ -154,9 +142,7 @@ impl Runtime {
                 }
 
                 let right_target_result = self.verify_zero_product_factor_matches_target(
-                    target,
-                    mul.right.as_ref(),
-                    line_file.clone(),
+                    &EqualFact::new_from_refs(target, mul.right.as_ref(), line_file.clone()),
                     builtin_state,
                 )?;
                 if right_target_result.is_true() {
@@ -171,7 +157,7 @@ impl Runtime {
                     if left_nonzero_result.is_true() {
                         return Ok(Some(
                             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                                equal_fact.clone().into(),
                                 "equality: a = 0 from a * b = 0 and b != 0".to_string(),
                                 vec![right_target_result, left_nonzero_result],
                             )
@@ -344,7 +330,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: 1 % k = 1 for k >= 2".to_string(),
                 vec![modulus_result],
             )
@@ -378,10 +364,10 @@ impl Runtime {
         let Obj::Mod(inner_mod) = sub.right.as_ref() else {
             return Ok(None);
         };
-        if !objs_equal_by_display_string(sub.left.as_ref(), inner_mod.left.as_ref()) {
+        if !objs_match_for_pattern(sub.left.as_ref(), inner_mod.left.as_ref()) {
             return Ok(None);
         }
-        if !objs_equal_by_display_string(outer_mod.right.as_ref(), inner_mod.right.as_ref()) {
+        if !objs_match_for_pattern(outer_mod.right.as_ref(), inner_mod.right.as_ref()) {
             return Ok(None);
         }
 
@@ -409,7 +395,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
                 vec![dividend_result, modulus_result],
             )
@@ -440,9 +426,9 @@ impl Runtime {
             let Obj::Mod(remainder) = sum.right.as_ref() else {
                 return None;
             };
-            if !objs_equal_by_display_string(product.left.as_ref(), quot.right.as_ref())
-                || !objs_equal_by_display_string(remainder.left.as_ref(), quot.left.as_ref())
-                || !objs_equal_by_display_string(remainder.right.as_ref(), quot.right.as_ref())
+            if !objs_match_for_pattern(product.left.as_ref(), quot.right.as_ref())
+                || !objs_match_for_pattern(remainder.left.as_ref(), quot.left.as_ref())
+                || !objs_match_for_pattern(remainder.right.as_ref(), quot.right.as_ref())
             {
                 return None;
             }
@@ -450,12 +436,12 @@ impl Runtime {
         }
 
         let (dividend, divisor) = if let Some((dividend, divisor)) = decomposition_parts(right) {
-            if !objs_equal_by_display_string(left, dividend) {
+            if !objs_match_for_pattern(left, dividend) {
                 return Ok(None);
             }
             (dividend, divisor)
         } else if let Some((dividend, divisor)) = decomposition_parts(left) {
-            if !objs_equal_by_display_string(right, dividend) {
+            if !objs_match_for_pattern(right, dividend) {
                 return Ok(None);
             }
             (dividend, divisor)
@@ -475,7 +461,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: Euclidean quotient decomposition a = d * quot(a, d) + a % d".to_string(),
                 premises,
             )
@@ -511,8 +497,8 @@ impl Runtime {
             let Obj::Mul(product) = sum.left.as_ref() else {
                 continue;
             };
-            if !objs_equal_by_display_string(product.left.as_ref(), modulus)
-                || !objs_equal_by_display_string(sum.right.as_ref(), remainder)
+            if !objs_match_for_pattern(product.left.as_ref(), modulus)
+                || !objs_match_for_pattern(sum.right.as_ref(), remainder)
             {
                 continue;
             }
@@ -558,7 +544,7 @@ impl Runtime {
             ]);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
                         .to_string(),
                     steps,

@@ -89,7 +89,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: (-1)^(2*m+1) = -1 for m in N".to_string(),
                 vec![m_result],
             )
@@ -260,7 +260,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: 0^x = 0 for x > 0".to_string(),
                 positive_steps,
             )

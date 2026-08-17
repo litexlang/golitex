@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::objs_equal_by_display_string;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 
 fn obj_is_literal_one(obj: &Obj) -> bool {
     matches!(obj, Obj::Number(number) if number.normalized_value == "1")
@@ -79,8 +79,8 @@ fn integer_discrete_split_subject_and_base(
     let (subject, base) = weak_order_left_right(first)?;
     let (successor, successor_subject) = weak_order_left_right(second)?;
     let successor_base = obj_plus_one_base(&successor)?;
-    if objs_equal_by_display_string(&subject, &successor_subject)
-        && objs_equal_by_display_string(&base, &successor_base)
+    if objs_match_for_pattern(&subject, &successor_subject)
+        && objs_match_for_pattern(&base, &successor_base)
     {
         return Some((subject, base));
     }
@@ -94,8 +94,8 @@ fn integer_discrete_predecessor_split_subject_and_base(
     let (base, subject) = weak_order_left_right(first)?;
     let (predecessor_subject, predecessor) = weak_order_left_right(second)?;
     let predecessor_base = obj_minus_one_base(&predecessor)?;
-    if objs_equal_by_display_string(&subject, &predecessor_subject)
-        && objs_equal_by_display_string(&base, &predecessor_base)
+    if objs_match_for_pattern(&subject, &predecessor_subject)
+        && objs_match_for_pattern(&base, &predecessor_base)
     {
         return Some((subject, base));
     }
@@ -199,7 +199,7 @@ impl Runtime {
             else {
                 continue;
             };
-            if !objs_equal_by_display_string(&first_left, &target_left) {
+            if !objs_match_for_pattern(&first_left, &target_left) {
                 continue;
             }
             for second in known_orders.iter() {
@@ -208,8 +208,8 @@ impl Runtime {
                 else {
                     continue;
                 };
-                if !objs_equal_by_display_string(&middle, &second_left)
-                    || !objs_equal_by_display_string(&second_right, &target_right)
+                if !objs_match_for_pattern(&middle, &second_left)
+                    || !objs_match_for_pattern(&second_right, &target_right)
                     || (target_is_strict && !first_is_strict && !second_is_strict)
                 {
                     continue;
@@ -586,7 +586,7 @@ impl Runtime {
             steps.push(upper_result);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "integer singleton interval: n <= x < n + 1 gives x = n".to_string(),
                     steps,
                 )
@@ -620,7 +620,7 @@ impl Runtime {
             steps.push(upper_result);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "integer successor singleton interval: n < x <= n + 1 gives x = n + 1"
                         .to_string(),
                     steps,

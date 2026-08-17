@@ -69,10 +69,8 @@ impl Runtime {
                             let Obj::SetMinus(set_minus) = &member.set else {
                                 continue;
                             };
-                            if objs_match_for_equality_pattern(
-                                &member.element,
-                                &not_in_fact.element,
-                            ) && objs_match_for_equality_pattern(&set_minus.right, right)
+                            if objs_match_for_pattern(&member.element, &not_in_fact.element)
+                                && objs_match_for_pattern(&set_minus.right, right)
                             {
                                 evidence = Some(known_fact.clone());
                                 break;

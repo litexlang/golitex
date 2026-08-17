@@ -2533,12 +2533,11 @@ thm self_exists:
 obtain copy from thm self_exists(2)
 "#;
 
-    let error = crate::compile_to_lean::compile_to_lean_from_source(
+    let error = crate::litex_to_lean_compiler::compile_source(
         source_code,
         "litex_to_lean_rejects_theorem_backed_obtain_explicitly",
     )
-    .expect_err("theorem-backed obtain must fail closed until theorem-call IR exists")
-    .trace_message();
+    .expect_err("theorem-backed obtain must fail closed until theorem-call IR exists");
     assert!(
         error.contains("does not yet support theorem-backed `obtain`"),
         "the compiler boundary should be explicit:\n{}",

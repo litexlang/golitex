@@ -49,16 +49,13 @@ impl Runtime {
     // `finite_set_size(fn_range(f)) = finite_set_size(A)`.
     pub(super) fn try_verify_finite_set_size_fn_range_from_known_injection(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let Some((function, source)) = finite_fn_range_size_equality_shape(left, right)
-            .or_else(|| finite_fn_range_size_equality_shape(right, left))
-        else {
+        let Some((function, source)) = finite_fn_range_size_equality_shape(equal_fact) else {
             return Ok(None);
         };
+        let line_file = &equal_fact.line_file;
 
         for property in self.known_function_property_facts(&[INJECTIVE, BIJECTIVE]) {
             let Some((domain, _, candidate_function)) = function_property_parts(&property) else {
@@ -90,7 +87,7 @@ impl Runtime {
 
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "finite injection has range cardinality equal to its source".to_string(),
                     vec![domain_match, function_match, finite_result, property_result],
                 )
@@ -105,14 +102,15 @@ impl Runtime {
     // `finite_set_size(A) = finite_set_size(B)`.
     pub(super) fn try_verify_finite_set_size_from_known_bijection(
         &mut self,
-        left: &Obj,
-        right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         _builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) = (left, right) else {
+        let (Obj::FiniteSetSize(left_size), Obj::FiniteSetSize(right_size)) =
+            (&equal_fact.left, &equal_fact.right)
+        else {
             return Ok(None);
         };
+        let line_file = &equal_fact.line_file;
 
         for property in self.known_function_property_facts(&[BIJECTIVE]) {
             let Some((domain, codomain, _)) = function_property_parts(&property) else {
@@ -153,7 +151,7 @@ impl Runtime {
 
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "finite bijection preserves cardinality".to_string(),
                     vec![domain_match, codomain_match, finite_result, property_result],
                 )
@@ -326,23 +324,26 @@ fn function_property_parts(fact: &NormalAtomicFact) -> Option<(Obj, Obj, Obj)> {
     ))
 }
 
-fn finite_fn_range_size_equality_shape(
-    range_size_side: &Obj,
-    source_size_side: &Obj,
-) -> Option<(Obj, Obj)> {
-    let Obj::FiniteSetSize(range_size) = range_size_side else {
-        return None;
-    };
-    let Obj::FnRange(range) = range_size.set.as_ref() else {
-        return None;
-    };
-    let Obj::FiniteSetSize(source_size) = source_size_side else {
-        return None;
-    };
-    Some((
-        range.function.as_ref().clone(),
-        source_size.set.as_ref().clone(),
-    ))
+fn finite_fn_range_size_equality_shape(equal_fact: &EqualFact) -> Option<(Obj, Obj)> {
+    for (range_size_side, source_size_side) in [
+        (&equal_fact.left, &equal_fact.right),
+        (&equal_fact.right, &equal_fact.left),
+    ] {
+        let Obj::FiniteSetSize(range_size) = range_size_side else {
+            continue;
+        };
+        let Obj::FnRange(range) = range_size.set.as_ref() else {
+            continue;
+        };
+        let Obj::FiniteSetSize(source_size) = source_size_side else {
+            continue;
+        };
+        return Some((
+            range.function.as_ref().clone(),
+            source_size.set.as_ref().clone(),
+        ));
+    }
+    None
 }
 
 fn ordered_finite_set_sizes(target: &AtomicFact) -> Option<(Obj, Obj, LineFile)> {

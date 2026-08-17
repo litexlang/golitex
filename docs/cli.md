@@ -130,17 +130,21 @@ so it may appear before or after `-f`. It may appear only once.
 | `litex -lean <input.lit> <output.lean>` | Verify and compile one Litex source file into one complete Lean file. The output is replaced only after the complete source compiles successfully. |
 | `litex -lean-ledger <input.md> <output.lean>` | Freshly compile every `litex` fence under a level-two Markdown heading and combine the results in numbered namespaces. |
 
-The canonical end-to-end compiler ledger uses the single-file command:
+The canonical single-file tracer can be generated through either the main CLI
+or the dedicated compiler wrapper:
 
 ```bash
 litex -lean \
-  lean/examples/compile_to_lean_examples.lit \
-  lean/examples/compile_to_lean_examples.lean
+  lean/examples/1_SetSystem.lit \
+  lean/examples/1_SetSystem.lean
+
+./lean/compiler.sh compile lean/examples/1_SetSystem.lit
 ```
 
 Declaration-bearing `sketch` blocks compile into isolated Lean namespaces.
-This preserves source order and permits explicit trusted statements to remain
-explicit namespaced axioms without leaking names between examples.
+This preserves source order without leaking names between examples. Unsupported
+or trusted routes fail closed; the compiler does not emit `sorry` or project
+axioms.
 
 ### Trusted prefix file checks (preview)
 
@@ -427,8 +431,9 @@ Use `litex.config` to organize a folder tree:
 
 - put `module` under `[hierarchy]` at an independently runnable/importable root;
 - put `submodule` under `[hierarchy]` in every exported child folder;
-- list every direct child file and folder exactly once, in mathematical order,
-  under `[export]`;
+- list every direct child `.lit` file and module folder exactly once, in
+  mathematical order, under `[export]`; the reserved local `.drafts/`
+  directory is ignored by module discovery;
 - declare external module folders under `[import]` and installed packages under
   `[import std]`, only in the top-level module;
 - cite earlier entries with their canonical export path, such as
@@ -437,10 +442,12 @@ Use `litex.config` to organize a folder tree:
   under `[allow bare export]`, `[allow bare import std]`, or
   `[allow bare import]` respectively.
 
-A configured folder may contain only `litex.config` and the direct children
-listed in `[export]`. Exported folders must be submodules. Imported targets must
-be external module folders; imports cannot target files, submodules, or
-descendants of the importing module.
+A configured folder may contain `litex.config`, non-Litex sidecar files, the
+direct module children listed in `[export]`, and an optional local `.drafts/`
+directory. Exported folders must be submodules. Every other direct child
+directory and `.lit` file remains an error. Imported targets must be external
+module folders; imports cannot target files, submodules, or descendants of the
+importing module.
 
 `-r` and `-f` share one recursive left-to-right order. Running a top-level
 module runs the whole tree. Running a submodule traces back to its module,

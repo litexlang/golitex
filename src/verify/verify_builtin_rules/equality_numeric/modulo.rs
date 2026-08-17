@@ -274,8 +274,8 @@ impl Runtime {
             let Obj::Mod(remainder) = reduced else {
                 return false;
             };
-            objs_equal_by_display_string(original, remainder.left.as_ref())
-                && objs_equal_by_display_string(modulus, remainder.right.as_ref())
+            objs_match_for_pattern(original, remainder.left.as_ref())
+                && objs_match_for_pattern(modulus, remainder.right.as_ref())
         };
         let canonical_reduction_matches =
             |unreduced: &Obj, reduced: &Obj, modulus: &Obj| match (unreduced, reduced) {
@@ -300,8 +300,11 @@ impl Runtime {
                 equal_fact,
                 "equality: integer congruence — reduce matching + / - / * operands modulo m",
                 equality_builtin_match_subgoals(
-                    lm.right.as_ref(),
-                    rm.right.as_ref(),
+                    &EqualFact::new_from_refs(
+                        lm.right.as_ref(),
+                        rm.right.as_ref(),
+                        line_file.clone(),
+                    ),
                     modulus_result,
                 ),
             )));

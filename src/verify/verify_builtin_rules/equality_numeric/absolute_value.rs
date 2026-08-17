@@ -24,9 +24,9 @@ impl Runtime {
         match obj {
             Obj::Mul(m) => {
                 (Self::obj_is_literal_neg_one_for_abs_builtin(m.left.as_ref())
-                    && objs_equal_by_display_string(m.right.as_ref(), expected_arg))
+                    && objs_match_for_pattern(m.right.as_ref(), expected_arg))
                     || (Self::obj_is_literal_neg_one_for_abs_builtin(m.right.as_ref())
-                        && objs_equal_by_display_string(m.left.as_ref(), expected_arg))
+                        && objs_match_for_pattern(m.left.as_ref(), expected_arg))
             }
             _ => false,
         }
@@ -38,8 +38,8 @@ impl Runtime {
         };
         match (m.left.as_ref(), m.right.as_ref()) {
             (Obj::Abs(left_abs), Obj::Abs(right_abs)) => {
-                objs_equal_by_display_string(left_abs.arg.as_ref(), x)
-                    && objs_equal_by_display_string(right_abs.arg.as_ref(), y)
+                objs_match_for_pattern(left_abs.arg.as_ref(), x)
+                    && objs_match_for_pattern(right_abs.arg.as_ref(), y)
             }
             _ => false,
         }
@@ -58,7 +58,7 @@ impl Runtime {
             (other, Obj::Abs(abs)) => (abs.arg.as_ref(), other),
             _ => return Ok(None),
         };
-        if !objs_equal_by_display_string(arg, other) {
+        if !objs_match_for_pattern(arg, other) {
             return Ok(None);
         }
         let nonnegative: AtomicFact = LessEqualFact::new(
@@ -83,7 +83,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "abs: abs(x) = x from 0 <= x".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonnegativeIdentity),
                 vec![nonnegative_result],
@@ -130,7 +130,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "abs: abs(x) = -x from x <= 0".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::NonpositiveNegation),
                 vec![nonpositive_result],
@@ -145,7 +145,6 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         let matches_abs_product = |abs_side: &Obj, product_side: &Obj| -> bool {
             let Obj::Abs(abs) = abs_side else {
                 return false;
@@ -165,7 +164,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "abs: abs(x * y) = abs(x) * abs(y)".to_string(),
                 BuiltinRuleEvidence::AbsoluteValue(AbsoluteValueBuiltinRule::Product),
                 Vec::new(),
@@ -187,7 +186,7 @@ impl Runtime {
         let (Obj::Pow(left_pow), Obj::Pow(right_pow)) = (left, right) else {
             return Ok(None);
         };
-        if !objs_equal_by_display_string(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
+        if !objs_match_for_pattern(left_pow.exponent.as_ref(), right_pow.exponent.as_ref()) {
             return Ok(None);
         }
         let Obj::Number(exp_num) = left_pow.exponent.as_ref() else {
@@ -199,11 +198,11 @@ impl Runtime {
 
         let (bases_match, real_base) = match (left_pow.base.as_ref(), right_pow.base.as_ref()) {
             (Obj::Abs(abs), other) => (
-                objs_equal_by_display_string(abs.arg.as_ref(), other),
+                objs_match_for_pattern(abs.arg.as_ref(), other),
                 abs.arg.as_ref(),
             ),
             (other, Obj::Abs(abs)) => (
-                objs_equal_by_display_string(other, abs.arg.as_ref()),
+                objs_match_for_pattern(other, abs.arg.as_ref()),
                 abs.arg.as_ref(),
             ),
             _ => return Ok(None),
@@ -234,15 +233,19 @@ impl Runtime {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
         let zero = Self::literal_zero_obj_for_abs_builtin();
-        let arg = if objs_equal_by_display_string(left, &zero) {
+        let arg = if objs_match_for_pattern(left, &zero) {
             right
-        } else if objs_equal_by_display_string(right, &zero) {
+        } else if objs_match_for_pattern(right, &zero) {
             left
         } else {
             return Ok(None);
         };
         let abs_arg: Obj = Abs::new(arg.clone()).into();
-        if !self.objs_have_same_known_equality_rc_in_some_env(&abs_arg, &zero) {
+        if !self.equal_fact_sides_have_same_known_equality_in_some_env(&EqualFact::new_from_refs(
+            &abs_arg,
+            &zero,
+            equal_fact.line_file.clone(),
+        )) {
             return Ok(None);
         }
         Ok(Some(factual_equal_success_by_builtin_reason(

@@ -844,9 +844,11 @@ impl Runtime {
         // Empty set rule: `not $is_nonempty_set(S)` follows from known `S = {}`.
         // Example: after `S = {}`, prove `not $is_nonempty_set(S)`.
         let empty_set: Obj = ListSet::new(vec![]).into();
-        if self
-            .objs_have_same_known_equality_rc_in_some_env(&not_is_nonempty_set_fact.set, &empty_set)
-        {
+        if self.equal_fact_sides_have_same_known_equality_in_some_env(&EqualFact::new_from_refs(
+            &not_is_nonempty_set_fact.set,
+            &empty_set,
+            not_is_nonempty_set_fact.line_file.clone(),
+        )) {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     not_is_nonempty_set_fact.clone().into(),

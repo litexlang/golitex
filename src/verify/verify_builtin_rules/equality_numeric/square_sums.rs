@@ -49,7 +49,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality: a^2 + b^2 = 0 from a = 0 and b = 0 over R".to_string(),
                 steps,
             )
@@ -108,15 +108,11 @@ impl Runtime {
                     continue;
                 }
                 let first_matches = self.verify_zero_product_factor_matches_target(
-                    target,
-                    &first_base,
-                    line_file.clone(),
+                    &EqualFact::new_from_refs(target, &first_base, line_file.clone()),
                     builtin_state,
                 )?;
                 let second_matches = self.verify_zero_product_factor_matches_target(
-                    target,
-                    &second_base,
-                    line_file.clone(),
+                    &EqualFact::new_from_refs(target, &second_base, line_file.clone()),
                     builtin_state,
                 )?;
                 if !first_matches.is_true() && !second_matches.is_true() {
@@ -130,7 +126,7 @@ impl Runtime {
                 }
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        equal_fact.clone().into(),
                         "equality: a = 0 from a^2 + b^2 = 0 over R".to_string(),
                         steps,
                     )

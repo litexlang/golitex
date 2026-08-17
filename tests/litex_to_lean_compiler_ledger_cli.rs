@@ -3,17 +3,22 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-const LEDGER: &str = "lean/examples/compile_to_lean_examples.md";
-
 #[test]
 fn lean_ledger_command_freshly_compiles_all_entries() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let mut scratch = ScratchFiles::new("success");
+    let ledger_path = scratch.new_path("md");
     let output_path = scratch.new_path("lean");
+    fs::write(
+        &ledger_path,
+        "## reflexivity\n\n```litex\n1 = 1\n```\n\n## arithmetic\n\n```litex\n2 + 3 = 5\n```\n",
+    )
+    .expect("write compiler ledger");
 
     let output = Command::new(env!("CARGO_BIN_EXE_litex"))
         .current_dir(root)
-        .args(["-lean-ledger", LEDGER])
+        .arg("-lean-ledger")
+        .arg(&ledger_path)
         .arg(&output_path)
         .output()
         .expect("run -lean-ledger");
@@ -25,20 +30,19 @@ fn lean_ledger_command_freshly_compiles_all_entries() {
         String::from_utf8_lossy(&output.stderr)
     );
     assert!(
-        String::from_utf8_lossy(&output.stdout).contains("wrote 25 freshly generated Lean entries")
+        String::from_utf8_lossy(&output.stdout).contains("wrote 2 freshly generated Lean entries")
     );
 
     let generated = fs::read_to_string(&output_path).expect("read bundled Lean output");
-    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 25);
-    assert_eq!(generated.matches("import Litex.Rules").count(), 1);
-    assert!(!generated.contains("Litex.abiVersion"));
-    assert!(generated.contains("__wd0_"));
-    assert!(!generated.contains("well_defined_fact_"));
-    assert!(generated.contains("-- BEGIN ENTRY 02: trusted_forall_atomic_fact"));
+    assert_eq!(generated.matches("-- BEGIN ENTRY ").count(), 2);
+    assert_eq!(generated.matches("import Litex\n").count(), 1);
+    assert!(!generated.contains("import Litex.Rules\n"));
+    assert!(!generated.contains("LitexObject"));
+    assert!(!generated.contains("Litex.Object"));
+    assert!(generated.contains("-- BEGIN ENTRY 02: arithmetic"));
     assert!(generated.contains("namespace Entry02"));
-    assert!(generated.contains("axiom __fact3"));
-    assert!(generated.contains("theorem __fact4 : p 1 := by"));
-    assert!(!generated.contains("Required generated shape"));
+    assert!(!generated.contains("axiom "));
+    assert!(!generated.contains("sorry"));
 }
 
 #[test]
@@ -113,7 +117,7 @@ impl ScratchFiles {
             .as_nanos();
         Self {
             prefix: private.join(format!(
-                "compile-to-lean-ledger-cli-{label}-{}-{nonce}",
+                "litex-to-lean-compiler-ledger-cli-{label}-{}-{nonce}",
                 std::process::id()
             )),
             paths: Vec::new(),

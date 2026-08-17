@@ -545,7 +545,10 @@ impl Runtime {
                     if !result.is_true() {
                         return Ok(None);
                     }
-                    subgoals.extend(equality_builtin_match_subgoals(left_arg, right_arg, result));
+                    subgoals.extend(equality_builtin_match_subgoals(
+                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        result,
+                    ));
                 }
                 let index_set: Obj = ClosedRange::new(
                     left_reduce.start.as_ref().clone(),
@@ -553,10 +556,12 @@ impl Runtime {
                 )
                 .into();
                 let pointwise = self.verify_reduce_functions_pointwise_on_set(
-                    left_reduce.func.as_ref(),
-                    right_reduce.func.as_ref(),
+                    &EqualFact::new_from_refs(
+                        left_reduce.func.as_ref(),
+                        right_reduce.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     &index_set,
-                    line_file.clone(),
                     builtin_state,
                 )?;
                 if !pointwise.is_true() {
@@ -583,13 +588,18 @@ impl Runtime {
                     if !result.is_true() {
                         return Ok(None);
                     }
-                    subgoals.extend(equality_builtin_match_subgoals(left_arg, right_arg, result));
+                    subgoals.extend(equality_builtin_match_subgoals(
+                        &EqualFact::new_from_refs(left_arg, right_arg, line_file.clone()),
+                        result,
+                    ));
                 }
                 let pointwise = self.verify_reduce_functions_pointwise_on_set(
-                    left_reduce.func.as_ref(),
-                    right_reduce.func.as_ref(),
+                    &EqualFact::new_from_refs(
+                        left_reduce.func.as_ref(),
+                        right_reduce.func.as_ref(),
+                        line_file.clone(),
+                    ),
                     left_reduce.set.as_ref(),
-                    line_file.clone(),
                     builtin_state,
                 )?;
                 if !pointwise.is_true() {
@@ -638,7 +648,10 @@ impl Runtime {
                     structural_match = false;
                     break;
                 }
-                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+                subgoals.extend(equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    result,
+                ));
             }
             if !structural_match {
                 continue;
@@ -659,8 +672,7 @@ impl Runtime {
                 continue;
             }
             subgoals.extend(equality_builtin_match_subgoals(
-                &source_length,
-                &translated_length,
+                &EqualFact::new_from_refs(&source_length, &translated_length, line_file.clone()),
                 length_result,
             ));
 
@@ -781,7 +793,10 @@ impl Runtime {
                     structural_match = false;
                     break;
                 }
-                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+                subgoals.extend(equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    result,
+                ));
             }
             if !structural_match {
                 continue;
@@ -821,8 +836,7 @@ impl Runtime {
                 continue;
             }
             subgoals.extend(equality_builtin_match_subgoals(
-                tail.seed.as_ref(),
-                &expected_seed,
+                &EqualFact::new_from_refs(tail.seed.as_ref(), &expected_seed, line_file.clone()),
                 seed_result,
             ));
 
@@ -875,7 +889,10 @@ impl Runtime {
                     structural_match = false;
                     break;
                 }
-                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+                subgoals.extend(equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    result,
+                ));
             }
             if !structural_match {
                 continue;
@@ -942,8 +959,10 @@ impl Runtime {
             if !union_result.is_true() {
                 continue;
             }
-            let mut subgoals =
-                equality_builtin_match_subgoals(full.set.as_ref(), &expected_union, union_result);
+            let mut subgoals = equality_builtin_match_subgoals(
+                &EqualFact::new_from_refs(full.set.as_ref(), &expected_union, line_file.clone()),
+                union_result,
+            );
             let empty_set: Obj = ListSet::new(Vec::new()).into();
             let intersection: Obj =
                 Intersect::new(outer.set.as_ref().clone(), inner.set.as_ref().clone()).into();
@@ -969,26 +988,33 @@ impl Runtime {
                     structural_match = false;
                     break;
                 }
-                subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+                subgoals.extend(equality_builtin_match_subgoals(
+                    &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                    result,
+                ));
             }
             if !structural_match {
                 continue;
             }
             let outer_pointwise = self.verify_reduce_functions_pointwise_on_set(
-                full.func.as_ref(),
-                outer.func.as_ref(),
+                &EqualFact::new_from_refs(
+                    full.func.as_ref(),
+                    outer.func.as_ref(),
+                    line_file.clone(),
+                ),
                 outer.set.as_ref(),
-                line_file.clone(),
                 builtin_state,
             )?;
             if !outer_pointwise.is_true() {
                 continue;
             }
             let inner_pointwise = self.verify_reduce_functions_pointwise_on_set(
-                full.func.as_ref(),
-                inner.func.as_ref(),
+                &EqualFact::new_from_refs(
+                    full.func.as_ref(),
+                    inner.func.as_ref(),
+                    line_file.clone(),
+                ),
                 inner.set.as_ref(),
-                line_file.clone(),
                 builtin_state,
             )?;
             if !inner_pointwise.is_true() {
@@ -1097,13 +1123,19 @@ impl Runtime {
             }
             let mut subgoals = Vec::new();
             subgoals.extend(equality_builtin_match_subgoals(
-                source.op.as_ref(),
-                pullback.op.as_ref(),
+                &EqualFact::new_from_refs(
+                    source.op.as_ref(),
+                    pullback.op.as_ref(),
+                    line_file.clone(),
+                ),
                 op_result,
             ));
             subgoals.extend(equality_builtin_match_subgoals(
-                source.seed.as_ref(),
-                pullback.seed.as_ref(),
+                &EqualFact::new_from_refs(
+                    source.seed.as_ref(),
+                    pullback.seed.as_ref(),
+                    line_file.clone(),
+                ),
                 seed_result,
             ));
             subgoals.push(pointwise_result);
@@ -1138,15 +1170,16 @@ impl Runtime {
             if !result.is_true() {
                 return Ok(None);
             }
-            subgoals.extend(equality_builtin_match_subgoals(actual, expected, result));
+            subgoals.extend(equality_builtin_match_subgoals(
+                &EqualFact::new_from_refs(actual, expected, line_file.clone()),
+                result,
+            ));
         }
         let index_set: Obj =
             ClosedRange::new(aggregate_start.clone(), aggregate_end.clone()).into();
         let function_result = self.verify_reduce_functions_pointwise_on_set(
-            reduce.func.as_ref(),
-            aggregate_func,
+            &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             &index_set,
-            line_file.clone(),
             builtin_state,
         )?;
         if !function_result.is_true() {
@@ -1162,8 +1195,7 @@ impl Runtime {
             return Ok(None);
         }
         subgoals.extend(equality_builtin_match_subgoals(
-            reduce.seed.as_ref(),
-            &identity,
+            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             seed_result,
         ));
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
@@ -1199,13 +1231,13 @@ impl Runtime {
         if !set_result.is_true() {
             return Ok(None);
         }
-        let mut subgoals =
-            equality_builtin_match_subgoals(reduce.set.as_ref(), aggregate_set, set_result);
+        let mut subgoals = equality_builtin_match_subgoals(
+            &EqualFact::new_from_refs(reduce.set.as_ref(), aggregate_set, line_file.clone()),
+            set_result,
+        );
         let function_result = self.verify_reduce_functions_pointwise_on_set(
-            reduce.func.as_ref(),
-            aggregate_func,
+            &EqualFact::new_from_refs(reduce.func.as_ref(), aggregate_func, line_file.clone()),
             reduce.set.as_ref(),
-            line_file.clone(),
             builtin_state,
         )?;
         if !function_result.is_true() {
@@ -1221,8 +1253,7 @@ impl Runtime {
             return Ok(None);
         }
         subgoals.extend(equality_builtin_match_subgoals(
-            reduce.seed.as_ref(),
-            &identity,
+            &EqualFact::new_from_refs(reduce.seed.as_ref(), &identity, line_file.clone()),
             seed_result,
         ));
         let Some(carrier) = self.reduce_carrier_from_operation(reduce.op.as_ref()) else {
@@ -1282,16 +1313,14 @@ impl Runtime {
 
     fn verify_reduce_functions_pointwise_on_set(
         &mut self,
-        left_func: &Obj,
-        right_func: &Obj,
+        equal_fact: &EqualFact,
         set: &Obj,
-        line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let direct = self.verify_equal_fact_as_builtin_premise(
-            &EqualFact::new_from_refs(left_func, right_func, line_file.clone()),
-            builtin_state,
-        )?;
+        let left_func = &equal_fact.left;
+        let right_func = &equal_fact.right;
+        let line_file = &equal_fact.line_file;
+        let direct = self.verify_equal_fact_as_builtin_premise(equal_fact, builtin_state)?;
         if direct.is_true() {
             return Ok(direct);
         }

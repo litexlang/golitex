@@ -1,6 +1,6 @@
 use super::order_normalize::normalize_positive_order_atomic_fact;
 use crate::prelude::*;
-use crate::verify::verify_equality_by_builtin_rules::objs_match_for_equality_pattern;
+use crate::verify::verify_equality_by_builtin_rules::objs_match_for_pattern;
 
 impl Runtime {
     // Integer inputs are fixed by both rounding operations.
@@ -22,7 +22,7 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        if !objs_match_for_equality_pattern(arg, other) {
+        if !objs_match_for_pattern(arg, other) {
             return Ok(None);
         }
         let integer_fact: AtomicFact =
@@ -33,7 +33,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 format!("{name} fixes integer inputs"),
                 vec![premise_result],
             )
@@ -55,7 +55,7 @@ impl Runtime {
         if rounding_negation_shape(left, right) || rounding_negation_shape(right, left) {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "native floor/ceil negation duality".to_string(),
                     Vec::new(),
                 )
@@ -76,7 +76,7 @@ impl Runtime {
         }
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "native floor/ceil integer translation".to_string(),
                 vec![premise_result],
             )
@@ -103,8 +103,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let selected_is_first = objs_match_for_equality_pattern(selected, first_arg);
-        let selected_is_second = objs_match_for_equality_pattern(selected, second_arg);
+        let selected_is_first = objs_match_for_pattern(selected, first_arg);
+        let selected_is_second = objs_match_for_pattern(selected, second_arg);
         if !selected_is_first && !selected_is_second {
             return Ok(None);
         }
@@ -126,7 +126,7 @@ impl Runtime {
         let name = if is_min { "min" } else { "max" };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 format!("{name} selects the ordered argument: {premise_left} <= {premise_right}"),
                 vec![premise_result],
             )
@@ -324,13 +324,12 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if !min_max_lattice_shape(left, right) && !min_max_lattice_shape(right, left) {
             return None;
         }
         Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "native min/max lattice identity".to_string(),
                 Vec::new(),
             )
@@ -347,13 +346,12 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if !lcm_gcd_product_shape(left, right) && !lcm_gcd_product_shape(right, left) {
             return None;
         }
         Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "lcm times gcd is the absolute product".to_string(),
                 Vec::new(),
             )
@@ -370,13 +368,12 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if !lcm_basic_shape(left, right) && !lcm_basic_shape(right, left) {
             return None;
         }
         Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "native lcm symmetry, zero law, or divisibility".to_string(),
                 Vec::new(),
             )
@@ -389,7 +386,7 @@ fn floor_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Floor(floor) = left else {
         return false;
     };
-    objs_match_for_equality_pattern(&floor.arg, right)
+    objs_match_for_pattern(&floor.arg, right)
 }
 
 fn floor_upper_shape(left: &Obj, right: &Obj) -> bool {
@@ -399,7 +396,7 @@ fn floor_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Floor(floor) = add.left.as_ref() else {
         return false;
     };
-    objs_match_for_equality_pattern(left, &floor.arg)
+    objs_match_for_pattern(left, &floor.arg)
         && add
             .right
             .evaluate_to_normalized_decimal_number()
@@ -413,7 +410,7 @@ fn ceil_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Ceil(ceil) = sub.left.as_ref() else {
         return false;
     };
-    objs_match_for_equality_pattern(&ceil.arg, right)
+    objs_match_for_pattern(&ceil.arg, right)
         && sub
             .right
             .evaluate_to_normalized_decimal_number()
@@ -424,23 +421,21 @@ fn ceil_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Ceil(ceil) = right else {
         return false;
     };
-    objs_match_for_equality_pattern(left, &ceil.arg)
+    objs_match_for_pattern(left, &ceil.arg)
 }
 
 fn min_lower_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Min(min) = left else {
         return false;
     };
-    objs_match_for_equality_pattern(&min.left, right)
-        || objs_match_for_equality_pattern(&min.right, right)
+    objs_match_for_pattern(&min.left, right) || objs_match_for_pattern(&min.right, right)
 }
 
 fn max_upper_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Max(max) = right else {
         return false;
     };
-    objs_match_for_equality_pattern(left, &max.left)
-        || objs_match_for_equality_pattern(left, &max.right)
+    objs_match_for_pattern(left, &max.left) || objs_match_for_pattern(left, &max.right)
 }
 
 fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
@@ -457,16 +452,18 @@ fn lcm_gcd_product_shape(left: &Obj, right: &Obj) -> bool {
     let Obj::Mul(arguments_product) = abs.arg.as_ref() else {
         return false;
     };
-    objs_match_for_equality_pattern(&lcm.left, &gcd.left)
-        && objs_match_for_equality_pattern(&lcm.right, &gcd.right)
-        && objs_match_for_equality_pattern(&lcm.left, &arguments_product.left)
-        && objs_match_for_equality_pattern(&lcm.right, &arguments_product.right)
+    objs_match_for_pattern(&lcm.left, &gcd.left)
+        && objs_match_for_pattern(&lcm.right, &gcd.right)
+        && objs_match_for_pattern(&lcm.left, &arguments_product.left)
+        && objs_match_for_pattern(&lcm.right, &arguments_product.right)
 }
 
 fn lcm_basic_shape(native: &Obj, other: &Obj) -> bool {
     if let Obj::Lcm(lcm) = native {
         if let Obj::Lcm(swapped) = other {
-            if same(&lcm.left, &swapped.right) && same(&lcm.right, &swapped.left) {
+            if objs_match_for_pattern(&lcm.left, &swapped.right)
+                && objs_match_for_pattern(&lcm.right, &swapped.left)
+            {
                 return true;
             }
         }
@@ -488,41 +485,50 @@ fn lcm_basic_shape(native: &Obj, other: &Obj) -> bool {
     let Obj::Abs(modulus) = remainder.right.as_ref() else {
         return false;
     };
-    same(&modulus.arg, &lcm.left) || same(&modulus.arg, &lcm.right)
+    objs_match_for_pattern(&modulus.arg, &lcm.left)
+        || objs_match_for_pattern(&modulus.arg, &lcm.right)
 }
 
 fn min_max_lattice_shape(lattice: &Obj, other: &Obj) -> bool {
     match lattice {
         Obj::Min(min) => {
-            if same(&min.left, &min.right) && same(&min.left, other) {
+            if objs_match_for_pattern(&min.left, &min.right)
+                && objs_match_for_pattern(&min.left, other)
+            {
                 return true;
             }
             if let Obj::Min(swapped) = other {
-                if same(&min.left, &swapped.right) && same(&min.right, &swapped.left) {
+                if objs_match_for_pattern(&min.left, &swapped.right)
+                    && objs_match_for_pattern(&min.right, &swapped.left)
+                {
                     return true;
                 }
             }
-            if same(&min.left, other) && max_contains(min.right.as_ref(), other) {
+            if objs_match_for_pattern(&min.left, other) && max_contains(min.right.as_ref(), other) {
                 return true;
             }
-            if same(&min.right, other) && max_contains(min.left.as_ref(), other) {
+            if objs_match_for_pattern(&min.right, other) && max_contains(min.left.as_ref(), other) {
                 return true;
             }
             min_associative_shape(min, other)
         }
         Obj::Max(max) => {
-            if same(&max.left, &max.right) && same(&max.left, other) {
+            if objs_match_for_pattern(&max.left, &max.right)
+                && objs_match_for_pattern(&max.left, other)
+            {
                 return true;
             }
             if let Obj::Max(swapped) = other {
-                if same(&max.left, &swapped.right) && same(&max.right, &swapped.left) {
+                if objs_match_for_pattern(&max.left, &swapped.right)
+                    && objs_match_for_pattern(&max.right, &swapped.left)
+                {
                     return true;
                 }
             }
-            if same(&max.left, other) && min_contains(max.right.as_ref(), other) {
+            if objs_match_for_pattern(&max.left, other) && min_contains(max.right.as_ref(), other) {
                 return true;
             }
-            if same(&max.right, other) && min_contains(max.left.as_ref(), other) {
+            if objs_match_for_pattern(&max.right, other) && min_contains(max.left.as_ref(), other) {
                 return true;
             }
             max_associative_shape(max, other)
@@ -541,9 +547,9 @@ fn min_associative_shape(left: &Min, other: &Obj) -> bool {
     let Obj::Min(right_inner) = right_outer.right.as_ref() else {
         return false;
     };
-    same(&left_inner.left, &right_outer.left)
-        && same(&left_inner.right, &right_inner.left)
-        && same(&left.right, &right_inner.right)
+    objs_match_for_pattern(&left_inner.left, &right_outer.left)
+        && objs_match_for_pattern(&left_inner.right, &right_inner.left)
+        && objs_match_for_pattern(&left.right, &right_inner.right)
 }
 
 fn max_associative_shape(left: &Max, other: &Obj) -> bool {
@@ -556,27 +562,23 @@ fn max_associative_shape(left: &Max, other: &Obj) -> bool {
     let Obj::Max(right_inner) = right_outer.right.as_ref() else {
         return false;
     };
-    same(&left_inner.left, &right_outer.left)
-        && same(&left_inner.right, &right_inner.left)
-        && same(&left.right, &right_inner.right)
+    objs_match_for_pattern(&left_inner.left, &right_outer.left)
+        && objs_match_for_pattern(&left_inner.right, &right_inner.left)
+        && objs_match_for_pattern(&left.right, &right_inner.right)
 }
 
 fn min_contains(obj: &Obj, expected: &Obj) -> bool {
     let Obj::Min(min) = obj else {
         return false;
     };
-    same(&min.left, expected) || same(&min.right, expected)
+    objs_match_for_pattern(&min.left, expected) || objs_match_for_pattern(&min.right, expected)
 }
 
 fn max_contains(obj: &Obj, expected: &Obj) -> bool {
     let Obj::Max(max) = obj else {
         return false;
     };
-    same(&max.left, expected) || same(&max.right, expected)
-}
-
-fn same(left: &Obj, right: &Obj) -> bool {
-    objs_match_for_equality_pattern(left, right)
+    objs_match_for_pattern(&max.left, expected) || objs_match_for_pattern(&max.right, expected)
 }
 
 fn rounding_negation_shape(native: &Obj, other: &Obj) -> bool {
@@ -592,8 +594,8 @@ fn rounding_negation_shape(native: &Obj, other: &Obj) -> bool {
         return false;
     };
     match other_rounding {
-        Obj::Floor(floor) if expect_floor => same(inner, &floor.arg),
-        Obj::Ceil(ceil) if !expect_floor => same(inner, &ceil.arg),
+        Obj::Floor(floor) if expect_floor => objs_match_for_pattern(inner, &floor.arg),
+        Obj::Ceil(ceil) if !expect_floor => objs_match_for_pattern(inner, &ceil.arg),
         _ => false,
     }
 }
@@ -619,8 +621,10 @@ fn rounding_integer_translation_shift(native: &Obj, other: &Obj) -> Option<Obj> 
             Obj::Ceil(ceil) if !is_floor => ceil.arg.as_ref(),
             _ => continue,
         };
-        if (same(&argument_sum.left, rounded_arg) && same(&argument_sum.right, shift))
-            || (same(&argument_sum.right, rounded_arg) && same(&argument_sum.left, shift))
+        if (objs_match_for_pattern(&argument_sum.left, rounded_arg)
+            && objs_match_for_pattern(&argument_sum.right, shift))
+            || (objs_match_for_pattern(&argument_sum.right, rounded_arg)
+                && objs_match_for_pattern(&argument_sum.left, shift))
         {
             return Some(shift.clone());
         }

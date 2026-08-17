@@ -7,7 +7,19 @@ bundles, states the standard two-sided group laws, proves cancellation and
 uniqueness of identity and inverse, and proves that a homomorphism preserves
 identity and inverse. Its flagship theorem then uses the native kernel set
 builder to prove that the kernel of a group homomorphism is a normal subgroup.
+Its proofs use `by thm ... => fact` to name the exact atomic consequence that
+each theorem application contributes to the next mathematical step.
 
 `main.lit` contains no `trust`. Both the independent release file runner and
-module runner return top-level `ok: true`. See `plan.md` and
-`math_collections.md` for the fixed scope and interface decisions.
+module runner return top-level `ok: true`. See `math_collections.md` for the
+fixed scope and interface decisions.
+
+For comparison, `lean_core_analogy.lean` expresses the same progression using
+only Lean's automatically loaded Prelude: it has no imports and does not depend
+on Mathlib. It is a handwritten semantic analogy, not generated output and not
+a claim about the Litex-to-Lean compiler's current function or group support.
+Run it independently with:
+
+```sh
+lean showcases/math_concepts_in_litex/abstract_algebra/lean_core_analogy.lean
+```

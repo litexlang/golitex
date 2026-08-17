@@ -18,12 +18,15 @@ thm projection_x_is_linear:
         ? forall u, v cart(R, R):
             projection_x(vector_add(u, v)) = projection_x(u) + projection_x(v)
         vector_add(u, v) = (u[1] + v[1], u[2] + v[2])
+        projection_x(u) = u[1]
+        projection_x(v) = v[1]
         projection_x(vector_add(u, v)) = vector_add(u, v)[1] = u[1] + v[1]
         projection_x(u) + projection_x(v) = u[1] + v[1]
     claim:
         ? forall a R, v cart(R, R):
             projection_x(scalar_mul(a, v)) = a * projection_x(v)
         scalar_mul(a, v) = (a * v[1], a * v[2])
+        projection_x(v) = v[1]
         projection_x(scalar_mul(a, v)) = scalar_mul(a, v)[1] = a * v[1]
         a * projection_x(v) = a * v[1]
     by def $is_linear_map_R2_to_R(projection_x)
@@ -31,8 +34,7 @@ thm projection_x_is_linear:
 have projection_kernel power_set(cart(R, R)) = {v cart(R, R): projection_x(v) = 0}
 (0, 7) $in cart(R, R)
 projection_x((0, 7)) = 0
-by thm set_builder_member((0, 7), {v cart(R, R): projection_x(v) = 0})
-(0, 7) $in {v cart(R, R): projection_x(v) = 0}
+by thm set_builder_member((0, 7), {v cart(R, R): projection_x(v) = 0}) => (0, 7) $in {v cart(R, R): projection_x(v) = 0}
 projection_kernel = {v cart(R, R): projection_x(v) = 0}
 (0, 7) $in projection_kernel
 (1, 7) $in cart(R, R)
@@ -76,9 +78,9 @@ thm kernel_of_linear_map_is_subspace:
         $is_linear_map_R2_to_R(T)
         =>:
             $is_subspace_R2(kernel_of(T))
-    by thm linear_map_sends_zero_to_zero(T)
+    by thm linear_map_sends_zero_to_zero(T) => T((0, 0)) = 0
     kernel_of(T) = {v cart(R, R): T(v) = 0}
-    by thm set_builder_member((0, 0), {v cart(R, R): T(v) = 0})
+    by thm set_builder_member((0, 0), {v cart(R, R): T(v) = 0}) => (0, 0) $in {v cart(R, R): T(v) = 0}
     (0, 0) $in kernel_of(T)
     witness $is_nonempty_set(kernel_of(T)) from (0, 0)
     by def:
@@ -89,16 +91,14 @@ thm kernel_of_linear_map_is_subspace:
         T(u) = 0
         T(v) = 0
         T(vector_add(u, v)) = T(u) + T(v) = 0
-        by thm set_builder_member(vector_add(u, v), {z cart(R, R): T(z) = 0})
-        vector_add(u, v) $in {z cart(R, R): T(z) = 0}
+        by thm set_builder_member(vector_add(u, v), {z cart(R, R): T(z) = 0}) => vector_add(u, v) $in {z cart(R, R): T(z) = 0}
         vector_add(u, v) $in kernel_of(T)
     claim:
         ? forall a R, v kernel_of(T):
             scalar_mul(a, v) $in kernel_of(T)
         T(v) = 0
         T(scalar_mul(a, v)) = a * T(v) = 0
-        by thm set_builder_member(scalar_mul(a, v), {z cart(R, R): T(z) = 0})
-        scalar_mul(a, v) $in {z cart(R, R): T(z) = 0}
+        by thm set_builder_member(scalar_mul(a, v), {z cart(R, R): T(z) = 0}) => scalar_mul(a, v) $in {z cart(R, R): T(z) = 0}
         scalar_mul(a, v) $in kernel_of(T)
     by def:
         ? $is_subspace_R2(kernel_of(T))
@@ -111,7 +111,7 @@ thm injective_linear_map_has_trivial_kernel:
         $injective(cart(R, R), R, T)
         =>:
             kernel_of(T) = zero_subspace
-    by thm linear_map_sends_zero_to_zero(T)
+    by thm linear_map_sends_zero_to_zero(T) => T((0, 0)) = 0
     by def:
         ? $injective(cart(R, R), R, T)
     kernel_of(T) = {v cart(R, R): T(v) = 0}
@@ -124,7 +124,7 @@ thm injective_linear_map_has_trivial_kernel:
             x $in zero_subspace
         forall x zero_subspace:
             x = (0, 0)
-            T(x) = 0
+            T(x) = T((0, 0)) = 0
             x $in kernel_of(T)
 
 thm trivial_kernel_implies_injective:
@@ -167,14 +167,14 @@ thm trivial_kernel_implies_injective:
         u[2] = v[2]
         u = (u[1], u[2])
         v = (v[1], v[2])
-        u = v
+        (u[1], u[2]) = (v[1], v[2])
+        u = (u[1], u[2]) = (v[1], v[2]) = v
     by def:
         ? $injective(cart(R, R), R, T)
 
 kernel_of(projection_x) = {v cart(R, R): projection_x(v) = 0} = projection_kernel
-by thm projection_x_is_linear()
-by thm kernel_of_linear_map_is_subspace(projection_x)
-$is_subspace_R2(kernel_of(projection_x))
+by thm projection_x_is_linear() => $is_linear_map_R2_to_R(projection_x)
+by thm kernel_of_linear_map_is_subspace(projection_x) => $is_subspace_R2(kernel_of(projection_x))
 
 thm projection_x_is_not_injective:
     ? forall:

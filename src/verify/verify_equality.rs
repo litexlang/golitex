@@ -19,13 +19,7 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> StmtResult {
-        let result = self.verify_equal_fact_by_known_equality_without_direct_evaluation(
-            &EqualFact::new_from_refs(
-                &equal_fact.left,
-                &equal_fact.right,
-                equal_fact.line_file.clone(),
-            ),
-        );
+        let result = self.verify_equal_fact_by_known_equality_without_direct_evaluation(equal_fact);
         self.remember_successful_atomic_fact_for_statement(&equal_fact.clone().into(), result)
     }
 
@@ -62,11 +56,7 @@ impl Runtime {
             ));
         }
 
-        if !self.objs_are_equal_by_terminating_reduction_and_congruence(
-            &equal_fact.left,
-            &equal_fact.right,
-            equal_fact.line_file.clone(),
-        )? {
+        if !self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(equal_fact)? {
             return Ok(direct_evaluation_result);
         }
 
@@ -98,8 +88,12 @@ impl Runtime {
             || objs_equal_by_rational_expression_evaluation(&left_resolved, &right_resolved)
         {
             "calculation and rational expression simplification"
-        } else if objs_equal_by_bounded_symbolic_normalization(&equal_fact.left, &equal_fact.right)
-            || objs_equal_by_bounded_symbolic_normalization(&left_resolved, &right_resolved)
+        } else if equal_fact_sides_match_by_bounded_symbolic_normalization(equal_fact)
+            || equal_fact_sides_match_by_bounded_symbolic_normalization(&EqualFact::new(
+                left_resolved,
+                right_resolved,
+                equal_fact.line_file.clone(),
+            ))
         {
             // Bounded, obligation-free symbolic normalization. Example:
             // `a * t + 0 = a * t` and `abs(x - y) = abs(y - x)`.
@@ -218,7 +212,7 @@ impl Runtime {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         equal_fact.clone().into(),
-                        same_shape_and_equal_args_reason(&equal_fact.left, &equal_fact.right),
+                        same_shape_and_equal_args_reason(equal_fact),
                         Vec::new(),
                     ))
                     .into(),
@@ -308,10 +302,8 @@ impl Runtime {
             let alpha_equal =
                 objs_equal_with_nested_binder_alpha_equivalence(&comparison_candidate, other_side);
             let compared_equal = alpha_equal
-                || self.objs_are_equal_by_terminating_reduction_and_congruence(
-                    &comparison_candidate,
-                    other_side,
-                    line_file.clone(),
+                || self.equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                    &EqualFact::new_from_refs(&comparison_candidate, other_side, line_file.clone()),
                 )?;
             if !compared_equal {
                 continue;
@@ -565,8 +557,6 @@ impl Runtime {
         equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
-        let left_obj = &equal_fact.left;
-        let right_obj = &equal_fact.right;
         let result = self.verify_equal_fact_with_direct_routes(equal_fact)?;
         if result.is_true() {
             return Ok(
@@ -588,7 +578,7 @@ impl Runtime {
             return Ok(
                 (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                     equal_fact.clone().into(),
-                    same_shape_and_equal_args_reason(left_obj, right_obj),
+                    same_shape_and_equal_args_reason(equal_fact),
                     Vec::new(),
                 ))
                 .into(),
@@ -599,11 +589,11 @@ impl Runtime {
     }
 }
 
-fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool {
+fn equal_fact_sides_match_by_bounded_symbolic_normalization(equal_fact: &EqualFact) -> bool {
     // Absolute value is invariant under sign change. This remains a bounded
     // computation leaf: it creates no proof obligations and applies no rules.
     // Example: `abs(x - y) = abs(y - x)`.
-    let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (left, right) else {
+    let (Obj::Abs(left_abs), Obj::Abs(right_abs)) = (&equal_fact.left, &equal_fact.right) else {
         return false;
     };
     let negative_one: Obj = Number::new("-1".to_string()).into();
@@ -611,8 +601,8 @@ fn objs_equal_by_bounded_symbolic_normalization(left: &Obj, right: &Obj) -> bool
     objs_equal_by_rational_expression_evaluation(left_abs.arg.as_ref(), &negated_right)
 }
 
-fn same_shape_and_equal_args_reason(left_obj: &Obj, right_obj: &Obj) -> String {
-    match (left_obj, right_obj) {
+fn same_shape_and_equal_args_reason(equal_fact: &EqualFact) -> String {
+    match (&equal_fact.left, &equal_fact.right) {
         (Obj::FnObj(_), Obj::FnObj(_)) => {
             "the function parts are equal, and the function arguments are equal one by one"
                 .to_string()
@@ -676,13 +666,9 @@ mod tests {
             StructObj::new(AtomicName::WithoutMod("Box".to_string()), vec![union_ab]).into();
         let right: Obj =
             StructObj::new(AtomicName::WithoutMod("Box".to_string()), vec![union_ba]).into();
-        let equal_fact = EqualFact::new(left.clone(), right.clone(), default_line_file());
+        let equal_fact = EqualFact::new(left, right, default_line_file());
         assert!(runtime
-            .verify_equal_fact_by_known_equality(&EqualFact::new_from_refs(
-                &left,
-                &right,
-                default_line_file()
-            ))
+            .verify_equal_fact_by_known_equality(&equal_fact)
             .is_unknown());
         assert!(runtime
             .verify_equal_fact(&equal_fact, &UseContextVerifyState::new(1, true))
@@ -705,7 +691,8 @@ mod tests {
             .next()
             .expect("definition source lookup must follow direct reduction");
 
-        assert!(reduction_impl.contains("objs_are_equal_by_terminating_reduction_and_congruence"));
+        assert!(reduction_impl
+            .contains("equal_fact_sides_are_equal_by_terminating_reduction_and_congruence"));
         assert!(source.contains("!verify_state.well_defined_already_verified"));
         let obsolete_depth = ["known_equality_candidate_", "replay_depth"].concat();
         let obsolete_collector = ["collect_known_equality_", "pairs_from_envs"].concat();
@@ -719,7 +706,7 @@ mod tests {
 
         let structural_source = include_str!("verify_builtin_rules/equality_structural.rs");
         let terminating_comparator = structural_source
-            .split("fn objs_are_equal_by_terminating_reduction_and_congruence(")
+            .split("fn equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(")
             .nth(1)
             .expect("terminating structural comparator must exist")
             .split("pub(crate) fn same_shape_and_corresponding_args_match")
@@ -760,16 +747,12 @@ mod tests {
         let two: Obj = Number::new("2".to_string()).into();
         let one_plus_one: Obj = Add::new(one.clone(), one).into();
 
-        assert!(runtime.objs_are_congruent_by_known_equalities(
-            &one_plus_one,
-            &two,
-            default_line_file(),
+        assert!(runtime.equal_fact_sides_are_congruent_by_known_equalities(
+            &EqualFact::new_from_refs(&one_plus_one, &two, default_line_file()),
         ));
         assert!(runtime
-            .objs_are_equal_by_terminating_reduction_and_congruence(
-                &one_plus_one,
-                &two,
-                default_line_file(),
+            .equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                &EqualFact::new_from_refs(&one_plus_one, &two, default_line_file()),
             )
             .expect("terminating structural comparison"));
 
@@ -777,10 +760,8 @@ mod tests {
         let zero: Obj = Number::new("0".to_string()).into();
         let x_plus_zero: Obj = Add::new(x.clone(), zero).into();
         assert!(runtime
-            .objs_are_equal_by_terminating_reduction_and_congruence(
-                &x_plus_zero,
-                &x,
-                default_line_file(),
+            .equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                &EqualFact::new_from_refs(&x_plus_zero, &x, default_line_file()),
             )
             .expect("bounded symbolic normalization"));
 
@@ -790,20 +771,16 @@ mod tests {
         let abs_x_minus_y: Obj = Abs::new(x_minus_y).into();
         let abs_y_minus_x: Obj = Abs::new(y_minus_x).into();
         assert!(runtime
-            .objs_are_equal_by_terminating_reduction_and_congruence(
-                &abs_x_minus_y,
-                &abs_y_minus_x,
-                default_line_file(),
+            .equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                &EqualFact::new_from_refs(&abs_x_minus_y, &abs_y_minus_x, default_line_file(),),
             )
             .expect("absolute-value sign normalization"));
 
         let abs_x: Obj = Abs::new(x).into();
         let abs_y: Obj = Abs::new(y).into();
         assert!(!runtime
-            .objs_are_equal_by_terminating_reduction_and_congruence(
-                &abs_x,
-                &abs_y,
-                default_line_file(),
+            .equal_fact_sides_are_equal_by_terminating_reduction_and_congruence(
+                &EqualFact::new_from_refs(&abs_x, &abs_y, default_line_file()),
             )
             .expect("unrelated absolute values must not compare equal"));
     }

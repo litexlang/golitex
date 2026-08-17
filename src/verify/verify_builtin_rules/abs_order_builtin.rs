@@ -121,16 +121,17 @@ fn neg_obj(obj: &Obj) -> Obj {
     Mul::new(literal_neg_one_obj(), obj.clone()).into()
 }
 
-fn objs_equal(a: &Obj, b: &Obj) -> bool {
+fn objs_have_same_display(a: &Obj, b: &Obj) -> bool {
     a.to_string() == b.to_string()
 }
 
 fn obj_is_negation_of(obj: &Obj, expected_arg: &Obj) -> bool {
     match obj {
         Obj::Mul(m) => {
-            (obj_is_literal_neg_one(m.left.as_ref()) && objs_equal(m.right.as_ref(), expected_arg))
+            (obj_is_literal_neg_one(m.left.as_ref())
+                && objs_have_same_display(m.right.as_ref(), expected_arg))
                 || (obj_is_literal_neg_one(m.right.as_ref())
-                    && objs_equal(m.left.as_ref(), expected_arg))
+                    && objs_have_same_display(m.left.as_ref(), expected_arg))
         }
         _ => false,
     }
@@ -138,7 +139,7 @@ fn obj_is_negation_of(obj: &Obj, expected_arg: &Obj) -> bool {
 
 fn obj_is_abs_of(obj: &Obj, arg: &Obj) -> bool {
     match obj {
-        Obj::Abs(abs) => objs_equal(abs.arg.as_ref(), arg),
+        Obj::Abs(abs) => objs_have_same_display(abs.arg.as_ref(), arg),
         _ => false,
     }
 }
@@ -158,8 +159,9 @@ fn obj_is_abs_of_add_pair(obj: &Obj, x: &Obj, y: &Obj) -> bool {
     let Obj::Add(add) = abs.arg.as_ref() else {
         return false;
     };
-    (objs_equal(add.left.as_ref(), x) && objs_equal(add.right.as_ref(), y))
-        || (objs_equal(add.left.as_ref(), y) && objs_equal(add.right.as_ref(), x))
+    (objs_have_same_display(add.left.as_ref(), x) && objs_have_same_display(add.right.as_ref(), y))
+        || (objs_have_same_display(add.left.as_ref(), y)
+            && objs_have_same_display(add.right.as_ref(), x))
 }
 
 fn obj_is_abs_of_sub_pair(obj: &Obj, x: &Obj, y: &Obj) -> bool {
@@ -169,7 +171,7 @@ fn obj_is_abs_of_sub_pair(obj: &Obj, x: &Obj, y: &Obj) -> bool {
     let Obj::Sub(sub) = abs.arg.as_ref() else {
         return false;
     };
-    objs_equal(sub.left.as_ref(), x) && objs_equal(sub.right.as_ref(), y)
+    objs_have_same_display(sub.left.as_ref(), x) && objs_have_same_display(sub.right.as_ref(), y)
 }
 
 fn abs_obj(arg: Obj) -> Obj {
@@ -228,7 +230,7 @@ impl Runtime {
         atomic_fact: &AtomicFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         if let Obj::Abs(abs) = &f.right {
-            if objs_equal(&f.left, abs.arg.as_ref())
+            if objs_have_same_display(&f.left, abs.arg.as_ref())
                 || obj_is_negation_of(&f.left, abs.arg.as_ref())
             {
                 return Ok(Some(StmtResult::from(

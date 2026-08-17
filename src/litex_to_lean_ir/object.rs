@@ -3,7 +3,7 @@ use crate::prelude::*;
 /// A structural compiler representation of one Litex object.
 ///
 /// The tree preserves source object syntax and symbol identity without fixing
-/// a universal target carrier. Compiler2 selects Mathlib-native carriers while
+/// a universal target carrier. Compiler selects Mathlib-native carriers while
 /// retaining numeric, user-set, and function membership as explicit evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LitexToLeanObjectIr {

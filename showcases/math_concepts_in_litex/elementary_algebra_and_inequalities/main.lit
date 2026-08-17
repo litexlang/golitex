@@ -30,7 +30,7 @@ thm two_variable_am_gm:
     geometric_mean(x, y) = sqrt(x * y)
     arithmetic_mean(x, y) = (x + y) / 2
 
-by thm two_variable_am_gm(9, 16)
+by thm two_variable_am_gm(9, 16) => geometric_mean(9, 16) <= arithmetic_mean(9, 16)
 geometric_mean(9, 16) = sqrt(9 * 16) = 12
 arithmetic_mean(9, 16) = (9 + 16) / 2 = 25 / 2
 12 <= 25 / 2
@@ -104,4 +104,4 @@ thm radical_equation_has_only_solution_five:
 0 <= 11 - 2 * 5
 sqrt(11 - 2 * 5) = 1
 5 = sqrt(11 - 2 * 5) + 4
-by thm radical_equation_has_only_solution_five(5)
+by thm radical_equation_has_only_solution_five(5) => 5 = 5

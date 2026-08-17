@@ -18,7 +18,7 @@ thm distance_sq_coordinate_formula:
 (0, 0) $in points
 (3, 4) $in cart(R, R)
 (3, 4) $in points
-by thm distance_sq_coordinate_formula((0, 0), (3, 4))
+by thm distance_sq_coordinate_formula((0, 0), (3, 4)) => distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2
 distance_sq((0, 0), (3, 4)) = (3 - 0)^2 + (4 - 0)^2 = 25
 
 prop are_segments_congruent(a, b, c, d cart(R, R)):
@@ -48,14 +48,14 @@ thm equilateral_vertex_distance_lemma:
     equilateral_vertex(a, b)[2] = (a[2] + b[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
     equilateral_vertex(a, b)[1] - a[1] = (b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
     equilateral_vertex(a, b)[2] - a[2] = (b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2
-    by thm distance_sq_coordinate_formula(a, equilateral_vertex(a, b))
-    by thm distance_sq_coordinate_formula(a, b)
-    by thm equilateral_rotation_norm(b[1] - a[1], b[2] - a[2])
+    by thm distance_sq_coordinate_formula(a, equilateral_vertex(a, b)) => distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2
+    by thm distance_sq_coordinate_formula(a, b) => distance_sq(a, b) = (b[1] - a[1])^2 + (b[2] - a[2])^2
+    by thm equilateral_rotation_norm(b[1] - a[1], b[2] - a[2]) => ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2
     distance_sq(a, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - a[1])^2 + (equilateral_vertex(a, b)[2] - a[2])^2 = ((b[1] - a[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (b[1] - a[1]) / 2)^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
     equilateral_vertex(a, b)[1] - b[1] = (a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2
     equilateral_vertex(a, b)[2] - b[2] = -((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)
-    by thm distance_sq_coordinate_formula(b, equilateral_vertex(a, b))
-    by thm equilateral_rotation_norm(a[1] - b[1], b[2] - a[2])
+    by thm distance_sq_coordinate_formula(b, equilateral_vertex(a, b)) => distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2
+    by thm equilateral_rotation_norm(a[1] - b[1], b[2] - a[2]) => ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2
     distance_sq(b, equilateral_vertex(a, b)) = (equilateral_vertex(a, b)[1] - b[1])^2 + (equilateral_vertex(a, b)[2] - b[2])^2 = ((a[1] - b[1]) / 2 - sqrt(3) * (b[2] - a[2]) / 2)^2 + ((b[2] - a[2]) / 2 + sqrt(3) * (a[1] - b[1]) / 2)^2 = (a[1] - b[1])^2 + (b[2] - a[2])^2 = (b[1] - a[1])^2 + (b[2] - a[2])^2 = distance_sq(a, b)
 
 # Euclid I.1: construct an equilateral triangle on a nondegenerate segment.
@@ -64,9 +64,8 @@ thm euclid_book1_proposition_1:
         a != b
         =>:
             exist c cart(R, R) st {$is_equilateral_triangle(a, b, c)}
-    by thm equilateral_vertex_distance_lemma(a, b)
-    distance_sq(a, equilateral_vertex(a, b)) = distance_sq(a, b)
-    distance_sq(b, equilateral_vertex(a, b)) = distance_sq(a, b)
+    by thm equilateral_vertex_distance_lemma(a, b) => distance_sq(a, equilateral_vertex(a, b)) = distance_sq(a, b)
+    by thm equilateral_vertex_distance_lemma(a, b) => distance_sq(b, equilateral_vertex(a, b)) = distance_sq(a, b)
     $are_segments_congruent(a, b, a, equilateral_vertex(a, b))
     $are_segments_congruent(a, b, b, equilateral_vertex(a, b))
     $is_equilateral_triangle(a, b, equilateral_vertex(a, b))

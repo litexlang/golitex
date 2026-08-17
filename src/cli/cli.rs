@@ -1,4 +1,6 @@
-use crate::compile_to_lean::{compile_litex_file_to_lean, compile_markdown_ledger_file_to_lean};
+use crate::litex_to_lean_compiler::{
+    compile_litex_file_to_lean, compile_markdown_ledger_file_to_lean,
+};
 use crate::prelude::*;
 use crate::to_latex::{to_latex_from_file, to_latex_from_repository, to_latex_from_source};
 use crate::to_python::{to_python_from_file, to_python_from_repository, to_python_from_source};

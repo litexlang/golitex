@@ -187,7 +187,7 @@ class ProcessController:
 
 def main() -> int:
     args = parse_args()
-    repository_root = Path(__file__).resolve().parent.parent
+    repository_root = Path(__file__).resolve().parents[2]
 
     try:
         textbook_files = collect_textbook_files(repository_root, TEXTBOOKS)

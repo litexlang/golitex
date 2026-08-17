@@ -11,11 +11,11 @@ import unittest
 from pathlib import Path
 
 
-TOOLS = Path(__file__).resolve().parent
-REPOSITORY_ROOT = TOOLS.parents[1]
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+REPOSITORY_ROOT = SCRIPT_DIRECTORY.parents[2]
 PRIVATE_ROOT = REPOSITORY_ROOT / "private"
 PRIVATE_ROOT.mkdir(parents=True, exist_ok=True)
-sys.path.insert(0, str(TOOLS))
+sys.path.insert(0, str(SCRIPT_DIRECTORY))
 
 import preflight  # noqa: E402
 
@@ -101,7 +101,9 @@ class ReleasePreflightTest(unittest.TestCase):
         workflow = (REPOSITORY_ROOT / ".github/workflows/deploy.yml").read_text(
             encoding="utf-8"
         )
-        self.assertEqual(workflow.count("tools/release/preflight.py --archive"), 2)
+        self.assertEqual(
+            workflow.count(".github/scripts/release/preflight.py --archive"), 2
+        )
         self.assertIn("COPYFILE_DISABLE=1 tar -czf", workflow)
         self.assertNotIn(
             "basics::finite_set_has_bijective_index", workflow

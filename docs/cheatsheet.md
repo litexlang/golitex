@@ -181,10 +181,9 @@ execution contracts.
 | A bare universal statement needs proof-control commands such as cases, theorem calls, witnesses, or induction | Local proved fact | The complete universal target must be well-defined | Local proof body to one stored fact | Wrap the target in `claim:` or name it with `thm` when reusable | Putting `by thm`, `by def`, or another proof-control statement directly in a bare `forall ... =>:` conclusion list | [`bodyless_by_goal_blocks.lit`](../examples/01_proof_patterns/bodyless_by_goal_blocks.lit) |
 <!-- END GENERATED GOAL-SHAPE ROUTES -->
 
-The table is generated from [`goal_shape_routes.json`](goal_shape_routes.json).
-After editing that data, run
-`python3 tools/generate_goal_shape_routing.py --write`; CI uses the same command
-with `--check` to reject stale rows or missing evidence files.
+The table mirrors [`goal_shape_routes.json`](goal_shape_routes.json). Update the
+data and this table together; there is currently no checked generator or CI
+drift gate for this section.
 
 These routes are directional. For example, known set-builder membership can
 expose its base and predicate facts automatically, while constructing that
@@ -232,7 +231,7 @@ cannot admit an unproved target. Required structural arms remain, and
 
 | Statement | Well-Definedness / Structural Checks | Truth Verification | Environment Effects |
 |---|---|---|---|
-| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct child in recursive execution order. Optional `[allow bare export]`, `[allow bare import std]`, and `[allow bare import]` entries must name items in their matching tables; allow-bare exports must be folders. | None during discovery. Enabled, loaded sources must expose a unique recursive public terminal-symbol set; different symbols with one bare name are a config error. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix. A source gets one inherited bare-symbol index; explicit qualified names and fields bypass it, private imports and isolated imports stay qualified-only, and active external names cannot be rebound locally. |
+| `litex.config` | `[hierarchy]` declares `module` or `submodule`; only modules may use `[import]` and `[import std]`; `[export]` lists every direct Litex child in recursive execution order, while the reserved local `.drafts/` directory is ignored. Optional `[allow bare export]`, `[allow bare import std]`, and `[allow bare import]` entries must name items in their matching tables; allow-bare exports must be folders. | None during discovery. Enabled, loaded sources must expose a unique recursive public terminal-symbol set; different symbols with one bare name are a config error. | Declares imports, canonical folder/file namespaces, full `-r` traversal, and the `-f` prefix. A source gets one inherited bare-symbol index; explicit qualified names and fields bypass it, private imports and isolated imports stay qualified-only, and active external names cannot be rebound locally. |
 | `clear` | None. | None. | Clears the current user environment; imported modules stay registered and active. |
 | `do_nothing` | None. | None. | None. |
 | `eval` | The expression must be evaluable, or a name with a known executable definition. | Does not separately prove the original expression; it stores the evaluation equality. | Stores and reports `expr = value` with evaluation-result reason. |

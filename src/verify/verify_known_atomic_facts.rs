@@ -301,8 +301,7 @@ impl Runtime {
         let mut steps = Vec::new();
         for (known_arg, goal_arg) in known_args.iter().zip(goal_args.iter()) {
             if !self.collect_nested_equality_transport_steps(
-                known_arg,
-                goal_arg,
+                &EqualFact::new_from_refs(known_arg, goal_arg, goal.line_file()),
                 &equalities,
                 module_names,
                 &mut steps,
@@ -322,17 +321,16 @@ impl Runtime {
     /// supported object constructor at which a stored equality is used.
     fn collect_nested_equality_transport_steps(
         &self,
-        source: &Obj,
-        goal: &Obj,
+        equal_fact: &EqualFact,
         equalities: &KnownEquality,
         module_names: &[String],
         steps: &mut Vec<EqualityTransportStep>,
     ) -> bool {
-        if obj_equality_key(source) == obj_equality_key(goal) {
+        if obj_equality_key(&equal_fact.left) == obj_equality_key(&equal_fact.right) {
             return true;
         }
 
-        if let Some(path) = equalities.proof_path(source, goal) {
+        if let Some(path) = equalities.proof_path(&equal_fact.left, &equal_fact.right) {
             for proof_step in path {
                 let equality_fact: Fact = AtomicFact::EqualFact(proof_step.equality.clone()).into();
                 let equality_fact_id =
@@ -348,12 +346,11 @@ impl Runtime {
         }
 
         let result: Result<bool, ()> = Runtime::same_shape_and_corresponding_args_match(
-            source,
-            goal,
+            &equal_fact.left,
+            &equal_fact.right,
             &mut |source_arg, goal_arg| {
                 Ok(self.collect_nested_equality_transport_steps(
-                    source_arg,
-                    goal_arg,
+                    &EqualFact::new_from_refs(source_arg, goal_arg, equal_fact.line_file.clone()),
                     equalities,
                     module_names,
                     steps,
@@ -854,7 +851,11 @@ impl Runtime {
         given_arg: &Obj,
         line_file: LineFile,
     ) -> bool {
-        if self.objs_are_congruent_by_known_equalities(known_arg, given_arg, line_file.clone()) {
+        if self.equal_fact_sides_are_congruent_by_known_equalities(&EqualFact::new_from_refs(
+            known_arg,
+            given_arg,
+            line_file.clone(),
+        )) {
             return true;
         }
 
@@ -867,11 +868,11 @@ impl Runtime {
         // Example: A = {a} and a = b let membership in A imply membership in {b}.
         known_candidates.iter().any(|known_candidate| {
             given_candidates.iter().any(|given_candidate| {
-                self.objs_are_congruent_by_known_equalities(
+                self.equal_fact_sides_are_congruent_by_known_equalities(&EqualFact::new_from_refs(
                     known_candidate,
                     given_candidate,
                     line_file.clone(),
-                )
+                ))
             })
         })
     }

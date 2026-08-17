@@ -24,15 +24,10 @@ fn fn_set_equality_verify_error(
     }
 }
 
-fn fn_set_equality_verified_by_builtin_rules_result(
-    left: &FnSet,
-    right: &FnSet,
-    line_file: LineFile,
-) -> StmtResult {
-    let stmt = fn_set_equality_fact(left, right, line_file);
+fn fn_set_equality_verified_by_builtin_rules_result(equal_fact: &EqualFact) -> StmtResult {
     StmtResult::from(
         FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            stmt,
+            equal_fact.clone().into(),
             "fnset equality: mutual implication of param sets, dom facts, and ret set".to_string(),
             Vec::new(),
         ),
@@ -42,11 +37,13 @@ fn fn_set_equality_verified_by_builtin_rules_result(
 impl Runtime {
     pub fn verify_fn_set_with_params_equality_by_builtin_rules(
         &mut self,
-        left: &FnSet,
-        right: &FnSet,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         verify_state: &UseContextVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
+        let (Obj::FnSet(left), Obj::FnSet(right)) = (&equal_fact.left, &equal_fact.right) else {
+            return Ok(StmtUnknown::new().into());
+        };
+        let line_file = &equal_fact.line_file;
         if ParamGroupWithSet::number_of_params(&left.body.params_def_with_set)
             != ParamGroupWithSet::number_of_params(&right.body.params_def_with_set)
         {
@@ -73,9 +70,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         }
 
-        Ok(fn_set_equality_verified_by_builtin_rules_result(
-            left, right, line_file,
-        ))
+        Ok(fn_set_equality_verified_by_builtin_rules_result(equal_fact))
     }
 
     fn verify_fn_set_with_params_directionally_in_local_env(

@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use crate::verify::verify_equality_by_builtin_rules::{
     factual_equal_success_by_builtin_reason, factual_equal_success_by_builtin_reason_with_subgoals,
-    objs_match_for_equality_pattern,
+    objs_match_for_pattern,
 };
 use std::rc::Rc;
 
@@ -13,7 +13,6 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         // A gcd divides each input.
         // Example: `a % gcd(a, b) = 0`.
         if gcd_divides_its_argument_shape(left, right)
@@ -144,10 +143,7 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_matrix_power_definition(equal_fact, left, right) {
-            return Ok(done);
-        }
-        if let Some(done) = self.try_verify_matrix_power_definition(equal_fact, right, left) {
+        if let Some(done) = self.try_verify_matrix_power_definition(equal_fact) {
             return Ok(done);
         }
 
@@ -167,21 +163,15 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_fn_range_from_known_injection(
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
+        if let Some(done) = self
+            .try_verify_finite_set_size_fn_range_from_known_injection(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_from_known_bijection(
-            left,
-            right,
-            line_file.clone(),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_from_known_bijection(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
@@ -218,33 +208,21 @@ impl Runtime {
         }
 
         if Self::intersection_has_literal_set_operand(left) {
-            if let Some(done) = self.try_verify_literal_set_intersection_filter(
-                left,
-                right,
-                left,
-                right,
-                line_file.clone(),
-                builtin_state,
-            )? {
+            if let Some(done) =
+                self.try_verify_literal_set_intersection_filter(equal_fact, true, builtin_state)?
+            {
                 return Ok(done);
             }
         }
         if Self::intersection_has_literal_set_operand(right) {
-            if let Some(done) = self.try_verify_literal_set_intersection_filter(
-                left,
-                right,
-                right,
-                left,
-                line_file.clone(),
-                builtin_state,
-            )? {
+            if let Some(done) =
+                self.try_verify_literal_set_intersection_filter(equal_fact, false, builtin_state)?
+            {
                 return Ok(done);
             }
         }
 
-        if let Some(done) =
-            self.try_verify_intersection_from_subset(left, right, line_file.clone(), builtin_state)?
-        {
+        if let Some(done) = self.try_verify_intersection_from_subset(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
@@ -735,7 +713,7 @@ impl Runtime {
         for (index, component) in tuple.args.iter().enumerate() {
             let expected: Obj =
                 ObjAtIndex::new(target.clone(), Number::new((index + 1).to_string()).into()).into();
-            if !objs_match_for_equality_pattern(component.as_ref(), &expected) {
+            if !objs_match_for_pattern(component.as_ref(), &expected) {
                 return Ok(None);
             }
         }
@@ -756,7 +734,7 @@ impl Runtime {
             }
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     "tuple reconstruction from known Cartesian-product membership".to_string(),
                     vec![membership_result],
                 )
@@ -899,7 +877,7 @@ impl Runtime {
             if subset_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                        EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                        equal_fact.clone().into(),
                         "set_minus_recovers_subset_from_relative_complement".to_string(),
                         vec![subset_result],
                     )
@@ -962,7 +940,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "finite_set_size_set_minus".to_string(),
                 vec![first_result, second_result],
             )
@@ -997,7 +975,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "finite_set_size_union_inclusion_exclusion".to_string(),
                 step_results,
             )
@@ -1032,7 +1010,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "finite_set_size_partition_by_intersection_and_difference".to_string(),
                 step_results,
             )
@@ -1079,7 +1057,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "finite_set_size_set_minus_finite_subset".to_string(),
                 vec![subset_result, container_result, subset_finite_result],
             )
@@ -1132,7 +1110,7 @@ impl Runtime {
         };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 rule.to_string(),
                 vec![start_result, end_result, order_result],
             )
@@ -1164,7 +1142,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "power_set_finite_set_size_two_pow_finite_set_size_base".to_string(),
                 vec![base_result],
             )
@@ -1177,10 +1155,7 @@ impl Runtime {
         reason: &str,
         evidence: Option<SetBuiltinRule>,
     ) -> StmtResult {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        let fact = EqualFact::new(left.clone(), right.clone(), line_file).into();
+        let fact = equal_fact.clone().into();
         match evidence {
             Some(rule) => {
                 FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -1203,8 +1178,8 @@ impl Runtime {
         let (Obj::Union(left_union), Obj::Union(right_union)) = (left, right) else {
             return false;
         };
-        objs_match_for_equality_pattern(&left_union.left, &right_union.right)
-            && objs_match_for_equality_pattern(&left_union.right, &right_union.left)
+        objs_match_for_pattern(&left_union.left, &right_union.right)
+            && objs_match_for_pattern(&left_union.right, &right_union.left)
     }
 
     fn union_associative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1220,9 +1195,9 @@ impl Runtime {
         let Obj::Union(right_inner) = right_outer.right.as_ref() else {
             return false;
         };
-        objs_match_for_equality_pattern(&left_inner.left, &right_outer.left)
-            && objs_match_for_equality_pattern(&left_inner.right, &right_inner.left)
-            && objs_match_for_equality_pattern(&left_outer.right, &right_inner.right)
+        objs_match_for_pattern(&left_inner.left, &right_outer.left)
+            && objs_match_for_pattern(&left_inner.right, &right_inner.left)
+            && objs_match_for_pattern(&left_outer.right, &right_inner.right)
     }
 
     fn intersect_commutative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1230,8 +1205,8 @@ impl Runtime {
         else {
             return false;
         };
-        objs_match_for_equality_pattern(&left_intersect.left, &right_intersect.right)
-            && objs_match_for_equality_pattern(&left_intersect.right, &right_intersect.left)
+        objs_match_for_pattern(&left_intersect.left, &right_intersect.right)
+            && objs_match_for_pattern(&left_intersect.right, &right_intersect.left)
     }
 
     fn intersect_associative_shape(left: &Obj, right: &Obj) -> bool {
@@ -1247,9 +1222,9 @@ impl Runtime {
         let Obj::Intersect(right_inner) = right_outer.right.as_ref() else {
             return false;
         };
-        objs_match_for_equality_pattern(&left_inner.left, &right_outer.left)
-            && objs_match_for_equality_pattern(&left_inner.right, &right_inner.left)
-            && objs_match_for_equality_pattern(&left_outer.right, &right_inner.right)
+        objs_match_for_pattern(&left_inner.left, &right_outer.left)
+            && objs_match_for_pattern(&left_inner.right, &right_inner.left)
+            && objs_match_for_pattern(&left_outer.right, &right_inner.right)
     }
 
     fn intersect_union_distributive_shape(left: &Obj, right: &Obj) -> bool {
@@ -1268,10 +1243,10 @@ impl Runtime {
         let Obj::Intersect(right_right_intersect) = right_union.right.as_ref() else {
             return false;
         };
-        objs_match_for_equality_pattern(&left_intersect.left, &right_left_intersect.left)
-            && objs_match_for_equality_pattern(&left_intersect.left, &right_right_intersect.left)
-            && objs_match_for_equality_pattern(&left_union.left, &right_left_intersect.right)
-            && objs_match_for_equality_pattern(&left_union.right, &right_right_intersect.right)
+        objs_match_for_pattern(&left_intersect.left, &right_left_intersect.left)
+            && objs_match_for_pattern(&left_intersect.left, &right_right_intersect.left)
+            && objs_match_for_pattern(&left_union.left, &right_left_intersect.right)
+            && objs_match_for_pattern(&left_union.right, &right_right_intersect.right)
     }
 
     fn set_minus_union_de_morgan_shape(left: &Obj, right: &Obj) -> bool {
@@ -1334,8 +1309,8 @@ impl Runtime {
         let Obj::SetMinus(inner_difference) = outer_difference.right.as_ref() else {
             return None;
         };
-        if objs_match_for_equality_pattern(&outer_difference.left, &inner_difference.left)
-            && objs_match_for_equality_pattern(subset_side, &inner_difference.right)
+        if objs_match_for_pattern(&outer_difference.left, &inner_difference.left)
+            && objs_match_for_pattern(subset_side, &inner_difference.right)
         {
             Some((outer_difference.left.as_ref().clone(), subset_side.clone()))
         } else {
@@ -1350,10 +1325,10 @@ impl Runtime {
         right_left_set_minus: &SetMinus,
         right_right_set_minus: &SetMinus,
     ) -> bool {
-        objs_match_for_equality_pattern(&left_set_minus.left, &right_left_set_minus.left)
-            && objs_match_for_equality_pattern(&left_set_minus.left, &right_right_set_minus.left)
-            && objs_match_for_equality_pattern(first_removed_set, &right_left_set_minus.right)
-            && objs_match_for_equality_pattern(second_removed_set, &right_right_set_minus.right)
+        objs_match_for_pattern(&left_set_minus.left, &right_left_set_minus.left)
+            && objs_match_for_pattern(&left_set_minus.left, &right_right_set_minus.left)
+            && objs_match_for_pattern(first_removed_set, &right_left_set_minus.right)
+            && objs_match_for_pattern(second_removed_set, &right_right_set_minus.right)
     }
 
     fn cart_finite_set_size_product_shape(finite_set_size_side: &Obj, product_side: &Obj) -> bool {
@@ -1366,7 +1341,7 @@ impl Runtime {
         let Some(expected_product) = Self::count_product_for_cart_args(&cart.args) else {
             return false;
         };
-        objs_match_for_equality_pattern(&expected_product, product_side)
+        objs_match_for_pattern(&expected_product, product_side)
     }
 
     fn finite_set_size_set_minus_shape(
@@ -1392,9 +1367,9 @@ impl Runtime {
             return None;
         };
 
-        if objs_match_for_equality_pattern(&set_minus.left, &first_size.set)
-            && objs_match_for_equality_pattern(&set_minus.left, &intersection.left)
-            && objs_match_for_equality_pattern(&set_minus.right, &intersection.right)
+        if objs_match_for_pattern(&set_minus.left, &first_size.set)
+            && objs_match_for_pattern(&set_minus.left, &intersection.left)
+            && objs_match_for_pattern(&set_minus.right, &intersection.right)
         {
             Some((
                 set_minus.left.as_ref().clone(),
@@ -1434,10 +1409,10 @@ impl Runtime {
             return None;
         };
 
-        if objs_match_for_equality_pattern(&union.left, &first_size.set)
-            && objs_match_for_equality_pattern(&union.right, &second_size.set)
-            && objs_match_for_equality_pattern(&union.left, &intersection.left)
-            && objs_match_for_equality_pattern(&union.right, &intersection.right)
+        if objs_match_for_pattern(&union.left, &first_size.set)
+            && objs_match_for_pattern(&union.right, &second_size.set)
+            && objs_match_for_pattern(&union.left, &intersection.left)
+            && objs_match_for_pattern(&union.right, &intersection.right)
         {
             Some((union.left.as_ref().clone(), union.right.as_ref().clone()))
         } else {
@@ -1468,17 +1443,17 @@ impl Runtime {
             return None;
         };
 
-        if objs_match_for_equality_pattern(&main_size.set, &intersection.left)
-            && objs_match_for_equality_pattern(&main_size.set, &remainder.left)
-            && objs_match_for_equality_pattern(&intersection.right, &remainder.right)
+        if objs_match_for_pattern(&main_size.set, &intersection.left)
+            && objs_match_for_pattern(&main_size.set, &remainder.left)
+            && objs_match_for_pattern(&intersection.right, &remainder.right)
         {
             Some((
                 main_size.set.as_ref().clone(),
                 intersection.right.as_ref().clone(),
             ))
-        } else if objs_match_for_equality_pattern(&main_size.set, &intersection.right)
-            && objs_match_for_equality_pattern(&main_size.set, &remainder.left)
-            && objs_match_for_equality_pattern(&intersection.left, &remainder.right)
+        } else if objs_match_for_pattern(&main_size.set, &intersection.right)
+            && objs_match_for_pattern(&main_size.set, &remainder.left)
+            && objs_match_for_pattern(&intersection.left, &remainder.right)
         {
             Some((
                 main_size.set.as_ref().clone(),
@@ -1509,8 +1484,8 @@ impl Runtime {
             return None;
         };
 
-        if objs_match_for_equality_pattern(&remainder.left, &container_size.set)
-            && objs_match_for_equality_pattern(&remainder.right, &subset_size.set)
+        if objs_match_for_pattern(&remainder.left, &container_size.set)
+            && objs_match_for_pattern(&remainder.right, &subset_size.set)
         {
             Some((
                 remainder.left.as_ref().clone(),
@@ -1560,7 +1535,7 @@ impl Runtime {
         } else {
             difference
         };
-        if !objs_match_for_equality_pattern(&expected_cardinality, cardinality_side) {
+        if !objs_match_for_pattern(&expected_cardinality, cardinality_side) {
             return None;
         }
         Some((start.clone(), end.clone(), closed))
@@ -1576,7 +1551,7 @@ impl Runtime {
         let two: Obj = Number::new("2".to_string()).into();
         let base_finite_set_size: Obj = FiniteSetSize::new(power_set.set.as_ref().clone()).into();
         let expected_pow: Obj = Pow::new(two, base_finite_set_size).into();
-        if objs_match_for_equality_pattern(&expected_pow, pow_side) {
+        if objs_match_for_pattern(&expected_pow, pow_side) {
             Some(power_set.set.as_ref().clone())
         } else {
             None
@@ -1598,18 +1573,17 @@ impl Runtime {
         let Obj::Union(union) = union_side else {
             return false;
         };
-        objs_match_for_equality_pattern(&union.left, &union.right)
-            && objs_match_for_equality_pattern(&union.left, other_side)
+        objs_match_for_pattern(&union.left, &union.right)
+            && objs_match_for_pattern(&union.left, other_side)
     }
 
     fn union_empty_identity_shape(union_side: &Obj, other_side: &Obj) -> bool {
         let Obj::Union(union) = union_side else {
             return false;
         };
-        (Self::is_empty_list_set(&union.left)
-            && objs_match_for_equality_pattern(&union.right, other_side))
+        (Self::is_empty_list_set(&union.left) && objs_match_for_pattern(&union.right, other_side))
             || (Self::is_empty_list_set(&union.right)
-                && objs_match_for_equality_pattern(&union.left, other_side))
+                && objs_match_for_pattern(&union.left, other_side))
     }
 
     fn is_empty_list_set(obj: &Obj) -> bool {
@@ -1628,32 +1602,29 @@ impl Runtime {
     // Example: from `B $subset A`, prove `intersect(A, B) = B`.
     fn try_verify_intersection_from_subset(
         &mut self,
-        statement_left: &Obj,
-        statement_right: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         for (intersection_side, target_side) in [
-            (statement_left, statement_right),
-            (statement_right, statement_left),
+            (&equal_fact.left, &equal_fact.right),
+            (&equal_fact.right, &equal_fact.left),
         ] {
             let Obj::Intersect(intersection) = intersection_side else {
                 continue;
             };
 
-            let (subset, superset) =
-                if objs_match_for_equality_pattern(target_side, &intersection.right) {
-                    (&intersection.right, &intersection.left)
-                } else if objs_match_for_equality_pattern(target_side, &intersection.left) {
-                    (&intersection.left, &intersection.right)
-                } else {
-                    continue;
-                };
+            let (subset, superset) = if objs_match_for_pattern(target_side, &intersection.right) {
+                (&intersection.right, &intersection.left)
+            } else if objs_match_for_pattern(target_side, &intersection.left) {
+                (&intersection.left, &intersection.right)
+            } else {
+                continue;
+            };
 
             let subset_fact: AtomicFact = SubsetFact::new(
                 subset.as_ref().clone(),
                 superset.as_ref().clone(),
-                line_file.clone(),
+                equal_fact.line_file.clone(),
             )
             .into();
             let subset_result = self.verify_builtin_rule_premise(&subset_fact, builtin_state)?;
@@ -1663,8 +1634,7 @@ impl Runtime {
 
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
-                        .into(),
+                    equal_fact.clone().into(),
                     "intersect_from_subset".to_string(),
                     vec![subset_result],
                 )
@@ -1679,13 +1649,16 @@ impl Runtime {
     // Example: from `x $in S` and `not y $in S`, prove `intersect(S, {x, y}) = {x}`.
     fn try_verify_literal_set_intersection_filter(
         &mut self,
-        statement_left: &Obj,
-        statement_right: &Obj,
-        intersection_side: &Obj,
-        target_side: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
+        intersection_is_left: bool,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (intersection_side, target_side) = if intersection_is_left {
+            (&equal_fact.left, &equal_fact.right)
+        } else {
+            (&equal_fact.right, &equal_fact.left)
+        };
+        let line_file = &equal_fact.line_file;
         let Obj::Intersect(intersection) = intersection_side else {
             return Ok(None);
         };
@@ -1721,13 +1694,13 @@ impl Runtime {
         }
 
         let filtered_set: Obj = ListSet::new(kept).into();
-        if !objs_match_for_equality_pattern(&filtered_set, target_side) {
+        if !objs_match_for_pattern(&filtered_set, target_side) {
             return Ok(None);
         }
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(statement_left.clone(), statement_right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "intersect_literal_set_filter".to_string(),
                 steps,
             )
@@ -1739,31 +1712,25 @@ impl Runtime {
         &mut self,
         equal_fact: &EqualFact,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        if let Some(done) = self.try_verify_one_subtraction_from_known_addition(
-            left,
-            right,
-            left,
-            right,
-            line_file.clone(),
-        )? {
+        if let Some(done) = self.try_verify_one_subtraction_from_known_addition(equal_fact, true)? {
             return Ok(Some(done));
         }
-        self.try_verify_one_subtraction_from_known_addition(left, right, right, left, line_file)
+        self.try_verify_one_subtraction_from_known_addition(equal_fact, false)
     }
 
     // Moves one addend across a known sum equality.
     // Example: from a known `a + b = c` or `b + a = c`, prove `a = c - b`.
     fn try_verify_one_subtraction_from_known_addition(
         &mut self,
-        statement_left: &Obj,
-        statement_right: &Obj,
-        target_a: &Obj,
-        subtraction_side: &Obj,
-        line_file: LineFile,
+        equal_fact: &EqualFact,
+        target_is_left: bool,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let (target_a, subtraction_side) = if target_is_left {
+            (&equal_fact.left, &equal_fact.right)
+        } else {
+            (&equal_fact.right, &equal_fact.left)
+        };
+        let line_file = &equal_fact.line_file;
         let Obj::Sub(subtraction) = subtraction_side else {
             return Ok(None);
         };
@@ -1778,8 +1745,7 @@ impl Runtime {
         if known_sum_1.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
-                        .into(),
+                    equal_fact.clone().into(),
                     "equality: a = c - b from known a + b = c".to_string(),
                     vec![known_sum_1],
                 )
@@ -1797,8 +1763,7 @@ impl Runtime {
         if known_sum_2.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(statement_left.clone(), statement_right.clone(), line_file)
-                        .into(),
+                    equal_fact.clone().into(),
                     "equality: a = c - b from known b + a = c".to_string(),
                     vec![known_sum_2],
                 )
@@ -1861,7 +1826,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "tuple equality from dimension and projections".to_string(),
                 steps,
             )
@@ -1970,7 +1935,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "tuple equality from symbolic dimension and coordinates".to_string(),
                 vec![
                     left_is_tuple_result,
@@ -2046,7 +2011,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "cart equality from dimension and projections".to_string(),
                 steps,
             )
@@ -2163,7 +2128,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 InferResult::new(),
                 "empty_set_equality_from_not_nonempty".to_string(),
                 vec![sub],
@@ -2197,7 +2162,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 InferResult::new(),
                 "finite_set_size_zero_implies_empty_set".to_string(),
                 vec![size_zero],
@@ -2269,7 +2234,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "equality from a >= b and b >= a".to_string(),
                 steps,
             )
@@ -2281,9 +2246,9 @@ impl Runtime {
         Obj::Number(Number::new("0".to_string()))
     }
 
-    fn objs_are_the_same_or_known_equal(&self, left: &Obj, right: &Obj) -> bool {
-        objs_match_for_equality_pattern(left, right)
-            || self.objs_have_same_known_equality_rc_in_some_env(left, right)
+    fn equal_fact_sides_are_the_same_or_known_equal(&self, equal_fact: &EqualFact) -> bool {
+        objs_match_for_pattern(&equal_fact.left, &equal_fact.right)
+            || self.equal_fact_sides_have_same_known_equality_in_some_env(equal_fact)
     }
 
     fn verify_division_denominator_nonzero_subgoal(
@@ -2307,16 +2272,19 @@ impl Runtime {
 
     fn try_verify_product_from_known_division_candidate(
         &mut self,
+        equal_fact: &EqualFact,
         dividend: &Obj,
         quotient: &Obj,
         denominator: &Obj,
-        target_left: &Obj,
-        target_right: &Obj,
-        line_file: LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
+        let line_file = &equal_fact.line_file;
         let division_obj: Obj = Div::new(dividend.clone(), denominator.clone()).into();
-        if !self.objs_are_the_same_or_known_equal(&division_obj, quotient) {
+        if !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+            &division_obj,
+            quotient,
+            line_file.clone(),
+        )) {
             return Ok(None);
         }
         let Some(nonzero_result) = self.verify_division_denominator_nonzero_subgoal(
@@ -2330,7 +2298,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(target_left.clone(), target_right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "division elimination: from a / b = c and b != 0, prove a = c * b".to_string(),
                 vec![nonzero_result],
             )
@@ -2345,7 +2313,6 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         let (dividend, product) = match (left, right) {
             (dividend, Obj::Mul(product)) => (dividend, product),
             (Obj::Mul(product), dividend) => (dividend, product),
@@ -2353,24 +2320,20 @@ impl Runtime {
         };
 
         if let Some(done) = self.try_verify_product_from_known_division_candidate(
+            equal_fact,
             dividend,
             product.left.as_ref(),
             product.right.as_ref(),
-            left,
-            right,
-            line_file.clone(),
             builtin_state,
         )? {
             return Ok(Some(done));
         }
 
         self.try_verify_product_from_known_division_candidate(
+            equal_fact,
             dividend,
             product.right.as_ref(),
             product.left.as_ref(),
-            left,
-            right,
-            line_file,
             builtin_state,
         )
     }
@@ -2391,9 +2354,15 @@ impl Runtime {
 
         let product_1: Obj = Mul::new(division.right.as_ref().clone(), quotient.clone()).into();
         let product_2: Obj = Mul::new(quotient.clone(), division.right.as_ref().clone()).into();
-        if !self.objs_are_the_same_or_known_equal(division.left.as_ref(), &product_1)
-            && !self.objs_are_the_same_or_known_equal(division.left.as_ref(), &product_2)
-        {
+        if !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+            division.left.as_ref(),
+            &product_1,
+            line_file.clone(),
+        )) && !self.equal_fact_sides_are_the_same_or_known_equal(&EqualFact::new_from_refs(
+            division.left.as_ref(),
+            &product_2,
+            line_file.clone(),
+        )) {
             return Ok(None);
         }
 
@@ -2408,7 +2377,7 @@ impl Runtime {
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 "division introduction: from a = b * c and b != 0, prove a / b = c".to_string(),
                 vec![nonzero_result],
             )
@@ -2547,7 +2516,7 @@ impl Runtime {
         };
         let expected_member =
             obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
-        if !objs_match_for_equality_pattern(choice_member, &expected_member) {
+        if !objs_match_for_pattern(choice_member, &expected_member) {
             return Ok(None);
         }
 
@@ -2607,17 +2576,17 @@ impl Runtime {
                 obj_for_bound_param_in_scope(&set_builder.param_binding, ParamObjType::SetBuilder);
             let (upper_left_matches, upper_right_matches) = match (right_closed, upper) {
                 (true, AtomicFact::LessEqualFact(fact)) => (
-                    objs_match_for_equality_pattern(&fact.left, &bound_param),
-                    objs_match_for_equality_pattern(&fact.right, end),
+                    objs_match_for_pattern(&fact.left, &bound_param),
+                    objs_match_for_pattern(&fact.right, end),
                 ),
                 (false, AtomicFact::LessFact(fact)) => (
-                    objs_match_for_equality_pattern(&fact.left, &bound_param),
-                    objs_match_for_equality_pattern(&fact.right, end),
+                    objs_match_for_pattern(&fact.left, &bound_param),
+                    objs_match_for_pattern(&fact.right, end),
                 ),
                 _ => (false, false),
             };
-            if !objs_match_for_equality_pattern(&lower.left, start)
-                || !objs_match_for_equality_pattern(&lower.right, &bound_param)
+            if !objs_match_for_pattern(&lower.left, start)
+                || !objs_match_for_pattern(&lower.right, &bound_param)
                 || !upper_left_matches
                 || !upper_right_matches
             {
@@ -2677,7 +2646,7 @@ impl Runtime {
                 self.fn_set_alpha_renamed_for_display_compare(&expanded.body, &alpha_names)?;
             let explicit_obj =
                 self.fn_set_alpha_renamed_for_display_compare(&fn_set.body, &alpha_names)?;
-            if objs_match_for_equality_pattern(&expanded_obj, &explicit_obj) {
+            if objs_match_for_pattern(&expanded_obj, &explicit_obj) {
                 return Ok(Some(factual_equal_success_by_builtin_reason(
                     equal_fact, rule,
                 )));
@@ -2722,7 +2691,7 @@ impl Runtime {
             }
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                    EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                    equal_fact.clone().into(),
                     format!(
                         "equality from registered antisymmetric prop `{}`",
                         prop_name
@@ -2750,8 +2719,8 @@ fn gcd_divides_its_argument_shape(remainder: &Obj, zero: &Obj) -> bool {
     let Obj::Gcd(gcd) = modulo.right.as_ref() else {
         return false;
     };
-    objs_match_for_equality_pattern(&modulo.left, &gcd.left)
-        || objs_match_for_equality_pattern(&modulo.left, &gcd.right)
+    objs_match_for_pattern(&modulo.left, &gcd.left)
+        || objs_match_for_pattern(&modulo.left, &gcd.right)
 }
 
 fn product_mod_factor_is_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
@@ -2767,6 +2736,6 @@ fn product_mod_factor_is_zero_shape(remainder: &Obj, zero: &Obj) -> bool {
     let Obj::Mul(product) = modulo.left.as_ref() else {
         return false;
     };
-    objs_match_for_equality_pattern(&modulo.right, &product.left)
-        || objs_match_for_equality_pattern(&modulo.right, &product.right)
+    objs_match_for_pattern(&modulo.right, &product.left)
+        || objs_match_for_pattern(&modulo.right, &product.right)
 }

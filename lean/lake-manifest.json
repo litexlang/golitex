@@ -91,5 +91,5 @@
    "inputRev": "v4.28.0",
    "inherited": true,
    "configFile": "lakefile.toml"}],
- "name": "litex_to_lean_compiler2",
+ "name": "litex_to_lean_compiler",
  "lakeDir": ".lake"}

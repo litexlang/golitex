@@ -53,17 +53,17 @@ thm homomorphism_maps_identity:
         f(one_A) = one_B
     mul_A(one_A, one_A) = one_A
     mul_B(f(one_A), f(one_A)) = f(mul_A(one_A, one_A)) = f(one_A) = mul_B(f(one_A), one_B)
-    by thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B)
+    by thm group_left_cancel(B, mul_B, one_B, inv_B, f(one_A), f(one_A), one_B) => f(one_A) = one_B
 
 # Tracer theorem: the setting keeps the ambient groups readable while the
 # proof works directly with the map and the two multiplications.
 thm homomorphism_maps_inverse:
     ? forall [GroupHomomorphismSetting], a A:
         f(inv_A(a)) = inv_B(f(a))
-    by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
+    by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
     mul_A(inv_A(a), a) = one_A
     mul_B(f(inv_A(a)), f(a)) = f(mul_A(inv_A(a), a)) = f(one_A) = one_B
-    by thm group_inverse_unique(B, mul_B, one_B, inv_B, f(a), f(inv_A(a)))
+    by thm group_inverse_unique(B, mul_B, one_B, inv_B, f(a), f(inv_A(a))) => f(inv_A(a)) = inv_B(f(a))
 
 prop is_subgroup([GroupSetting], H power_set(A)):
     one $in H
@@ -83,27 +83,27 @@ thm kernel_is_normal_subgroup:
         $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
     claim:
         ? $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
-        by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f)
-        by thm set_builder_member(one_A, {candidate A: f(candidate) = one_B})
+        by thm homomorphism_maps_identity(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f) => f(one_A) = one_B
+        by thm set_builder_member(one_A, {candidate A: f(candidate) = one_B}) => one_A $in {candidate A: f(candidate) = one_B}
         claim:
             ? forall kernel_x, kernel_y {candidate A: f(candidate) = one_B}:
                 mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
             f(mul_A(kernel_x, kernel_y)) = mul_B(f(kernel_x), f(kernel_y)) = mul_B(one_B, one_B) = one_B
-            by thm set_builder_member(mul_A(kernel_x, kernel_y), {candidate A: f(candidate) = one_B})
+            by thm set_builder_member(mul_A(kernel_x, kernel_y), {candidate A: f(candidate) = one_B}) => mul_A(kernel_x, kernel_y) $in {candidate A: f(candidate) = one_B}
         claim:
             ? forall kernel_x {candidate A: f(candidate) = one_B}:
                 inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
-            by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, kernel_x)
-            by thm group_inverse_unique(B, mul_B, one_B, inv_B, one_B, one_B)
+            by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, kernel_x) => f(inv_A(kernel_x)) = inv_B(f(kernel_x))
+            by thm group_inverse_unique(B, mul_B, one_B, inv_B, one_B, one_B) => inv_B(one_B) = one_B
             f(inv_A(kernel_x)) = inv_B(f(kernel_x)) = inv_B(one_B) = one_B
-            by thm set_builder_member(inv_A(kernel_x), {candidate A: f(candidate) = one_B})
+            by thm set_builder_member(inv_A(kernel_x), {candidate A: f(candidate) = one_B}) => inv_A(kernel_x) $in {candidate A: f(candidate) = one_B}
         by def $is_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})
     claim:
         ? forall conjugator A, kernel_h {candidate A: f(candidate) = one_B}:
             mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
         f(mul_A(conjugator, kernel_h)) = mul_B(f(conjugator), f(kernel_h))
-        by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, conjugator)
+        by thm homomorphism_maps_inverse(A, mul_A, one_A, inv_A, B, mul_B, one_B, inv_B, f, conjugator) => f(inv_A(conjugator)) = inv_B(f(conjugator))
         mul_B(f(conjugator), one_B) = f(conjugator)
         f(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator))) = mul_B(f(mul_A(conjugator, kernel_h)), f(inv_A(conjugator))) = mul_B(mul_B(f(conjugator), f(kernel_h)), inv_B(f(conjugator))) = mul_B(mul_B(f(conjugator), one_B), inv_B(f(conjugator))) = mul_B(f(conjugator), inv_B(f(conjugator))) = one_B
-        by thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B})
+        by thm set_builder_member(mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)), {candidate A: f(candidate) = one_B}) => mul_A(mul_A(conjugator, kernel_h), inv_A(conjugator)) $in {candidate A: f(candidate) = one_B}
     by def $is_normal_subgroup(A, mul_A, one_A, inv_A, {candidate A: f(candidate) = one_B})

@@ -1,7 +1,9 @@
 use crate::prelude::*;
 
 impl Runtime {
-    pub fn equal_literally(&self, left: &Obj, right: &Obj) -> bool {
+    pub fn equal_fact_sides_are_literally_equal(&self, equal_fact: &EqualFact) -> bool {
+        let left = &equal_fact.left;
+        let right = &equal_fact.right;
         match left {
             Obj::Atom(AtomObj::Identifier(a)) => match right {
                 Obj::Atom(AtomObj::Identifier(b)) => a.to_string() == b.to_string(),

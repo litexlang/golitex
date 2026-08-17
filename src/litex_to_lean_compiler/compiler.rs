@@ -1,4 +1,4 @@
-use crate::compile_to_lean::capture_litex_to_lean_ir_from_source;
+use crate::litex_to_lean_ir::capture_litex_to_lean_ir_from_source;
 
 pub fn compile_source(source: &str, source_label: &str) -> Result<String, String> {
     let ir = capture_litex_to_lean_ir_from_source(source, source_label)

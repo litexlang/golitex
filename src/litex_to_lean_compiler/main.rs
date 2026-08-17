@@ -1,4 +1,4 @@
-use litex::litex_to_lean_compiler2::compile_source;
+use litex::litex_to_lean_compiler::{compile_litex_file_to_lean, compile_source};
 use std::env;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -6,7 +6,7 @@ use std::process::Command;
 
 fn main() {
     if let Err(message) = run() {
-        eprintln!("compiler2: {message}");
+        eprintln!("compiler: {message}");
         std::process::exit(1);
     }
 }
@@ -28,18 +28,18 @@ fn run() -> Result<(), String> {
         }
         [command, directory] if command == "generate" => {
             let count = generate_directory(Path::new(directory))?;
-            println!("generated {count} compiler2 example pair(s)");
+            println!("generated {count} compiler example pair(s)");
             Ok(())
         }
         [command, directory] if command == "check" => {
             let count = check_directory(Path::new(directory))?;
             println!(
-                "checked {count} compiler2 example pair(s): no drift and Lean kernel accepted"
+                "checked {count} compiler example pair(s): no drift and Lean kernel accepted"
             );
             Ok(())
         }
         _ => Err(
-            "usage: compiler2 compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir>"
+            "usage: compiler compile <input.lit> [output.lean] | generate <examples-dir> | check <examples-dir>"
                 .to_string(),
         ),
     }
@@ -56,22 +56,7 @@ fn paired_output_path(input: &Path) -> Result<PathBuf, String> {
 }
 
 fn compile_file(input: &Path, output: &Path) -> Result<(), String> {
-    if input == output {
-        return Err("input and output paths must differ".to_string());
-    }
-    let source = fs::read_to_string(input)
-        .map_err(|error| format!("failed to read {}: {error}", input.display()))?;
-    let label = input
-        .file_name()
-        .and_then(|name| name.to_str())
-        .ok_or_else(|| format!("source path has no UTF-8 file name: {}", input.display()))?;
-    let generated = compile_source(&source, label)?;
-    if let Some(parent) = output.parent() {
-        fs::create_dir_all(parent)
-            .map_err(|error| format!("failed to create {}: {error}", parent.display()))?;
-    }
-    fs::write(output, generated)
-        .map_err(|error| format!("failed to write {}: {error}", output.display()))
+    compile_litex_file_to_lean(input, output)
 }
 
 fn generate_directory(directory: &Path) -> Result<usize, String> {
@@ -103,7 +88,7 @@ fn check_directory(directory: &Path) -> Result<usize, String> {
         })?;
         if generated != checked_in {
             return Err(format!(
-                "generated Lean drifted for {}; run `./compiler2.sh generate examples`",
+                "generated Lean drifted for {}; run `./compiler.sh generate examples`",
                 source_path.display()
             ));
         }

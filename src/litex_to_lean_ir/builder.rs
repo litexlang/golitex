@@ -37,17 +37,17 @@ impl LitexToLeanIrConstructionContext {
     }
 }
 
-pub struct LitexToLeanCompiler<'a> {
+pub struct LitexToLeanIrBuilder<'a> {
     runtime: &'a Runtime,
 }
 
-impl<'a> LitexToLeanCompiler<'a> {
+impl<'a> LitexToLeanIrBuilder<'a> {
     pub fn new(runtime: &'a Runtime) -> Self {
         Self { runtime }
     }
 }
 
-impl LitexToLeanCompiler<'_> {
+impl LitexToLeanIrBuilder<'_> {
     pub fn compile_statement(
         &self,
         result: &StmtResult,
@@ -2875,7 +2875,7 @@ impl LitexToLeanCompiler<'_> {
                     .map(|unknown| unknown.goal().clone())
                     .unwrap_or_else(|| {
                         NormalAtomicFact::new(
-                            AtomicName::WithoutMod("compile_to_lean_unknown_subgoal".to_string()),
+                            AtomicName::WithoutMod("litex_to_lean_unknown_subgoal".to_string()),
                             vec![],
                             result.line_file(),
                         )
@@ -4723,7 +4723,7 @@ fn infer_results_have_same_frozen_effects(left: &InferResult, right: &InferResul
 }
 
 fn build_litex_to_lean_ir_inferred_fact_proof(
-    compiler: &LitexToLeanCompiler<'_>,
+    compiler: &LitexToLeanIrBuilder<'_>,
     source_fact: &Fact,
     source_fact_id: Option<FactId>,
     inferred_fact: &Fact,
@@ -4993,7 +4993,7 @@ fn added_fact_id_from_infer_result(
 }
 
 fn build_litex_to_lean_ir_contradiction_results(
-    compiler: &LitexToLeanCompiler<'_>,
+    compiler: &LitexToLeanIrBuilder<'_>,
     results: &[StmtResult],
     impossible_fact: &AtomicFact,
     context: &LitexToLeanIrConstructionContext,
@@ -5236,7 +5236,7 @@ mod fact_transformation_evidence_tests {
     #[test]
     fn equality_rewrite_without_fact_id_is_explicitly_unsupported() {
         let runtime = Runtime::new();
-        let compiler = LitexToLeanCompiler::new(&runtime);
+        let compiler = LitexToLeanIrBuilder::new(&runtime);
         let source = integer_membership(Number::new("2".to_string()).into());
         let alias: Obj = Identifier::new("alias".to_string()).into();
         let target = integer_membership(alias.clone());
@@ -5272,7 +5272,7 @@ mod fact_transformation_evidence_tests {
     #[test]
     fn fact_transformation_rejects_a_changed_source() {
         let runtime = Runtime::new();
-        let compiler = LitexToLeanCompiler::new(&runtime);
+        let compiler = LitexToLeanIrBuilder::new(&runtime);
         let proved = integer_membership(Number::new("2".to_string()).into());
         let changed = integer_membership(Number::new("3".to_string()).into());
         let transformed = compiler.build_litex_to_lean_ir_fact_transformation(

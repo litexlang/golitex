@@ -1,13 +1,10 @@
 use crate::prelude::*;
 
-/// Structural alignment for builtin patterns: two objects match iff their `Display` text matches.
+/// Generic AST-pattern alignment with nested-binder alpha equivalence.
+/// This is not an equality proof API and does not own an `EqualFact` goal.
 #[inline]
-pub fn objs_equal_by_display_string(a: &Obj, b: &Obj) -> bool {
+pub fn objs_match_for_pattern(a: &Obj, b: &Obj) -> bool {
     objs_equal_with_nested_binder_alpha_equivalence(a, b)
-}
-
-pub fn objs_match_for_equality_pattern(left: &Obj, right: &Obj) -> bool {
-    objs_equal_by_display_string(left, right)
 }
 
 #[inline]
@@ -229,11 +226,10 @@ pub(crate) fn factual_equal_success_by_builtin_reason_with_subgoals(
 }
 
 pub(crate) fn equality_builtin_match_subgoals(
-    actual: &Obj,
-    expected: &Obj,
+    equal_fact: &EqualFact,
     result: StmtResult,
 ) -> Vec<StmtResult> {
-    if objs_match_for_equality_pattern(actual, expected) {
+    if objs_match_for_pattern(&equal_fact.left, &equal_fact.right) {
         Vec::new()
     } else {
         vec![result]

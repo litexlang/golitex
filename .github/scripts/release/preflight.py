@@ -58,7 +58,7 @@ PLATFORMS = {
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = parse_args(argv)
-    repository_root = Path(__file__).resolve().parents[2]
+    repository_root = Path(__file__).resolve().parents[3]
 
     try:
         cargo_version = package_version(repository_root / "Cargo.toml")

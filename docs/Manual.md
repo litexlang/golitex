@@ -148,9 +148,8 @@ own well-definedness obligations. These restrictions are what separate
 "every object is set-coded" from the inconsistent claim that every predicate
 defines a set of all objects.
 
-The detailed Litex-to-Lean consequences and current implementation drift are
-recorded in the
-[universal object design](../src/compile_to_lean/litex_object_design.md).
+The active Litex-to-Lean wrapper design and current implementation boundary
+are recorded in the [compiler README](../lean/README.md).
 
 ### Names, numbers, and arithmetic
 
@@ -2290,7 +2289,9 @@ Important rules:
 1. `[export]` is ordered and each entry names one direct `.lit` file or one
    configured child directory.
 2. Direct child `.lit` files and configured submodule directories appear once;
-   Markdown and other non-Litex sidecars are not exports.
+   Markdown and other non-Litex sidecars are not exports. The reserved local
+   `.drafts/` directory is excluded from module discovery; every other direct
+   child directory must still be exported.
 3. Only a `module` imports. `[import]` mounts another module; `[import std]`
    mounts an installed standard package.
 4. An optional module-only `[module] flatten = true` removes one file namespace
@@ -3378,13 +3379,12 @@ write a smaller intermediate fact that exposes a supported shape.
 #### What this atlas counts
 
 The user-visible unit is a mathematical rule schema, not a Rust success call.
-The generated [builtin-rule source inventory](../src/compile_to_lean/builtin_rule_inventory.md)
-records every label-bearing success site, including mirrored orientations,
-dispatcher branches, computation paths, and structural strategy nodes. Several
-such sites may implement one public law, while one declarative schema may be
-instantiated at arbitrarily many objects. The Manual therefore groups rules by
-their mathematical contract and gives the exact recognized shapes; the
-generated inventory remains the exhaustive code-location audit.
+The verifier sources record label-bearing success sites, including mirrored
+orientations, dispatcher branches, computation paths, and structural strategy
+nodes. Several such sites may implement one public law, while one declarative
+schema may be instantiated at arbitrarily many objects. The Manual therefore
+groups rules by their mathematical contract and gives the recognized shapes;
+the source remains the authoritative code-location audit.
 
 Builtin success has six distinct mechanisms:
 

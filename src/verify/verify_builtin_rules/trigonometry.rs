@@ -95,15 +95,11 @@ impl Runtime {
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if first_trig_arg(left).is_none() && first_trig_arg(right).is_none() {
             return Ok(None);
         }
 
-        if let Some(result) = try_trig_quotient_definition(left, right, line_file.clone()) {
-            return Ok(Some(result));
-        }
-        if let Some(result) = try_trig_quotient_definition(right, left, line_file.clone()) {
+        if let Some(result) = try_trig_quotient_definition(equal_fact) {
             return Ok(Some(result));
         }
 
@@ -150,11 +146,10 @@ impl Runtime {
         }
         left_expansion.extend_lemmas(right_expansion.lemmas);
         let reason = trig_reason(&left_expansion.lemmas);
-        let dependencies =
-            trig_core_dependency_results(left, right, &line_file, &left_expansion.lemmas);
+        let dependencies = trig_core_dependency_results(equal_fact, &left_expansion.lemmas);
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(left.clone(), right.clone(), line_file).into(),
+                equal_fact.clone().into(),
                 reason,
                 dependencies,
             )
@@ -1048,35 +1043,36 @@ fn rewrite_pythagorean_binary(
     (result, left_changed || right_changed)
 }
 
-fn try_trig_quotient_definition(
-    trig_side: &Obj,
-    quotient_side: &Obj,
-    line_file: LineFile,
-) -> Option<StmtResult> {
-    let expected: Obj = match trig_side {
-        Obj::Tan(x) => Div::new(
-            Sin::new((*x.arg).clone()).into(),
-            Cos::new((*x.arg).clone()).into(),
-        )
-        .into(),
-        Obj::Cot(x) => Div::new(
-            Cos::new((*x.arg).clone()).into(),
-            Sin::new((*x.arg).clone()).into(),
-        )
-        .into(),
-        _ => return None,
-    };
-    if !objs_equal_by_rational_expression_evaluation(&expected, quotient_side) {
-        return None;
+fn try_trig_quotient_definition(equal_fact: &EqualFact) -> Option<StmtResult> {
+    for (trig_side, quotient_side) in [
+        (&equal_fact.left, &equal_fact.right),
+        (&equal_fact.right, &equal_fact.left),
+    ] {
+        let expected: Obj = match trig_side {
+            Obj::Tan(x) => Div::new(
+                Sin::new((*x.arg).clone()).into(),
+                Cos::new((*x.arg).clone()).into(),
+            )
+            .into(),
+            Obj::Cot(x) => Div::new(
+                Cos::new((*x.arg).clone()).into(),
+                Sin::new((*x.arg).clone()).into(),
+            )
+            .into(),
+            _ => continue,
+        };
+        if objs_equal_by_rational_expression_evaluation(&expected, quotient_side) {
+            return Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    equal_fact.clone().into(),
+                    "trigonometry core: tan/cot quotient definition".to_string(),
+                    Vec::new(),
+                )
+                .into(),
+            );
+        }
     }
-    Some(
-        FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-            EqualFact::new(trig_side.clone(), quotient_side.clone(), line_file).into(),
-            "trigonometry core: tan/cot quotient definition".to_string(),
-            Vec::new(),
-        )
-        .into(),
-    )
+    None
 }
 
 fn pythagorean_core_result(sin_or_cos: &Obj, other: &Obj, line_file: &LineFile) -> StmtResult {
@@ -1158,21 +1154,17 @@ fn trig_reason(lemmas: &[TrigLemma]) -> String {
     )
 }
 
-fn trig_core_dependency_results(
-    left: &Obj,
-    right: &Obj,
-    line_file: &LineFile,
-    lemmas: &[TrigLemma],
-) -> Vec<StmtResult> {
+fn trig_core_dependency_results(equal_fact: &EqualFact, lemmas: &[TrigLemma]) -> Vec<StmtResult> {
     if !lemmas.iter().any(|lemma| lemma.level() > 0) {
         return Vec::new();
     }
-    let Some(arg) = first_trig_arg(left).or_else(|| first_trig_arg(right)) else {
+    let Some(arg) = first_trig_arg(&equal_fact.left).or_else(|| first_trig_arg(&equal_fact.right))
+    else {
         return Vec::new();
     };
     let sin: Obj = Sin::new(arg.clone()).into();
     let cos: Obj = Cos::new(arg.clone()).into();
-    let mut results = vec![pythagorean_core_result(&sin, &cos, line_file)];
+    let mut results = vec![pythagorean_core_result(&sin, &cos, &equal_fact.line_file)];
     if lemmas.iter().any(|lemma| {
         matches!(
             lemma,
@@ -1193,7 +1185,7 @@ fn trig_core_dependency_results(
         .into();
         results.push(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                EqualFact::new(source, expanded, line_file.clone()).into(),
+                EqualFact::new(source, expanded, equal_fact.line_file.clone()).into(),
                 "trigonometry core: sine addition formula".to_string(),
                 Vec::new(),
             )

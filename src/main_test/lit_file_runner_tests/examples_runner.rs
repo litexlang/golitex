@@ -14,8 +14,6 @@ use super::helper::{
 };
 use super::runtime_regression_tests::run_runtime_contract_suite_impl;
 
-const COMPILE_TO_LEAN_EXAMPLES_MARKDOWN: &str = "lean/examples/compile_to_lean_examples.md";
-
 #[derive(Clone)]
 struct LitexRunItem {
     report_label: String,
@@ -637,14 +635,6 @@ fn collect_examples_phase1_groups(
                 run_in_project_context: true,
             }],
         });
-    }
-    let compile_to_lean_markdown_path = manifest_dir.join(COMPILE_TO_LEAN_EXAMPLES_MARKDOWN);
-    if compile_to_lean_markdown_path.is_file() {
-        push_markdown_run_groups(
-            &mut phase1_groups,
-            manifest_dir,
-            &[compile_to_lean_markdown_path],
-        );
     }
     push_markdown_run_groups(&mut phase1_groups, manifest_dir, &manual_md_paths);
     phase1_groups

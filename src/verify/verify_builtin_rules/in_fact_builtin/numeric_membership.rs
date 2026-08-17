@@ -14,7 +14,7 @@ impl Runtime {
             _ => return None,
         };
         let carrier = self.reduce_carrier_from_operation(operation)?;
-        let carrier_is_contained = objs_match_for_equality_pattern(&carrier, &in_fact.set)
+        let carrier_is_contained = objs_match_for_pattern(&carrier, &in_fact.set)
             || matches!(
                 (&carrier, &in_fact.set),
                 (Obj::StandardSet(source), Obj::StandardSet(target))
@@ -232,7 +232,7 @@ impl Runtime {
             return Ok((StmtUnknown::new()).into());
         };
         let n_pos_obj: Obj = StandardSet::NPos.into();
-        if !objs_match_for_equality_pattern(&ret_set, &n_pos_obj) {
+        if !objs_match_for_pattern(&ret_set, &n_pos_obj) {
             return Ok((StmtUnknown::new()).into());
         }
         let reason = format!("{op}: iterand return set is N+");

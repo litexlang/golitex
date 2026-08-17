@@ -19,3 +19,13 @@ target/release/litex -compact -runner -r scratch/math_concepts_in_litex/euclidea
 The module has no `trust` or local axiom. Its analytic model is intentional and
 narrower than a synthetic Euclidean axiom system; the result does not claim to
 formalize all of Euclid's foundations.
+
+For comparison, `lean_core_analogy.lean` uses Prelude integers for the exact
+coordinate and `3-4-5` calculations. The square-root-dependent equilateral
+vertex lemma is exposed as a named setting boundary, then consumed to construct
+the Euclid I.1 witness. It has no imports and is handwritten analogy code, not
+compiler-generated output. Run it with:
+
+```sh
+lean showcases/math_concepts_in_litex/euclidean_geometry/lean_core_analogy.lean
+```
