@@ -416,6 +416,12 @@ impl PythonExtractor {
 
     fn reject_native_complex_fact(&self, fact: &Fact) -> Result<(), RuntimeError> {
         let rendered = fact.to_string();
+        if contains_unqualified_function_call(&rendered, QUOT) {
+            return Err(python_extract_error(
+                &fact.line_file(),
+                "python extractor v1 does not support native quot",
+            ));
+        }
         if contains_unqualified_function_call(&rendered, GCD) {
             return Err(python_extract_error(
                 &fact.line_file(),

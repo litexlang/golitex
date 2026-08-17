@@ -1753,7 +1753,7 @@ impl Runtime {
         Ok(
             (FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 in_fact.clone().into(),
-                "Z closure: arithmetic operands in Z; pow base in Z and exponent in N, or base in N+ and exponent in N"
+                "Z closure: integer arithmetic; quot dividend in Z and divisor in N+; pow base in Z or N+ and exponent in N"
                     .to_string(),
                 subgoals,
             ))

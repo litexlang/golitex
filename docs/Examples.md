@@ -2037,8 +2037,8 @@ For a complete checked sample, see
 ### 2.3. Native Quot, Gcd, Prime, Coprime, And Dvd
 
 - Category: `builtin object and predicate`
-- Purpose: Shows direct gcd calculation, optional explicit evaluation, and
-  concrete primality and coprimality decisions.
+- Purpose: Shows Euclidean quotient, direct gcd calculation, optional explicit
+  evaluation, and concrete primality and coprimality decisions.
 
 ```litex
 quot(-7, 3) = -3
