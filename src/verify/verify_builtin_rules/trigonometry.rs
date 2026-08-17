@@ -545,15 +545,9 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let mut results = Vec::new();
-        for premise in premises {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            results.push(result);
-        }
+        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
@@ -651,24 +645,19 @@ impl Runtime {
             ],
             _ => Vec::new(),
         };
-        for premises in interval_candidates {
-            let mut results = Vec::new();
-            for premise in premises {
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if !result.is_true() {
-                    results.clear();
-                    break;
-                }
-                results.push(result);
-            }
-            if results.len() == 2 {
+        if !interval_candidates.is_empty() {
+            let interval_result = self.verify_builtin_rule_premise_alternatives(
+                interval_candidates,
+                not_equal_fact.line_file.clone(),
+                builtin_state,
+            )?;
+            if interval_result.is_true() {
                 return Ok(Some(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         not_equal_fact.clone().into(),
                         "trigonometry: sine/cosine is nonzero on a canonical sign interval"
                             .to_string(),
-                        results,
+                        vec![interval_result],
                     )
                     .into(),
                 ));

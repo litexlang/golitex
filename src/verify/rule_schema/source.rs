@@ -68,7 +68,7 @@ pub struct CompiledRuleSchema {
     pub(crate) source: RuleSourceRef,
     pub(crate) variables: Vec<RuleVariable>,
     pub(crate) parameter_requirements: Vec<AtomicFact>,
-    pub(crate) premises: Vec<AtomicFact>,
+    pub(crate) premises: Vec<QuantifierFreeFact>,
     pub(crate) conclusion: AtomicFact,
     pub(crate) head_key: super::AtomicFactHead,
 }

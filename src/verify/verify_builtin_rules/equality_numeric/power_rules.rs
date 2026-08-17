@@ -337,17 +337,70 @@ impl Runtime {
                     line_file.clone(),
                     builtin_state,
                 )?;
-            if !exponents_are_integer {
-                return Ok(false);
+            if exponents_are_integer
+                && self.obj_is_verified_nonzero_for_power_builtin(
+                    combined_power.base.as_ref(),
+                    line_file.clone(),
+                    builtin_state,
+                )?
+            {
+                return Ok(true);
             }
-            if !self.obj_is_verified_nonzero_for_power_builtin(
-                combined_power.base.as_ref(),
+
+            // The carrier side condition is itself a disjunction of complete
+            // sufficient branches. Consuming that QFF premise as a whole matters when,
+            // for example, the context stores `m in N+ and n in N+` but neither leaf
+            // was introduced independently.
+            let base = combined_power.base.as_ref();
+            let nonzero: AtomicFact = NotEqualFact::new(
+                base.clone(),
+                Self::literal_zero_obj_for_abs_builtin(),
+                line_file.clone(),
+            )
+            .into();
+            let carrier_result = self.verify_builtin_rule_premise_alternatives(
+                vec![
+                    vec![
+                        InFact::new(
+                            left_exp.clone(),
+                            StandardSet::NPos.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                        InFact::new(
+                            right_exp.clone(),
+                            StandardSet::NPos.into(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                    ],
+                    vec![
+                        InFact::new(left_exp.clone(), StandardSet::N.into(), line_file.clone())
+                            .into(),
+                        InFact::new(right_exp.clone(), StandardSet::N.into(), line_file.clone())
+                            .into(),
+                        InFact::new(base.clone(), StandardSet::C.into(), line_file.clone()).into(),
+                    ],
+                    vec![
+                        InFact::new(left_exp.clone(), StandardSet::R.into(), line_file.clone())
+                            .into(),
+                        InFact::new(right_exp.clone(), StandardSet::R.into(), line_file.clone())
+                            .into(),
+                        InFact::new(base.clone(), StandardSet::RPos.into(), line_file.clone())
+                            .into(),
+                    ],
+                    vec![
+                        InFact::new(left_exp.clone(), StandardSet::Z.into(), line_file.clone())
+                            .into(),
+                        InFact::new(right_exp.clone(), StandardSet::Z.into(), line_file.clone())
+                            .into(),
+                        nonzero,
+                    ],
+                ],
                 line_file.clone(),
                 builtin_state,
-            )? {
-                return Ok(false);
-            }
-            return Ok(true);
+            )?;
+            return Ok(carrier_result.is_true());
         }
 
         Ok(false)
@@ -495,14 +548,61 @@ impl Runtime {
             line_file.clone(),
             builtin_state,
         )?;
-        if !exponents_are_integer {
-            return Ok(false);
+        if exponents_are_integer
+            && self.obj_is_verified_nonzero_for_power_builtin(
+                combined_power.base.as_ref(),
+                line_file.clone(),
+                builtin_state,
+            )?
+        {
+            return Ok(true);
         }
-        self.obj_is_verified_nonzero_for_power_builtin(
-            combined_power.base.as_ref(),
+
+        let inner_exp = inner_power.exponent.as_ref();
+        let outer_exp = nested_power.exponent.as_ref();
+        let base = combined_power.base.as_ref();
+        let nonzero: AtomicFact = NotEqualFact::new(
+            base.clone(),
+            Self::literal_zero_obj_for_abs_builtin(),
+            line_file.clone(),
+        )
+        .into();
+        let carrier_result = self.verify_builtin_rule_premise_alternatives(
+            vec![
+                vec![
+                    InFact::new(base.clone(), StandardSet::RPos.into(), line_file.clone()).into(),
+                    InFact::new(inner_exp.clone(), StandardSet::R.into(), line_file.clone()).into(),
+                    InFact::new(outer_exp.clone(), StandardSet::R.into(), line_file.clone()).into(),
+                ],
+                vec![
+                    InFact::new(
+                        inner_exp.clone(),
+                        StandardSet::NPos.into(),
+                        line_file.clone(),
+                    )
+                    .into(),
+                    InFact::new(
+                        outer_exp.clone(),
+                        StandardSet::NPos.into(),
+                        line_file.clone(),
+                    )
+                    .into(),
+                ],
+                vec![
+                    InFact::new(inner_exp.clone(), StandardSet::N.into(), line_file.clone()).into(),
+                    InFact::new(outer_exp.clone(), StandardSet::N.into(), line_file.clone()).into(),
+                    InFact::new(base.clone(), StandardSet::C.into(), line_file.clone()).into(),
+                ],
+                vec![
+                    InFact::new(inner_exp.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                    InFact::new(outer_exp.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                    nonzero,
+                ],
+            ],
             line_file,
             builtin_state,
-        )
+        )?;
+        Ok(carrier_result.is_true())
     }
 
     fn power_exponent_product_matches(
@@ -703,7 +803,64 @@ impl Runtime {
                 && !natural_exponent_over_complex_bases
                 && !integer_exponent_over_nonzero_bases
             {
-                return Ok(false);
+                let exponent = combined_power.exponent.as_ref();
+                let left_base = combined_base.left.as_ref();
+                let right_base = combined_base.right.as_ref();
+                let zero = Self::literal_zero_obj_for_abs_builtin();
+                let carrier_result = self.verify_builtin_rule_premise_alternatives(
+                    vec![
+                        vec![InFact::new(
+                            exponent.clone(),
+                            StandardSet::NPos.into(),
+                            line_file.clone(),
+                        )
+                        .into()],
+                        vec![
+                            InFact::new(exponent.clone(), StandardSet::R.into(), line_file.clone())
+                                .into(),
+                            InFact::new(
+                                left_base.clone(),
+                                StandardSet::RPos.into(),
+                                line_file.clone(),
+                            )
+                            .into(),
+                            InFact::new(
+                                right_base.clone(),
+                                StandardSet::RPos.into(),
+                                line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        vec![
+                            InFact::new(exponent.clone(), StandardSet::N.into(), line_file.clone())
+                                .into(),
+                            InFact::new(
+                                left_base.clone(),
+                                StandardSet::C.into(),
+                                line_file.clone(),
+                            )
+                            .into(),
+                            InFact::new(
+                                right_base.clone(),
+                                StandardSet::C.into(),
+                                line_file.clone(),
+                            )
+                            .into(),
+                        ],
+                        vec![
+                            InFact::new(exponent.clone(), StandardSet::Z.into(), line_file.clone())
+                                .into(),
+                            NotEqualFact::new(left_base.clone(), zero.clone(), line_file.clone())
+                                .into(),
+                            NotEqualFact::new(right_base.clone(), zero, line_file.clone()).into(),
+                        ],
+                    ],
+                    line_file.clone(),
+                    builtin_state,
+                )?;
+                if !carrier_result.is_true() {
+                    return Ok(false);
+                }
             }
         }
 

@@ -128,6 +128,36 @@ domain facts, no anonymous functions, no multiple arguments, and no curried
 function return. Those forms remain unsupported rather than being flattened
 to this ABI.
 
+## Existential witnesses
+
+A supported positive existential has one witness and one body fact. Over a
+standard numeric set it is rendered as `∃ x : ℂ, Litex.In x S ∧ body`. Over
+an arbitrary Litex set it instead quantifies a Lean carrier and a value in that
+carrier, then states the same explicit membership proposition. Thus the Lean
+type chosen for the witness is representation data; `Litex.In x S` remains
+the semantic admission condition.
+
+Introduction consumes the verifier's exact parameter-membership and body
+proofs. Elimination cites the stored existential FactId, selects its native
+witness with Lean's ordinary classical choice, and emits separate theorems for
+the retained parameter and body projection roles. Nothing is transported back
+from the wrapper because the witness already is an ordinary Lean value.
+
+The authoritative pair is `examples/10_ExistentialWitness.lit/.lean`. The
+negative Rust tracer keeps multiple witnesses outside this reviewed slice.
+
+## Proof scopes and object definitions
+
+Named theorems, claims, examples, cases, and contradictions preserve their
+source-local environments by cloning the compiler render context. FactId joins
+are installed only in the scope in which the verifier produced them. These
+routes are traced by examples 8 and 9.
+
+Minimal object definitions create native Lean definitions rather than a
+universal Litex carrier. The defining relation is still `Litex.Same`; a typed
+`have x S = value` additionally replays the checked `Litex.In x S` fact.
+Example 11 fixes this contract for closed numeric values.
+
 ## Generated example contract
 
 The `.lit` file is authoritative. Compiler first verifies it and captures the
@@ -172,6 +202,7 @@ Mathlib native carriers
   -> Litex.lean                 [public umbrella import]
   -> verifier-produced statement IR [checked compilation evidence]
   -> compiler strict emitter    [reviewed adapters]
+  -> proof/existential/object scopes [native values + explicit Litex evidence]
   -> same-name generated examples [real Lean proof]
 ```
 

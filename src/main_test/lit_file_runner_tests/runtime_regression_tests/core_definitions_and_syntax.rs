@@ -653,10 +653,10 @@ fn have_tuple_can_equal_literal_tuple_by_dimension_and_projections() {
 have n N+ = 3
 
 have tuple index_tuple for i1 <= n, index_tuple[i1] = i1
-index_tuple = (1, 2, 3)
+by thm tuple_equal_from_coordinates(index_tuple, (1, 2, 3))
 
 have tuple real_tuple for i1 <= n, real_tuple[i1] = R
-(R, R, R) = real_tuple
+by thm tuple_equal_from_coordinates((R, R, R), real_tuple)
 "#;
 
             let mut runtime = Runtime::new();
@@ -2922,11 +2922,21 @@ trust Ambient = \selected<R>
         .resolved_identifier_symbol("Ambient")
         .expect("Ambient should have a runtime symbol");
     let ambient: Obj = Identifier::new_bound("Ambient".to_string(), ambient_symbol).into();
-    let opaque_set = runtime
-        .get_all_obj_representatives_equal_to_given(&ambient)
-        .into_iter()
+    let ambient_representatives = runtime.get_all_obj_representatives_equal_to_given(&ambient);
+    let opaque_set = ambient_representatives
+        .iter()
         .find(|candidate| matches!(candidate, Obj::InstantiatedTemplateObj(_)))
-        .expect("Ambient should be equal to the instantiated selected-set template");
+        .cloned()
+        .unwrap_or_else(|| {
+            panic!(
+                "Ambient should be equal to the instantiated selected-set template; representatives: {}",
+                ambient_representatives
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            )
+        });
 
     let local_result: Result<(), RuntimeError> = runtime.run_in_local_env(|rt| {
         let group =

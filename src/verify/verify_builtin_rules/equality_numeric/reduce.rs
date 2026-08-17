@@ -906,24 +906,18 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let prefix_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&prefix_nonempty, builtin_state)?;
-            if !prefix_result.is_true() {
-                continue;
-            }
             let tail_nonempty: AtomicFact = LessFact::new(
                 prefix.end.as_ref().clone(),
                 full.end.as_ref().clone(),
                 line_file.clone(),
             )
             .into();
-            let tail_result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&tail_nonempty, builtin_state)?;
-            if !tail_result.is_true() {
+            let Some(range_results) = self
+                .verify_builtin_rule_premises(&[prefix_nonempty, tail_nonempty], builtin_state)?
+            else {
                 continue;
-            }
-            subgoals.push(prefix_result);
-            subgoals.push(tail_result);
+            };
+            subgoals.extend(range_results);
             return Ok(Some(factual_equal_success_by_builtin_reason_with_subgoals(
                 equal_fact,
                 "equality: reduce partitions into adjacent ordered ranges",

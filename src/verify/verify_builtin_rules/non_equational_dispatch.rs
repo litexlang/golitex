@@ -79,6 +79,16 @@ impl Runtime {
                     not_is_nonempty_set_fact,
                     builtin_state,
                 ),
+            AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
+                if crate::verify::verify_proper_set_relations_builtin::is_builtin_proper_set_relation_fact(
+                    atomic_fact,
+                ) =>
+            {
+                self.verify_builtin_proper_set_relation_from_quantifier_free_premise(
+                    atomic_fact,
+                    builtin_state,
+                )
+            }
             _ => Ok((StmtUnknown::new()).into()),
         }
     }

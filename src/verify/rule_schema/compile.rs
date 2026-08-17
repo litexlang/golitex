@@ -91,13 +91,22 @@ pub(crate) fn compile_local_builtin_schema(
 
     let mut premises = Vec::with_capacity(forall.dom_facts.len());
     for premise in &forall.dom_facts {
-        let Fact::AtomicFact(premise) = premise else {
-            return Err(schema_error(format!(
-                "local builtin `{}` premises must all be atomic",
-                rule_id.as_str()
-            )));
+        let premise = match premise {
+            Fact::AtomicFact(fact) => QuantifierFreeFact::AtomicFact(fact.clone()),
+            Fact::AndFact(fact) => QuantifierFreeFact::AndFact(fact.clone()),
+            Fact::ChainFact(fact) => QuantifierFreeFact::ChainFact(fact.clone()),
+            Fact::OrFact(fact) => QuantifierFreeFact::OrFact(fact.clone()),
+            Fact::ExistFact(_)
+            | Fact::ForallFact(_)
+            | Fact::ForallFactWithIff(_)
+            | Fact::NotForall(_) => {
+                return Err(schema_error(format!(
+                    "local builtin `{}` premises must be quantifier-free",
+                    rule_id.as_str()
+                )));
+            }
         };
-        premises.push(premise.clone());
+        premises.push(premise);
     }
 
     let variables = forall
@@ -141,7 +150,7 @@ pub(crate) fn compile_local_builtin_schema(
         }
     }
     for premise in &premises {
-        for obj in premise.args_ref() {
+        for obj in premise.get_args_from_fact_ref() {
             validate_pattern_and_collect_variables(obj, &variable_ids, &mut HashSet::new())?;
         }
     }
@@ -168,4 +177,38 @@ pub(crate) fn compile_local_builtin_schema(
         head_key: atomic_fact_head(&conclusion),
         conclusion,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn local_builtin_schema_accepts_every_quantifier_free_premise_shape() {
+        let schema = compile_local_builtin_schema(
+            r#"
+forall a, b, c R:
+    a <= b
+    a <= b and b <= c
+    a <= b <= c
+    a = b or b = c
+    =>:
+        a + b <= c
+"#,
+            RuleId::new("test.quantifier_free_premises").expect("valid test rule id"),
+            RuleFingerprint::from_hex("0".repeat(64)).expect("valid test fingerprint"),
+        )
+        .expect("all quantifier-free premise variants should compile");
+
+        assert!(matches!(
+            schema.premises[0],
+            QuantifierFreeFact::AtomicFact(_)
+        ));
+        assert!(matches!(schema.premises[1], QuantifierFreeFact::AndFact(_)));
+        assert!(matches!(
+            schema.premises[2],
+            QuantifierFreeFact::ChainFact(_)
+        ));
+        assert!(matches!(schema.premises[3], QuantifierFreeFact::OrFact(_)));
+    }
 }

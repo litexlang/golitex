@@ -34,6 +34,35 @@ impl Runtime {
         }
     }
 
+    /// Verifies a disjunction whose branches are atomic facts or flat conjunctions.
+    /// Each inner vector is one sufficient alternative; it is not a list of independently
+    /// known facts. This keeps rule implementations aligned with the `OrFact` AST shape.
+    pub(crate) fn verify_builtin_rule_premise_alternatives(
+        &mut self,
+        alternatives: Vec<Vec<AtomicFact>>,
+        line_file: LineFile,
+        builtin_state: &UseBuiltinRuleVerifyState,
+    ) -> Result<StmtResult, RuntimeError> {
+        let mut branches = Vec::with_capacity(alternatives.len());
+        for mut alternative in alternatives {
+            if alternative.is_empty() {
+                return Ok(StmtUnknown::new().into());
+            }
+            if alternative.len() == 1 {
+                branches.push(alternative.remove(0).into());
+            } else {
+                branches.push(AndChainAtomicFact::AndFact(AndFact::new(
+                    alternative,
+                    line_file.clone(),
+                )));
+            }
+        }
+        self.verify_builtin_rule_premise(
+            &QuantifierFreeFact::OrFact(OrFact::new(branches, line_file)),
+            builtin_state,
+        )
+    }
+
     fn verify_and_fact_as_builtin_rule_premise(
         &mut self,
         and_fact: &AndFact,
@@ -189,15 +218,25 @@ impl Runtime {
         children: &[AtomicFact],
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let mut results = Vec::with_capacity(children.len());
-        for child in children {
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
+        match children {
+            [] => Ok(Some(Vec::new())),
+            [child] => {
+                let result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(child, builtin_state)?;
+                Ok(result.is_true().then_some(vec![result]))
             }
-            results.push(result);
+            _ => {
+                // Jointly required atomic premises form one conjunction. Trying the complete
+                // `AndFact` lets a stored whole conjunction satisfy the rule; otherwise the
+                // compound dispatcher verifies every leaf with the unchanged depth budget.
+                let conjunction = QuantifierFreeFact::AndFact(AndFact::new(
+                    children.to_vec(),
+                    children[0].line_file(),
+                ));
+                let result = self.verify_builtin_rule_premise(&conjunction, builtin_state)?;
+                Ok(result.is_true().then_some(vec![result]))
+            }
         }
-        Ok(Some(results))
     }
 }
 

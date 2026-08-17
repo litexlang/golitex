@@ -59,17 +59,10 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let mut subgoals = Vec::new();
-            for premise in [d_in_n_pos, left_divisible, right_divisible] {
-                let result =
-                    self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-                if result.is_unknown() {
-                    subgoals.clear();
-                    break;
-                }
-                subgoals.push(result);
-            }
-            if subgoals.len() == 3 {
+            if let Some(subgoals) = self.verify_builtin_rule_premises(
+                &[d_in_n_pos, left_divisible, right_divisible],
+                builtin_state,
+            )? {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                         atomic_fact.clone().into(),
@@ -290,7 +283,7 @@ impl Runtime {
             return Ok(result);
         }
         if let Some(result) =
-            self.verify_order_from_known_zero_order_on_sub_builtin_rule(atomic_fact)?
+            self.verify_order_from_known_zero_order_on_sub_builtin_rule(atomic_fact, builtin_state)?
         {
             return Ok(result);
         }
@@ -1668,15 +1661,10 @@ impl Runtime {
             subgoals.push(LessEqualFact::new(left_arg, right_arg, line_file).into());
         }
 
-        let mut step_results = Vec::new();
-        for subgoal in subgoals {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&subgoal, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            step_results.push(result);
-        }
+        let Some(step_results) = self.verify_builtin_rule_premises(&subgoals, builtin_state)?
+        else {
+            return Ok(None);
+        };
 
         let reason = if strict {
             "sqrt: sqrt(a) < sqrt(b) from 0 <= a, 0 <= b, and a < b"
@@ -2177,8 +2165,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        for candidate in candidates {
-            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(&candidate)?;
+        for candidate in &candidates {
+            let sub = self.verify_non_equational_atomic_fact_with_known_atomic_facts(candidate)?;
             if sub.is_true() {
                 steps.push(sub);
                 return Ok(Some(
@@ -2192,6 +2180,27 @@ impl Runtime {
                 ));
             }
         }
+
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            candidates
+                .into_iter()
+                .map(|candidate| vec![candidate])
+                .collect(),
+            line_file,
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            steps.push(premise_result);
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
+                    atomic_fact.clone().into(),
+                    InferResult::new(),
+                    "negated_order_from_complete_equivalent_order_disjunction".to_string(),
+                    steps,
+                )
+                .into(),
+            ));
+        }
         Ok(None)
     }
 
@@ -2200,6 +2209,7 @@ impl Runtime {
     fn verify_order_from_known_zero_order_on_sub_builtin_rule(
         &mut self,
         atomic_fact: &AtomicFact,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
         let Some(normalized_fact) = normalize_positive_order_atomic_fact(atomic_fact) else {
             return Ok(None);
@@ -2237,29 +2247,45 @@ impl Runtime {
 
         let difference: Obj = Sub::new(right, left).into();
         let difference_order: AtomicFact = if is_weak {
-            LessEqualFact::new(zero, difference, line_file).into()
+            LessEqualFact::new(zero, difference, line_file.clone()).into()
         } else {
-            LessFact::new(zero, difference, line_file).into()
+            LessFact::new(zero, difference, line_file.clone()).into()
         };
         let difference_result =
             self.verify_non_equational_atomic_fact_with_known_atomic_facts(&difference_order)?;
-        if !difference_result.is_true() {
-            return Ok(None);
+        if difference_result.is_true() {
+            let reason = if is_weak {
+                "a <= b from 0 <= b - a"
+            } else {
+                "a < b from 0 < b - a"
+            };
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    reason.to_string(),
+                    vec![difference_result],
+                )
+                .into(),
+            ));
         }
 
-        let reason = if is_weak {
-            "a <= b from 0 <= b - a"
-        } else {
-            "a < b from 0 < b - a"
-        };
-        Ok(Some(
-            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
-                atomic_fact.clone().into(),
-                reason.to_string(),
-                vec![difference_result],
-            )
-            .into(),
-        ))
+        let premise_result = self.verify_builtin_rule_premise_alternatives(
+            vec![vec![direct_difference_order], vec![difference_order]],
+            line_file,
+            builtin_state,
+        )?;
+        if premise_result.is_true() {
+            return Ok(Some(
+                FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                    atomic_fact.clone().into(),
+                    "order from complete zero-difference-bound disjunction".to_string(),
+                    vec![premise_result],
+                )
+                .into(),
+            ));
+        }
+
+        Ok(None)
     }
 
     // Matches Lit `a <= b` <=> `0 <= b - a` (and strict): `0 <= u - v` iff `v <= u`, `0 < u - v` iff `v < u`.

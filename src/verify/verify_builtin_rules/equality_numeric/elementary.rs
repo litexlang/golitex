@@ -116,6 +116,41 @@ impl Runtime {
                     continue;
                 };
 
+                for (factor, other_factor, reason) in [
+                    (
+                        mul.left.as_ref(),
+                        mul.right.as_ref(),
+                        "equality: b = 0 from a * b = 0 and a != 0",
+                    ),
+                    (
+                        mul.right.as_ref(),
+                        mul.left.as_ref(),
+                        "equality: a = 0 from a * b = 0 and b != 0",
+                    ),
+                ] {
+                    let premises: [AtomicFact; 2] = [
+                        EqualFact::new_from_refs(target, factor, line_file.clone()).into(),
+                        NotEqualFact::new(
+                            other_factor.clone(),
+                            zero_obj.clone(),
+                            line_file.clone(),
+                        )
+                        .into(),
+                    ];
+                    if let Some(results) =
+                        self.verify_builtin_rule_premises(&premises, builtin_state)?
+                    {
+                        return Ok(Some(
+                            FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                                equal_fact.clone().into(),
+                                reason.to_string(),
+                                results,
+                            )
+                            .into(),
+                        ));
+                    }
+                }
+
                 let left_target_result = self.verify_zero_product_factor_matches_target(
                     &EqualFact::new_from_refs(target, mul.left.as_ref(), line_file.clone()),
                     builtin_state,
@@ -379,29 +414,23 @@ impl Runtime {
             line_file.clone(),
         )
         .into();
-        let dividend_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&dividend_in_z, builtin_state)?;
-        if !dividend_result.is_true() {
-            return Ok(None);
-        }
-
         let modulus_in_n_pos: AtomicFact = InFact::new(
             outer_mod.right.as_ref().clone(),
             StandardSet::NPos.into(),
             line_file.clone(),
         )
         .into();
-        let modulus_result =
-            self.verify_atomic_fact_as_builtin_rule_premise(&modulus_in_n_pos, builtin_state)?;
-        if !modulus_result.is_true() {
+        let Some(results) =
+            self.verify_builtin_rule_premises(&[dividend_in_z, modulus_in_n_pos], builtin_state)?
+        else {
             return Ok(None);
-        }
+        };
 
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 equal_fact.clone().into(),
                 "equality: (a - a % b) % b = 0 for a in Z and b in N+".to_string(),
-                vec![dividend_result, modulus_result],
+                results,
             )
             .into(),
         ))
@@ -514,6 +543,29 @@ impl Runtime {
                 InFact::new(remainder.clone(), StandardSet::N.into(), line_file.clone()).into();
             let remainder_lt_modulus: AtomicFact =
                 LessFact::new(remainder.clone(), modulus.clone(), line_file.clone()).into();
+            let decomposition: AtomicFact =
+                EqualFact::new_from_refs(dividend, &candidate, line_file.clone()).into();
+            let complete_premises: [AtomicFact; 6] = [
+                InFact::new(dividend.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                InFact::new(quotient.clone(), StandardSet::Z.into(), line_file.clone()).into(),
+                divisor_in_n_pos.clone(),
+                remainder_in_n.clone(),
+                remainder_lt_modulus.clone(),
+                decomposition,
+            ];
+            if let Some(steps) =
+                self.verify_builtin_rule_premises(&complete_premises, builtin_state)?
+            {
+                return Ok(Some(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        equal_fact.clone().into(),
+                        "equality: Euclidean remainder uniqueness from a = m * q + r and 0 <= r < m"
+                            .to_string(),
+                        steps,
+                    )
+                    .into(),
+                ));
+            }
 
             let Some(integer_steps) = self.verify_objects_are_known_integers_in_builtin_leaf(
                 &[dividend, quotient],

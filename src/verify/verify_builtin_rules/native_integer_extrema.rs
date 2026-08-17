@@ -214,15 +214,9 @@ impl Runtime {
             )
             .into(),
         ];
-        let mut results = Vec::new();
-        for premise in premises {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            results.push(result);
-        }
+        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),
@@ -301,15 +295,9 @@ impl Runtime {
             _ => return Ok(None),
         };
 
-        let mut results = Vec::new();
-        for premise in premises {
-            let result =
-                self.verify_atomic_fact_as_builtin_rule_premise(&premise, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            results.push(result);
-        }
+        let Some(results) = self.verify_builtin_rule_premises(&premises, builtin_state)? else {
+            return Ok(None);
+        };
         Ok(Some(
             FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
                 atomic_fact.clone().into(),

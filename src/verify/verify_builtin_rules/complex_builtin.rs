@@ -611,17 +611,13 @@ impl Runtime {
         line_file: &LineFile,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
-        let mut steps = Vec::new();
-        for obj in objs {
-            let fact: AtomicFact =
-                InFact::new((*obj).clone(), StandardSet::C.into(), line_file.clone()).into();
-            let result = self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)?;
-            if !result.is_true() {
-                return Ok(None);
-            }
-            steps.push(result);
-        }
-        Ok(Some(steps))
+        let premises = objs
+            .iter()
+            .map(|obj| {
+                InFact::new((**obj).clone(), StandardSet::C.into(), line_file.clone()).into()
+            })
+            .collect::<Vec<AtomicFact>>();
+        self.verify_builtin_rule_premises(&premises, builtin_state)
     }
 
     fn objects_have_known_standard_membership(&self, objs: &[&Obj], set: StandardSet) -> bool {

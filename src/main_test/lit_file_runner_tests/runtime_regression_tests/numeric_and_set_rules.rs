@@ -2674,7 +2674,7 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("union membership: member of the left side"),
+        run_output.contains("local builtin set.union_membership_left"),
         "union introduction should remain a direct builtin:\n{}",
         run_output
     );
@@ -2684,13 +2684,12 @@ x $in U or x $in V
         run_output
     );
     assert!(
-        run_output.contains("intersection membership: member of both sides"),
+        run_output.contains("local builtin set.intersect_membership"),
         "intersection introduction should report its builtin provenance:\n{}",
         run_output
     );
     assert!(
-        run_output
-            .contains("set-minus membership: member of left side and non-member of right side"),
+        run_output.contains("local builtin set.set_minus_membership"),
         "set-minus introduction should report its builtin provenance:\n{}",
         run_output
     );
@@ -2905,7 +2904,7 @@ union(set_minus(A, B), set_minus(A, c)) = set_minus(A, intersect(B, c))
         run_output
     );
     assert!(
-        run_output.contains("set minus recovers subset from relative complement"),
+        run_output.contains("local builtin set.subset_eq_set_minus_recovery"),
         "the subset recovery equality should report its builtin rule:\n{}",
         run_output
     );
@@ -4022,7 +4021,7 @@ forall A, B, T set:
     );
     for rule in [
         "literal finite-set subset from member facts",
-        "union subset from both operand subsets",
+        "local builtin set.union_subset",
     ] {
         assert!(
             run_output.contains(rule),

@@ -9,7 +9,8 @@ pub(crate) use canonical_match::{
 };
 pub(crate) use compile::compile_local_builtin_schema;
 pub(crate) use matcher::{
-    canonical_atomic_facts_equal, canonical_objs_equal, match_conclusion, MatchLimits,
+    canonical_atomic_facts_equal, canonical_objs_equal, canonical_quantifier_free_facts_equal,
+    match_conclusion, MatchLimits,
 };
 pub use source::{CompiledRuleSchema, RuleFingerprint, RuleId, RuleSourceRef, RuleVariable};
 pub use substitution::RuleSubstitution;
