@@ -14,12 +14,12 @@ topology bundles into the reusable map contexts consumed by the theorems.
 module runner return top-level `ok: true`. See `math_collections.md` for the
 fixed scope and interface decisions.
 
-For comparison, `lean_core_analogy.lean` defines sets as predicates, packages
+`same_math_in_lean.lean` defines sets as predicates, packages
 the topology laws as a structure, derives binary-union closure, and proves
 continuity under composition using only Lean's automatically loaded Prelude.
-It has no imports and is handwritten analogy code, not compiler-generated
+It has no imports and is a handwritten formulation of the same mathematics, not compiler-generated
 output. Run it with:
 
 ```sh
-lean showcases/math_concepts_in_litex/topology/lean_core_analogy.lean
+lean showcases/math_concepts_in_litex/topology/same_math_in_lean.lean
 ```

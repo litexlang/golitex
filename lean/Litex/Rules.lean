@@ -19,6 +19,30 @@ theorem complexRatInQ (q : ℚ) : Litex.In (q : ℂ) Litex.Q :=
 theorem complexRealInR (r : ℝ) : Litex.In (r : ℂ) Litex.R :=
   ⟨r, Litex.Same.complexReal r⟩
 
+/-- A complex value proved equal to a natural cast belongs to `N`. -/
+theorem complexEqNatInN
+    (z : ℂ)
+    (n : ℕ)
+    (h : z = (n : ℂ)) :
+    Litex.In z Litex.N :=
+  ⟨n, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexNat n)⟩
+
+/-- A complex value proved equal to an integer cast belongs to `Z`. -/
+theorem complexEqIntInZ
+    (z : ℂ)
+    (n : ℤ)
+    (h : z = (n : ℂ)) :
+    Litex.In z Litex.Z :=
+  ⟨n, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexInt n)⟩
+
+/-- A complex value proved equal to a rational cast belongs to `Q`. -/
+theorem complexEqRatInQ
+    (z : ℂ)
+    (q : ℚ)
+    (h : z = (q : ℂ)) :
+    Litex.In z Litex.Q :=
+  ⟨q, Litex.Same.trans (Litex.Same.ofEq h) (Litex.Same.complexRat q)⟩
+
 /-- Negated Litex semantic equality is symmetric because `Same` itself is
 symmetric. Example: `a != b` proves `b != a`. -/
 theorem notSameSymm

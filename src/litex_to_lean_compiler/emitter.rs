@@ -437,13 +437,31 @@ fn emit_forall_fact(
             .insert(premise.fact_id, premise.fact.clone());
     }
 
-    // Alias-derived inferred premises are verifier context, not theorem
-    // binders. Validate that their propositions are in this emitter's
-    // supported language, but leave their FactIds unavailable: if a target
-    // proof actually cites one, proof rendering fails closed until compiler
-    // has an explicit adapter for that inference route.
-    for inferred in inferred_premises {
-        render_fact(&inferred.proposition, &context)?;
+    // Inferred premises are verifier-owned consequences of the explicit
+    // binders above. This stage materializes structural conjunction
+    // projections; other inference routes remain unavailable until their own
+    // proof adapters are intentionally enabled.
+    let mut derived_lines = Vec::new();
+    for (inferred_index, inferred) in inferred_premises.iter().enumerate() {
+        let proposition = render_fact(&inferred.proposition, &context)?;
+        if !matches!(
+            &inferred.proof,
+            LitexToLeanFactProofIr::RuleApplication {
+                rule: LitexToLeanProofRuleIr::ConjunctionProjection { .. },
+                ..
+            }
+        ) {
+            continue;
+        }
+        let proof = render_proof(inferred, &context)?;
+        let name = format!("__i{theorem_index}_{inferred_index}");
+        derived_lines.push(format!("  have {name} : {proposition} := {proof}"));
+        if let Some(fact_id) = inferred.fact_id {
+            context.fact_names.insert(fact_id, name);
+            context
+                .fact_propositions
+                .insert(fact_id, inferred.proposition.clone());
+        }
     }
 
     let conclusion_types = conclusions
@@ -461,10 +479,12 @@ fn emit_forall_fact(
         format!("  exact ⟨{}⟩", conclusion_proofs.join(", "))
     };
 
+    derived_lines.push(proof);
     Ok(format!(
-        "theorem __fact{theorem_index} :\n    ∀ {},\n      {conclusion_type} := by\n  intro {}\n{proof}",
+        "theorem __fact{theorem_index} :\n    ∀ {},\n      {conclusion_type} := by\n  intro {}\n{}",
         binders.join(" "),
-        intro_names.join(" ")
+        intro_names.join(" "),
+        derived_lines.join("\n")
     ))
 }
 
@@ -720,14 +740,22 @@ fn render_closed_standard_membership(
             "compiler closed N/Z/Q/R membership currently requires a natural numeral".into(),
         );
     }
+    if *set == StandardSet::R {
+        return Ok(format!(
+            "Litex.Rules.complexRealInR {}",
+            number.normalized_value
+        ));
+    }
     let theorem = match set {
-        StandardSet::N => "complexNatInN",
-        StandardSet::Z => "complexIntInZ",
-        StandardSet::Q => "complexRatInQ",
-        StandardSet::R => "complexRealInR",
+        StandardSet::N => "complexEqNatInN",
+        StandardSet::Z => "complexEqIntInZ",
+        StandardSet::Q => "complexEqRatInQ",
         _ => return Err(format!("unsupported closed standard membership in `{set}`")),
     };
-    Ok(format!("Litex.Rules.{theorem} {}", number.normalized_value))
+    Ok(format!(
+        "Litex.Rules.{theorem} ({} : ℂ) {} (by norm_num)",
+        number.normalized_value, number.normalized_value
+    ))
 }
 
 fn render_closed_numeric_comparison(

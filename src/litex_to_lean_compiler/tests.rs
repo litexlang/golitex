@@ -58,7 +58,7 @@ fn top_level_atomic_membership_emits_source_and_inferred_fact_ids() {
     let generated = compile_on_verifier_stack("1 $in N\n", "atomic_membership.lit")
         .expect("compile top-level atomic membership");
     assert!(generated.contains("Litex.In (1 : ℂ) Litex.N"));
-    assert!(generated.contains("Litex.Rules.complexNatInN 1"));
+    assert!(generated.contains("Litex.Rules.complexEqNatInN (1 : ℂ) 1 (by norm_num)"));
     assert!(generated.contains("Litex.Le (0 : ℂ) (1 : ℂ)"));
     assert!(generated.contains("Litex.OrderBridge.leOfComplexReals (by norm_num)"));
     assert!(!generated.contains("sorry"));
@@ -102,6 +102,17 @@ fn conjunction_disjunction_and_alpha_forall_citations_replay_exact_evidence() {
     assert!(generated.contains("exact Or.inl (__h2_3)"));
     assert!(generated.contains("theorem __fact4 :\n    ∀ (__p1 : Litex.Set) (__p2 : Litex.Set)"));
     assert!(generated.contains(":= __fact3"));
+}
+
+#[test]
+fn conjunction_projection_replays_inferred_fact_ids() {
+    let generated = compile_on_verifier_stack(
+        "forall a, b, c, d set:\n    a != b and c != d\n    =>:\n        c != d\n",
+        "conjunction_projection.lit",
+    )
+    .expect("compile conjunction projection proof spine");
+    assert!(generated.contains("have __i0_0 : ¬ Litex.Same c d := (__h0_5).2"));
+    assert!(generated.contains("exact __i0_0"));
 }
 
 #[test]
@@ -151,5 +162,5 @@ fn function_application_without_domain_membership_is_rejected_by_litex() {
 fn unsupported_atomic_predicate_fails_closed() {
     let error = compile_on_verifier_stack("1 != 0\n", "unsupported.lit")
         .expect_err("unsupported fact must fail closed");
-    assert!(error.contains("unsupported verified proof rule"));
+    assert!(error.contains("supports positive <, >, <=, or >= facts"));
 }

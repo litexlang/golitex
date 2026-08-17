@@ -551,7 +551,7 @@ impl Runtime {
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         let fact: AtomicFact = equal_fact.clone().into();
-        self.verify_builtin_rule_premise(&fact, builtin_state)
+        self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
     }
 }
 

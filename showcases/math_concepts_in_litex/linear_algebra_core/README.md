@@ -22,12 +22,12 @@ The module has no `trust` or local axiom. It intentionally stops before a
 generic real-vector-space structure, bases, dimension, and rank-nullity; those
 belong to the guarded next gate.
 
-For comparison, `lean_core_analogy.lean` builds the small scalar, linear-map,
+`same_math_in_lean.lean` builds the small scalar, linear-map,
 subspace, and kernel interfaces directly over Prelude products. It proves that
 a kernel is a subspace, the injective-to-trivial-kernel direction, and the
-noninjectivity of coordinate projection. It has no imports and is handwritten
-analogy code, not compiler-generated output. Run it with:
+noninjectivity of coordinate projection. It has no imports and is a handwritten
+formulation of the same mathematics, not compiler-generated output. Run it with:
 
 ```sh
-lean showcases/math_concepts_in_litex/linear_algebra_core/lean_core_analogy.lean
+lean showcases/math_concepts_in_litex/linear_algebra_core/same_math_in_lean.lean
 ```

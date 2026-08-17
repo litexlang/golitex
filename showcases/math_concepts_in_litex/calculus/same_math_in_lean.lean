@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 Lean's Prelude has no real numbers, absolute value, division, or ordered-field
 library. Those operations and the two algebraic identities used by the proof
@@ -10,7 +10,7 @@ compiler output.
 
 universe u
 
-namespace CalculusCoreAnalogy
+namespace CalculusSameMathInLean
 
 structure RealCalculusSetting (R : Type u) where
   sub : R → R → R
@@ -112,4 +112,4 @@ theorem square_tangent_error_at_three
     S.sub (S.square x) (T.tangent x) = S.square (S.sub x T.three) :=
   T.exact_remainder x
 
-end CalculusCoreAnalogy
+end CalculusSameMathInLean

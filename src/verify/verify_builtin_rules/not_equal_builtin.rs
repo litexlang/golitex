@@ -44,7 +44,8 @@ impl Runtime {
             not_equal_fact.line_file.clone(),
         )
         .into();
-        let reversed_result = self.verify_builtin_rule_premise(&reversed, builtin_state)?;
+        let reversed_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&reversed, builtin_state)?;
         if reversed_result.is_true() {
             return Ok(
                 FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(
@@ -314,7 +315,7 @@ impl Runtime {
         };
 
         let nonempty: AtomicFact = IsNonemptySetFact::new(set, line_file).into();
-        let sub = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
+        let sub = self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
         if !sub.is_true() {
             return Ok(None);
         }
@@ -519,7 +520,8 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let arg_nonzero: AtomicFact =
             NotEqualFact::new(abs.arg.as_ref().clone(), zero_obj, line_file.clone()).into();
-        let result = self.verify_builtin_rule_premise(&arg_nonzero, builtin_state)?;
+        let result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&arg_nonzero, builtin_state)?;
         if !result.is_true() {
             return Ok(None);
         }
@@ -561,7 +563,8 @@ impl Runtime {
         let zero: Obj = Number::new("0".to_string()).into();
         let positive: AtomicFact =
             GreaterFact::new(sqrt.arg.as_ref().clone(), zero, line_file.clone()).into();
-        let positive_result = self.verify_builtin_rule_premise(&positive, builtin_state)?;
+        let positive_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&positive, builtin_state)?;
         if !positive_result.is_true() {
             return Ok(None);
         }
@@ -815,13 +818,13 @@ impl Runtime {
         };
         let in_n: AtomicFact =
             InFact::new(x.clone(), StandardSet::N.into(), line_file.clone()).into();
-        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
+        let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if !in_n_result.is_true() {
             return Ok(None);
         }
         let ge: AtomicFact =
             GreaterEqualFact::new(x.clone(), one_obj.clone(), line_file.clone()).into();
-        let ge_result = self.verify_builtin_rule_premise(&ge, builtin_state)?;
+        let ge_result = self.verify_atomic_fact_as_builtin_rule_premise(&ge, builtin_state)?;
         if ge_result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -833,7 +836,8 @@ impl Runtime {
             ));
         }
         let one_le: AtomicFact = LessEqualFact::new(one_obj, x, line_file.clone()).into();
-        let one_le_result = self.verify_builtin_rule_premise(&one_le, builtin_state)?;
+        let one_le_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&one_le, builtin_state)?;
         if one_le_result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -877,7 +881,7 @@ impl Runtime {
         for standard_set in [StandardSet::Z, StandardSet::N, StandardSet::NPos] {
             let in_set: AtomicFact =
                 InFact::new(obj.clone(), standard_set.into(), line_file.clone()).into();
-            let result = self.verify_builtin_rule_premise(&in_set, builtin_state)?;
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(&in_set, builtin_state)?;
             if result.is_true() {
                 return Ok(true);
             }
@@ -910,7 +914,8 @@ impl Runtime {
         let base = pow.base.as_ref().clone();
         let base_neq_zero: AtomicFact =
             NotEqualFact::new(base.clone(), zero_obj, line_file.clone()).into();
-        let result = self.verify_builtin_rule_premise(&base_neq_zero, builtin_state)?;
+        let result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&base_neq_zero, builtin_state)?;
         if result.is_true() {
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
@@ -978,13 +983,13 @@ impl Runtime {
             NotEqualFact::new(div.right.as_ref().clone(), zero_obj, line_file.clone()).into();
 
         let numerator_result =
-            self.verify_builtin_rule_premise(&numerator_nonzero, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&numerator_nonzero, builtin_state)?;
         if !numerator_result.is_true() {
             return Ok(None);
         }
 
         let denominator_result =
-            self.verify_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&denominator_nonzero, builtin_state)?;
         if !denominator_result.is_true() {
             return Ok(None);
         }
@@ -1157,52 +1162,18 @@ impl Runtime {
             NotEqualFact::new(left_base.clone(), zero_obj.clone(), line_file.clone()).into();
         let right_nonzero: AtomicFact =
             NotEqualFact::new(right_base.clone(), zero_obj, line_file.clone()).into();
-        let left_nonzero_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&left_nonzero)?;
-        let right_nonzero_result =
-            self.verify_non_equational_atomic_fact_with_known_atomic_facts(&right_nonzero)?;
-        let nonzero_result = if left_nonzero_result.is_true() {
-            Some(left_nonzero_result)
-        } else if right_nonzero_result.is_true() {
-            Some(right_nonzero_result)
-        } else {
-            None
-        };
-        if let Some(nonzero_result) = nonzero_result {
-            steps.push(nonzero_result);
+        let premise = QuantifierFreeFact::OrFact(OrFact::new(
+            vec![left_nonzero.into(), right_nonzero.into()],
+            line_file,
+        ));
+        let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+        if premise_result.is_true() {
+            steps.push(premise_result);
             return Ok(Some(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
                     not_equal_fact.clone().into(),
                     InferResult::new(),
                     "square_sum_not_equal_zero_from_nonzero_component_or".to_string(),
-                    steps,
-                )
-                .into(),
-            ));
-        }
-
-        let left_result = self.verify_builtin_rule_premise(&left_nonzero, builtin_state)?;
-        if left_result.is_true() {
-            steps.push(left_result);
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                    not_equal_fact.clone().into(),
-                    InferResult::new(),
-                    "square_sum_not_equal_zero_from_left_nonzero".to_string(),
-                    steps,
-                )
-                .into(),
-            ));
-        }
-
-        let right_result = self.verify_builtin_rule_premise(&right_nonzero, builtin_state)?;
-        if right_result.is_true() {
-            steps.push(right_result);
-            return Ok(Some(
-                FactualStmtSuccess::new_with_verified_by_builtin_rules_label_and_steps(
-                    not_equal_fact.clone().into(),
-                    InferResult::new(),
-                    "square_sum_not_equal_zero_from_right_nonzero".to_string(),
                     steps,
                 )
                 .into(),
@@ -1279,8 +1250,10 @@ impl Runtime {
         // A factor may be a computable nonzero scalar such as `7 / 5`, not
         // only a previously stored nonzero fact. Example: from `b != 0`,
         // prove `b * (7 / 5) != 0`.
-        let verify_result =
-            self.verify_builtin_rule_premise(&operand_not_equal_zero_fact, builtin_state)?;
+        let verify_result = self.verify_atomic_fact_as_builtin_rule_premise(
+            &operand_not_equal_zero_fact,
+            builtin_state,
+        )?;
         Ok(verify_result.is_true().then_some(verify_result))
     }
 
@@ -1320,13 +1293,14 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let zero_less_than_left =
             LessFact::new(zero_obj.clone(), left_operand.clone(), line_file.clone()).into();
-        let left_result = self.verify_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
+        let left_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let zero_less_than_right = LessFact::new(zero_obj, right_operand.clone(), line_file).into();
         let right_result =
-            self.verify_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1343,13 +1317,14 @@ impl Runtime {
         let zero_obj: Obj = Number::new("0".to_string()).into();
         let left_less_than_zero =
             LessFact::new(left_operand.clone(), zero_obj.clone(), line_file.clone()).into();
-        let left_result = self.verify_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
+        let left_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
         if !left_result.is_true() {
             return Ok(None);
         }
         let right_less_than_zero = LessFact::new(right_operand.clone(), zero_obj, line_file).into();
         let right_result =
-            self.verify_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
         if !right_result.is_true() {
             return Ok(None);
         }
@@ -1368,17 +1343,20 @@ impl Runtime {
             LessFact::new(left_factor.clone(), zero_obj.clone(), line_file.clone()).into();
         let zero_less_than_right =
             LessFact::new(zero_obj.clone(), right_factor.clone(), line_file.clone()).into();
-        let first_left = self.verify_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
-        let first_right = self.verify_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
+        let first_left =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_less_than_zero, builtin_state)?;
+        let first_right =
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_right, builtin_state)?;
         if first_left.is_true() && first_right.is_true() {
             return Ok(Some(vec![first_left, first_right]));
         }
         let zero_less_than_left =
             LessFact::new(zero_obj.clone(), left_factor.clone(), line_file.clone()).into();
         let right_less_than_zero = LessFact::new(right_factor.clone(), zero_obj, line_file).into();
-        let second_left = self.verify_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
+        let second_left =
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_left, builtin_state)?;
         let second_right =
-            self.verify_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_less_than_zero, builtin_state)?;
         if second_left.is_true() && second_right.is_true() {
             Ok(Some(vec![second_left, second_right]))
         } else {
@@ -1398,10 +1376,12 @@ impl Runtime {
             LessFact::new(zero_obj.clone(), minuend.clone(), line_file.clone()).into();
         let subtrahend_less_than_zero =
             LessFact::new(subtrahend.clone(), zero_obj.clone(), line_file.clone()).into();
-        let first_left =
-            self.verify_builtin_rule_premise(&zero_less_than_minuend, builtin_state)?;
-        let first_right =
-            self.verify_builtin_rule_premise(&subtrahend_less_than_zero, builtin_state)?;
+        let first_left = self
+            .verify_atomic_fact_as_builtin_rule_premise(&zero_less_than_minuend, builtin_state)?;
+        let first_right = self.verify_atomic_fact_as_builtin_rule_premise(
+            &subtrahend_less_than_zero,
+            builtin_state,
+        )?;
         if first_left.is_true() && first_right.is_true() {
             return Ok(Some(vec![first_left, first_right]));
         }
@@ -1409,10 +1389,12 @@ impl Runtime {
             LessFact::new(minuend.clone(), zero_obj.clone(), line_file.clone()).into();
         let zero_less_than_subtrahend =
             LessFact::new(zero_obj, subtrahend.clone(), line_file).into();
-        let second_left =
-            self.verify_builtin_rule_premise(&minuend_less_than_zero, builtin_state)?;
-        let second_right =
-            self.verify_builtin_rule_premise(&zero_less_than_subtrahend, builtin_state)?;
+        let second_left = self
+            .verify_atomic_fact_as_builtin_rule_premise(&minuend_less_than_zero, builtin_state)?;
+        let second_right = self.verify_atomic_fact_as_builtin_rule_premise(
+            &zero_less_than_subtrahend,
+            builtin_state,
+        )?;
         if second_left.is_true() && second_right.is_true() {
             Ok(Some(vec![second_left, second_right]))
         } else {
@@ -1502,7 +1484,7 @@ impl Runtime {
                 ).into();
 
                 let positive_result =
-                    self.verify_builtin_rule_premise(&zero_lt_a, builtin_state)?;
+                    self.verify_atomic_fact_as_builtin_rule_premise(&zero_lt_a, builtin_state)?;
                 if positive_result.is_true() {
                     Some(("not_equal_zero_operand_strictly_positive", vec![positive_result]))
                 } else {
@@ -1512,7 +1494,7 @@ impl Runtime {
                         line_file.clone(),
                     ).into();
                     let negative_result =
-                        self.verify_builtin_rule_premise(&a_lt_0, builtin_state)?;
+                        self.verify_atomic_fact_as_builtin_rule_premise(&a_lt_0, builtin_state)?;
                     if negative_result.is_true() {
                         Some(("not_equal_zero_operand_strictly_negative", vec![negative_result]))
                     } else {

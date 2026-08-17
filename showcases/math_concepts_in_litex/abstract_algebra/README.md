@@ -14,12 +14,12 @@ each theorem application contributes to the next mathematical step.
 module runner return top-level `ok: true`. See `math_collections.md` for the
 fixed scope and interface decisions.
 
-For comparison, `lean_core_analogy.lean` expresses the same progression using
+`same_math_in_lean.lean` expresses the same progression using
 only Lean's automatically loaded Prelude: it has no imports and does not depend
-on Mathlib. It is a handwritten semantic analogy, not generated output and not
+on Mathlib. It is a handwritten formulation of the same semantics, not generated output and not
 a claim about the Litex-to-Lean compiler's current function or group support.
 Run it independently with:
 
 ```sh
-lean showcases/math_concepts_in_litex/abstract_algebra/lean_core_analogy.lean
+lean showcases/math_concepts_in_litex/abstract_algebra/same_math_in_lean.lean
 ```

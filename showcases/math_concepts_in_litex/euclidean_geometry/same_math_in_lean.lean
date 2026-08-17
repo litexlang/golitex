@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 The exact integer coordinate fragment uses Prelude `Int`. The general
 equilateral construction exposes its distance lemma as a setting because pure
@@ -7,7 +7,7 @@ Lean has no real square root or Euclidean-geometry library. This is handwritten
 comparison code, not compiler output.
 -/
 
-namespace EuclideanGeometryCoreAnalogy
+namespace EuclideanGeometrySameMathInLean
 
 abbrev Point := Int × Int
 
@@ -44,4 +44,4 @@ theorem euclid_book1_proposition_1 (E : EquilateralVertexSetting)
     (E.distance_from_right a b).symm
   exact ⟨E.vertex a b, hne, left_congruence, right_congruence⟩
 
-end EuclideanGeometryCoreAnalogy
+end EuclideanGeometrySameMathInLean

@@ -216,9 +216,9 @@ impl Runtime {
     ) -> Result<StmtResult, RuntimeError> {
         match fact {
             AtomicFact::LessFact(_) | AtomicFact::LessEqualFact(_) => {
-                self.verify_builtin_rule_premise(&fact, builtin_state)
+                self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state)
             }
-            _ => self.verify_builtin_rule_premise(&fact, builtin_state),
+            _ => self.verify_atomic_fact_as_builtin_rule_premise(&fact, builtin_state),
         }
     }
 
@@ -280,7 +280,8 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let start_result = self.verify_builtin_rule_premise(&start_fact, builtin_state)?;
+        let start_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&start_fact, builtin_state)?;
         if !start_result.is_true() {
             return Ok(None);
         }
@@ -290,7 +291,8 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let end_result = self.verify_builtin_rule_premise(&end_fact, builtin_state)?;
+        let end_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&end_fact, builtin_state)?;
         if !end_result.is_true() {
             return Ok(None);
         }
@@ -325,7 +327,7 @@ impl Runtime {
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_lo)?;
             rt.store_fact_without_forall_coverage_check_and_infer(dom_hi)?;
-            rt.verify_builtin_rule_premise(&pointwise_fact, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
         if !pointwise_result.is_true() {
             return Ok(None);
@@ -364,7 +366,8 @@ impl Runtime {
             f.line_file.clone(),
         )
         .into();
-        let set_result = self.verify_builtin_rule_premise(&set_fact, builtin_state)?;
+        let set_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&set_fact, builtin_state)?;
         if !set_result.is_true() {
             return Ok(None);
         }
@@ -388,7 +391,7 @@ impl Runtime {
                 ParamType::Obj(left_sum.set.as_ref().clone()),
             )]);
             rt.define_params_with_type(&params_def, false, ParamObjType::Forall)?;
-            rt.verify_builtin_rule_premise(&pointwise_fact, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
         if !pointwise_result.is_true() {
             return Ok(None);
@@ -595,7 +598,7 @@ impl Runtime {
             let le_y: AtomicFact =
                 LessEqualFact::new(left.clone(), zero.clone(), line_file.clone()).into();
             let r_sign = if strict {
-                self.verify_builtin_rule_premise(&le_y, builtin_state)?
+                self.verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
             } else {
                 self.verify_abs_order_subgoal(le_y, builtin_state)?
             };
@@ -624,7 +627,7 @@ impl Runtime {
                 let le_y: AtomicFact =
                     LessEqualFact::new(y.clone(), zero.clone(), line_file.clone()).into();
                 let r_sign = if strict {
-                    self.verify_builtin_rule_premise(&le_y, builtin_state)?
+                    self.verify_atomic_fact_as_builtin_rule_premise(&le_y, builtin_state)?
                 } else {
                     self.verify_abs_order_subgoal(le_y, builtin_state)?
                 };

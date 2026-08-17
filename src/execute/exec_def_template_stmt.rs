@@ -780,17 +780,21 @@ impl Runtime {
                 for arg in s.args.iter() {
                     args.push(self.inst_obj(arg, param_to_arg_map, ParamObjType::DefHeader)?);
                 }
-                let selected_fact = if let Some(fact) = s.selected_fact.as_ref() {
-                    Some(self.inst_atomic_fact(
-                        fact,
-                        param_to_arg_map,
-                        ParamObjType::DefHeader,
-                        Some(line_file),
-                    )?)
+                let selected_facts = if let Some(facts) = s.selected_facts.as_ref() {
+                    let mut instantiated = Vec::with_capacity(facts.len());
+                    for fact in facts {
+                        instantiated.push(self.inst_fact(
+                            fact,
+                            param_to_arg_map,
+                            ParamObjType::DefHeader,
+                            Some(line_file.clone()),
+                        )?);
+                    }
+                    Some(instantiated)
                 } else {
                     None
                 };
-                Ok(ByThmStmt::new(s.name.clone(), args, selected_fact, line_file.clone()).into())
+                Ok(ByThmStmt::new(s.name.clone(), args, selected_facts, line_file.clone()).into())
             }
             Stmt::By(ByStmt::ByDefStmt(s)) => {
                 let fact = self.inst_atomic_fact(

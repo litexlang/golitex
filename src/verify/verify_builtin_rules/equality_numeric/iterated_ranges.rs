@@ -156,7 +156,7 @@ impl Runtime {
             if known_forall_result.is_true() {
                 return Ok(known_forall_result);
             }
-            rt.verify_builtin_rule_premise(&pointwise_fact, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
         })?;
         if !pointwise_result.is_true() {
             return Ok(None);
@@ -416,7 +416,7 @@ impl Runtime {
             if known_forall_result.is_true() {
                 return Ok(known_forall_result);
             }
-            rt.verify_builtin_rule_premise(then_fact, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(then_fact, builtin_state)
         })
     }
 

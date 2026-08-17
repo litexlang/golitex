@@ -153,6 +153,14 @@ precedence describe the same parse from two viewpoints. This does not make the
 fact grammar recursively nestable: `and` still contains only atomic facts, and
 `or` only collects completed atomic, chain, or flat-conjunction branches.
 
+The same four shapes form the bounded premise language for automatic builtin
+rules. In particular, a rule may consume a known complete `or` fact without
+claiming that any branch is separately known. For example, the premise
+`a = 1 or a = 2 or a = 3` can prove `a $in {1, 2, 3}`. When the verifier instead
+introduces an `or`, it must prove one selected branch. In both directions every
+atomic leaf keeps the surrounding builtin-depth budget; the compound fact does
+not reopen full proof search.
+
 The sole positive nested-`forall` conclusion follows the same canonical
 principle. The surface parser accepts it for convenience, then merges its
 parameters and premises into the outer `forall`; the stored conclusion remains

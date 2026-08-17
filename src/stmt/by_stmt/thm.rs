@@ -5,7 +5,7 @@ use std::fmt;
 pub struct ByThmStmt {
     pub name: AtomicName,
     pub args: Vec<Obj>,
-    pub selected_fact: Option<AtomicFact>,
+    pub selected_facts: Option<Vec<Fact>>,
     pub line_file: LineFile,
 }
 
@@ -13,13 +13,13 @@ impl ByThmStmt {
     pub fn new(
         name: AtomicName,
         args: Vec<Obj>,
-        selected_fact: Option<AtomicFact>,
+        selected_facts: Option<Vec<Fact>>,
         line_file: LineFile,
     ) -> Self {
         ByThmStmt {
             name,
             args,
-            selected_fact,
+            selected_facts,
             line_file,
         }
     }
@@ -43,8 +43,21 @@ impl fmt::Display for ByThmStmt {
             self.name,
             braced_vec_to_string(&self.args)
         )?;
-        if let Some(selected_fact) = self.selected_fact.as_ref() {
-            write!(f, " {} {}", RIGHT_ARROW, selected_fact)?;
+        if let Some(selected_facts) = self.selected_facts.as_ref() {
+            let question_goals = selected_facts
+                .iter()
+                .map(|fact| format!("{} {}", QUESTION_GOAL, fact))
+                .collect::<Vec<String>>();
+            if question_goals.len() == 1 {
+                write!(f, " {} {}", RIGHT_ARROW, selected_facts[0])?;
+            } else {
+                write!(
+                    f,
+                    "{}\n{}",
+                    COLON,
+                    vec_to_string_add_four_spaces_at_beginning_of_each_line(&question_goals, 1)
+                )?;
+            }
         }
         Ok(())
     }

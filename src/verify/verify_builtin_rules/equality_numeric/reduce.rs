@@ -23,7 +23,7 @@ impl Runtime {
             )
             .into();
             if !self
-                .verify_builtin_rule_premise(&empty, builtin_state)?
+                .verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?
                 .is_true()
             {
                 continue;
@@ -140,7 +140,7 @@ impl Runtime {
             )
             .into();
             if !self
-                .verify_builtin_rule_premise(&nonempty, builtin_state)?
+                .verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?
                 .is_true()
             {
                 continue;
@@ -363,7 +363,7 @@ impl Runtime {
                 )
                 .into();
                 if !self
-                    .verify_builtin_rule_premise(&freshness, builtin_state)?
+                    .verify_atomic_fact_as_builtin_rule_premise(&freshness, builtin_state)?
                     .is_true()
                 {
                     continue;
@@ -682,7 +682,8 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let nonempty_result = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
+            let nonempty_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
             if !nonempty_result.is_true() {
                 let empty: AtomicFact = LessFact::new(
                     source.end.as_ref().clone(),
@@ -690,7 +691,8 @@ impl Runtime {
                     line_file.clone(),
                 )
                 .into();
-                let empty_result = self.verify_builtin_rule_premise(&empty, builtin_state)?;
+                let empty_result =
+                    self.verify_atomic_fact_as_builtin_rule_premise(&empty, builtin_state)?;
                 if !empty_result.is_true() {
                     continue;
                 }
@@ -743,7 +745,7 @@ impl Runtime {
                 if known_forall.is_true() {
                     return Ok(known_forall);
                 }
-                rt.verify_builtin_rule_premise(&equality, builtin_state)
+                rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
             })?;
             if !pointwise_result.is_true() {
                 continue;
@@ -808,7 +810,8 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let nonempty_result = self.verify_builtin_rule_premise(&nonempty, builtin_state)?;
+            let nonempty_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&nonempty, builtin_state)?;
             if !nonempty_result.is_true() {
                 continue;
             }
@@ -904,7 +907,7 @@ impl Runtime {
             )
             .into();
             let prefix_result =
-                self.verify_builtin_rule_premise(&prefix_nonempty, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&prefix_nonempty, builtin_state)?;
             if !prefix_result.is_true() {
                 continue;
             }
@@ -914,7 +917,8 @@ impl Runtime {
                 line_file.clone(),
             )
             .into();
-            let tail_result = self.verify_builtin_rule_premise(&tail_nonempty, builtin_state)?;
+            let tail_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&tail_nonempty, builtin_state)?;
             if !tail_result.is_true() {
                 continue;
             }
@@ -1103,7 +1107,7 @@ impl Runtime {
                 if known_forall.is_true() {
                     return Ok(known_forall);
                 }
-                rt.verify_builtin_rule_premise(&pointwise_fact, builtin_state)
+                rt.verify_atomic_fact_as_builtin_rule_premise(&pointwise_fact, builtin_state)
             })?;
             if !pointwise_result.is_true() {
                 continue;
@@ -1307,7 +1311,7 @@ impl Runtime {
             if known_forall.is_true() {
                 return Ok(known_forall);
             }
-            rt.verify_builtin_rule_premise(&equality, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
         })
     }
 
@@ -1369,7 +1373,7 @@ impl Runtime {
             if known_forall.is_true() {
                 return Ok(known_forall);
             }
-            rt.verify_builtin_rule_premise(&equality, builtin_state)
+            rt.verify_atomic_fact_as_builtin_rule_premise(&equality, builtin_state)
         })
     }
 }

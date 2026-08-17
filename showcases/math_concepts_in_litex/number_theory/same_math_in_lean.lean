@@ -1,11 +1,11 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 `Int` and its elementary ring laws are part of Lean's Prelude, so this file
 needs no import. It is handwritten comparison code, not compiler output.
 -/
 
-namespace NumberTheoryCoreAnalogy
+namespace NumberTheorySameMathInLean
 
 theorem congrArg2 {X Y : Type} {Z : Sort _} (f : X → Y → Z)
     {x₁ x₂ : X} {y₁ y₂ : Y} (hx : x₁ = x₂) (hy : y₁ = y₂) :
@@ -110,4 +110,4 @@ example : DividesBy 3 60 := by
   exact divisibility_is_transitive (a := 3) (b := 12) (c := 60)
     ⟨4, by decide⟩ ⟨5, by decide⟩
 
-end NumberTheoryCoreAnalogy
+end NumberTheorySameMathInLean

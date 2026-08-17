@@ -848,7 +848,7 @@ impl Runtime {
         let finite_target: AtomicFact =
             IsFiniteSetFact::new(left_shape.target_set.clone(), line_file.clone()).into();
         if !self
-            .verify_builtin_rule_premise(&finite_target, builtin_state)?
+            .verify_atomic_fact_as_builtin_rule_premise(&finite_target, builtin_state)?
             .is_true()
         {
             return Ok(None);

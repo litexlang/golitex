@@ -54,7 +54,8 @@ impl Runtime {
             }
             _ => return Ok(None),
         };
-        let sign_result = self.verify_builtin_rule_premise(&sign_fact, builtin_state)?;
+        let sign_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&sign_fact, builtin_state)?;
         if !sign_result.is_true() {
             return Ok(None);
         }
@@ -154,7 +155,7 @@ impl Runtime {
             let nonempty_fact: AtomicFact =
                 IsNonemptySetFact::new((*sum.set).clone(), in_fact.line_file.clone()).into();
             let nonempty_result =
-                self.verify_builtin_rule_premise(&nonempty_fact, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&nonempty_fact, builtin_state)?;
             let structurally_nonempty = match sum.set.as_ref() {
                 Obj::StandardSet(_) | Obj::PowerSet(_) => true,
                 Obj::ListSet(list) => !list.list.is_empty(),
@@ -316,7 +317,7 @@ impl Runtime {
             )
             .into();
             let head_membership_result =
-                self.verify_builtin_rule_premise(&head_membership, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&head_membership, builtin_state)?;
             if !head_membership_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -368,11 +369,11 @@ impl Runtime {
         let f_left: AtomicFact =
             InFact::new(add.left.as_ref().clone(), n.clone(), lf.clone()).into();
         let f_right: AtomicFact = InFact::new(add.right.as_ref().clone(), n, lf.clone()).into();
-        let r_left = self.verify_builtin_rule_premise(&f_left, builtin_state)?;
+        let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let r_right = self.verify_builtin_rule_premise(&f_right, builtin_state)?;
+        let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -411,7 +412,7 @@ impl Runtime {
             let left_in_n_pos: AtomicFact =
                 InFact::new(left.clone(), StandardSet::NPos.into(), lf.clone()).into();
             let positive_natural_result =
-                self.verify_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
             if positive_natural_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -426,9 +427,10 @@ impl Runtime {
                 InFact::new(left.clone(), StandardSet::N.into(), lf.clone()).into();
             let left_positive: AtomicFact =
                 GreaterFact::new(left, Number::new("0".to_string()).into(), lf).into();
-            let membership_result = self.verify_builtin_rule_premise(&left_in_n, builtin_state)?;
+            let membership_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n, builtin_state)?;
             let positive_result =
-                self.verify_builtin_rule_premise(&left_positive, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&left_positive, builtin_state)?;
             if membership_result.is_true() && positive_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -453,15 +455,18 @@ impl Runtime {
         )
         .into();
 
-        let left_result = self.verify_builtin_rule_premise(&left_in_z, builtin_state)?;
+        let left_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_in_z, builtin_state)?;
         if !left_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let right_result = self.verify_builtin_rule_premise(&right_in_z, builtin_state)?;
+        let right_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_in_z, builtin_state)?;
         if !right_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let bound_result = self.verify_builtin_rule_premise(&right_le_left, builtin_state)?;
+        let bound_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_le_left, builtin_state)?;
         if bound_result.is_true() {
             return Ok(
                 FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -519,11 +524,11 @@ impl Runtime {
         let f_left: AtomicFact =
             InFact::new(mul.left.as_ref().clone(), n.clone(), lf.clone()).into();
         let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n, lf.clone()).into();
-        let r_left = self.verify_builtin_rule_premise(&f_left, builtin_state)?;
+        let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let r_right = self.verify_builtin_rule_premise(&f_right, builtin_state)?;
+        let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -564,11 +569,13 @@ impl Runtime {
         )
         .into();
 
-        let base_result = self.verify_builtin_rule_premise(&base_in_target, builtin_state)?;
+        let base_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&base_in_target, builtin_state)?;
         if !base_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let exponent_result = self.verify_builtin_rule_premise(&exponent_in_n, builtin_state)?;
+        let exponent_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_n, builtin_state)?;
         if !exponent_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -598,11 +605,13 @@ impl Runtime {
         let exponent_in_r: AtomicFact =
             InFact::new(pow.exponent.as_ref().clone(), StandardSet::R.into(), lf).into();
 
-        let base_result = self.verify_builtin_rule_premise(&base_positive, builtin_state)?;
+        let base_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&base_positive, builtin_state)?;
         if !base_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let exponent_result = self.verify_builtin_rule_premise(&exponent_in_r, builtin_state)?;
+        let exponent_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&exponent_in_r, builtin_state)?;
         if !exponent_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -641,14 +650,16 @@ impl Runtime {
         .into();
         let two_le_left: AtomicFact =
             LessEqualFact::new(Number::new("2".to_string()).into(), left, lf).into();
-        let membership_result = self.verify_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
+        let membership_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_in_n_pos, builtin_state)?;
         let mut bound_result =
-            self.verify_builtin_rule_premise(&left_greater_than_one, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_greater_than_one, builtin_state)?;
         if !bound_result.is_true() {
             // Over naturals, the common induction premise `2 <= n` is the
             // discrete spelling of `n > 1`; accept it directly so a caller
             // does not need a second builtin-order step.
-            bound_result = self.verify_builtin_rule_premise(&two_le_left, builtin_state)?;
+            bound_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&two_le_left, builtin_state)?;
         }
         if !membership_result.is_true() || !bound_result.is_true() {
             return Ok((StmtUnknown::new()).into());
@@ -688,10 +699,11 @@ impl Runtime {
             InFact::new(add.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
         let right_n_pos_for_pair: AtomicFact =
             InFact::new(add.right.as_ref().clone(), n_pos.clone(), lf.clone()).into();
-        let r_left_n_pos_for_pair = self.verify_builtin_rule_premise(&left_n_pos, builtin_state)?;
+        let r_left_n_pos_for_pair =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_n_pos, builtin_state)?;
         if r_left_n_pos_for_pair.is_true() {
-            let r_right_n_pos_for_pair =
-                self.verify_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
+            let r_right_n_pos_for_pair = self
+                .verify_atomic_fact_as_builtin_rule_premise(&right_n_pos_for_pair, builtin_state)?;
             if r_right_n_pos_for_pair.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -706,9 +718,11 @@ impl Runtime {
 
         let right_n: AtomicFact =
             InFact::new(add.right.as_ref().clone(), n.clone(), lf.clone()).into();
-        let r_left_n_pos = self.verify_builtin_rule_premise(&left_n_pos, builtin_state)?;
+        let r_left_n_pos =
+            self.verify_atomic_fact_as_builtin_rule_premise(&left_n_pos, builtin_state)?;
         if r_left_n_pos.is_true() {
-            let r_right_n = self.verify_builtin_rule_premise(&right_n, builtin_state)?;
+            let r_right_n =
+                self.verify_atomic_fact_as_builtin_rule_premise(&right_n, builtin_state)?;
             if r_right_n.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -725,11 +739,12 @@ impl Runtime {
             InFact::new(add.left.as_ref().clone(), n.clone(), lf.clone()).into();
         let right_n_pos: AtomicFact =
             InFact::new(add.right.as_ref().clone(), n_pos, lf.clone()).into();
-        let r_left_n = self.verify_builtin_rule_premise(&left_n, builtin_state)?;
+        let r_left_n = self.verify_atomic_fact_as_builtin_rule_premise(&left_n, builtin_state)?;
         if !r_left_n.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let r_right_n_pos = self.verify_builtin_rule_premise(&right_n_pos, builtin_state)?;
+        let r_right_n_pos =
+            self.verify_atomic_fact_as_builtin_rule_premise(&right_n_pos, builtin_state)?;
         if !r_right_n_pos.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -763,11 +778,11 @@ impl Runtime {
         let f_left: AtomicFact =
             InFact::new(mul.left.as_ref().clone(), n_pos.clone(), lf.clone()).into();
         let f_right: AtomicFact = InFact::new(mul.right.as_ref().clone(), n_pos, lf.clone()).into();
-        let r_left = self.verify_builtin_rule_premise(&f_left, builtin_state)?;
+        let r_left = self.verify_atomic_fact_as_builtin_rule_premise(&f_left, builtin_state)?;
         if !r_left.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
-        let r_right = self.verify_builtin_rule_premise(&f_right, builtin_state)?;
+        let r_right = self.verify_atomic_fact_as_builtin_rule_premise(&f_right, builtin_state)?;
         if !r_right.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -792,11 +807,12 @@ impl Runtime {
         let elem = &in_fact.element;
         let lf = in_fact.line_file.clone();
         let in_n: AtomicFact = InFact::new(elem.clone(), StandardSet::N.into(), lf.clone()).into();
-        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
+        let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if in_n_result.is_true() {
             let zero: Obj = Number::new("0".to_string()).into();
             let nonzero: AtomicFact = NotEqualFact::new(elem.clone(), zero, lf.clone()).into();
-            let nonzero_result = self.verify_builtin_rule_premise(&nonzero, builtin_state)?;
+            let nonzero_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(&nonzero, builtin_state)?;
             if nonzero_result.is_true() {
                 return Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -810,13 +826,14 @@ impl Runtime {
 
         let zero: Obj = Number::new("0".to_string()).into();
         let zero_lt_elem = LessFact::new(zero, elem.clone(), lf.clone()).into();
-        let zero_lt_result = self.verify_builtin_rule_premise(&zero_lt_elem, builtin_state)?;
+        let zero_lt_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_lt_elem, builtin_state)?;
         if !zero_lt_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
 
         let in_z = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
+        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
         if in_z_result.is_true() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -827,7 +844,7 @@ impl Runtime {
             );
         }
 
-        let in_n_result = self.verify_builtin_rule_premise(&in_n, builtin_state)?;
+        let in_n_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_n, builtin_state)?;
         if in_n_result.is_true() {
             return Ok(
                 number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -854,13 +871,15 @@ impl Runtime {
         let lf = in_fact.line_file.clone();
         let zero: Obj = Number::new("0".to_string()).into();
         let zero_lt_elem: AtomicFact = LessFact::new(zero, elem.clone(), lf.clone()).into();
-        let zero_lt_result = self.verify_builtin_rule_premise(&zero_lt_elem, builtin_state)?;
+        let zero_lt_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&zero_lt_elem, builtin_state)?;
         if !zero_lt_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
 
         let in_base_set: AtomicFact = InFact::new(elem.clone(), base_set.into(), lf).into();
-        let in_base_result = self.verify_builtin_rule_premise(&in_base_set, builtin_state)?;
+        let in_base_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&in_base_set, builtin_state)?;
         if !in_base_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -900,7 +919,7 @@ impl Runtime {
         }
 
         let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
+        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
         if !in_z_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -913,7 +932,8 @@ impl Runtime {
             LessFact::new(zero, elem.clone(), lf).into(),
         ];
         for order_fact in order_facts.iter() {
-            let order_result = self.verify_builtin_rule_premise(order_fact, builtin_state)?;
+            let order_result =
+                self.verify_atomic_fact_as_builtin_rule_premise(order_fact, builtin_state)?;
             if order_result.is_true() {
                 return Ok(
                     number_in_set_verified_by_builtin_rules_result_with_subgoals(
@@ -1009,7 +1029,7 @@ impl Runtime {
         // Real interval membership requires a real element and the endpoint inequalities.
         // Example: `x $in '(a, b]` follows from `x $in R`, `a < x`, and `x <= b`.
         let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
-        let in_r_result = self.verify_builtin_rule_premise(&in_r, builtin_state)?;
+        let in_r_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?;
         if !in_r_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -1060,7 +1080,7 @@ impl Runtime {
         // Half-infinite real interval membership requires a real element and the finite endpoint bound.
         // Example: `x $in '[a,)` follows from `x $in R` and `a <= x`.
         let in_r: AtomicFact = InFact::new(elem.clone(), StandardSet::R.into(), lf.clone()).into();
-        let in_r_result = self.verify_builtin_rule_premise(&in_r, builtin_state)?;
+        let in_r_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?;
         if !in_r_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -1152,7 +1172,7 @@ impl Runtime {
             return Ok(Some(vec![weak_result]));
         }
         let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
+        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
         if !in_z_result.is_true() {
             return Ok(None);
         }
@@ -1190,7 +1210,7 @@ impl Runtime {
             return Ok(Some(vec![strict_result]));
         }
         let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
+        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
         if !in_z_result.is_true() {
             return Ok(None);
         }
@@ -1228,7 +1248,7 @@ impl Runtime {
             return Ok(Some(vec![weak_result]));
         }
         let in_z: AtomicFact = InFact::new(elem.clone(), StandardSet::Z.into(), lf.clone()).into();
-        let in_z_result = self.verify_builtin_rule_premise(&in_z, builtin_state)?;
+        let in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(&in_z, builtin_state)?;
         if !in_z_result.is_true() {
             return Ok(None);
         }
@@ -1513,7 +1533,8 @@ impl Runtime {
     ) -> Result<Option<Vec<StmtResult>>, RuntimeError> {
         let in_r: AtomicFact =
             InFact::new(obj.clone(), StandardSet::R.into(), line_file.clone()).into();
-        let direct_result = self.verify_builtin_rule_premise(&in_r, builtin_state)?;
+        let direct_result =
+            self.verify_atomic_fact_as_builtin_rule_premise(&in_r, builtin_state)?;
         if direct_result.is_true() {
             return Ok(Some(vec![direct_result]));
         }
@@ -1862,8 +1883,8 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let positive_result =
-                self.verify_builtin_rule_premise(&positive_membership, builtin_state)?;
+            let positive_result = self
+                .verify_atomic_fact_as_builtin_rule_premise(&positive_membership, builtin_state)?;
             if positive_result.is_true() {
                 return Ok(
                     FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
@@ -1883,7 +1904,7 @@ impl Runtime {
         )
         .into();
         let product_in_r_result =
-            self.verify_builtin_rule_premise(&product_in_r_fact, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&product_in_r_fact, builtin_state)?;
         if !product_in_r_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -1915,8 +1936,10 @@ impl Runtime {
                     in_fact.line_file.clone(),
                 )
                 .into();
-                let product_in_q_result =
-                    self.verify_builtin_rule_premise(&product_in_q_fact, builtin_state)?;
+                let product_in_q_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &product_in_q_fact,
+                    builtin_state,
+                )?;
                 if product_in_q_result.is_true() {
                     base_subgoals.push(product_in_q_result);
                     Ok(
@@ -1938,8 +1961,10 @@ impl Runtime {
                     in_fact.line_file.clone(),
                 )
                 .into();
-                let product_in_z_result =
-                    self.verify_builtin_rule_premise(&product_in_z_fact, builtin_state)?;
+                let product_in_z_result = self.verify_atomic_fact_as_builtin_rule_premise(
+                    &product_in_z_fact,
+                    builtin_state,
+                )?;
                 if product_in_z_result.is_true() {
                     base_subgoals.push(product_in_z_result);
                     Ok(

@@ -40,7 +40,7 @@ impl Runtime {
         )
         .into();
         let mut selected_result =
-            self.verify_builtin_rule_premise(&selected_membership, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&selected_membership, builtin_state)?;
         if !selected_result.is_true() && matches!(target_set_obj, Obj::StandardSet(StandardSet::R))
         {
             if let Some(real_steps) = self.verify_objects_are_known_reals_in_builtin(
@@ -104,7 +104,7 @@ impl Runtime {
                 )
                 .into()
             }
-            _ => self.verify_builtin_rule_premise(&subset_fact, builtin_state)?,
+            _ => self.verify_atomic_fact_as_builtin_rule_premise(&subset_fact, builtin_state)?,
         };
         if !verify_subset_result.is_true() {
             return Ok((StmtUnknown::new()).into());
@@ -137,8 +137,8 @@ impl Runtime {
             let element_obj = *element_box.clone();
             let element_in_base_fact =
                 InFact::new(element_obj, base_set.clone(), in_fact.line_file.clone()).into();
-            let verify_one_element_result =
-                self.verify_builtin_rule_premise(&element_in_base_fact, builtin_state)?;
+            let verify_one_element_result = self
+                .verify_atomic_fact_as_builtin_rule_premise(&element_in_base_fact, builtin_state)?;
             if !verify_one_element_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -162,7 +162,7 @@ impl Runtime {
         &mut self,
         in_fact: &InFact,
         list_set: &ListSet,
-        _builtin_state: &UseBuiltinRuleVerifyState,
+        builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<StmtResult, RuntimeError> {
         // Check reflexive and already-known element equalities before invoking
         // the broader equality builtin search for list-set membership.
@@ -181,8 +181,49 @@ impl Runtime {
                             "{} equals one element in list_set {}",
                             in_fact.element, in_fact.set
                         ),
-                        Vec::new(),
+                        vec![equal_fact_verify_result],
                     ))
+                    .into(),
+                );
+            }
+        }
+
+        if list_set.list.is_empty() {
+            return Ok(StmtUnknown::new().into());
+        }
+
+        let mut left_equalities = Vec::with_capacity(list_set.list.len());
+        let mut right_equalities = Vec::with_capacity(list_set.list.len());
+        for listed_element in &list_set.list {
+            left_equalities.push(AndChainAtomicFact::AtomicFact(
+                EqualFact::new_from_refs(
+                    &in_fact.element,
+                    listed_element.as_ref(),
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            ));
+            right_equalities.push(AndChainAtomicFact::AtomicFact(
+                EqualFact::new_from_refs(
+                    listed_element.as_ref(),
+                    &in_fact.element,
+                    in_fact.line_file.clone(),
+                )
+                .into(),
+            ));
+        }
+
+        for branches in [left_equalities, right_equalities] {
+            let premise =
+                QuantifierFreeFact::OrFact(OrFact::new(branches, in_fact.line_file.clone()));
+            let premise_result = self.verify_builtin_rule_premise(&premise, builtin_state)?;
+            if premise_result.is_true() {
+                return Ok(
+                    FactualStmtSuccess::new_with_verified_by_builtin_rules_recording_stmt(
+                        in_fact.clone().into(),
+                        "list-set membership from equality with one listed element".to_string(),
+                        vec![premise_result],
+                    )
                     .into(),
                 );
             }
@@ -206,7 +247,7 @@ impl Runtime {
             )
             .into();
             let not_equal_fact_verify_result =
-                self.verify_builtin_rule_premise(&not_equal_fact, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&not_equal_fact, builtin_state)?;
             if !not_equal_fact_verify_result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -425,7 +466,7 @@ impl Runtime {
         )
         .into();
         let index_in_n_pos_result =
-            self.verify_builtin_rule_premise(&index_in_n_pos, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&index_in_n_pos, builtin_state)?;
         if !index_in_n_pos_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -435,7 +476,7 @@ impl Runtime {
         let index_in_range: AtomicFact =
             LessEqualFact::new(index_obj, list_len_obj, in_fact.line_file.clone()).into();
         let index_in_range_result =
-            self.verify_builtin_rule_premise(&index_in_range, builtin_state)?;
+            self.verify_atomic_fact_as_builtin_rule_premise(&index_in_range, builtin_state)?;
         if !index_in_range_result.is_true() {
             return Ok((StmtUnknown::new()).into());
         }
@@ -448,7 +489,10 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result = self.verify_builtin_rule_premise(&element_in_target_set, builtin_state)?;
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                &element_in_target_set,
+                builtin_state,
+            )?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -508,7 +552,10 @@ impl Runtime {
                 in_fact.line_file.clone(),
             )
             .into();
-            let result = self.verify_builtin_rule_premise(&element_in_target_set, builtin_state)?;
+            let result = self.verify_atomic_fact_as_builtin_rule_premise(
+                &element_in_target_set,
+                builtin_state,
+            )?;
             if !result.is_true() {
                 return Ok((StmtUnknown::new()).into());
             }
@@ -550,7 +597,7 @@ impl Runtime {
             )
             .into();
             let source_result =
-                self.verify_builtin_rule_premise(&source_membership, builtin_state)?;
+                self.verify_atomic_fact_as_builtin_rule_premise(&source_membership, builtin_state)?;
             if source_result.is_true() {
                 return Ok(
                     (FactualStmtSuccess::new_with_verified_by_builtin_rule_evidence_recording_stmt(

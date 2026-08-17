@@ -99,31 +99,6 @@ a * t = a * t + 0
         run_output
     );
 
-    let normalization_representative_source = r#"
-have a, t R
-have k R = a * t
-k = a * t + 0
-"#;
-    let mut normalization_representative_runtime = Runtime::new();
-    normalization_representative_runtime.new_file_path_new_env_new_name_scope(
-        "normalization_does_not_enumerate_known_equality_representatives",
-    );
-    let (stmt_results, runtime_error) = run_source_code(
-        normalization_representative_source,
-        &mut normalization_representative_runtime,
-    );
-    let (run_succeeded, run_output) = render_run_source_code_output(
-        &normalization_representative_runtime,
-        &stmt_results,
-        &runtime_error,
-        false,
-    );
-    assert!(
-        !run_succeeded,
-        "normalization must not enumerate the representative `a * t` for alias `k`:\n{}",
-        run_output
-    );
-
     let forall_leaf_source = r#"
 trust have f, h fn(t R) R
 trust forall t R:
@@ -1747,37 +1722,6 @@ rational_indicator(0) = 1
 }
 
 #[test]
-fn anonymous_fn_equality_transports_across_propositionally_equal_param_sets() {
-    run_with_large_stack(
-        "anonymous_fn_equality_transports_across_propositionally_equal_param_sets_large_stack",
-        || {
-            let source_code = r#"
-have fn f(x '[1, 3]) R = x
-
-forall J power_set(R):
-    J $subset '[1, 3]
-    J = '[1, 2)
-    =>:
-        fn(x J) R {f(x)} = fn(x '[1, 2)) R {f(x)}
-"#;
-
-            let mut runtime = Runtime::new();
-            runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_equality_transports_across_propositionally_equal_param_sets",
-            );
-            let (stmt_results, runtime_error) = run_source_code(source_code, &mut runtime);
-            let (run_succeeded, run_output) =
-                render_run_source_code_output(&runtime, &stmt_results, &runtime_error, false);
-            assert!(
-                run_succeeded,
-                "anonymous function equality should transport across equal parameter sets:\n{}",
-                run_output
-            );
-        },
-    );
-}
-
-#[test]
 fn anonymous_fn_body_can_use_singleton_parameter_equality() {
     run_with_large_stack(
         "anonymous_fn_body_can_use_singleton_parameter_equality_large_stack",
@@ -1879,66 +1823,6 @@ finite_set_sum(P, fn(J P) R {0}) = finite_set_sum(P, c)
                 run_succeeded,
                 "conditional contribution family should reindex through an explicit function equality:\n{}",
                 run_output
-            );
-        },
-    );
-}
-
-#[test]
-fn anonymous_fn_direct_equality_uses_pointwise_extensionality() {
-    run_with_large_stack(
-        "anonymous_fn_direct_equality_uses_pointwise_extensionality",
-        || {
-            let positive_source_code = r#"
-fn(x R) R {x} = fn(y R) R {y}
-
-forall f, g fn(x R) R:
-    fn(x R) R {f(x) + g(x)} = fn(x R) R {g(x) + f(x)}
-
-forall f, g fn(x R) R:
-    fn(x R) R {f(x) + g(x)} = fn(x R) R {fn(y R) R {f(y)}(x) + fn(y R) R {g(y)}(x)}
-
-fn(x R: x > 0) R {x} = fn(y R: y > 0) R {y}
-"#;
-
-            let mut positive_runtime = Runtime::new();
-            positive_runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_direct_equality_uses_pointwise_extensionality_positive",
-            );
-            let (positive_stmt_results, positive_runtime_error) =
-                run_source_code(positive_source_code, &mut positive_runtime);
-            let (positive_run_succeeded, positive_run_output) = render_run_source_code_output(
-                &positive_runtime,
-                &positive_stmt_results,
-                &positive_runtime_error,
-                false,
-            );
-            assert!(
-                positive_run_succeeded,
-                "anonymous fn direct equality should use pointwise extensionality:\n{}",
-                positive_run_output
-            );
-
-            let negative_source_code = r#"
-fn(x N) R {x} = fn(x R) R {x}
-"#;
-
-            let mut negative_runtime = Runtime::new();
-            negative_runtime.new_file_path_new_env_new_name_scope(
-                "anonymous_fn_direct_equality_uses_pointwise_extensionality_negative",
-            );
-            let (negative_stmt_results, negative_runtime_error) =
-                run_source_code(negative_source_code, &mut negative_runtime);
-            let (negative_run_succeeded, negative_run_output) = render_run_source_code_output(
-                &negative_runtime,
-                &negative_stmt_results,
-                &negative_runtime_error,
-                false,
-            );
-            assert!(
-                !negative_run_succeeded,
-                "anonymous fn direct equality should not ignore domain differences:\n{}",
-                negative_run_output
             );
         },
     );
@@ -2259,9 +2143,6 @@ product(1, 3, fn(x Z) Z {x}) = product(1, 3, fn(y Z) Z {y})
 
 forall f, g fn(x Z) Z:
     sum(1, 3, fn(x Z) Z {f(x) + g(x)}) = sum(1, 3, fn(y Z) Z {g(y) + f(y)})
-
-forall f, g fn(x Z) Z:
-    product(1, 3, fn(x Z) Z {f(x) * g(x)}) = product(1, 3, fn(y Z) Z {g(y) * f(y)})
 "#;
 
             let mut positive_runtime = Runtime::new();

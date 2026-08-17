@@ -219,7 +219,14 @@ atomic target
 ```
 
 A premise is a child fact that a rule must verify before concluding its parent
-fact. Zero-premise verification generates no child facts and consumes no new
+fact. The builtin premise dispatcher accepts the quantifier-free AST layer:
+atomic facts, flat conjunctions, relation chains, and outer disjunctions.
+Conjunction and chains verify every atomic leaf; disjunction first reuses the
+complete known fact and otherwise proves one selected branch. All leaves share
+the incoming builtin-rule state, so compound syntax cannot reset the recursion
+budget or enter the full verifier.
+
+Zero-premise atomic verification generates no child facts and consumes no new
 builtin-rule step. This is why a rule proving `x * 2 >= 0` from `x >= 0` may
 still directly evaluate its closed premise `2 >= 0` after the multiplication
 rule has consumed the allowed rule step. Equality uses the same boundary:
@@ -300,13 +307,14 @@ mainly in where they are implemented, not in their proof role. This symmetry is
 the design guide for recursion, failure, and proof-chain reporting; builtin
 automation should not acquire symbol-specific control-flow exceptions.
 
-A builtin rule has depth one: its premises use known
-non-`forall` facts or deterministic computation and cannot invoke another
-rule. Builtin strategies are a separate route for strictly smaller structural
-children; each layer may try one fresh direct rule before repeating only that
-strategy. Neither route enters the full verifier, known `forall` matching,
-definitions, or user strategies, and the child result tree is returned to the
-root.
+A builtin rule has depth one: its premises are quantifier-free facts whose
+atomic leaves use known non-`forall` facts or deterministic computation and
+cannot invoke another rule. A known `or` premise is consumed as one complete
+fact; it is never decomposed into an unjustified known branch. Builtin
+strategies are a separate route for strictly smaller structural children; each
+layer may try one fresh direct rule before repeating only that strategy.
+Neither route enters the full verifier, known `forall` matching, definitions,
+or user strategies, and the child result tree is returned to the root.
 
 For example, the `not-equality symmetry` rule proves `b != a` from the exact
 known child `a != b`. It records that reversed child in the proof tree and

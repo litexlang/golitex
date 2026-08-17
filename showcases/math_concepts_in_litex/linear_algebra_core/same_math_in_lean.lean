@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 Lean's Prelude has products but no vector-space hierarchy, so the scalar
 operations used by this R²-style model are explicit setting fields. This is
@@ -8,7 +8,7 @@ handwritten comparison code, not compiler output.
 
 universe u
 
-namespace LinearAlgebraCoreAnalogy
+namespace LinearAlgebraSameMathInLean
 
 structure ScalarSetting (R : Type u) where
   zero : R
@@ -126,4 +126,4 @@ theorem projection_x_is_not_injective
     congrArg Prod.snd pair_equality
   exact hne second_coordinate_equality
 
-end LinearAlgebraCoreAnalogy
+end LinearAlgebraSameMathInLean

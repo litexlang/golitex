@@ -1,5 +1,5 @@
 /-
-Pure Lean 4 analogy for `main.lit`.
+The same mathematics as `main.lit`, expressed in pure Lean 4.
 
 Prelude `Int` supports the exact factorization/candidate logic below. Pure Lean
 has no real square root, so AM-GM is shown in the equivalent doubled form after
@@ -7,7 +7,7 @@ the nonnegative square-comparison step has been made explicit. This is
 handwritten comparison code, not compiler output.
 -/
 
-namespace ElementaryAlgebraCoreAnalogy
+namespace ElementaryAlgebraSameMathInLean
 
 structure IntegerGeometricMean (x y g : Int) : Prop where
   nonnegative : 0 ≤ g
@@ -49,4 +49,4 @@ theorem radical_candidate_filter {x : Int}
 
 example : ((5 : Int) - 1) * (5 - 5) = 0 := by decide
 
-end ElementaryAlgebraCoreAnalogy
+end ElementaryAlgebraSameMathInLean
