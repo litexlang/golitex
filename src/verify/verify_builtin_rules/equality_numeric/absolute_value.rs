@@ -256,35 +256,19 @@ impl Runtime {
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        if let Some(done) = self.try_verify_abs_nonnegative_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_abs_nonnegative_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_abs_nonpositive_negation(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_abs_nonpositive_negation(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_abs_product(&EqualFact::new_from_refs(left, right, line_file.clone()))?
-        {
+        if let Some(done) = self.try_verify_abs_product(equal_fact)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_abs_even_power(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_abs_even_power(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) =
-            self.try_verify_zero_from_abs_zero(&EqualFact::new_from_refs(left, right, line_file))?
-        {
+        if let Some(done) = self.try_verify_zero_from_abs_zero(equal_fact)? {
             return Ok(Some(done));
         }
         Ok(None)

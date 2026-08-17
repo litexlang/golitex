@@ -85,7 +85,7 @@ impl Runtime {
                 };
                 steps.push(known_zero);
                 return Ok(Some(complex_equality_result_with_steps(
-                    &EqualFact::new_from_refs(left, right, line_file),
+                    equal_fact,
                     "complex modulus zero implies zero argument",
                     steps,
                 )));
@@ -100,7 +100,7 @@ impl Runtime {
                 return Ok(None);
             };
             return Ok(Some(complex_equality_result_with_steps(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "complex reconstruction from real and imaginary coordinates",
                 steps,
             )));
@@ -113,7 +113,7 @@ impl Runtime {
                 return Ok(None);
             };
             return Ok(Some(complex_equality_result_with_steps(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "complex reconstruction from real and imaginary coordinates",
                 steps,
             )));
@@ -150,7 +150,7 @@ impl Runtime {
         steps.push(re_result);
         steps.push(img_result);
         Ok(Some(complex_equality_result_with_steps(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "complex extensionality by re and img",
             steps,
         )))
@@ -636,14 +636,7 @@ impl Runtime {
 }
 
 fn complex_equality_result(equal_fact: &EqualFact, reason: &str) -> StmtResult {
-    let left = &equal_fact.left;
-    let right = &equal_fact.right;
-    let line_file = equal_fact.line_file.clone();
-    complex_equality_result_with_steps(
-        &EqualFact::new_from_refs(left, right, line_file),
-        reason,
-        Vec::new(),
-    )
+    complex_equality_result_with_steps(equal_fact, reason, Vec::new())
 }
 
 fn complex_successor_power_base_and_exponent(obj: &Obj) -> Option<(&Obj, &Obj)> {

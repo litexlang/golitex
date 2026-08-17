@@ -282,37 +282,19 @@ impl Runtime {
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        if let Some(done) = self.try_verify_sqrt_square_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_square_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_sqrt_zero_one_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_zero_one_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_sqrt_of_square_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_of_square_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_sqrt_product_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_product_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_sqrt_quotient_identity(
-            &EqualFact::new_from_refs(left, right, line_file),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_quotient_identity(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
         Ok(None)
