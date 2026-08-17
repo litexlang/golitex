@@ -35,167 +35,112 @@ impl Runtime {
                 "a product modulo either factor is zero",
             ));
         }
-        if let Some(result) = self.try_verify_native_min_max_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) = self.try_verify_native_min_max_equality(equal_fact, builtin_state)? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_min_max_lattice_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        ) {
+        if let Some(result) = self.try_verify_native_min_max_lattice_equality(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_rounding_integer_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_rounding_integer_equality(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_rounding_algebra_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_rounding_algebra_equality(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_lcm_gcd_product_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        ) {
+        if let Some(result) = self.try_verify_native_lcm_gcd_product_equality(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_lcm_basic_equality(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(result) = self.try_verify_native_lcm_basic_equality(equal_fact) {
             return Ok(result);
         }
         // Absolute-value identities retain their direct premise certificates.
         // Check them before the broad exp/ln injectivity route can repackage
         // the same equality through an unrelated intermediate equality.
-        if let Some(done) = self.try_verify_abs_equalities(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_abs_equalities(equal_fact, builtin_state)? {
             return Ok(done);
         }
-        if let Some(result) = self.try_verify_native_exp_ln_identity(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(result) = self.try_verify_native_exp_ln_identity(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_exp_ln_injectivity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_exp_ln_injectivity(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_sign_zero_reflection(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_sign_zero_reflection(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_exp_ln_algebra(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(result) = self.try_verify_native_exp_ln_algebra(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_sign_value(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) = self.try_verify_native_sign_value(equal_fact, builtin_state)? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_sign_abs_identity(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(result) = self.try_verify_native_sign_abs_identity(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_sign_algebra(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(result) = self.try_verify_native_sign_algebra(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_factorial_recurrence(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        ) {
+        if let Some(result) = self.try_verify_native_factorial_recurrence(equal_fact) {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_native_factorial_divisibility(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_native_factorial_divisibility(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_minus_one_odd_natural_power(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_minus_one_odd_natural_power(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_indexed_fn_set_definition_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(result) = self.try_verify_indexed_fn_set_definition_equality(equal_fact)? {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_tuple_reconstruction_from_known_cart_membership(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(result) =
+            self.try_verify_tuple_reconstruction_from_known_cart_membership(equal_fact)?
+        {
             return Ok(result);
         }
-        if let Some(result) = self.try_verify_cart_equality_from_dim_and_projections(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(result) =
+            self.try_verify_cart_equality_from_dim_and_projections(equal_fact, builtin_state)?
+        {
             return Ok(result);
         }
 
         // Prefer exact modulo shapes before generic equality rewrites.
-        if let Some(done) = self.try_verify_mod_nested_same_modulus_absorption(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_nested_same_modulus_absorption(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
-        if let Some(done) = self.try_verify_mod_nested_divisible_modulus_absorption(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_nested_divisible_modulus_absorption(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
-        if let Some(done) = self.try_verify_mod_peel_nested_same_modulus(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_peel_nested_same_modulus(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
-        if let Some(done) = self.try_verify_mod_congruence_from_inner_binary(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_congruence_from_inner_binary(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_native_complex_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_native_complex_equality(equal_fact, builtin_state)? {
             return Ok(done);
         }
-        if let Some(done) = self.try_verify_trigonometric_equality(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        ))? {
+        if let Some(done) = self.try_verify_trigonometric_equality(equal_fact)? {
             return Ok(done);
         }
 
@@ -206,23 +151,19 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_general_cart_set_builder_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_general_cart_set_builder_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_integer_range_set_builder_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(done) = self.try_verify_integer_range_set_builder_equality(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_integer_range_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_integer_range_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
@@ -244,47 +185,35 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_equals_subtraction_implies_equal_operands(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self
+            .try_verify_zero_equals_subtraction_implies_equal_operands(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_equals_product_implies_other_factor_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self
+            .try_verify_zero_equals_product_implies_other_factor_zero(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_square_sum_zero_from_zero_components(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_square_sum_zero_from_zero_components(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_square_sum_component_zero_from_known_sum_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self
+            .try_verify_square_sum_component_zero_from_known_sum_zero(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_union_set_equalities(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(done) = self.try_verify_union_set_equalities(equal_fact) {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_intersection_set_equalities(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        )) {
+        if let Some(done) = self.try_verify_intersection_set_equalities(equal_fact) {
             return Ok(done);
         }
 
@@ -319,644 +248,467 @@ impl Runtime {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_set_minus_equalities(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_set_minus_equalities(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_set_minus_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_set_minus_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_union_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_union_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_partition_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_partition_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_size_set_minus_of_subset_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_size_set_minus_of_subset_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_cart_finite_set_size_product_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        ) {
+        if let Some(done) = self.try_verify_cart_finite_set_size_product_equality(equal_fact) {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_power_set_finite_set_size_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_power_set_finite_set_size_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_subtraction_from_known_addition(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(done) = self.try_verify_subtraction_from_known_addition(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_equality_from_two_sided_weak_order(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_equality_from_two_sided_weak_order(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_integer_singleton_interval_equality_builtin_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            equal_fact,
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_equality_from_known_antisymmetric_props(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_equality_from_known_antisymmetric_props(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
         if let Some(done) = self.try_verify_positive_base_equal_from_equal_nonzero_integer_power(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
+            equal_fact,
             builtin_state,
         )? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_division_product_conversion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_division_product_conversion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_equals_pow_from_base_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_zero_equals_pow_from_base_zero(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_pow_one_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_pow_one_identity(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_pow_zero_identity(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        ))? {
+        if let Some(done) = self.try_verify_pow_zero_identity(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_one_pow_identity(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        ))? {
+        if let Some(done) = self.try_verify_one_pow_identity(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_pow_positive_exponent_identity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_zero_pow_positive_exponent_identity(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sqrt_equalities(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sqrt_equalities(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_power_addition_exponent_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_power_addition_exponent_rule(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_power_of_power_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_power_of_power_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_power_product_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_power_product_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_base_zero_from_known_positive_power_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_base_zero_from_known_positive_power_zero(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_abs_power_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_abs_power_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_power_inverse_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_power_inverse_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_pow_reciprocal_exponent_equals_root_by_power(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_pow_reciprocal_exponent_equals_root_by_power(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_identity_equalities(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_identity_equalities(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_algebra_identities(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_algebra_identities(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_reciprocal_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_reciprocal_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_change_of_base_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_change_of_base_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_log_equals_by_pow_inverse(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_equals_by_pow_inverse(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_pow_equals_by_known_log_inverse(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_pow_equals_by_known_log_inverse(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_specialized_aggregate_bridge(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_reduce_specialized_aggregate_bridge(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_specialized_aggregate_bridge(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self
+            .try_verify_finite_set_reduce_specialized_aggregate_bridge(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_pointwise_congruence(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_reduce_pointwise_congruence(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_order_preserving_translation(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_reduce_order_preserving_translation(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_first_step(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_reduce_first_step(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_adjacent_partition(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_reduce_adjacent_partition(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_disjoint_union(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_disjoint_union(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_bijective_reindexing(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_bijective_reindexing(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_empty(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_reduce_empty(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_literal_expansion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_reduce_literal_expansion(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_reduce_step(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_reduce_step(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_empty(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_reduce_empty(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_list_expansion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_list_expansion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_closed_range_bridge(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_closed_range_bridge(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_reduce_fresh_insertion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_reduce_fresh_insertion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_literal_zero_range_sum_is_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(done) = self.try_verify_literal_zero_range_sum_is_zero(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_pointwise_congruence(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_pointwise_congruence(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_additivity(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_additivity(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_subtraction(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_subtraction(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_merge_adjacent_ranges(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_merge_adjacent_ranges(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_single_term(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_single_term(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_split_last_term(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_split_last_term(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_product_single_term(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_product_single_term(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_product_split_last_term(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_product_split_last_term(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_partition_adjacent_ranges(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_partition_adjacent_ranges(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_product_partition_adjacent_ranges(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_product_partition_adjacent_ranges(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_reindex_shift(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_reindex_shift(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_constant_summand(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_constant_summand(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_scalar_mul(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_sum_scalar_mul(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_empty(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_sum_empty(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_list_expansion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_list_expansion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_closed_range_bridge(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_closed_range_bridge(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_constant_summand(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_constant_summand(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_pointwise_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_pointwise_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_disjoint_union(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_disjoint_union(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_add(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_sum_add(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_scalar_mul(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_sum_scalar_mul(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_over_cartesian_product(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_sum_over_cartesian_product(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_sum_fubini(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_sum_fubini(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_sum_over_bijective_finite_set_enumerations(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_sum_over_bijective_finite_set_enumerations(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_empty(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_product_empty(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_list_expansion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_list_expansion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_fresh_insertion(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_fresh_insertion(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_remove_member(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_remove_member(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_closed_range_bridge(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_closed_range_bridge(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_constant_factor(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_constant_factor(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_pointwise_equality(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_pointwise_equality(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_mul(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_finite_set_product_mul(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_finite_set_product_substitution(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_finite_set_product_substitution(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
         // A finite set with zero cardinality is empty.
-        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-        )? {
+        if let Some(done) = self.try_verify_empty_finite_set_from_size_zero(equal_fact)? {
             return Ok(done);
         }
 
         // Empty set rule: `S = {}` follows from `not $is_nonempty_set(S)`.
         // This replaces the old common fact `S = {} <=> not $is_nonempty_set(S)`.
         // Example: after `not $is_nonempty_set(S)`, prove `S = {}`.
-        if let Some(done) = self.try_verify_empty_set_equality_from_not_nonempty(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_empty_set_equality_from_not_nonempty(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_zero_mod_equals_zero(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        ))? {
+        if let Some(done) = self.try_verify_zero_mod_equals_zero(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_mod_one_equals_zero(&EqualFact::new_from_refs(
-            left,
-            right,
-            line_file.clone(),
-        ))? {
+        if let Some(done) = self.try_verify_mod_one_equals_zero(equal_fact)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_one_mod_equals_one_for_modulus_at_least_two(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_one_mod_equals_one_for_modulus_at_least_two(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_mod_dividend_minus_remainder_equals_zero(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_dividend_minus_remainder_equals_zero(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_quot_euclidean_decomposition(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_quot_euclidean_decomposition(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_mod_eq_remainder_from_euclidean_division(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_mod_eq_remainder_from_euclidean_division(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_integer_mod_negation_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_integer_mod_negation_rule(equal_fact, builtin_state)? {
             return Ok(done);
         }
 
-        if let Some(done) = self.try_verify_integer_mod_natural_power_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_integer_mod_natural_power_rule(equal_fact, builtin_state)?
+        {
             return Ok(done);
         }
 
@@ -1018,12 +770,11 @@ impl Runtime {
     fn try_verify_union_set_equalities(&self, equal_fact: &EqualFact) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         // Union commutativity for sets.
         // Example: `union(A, B) = union(B, A)`.
         if Self::union_commutative_shape(left, right) {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "union_commutative",
                 Some(SetBuiltinRule::UnionCommutative),
             ));
@@ -1034,7 +785,7 @@ impl Runtime {
         if Self::union_associative_shape(left, right) || Self::union_associative_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "union_associative",
                 Some(SetBuiltinRule::UnionAssociative),
             ));
@@ -1044,7 +795,7 @@ impl Runtime {
         // Example: `union(A, A) = A`.
         if Self::union_idempotent_shape(left, right) || Self::union_idempotent_shape(right, left) {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "union_idempotent",
                 Some(SetBuiltinRule::UnionIdempotent),
             ));
@@ -1056,7 +807,7 @@ impl Runtime {
             || Self::union_empty_identity_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "union_empty_identity",
                 Some(SetBuiltinRule::UnionEmptyIdentity),
             ));
@@ -1068,12 +819,11 @@ impl Runtime {
     fn try_verify_intersection_set_equalities(&self, equal_fact: &EqualFact) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         // Intersection commutativity for sets.
         // Example: `intersect(A, B) = intersect(B, A)`.
         if Self::intersect_commutative_shape(left, right) {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "intersect_commutative",
                 Some(SetBuiltinRule::IntersectCommutative),
             ));
@@ -1085,7 +835,7 @@ impl Runtime {
             || Self::intersect_associative_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "intersect_associative",
                 Some(SetBuiltinRule::IntersectAssociative),
             ));
@@ -1097,7 +847,7 @@ impl Runtime {
             || Self::intersect_union_distributive_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "intersect_union_distributive",
                 None,
             ));
@@ -1120,7 +870,7 @@ impl Runtime {
             || Self::set_minus_union_de_morgan_shape(right, left)
         {
             return Ok(Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "set_minus_union_de_morgan",
                 None,
             )));
@@ -1132,7 +882,7 @@ impl Runtime {
             || Self::set_minus_intersect_de_morgan_shape(right, left)
         {
             return Ok(Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "set_minus_intersect_de_morgan",
                 None,
             )));
@@ -1167,14 +917,13 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         // Cardinality of a finite Cartesian product is the product of factor cardinalities.
         // Example: `finite_set_size(cart(A, B)) = finite_set_size(A) * finite_set_size(B)`.
         if Self::cart_finite_set_size_product_shape(left, right)
             || Self::cart_finite_set_size_product_shape(right, left)
         {
             return Some(Self::set_equality_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "cart_finite_set_size_product",
                 None,
             ));
@@ -2675,20 +2424,13 @@ impl Runtime {
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        if let Some(done) = self.try_verify_product_from_known_division(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) =
+            self.try_verify_product_from_known_division(equal_fact, builtin_state)?
+        {
             return Ok(Some(done));
         }
 
-        self.try_verify_division_from_known_product(
-            &EqualFact::new_from_refs(left, right, line_file),
-            builtin_state,
-        )
+        self.try_verify_division_from_known_product(equal_fact, builtin_state)
     }
 
     fn verify_user_prop_subgoal(
@@ -2965,11 +2707,8 @@ impl Runtime {
         }
 
         for prop_name in prop_names {
-            let left_to_right = self.verify_user_prop_subgoal(
-                &prop_name,
-                &EqualFact::new_from_refs(left, right, line_file.clone()),
-                builtin_state,
-            )?;
+            let left_to_right =
+                self.verify_user_prop_subgoal(&prop_name, equal_fact, builtin_state)?;
             if !left_to_right.is_true() {
                 continue;
             }

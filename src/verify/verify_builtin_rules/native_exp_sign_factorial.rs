@@ -12,10 +12,9 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if exp_ln_identity_shape(left, right) || exp_ln_identity_shape(right, left) {
             return Some(native_equal_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "native exp/ln inverse or canonical-base identity",
                 Vec::new(),
             ));
@@ -42,7 +41,7 @@ impl Runtime {
         ));
         if exp_result.is_true() {
             return Ok(Some(native_equal_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "injectivity of native exp",
                 vec![exp_result],
             )));
@@ -70,7 +69,7 @@ impl Runtime {
         }
         positivity_results.push(ln_result);
         Ok(Some(native_equal_success(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "injectivity of native ln",
             positivity_results,
         )))
@@ -104,7 +103,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "sign is zero only at zero",
             vec![result],
         )))
@@ -162,10 +161,9 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if exp_ln_algebra_shape(left, right) || exp_ln_algebra_shape(right, left) {
             return Some(native_equal_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "native exp/ln algebra identity",
                 Vec::new(),
             ));
@@ -202,7 +200,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "sign value selected from the argument order at zero",
             vec![premise_result],
         )))
@@ -216,10 +214,9 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if sign_abs_identity_shape(left, right) || sign_abs_identity_shape(right, left) {
             return Some(native_equal_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "sign times absolute value restores the argument",
                 Vec::new(),
             ));
@@ -236,12 +233,11 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if !sign_algebra_shape(left, right) && !sign_algebra_shape(right, left) {
             return None;
         }
         Some(native_equal_success(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "native sign oddness or multiplicativity",
             Vec::new(),
         ))
@@ -255,10 +251,9 @@ impl Runtime {
     ) -> Option<StmtResult> {
         let left = &equal_fact.left;
         let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
         if factorial_recurrence_shape(left, right) || factorial_recurrence_shape(right, left) {
             return Some(native_equal_success(
-                &EqualFact::new_from_refs(left, right, line_file),
+                equal_fact,
                 "factorial successor recurrence",
                 Vec::new(),
             ));
@@ -299,7 +294,7 @@ impl Runtime {
             return Ok(None);
         }
         Ok(Some(native_equal_success(
-            &EqualFact::new_from_refs(left, right, line_file),
+            equal_fact,
             "earlier factorial divides later factorial",
             vec![result],
         )))

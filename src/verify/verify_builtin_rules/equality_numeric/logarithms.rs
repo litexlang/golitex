@@ -199,31 +199,16 @@ impl Runtime {
         equal_fact: &EqualFact,
         builtin_state: &UseBuiltinRuleVerifyState,
     ) -> Result<Option<StmtResult>, RuntimeError> {
-        let left = &equal_fact.left;
-        let right = &equal_fact.right;
-        let line_file = equal_fact.line_file.clone();
-        if let Some(done) = self.try_verify_log_base_power_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_base_power_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_log_arg_power_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_arg_power_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_log_product_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_product_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
-        if let Some(done) = self.try_verify_log_quotient_rule(
-            &EqualFact::new_from_refs(left, right, line_file.clone()),
-            builtin_state,
-        )? {
+        if let Some(done) = self.try_verify_log_quotient_rule(equal_fact, builtin_state)? {
             return Ok(Some(done));
         }
         Ok(None)
